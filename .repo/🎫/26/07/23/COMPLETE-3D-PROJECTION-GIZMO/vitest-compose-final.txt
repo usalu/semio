@@ -1,0 +1,37 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (0 test)
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (0 test)
+
+⎯⎯⎯⎯⎯⎯ Failed Suites 2 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx [ index.tsx ]
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx [ index.tsx ]
+Error: Transform failed with 1 error:
+/Users/ueli/Documents/semio/infinite/world/r3f/index.tsx:3955:3: ERROR: Unexpected ")"
+  Plugin: vite:esbuild
+  File: /Users/ueli/Documents/semio/infinite/world/r3f/index.tsx:3955:3
+  
+  Unexpected ")"
+  3953 |        expect(fishTop).toEqual({ mode: worldProjectionDefaults("curvilinear").mode, orientation: { type: "cardinal", v...
+  3954 |      });
+  3955 |    });
+       |     ^
+  3956 |  
+  3957 |    describe("orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView", () => {
+  
+ ❯ failureErrorWithLog ../../../node_modules/esbuild/lib/main.js:1748:15
+ ❯ ../../../node_modules/esbuild/lib/main.js:1017:50
+ ❯ responseCallbacks.<computed> ../../../node_modules/esbuild/lib/main.js:884:9
+ ❯ handleIncomingPacket ../../../node_modules/esbuild/lib/main.js:939:12
+ ❯ Socket.readFromStdout ../../../node_modules/esbuild/lib/main.js:862:7
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/2]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  no tests
+   Start at  08:58:56
+   Duration  430ms (transform 0ms, setup 0ms, import 0ms, tests 0ms, environment 491ms)
+

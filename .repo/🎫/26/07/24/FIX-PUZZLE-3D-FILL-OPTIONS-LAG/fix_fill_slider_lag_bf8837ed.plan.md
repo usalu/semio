@@ -19,7 +19,7 @@ todos:
     status: completed
   - id: validate
     content: Timing diagnostic in ticket folder + run tests / DEBUG confirmation
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

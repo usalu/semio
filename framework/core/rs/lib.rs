@@ -3606,6 +3606,11 @@ pub struct IntroductionStepDefinition {
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
+    /// 🎬 An optional ghost-cursor demonstration of the gesture that completes `advance`, played while
+    /// the user's pointer is idle.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub demonstration: Option<IntroductionDemonstration>,
 }
 
 impl IntroductionStepDefinition {
@@ -3619,6 +3624,7 @@ impl IntroductionStepDefinition {
             placement: IntroductionPlacement::default(),
             advance: IntroductionAdvance::default(),
             logos: Vec::new(),
+            demonstration: None,
         }
     }
 
@@ -3649,6 +3655,12 @@ impl IntroductionStepDefinition {
     /// @emoji 🏛️ Attaches institution/partner logos to the step's info box.
     pub fn logos(mut self, logos: Vec<IntroductionLogo>) -> Self {
         self.logos = logos;
+        self
+    }
+
+    /// @emoji 🎬 Attaches a ghost-cursor demonstration of the step's `advance` gesture.
+    pub fn demonstrate(mut self, demonstration: IntroductionDemonstration) -> Self {
+        self.demonstration = Some(demonstration);
         self
     }
 }
@@ -3695,6 +3707,92 @@ pub enum IntroductionAdvance {
     Utility(UtilityRef),
     /// 🛠️ References `AppDefinition.tools` (mode-level tools such as fill).
     Tool(ToolRef),
+}
+
+/// @emoji 📌 Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
+/// point type covers click targets and drag endpoints across every addressing scheme the shell needs:
+/// element-relative, absolute/normalized screen space, absolute/normalized window(pane)-local space, and
+/// a 3D scene world position projected through that window's live camera.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum IntroductionPoint {
+    /// 🎯 Center (or `offset`, normalized 0–1 within the element's rect) of the element `id` resolves to.
+    Element {
+        id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        offset: Option<[f64; 2]>,
+    },
+    /// 🖥️ Absolute viewport pixel.
+    Screen { x: f64, y: f64 },
+    /// 🖥️ Normalized 0–1 of the viewport.
+    ScreenNormalized { x: f64, y: f64 },
+    /// 🪟 Pixel local to window/pane element `id`'s rect (top-left origin).
+    Window { id: String, x: f64, y: f64 },
+    /// 🪟 Normalized 0–1 within window/pane element `id`'s rect.
+    WindowNormalized { id: String, x: f64, y: f64 },
+    /// 🧊 3D world-space position in the scene shown by window `id`, projected through its live camera.
+    Scene { id: String, position: [f64; 3] },
+}
+
+/// @emoji 👆 A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
+/// and performs the visual press/release affordance for the gesture kind.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", tag = "kind")]
+pub enum IntroductionGesture {
+    LeftClick { at: IntroductionPoint },
+    RightClick { at: IntroductionPoint },
+    DoubleClick { at: IntroductionPoint },
+    Drag { from: IntroductionPoint, to: IntroductionPoint },
+    Scroll { at: IntroductionPoint, delta_y: f64 },
+}
+
+/// @emoji 🖱️ Ghost-cursor glyph, mirroring `ui.css`'s `--cursor-*` custom cursors.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IntroductionCursor {
+    #[default]
+    Default,
+    Pointer,
+    Grab,
+    Grabbing,
+    Crosshair,
+    Move,
+}
+
+/// @emoji 🎬 A looping ghost-cursor demonstration attached to an interaction-gated
+/// `IntroductionStepDefinition`. Plays only while the user's own pointer is idle — any real pointer
+/// movement mutes it and restores the real cursor instantly; going idle again while the step is still
+/// active replays it from the beginning. `cursor` overrides the glyph shown over the target; omitted, it
+/// derives from `gesture` (clicks → pointer, drag → grab/grabbing).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IntroductionDemonstration {
+    pub gesture: IntroductionGesture,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cursor: Option<IntroductionCursor>,
+}
+
+impl IntroductionDemonstration {
+    /// @emoji 👆 A left-click demonstration at `at`.
+    pub fn left_click(at: IntroductionPoint) -> Self {
+        Self { gesture: IntroductionGesture::LeftClick { at }, cursor: None }
+    }
+
+    /// @emoji 👆 A right-click demonstration at `at`.
+    pub fn right_click(at: IntroductionPoint) -> Self {
+        Self { gesture: IntroductionGesture::RightClick { at }, cursor: None }
+    }
+
+    /// @emoji ✋ A click-and-drag demonstration from `from` to `to`.
+    pub fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
+        Self { gesture: IntroductionGesture::Drag { from, to }, cursor: None }
+    }
 }
 //#endregion 🔖Introduction
 
@@ -5349,7 +5447,8 @@ mod app_document_tests {
         child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
-        CommandScope, DialogDefinition, IntroductionAdvance, IntroductionStepDefinition,
+        CommandScope, DialogDefinition, IntroductionAdvance, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
+        IntroductionPoint, IntroductionStepDefinition,
         Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
@@ -5672,6 +5771,68 @@ mod app_document_tests {
     }
 
     #[test]
+    fn introduction_point_round_trips_tagged_camel_case() {
+        for (point, tag) in [
+            (IntroductionPoint::Element { id: "transform".into(), offset: None }, "element"),
+            (IntroductionPoint::Element { id: "transform".into(), offset: Some([0.25, 0.75]) }, "element"),
+            (IntroductionPoint::Screen { x: 10.0, y: 20.0 }, "screen"),
+            (IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.5 }, "screenNormalized"),
+            (IntroductionPoint::Window { id: window_element_id("puzzle3d-main"), x: 40.0, y: 60.0 }, "window"),
+            (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main"), x: 0.5, y: 0.55 }, "windowNormalized"),
+            (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main"), position: [1.0, 2.0, 3.0] }, "scene"),
+        ] {
+            let json = serde_json::to_string(&point).unwrap();
+            assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
+            let round: IntroductionPoint = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, point);
+        }
+    }
+
+    #[test]
+    fn introduction_gesture_round_trips_tagged_camel_case() {
+        let at = IntroductionPoint::Element { id: "tool.fill".into(), offset: None };
+        for (gesture, tag) in [
+            (IntroductionGesture::LeftClick { at: at.clone() }, "leftClick"),
+            (IntroductionGesture::RightClick { at: at.clone() }, "rightClick"),
+            (IntroductionGesture::DoubleClick { at: at.clone() }, "doubleClick"),
+            (IntroductionGesture::Drag { from: at.clone(), to: at.clone() }, "drag"),
+            (IntroductionGesture::Scroll { at: at.clone(), delta_y: 100.0 }, "scroll"),
+        ] {
+            let json = serde_json::to_string(&gesture).unwrap();
+            assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
+            let round: IntroductionGesture = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, gesture);
+        }
+    }
+
+    #[test]
+    fn introduction_demonstration_round_trips_and_defaults() {
+        let at = IntroductionPoint::Element { id: "transform".into(), offset: None };
+        let demo = IntroductionDemonstration::left_click(at.clone());
+        assert_eq!(demo.cursor, None);
+        let json = serde_json::to_string(&demo).unwrap();
+        assert!(!json.contains("cursor"), "{json}");
+        let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, demo);
+
+        let with_cursor = IntroductionDemonstration { gesture: IntroductionGesture::Drag { from: at.clone(), to: at }, cursor: Some(IntroductionCursor::Grabbing) };
+        let json = serde_json::to_string(&with_cursor).unwrap();
+        assert!(json.contains("\"cursor\":\"grabbing\""), "{json}");
+        let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, with_cursor);
+
+        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        assert_eq!(step.demonstration, None);
+        let json = serde_json::to_string(&step).unwrap();
+        assert!(!json.contains("demonstration"), "{json}");
+
+        let with_demo = IntroductionStepDefinition::new("fill", "Fill", "…").demonstrate(IntroductionDemonstration::left_click(IntroductionPoint::Element { id: "tool.fill".into(), offset: None }));
+        let json = serde_json::to_string(&with_demo).unwrap();
+        let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, with_demo);
+    }
+
+    #[test]
     fn dialog_definition_round_trips_camel_case_with_defaults() {
         let dialog = DialogDefinition::new("confirm-delete", "Delete?", ActionRef::new("deleteSelection"));
         let json = serde_json::to_string(&dialog).unwrap();
@@ -5945,6 +6106,10 @@ mod app_document_tests {
         crate::ui::IntroductionPlacement::export().unwrap();
         crate::ui::IntroductionAdvance::export().unwrap();
         crate::ui::IntroductionLogo::export().unwrap();
+        crate::ui::IntroductionPoint::export().unwrap();
+        crate::ui::IntroductionGesture::export().unwrap();
+        crate::ui::IntroductionCursor::export().unwrap();
+        crate::ui::IntroductionDemonstration::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ProgramDefinition::export().unwrap();

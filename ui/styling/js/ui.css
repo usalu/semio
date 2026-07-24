@@ -146,6 +146,15 @@
     --cursor-help: help;
     --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed.svg") 0 0, not-allowed;
     --cursor-text: text;
+    /* 🎬 Plain background-image URLs (no hotspot/fallback-keyword suffix) for the introduction
+       demonstration's ghost cursor — the --cursor-* vars above embed a cursor: url() hotspot pair that
+       background-image can't consume. */
+    --cursor-ghost-default: url("../../../asset/cursor/cursor.svg");
+    --cursor-ghost-pointer: url("../../../asset/cursor/cursor_pointer.svg");
+    --cursor-ghost-grab: url("../../../asset/cursor/cursor_grab.svg");
+    --cursor-ghost-grabbing: url("../../../asset/cursor/cursor_grabbing.svg");
+    --cursor-ghost-crosshair: url("../../../asset/cursor/cursor_crosshair.svg");
+    --cursor-ghost-move: url("../../../asset/cursor/cursor_move_inkscape.svg");
     * {
       cursor: var(--cursor-default);
     }
@@ -598,6 +607,12 @@
   --cursor-selectable: url("../../../asset/cursor/cursor_selectable_dark.svg") 0 0, pointer;
   --cursor-foldable: url("../../../asset/cursor/cursor_foldable_dark.svg") 0 0, pointer;
   --cursor-not-allowed: url("../../../asset/cursor/cursor_not-allowed_dark.svg") 0 0, not-allowed;
+  --cursor-ghost-default: url("../../../asset/cursor/cursor_dark.svg");
+  --cursor-ghost-pointer: url("../../../asset/cursor/cursor_pointer_dark_inkscape.svg");
+  --cursor-ghost-grab: url("../../../asset/cursor/cursor_grab_dark.svg");
+  --cursor-ghost-grabbing: url("../../../asset/cursor/cursor_grabbing.svg");
+  --cursor-ghost-crosshair: url("../../../asset/cursor/cursor_crosshair_dark.svg");
+  --cursor-ghost-move: url("../../../asset/cursor/cursor_move_dark.svg");
   --info-bg: var(--color-dark-8-9);
   --info-foreground: var(--color-light);
   --info-border: var(--color-info);
@@ -1239,6 +1254,35 @@
 [data-introduction-active] [data-slot="context-menu-content"],
 [data-introduction-active] [data-radix-popper-content-wrapper] {
   z-index: calc(var(--z-tutorial) + 3) !important;
+}
+
+/* 🎬 Real cursor mutes only while a demonstration ghost cursor is actually playing — a separate,
+   playback-scoped attribute from data-introduction-active (which spans the whole tour) so the real
+   cursor never disappears merely because the current step declares a demonstration. */
+:root[data-introduction-demonstrating] * {
+  cursor: none !important;
+}
+
+@keyframes introduction-demo-press-ripple {
+  0% {
+    transform: scale(0.4);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(1.6);
+    opacity: 0;
+  }
+}
+
+.introduction-demo-ripple {
+  animation: introduction-demo-press-ripple 420ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .introduction-demo-ripple {
+    animation: none;
+    opacity: 0;
+  }
 }
 
 /* #region 🫨IconAnim — closed hover micro-animations. Every @keyframes has an identical 0% and 100%

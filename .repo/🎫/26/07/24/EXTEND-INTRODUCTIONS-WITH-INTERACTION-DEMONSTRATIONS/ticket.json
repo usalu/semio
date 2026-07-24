@@ -1,0 +1,13 @@
+{
+  "title": "Extend Introductions with Interaction Demonstrations",
+  "emoji": "🎬",
+  "status": "open",
+  "description": "Extend the introduction (tour) system so interaction-gated steps (advance: action/utility/tool) show a visual demonstration, not just a text hint. While the user's real cursor is idle (~1.6s), mute it and play an animated ghost cursor performing the gesture (left click, right click, double click, drag, scroll) at the target. Any real cursor movement stops the demo instantly and restores the real cursor; re-idling replays from the beginning. Targets must be addressable by element id (+ normalized offset), absolute/normalized screen coords, absolute/normalized window-local (pane) coords, and 3D scene world coords projected through the live camera. Add Rust types (IntroductionPoint, IntroductionGesture, IntroductionCursor, IntroductionDemonstration) under framework/core/rs/lib.rs's Introduction region, regenerate TS bindings, build the demo playback engine in ui/js/react/index.tsx (idle hook, point resolver, rAF gesture timeline, ghost cursor styled from the real cursor SVGs), a 3D scene-point projector bridge in framework/renderer/react/index.tsx's WorldCanvas subtree, wire demonstrations into all five interaction-gated steps of the Aggregator brand (mit-bestand/aggregator/brand.ts), and extend existing test files (no new test files) with Rust serde round-trips and ui-react vitest coverage.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2309"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪36f6c15a7b0f4296b922a5136840047f"
+  ]
+}

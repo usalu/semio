@@ -6264,6 +6264,7 @@ pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
             max: slider.max,
             step: slider.step,
             ready: None,
+            disabled: false,
             on_change: Some(slider.on_change.clone()),
         },
         UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
@@ -6375,6 +6376,7 @@ fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
             max: n.max,
             step: n.step,
             ready: None,
+            disabled: false,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => ControlNode::NumberStepper {
@@ -6491,6 +6493,7 @@ fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescripto
             max: n.max,
             step: n.step,
             ready: None,
+            disabled: false,
             on_change: Some(n.on_change.clone()),
         },
         UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper {
@@ -24021,6 +24024,7 @@ impl ShellState {
                 ready,
                 loading: _,
                 waiting: _,
+                disabled,
                 on_change,
             } => {
                 if let Some(label) = label {
@@ -24033,7 +24037,8 @@ impl ShellState {
                     max: *max,
                     step: step.unwrap_or(0.01),
                     ready: *ready,
-                    on_change: Some(on_change.clone()),
+                    disabled: disabled.unwrap_or(false),
+                    on_change: if disabled.unwrap_or(false) { None } else { Some(on_change.clone()) },
                 };
                 let rect = Rect::new(bounds.x, y + 16.0, bounds.w, theme.control_height);
                 let scroll_offsets = &mut self.scroll_offsets;
@@ -24362,7 +24367,7 @@ impl ShellState {
     ) {
         use ui_wgpu::widgets::{render_widget, WidgetNode};
         let node = match control {
-            WindowEngagementControl::Slider { id, value, min, max, step, on_change, .. } => {
+            WindowEngagementControl::Slider { id, value, min, max, step, disabled, on_change, .. } => {
                 WidgetNode::Slider {
                     id: id.clone().unwrap_or_else(|| "engagement-slider".into()),
                     value: *value,
@@ -24370,7 +24375,8 @@ impl ShellState {
                     max: *max,
                     step: step.unwrap_or(0.01),
                     ready: None,
-                    on_change: on_change.clone(),
+                    disabled: disabled.unwrap_or(false),
+                    on_change: if disabled.unwrap_or(false) { None } else { on_change.clone() },
                 }
             }
             WindowEngagementControl::Stepper { id, value, step, on_change, .. } => {

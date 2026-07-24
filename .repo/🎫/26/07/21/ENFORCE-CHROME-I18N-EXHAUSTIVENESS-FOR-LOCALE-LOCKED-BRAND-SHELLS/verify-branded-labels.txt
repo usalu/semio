@@ -30,3 +30,7 @@ FAIL
 cargo: app_labels_overlay tests ok (2 passed)
 brand: Aktionsmenü present, Kontextmenü absent
 overlay: mode=Bearbeiten dialog=Baukomponente hinzufügen contextMenuAt=Aktionsmenü öffnen under de+reuse
+=== entity labels pass ===
+ok: document/kinds trees German reuse (Kabel, Verbindungen, Referenzen, Zielvolumina, Baukomponenten)
+ok: select/lod/grid/settings/inspector wired through Puzzle3dLabels
+ok: createAttraction → Verbindung erstellen under reuse-de

@@ -16,3 +16,7 @@ Locale-locked Entwerfen mit Bestand Aggregator (`de` + `reuse`) still leaked Eng
 - Remaining TS chrome literal leaks + `check-chrome-i18n` gate.
 - Static layout instance titles (`Top` / `Perspective`) still English (no overlay slot).
 - puzzle2d/5d overlays still incomplete (aggregator is puzzle3d only).
+
+## Follow-up (cables / attractions)
+
+Hardcoded English catalogue/document/select labels (`"Cables"`, `"Attractions"`, `"References"`, `"Target Volumes"`, selection/LOD/grid/settings/inspector chrome) now go through `Puzzle3dLabels`. Reuse-de: Attraktionen→Verbindungen, Kabel, Referenzen, Zielvolumina. Tests: `document_and_kinds_trees_use_german_reuse_section_labels` + overlay asserts.

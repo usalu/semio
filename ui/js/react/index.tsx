@@ -74,9 +74,13 @@ import {
   type DockSkeleton,
   type DockTabSkeleton,
   type IntroductionAdvance,
+  type IntroductionCursor,
   type IntroductionDefinition,
+  type IntroductionDemonstration,
+  type IntroductionGesture,
   type IntroductionLogo,
   type IntroductionPlacement,
+  type IntroductionPoint,
   type IntroductionStepDefinition,
   type ShellLocale,
   type ShellTerminology,
@@ -5250,6 +5254,361 @@ export function resolveIntroductionPlacement(
   }
 }
 
+//#region 🎬DemonstrationProjectors
+/** @emoji 🧊 Projects a 3D scene world position to a live viewport pixel through that scene's current
+ * camera — `visible: false` (or a `null` return) means off-camera/behind-camera, which callers must treat
+ * as "unresolved this frame", not an error. Registered per window element id by the shell surface that
+ * owns the live camera (e.g. a react-three-fiber `useThree` bridge). */
+export type IntroductionScenePointProjector = (
+  position: readonly [number, number, number],
+) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
+
+const introductionSceneProjectors = new Map<string, IntroductionScenePointProjector>();
+
+/** @emoji 🧊 Registers the live camera projector for the 3D scene shown by window element `windowId`, so
+ * `IntroductionPoint.Scene` points can resolve to a viewport pixel — call from the window's r3f subtree
+ * (has `useThree`), unregister on unmount via the returned disposer. Multiple concurrently open instances
+ * of the same window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
+export function registerIntroductionSceneProjector(windowId: string, projector: IntroductionScenePointProjector): () => void {
+  introductionSceneProjectors.set(windowId, projector);
+  return () => {
+    if (introductionSceneProjectors.get(windowId) === projector) introductionSceneProjectors.delete(windowId);
+  };
+}
+
+/** @emoji 🧊 Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene projector. */
+export function ndcToViewportPoint(
+  ndc: { readonly x: number; readonly y: number },
+  rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number },
+): { readonly x: number; readonly y: number } {
+  return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
+}
+//#endregion 🎬DemonstrationProjectors
+
+//#region 🎬DemonstrationResolve
+type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
+
+/** @emoji 📌 Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
+ * playing demonstration — re-resolving (rather than caching) keeps a drag path glued to a target that's
+ * still moving (a resizing panel, an orbiting 3D camera). `null` means "not resolvable yet" (element not
+ * mounted, scene projector not registered, or the 3D point is off-camera) — callers wait and retry next
+ * frame rather than treating it as an error. */
+export function resolveIntroductionPoint(point: IntroductionPoint): IntroductionResolvedPoint | null {
+  switch (point.kind) {
+    case "element": {
+      const element = document.querySelector(elementIdSelector(point.id));
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      const [offsetX, offsetY] = point.offset ?? [0.5, 0.5];
+      return { x: rect.left + offsetX * rect.width, y: rect.top + offsetY * rect.height };
+    }
+    case "screen":
+      return { x: point.x, y: point.y };
+    case "screenNormalized":
+      return { x: point.x * window.innerWidth, y: point.y * window.innerHeight };
+    case "window": {
+      const element = document.querySelector(elementIdSelector(point.id));
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.left + point.x, y: rect.top + point.y };
+    }
+    case "windowNormalized": {
+      const element = document.querySelector(elementIdSelector(point.id));
+      if (!element) return null;
+      const rect = element.getBoundingClientRect();
+      return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
+    }
+    case "scene": {
+      const projector = introductionSceneProjectors.get(point.id);
+      if (!projector) return null;
+      const projected = projector(point.position);
+      if (!projected || !projected.visible) return null;
+      return { x: projected.x, y: projected.y };
+    }
+    default:
+      return null;
+  }
+}
+//#endregion 🎬DemonstrationResolve
+
+//#region 🎬DemonstrationIdle
+const INTRODUCTION_DEMO_IDLE_THRESHOLD_MS = 1600;
+
+type IntroductionPointerPosition = { readonly x: number; readonly y: number };
+
+type IntroductionPointerIdleState = {
+  readonly idle: boolean;
+  /** 🎬 The real pointer's last observed viewport position (`null` until it has moved at least once) —
+   * lets a demonstration open by traveling from where the user's actual cursor is resting, instead of
+   * materializing out of nowhere near its target. Stable ref identity; read `.current`, don't watch it. */
+  readonly lastPositionRef: React.RefObject<IntroductionPointerPosition | null>;
+};
+
+/** @emoji 💤 Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
+ * demonstration plays behind — and where it last was. Any `pointerdown`/`wheel`/`keydown`, or a
+ * `pointermove` to DIFFERENT coordinates than the last one, resets the timer and flips back to not-idle
+ * immediately; a `pointermove` carrying the SAME coordinates as the last one is ignored — browsers
+ * re-fire pointermove when the DOM mutates under a stationary cursor (which a playing demonstration does
+ * every frame), and without this guard the demonstration would perpetually interrupt itself. Starts
+ * not-idle: a demonstration should only appear once the user has first settled, not the instant a step
+ * mounts mid-motion. */
+function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTRODUCTION_DEMO_IDLE_THRESHOLD_MS): IntroductionPointerIdleState {
+  const [idle, setIdle] = reactHostPort.useState(false);
+  const lastPositionRef = reactHostPort.useRef<IntroductionPointerPosition | null>(null);
+
+  reactHostPort.useEffect(() => {
+    if (!enabled) {
+      setIdle(false);
+      return;
+    }
+    let timer: ReturnType<typeof setTimeout> | null = null;
+
+    const settle = () => {
+      timer = setTimeout(() => setIdle(true), thresholdMs);
+    };
+    const unsettle = () => {
+      setIdle(false);
+      if (timer) clearTimeout(timer);
+      settle();
+    };
+    const onPointerMove = (event: PointerEvent) => {
+      const previous = lastPositionRef.current;
+      if (previous && event.clientX === previous.x && event.clientY === previous.y) return;
+      lastPositionRef.current = { x: event.clientX, y: event.clientY };
+      unsettle();
+    };
+    const onOtherInput = () => unsettle();
+
+    window.addEventListener("pointermove", onPointerMove, true);
+    window.addEventListener("pointerdown", onOtherInput, true);
+    window.addEventListener("wheel", onOtherInput, true);
+    window.addEventListener("keydown", onOtherInput, true);
+    settle();
+    return () => {
+      if (timer) clearTimeout(timer);
+      window.removeEventListener("pointermove", onPointerMove, true);
+      window.removeEventListener("pointerdown", onOtherInput, true);
+      window.removeEventListener("wheel", onOtherInput, true);
+      window.removeEventListener("keydown", onOtherInput, true);
+    };
+  }, [enabled, thresholdMs]);
+
+  return { idle, lastPositionRef };
+}
+//#endregion 🎬DemonstrationIdle
+
+//#region 🎬DemonstrationOverlay
+const INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR: Record<IntroductionGesture["kind"], IntroductionCursor> = {
+  leftClick: "pointer",
+  rightClick: "pointer",
+  doubleClick: "pointer",
+  drag: "grab",
+  scroll: "default",
+};
+
+const INTRODUCTION_DEMO_PHASE_MS = {
+  appear: 250,
+  travel: 600,
+  press: 180,
+  dragMove: 900,
+  release: 180,
+  linger: 500,
+  fadeOut: 250,
+  pause: 900,
+} as const;
+
+type IntroductionDemoPhase = keyof typeof INTRODUCTION_DEMO_PHASE_MS;
+
+const INTRODUCTION_DEMO_NEXT_PHASE: Record<IntroductionDemoPhase, IntroductionDemoPhase> = {
+  appear: "travel",
+  travel: "press",
+  press: "dragMove",
+  dragMove: "release",
+  release: "linger",
+  linger: "fadeOut",
+  fadeOut: "pause",
+  pause: "appear",
+};
+
+function introductionDemoEaseInOutCubic(t: number): number {
+  return t < 0.5 ? 4 * t * t * t : 1 - (-2 * t + 2) ** 3 / 2;
+}
+
+function introductionDemoLerp(a: number, b: number, t: number): number {
+  return a + (b - a) * t;
+}
+
+const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
+
+/** @emoji 🎬 Ghost-cursor gesture demonstration for an interaction-gated introduction step, mounted by
+ * `UIIntroduction` whenever `step.demonstration` is set. Plays only while
+ * {@link useIntroductionPointerIdle} is true — any real pointer movement hides it and restores the real
+ * cursor instantly (`data-introduction-demonstrating` cleared, see `ui.css`); going idle again restarts
+ * the timeline from `appear`. Never dispatches real pointer events — purely visual, driven by an
+ * imperative rAF loop (no per-frame React state) that re-resolves its `IntroductionPoint` endpoints every
+ * frame via {@link resolveIntroductionPoint} so it stays glued to a moving/orbiting target. Renders
+ * nothing under `prefers-reduced-motion: reduce` — the info box's "perform to continue" text remains the
+ * fallback. */
+const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstration: IntroductionDemonstration }> = ({ demonstration }) => {
+  const { idle, lastPositionRef } = useIntroductionPointerIdle(true);
+  const ghostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const reducedMotion = reactHostPort.useMemo(() => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true, []);
+
+  reactHostPort.useEffect(() => {
+    if (reducedMotion || !idle) {
+      document.documentElement.removeAttribute("data-introduction-demonstrating");
+      return;
+    }
+    document.documentElement.setAttribute("data-introduction-demonstrating", "true");
+
+    const gesture = demonstration.gesture;
+    const hoverCursor = demonstration.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[gesture.kind];
+    const dragCursor = demonstration.cursor ?? "grabbing";
+    const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } =
+      gesture.kind === "drag" ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
+    // 🎬 Captured once per idle period (real pointer movement tears this whole effect down before it could
+    // change) so every loop of the demonstration — including internal repeats while still idle — opens by
+    // traveling from the same real, physical resting spot of the user's actual cursor. `null` only if the
+    // pointer has never moved since load; falls back to materializing with the old fixed offset.
+    const origin = lastPositionRef.current;
+
+    const setGlyph = (glyph: IntroductionCursor) => {
+      const ghost = ghostRef.current;
+      if (ghost) ghost.style.backgroundImage = `var(--cursor-ghost-${glyph})`;
+    };
+    // 🎬 The ghost glyphs share the real `--cursor-*` SVGs' `0 0` hotspot (default/pointer/grab/grabbing) —
+    // the element's top-left corner IS the cursor tip, so it positions directly at (x, y), not centered.
+    const setPosition = (x: number, y: number) => {
+      const ghost = ghostRef.current;
+      if (ghost) ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
+    };
+    const setOpacity = (opacity: number) => {
+      const ghost = ghostRef.current;
+      if (ghost) ghost.style.opacity = String(opacity);
+    };
+    const spawnRipple = (x: number, y: number) => {
+      const host = rippleHostRef.current;
+      if (!host) return;
+      const ripple = document.createElement("div");
+      ripple.className = "introduction-demo-ripple pointer-events-none fixed rounded-full border-2 border-current";
+      ripple.style.left = `${x - 12}px`;
+      ripple.style.top = `${y - 12}px`;
+      ripple.style.width = "24px";
+      ripple.style.height = "24px";
+      host.appendChild(ripple);
+      ripple.addEventListener("animationend", () => ripple.remove());
+    };
+
+    let cancelled = false;
+    let rafId = 0;
+    let phase: IntroductionDemoPhase = "appear";
+    let phaseStart = performance.now();
+    let rippleSpawned = false;
+    let secondRippleSpawned = false;
+
+    const tick = (now: number) => {
+      if (cancelled) return;
+      const start = resolveIntroductionPoint(targets.start);
+      const end = targets.end ? resolveIntroductionPoint(targets.end) : null;
+      if (!start || (targets.end && !end)) {
+        rafId = requestAnimationFrame(tick);
+        return;
+      }
+
+      const duration = INTRODUCTION_DEMO_PHASE_MS[phase];
+      const t = Math.min(1, (now - phaseStart) / duration);
+      const eased = introductionDemoEaseInOutCubic(t);
+      // 🎬 `appear` holds still at `origin` and only fades in; `travel` is the SOLE motion segment, from
+      // `origin` to `start`. Both phases must never animate position over the same range — a stationary
+      // fade followed by a full traversal is one clean journey, not a snap-back-and-repeat.
+      const anchor = origin ?? { x: start.x + INTRODUCTION_DEMO_APPEAR_OFFSET.x, y: start.y + INTRODUCTION_DEMO_APPEAR_OFFSET.y };
+
+      switch (phase) {
+        case "appear":
+          setGlyph("default");
+          setOpacity(t);
+          setPosition(anchor.x, anchor.y);
+          break;
+        case "travel":
+          setOpacity(1);
+          setPosition(introductionDemoLerp(anchor.x, start.x, eased), introductionDemoLerp(anchor.y, start.y, eased));
+          if (t > 0.7) setGlyph(hoverCursor);
+          break;
+        case "press":
+          setGlyph(hoverCursor);
+          setPosition(start.x, start.y);
+          if (!rippleSpawned) {
+            spawnRipple(start.x, start.y);
+            rippleSpawned = true;
+          }
+          if (gesture.kind === "doubleClick" && t > 0.5 && !secondRippleSpawned) {
+            spawnRipple(start.x, start.y);
+            secondRippleSpawned = true;
+          }
+          break;
+        case "dragMove":
+          setGlyph(dragCursor);
+          if (end) setPosition(introductionDemoLerp(start.x, end.x, eased), introductionDemoLerp(start.y, end.y, eased));
+          else setPosition(start.x, start.y);
+          break;
+        case "release": {
+          const point = end ?? start;
+          setGlyph(hoverCursor);
+          setPosition(point.x, point.y);
+          break;
+        }
+        case "linger": {
+          const point = end ?? start;
+          setPosition(point.x, point.y);
+          break;
+        }
+        case "fadeOut": {
+          const point = end ?? start;
+          setOpacity(1 - t);
+          setPosition(point.x, point.y);
+          break;
+        }
+        case "pause":
+          setOpacity(0);
+          break;
+      }
+
+      if (t >= 1) {
+        phaseStart = now;
+        rippleSpawned = false;
+        secondRippleSpawned = false;
+        // 🎬 A non-drag gesture's press phase skips straight to release — there is no from→to path to move
+        // along.
+        phase = phase === "press" && gesture.kind !== "drag" ? "release" : INTRODUCTION_DEMO_NEXT_PHASE[phase];
+      }
+      rafId = requestAnimationFrame(tick);
+    };
+
+    rafId = requestAnimationFrame(tick);
+    return () => {
+      cancelled = true;
+      cancelAnimationFrame(rafId);
+      document.documentElement.removeAttribute("data-introduction-demonstrating");
+    };
+  }, [demonstration, idle, reducedMotion]);
+
+  if (reducedMotion) return null;
+
+  return (
+    <div data-slot="introduction-demonstration" className="pointer-events-none fixed inset-0" style={{ zIndex: "calc(var(--z-tutorial) + 2)" }}>
+      <div
+        ref={ghostRef}
+        data-slot="introduction-demonstration-cursor"
+        className="pointer-events-none fixed h-6 w-6 bg-contain bg-no-repeat opacity-0"
+        style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }}
+      />
+      <div ref={rippleHostRef} className="pointer-events-none fixed inset-0" />
+    </div>
+  );
+};
+//#endregion 🎬DemonstrationOverlay
+
 export type UIIntroductionProps = {
   readonly introduction: IntroductionDefinition;
   readonly stepIndex: number;
@@ -5423,6 +5782,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
           </div>
         </div>
       </div>
+      {step.demonstration && <IntroductionDemonstrationOverlay key={step.id} demonstration={step.demonstration} />}
     </>
   );
 };
@@ -10356,6 +10716,7 @@ function Slider({
   id,
   snapValues,
   step,
+  disabled,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
@@ -10432,6 +10793,7 @@ function Slider({
   );
 
   const handleValueClick = () => {
+    if (disabled) return;
     if (!hasBeenEdited) setHasBeenEdited(true);
     setEditValue(formatReadout(displayValue));
     setIsEditing(true);
@@ -10538,6 +10900,7 @@ function Slider({
       onPointerCancel={handlePointerCancel}
       onKeyDown={handleKeyDown}
       onKeyUp={handleKeyUp}
+      disabled={disabled}
       className={cn(
         "group relative flex h-full w-full touch-none items-center select-none data-[disabled]:opacity-50 data-[orientation=vertical]:h-full data-[orientation=vertical]:min-h-44 data-[orientation=vertical]:w-auto data-[orientation=vertical]:flex-col",
         "has-[[data-slot=slider-thumb]:hover]:[&_[data-slot=slider-range]]:bg-emphasized",
@@ -17365,6 +17728,12 @@ export interface PanelProps {
   /** @emoji 🌱 Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
+  /**
+   * ♻️ Busts {@link PanelTreeUnitsPane}'s memo when lazy `resolveTree` sources read host refs (tool measures,
+   * active tool, staged command args). Without this, slider/option payloads refresh in shell state but the
+   * memoized pane never re-calls `resolveTree`, so sibling distribution sliders stay visually stuck.
+   */
+  treeContentRevision?: unknown;
   minSize?: number;
   maxSize?: number;
   zIndex?: 10 | 20 | 30 | 40;
@@ -17386,6 +17755,7 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   units,
   treeOpenStates,
   onTreeOpenStateChange,
+  treeContentRevision: _treeContentRevision,
 }: {
   readonly anchor?: Anchor;
   readonly tabId: string;
@@ -17393,6 +17763,8 @@ const PanelTreeUnitsPane = reactHostPort.memo(function PanelTreeUnitsPane({
   /** @emoji 🌱 Persisted tree expansion, namespaced `${unitId}:${innerId}` across every unit this pane hosts. */
   readonly treeOpenStates?: Readonly<Record<string, boolean>>;
   readonly onTreeOpenStateChange?: (id: string, open: boolean) => void;
+  /** @emoji ♻️ Identity-only prop — included so memo re-renders when lazy tree sources must re-resolve. */
+  readonly treeContentRevision?: unknown;
 }) {
   const dock = usePanelDockContext();
   const flow = useFlow();
@@ -17583,6 +17955,7 @@ const Panel: React.FC<PanelProps> = ({
   onPathMemoryChange,
   treeOpenStates,
   onTreeOpenStateChange,
+  treeContentRevision,
   minSize = 200,
   maxSize = 600,
   zIndex = 20,
@@ -17673,7 +18046,16 @@ const Panel: React.FC<PanelProps> = ({
               <Scrollable className="relative z-10 flex-1 min-h-0">
                 {/* 🌲 Panel body content follows the anchor's flow — trees, labels, and their controls mirror on right anchors, same as the chrome (tab bar, resize handles, panel position). */}
                 <div ref={panelContentRef} data-dim data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
-                  {activeTabTrees && activeNode ? <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
+                  {activeTabTrees && activeNode ? (
+                    <PanelTreeUnitsPane
+                      anchor={anchor}
+                      tabId={activeNode.id}
+                      units={activeTabTrees}
+                      treeOpenStates={treeOpenStates}
+                      onTreeOpenStateChange={onTreeOpenStateChange}
+                      treeContentRevision={treeContentRevision}
+                    />
+                  ) : null}
                 </div>
               </Scrollable>
               {onSizeChange
@@ -17953,6 +18335,8 @@ export interface MobilePanelProps {
   /** @emoji 🌱 Persisted tree section/group expansion across every leaf tab's units (see {@link PanelTreeUnitsPane}). */
   treeOpenStates?: Readonly<Record<string, boolean>>;
   onTreeOpenStateChange?: (id: string, open: boolean) => void;
+  /** @emoji ♻️ See {@link PanelProps.treeContentRevision}. */
+  treeContentRevision?: unknown;
   className?: string;
 }
 
@@ -17960,7 +18344,7 @@ export interface MobilePanelProps {
  * MobilePanel is a full-height tabbed panel for mobile layouts.
  * It merges all tabs into a single non-resizable panel filling the available space.
  **/
-const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, className = "" }) => {
+const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange, treeOpenStates, onTreeOpenStateChange, treeContentRevision, className = "" }) => {
   // 🌱 `visible: true` — MobilePanel has no folded state of its own (it renders nothing at all instead, below);
   // this just keeps `usePanelTabSelection`'s open/fold branches inert so it behaves as pure path/memory selection.
   const { resolvedPath, handlePathChange } = usePanelTabSelection({ tabs, visible: true, activeTabPath, onActiveTabPathChange, pathMemory, onPathMemoryChange });
@@ -17989,7 +18373,15 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div ref={panelContentRef} data-dim data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} /> : null}
+            {activeTabTrees && activeNode ? (
+              <PanelTreeUnitsPane
+                tabId={activeNode.id}
+                units={activeTabTrees}
+                treeOpenStates={treeOpenStates}
+                onTreeOpenStateChange={onTreeOpenStateChange}
+                treeContentRevision={treeContentRevision}
+              />
+            ) : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>
@@ -25449,7 +25841,7 @@ export { Ui };
 
 if (import.meta.vitest) {
   const { describe, expect, it, vi } = import.meta.vitest;
-  const { render, screen, fireEvent, waitFor } = await import("@testing-library/react");
+  const { render, screen, fireEvent, waitFor, act } = await import("@testing-library/react");
 
   describe("element id grammar", () => {
     it("isElementId accepts dotted camelCase and rejects everything else", () => {
@@ -26116,6 +26508,171 @@ if (import.meta.vitest) {
       expect(left.left).toBeLessThan(anchor.left);
       const nearEdge = resolveIntroductionPlacement("right", { top: 10, left: 780, width: 10, height: 10 }, boxSize, viewport);
       expect(nearEdge.left).toBeLessThanOrEqual(viewport.width - boxSize.width);
+    });
+  });
+
+  describe("resolveIntroductionPoint", () => {
+    it("resolves an element point to its rect center, or a normalized offset within it", () => {
+      const { container } = render(<div id="demo.target" />);
+      const el = container.querySelector("#demo\\.target")!;
+      vi.spyOn(el, "getBoundingClientRect").mockReturnValue({ left: 100, top: 200, width: 100, height: 50, right: 200, bottom: 250, x: 100, y: 200, toJSON: () => ({}) } as DOMRect);
+      expect(resolveIntroductionPoint({ kind: "element", id: "demo.target" })).toEqual({ x: 150, y: 225 });
+      expect(resolveIntroductionPoint({ kind: "element", id: "demo.target", offset: [0, 0] })).toEqual({ x: 100, y: 200 });
+    });
+
+    it("resolves absolute and normalized screen points against the viewport", () => {
+      const originalWidth = window.innerWidth;
+      const originalHeight = window.innerHeight;
+      Object.defineProperty(window, "innerWidth", { value: 800, configurable: true });
+      Object.defineProperty(window, "innerHeight", { value: 600, configurable: true });
+      expect(resolveIntroductionPoint({ kind: "screen", x: 10, y: 20 })).toEqual({ x: 10, y: 20 });
+      expect(resolveIntroductionPoint({ kind: "screenNormalized", x: 0.5, y: 0.5 })).toEqual({ x: 400, y: 300 });
+      Object.defineProperty(window, "innerWidth", { value: originalWidth, configurable: true });
+      Object.defineProperty(window, "innerHeight", { value: originalHeight, configurable: true });
+    });
+
+    it("resolves window-local absolute and normalized points against the target's rect", () => {
+      const { container } = render(<div id="demo.window" />);
+      const el = container.querySelector("#demo\\.window")!;
+      vi.spyOn(el, "getBoundingClientRect").mockReturnValue({ left: 50, top: 60, width: 200, height: 100, right: 250, bottom: 160, x: 50, y: 60, toJSON: () => ({}) } as DOMRect);
+      expect(resolveIntroductionPoint({ kind: "window", id: "demo.window", x: 10, y: 20 })).toEqual({ x: 60, y: 80 });
+      expect(resolveIntroductionPoint({ kind: "windowNormalized", id: "demo.window", x: 0.5, y: 0.5 })).toEqual({ x: 150, y: 110 });
+    });
+
+    it("resolves a scene point through its registered projector, and null once off-camera or unregistered", () => {
+      const unregister = registerIntroductionSceneProjector("demo.scene", (position) =>
+        position[0] > 0 ? { x: 42, y: 84, visible: true } : { x: 0, y: 0, visible: false },
+      );
+      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toEqual({ x: 42, y: 84 });
+      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [-1, 0, 0] })).toBeNull();
+      unregister();
+      expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toBeNull();
+    });
+
+    it("returns null for an element/window point that hasn't mounted", () => {
+      expect(resolveIntroductionPoint({ kind: "element", id: "nothing.here" })).toBeNull();
+      expect(resolveIntroductionPoint({ kind: "window", id: "nothing.here", x: 0, y: 0 })).toBeNull();
+    });
+  });
+
+  describe("ndcToViewportPoint", () => {
+    it("maps NDC corners and center to viewport pixels", () => {
+      const rect = { left: 100, top: 50, width: 200, height: 100 };
+      expect(ndcToViewportPoint({ x: 0, y: 0 }, rect)).toEqual({ x: 200, y: 100 });
+      expect(ndcToViewportPoint({ x: -1, y: -1 }, rect)).toEqual({ x: 100, y: 150 });
+      expect(ndcToViewportPoint({ x: 1, y: 1 }, rect)).toEqual({ x: 300, y: 50 });
+    });
+  });
+
+  describe("useIntroductionPointerIdle", () => {
+    it("goes idle after the threshold, resets on real movement, and ignores repeated-coordinate pointermoves", () => {
+      vi.useFakeTimers();
+      try {
+        const IdleProbe: React.FC = () => {
+          const { idle, lastPositionRef } = useIntroductionPointerIdle(true, 1000);
+          return <div data-testid="idle-probe" data-idle={idle ? "true" : "false"} data-last={lastPositionRef.current ? `${lastPositionRef.current.x},${lastPositionRef.current.y}` : ""} />;
+        };
+        const { getByTestId } = render(<IdleProbe />);
+        const probe = () => getByTestId("idle-probe").getAttribute("data-idle");
+
+        expect(probe()).toBe("false");
+        act(() => {
+          vi.advanceTimersByTime(999);
+        });
+        expect(probe()).toBe("false");
+        act(() => {
+          vi.advanceTimersByTime(1);
+        });
+        expect(probe()).toBe("true");
+
+        fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 10, clientY: 20 }));
+        expect(probe()).toBe("false");
+        expect(getByTestId("idle-probe").getAttribute("data-last")).toBe("10,20");
+
+        // 🎬 Same coordinates as the last move: ignored, so the idle timer set by the move above must NOT
+        // have been restarted — advancing exactly the threshold from that move flips idle back to true.
+        fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 10, clientY: 20 }));
+        expect(probe()).toBe("false");
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+        expect(probe()).toBe("true");
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+  });
+
+  describe("UIIntroduction demonstration", () => {
+    const demoSteps: IntroductionStepDefinition[] = [
+      {
+        id: "fill",
+        title: "Füllen",
+        body: "Click fill.",
+        introduce: "tool.fill",
+        show: [],
+        placement: "auto",
+        advance: { kind: "tool", id: "fill" },
+        logos: [],
+        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
+      },
+    ];
+
+    it("mutes the real cursor only once idle, and restores it the instant the pointer moves", () => {
+      vi.useFakeTimers();
+      try {
+        render(
+          <div>
+            <button id="tool.fill">Fill</button>
+            <UIIntroduction introduction={{ title: "Welcome", steps: demoSteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />
+          </div>,
+        );
+        expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+
+        fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 5, clientY: 5 }));
+        expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("unmount clears the demonstrating attribute", () => {
+      vi.useFakeTimers();
+      try {
+        const { unmount } = render(
+          <div>
+            <button id="tool.fill">Fill</button>
+            <UIIntroduction introduction={{ title: "Welcome", steps: demoSteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />
+          </div>,
+        );
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+        unmount();
+        expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("a step without a demonstration never mutes the cursor", () => {
+      vi.useFakeTimers();
+      try {
+        const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "No demo.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [] }];
+        render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
     });
   });
 
@@ -27125,6 +27682,26 @@ if (import.meta.vitest) {
       fireEvent.click(rows[0]);
       expect(treeOpenStates).toEqual({ "unit-a:tree-section-sec": true });
       expect(treeOpenStates["unit-b:tree-section-sec"]).toBeUndefined();
+    });
+
+    it("PanelTreeUnitsPane re-resolves lazy trees when treeContentRevision changes", () => {
+      const StubIcon = (): null => null;
+      let sectionLabel = "before";
+      const resolveTree = vi.fn(() => ({
+        sections: [{ id: "sec", label: sectionLabel, items: [{ id: "item", label: "Item" }] }],
+        sortableSections: false as const,
+      }));
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tool.fill", icon: StubIcon, name: "Fill", tree: { resolveTree } })];
+      const { container, rerender } = render(<Panel anchor="bottom-middle" visible tabs={tabs} activeTabPath={["tool.fill"]} treeContentRevision={0} />);
+      expect(container.textContent).toContain("before");
+      expect(resolveTree).toHaveBeenCalledTimes(1);
+      sectionLabel = "after";
+      rerender(<Panel anchor="bottom-middle" visible tabs={tabs} activeTabPath={["tool.fill"]} treeContentRevision={0} />);
+      expect(resolveTree).toHaveBeenCalledTimes(1);
+      expect(container.textContent).toContain("before");
+      rerender(<Panel anchor="bottom-middle" visible tabs={tabs} activeTabPath={["tool.fill"]} treeContentRevision={1} />);
+      expect(resolveTree).toHaveBeenCalledTimes(2);
+      expect(container.textContent).toContain("after");
     });
 
     it("PanelTreeUnitsPane omits unlabeled single-unit headers under PanelDockProvider (no lonely top grip)", () => {

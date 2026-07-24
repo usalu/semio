@@ -1886,10 +1886,10 @@ describe("framework renderer hosts", () => {
 
   it("preserves projectionSpec.view from gizmo snaps instead of clobbering to top", () => {
     const merged = mergeWorldViewportCamera(
-      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionSpec: { kind: "orthographic", view: "top" } },
-      { position: [0, -600, 0], target: [0, 0, 0], zoom: 50, projection: "orthographic", projectionSpec: { kind: "orthographic", view: "front" } },
+      { position: [0, 0, 10], target: [0, 0, 0], zoom: 50, projection: "orthographic", fov: 45, explicitProjection: true, projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } } },
+      { position: [0, -600, 0], target: [0, 0, 0], zoom: 50, projection: "orthographic", projectionSpec: { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } } },
     );
-    expect(merged.projectionSpec).toEqual({ kind: "orthographic", view: "front" });
+    expect(merged.projectionSpec).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } });
   });
 
   it("accepts extended world 3d scene fields", () => {
@@ -3580,7 +3580,7 @@ describe("registry-derived utilities and activation (P5)", () => {
   });
 
   it("worldGumballConfigForProjection intersects transform mode with planar window projections", () => {
-    expect(worldGumballConfigForProjection("move", { kind: "orthographic", view: "top" })).toEqual({
+    expect(worldGumballConfigForProjection("move", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual({
       moveAxes: true,
       movePlanes: true,
       rotate: false,
@@ -3589,9 +3589,9 @@ describe("registry-derived utilities and activation (P5)", () => {
       scaleUniform: false,
       plane: "xy",
     });
-    expect(worldGumballConfigForProjection("rotate", { kind: "orthographic", view: "front" }).plane).toBe("xz");
-    expect(worldGumballConfigForProjection("scale", { kind: "orthographic", view: "left" }).plane).toBe("yz");
-    expect(worldGumballConfigForProjection("move", { kind: "threePoint", fov: 50 }).plane).toBeUndefined();
+    expect(worldGumballConfigForProjection("rotate", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }).plane).toBe("xz");
+    expect(worldGumballConfigForProjection("scale", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } }).plane).toBe("yz");
+    expect(worldGumballConfigForProjection("move", { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }).plane).toBeUndefined();
     expect(worldGumballConfigForProjection("transform", undefined).plane).toBeUndefined();
   });
 
@@ -4308,17 +4308,15 @@ describe("Display Windows tab — projection drag templates", () => {
     expect(sections[0]!.items).toHaveLength(1);
   });
 
-  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Plan's children top-to-bottom as Top/Bottom/Front/Back/Left/Right", () => {
+  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Parallel children top-to-bottom", () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
-    const orthographic = byLabel(parallel.items!, "Orthographic")!;
-    const plan = byLabel(orthographic.items!, "Plan")!;
     // Raw (pre-render) order is reversed once more so that after the Tree's own "up" reversal on render,
-    // Orthographic reads Plan, and Plan reads Top, Bottom, Front, Back, Left, Right — top to bottom.
-    expect([...orthographic.items!].reverse().map((row) => row.label)).toEqual(["Plan"]);
-    const renderedOrder = [...plan.items!].reverse().map((row) => row.label);
-    expect(renderedOrder).toEqual(["Top", "Bottom", "Front", "Back", "Left", "Right"]);
+    // Parallel reads Orthographic, Axonometric, Oblique — top to bottom.
+    expect([...parallel.items!].reverse().map((row) => row.label)).toEqual(["Orthographic", "Axonometric", "Oblique"]);
+    const axonometric = byLabel(parallel.items!, "Axonometric")!;
+    expect([...axonometric.items!].reverse().map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
   });
 
   it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
@@ -4326,13 +4324,13 @@ describe("Display Windows tab — projection drag templates", () => {
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
     const orthographic = byLabel(parallel.items!, "Orthographic")!;
-    const plan = byLabel(orthographic.items!, "Plan")!;
-    const topLeaf = byLabel(plan.items!, "Top")!;
-    const payload = JSON.parse(topLeaf.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
+    const payload = JSON.parse(orthographic.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(payload.windowKindId).toBe("puzzle3d-main");
-    expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
-    const planPayload = JSON.parse(plan.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
-    expect(decodeWorldProjectionTemplateId(planPayload.templateId)).toEqual({ kind: "orthographic", view: "plan" });
+    expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } });
+    const axonometric = byLabel(parallel.items!, "Axonometric")!;
+    const isometric = byLabel(axonometric.items!, "Isometric")!;
+    const isoPayload = JSON.parse(isometric.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
+    expect(decodeWorldProjectionTemplateId(isoPayload.templateId)).toMatchObject({ mode: { kind: "axonometric", variant: "isometric" } });
   });
 });
 
@@ -4383,8 +4381,8 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
   };
 
   it("hydrates Top (1/3) + Perspective (2/3) instances and projection templates", () => {
-    const topTemplate = encodeWorldProjectionTemplateId({ kind: "orthographic", view: "top" });
-    const perspectiveTemplate = encodeWorldProjectionTemplateId({ kind: "threePoint", fov: 50 });
+    const topTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } });
+    const perspectiveTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } });
     const seed = resolveFrameworkLayoutSeed(
       {
         root: {
@@ -4425,8 +4423,8 @@ describe("resolveFrameworkLayoutSeed — multi-pane default layouts", () => {
   });
 
   it("treats instance-id panes as extras so the host fetches bodies keyed by instance id, not only by kind", () => {
-    const topTemplate = encodeWorldProjectionTemplateId({ kind: "orthographic", view: "top" });
-    const perspectiveTemplate = encodeWorldProjectionTemplateId({ kind: "threePoint", fov: 50 });
+    const topTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } });
+    const perspectiveTemplate = encodeWorldProjectionTemplateId({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } });
     const seed = resolveFrameworkLayoutSeed(
       {
         root: {

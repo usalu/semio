@@ -1,0 +1,75 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (67 tests | 2 failed) 24ms
+     × keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle 7ms
+     × is the identity mapping at strength 0 (rectilinear passthrough) 0ms
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (67 tests | 2 failed) 24ms
+     × keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle 7ms
+     × is the identity mapping at strength 0 (rectilinear passthrough) 0ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 4 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle
+AssertionError: expected +0 to be close to 0.49999999999999994, received difference is 0.49999999999999994, but expected 0.000005
+ ❯ index.tsx:4175:31
+
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/4]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldCurvilinearUnproject > is the identity mapping at strength 0 (rectilinear passthrough)
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldCurvilinearUnproject > is the identity mapping at strength 0 (rectilinear passthrough)
+AssertionError: expected NaN to be close to 0.3, received difference is NaN, but expected 0.000005
+ ❯ index.tsx:4217:17
+    4215|       const spec = { mode: { kind: "curvilinear", fov: 120, strength: …
+    4216|       const [x, y] = worldCurvilinearUnproject([0.3, 0.2], spec);
+    4217|       expect(x).toBeCloseTo(0.3, 5);
+       |                 ^
+    4218|       expect(y).toBeCloseTo(0.2, 5);
+    4219|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/4]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  4 failed | 130 passed (134)
+   Start at  08:57:41
+   Duration  5.00s (transform 2.41s, setup 0ms, import 8.31s, tests 49ms, environment 1.20s)
+

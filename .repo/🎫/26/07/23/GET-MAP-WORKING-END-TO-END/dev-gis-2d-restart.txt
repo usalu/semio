@@ -1843,3 +1843,20 @@ warning: `gis-plugin` (lib) generated 9 warnings (run `cargo fix --lib -p gis-pl
 7:45:44 AM [vite] server restarted.
 7:45:49 AM [vite] ../../../../mit-bestand/aggregator/brand.ts changed, restarting server...
 7:45:50 AM [vite] server restarted.
+8:42:07 AM [vite] ../../../core/js/index.ts changed, restarting server...
+8:42:09 AM [vite] server restarted.
+8:42:12 AM [vite] ../../../core/js/index.ts changed, restarting server...
+8:42:13 AM [vite] server restarted.
+error: script "nx" was terminated by signal SIGTERM (Polite quit request)
+error: script "dev:gis:2d" was terminated by signal SIGTERM (Polite quit request)
+Warning: command "bun ./script.ts dev" exited with non-zero status code
+
+
+ NX   Running target dev for project @semio-tech/framework-os-dev failed
+
+Failed tasks:
+
+- @semio-tech/framework-os-dev:dev
+
+Hint: run the command with --verbose for more details.
+

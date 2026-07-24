@@ -1399,6 +1399,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                 step: Some(0.05),
                 ready: None,
                 loading: None,
+                disabled: None,
                 on_change: note_action("setCameraZoom", None),
 
                 waiting: None,}],
@@ -1435,6 +1436,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     ready: None,
                     loading: None,
                     waiting: None,
+                    disabled: None,
                     on_change: note_action("setGridSpacing", None),
                     },
                 WindowMeasure::Slider {
@@ -1447,6 +1449,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     ready: None,
                     loading: None,
                     waiting: None,
+                    disabled: None,
                     on_change: note_action("setGridSubdivisions", None),
                     },
                 WindowMeasure::Slider {
@@ -1459,6 +1462,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     ready: None,
                     loading: None,
                     waiting: None,
+                    disabled: None,
                     on_change: note_action("setGridOpacity", None),
                     },
             ],
@@ -1495,6 +1499,7 @@ fn note_canvas_measures(document: &NoteDocument, labels: &NotePlayLabels) -> Vec
                     ready: None,
                     loading: None,
                     waiting: None,
+                    disabled: None,
                     on_change: note_action("setSnapGridSpacing", None),
                     },
             ],
@@ -1528,6 +1533,7 @@ fn note_pencil_utility_options(document: &NoteDocument, labels: &NotePlayLabels)
             step: Some(1.0),
             ready: None,
             loading: None,
+            disabled: None,
             on_change: note_action("setPencilWidth", None),
 
             waiting: None,}],
@@ -1557,6 +1563,7 @@ fn note_eraser_utility_options(document: &NoteDocument, labels: &NotePlayLabels,
             step: Some(1.0),
             ready: None,
             loading: None,
+            disabled: None,
             on_change: note_action("setEraserRadius", None),
 
             waiting: None,}],
@@ -1575,6 +1582,7 @@ fn note_navigator_measures(document: &NoteDocument, labels: &NotePlayLabels) -> 
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: note_action("setCameraZoom", None),
             },
         WindowMeasure::Toggle {

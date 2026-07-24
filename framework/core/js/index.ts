@@ -46,6 +46,10 @@ import type {
   IntroductionPlacement as GeneratedIntroductionPlacement,
   IntroductionAdvance as GeneratedIntroductionAdvance,
   IntroductionLogo as GeneratedIntroductionLogo,
+  IntroductionPoint as GeneratedIntroductionPoint,
+  IntroductionGesture as GeneratedIntroductionGesture,
+  IntroductionCursor as GeneratedIntroductionCursor,
+  IntroductionDemonstration as GeneratedIntroductionDemonstration,
   DialogDefinition as GeneratedDialogDefinition,
 } from "./generated/manifest.ts";
 // #endregion 🧬GeneratedMirror
@@ -1432,6 +1436,10 @@ export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
 export type IntroductionAdvance = GeneratedIntroductionAdvance;
 export type IntroductionLogo = GeneratedIntroductionLogo;
+export type IntroductionPoint = GeneratedIntroductionPoint;
+export type IntroductionGesture = GeneratedIntroductionGesture;
+export type IntroductionCursor = GeneratedIntroductionCursor;
+export type IntroductionDemonstration = GeneratedIntroductionDemonstration;
 
 /** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type DialogDefinition = GeneratedDialogDefinition;

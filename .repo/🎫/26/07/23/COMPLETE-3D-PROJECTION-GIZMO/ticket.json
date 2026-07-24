@@ -3,7 +3,7 @@
   "emoji": "🧭",
   "status": "closed",
   "description": "Rebuild the ad-hoc corner orbit gizmo into a complete projection navigation control: face/corner/center cube emitting WorldProjectionSpec, plus a family switcher exposing every taxonomy kind, with fixed snap pipeline so all transitions land correctly.",
-  "summary": "Split projection chrome vs gizmo: pane selects mode (kinds + Iso/Di/Tri, Cab/Cav/Mil, Fish/Pan); cube only refines angle within the active mode and no longer switches kind. Removed duplicated ortho views and one-point axes from the mode row. vitest 126 passed.",
+  "summary": "Split WorldProjectionSpec into mode⊗orientation so gizmo and pane conjugate: gizmo sets cardinal/corner/free view only; pane sets Ortho/Axo/Obl/1–3pt/Curvilinear only. Top (and every other view) works with every projection mode. Template tree no longer lists Top/Front. vitest r3f 136 + framework 252 passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2280"
   },
@@ -27,6 +27,9 @@
     "⚪1af1a12b2d7d47898815f75d90c28a7f",
     "⚪8ab199be3c944fbc96c216fc985cf9e6",
     "⚪2471a1dd62184568b591d4d792620c5c",
-    "⚪5439eb56d3884badab5dfe3bba4826fa"
+    "⚪5439eb56d3884badab5dfe3bba4826fa",
+    "⚪87e2d4fb9eb7442e8d2fd673f6c772c1",
+    "⚪d2a6c0c4596b49b996696276c78ed82a",
+    "⚪75650e0d1edc4817997f49a0d40a14a0"
   ]
 }

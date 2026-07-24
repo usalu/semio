@@ -2039,8 +2039,10 @@ mod tests {
         let weight_ms = weight_start.elapsed().as_secs_f64() * 1000.0;
         println!("[DEBUG] update_kind_weights: {weight_ms:.3}ms queue_before={queue_before} queue_after={}", engine.queue.len());
         assert!(weight_ms < 50.0, "weight update took {weight_ms}ms");
-        assert!(engine.queue.len() >= queue_before, "weight update must not wipe the queue");
-        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 5, "applied fill objects must survive weight edits");
+        let fill = engine.fill.as_ref().expect("fill");
+        let fill_steps = engine.queue.iter().filter(|task| matches!(task, PrecomputeTask::FillStep)).count();
+        assert_eq!(fill_steps, fill.max_count - fill.applied_count, "weight update must soft-replan the tail without a full queue wipe");
+        assert_eq!(fill.applied_count, 5, "applied fill objects must survive weight edits");
     }
 
     #[test]

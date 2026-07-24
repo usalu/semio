@@ -1,0 +1,585 @@
+$ bun ./script.ts nx run @semio-tech/framework-core:generate
+
+> nx run @semio-tech/framework-core:generate
+
+> bun ./script.ts generate
+
+    Blocking waiting for file lock on build directory
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none", alias = "activeId")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Vec::is_empty")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none", alias = "expanded")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(default, skip_serializing_if = "UiPresence::is_default")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+warning: failed to parse serde attribute
+  | 
+  | #[serde(skip_serializing_if = "Option::is_none")]
+  | 
+  = note: ts-rs failed to parse this attribute. It will be ignored.
+error[E0277]: the trait bound `StyleSpec: TS` is not satisfied
+    --> ui/wgpu/rs/lib.rs:1557:23
+     |
+1557 |     pub style: Option<StyleSpec>,
+     |                       ^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `TS` is not implemented for `StyleSpec`
+    --> ui/wgpu/rs/lib.rs:27:1
+     |
+  27 | pub struct StyleSpec {
+     | ^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `TS`:
+               &T
+               ()
+               (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+               (T10,)
+               (T2, T3, T4, T5, T6, T7, T8, T9, T10)
+               (T3, T4, T5, T6, T7, T8, T9, T10)
+               (T4, T5, T6, T7, T8, T9, T10)
+               (T5, T6, T7, T8, T9, T10)
+             and 109 others
+
+error[E0277]: the trait bound `StyleSpec: TS` is not satisfied
+    --> ui/wgpu/rs/lib.rs:1557:23
+     |
+1546 | #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+     |                                        --------- required by a bound introduced by this call
+...
+1557 |     pub style: Option<StyleSpec>,
+     |                       ^^^^^^^^^ unsatisfied trait bound
+     |
+help: the trait `TS` is not implemented for `StyleSpec`
+    --> ui/wgpu/rs/lib.rs:27:1
+     |
+  27 | pub struct StyleSpec {
+     | ^^^^^^^^^^^^^^^^^^^^
+     = help: the following other types implement trait `TS`:
+               &T
+               ()
+               (T1, T2, T3, T4, T5, T6, T7, T8, T9, T10)
+               (T10,)
+               (T2, T3, T4, T5, T6, T7, T8, T9, T10)
+               (T3, T4, T5, T6, T7, T8, T9, T10)
+               (T4, T5, T6, T7, T8, T9, T10)
+               (T5, T6, T7, T8, T9, T10)
+             and 109 others
+note: required by a bound in `visit`
+    --> /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/ts-rs-10.1.0/src/lib.rs:591:17
+     |
+ 591 |     fn visit<T: TS + 'static + ?Sized>(&mut self);
+     |                 ^^ required by this bound in `TypeVisitor::visit`
+
+For more information about this error, try `rustc --explain E0277`.
+error: could not compile `ui_wgpu` (lib) due to 3 previous errors
+framework-core typegen: `cargo test --features typegen` failed — see output above.
+Warning: command "bun ./script.ts generate" exited with non-zero status code
+
+
+ NX   Running target generate for project @semio-tech/framework-core failed
+
+Failed tasks:
+
+- @semio-tech/framework-core:generate
+
+Hint: run the command with --verbose for more details.
+
+1073 |  * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1074 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1075 |  */
+1076 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1077 |   const status = runCmdInternal(cmd, args, opts);
+1078 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-core:generate exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1078:31)
+      at run (/Users/ueli/Documents/semio/script.ts:507:5)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:1841:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1

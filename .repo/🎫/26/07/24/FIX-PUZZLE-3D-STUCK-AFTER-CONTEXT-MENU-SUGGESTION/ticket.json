@@ -1,8 +1,9 @@
 {
   "title": "Fix Puzzle 3D Stuck After Context Menu Suggestion",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "puzzle 3d: sometimes after clicking on a suggestion over context menu the 3d is kind of stuck (the vortex remains selected, the hover stays, but somehow the group selection still works. but when trying to open a context menu for a new vortex nothing happens. clicking on background also doesnt do anything)",
+  "summary": "Fixed Puzzle 3D getting stuck after context-menu suggestion clicks.\n\nRoot cause: acceptSuggestion only cleared suggestionMenu.open on full placement success, so a failed place left every split pane’s regular context menu gated shut (sibling pane had no dismiss UI). Hover/selection also stayed sticky; right-click could arm connect-drag without host pointer-up; stale wasMarqueeDragRef could no-op the next background click.\n\nFixes: always dismiss suggestion menu (+ clear hover) on accept; clear selection after successful one-shot place; clear hover on close; scope context-menu suppression to owning windowId; sibling-pane dismiss listeners; empty-click closes suggestions and consumes marquee suppress flag; cancel connect-arm on open/accept/close; primary-button-only vortex pointerDown. Also unblocked compile with IntroductionAdvance::Tool validation arm.\n\nVerified: cargo accept_suggestion_ (3 ok), close_vortex_suggestions (2 ok), vitest worldSuggestionMenuOwnsWindow (1 ok).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2304"
   },

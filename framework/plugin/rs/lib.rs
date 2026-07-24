@@ -4795,6 +4795,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: action("setSunAzimuth", None),
             },
             WindowMeasure::Slider {
@@ -4807,6 +4808,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: action("setSunElevation", None),
             },
             WindowMeasure::Slider {
@@ -4819,6 +4821,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: action("setSunIntensity", None),
             },
         ],
@@ -4902,24 +4905,40 @@ impl Default for WorldProjectionConfig {
     }
 }
 
-/** 📐 Serializes only the active kind's fields — the `WorldProjectionSpec` shape the JS world layer parses. */
+/** 📐 Serializes mode ⊗ orientation — the `WorldProjectionSpec` shape the JS world layer parses. */
 pub fn world3d_projection_spec_json(p: &WorldProjectionConfig) -> Value {
-    match p.kind.as_str() {
-        "orthographic" => json!({ "kind": "orthographic", "view": p.orthographic_view }),
+    let mode = match p.kind.as_str() {
+        "orthographic" => json!({ "kind": "orthographic" }),
         "axonometric" => {
             let (angle_a, angle_b) = match p.axonometric_variant.as_str() {
                 "isometric" => (30.0, 30.0),
                 "dimetric" => (p.axonometric_angle_a, p.axonometric_angle_a),
                 _ => (p.axonometric_angle_a, p.axonometric_angle_b),
             };
-            json!({ "kind": "axonometric", "variant": p.axonometric_variant, "angleA": angle_a, "angleB": angle_b, "quadrant": p.axonometric_quadrant })
+            json!({ "kind": "axonometric", "variant": p.axonometric_variant, "angleA": angle_a, "angleB": angle_b })
         }
         "oblique" => json!({ "kind": "oblique", "variant": p.oblique_variant, "angle": p.oblique_angle, "depthScale": p.oblique_depth }),
-        "onePoint" => json!({ "kind": "onePoint", "axis": p.one_point_axis, "fov": p.fov }),
+        "onePoint" => json!({ "kind": "onePoint", "fov": p.fov }),
         "twoPoint" => json!({ "kind": "twoPoint", "fov": p.fov, "verticalShift": p.two_point_shift }),
         "curvilinear" => json!({ "kind": "curvilinear", "fov": p.curvilinear_fov, "strength": p.curvilinear_strength, "mapping": p.curvilinear_mapping }),
         _ => json!({ "kind": "threePoint", "fov": p.fov }),
-    }
+    };
+    let orientation = match p.kind.as_str() {
+        "axonometric" => json!({ "type": "corner", "quadrant": p.axonometric_quadrant, "hemisphere": "upper" }),
+        "twoPoint" | "threePoint" | "curvilinear" => json!({ "type": "free" }),
+        "onePoint" => {
+            let view = match p.one_point_axis.as_str() {
+                "x" => "left",
+                "z" => "top",
+                _ => "front",
+            };
+            json!({ "type": "cardinal", "view": view })
+        }
+        "oblique" if p.oblique_variant == "military" => json!({ "type": "cardinal", "view": "plan" }),
+        "oblique" => json!({ "type": "cardinal", "view": "front" }),
+        _ => json!({ "type": "cardinal", "view": p.orthographic_view }),
+    };
+    json!({ "mode": mode, "orientation": orientation })
 }
 
 /** 📐 `camera_json` with `position`/`target`/`up`/`zoom` plus the active-kind `projection` spec object — replaces the plain `world3d_camera_json` for worlds that carry the full taxonomy. */
@@ -5007,6 +5026,7 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
         ready: None,
         loading: None,
         waiting: None,
+        disabled: None,
         on_change: action("setProjectionParam", Some(json!({ "param": param }))),
     };
 

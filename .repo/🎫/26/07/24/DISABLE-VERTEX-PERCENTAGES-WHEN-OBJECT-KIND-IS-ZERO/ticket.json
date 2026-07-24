@@ -1,0 +1,13 @@
+{
+  "title": "Disable Vertex Percentages When Object Kind Is Zero",
+  "emoji": "🚫",
+  "status": "open",
+  "description": "In puzzle 3D fill options: when an object kind percentage is set to 0, all vertex percentages for that kind must be disabled because anything times 0 is 0. Vertex percentage controls should be visually and interactively disabled while the object kind weight is 0.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2307"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9060401c4e6c438d8ad5b579774ed4a1"
+  ]
+}

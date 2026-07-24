@@ -1,0 +1,519 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (67 tests | 24 failed) 27ms
+     × maps faces to orthographic views, corners to axonometric quadrants, center to perspective 9ms
+     × preserves axonometric variant when snapping corners 1ms
+     × round-trips orthographic and isometric orbit views 1ms
+     × emits defaults for every projection kind 0ms
+     × preserves perspective fov when switching kinds 0ms
+     × returns Orthographic to Plan when re-selecting the kind from a Plan child view 0ms
+     × selects the same leaf ids the display template tree uses 0ms
+     × preserves gizmo-owned angles when applying a same-family template node 0ms
+     × mirrors createWorldProjectionTemplates labels and ids in the switch tree 0ms
+     × lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon 0ms
+     × treats orthographic/axonometric/oblique as parallel and everything else as perspective 0ms
+     × maps planar orthographic views to drafting planes and leaves 3D projections unconstrained 0ms
+     × places plan/top directly above the target with orthographic projection 0ms
+     × accepts an explicit orthographic zoom including values below the legacy default 0ms
+     × preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom 0ms
+     × derives the classic 35.264/45 isometric direction from the 30/30 axis angles 0ms
+     × mirrors quadrant sign flips for axonometric corners 0ms
+     × places lower-hemisphere axonometric corners below the target 0ms
+     × keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle 0ms
+     × reports perspective projection for the perspective family 0ms
+     × centers top orthographic on reference bounds and fits width in the viewport 0ms
+     × locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest 0ms
+     × emits exactly the requested Parallel/Perspective taxonomy tree 0ms
+     × matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from 1ms
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.tsx
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/infinite-world-r3f| index.tsx (67 tests | 24 failed) 27ms
+     × maps faces to orthographic views, corners to axonometric quadrants, center to perspective 9ms
+     × preserves axonometric variant when snapping corners 1ms
+     × round-trips orthographic and isometric orbit views 0ms
+     × emits defaults for every projection kind 0ms
+     × preserves perspective fov when switching kinds 0ms
+     × returns Orthographic to Plan when re-selecting the kind from a Plan child view 0ms
+     × selects the same leaf ids the display template tree uses 0ms
+     × preserves gizmo-owned angles when applying a same-family template node 0ms
+     × mirrors createWorldProjectionTemplates labels and ids in the switch tree 0ms
+     × lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon 0ms
+     × treats orthographic/axonometric/oblique as parallel and everything else as perspective 0ms
+     × maps planar orthographic views to drafting planes and leaves 3D projections unconstrained 0ms
+     × places plan/top directly above the target with orthographic projection 0ms
+     × accepts an explicit orthographic zoom including values below the legacy default 0ms
+     × preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom 0ms
+     × derives the classic 35.264/45 isometric direction from the 30/30 axis angles 0ms
+     × mirrors quadrant sign flips for axonometric corners 0ms
+     × places lower-hemisphere axonometric corners below the target 0ms
+     × keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle 0ms
+     × reports perspective projection for the perspective family 0ms
+     × centers top orthographic on reference bounds and fits width in the viewport 0ms
+     × locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest 0ms
+     × emits exactly the requested Parallel/Perspective taxonomy tree 0ms
+     × matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from 1ms
+
+⎯⎯⎯⎯⎯⎯ Failed Tests 48 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > resolveProjectionGizmoSpec > maps faces to orthographic views, corners to axonometric quadrants, center to perspective
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > resolveProjectionGizmoSpec > maps faces to orthographic views, corners to axonometric quadrants, center to perspective
+AssertionError: expected { mode: undefined, …(1) } to deeply equal { kind: 'orthographic', view: 'top' }
+
+- Expected
++ Received
+
+  {
+-   "kind": "orthographic",
++   "mode": undefined,
++   "orientation": {
++     "type": "cardinal",
+      "view": "top",
++   },
+  }
+
+ ❯ index.tsx:3908:113
+    3906|   describe("resolveProjectionGizmoSpec", () => {
+    3907|     it("maps faces to orthographic views, corners to axonometric quadr…
+    3908|       expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sig…
+       |                                                                                                                 ^
+    3909|       expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sig…
+    3910|         kind: "orthographic",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > resolveProjectionGizmoSpec > preserves axonometric variant when snapping corners
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > resolveProjectionGizmoSpec > preserves axonometric variant when snapping corners
+AssertionError: expected { mode: undefined, …(1) } to deeply equal { kind: 'axonometric', …(5) }
+
+- Expected
++ Received
+
+  {
+-   "angleA": 15,
+-   "angleB": 15,
++   "mode": undefined,
++   "orientation": {
+      "hemisphere": "lower",
+-   "kind": "axonometric",
+      "quadrant": "sw",
+-   "variant": "dimetric",
++     "type": "corner",
++   },
+  }
+
+ ❯ index.tsx:3927:109
+    3925|     it("preserves axonometric variant when snapping corners", () => {
+    3926|       const dimetric = { kind: "axonometric" as const, variant: "dimet…
+    3927|       expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "s…
+       |                                                                                                             ^
+    3928|     });
+    3929|   });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView > round-trips orthographic and isometric orbit views
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView > round-trips orthographic and isometric orbit views
+AssertionError: expected { Object (mode, orientation) } to deeply equal { kind: 'orthographic', view: 'front' }
+
+- Expected
++ Received
+
+  {
++   "mode": {
+      "kind": "orthographic",
++   },
++   "orientation": {
++     "type": "cardinal",
+      "view": "front",
++   },
+  }
+
+ ❯ index.tsx:3933:55
+    3931|   describe("orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbi…
+    3932|     it("round-trips orthographic and isometric orbit views", () => {
+    3933|       expect(orbitViewToWorldProjectionSpec("front")).toEqual({ kind: …
+       |                                                       ^
+    3934|       expect(orbitViewToWorldProjectionSpec("isometricNw")).toEqual({ …
+    3935|       expect(worldProjectionSpecToOrbitView({ kind: "orthographic", vi…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > emits defaults for every projection kind
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > emits defaults for every projection kind
+AssertionError: expected undefined to be 'orthographic' // Object.is equality
+
+- Expected:
+"orthographic"
+
++ Received:
+undefined
+
+ ❯ index.tsx:3943:58
+    3941|     it("emits defaults for every projection kind", () => {
+    3942|       for (const kind of WORLD_PROJECTION_KINDS) {
+    3943|         expect(worldProjectionKindSwitchSpec(kind).kind).toBe(kind);
+       |                                                          ^
+    3944|       }
+    3945|       expect(worldProjectionKindSwitchSpec("orthographic")).toEqual({ …
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[4/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > preserves perspective fov when switching kinds
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > preserves perspective fov when switching kinds
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionModeFov index.tsx:2042:15
+    2040| export function worldProjectionModeFov(spec: WorldProjectionSpec): num…
+    2041|   const mode = spec.mode;
+    2042|   return mode.kind === "onePoint" || mode.kind === "twoPoint" || mode.…
+       |               ^
+    2043| }
+    2044|
+ ❯ worldProjectionKindSwitchSpec index.tsx:2423:17
+ ❯ index.tsx:3949:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > returns Orthographic to Plan when re-selecting the kind from a Plan child view
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionKindSwitchSpec > returns Orthographic to Plan when re-selecting the kind from a Plan child view
+AssertionError: expected { Object (mode, orientation) } to deeply equal { kind: 'orthographic', view: 'plan' }
+
+- Expected
++ Received
+
+  {
++   "mode": {
+      "kind": "orthographic",
++   },
++   "orientation": {
++     "type": "cardinal",
+      "view": "plan",
++   },
+  }
+
+ ❯ index.tsx:3953:102
+    3951|
+    3952|     it("returns Orthographic to Plan when re-selecting the kind from a…
+    3953|       expect(worldProjectionKindSwitchSpec("orthographic", { kind: "or…
+       |                                                                                                      ^
+    3954|       expect(worldProjectionKindSwitchSpec("orthographic", { kind: "or…
+    3955|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > selects the same leaf ids the display template tree uses
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > selects the same leaf ids the display template tree uses
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionTemplateSelectionId index.tsx:1666:21
+    1664| /** @emoji 🌲 Template-tree node id for the active *mode* (orientation…
+    1665| export function worldProjectionTemplateSelectionId(spec: WorldProjecti…
+    1666|   switch (spec.mode.kind) {
+       |                     ^
+    1667|     case "orthographic":
+    1668|       return "orthographic";
+ ❯ index.tsx:3960:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > preserves gizmo-owned angles when applying a same-family template node
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > preserves gizmo-owned angles when applying a same-family template node
+AssertionError: expected { mode: undefined, …(1) } to deeply equal { kind: 'axonometric', …(5) }
+
+- Expected
++ Received
+
+  {
+-   "angleA": 15,
+-   "angleB": 15,
+-   "hemisphere": "lower",
+-   "kind": "axonometric",
+-   "quadrant": "nw",
+-   "variant": "dimetric",
++   "mode": undefined,
++   "orientation": undefined,
+  }
+
+ ❯ index.tsx:3969:139
+    3967|     it("preserves gizmo-owned angles when applying a same-family templ…
+    3968|       const axo = { kind: "axonometric" as const, variant: "isometric"…
+    3969|       expect(worldProjectionTemplateApplySpec({ kind: "axonometric", v…
+       |                                                                                                                                           ^
+    3970|         kind: "axonometric",
+    3971|         variant: "dimetric",
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > mirrors createWorldProjectionTemplates labels and ids in the switch tree
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems > mirrors createWorldProjectionTemplates labels and ids in the switch tree
+TypeError: Cannot read properties of undefined (reading '0')
+ ❯ index.tsx:3985:35
+    3983|       expect(items.map((row) => row.id)).toEqual(["parallel", "perspec…
+    3984|       expect(items[0]!.items!.map((row) => row.label)).toEqual(["Ortho…
+    3985|       expect(items[0]!.items![0]!.items![0]!.items!.map((row) => row.l…
+       |                                   ^
+    3986|       expect(items[1]!.items!.map((row) => row.label)).toEqual(["1-Poi…
+    3987|     });
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[9/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionModeOptions > lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionModeOptions > lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionModeOptions index.tsx:1625:21
+    1623|  * Prefer {@link createWorldProjectionTemplates} / {@link WorldProject…
+    1624| export function worldProjectionModeOptions(spec: WorldProjectionSpec):…
+    1625|   switch (spec.mode.kind) {
+       |                     ^
+    1626|     case "axonometric": {
+    1627|       const variants: readonly { readonly variant: WorldAxonometricVar…
+ ❯ index.tsx:3992:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[10/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionFamily > treats orthographic/axonometric/oblique as parallel and everything else as perspective
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionFamily > treats orthographic/axonometric/oblique as parallel and everything else as perspective
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ index.tsx:4074:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[11/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionGumballPlane > maps planar orthographic views to drafting planes and leaves 3D projections unconstrained
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionGumballPlane > maps planar orthographic views to drafting planes and leaves 3D projections unconstrained
+TypeError: Cannot read properties of undefined (reading 'type')
+ ❯ worldProjectionGumballPlane index.tsx:2268:33
+    2266| /** @emoji 🎛 Drafting plane from cardinal orientation — `undefined` f…
+    2267| export function worldProjectionGumballPlane(spec: WorldProjectionSpec …
+    2268|   if (!spec || spec.orientation.type !== "cardinal") return undefined;
+       |                                 ^
+    2269|   switch (spec.orientation.view) {
+    2270|     case "front":
+ ❯ index.tsx:4085:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[12/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > places plan/top directly above the target with orthographic projection
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > places plan/top directly above the target with orthographic projection
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4114:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[13/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > accepts an explicit orthographic zoom including values below the legacy default
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > accepts an explicit orthographic zoom including values below the legacy default
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4121:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[14/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ worldProjectionSnapZoom index.tsx:1163:18
+ ❯ index.tsx:4126:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[15/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > derives the classic 35.264/45 isometric direction from the 30/30 axis angles
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > derives the classic 35.264/45 isometric direction from the 30/30 axis angles
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4133:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[16/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > mirrors quadrant sign flips for axonometric corners
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > mirrors quadrant sign flips for axonometric corners
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4140:18
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[17/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > places lower-hemisphere axonometric corners below the target
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > places lower-hemisphere axonometric corners below the target
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4147:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[18/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4156:24
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[19/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > reports perspective projection for the perspective family
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > computeWorldProjectionPose > reports perspective projection for the perspective family
+TypeError: Cannot read properties of undefined (reading 'kind')
+ ❯ worldProjectionFamily index.tsx:2050:26
+    2048|     return "perspective";
+    2049|   }
+    2050|   const kind = spec.mode.kind;
+       |                          ^
+    2051|   return kind === "orthographic" || kind === "axonometric" || kind ===…
+    2052| }
+ ❯ computeWorldProjectionPose index.tsx:2239:18
+ ❯ index.tsx:4164:26
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[20/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > frameWorldProjectionPose > centers top orthographic on reference bounds and fits width in the viewport
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > frameWorldProjectionPose > centers top orthographic on reference bounds and fits width in the viewport
+TypeError: Cannot read properties of undefined (reading 'type')
+ ❯ worldProjectionViewHalfExtent index.tsx:2189:24
+    2187| export function worldProjectionViewHalfExtent(spec: WorldProjectionSpe…
+    2188|   const [hx, hy, hz] = bounds.halfExtent;
+    2189|   if (spec.orientation.type === "cardinal") {
+       |                        ^
+    2190|     switch (spec.orientation.view) {
+    2191|       case "front":
+ ❯ frameWorldProjectionPose index.tsx:2224:37
+ ❯ index.tsx:4174:21
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[21/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionOrbitConstraints > locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionOrbitConstraints > locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest
+TypeError: Cannot read properties of undefined (reading 'type')
+ ❯ worldProjectionOrbitConstraints index.tsx:2257:24
+    2255|     return { rotate: true };
+    2256|   }
+    2257|   if (spec.orientation.type === "cardinal" && (spec.mode.kind === "ort…
+       |                        ^
+    2258|     return { rotate: false };
+    2259|   }
+ ❯ index.tsx:4187:14
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[22/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > createWorldProjectionTemplates > emits exactly the requested Parallel/Perspective taxonomy tree
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > createWorldProjectionTemplates > emits exactly the requested Parallel/Perspective taxonomy tree
+TypeError: Cannot read properties of undefined (reading 'map')
+ ❯ index.tsx:4227:48
+    4225|       const [parallel, perspective] = templates;
+    4226|       expect(parallel!.children!.map((row) => row.id)).toEqual(["ortho…
+    4227|       expect(parallel!.children![0]!.children!.map((row) => row.label)…
+       |                                                ^
+    4228|       expect(parallel!.children![0]!.children![0]!.children!.map((row)…
+    4229|       expect(parallel!.children![1]!.children!.map((row) => row.label)…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[23/48]⎯
+
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionSpecLabel > matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from
+ FAIL  |@semio-tech/infinite-world-r3f| index.tsx > worldProjectionSpecLabel > matches the exact labels createWorldProjectionTemplates uses for every leaf, so a dragged pane's title matches the tree entry it came from
+AssertionError: expected 'Plan · Orthographic' to be 'Orthographic' // Object.is equality
+
+Expected: "Orthographic"
+Received: "Plan · Orthographic"
+
+ ❯ index.tsx:4257:48
+    4255|         nodes.flatMap((node) => (node.children?.length ? collectLeafLa…
+    4256|       for (const [label, spec] of collectLeafLabels(templates)) {
+    4257|         expect(worldProjectionSpecLabel(spec)).toBe(label);
+       |                                                ^
+    4258|       }
+    4259|       expect(worldProjectionSpecLabel({ kind: "orthographic", view: "p…
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[24/48]⎯
+
+
+ Test Files  2 failed (2)
+      Tests  48 failed | 86 passed (134)
+   Start at  08:53:00
+   Duration  4.77s (transform 2.63s, setup 0ms, import 8.19s, tests 54ms, environment 858ms)
+

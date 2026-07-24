@@ -1337,6 +1337,7 @@ impl DocumentApp for WriterPlayApp {
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "fontPx" }))),
                 },
             WindowMeasure::Slider {
@@ -1349,6 +1350,7 @@ impl DocumentApp for WriterPlayApp {
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "lineHeight" }))),
                 },
             WindowMeasure::Slider {
@@ -1361,6 +1363,7 @@ impl DocumentApp for WriterPlayApp {
                 ready: None,
                 loading: None,
                 waiting: None,
+                disabled: None,
                 on_change: play_action(WRITER_PLAY_CONTROLLER_ID, "setEditorSetting", Some(json!({ "field": "tabSize" }))),
                 },
             WindowMeasure::Toggle {

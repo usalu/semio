@@ -21,3 +21,14 @@ cd ui/js/react && bun ./script.ts test slider
 - Weight update: < 50ms native (no full queue rebuild)
 - Fill count apply at n=10: < 5ms native
 - Queue length after weight edit >= queue length before (no wipe)
+
+## Results (2026-07-24)
+
+```
+[DEBUG] apply_fill_count(5): 0.006ms
+[DEBUG] update_kind_weights: 0.042ms queue_before=1000 queue_after=995
+```
+
+- `cargo test -p puzzle_3d kind_weights` — passed
+- `cargo test -p puzzle_3d fill_options` — passed
+- `puzzle-plugin` tests blocked by pre-existing `semio-framework-plugin` compile error (`IntroductionAdvance::Tool` match)

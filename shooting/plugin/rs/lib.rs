@@ -773,6 +773,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: shooting_action("setSunAzimuth", None),
             },
         WindowMeasure::Slider {
@@ -785,6 +786,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: shooting_action("setSunElevation", None),
             },
         WindowMeasure::Slider {
@@ -797,6 +799,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: shooting_action("setSunIntensity", None),
             },
         WindowMeasure::Slider {
@@ -809,6 +812,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: shooting_action("setAmbientIntensity", None),
             },
         WindowMeasure::Toggle {
@@ -829,6 +833,7 @@ fn shooting_model_measures(fixture: &ShootingFixture, labels: &ShootingLabels) -
             ready: None,
             loading: None,
             waiting: None,
+            disabled: None,
             on_change: shooting_action("setMaterialRoughness", None),
             },
     ]

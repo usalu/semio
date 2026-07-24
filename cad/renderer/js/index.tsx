@@ -4722,7 +4722,7 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
 /** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-middle with fold chrome; falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-middle");
-  const [folded, setFolded] = reactHostPort.useState(false);
+  const [folded, setFolded] = reactHostPort.useState(true);
   const pane = (
     <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label="Projection">
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
@@ -4836,7 +4836,7 @@ export function InteractionRepl({
   rtRef.current = rt;
   const [gumballPreviewDiff, setGumballPreviewDiff] = reactHostPort.useState<ModelDiff | null>(null);
   const [projectionSpec, setProjectionSpec] = reactHostPort.useState<WorldProjectionSpec>(
-    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { kind: "orthographic", view: "plan" } : { kind: "threePoint", fov: 50 }),
+    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } } : { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }),
   );
   reactHostPort.useEffect(() => {
     if (spatialViewOverrides?.projectionSpec) {

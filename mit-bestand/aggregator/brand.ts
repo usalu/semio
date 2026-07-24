@@ -86,6 +86,13 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "right",
         advance: { kind: "action", id: "addObjectKind" },
         logos: [],
+        demonstration: {
+          gesture: {
+            kind: "drag",
+            from: { kind: "element", id: panelTabFirstDraggableElementId(FRAMEWORK_PANEL_TAB_CATALOGUE_ID) },
+            to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.55 },
+          },
+        },
       },
       {
         id: "transform-utility",
@@ -96,6 +103,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "utility", id: "transform" },
         logos: [],
+        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "transform" } } },
       },
       {
         id: "verbindungspunkte",
@@ -106,6 +114,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "action", id: "setVortexShow" },
         logos: [],
+        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "puzzle3d-play-vortex-show" } } },
       },
       {
         id: "suggest-objects",
@@ -116,6 +125,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "action", id: "openVortexSuggestions" },
         logos: [],
+        demonstration: { gesture: { kind: "rightClick", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 } } },
       },
       {
         id: "fill-tool",
@@ -126,6 +136,7 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         placement: "auto",
         advance: { kind: "tool", id: "fill" },
         logos: [],
+        demonstration: { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
       },
       {
         id: "fill-distribution",

@@ -245,6 +245,8 @@ import {
   type DragEndEvent,
   type UiRibbonParentCategory,
   Spinner,
+  registerIntroductionSceneProjector,
+  ndcToViewportPoint,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
 import {
@@ -385,6 +387,7 @@ import {
   SHELL_TERMINOLOGIES,
   type ShellLocale,
   type ShellTerminology,
+  windowElementId,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-cavas-react-renderer";
@@ -440,6 +443,8 @@ import {
   worldProjectionFamily,
   worldProjectionGumballPlane,
   worldProjectionOrbitConstraints,
+  worldProjectionModeFov,
+  worldProjectionDefaults,
   orbitCameraDistance,
   createWorldProjectionTemplates,
   decodeWorldProjectionTemplateId,
@@ -458,6 +463,7 @@ import {
   type WorldVolumeRelocatePayload,
   type OrbitCameraProjection,
   type WorldCameraState,
+  cadVec3ToThree,
 } from "@semio-tech/infinite-world-r3f";
 import { clearColorResolveCache, resolveColorHex, semanticVar, themeColorVar, tokenVar, syncSessionCanvasTheme, resolveSemanticColorHex, currentStylingAppearanceName, STYLING_BOARD_PALETTES, STYLING_METRICS, STYLING_STROKES } from "@semio-tech/ui-styling";
 
@@ -3208,6 +3214,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
     [measure.onChange, onAction],
   );
   const formatDisplayValue = windowMeasureUsesProbabilityReadout(measure) ? windowMeasureProbabilityReadout : undefined;
+  const disabled = measure.disabled === true;
 
   return (
     <Slider
@@ -3219,8 +3226,12 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       loading={measure.loading === true}
       waiting={measure.waiting === true}
       step={measure.step}
+      disabled={disabled}
       formatDisplayValue={formatDisplayValue}
-      onValueChange={(values) => dispatchValue(values[0] ?? measure.value)}
+      onValueChange={(values) => {
+        if (disabled) return;
+        dispatchValue(values[0] ?? measure.value);
+      }}
     />
   );
 }
@@ -6615,8 +6626,10 @@ export function FrameworkOsShell({
       onPathMemoryChange: (value: Readonly<Record<string, string>>) => dispatch({ type: "SET_PANEL_PATH_MEMORY", value }),
       treeOpenStates,
       onTreeOpenStateChange: (id: string, open: boolean) => dispatch({ type: "SET_TREE_OPEN_STATE", id, open }),
+      // ♻️ Lazy tool/command trees read measures + active tool from refs — revision forces re-resolve.
+      treeContentRevision: { activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey },
     };
-  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId]);
+  }, [mobilePanelVisible, mobilePanelPath, mobilePanelTabs, onAction, panelPathMemory, session, studioMode, treeOpenStates, hostAppId, activeToolId, toolMeasuresByToolId, actionPaneStagedArgsByKey]);
 
   useEffect(() => {
     if (exampleOptions.length === 0) return;
@@ -10235,13 +10248,13 @@ export function semanticColorsFromPalette(palette: MeshStylePalette): SemanticCo
 
 type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
 
-/** 📐 A `camera_json.projection` field is either the legacy binary string or the full taxonomy spec object. */
+/** 📐 A `camera_json.projection` field is the composed mode ⊗ orientation taxonomy object. */
 function parseWorldProjectionField(value: unknown): WorldProjectionSpec | undefined {
   if (!value || typeof value !== "object") {
     return undefined;
   }
-  const kind = (value as { kind?: unknown }).kind;
-  if (typeof kind !== "string") {
+  const mode = (value as { mode?: { kind?: unknown } }).mode;
+  if (typeof mode?.kind !== "string") {
     return undefined;
   }
   return value as WorldProjectionSpec;
@@ -10262,7 +10275,7 @@ function parseCameraState(cameraJson: string): WorldParsedCameraState {
       zoom: typeof parsed.zoom === "number" ? parsed.zoom : 1,
       projection: projectionFamily ? (projectionFamily === "parallel" ? "orthographic" : "perspective") : parsed.projection === "orthographic" ? "orthographic" : "perspective",
       projectionSpec,
-      fov: parsed.fov ?? (projectionSpec && "fov" in projectionSpec ? projectionSpec.fov : 45),
+      fov: parsed.fov ?? (projectionSpec ? worldProjectionModeFov(projectionSpec) : undefined) ?? 45,
       explicitProjection,
     };
   } catch {
@@ -12532,6 +12545,29 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
   return null;
 }
 
+/** @emoji 🧊 Registers this window's live camera as the introduction demonstration engine's projector
+ * for `IntroductionPoint.Scene` points targeting `windowElementId(windowInstanceId)` — the same element
+ * id `windowElementId(kind.id)` builds for authoring (see `mit-bestand/aggregator/brand.ts`). Only the
+ * base (non-split) window instance registers under its exact kind id this way, since `windowInstanceId`
+ * equals `kind.id` verbatim for it; a split/spawned extra instance registers under its own instance id
+ * instead (last-write-wins if multiple instances of a kind are open — acceptable for a single
+ * demonstration target, not a general multi-instance broadcast). */
+function IntroductionSceneProjectorBridge({ windowInstanceId }: { readonly windowInstanceId: string }) {
+  const camera = useThree((state) => state.camera);
+  const gl = useThree((state) => state.gl);
+  useEffect(() => {
+    const windowId = windowElementId(windowInstanceId);
+    return registerIntroductionSceneProjector(windowId, (position) => {
+      const projected = new Vector3(...cadVec3ToThree(position)).project(camera);
+      if (projected.z >= 1 || Math.abs(projected.x) > 1.05 || Math.abs(projected.y) > 1.05) return { x: 0, y: 0, visible: false };
+      const rect = gl.domElement.getBoundingClientRect();
+      const { x, y } = ndcToViewportPoint(projected, rect);
+      return { x, y, visible: true };
+    });
+  }, [camera, gl, windowInstanceId]);
+  return null;
+}
+
 /** @emoji 🎯 Widens Line/Points raycast hit area so thin edge/vertex geometry is reliably pickable without stealing face clicks. */
 function RaycasterPickTuning() {
   const raycaster = useThree((state) => state.raycaster);
@@ -12732,7 +12768,7 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
 /** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-middle so it grows upward like other bottom panes and clears the navigation cube. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
   const [anchor, setAnchor] = useState<Anchor>("bottom-middle");
-  const [folded, setFolded] = useState(false);
+  const [folded, setFolded] = useState(true);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
     <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label={projectionLabel}>
@@ -13374,7 +13410,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     setProjectionFramePending(false);
   }, []);
 
-  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? { kind: "orthographic", view: "plan" } : { kind: "threePoint", fov: cameraState.fov });
+  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? worldProjectionDefaults("orthographic") : worldProjectionDefaults("threePoint"));
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -13783,6 +13819,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
+            {windowInstanceId ? <IntroductionSceneProjectorBridge windowInstanceId={windowInstanceId} /> : null}
             {brushMeshUrls.map((url) => (
               <Suspense key={url} fallback={null}>
                 <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />

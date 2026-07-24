@@ -10,6 +10,7 @@ import {
   resolveSceneGizmoViewportPlacement,
   sceneHostPort,
   referenceMediaPort,
+  Tree,
   UnifiedGumball,
   gumballConfigVisible,
   gumballHandleKindToTransformMode,
@@ -19,6 +20,7 @@ import {
   type GumballPose,
   type ReactNode,
   type ThreeEvent,
+  type TreeDataItem,
 } from "@semio-tech/ui-react";
 import { clearColorResolveCache, resolveColorHex, resolveSpatialAxisColors, resolveThreeColor, semanticVar, themeColorVar, tokenHex, tokenVar } from "@semio-tech/ui-styling";
 import React, { Children, isValidElement, type CSSProperties, type MutableRefObject, type ReactElement } from "react";
@@ -1469,7 +1471,7 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
         font="12px Inter var, Arial, sans-serif"
         onHitSelect={(hit) => {
           const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
-          // 🧭 Ignore hits that do not apply to the active mode (pane selects mode; cube only angles).
+          // 🧭 Skip only true no-ops (e.g. center while already on the same perspective kind).
           if (props.projectionSpec && worldProjectionSpecsEqual(spec, props.projectionSpec)) return;
           props.onSpecSelect(spec);
           const view = worldProjectionSpecToOrbitView(spec);
@@ -1610,16 +1612,6 @@ export function WorldOrbitViewControls(props: WorldOrbitViewControlsProps): Reac
 
 export const WORLD_PROJECTION_KINDS: readonly WorldProjectionKind[] = ["orthographic", "axonometric", "oblique", "onePoint", "twoPoint", "threePoint", "curvilinear"];
 
-const WORLD_PROJECTION_KIND_SHORT_LABELS: Record<WorldProjectionKind, string> = {
-  orthographic: "Ortho",
-  axonometric: "Axo",
-  oblique: "Obl",
-  onePoint: "1Pt",
-  twoPoint: "2Pt",
-  threePoint: "3Pt",
-  curvilinear: "Fish",
-};
-
 export interface WorldProjectionModeOption {
   readonly id: string;
   readonly label: string;
@@ -1627,10 +1619,10 @@ export interface WorldProjectionModeOption {
   readonly active: boolean;
 }
 
-/** @emoji 🔀 Kind-specific *mode* leaves for the projection switcher — never spatial angles the gizmo already owns
- * (ortho faces, axo corners, one-point axes). Pane picks mode; cube picks angle. */
+/** @emoji 🔀 Non-spatial mode variants that sit beside the template tree (kept for callers that still want a flat list).
+ * Prefer {@link createWorldProjectionTemplates} / {@link WorldProjectionKindSwitch} for the canonical taxonomy. */
 export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly WorldProjectionModeOption[] {
-  switch (spec.kind) {
+  switch (spec.mode.kind) {
     case "axonometric": {
       const variants: readonly { readonly variant: WorldAxonometricVariant; readonly label: string; readonly angleA: number; readonly angleB: number }[] = [
         { variant: "isometric", label: "Iso", angleA: 30, angleB: 30 },
@@ -1640,8 +1632,8 @@ export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly 
       return variants.map((row) => ({
         id: `axonometric-${row.variant}`,
         label: row.label,
-        spec: { kind: "axonometric", variant: row.variant, angleA: row.angleA, angleB: row.angleB, quadrant: spec.quadrant, hemisphere: spec.hemisphere },
-        active: spec.variant === row.variant,
+        spec: { mode: { kind: "axonometric", variant: row.variant, angleA: row.angleA, angleB: row.angleB }, orientation: spec.orientation },
+        active: spec.mode.variant === row.variant,
       }));
     }
     case "oblique": {
@@ -1653,20 +1645,59 @@ export function worldProjectionModeOptions(spec: WorldProjectionSpec): readonly 
       return variants.map((row) => ({
         id: `oblique-${row.variant}`,
         label: row.label,
-        spec: { kind: "oblique", variant: row.variant, angle: spec.angle, depthScale: row.depthScale },
-        active: spec.variant === row.variant,
+        spec: { mode: { kind: "oblique", variant: row.variant, angle: spec.mode.angle, depthScale: row.depthScale }, orientation: spec.orientation },
+        active: spec.mode.variant === row.variant,
       }));
     }
     case "curvilinear":
       return (["fisheye", "panini"] as const).map((mapping) => ({
         id: `curvilinear-${mapping}`,
         label: mapping === "fisheye" ? "Fish" : "Pan",
-        spec: { kind: "curvilinear", fov: spec.fov, strength: spec.strength, mapping },
-        active: spec.mapping === mapping,
+        spec: { mode: { kind: "curvilinear", fov: spec.mode.fov, strength: spec.mode.strength, mapping }, orientation: spec.orientation },
+        active: spec.mode.mapping === mapping,
       }));
     default:
       return [];
   }
+}
+
+/** @emoji 🌲 Template-tree node id for the active *mode* (orientation is gizmo-owned and does not change selection). */
+export function worldProjectionTemplateSelectionId(spec: WorldProjectionSpec): string {
+  switch (spec.mode.kind) {
+    case "orthographic":
+      return "orthographic";
+    case "axonometric":
+      return `axonometric-${spec.mode.variant}`;
+    case "oblique":
+      return `oblique-${spec.mode.variant}`;
+    case "onePoint":
+      return "one-point";
+    case "twoPoint":
+      return "two-point";
+    case "threePoint":
+      return "three-point";
+    case "curvilinear":
+      return "curvilinear";
+  }
+}
+
+/** @emoji 🌲 Applies a template-tree *mode* while preserving the current gizmo orientation. */
+export function worldProjectionTemplateApplySpec(templateSpec: WorldProjectionSpec, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+  return {
+    mode: templateSpec.mode,
+    orientation: currentSpec?.orientation ?? templateSpec.orientation,
+  };
+}
+
+/** @emoji 🌲 Maps {@link createWorldProjectionTemplates} into selectable {@link TreeDataItem}s for the live projection pane. */
+export function worldProjectionSwitchTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], onSelect: (spec: WorldProjectionSpec) => void, currentSpec?: WorldProjectionSpec): TreeDataItem[] {
+  return templates.map((template) => ({
+    id: template.id,
+    label: template.label,
+    defaultOpen: true,
+    onClick: () => onSelect(worldProjectionTemplateApplySpec(template.args.spec, currentSpec)),
+    ...(template.children?.length ? { items: worldProjectionSwitchTreeItems(template.children, onSelect, currentSpec) } : {}),
+  }));
 }
 
 export interface WorldProjectionKindSwitchProps {
@@ -1675,30 +1706,15 @@ export interface WorldProjectionKindSwitchProps {
   readonly className?: string;
 }
 
-/** @emoji 🔀 Projection-mode switcher — every {@link WorldProjectionKind} plus non-spatial variants (Iso/Di/Tri, Cab/Cav/Mil, Fish/Pan).
- * Spatial angles stay on {@link WorldOrbitViewGizmo}; this chrome never lists Top/Front/NE/X-axis. */
+/** @emoji 🌲 Projection-mode switcher — same Parallel/Perspective taxonomy as {@link createWorldProjectionTemplates}; cube owns spatial angles. */
 export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps): ReactElement {
-  const shellClass = props.className ?? cn("pointer-events-auto flex flex-col gap-px text-2xs font-medium", floatingRibbonSurfaceClass);
-  const buttonClass = (active: boolean) => cn("px-1.5 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");
-  const modes = worldProjectionModeOptions(props.spec);
+  const shellClass = props.className ?? cn("pointer-events-auto min-w-40 text-2xs font-medium", floatingRibbonSurfaceClass);
+  const templates = reactHostPort.useMemo(() => createWorldProjectionTemplates({ controllerId: "projection-switch" }), []);
+  const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(templates, props.onSpecChange, props.spec), [templates, props.onSpecChange, props.spec]);
+  const selectedId = worldProjectionTemplateSelectionId(props.spec);
   return (
     <div className={shellClass} data-world-projection-kind-switch>
-      <div className="flex flex-wrap gap-px" data-world-projection-kinds>
-        {WORLD_PROJECTION_KINDS.map((kind) => (
-          <button key={kind} type="button" className={buttonClass(props.spec.kind === kind)} aria-pressed={props.spec.kind === kind} onClick={() => props.onSpecChange(worldProjectionKindSwitchSpec(kind, props.spec))}>
-            {WORLD_PROJECTION_KIND_SHORT_LABELS[kind]}
-          </button>
-        ))}
-      </div>
-      {modes.length > 0 ? (
-        <div className="flex flex-wrap gap-px border-t border-border/40" data-world-projection-modes>
-          {modes.map((mode) => (
-            <button key={mode.id} type="button" className={buttonClass(mode.active)} aria-pressed={mode.active} onClick={() => props.onSpecChange(mode.spec)}>
-              {mode.label}
-            </button>
-          ))}
-        </div>
-      ) : null}
+      <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: "projection-modes", items }]} />
     </div>
   );
 }
@@ -1987,48 +2003,71 @@ export type WorldAxonometricHemisphere = "upper" | "lower";
 export type WorldObliqueVariant = "cabinet" | "cavalier" | "military";
 export type WorldCurvilinearMapping = "fisheye" | "panini";
 
-/** @emoji 📐 Full classical projection taxonomy: Parallel (Orthographic/Axonometric/Oblique) and
- * Perspective (1/2/3-Point/Curvilinear) — see https://en.wikipedia.org/wiki/Axonometric_projection
- * and https://en.wikipedia.org/wiki/Oblique_projection for the family math this taxonomy encodes. */
-export type WorldProjectionSpec =
-  | { readonly kind: "orthographic"; readonly view: WorldOrthographicViewId }
-  | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number; readonly quadrant: WorldAxonometricQuadrant; readonly hemisphere?: WorldAxonometricHemisphere }
+/** @emoji 🧭 Spatial look the navigation cube owns — cardinal faces, axonometric corners, or free 3D. */
+export type WorldProjectionOrientation =
+  | { readonly type: "cardinal"; readonly view: WorldOrthographicViewId }
+  | { readonly type: "corner"; readonly quadrant: WorldAxonometricQuadrant; readonly hemisphere?: WorldAxonometricHemisphere }
+  | { readonly type: "free" };
+
+/** @emoji 📐 Projection *mode* the pane owns (kind + non-spatial params). Composes with {@link WorldProjectionOrientation}. */
+export type WorldProjectionMode =
+  | { readonly kind: "orthographic" }
+  | { readonly kind: "axonometric"; readonly variant: WorldAxonometricVariant; readonly angleA: number; readonly angleB: number }
   | { readonly kind: "oblique"; readonly variant: WorldObliqueVariant; readonly angle: number; readonly depthScale: number }
-  | { readonly kind: "onePoint"; readonly axis: "x" | "y" | "z"; readonly fov: number }
+  | { readonly kind: "onePoint"; readonly fov: number }
   | { readonly kind: "twoPoint"; readonly fov: number; readonly verticalShift: number }
   | { readonly kind: "threePoint"; readonly fov: number }
   | { readonly kind: "curvilinear"; readonly fov: number; readonly strength: number; readonly mapping: WorldCurvilinearMapping };
 
-export type WorldProjectionKind = WorldProjectionSpec["kind"];
+/** @emoji 📐 Full classical projection taxonomy as mode ⊗ orientation — every mode works with every gizmo view.
+ * See https://en.wikipedia.org/wiki/Axonometric_projection and https://en.wikipedia.org/wiki/Oblique_projection. */
+export type WorldProjectionSpec = {
+  readonly mode: WorldProjectionMode;
+  readonly orientation: WorldProjectionOrientation;
+};
+
+export type WorldProjectionKind = WorldProjectionMode["kind"];
 
 /** @emoji 📡 Command name products handle to apply a {@link WorldProjectionSpec}. */
 export const WORLD_PROJECTION_COMMAND = "setProjection";
+
+/** @emoji 📐 Kind discriminator for a composed {@link WorldProjectionSpec}. */
+export function worldProjectionModeKind(spec: WorldProjectionSpec): WorldProjectionKind {
+  return spec.mode.kind;
+}
+
+/** @emoji 📐 Perspective FOV when the active mode carries one. */
+export function worldProjectionModeFov(spec: WorldProjectionSpec): number | undefined {
+  const mode = spec.mode;
+  return mode.kind === "onePoint" || mode.kind === "twoPoint" || mode.kind === "threePoint" || mode.kind === "curvilinear" ? mode.fov : undefined;
+}
 
 /** @emoji 📐 Parallel family = orthographic camera (Orthographic/Axonometric/Oblique); everything else is perspective. */
 export function worldProjectionFamily(spec: WorldProjectionSpec | undefined): WorldProjectionFamily {
   if (!spec) {
     return "perspective";
   }
-  return spec.kind === "orthographic" || spec.kind === "axonometric" || spec.kind === "oblique" ? "parallel" : "perspective";
+  const kind = spec.mode.kind;
+  return kind === "orthographic" || kind === "axonometric" || kind === "oblique" ? "parallel" : "perspective";
 }
 
-/** @emoji 📐 Baseline parameters for a freshly-selected projection kind. */
+/** @emoji 📐 Baseline mode + default orientation for a freshly-selected projection kind. */
 export function worldProjectionDefaults(kind: WorldProjectionKind): WorldProjectionSpec {
   switch (kind) {
     case "orthographic":
-      return { kind, view: "plan" };
+      return { mode: { kind }, orientation: { type: "cardinal", view: "plan" } };
     case "axonometric":
-      return { kind, variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" };
+      return { mode: { kind, variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } };
     case "oblique":
-      return { kind, variant: "cavalier", angle: 45, depthScale: 1 };
+      return { mode: { kind, variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } };
     case "onePoint":
-      return { kind, axis: "y", fov: 50 };
+      return { mode: { kind, fov: 50 }, orientation: { type: "cardinal", view: "front" } };
     case "twoPoint":
-      return { kind, fov: 50, verticalShift: 0 };
+      return { mode: { kind, fov: 50, verticalShift: 0 }, orientation: { type: "free" } };
     case "curvilinear":
-      return { kind, fov: 120, strength: 1, mapping: "fisheye" };
+      return { mode: { kind, fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } };
     default:
-      return { kind: "threePoint", fov: 50 };
+      return { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } };
   }
 }
 
@@ -2082,11 +2121,77 @@ export function worldSceneContentBounds(
   };
 }
 
+/** @emoji 📷 Cardinal face look direction (Z-up CAD). */
+export function worldProjectionCardinalLook(view: WorldOrthographicViewId): { readonly dir: Vec3; readonly up: Vec3 } {
+  switch (view) {
+    case "bottom":
+      return { dir: [0, 0, -1], up: [0, -1, 0] };
+    case "front":
+      return { dir: [0, -1, 0], up: [0, 0, 1] };
+    case "back":
+      return { dir: [0, 1, 0], up: [0, 0, 1] };
+    case "left":
+      return { dir: [-1, 0, 0], up: [0, 0, 1] };
+    case "right":
+      return { dir: [1, 0, 0], up: [0, 0, 1] };
+    default: // "plan" | "top"
+      return { dir: [0, 0, 1], up: [0, 1, 0] };
+  }
+}
+
+/** @emoji 📷 Corner look from axonometric elevation/azimuth (also used as spatial corner for non-axo modes). */
+export function worldProjectionCornerLook(
+  quadrant: WorldAxonometricQuadrant,
+  hemisphere: WorldAxonometricHemisphere | undefined,
+  angleADeg: number,
+  angleBDeg: number,
+): { readonly dir: Vec3; readonly up: Vec3 } {
+  const angleA = angleADeg * (Math.PI / 180);
+  const angleB = angleBDeg * (Math.PI / 180);
+  const elevation = Math.asin(Math.sqrt(Math.tan(angleA) * Math.tan(angleB)));
+  const azimuth = Math.atan(Math.sqrt(Math.tan(angleA) / Math.tan(angleB)));
+  const signX = quadrant === "nw" || quadrant === "sw" ? -1 : 1;
+  const signY = quadrant === "se" || quadrant === "sw" ? -1 : 1;
+  const hemi = hemisphere ?? "upper";
+  const dir: Vec3 = [signX * Math.cos(elevation) * Math.sin(azimuth), signY * Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation) * (hemi === "lower" ? -1 : 1)];
+  return { dir, up: hemi === "lower" ? [0, 0, -1] : [0, 0, 1] };
+}
+
+/** @emoji 📷 Resolves look direction from mode ⊗ orientation — every orientation works with every mode. */
+export function worldProjectionOrientationLook(spec: WorldProjectionSpec): { readonly dir: Vec3; readonly up: Vec3 } {
+  const { mode, orientation } = spec;
+  switch (orientation.type) {
+    case "cardinal":
+      if (mode.kind === "oblique" && mode.variant === "military" && (orientation.view === "plan" || orientation.view === "top")) {
+        const rotation = mode.angle * (Math.PI / 180);
+        return { dir: [0, 0, 1], up: [Math.sin(rotation), Math.cos(rotation), 0] };
+      }
+      return worldProjectionCardinalLook(orientation.view);
+    case "corner": {
+      const angleA = mode.kind === "axonometric" ? (mode.variant === "isometric" ? 30 : mode.angleA) : 30;
+      const angleB = mode.kind === "axonometric" ? (mode.variant === "isometric" ? 30 : mode.variant === "dimetric" ? mode.angleA : mode.angleB) : 30;
+      return worldProjectionCornerLook(orientation.quadrant, orientation.hemisphere, angleA, angleB);
+    }
+    case "free":
+      if (mode.kind === "twoPoint") {
+        return { dir: [Math.SQRT1_2, -Math.SQRT1_2, 0], up: [0, 0, 1] };
+      }
+      if (mode.kind === "oblique") {
+        if (mode.variant === "military") {
+          const rotation = mode.angle * (Math.PI / 180);
+          return { dir: [0, 0, 1], up: [Math.sin(rotation), Math.cos(rotation), 0] };
+        }
+        return { dir: [0, -1, 0], up: [0, 0, 1] };
+      }
+      return { dir: vec3Normalize([0.75, -0.75, 0.55]), up: [0, 0, 1] };
+  }
+}
+
 /** @emoji 📷 Half-width/height of `bounds` in the projection's view plane (CAD axes). */
 export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds: WorldSceneContentBounds): { readonly halfWidth: number; readonly halfHeight: number } {
   const [hx, hy, hz] = bounds.halfExtent;
-  if (spec.kind === "orthographic") {
-    switch (spec.view) {
+  if (spec.orientation.type === "cardinal") {
+    switch (spec.orientation.view) {
       case "front":
       case "back":
         return { halfWidth: hx, halfHeight: hz };
@@ -2097,18 +2202,8 @@ export function worldProjectionViewHalfExtent(spec: WorldProjectionSpec, bounds:
         return { halfWidth: hx, halfHeight: hy };
     }
   }
-  if (spec.kind === "oblique" && spec.variant !== "military") {
+  if (spec.mode.kind === "oblique" && spec.mode.variant !== "military" && spec.orientation.type === "free") {
     return { halfWidth: hx, halfHeight: hz };
-  }
-  if (spec.kind === "onePoint") {
-    switch (spec.axis) {
-      case "x":
-        return { halfWidth: hy, halfHeight: hz };
-      case "z":
-        return { halfWidth: hx, halfHeight: hy };
-      default:
-        return { halfWidth: hx, halfHeight: hz };
-    }
   }
   const span = Math.max(hx, hy, hz);
   return { halfWidth: span, halfHeight: span };
@@ -2141,117 +2236,53 @@ export function frameWorldProjectionPose(
   return computeWorldProjectionPose(spec, { target: bounds.center, distance, zoom });
 }
 
-/** @emoji 📷 Computes a Z-up camera pose for the full projection taxonomy — the axonometric branch derives
- * elevation/azimuth from the two projected-axis angles (`elevation = asin(sqrt(tan a * tan b))`,
- * `azimuth = atan(sqrt(tan a / tan b))`; 30/30 yields the classic 35.264°/45° isometric direction). */
+/** @emoji 📷 Computes a Z-up camera pose for mode ⊗ orientation — look from orientation, camera family from mode. */
 export function computeWorldProjectionPose(spec: WorldProjectionSpec, options: { readonly target: Vec3; readonly distance?: number; readonly zoom?: number }): WorldCameraState {
   const distance = options.distance ?? WORLD_PROJECTION_DEFAULT_DISTANCE;
   const target = options.target;
   const family = worldProjectionFamily(spec);
   const zoom = family === "parallel" ? (options.zoom ?? 50) : (options.zoom ?? 1);
-  const at = (dir: Vec3, up: Vec3): WorldCameraState => ({
+  const { dir, up } = worldProjectionOrientationLook(spec);
+  return {
     position: [target[0] + dir[0] * distance, target[1] + dir[1] * distance, target[2] + dir[2] * distance],
     target,
     up,
     zoom,
     projection: family === "parallel" ? "orthographic" : "perspective",
     projectionSpec: spec,
-  });
-  switch (spec.kind) {
-    case "orthographic":
-      switch (spec.view) {
-        case "bottom":
-          return at([0, 0, -1], [0, -1, 0]);
-        case "front":
-          return at([0, -1, 0], [0, 0, 1]);
-        case "back":
-          return at([0, 1, 0], [0, 0, 1]);
-        case "left":
-          return at([-1, 0, 0], [0, 0, 1]);
-        case "right":
-          return at([1, 0, 0], [0, 0, 1]);
-        default: // "plan" | "top"
-          return at([0, 0, 1], [0, 1, 0]);
-      }
-    case "axonometric": {
-      const angleA = (spec.variant === "isometric" ? 30 : spec.angleA) * (Math.PI / 180);
-      const angleB = (spec.variant === "isometric" ? 30 : spec.variant === "dimetric" ? spec.angleA : spec.angleB) * (Math.PI / 180);
-      const elevation = Math.asin(Math.sqrt(Math.tan(angleA) * Math.tan(angleB)));
-      const azimuth = Math.atan(Math.sqrt(Math.tan(angleA) / Math.tan(angleB)));
-      const signX = spec.quadrant === "nw" || spec.quadrant === "sw" ? -1 : 1;
-      const signY = spec.quadrant === "se" || spec.quadrant === "sw" ? -1 : 1;
-      const hemisphere = spec.hemisphere ?? "upper";
-      const dir: Vec3 = [signX * Math.cos(elevation) * Math.sin(azimuth), signY * Math.cos(elevation) * Math.cos(azimuth), Math.sin(elevation) * (hemisphere === "lower" ? -1 : 1)];
-      return at(dir, hemisphere === "lower" ? [0, 0, -1] : [0, 0, 1]);
-    }
-    case "oblique":
-      if (spec.variant === "military") {
-        const rotation = spec.angle * (Math.PI / 180);
-        return at([0, 0, 1], [Math.sin(rotation), Math.cos(rotation), 0]);
-      }
-      return at([0, -1, 0], [0, 0, 1]);
-    case "onePoint":
-      switch (spec.axis) {
-        case "x":
-          return at([-1, 0, 0], [0, 0, 1]);
-        case "z":
-          return at([0, 0, 1], [0, 1, 0]);
-        default:
-          return at([0, -1, 0], [0, 0, 1]);
-      }
-    case "twoPoint":
-      return at([Math.SQRT1_2, -Math.SQRT1_2, 0], [0, 0, 1]);
-    default: // "threePoint" | "curvilinear"
-      return at(vec3Normalize([0.75, -0.75, 0.55]), [0, 0, 1]);
-  }
+  };
 }
 
-/** @emoji 🔒 Orbit-interaction constraints implied by a projection — drafting-locked kinds (`plan`, oblique)
- * and axis-locked one-point perspective disable rotation; two-point keeps the horizon level. */
+/** @emoji 🔒 Orbit-interaction constraints implied by a projection — drafting-locked orientations and modes disable rotation; two-point keeps the horizon level when free. */
 export function worldProjectionOrbitConstraints(spec: WorldProjectionSpec | undefined): { readonly rotate: boolean; readonly minPolar?: number; readonly maxPolar?: number } {
   if (!spec) {
     return { rotate: true };
   }
-  if ((spec.kind === "orthographic" && spec.view === "plan") || spec.kind === "oblique" || spec.kind === "onePoint") {
+  if (spec.orientation.type === "cardinal" && spec.orientation.view === "plan" && (spec.mode.kind === "orthographic" || spec.mode.kind === "oblique")) {
     return { rotate: false };
   }
-  if (spec.kind === "twoPoint") {
+  if (spec.mode.kind === "oblique" || spec.mode.kind === "onePoint") {
+    return { rotate: false };
+  }
+  if (spec.mode.kind === "twoPoint" && spec.orientation.type === "free") {
     return { rotate: true, minPolar: Math.PI / 2, maxPolar: Math.PI / 2 };
   }
   return { rotate: true };
 }
 
-/** @emoji 🎛 Drafting plane for a planar window projection — `undefined` keeps the full 3D gumball
- * (axonometric / multi-point / curvilinear). Orthographic Plan/Top/Bottom → `xy`, Front/Back → `xz`,
- * Left/Right → `yz`; oblique military and one-point follow the same view-plane rule. */
+/** @emoji 🎛 Drafting plane from cardinal orientation — `undefined` for corner/free 3D. */
 export function worldProjectionGumballPlane(spec: WorldProjectionSpec | undefined): GumballPlaneId | undefined {
-  if (!spec) return undefined;
-  if (spec.kind === "orthographic") {
-    switch (spec.view) {
-      case "front":
-      case "back":
-        return "xz";
-      case "left":
-      case "right":
-        return "yz";
-      default:
-        return "xy";
-    }
+  if (!spec || spec.orientation.type !== "cardinal") return undefined;
+  switch (spec.orientation.view) {
+    case "front":
+    case "back":
+      return "xz";
+    case "left":
+    case "right":
+      return "yz";
+    default:
+      return "xy";
   }
-  if (spec.kind === "oblique") {
-    return spec.variant === "military" ? "xy" : "xz";
-  }
-  if (spec.kind === "onePoint") {
-    switch (spec.axis) {
-      case "x":
-        return "yz";
-      case "z":
-        return "xy";
-      default:
-        return "xz";
-    }
-  }
-  return undefined;
 }
 
 /** @emoji 🎛 Drafting plane for a legacy {@link OrbitCameraViewId} preset (CAD panes that still seed via orbit views). */
@@ -2299,38 +2330,17 @@ export function worldProjectionSpecsEqual(a: WorldProjectionSpec, b: WorldProjec
   return JSON.stringify(a) === JSON.stringify(b);
 }
 
-/** @emoji 🧭 Resolves a navigation-cube hit into a spatial angle on the *current* projection mode — never switches kind.
- * Faces refine orthographic view or one-point axis; corners refine axonometric quadrant/hemisphere; center re-snaps perspective kinds.
- * Hits that do not apply to the active mode return `currentSpec` unchanged (pane owns mode selection). */
+/** @emoji 🧭 Resolves a navigation-cube hit into orientation only — never changes projection mode.
+ * Faces → cardinal views; corners → quadrant/hemisphere; center → free 3D. */
 export function resolveProjectionGizmoSpec(hit: ProjectionGizmoHit, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
+  const base = currentSpec ?? worldProjectionDefaults("threePoint");
   switch (hit.type) {
-    case "face": {
-      if (currentSpec?.kind === "onePoint") {
-        return { ...currentSpec, axis: hit.axis };
-      }
-      if (!currentSpec || currentSpec.kind === "orthographic") {
-        return { kind: "orthographic", view: projectionGizmoFaceToOrthographicView(hit.axis, hit.sign) };
-      }
-      return currentSpec;
-    }
-    case "corner": {
-      if (currentSpec?.kind === "axonometric") {
-        return { ...currentSpec, quadrant: hit.quadrant, hemisphere: hit.hemisphere };
-      }
-      if (!currentSpec) {
-        return { ...worldProjectionDefaults("axonometric"), quadrant: hit.quadrant, hemisphere: hit.hemisphere };
-      }
-      return currentSpec;
-    }
-    case "center": {
-      if (currentSpec?.kind === "onePoint" || currentSpec?.kind === "twoPoint" || currentSpec?.kind === "threePoint" || currentSpec?.kind === "curvilinear") {
-        return currentSpec;
-      }
-      if (!currentSpec) {
-        return worldProjectionDefaults("threePoint");
-      }
-      return currentSpec;
-    }
+    case "face":
+      return { mode: base.mode, orientation: { type: "cardinal", view: projectionGizmoFaceToOrthographicView(hit.axis, hit.sign) } };
+    case "corner":
+      return { mode: base.mode, orientation: { type: "corner", quadrant: hit.quadrant, hemisphere: hit.hemisphere } };
+    case "center":
+      return { mode: base.mode, orientation: { type: "free" } };
   }
 }
 
@@ -2366,106 +2376,101 @@ export function orbitViewToWorldProjectionSpec(view: OrbitCameraViewId): WorldPr
     case "back":
     case "left":
     case "right":
-      return { kind: "orthographic", view };
+      return { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view } };
     case "north":
-      return { kind: "orthographic", view: "back" };
+      return { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "back" } };
     case "south":
-      return { kind: "orthographic", view: "front" };
+      return { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } };
     case "east":
-      return { kind: "orthographic", view: "right" };
+      return { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "right" } };
     case "west":
-      return { kind: "orthographic", view: "left" };
+      return { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } };
     case "isometricNe":
-      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" };
+      return { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } };
     case "isometricNw":
-      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "nw" };
+      return { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "nw", hemisphere: "upper" } };
     case "isometricSe":
-      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "se" };
+      return { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "se", hemisphere: "upper" } };
     case "isometricSw":
-      return { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" };
+      return { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "upper" } };
     case "twoPointPerspective":
-      return { kind: "twoPoint", fov: 50, verticalShift: 0 };
+      return worldProjectionDefaults("twoPoint");
     case "perspective":
     default:
-      return { kind: "threePoint", fov: 50 };
+      return worldProjectionDefaults("threePoint");
   }
 }
 
 /** @emoji 🧭 Best-effort reverse of {@link orbitViewToWorldProjectionSpec} for legacy orbit callbacks. */
 export function worldProjectionSpecToOrbitView(spec: WorldProjectionSpec): OrbitCameraViewId | null {
-  switch (spec.kind) {
-    case "orthographic":
-      return spec.view === "plan" ? "top" : spec.view;
-    case "axonometric":
-      if (spec.variant !== "isometric") {
-        return "isometricNe";
-      }
-      switch (spec.quadrant) {
-        case "nw":
-          return "isometricNw";
-        case "se":
-          return "isometricSe";
-        case "sw":
-          return "isometricSw";
-        default:
-          return "isometricNe";
-      }
-    case "twoPoint":
-      return "twoPointPerspective";
-    case "onePoint":
-    case "threePoint":
-    case "curvilinear":
-      return "perspective";
-    case "oblique":
-      return spec.variant === "military" ? "top" : "front";
+  if (spec.orientation.type === "cardinal") {
+    return spec.orientation.view === "plan" ? "top" : spec.orientation.view;
   }
+  if (spec.orientation.type === "corner") {
+    switch (spec.orientation.quadrant) {
+      case "nw":
+        return "isometricNw";
+      case "se":
+        return "isometricSe";
+      case "sw":
+        return "isometricSw";
+      default:
+        return "isometricNe";
+    }
+  }
+  if (spec.mode.kind === "twoPoint") return "twoPointPerspective";
+  return "perspective";
 }
 
-/** @emoji 🔀 Switches projection kind while preserving perspective FOV when possible. */
+/** @emoji 🔀 Switches projection *mode* while preserving gizmo orientation (and FOV when possible). */
 export function worldProjectionKindSwitchSpec(kind: WorldProjectionKind, currentSpec?: WorldProjectionSpec): WorldProjectionSpec {
   const next = worldProjectionDefaults(kind);
-  if (kind === "onePoint") {
-    const fov = currentSpec && "fov" in currentSpec ? currentSpec.fov : next.fov;
-    return currentSpec?.kind === "onePoint" ? { ...currentSpec, fov } : { ...next, fov };
-  }
-  if (kind === "twoPoint" || kind === "threePoint" || kind === "curvilinear") {
-    const fov = currentSpec && "fov" in currentSpec ? currentSpec.fov : next.fov;
+  const orientation = currentSpec?.orientation ?? next.orientation;
+  if (kind === "onePoint" || kind === "twoPoint" || kind === "threePoint" || kind === "curvilinear") {
+    const fov = worldProjectionModeFov(currentSpec ?? next) ?? worldProjectionModeFov(next)!;
     if (kind === "twoPoint") {
-      return { kind, fov, verticalShift: currentSpec?.kind === "twoPoint" ? currentSpec.verticalShift : 0 };
+      const verticalShift = currentSpec?.mode.kind === "twoPoint" ? currentSpec.mode.verticalShift : 0;
+      return { mode: { kind, fov, verticalShift }, orientation };
     }
     if (kind === "curvilinear") {
-      return currentSpec?.kind === "curvilinear" ? currentSpec : { ...next, fov };
+      const mapping = currentSpec?.mode.kind === "curvilinear" ? currentSpec.mode.mapping : "fisheye";
+      const strength = currentSpec?.mode.kind === "curvilinear" ? currentSpec.mode.strength : 1;
+      return { mode: { kind, fov: currentSpec?.mode.kind === "curvilinear" ? currentSpec.mode.fov : 120, strength, mapping }, orientation };
     }
-    return { kind, fov };
+    return { mode: { kind, fov }, orientation };
   }
-  if (kind === "axonometric" && currentSpec?.kind === "axonometric") {
-    return { ...currentSpec };
+  if (kind === "axonometric") {
+    if (currentSpec?.mode.kind === "axonometric") {
+      return { mode: currentSpec.mode, orientation };
+    }
+    return { mode: next.mode, orientation };
   }
-  if (kind === "oblique" && currentSpec?.kind === "oblique") {
-    return { ...currentSpec };
+  if (kind === "oblique") {
+    if (currentSpec?.mode.kind === "oblique") {
+      return { mode: currentSpec.mode, orientation };
+    }
+    return { mode: next.mode, orientation };
   }
-  if (kind === "orthographic" && currentSpec?.kind === "orthographic") {
-    return currentSpec.view === "plan" ? currentSpec : worldProjectionDefaults("orthographic");
-  }
-  return next;
+  return { mode: next.mode, orientation };
 }
 
 /** @emoji 📷 Mounts the camera for a {@link WorldProjectionSpec} and the matrix/curvilinear post-processing it needs. */
 export function WorldProjectionRig(props: { readonly spec: WorldProjectionSpec; readonly state: WorldCameraState; readonly seedKey: string | number; readonly onCamera?: (camera: Camera | null) => void }): ReactElement {
   const family = worldProjectionFamily(props.spec);
   const up = cadVec3ToThree(props.state.up ?? ORBIT_CAMERA_Z_UP);
-  const cameraKey = `${props.spec.kind}:${props.seedKey}`;
-  const fov = props.spec.kind === "onePoint" || props.spec.kind === "twoPoint" || props.spec.kind === "threePoint" ? props.spec.fov : props.spec.kind === "curvilinear" ? Math.min(props.spec.fov, 160) : 50;
+  const cameraKey = `${props.spec.mode.kind}:${props.seedKey}`;
+  const fov = worldProjectionModeFov(props.spec);
+  const perspectiveFov = props.spec.mode.kind === "curvilinear" ? Math.min(fov ?? 120, 160) : (fov ?? 50);
   return (
     <>
       {family === "parallel" ? (
         <OrthographicCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} zoom={props.state.zoom} />
       ) : (
-        <PerspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={fov} zoom={props.state.zoom} />
+        <PerspectiveCamera key={cameraKey} ref={props.onCamera} makeDefault up={up} near={0.2} far={WORLD_ORBIT_CAMERA_MIN_FAR} fov={perspectiveFov} zoom={props.state.zoom} />
       )}
       <WorldOrbitCameraViewRigSeed state={props.state} seedKey={`${cameraKey}`} />
-      {props.spec.kind === "oblique" || props.spec.kind === "twoPoint" ? <WorldProjectionMatrixDriver spec={props.spec} /> : null}
-      {props.spec.kind === "curvilinear" ? <WorldCurvilinearPass spec={props.spec} /> : null}
+      {props.spec.mode.kind === "oblique" || props.spec.mode.kind === "twoPoint" ? <WorldProjectionMatrixDriver mode={props.spec.mode} /> : null}
+      {props.spec.mode.kind === "curvilinear" ? <WorldCurvilinearPass mode={props.spec.mode} /> : null}
     </>
   );
 }
@@ -2487,35 +2492,31 @@ export function WorldProjectionApplier(props: { readonly spec: WorldProjectionSp
 /** @emoji 🪞 Post-multiplies the oblique receding-axis shear or two-point vertical lens-shift onto the active
  * camera's projection matrix every frame (after recomputing the pristine matrix, so resize/zoom never compounds
  * the shear) and refreshes `projectionMatrixInverse` — required because r3f raycasting/picking reads the inverse. */
-function WorldProjectionMatrixDriver(props: { readonly spec: Extract<WorldProjectionSpec, { kind: "oblique" | "twoPoint" }> }): null {
+function WorldProjectionMatrixDriver(props: { readonly mode: Extract<WorldProjectionMode, { kind: "oblique" | "twoPoint" }> }): null {
   const { camera, invalidate } = useThree();
   useFrame(() => {
     camera.updateProjectionMatrix();
-    if (props.spec.kind === "oblique" && camera instanceof ThreeOrthographicCamera) {
-      const angle = props.spec.angle * (Math.PI / 180);
-      const l = props.spec.variant === "military" ? 1 : props.spec.depthScale;
-      const alpha = props.spec.variant === "military" ? Math.PI / 2 : angle;
+    if (props.mode.kind === "oblique" && camera instanceof ThreeOrthographicCamera) {
+      const angle = props.mode.angle * (Math.PI / 180);
+      const l = props.mode.variant === "military" ? 1 : props.mode.depthScale;
+      const alpha = props.mode.variant === "military" ? Math.PI / 2 : angle;
       const shear = new Matrix4().identity();
       shear.elements[8] = -l * Math.cos(alpha);
       shear.elements[9] = -l * Math.sin(alpha);
       camera.projectionMatrix.multiply(shear);
-    } else if (props.spec.kind === "twoPoint" && camera instanceof ThreePerspectiveCamera) {
-      camera.projectionMatrix.elements[9] += props.spec.verticalShift;
+    } else if (props.mode.kind === "twoPoint" && camera instanceof ThreePerspectiveCamera) {
+      camera.projectionMatrix.elements[9] += props.mode.verticalShift;
     }
     camera.projectionMatrixInverse.copy(camera.projectionMatrix).invert();
     invalidate();
-    // 🎯 Priority 0 (the default — omitted, not `1`): this only tweaks the projection matrix before the
-    // frame paints. A *positive* useFrame priority tells r3f "I'll call gl.render myself" and suppresses
-    // its own default render entirely — since this driver never calls gl.render, giving it priority 1
-    // blanked every oblique/two-point window (nothing ever painted the canvas).
   });
   return null;
 }
 
 /** @emoji 🐟 Remaps a pointer NDC coordinate through the inverse curvilinear radius mapping so raycasting against
  * the exact (undistorted) capture-space render stays pixel-accurate under fisheye/panini distortion. */
-export function worldCurvilinearUnproject(ndc: readonly [number, number], spec: Extract<WorldProjectionSpec, { kind: "curvilinear" }>, aspect = 1): readonly [number, number] {
-  const halfFov = (Math.min(spec.fov, 160) * (Math.PI / 180)) / 2;
+export function worldCurvilinearUnproject(ndc: readonly [number, number], mode: Extract<WorldProjectionMode, { kind: "curvilinear" }>, aspect = 1): readonly [number, number] {
+  const halfFov = (Math.min(mode.fov, 160) * (Math.PI / 180)) / 2;
   const scaled: [number, number] = [ndc[0] * aspect, ndc[1]];
   const r = Math.hypot(scaled[0], scaled[1]);
   if (r < 1e-6) {
@@ -2523,7 +2524,7 @@ export function worldCurvilinearUnproject(ndc: readonly [number, number], spec: 
   }
   const theta = r * halfFov;
   const rectilinearR = Math.tan(theta) / Math.tan(halfFov);
-  const sourceR = r + (rectilinearR - r) * spec.strength;
+  const sourceR = r + (rectilinearR - r) * mode.strength;
   const scale = sourceR / r;
   return [(scaled[0] * scale) / aspect, scaled[1] * scale];
 }
@@ -2584,7 +2585,7 @@ export const WORLD_CURVILINEAR_CAPTURE_TARGET_OPTIONS = {
  * a fullscreen fisheye/panini shader — chosen over pmndrs/drei `<Fisheye>` / a 6-face cubemap unwrap because it needs
  * one extra render target instead of six, keeps orbit/gizmo chrome undistorted as siblings, supports strength+panini,
  * and the taxonomy never promises >=180° coverage. */
-function WorldCurvilinearPass(props: { readonly spec: Extract<WorldProjectionSpec, { kind: "curvilinear" }> }): null {
+function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMode, { kind: "curvilinear" }> }): null {
   const { gl, camera, scene, size, invalidate } = useThree();
   const targetRef = reactHostPort.useRef<InstanceType<typeof WebGLRenderTarget> | null>(null);
   const quadRef = reactHostPort.useRef<{ readonly scene: InstanceType<typeof Scene>; readonly camera: InstanceType<typeof ThreeOrthographicCamera>; readonly material: InstanceType<typeof ShaderMaterial> } | null>(null);
@@ -2617,10 +2618,10 @@ function WorldCurvilinearPass(props: { readonly spec: Extract<WorldProjectionSpe
     const target = targetRef.current;
     const { material } = quadRef.current;
     material.uniforms.tCapture.value = target.texture;
-    material.uniforms.uFov.value = Math.min(props.spec.fov, 160) * (Math.PI / 180);
-    material.uniforms.uStrength.value = props.spec.strength;
+    material.uniforms.uFov.value = Math.min(props.mode.fov, 160) * (Math.PI / 180);
+    material.uniforms.uStrength.value = props.mode.strength;
     material.uniforms.uAspect.value = size.width / Math.max(1, size.height);
-    material.uniforms.uMapping.value = props.spec.mapping === "panini" ? 1 : 0;
+    material.uniforms.uMapping.value = props.mode.mapping === "panini" ? 1 : 0;
 
     gl.setRenderTarget(target);
     gl.render(scene, camera);
@@ -2660,8 +2661,8 @@ function worldProjectionTemplateBranch(controllerId: string, command: string, id
   return { id, label, controllerId, command, args: { spec }, children };
 }
 
-/** @emoji 🪟 Builds the exact requested taxonomy tree for the display-panel drag palette:
- * `Parallel > Orthographic > Plan (Top/Bottom/Front/Back/Left/Right) | Axonometric (Isometric/Dimetric/Trimetric) | Oblique (Cabinet/Cavalier/Military)`
+/** @emoji 🪟 Builds the projection-mode taxonomy tree (no Top/Front — those are gizmo orientations):
+ * `Parallel > Orthographic | Axonometric (Isometric/Dimetric/Trimetric) | Oblique (Cabinet/Cavalier/Military)`
  * and `Perspective > 1-Point/2-Point/3-Point/Curvilinear`. */
 export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
   const { controllerId } = config;
@@ -2669,21 +2670,7 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
   const leaf = (id: string, label: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, spec);
   const branch = (id: string, label: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, spec, children);
 
-  const planViews: readonly [Exclude<WorldOrthographicViewId, "plan">, string][] = [
-    ["top", "Top"],
-    ["bottom", "Bottom"],
-    ["front", "Front"],
-    ["back", "Back"],
-    ["left", "Left"],
-    ["right", "Right"],
-  ];
-  const plan = branch(
-    "orthographic-plan",
-    "Plan",
-    { kind: "orthographic", view: "plan" },
-    planViews.map(([view, label]) => leaf(`orthographic-${view}`, label, { kind: "orthographic", view })),
-  );
-  const orthographic = branch("orthographic", "Orthographic", { kind: "orthographic", view: "plan" }, [plan]);
+  const orthographic = leaf("orthographic", "Orthographic", worldProjectionDefaults("orthographic"));
 
   const axonometricVariants: readonly [WorldAxonometricVariant, string][] = [
     ["isometric", "Isometric"],
@@ -2693,8 +2680,13 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
   const axonometric = branch(
     "axonometric",
     "Axonometric",
-    { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" },
-    axonometricVariants.map(([variant, label]) => leaf(`axonometric-${variant}`, label, { kind: "axonometric", variant, angleA: variant === "trimetric" ? 12 : 15, angleB: variant === "trimetric" ? 42 : variant === "isometric" ? 30 : 15, quadrant: "ne" })),
+    worldProjectionDefaults("axonometric"),
+    axonometricVariants.map(([variant, label]) =>
+      leaf(`axonometric-${variant}`, label, {
+        mode: { kind: "axonometric", variant, angleA: variant === "trimetric" ? 12 : 15, angleB: variant === "trimetric" ? 42 : variant === "isometric" ? 30 : 15 },
+        orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" },
+      }),
+    ),
   );
 
   const obliqueVariants: readonly [WorldObliqueVariant, string][] = [
@@ -2705,17 +2697,22 @@ export function createWorldProjectionTemplates(config: CreateWorldProjectionTemp
   const oblique = branch(
     "oblique",
     "Oblique",
-    { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 },
-    obliqueVariants.map(([variant, label]) => leaf(`oblique-${variant}`, label, { kind: "oblique", variant, angle: 45, depthScale: variant === "cabinet" ? 0.5 : 1 })),
+    worldProjectionDefaults("oblique"),
+    obliqueVariants.map(([variant, label]) =>
+      leaf(`oblique-${variant}`, label, {
+        mode: { kind: "oblique", variant, angle: 45, depthScale: variant === "cabinet" ? 0.5 : 1 },
+        orientation: { type: "cardinal", view: variant === "military" ? "plan" : "front" },
+      }),
+    ),
   );
 
-  const parallel = branch("parallel", "Parallel", { kind: "orthographic", view: "plan" }, [orthographic, axonometric, oblique]);
+  const parallel = branch("parallel", "Parallel", worldProjectionDefaults("orthographic"), [orthographic, axonometric, oblique]);
 
-  const perspective = branch("perspective", "Perspective", { kind: "threePoint", fov: 50 }, [
-    leaf("one-point", "1-Point", { kind: "onePoint", axis: "y", fov: 50 }),
-    leaf("two-point", "2-Point", { kind: "twoPoint", fov: 50, verticalShift: 0 }),
-    leaf("three-point", "3-Point", { kind: "threePoint", fov: 50 }),
-    leaf("curvilinear", "Curvilinear", { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }),
+  const perspective = branch("perspective", "Perspective", worldProjectionDefaults("threePoint"), [
+    leaf("one-point", "1-Point", worldProjectionDefaults("onePoint")),
+    leaf("two-point", "2-Point", worldProjectionDefaults("twoPoint")),
+    leaf("three-point", "3-Point", worldProjectionDefaults("threePoint")),
+    leaf("curvilinear", "Curvilinear", worldProjectionDefaults("curvilinear")),
   ]);
 
   return [parallel, perspective];
@@ -2735,8 +2732,8 @@ export function decodeWorldProjectionTemplateId(templateId: string | undefined):
     return null;
   }
   try {
-    const parsed = JSON.parse(templateId.slice(WORLD_PROJECTION_TEMPLATE_PREFIX.length)) as { readonly kind?: unknown };
-    return typeof parsed.kind === "string" ? (parsed as WorldProjectionSpec) : null;
+    const parsed = JSON.parse(templateId.slice(WORLD_PROJECTION_TEMPLATE_PREFIX.length)) as { readonly mode?: { readonly kind?: unknown }; readonly orientation?: unknown };
+    return typeof parsed.mode?.kind === "string" && parsed.orientation ? (parsed as WorldProjectionSpec) : null;
   } catch {
     return null;
   }
@@ -2746,17 +2743,29 @@ const WORLD_ORTHOGRAPHIC_VIEW_LABELS: Record<WorldOrthographicViewId, string> = 
 const WORLD_AXONOMETRIC_VARIANT_LABELS: Record<WorldAxonometricVariant, string> = { isometric: "Isometric", dimetric: "Dimetric", trimetric: "Trimetric" };
 const WORLD_OBLIQUE_VARIANT_LABELS: Record<WorldObliqueVariant, string> = { cabinet: "Cabinet", cavalier: "Cavalier", military: "Military" };
 
-/** @emoji 🪟 The exact label a {@link WorldProjectionSpec} shows as in {@link createWorldProjectionTemplates}'s
- * drag tree — used to title a pane opened by dragging a specific view (e.g. "Top", "Isometric", "Curvilinear")
- * instead of the generic window-kind label every pane would otherwise share. */
-export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
-  switch (spec.kind) {
+/** @emoji 🧭 Short label for a gizmo orientation. */
+export function worldProjectionOrientationLabel(orientation: WorldProjectionOrientation): string {
+  switch (orientation.type) {
+    case "cardinal":
+      return WORLD_ORTHOGRAPHIC_VIEW_LABELS[orientation.view];
+    case "corner": {
+      const q = orientation.quadrant.toUpperCase();
+      return (orientation.hemisphere ?? "upper") === "lower" ? `${q}↓` : q;
+    }
+    case "free":
+      return "3D";
+  }
+}
+
+/** @emoji 📐 Mode label matching {@link createWorldProjectionTemplates} leaves. */
+export function worldProjectionModeLabel(mode: WorldProjectionMode): string {
+  switch (mode.kind) {
     case "orthographic":
-      return WORLD_ORTHOGRAPHIC_VIEW_LABELS[spec.view];
+      return "Orthographic";
     case "axonometric":
-      return WORLD_AXONOMETRIC_VARIANT_LABELS[spec.variant];
+      return WORLD_AXONOMETRIC_VARIANT_LABELS[mode.variant];
     case "oblique":
-      return WORLD_OBLIQUE_VARIANT_LABELS[spec.variant];
+      return WORLD_OBLIQUE_VARIANT_LABELS[mode.variant];
     case "onePoint":
       return "1-Point";
     case "twoPoint":
@@ -2766,6 +2775,11 @@ export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
     case "curvilinear":
       return "Curvilinear";
   }
+}
+
+/** @emoji 🪟 Window title for a live projection — matches {@link createWorldProjectionTemplates} mode labels. */
+export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
+  return worldProjectionModeLabel(spec.mode);
 }
 // #endregion 📐WorldProjection
 
@@ -3895,71 +3909,121 @@ if (import.meta.vitest) {
   });
 
   describe("resolveProjectionGizmoSpec", () => {
-    it("refines angle within the active mode and never switches kind from the cube", () => {
-      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, { kind: "orthographic", view: "front" })).toEqual({ kind: "orthographic", view: "top" });
-      expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sign: -1 }, { kind: "orthographic", view: "plan" })).toEqual({ kind: "orthographic", view: "left" });
-      expect(resolveProjectionGizmoSpec({ type: "face", axis: "y", sign: 1 }, { kind: "onePoint", axis: "z", fov: 50 })).toEqual({ kind: "onePoint", axis: "y", fov: 50 });
-      const dimetric = { kind: "axonometric" as const, variant: "dimetric" as const, angleA: 15, angleB: 15, quadrant: "ne" as const, hemisphere: "upper" as const };
-      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se", hemisphere: "upper" }, dimetric)).toEqual({ ...dimetric, quadrant: "se", hemisphere: "upper" });
-      expect(resolveProjectionGizmoSpec({ type: "center" }, { kind: "twoPoint", fov: 42, verticalShift: 0 })).toEqual({ kind: "twoPoint", fov: 42, verticalShift: 0 });
-    });
-
-    it("keeps the active mode when a cube hit is not an angle for that mode", () => {
-      const axo = { kind: "axonometric" as const, variant: "isometric" as const, angleA: 30, angleB: 30, quadrant: "ne" as const };
-      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, axo)).toEqual(axo);
-      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw", hemisphere: "lower" }, { kind: "orthographic", view: "top" })).toEqual({ kind: "orthographic", view: "top" });
-      expect(resolveProjectionGizmoSpec({ type: "center" }, { kind: "orthographic", view: "plan" })).toEqual({ kind: "orthographic", view: "plan" });
-    });
-
-    it("bootstraps angle defaults only when no mode is active yet", () => {
-      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 })).toEqual({ kind: "orthographic", view: "top" });
-      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "nw", hemisphere: "lower" })).toEqual({
-        kind: "axonometric",
-        variant: "isometric",
-        angleA: 30,
-        angleB: 30,
-        quadrant: "nw",
-        hemisphere: "lower",
+    it("sets orientation only and preserves the active projection mode", () => {
+      expect(resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toEqual({
+        mode: { kind: "threePoint", fov: 50 },
+        orientation: { type: "cardinal", view: "top" },
       });
-      expect(resolveProjectionGizmoSpec({ type: "center" })).toEqual({ kind: "threePoint", fov: 50 });
+      expect(resolveProjectionGizmoSpec({ type: "face", axis: "x", sign: -1 }, { mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toEqual({
+        mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 },
+        orientation: { type: "cardinal", view: "left" },
+      });
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "se", hemisphere: "upper" }, { mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toEqual({
+        mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" },
+        orientation: { type: "corner", quadrant: "se", hemisphere: "upper" },
+      });
+      expect(resolveProjectionGizmoSpec({ type: "center" }, { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toEqual({
+        mode: { kind: "orthographic" },
+        orientation: { type: "free" },
+      });
+      expect(resolveProjectionGizmoSpec({ type: "center" }, { mode: { kind: "twoPoint", fov: 42, verticalShift: 0 }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+        mode: { kind: "twoPoint", fov: 42, verticalShift: 0 },
+        orientation: { type: "free" },
+      });
+    });
+
+    it("preserves axonometric mode params when snapping corners", () => {
+      const dimetric = { mode: { kind: "axonometric" as const, variant: "dimetric" as const, angleA: 15, angleB: 15 }, orientation: { type: "corner" as const, quadrant: "ne" as const, hemisphere: "upper" as const } };
+      expect(resolveProjectionGizmoSpec({ type: "corner", quadrant: "sw", hemisphere: "lower" }, dimetric)).toEqual({
+        mode: dimetric.mode,
+        orientation: { type: "corner", quadrant: "sw", hemisphere: "lower" },
+      });
+    });
+
+    it("composes every mode with gizmo top orientation (top works for fisheye, 2pt, axo, …)", () => {
+      const top = { type: "cardinal" as const, view: "top" as const };
+      for (const kind of WORLD_PROJECTION_KINDS) {
+        const withTop = { mode: worldProjectionDefaults(kind).mode, orientation: top };
+        const pose = computeWorldProjectionPose(withTop, { target: [0, 0, 0], distance: 100 });
+        expect(pose.position[2]).toBeGreaterThan(0);
+        expect(pose.projectionSpec).toEqual(withTop);
+      }
+      const fishTop = resolveProjectionGizmoSpec({ type: "face", axis: "z", sign: 1 }, worldProjectionDefaults("curvilinear"));
+      expect(fishTop).toEqual({ mode: worldProjectionDefaults("curvilinear").mode, orientation: { type: "cardinal", view: "top" } });
     });
   });
 
   describe("orbitViewToWorldProjectionSpec / worldProjectionSpecToOrbitView", () => {
     it("round-trips orthographic and isometric orbit views", () => {
-      expect(orbitViewToWorldProjectionSpec("front")).toEqual({ kind: "orthographic", view: "front" });
-      expect(orbitViewToWorldProjectionSpec("isometricNw")).toEqual({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "nw" });
-      expect(worldProjectionSpecToOrbitView({ kind: "orthographic", view: "right" })).toBe("right");
-      expect(worldProjectionSpecToOrbitView({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "se" })).toBe("isometricSe");
+      expect(orbitViewToWorldProjectionSpec("front")).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } });
+      expect(orbitViewToWorldProjectionSpec("isometricNw")).toEqual({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "nw", hemisphere: "upper" } });
+      expect(worldProjectionSpecToOrbitView({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "right" } })).toBe("right");
+      expect(worldProjectionSpecToOrbitView({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "se", hemisphere: "upper" } })).toBe("isometricSe");
     });
   });
 
   describe("worldProjectionKindSwitchSpec", () => {
     it("emits defaults for every projection kind", () => {
       for (const kind of WORLD_PROJECTION_KINDS) {
-        expect(worldProjectionKindSwitchSpec(kind).kind).toBe(kind);
+        expect(worldProjectionKindSwitchSpec(kind).mode.kind).toBe(kind);
       }
-      expect(worldProjectionKindSwitchSpec("orthographic")).toEqual({ kind: "orthographic", view: "plan" });
+      expect(worldProjectionKindSwitchSpec("orthographic")).toEqual({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } });
     });
 
     it("preserves perspective fov when switching kinds", () => {
-      expect(worldProjectionKindSwitchSpec("twoPoint", { kind: "threePoint", fov: 72 })).toEqual({ kind: "twoPoint", fov: 72, verticalShift: 0 });
+      expect(worldProjectionKindSwitchSpec("twoPoint", { mode: { kind: "threePoint", fov: 72 }, orientation: { type: "free" } })).toEqual({ mode: { kind: "twoPoint", fov: 72, verticalShift: 0 }, orientation: { type: "free" } });
     });
 
-    it("returns Orthographic to Plan when re-selecting the kind from a Plan child view", () => {
-      expect(worldProjectionKindSwitchSpec("orthographic", { kind: "orthographic", view: "front" })).toEqual({ kind: "orthographic", view: "plan" });
-      expect(worldProjectionKindSwitchSpec("orthographic", { kind: "orthographic", view: "plan" })).toEqual({ kind: "orthographic", view: "plan" });
+    it("preserves gizmo orientation when switching mode", () => {
+      expect(worldProjectionKindSwitchSpec("orthographic", { mode: { kind: "threePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } })).toEqual({
+        mode: { kind: "orthographic" },
+        orientation: { type: "cardinal", view: "front" },
+      });
+      expect(worldProjectionKindSwitchSpec("curvilinear", { mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+        mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" },
+        orientation: { type: "cardinal", view: "top" },
+      });
+    });
+  });
+
+  describe("worldProjectionTemplateSelectionId / worldProjectionTemplateApplySpec / worldProjectionSwitchTreeItems", () => {
+    it("selects the same leaf ids the display template tree uses", () => {
+      expect(worldProjectionTemplateSelectionId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("orthographic");
+      expect(worldProjectionTemplateSelectionId({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } })).toBe("orthographic");
+      expect(worldProjectionTemplateSelectionId({ mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "lower" } })).toBe("axonometric-dimetric");
+      expect(worldProjectionTemplateSelectionId({ mode: { kind: "onePoint", fov: 40 }, orientation: { type: "cardinal", view: "left" } })).toBe("one-point");
+      expect(worldProjectionTemplateSelectionId({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "panini" }, orientation: { type: "free" } })).toBe("curvilinear");
+    });
+
+    it("preserves gizmo orientation when applying a template mode", () => {
+      const axo = { mode: { kind: "axonometric" as const, variant: "isometric" as const, angleA: 30, angleB: 30 }, orientation: { type: "corner" as const, quadrant: "nw" as const, hemisphere: "lower" as const } };
+      expect(worldProjectionTemplateApplySpec({ mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, axo)).toEqual({
+        mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 },
+        orientation: { type: "corner", quadrant: "nw", hemisphere: "lower" },
+      });
+      expect(worldProjectionTemplateApplySpec({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } }, { mode: { kind: "onePoint", fov: 72 }, orientation: { type: "cardinal", view: "top" } })).toEqual({
+        mode: { kind: "onePoint", fov: 50 },
+        orientation: { type: "cardinal", view: "top" },
+      });
+    });
+
+    it("mirrors createWorldProjectionTemplates labels and ids in the switch tree", () => {
+      const templates = createWorldProjectionTemplates({ controllerId: "demo" });
+      const items = worldProjectionSwitchTreeItems(templates, () => undefined);
+      expect(items.map((row) => row.id)).toEqual(["parallel", "perspective"]);
+      expect(items[0]!.items!.map((row) => row.label)).toEqual(["Orthographic", "Axonometric", "Oblique"]);
+      expect(items[0]!.items![0]!.items).toBeUndefined();
+      expect(items[0]!.items![1]!.items!.map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
+      expect(items[1]!.items!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
     });
   });
 
   describe("worldProjectionModeOptions", () => {
-    it("lists only non-spatial mode variants — angles stay on the gizmo", () => {
-      expect(worldProjectionModeOptions({ kind: "orthographic", view: "top" })).toEqual([]);
-      expect(worldProjectionModeOptions({ kind: "onePoint", axis: "y", fov: 50 })).toEqual([]);
-      expect(worldProjectionModeOptions({ kind: "threePoint", fov: 50 })).toEqual([]);
-      expect(worldProjectionModeOptions({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }).map((row) => row.label)).toEqual(["Iso", "Di", "Tri"]);
-      expect(worldProjectionModeOptions({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }).map((row) => row.label)).toEqual(["Cab", "Cav", "Mil"]);
-      expect(worldProjectionModeOptions({ kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }).map((row) => row.label)).toEqual(["Fish", "Pan"]);
+    it("lists axonometric/oblique/curvilinear flat variants for callers that still want a ribbon", () => {
+      expect(worldProjectionModeOptions({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toEqual([]);
+      expect(worldProjectionModeOptions({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }).map((row) => row.label)).toEqual(["Iso", "Di", "Tri"]);
+      expect(worldProjectionModeOptions({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }).map((row) => row.label)).toEqual(["Cab", "Cav", "Mil"]);
+      expect(worldProjectionModeOptions({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } }).map((row) => row.label)).toEqual(["Fish", "Pan"]);
     });
   });
 
@@ -4038,31 +4102,31 @@ if (import.meta.vitest) {
 
   describe("worldProjectionFamily", () => {
     it("treats orthographic/axonometric/oblique as parallel and everything else as perspective", () => {
-      expect(worldProjectionFamily({ kind: "orthographic", view: "top" })).toBe("parallel");
-      expect(worldProjectionFamily({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" })).toBe("parallel");
-      expect(worldProjectionFamily({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 })).toBe("parallel");
-      expect(worldProjectionFamily({ kind: "threePoint", fov: 50 })).toBe("perspective");
-      expect(worldProjectionFamily({ kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" })).toBe("perspective");
+      expect(worldProjectionFamily({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toBe("parallel");
+      expect(worldProjectionFamily({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toBe("parallel");
+      expect(worldProjectionFamily({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } })).toBe("parallel");
+      expect(worldProjectionFamily({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBe("perspective");
+      expect(worldProjectionFamily({ mode: { kind: "curvilinear", fov: 120, strength: 1, mapping: "fisheye" }, orientation: { type: "free" } })).toBe("perspective");
       expect(worldProjectionFamily(undefined)).toBe("perspective");
     });
   });
 
   describe("worldProjectionGumballPlane", () => {
     it("maps planar orthographic views to drafting planes and leaves 3D projections unconstrained", () => {
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "plan" })).toBe("xy");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "top" })).toBe("xy");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "bottom" })).toBe("xy");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "front" })).toBe("xz");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "back" })).toBe("xz");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "left" })).toBe("yz");
-      expect(worldProjectionGumballPlane({ kind: "orthographic", view: "right" })).toBe("yz");
-      expect(worldProjectionGumballPlane({ kind: "oblique", variant: "military", angle: 45, depthScale: 1 })).toBe("xy");
-      expect(worldProjectionGumballPlane({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 })).toBe("xz");
-      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "y", fov: 50 })).toBe("xz");
-      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "x", fov: 50 })).toBe("yz");
-      expect(worldProjectionGumballPlane({ kind: "onePoint", axis: "z", fov: 50 })).toBe("xy");
-      expect(worldProjectionGumballPlane({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" })).toBeUndefined();
-      expect(worldProjectionGumballPlane({ kind: "threePoint", fov: 50 })).toBeUndefined();
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("xy");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } })).toBe("xy");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "bottom" } })).toBe("xy");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "back" } })).toBe("xz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "left" } })).toBe("yz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "right" } })).toBe("yz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "oblique", variant: "military", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "plan" } })).toBe("xy");
+      expect(worldProjectionGumballPlane({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } })).toBe("xz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "left" } })).toBe("yz");
+      expect(worldProjectionGumballPlane({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "top" } })).toBe("xy");
+      expect(worldProjectionGumballPlane({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } })).toBeUndefined();
+      expect(worldProjectionGumballPlane({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } })).toBeUndefined();
       expect(worldProjectionGumballPlane(undefined)).toBeUndefined();
     });
 
@@ -4078,41 +4142,41 @@ if (import.meta.vitest) {
 
   describe("computeWorldProjectionPose", () => {
     it("places plan/top directly above the target with orthographic projection", () => {
-      const state = computeWorldProjectionPose({ kind: "orthographic", view: "top" }, { target: [0, 0, 40], distance: 800 });
+      const state = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, { target: [0, 0, 40], distance: 800 });
       expect(state).toMatchObject({ position: [0, 0, 840], target: [0, 0, 40], up: [0, 1, 0], projection: "orthographic", zoom: 50 });
-      const plan = computeWorldProjectionPose({ kind: "orthographic", view: "plan" }, { target: [0, 0, 40], distance: 800 });
+      const plan = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } }, { target: [0, 0, 40], distance: 800 });
       expect(plan.position).toEqual(state.position);
     });
 
     it("accepts an explicit orthographic zoom including values below the legacy default", () => {
-      const state = computeWorldProjectionPose({ kind: "orthographic", view: "top" }, { target: [7, 0, 0], distance: 100, zoom: 6.4 });
+      const state = computeWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, { target: [7, 0, 0], distance: 100, zoom: 6.4 });
       expect(state.zoom).toBe(6.4);
     });
 
     it("preserves live parallel zoom across gizmo snaps and upgrades perspective unit zoom", () => {
-      expect(worldProjectionSnapZoom({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, 12.5, true)).toBe(12.5);
-      expect(worldProjectionSnapZoom({ kind: "orthographic", view: "front" }, 1, true)).toBe(1);
-      expect(worldProjectionSnapZoom({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" }, 1, false)).toBe(50);
-      expect(worldProjectionSnapZoom({ kind: "threePoint", fov: 50 }, 50, true)).toBe(50);
+      expect(worldProjectionSnapZoom({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, 12.5, true)).toBe(12.5);
+      expect(worldProjectionSnapZoom({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "front" } }, 1, true)).toBe(1);
+      expect(worldProjectionSnapZoom({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "upper" } }, 1, false)).toBe(50);
+      expect(worldProjectionSnapZoom({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }, 50, true)).toBe(50);
     });
 
     it("derives the classic 35.264/45 isometric direction from the 30/30 axis angles", () => {
-      const state = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, { target: [0, 0, 0], distance: 10 });
+      const state = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
       expect(state.position[2] / 10).toBeCloseTo(Math.sin((35.264 * Math.PI) / 180), 3);
       const azimuth = (Math.atan2(state.position[0], state.position[1]) * 180) / Math.PI;
       expect(azimuth).toBeCloseTo(45, 2);
     });
 
     it("mirrors quadrant sign flips for axonometric corners", () => {
-      const ne = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne" }, { target: [0, 0, 0], distance: 10 });
-      const sw = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "sw" }, { target: [0, 0, 0], distance: 10 });
+      const ne = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+      const sw = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "sw", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
       expect(sw.position[0]).toBeCloseTo(-ne.position[0], 5);
       expect(sw.position[1]).toBeCloseTo(-ne.position[1], 5);
     });
 
     it("places lower-hemisphere axonometric corners below the target", () => {
-      const upper = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne", hemisphere: "upper" }, { target: [0, 0, 0], distance: 10 });
-      const lower = computeWorldProjectionPose({ kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30, quadrant: "ne", hemisphere: "lower" }, { target: [0, 0, 0], distance: 10 });
+      const upper = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" } }, { target: [0, 0, 0], distance: 10 });
+      const lower = computeWorldProjectionPose({ mode: { kind: "axonometric", variant: "isometric", angleA: 30, angleB: 30 }, orientation: { type: "corner", quadrant: "ne", hemisphere: "lower" } }, { target: [0, 0, 0], distance: 10 });
       expect(upper.position[2]).toBeGreaterThan(0);
       expect(lower.position[2]).toBeLessThan(0);
       expect(lower.position[0]).toBeCloseTo(upper.position[0], 5);
@@ -4120,15 +4184,15 @@ if (import.meta.vitest) {
     });
 
     it("keeps oblique cabinet/cavalier at the front pose and rotates military's up vector by its angle", () => {
-      const cavalier = computeWorldProjectionPose({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, { target: [0, 0, 0], distance: 10 });
+      const cavalier = computeWorldProjectionPose({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }, { target: [0, 0, 0], distance: 10 });
       expect(cavalier.position).toEqual([0, -10, 0]);
-      const military = computeWorldProjectionPose({ kind: "oblique", variant: "military", angle: 30, depthScale: 1 }, { target: [0, 0, 0], distance: 10 });
+      const military = computeWorldProjectionPose({ mode: { kind: "oblique", variant: "military", angle: 30, depthScale: 1 }, orientation: { type: "cardinal", view: "plan" } }, { target: [0, 0, 0], distance: 10 });
       expect(military.position).toEqual([0, 0, 10]);
       expect(military.up![0]).toBeCloseTo(Math.sin((30 * Math.PI) / 180), 5);
     });
 
     it("reports perspective projection for the perspective family", () => {
-      const threePoint = computeWorldProjectionPose({ kind: "threePoint", fov: 50 }, { target: [0, 0, 0], distance: 100 });
+      const threePoint = computeWorldProjectionPose({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }, { target: [0, 0, 0], distance: 100 });
       expect(threePoint.projection).toBe("perspective");
       expect(Math.hypot(...threePoint.position)).toBeGreaterThan(90);
     });
@@ -4138,7 +4202,7 @@ if (import.meta.vitest) {
     it("centers top orthographic on reference bounds and fits width in the viewport", () => {
       const bounds = worldSceneContentBounds([], [{ origin: [7, 0, 0.01], widthWorld: 50 }]);
       expect(bounds).toEqual({ center: [7, 0, 0.01], halfExtent: [25, 25, 0.5] });
-      const state = frameWorldProjectionPose({ kind: "orthographic", view: "top" }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.35 });
+      const state = frameWorldProjectionPose({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }, bounds!, { viewportWidth: 400, viewportHeight: 800, padding: 1.35 });
       expect(state.target).toEqual([7, 0, 0.01]);
       expect(state.position[0]).toBe(7);
       expect(state.position[1]).toBe(0);
@@ -4151,21 +4215,21 @@ if (import.meta.vitest) {
 
   describe("worldProjectionOrbitConstraints", () => {
     it("locks rotation for plan, oblique, and one-point; locks polar for two-point; frees the rest", () => {
-      expect(worldProjectionOrbitConstraints({ kind: "orthographic", view: "plan" }).rotate).toBe(false);
-      expect(worldProjectionOrbitConstraints({ kind: "orthographic", view: "top" }).rotate).toBe(true);
-      expect(worldProjectionOrbitConstraints({ kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }).rotate).toBe(false);
-      expect(worldProjectionOrbitConstraints({ kind: "onePoint", axis: "y", fov: 50 }).rotate).toBe(false);
-      const twoPoint = worldProjectionOrbitConstraints({ kind: "twoPoint", fov: 50, verticalShift: 0 });
+      expect(worldProjectionOrbitConstraints({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } }).rotate).toBe(false);
+      expect(worldProjectionOrbitConstraints({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "top" } }).rotate).toBe(true);
+      expect(worldProjectionOrbitConstraints({ mode: { kind: "oblique", variant: "cavalier", angle: 45, depthScale: 1 }, orientation: { type: "cardinal", view: "front" } }).rotate).toBe(false);
+      expect(worldProjectionOrbitConstraints({ mode: { kind: "onePoint", fov: 50 }, orientation: { type: "cardinal", view: "front" } }).rotate).toBe(false);
+      const twoPoint = worldProjectionOrbitConstraints({ mode: { kind: "twoPoint", fov: 50, verticalShift: 0 }, orientation: { type: "free" } });
       expect(twoPoint.minPolar).toBeCloseTo(Math.PI / 2);
       expect(twoPoint.maxPolar).toBeCloseTo(Math.PI / 2);
-      expect(worldProjectionOrbitConstraints({ kind: "threePoint", fov: 50 }).rotate).toBe(true);
+      expect(worldProjectionOrbitConstraints({ mode: { kind: "threePoint", fov: 50 }, orientation: { type: "free" } }).rotate).toBe(true);
     });
   });
 
   describe("worldCurvilinearUnproject", () => {
     it("is the identity mapping at strength 0 (rectilinear passthrough)", () => {
-      const spec = { kind: "curvilinear" as const, fov: 120, strength: 0, mapping: "fisheye" as const };
-      const [x, y] = worldCurvilinearUnproject([0.3, 0.2], spec);
+      const mode = { kind: "curvilinear" as const, fov: 120, strength: 0, mapping: "fisheye" as const };
+      const [x, y] = worldCurvilinearUnproject([0.3, 0.2], mode);
       expect(x).toBeCloseTo(0.3, 5);
       expect(y).toBeCloseTo(0.2, 5);
     });
@@ -4186,13 +4250,12 @@ if (import.meta.vitest) {
   });
 
   describe("createWorldProjectionTemplates", () => {
-    it("emits exactly the requested Parallel/Perspective taxonomy tree", () => {
+    it("emits Parallel/Perspective mode tree without gizmo orientations", () => {
       const templates = createWorldProjectionTemplates({ controllerId: "demo" });
       expect(templates.map((row) => row.id)).toEqual(["parallel", "perspective"]);
       const [parallel, perspective] = templates;
       expect(parallel!.children!.map((row) => row.id)).toEqual(["orthographic", "axonometric", "oblique"]);
-      expect(parallel!.children![0]!.children!.map((row) => row.label)).toEqual(["Plan"]);
-      expect(parallel!.children![0]!.children![0]!.children!.map((row) => row.label)).toEqual(["Top", "Bottom", "Front", "Back", "Left", "Right"]);
+      expect(parallel!.children![0]!.children).toBeUndefined();
       expect(parallel!.children![1]!.children!.map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
       expect(parallel!.children![2]!.children!.map((row) => row.label)).toEqual(["Cabinet", "Cavalier", "Military"]);
       expect(perspective!.children!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
@@ -4202,7 +4265,7 @@ if (import.meta.vitest) {
 
   describe("encodeWorldProjectionTemplateId / decodeWorldProjectionTemplateId", () => {
     it("round-trips a spec through the template id string", () => {
-      const spec: WorldProjectionSpec = { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15, quadrant: "nw" };
+      const spec: WorldProjectionSpec = { mode: { kind: "axonometric", variant: "dimetric", angleA: 15, angleB: 15 }, orientation: { type: "corner", quadrant: "nw", hemisphere: "upper" } };
       const encoded = encodeWorldProjectionTemplateId(spec);
       expect(typeof encoded).toBe("string");
       expect(decodeWorldProjectionTemplateId(encoded)).toEqual(spec);
@@ -4223,7 +4286,7 @@ if (import.meta.vitest) {
       for (const [label, spec] of collectLeafLabels(templates)) {
         expect(worldProjectionSpecLabel(spec)).toBe(label);
       }
-      expect(worldProjectionSpecLabel({ kind: "orthographic", view: "plan" })).toBe("Plan");
+      expect(worldProjectionSpecLabel({ mode: { kind: "orthographic" }, orientation: { type: "cardinal", view: "plan" } })).toBe("Orthographic");
     });
   });
 
