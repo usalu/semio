@@ -1,0 +1,15 @@
+{
+  "title": "Use Drei Fisheye for Curvilinear",
+  "emoji": "🐟",
+  "status": "closed",
+  "description": "Fix fisheye/curvilinear projection: pixelated image and wrong colors caused by NearestFilter capture, CSS-pixel RT size, and missing sRGB blit conversion.",
+  "summary": "Evaluated pmndrs/drei \u003cFisheye\u003e: it portals children into a cubemap sphere (zoom/segments/resolution only) and cannot express our curvilinear fov/strength/panini or sibling-pass mounting next to undistorted gizmo/orbit chrome. Kept WorldCurvilinearPass; borrowed HalfFloatType capture precision from drei RenderCubeTexture. Vitest 130 passed.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2303"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9a2ca78f7b4141e6903ad63764d410ae",
+    "⚪6f7ca4ae75694f13aacb4eff9501893c"
+  ]
+}

@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3D Stuck After Context Menu Suggestion",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "puzzle 3d: sometimes after clicking on a suggestion over context menu the 3d is kind of stuck (the vortex remains selected, the hover stays, but somehow the group selection still works. but when trying to open a context menu for a new vortex nothing happens. clicking on background also doesnt do anything)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2304"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪cf02c7320f1d4d61b084c36b007eee6f"
+  ]
+}

@@ -459,6 +459,15 @@ This MUST NOT happen.
 
 ---
 
+Extend introductions with demonstrations for interactions.
+During interaction demonstration the cursor is muted and a new cursor appears.
+The demonstration only shows when the cursor is not moving. If the user moves the cursor during the demonstration, the demonstration stops. If the user stops moving the cursor and the step is still active, show the demonstration again from the beginning.
+e.g. mouse left click, mouse right click, mouse click and drag, etc
+Show correct mouse cursors, etc
+e.g. for drag and drop allow for id based definition, absolute coordinates and normalized coordinates (such as  0-1 for windows) both screen coordinate system and local coordinate system (such as 2d and 3d)
+
+---
+
 Make sure that every single ui element is implemented cleanly and that there are proper mechanisms enforcing this.
 All ui elements share this and must render a visually distinguishable state for all combinations (except when hidden, then the rest of the props are ignored).
 A ui element can be in one of three states. The status state has 4 states. hover and selected are always possible and must be composable.

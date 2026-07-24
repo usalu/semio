@@ -198,6 +198,7 @@ import {
   UnifiedGumball,
   ContextMenuController,
   getActiveCatalogueDragPayload,
+  isContextMenuPointerTarget,
   marqueeCoverageFromGesture,
   marqueeModeFromModifiers,
   menuListItemClassName,
@@ -3190,12 +3191,23 @@ export function windowMeasureTreeContainsId(measures: readonly WindowMeasure[], 
   return false;
 }
 
+/** @emoji 📊 Probability weights (0–1 simplex sliders) read out as whole-percent labels, not raw fractions. */
+function windowMeasureUsesProbabilityReadout(measure: Extract<WindowMeasure, { kind: "slider" }>): boolean {
+  const step = measure.step ?? 1;
+  return measure.min === 0 && measure.max <= 1 && step < 1;
+}
+
+function windowMeasureProbabilityReadout(value: number): string {
+  return `${Math.round(value * 100)}%`;
+}
+
 /** @emoji 🎚️ Keeps a measure slider live without accumulating stale document actions behind the pointer. */
 function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<WindowMeasure, { kind: "slider" }>; readonly onAction: (action: ActionDescriptor) => unknown }) {
   const dispatchValue = useMemo(
     () => createDirectionalAsyncDispatcher((value) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } })),
     [measure.onChange, onAction],
   );
+  const formatDisplayValue = windowMeasureUsesProbabilityReadout(measure) ? windowMeasureProbabilityReadout : undefined;
 
   return (
     <Slider
@@ -3207,6 +3219,7 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       loading={measure.loading === true}
       waiting={measure.waiting === true}
       step={measure.step}
+      formatDisplayValue={formatDisplayValue}
       onValueChange={(values) => dispatchValue(values[0] ?? measure.value)}
     />
   );
@@ -5484,7 +5497,7 @@ export function FrameworkOsShell({
         activeToolIdRef.current = next;
         dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
         if (next) clearAllWindowUtilities();
-        if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
+        if (introductionStep?.advance.kind === "tool" && next && introductionStep.advance.id === next) advanceIntroductionStep();
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
@@ -6453,9 +6466,13 @@ export function FrameworkOsShell({
   }, [introductionElementIds]);
   const introductionPanelTabId = useMemo(() => {
     for (const id of introductionElementIds) {
-      if (!id.startsWith("framework.panelTab.")) continue;
-      const rest = id.slice("framework.panelTab.".length);
-      return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
+      if (id.startsWith("framework.panelTab.")) {
+        const rest = id.slice("framework.panelTab.".length);
+        return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
+      }
+      // 🛠️ Mode-level tool leaf / activate toggle ids (`tool.fill`) are themselves the panel tab id under
+      // the Tool category — open that tab so the introduce target can mount.
+      if (/^tool\.[a-z][a-zA-Z0-9]*$/.test(id)) return id;
     }
     return null;
   }, [introductionElementIds]);
@@ -6482,6 +6499,28 @@ export function FrameworkOsShell({
     }
     return null;
   }, [extraWindowInstances, introductionElementIds, session, windowMeasuresByWindowId]);
+
+  /** 🛠️ Tool id whose measure tree owns an introduce/show id — keeps mode-level tools like fill
+   * active so targets such as `puzzle3d-play-distribution` stay mounted for the tour. */
+  const introductionToolId = useMemo(() => {
+    if (introductionElementIds.length === 0) return null;
+    for (const [toolId, measures] of Object.entries(toolMeasuresByToolId)) {
+      if (introductionElementIds.some((id) => windowMeasureTreeContainsId(measures, id))) return toolId;
+    }
+    return null;
+  }, [introductionElementIds, toolMeasuresByToolId]);
+
+  const lastIntroductionToolIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!introductionToolId || !session) {
+      lastIntroductionToolIdRef.current = null;
+      return;
+    }
+    if (lastIntroductionToolIdRef.current === introductionToolId && activeToolIdRef.current === introductionToolId) return;
+    lastIntroductionToolIdRef.current = introductionToolId;
+    if (activeToolIdRef.current === introductionToolId) return;
+    onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: introductionToolId } });
+  }, [introductionToolId, onActionStable, session]);
 
   const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -8327,16 +8366,17 @@ function groupNamedLayoutsToTreeItems(layouts: readonly NamedLayout[], onApply: 
 }
 
 /** @emoji 🪟 Recursively converts a {@link WorldProjectionTemplateDescriptor} tree (Parallel/Perspective taxonomy)
- * into draggable {@link TreeDataItem}s for a window kind's Display "Windows" section — each leaf drags a
+ * into draggable {@link TreeDataItem}s for a window kind's Display "Windows" section — each node drags a
  * `{windowKindId, templateId}` payload that seeds the freshly-opened pane's initial camera (see
- * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}).
+ * {@link registerPendingWorldProjection}/{@link decodeWorldProjectionTemplateId}). Branches keep `items`
+ * so Orthographic > Plan > Top/… nesting stays expandable while Plan itself remains a drag target.
  *
  * The Display "Windows" section is always docked at the `bottom-left` panel anchor (see
  * `PanelGroup::Display`'s `anchor()`), so `Tree` always renders it with `direction="up"` — by design it
  * reverses sibling order at *every* level (`ui/js/react/index.tsx`'s `direction === "up" ? [...items].reverse() : items`,
  * exercised by existing tests), so the box can grow upward from its anchor without breaking parent/child
  * nesting. We pre-reverse each level here to cancel that out, so the palette still *reads* top-to-bottom as
- * Plan/Top/Bottom/Front/Back/Left/Right (etc.) instead of backwards. */
+ * Plan > Top/Bottom/Front/Back/Left/Right (etc.) instead of backwards. */
 function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjectionTemplateDescriptor[], windowKindId: string, idPrefix: string): TreeDataItem[] {
   return [...templates]
     .reverse()
@@ -8344,9 +8384,8 @@ function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjection
       id: `${idPrefix}.${template.id}`,
       label: template.label,
       defaultOpen: false,
-      ...(template.children?.length
-        ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) }
-        : { dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) } }),
+      dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) },
+      ...(template.children?.length ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) } : {}),
     }));
 }
 
@@ -12011,7 +12050,10 @@ function WorldVortexMarkers({
             event.stopPropagation();
             onHover(null);
           },
-          onPointerDown: (event: { stopPropagation: () => void; clientX: number; clientY: number; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+          onPointerDown: (event: { stopPropagation: () => void; button?: number; clientX: number; clientY: number; shiftKey?: boolean; ctrlKey?: boolean; metaKey?: boolean }) => {
+            // 🖱️ Ignore right/middle — otherwise opening a context/suggestion menu arms connect-drag
+            // and the portaled menu click never delivers host pointer-up to cancel it.
+            if (event.button != null && event.button !== 0) return;
             event.stopPropagation();
             if (resolveVortexPointerDownIntent(brushMode, selectionMode) === "select") {
               onVortexSelect(vortex.fullId, event);
@@ -12240,7 +12282,16 @@ function EngagementPreviewLayer({ items, color }: { readonly items: readonly Wor
   );
 }
 
-/** @emoji 🧭 Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. */
+/** @emoji 🪟 True when this world host pane owns the open one-shot suggestion popup (by `windowId`). */
+export function worldSuggestionMenuOwnsWindow(
+  menu: { readonly open?: boolean; readonly windowId?: string } | null | undefined,
+  windowInstanceId: string | undefined,
+): boolean {
+  if (!menu?.open) return false;
+  return !menu.windowId || menu.windowId === windowInstanceId;
+}
+
+/** @emoji 🧭 Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
 function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
   if (menu.pending) {
     return [{ id: "pending", label: "Checking placement…", disabled: true }];
@@ -12252,7 +12303,6 @@ function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: numbe
     id: `suggestion-${candidate.index}`,
     label: `${candidate.objectLabel} · ${candidate.vortexLabel}`,
     icon: candidate.icon ?? "box",
-    color: candidate.color,
     checked: candidate.index === activeIndex,
     action: "acceptSuggestion",
     args: { index: candidate.index, ...(menu.vortexFullId ? { fullId: menu.vortexFullId } : {}) },
@@ -12679,12 +12729,13 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), anchored bottom-left so it clears the navigation cube. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-middle so it grows upward like other bottom panes and clears the navigation cube. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = useState<Anchor>("bottom-left");
+  const [anchor, setAnchor] = useState<Anchor>("bottom-middle");
+  const [folded, setFolded] = useState(false);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
-    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label={projectionLabel}>
+    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label={projectionLabel}>
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
@@ -12852,10 +12903,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const gumballDragDebugTickRef = useRef(0);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
+  const suggestionMenuOpen = Boolean(interaction.suggestionMenu?.open);
+  const suggestionMenuOwnsThisWindow = worldSuggestionMenuOwnsWindow(interaction.suggestionMenu, windowInstanceId);
   useEffect(() => {
-    if (contextMenu == null || contextMenuItems.length === 0 || interaction.suggestionMenu?.open) return;
+    if (contextMenu == null || contextMenuItems.length === 0 || suggestionMenuOwnsThisWindow) return;
     logContextMenuOpen("world3d", contextMenuItems);
-  }, [contextMenu, contextMenuItems, interaction.suggestionMenu?.open]);
+  }, [contextMenu, contextMenuItems, suggestionMenuOwnsThisWindow]);
   useEffect(() => {
     if (!interaction.suggestionMenu?.open) return;
     logContextMenuOpen("world3d-suggestions", suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0));
@@ -13032,6 +13085,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       if (action === "openVortexSuggestions") {
+        setVortexPointerArm(null);
+        setConnectDragSource(null);
+        setConnectDragHoverPosition(null);
         dispatch(action, {
           windowId: windowInstanceId ?? undefined,
           x: contextMenu?.x ?? 0,
@@ -13053,6 +13109,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const handleWorldOrbitRightPointerDown = useCallback(
     (event: PointerEvent) => {
       if (event.altKey && hoveredVortexFullIdRef.current) {
+        setVortexPointerArm(null);
+        setConnectDragSource(null);
+        setConnectDragHoverPosition(null);
         dispatch("openVortexSuggestions", { fullId: hoveredVortexFullIdRef.current, x: event.clientX, y: event.clientY, windowId: windowInstanceId ?? undefined });
         return false;
       }
@@ -13061,7 +13120,31 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [dispatch, windowInstanceId],
   );
 
-  const handleSuggestionClose = useCallback(() => dispatch("closeVortexSuggestions"), [dispatch]);
+  const handleSuggestionClose = useCallback(() => {
+    setVortexPointerArm(null);
+    setConnectDragSource(null);
+    setConnectDragHoverPosition(null);
+    dispatch("closeVortexSuggestions");
+  }, [dispatch]);
+
+  // 🪟 Sibling split panes do not mount the suggestion ContextMenuController, so they need their own
+  // Escape / outside-dismiss path — otherwise `suggestionMenu.open` gates them with no way to clear it.
+  useEffect(() => {
+    if (!suggestionMenuOpen || suggestionMenuOwnsThisWindow) return undefined;
+    const handlePointerDown = (event: globalThis.PointerEvent): void => {
+      if (isContextMenuPointerTarget(event.target)) return;
+      handleSuggestionClose();
+    };
+    const handleKeyDown = (event: globalThis.KeyboardEvent): void => {
+      if (event.key === "Escape") handleSuggestionClose();
+    };
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [handleSuggestionClose, suggestionMenuOpen, suggestionMenuOwnsThisWindow]);
 
   // 🐢 Background suggestion/fill planning ticks must not pile into the serialized plugin WASM queue —
   // a blind `setInterval` every 120ms while each tick+refresh still runs turns ~15s of idle fill into an
@@ -13291,7 +13374,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     setProjectionFramePending(false);
   }, []);
 
-  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: cameraState.fov });
+  const worldProjectionSpec: WorldProjectionSpec = cameraState.projectionSpec ?? (cameraState.projection === "orthographic" ? { kind: "orthographic", view: "plan" } : { kind: "threePoint", fov: cameraState.fov });
   const worldOrbitConstraints = useMemo(() => worldProjectionOrbitConstraints(cameraState.projectionSpec), [cameraState.projectionSpec]);
 
   const marqueePreview = useMemo<{ readonly mergedComponentIds: readonly number[] | null; readonly mergedInstanceIds: readonly string[] | null }>(() => {
@@ -13461,11 +13544,18 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
-      if (wasMarqueeDragRef.current) return;
+      // 🧹 Consume the post-marquee suppress flag so a stale `true` cannot permanently no-op background deselect.
+      if (wasMarqueeDragRef.current) {
+        wasMarqueeDragRef.current = false;
+        return;
+      }
       if (selection.engagementSessionActive || paintMode) return;
+      if (interaction.suggestionMenu?.open) {
+        handleSuggestionClose();
+      }
       dispatch("worldPick", { granularity: selectionMode, id: null, merge: instanceMergeArg(resolveWorldSelectionMergeMode(selection.selectionMergeMode, event)) });
     },
-    [dispatch, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
+    [dispatch, handleSuggestionClose, interaction.suggestionMenu?.open, paintMode, selection.engagementSessionActive, selection.selectionMergeMode, selectionMode],
   );
 
   const clearCatalogueDrop = useCallback(() => {
@@ -13802,19 +13892,26 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         )
       ) : null}
       <ContextMenuController
-        open={contextMenu != null && contextMenuItems.length > 0 && !interaction.suggestionMenu?.open}
+        open={contextMenu != null && contextMenuItems.length > 0 && !suggestionMenuOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
         items={mapContextMenuSpecs(contextMenuItems, handleWorldMenuDispatch)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
       />
-      {interaction.suggestionMenu?.open && (!interaction.suggestionMenu.windowId || interaction.suggestionMenu.windowId === windowInstanceId) ? (
+      {suggestionMenuOwnsThisWindow ? (
         <ContextMenuController
           open
           closeOnSelect={false}
-          position={{ x: interaction.suggestionMenu.x, y: interaction.suggestionMenu.y }}
-          items={mapContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu, interaction.brushCandidateIndex ?? 0), dispatch)}
+          position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
+          items={mapContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0), (action, args) => {
+            if (action === "acceptSuggestion") {
+              setVortexPointerArm(null);
+              setConnectDragSource(null);
+              setConnectDragHoverPosition(null);
+            }
+            dispatch(action, args);
+          })}
           onOpenChange={(open) => {
             if (!open) handleSuggestionClose();
           }}

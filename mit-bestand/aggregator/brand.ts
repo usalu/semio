@@ -8,7 +8,7 @@ import { panelTabElementId, panelTabFirstDraggableElementId, windowElementId, FR
 /** @emoji ✒️ Semio emblem. */
 const ENTWERFEN_MIT_BESTAND_LOGO_SVG = `<svg viewBox="0 0 350 350" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Entwerfen mit Bestand"><path d="M270.589 28.413a175 175 0 0151.24 241.804A175 175 0 0180.155 322.07 175 175 0 0127.691 80.528a175 175 0 01241.408-53.076" fill="#001117"/><path d="M76.25 271.933l35-35.808V118.75h-35z" fill="#fa9500" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"/><g fill="#ff344f" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M76.25 113.75h155.563l37.66-37.5H76.25zM236.263 273.75l-.013-155.606 37.5-37.62V273.75z"/></g><g fill="#34d1bf" stroke="#f7f3e3" stroke-width="2.5" stroke-miterlimit="5"><path d="M160.467 273.75h70.783v-37.5h-34.169zM160.468 193.75h70.782v-37.5h-34.169z"/></g></svg>`;
 
-/** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `setVortexShow`, `openVortexSuggestions`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → catalogue → drag-and-drop → transform → Verbindungspunkte (window options) → context-menu suggest. */
+    /** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `tool.fill`, `puzzle3d-play-distribution`, `setVortexShow`, `openVortexSuggestions`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → catalogue → drag-and-drop → transform → Verbindungspunkte → Aktionsmenü vorschlagen → Füllen → Verteilung. */
 export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
   id: "entwerfen-mit-bestand",
   windowTitle: "Entwerfen mit Bestand · Aggregator",
@@ -110,11 +110,31 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
       {
         id: "suggest-objects",
         title: "Baukomponenten vorschlagen",
-        body: "Wählen Sie einen Verbindungspunkt und öffnen Sie das Kontextmenü per Rechtsklick. Mit »Baukomponenten vorschlagen« erhalten Sie passende Anschlüsse — schweben Sie über einen Eintrag zur Vorschau und klicken Sie zum Platzieren.",
+        body: "Wählen Sie einen Verbindungspunkt und öffnen Sie per Rechtsklick das Aktionsmenü. Mit »Baukomponenten vorschlagen« erhalten Sie passende Anschlüsse — fahren Sie über einen Eintrag zur Vorschau und klicken Sie zum Platzieren.",
         introduce: windowElementId("puzzle3d-main"),
         show: [],
         placement: "auto",
         advance: { kind: "action", id: "openVortexSuggestions" },
+        logos: [],
+      },
+      {
+        id: "fill-tool",
+        title: "Füllen",
+        body: "Aktivieren Sie das Werkzeug »Füllen« in der Werkzeugleiste, um den Entwurf automatisch mit Baukomponenten zu füllen.",
+        introduce: "tool.fill",
+        show: [panelTabElementId("tool.fill")],
+        placement: "auto",
+        advance: { kind: "tool", id: "fill" },
+        logos: [],
+      },
+      {
+        id: "fill-distribution",
+        title: "Anzahl und Verteilung",
+        body: "Stellen Sie die Anzahl ein und justieren Sie die Verteilung — sie gewichtet, welche Baukomponenten und Verbindungspunkte beim Füllen bevorzugt werden.",
+        introduce: "puzzle3d-play-distribution",
+        show: ["puzzle3d-fill-count", panelTabElementId("tool.fill")],
+        placement: "auto",
+        advance: { kind: "next" },
         logos: [],
       },
     ],

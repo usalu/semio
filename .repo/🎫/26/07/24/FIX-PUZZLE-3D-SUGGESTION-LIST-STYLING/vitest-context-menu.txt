@@ -1,0 +1,9 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  9 passed | 350 skipped (359)
+   Start at  07:08:16
+   Duration  4.88s (transform 1.22s, setup 117ms, import 3.92s, tests 262ms, environment 406ms)
+

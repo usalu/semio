@@ -2729,7 +2729,7 @@ pub mod d3 {
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionAdvance, IntroductionDefinition, IntroductionPlacement, IntroductionStepDefinition,
         window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
-        ActionRef, DialogDefinition,
+        ActionRef, AppLabelsOverlayExt, DialogDefinition,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -3860,6 +3860,20 @@ pub mod d3 {
         }
     }
 
+    /// 🐢 Fill/distribution slider gestures refresh the world body, fill-tool measures, and utility-option
+    /// window measures — never the full shell chrome.
+    fn puzzle3d_fill_options_scope() -> semio_framework_core::kernel::UiDirtyScope {
+        semio_framework_core::kernel::UiDirtyScope::Partial {
+            window_bodies: vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()],
+            panel_bodies: Vec::new(),
+            utilities: false,
+            tools: true,
+            engagements: false,
+            measures: true,
+            labels: false,
+        }
+    }
+
     /// 🐢 Suggestion collision ticking only refreshes the world body's suggestion-menu interaction JSON.
     fn puzzle3d_suggestions_tick_scope() -> semio_framework_core::kernel::UiDirtyScope {
         semio_framework_core::kernel::UiDirtyScope::Partial {
@@ -3970,6 +3984,10 @@ pub mod d3 {
         }
     }
 
+    fn sync_precompute_weights(session: &mut Puzzle3dPrecomputeSession, envelope: &Puzzle3dScene) {
+        session.update_kind_weights_rust(envelope.runtime.object_kind_weights.clone(), envelope.runtime.vortex_kind_weights.clone());
+    }
+
     fn world_selection_json(envelope: &Puzzle3dScene) -> String {
         let runtime = &envelope.runtime;
         let mut value: Value = serde_json::from_str(&world3d_selection_json(&runtime.selection_method, &runtime.selection.object_ids, runtime.hovered_object_id.as_deref())).unwrap_or_else(|_| json!({}));
@@ -4047,8 +4065,6 @@ pub mod d3 {
         if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
             if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
                 envelope = next;
-                puzzle3d_rederive_all_attractions(&mut envelope.fixture);
-                resolve_puzzle3d_attractions(&mut envelope.fixture);
             }
         }
         envelope
@@ -4749,6 +4765,7 @@ pub mod d3 {
         outwards: &'static str,
         inwards: &'static str,
         vortex_direction: &'static str,
+        distribution: &'static str,
         suggest_objects: &'static str,
         duplicate: &'static str,
         select_same_kind: &'static str,
@@ -4786,6 +4803,7 @@ pub mod d3 {
         outwards: "Outwards",
         inwards: "Inwards",
         vortex_direction: "Vortex Direction",
+        distribution: "Distribution",
         suggest_objects: "Suggest objects",
         duplicate: "Duplicate",
         select_same_kind: "Select all of same kind",
@@ -4822,6 +4840,7 @@ pub mod d3 {
         outwards: "Auswärts",
         inwards: "Einwärts",
         vortex_direction: "Vortex-Richtung",
+        distribution: "Verteilung",
         suggest_objects: "Objekte vorschlagen",
         duplicate: "Duplizieren",
         select_same_kind: "Alle gleicher Art auswählen",
@@ -5735,7 +5754,7 @@ pub mod d3 {
                 let joint = puzzle3d_joint_vortex_weight(object_weight, vortex_weight);
                 WindowMeasure::Slider {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-joint-vortex-{object_kind_id}-{vortex_kind_id}"),
-                    label: Some(format!("{vortex_kind_id} {:.0}%", joint * 100.0)),
+                    label: Some(vortex_kind_id.clone()),
                     value: joint,
                     min: 0.0,
                     max: if object_weight > f64::EPSILON { object_weight } else { 1.0 },
@@ -5761,7 +5780,7 @@ pub mod d3 {
                 let label = puzzle3d_object_kind_label(&envelope.fixture, object_kind_id);
                 WindowMeasure::Group {
                     id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution-object-{object_kind_id}"),
-                    label: format!("{label} {:.0}%", object_weight * 100.0).into(),
+                    label,
                     default_open,
                     active_utility_id: None,
                     value: Some(object_weight),
@@ -5781,7 +5800,7 @@ pub mod d3 {
     fn puzzle3d_distribution_group(envelope: &Puzzle3dScene, labels: &Puzzle3dLabels, default_open: Option<bool>) -> WindowMeasure {
         WindowMeasure::Group {
             id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-distribution"),
-            label: "Distribution".into(),
+            label: labels.distribution.into(),
             default_open,
             active_utility_id: None,
             value: None,
@@ -6762,6 +6781,7 @@ pub mod d3 {
                         .unwrap_or(0)
                         .min(PUZZLE3D_FILL_COUNT_MAX);
                     envelope = apply_puzzle3d_fill_count(&mut self.precompute, envelope, count);
+                    ui_scope = puzzle3d_fill_build_scope();
                 }
                 "setBrushPlacementOverlapBudget" => {
                     if let Some(value) = puzzle3d_absolute_or_delta(args, envelope.runtime.overlap_budget) {
@@ -6785,7 +6805,8 @@ pub mod d3 {
                     } else {
                         envelope.runtime.vortex_kind_weights = puzzle3d_normalize_kind_weight_group(&envelope.runtime.vortex_kind_weights, &vortex_ids, kind_id, value);
                     }
-                    sync_precompute_session(&mut self.precompute, &envelope);
+                    sync_precompute_weights(&mut self.precompute, &envelope);
+                    ui_scope = puzzle3d_fill_options_scope();
                 }
                 "cycleBrushCandidate" | "cycleBrushCandidateBack" => {
                     drive_precompute(&mut self.precompute, &envelope);
@@ -6829,6 +6850,7 @@ pub mod d3 {
                 }
                 "closeVortexSuggestions" => {
                     envelope.runtime.suggestion_menu = None;
+                    envelope.runtime.hovered_vortex_full_id = None;
                 }
                 "hoverSuggestion" => {
                     if let Some(index) = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()) {
@@ -6836,6 +6858,8 @@ pub mod d3 {
                     }
                 }
                 "acceptSuggestion" => {
+                    // 🧹 Always dismiss the one-shot picker first — a failed preview/place must not leave
+                    // `suggestionMenu.open` gating every split pane's regular context menu.
                     drive_precompute(&mut self.precompute, &envelope);
                     let index = args.and_then(|value| value.get("index")).and_then(|value| value.as_u64()).unwrap_or(envelope.runtime.brush_candidate_index as u64) as usize;
                     let vortex_id = args
@@ -6843,6 +6867,8 @@ pub mod d3 {
                         .and_then(|value| value.as_str())
                         .map(str::to_string)
                         .or_else(|| puzzle3d_brush_target_vortex(&envelope));
+                    envelope.runtime.suggestion_menu = None;
+                    envelope.runtime.hovered_vortex_full_id = None;
                     if let Some(vortex_id) = vortex_id {
                         envelope.runtime.selection.vortex_ids = vec![vortex_id.clone()];
                         envelope.runtime.selection.object_ids.clear();
@@ -6853,7 +6879,10 @@ pub mod d3 {
                                     envelope = next;
                                     puzzle3d_rederive_all_attractions(&mut envelope.fixture);
                                     resolve_puzzle3d_attractions(&mut envelope.fixture);
+                                    // ✅ One-shot place finished — leave the scene idle (no sticky vortex/hover/menu).
+                                    puzzle3d_clear_selection(&mut envelope.runtime.selection);
                                     envelope.runtime.suggestion_menu = None;
+                                    envelope.runtime.hovered_vortex_full_id = None;
                                 }
                             }
                         }
@@ -7001,121 +7030,263 @@ pub mod d3 {
         }
 
         fn app_labels(&self, view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
-            let labels = puzzle3d_labels(view_state);
-            let is_de = view_state.locale.as_deref().is_some_and(|locale| locale.starts_with("de"));
-            semio_framework_plugin::AppLabelsOverlay {
-                window_kind_labels: std::collections::HashMap::from([(PUZZLE3D_PLAY_WINDOW_MAIN.to_string(), labels.window_main.to_string())]),
-                panel_tab_labels: std::collections::HashMap::from([
-                    ("puzzle3d.panel.settings".to_string(), (if is_de { "Einstellungen" } else { "Settings" }).to_string()),
-                ]),
-                mode_labels: std::collections::HashMap::new(),
-                action_labels: puzzle3d_action_labels(is_de),
-                utility_labels: puzzle3d_utility_labels(is_de),
-                example_labels: std::collections::HashMap::from([(PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string())]),
-                action_arg_labels: HashMap::new(),
-                dialog_labels: HashMap::new(),
-                introduction_labels: HashMap::new(),
-                group_labels: std::collections::HashMap::new(),
-            }
+            puzzle3d_app_labels_overlay(view_state)
         }
     }
     //#endregion 🔖Puzzle3dPlayApp
 
     //#region 🔖CommandLabels
-    /// 🗣️ (action id) -> localized label for every operation/view-action/shell-action declared in `create_puzzle3d_app`'s
-    /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
-    /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-    fn puzzle3d_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("setFixtureJson", "Set Fixture Json", "Fixture-JSON festlegen"),
-            ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
-            ("addObjectKind", "Add Object", "Objekt hinzufügen"),
-            ("deleteSelection", "Delete Selection", "Auswahl löschen"),
-            ("duplicateSelection", "Duplicate Selection", "Auswahl duplizieren"),
-            ("setCamera", "Set Camera", "Kamera festlegen"),
-            ("setProjection", "Set Projection", "Projektion festlegen"),
-            ("setProjectionParam", "Set Projection Parameter", "Projektionsparameter festlegen"),
-            ("translateSelection", "Translate Selection", "Auswahl verschieben"),
-            ("rotateSelection", "Rotate Selection", "Auswahl drehen"),
-            ("scaleSelection", "Scale Selection", "Auswahl skalieren"),
-            ("worldRelocate", "Relocate Object", "Objekt verlagern"),
-            ("setSelectionFlag", "Set Selection Flag", "Auswahlmarkierung festlegen"),
-            ("patchInspector", "Patch Inspector", "Inspektor aktualisieren"),
-            ("focusSelection", "Focus Selection", "Auswahl fokussieren"),
-            ("engagementSubmit", "Engagement Submit", "Eingabe bestätigen"),
-            ("engagementRepeatLast", "Engagement Repeat Last", "Letzte Eingabe wiederholen"),
-            ("createAttraction", "Create Attraction", "Anziehung erstellen"),
-            ("deleteAttraction", "Delete Attraction", "Anziehung löschen"),
-            ("addTargetVolume", "Add Target Volume", "Zielvolumen hinzufügen"),
-            ("deleteTargetVolume", "Delete Target Volume", "Zielvolumen löschen"),
-            ("relocateTargetVolume", "Relocate Target Volume", "Zielvolumen verlagern"),
-            ("setTargetVolumeFlag", "Set Target Volume Flag", "Zielvolumenmarkierung festlegen"),
-            ("addBrushObject", "Add Brush Object", "Pinselobjekt hinzufügen"),
-            ("setFillCount", "Set Fill Count", "Füllanzahl festlegen"),
-            ("acceptSuggestion", "Accept Suggestion", "Vorschlag annehmen"),
-            ("fillBuildTick", "Fill Build Tick", "Füllaufbau-Takt"),
-            ("openAddObjectDialog", "Add Object…", "Objekt hinzufügen…"),
-            ("setSelection", "Set Selection", "Auswahl festlegen"),
-            ("selectSameKindSelection", "Select Same Kind", "Gleiche Art auswählen"),
-            ("setJackQuery", "Set Jack Query", "Jack-Abfrage festlegen"),
-            ("worldSelect", "World Select", "Welt auswählen"),
-            ("worldHover", "World Hover", "Überfahren (Welt)"),
-            ("setHover", "Set Hover", "Überfahren festlegen"),
-            ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
-            ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
-            ("worldVortexSelect", "World Vortex Select", "Welt-Vortex auswählen"),
-            ("setSelectionMethod", "Set Selection Method", "Auswahlmethode festlegen"),
-            ("setVortexShow", "Set Vortex Show", "Vortex-Anzeige festlegen"),
-            ("setVortexDirection", "Set Vortex Direction", "Vortex-Richtung festlegen"),
-            ("toggleSun", "Toggle Sun", "Sonne umschalten"),
-            ("setSunAzimuth", "Set Sun Azimuth", "Sonnenazimut festlegen"),
-            ("setSunElevation", "Set Sun Elevation", "Sonnenhöhe festlegen"),
-            ("setSunIntensity", "Set Sun Intensity", "Sonnenintensität festlegen"),
-            ("setLodAutomatic", "Set Lod Automatic", "LOD automatisch festlegen"),
-            ("setLodDepthVariable", "Set Lod Depth Variable", "LOD-Tiefenvariable festlegen"),
-            ("setGridVisible", "Set Grid Visible", "Raster anzeigen"),
-            ("setLodManual", "Set Lod Manual", "LOD manuell festlegen"),
-            ("setGridSnapEnabled", "Set Grid Snap Enabled", "Rasterfang aktivieren"),
-            ("setGridSpacing", "Set Grid Spacing", "Rasterabstand festlegen"),
-            ("setSelectionModeDefault", "Set Selection Mode Default", "Standardauswahlmodus festlegen"),
-            ("setProximityRadius", "Set Proximity Radius", "Näheradius festlegen"),
-            ("setChunkSize", "Set Chunk Size", "Blockgröße festlegen"),
-            ("setSelectableKind", "Set Selectable Kind", "Auswählbare Art festlegen"),
-            ("setKindHover", "Set Kind Hover", "Überfahren (Art) festlegen"),
-            ("selectAll", "Select All", "Alles auswählen"),
-            ("clearSelection", "Clear Selection", "Auswahl aufheben"),
-            ("contextMenuAt", "Context Menu At", "Kontextmenü bei"),
-            ("engagementInput", "Engagement Input", "Eingabe"),
-            ("engagementAbort", "Engagement Abort", "Eingabe abbrechen"),
-            ("engagementControlSelect", "Engagement Control Select", "Eingabesteuerung auswählen"),
-            ("setTransformGumballFlag", "Set Transform Gumball Flag", "Transform-Gumball-Flagge festlegen"),
-            ("setVoxelDims", "Set Voxel Dims", "Voxel-Abmessungen festlegen"),
-            ("setBrushPlacementOverlapBudget", "Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen"),
-            ("setObjectKindWeight", "Set Object Kind Weight", "Objektart-Gewicht festlegen"),
-            ("setVortexKindWeight", "Set Vortex Kind Weight", "Vortexart-Gewicht festlegen"),
-            ("cycleBrushCandidate", "Cycle Brush Candidate", "Pinselkandidat wechseln"),
-            ("cycleBrushCandidateBack", "Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln"),
-            ("openVortexSuggestions", "Open Vortex Suggestions", "Vortex-Vorschläge öffnen"),
-            ("closeVortexSuggestions", "Close Vortex Suggestions", "Vortex-Vorschläge schließen"),
-            ("hoverSuggestion", "Hover Suggestion", "Vorschlag hovern"),
-            ("suggestionsTick", "Suggestions Tick", "Vorschläge-Takt"),
-            ("registerBrushMesh", "Register Brush Mesh", "Pinsel-Mesh registrieren"),
-            ("worldPointerDown", "World Pointer Down", "Welt-Zeiger gedrückt"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    /// 🗣️ Full chrome overlay for puzzle3d — locale × terminology (native/reuse). Empty maps used to leak English
+    /// manifest labels ("Edit", "Add Object", "Context Menu At") into locale-locked brand shells.
+    fn puzzle3d_app_labels_overlay(view_state: &ViewState) -> semio_framework_plugin::AppLabelsOverlay {
+        let labels = puzzle3d_labels(view_state);
+        let is_de = is_de_locale(view_state);
+        let object = labels.object;
+        let objects = labels.objects;
+        semio_framework_plugin::AppLabelsOverlay::default()
+            .window_kind_label(PUZZLE3D_PLAY_WINDOW_MAIN, labels.window_main)
+            .panel_tab_label("puzzle3d.panel.settings", if is_de { "Einstellungen" } else { "Settings" })
+            .mode_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
+            .action_labels(puzzle3d_action_labels(view_state))
+            .utility_labels(puzzle3d_utility_labels(is_de))
+            .example_labels(HashMap::from([
+                (PUZZLE3D_EXAMPLE_CONCRETE_FOREST.to_string(), labels.example_concrete_forest.to_string()),
+                (PUZZLE3D_EXAMPLE_NAKAGIN.to_string(), "Nakagin Capsule Tower".to_string()),
+            ]))
+            .action_arg_label("addObjectKind.objectKind", if is_de { "Art" } else { "Kind" })
+            .action_arg_label("addObjectKind.objectKind.option.Object", object)
+            .action_arg_label("addObject.objectKind", if is_de { "Art" } else { "Kind" })
+            .action_arg_label("addObject.objectKind.option.Object", object)
+            .dialog_labels(HashMap::from([
+                (
+                    "addObject.title".to_string(),
+                    if is_de { format!("{object} hinzufügen") } else { format!("Add {object}") },
+                ),
+                (
+                    "addObject.body".to_string(),
+                    if is_de {
+                        "Wählen Sie die Art zum Hinzufügen.".into()
+                    } else {
+                        format!("Choose the kind of {object} to add to the scene.")
+                    },
+                ),
+                ("addObject.submit".to_string(), if is_de { "Hinzufügen".to_string() } else { "Add".to_string() }),
+            ]))
+            .introduction_labels(HashMap::from([
+                (
+                    "intro.title".to_string(),
+                    if is_de {
+                        format!("Willkommen bei {}", labels.window_main)
+                    } else {
+                        format!("Welcome to {}", labels.window_main)
+                    },
+                ),
+                (
+                    "intro.step.welcome.title".to_string(),
+                    if is_de {
+                        format!("Willkommen bei {}", labels.window_main)
+                    } else {
+                        format!("Welcome to {}", labels.window_main)
+                    },
+                ),
+                (
+                    "intro.step.welcome.body".to_string(),
+                    if is_de {
+                        "Eine kurze Tour durch Ansicht, Hilfsmittel und Paneele, bevor Sie mit dem Zusammenfügen beginnen.".into()
+                    } else {
+                        "A quick tour of the viewport, utilities, and panels before you start composing.".into()
+                    },
+                ),
+                (
+                    "intro.step.viewport.title".to_string(),
+                    if is_de { "Die 3D-Ansicht".into() } else { "The Viewport".into() },
+                ),
+                (
+                    "intro.step.viewport.body".to_string(),
+                    if is_de {
+                        "Das ist Ihre 3D-Szene — orbitieren, verschieben und zoomen Sie, um sich umzusehen.".into()
+                    } else {
+                        "This is your 3D scene — orbit, pan, and zoom to look around.".into()
+                    },
+                ),
+                (
+                    "intro.step.catalogue.title".to_string(),
+                    if is_de { "Der Katalog".into() } else { "The Catalogue".into() },
+                ),
+                (
+                    "intro.step.catalogue.body".to_string(),
+                    if is_de {
+                        format!("Durchstöbern Sie hier die verfügbaren {objects}.")
+                    } else {
+                        format!("Browse the {objects} available to place from here.")
+                    },
+                ),
+                (
+                    "intro.step.add-object.title".to_string(),
+                    if is_de { format!("{object} hinzufügen") } else { format!("Add a {object}") },
+                ),
+                (
+                    "intro.step.add-object.body".to_string(),
+                    if is_de {
+                        "Ziehen Sie den ersten Eintrag per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.".into()
+                    } else {
+                        format!("Drag the first {object} from the catalogue into the viewport.")
+                    },
+                ),
+                (
+                    "intro.step.transform-utility.title".to_string(),
+                    if is_de {
+                        format!("{objects} transformieren")
+                    } else {
+                        format!("Transform {objects}")
+                    },
+                ),
+                (
+                    "intro.step.transform-utility.body".to_string(),
+                    if is_de {
+                        format!("Aktivieren Sie das Transformieren-Hilfsmittel, um {objects} zu verschieben und zu drehen.")
+                    } else {
+                        format!("Activate the Transform utility to move and rotate {objects} in the scene.")
+                    },
+                ),
+            ]))
+            .group_label("edit", if is_de { "Bearbeiten" } else { "Edit" })
     }
 
-    /// 🗣️ (utility id) -> localized utility bar button label, for every `.utility(...)` declared in `create_puzzle3d_app`.
-    fn puzzle3d_utility_labels(is_de: bool) -> std::collections::HashMap<String, String> {
-        const ENTRIES: &[(&str, &str, &str)] = &[
-            ("select", "Select", "Auswählen"),
-            ("transform", "Transform", "Transformieren"),
-            ("brush", "Brush", "Pinsel"),
-            ("volumeBrush", "Volume Brush", "Volumenpinsel"),
-            ("fill", "Fill", "Füllen"),
-            ("worldRelocate", "Relocate", "Verlagern"),
-        ];
-        ENTRIES.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
+    /// 🗣️ (action id) → localized, terminology-aware label for every operation/view/shell action in `create_puzzle3d_app`.
+    fn puzzle3d_action_labels(view_state: &ViewState) -> HashMap<String, String> {
+        let labels = puzzle3d_labels(view_state);
+        let is_de = is_de_locale(view_state);
+        let object = labels.object;
+        let vortex = labels.vortex;
+        let pick = |en: &str, de: &str| (if is_de { de } else { en }).to_string();
+        let mut map = HashMap::from([
+            ("setFixtureJson".to_string(), pick("Set Fixture Json", "Rohdaten festlegen")),
+            ("setActiveExample".to_string(), pick("Set Active Example", "Aktives Beispiel festlegen")),
+            ("deleteSelection".to_string(), pick("Delete Selection", "Auswahl löschen")),
+            ("duplicateSelection".to_string(), pick("Duplicate Selection", "Auswahl duplizieren")),
+            ("setCamera".to_string(), pick("Set Camera", "Kamera festlegen")),
+            ("setProjection".to_string(), pick("Set Projection", "Projektion festlegen")),
+            ("setProjectionParam".to_string(), pick("Set Projection Parameter", "Projektionsparameter festlegen")),
+            ("translateSelection".to_string(), pick("Translate Selection", "Auswahl verschieben")),
+            ("rotateSelection".to_string(), pick("Rotate Selection", "Auswahl drehen")),
+            ("scaleSelection".to_string(), pick("Scale Selection", "Auswahl skalieren")),
+            ("setSelectionFlag".to_string(), pick("Set Selection Flag", "Auswahlmarkierung festlegen")),
+            ("patchInspector".to_string(), pick("Patch Inspector", "Inspektor aktualisieren")),
+            ("focusSelection".to_string(), pick("Focus Selection", "Auswahl fokussieren")),
+            ("engagementSubmit".to_string(), pick("Engagement Submit", "Eingabe bestätigen")),
+            ("engagementRepeatLast".to_string(), pick("Engagement Repeat Last", "Letzte Eingabe wiederholen")),
+            ("createAttraction".to_string(), pick("Create Attraction", "Anziehung erstellen")),
+            ("deleteAttraction".to_string(), pick("Delete Attraction", "Anziehung löschen")),
+            ("addTargetVolume".to_string(), pick("Add Target Volume", "Zielvolumen hinzufügen")),
+            ("deleteTargetVolume".to_string(), pick("Delete Target Volume", "Zielvolumen löschen")),
+            ("relocateTargetVolume".to_string(), pick("Relocate Target Volume", "Zielvolumen verlagern")),
+            ("setTargetVolumeFlag".to_string(), pick("Set Target Volume Flag", "Zielvolumenmarkierung festlegen")),
+            ("setFillCount".to_string(), pick("Set Fill Count", "Füllanzahl festlegen")),
+            ("acceptSuggestion".to_string(), pick("Accept Suggestion", "Vorschlag annehmen")),
+            ("fillBuildTick".to_string(), pick("Fill Build Tick", "Füllaufbau-Takt")),
+            ("setSelection".to_string(), pick("Set Selection", "Auswahl festlegen")),
+            ("selectSameKindSelection".to_string(), pick("Select Same Kind", "Gleiche Art auswählen")),
+            ("setJackQuery".to_string(), pick("Set Jack Query", "Abfrage festlegen")),
+            ("worldSelect".to_string(), pick("World Select", "In der Welt auswählen")),
+            ("worldHover".to_string(), pick("World Hover", "Überfahren (Welt)")),
+            ("setHover".to_string(), pick("Set Hover", "Überfahren festlegen")),
+            ("worldPick".to_string(), pick("World Pick", "Punkt in der Welt wählen")),
+            ("setSelectionMethod".to_string(), pick("Set Selection Method", "Auswahlmethode festlegen")),
+            ("toggleSun".to_string(), pick("Toggle Sun", "Sonne umschalten")),
+            ("setSunAzimuth".to_string(), pick("Set Sun Azimuth", "Sonnenazimut festlegen")),
+            ("setSunElevation".to_string(), pick("Set Sun Elevation", "Sonnenhöhe festlegen")),
+            ("setSunIntensity".to_string(), pick("Set Sun Intensity", "Sonnenintensität festlegen")),
+            ("setLodAutomatic".to_string(), pick("Set Lod Automatic", "Detailstufe automatisch")),
+            ("setLodDepthVariable".to_string(), pick("Set Lod Depth Variable", "Detailstufen-Tiefe festlegen")),
+            ("setGridVisible".to_string(), pick("Set Grid Visible", "Raster anzeigen")),
+            ("setLodManual".to_string(), pick("Set Lod Manual", "Detailstufe manuell")),
+            ("setGridSnapEnabled".to_string(), pick("Set Grid Snap Enabled", "Rasterfang aktivieren")),
+            ("setGridSpacing".to_string(), pick("Set Grid Spacing", "Rasterabstand festlegen")),
+            ("setSelectionModeDefault".to_string(), pick("Set Selection Mode Default", "Standardauswahlmodus festlegen")),
+            ("setProximityRadius".to_string(), pick("Set Proximity Radius", "Näheradius festlegen")),
+            ("setChunkSize".to_string(), pick("Set Chunk Size", "Blockgröße festlegen")),
+            ("setSelectableKind".to_string(), pick("Set Selectable Kind", "Auswählbare Art festlegen")),
+            ("setKindHover".to_string(), pick("Set Kind Hover", "Überfahren (Art) festlegen")),
+            ("selectAll".to_string(), pick("Select All", "Alles auswählen")),
+            ("clearSelection".to_string(), pick("Clear Selection", "Auswahl aufheben")),
+            ("contextMenuAt".to_string(), pick("Open Actions Menu", "Aktionsmenü öffnen")),
+            ("engagementInput".to_string(), pick("Engagement Input", "Eingabe")),
+            ("engagementAbort".to_string(), pick("Engagement Abort", "Eingabe abbrechen")),
+            ("engagementControlSelect".to_string(), pick("Engagement Control Select", "Eingabesteuerung auswählen")),
+            ("setTransformGumballFlag".to_string(), pick("Set Transform Gumball Flag", "Transformieren-Griff festlegen")),
+            ("setVoxelDims".to_string(), pick("Set Voxel Dims", "Voxel-Abmessungen festlegen")),
+            ("setBrushPlacementOverlapBudget".to_string(), pick("Set Brush Placement Overlap Budget", "Pinsel-Überlappungsbudget festlegen")),
+            ("cycleBrushCandidate".to_string(), pick("Cycle Brush Candidate", "Pinselkandidat wechseln")),
+            ("cycleBrushCandidateBack".to_string(), pick("Cycle Brush Candidate Back", "Pinselkandidat rückwärts wechseln")),
+            ("hoverSuggestion".to_string(), pick("Hover Suggestion", "Vorschlag überfahren")),
+            ("suggestionsTick".to_string(), pick("Suggestions Tick", "Vorschläge-Takt")),
+            ("registerBrushMesh".to_string(), pick("Register Brush Mesh", "Pinsel-Mesh registrieren")),
+            ("worldPointerDown".to_string(), pick("World Pointer Down", "Welt-Zeiger gedrückt")),
+            ("transformEnd".to_string(), pick("Transform End", "Transformieren beenden")),
+            ("transformBegin".to_string(), pick("Transform Begin", "Transformieren beginnen")),
+        ]);
+        map.insert(
+            "addObjectKind".into(),
+            if is_de { format!("{object} hinzufügen") } else { format!("Add {object}") },
+        );
+        map.insert(
+            "openAddObjectDialog".into(),
+            if is_de { format!("{object} hinzufügen…") } else { format!("Add {object}…") },
+        );
+        map.insert(
+            "worldRelocate".into(),
+            if is_de { format!("{object} verlagern") } else { format!("Relocate {object}") },
+        );
+        map.insert(
+            "addBrushObject".into(),
+            if is_de { format!("Pinsel-{object} hinzufügen") } else { format!("Add Brush {object}") },
+        );
+        map.insert(
+            "worldVortexHover".into(),
+            if is_de { format!("Überfahren ({vortex})") } else { format!("World {vortex} Hover") },
+        );
+        map.insert(
+            "worldVortexSelect".into(),
+            if is_de { format!("{vortex} in der Welt auswählen") } else { format!("World {vortex} Select") },
+        );
+        map.insert(
+            "setVortexShow".into(),
+            if is_de { format!("{} festlegen", labels.vortex_show) } else { format!("Set {}", labels.vortex_show) },
+        );
+        map.insert(
+            "setVortexDirection".into(),
+            if is_de { format!("{} festlegen", labels.vortex_direction) } else { format!("Set {}", labels.vortex_direction) },
+        );
+        map.insert(
+            "setObjectKindWeight".into(),
+            if is_de { format!("{object}-Art-Gewicht festlegen") } else { format!("Set {object} Kind Weight") },
+        );
+        map.insert(
+            "setVortexKindWeight".into(),
+            if is_de { format!("{vortex}-Art-Gewicht festlegen") } else { format!("Set {vortex} Kind Weight") },
+        );
+        map.insert(
+            "openVortexSuggestions".into(),
+            if is_de { format!("{vortex}-Vorschläge öffnen") } else { format!("Open {vortex} Suggestions") },
+        );
+        map.insert(
+            "closeVortexSuggestions".into(),
+            if is_de { format!("{vortex}-Vorschläge schließen") } else { format!("Close {vortex} Suggestions") },
+        );
+        map
+    }
+
+    /// 🗣️ (utility id) → localized utility bar button label for every `.utility(...)` / `.tool_simple(...)` in `create_puzzle3d_app`.
+    fn puzzle3d_utility_labels(is_de: bool) -> HashMap<String, String> {
+        HashMap::from([
+            ("select".to_string(), (if is_de { "Auswählen" } else { "Select" }).to_string()),
+            ("transform".to_string(), (if is_de { "Transformieren" } else { "Transform" }).to_string()),
+            ("brush".to_string(), (if is_de { "Pinsel" } else { "Brush" }).to_string()),
+            ("volumeBrush".to_string(), (if is_de { "Volumenpinsel" } else { "Volume Brush" }).to_string()),
+            ("fill".to_string(), (if is_de { "Füllen" } else { "Fill" }).to_string()),
+            ("worldRelocate".to_string(), (if is_de { "Verlagern" } else { "Relocate" }).to_string()),
+        ])
     }
     //#endregion 🔖CommandLabels
 
@@ -7251,7 +7422,7 @@ pub mod d3 {
                 .view_action("setKindHover", "Set Kind Hover")
                 .view_action("selectAll", "Select All")
                 .view_action("clearSelection", "Clear Selection")
-                .view_action("contextMenuAt", "Context Menu At")
+                .view_action("contextMenuAt", "Open Actions Menu")
                 .view_action("engagementInput", "Engagement Input")
                 .view_action("engagementAbort", "Engagement Abort")
                 .view_action("engagementControlSelect", "Engagement Control Select")
@@ -7584,6 +7755,41 @@ pub mod d3 {
             assert_eq!(dialog.args.len(), 1);
         }
 
+        #[test]
+        fn app_labels_overlay_is_german_reuse_branded_for_aggregator() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let view = ViewState {
+                locale: Some("de".into()),
+                terminology: Some("reuse".into()),
+                ..ViewState::default()
+            };
+            let overlay = app.app_labels(&view);
+            assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Bearbeiten"));
+            assert_eq!(overlay.window_kind_labels.get(PUZZLE3D_PLAY_WINDOW_MAIN).map(String::as_str), Some("Aggregator"));
+            assert_eq!(overlay.dialog_labels.get("addObject.title").map(String::as_str), Some("Baukomponente hinzufügen"));
+            assert_eq!(overlay.dialog_labels.get("addObject.submit").map(String::as_str), Some("Hinzufügen"));
+            assert_eq!(overlay.action_arg_labels.get("addObject.objectKind.option.Object").map(String::as_str), Some("Baukomponente"));
+            assert_eq!(overlay.action_labels.get("addObjectKind").map(String::as_str), Some("Baukomponente hinzufügen"));
+            assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Aktionsmenü öffnen"));
+            assert_eq!(overlay.action_labels.get("worldPick").map(String::as_str), Some("Punkt in der Welt wählen"));
+            assert_eq!(overlay.action_labels.get("openVortexSuggestions").map(String::as_str), Some("Verbindungspunkt-Vorschläge öffnen"));
+            assert_eq!(overlay.utility_labels.get("transform").map(String::as_str), Some("Transformieren"));
+            assert_eq!(overlay.example_labels.get(PUZZLE3D_EXAMPLE_CONCRETE_FOREST).map(String::as_str), Some("Abbau Aufbau"));
+            assert!(!overlay.action_labels.get("contextMenuAt").is_some_and(|label| label.contains("Kontextmenü") || label.contains("Context Menu")));
+            assert!(!overlay.action_labels.values().any(|label| label.contains("Hover") || label.contains("Pick") || label.contains("hovern")));
+        }
+
+        #[test]
+        fn app_labels_overlay_stays_english_native_without_brand_locks() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let overlay = app.app_labels(&ViewState::default());
+            assert_eq!(overlay.mode_labels.get("edit").map(String::as_str), Some("Edit"));
+            assert_eq!(overlay.window_kind_labels.get(PUZZLE3D_PLAY_WINDOW_MAIN).map(String::as_str), Some("Puzzle 3D"));
+            assert_eq!(overlay.dialog_labels.get("addObject.title").map(String::as_str), Some("Add Object"));
+            assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Open Actions Menu"));
+            assert_eq!(overlay.action_labels.get("addObjectKind").map(String::as_str), Some("Add Object"));
+        }
+
         //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
         fn vortex_full_ids(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> Vec<String> {
             let projection = app.projection().expect("projection");
@@ -7828,6 +8034,59 @@ pub mod d3 {
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
             assert_eq!(interaction.get("activeUtility").and_then(Value::as_str), Some("select"));
+            assert!(interaction.get("hoveredVortexFullId").is_none_or(|value| value.is_null()), "accept must clear sticky vortex hover");
+            let selected_vortices = render_composite(&mut app)
+                .pointer("/world3d/vorticesJson")
+                .and_then(Value::as_str)
+                .and_then(|raw| serde_json::from_str::<Vec<Value>>(raw).ok())
+                .unwrap_or_default()
+                .iter()
+                .filter(|entry| entry.get("selected").and_then(Value::as_bool) == Some(true))
+                .count();
+            assert_eq!(selected_vortices, 0, "one-shot accept must leave no sticky vortex selection");
+        }
+
+        /// 🧹 A failed place (unknown vortex) must still close the suggestion menu — otherwise
+        /// `suggestionMenu.open` stays true and every split pane's regular context menu is gated shut.
+        #[test]
+        fn accept_suggestion_closes_menu_even_when_placement_fails() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("worldVortexHover", Some(&json!({ "fullId": vortex.clone() })), &ViewState::default(), &testkit::meta("local")).expect("worldVortexHover");
+            app.handle_action(
+                "openVortexSuggestions",
+                Some(&json!({ "fullId": vortex.clone(), "x": 10.0, "y": 20.0, "windowId": "puzzle3d-main-top" })),
+                &ViewState::default(),
+                &testkit::meta("local"),
+            )
+            .expect("openVortexSuggestions");
+            let before = interaction_of(&render_composite(&mut app));
+            assert_eq!(before.pointer("/suggestionMenu/open").and_then(Value::as_bool), Some(true));
+            assert_eq!(before.get("hoveredVortexFullId").and_then(Value::as_str), Some(vortex.as_str()));
+            let object_count_before = object_count(&app);
+            app.handle_action(
+                "acceptSuggestion",
+                Some(&json!({ "index": 0, "fullId": "missing-object::missing-vortex" })),
+                &ViewState::default(),
+                &testkit::meta("local"),
+            )
+            .expect("acceptSuggestion");
+            assert_eq!(object_count(&app), object_count_before, "unknown-vortex accept must not place");
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()), "failed accept must still dismiss the suggestion menu");
+            assert!(interaction.get("hoveredVortexFullId").is_none_or(|value| value.is_null()), "failed accept must clear sticky vortex hover");
+        }
+
+        #[test]
+        fn close_vortex_suggestions_clears_sticky_hover() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let vortex = first_vortex_full_id(&app);
+            app.handle_action("worldVortexHover", Some(&json!({ "fullId": vortex.clone() })), &ViewState::default(), &testkit::meta("local")).expect("worldVortexHover");
+            app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex, "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
+            app.handle_action("closeVortexSuggestions", None, &ViewState::default(), &testkit::meta("local")).expect("closeVortexSuggestions");
+            let interaction = interaction_of(&render_composite(&mut app));
+            assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
+            assert!(interaction.get("hoveredVortexFullId").is_none_or(|value| value.is_null()));
         }
 
         #[test]
@@ -8064,6 +8323,52 @@ pub mod d3 {
         }
 
         #[test]
+        fn set_fill_count_declares_narrow_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill tool");
+            let result = app.handle_action("setFillCount", Some(&json!({ "value": 1 })), &fill_view, &testkit::meta("local")).expect("setFillCount");
+            match result.ui_scope {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
+                    assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                    assert!(panel_bodies.is_empty());
+                    assert!(tools);
+                    assert!(!measures);
+                    assert!(!engagements);
+                    assert!(!utilities);
+                    assert!(!labels);
+                }
+                other => panic!("expected a Partial ui_scope for setFillCount, got {other:?}"),
+            }
+        }
+
+        #[test]
+        fn set_object_kind_weight_declares_fill_options_ui_scope() {
+            use semio_framework_core::kernel::UiDirtyScope;
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill tool");
+            let object_ids = puzzle3d_kind_ids(&nakagin_fixture(), "objects");
+            let kind_id = object_ids.first().expect("object kind");
+            let result = app
+                .handle_action("setObjectKindWeight", Some(&json!({ "kindId": kind_id, "value": 0.75 })), &fill_view, &testkit::meta("local"))
+                .expect("setObjectKindWeight");
+            match result.ui_scope {
+                UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
+                    assert_eq!(window_bodies, vec![PUZZLE3D_PLAY_BODY_COMPOSITE.to_string()]);
+                    assert!(panel_bodies.is_empty());
+                    assert!(tools);
+                    assert!(measures, "distribution sliders live in tool + window measures");
+                    assert!(!engagements);
+                    assert!(!utilities);
+                    assert!(!labels);
+                }
+                other => panic!("expected a Partial ui_scope for setObjectKindWeight, got {other:?}"),
+            }
+        }
+
+        #[test]
         fn fill_count_measure_shows_planning_progress_while_precompute_incomplete() {
             let mut session = Puzzle3dPrecomputeSession::new();
             let scene = Puzzle3dScene { fixture: nakagin_fixture(), runtime: Puzzle3dRuntime::default(), active_utility: "fill".into() };
@@ -8138,11 +8443,18 @@ pub mod d3 {
                 "each object-kind group must carry a header weight slider"
             );
             assert!(
-                distribution_children.iter().any(|measure| match measure {
-                    WindowMeasure::Group { children, .. } => children.iter().any(|child| matches!(child, WindowMeasure::Slider { .. })),
+                distribution_children.iter().all(|measure| match measure {
+                    WindowMeasure::Group { label, value: Some(_), on_change: Some(_), .. } => !label.contains('%'),
                     _ => false,
                 }),
-                "object-kind groups must nest joint vortex sliders"
+                "object-kind group labels must not embed percentages — the header slider owns the value readout"
+            );
+            assert!(
+                distribution_children.iter().any(|measure| match measure {
+                    WindowMeasure::Group { children, .. } => children.iter().any(|child| matches!(child, WindowMeasure::Slider { label: Some(label), .. } if !label.contains('%'))),
+                    _ => false,
+                }),
+                "vortex joint sliders must label kinds without embedding percentages"
             );
             assert!(find_measure_toggle(&fill_tool_measures, "puzzle3d-edit-volumes").is_none(), "fill must not carry edit-volumes toggle");
             assert_eq!(measure_group_tag(&fill_tool_measures, "puzzle3d-play-tool-options-voxel"), None, "fill must not carry voxel-dimension sliders");

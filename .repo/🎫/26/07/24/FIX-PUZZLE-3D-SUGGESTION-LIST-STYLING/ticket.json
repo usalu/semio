@@ -1,0 +1,14 @@
+{
+  "title": "Fix Puzzle 3D Suggestion List Styling",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "puzzle 3d: the suggestion list is stylistically inconsistent. e.g. remove the blue box. Make sure spacing, etc is all correct",
+  "summary": "Removed the leading object-kind color swatch (often default sky blue) from Puzzle 3D suggestion popup rows so they match floating-menu density: icon + active preview highlight only; color stays on the 3D ghost. ContextMenu controller rows no longer force bg-transparent and keep bg-active-base through hover. Extended ContextMenu + mapContextMenuSpecs vitest (passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2305"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad/🎯runningsketchpadapps",
+  "sessions": [
+    "⚪37fea753316a45e486c9de90c516674c"
+  ]
+}

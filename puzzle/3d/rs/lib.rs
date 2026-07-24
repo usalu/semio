@@ -1232,6 +1232,39 @@ impl Puzzle3dEngine {
         }
     }
 
+    /// 🎚 Distribution-weight edits must not `rebuild_queue()` — applied fill objects stay, only the
+    /// unapplied planning tail is discarded and re-enqueued for background `fillBuildTick` planning.
+    fn soft_replan_fill_tail(&mut self) {
+        let Some(fill) = &mut self.fill else {
+            return;
+        };
+        let applied = fill.applied_count;
+        fill.sequence.truncate(applied);
+        fill.appended_objects.truncate(applied);
+        fill.appended_attractions.truncate(applied);
+        fill.fixture = fill.base.clone();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+        let retained_ids: std::collections::HashSet<&str> = fill.fixture.objects.iter().map(|object| object.id.as_str()).collect();
+        fill.placed.retain(|entry| retained_ids.contains(entry.object_id.as_str()));
+        fill.candidate_cache.clear();
+        fill.stalled = false;
+        self.queue.retain(|task| !matches!(task, PrecomputeTask::FillStep));
+        self.queue.extend((applied..fill.max_count).map(|_| PrecomputeTask::FillStep));
+    }
+
+    fn update_kind_weights(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
+        if let Some(scene) = &mut self.scene {
+            scene.weights.object_weights = object_weights;
+            scene.weights.vortex_weights = vortex_weights;
+            if let Ok(normalized) = serde_json::to_string(scene) {
+                self.scene_json = Some(normalized);
+            }
+        }
+        self.brush_cache.clear();
+        self.soft_replan_fill_tail();
+    }
+
     /// 🪣 True when `fixture` is the fill plan's base plus zero-or-more applied fill objects — i.e. the
     /// live document after `setFillCount`, which must NOT rebuild the precompute session or the slider
     /// loses its ability to remove/replan those objects.
@@ -1735,6 +1768,13 @@ impl Puzzle3dPrecomputeSession {
         let fixture = self.engine.apply_fill_count(count as usize).ok_or_else(|| JsValue::from_str("fill session unavailable"))?;
         serde_json::to_string(&fixture).map_err(|e| JsValue::from_str(&e.to_string()))
     }
+
+    pub fn update_kind_weights(&mut self, object_weights: &str, vortex_weights: &str) -> Result<(), JsValue> {
+        let object_weights: HashMap<String, f64> = serde_json::from_str(object_weights).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let vortex_weights: HashMap<String, f64> = serde_json::from_str(vortex_weights).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        self.engine.update_kind_weights(object_weights, vortex_weights);
+        Ok(())
+    }
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
@@ -1953,6 +1993,81 @@ mod tests {
     /// on *every* action, so this made suggestion/fill precompute restart from zero on every single tick,
     /// freezing the UI. A resync with byte-identical scene JSON must be a no-op.
     #[test]
+    fn fill_options_paths_are_millisecond_scale() {
+        let object =
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+        let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
+        let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        fill.applied_count = 0;
+        fill.sequence = (0..10).map(payload).collect();
+        fill.appended_objects = (0..10).map(|index| object(&format!("p{index}"))).collect();
+        fill.appended_attractions = (0..10).map(attraction).collect();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+
+        let mut engine = Puzzle3dEngine::new();
+        let base_scene = SceneConfig {
+            fixture: base.clone(),
+            kind_catalogs: Some(catalogs),
+            kind_compatibility: vec![],
+            overlap_budget: 0.0,
+            seed: 7,
+            host_rules: BrushHostRules::default(),
+            weights: BrushKindWeights::default(),
+        };
+        engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
+        engine.fill = Some(fill);
+
+        let count_start = std::time::Instant::now();
+        let _ = engine.apply_fill_count(5).expect("apply fill count");
+        let count_ms = count_start.elapsed().as_secs_f64() * 1000.0;
+        println!("[DEBUG] apply_fill_count(5): {count_ms:.3}ms");
+        assert!(count_ms < 5.0, "fill count apply took {count_ms}ms");
+        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 5);
+
+        let queue_before = engine.queue.len();
+        let weight_start = std::time::Instant::now();
+        let mut object_weights = HashMap::new();
+        object_weights.insert("Placed".to_string(), 1.0);
+        let mut vortex_weights = HashMap::new();
+        vortex_weights.insert("c-b".to_string(), 0.5);
+        vortex_weights.insert("b-s".to_string(), 0.5);
+        engine.update_kind_weights(object_weights, vortex_weights);
+        let weight_ms = weight_start.elapsed().as_secs_f64() * 1000.0;
+        println!("[DEBUG] update_kind_weights: {weight_ms:.3}ms queue_before={queue_before} queue_after={}", engine.queue.len());
+        assert!(weight_ms < 50.0, "weight update took {weight_ms}ms");
+        assert!(engine.queue.len() >= queue_before, "weight update must not wipe the queue");
+        assert_eq!(engine.fill.as_ref().expect("fill").applied_count, 5, "applied fill objects must survive weight edits");
+    }
+
+    #[test]
+    fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
+        let mut engine = Puzzle3dEngine::new();
+        let json = single_object_scene_json();
+        engine.set_scene(&json).expect("seed scene");
+        let queue_len_after_seed = engine.queue.len();
+        engine.precompute_step(8);
+        let queue_len_after_step = engine.queue.len();
+        assert!(queue_len_after_step < queue_len_after_seed);
+
+        let mut object_weights = HashMap::new();
+        object_weights.insert("Host".to_string(), 0.25);
+        object_weights.insert("Placed".to_string(), 0.75);
+        let mut vortex_weights = HashMap::new();
+        vortex_weights.insert("c-b".to_string(), 0.5);
+        vortex_weights.insert("b-s".to_string(), 0.5);
+        engine.update_kind_weights(object_weights, vortex_weights);
+
+        assert_eq!(engine.fill.as_ref().map(|fill| fill.applied_count).unwrap_or(0), 0, "weight-only edits must not change applied count");
+        assert_eq!(engine.fill.as_ref().map(|fill| fill.sequence.len()).unwrap_or(0), 0, "planned tail must be discarded for replanning");
+        assert!(engine.queue.len() >= queue_len_after_step, "fill steps must be re-enqueued without a full queue wipe");
+        assert!(engine.queue.iter().any(|task| matches!(task, PrecomputeTask::FillStep)), "fill planning must continue after weight edits");
+    }
+
+    #[test]
     fn set_scene_with_identical_json_preserves_precompute_progress() {
         let mut engine = Puzzle3dEngine::new();
         let json = single_object_scene_json();
@@ -2138,6 +2253,10 @@ impl Puzzle3dPrecomputeSession {
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle3dError> {
         let fixture = self.engine.apply_fill_count(count as usize).ok_or(Puzzle3dError::FillSessionUnavailable)?;
         Ok(serde_json::to_string(&fixture)?)
+    }
+
+    pub fn update_kind_weights_rust(&mut self, object_weights: HashMap<String, f64>, vortex_weights: HashMap<String, f64>) {
+        self.engine.update_kind_weights(object_weights, vortex_weights);
     }
 }
 

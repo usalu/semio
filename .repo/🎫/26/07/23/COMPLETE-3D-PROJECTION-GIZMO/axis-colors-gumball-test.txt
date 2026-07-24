@@ -1,30 +1,9 @@
 
  RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
 
-stderr | index.tsx
-THREE.WARNING: Multiple instances of Three.js being imported.
 
- ❯ |@semio-tech/ui-react| index.tsx (356 tests | 1 failed | 354 skipped) 34ms
-     × builds parallel orthographic rays via isOrthographicCamera duck-typing (not instanceof) 26ms
-
-⎯⎯⎯⎯⎯⎯⎯ Failed Tests 1 ⎯⎯⎯⎯⎯⎯⎯
-
- FAIL  |@semio-tech/ui-react| index.tsx > UnifiedGumball math > builds parallel orthographic rays via isOrthographicCamera duck-typing (not instanceof)
-TypeError: camera.updateMatrixWorld is not a function
- ❯ gumballRayFromNdc index.tsx:21222:10
-    21220|  * R3F-swapped cameras from a duplicate `three` copy stay correct (oth…
-    21221| export function gumballRayFromNdc(ndcX: number, ndcY: number, camera: …
-    21222|   camera.updateMatrixWorld(true);
-       |          ^
-    21223|   const ortho = camera as THREE.OrthographicCamera & { readonly isOrth…
-    21224|   if (ortho.isOrthographicCamera) {
- ❯ index.tsx:26291:26
-
-⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
-
-
- Test Files  1 failed (1)
-      Tests  1 failed | 1 passed | 354 skipped (356)
-   Start at  05:51:04
-   Duration  4.08s (transform 1.03s, setup 84ms, import 3.55s, tests 34ms, environment 250ms)
+ Test Files  1 passed (1)
+      Tests  1 passed | 355 skipped (356)
+   Start at  05:52:12
+   Duration  3.65s (transform 1.16s, setup 81ms, import 3.20s, tests 8ms, environment 224ms)
 

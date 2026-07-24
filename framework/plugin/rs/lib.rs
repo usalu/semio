@@ -1026,6 +1026,13 @@ impl AppBuilder {
                         step.id,
                         utility_ref.as_str()
                     ),
+                    IntroductionAdvance::Tool(tool_ref) => assert!(
+                        declared_tool_ids.contains(tool_ref.as_str()),
+                        "app {} introduction step {} advance references undeclared tool {}",
+                        self.id,
+                        step.id,
+                        tool_ref.as_str()
+                    ),
                 }
             }
         }

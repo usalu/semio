@@ -1230,6 +1230,17 @@
   z-index: calc(var(--z-tutorial) + 1) !important;
 }
 
+/* 🎓 Portaled floating UI (Select / Popover / …) leaves the elevated chrome subtree and would otherwise
+   paint under the fullscreen introduction veil (`z-temporary` ≪ `z-tutorial`). Raise both the content
+   (so Radix copies the used z-index onto its fixed wrapper) and the Popper wrapper itself. */
+[data-introduction-active] [data-slot="select-content"],
+[data-introduction-active] [data-slot="popover-content"],
+[data-introduction-active] [data-slot="hover-card-content"],
+[data-introduction-active] [data-slot="context-menu-content"],
+[data-introduction-active] [data-radix-popper-content-wrapper] {
+  z-index: calc(var(--z-tutorial) + 3) !important;
+}
+
 /* #region 🫨IconAnim — closed hover micro-animations. Every @keyframes has an identical 0% and 100%
    frame (shared rest pose), EXCEPT declared full-turn spins (rotate/rotateX/rotateY to ±360deg — a
    visually identical pose, so the loop is still seamless): rotate-ccw, rotate-cw, loader-2,

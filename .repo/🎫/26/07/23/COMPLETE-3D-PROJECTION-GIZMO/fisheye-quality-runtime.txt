@@ -1,0 +1,13 @@
+[DEBUG] fisheye capture quality {
+  capture: "1600x1200",
+  css: "800x600",
+  pixelRatio: 2,
+  magFilter: 1006,
+  minFilter: 1006,
+  colorSpace: "srgb-linear",
+  expectsLinearFilter: 1006,
+  expectsLinearSRGB: "srgb-linear",
+  hasColorspaceInclude: true,
+  magOk: true,
+  colorOk: true,
+}

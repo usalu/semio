@@ -3682,7 +3682,7 @@ pub enum IntroductionPlacement {
 }
 
 /// @emoji 👉 What completes an introduction step. `Next` needs the info box's Next button; `Action`/
-/// `Utility` complete as soon as the user dispatches that action or activates that utility, teaching by doing.
+/// `Utility`/`Tool` complete as soon as the user dispatches that action or activates that utility/tool, teaching by doing.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
@@ -3693,6 +3693,8 @@ pub enum IntroductionAdvance {
     Action(ActionRef),
     /// 🧰 References `AppDefinition.utilities`.
     Utility(UtilityRef),
+    /// 🛠️ References `AppDefinition.tools` (mode-level tools such as fill).
+    Tool(ToolRef),
 }
 //#endregion 🔖Introduction
 
@@ -5660,6 +5662,7 @@ mod app_document_tests {
             IntroductionAdvance::Next,
             IntroductionAdvance::Action(ActionRef::new("add")),
             IntroductionAdvance::Utility(UtilityRef::new("brush")),
+            IntroductionAdvance::Tool(ToolRef::new("fill")),
         ] {
             let json = serde_json::to_string(&advance).unwrap();
             let round: IntroductionAdvance = serde_json::from_str(&json).unwrap();

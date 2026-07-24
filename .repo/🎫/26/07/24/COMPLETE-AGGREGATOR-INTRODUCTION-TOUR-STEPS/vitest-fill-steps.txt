@@ -1,0 +1,10 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 250 skipped (251)
+   Start at  07:17:01
+   Duration  4.91s (transform 1.68s, setup 0ms, import 4.40s, tests 5ms, environment 344ms)
+
+error: package ID specification `framework_core` did not match any packages

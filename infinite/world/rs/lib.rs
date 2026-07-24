@@ -2051,38 +2051,39 @@ fn paint_world_orbit_view_gizmo<E>(ctx: &mut WidgetContext<'_, E>, camera: &Came
         (Vec3::new(0.0, 0.0, -1.0), "", spatial_axis_rgba(2, 0.75)),
     ];
     let corners = [
-        (Vec3::new(0.72, 0.72, 0.72), "NE"),
-        (Vec3::new(-0.72, 0.72, 0.72), "NW"),
-        (Vec3::new(0.72, -0.72, 0.72), "SE"),
-        (Vec3::new(-0.72, -0.72, 0.72), "SW"),
-        (Vec3::new(0.72, 0.72, -0.72), "ne"),
-        (Vec3::new(-0.72, 0.72, -0.72), "nw"),
-        (Vec3::new(0.72, -0.72, -0.72), "se"),
-        (Vec3::new(-0.72, -0.72, -0.72), "sw"),
+        (Vec3::new(0.72, 0.72, 0.72), "NE", true),
+        (Vec3::new(-0.72, 0.72, 0.72), "NW", true),
+        (Vec3::new(0.72, -0.72, 0.72), "SE", true),
+        (Vec3::new(-0.72, -0.72, 0.72), "SW", true),
+        // 🧭 Lower hemisphere: unlabeled small tips (parity with negative axis ends).
+        (Vec3::new(0.72, 0.72, -0.72), "", false),
+        (Vec3::new(-0.72, 0.72, -0.72), "", false),
+        (Vec3::new(0.72, -0.72, -0.72), "", false),
+        (Vec3::new(-0.72, -0.72, -0.72), "", false),
     ];
     let neutral = Rgba::new(0.62, 0.62, 0.66, 0.9);
-    let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool)> = axes
+    let mut ordered: Vec<(f32, f32, f32, &'static str, Rgba, bool, bool)> = axes
         .into_iter()
         .map(|(axis, label, color)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
-            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, false)
+            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, color, false, !label.is_empty())
         })
-        .chain(corners.into_iter().map(|(axis, label)| {
+        .chain(corners.into_iter().map(|(axis, label, prominent)| {
             let sx = axis.dot(right);
             let sy = -axis.dot(up);
             let depth = axis.dot(forward);
-            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, neutral, true)
+            (depth, origin_x + sx * axis_len, origin_y + sy * axis_len, label, neutral, true, prominent)
         }))
         .collect();
     ordered.sort_by(|a, b| a.0.partial_cmp(&b.0).unwrap_or(std::cmp::Ordering::Equal));
-    for (depth, tip_x, tip_y, label, color, is_corner) in ordered {
+    for (depth, tip_x, tip_y, label, color, is_corner, prominent) in ordered {
         let fade = if depth > 0.05 { 0.45 } else { 1.0 };
         let stroke = Rgba::new(color.r, color.g, color.b, color.a * fade);
         ctx.draw.push_line_overlay(origin_x, origin_y, tip_x, tip_y, stroke, if is_corner { 1.5 } else { 2.0 });
-        if is_corner {
-            let r = 3.0;
+        if is_corner || label.is_empty() {
+            let r = if prominent { 3.0 } else { 2.0 };
             ctx.draw.push_solid_overlay([tip_x - r, tip_y - r, tip_x + r, tip_y + r], stroke);
         }
         if !label.is_empty() {

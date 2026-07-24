@@ -3,12 +3,13 @@
   "emoji": "🔽",
   "status": "closed",
   "description": "UI dropdowns such as the example for playgrounds are currently not showing any chevron on the right, hence you currently cant see that it is dropdown compared to a button, etc. Fix so dropdowns show a visible chevron affordance on the right.",
-  "summary": "SelectTrigger now keeps a visible trailing chevron: value text truncates with min-w-0/flex-1 so the icon is not clipped in fixed-width chrome (e.g. playground example dropdown), and the chevron no longer uses opacity-50. Combobox/ButtonGroupItem labels with justify-between also truncate so trailing icons stay visible.",
+  "summary": "Fixed unusably narrow fill distribution sliders by switching tree property rows from flex to a fixed control column grid (controlValueColumnUiSpacing, same as ControlTree/WindowMeasuresTree). Labels truncate; percentages removed from Rust group/vortex labels; weight sliders now read out as 50% on the slider value only (not in row labels). Vitest slider-width + buildToolTabs + cargo fill_and_brush tests passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2297"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
-    "⚪0a9325059167457e888d272cba59ab08"
+    "⚪0a9325059167457e888d272cba59ab08",
+    "⚪141d56a9c8b94533a2de28e001d89ab4"
   ]
 }

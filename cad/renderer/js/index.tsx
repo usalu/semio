@@ -4719,11 +4719,12 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Falls back to a local overlay when no pane host is available. */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-middle with fold chrome; falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-left");
+  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-middle");
+  const [folded, setFolded] = reactHostPort.useState(false);
   const pane = (
-    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} icon="camera" label="Projection">
+    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label="Projection">
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
@@ -4835,7 +4836,7 @@ export function InteractionRepl({
   rtRef.current = rt;
   const [gumballPreviewDiff, setGumballPreviewDiff] = reactHostPort.useState<ModelDiff | null>(null);
   const [projectionSpec, setProjectionSpec] = reactHostPort.useState<WorldProjectionSpec>(
-    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { kind: "orthographic", view: "top" } : { kind: "threePoint", fov: 50 }),
+    () => spatialViewOverrides?.projectionSpec ?? (spatialViewOverrides?.orbitProjection === "orthographic" ? { kind: "orthographic", view: "plan" } : { kind: "threePoint", fov: 50 }),
   );
   reactHostPort.useEffect(() => {
     if (spatialViewOverrides?.projectionSpec) {

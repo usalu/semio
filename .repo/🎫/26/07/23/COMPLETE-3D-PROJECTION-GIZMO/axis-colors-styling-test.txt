@@ -1,9 +1,29 @@
+bun test v1.3.14 (0d9b296a)
 
- RUN  v4.1.7 /Users/ueli/Documents/semio/ui/styling
+index.test.ts:
+(pass) styling resolve > selection fill uses accent with emphasized text color so muted gray stays readable [0.74ms]
+(pass) styling resolve > resolveColorHex resolves palette var refs headlessly [2.58ms]
+(pass) styling resolve > resolveSpatialAxisColors maps X/Y/Z to primary/secondary/tertiary permanently [0.20ms]
+(pass) styling resolve > resolveColorRgba returns byte tuple [0.22ms]
+(pass) styling resolve > serializeCanvasThemeJson dark labelFill differs from light [0.23ms]
+(pass) styling resolve > resolveColorHex foreground flips with html.dark appearance [0.34ms]
+(pass) styling resolve > syncSessionCanvasTheme pushes serialized palette into a session [0.13ms]
+(pass) puzzle3d mesh-collection asset spec > resolves kit glb roots and shared placeholder [0.46ms]
+(pass) puzzle3d mesh-collection asset spec > registers a generic mesh-collection serve/build plugin pair [1.30ms]
+(pass) puzzle3d mesh-collection asset spec > includes base.glb for shooting's default fixture [0.48ms]
+(pass) elementState > resolveElementState defaults every axis to inert [22.74ms]
+(pass) elementState > elementStateHidden is true only for state === hidden [3.58ms]
+(pass) elementState > elementStateAttributes omits every axis at default [0.10ms]
+(pass) elementState > elementStateAttributes returns {} for hidden regardless of other axes [0.03ms]
+(pass) elementState > elementStateAttributes stamps data-ui-state plus data-introduced for introducing [0.07ms]
+(pass) elementState > elementStateAttributes stamps data-ui-state for previewed/disabled without data-introduced [0.04ms]
+(pass) elementState > elementStateAttributes stamps data-ui-status for non-idle status [0.05ms]
+(pass) elementState > elementStateAttributes stamps data-ui-hover and data-ui-selected independently [0.04ms]
+(pass) elementState > elementStateAttributes composes all four axes simultaneously [0.04ms]
+(pass) elementState > resolveElementFillKind follows disabled > selected > previewed > hovered > neutral precedence [0.11ms]
+(pass) elementState > resolveElementFillKind returns null for hidden [0.05ms]
 
-No test files found, exiting with code 1
-
-filter: index.test.ts
-include: vite-elements-assets.ts
-exclude:  **/node_modules/**, **/.git/**
-
+ 21 pass
+ 0 fail
+ 45 expect() calls
+Ran 21 tests across 1 file. [214.00ms]

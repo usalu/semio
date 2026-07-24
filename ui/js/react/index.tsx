@@ -1641,14 +1641,14 @@ function contextMenuContentClassName(...extra: Array<string | false | null | und
   return cn(floatingMenuSurfaceClass, "w-auto min-w-[10rem] p-single z-temporary", ...extra);
 }
 
-/** @emoji 🪟 Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark). */
+/** @emoji 🪟 Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
 function contextMenuItemClassName(item: Pick<ContextMenuItem, "checked" | "destructive">, ...extra: Array<string | false | null | undefined>): string {
   return cn(
     floatingMenuItemClass,
     "whitespace-nowrap data-[disabled]:pointer-events-none data-[disabled]:opacity-50",
     item.destructive && "text-destructive focus:bg-destructive/10 hover:bg-destructive/10",
     ...extra,
-    item.checked && "bg-active-base text-emphasized",
+    item.checked && "bg-active-base text-emphasized hover:bg-active-base/90 hover:text-emphasized",
   );
 }
 
@@ -1716,7 +1716,7 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
           </DropdownMenuPrimitive.SubTrigger>
           <DropdownMenuPrimitive.Portal>
-            <DropdownMenuPrimitive.SubContent className={contextMenuContentClassName()}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
+            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className={contextMenuContentClassName()}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
           </DropdownMenuPrimitive.Portal>
         </DropdownMenuPrimitive.Sub>,
       );
@@ -1838,6 +1838,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
           align="start"
           avoidCollisions={false}
           className={contextMenuContentClassName()}
+          data-slot="context-menu-content"
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
           sideOffset={0}
@@ -1865,7 +1866,7 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
     <div className="relative" onPointerEnter={() => setOpen(true)} onPointerLeave={() => setOpen(false)}>
       <button
         aria-disabled={item.disabled}
-        className={contextMenuItemClassName(item, "bg-transparent text-start")}
+        className={contextMenuItemClassName(item)}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         disabled={item.disabled}
@@ -1899,7 +1900,7 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
         key={item.id}
         aria-checked={item.checked}
         aria-disabled={item.disabled}
-        className={contextMenuItemClassName(item, "bg-transparent text-start")}
+        className={contextMenuItemClassName(item)}
         data-disabled={item.disabled ? "" : undefined}
         data-selected={item.checked ? "true" : undefined}
         disabled={item.disabled}
@@ -1967,7 +1968,7 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div className={contextMenuContentClassName()} dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
+    <div className={contextMenuContentClassName()} data-slot="context-menu-content" dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
       {renderFixedContextMenuItems(items, closeOnSelect ? close : () => undefined)}
     </div>,
     getDocumentBody(),
@@ -5332,6 +5333,12 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
 
   reactHostPort.useEffect(() => {
+    const root = document.documentElement;
+    root.setAttribute("data-introduction-active", "true");
+    return () => root.removeAttribute("data-introduction-active");
+  }, []);
+
+  reactHostPort.useEffect(() => {
     const onResize = () => setViewport({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener("resize", onResize);
     return () => window.removeEventListener("resize", onResize);
@@ -5409,8 +5416,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
               <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />
             ) : (
               <span className="text-xs text-muted-foreground">
-                {(advance.kind === "utility" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
-                  (advance.kind === "utility" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
+                {(advance.kind === "utility" || advance.kind === "tool" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
+                  (advance.kind === "utility" || advance.kind === "tool" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
               </span>
             )}
           </div>
@@ -10313,6 +10320,19 @@ export { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectScro
 // Range slider built on Radix primitives.
 // Consumers MUST provide min and max values.
 
+/** @emoji 🎚 Whether two slider value tuples match within a step-aware epsilon. */
+export function sliderValuesMatch(lhs: readonly number[], rhs: readonly number[], step?: number): boolean {
+  if (lhs.length !== rhs.length) return false;
+  const epsilon = step != null && step > 0 ? step * 0.25 : 1e-9;
+  return lhs.every((value, index) => Math.abs(value - (rhs[index] ?? value)) <= epsilon);
+}
+
+/** @emoji 🎚 Clears a pending draft once the controlled `value` prop catches up. */
+export function resolveSliderDraftClear(pending: number[] | null, external: readonly number[], step?: number): number[] | null {
+  if (pending === null) return null;
+  return sliderValuesMatch(pending, external, step) ? null : pending;
+}
+
 /**
  * Slider holds the data fields for a Slider record.
  **/
@@ -10327,6 +10347,7 @@ function Slider({
   waiting = false,
   showLabel,
   showValue = true,
+  formatDisplayValue,
   onValueChange,
   onPointerDown,
   onPointerUp,
@@ -10334,6 +10355,7 @@ function Slider({
   interactionId,
   id,
   snapValues,
+  step,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
@@ -10346,6 +10368,8 @@ function Slider({
     showLabel?: boolean;
     /** @emoji 🔢 When false, only the track+thumb render (graph overlays that already paint the value elsewhere). */
     showValue?: boolean;
+    /** @emoji 🔢 Optional readout formatter — defaults to {@link formatNumber}. */
+    formatDisplayValue?: (value: number) => string;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
     onPointerCancel?: () => void;
@@ -10367,10 +10391,15 @@ function Slider({
   // 🖱️ While actively sliding, track the value locally instead of re-reading the (possibly-controlled)
   // `value` prop on every render — a slow or stale round-trip back to `value` would otherwise fight the
   // drag and snap the thumb back to its pre-drag position mid-gesture.
-  const [draftValues, setDraftValues] = reactHostPort.useState<number[] | null>(null);
+  const [pendingDraftValues, setPendingDraftValues] = reactHostPort.useState<number[] | null>(null);
+  const draftValues = resolveSliderDraftClear(pendingDraftValues, externalValues, step ?? undefined);
+  reactHostPort.useEffect(() => {
+    setPendingDraftValues((pending) => resolveSliderDraftClear(pending, externalValues, step ?? undefined));
+  }, [externalValues, step]);
   const _values = draftValues ?? externalValues;
 
   const displayValue = _values[0] ?? min;
+  const formatReadout = formatDisplayValue ?? formatNumber;
   const span = max - min;
   const readyExtent = ready == null || span <= 0 ? null : Math.min(max, Math.max(min, ready));
   const readyStartPct = span <= 0 ? 0 : ((displayValue - min) / span) * 100;
@@ -10396,7 +10425,7 @@ function Slider({
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
       const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
-      setDraftValues(nextValues);
+      setPendingDraftValues(nextValues);
       onValueChange?.(nextValues);
     },
     [snapValues, findNearestSnapValue, onValueChange],
@@ -10404,7 +10433,7 @@ function Slider({
 
   const handleValueClick = () => {
     if (!hasBeenEdited) setHasBeenEdited(true);
-    setEditValue(formatNumber(displayValue));
+    setEditValue(formatReadout(displayValue));
     setIsEditing(true);
     transaction?.start?.();
   };
@@ -10433,7 +10462,7 @@ function Slider({
     if (!hasBeenEdited) setHasBeenEdited(true);
     if (interactionId && setActiveInteraction) setActiveInteraction(id, interactionId);
     if (!isSliding) {
-      setDraftValues(externalValues);
+      setPendingDraftValues(externalValues);
       setIsSliding(true);
       transaction?.start?.();
     }
@@ -10450,7 +10479,6 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
-      setDraftValues(null);
       transaction?.finalize?.();
     }
     onPointerUp?.();
@@ -10462,7 +10490,7 @@ function Slider({
     if (interactionId && setActiveInteraction) setActiveInteraction(id, undefined);
     if (isSliding) {
       setIsSliding(false);
-      setDraftValues(null);
+      setPendingDraftValues(null);
       transaction?.abort?.();
     }
     onPointerCancel?.();
@@ -10471,7 +10499,7 @@ function Slider({
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (!isSliding) {
-        setDraftValues(externalValues);
+        setPendingDraftValues(externalValues);
         setIsSliding(true);
         transaction?.start?.();
       }
@@ -10482,13 +10510,12 @@ function Slider({
     if (e.key === "ArrowLeft" || e.key === "ArrowRight" || e.key === "ArrowUp" || e.key === "ArrowDown") {
       if (isSliding) {
         setIsSliding(false);
-        setDraftValues(null);
         transaction?.finalize?.();
       }
     } else if (e.key === "Escape") {
       if (isSliding) {
         setIsSliding(false);
-        setDraftValues(null);
+        setPendingDraftValues(null);
         transaction?.abort?.();
       }
     }
@@ -10560,7 +10587,7 @@ function Slider({
           />
         ) : (
           <span data-slot="slider-value" className={sliderValueClassName} role="button" onDoubleClick={handleValueClick} title={doubleClickToEditLabel}>
-            {formatNumber(displayValue)}
+            {formatReadout(displayValue)}
           </span>
         )}
       </div>
@@ -12922,10 +12949,12 @@ const detailPanelPropertyControlClassName =
   "min-w-0 w-full self-start flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const treeInspectorInnerRowClassName = "min-w-0 w-full";
 const treeHeaderRowClassName = "flex h-full min-w-0 w-full items-center gap-double";
-const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double";
+const treeHeaderMainClassName = "flex h-full min-w-0 flex-1 items-center gap-double overflow-hidden";
 const treeHeaderActionsClassName = "flex flex-shrink-0 items-center gap-single";
+const treePropertyHeaderGridClassName = "grid min-w-0 w-full items-center gap-x-tiny min-h-workbench";
+const treePropertyHeaderGridStyle: React.CSSProperties = { gridTemplateColumns: `minmax(0, 1fr) ${uiSpacingLen(STYLING_DOM.controlValueColumnUiSpacing)}` };
 const treeItemControlClassName =
-  "ms-auto flex min-w-0 shrink-0 items-center justify-end gap-double [&_[data-slot=slider-content]]:w-[calc(var(--size-large)+6*var(--ui-spacing))] [&_[data-slot=slider-content]]:min-w-[calc(var(--size-large)+6*var(--ui-spacing))]";
+  "min-w-0 w-full flex items-stretch justify-end [&_[data-detail-panel-control='fill']]:min-w-0 [&_[data-detail-panel-control='fill']]:w-full [&_[data-detail-panel-control='fit']]:ms-auto [&_[data-detail-panel-control='fit']]:max-w-full [&_[data-detail-panel-control='fit']]:shrink-0";
 const indentationLineLen = (i: number, multiplier = 1): string => `calc(${detailPanelIndentLen(i, multiplier)} + ${uiSpacingLen(STYLING_DOM.treeIndentLineExtraUiSpacing)})`;
 const indentationLinePx = (i: number, multiplier = 1): number => detailPanelIndentPx(i, multiplier) + domSizePx("treeIndentLineExtraUiSpacing");
 /** @emoji 🌳 Ancestor guide indices for a branch at {@link level}: parent level always continues through expanded children; deeper ancestors stop after last siblings. */
@@ -14707,13 +14736,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 contentClassName="min-w-0"
                 contentChromeClassName={itemContentFillClassName}
               >
-                <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
+                <div className={cn(treePropertyHeaderGridClassName, treeInspectorInnerRowClassName)} style={treePropertyHeaderGridStyle}>
                   <div className={treeHeaderMainClassName}>
                     {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text", rowEmphasized)}
                     <span
                       data-slot="tree-label"
                       title={controlHint}
-                      className={cn(treeItemLabelSlotClassName, "font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                      className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
                       style={treeItemLabelStyle}
                       onClick={(event) => {
                         if (event.detail > 1) return;
@@ -14729,18 +14758,15 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       {resolvedLabel as React.ReactNode}
                     </span>
                   </div>
-                  {!isExpandable && (
-                    <div data-slot="tree-item-control" className={treeItemControlClassName}>
+                  <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")}>
+                    {!isExpandable ? (
                       <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
-                    </div>
-                  )}
-                  {isExpandable && headerControl ? (
-                    <div data-slot="tree-item-control" className={treeItemControlClassName}>
+                    ) : headerControl ? (
                       <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
-                    </div>
-                  ) : null}
-                  {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+                    ) : null}
+                    {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+                    {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+                  </div>
                 </div>
               </TreeAlignedRow>
             );
@@ -17756,8 +17782,8 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
   return host?.container ? (createPortal(pane, host.container) as React.ReactPortal) : null;
 }
 
-/** @emoji ↔️ Pane resize handle on its inner (canvas-facing) edge — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. */
-function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange }: { readonly side: "left" | "right"; readonly size: number; readonly minSize: number; readonly maxSize: number; readonly onSizeChange: (size: number) => void }) {
+/** @emoji ↔️ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
+function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange, deltaFactor = 1 }: { readonly side: "left" | "right"; readonly size: number; readonly minSize: number; readonly maxSize: number; readonly onSizeChange: (size: number) => void; readonly deltaFactor?: number }) {
   const startRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
   const pointerProps = usePointerDrag<HTMLDivElement>({
     onStart: (event) => {
@@ -17767,7 +17793,7 @@ function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange }: { read
     onMove: (event) => {
       const start = startRef.current;
       if (!start) return;
-      const next = start.size + (side === "right" ? 1 : -1) * (event.clientX - start.pointerX);
+      const next = start.size + (side === "right" ? 1 : -1) * deltaFactor * (event.clientX - start.pointerX);
       if (next >= minSize && next <= maxSize) onSizeChange(next);
     },
     onEnd: () => {
@@ -17809,10 +17835,11 @@ const PANE_DEFAULT_MIN_SIZE = 200;
 const PANE_DEFAULT_MAX_SIZE = 600;
 
 /** @emoji 🪟 One floating pane inside a {@link PaneHost} — anchored via the exact same {@link anchorPositionStyle}/
- * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable on its inner edge,
- * and (given `onAnchorChange`) draggable by its handle to any of the eight anchors via {@link nearestAnchor} —
- * dropped anywhere inside the enclosing {@link PaneHost}, not just on the target slot, since the box is the only
- * drop target there is. Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}. */
+ * {@link flowFromAnchor} math as {@link Panel}, foldable to a chip, optionally width-resizable (inner edge for
+ * corners / side-middle; both edges for top/bottom-middle, matching panel grow), and (given `onAnchorChange`)
+ * draggable by its handle to any of the eight anchors via {@link nearestAnchor} — dropped anywhere inside the
+ * enclosing {@link PaneHost}, not just on the target slot, since the box is the only drop target there is.
+ * Chrome matches panel toggles: semantic {@link icon} + label + trailing {@link DragHandle}. */
 export const Pane: React.FC<PaneProps> = ({
   id,
   anchor,
@@ -17861,7 +17888,8 @@ export const Pane: React.FC<PaneProps> = ({
 
   // 📱 Panes are fixed on mobile — no drag handle, no resize, no fold; width tracks content instead of a persisted size.
   const positionStyle: React.CSSProperties = { ...anchorPositionStyle(anchor), order, zIndex, width: !mobile && !effectiveFolded && size ? `${size}px` : undefined };
-  const resizeSide: "left" | "right" = horizontal === "right" ? "left" : "right";
+  const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
+  const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
 
   return (
     <div
@@ -17897,7 +17925,9 @@ export const Pane: React.FC<PaneProps> = ({
             {children}
           </div>
         ) : null}
-        {resizable && !mobile && !effectiveFolded && onSizeChange ? <PaneResizeHandle side={resizeSide} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} /> : null}
+        {resizable && !mobile && !effectiveFolded && onSizeChange
+          ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} deltaFactor={resizeDeltaFactor} />)
+          : null}
       </FlowProvider>
     </div>
   );
@@ -25531,6 +25561,35 @@ if (import.meta.vitest) {
       });
       expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduction-elevated")).toBe("true");
       expect(container.querySelectorAll(".ui-glass-veil")).toHaveLength(1);
+      expect(document.documentElement.getAttribute("data-introduction-active")).toBe("true");
+    });
+
+    it("clears data-introduction-active when the introduction unmounts so portaled overlays leave the tutorial layer", () => {
+      const { unmount } = render(
+        <UIIntroduction
+          introduction={{
+            title: "Welcome",
+            steps: [
+              {
+                id: "welcome",
+                title: "Hi",
+                body: "Body",
+                introduce: null,
+                show: [],
+                placement: "center",
+                advance: { kind: "next" },
+                logos: [],
+              },
+            ],
+          }}
+          stepIndex={0}
+          onStepIndexChange={vi.fn()}
+          onDismiss={vi.fn()}
+        />,
+      );
+      expect(document.documentElement.getAttribute("data-introduction-active")).toBe("true");
+      unmount();
+      expect(document.documentElement.getAttribute("data-introduction-active")).toBeNull();
     });
 
     it("introduces the first draggable tree item via its stamped alias, elevating the panel (not the row) and not pulsing siblings", async () => {
@@ -26072,6 +26131,15 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("slider draft confirmation", () => {
+    it("keeps pending draft values until the external value catches up", () => {
+      expect(resolveSliderDraftClear([42], [10], 1)).toEqual([42]);
+      expect(resolveSliderDraftClear([42], [42], 1)).toBeNull();
+      expect(sliderValuesMatch([0.5], [0.51], 0.1)).toBe(true);
+      expect(sliderValuesMatch([0.5], [0.8], 0.1)).toBe(false);
+    });
+  });
+
   describe("referenceMediaKindFromUrl", () => {
     it("infers image, svg, and pdf kinds from paths", () => {
       expect(referenceMediaKindFromUrl("/infinite-fixture/sketch.png")).toBe("image");
@@ -26562,11 +26630,39 @@ if (import.meta.vitest) {
       expect(active.getAttribute("aria-checked")).toBe("true");
       expect(active.getAttribute("data-selected")).toBe("true");
       expect(active.className.split(/\s+/)).toContain("bg-active-base");
+      expect(active.className.split(/\s+/)).toContain("hover:bg-active-base/90");
       expect(active.textContent).not.toContain("✓");
       expect(idle.getAttribute("aria-checked")).toBe("false");
       expect(idle.getAttribute("data-selected")).toBeNull();
       expect(idle.className.split(/\s+/)).not.toContain("bg-active-base");
       expect(idle.textContent).not.toContain("✓");
+    });
+
+    it("omits the color swatch when suggestion-style rows have icon only", async () => {
+      render(
+        <ContextMenuController
+          open
+          position={{ x: 8, y: 16 }}
+          items={[
+            { id: "suggestion-0", label: "Capsule · vortex 0", icon: "box", checked: true },
+            { id: "suggestion-1", label: "Box · vortex 1", icon: "box", checked: false },
+          ]}
+          onOpenChange={vi.fn()}
+        />,
+      );
+      const active = await waitFor(() => screen.getByRole("menuitemcheckbox", { name: "Capsule · vortex 0" }));
+      const idle = screen.getByRole("menuitemcheckbox", { name: "Box · vortex 1" });
+      const swatch = (item: HTMLElement) =>
+        Array.from(item.querySelectorAll("[aria-hidden]")).find((node) => {
+          const style = (node as HTMLElement).getAttribute("style") ?? "";
+          return style.includes("background") || /#|rgb\(/i.test(style);
+        });
+      expect(swatch(active)).toBeUndefined();
+      expect(swatch(idle)).toBeUndefined();
+      expect(active.querySelector("[data-icon]")).toBeTruthy();
+      expect(active.className.split(/\s+/)).toContain("gap-single");
+      expect(active.className.split(/\s+/)).toContain("px-single");
+      expect(active.className.split(/\s+/)).toContain("py-half");
     });
 
     it("ignores outside dismiss when pointerdown targets a sibling menu", async () => {
@@ -29533,6 +29629,19 @@ if (import.meta.vitest) {
 
       rerender(
         <PaneHost>
+          <Pane id="direction-pane" anchor="bottom-middle" icon="box" label="Direction">
+            <div>Content</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(pane().className).toContain("flex-col-reverse");
+      expect(pane().className).toContain("items-center");
+      expect(pane().style.bottom).toBe("var(--spacing-single)");
+      expect(pane().style.left).toBe("50%");
+      expect(pane().style.transform).toBe("translateX(-50%)");
+
+      rerender(
+        <PaneHost>
           <Pane id="direction-pane" anchor="left-middle" icon="box" label="Direction">
             <div>Content</div>
           </Pane>
@@ -29540,6 +29649,34 @@ if (import.meta.vitest) {
       );
       expect(pane().style.top).toBe("50%");
       expect(pane().style.transform).toBe("translateY(-50%)");
+    });
+
+    it("Pane chrome toggle folds and unfolds when onFoldToggle is wired", () => {
+      let folded = false;
+      const onFoldToggle = vi.fn(() => {
+        folded = !folded;
+      });
+      const { container, rerender } = render(
+        <PaneHost>
+          <Pane id="fold-pane" anchor="bottom-middle" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+            <div data-testid="fold-pane-content">Modes</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
+      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-middle");
+      fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
+      expect(onFoldToggle).toHaveBeenCalledTimes(1);
+      rerender(
+        <PaneHost>
+          <Pane id="fold-pane" anchor="bottom-middle" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+            <div data-testid="fold-pane-content">Modes</div>
+          </Pane>
+        </PaneHost>,
+      );
+      expect(screen.queryByTestId("fold-pane-content")).toBeNull();
+      fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
+      expect(onFoldToggle).toHaveBeenCalledTimes(2);
     });
 
     it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
@@ -30425,7 +30562,7 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-item-control"');
       expect(markup).toContain('data-slot="slider-track"');
-      expect(markup).toContain("calc(var(--size-large)+6*var(--ui-spacing))");
+      expect(markup).toContain("grid-template-columns:minmax(0, 1fr) calc(50 * var(--ui-spacing))");
     });
 
     it("keeps leaf inspector controls visible without manual expand", () => {

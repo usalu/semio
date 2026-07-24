@@ -1,0 +1,23 @@
+# Fill options interactive path timing
+
+Diagnostic for puzzle 3D fill count / distribution slider round-trips.
+
+## What is measured
+
+1. `update_kind_weights` — must not call `rebuild_queue()` (soft-replan tail only)
+2. `apply_fill_count` — O(1) prefix apply without attraction resolve
+3. `set_scene` identical JSON — queue length preserved (regression guard)
+
+## How to run
+
+```bash
+cd puzzle/3d/rs && cargo test fill_options_paths_are_millisecond_scale update_kind_weights_soft_replans -- --nocapture
+cd puzzle/plugin/rs && cargo test set_fill_count_declares set_object_kind_weight_declares fill_build_tick -- --nocapture
+cd ui/js/react && bun ./script.ts test slider
+```
+
+## Expected
+
+- Weight update: < 50ms native (no full queue rebuild)
+- Fill count apply at n=10: < 5ms native
+- Queue length after weight edit >= queue length before (no wipe)

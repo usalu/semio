@@ -1,0 +1,32 @@
+=== brand.ts ===
+ok: no Kontextmenü/Context Menu/schweben
+11:    /** 🏷️ The Aggregator ships puzzle3d with locked German locale, locked reuse terminology (window "Aggregator", document "Entwerfen mit Bestand", example "Abbau Aufbau"), locked semio theme, switchable appearance, a brand-owned German introduction, and Abbau Aufbau (`concrete-forest`) seeded as the default-but-switchable example. Ephemeral: nothing survives a window refresh — dock, panes, chrome prefs, and the introduction all reset to brand defaults. Introduced/shown element ids reference `puzzle/plugin/rs/lib.rs`'s puzzle3d app (`puzzle3d-main`, `transform`, `addObjectKind`, `puzzle3d-play-vortex-show`, `tool.fill`, `puzzle3d-play-distribution`, `setVortexShow`, `openVortexSuggestions`) and `framework/core/js`'s `FRAMEWORK_PANEL_TAB_CATALOGUE_ID`. Tour order: viewport → catalogue → drag-and-drop → transform → Verbindungspunkte → Aktionsmenü vorschlagen → Füllen → Verteilung. */
+29:        body: "Der Aggregator ist der Demonstrator des Forschungsprojekts „Entwerfen mit Bestand“ der Leibniz Universität Hannover und der Universität der Künste Berlin.\n\nDas Projekt entwickelt eine offene Plattform, um neue Strukturen aus wiederverwendeten Baukomponenten zu entwerfen — mit vereinfachter Tragwerks- und Lebenszyklusanalyse, KI-Unterstützung entlang funktionaler und struktureller Abhängigkeiten.",
+73:        body: "Durchstöbern Sie hier die verfügbaren Baukomponenten aus dem Bestand.",
+82:        title: "Baukomponente hinzufügen",
+83:        body: "Ziehen Sie die erste Baukomponente per Drag-and-Drop aus dem Katalog in die 3D-Ansicht.",
+92:        title: "Baukomponenten transformieren",
+93:        body: "Aktivieren Sie das Transformieren-Hilfsmittel, um Baukomponenten zu verschieben und zu drehen.",
+102:        title: "Verbindungspunkte",
+103:        body: "Öffnen Sie die Fensteroptionen und stellen Sie »Verbindungspunkte anzeigen« auf »Immer«, damit die Anschlüsse aller Baukomponenten sichtbar werden.",
+112:        title: "Baukomponenten vorschlagen",
+113:        body: "Wählen Sie einen Verbindungspunkt und öffnen Sie per Rechtsklick das Aktionsmenü. Mit »Baukomponenten vorschlagen« erhalten Sie passende Anschlüsse — fahren Sie über einen Eintrag zur Vorschau und klicken Sie zum Platzieren.",
+123:        body: "Aktivieren Sie das Werkzeug »Füllen« in der Werkzeugleiste, um den Entwurf automatisch mit Baukomponenten zu füllen.",
+133:        body: "Stellen Sie die Anzahl ein und justieren Sie die Verteilung — sie gewichtet, welche Baukomponenten und Verbindungspunkte beim Füllen bevorzugt werden.",
+=== puzzle3d action overlay source ===
+7040:    /// manifest labels ("Edit", "Add Object", "Context Menu At") into locale-locked brand shells.
+7778:            assert!(!overlay.action_labels.get("contextMenuAt").is_some_and(|label| label.contains("Kontextmenü") || label.contains("Context Menu")));
+11666:            ("worldPick", "World Pick", "Welt-Auswahl (Pick)"),
+11669:            ("worldVortexHover", "World Vortex Hover", "Welt-Vortex-Hover"),
+FAIL
+7194:            ("worldPick".to_string(), pick("World Pick", "Punkt in der Welt wählen")),
+7213:            ("contextMenuAt".to_string(), pick("Open Actions Menu", "Aktionsmenü öffnen")),
+7425:                .view_action("contextMenuAt", "Open Actions Menu")
+7769:            assert_eq!(overlay.dialog_labels.get("addObject.title").map(String::as_str), Some("Baukomponente hinzufügen"));
+7772:            assert_eq!(overlay.action_labels.get("addObjectKind").map(String::as_str), Some("Baukomponente hinzufügen"));
+7773:            assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Aktionsmenü öffnen"));
+7774:            assert_eq!(overlay.action_labels.get("worldPick").map(String::as_str), Some("Punkt in der Welt wählen"));
+7789:            assert_eq!(overlay.action_labels.get("contextMenuAt").map(String::as_str), Some("Open Actions Menu"));
+cargo: app_labels_overlay tests ok (2 passed)
+brand: Aktionsmenü present, Kontextmenü absent
+overlay: mode=Bearbeiten dialog=Baukomponente hinzufügen contextMenuAt=Aktionsmenü öffnen under de+reuse

@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/framework-renderer-react:test -- -t "pre-reverses every level|each projection leaf|windowsTreeSections|Display Windows"
+
+> nx run @semio-tech/framework-renderer-react:test -t pre-reverses every level|each projection leaf|windowsTreeSections|Display Windows
+
+> bun ./script.ts test -t "pre-reverses every level|each projection leaf|windowsTreeSections|Display Windows"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 246 skipped (250)
+   Start at  05:57:11
+   Duration  5.60s (transform 1.99s, setup 0ms, import 5.11s, tests 6ms, environment 307ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/framework-renderer-react
+
+

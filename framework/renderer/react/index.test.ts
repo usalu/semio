@@ -85,6 +85,7 @@ import {
   resolveVortexPointerDownIntent,
   worldMeshMaterialRevision,
   worldVortexMaterialRevision,
+  worldSuggestionMenuOwnsWindow,
   resolveWorldSelectionMergeMode,
   resolveWorldContextMenuTarget,
   shouldReattachWorldViewportCamera,
@@ -1580,6 +1581,28 @@ describe("framework renderer hosts", () => {
     expect(items[2]).toMatchObject({ id: "delete", destructive: true, icon: "trash" });
   });
 
+  it("maps suggestion-style specs without a color swatch field", () => {
+    const dispatch = vi.fn();
+    const items = mapContextMenuSpecs(
+      [
+        {
+          id: "suggestion-0",
+          label: "Capsule · vortex 0",
+          icon: "box",
+          checked: true,
+          action: "acceptSuggestion",
+          args: { index: 0, fullId: "obj:v0" },
+          hoverAction: "hoverSuggestion",
+          hoverArgs: { index: 0 },
+        },
+      ],
+      dispatch,
+    );
+    expect(items[0]).toMatchObject({ id: "suggestion-0", icon: "box", checked: true });
+    expect(items[0]).not.toHaveProperty("color", expect.anything());
+    expect(items[0]?.color).toBeUndefined();
+  });
+
   it("enriches node-graph context menu rows for the effective right-click selection", () => {
     const base = [
       { id: "add-node", label: "Add node…", icon: "plus", action: "openSpotlight" },
@@ -1928,6 +1951,14 @@ describe("framework renderer hosts", () => {
     expect(resolveVortexPointerDownIntent(false, "vertex")).toBe("select");
     expect(resolveVortexPointerDownIntent(false)).toBe("click-or-drag");
     expect(resolveVortexPointerDownIntent(false, "mesh")).toBe("click-or-drag");
+  });
+
+  it("scopes suggestion menu ownership to the opening world window so sibling panes stay interactive", () => {
+    expect(worldSuggestionMenuOwnsWindow(null, "puzzle3d-main-top")).toBe(false);
+    expect(worldSuggestionMenuOwnsWindow({ open: false, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(false);
+    expect(worldSuggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-top")).toBe(true);
+    expect(worldSuggestionMenuOwnsWindow({ open: true, windowId: "puzzle3d-main-top" }, "puzzle3d-main-perspective")).toBe(false);
+    expect(worldSuggestionMenuOwnsWindow({ open: true }, "puzzle3d-main-perspective")).toBe(true);
   });
 
   it("revisions vortex materials when selection or hover state changes", () => {
@@ -3893,7 +3924,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects"]);
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "catalogue", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
     expect(steps.find((step) => step.id === "catalogue")?.placement).toBe("right");
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
@@ -3918,6 +3949,18 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       advance: { kind: "action", id: "openVortexSuggestions" },
     });
     expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Kontextmenü|Rechtsklick/i);
+    expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
+      introduce: "tool.fill",
+      advance: { kind: "tool", id: "fill" },
+      show: ["framework.panelTab.tool.fill"],
+    });
+    expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/Füllen/i);
+    expect(steps.find((step) => step.id === "fill-distribution")).toMatchObject({
+      introduce: "puzzle3d-play-distribution",
+      advance: { kind: "next" },
+      show: ["puzzle3d-fill-count", "framework.panelTab.tool.fill"],
+    });
+    expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Verteilung/i);
 
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -4265,15 +4308,17 @@ describe("Display Windows tab — projection drag templates", () => {
     expect(sections[0]!.items).toHaveLength(1);
   });
 
-  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Orthographic's children top-to-bottom as Plan/Top/Bottom/Front/Back/Left/Right", () => {
+  it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Plan's children top-to-bottom as Top/Bottom/Front/Back/Left/Right", () => {
     const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
     const orthographic = byLabel(parallel.items!, "Orthographic")!;
+    const plan = byLabel(orthographic.items!, "Plan")!;
     // Raw (pre-render) order is reversed once more so that after the Tree's own "up" reversal on render,
-    // it reads Plan, Top, Bottom, Front, Back, Left, Right — top to bottom, not backwards.
-    const renderedOrder = [...orthographic.items!].reverse().map((row) => row.label);
-    expect(renderedOrder).toEqual(["Plan", "Top", "Bottom", "Front", "Back", "Left", "Right"]);
+    // Orthographic reads Plan, and Plan reads Top, Bottom, Front, Back, Left, Right — top to bottom.
+    expect([...orthographic.items!].reverse().map((row) => row.label)).toEqual(["Plan"]);
+    const renderedOrder = [...plan.items!].reverse().map((row) => row.label);
+    expect(renderedOrder).toEqual(["Top", "Bottom", "Front", "Back", "Left", "Right"]);
   });
 
   it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
@@ -4281,10 +4326,13 @@ describe("Display Windows tab — projection drag templates", () => {
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
     const orthographic = byLabel(parallel.items!, "Orthographic")!;
-    const topLeaf = byLabel(orthographic.items!, "Top")!;
+    const plan = byLabel(orthographic.items!, "Plan")!;
+    const topLeaf = byLabel(plan.items!, "Top")!;
     const payload = JSON.parse(topLeaf.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
     expect(payload.windowKindId).toBe("puzzle3d-main");
     expect(decodeWorldProjectionTemplateId(payload.templateId)).toEqual({ kind: "orthographic", view: "top" });
+    const planPayload = JSON.parse(plan.dragData!["application/x-compose-window-template"]!) as { windowKindId: string; templateId: string };
+    expect(decodeWorldProjectionTemplateId(planPayload.templateId)).toEqual({ kind: "orthographic", view: "plan" });
   });
 });
 

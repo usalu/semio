@@ -1,6 +1,16 @@
-    Blocking waiting for file lock on build directory
-   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
-   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+    Checking num-traits v0.2.19
+    Checking png v0.18.1
+    Checking half v2.7.1
+    Checking moxcms v0.8.1
+    Checking image v0.25.10
+    Checking naga v27.0.3
+    Checking framework_surface_terrain v0.1.0 (/Users/ueli/Documents/semio/framework/surface/terrain/rs)
+    Checking wgpu-hal v27.0.4
+    Checking wgpu-core-deps-apple v27.0.0
+    Checking wgpu-core v27.0.3
+    Checking wgpu v27.0.1
+    Checking ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
 warning: hidden lifetime parameters in types are deprecated
     --> framework/core/rs/lib.rs:1791:42
      |
@@ -37,14 +47,7 @@ help: indicate the anonymous lifetime
      |                                                                 ++++
 
 warning: `semio-framework-core` (lib) generated 3 warnings
-   Compiling infinite_world v0.1.0 (/Users/ueli/Documents/semio/infinite/world/rs)
-    Finished `test` profile [unoptimized] target(s) in 3m 01s
+    Checking infinite_world v0.1.0 (/Users/ueli/Documents/semio/infinite/world/rs)
+    Finished `dev` profile [unoptimized] target(s) in 14m 46s
 warning: the following packages contain code that will be rejected by a future version of Rust: block v0.1.6
 note: to see what the problems were, use the option `--future-incompat-report`, or run `cargo report future-incompatibilities --id 1`
-     Running unittests lib.rs (/Users/ueli/Documents/semio/target/debug/deps/infinite_world-3aac7d11cfc34267)
-
-running 1 test
-test tests::world_orbit_view_gizmo_placement_matches_react_bottom_right_insets ... ok
-
-test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 40 filtered out; finished in 0.00s
-
