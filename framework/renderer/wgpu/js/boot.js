@@ -677,13 +677,13 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "shooting",
-  registryPluginId: "shooting",
-  defaultAppId: undefined,
+  variant: "process3d",
+  registryPluginId: "process",
+  defaultAppId: "process3d-play",
   studioMode: false,
   host: undefined,
   plugins: [
-    { pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "process", moduleUrl: "/plugin-modules/process/process_plugin.js", contributes: [], consumes: [] }
   ]
 };
 

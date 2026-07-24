@@ -622,6 +622,49 @@ fn flow_lod_measure(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> Windo
 
 fn flow_grid_measures_group(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> WindowMeasure {
     WindowMeasure::Group {
+        id: "flow-play-measures.grid".into(),
+        label: labels.grid.into(),
+        default_open: Some(true),
+        active_utility_id: None,
+        value: None,
+        min: None,
+        max: None,
+        step: None,
+        ready: None,
+        loading: None,
+        waiting: None,
+        on_change: None,
+        children: vec![
+            WindowMeasure::Toggle {
+                id: "flow-play-measures.grid-visible".into(),
+                icon_id: "layout-grid".into(),
+                label: Some(labels.grid_visible.into()),
+                pressed: runtime.grid_visible,
+                text: None,
+                on_change: flow_action("setGridVisible", None),
+            },
+            WindowMeasure::Toggle {
+                id: "flow-play-measures.grid-snap".into(),
+                icon_id: "magnet".into(),
+                label: Some(labels.grid_snap.into()),
+                pressed: runtime.grid_snap_enabled,
+                text: None,
+                on_change: flow_action("setGridSnapEnabled", None),
+            },
+            WindowMeasure::Slider {
+                id: "flow-play-measures.grid-factor".into(),
+                label: Some(format!("{} {:.1}", labels.grid_factor, runtime.grid_factor)),
+                value: runtime.grid_factor,
+                min: 0.5,
+                max: 50.0,
+                step: Some(0.5),
+                ready: None,
+                loading: None,
+                waiting: None,
+                on_change: flow_action("setGridFactor", None),
+            },
+        ],
+    }
 }
 
 fn flow_window_measures(runtime: &FlowPlayRuntime, labels: &FlowPlayLabels) -> Vec<WindowMeasure> {
@@ -1629,14 +1672,6 @@ mod tests {
         let window_measures = measures.get(FLOW_PLAY_WINDOW_MAIN).expect("main window measures");
         assert_eq!(window_measures.len(), 3);
         assert!(window_measures.iter().any(|measure| matches!(measure, WindowMeasure::Slider { id, .. } if id == "flow-play-measures.proximity")));
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         assert!(window_measures.iter().any(|measure| matches!(measure, WindowMeasure::Group { id, .. } if id == "flow-play-measures.grid")));
     }
 

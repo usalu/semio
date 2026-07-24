@@ -1780,14 +1780,6 @@ mod tests {
             measures[PROCESS_3D_PLAY_WINDOW_MAIN]
                 .iter()
                 .find_map(|measure| match measure {
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
                     WindowMeasure::Group { id, children, .. } if id == "process3d-measure-sun" => Some(children.clone()),
                     _ => None,
                 })

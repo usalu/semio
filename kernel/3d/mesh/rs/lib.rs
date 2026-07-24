@@ -272,6 +272,67 @@ impl HalfedgeMesh {
         Self::from_faces(&verts, &faces)
     }
 
+    /// Builds a halfedge mesh from a CAD solid tessellation that carries one B-Rep face id per triangle.
+    ///
+    /// Each B-Rep face is reconstructed independently: coplanar triangles of a simply-connected face merge
+    /// into one n-gon; faces with holes keep their triangulation so openings are not filled. Call
+    /// [`Self::weld_coincident_vertices`] afterwards so independently-tessellated seam vertices become shared.
+    pub fn from_indexed_triangles_by_face_id(positions: &[f32], indices: &[u32], face_ids: &[u32]) -> MeshResult<Self> {
+        if face_ids.is_empty() {
+            return Self::from_indexed_triangles(positions, indices);
+        }
+        if !positions.len().is_multiple_of(3) {
+            return Err(MeshKernelError::InvalidInput("positions length must be a multiple of 3".into()));
+        }
+        if !indices.len().is_multiple_of(3) {
+            return Err(MeshKernelError::InvalidInput("indices length must be a multiple of 3".into()));
+        }
+        let tri_count = indices.len() / 3;
+        if face_ids.len() != tri_count {
+            return Err(MeshKernelError::InvalidInput(format!(
+                "face_ids length {} must equal triangle count {}",
+                face_ids.len(),
+                tri_count
+            )));
+        }
+        let mut groups: HashMap<u32, Vec<u32>> = HashMap::new();
+        for (triangle_index, &face_id) in face_ids.iter().enumerate() {
+            let base = triangle_index * 3;
+            let group = groups.entry(face_id).or_default();
+            group.extend_from_slice(&indices[base..base + 3]);
+        }
+        let mut faces: Vec<Vec<u32>> = Vec::new();
+        for group_indices in groups.values() {
+            let mut face_mesh = Self::from_indexed_triangles(positions, group_indices)?;
+            let _ = face_mesh.merge_coplanar_faces()?;
+            let (_, group_faces) = face_mesh.polygon_soup();
+            faces.extend(group_faces);
+        }
+        let verts: Vec<[f32; 3]> = positions.as_chunks::<3>().0.to_vec();
+        Self::from_faces(&verts, &faces)
+    }
+
+    /// Builds a halfedge mesh from CAD face wire loops that share a global vertex buffer.
+    ///
+    /// Each entry is `(outer, holes)`. Faces without holes become one n-gon; faces with holes are
+    /// triangulated via keyhole bridging so openings stay empty (never filled by a single outer n-gon).
+    pub fn from_face_loops(positions: &[[f32; 3]], face_loops: &[(Vec<u32>, Vec<Vec<u32>>)]) -> MeshResult<Self> {
+        let mut faces: Vec<Vec<u32>> = Vec::new();
+        for (outer, holes) in face_loops {
+            if outer.len() < 3 {
+                continue;
+            }
+            if holes.is_empty() {
+                faces.push(outer.clone());
+                continue;
+            }
+            for tri in triangulate_indexed_polygon_with_holes(positions, outer, holes) {
+                faces.push(tri.to_vec());
+            }
+        }
+        Self::from_faces(positions, &faces)
+    }
+
     pub fn from_faces(positions: &[[f32; 3]], faces: &[Vec<u32>]) -> MeshResult<Self> {
         let mut mesh = Self::empty();
         for p in positions {
@@ -955,6 +1016,69 @@ impl HalfedgeMesh {
         Ok(removed)
     }
 
+    /// Flips faces so every undirected edge is traversed in opposite directions by its two incident faces.
+    /// CAD imports often leave inconsistently oriented face wires; without this pass, halfedge twins are
+    /// missing even though the undirected mesh is closed. Returns the number of faces flipped.
+    pub fn orient_faces_consistently(&mut self) -> MeshResult<usize> {
+        let (positions, mut face_list) = self.polygon_soup();
+        if face_list.is_empty() {
+            return Ok(0);
+        }
+        let mut edge_faces: HashMap<(u32, u32), Vec<(usize, bool)>> = HashMap::new();
+        for (fi, face) in face_list.iter().enumerate() {
+            let n = face.len();
+            for i in 0..n {
+                let a = face[i];
+                let b = face[(i + 1) % n];
+                let key = if a < b { (a, b) } else { (b, a) };
+                let forward = a < b;
+                edge_faces.entry(key).or_default().push((fi, forward));
+            }
+        }
+        let mut adjacency: Vec<Vec<(usize, bool)>> = vec![Vec::new(); face_list.len()];
+        for owners in edge_faces.values() {
+            if owners.len() != 2 {
+                continue;
+            }
+            let (a, a_forward) = owners[0];
+            let (b, b_forward) = owners[1];
+            // Same directed sense on a shared undirected edge ⇒ neighbor needs a relative flip.
+            let needs_relative_flip = a_forward == b_forward;
+            adjacency[a].push((b, needs_relative_flip));
+            adjacency[b].push((a, needs_relative_flip));
+        }
+        let mut oriented = vec![false; face_list.len()];
+        let mut flip = vec![false; face_list.len()];
+        let mut flips = 0usize;
+        for start in 0..face_list.len() {
+            if oriented[start] {
+                continue;
+            }
+            let mut stack = vec![start];
+            oriented[start] = true;
+            while let Some(fi) = stack.pop() {
+                for &(neighbor, needs_relative_flip) in &adjacency[fi] {
+                    let neighbor_flip = flip[fi] ^ needs_relative_flip;
+                    if !oriented[neighbor] {
+                        oriented[neighbor] = true;
+                        flip[neighbor] = neighbor_flip;
+                        if neighbor_flip {
+                            flips += 1;
+                        }
+                        stack.push(neighbor);
+                    }
+                }
+            }
+        }
+        for (fi, face) in face_list.iter_mut().enumerate() {
+            if flip[fi] {
+                face.reverse();
+            }
+        }
+        self.rebuild_from_polygon_soup(&positions, &face_list)?;
+        Ok(flips)
+    }
+
     /// Finds every closed boundary loop (a chain of edges with no opposite face on the other side) in the
     /// current halfedge topology and caps each with a new n-gon face, so the mesh becomes watertight. Call
     /// `weld_coincident_vertices` first if the mesh may contain importer-duplicated boundary vertices, or
@@ -1491,6 +1615,55 @@ fn point_in_triangle(p: (f64, f64), a: (f64, f64), b: (f64, f64), c: (f64, f64))
     !(has_neg && has_pos)
 }
 
+/// Triangulates a planar polygon that may contain holes. Holes are bridged into the outer loop with a
+/// keyhole (doubled bridge edge) then ear-clipped, so the result covers only the solid region.
+fn triangulate_indexed_polygon_with_holes(positions: &[[f32; 3]], outer: &[u32], holes: &[Vec<u32>]) -> Vec<[u32; 3]> {
+    if holes.is_empty() {
+        let pts: Vec<Vec3> = outer.iter().map(|&i| Vec3(positions[i as usize])).collect();
+        return triangulate_polygon(&pts)
+            .into_iter()
+            .map(|[a, b, c]| [outer[a], outer[b], outer[c]])
+            .collect();
+    }
+    let mut combined: Vec<u32> = outer.to_vec();
+    let mut remaining: Vec<Vec<u32>> = holes.to_vec();
+    while let Some((hole_index, outer_pos, hole_pos)) = find_closest_bridge(&combined, &remaining, positions) {
+        let hole = remaining.remove(hole_index);
+        let mut spliced = Vec::with_capacity(combined.len() + hole.len() + 2);
+        spliced.extend_from_slice(&combined[..=outer_pos]);
+        spliced.push(hole[hole_pos]);
+        for k in 1..hole.len() {
+            spliced.push(hole[(hole_pos + k) % hole.len()]);
+        }
+        spliced.push(hole[hole_pos]);
+        spliced.push(combined[outer_pos]);
+        spliced.extend_from_slice(&combined[outer_pos + 1..]);
+        combined = spliced;
+    }
+    let pts: Vec<Vec3> = combined.iter().map(|&i| Vec3(positions[i as usize])).collect();
+    triangulate_polygon(&pts)
+        .into_iter()
+        .map(|[a, b, c]| [combined[a], combined[b], combined[c]])
+        .collect()
+}
+
+fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]) -> Option<(usize, usize, usize)> {
+    let mut best: Option<(f32, usize, usize, usize)> = None;
+    for (hi, hole) in holes.iter().enumerate() {
+        for (oi, &ov) in outer.iter().enumerate() {
+            let op = Vec3(positions[ov as usize]);
+            for (hpi, &hv) in hole.iter().enumerate() {
+                let hp = Vec3(positions[hv as usize]);
+                let d = op.sub(hp).length();
+                if best.map(|(bd, _, _, _)| d < bd).unwrap_or(true) {
+                    best = Some((d, hi, oi, hpi));
+                }
+            }
+        }
+    }
+    best.map(|(_, hi, oi, hpi)| (hi, oi, hpi))
+}
+
 /// Deterministic ear-clipping triangulation of a simple polygon (convex or concave), given ordered 3D corner
 /// positions. Falls back to a fan (previous behavior) whenever the polygon is degenerate (zero-area / collinear)
 /// or clipping stalls, so it never returns fewer than `n - 2` triangles or panics.
@@ -1897,6 +2070,87 @@ mod tests {
         let mesh = HalfedgeMesh::from_indexed_triangles(&positions, &indices).unwrap();
         assert_eq!(mesh.vertex_count(), 3);
         assert_eq!(mesh.face_count(), 1);
+    }
+
+    #[test]
+    fn from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_holes() {
+        // Two quads on z=0 sharing no edge (a slab with a gap — like a face pair that must not be bridged),
+        // plus a third vertical face that should stay separate. Face ids: 1 covers both coplanar quads'
+        // triangles as two separate B-Rep faces (10 and 11), so the gap is never capped.
+        let positions = vec![
+            0.0, 0.0, 0.0, // 0
+            1.0, 0.0, 0.0, // 1
+            1.0, 1.0, 0.0, // 2
+            0.0, 1.0, 0.0, // 3
+            2.0, 0.0, 0.0, // 4
+            3.0, 0.0, 0.0, // 5
+            3.0, 1.0, 0.0, // 6
+            2.0, 1.0, 0.0, // 7
+            0.0, 0.0, 1.0, // 8
+            1.0, 0.0, 1.0, // 9
+        ];
+        let indices = vec![
+            0, 1, 2, 0, 2, 3, // face 10 — left quad
+            4, 5, 6, 4, 6, 7, // face 11 — right quad (gap between x=1 and x=2)
+            0, 1, 9, 0, 9, 8, // face 12 — vertical
+        ];
+        let face_ids = vec![10, 10, 11, 11, 12, 12];
+        let mut mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &face_ids).unwrap();
+        assert_eq!(mesh.face_count(), 3, "each B-Rep face becomes one n-gon; gap must not be filled");
+        mesh.weld_coincident_vertices(1e-6).unwrap();
+        let open = {
+            let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+            for fi in 0..mesh.face_count() {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+                let n = verts.len();
+                for i in 0..n {
+                    *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
+                }
+            }
+            directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
+        };
+        assert!(open > 0, "gap between the two quads must remain an open boundary, not a filled face");
+    }
+
+    #[test]
+    fn orient_faces_consistently_fixes_same_winding_neighbors() {
+        // Two quads sharing edge 1-2, both wound CCW in XY — shared edge has the same directed sense.
+        let positions = [
+            [0.0, 0.0, 0.0],
+            [1.0, 0.0, 0.0],
+            [1.0, 1.0, 0.0],
+            [0.0, 1.0, 0.0],
+            [2.0, 0.0, 0.0],
+            [2.0, 1.0, 0.0],
+        ];
+        let faces = vec![vec![0, 1, 2, 3], vec![1, 2, 5, 4]];
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &faces).unwrap();
+        let open_before = {
+            let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+            for fi in 0..mesh.face_count() {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+                let n = verts.len();
+                for i in 0..n {
+                    *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
+                }
+            }
+            directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
+        };
+        assert!(open_before > 0);
+        let flips = mesh.orient_faces_consistently().unwrap();
+        assert!(flips >= 1);
+        let open_after = {
+            let mut directed: HashMap<(u32, u32), u32> = HashMap::new();
+            for fi in 0..mesh.face_count() {
+                let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+                let n = verts.len();
+                for i in 0..n {
+                    *directed.entry((verts[i].0, verts[(i + 1) % n].0)).or_insert(0) += 1;
+                }
+            }
+            directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
+        };
+        assert_eq!(open_after, 6, "only the outer boundary of the 2-quad strip should remain open");
     }
 
     #[test]

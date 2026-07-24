@@ -1,0 +1,16 @@
+[
+  "s-play-catalogue",
+  "s-media-graph",
+  "framework.window.sMediaGraph.windowControls",
+  "framework.window.sMediaGraph",
+  "framework.window.sMediaGraph.measures.unfold",
+  "framework.window.sMediaGraph.engagement.toggle",
+  "framework.window.sMediaGraph.search.toggle",
+  "framework.window.sMediaGraph.utilityBar.unfold",
+  "framework.window.sMediaVfs.engagement.toggle",
+  "framework.window.sCompiledDag.engagement.toggle"
+]
+slots [ "window-measures-overlay", "window-measures-stack", "window-measures-chrome", "window-engagement-overlay",
+  "window-engagement-zone", "window-engagement-chrome", "window-search-overlay", "window-search-zone",
+  "window-search-chrome"
+]

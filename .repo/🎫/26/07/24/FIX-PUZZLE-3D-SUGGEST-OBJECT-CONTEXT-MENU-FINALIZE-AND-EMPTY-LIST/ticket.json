@@ -1,0 +1,13 @@
+{
+  "title": "Fix Puzzle 3D Suggest Object Context Menu Finalize and Empty List",
+  "emoji": "🐛",
+  "status": "open",
+  "description": "puzzle 3d: There are several problems with suggest object over context menu:\n- Sometimes it doesnt finalize the option that was chosen\n- Sometimes it when clicking suggest objects on context menu no list appears (not even when there are plenty of objects, retrying sometimes works)",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2293"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪72e182eb57274e0d95c940cf80860e81"
+  ]
+}

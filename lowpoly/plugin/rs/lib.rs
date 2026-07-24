@@ -1200,6 +1200,35 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels)
 fn lowpoly_selection_utility_options(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels) -> WindowMeasure {
     let targets = &runtime.selection.targets;
     WindowMeasure::Group {
+        id: "lowpoly-utility-options-select".into(),
+        label: labels.selection_kind.into(),
+        default_open: Some(true),
+        active_utility_id: Some(LOWPOLY_TRANSFORM_UTILITY_DEFAULT.into()),
+        value: None,
+        min: None,
+        max: None,
+        step: None,
+        ready: None,
+        loading: None,
+        waiting: None,
+        on_change: None,
+        children: vec![
+            selection_kind_toggle("mesh", "box", labels.mesh, "mesh", targets.mesh),
+            selection_kind_toggle("face", "square", labels.face, "face", targets.face),
+            selection_kind_toggle("edge", "minus", labels.edge, "edge", targets.edge),
+            selection_kind_toggle("vertex", "circle", labels.vertex, "vertex", targets.vertex),
+            WindowMeasure::Select {
+                id: "lowpoly-measure-selection-method".into(),
+                label: Some(labels.selection_method.into()),
+                value: runtime.selection_method.clone(),
+                items: vec![
+                    MeasureSelectItem { id: "rectangle".into(), value: "rectangle".into(), label: labels.rectangle.into() },
+                    MeasureSelectItem { id: "lasso".into(), value: "lasso".into(), label: labels.lasso.into() },
+                ],
+                on_change: lowpoly_action("setSelectionMethod", None),
+            },
+        ],
+    }
 }
 
 /// 🖌️ Utility Options for a stamping paint utility (`brush`/`eraser`) — the live brush size/opacity/hardness
@@ -2465,14 +2494,6 @@ mod tests {
         let measures = lowpoly_window_measures(&LowpolyPlayRuntime::default(), &LowpolyLabels::EN);
         let group_tag = |id: &str| {
             measures.iter().find_map(|measure| match measure {
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
                 WindowMeasure::Group { id: gid, active_utility_id, .. } if gid == id => Some(active_utility_id.clone()),
                 _ => None,
             })

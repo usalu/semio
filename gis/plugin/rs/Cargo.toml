@@ -15,35 +15,35 @@ package = "semio:gis"
 [[package.metadata.semio.playground]]
 variant = "gis2d"
 aliases = ["gis 2d"]
-app = "gis2d"
+app = "gis2d-play"
 ports = { react = 6040, wgpu = 6140 }
 engines = ["framework/surface/tiled-map/rs"]
 
 [[package.metadata.semio.playground]]
 variant = "gis3d"
 aliases = ["gis 3d"]
-app = "gis3d"
+app = "gis3d-play"
 ports = { react = 6083, wgpu = 6183 }
 engines = ["framework/surface/terrain/rs"]
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/osm"
-app = "gis2d"
+app = "gis2d-play"
 upstream = "https://tile.openstreetmap.org/{z}/{x}/{y}.png"
 cache = "osm-tiles"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/vt"
-app = "gis2d"
+app = "gis2d-play"
 upstream = "https://tiles.openfreemap.org/planet"
 cache = "openfreemap-vt"
 
 [[package.metadata.semio.assets]]
 kind = "tile-proxy"
 route = "/dem"
-app = "gis3d"
+app = "gis3d-play"
 upstream = "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png"
 cache = "terrarium-dem"
 

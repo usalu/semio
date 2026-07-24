@@ -12567,9 +12567,12 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const engagementPointerMoveInFlightRef = useRef(false);
   const engagementPointerMoveLastPointRef = useRef<readonly [number, number, number] | null>(null);
   const gumballDragStartPoseRef = useRef<GumballPose | null>(null);
+  /** 🧲 Last pose already handed to the plugin — mid-drag ticks send incremental `last→pending` so AmendLast / scratch-accumulate apps (CAD, lowpoly, puzzle) never stack absolute totals into a fly-away. */
+  const gumballDragLastPoseRef = useRef<GumballPose | null>(null);
   const gumballDragPendingRef = useRef<{ readonly kind: GumballHandleKind; readonly pose: GumballPose } | null>(null);
   const gumballDragRafRef = useRef<number | null>(null);
   const gumballDragChainRef = useRef(Promise.resolve());
+  const gumballDragDebugTickRef = useRef(0);
   const selectionMode = selection.selectionMode ?? selection.granularity ?? "mesh";
   const gridSnapEnabled = lod.gridSnapEnabled ?? false;
   useEffect(() => {
@@ -13027,23 +13030,37 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const flushGumballDragPending = useCallback(() => {
     gumballDragRafRef.current = null;
-    const startPose = gumballDragStartPoseRef.current;
     const pending = gumballDragPendingRef.current;
-    if (!startPose || !pending) return;
+    if (!pending) return;
     gumballDragPendingRef.current = null;
-    // 🧲 Absolute delta from drag-start pose — re-applies onto the plugin transform base each tick so
-    // out-of-order async completions cannot accumulate corrupted incremental state.
-    void enqueueGumballDispatch(() => dispatchGumballPoseDelta(pending.kind, startPose, pending.pose));
+    const lastPose = gumballDragLastPoseRef.current ?? gumballDragStartPoseRef.current;
+    if (!lastPose) return;
+    // 🧲 Incremental last→pending (rAF latest-wins still covers the skipped gap). Absolute-from-start
+    // stacked on AmendLast/scratch-accumulate plugins and flung the selection away from the cursor.
+    gumballDragLastPoseRef.current = pending.pose;
+    const tick = ++gumballDragDebugTickRef.current;
+    void enqueueGumballDispatch(async () => {
+      const dx = pending.pose.position[0] - lastPose.position[0];
+      const dy = pending.pose.position[1] - lastPose.position[1];
+      const dz = pending.pose.position[2] - lastPose.position[2];
+      if (tick <= 5) {
+        console.log("[DEBUG] gumball drag tick", { tick, kind: pending.kind, dx, dy, dz });
+      }
+      await dispatchGumballPoseDelta(pending.kind, lastPose, pending.pose);
+    });
   }, [dispatchGumballPoseDelta, enqueueGumballDispatch]);
 
   const handleGumballDragStart = useCallback(
     (_kind: GumballHandleKind, before: GumballPose) => {
       gumballDragStartPoseRef.current = before;
+      gumballDragLastPoseRef.current = before;
       gumballDragPendingRef.current = null;
+      gumballDragDebugTickRef.current = 0;
       if (gumballDragRafRef.current != null) {
         cancelAnimationFrame(gumballDragRafRef.current);
         gumballDragRafRef.current = null;
       }
+      console.log("[DEBUG] gumball drag begin", { position: before.position });
       void enqueueGumballDispatch(() => Promise.resolve(dispatch("transformBegin")));
     },
     [dispatch, enqueueGumballDispatch],
@@ -13053,6 +13070,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     (kind: GumballHandleKind, pose: GumballPose) => {
       if (!gumballDragStartPoseRef.current) {
         gumballDragStartPoseRef.current = pose;
+        gumballDragLastPoseRef.current = pose;
       }
       gumballDragPendingRef.current = { kind, pose };
       if (gumballDragRafRef.current == null) {
@@ -13068,11 +13086,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
         cancelAnimationFrame(gumballDragRafRef.current);
         gumballDragRafRef.current = null;
       }
-      const startPose = gumballDragStartPoseRef.current ?? before;
+      const lastPose = gumballDragLastPoseRef.current ?? gumballDragStartPoseRef.current ?? before;
       gumballDragPendingRef.current = null;
       gumballDragStartPoseRef.current = null;
+      gumballDragLastPoseRef.current = null;
+      console.log("[DEBUG] gumball drag end", {
+        kind,
+        remaining: [after.position[0] - lastPose.position[0], after.position[1] - lastPose.position[1], after.position[2] - lastPose.position[2]],
+      });
       void enqueueGumballDispatch(async () => {
-        await dispatchGumballPoseDelta(kind, startPose, after);
+        await dispatchGumballPoseDelta(kind, lastPose, after);
         await Promise.resolve(dispatch("transformEnd"));
       });
     },

@@ -1047,6 +1047,7 @@ pub mod app_2d {
         ];
         fields.extend(layer_weight_slider_fields(runtime, labels));
         UiInspectorFieldGroup {
+            presence: UiPresence::default(),
             id: "gis2d-play-inspector.map-view".into(),
             label: labels.map_view.into(),
             default_open: Some(true),
@@ -1085,6 +1086,7 @@ pub mod app_2d {
         ui_inspector_groups_to_tree(&[
             map_view_group,
             UiInspectorFieldGroup {
+                presence: UiPresence::default(),
                 id: "gis2d-play-inspector.layer".into(),
                 label: labels.map_layer.into(),
                 default_open: Some(true),

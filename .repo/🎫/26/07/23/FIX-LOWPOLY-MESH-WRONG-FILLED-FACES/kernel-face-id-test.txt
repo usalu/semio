@@ -1,0 +1,16 @@
+   Compiling memchr v2.8.0
+   Compiling syn v2.0.117
+   Compiling serde_json v1.0.149
+   Compiling thiserror-impl v2.0.18
+   Compiling serde_derive v1.0.228
+   Compiling thiserror v2.0.18
+   Compiling serde v1.0.228
+   Compiling kernel_3d_mesh v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/mesh/rs)
+    Finished `test` profile [unoptimized] target(s) in 2m 10s
+     Running unittests lib.rs (/tmp/semio-lowpoly-mesh-fix/debug/deps/kernel_3d_mesh-88bf5d04c83b8e09)
+
+running 1 test
+test tests::from_indexed_triangles_by_face_id_merges_per_brep_face_without_filling_holes ... ok
+
+test result: ok. 1 passed; 0 failed; 0 ignored; 0 measured; 22 filtered out; finished in 0.00s
+

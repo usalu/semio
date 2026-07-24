@@ -1,0 +1,13 @@
+{
+  "title": "Realtime Puzzle Gumball Drag",
+  "emoji": "⚡",
+  "status": "open",
+  "description": "Puzzle 3D gumball dragging is insanely slow and buggy. It should realtime-update during drag and keep working when used several times.\n\nImplemented scratch-session transformBegin/transformEnd in puzzle plugin, absolute-from-start gumball deltas + rAF coalesce + serialized dispatch in World3dHost, and SceneGumball pivot freeze while dragging. Closing after verification.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2289"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪3e8dc0676b4d48fbaecb4a4015a70280"
+  ]
+}

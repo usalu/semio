@@ -1435,6 +1435,48 @@ impl BrepkitKernel {
         Ok(self.entry(handle)?.kind)
     }
 
+    /// 🧩 Extracts the low-poly polygon soup of a solid from B-Rep face wires, using shared topology
+    /// vertices (no per-face Steiner edge samples). Each entry is `(outer_loop, hole_loops)` indexed into
+    /// `positions`. Simple faces become one n-gon; callers triangulate holed faces without filling openings.
+    pub fn solid_face_loops_sync(&self, handle: &GeometryHandle) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
+        let solid = self.solid_id(handle)?;
+        let mut vertex_to_index: std::collections::HashMap<usize, u32> = std::collections::HashMap::new();
+        let mut positions: Vec<[f32; 3]> = Vec::new();
+        let mut face_loops = Vec::new();
+        for face_id in explorer::solid_faces(&self.topo, solid).map_err(Self::map_topo_err)? {
+            let face = self.topo.face(face_id).map_err(Self::map_topo_err)?;
+            let mut wires = vec![face.outer_wire()];
+            wires.extend_from_slice(face.inner_wires());
+            let mut loops: Vec<Vec<u32>> = Vec::new();
+            for wire_id in wires {
+                let wire = self.topo.wire(wire_id).map_err(Self::map_topo_err)?;
+                let mut loop_indices = Vec::new();
+                for oriented in wire.edges() {
+                    let edge = self.topo.edge(oriented.edge()).map_err(Self::map_topo_err)?;
+                    let vid = oriented.oriented_start(&edge);
+                    let index = if let Some(&existing) = vertex_to_index.get(&vid.index()) {
+                        existing
+                    } else {
+                        let point = self.topo.vertex(vid).map_err(Self::map_topo_err)?.point();
+                        let next = positions.len() as u32;
+                        positions.push([point.x() as f32, point.y() as f32, point.z() as f32]);
+                        vertex_to_index.insert(vid.index(), next);
+                        next
+                    };
+                    loop_indices.push(index);
+                }
+                loops.push(loop_indices);
+            }
+            let mut loops_iter = loops.into_iter();
+            let Some(outer) = loops_iter.next() else { continue };
+            if outer.len() < 3 {
+                continue;
+            }
+            face_loops.push((outer, loops_iter.collect()));
+        }
+        Ok((positions, face_loops))
+    }
+
     pub fn tessellate_sync(&self, handle: &GeometryHandle, tolerance: f64) -> Result<MeshTransfer, BrepError> {
         let tol = tolerance.max(1e-4);
         let entry = self.entry(handle)?;

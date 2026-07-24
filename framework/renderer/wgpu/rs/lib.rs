@@ -2596,6 +2596,31 @@ mod tests {
         use ui_wgpu::{partition_window_measures, ActionDescriptor, WindowMeasure};
         let measures = vec![
             WindowMeasure::Group {
+                id: "brush-params".into(),
+                label: "Brush".into(),
+                default_open: Some(true),
+                active_utility_id: Some("utility.a".into()),
+                value: None,
+                min: None,
+                max: None,
+                step: None,
+                ready: None,
+                loading: None,
+                waiting: None,
+                on_change: None,
+                children: vec![WindowMeasure::Toggle {
+                    id: "brush-size".into(),
+                    icon_id: "brush".into(),
+                    label: Some("Size".into()),
+                    pressed: false,
+                    text: None,
+                    on_change: ActionDescriptor {
+                        controller_id: "test".into(),
+                        action: "noop".into(),
+                        args: None,
+                    },
+                }],
+            },
             WindowMeasure::Group {
                 id: "grid".into(),
                 label: "Grid".into(),
@@ -2614,24 +2639,8 @@ mod tests {
         ];
         let (general, utility_options) = partition_window_measures(&measures, Some("utility.a"));
         assert_eq!(utility_options.len(), 1, "matching utility surfaces the tagged group in utility options");
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
-        assert!(matches!(&utility_options[0], WindowMeasure::Group { id, .. } if id == "brush-params"));
+        assert!(matches!(&utility_options[0], WindowMeasure::Toggle { id, .. } if id == "brush-size"));
         assert_eq!(general.len(), 1, "untagged group stays in the general measures rail");
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         assert!(matches!(&general[0], WindowMeasure::Group { id, .. } if id == "grid"));
         let (general_other, utility_options_other) = partition_window_measures(&measures, Some("utility.b"));
         assert!(utility_options_other.is_empty(), "wrong active utility drops the tagged group");
@@ -19407,14 +19416,6 @@ fn measure_window_measure_height(
                 }
             }
             h
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         }
         WindowMeasure::Select { .. } | WindowMeasure::Slider { .. } => 16.0 + theme.control_height,
         WindowMeasure::Toggle { .. } => theme.control_height,
@@ -23975,14 +23976,6 @@ impl ShellState {
                         y += child_h;
                     }
                 }
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
             }
             WindowMeasure::Select {
                 id,

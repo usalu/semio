@@ -1,0 +1,13 @@
+[DEBUG] goto http://127.0.0.1:6022/
+[DEBUG] process page {
+  "canvas": 1,
+  "hasRenderError": false,
+  "mentionsProcess": true,
+  "windowTitles": [
+    " Window Options Actions Search Ut"
+  ],
+  "pageErrors": [],
+  "consoleSample": [],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · process · 3d\nExample\nTimber Beam Joinery\nWorkpiece\nClose\nWindow Options\nActions\nSearch\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+[DEBUG] process e2e ok

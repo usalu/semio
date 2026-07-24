@@ -853,6 +853,29 @@ mod tests {
     }
 
     #[test]
+    fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
+        let mesh = HalfedgeMesh::from_json(DEFAULT_MESH_JSON).expect("default mesh");
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
+            let mut min_x = f32::MAX;
+            let mut max_x = f32::MIN;
+            let mut min_z = f32::MAX;
+            let mut max_z = f32::MIN;
+            for vid in verts {
+                let p = mesh.vertex_position(vid).expect("vertex");
+                min_x = min_x.min(p.x());
+                max_x = max_x.max(p.x());
+                min_z = min_z.min(p.z());
+                max_z = max_z.max(p.z());
+            }
+            assert!(
+                !((max_x - min_x) > 4.0 && (max_z - min_z) > 1.0),
+                "default mesh face {fi} spans the support gap — CAD wire rebuild regressed to fill_holes caps"
+            );
+        }
+    }
+
+    #[test]
     fn document_loads_meshes() {
         let doc = LowpolyDocument::new(default_projection()).unwrap();
         assert_eq!(doc.meshes.len(), 1);
@@ -975,8 +998,9 @@ mod tests {
 //#region 🔖ExportConcreteForestMeshTests
 #[cfg(test)]
 mod export_concrete_forest_mesh_tests {
-    use cad_plugin::geometry_import::{objects_from_fixture_model, parse_geometry, tessellate_geometry_handle};
+    use cad_plugin::geometry_import::{objects_from_fixture_model, parse_geometry};
     use kernel_3d_brepkit::BrepkitKernel;
+    use kernel_3d_engine::GeometryHandle;
     use kernel_3d_mesh::{FaceId, HalfedgeMesh, Vec3 as MeshVec3, VertexId};
     use serde_json::Value;
     use std::collections::HashMap;
@@ -1008,6 +1032,32 @@ mod export_concrete_forest_mesh_tests {
         directed.keys().filter(|&&(a, b)| !directed.contains_key(&(b, a))).count()
     }
 
+    /// Spurious `fill_holes` caps on this solid spanned the open gap between vertical supports: large X
+    /// extent *and* large Z extent on one face. Real CAD faces are either horizontal slabs (small Δz) or
+    /// vertical support sides (small Δx).
+    fn assert_no_spanning_face_across_support_gap(mesh: &HalfedgeMesh) {
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).expect("face verts");
+            let mut min_x = f32::MAX;
+            let mut max_x = f32::MIN;
+            let mut min_z = f32::MAX;
+            let mut max_z = f32::MIN;
+            for vid in verts {
+                let p = mesh.vertex_position(vid).expect("vertex");
+                min_x = min_x.min(p.x());
+                max_x = max_x.max(p.x());
+                min_z = min_z.min(p.z());
+                max_z = max_z.max(p.z());
+            }
+            let dx = max_x - min_x;
+            let dz = max_z - min_z;
+            assert!(
+                !(dx > 4.0 && dz > 1.0),
+                "face {fi} spans the support gap (dx={dx:.3}, dz={dz:.3}) — likely a filled hole, not a CAD face"
+            );
+        }
+    }
+
     #[test]
     fn export_concrete_forest_left_lowpoly_mesh_json() {
         if std::env::var("EXPORT_LOWPOLY_FOREST_MESH").ok().as_deref() != Some("1") {
@@ -1019,35 +1069,30 @@ mod export_concrete_forest_mesh_tests {
         let objects = root.pointer("/models/0/model/objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
         let mut kernel = BrepkitKernel::new();
         let imported = objects_from_fixture_model(&mut kernel, &objects, &geometry);
-        let mesh_data = tessellate_geometry_handle(&mut kernel, imported[0].solid_handle.as_ref().expect("handle"), "solid").expect("tessellated mesh");
-        let mut mesh = HalfedgeMesh::from_indexed_triangles(&mesh_data.positions, &mesh_data.indices).expect("halfedge mesh");
-        // The BREP tessellator emits independently-tessellated, non-shared vertices along seams between
-        // adjacent source faces; weld those before touching topology so twins/boundaries are accurate.
-        let welded = mesh.weld_coincident_vertices(1e-4).expect("weld coincident vertices");
+        let handle = GeometryHandle(imported[0].solid_handle.clone().expect("handle"));
+        let (positions, face_loops) = kernel.solid_face_loops_sync(&handle).expect("CAD face loops");
+        let holed = face_loops.iter().filter(|(_, holes)| !holes.is_empty()).count();
         eprintln!(
-            "[DEBUG] after weld: verts={} faces={} welded={} open={}",
+            "[DEBUG] CAD face loops: verts={} faces={} holed={}",
+            positions.len(),
+            face_loops.len(),
+            holed
+        );
+        let mut mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).expect("halfedge from CAD wires");
+        let flips = mesh.orient_faces_consistently().expect("orient faces");
+        eprintln!(
+            "[DEBUG] after wire build+orient: verts={} faces={} flips={} open={}",
             mesh.vertex_count(),
             mesh.face_count(),
-            welded,
+            flips,
             open_boundary_count(&mesh)
         );
-        // Do NOT fill_holes: CAD solids with column gaps have complex boundary loops that are not
-        // missing faces — capping them creates spurious faces spanning open space between supports.
-        // Prefer a faithful CAD tessellation over artificial watertightness.
-        let triangle_face_count = mesh.face_count();
-        let merges = mesh.merge_coplanar_faces().expect("merge coplanar faces");
-        eprintln!(
-            "[DEBUG] after merge: verts={} faces={} merges={} open={}",
-            mesh.vertex_count(),
-            mesh.face_count(),
-            merges,
-            open_boundary_count(&mesh)
+        assert!(
+            (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 3),
+            "expected at least one non-triangle CAD face"
         );
-        assert!(mesh.face_count() < triangle_face_count, "expected coplanar merge to reduce face count below {triangle_face_count}, got {}", mesh.face_count());
-        assert!((0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(kernel_3d_mesh::FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) > 4), "expected at least one merged face with more than 4 corners");
-        // CAD tessellation after weld should already be a closed solid; if it is not, fix the
-        // tessellator — never invent faces with fill_holes.
         assert_watertight(&mesh);
+        assert_no_spanning_face_across_support_gap(&mesh);
         let mut min = MeshVec3::new(f32::MAX, f32::MAX, f32::MAX);
         let mut max = MeshVec3::new(f32::MIN, f32::MIN, f32::MIN);
         for index in 0..mesh.vertex_count() {

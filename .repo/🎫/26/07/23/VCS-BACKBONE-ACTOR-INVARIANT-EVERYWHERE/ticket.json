@@ -1,8 +1,9 @@
 {
   "title": "Vcs Backbone Actor Invariant Everywhere",
   "emoji": "🧬",
-  "status": "open",
+  "status": "closed",
   "description": "Guarantee the vcs architecture invariant across every playground, app, and OS surface, and migrate Compose/Sketchpad onto it: every document is always a DocumentVcsStore (in-memory edit log + checkpoint DAG + causal OpDag, materialized by replay); the backbone is a non-blocking, IO-free, runtime-attachable/detachable queue (default: no backbone attached); all IO lives in a per-document sync actor with bidirectional communication (command channel in, event broadcast out, crossed queues). Close all gaps identified in exploration (register_app escape hatch, TS/Rust dual sync-actor implementations, deprecated attachSyncBackbone, Ack/presence half-wired, wgpu browser attach stub, os/run bypassing the folder backbone, StudioVcsHost not backbone-attachable, auto_attach_backbone violating default-detached on wasm). Migrate Compose/Sketchpad's parallel persistence stack (hand-rolled VCS entity model, bespoke kit-backbone, compose-store server, compose hub) onto vcs + backbone, deleting the parallel axes and the os-core legacy shim outright. Full plan at /Users/ueli/.claude/plans/make-sure-vcs-always-witty-wilkes.md.",
+  "summary": "Fixed Puzzle 3D fill tool panel to use native bottom-up Tree chrome (same as left-corner panels) via windowMeasuresToTreeItems + buildToolTree rewrite. Restructured distribution to Count → Distribution → ObjectKind (header slider) → VortexKind (joint P(object)×P(vortex) sliders). Extended WindowMeasure::Group with optional header slider fields; TreeItem shows headerControl on expandable property groups. Joint vortex edits convert to global vortex simplex via setVortexKindWeight + objectKindId. Tests: vitest buildToolTabs (6 passed), cargo puzzle3d_joint_vortex + fill_and_brush_params (3 passed).",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2274"
   },

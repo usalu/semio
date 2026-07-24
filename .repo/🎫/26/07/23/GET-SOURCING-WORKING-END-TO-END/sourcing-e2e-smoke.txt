@@ -1,0 +1,8 @@
+[DEBUG] sourcing e2e smoke: {
+  "ok": true,
+  "bodySnippet": "Document\nFullscreen\nsemio · sourcing · curate\nExample\nDemo Stock\nPool\nFocus\nClose\nBeams\nWindows\nSlabs\nSelect\n\nLoading surface…\n\nActions\nUtilities\nCurated\nFocus\nClose\n\nLoading surface…\n\nActions\nUtilities\nPreview\nFocus\nClose\n\nNo selection\n\nActions\nUtilities\nGrid\nFocus\nClose\n\nLoading surface…\n\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view",
+  "pageErrors": [],
+  "consoleErrors": [],
+  "debugLogs": [],
+  "url": "http://127.0.0.1:6081/"
+}

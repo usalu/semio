@@ -1,8 +1,9 @@
 {
   "title": "Draw Canvas Light Mode And Document Dimensions",
   "emoji": "🎨",
-  "status": "open",
+  "status": "closed",
   "description": "The draw canvas is too dark in light mode. Make it match other projects such as flow and infinite grid. Also show the document dimensions.",
+  "summary": "Draw canvas in light mode now uses the same board palette clear (`rasterClear`) and LOD infinite grid as flow/infinite instead of a hardcoded dark fill/checkerboard (React + wgpu). Draw scenes emit the artboard paper plus a `W × H` dimension label; blank documents default to a 1024×1024 artboard. Also repaired concurrent WindowMeasure::Group initializer breakage in framework/plugin and framework/renderer/wgpu that blocked compile.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2283"
   },

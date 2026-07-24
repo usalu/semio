@@ -8,7 +8,13 @@ Plugin `RasterLayerNode::Adjustment` had **no `params` field**, so fixture param
 
 ## Fixes
 
-1. Paint: `params` defaults; group children accumulate parent transform once (no double camera).
-2. Plugin: preserve adjustment `params` as a JSON map through serialize/deserialize.
+1. Paint: `params` defaults; group children accumulate parent transform once (no double camera); picking/marquee/navigator bounds follow the same parent transform chain.
+2. Plugin: preserve adjustment `params` as a JSON map through serialize/deserialize; fill `WindowMeasure::Group` state fields required by the unified UI presence model.
 3. wgpu paint2d: use `cameraJson`, render pixel layers without `imageKey`, center quads like WASM.
 4. React: log `[DEBUG]` on sync/upload failures instead of swallowing/crashing silently.
+5. Tests: assert `componentKind: paint-2d` and presence-stamped hover (`state: previewed`).
+
+## Verification
+
+- `cargo test -p framework_surface_paint --lib` → 9 passed
+- `cargo test -p raster-plugin --lib` → 25 passed

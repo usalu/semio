@@ -1,0 +1,14 @@
+{
+  "title": "Get Map Working End to End",
+  "emoji": "🗺️",
+  "status": "closed",
+  "description": "Get GIS/map (dev:gis:2d) working end to end. Build currently fails with missing `presence` field on UiInspectorFieldGroup in gis/plugin/rs/lib.rs. Fix compile errors and any further blockers so the map app runs.",
+  "summary": "GIS/map failed to compile (UiInspectorFieldGroup missing presence) and then failed to boot (playground app id gis2d/gis3d vs plugin gis2d-play/gis3d-play). Added presence defaults in gis/plugin/rs/lib.rs; aligned Cargo.toml playground+asset app ids and regenerated the plugin registry. Verified: wasm release build ok; SEMIO_RENDERER=react dev:gis:2d serves http://127.0.0.1:6040/ as semio · gis · 2d with Map canvas, Document/Catalogue/Inspection chrome, and Reuse Map example (Playwright).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2292"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪6f317847c9da4977a9618906e176b734"
+  ]
+}

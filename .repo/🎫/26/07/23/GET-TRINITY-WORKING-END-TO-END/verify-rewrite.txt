@@ -1,0 +1,24 @@
+[DEBUG] trinity page {
+  "title": "semio · trinity · rewrite",
+  "canvas": 9,
+  "chromeOk": true,
+  "fatal": false,
+  "pageErrors": [
+    "NoCompatibleDevice",
+    "NoCompatibleDevice",
+    "NoCompatibleDevice",
+    "NoCompatibleDevice",
+    "NoCompatibleDevice"
+  ],
+  "actionablePageErrors": [],
+  "consoleErrors": [
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "Failed to load resource: net::ERR_CONNECTION_REFUSED",
+    "[DEBUG] plugin worker trinity crashed Event"
+  ],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · trinity · rewrite\nExample\nLabel Core\nLHS\nFocus\nClose\nWindow Options\nActions\nUtilities\nRHS\nFocus\nClose\nWindow Options\nActions\nUtilities\nJack\nFocus\nClose\nActions\nUtilities\nParameters\nFocus\nClose\nPARAMETERS\nlabel\nActions\nUtilities\nBefore\nFocus\nClose\nWindow Options\nActions\nUtilities\nAfter\nFocus\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+[DEBUG] trinity e2e ok

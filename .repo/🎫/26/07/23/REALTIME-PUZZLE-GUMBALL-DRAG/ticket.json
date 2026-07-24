@@ -1,8 +1,9 @@
 {
   "title": "Realtime Puzzle Gumball Drag",
   "emoji": "⚡",
-  "status": "open",
+  "status": "closed",
   "description": "Puzzle 3D gumball dragging is insanely slow and buggy. It should realtime-update the selection during drag and keep working correctly when used several times in a row.\n\nRoot causes to fix:\n1. Every pointermove dispatches translateSelection/rotateSelection through full WASM + attraction resolve + document delta + VCS amend + React re-render (no transformBegin/transformEnd session in puzzle, unlike lowpoly).\n2. SceneGumball resets pivot from gumballTarget on every selectionJson update mid-drag, fighting the live drag.\n3. Async action races and stale pivot reset break subsequent drags.\n\nImplement scratch-session transformBegin/transformEnd in puzzle plugin (mirror lowpoly), keep live instance preview during drag, commit once on transformEnd, and stop mid-drag pivot resets from fighting the gumball.",
+  "summary": "Puzzle 3D gumball drag is now scratch-session based (transformBegin → absolute mid-drag ticks on a fixture base with no VCS ops → transformEnd commits once), matching lowpoly. World3dHost sends absolute drag-start deltas, coalesces to one rAF tick, and serializes WASM dispatches so repeated drags stay correct. SceneGumball ignores gumballTarget updates while dragging and snaps the pivot from the final pose. Also repaired concurrent syntax corruption in puzzle distribution measures and framework measure_group_with_open that blocked compile.\n\nVerified: puzzle-plugin gumball_transform_session_commits_once_on_end passed; framework-renderer-react gumballTransform test passed.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2281"
   },

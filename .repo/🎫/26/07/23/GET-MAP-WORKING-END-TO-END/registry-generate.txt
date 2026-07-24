@@ -1,0 +1,13 @@
+$ bun ./script.ts nx run @semio-tech/plugin-registry:generate
+
+> nx run @semio-tech/plugin-registry:generate
+
+> bun ./script.ts generate
+
+plugin registry catalog refreshed (33 plugin crates, 50 playgrounds) -> /Users/ueli/Documents/semio/framework/plugin/registry/generated
+
+
+
+ NX   Successfully ran target generate for project @semio-tech/plugin-registry
+
+

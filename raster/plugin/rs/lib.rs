@@ -1234,6 +1234,14 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
         label: label.into(),
         default_open: Some(true),
         active_utility_id: Some(utility.into()),
+        value: None,
+        min: None,
+        max: None,
+        step: None,
+        ready: None,
+        loading: None,
+        waiting: None,
+        on_change: None,
         children: vec![
             WindowMeasure::Slider {
                 id: format!("raster-{utility}-size"),
@@ -1246,7 +1254,7 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 loading: None,
                 waiting: None,
                 on_change: raster_action("setBrushSize", None),
-                },
+            },
             WindowMeasure::Slider {
                 id: format!("raster-{utility}-opacity"),
                 label: Some("Opacity".into()),
@@ -1258,7 +1266,7 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 loading: None,
                 waiting: None,
                 on_change: raster_action("setBrushOpacity", None),
-                },
+            },
         ],
     }
 }
@@ -1683,7 +1691,7 @@ mod tests {
     fn renders_navigator_scene() {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_NAVIGATOR, None, &ViewState::default()).expect("render")).unwrap();
-        assert!(json.contains("\"componentKind\":\"raster\""));
+        assert!(json.contains("\"componentKind\":\"paint-2d\""));
         assert!(json.contains("\"viewMode\":\"navigator\""));
     }
 
@@ -1787,7 +1795,7 @@ mod tests {
     fn composite_scene_syncs_document_and_assets() {
         let mut app = semio_app();
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &ViewState::default()).expect("render")).unwrap();
-        assert!(json.contains("\"componentKind\":\"raster\""));
+        assert!(json.contains("\"componentKind\":\"paint-2d\""));
         assert!(json.contains("\"viewMode\":\"composite\""));
         assert!(!json.contains("\"assetsJson\":\"{}\""), "semio fixture has embedded assets");
         let document: RasterDocument = serde_json::from_str(SEMIO_EXAMPLE_JSON).unwrap();
@@ -1821,10 +1829,12 @@ mod tests {
     fn set_hover_highlights_layer_row_via_runtime() {
         let mut app = semio_app();
         let layer_id = layer_node_id(&app.projection().expect("projection").layers[0]).to_string();
+        let row_id = layer_row_id(find_layer(&app.projection().expect("projection").layers, &layer_id).expect("layer"));
         let result = app.handle_action("setHover", Some(&json!({ "id": layer_id })), &ViewState::default(), &testkit::meta("local")).expect("hover");
         assert!(result.operations.is_empty(), "hover is a view action and emits no ops");
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
-        assert!(json.contains("\"highlightedIds\":[\"raster-play-layers."));
+        assert!(json.contains(&format!("\"id\":\"{row_id}\"")), "hovered layer row must be present");
+        assert!(json.contains("\"state\":\"previewed\""), "hover stamps UiState::Previewed onto the layer row");
     }
 
     #[test]

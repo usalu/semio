@@ -1,0 +1,5 @@
+# Verification
+
+- `cargo test -p puzzle-plugin gumball_transform` → `gumball_transform_session_commits_once_on_end` passed (1 ok)
+- `bun ./script.ts test index.test.ts -t gumballTransform` (framework-renderer-react) → 1 passed
+- Also repaired concurrent corruption in `puzzle3d_distribution_*` / `puzzle3d_brush_utility_options` and `measure_group_with_open` that blocked compile

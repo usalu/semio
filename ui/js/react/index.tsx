@@ -20937,18 +20937,22 @@ const GUMBALL_PREVIEW_DISK_SEGMENTS = 64;
 const _gumballPreviewCamPos = new THREE.Vector3();
 const _gumballPreviewPivot = new THREE.Vector3();
 
-/** @emoji 👁 World half-extent for gumball axis line previews (fills the viewport at the pivot). */
+/** @emoji 👁 World half-extent for gumball axis line previews (fills the viewport at the pivot).
+ * Duck-types `isOrthographicCamera` / `isPerspectiveCamera` (not `instanceof`) so R3F cameras from a
+ * duplicate `three` copy still resolve the correct frustum. */
 export function gumballPreviewWorldExtent(camera: THREE.Camera, pivotWorld: THREE.Vector3): number {
   _gumballPreviewCamPos.copy(camera.position);
   const dist = Math.max(_gumballPreviewCamPos.distanceTo(pivotWorld), 1e-3);
-  if (camera instanceof THREE.OrthographicCamera) {
-    const halfW = ((camera.right - camera.left) * 0.5) / Math.max(camera.zoom, 1e-3);
-    const halfH = ((camera.top - camera.bottom) * 0.5) / Math.max(camera.zoom, 1e-3);
+  const ortho = camera as THREE.OrthographicCamera & { readonly isOrthographicCamera?: boolean };
+  if (ortho.isOrthographicCamera) {
+    const halfW = ((ortho.right - ortho.left) * 0.5) / Math.max(ortho.zoom, 1e-3);
+    const halfH = ((ortho.top - ortho.bottom) * 0.5) / Math.max(ortho.zoom, 1e-3);
     return Math.max(Math.max(halfW, halfH) * GUMBALL_PREVIEW_EXTENT_MARGIN, GUMBALL_PREVIEW_MIN_EXTENT);
   }
-  if (camera instanceof THREE.PerspectiveCamera) {
-    const vFovRad = (camera.fov * Math.PI) / 180;
-    const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * camera.aspect);
+  const perspective = camera as THREE.PerspectiveCamera & { readonly isPerspectiveCamera?: boolean };
+  if (perspective.isPerspectiveCamera) {
+    const vFovRad = (perspective.fov * Math.PI) / 180;
+    const hFovRad = 2 * Math.atan(Math.tan(vFovRad / 2) * perspective.aspect);
     const span = dist * Math.max(Math.tan(vFovRad / 2), Math.tan(hFovRad / 2)) * GUMBALL_PREVIEW_EXTENT_MARGIN;
     return Math.max(span, GUMBALL_PREVIEW_MIN_EXTENT);
   }
@@ -21148,17 +21152,25 @@ function gumballWorldAxis(localAxis: GumballVec3, quat: THREE.Quaternion): Gumba
   return [v.x, v.y, v.z];
 }
 
-function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Camera): { origin: GumballVec3; dir: GumballVec3 } {
-  const origin = new THREE.Vector3();
-  const point = new THREE.Vector3(ndcX, ndcY, 0.5).unproject(camera);
-  if (camera instanceof THREE.OrthographicCamera) {
-    origin.copy(point);
+/** @emoji 📡 World-space camera ray through an NDC point — orthographic uses parallel near→far unproject rays;
+ * perspective uses the pinhole from `camera.position`. Duck-types `isOrthographicCamera` (not `instanceof`) so
+ * R3F-swapped cameras from a duplicate `three` copy stay correct (otherwise ortho drags fly away from the cursor). */
+export function gumballRayFromNdc(ndcX: number, ndcY: number, camera: THREE.Camera): { origin: GumballVec3; dir: GumballVec3 } {
+  camera.updateMatrixWorld(true);
+  const ortho = camera as THREE.OrthographicCamera & { readonly isOrthographicCamera?: boolean };
+  if (ortho.isOrthographicCamera) {
+    const origin = new THREE.Vector3(ndcX, ndcY, -1).unproject(camera);
     const far = new THREE.Vector3(ndcX, ndcY, 1).unproject(camera);
-    const dir = far.sub(origin).normalize();
+    const dir = far.sub(origin);
+    if (dir.lengthSq() < 1e-12) return { origin: [origin.x, origin.y, origin.z], dir: [0, 0, -1] };
+    dir.normalize();
     return { origin: [origin.x, origin.y, origin.z], dir: [dir.x, dir.y, dir.z] };
   }
-  origin.copy(camera.position);
-  const dir = point.sub(origin).normalize();
+  const origin = camera.position.clone();
+  const point = new THREE.Vector3(ndcX, ndcY, 0.5).unproject(camera);
+  const dir = point.sub(origin);
+  if (dir.lengthSq() < 1e-12) return { origin: [origin.x, origin.y, origin.z], dir: [0, 0, -1] };
+  dir.normalize();
   return { origin: [origin.x, origin.y, origin.z], dir: [dir.x, dir.y, dir.z] };
 }
 
@@ -26134,6 +26146,53 @@ if (import.meta.vitest) {
       expect(biased[0]!.distance).toBeLessThan(plain[0]!.distance);
       biasedPickMesh.geometry.dispose();
       (biasedPickMesh.material as THREE.Material).dispose();
+    });
+
+    it("builds parallel orthographic rays via isOrthographicCamera duck-typing (not instanceof)", () => {
+      const ortho = new THREE.OrthographicCamera(-100, 100, 50, -50, 0.1, 1000);
+      ortho.position.set(0, 0, 100);
+      ortho.up.set(0, 1, 0);
+      ortho.lookAt(0, 0, 0);
+      ortho.updateMatrixWorld(true);
+      ortho.updateProjectionMatrix();
+
+      const center = gumballRayFromNdc(0, 0, ortho);
+      const right = gumballRayFromNdc(0.5, 0, ortho);
+      expect(center.dir[0]).toBeCloseTo(right.dir[0], 5);
+      expect(center.dir[1]).toBeCloseTo(right.dir[1], 5);
+      expect(center.dir[2]).toBeCloseTo(right.dir[2], 5);
+      expect(Math.abs(right.origin[0] - center.origin[0])).toBeCloseTo(50, 5);
+
+      const planeHit = (ray: { origin: GumballVec3; dir: GumballVec3 }): GumballVec3 => {
+        const hit = gumballRayPlanePoint(ray.origin, ray.dir, [0, 0, 0], [0, 0, 1]);
+        expect(hit).not.toBeNull();
+        return hit!;
+      };
+      const centerHit = planeHit(center);
+      const rightHit = planeHit(right);
+      expect(rightHit[0] - centerHit[0]).toBeCloseTo(50, 5);
+      expect(rightHit[1] - centerHit[1]).toBeCloseTo(0, 5);
+
+      // 🦆 Duplicate-three failure mode: plain object with the flag but not `instanceof OrthographicCamera`.
+      const duck = {
+        isOrthographicCamera: true,
+        position: ortho.position,
+        matrixWorld: ortho.matrixWorld,
+        projectionMatrix: ortho.projectionMatrix,
+        projectionMatrixInverse: ortho.projectionMatrixInverse,
+        left: ortho.left,
+        right: ortho.right,
+        top: ortho.top,
+        bottom: ortho.bottom,
+        zoom: ortho.zoom,
+      } as unknown as THREE.Camera;
+      expect(duck instanceof THREE.OrthographicCamera).toBe(false);
+      const duckCenter = gumballRayFromNdc(0, 0, duck);
+      const duckRight = gumballRayFromNdc(0.5, 0, duck);
+      expect(duckCenter.dir[0]).toBeCloseTo(duckRight.dir[0], 5);
+      expect(duckCenter.dir[2]).toBeCloseTo(duckRight.dir[2], 5);
+      expect(Math.abs(duckRight.origin[0] - duckCenter.origin[0])).toBeCloseTo(50, 5);
+      expect(gumballPreviewWorldExtent(duck, new THREE.Vector3(0, 0, 0))).toBeGreaterThan(50);
     });
   });
 

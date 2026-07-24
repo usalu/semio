@@ -612,6 +612,7 @@ pub mod app_jack {
                 ],
             },
             UiInspectorFieldGroup {
+                presence: UiPresence::default(),
                 id: "trinity-inspector.identity".into(),
                 label: term_labels.identity.into(),
                 default_open: None,
@@ -2327,6 +2328,7 @@ pub mod app_rewrite {
                 ],
             },
             UiInspectorFieldGroup {
+                presence: UiPresence::default(),
                 id: "trinity-inspector.identity".into(),
                 label: term_labels.identity.into(),
                 default_open: None,

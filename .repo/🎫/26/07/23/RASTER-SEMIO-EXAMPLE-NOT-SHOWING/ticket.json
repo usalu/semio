@@ -1,8 +1,9 @@
 {
   "title": "Raster Semio Example Not Showing",
   "emoji": "🐛",
-  "status": "open",
+  "status": "closed",
   "description": "The raster app's semio example (semio.raster.json) isn't showing anything on screen. Investigate root cause in the raster plugin / paint surface / document load path and fix so the Semio Brand Showcase renders correctly.",
+  "summary": "Fixed the Semio raster example blank canvas. Root cause: plugin Adjustment layers dropped `params` on deserialize, then paint host required `params` so `syncDocumentJson` threw and never composited the fixture. Preserved adjustment params in the plugin domain, defaulted paint-host params, fixed group/parent transform propagation (compositor + picking), and taught wgpu paint2d to use cameraJson, center quads, and draw layers without imageKey. Verified with framework_surface_paint (9) and raster-plugin (25) tests plus wgpu cargo check.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2284"
   },

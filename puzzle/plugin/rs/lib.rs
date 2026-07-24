@@ -874,6 +874,30 @@ pub mod d2 {
     /// fill tool is active (not a window utility-options group; fill is a whole-document generator).
     fn puzzle2d_fill_tool_measures(envelope: &Puzzle2dScene, labels: &Puzzle2dLabels) -> WindowMeasure {
         WindowMeasure::Group {
+            id: "puzzle2d-tool-options-fill".into(),
+            label: labels.fill.into(),
+            default_open: Some(true),
+            active_utility_id: None,
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
+            children: vec![WindowMeasure::Slider {
+                id: "puzzle2d-fill-count".into(),
+                label: Some(labels.count.into()),
+                value: envelope.runtime.fill_count as f64,
+                min: 0.0,
+                max: PUZZLE2D_FILL_COUNT_MAX as f64,
+                step: Some(1.0),
+                ready: None,
+                loading: None, waiting: None,
+                on_change: puzzle2d_action("setFillCount", None),
+            }],
+        }
     }
 
     fn puzzle2d_engagement(envelope: &Puzzle2dScene, host: &BoardHost, pane: &str, labels: &Puzzle2dLabels) -> WindowEngagement {
@@ -5536,10 +5560,46 @@ pub mod d3 {
 
     fn puzzle3d_lod_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
         WindowMeasure::Group {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod"),
+            label: "LOD".into(),
+            default_open: Some(true),
+            active_utility_id: None,
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
+            children: vec![
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some("Auto zoom".into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some("Depth-variable".into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("LOD {:.0}", runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, on_change: puzzle3d_action("setLodManual", None) },
+            ],
+        }
     }
 
     fn puzzle3d_grid_measures_group(runtime: &Puzzle3dRuntime) -> WindowMeasure {
         WindowMeasure::Group {
+            id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid"),
+            label: "Grid".into(),
+            default_open: Some(true),
+            active_utility_id: None,
+            value: None,
+            min: None,
+            max: None,
+            step: None,
+            ready: None,
+            loading: None,
+            waiting: None,
+            on_change: None,
+            children: vec![
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible"), icon_id: "layout-grid".into(), label: Some("Visible".into()), pressed: runtime.grid_visible, text: None, on_change: puzzle3d_action("setGridVisible", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some("Snap".into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("Spacing {:.1}", runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, on_change: puzzle3d_action("setGridSpacing", None) },
+            ],
+        }
     }
 
     fn puzzle3d_select_measures_group(runtime: &Puzzle3dRuntime, labels: &Puzzle3dLabels) -> WindowMeasure {
@@ -5909,8 +5969,8 @@ pub mod d3 {
     /// manual `undo_stack`/`redo_stack` machinery is gone.
     ///
     /// 🧲 Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
-    /// `transform_scratch`): mid-drag ticks mutate the scratch only and emit no ops; `transformEnd`
-    /// commits the base→scratch fixture delta once.
+    /// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
+    /// ops; `transformEnd` commits the base→scratch fixture delta once.
     pub struct Puzzle3dPlayApp {
         precompute: Puzzle3dPrecomputeSession,
         runtime: Puzzle3dRuntime,
@@ -5947,18 +6007,19 @@ pub mod d3 {
             self.transform_scratch = None;
         }
 
-        /// 🧲 One mid-drag gumball tick: re-applies the absolute delta onto the drag-start base into
-        /// `transform_scratch` and emits zero ops (scratch-commit pattern b).
+        /// 🧲 One mid-drag gumball tick: accumulates an incremental delta onto `transform_scratch`
+        /// (seeded from the drag-start base) and emits zero ops (scratch-commit pattern b).
         fn transform_drag_tick(&mut self, action: &str, args: Option<&Value>, projection: &Value) -> ActionEmit<Puzzle3dOp> {
             if self.transform_base.is_none() {
                 self.begin_transform_session(projection);
             }
-            let Some(base) = self.transform_base.clone() else {
-                return ActionEmit::default();
-            };
             let object_ids = mesh_selection_ids(args, &self.runtime.selection.object_ids);
             let volume_ids = self.runtime.selection.target_volume_ids.clone();
-            let mut scratch = base;
+            let mut scratch = self
+                .transform_scratch
+                .clone()
+                .or_else(|| self.transform_base.clone())
+                .unwrap_or_else(empty_fixture);
             match action {
                 "translateSelection" => {
                     let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -6672,7 +6733,7 @@ pub mod d3 {
                 }
                 "setObjectKindWeight" | "setVortexKindWeight" => {
                     let kind_id = args.and_then(|v| v.get("kindId")).and_then(|v| v.as_str()).unwrap_or("");
-                    let mut value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
+                    let value = args.and_then(|v| v.get("value")).and_then(|v| v.as_f64()).unwrap_or(1.0).clamp(0.0, 1.0);
                     let object_ids = puzzle3d_kind_ids(&envelope.fixture, "objects");
                     let vortex_ids = puzzle3d_kind_ids(&envelope.fixture, "vortices");
                     puzzle3d_ensure_catalog_kind_weights(&mut envelope.runtime.object_kind_weights, &object_ids);
@@ -8362,7 +8423,7 @@ pub mod d3 {
         #[test]
         fn gumball_transform_session_commits_once_on_end() {
             // 🧲 Scratch-commit: mid-drag ticks emit ZERO ops; transformEnd commits ONE edit from base→scratch.
-            // Absolute deltas (from drag-start) re-apply onto the base each tick — 1 then 6 → final +6.
+            // Incremental host deltas accumulate on scratch — 1 then 5 → final +6.
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &testkit::meta("local")).expect("add object");
@@ -8370,7 +8431,7 @@ pub mod d3 {
             let origin_of = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
                 app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
             };
-            let scratch_origin_of = |app: &VcsDocumentApp<Puzzle3dPlayApp>, view: &ViewState| -> Vec<f64> {
+            let scratch_origin_of = |app: &mut VcsDocumentApp<Puzzle3dPlayApp>, view: &ViewState| -> Vec<f64> {
                 let rendered = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, view).expect("render")).expect("json");
                 let instances: Vec<Value> = rendered.pointer("/world3d/instancesJson").and_then(Value::as_str).and_then(|json| serde_json::from_str(json).ok()).unwrap_or_default();
                 instances.iter().find(|instance| instance.get("id").and_then(Value::as_str) == Some(object_id.as_str())).and_then(|instance| instance.get("position")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
@@ -8380,15 +8441,15 @@ pub mod d3 {
             let start = origin_of(&app);
             app.handle_action("transformBegin", None, &transform_view, &testkit::meta("local")).expect("begin");
             let tick_a = app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &transform_view, &testkit::meta("local")).expect("tick a");
-            let tick_b = app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": 6.0, "dy": 0.0, "dz": 0.0 })), &transform_view, &testkit::meta("local")).expect("tick b");
+            let tick_b = app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), &transform_view, &testkit::meta("local")).expect("tick b");
             assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no ops");
             assert_eq!(origin_of(&app), start, "document stays at the drag-start pose mid-drag");
-            let preview = scratch_origin_of(&app, &transform_view);
-            assert!((preview[0] - start[0] - 6.0).abs() < 1e-9, "scratch render previews the absolute drag total");
+            let preview = scratch_origin_of(&mut app, &transform_view);
+            assert!((preview[0] - start[0] - 6.0).abs() < 1e-9, "scratch render accumulates incremental ticks");
             let end = app.handle_action("transformEnd", None, &transform_view, &testkit::meta("local")).expect("end");
             assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one op");
             let dragged = origin_of(&app);
-            assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "transformEnd lands on the absolute total");
+            assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "transformEnd lands on the accumulated total");
             app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(origin_of(&app), start, "one undo restores the whole scratch-committed gumball drag");
             app.handle_action("transformBegin", None, &transform_view, &testkit::meta("local")).expect("begin again");

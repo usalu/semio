@@ -1,0 +1,1914 @@
+   Compiling proc-macro2 v1.0.106
+   Compiling unicode-ident v1.0.24
+   Compiling quote v1.0.45
+   Compiling serde_core v1.0.228
+   Compiling serde v1.0.228
+   Compiling thiserror v2.0.18
+    Checking memchr v2.8.0
+    Checking cfg-if v1.0.4
+    Checking smallvec v1.15.1
+   Compiling libm v0.2.16
+   Compiling zmij v1.0.21
+   Compiling serde_json v1.0.149
+    Checking stable_deref_trait v1.2.1
+   Compiling autocfg v1.5.0
+   Compiling crossbeam-utils v0.8.21
+    Checking itoa v1.0.18
+    Checking arrayvec v0.7.6
+    Checking log v0.4.29
+   Compiling zerocopy v0.8.48
+   Compiling rayon-core v1.13.0
+    Checking either v1.15.0
+   Compiling num-traits v0.2.19
+    Checking slab v0.4.12
+    Checking equivalent v1.0.2
+    Checking once_cell v1.21.4
+    Checking bitflags v2.11.1
+   Compiling crc32fast v1.5.0
+    Checking simd-adler32 v0.3.9
+    Checking crossbeam-epoch v0.9.18
+   Compiling version_check v0.9.5
+    Checking adler2 v2.0.1
+    Checking zlib-rs v0.6.3
+   Compiling wasm-bindgen-shared v0.2.126
+    Checking futures-core v0.3.32
+    Checking futures-sink v0.3.32
+    Checking crossbeam-deque v0.8.6
+    Checking pin-project-lite v0.2.17
+    Checking futures-io v0.3.32
+    Checking miniz_oxide v0.8.9
+    Checking futures-task v0.3.32
+    Checking arrayref v0.3.9
+    Checking siphasher v1.0.3
+   Compiling syn v2.0.117
+   Compiling rustversion v1.0.22
+    Checking futures-channel v0.3.32
+    Checking hashbrown v0.17.1
+    Checking flate2 v1.1.9
+   Compiling bumpalo v3.20.2
+   Compiling wasm-bindgen v0.2.126
+   Compiling serde_derive v1.0.228
+   Compiling thiserror-impl v2.0.18
+   Compiling synstructure v0.13.2
+   Compiling displaydoc v0.2.5
+   Compiling zerocopy-derive v0.8.48
+    Checking rayon v1.12.0
+   Compiling bytemuck_derive v1.10.2
+   Compiling zerovec-derive v0.11.3
+   Compiling futures-macro v0.3.32
+    Checking indexmap v2.14.0
+   Compiling wasm-bindgen-macro-support v0.2.126
+    Checking futures-util v0.3.32
+   Compiling zerovec-derive v0.10.3
+    Checking bytemuck v1.25.0
+   Compiling zerofrom-derive v0.1.7
+    Checking zerofrom v0.1.8
+   Compiling yoke-derive v0.8.2
+   Compiling yoke-derive v0.7.5
+   Compiling wasm-bindgen-macro v0.2.126
+   Compiling heck v0.5.0
+   Compiling parking_lot_core v0.9.12
+    Checking scopeguard v1.2.0
+    Checking base64 v0.22.1
+    Checking yoke v0.8.2
+    Checking yoke v0.7.5
+    Checking litemap v0.7.5
+    Checking lock_api v0.4.14
+    Checking tinyvec_macros v0.1.1
+    Checking litemap v0.8.2
+    Checking utf8_iter v1.0.4
+    Checking zerovec v0.11.6
+    Checking zerovec v0.10.4
+    Checking writeable v0.6.3
+    Checking zerotrie v0.2.4
+    Checking parking_lot v0.12.5
+    Checking tinyvec v1.11.0
+    Checking neural_engine v0.1.0 (/Users/ueli/Documents/semio/neural/engine/rs)
+    Checking cobs v0.3.0
+    Checking fdeflate v0.3.7
+    Checking tinystr v0.8.3
+    Checking tinystr v0.7.6
+   Compiling phf_shared v0.13.1
+    Checking potential_utf v0.1.5
+    Checking core_maths v0.1.1
+   Compiling icu_properties_data v2.2.0
+    Checking writeable v0.5.5
+   Compiling proc-macro-hack v0.5.20+deprecated
+   Compiling icu_normalizer_data v2.2.0
+    Checking rustc-hash v2.1.2
+   Compiling fastrand v2.4.1
+    Checking pxfm v0.1.29
+    Checking icu_locale_core v2.2.0
+    Checking postcard v1.1.3
+    Checking js-sys v0.3.103
+    Checking icu_collections v2.2.0
+   Compiling icu_provider_macros v1.5.0
+    Checking icu_locid v1.5.0
+   Compiling slotmap v1.1.1
+   Compiling phf_generator v0.13.1
+    Checking ttf-parser v0.25.1
+    Checking icu_provider v2.2.0
+   Compiling unic-langid-impl v0.9.6
+    Checking icu_provider v1.5.0
+    Checking approx v0.5.1
+   Compiling phf_macros v0.13.1
+    Checking aho-corasick v1.1.4
+    Checking powerfmt v0.2.0
+   Compiling time-core v0.1.8
+    Checking unicode-script v0.5.8
+   Compiling icu_locid_transform_data v1.5.1
+    Checking zune-core v0.5.1
+    Checking byteorder-lite v0.1.0
+   Compiling num-conv v0.2.1
+    Checking weezl v0.1.12
+    Checking zune-core v0.4.12
+    Checking float-cmp v0.9.0
+    Checking color_quant v1.1.0
+    Checking quick-error v2.0.1
+    Checking regex-syntax v0.8.10
+    Checking zune-jpeg v0.5.15
+    Checking deranged v0.5.8
+   Compiling time-macros v0.2.27
+    Checking phf v0.13.1
+   Compiling unic-langid-macros-impl v0.9.6
+    Checking zune-jpeg v0.4.21
+    Checking strict-num v0.1.1
+    Checking gif v0.14.2
+    Checking image-webp v0.2.4
+    Checking icu_normalizer v2.2.0
+    Checking icu_properties v2.2.0
+    Checking regex-automata v0.4.14
+    Checking moxcms v0.8.1
+    Checking png v0.18.1
+    Checking polycool v0.4.0
+    Checking kurbo v0.12.0
+    Checking xmlwriter v0.1.0
+    Checking unicode-bidi-mirroring v0.4.0
+    Checking unicode-ccc v0.4.0
+    Checking bit-vec v0.8.0
+   Compiling cfg_aliases v0.2.1
+   Compiling paste v1.0.15
+    Checking unicode-properties v0.1.4
+    Checking memmap2 v0.9.10
+   Compiling portable-atomic v1.13.1
+    Checking hayro-syntax v0.4.0
+    Checking kurbo v0.13.1
+    Checking image v0.25.10
+    Checking bit-set v0.8.0
+    Checking unic-langid-macros v0.9.6
+    Checking time v0.3.47
+    Checking idna_adapter v1.2.2
+    Checking rustybuzz v0.20.1
+    Checking fontdb v0.23.0
+    Checking tiny-skia-path v0.11.4
+    Checking half v2.7.1
+   Compiling strum_macros v0.27.2
+    Checking toml_datetime v0.6.11
+    Checking serde_spanned v0.6.9
+    Checking simplecss v0.2.2
+    Checking quick-xml v0.39.4
+    Checking unicode-vo v0.1.0
+    Checking bitflags v1.3.2
+    Checking linked-hash-map v0.5.6
+    Checking unicode-bidi v0.3.18
+    Checking winnow v0.7.15
+    Checking percent-encoding v2.3.2
+    Checking toml_write v0.1.2
+    Checking data-url v0.3.2
+   Compiling icu_properties_data v1.5.1
+    Checking pico-args v0.5.0
+    Checking ryu v1.0.23
+    Checking robust v1.2.0
+    Checking same-file v1.0.6
+    Checking rand_core v0.6.4
+    Checking unscanny v0.1.0
+   Compiling wasmparser v0.228.0
+    Checking ciborium-io v0.2.2
+    Checking toml_edit v0.22.27
+    Checking form_urlencoded v1.2.2
+    Checking yaml-rust v0.4.5
+    Checking png v0.17.16
+    Checking plist v1.9.0
+    Checking walkdir v2.5.0
+    Checking icu_locid_transform v1.5.0
+    Checking strum v0.27.2
+    Checking idna v1.1.0
+    Checking ciborium-ll v0.2.2
+    Checking unic-langid v0.9.6
+    Checking fancy-regex v0.16.2
+    Checking unicode-normalization v0.1.25
+    Checking ppv-lite86 v0.2.21
+    Checking icu_collections v1.5.0
+    Checking quick-xml v0.38.4
+    Checking bincode v1.3.3
+   Compiling enum-ordinalize-derive v4.3.2
+    Checking num-integer v0.1.46
+    Checking wasmi_core v0.51.5
+    Checking kurbo v0.11.3
+    Checking unicode-math-class v0.1.0
+   Compiling rust_decimal v1.42.0
+    Checking fnv v1.0.7
+    Checking unicode-segmentation v1.13.2
+   Compiling codex v0.2.0
+    Checking roman-numerals-rs v3.1.0
+   Compiling palette v0.7.6
+   Compiling by_address v1.2.1
+    Checking ui_styling v0.1.0 (/Users/ueli/Documents/semio/ui/styling/rs)
+    Checking unsafe-libyaml v0.2.11
+    Checking thin-vec v0.2.18
+    Checking num-bigint v0.4.6
+    Checking wasmi_ir v0.51.5
+    Checking svgtypes v0.15.3
+    Checking citationberg v0.6.1
+    Checking syntect v5.3.0
+    Checking biblatex v0.11.0
+   Compiling palette_derive v0.7.6
+    Checking serde_yaml v0.9.34+deprecated
+    Checking typst-utils v0.14.2
+    Checking rand_chacha v0.3.1
+    Checking enum-ordinalize v4.3.2
+    Checking ciborium v0.2.2
+    Checking url v2.5.8
+    Checking toml v0.8.23
+    Checking rand v0.8.6
+    Checking typst-timing v0.14.2
+    Checking zerotrie v0.1.3
+    Checking font-types v0.10.1
+    Checking ecow v0.2.6
+   Compiling comemo-macros v0.5.1
+    Checking csv-core v0.1.13
+   Compiling shlex v1.3.0
+    Checking imagesize v0.13.0
+    Checking spin v0.9.8
+    Checking fast-srgb8 v1.0.0
+    Checking wasmi_collections v0.51.5
+    Checking foldhash v0.2.0
+    Checking allocator-api2 v0.2.21
+    Checking chinese-variant v1.1.5
+    Checking roxmltree v0.20.0
+   Compiling find-msvc-tools v0.1.9
+    Checking mutate_once v0.1.2
+    Checking csv v1.4.0
+    Checking typst-syntax v0.14.2
+    Checking wasmi v0.51.5
+    Checking read-fonts v0.35.0
+    Checking hashbrown v0.16.1
+    Checking chinese-number v0.7.8
+    Checking usvg v0.45.1
+   Compiling cc v1.2.62
+    Checking kamadak-exif v0.6.1
+    Checking icu_provider_blob v1.5.0
+    Checking lipsum v0.9.1
+    Checking comemo v0.5.1
+    Checking icu_properties v1.5.1
+    Checking hayagriva v0.9.1
+    Checking two-face v0.4.5
+   Compiling naga v27.0.3
+    Checking regex v1.12.3
+    Checking web-sys v0.3.103
+   Compiling typst-macros v0.14.2
+    Checking az v1.3.0
+    Checking typst-assets v0.14.2
+    Checking glidesort v0.1.2
+    Checking qcms v0.3.0
+    Checking typed-arena v2.0.2
+   Compiling unicode-width v0.2.2
+   Compiling blake3 v1.8.5
+    Checking skrifa v0.37.0
+    Checking hayro-font v0.3.0
+    Checking wasm-bindgen-futures v0.4.76
+    Checking moxcms v0.7.11
+    Checking typst-library v0.14.2
+   Compiling codespan-reporting v0.12.0
+    Checking font-types v0.11.3
+   Compiling ahash v0.8.12
+   Compiling rustc-hash v1.1.0
+   Compiling wit-bindgen v0.57.1
+   Compiling hexf-parse v0.2.1
+    Checking brepkit-math v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking hayro-interpret v0.4.0
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+    Checking euclid v0.22.14
+    Checking svg_fmt v0.4.5
+    Checking color v0.3.3
+    Checking constant_time_eq v0.4.2
+    Checking read-fonts v0.37.0
+    Checking linebender_resource_handle v0.1.1
+   Compiling icu_segmenter_data v1.5.1
+   Compiling wgpu v27.0.1
+   Compiling getrandom v0.3.4
+    Checking guillotiere v0.6.2
+   Compiling litrs v1.0.0
+    Checking hayro-svg v0.2.0
+    Checking hayro v0.4.0
+    Checking skrifa v0.40.0
+    Checking peniko v0.6.1
+   Compiling vello_shaders v0.7.0
+   Compiling hashbrown v0.14.5
+    Checking wasip2 v1.0.3+wasi-0.2.9
+    Checking brepkit-topology v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+   Compiling document-features v0.2.12
+    Checking wgpu-types v27.0.1
+    Checking ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+    Checking flow_module_wasm v0.1.0 (/Users/ueli/Documents/semio/flow/module/wasm/rs)
+   Compiling anyhow v1.0.102
+    Checking semio-framework-hash v0.1.0 (/Users/ueli/Documents/semio/framework/hash/rs)
+    Checking xmlparser v0.13.6
+    Checking profiling v1.0.18
+    Checking static_assertions v1.1.0
+   Compiling semver v1.0.28
+    Checking vello_encoding v0.7.0
+    Checking raw-window-handle v0.6.2
+    Checking semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1791:42
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1791 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1804:43
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1804 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1919:53
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1919 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+    Checking icu_segmenter v1.5.0
+warning: `semio-framework-core` (lib) generated 3 warnings
+    Checking icu_provider_adapters v1.5.0
+    Checking typst-svg v0.14.2
+    Checking svgtypes v0.16.1
+    Checking mathematical_geometry v0.1.0 (/Users/ueli/Documents/semio/mathematical/geometry/rs)
+    Checking futures-intrusive v0.5.0
+   Compiling wasmparser v0.220.1
+    Checking roxmltree v0.21.1
+    Checking imagesize v0.14.0
+    Checking hypher v0.1.7
+    Checking typst-html v0.14.2
+    Checking brepkit-geometry v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking typst-eval v0.14.2
+    Checking typst-realize v0.14.2
+   Compiling infinite_cavas v0.1.0 (/Users/ueli/Documents/semio/infinite/cavas/rs)
+    Checking futures-executor v0.3.32
+    Checking vello v0.7.0
+   Compiling prettyplease v0.2.37
+   Compiling heapless v0.8.0
+    Checking usvg v0.46.0
+    Checking typst-layout v0.14.2
+    Checking byteorder v1.5.0
+    Checking mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling async-trait v0.1.89
+   Compiling unicode-xid v0.2.6
+   Compiling leb128 v0.2.7
+   Compiling id-arena v2.3.0
+    Checking futures v0.3.32
+    Checking pollster v0.4.0
+    Checking vello_svg v0.9.0
+    Checking typst v0.14.2
+    Checking hash32 v0.3.1
+   Compiling spdx v0.10.9
+    Checking mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+    Checking i_float v1.6.0
+   Compiling wasm-encoder v0.220.1
+   Compiling wit-parser v0.220.1
+    Checking brepkit-check v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-offset v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-heal v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+    Checking brepkit-blend v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking brepkit-algo v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking i_shape v1.6.0
+    Checking zopfli v0.8.3
+   Compiling wasm-metadata v0.220.1
+    Checking serde-wasm-bindgen v0.6.5
+    Checking brepkit-sketch v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking itertools v0.11.0
+    Checking i_tree v0.8.3
+    Checking rstar v0.12.2
+    Checking typed-path v0.12.3
+   Compiling wit-bindgen-rust v0.36.0
+    Checking i_key_sort v0.2.0
+   Compiling wit-bindgen-core v0.36.0
+   Compiling wit-component v0.220.1
+    Checking vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:590:20
+    |
+590 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+590 -     let committed: std::collections::HashSet<String> = envelope
+590 +     let committed: HashSet<String> = envelope
+    |
+
+    Checking brepkit-operations v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+warning: `vcs` (lib) generated 1 warning (run `cargo fix --lib -p vcs` to apply 1 suggestion)
+    Checking spade v2.15.1
+    Checking earcutr v0.4.3
+    Checking geographiclib-rs v0.2.7
+    Checking geo-types v0.7.19
+    Checking zip v8.6.0
+    Checking i_overlay v1.9.4
+    Checking quick-xml v0.40.1
+   Compiling wit-bindgen-rust-macro v0.36.0
+   Compiling wit-bindgen-rt v0.36.0
+    Checking float_next_after v1.0.0
+    Checking kernel_3d_engine v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/engine/rs)
+    Checking kernel_2d_engine v0.1.0 (/Users/ueli/Documents/semio/kernel/2d/engine/rs)
+    Checking infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+    Checking infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+    Checking mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+    Checking protocol v0.1.0 (/Users/ueli/Documents/semio/protocol/rs)
+    Checking neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+    Checking infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+    Checking flow_module_list v0.1.0 (/Users/ueli/Documents/semio/flow/module/list/rs)
+warning: function `module_registry` is never used
+   --> flow/module/list/rs/lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_list` (lib) generated 1 warning
+    Checking flow_module_math v0.1.0 (/Users/ueli/Documents/semio/flow/module/math/rs)
+    Checking flow_module_dictionary v0.1.0 (/Users/ueli/Documents/semio/flow/module/dictionary/rs)
+warning: function `module_registry` is never used
+   --> flow/module/dictionary/rs/lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_dictionary` (lib) generated 1 warning
+    Checking flow_module_text v0.1.0 (/Users/ueli/Documents/semio/flow/module/text/rs)
+warning: function `module_registry` is never used
+   --> flow/module/math/rs/lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_math` (lib) generated 1 warning
+    Checking flow_module_logic v0.1.0 (/Users/ueli/Documents/semio/flow/module/logic/rs)
+    Checking flow_module_bim v0.1.0 (/Users/ueli/Documents/semio/flow/module/bim/rs)
+warning: function `module_registry` is never used
+  --> flow/module/text/rs/lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+  --> flow/module/logic/rs/lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_text` (lib) generated 1 warning
+    Checking flow_module_core v0.1.0 (/Users/ueli/Documents/semio/flow/module/core/rs)
+warning: `flow_module_logic` (lib) generated 1 warning
+warning: function `module_registry` is never used
+   --> flow/module/bim/rs/lib.rs:564:4
+    |
+564 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_bim` (lib) generated 1 warning
+    Checking infinite_board_port_directed_dag v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/dag/rs)
+warning: function `module_registry` is never used
+   --> flow/module/core/rs/lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_core` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:262:25
+    |
+262 |     pub default: Option<serde_json::Value>,
+    |                         ^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+262 -     pub default: Option<serde_json::Value>,
+262 +     pub default: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:264:23
+    |
+264 |     pub value: Option<serde_json::Value>,
+    |                       ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+264 -     pub value: Option<serde_json::Value>,
+264 +     pub value: Option<Value>,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:376:15
+    |
+376 |         json: serde_json::Value,
+    |               ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+376 -         json: serde_json::Value,
+376 +         json: Value,
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:434:43
+    |
+434 | fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+    |                                           ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+434 - fn preview_tree_collapsed_summary(value: &serde_json::Value) -> String {
+434 + fn preview_tree_collapsed_summary(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:436:9
+    |
+436 |         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+436 -         serde_json::Value::Object(map) => format!("{{{} keys}}", map.len()),
+436 +         Value::Object(map) => format!("{{{} keys}}", map.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:437:9
+    |
+437 |         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+437 -         serde_json::Value::Array(arr) => format!("[{} items]", arr.len()),
+437 +         Value::Array(arr) => format!("[{} items]", arr.len()),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:438:9
+    |
+438 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+438 -         serde_json::Value::String(s) => format!("\"{s}\""),
+438 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:439:9
+    |
+439 |         serde_json::Value::Number(n) => n.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+439 -         serde_json::Value::Number(n) => n.to_string(),
+439 +         Value::Number(n) => n.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:440:9
+    |
+440 |         serde_json::Value::Bool(b) => b.to_string(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+440 -         serde_json::Value::Bool(b) => b.to_string(),
+440 +         Value::Bool(b) => b.to_string(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:441:9
+    |
+441 |         serde_json::Value::Null => "null".into(),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+441 -         serde_json::Value::Null => "null".into(),
+441 +         Value::Null => "null".into(),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:445:40
+    |
+445 | fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+    |                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+445 - fn preview_tree_scalar_display(value: &serde_json::Value) -> String {
+445 + fn preview_tree_scalar_display(value: &Value) -> String {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:447:9
+    |
+447 |         serde_json::Value::String(s) => format!("\"{s}\""),
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+447 -         serde_json::Value::String(s) => format!("\"{s}\""),
+447 +         Value::String(s) => format!("\"{s}\""),
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:508:29
+    |
+508 | fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |                             ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+508 - fn preview_tree_rows(json: &serde_json::Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+508 + fn preview_tree_rows(json: &Value, expanded: &BTreeSet<String>, path: &str, depth: usize) -> Vec<PreviewTreeRow> {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:511:9
+    |
+511 |         serde_json::Value::Object(map) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+511 -         serde_json::Value::Object(map) => {
+511 +         Value::Object(map) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:50
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:514:81
+    |
+514 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+514 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+514 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:523:9
+    |
+523 |         serde_json::Value::Array(arr) => {
+    |         ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+523 -         serde_json::Value::Array(arr) => {
+523 +         Value::Array(arr) => {
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:50
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                  ^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, Value::Object(_) | serde_json::Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:527:81
+    |
+527 |                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+    |                                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+527 -                 let has_children = matches!(val, serde_json::Value::Object(_) | serde_json::Value::Array(_));
+527 +                 let has_children = matches!(val, serde_json::Value::Object(_) | Value::Array(_));
+    |
+
+warning: unnecessary qualification
+   --> infinite/board/port/directed/dag/rs/lib.rs:593:56
+    |
+593 | fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |                                                        ^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+593 - fn preview_tree_row_layouts(node: &DagNodeSpec, json: &serde_json::Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+593 + fn preview_tree_row_layouts(node: &DagNodeSpec, json: &Value, expanded: &BTreeSet<String>) -> Vec<PreviewTreeRowLayout> {
+    |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1656:40
+     |
+1656 | fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+     |                                        ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1656 - fn lod_max_zoom_json(max_zoom: f64) -> serde_json::Value {
+1656 + fn lod_max_zoom_json(max_zoom: f64) -> Value {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:1666:19
+     |
+1666 |     let rows: Vec<serde_json::Value> = DAG_LODS
+     |                   ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1666 -     let rows: Vec<serde_json::Value> = DAG_LODS
+1666 +     let rows: Vec<Value> = DAG_LODS
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3717:92
+     |
+3717 |     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                                                            ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3717 -     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<serde_json::Value> {
+3717 +     pub fn label_overlay_rows_for_node_spec(&self, node: &DagNodeSpec, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3724:122
+     |
+3724 | ...wLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+     |                                                           ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3724 -     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<serde_json::Value> {
+3724 +     fn label_overlay_rows_for_node(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize, ghost: bool) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3752:48
+     |
+3752 |                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+     |                                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3752 -                     obj.insert("ghost".into(), serde_json::Value::Bool(ghost));
+3752 +                     obj.insert("ghost".into(), Value::Bool(ghost));
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3760:105
+     |
+3760 |     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+     |                                                                                                         ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3760 -     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<serde_json::Value> {
+3760 +     fn port_label_overlay_rows(node: &DagNodeSpec, lod: DagDrawLod, zoom: f64, lod_index: usize) -> Vec<Value> {
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/dag/rs/lib.rs:3831:30
+     |
+3831 |         let mut sliders: Vec<serde_json::Value> = Vec::new();
+     |                              ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3831 -         let mut sliders: Vec<serde_json::Value> = Vec::new();
+3831 +         let mut sliders: Vec<Value> = Vec::new();
+     |
+
+warning: `infinite_board_port_directed_dag` (lib) generated 27 warnings (run `cargo fix --lib -p infinite_board_port_directed_dag` to apply 27 suggestions)
+    Checking brepkit-io v0.1.0 (https://github.com/andymai/brepkit?rev=d470b7c7d1c6fea793d310b6f7bc4f8fdcc1db6e#d470b7c7)
+    Checking geo v0.29.3
+    Checking kernel_3d_brepkit v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/rs)
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:238:28
+    |
+238 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+238 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+238 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+    |
+
+warning: unnecessary qualification
+   --> kernel/3d/brep/rs/lib.rs:241:28
+    |
+241 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+241 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+241 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+    |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:28
+     |
+1384 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1384:106
+     |
+1384 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1384 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1384 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:28
+     |
+1427 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:1427:106
+     |
+1427 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1427 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+1427 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)
+    Checking flow_module_brep v0.1.0 (/Users/ueli/Documents/semio/flow/module/brep/rs)
+warning: function `module_registry` is never used
+    --> flow/module/brep/rs/lib.rs:1871:4
+     |
+1871 | fn module_registry() -> Registry {
+     |    ^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_brep` (lib) generated 1 warning
+    Checking wit-bindgen v0.36.0
+    Checking kernel_2d_rs v0.1.0 (/Users/ueli/Documents/semio/kernel/2d/rs)
+    Checking flow_module_draw v0.1.0 (/Users/ueli/Documents/semio/flow/module/draw/rs)
+warning: function `module_registry` is never used
+   --> flow/module/draw/rs/lib.rs:143:4
+    |
+143 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_draw` (lib) generated 1 warning
+    Checking flow_core v0.1.0 (/Users/ueli/Documents/semio/flow/core/rs)
+    Checking semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:396:40
+    |
+396 |             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+396 -             let (name, abbreviation) = dag::normalize_node_display(neuron_kind, neuron_kind);
+396 +             let (name, abbreviation) = normalize_node_display(neuron_kind, neuron_kind);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:406:40
+    |
+406 |             let (name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+406 -             let (name, abbreviation) = dag::normalize_node_display(title, title);
+406 +             let (name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+   --> flow/core/rs/lib.rs:412:48
+    |
+412 |             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+    |                                                ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+412 -             let (display_name, abbreviation) = dag::normalize_node_display(title, title);
+412 +             let (display_name, abbreviation) = normalize_node_display(title, title);
+    |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1176:45
+     |
+1176 |     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+     |                                             ^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1176 -     let mut by_module: BTreeMap<String, Vec<neural::OperatorInfo>> = BTreeMap::new();
+1176 +     let mut by_module: BTreeMap<String, Vec<OperatorInfo>> = BTreeMap::new();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:1737:24
+     |
+1737 |     ghost_node: Option<dag::DagNodeSpec>,
+     |                        ^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1737 -     ghost_node: Option<dag::DagNodeSpec>,
+1737 +     ghost_node: Option<DagNodeSpec>,
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4198:27
+     |
+4198 |     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4198 -     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+4198 +     let after_widget_ids: BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
+     |
+
+warning: unnecessary qualification
+    --> flow/core/rs/lib.rs:4213:28
+     |
+4213 |     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4213 -     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+4213 +     let after_synapse_ids: BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
+     |
+
+warning: unused import: `wasm_bindgen::prelude::*`
+    --> flow/core/rs/lib.rs:4255:9
+     |
+4255 |     use wasm_bindgen::prelude::*;
+     |         ^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:334:28
+    |
+334 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+334 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+334 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:363:36
+    |
+363 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+363 -             terminology_documents: std::collections::HashMap::new(),
+363 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3816:17
+     |
+3816 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3816 -     let action: serde_json::Value =
+3816 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3818:18
+     |
+3818 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3818 -     let context: serde_json::Value =
+3818 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3846:18
+     |
+3846 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3846 -     let command: serde_json::Value =
+3846 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3848:18
+     |
+3848 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3848 -     let context: serde_json::Value =
+3848 +     let context: Value =
+     |
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_consume_media` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: requested on the command line with `-W unsafe-op-in-unsafe-fn`
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_produce_media_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_migrate_document` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_load_app_document` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_apply_operations_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_apply_operations` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_read_app_document_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_read_app_document` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_attach_backbone_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_handle_command` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_produce_media` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_manifest` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_instantiate_app_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_instantiate_app` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_attach_backbone` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_manifest_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_update_window_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_update_window` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_load_app_document_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_detach_backbone_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_handle_action_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_detach_backbone` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_refresh_ui_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_consume_media_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_handle_action` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::__post_return_refresh_ui` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_migrate_document_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+warning[E0133]: call to unsafe function `component::exports::semio::framework::plugin::_export_handle_command_cabi` is unsafe and requires unsafe block
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^ call to unsafe function
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    |
+    = note: consult the function's documentation for information on how to avoid undefined behavior
+note: an unsafe function restricts its caller, but its body is safe by default
+   --> framework/plugin/rs/lib.rs:15:5
+    |
+ 15 | /     generate!({
+ 16 | |         world: "plugin-world",
+ 17 | |         path: "../../wit",
+ 18 | |     });
+    | |______^
+...
+129 |       export!(ComponentGuest);
+    |       ----------------------- in this macro invocation
+    = note: for more information, see <https://doc.rust-lang.org/edition-guide/rust-2024/unsafe-op-in-unsafe-fn.html>
+    = note: this warning originates in the macro `export` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+For more information about this error, try `rustc --explain E0133`.
+warning: `semio-framework-plugin` (lib) generated 34 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 34 suggestions)
+warning: `flow_core` (lib) generated 8 warnings (run `cargo fix --lib -p flow_core` to apply 8 suggestions)
+    Checking flow-plugin v0.1.0 (/Users/ueli/Documents/semio/flow/plugin/rs)
+    Finished `dev` profile [unoptimized] target(s) in 5m 58s

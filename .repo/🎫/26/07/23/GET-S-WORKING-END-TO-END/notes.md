@@ -1,12 +1,28 @@
 # Get S Working End to End
 
-## Root cause
-`waiting?: Option<bool>` was added to UI nodes / `WindowMeasure::Slider` (and related) without updating all plugin/module initializers. `dev:s` is studio mode (`isStudioPluginFilter("s")`) so it builds **all** plugin crates — one missing field anywhere blocked the whole OS build.
+## Status (2026-07-23 reopen)
 
-## Fix
-- Added `waiting: None` across framework plugin helpers and all guest plugins/modules that construct UI nodes / sliders.
-- Also fixed related struct gaps uncovered by the full studio build: `group_labels` on `AppLabelsOverlay`, `ready`/`loading` on sliders, `diff_view`/`event_feed` on `UiComponentSceneNode`, `drop_overlay` on `UiStackNode`, `SceneQuery` import in `layout/rs` wasm session, and restored corrupted DAG catalogue kinds list.
+Studio build (`SEMIO_PLUGIN=s`) failed while packaging **all** plugin crates; e2e then needed a stale selector fix.
 
-## Verification
-- `SEMIO_PLUGIN=s bun ./script.ts build` in `framework/product/os/dev` completed with exit 0.
-- Packaged 35 plugin modules under `framework/product/os/dev/plugin-modules/` including `s/`.
+### Failures found
+
+1. **flow** — `flow_grid_measures_group` truncated to empty `WindowMeasure::Group { }`; test had orphaned Group fields injected into assertions.
+2. **lowpoly** — `lowpoly_selection_utility_options` truncated the same way; test match arm had orphaned `value/min/...` fields.
+3. **note** — five `WindowMeasure::Group` constructors missing `value/min/max/step/ready/loading/waiting/on_change`.
+4. **e2e** — search toggle id moved from `s-media-graph-window-search-toggle` to `framework.window.sMediaGraph.search.toggle`.
+
+### Fixes
+
+- Restored flow grid group (visible/snap/factor) and cleaned the test.
+- Restored lowpoly selection utility options; cleaned match-arm corruption.
+- Injected missing Group Option fields in note.
+- Updated S studio e2e engagement expand selector.
+
+### Verification
+
+- `cargo test -p flow-plugin --lib window_measures_surface_lod_proximity_and_grid` — ok
+- `cargo build -p flow-plugin --target wasm32-wasip2 --release` — ok
+- `cargo build -p lowpoly-plugin --target wasm32-wasip2 --release` — ok
+- `cd framework/product/os/dev && SEMIO_PLUGIN=s bun ./script.ts build` — exit 0 (33 plugin crates incl. `s`, vite dist)
+- `SKIP_PLUGIN_BUILD=1 SEMIO_PLUGIN=s bun ./script.ts dev` — Vite on `http://127.0.0.1:6070/`
+- `bun ./script.ts verify e2e` — PASS (home → studio → windows → draw spawn via engagement → undo/palette/home)

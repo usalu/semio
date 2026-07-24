@@ -1,0 +1,13 @@
+[DEBUG] gis page {
+  "title": "semio · gis · 2d",
+  "canvas": 1,
+  "chromeOk": true,
+  "fatal": false,
+  "pageErrors": [
+    "NoCompatibleDevice"
+  ],
+  "actionablePageErrors": [],
+  "consoleErrors": [],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · gis · 2d\nExample\nReuse Map\nMap\nClose\nWindow Options\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+[DEBUG] gis e2e ok

@@ -5432,35 +5432,11 @@ mod tests {
     fn projection_measures_tree_matches_the_requested_taxonomy() {
         let p = WorldProjectionConfig::default();
         let tree = world3d_projection_measures("t", &p, |action, args| ActionDescriptor { controller_id: "t".into(), action: action.into(), args });
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         let WindowMeasure::Group { children: families, .. } = &tree else { panic!("expected root group") };
         assert_eq!(families.len(), 2);
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         let WindowMeasure::Group { label: parallel_label, children: parallel_children, .. } = &families[0] else { panic!("expected parallel group") };
         assert_eq!(parallel_label, "Parallel");
         assert_eq!(parallel_children.len(), 3);
-            value: None,
-            min: None,
-            max: None,
-            step: None,
-            ready: None,
-            loading: None,
-            waiting: None,
-            on_change: None,
         let WindowMeasure::Group { label: perspective_label, .. } = &families[1] else { panic!("expected perspective group") };
         assert_eq!(perspective_label, "Perspective");
     }

@@ -1317,7 +1317,7 @@ async function activateStudioE2eMediaGraphWindow(page: import("playwright").Page
 
 async function expandStudioE2eMediaGraphEngagement(page: import("playwright").Page): Promise<void> {
   await activateStudioE2eMediaGraphWindow(page);
-  await page.evaluate(() => document.getElementById("s-media-graph-window-search-toggle")?.click());
+  await page.evaluate(() => document.getElementById("framework.window.sMediaGraph.search.toggle")?.click());
   await page.waitForSelector("#s-media-catalogue-hint", { timeout: 10_000 });
 }
 

@@ -1,0 +1,14 @@
+[DEBUG] trinity page {
+  "title": "semio · trinity · jack",
+  "canvas": 3,
+  "chromeOk": true,
+  "fatal": false,
+  "pageErrors": [
+    "NoCompatibleDevice",
+    "NoCompatibleDevice"
+  ],
+  "actionablePageErrors": [],
+  "consoleErrors": [],
+  "bodySnippet": "Document\nCatalogue\nInspection\nFullscreen\nsemio · trinity · jack\nExample\nNakagin\nNakagin Graph\nFocus\nClose\nWindow Options\nActions\nUtilities\nJack Query\nFocus\nClose\nActions\nUtilities\nResults\nFocus\nClose\na.name\tb.name\tb.label\n\nb\n\t\nt_f0_b_c1\n\t\nfloor0-right\n\n\nb\n\t\nt_f0_b_c0\n\t\nfloor0-left\nActions\nUtilities\nDisplay\nSync\nSettings\nTheme\nHistory\nCommand\nSearch\n\nSearch for items\n\nFind\n\nFind items in this view"
+}
+[DEBUG] trinity e2e ok

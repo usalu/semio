@@ -4,7 +4,7 @@ use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     app_labels, build_table_scene, build_world_3d_scene, is_de_locale, localized_label_map, resolve_labels, table_row_json, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt, Contribution, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, ResourceKindSpec, SurfaceKind, TableCell, TableScene, UiInputNode, UiNode,
-    UiNumberStepperNode, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
+    UiNumberStepperNode, UiPresence, UiSelectItem, UiSelectNode, UiToggleNode, UiTreeItemAction, ViewState, WindowLayout, WindowLayoutAxisNode, WindowLayoutChild, WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode, WorldSunConfig,
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -148,9 +148,9 @@ fn build_filter_bar(document: &CurateDocument, modules: &[ModuleCatalogue], labe
         children.push(UiNode::Toggle(UiToggleNode {
             id: format!("sourcing-filter-module-{}", module.module_id),
             icon_id: "layers".into(),
-            pressed,
             text: Some(module.label.clone()),
             on_change: sourcing_action("setFilterModule", Some(json!({ "moduleId": module.module_id, "enabled": !pressed }))),
+            presence: UiPresence::selected(pressed),
         }));
     }
     let mut typology_items = vec![UiSelectItem { value: String::new(), label: labels.all_typologies.into() }];
@@ -769,6 +769,25 @@ mod tests {
         let mut app = testkit::new_app::<SourcingCurateApp>();
         app.handle_action("setFilterMinAvailability", Some(&json!({ "delta": -1000.0 })), &view_state(), &testkit::meta("local")).expect("set min availability");
         assert_eq!(app.projection().expect("projection").filters.min_availability, 0);
+    }
+
+    #[test]
+    fn filter_bar_module_toggles_encode_pressed_state_as_presence_selected() {
+        let mut document = default_document();
+        document.filters.module_ids = vec!["beams".into()];
+        let modules = available_modules(&view_state());
+        let node = build_filter_bar(&document, &modules, &SourcingLabels::EN);
+        let json = serde_json::to_string(&node).unwrap();
+        assert!(json.contains("\"id\":\"sourcing-filter-module-beams\""), "beams toggle present: {json}");
+        assert!(json.contains("\"id\":\"sourcing-filter-module-windows\""), "windows toggle present: {json}");
+        // Selected module uses presence.selected=true; skip_serializing_if drops the default/false case.
+        assert!(json.contains("\"selected\":true"), "pressed module encodes selected presence: {json}");
+        let beams_idx = json.find("\"id\":\"sourcing-filter-module-beams\"").expect("beams id");
+        let windows_idx = json.find("\"id\":\"sourcing-filter-module-windows\"").expect("windows id");
+        let beams_slice = &json[beams_idx..beams_idx + 220.min(json.len() - beams_idx)];
+        let windows_slice = &json[windows_idx..windows_idx + 220.min(json.len() - windows_idx)];
+        assert!(beams_slice.contains("\"selected\":true"), "beams toggle selected: {beams_slice}");
+        assert!(!windows_slice.contains("\"selected\":true"), "windows toggle not selected: {windows_slice}");
     }
 }
 //#endregion 🧪Tests
