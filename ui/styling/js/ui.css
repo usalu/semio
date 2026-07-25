@@ -1286,24 +1286,23 @@
   stroke: var(--border-normal-color);
 }
 
-@keyframes window-silhouette-border-celebrated-cycle {
-  0%,
-  100% {
-    stroke: var(--celebrate-border-color-a, var(--color-primary));
-  }
-  33% {
-    stroke: var(--celebrate-border-color-b, var(--color-secondary));
-  }
-  66% {
-    stroke: var(--celebrate-border-color-c, var(--color-tertiary));
-  }
+/* 🎉 Window silhouette celebrate: mask path pulses thickness while the foreignObject fill spins the
+   same three-color conic as `[data-celebrated="true"]::after` — never a solid three-color stroke cycle. */
+.window-silhouette-border-celebrated-mask {
+  stroke-width: var(--stroke-hairline);
+  animation: window-silhouette-border-introduced-pulse var(--celebrate-border-duration) ease-in-out infinite;
 }
 
-.window-silhouette-border-celebrated {
-  stroke-width: var(--stroke-hairline);
-  animation:
-    window-silhouette-border-introduced-pulse var(--celebrate-border-duration) ease-in-out infinite,
-    window-silhouette-border-celebrated-cycle calc(var(--celebrate-border-duration) * 3) linear infinite;
+.window-silhouette-border-celebrated-fill {
+  --celebrate-border-angle: 0deg;
+  background: conic-gradient(
+    from var(--celebrate-border-angle),
+    var(--celebrate-border-color-a, var(--color-primary)),
+    var(--celebrate-border-color-b, var(--color-secondary)),
+    var(--celebrate-border-color-c, var(--color-tertiary)),
+    var(--celebrate-border-color-a, var(--color-primary))
+  );
+  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1325,13 +1324,14 @@
   .window-silhouette-border-introduced,
   .window-silhouette-border-loading,
   .window-silhouette-border-waiting,
-  .window-silhouette-border-celebrated {
+  .window-silhouette-border-celebrated-mask,
+  .window-silhouette-border-celebrated-fill {
     animation: none;
     opacity: 1;
   }
 
   .window-silhouette-border-introduced,
-  .window-silhouette-border-celebrated {
+  .window-silhouette-border-celebrated-mask {
     stroke-width: var(--stroke-default);
   }
 }

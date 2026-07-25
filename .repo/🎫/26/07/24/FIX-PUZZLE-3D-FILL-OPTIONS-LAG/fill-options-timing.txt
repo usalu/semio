@@ -32,3 +32,20 @@ cd ui/js/react && bun ./script.ts test slider
 - `cargo test -p puzzle_3d kind_weights` — passed
 - `cargo test -p puzzle_3d fill_options` — passed
 - `puzzle-plugin` tests blocked by pre-existing `semio-framework-plugin` compile error (`IntroductionAdvance::Tool` match)
+
+## Phase 2 — viewport live update (2026-07-24)
+
+Render path now overlays `compose_fill_display(fill_count)` onto the projection fixture so the 3D viewport shows/hides the precomputed plan prefix instantly without waiting for document ops.
+
+### How to run
+
+```bash
+CARGO_TARGET_DIR=.repo/🎫/26/07/24/FIX-PUZZLE-3D-FILL-OPTIONS-LAG/target cargo test -p puzzle_3d compose_fill_display -- --nocapture
+CARGO_TARGET_DIR=.repo/🎫/26/07/24/FIX-PUZZLE-3D-FILL-OPTIONS-LAG/target cargo test -p puzzle-plugin fill_count_renders_planned_prefix fill_build_tick_only_plans -- --nocapture
+```
+
+### Results
+
+- `compose_fill_display_is_read_only_and_matches_apply_prefix` — passed (0.00s)
+- `fill_count_renders_planned_prefix_before_document_materializes` — passed (0.02s)
+- `fill_build_tick_only_plans_available_slider_range` — passed (0.09s)

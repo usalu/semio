@@ -248,6 +248,8 @@ import {
   registerIntroductionSceneProjector,
   ndcToViewportPoint,
   celebrateElements,
+  celebrateAllElements,
+  CELEBRATE_STAMP_DURATION_MS,
   elementIdSelector,
 } from "@semio-tech/ui-react";
 import { ICONS } from "@semio-tech/ui-asset";
@@ -318,6 +320,7 @@ import {
   type ContextMenuItemSpec,
   type DialogDefinition,
   type IntroductionDefinition,
+  type IntroductionInteraction,
   type IntroductionStepDefinition,
   type TiledMapScene,
   type IconRenderScene,
@@ -424,6 +427,7 @@ import {
   OrthographicCamera,
   PointsMaterial,
   Quaternion,
+  ShaderMaterial,
   TextureLoader,
   Vector3,
   type ThreeEvent,
@@ -1345,6 +1349,8 @@ type OverlayState = {
   readonly findOpen: boolean;
   /** 🎓 Current step of the active app's introduction walkthrough, or `null` when none is playing. */
   readonly introductionStepIndex: number | null;
+  /** ✅ Indices into the active step's `interactions` that are done — reset whenever the step changes. */
+  readonly introductionCompletedInteractions: readonly number[];
   /** 🗨️ The open declared dialog (id + `HostEffect`-seeded args), or `null` when none is open. */
   readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
 };
@@ -1439,6 +1445,7 @@ export type ShellAction =
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
+  | { readonly type: "COMPLETE_INTRODUCTION_INTERACTION"; readonly index: number }
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
@@ -1622,7 +1629,11 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
     case "SET_FIND_OPEN":
       return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
     case "SET_INTRODUCTION_STEP":
-      return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex) };
+      return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex), introductionCompletedInteractions: [] };
+    case "COMPLETE_INTRODUCTION_INTERACTION":
+      return state.introductionCompletedInteractions.includes(action.index)
+        ? state
+        : { ...state, introductionCompletedInteractions: [...state.introductionCompletedInteractions, action.index] };
     case "SET_DIALOG":
       return { ...state, dialog: action.value };
     default:
@@ -1720,7 +1731,7 @@ export function initialShellState(_props: {
       extraWindowInstances: [],
       windowTitlesById: {},
     },
-    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, dialog: null },
+    overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionCompletedInteractions: [], dialog: null },
     uiPrefs: {
       uiAppearance: locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()),
       uiLayout: ephemeral ? "desktop" : readStoredUiChromeLayout(),
@@ -1776,6 +1787,11 @@ const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
   "bottom-right": "footer",
 };
 const APP_DOCUMENT_SEPARATOR = " · ";
+
+/** 🧭 Shell-only action id `World3dHost`'s `WorldOrbitGated.onNavigationGestures` dispatches through the
+ * standard `onAction` funnel to report a completed pan/zoom/orbit gesture — intercepted in `onAction`
+ * (never forwarded to the plugin), args `{ windowId: string, gestures: readonly string[] }`. */
+const NOTE_WORLD_NAVIGATION_ACTION_ID = "noteWorldNavigation";
 
 const PRESENCE_CLIENT_STORAGE_KEY = "semio.presence.client";
 const PRESENCE_HEARTBEAT_INTERVAL_MS = 5000;
@@ -3088,7 +3104,8 @@ function resolveDialogDefinition(dialog: DialogDefinition, overlay: PluginAppLab
   };
 }
 
-/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body from the overlay's `introductionLabels` map. */
+/** @emoji 🗣️ Resolves an `IntroductionDefinition`'s title and every step's title/body/interaction labels
+ * from the overlay's `introductionLabels` map. */
 function resolveIntroductionDefinition(introduction: IntroductionDefinition, overlay: PluginAppLabelsOverlay): IntroductionDefinition {
   return {
     title: resolveAppLabel(overlay, "introduction", "intro.title", introduction.title),
@@ -3097,6 +3114,11 @@ function resolveIntroductionDefinition(introduction: IntroductionDefinition, ove
         ...step,
         title: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.title`, step.title),
         body: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.body`, step.body),
+        interactions: (step.interactions ?? []).map((interaction, index) => ({
+          ...interaction,
+          label: resolveAppLabel(overlay, "introduction", `intro.step.${step.id}.interaction.${index}.label`, interaction.label),
+        })),
+        ordered: step.ordered ?? false,
       }),
     ),
   };
@@ -4466,7 +4488,7 @@ export function FrameworkOsShell({
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById } = shellState.layout;
-  const { searchOpen, findOpen, introductionStepIndex, dialog: overlayDialog } = shellState.overlays;
+  const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
@@ -4616,21 +4638,62 @@ export function FrameworkOsShell({
   actionPaneStagedArgsByKeyRef.current = actionPaneStagedArgsByKey;
   const introductionStepIndexRef = useRef(introductionStepIndex);
   introductionStepIndexRef.current = introductionStepIndex;
+  const introductionCompletedInteractionsRef = useRef(introductionCompletedInteractions);
+  introductionCompletedInteractionsRef.current = introductionCompletedInteractions;
 
-  /** 🎓 Shared advance-by-doing path for utility/tool/action/panel/expand introduction steps. */
+  /** 🎓 Ends the active introduction — persists the seen flag when configured, and on successful
+   * completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements} stamp
+   * across every mounted UI element. Skip/escape passes `completed: false` and does not celebrate. */
+  const dismissIntroduction = useCallback(
+    (completed: boolean) => {
+      if (completed) celebrateAllElements();
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
+      if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
+    },
+    [introductionSeenKey, persistIntroductionSeen],
+  );
+
+  /** 🎓 Shared step-complete path: fires once every interaction-gated step's `interactions` are all done
+   * (via `completeIntroductionInteraction` below), celebrating `introduce` on top of each interaction's
+   * own celebration, then advances or finishes the tour. Finishing the last step celebrates every UI
+   * element via {@link dismissIntroduction}(true) instead of only the introduce target. */
   const advanceIntroductionByDoing = useCallback(() => {
     const stepIndex = introductionStepIndexRef.current;
     const introduction = activeIntroductionRef.current;
     if (stepIndex == null || !introduction) return;
     const step = introduction.steps[stepIndex];
-    if (step && step.advance.kind !== "next" && step.introduce) celebrateElements(elementIdSelector(step.introduce));
     if (stepIndex >= introduction.steps.length - 1) {
-      dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-      if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
-    } else {
-      dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+      dismissIntroduction(true);
+      return;
     }
-  }, [introductionSeenKey, persistIntroductionSeen]);
+    if (step && (step.interactions ?? []).length > 0 && step.introduce) celebrateElements(elementIdSelector(step.introduce));
+    dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+  }, [dismissIntroduction]);
+
+  /** ✅ Completes the first not-yet-done interaction of the active step matching `matches` (respecting
+   * `step.ordered` — only the next in-order interaction may complete), celebrates its target element
+   * (`interaction.celebrate ?? step.introduce`), and advances the step once every interaction is done.
+   * Mirrors the wgpu shell's `chrome_tour_complete_interaction`. */
+  const completeIntroductionInteraction = useCallback(
+    (matches: (interaction: IntroductionInteraction) => boolean) => {
+      const stepIndex = introductionStepIndexRef.current;
+      const introduction = activeIntroductionRef.current;
+      if (stepIndex == null || !introduction) return;
+      const step = introduction.steps[stepIndex];
+      if (!step || (step.interactions ?? []).length === 0) return;
+      const completed = introductionCompletedInteractionsRef.current;
+      const interactions = step.interactions ?? [];
+      const index = interactions.findIndex((interaction, i) => !completed.includes(i) && matches(interaction));
+      if (index < 0) return;
+      if (step.ordered && index !== completed.length) return;
+      const celebrateId = interactions[index].celebrate ?? step.introduce;
+      if (celebrateId) celebrateElements(elementIdSelector(celebrateId));
+      introductionCompletedInteractionsRef.current = [...completed, index];
+      dispatch({ type: "COMPLETE_INTRODUCTION_INTERACTION", index });
+      if (introductionCompletedInteractionsRef.current.length >= interactions.length) advanceIntroductionByDoing();
+    },
+    [advanceIntroductionByDoing],
+  );
   // 🎛️ So the command-category leaves' lazily-resolved tree content (built once per resolved-commands
   // change, not per keystroke — see `buildCommandCategoryTabs`) can read the latest expand/staged-arg
   // state without becoming a `defaultDock` memo dependency, which would otherwise persist-write the dock
@@ -5471,10 +5534,22 @@ export function FrameworkOsShell({
         dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
         return;
       }
-      const introductionStep = introductionStepIndexRef.current != null ? (activeIntroductionRef.current?.steps[introductionStepIndexRef.current] ?? null) : null;
-      // 🎉 Advance-by-doing (utility/tool/action/panel/expand, never plain "next") means the user just completed the
-      // taught action — celebrate the element they were taught on before moving to the next step.
-      const advanceIntroductionStep = advanceIntroductionByDoing;
+
+      // 🧭 Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
+      // forwarded to the plugin) — completes any pan/zoom/orbit interaction of the active step that
+      // targets the window the gesture happened on.
+      if (action.action === NOTE_WORLD_NAVIGATION_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { windowId?: unknown; gestures?: unknown }) : {};
+        const windowId = typeof args.windowId === "string" ? args.windowId : "";
+        const gestures = Array.isArray(args.gestures) ? (args.gestures as readonly string[]) : [];
+        if (windowId) {
+          const windowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === windowId)?.windowKindId ?? windowId;
+          for (const gesture of gestures) {
+            completeIntroductionInteraction((interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id));
+          }
+        }
+        return;
+      }
 
       // 🧰 Utility activation (P5): host-owned session state, never a document op. Re-clicking the active
       // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
@@ -5493,7 +5568,7 @@ export function FrameworkOsShell({
           activeToolIdRef.current = null;
           dispatch({ type: "SET_ACTIVE_TOOL", toolId: null });
         }
-        if (introductionStep?.advance.kind === "utility" && next && introductionStep.advance.id === next) advanceIntroductionStep();
+        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "utility" && interaction.on.id === next);
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
@@ -5517,7 +5592,7 @@ export function FrameworkOsShell({
         activeToolIdRef.current = next;
         dispatch({ type: "SET_ACTIVE_TOOL", toolId: next });
         if (next) clearAllWindowUtilities();
-        if (introductionStep?.advance.kind === "tool" && next && introductionStep.advance.id === next) advanceIntroductionStep();
+        if (next) completeIntroductionInteraction((interaction) => interaction.on.kind === "tool" && interaction.on.id === next);
         const pluginEntry = findPluginForAction(action);
         const plugin = pluginEntry?.handle;
         if (plugin) {
@@ -5531,7 +5606,7 @@ export function FrameworkOsShell({
         return;
       }
 
-      if (introductionStep?.advance.kind === "action" && introductionStep.advance.id === action.action) advanceIntroductionStep();
+      completeIntroductionInteraction((interaction) => interaction.on.kind === "action" && interaction.on.id === action.action);
 
       if (action.controllerId === FRAMEWORK_SYNC_CONTROLLER_ID) {
         if (action.action === "selectFile") {
@@ -5658,9 +5733,7 @@ export function FrameworkOsShell({
       hostControllerId,
       landingControllerId,
       hostCatalogueTabId,
-      introductionSeenKey,
-      persistIntroductionSeen,
-      advanceIntroductionByDoing,
+      completeIntroductionInteraction,
     ],
   );
 
@@ -6491,12 +6564,23 @@ export function FrameworkOsShell({
         const rest = id.slice("framework.panelTab.".length);
         return rest.endsWith(".firstDraggable") ? rest.slice(0, -".firstDraggable".length) : rest;
       }
-      // 🛠️ Mode-level tool leaf / activate toggle ids (`tool.fill`) are themselves the panel tab id under
-      // the Tool category — open that tab so the introduce target can mount.
-      if (/^tool\.[a-z][a-zA-Z0-9]*$/.test(id)) return id;
     }
     return null;
   }, [introductionElementIds]);
+  /** 🛠️ Tool ids the active step asks the user to activate (`interactions` of kind `tool`, or a bare
+   * `tool.<id>` introduce/show). Reveals the Tool category chrome so the leaf tab can be pressed —
+   * never drills into the leaf itself (that would open the inactive activate-toggle tree and, via tab
+   * selection, auto-activate + celebrate before the user acts). */
+  const introductionToolPickIds = useMemo((): readonly string[] => {
+    const fromInteractions = (activeIntroductionStep?.interactions ?? [])
+      .filter((interaction): interaction is IntroductionInteraction & { readonly on: { readonly kind: "tool"; readonly id: string } } => interaction.on.kind === "tool")
+      .map((interaction) => interaction.on.id);
+    if (fromInteractions.length > 0) return fromInteractions;
+    return introductionElementIds.flatMap((id) => {
+      const match = /^tool\.([a-z][a-zA-Z0-9]*)$/.exec(id);
+      return match?.[1] ? [match[1]] : [];
+    });
+  }, [activeIntroductionStep, introductionElementIds]);
   const introductionPanelTabAnchor = introductionPanelTabId ? findPanelTabInDock(dock, introductionPanelTabId)?.anchor : undefined;
   const introductionUtilityWindowId = useMemo(() => {
     if (!introductionUtilityId || !session) return null;
@@ -6543,6 +6627,37 @@ export function FrameworkOsShell({
     onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: introductionToolId } });
   }, [introductionToolId, onActionStable, session]);
 
+  /** 🛠️ Tool-pick steps (e.g. Füllen): open the Tool category so `tool.<id>` leaf tabs mount in the
+   * panel chrome, clear any already-active tool so the user must activate it, and never select the
+   * leaf path (selecting auto-activates and would celebrate before they act). */
+  const lastIntroductionToolPickStepIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    if (!session || introductionToolPickIds.length === 0 || !activeIntroductionStep) {
+      lastIntroductionToolPickStepIdRef.current = null;
+      return;
+    }
+    // 🛠️ Measure-driven keep-alive (`introductionToolId`) owns activation for steps that introduce
+    // tool measures (fill-distribution) — don't fight it by clearing the tool.
+    if (introductionToolId) return;
+    if (lastIntroductionToolPickStepIdRef.current === activeIntroductionStep.id) return;
+    lastIntroductionToolPickStepIdRef.current = activeIntroductionStep.id;
+    for (const toolId of introductionToolPickIds) {
+      if (activeToolIdRef.current === toolId) {
+        onActionStable({ controllerId: session.app.controllerId, action: SET_ACTIVE_TOOL_ACTION_ID, args: { toolId: "" } });
+      }
+    }
+    if (mobile) {
+      const resolved = findPanelTabPath(mobilePanelTabs, FRAMEWORK_CATEGORY_TOOL_ID);
+      if (resolved) dispatch({ type: "SET_MOBILE_PANEL_PATH", value: resolved });
+      dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: true });
+      return;
+    }
+    const toolAnchor = findPanelTabInDock(dock, FRAMEWORK_CATEGORY_TOOL_ID)?.anchor ?? "bottom-middle";
+    const resolved = findPanelTabPath(dock.anchors[toolAnchor], FRAMEWORK_CATEGORY_TOOL_ID);
+    if (resolved) dispatch({ type: "SET_PANEL_PATH", anchor: toolAnchor, value: resolved });
+    dispatch({ type: "SET_PANEL_VISIBLE", anchor: toolAnchor, value: true });
+  }, [activeIntroductionStep, dock, introductionToolId, introductionToolPickIds, mobile, mobilePanelTabs, onActionStable, session]);
+
   const lastIntroductionPanelTabIdRef = useRef<string | undefined>(undefined);
   useEffect(() => {
     if (!introductionPanelTabId || !introductionPanelTabAnchor) {
@@ -6562,35 +6677,46 @@ export function FrameworkOsShell({
     dispatch({ type: "SET_PANEL_VISIBLE", anchor: introductionPanelTabAnchor, value: true });
   }, [introductionPanelTabId, introductionPanelTabAnchor, dock, mobile, mobilePanelTabs]);
 
-  /** 🎓 Panel-advance steps complete when the named panel tab is open and visible. */
+  /** 🎓 Panel interactions complete when their named panel tab is open and visible — checked for every
+   * `panel` interaction of the active step, not just the first, so a step can require opening several. */
   useEffect(() => {
-    if (activeIntroductionStep?.advance.kind !== "panel") return;
-    const tabId = activeIntroductionStep.advance.id;
-    const located = findPanelTabInDock(dock, tabId);
-    if (!located) return;
-    const panel = panels[located.anchor];
-    if (!panel.visible || !panel.path.includes(tabId)) return;
-    advanceIntroductionByDoing();
-  }, [activeIntroductionStep, advanceIntroductionByDoing, dock, panels]);
+    if (!activeIntroductionStep) return;
+    for (const interaction of activeIntroductionStep.interactions ?? []) {
+      if (interaction.on.kind !== "panel") continue;
+      const tabId = interaction.on.id;
+      const located = findPanelTabInDock(dock, tabId);
+      if (!located) continue;
+      const panel = panels[located.anchor];
+      if (!panel.visible || !panel.path.includes(tabId)) continue;
+      completeIntroductionInteraction((candidate) => candidate.on.kind === "panel" && candidate.on.id === tabId);
+    }
+  }, [activeIntroductionStep, completeIntroductionInteraction, dock, panels]);
 
-  /** 🎓 Expand-advance steps start with the named tree section forced closed, then complete when the user opens it. */
-  const lastIntroductionExpandIdRef = useRef<string | null>(null);
+  /** 🎓 Expand interactions start with every named tree section forced closed on step entry, then
+   * complete individually as the user opens each one. */
+  const lastIntroductionExpandStepIdRef = useRef<string | null>(null);
   useEffect(() => {
-    if (activeIntroductionStep?.advance.kind !== "expand") {
-      lastIntroductionExpandIdRef.current = null;
+    const expandInteractions = (activeIntroductionStep?.interactions ?? []).filter((interaction) => interaction.on.kind === "expand");
+    if (!activeIntroductionStep || expandInteractions.length === 0) {
+      lastIntroductionExpandStepIdRef.current = null;
       return;
     }
-    const sectionId = activeIntroductionStep.advance.id;
-    const stateSuffix = `tree-section-${sectionId}`;
-    if (lastIntroductionExpandIdRef.current !== sectionId) {
-      lastIntroductionExpandIdRef.current = sectionId;
-      const catalogueKey = `${FRAMEWORK_PANEL_TAB_CATALOGUE_ID}.tree:${stateSuffix}`;
-      dispatch({ type: "SET_TREE_OPEN_STATE", id: catalogueKey, open: false });
+    if (lastIntroductionExpandStepIdRef.current !== activeIntroductionStep.id) {
+      lastIntroductionExpandStepIdRef.current = activeIntroductionStep.id;
+      for (const interaction of expandInteractions) {
+        const stateSuffix = `tree-section-${interaction.on.id}`;
+        const catalogueKey = `${FRAMEWORK_PANEL_TAB_CATALOGUE_ID}.tree:${stateSuffix}`;
+        dispatch({ type: "SET_TREE_OPEN_STATE", id: catalogueKey, open: false });
+      }
       return;
     }
-    const expanded = Object.entries(treeOpenStates).some(([key, open]) => open && key.endsWith(stateSuffix));
-    if (expanded) advanceIntroductionByDoing();
-  }, [activeIntroductionStep, advanceIntroductionByDoing, treeOpenStates]);
+    for (const interaction of expandInteractions) {
+      const sectionId = interaction.on.id;
+      const stateSuffix = `tree-section-${sectionId}`;
+      const expanded = Object.entries(treeOpenStates).some(([key, open]) => open && key.endsWith(stateSuffix));
+      if (expanded) completeIntroductionInteraction((candidate) => candidate.on.kind === "expand" && candidate.on.id === sectionId);
+    }
+  }, [activeIntroductionStep, completeIntroductionInteraction, treeOpenStates]);
 
   /** 🧭 Progressive reveal means a stored path can legitimately end at a branch (or be empty) — this is now a plain per-anchor truncation-validate, no override reassertion (see the write-through effects below). */
   const panelActivePaths = useMemo((): Record<Anchor, readonly string[]> => {
@@ -7241,10 +7367,7 @@ export function FrameworkOsShell({
             introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
-            onDismiss={() => {
-              dispatch({ type: "SET_INTRODUCTION_STEP", value: null });
-              if (persistIntroductionSeen) writeStoredIntroductionSeen(introductionSeenKey);
-            }}
+            onDismiss={dismissIntroduction}
           />
         )}
         {session &&
@@ -10193,7 +10316,7 @@ type WorldEngagementPreviewItem = WorldEngagementPreviewPoint | WorldEngagementP
 
 //#region WorldMeshPaint
 /** 🎨 Mesh style kinds, in {@link resolveMeshStyle} priority order (highest first). */
-type MeshStyleKind = "disabled" | "selected" | "highlighted" | "hovered" | "neutral";
+type MeshStyleKind = "disabled" | "celebrated" | "selected" | "highlighted" | "hovered" | "neutral";
 
 type MeshStyleColors = {
   readonly meshColor: string;
@@ -10210,6 +10333,8 @@ const MESH_STYLE_PAINT: Readonly<Record<MeshStyleKind, { readonly fill: string; 
   hovered: { fill: semanticVar("hover-interactive-fill"), line: semanticVar("border-emphasized-color"), emissiveIntensity: 0.08, opacity: 1 },
   selected: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.35, opacity: 1 },
   highlighted: { fill: tokenVar("secondary"), line: tokenVar("secondary"), emissiveIntensity: 0.2, opacity: 1 },
+  // 🎉 Transient drop/completion paint — solid fallback for lines; shaded meshes use {@link CelebratingConicMaterial}.
+  celebrated: { fill: tokenVar("primary"), line: tokenVar("primary"), emissiveIntensity: 0.55, opacity: 1 },
   disabled: { fill: "color-mix(in oklab, var(--color-muted-foreground) 55%, var(--panel))", line: themeColorVar("muted-foreground"), emissiveIntensity: 0, opacity: 0.45 },
 };
 
@@ -10245,9 +10370,16 @@ export function worldMeshMaterialRevision(kind: MeshStyleKind): MeshStyleKind {
   return kind;
 }
 
-/** 🎨 Resolves the effective style kind for an instance/component, premigration priority: disabled → selected → highlighted → hovered → neutral. */
-export function resolveMeshStyle(state: { readonly disabled?: boolean; readonly selected?: boolean; readonly highlighted?: boolean; readonly hovered?: boolean }): MeshStyleKind {
+/** 🎨 Resolves the effective style kind for an instance/component, priority: disabled → celebrated → selected → highlighted → hovered → neutral. */
+export function resolveMeshStyle(state: {
+  readonly disabled?: boolean;
+  readonly celebrating?: boolean;
+  readonly selected?: boolean;
+  readonly highlighted?: boolean;
+  readonly hovered?: boolean;
+}): MeshStyleKind {
   if (state.disabled) return "disabled";
+  if (state.celebrating) return "celebrated";
   if (state.selected) return "selected";
   if (state.highlighted) return "highlighted";
   if (state.hovered) return "hovered";
@@ -10255,10 +10387,14 @@ export function resolveMeshStyle(state: { readonly disabled?: boolean; readonly 
 }
 
 /** 🎨 Resolves live group-selection preview paint: the new selection is active, while only objects exiting the old selection are highlighted. */
-export function resolveMeshSelectionPreviewStyle(instance: Pick<WorldInstanceRecord, "disabled" | "selected" | "highlighted" | "hovered">, previewSelected?: boolean): MeshStyleKind {
+export function resolveMeshSelectionPreviewStyle(
+  instance: Pick<WorldInstanceRecord, "disabled" | "selected" | "highlighted" | "hovered"> & { readonly celebrating?: boolean },
+  previewSelected?: boolean,
+): MeshStyleKind {
   const selectionExited = previewSelected === false && instance.selected === true;
   return resolveMeshStyle({
     disabled: instance.disabled,
+    celebrating: instance.celebrating,
     selected: previewSelected ?? instance.selected,
     highlighted: selectionExited || instance.highlighted,
     hovered: instance.hovered,
@@ -10284,6 +10420,189 @@ export function semanticColorsFromPalette(palette: MeshStylePalette): SemanticCo
     edgeHover: palette.hovered.lineColor,
   };
 }
+
+//#region 🎉WorldInstanceCelebrate
+/** 🎉 Expiry timestamps keyed by world instance id — transient completion paint after catalogue drop (mirrors DOM `celebrateElements`). */
+const celebratingWorldInstanceUntil = new Map<string, number>();
+const celebratingWorldInstanceListeners = new Set<() => void>();
+let celebratingWorldInstanceVersion = 0;
+let celebratingWorldInstanceTimer: ReturnType<typeof setTimeout> | null = null;
+
+function notifyCelebratingWorldInstances(): void {
+  celebratingWorldInstanceVersion += 1;
+  celebratingWorldInstanceListeners.forEach((listener) => listener());
+}
+
+function pruneCelebratingWorldInstances(now = performance.now()): void {
+  let changed = false;
+  for (const [id, until] of celebratingWorldInstanceUntil) {
+    if (until <= now) {
+      celebratingWorldInstanceUntil.delete(id);
+      changed = true;
+    }
+  }
+  if (changed) notifyCelebratingWorldInstances();
+}
+
+function scheduleCelebratingWorldInstancePrune(): void {
+  if (celebratingWorldInstanceTimer != null) window.clearTimeout(celebratingWorldInstanceTimer);
+  let next = Infinity;
+  const now = performance.now();
+  for (const until of celebratingWorldInstanceUntil.values()) {
+    if (until > now && until < next) next = until;
+  }
+  if (!Number.isFinite(next)) {
+    celebratingWorldInstanceTimer = null;
+    return;
+  }
+  celebratingWorldInstanceTimer = window.setTimeout(() => {
+    celebratingWorldInstanceTimer = null;
+    pruneCelebratingWorldInstances();
+    scheduleCelebratingWorldInstancePrune();
+  }, Math.max(0, next - now + 1));
+}
+
+/** 🎉 Stamps world instance ids as celebrating for `durationMs` so their mesh paint uses the spinning conic brand gradient instead of selected. */
+export function celebrateWorldInstances(ids: readonly string[], durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
+  const until = performance.now() + durationMs;
+  for (const id of ids) celebratingWorldInstanceUntil.set(id, until);
+  notifyCelebratingWorldInstances();
+  scheduleCelebratingWorldInstancePrune();
+  return () => {
+    let changed = false;
+    for (const id of ids) {
+      if (celebratingWorldInstanceUntil.delete(id)) changed = true;
+    }
+    if (changed) notifyCelebratingWorldInstances();
+  };
+}
+
+/** 🎉 Whether `id` is still inside its transient celebration window. */
+export function isWorldInstanceCelebrating(id: string, now = performance.now()): boolean {
+  const until = celebratingWorldInstanceUntil.get(id);
+  return until != null && until > now;
+}
+
+function subscribeCelebratingWorldInstances(listener: () => void): () => void {
+  celebratingWorldInstanceListeners.add(listener);
+  return () => {
+    celebratingWorldInstanceListeners.delete(listener);
+  };
+}
+
+function celebratingWorldInstanceSnapshot(): number {
+  return celebratingWorldInstanceVersion;
+}
+
+/** 🎉 React subscription to the transient celebrating-instance set — re-renders when stamps are added or expire. */
+function useCelebratingWorldInstanceIds(): ReadonlySet<string> {
+  const version = useSyncExternalStore(subscribeCelebratingWorldInstances, celebratingWorldInstanceSnapshot, celebratingWorldInstanceSnapshot);
+  return useMemo(() => {
+    const now = performance.now();
+    const ids = new Set<string>();
+    for (const [id, until] of celebratingWorldInstanceUntil) {
+      if (until > now) ids.add(id);
+    }
+    return ids;
+  }, [version]);
+}
+
+/** 🎉 One spin period of the celebrate conic — matches `--celebrate-border-duration` (1.2s). */
+const CELEBRATE_CONIC_SPIN_SECONDS = 1.2;
+
+const CELEBRATE_CONIC_VERTEX_SHADER = /* glsl */ `
+varying vec3 vObjectPosition;
+void main() {
+  vObjectPosition = position;
+  gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+}
+`;
+
+const CELEBRATE_CONIC_FRAGMENT_SHADER = /* glsl */ `
+uniform vec3 uColorA;
+uniform vec3 uColorB;
+uniform vec3 uColorC;
+uniform float uAngle;
+uniform float uOpacity;
+varying vec3 vObjectPosition;
+void main() {
+  float a = atan(vObjectPosition.y, vObjectPosition.x) + uAngle;
+  float t = fract(a / 6.28318530718);
+  vec3 color;
+  if (t < 0.333333) {
+    color = mix(uColorA, uColorB, t / 0.333333);
+  } else if (t < 0.666667) {
+    color = mix(uColorB, uColorC, (t - 0.333333) / 0.333333);
+  } else {
+    color = mix(uColorC, uColorA, (t - 0.666667) / 0.333333);
+  }
+  gl_FragColor = vec4(color, uOpacity);
+}
+`;
+
+function hexToRgb01(hex: string): [number, number, number] {
+  const color = new Color(hex);
+  return [color.r, color.g, color.b];
+}
+
+/** 🎉 Spinning primary/secondary/tertiary conic fill — the 3D counterpart of `[data-celebrated="true"]`'s CSS ring. */
+function CelebratingConicMaterial({ opacity = 1 }: { readonly opacity?: number }) {
+  const invalidate = useThree((state) => state.invalidate);
+  const colors = useMemo(() => {
+    clearColorResolveCache();
+    return {
+      a: hexToRgb01(resolveColorHex(tokenVar("primary"))),
+      b: hexToRgb01(resolveColorHex(tokenVar("secondary"))),
+      c: hexToRgb01(resolveColorHex(tokenVar("tertiary"))),
+    };
+  }, []);
+  const material = useMemo(
+    () =>
+      new ShaderMaterial({
+        vertexShader: CELEBRATE_CONIC_VERTEX_SHADER,
+        fragmentShader: CELEBRATE_CONIC_FRAGMENT_SHADER,
+        uniforms: {
+          uColorA: { value: colors.a },
+          uColorB: { value: colors.b },
+          uColorC: { value: colors.c },
+          uAngle: { value: 0 },
+          uOpacity: { value: opacity },
+        },
+        transparent: opacity < 1,
+        side: DoubleSide,
+        depthWrite: opacity >= 1,
+      }),
+    [colors, opacity],
+  );
+  useEffect(() => () => material.dispose(), [material]);
+  useFrame((_, delta) => {
+    material.uniforms.uAngle.value = (material.uniforms.uAngle.value + (delta * Math.PI * 2) / CELEBRATE_CONIC_SPIN_SECONDS) % (Math.PI * 2);
+    invalidate();
+  });
+  return <primitive object={material} attach="material" />;
+}
+
+function createCelebratingConicMaterial(opacity = 1): ShaderMaterial {
+  clearColorResolveCache();
+  const a = hexToRgb01(resolveColorHex(tokenVar("primary")));
+  const b = hexToRgb01(resolveColorHex(tokenVar("secondary")));
+  const c = hexToRgb01(resolveColorHex(tokenVar("tertiary")));
+  return new ShaderMaterial({
+    vertexShader: CELEBRATE_CONIC_VERTEX_SHADER,
+    fragmentShader: CELEBRATE_CONIC_FRAGMENT_SHADER,
+    uniforms: {
+      uColorA: { value: a },
+      uColorB: { value: b },
+      uColorC: { value: c },
+      uAngle: { value: 0 },
+      uOpacity: { value: opacity },
+    },
+    transparent: opacity < 1,
+    side: DoubleSide,
+    depthWrite: opacity >= 1,
+  });
+}
+//#endregion 🎉WorldInstanceCelebrate
 //#endregion WorldMeshPaint
 
 type WorldParsedCameraState = WorldCameraState & { readonly fov: number; readonly explicitProjection: boolean };
@@ -10913,22 +11232,27 @@ function PaintTexturedMesh({
   // Per-vertex colors (e.g. FEM stress contours) multiply against the material's own `color` in
   // three.js, so white lets them show through unmodified — `style.meshColor` would otherwise tint them.
   const hasVertexColors = geometry.hasAttribute("color");
+  const celebrating = styleKind === "celebrated" && !hasVertexColors;
   return (
     <mesh geometry={geometry} {...meshProps}>
-      <meshStandardMaterial
-        key={worldMeshMaterialRevision(styleKind)}
-        color={hasVertexColors ? "#ffffff" : style.meshColor}
-        vertexColors={hasVertexColors}
-        map={paintMap ?? undefined}
-        side={DoubleSide}
-        flatShading={flatShading}
-        metalness={0}
-        roughness={1}
-        emissive={hasVertexColors ? "#000000" : style.meshColor}
-        emissiveIntensity={hasVertexColors ? 0 : style.emissiveIntensity}
-        transparent={style.opacity < 1}
-        opacity={style.opacity}
-      />
+      {celebrating ? (
+        <CelebratingConicMaterial opacity={style.opacity} />
+      ) : (
+        <meshStandardMaterial
+          key={worldMeshMaterialRevision(styleKind)}
+          color={hasVertexColors ? "#ffffff" : style.meshColor}
+          vertexColors={hasVertexColors}
+          map={paintMap ?? undefined}
+          side={DoubleSide}
+          flatShading={flatShading}
+          metalness={0}
+          roughness={1}
+          emissive={hasVertexColors ? "#000000" : style.meshColor}
+          emissiveIntensity={hasVertexColors ? 0 : style.emissiveIntensity}
+          transparent={style.opacity < 1}
+          opacity={style.opacity}
+        />
+      )}
       {children}
     </mesh>
   );
@@ -10988,27 +11312,42 @@ function GlbInstanceMesh({
 }) {
   const gltf = useLoader(GLTFLoader, url);
   const invalidate = useThree((state) => state.invalidate);
+  const celebrating = revision === "celebrated";
   // 🎨 Bake selection/hover paint into the clone itself. Imperative `color.set` after deselect was leaving
   // the previous selected tint until a later hover remounted materials — style deps must recreate the tree.
   const scene = useMemo(() => {
     const cloned = gltf.scene.clone(true);
     cloned.traverse((child) => {
       if (!(child instanceof Mesh)) return;
-      child.material = new MeshStandardMaterial({
-        color: new Color(color),
-        emissive: new Color(emissive),
-        emissiveIntensity,
-        metalness: material?.metalness ?? 0,
-        roughness: material?.roughness ?? 1,
-        transparent: opacity < 1,
-        opacity,
-      });
+      if (celebrating) {
+        child.material = createCelebratingConicMaterial(opacity);
+      } else {
+        child.material = new MeshStandardMaterial({
+          color: new Color(color),
+          emissive: new Color(emissive),
+          emissiveIntensity,
+          metalness: material?.metalness ?? 0,
+          roughness: material?.roughness ?? 1,
+          transparent: opacity < 1,
+          opacity,
+        });
+      }
       child.castShadow = shadowEnabled === true;
       child.receiveShadow = shadowEnabled === true;
     });
     applyGlbMeshEdgeBorders(cloned, borderColor);
     return cloned;
-  }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision]);
+  }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision, celebrating]);
+  useFrame((_, delta) => {
+    if (!celebrating) return;
+    scene.traverse((child) => {
+      if (!(child instanceof Mesh)) return;
+      const mat = child.material;
+      if (!(mat instanceof ShaderMaterial) || !mat.uniforms?.uAngle) return;
+      mat.uniforms.uAngle.value = (mat.uniforms.uAngle.value + (delta * Math.PI * 2) / CELEBRATE_CONIC_SPIN_SECONDS) % (Math.PI * 2);
+    });
+    invalidate();
+  });
   // 🎞️ Demand frameloop: useLoader / style remounts after the mount kick would otherwise leave transparent panes.
   useLayoutEffect(() => {
     invalidate();
@@ -11356,7 +11695,8 @@ function WorldInstanceNode({
   );
   const isActiveObject = instance.id === activeObjectId;
   const colors = semanticColorsFromPalette(palette);
-  const styleKind = resolveMeshSelectionPreviewStyle(instance, previewInstanceSelected);
+  const celebratingIds = useCelebratingWorldInstanceIds();
+  const styleKind = resolveMeshSelectionPreviewStyle({ ...instance, celebrating: celebratingIds.has(instance.id) }, previewInstanceSelected);
   const style = palette[styleKind];
   const glbUsesEnvironmentColor = styleKind === "neutral" && environmentMaterial?.color != null;
   const glbColor = glbUsesEnvironmentColor ? environmentMaterial!.color! : style.meshColor;
@@ -12969,6 +13309,10 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const cameraRef = useRef<import("three").Camera | null>(null);
   const catalogueDragDepthRef = useRef(0);
   const catalogueDragEncodedRef = useRef<string | null>(null);
+  /** 🎉 Pre-drop instance ids — when the scene gains new ids after {@link commitCatalogueDropAt}, those objects celebrate. */
+  const pendingCelebrateCatalogueDropIdsRef = useRef<ReadonlySet<string> | null>(null);
+  const instancesRef = useRef(instances);
+  instancesRef.current = instances;
   const wasMarqueeDragRef = useRef(false);
   const connectDropConsumedRef = useRef(false);
   const engagementPointerMoveInFlightRef = useRef(false);
@@ -13666,10 +14010,21 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       const rect = hostRef.current.getBoundingClientRect();
       const origin = resolveCatalogueDropOrigin(clientX, clientY, rect, cameraRef.current, gridSnapEnabled, gridFactor);
       if (!origin) return;
+      // 🎉 Stamp the pre-drop instance set so the next scene update can celebrate the newly placed object(s).
+      pendingCelebrateCatalogueDropIdsRef.current = new Set(instancesRef.current.map((instance) => instance.id));
       dispatch("addObjectKind", { objectKind: payload.objectKind, origin });
     },
     [dispatch, gridFactor, gridSnapEnabled, readCatalogueDragEncoded],
   );
+
+  useEffect(() => {
+    const baseline = pendingCelebrateCatalogueDropIdsRef.current;
+    if (!baseline) return;
+    const added = instances.filter((instance) => !baseline.has(instance.id)).map((instance) => instance.id);
+    if (added.length === 0) return;
+    pendingCelebrateCatalogueDropIdsRef.current = null;
+    celebrateWorldInstances(added);
+  }, [instances]);
 
   const onCatalogueDragEnter = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
@@ -13824,6 +14179,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             projection={cameraState.explicitProjection ? cameraState.projection : undefined}
             constraints={worldOrbitConstraints}
             onRightPointerDown={handleWorldOrbitRightPointerDown}
+            onNavigationGestures={(gestures) => dispatch(NOTE_WORLD_NAVIGATION_ACTION_ID, { windowId: windowInstanceId ?? node.surfaceId, gestures })}
           />
           <WorldOrbitViewControls
             projectionSpec={worldProjectionSpec}

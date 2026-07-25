@@ -80,6 +80,8 @@ import {
   resolveMeshStyle,
   resolveMeshSelectionPreviewStyle,
   semanticColorsFromPalette,
+  celebrateWorldInstances,
+  isWorldInstanceCelebrating,
   isCurveOnlyWorldMesh,
   meshBoundsCorners,
   resolveVortexPointerDownIntent,
@@ -332,6 +334,21 @@ describe("shell store reducer", () => {
     expect(advanced.overlays.introductionStepIndex).toBe(1);
     const dismissed = shellReducer(advanced, { type: "SET_INTRODUCTION_STEP", value: null });
     expect(dismissed.overlays.introductionStepIndex).toBeNull();
+  });
+
+  it("COMPLETE_INTRODUCTION_INTERACTION appends and dedupes indices; SET_INTRODUCTION_STEP resets them", () => {
+    const state = baseState();
+    expect(state.overlays.introductionCompletedInteractions).toEqual([]);
+    const started = shellReducer(state, { type: "SET_INTRODUCTION_STEP", value: 0 });
+    const first = shellReducer(started, { type: "COMPLETE_INTRODUCTION_INTERACTION", index: 1 });
+    expect(first.overlays.introductionCompletedInteractions).toEqual([1]);
+    const second = shellReducer(first, { type: "COMPLETE_INTRODUCTION_INTERACTION", index: 0 });
+    expect(second.overlays.introductionCompletedInteractions).toEqual([1, 0]);
+    const deduped = shellReducer(second, { type: "COMPLETE_INTRODUCTION_INTERACTION", index: 1 });
+    expect(deduped.overlays.introductionCompletedInteractions).toEqual([1, 0]);
+    expect(deduped.layout).toBe(state.layout);
+    const nextStep = shellReducer(deduped, { type: "SET_INTRODUCTION_STEP", value: 1 });
+    expect(nextStep.overlays.introductionCompletedInteractions).toEqual([]);
   });
 
   it("opens, replaces, and closes a dialog via SET_DIALOG without touching unrelated slices", () => {
@@ -1986,13 +2003,24 @@ describe("framework renderer hosts", () => {
     }
   });
 
-  it("resolves mesh style by premigration priority: disabled > selected > highlighted > hovered > neutral", () => {
+  it("resolves mesh style by priority: disabled > celebrated > selected > highlighted > hovered > neutral", () => {
     expect(resolveMeshStyle({})).toBe("neutral");
     expect(resolveMeshStyle({ hovered: true })).toBe("hovered");
     expect(resolveMeshStyle({ hovered: true, highlighted: true })).toBe("highlighted");
     expect(resolveMeshStyle({ highlighted: true, selected: true })).toBe("selected");
+    expect(resolveMeshStyle({ selected: true, celebrating: true })).toBe("celebrated");
+    expect(resolveMeshStyle({ celebrating: true, disabled: true })).toBe("disabled");
     expect(resolveMeshStyle({ selected: true, disabled: true })).toBe("disabled");
-    expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true })).toBe("disabled");
+    expect(resolveMeshStyle({ disabled: true, selected: true, highlighted: true, hovered: true, celebrating: true })).toBe("disabled");
+  });
+
+  it("celebrateWorldInstances stamps ids and cancel clears them so paint prefers celebrated over selected", () => {
+    const cancel = celebrateWorldInstances(["drop-1"], 60_000);
+    expect(isWorldInstanceCelebrating("drop-1")).toBe(true);
+    expect(resolveMeshStyle({ selected: true, celebrating: isWorldInstanceCelebrating("drop-1") })).toBe("celebrated");
+    cancel();
+    expect(isWorldInstanceCelebrating("drop-1")).toBe(false);
+    expect(resolveMeshStyle({ selected: true, celebrating: isWorldInstanceCelebrating("drop-1") })).toBe("selected");
   });
 
   it("maps edge hover to line paint so coplanar edges stay distinct from face hover fill", () => {
@@ -2001,6 +2029,7 @@ describe("framework renderer hosts", () => {
       hovered: { meshColor: "#aaaaaa", lineColor: "#333333", emissiveIntensity: 0.08, opacity: 1 },
       selected: { meshColor: "#0000ff", lineColor: "#0000ff", emissiveIntensity: 0.35, opacity: 1 },
       highlighted: { meshColor: "#00ff00", lineColor: "#00ff00", emissiveIntensity: 0.2, opacity: 1 },
+      celebrated: { meshColor: "#ff00ff", lineColor: "#ff00ff", emissiveIntensity: 0.55, opacity: 1 },
       disabled: { meshColor: "#999999", lineColor: "#888888", emissiveIntensity: 0, opacity: 0.45 },
     } as Parameters<typeof semanticColorsFromPalette>[0];
     const colors = semanticColorsFromPalette(palette);
@@ -3924,56 +3953,62 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
 
   it("ENTWERFEN_MIT_BESTAND_BRAND introduction opens with a project-demonstrator welcome, prototype notice, and funding credit before the app tour", () => {
     const steps = ENTWERFEN_MIT_BESTAND_BRAND.introduction!.steps;
-    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "panels", "catalogue-panel", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
+    expect(steps.map((step) => step.id)).toEqual(["welcome", "prototype", "funding", "viewport", "panels", "catalogue-objects", "add-object", "transform-utility", "verbindungspunkte", "suggest-objects", "fill-tool", "fill-distribution"]);
+    const viewport = steps.find((step) => step.id === "viewport")!;
+    expect(viewport.ordered).toBe(false);
+    expect(viewport.interactions.map((interaction) => interaction.on)).toEqual([
+      { kind: "zoom", id: "puzzle3d-main" },
+      { kind: "pan", id: "puzzle3d-main" },
+      { kind: "orbit", id: "puzzle3d-main" },
+    ]);
+    expect(viewport.interactions.every((interaction) => interaction.label.trim().length > 0)).toBe(true);
     expect(steps.find((step) => step.id === "panels")).toMatchObject({
       introduce: "framework.panel.catalogue",
-      advance: { kind: "next" },
+      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" } }],
     });
-    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/Paneele/i);
-    expect(steps.find((step) => step.id === "catalogue-panel")).toMatchObject({
-      introduce: "framework.panel.catalogue",
-      advance: { kind: "panel", id: "framework.panel.catalogue" },
-    });
+    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/Paneele|Katalog/i);
     expect(steps.find((step) => step.id === "catalogue-objects")).toMatchObject({
       introduce: "puzzle3d-play-kinds.objects",
       placement: "right",
-      advance: { kind: "expand", id: "puzzle3d-play-kinds.objects" },
+      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" } }],
       show: ["framework.panelTab.framework.panel.catalogue"],
     });
     expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/Baukomponenten/i);
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
-      advance: { kind: "action", id: "addObjectKind" },
+      interactions: [{ on: { kind: "action", id: "addObjectKind" } }],
       show: ["framework.panelTab.framework.panel.catalogue", "framework.window.puzzle3dMain"],
     });
     expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/Drag-and-Drop|ziehen/i);
     expect(steps.find((step) => step.id === "transform-utility")).toMatchObject({
       introduce: "transform",
-      advance: { kind: "utility", id: "transform" },
+      interactions: [{ on: { kind: "utility", id: "transform" } }],
       show: ["framework.window.puzzle3dMain"],
     });
     expect(steps.find((step) => step.id === "verbindungspunkte")).toMatchObject({
       introduce: "puzzle3d-play-vortex-show",
-      advance: { kind: "action", id: "setVortexShow" },
+      interactions: [{ on: { kind: "action", id: "setVortexShow" } }],
       show: ["framework.window.puzzle3dMain"],
     });
     expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Verbindungspunkte/i);
     expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
       introduce: "framework.window.puzzle3dMain",
-      advance: { kind: "action", id: "acceptSuggestion" },
+      interactions: [{ on: { kind: "action", id: "acceptSuggestion" } }],
     });
     expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Liste|wählen|Aktionsmenü|Rechtsklick/i);
     expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
       introduce: "tool.fill",
-      advance: { kind: "tool", id: "fill" },
-      show: ["framework.panelTab.tool.fill"],
+      interactions: [{ on: { kind: "tool", id: "fill" } }],
+      show: [],
+      placement: "top",
     });
     expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/Füllen/i);
     expect(steps.find((step) => step.id === "fill-distribution")).toMatchObject({
       introduce: "puzzle3d-play-distribution",
-      advance: { kind: "next" },
+      interactions: [],
       show: ["puzzle3d-fill-count", "framework.panelTab.tool.fill"],
+      placement: "top",
     });
     expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Verteilung/i);
 

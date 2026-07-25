@@ -90,6 +90,67 @@ export interface WorldCameraState {
   readonly projectionSpec?: WorldProjectionSpec;
 }
 
+/** @emoji 🧭 A camera-navigation gesture {@link classifyWorldNavigationGestures} can detect on an orbit control. */
+export type WorldNavigationGesture = "pan" | "zoom" | "orbit";
+
+/** @emoji 📸 The subset of camera state {@link classifyWorldNavigationGestures} diffs before/after a gesture. */
+export interface WorldNavigationSnapshot {
+  readonly position: Vec3;
+  readonly target: Vec3;
+  readonly zoom: number;
+  readonly projection: OrbitCameraProjection;
+}
+
+/** @emoji 📏 Ratios/angle above which a camera-state delta counts as that gesture, tunable per caller. */
+export interface WorldNavigationThresholds {
+  readonly panRatio: number;
+  readonly zoomRatio: number;
+  readonly orbitRadians: number;
+}
+
+const WORLD_NAVIGATION_THRESHOLDS_DEFAULT: WorldNavigationThresholds = { panRatio: 0.02, zoomRatio: 0.03, orbitRadians: 0.05 };
+
+function worldNavigationVec3Distance(a: Vec3, b: Vec3): number {
+  return Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+}
+
+function worldNavigationVec3Direction(from: Vec3, to: Vec3): Vec3 {
+  const dx = to[0] - from[0];
+  const dy = to[1] - from[1];
+  const dz = to[2] - from[2];
+  const length = Math.hypot(dx, dy, dz);
+  return length > 1e-9 ? [dx / length, dy / length, dz / length] : [0, 0, 0];
+}
+
+/** @emoji 🧭 Classifies which navigation gestures a camera movement performed by diffing before/after
+ * snapshots — pan (the orbit target moved), zoom (orthographic zoom factor or perspective dolly distance
+ * changed), orbit (the camera's direction around the target rotated). A single drag may perform more than
+ * one (e.g. a drag that pans while also slightly orbiting), so this returns a set, not one verdict. */
+export function classifyWorldNavigationGestures(
+  before: WorldNavigationSnapshot,
+  after: WorldNavigationSnapshot,
+  thresholds: Partial<WorldNavigationThresholds> = {},
+): readonly WorldNavigationGesture[] {
+  const { panRatio, zoomRatio, orbitRadians } = { ...WORLD_NAVIGATION_THRESHOLDS_DEFAULT, ...thresholds };
+  const gestures: WorldNavigationGesture[] = [];
+  const referenceDistance = Math.max(worldNavigationVec3Distance(before.position, before.target), 1);
+
+  if (worldNavigationVec3Distance(before.target, after.target) > panRatio * referenceDistance) gestures.push("pan");
+
+  const zoomDelta =
+    before.projection === "orthographic"
+      ? Math.abs(after.zoom / (before.zoom || 1) - 1)
+      : Math.abs(worldNavigationVec3Distance(after.position, after.target) / referenceDistance - 1);
+  if (zoomDelta > zoomRatio) gestures.push("zoom");
+
+  const beforeDirection = worldNavigationVec3Direction(before.target, before.position);
+  const afterDirection = worldNavigationVec3Direction(after.target, after.position);
+  const dot = Math.min(1, Math.max(-1, beforeDirection[0] * afterDirection[0] + beforeDirection[1] * afterDirection[1] + beforeDirection[2] * afterDirection[2]));
+  if (Math.acos(dot) > orbitRadians) gestures.push("orbit");
+
+  return gestures;
+}
+
 export type SceneListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 /** @emoji 👁️ Persisted per-entity hide/lock flags shared by CAD and puzzle 3d. */
@@ -3262,6 +3323,8 @@ export interface WorldOrbitGatedProps {
   readonly onCameraNavigate?: (active: boolean) => void;
   readonly controlsKey?: string | number;
   readonly onRightPointerDown?: (event: PointerEvent) => boolean;
+  /** @emoji 🧭 Reports which gestures (pan/zoom/orbit) a drag/scroll performed, classified between `start` and `end`. */
+  readonly onNavigationGestures?: (gestures: readonly WorldNavigationGesture[]) => void;
 }
 
 const WORLD_ORBIT_CONSTRAINTS_DEFAULT = { rotate: true } as const;
@@ -3344,6 +3407,7 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
   const rotateEnabled = props.constraints?.rotate ?? true;
   const mouseButtonsIdle = reactHostPort.useMemo(() => resolveWorldOrbitMouseButtonsIdle(projection, rotateEnabled), [projection, rotateEnabled]);
   useWorldOrbitRightMouseBindings(controls, gl.domElement, { projection, rotateEnabled, onRightPointerDown: props.onRightPointerDown });
+  const navigationSnapshotRef = reactHostPort.useRef<WorldNavigationSnapshot | null>(null);
   reactHostPort.useEffect(() => {
     invalidate();
   }, [gate, invalidate]);
@@ -3359,6 +3423,18 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       projection,
     });
   };
+  // 🧭 Live zoom (not `props.zoom`, stale mid-gesture — see `reportCamera` above) so an orthographic
+  // scroll-zoom classifies correctly even before the shell's own camera-state prop round-trips.
+  const captureNavigationSnapshot = (): WorldNavigationSnapshot | null => {
+    if (!camera) return null;
+    const tgt = controls?.target ?? targetScratch.set(0, 0, 0);
+    return {
+      position: threeVec3ToCad(camera.position),
+      target: threeVec3ToCad(tgt),
+      zoom: camera instanceof ThreeOrthographicCamera ? camera.zoom : 1,
+      projection,
+    };
+  };
   return (
     <WorldOrbitControlsBridge
       camera={camera}
@@ -3369,12 +3445,20 @@ export function WorldOrbitGated(props: WorldOrbitGatedProps): ReactElement | nul
       onChange={() => invalidate()}
       onStart={() => {
         invalidate();
+        navigationSnapshotRef.current = captureNavigationSnapshot();
         props.onCameraNavigate?.(true);
       }}
       onEnd={() => {
         invalidate();
         props.onCameraNavigate?.(false);
         reportCamera();
+        const before = navigationSnapshotRef.current;
+        navigationSnapshotRef.current = null;
+        const after = captureNavigationSnapshot();
+        if (before && after && props.onNavigationGestures) {
+          const gestures = classifyWorldNavigationGestures(before, after);
+          if (gestures.length > 0) props.onNavigationGestures(gestures);
+        }
       }}
     />
   );
@@ -4160,6 +4244,50 @@ if (import.meta.vitest) {
     it("always maps middle click to pan when rotation is disabled (plan/oblique/one-point projections), even in the orthographic family", () => {
       expect(resolveWorldOrbitMouseButtonsIdle("orthographic", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
       expect(resolveWorldOrbitMouseButtonsIdle("perspective", false)).toEqual({ LEFT: null, MIDDLE: MOUSE.PAN, RIGHT: null });
+    });
+  });
+
+  describe("classifyWorldNavigationGestures", () => {
+    const base: WorldNavigationSnapshot = { position: [0, 0, 10], target: [0, 0, 0], zoom: 1, projection: "perspective" };
+
+    it("detects pan when only the target translates", () => {
+      const after: WorldNavigationSnapshot = { ...base, position: [5, 0, 10], target: [5, 0, 0] };
+      expect(classifyWorldNavigationGestures(base, after)).toEqual(["pan"]);
+    });
+
+    it("detects zoom via distance change in perspective projection", () => {
+      const after: WorldNavigationSnapshot = { ...base, position: [0, 0, 5] };
+      expect(classifyWorldNavigationGestures(base, after)).toEqual(["zoom"]);
+    });
+
+    it("detects zoom via the zoom factor in orthographic projection, ignoring unchanged distance", () => {
+      const orthoBase: WorldNavigationSnapshot = { ...base, projection: "orthographic", zoom: 1 };
+      const after: WorldNavigationSnapshot = { ...orthoBase, zoom: 1.5 };
+      expect(classifyWorldNavigationGestures(orthoBase, after)).toEqual(["zoom"]);
+    });
+
+    it("detects orbit when the camera direction around the target rotates", () => {
+      const after: WorldNavigationSnapshot = { ...base, position: [10, 0, 0] };
+      expect(classifyWorldNavigationGestures(base, after)).toEqual(["orbit"]);
+    });
+
+    it("returns no gestures when every delta is below threshold", () => {
+      const after: WorldNavigationSnapshot = { ...base, position: [0, 0, 10.001], target: [0.001, 0, 0] };
+      expect(classifyWorldNavigationGestures(base, after)).toEqual([]);
+    });
+
+    it("never misreads a pure pan as orbit, and a pure orbit as pan", () => {
+      const panned: WorldNavigationSnapshot = { ...base, position: [5, 0, 10], target: [5, 0, 0] };
+      expect(classifyWorldNavigationGestures(base, panned)).not.toContain("orbit");
+      const orbited: WorldNavigationSnapshot = { ...base, position: [10, 0, 0] };
+      expect(classifyWorldNavigationGestures(base, orbited)).not.toContain("pan");
+    });
+
+    it("can report multiple gestures from a single combined movement", () => {
+      const after: WorldNavigationSnapshot = { ...base, position: [10, 0, 0], target: [0, 0, 0] };
+      const gestures = classifyWorldNavigationGestures({ ...base, position: [0, 0, 20] }, after);
+      expect(gestures).toContain("orbit");
+      expect(gestures).toContain("zoom");
     });
   });
 

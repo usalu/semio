@@ -3583,7 +3583,7 @@ pub struct IntroductionDefinition {
 }
 
 /// @emoji 🪜 One step of an `IntroductionDefinition`: an info box pointing at `introduce`, with `show`
-/// raising extra elements above the glass veil and an `advance` condition that completes the step.
+/// raising extra elements above the glass veil and `interactions` completing the step.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -3601,8 +3601,13 @@ pub struct IntroductionStepDefinition {
     pub show: Vec<String>,
     #[serde(default)]
     pub placement: IntroductionPlacement,
+    /// ✅ Interactions completing this step; empty means purely informational (Next-button-only).
     #[serde(default)]
-    pub advance: IntroductionAdvance,
+    pub interactions: Vec<IntroductionInteraction>,
+    /// 🔢 Whether `interactions` must complete in declaration order — out-of-order completions are
+    /// ignored. Unordered: the first incomplete matching interaction completes.
+    #[serde(default)]
+    pub ordered: bool,
     /// 🏛️ Institution/partner logos shown in the info box below the body — e.g. funding acknowledgements.
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
@@ -3621,7 +3626,8 @@ impl IntroductionStepDefinition {
             introduce: None,
             show: Vec::new(),
             placement: IntroductionPlacement::default(),
-            advance: IntroductionAdvance::default(),
+            interactions: Vec::new(),
+            ordered: false,
             logos: Vec::new(),
             demonstrations: Vec::new(),
         }
@@ -3645,9 +3651,17 @@ impl IntroductionStepDefinition {
         self
     }
 
-    /// @emoji 👉 Makes the step complete when the user performs `advance` instead of pressing Next.
-    pub fn advance_on(mut self, advance: IntroductionAdvance) -> Self {
-        self.advance = advance;
+    /// @emoji ✅ Makes the step complete when the user performs all `interactions` (any order) instead of
+    /// pressing Next.
+    pub fn interact(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+        self.interactions = interactions;
+        self
+    }
+
+    /// @emoji 🔢 Like `interact`, but `interactions` must complete in declaration order.
+    pub fn interact_ordered(mut self, interactions: Vec<IntroductionInteraction>) -> Self {
+        self.interactions = interactions;
+        self.ordered = true;
         self
     }
 
@@ -3692,15 +3706,15 @@ pub enum IntroductionPlacement {
     Center,
 }
 
-/// @emoji 👉 What completes an introduction step. `Next` needs the info box's Next button; `Action`/
-/// `Utility`/`Tool`/`Panel`/`Expand` complete as soon as the user activates that utility/tool, opens that
-/// panel tab, or expands that tree section — teaching by doing.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// @emoji 👉 What one `IntroductionInteraction` requires: `Action`/`Utility`/`Tool`/`Panel`/`Expand`
+/// complete as soon as the user activates that utility/tool, opens that panel tab, or expands that tree
+/// section — teaching by doing. `Pan`/`Zoom`/`Orbit` complete on that camera-navigation gesture over the
+/// 3D window named by the payload (a window-kind id) — classified from camera-state deltas by the shell
+/// that renders the window, so only shells that render a 3D world (the React shell) can complete them.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase", tag = "kind", content = "id")]
-pub enum IntroductionAdvance {
-    #[default]
-    Next,
+pub enum IntroductionInteractionKind {
     /// 📇 References `AppDefinition.actions`.
     Action(ActionRef),
     /// 🧰 References `AppDefinition.utilities`.
@@ -3711,6 +3725,79 @@ pub enum IntroductionAdvance {
     Panel(String),
     /// 🌲 Tree section/item id (e.g. `puzzle3d-play-kinds.objects`) — completes when the user expands it.
     Expand(String),
+    /// 🖐️ Completes when the user pans the named 3D window.
+    Pan(String),
+    /// 🔍 Completes when the user zooms (scroll or dolly) the named 3D window.
+    Zoom(String),
+    /// 🌐 Completes when the user orbits the named 3D window.
+    Orbit(String),
+}
+
+/// @emoji ✅ One thing the user must do to complete an interaction-gated `IntroductionStepDefinition` —
+/// rendered as a checklist row in the info box and celebrated individually on completion.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct IntroductionInteraction {
+    pub on: IntroductionInteractionKind,
+    /// 🏷️ Short checklist label shown in the step's info box.
+    pub label: String,
+    /// 🎉 Element id stamped `data-celebrated` on completion; `None` falls back to the step's `introduce`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub celebrate: Option<String>,
+}
+
+impl IntroductionInteraction {
+    fn new(on: IntroductionInteractionKind, label: impl Into<String>) -> Self {
+        Self { on, label: label.into(), celebrate: None }
+    }
+
+    /// @emoji 📇 An interaction completing when the user activates action `id`.
+    pub fn action(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Action(ActionRef::new(id.into())), label)
+    }
+
+    /// @emoji 🧰 An interaction completing when the user activates utility `id`.
+    pub fn utility(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Utility(UtilityRef::new(id.into())), label)
+    }
+
+    /// @emoji 🛠️ An interaction completing when the user activates tool `id`.
+    pub fn tool(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Tool(ToolRef::new(id.into())), label)
+    }
+
+    /// @emoji 📑 An interaction completing when panel tab `id` opens.
+    pub fn panel(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Panel(id.into()), label)
+    }
+
+    /// @emoji 🌲 An interaction completing when tree section/item `id` expands.
+    pub fn expand(id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Expand(id.into()), label)
+    }
+
+    /// @emoji 🖐️ An interaction completing when the user pans 3D window `window_kind_id`.
+    pub fn pan(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Pan(window_kind_id.into()), label)
+    }
+
+    /// @emoji 🔍 An interaction completing when the user zooms 3D window `window_kind_id`.
+    pub fn zoom(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Zoom(window_kind_id.into()), label)
+    }
+
+    /// @emoji 🌐 An interaction completing when the user orbits 3D window `window_kind_id`.
+    pub fn orbit(window_kind_id: impl Into<String>, label: impl Into<String>) -> Self {
+        Self::new(IntroductionInteractionKind::Orbit(window_kind_id.into()), label)
+    }
+
+    /// @emoji 🎉 Overrides which element id is stamped `data-celebrated` on completion.
+    pub fn celebrate(mut self, element_id: impl Into<String>) -> Self {
+        self.celebrate = Some(element_id.into());
+        self
+    }
 }
 
 /// @emoji 📌 Where a demonstration gesture points, resolvable to a viewport pixel at play time. One
@@ -5469,8 +5556,8 @@ mod app_document_tests {
         child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
-        CommandScope, DialogDefinition, IntroductionAdvance, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
-        IntroductionPoint, IntroductionStepDefinition,
+        CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
+        IntroductionInteraction, IntroductionInteractionKind, IntroductionPoint, IntroductionStepDefinition,
         Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
@@ -5778,20 +5865,53 @@ mod app_document_tests {
     }
 
     #[test]
-    fn introduction_advance_round_trips_tagged() {
-        for advance in [
-            IntroductionAdvance::Next,
-            IntroductionAdvance::Action(ActionRef::new("add")),
-            IntroductionAdvance::Utility(UtilityRef::new("brush")),
-            IntroductionAdvance::Tool(ToolRef::new("fill")),
-            IntroductionAdvance::Panel("framework.panel.catalogue".into()),
-            IntroductionAdvance::Expand("puzzle3d-play-kinds.objects".into()),
+    fn introduction_interaction_kind_round_trips_tagged() {
+        for (kind, tag) in [
+            (IntroductionInteractionKind::Action(ActionRef::new("add")), "action"),
+            (IntroductionInteractionKind::Utility(UtilityRef::new("brush")), "utility"),
+            (IntroductionInteractionKind::Tool(ToolRef::new("fill")), "tool"),
+            (IntroductionInteractionKind::Panel("framework.panel.catalogue".into()), "panel"),
+            (IntroductionInteractionKind::Expand("puzzle3d-play-kinds.objects".into()), "expand"),
+            (IntroductionInteractionKind::Pan("puzzle3d-main".into()), "pan"),
+            (IntroductionInteractionKind::Zoom("puzzle3d-main".into()), "zoom"),
+            (IntroductionInteractionKind::Orbit("puzzle3d-main".into()), "orbit"),
         ] {
-            let json = serde_json::to_string(&advance).unwrap();
-            let round: IntroductionAdvance = serde_json::from_str(&json).unwrap();
-            assert_eq!(round, advance);
+            let json = serde_json::to_string(&kind).unwrap();
+            assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
+            let round: IntroductionInteractionKind = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, kind);
         }
-        assert_eq!(IntroductionAdvance::default(), IntroductionAdvance::Next);
+    }
+
+    #[test]
+    fn introduction_interaction_round_trips_and_defaults() {
+        let interaction = IntroductionInteraction::zoom("puzzle3d-main", "Zoom in");
+        assert_eq!(interaction.celebrate, None);
+        let json = serde_json::to_string(&interaction).unwrap();
+        assert!(!json.contains("celebrate"), "{json}");
+        let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, interaction);
+
+        let with_celebrate = IntroductionInteraction::pan("puzzle3d-main", "Pan").celebrate(window_element_id("puzzle3d-main"));
+        let json = serde_json::to_string(&with_celebrate).unwrap();
+        assert!(json.contains("\"celebrate\":\"framework.window.puzzle3dMain\""), "{json}");
+        let round: IntroductionInteraction = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, with_celebrate);
+
+        let step: IntroductionStepDefinition = serde_json::from_str(r#"{"id":"welcome","title":"Welcome","body":"Hi there"}"#).unwrap();
+        assert!(step.interactions.is_empty());
+        assert!(!step.ordered);
+
+        let with_interactions = IntroductionStepDefinition::new("viewport", "Viewport", "…").interact_ordered(vec![
+            IntroductionInteraction::zoom("puzzle3d-main", "Zoom"),
+            IntroductionInteraction::pan("puzzle3d-main", "Pan"),
+            IntroductionInteraction::orbit("puzzle3d-main", "Orbit"),
+        ]);
+        assert!(with_interactions.ordered);
+        assert_eq!(with_interactions.interactions.len(), 3);
+        let json = serde_json::to_string(&with_interactions).unwrap();
+        let round: IntroductionStepDefinition = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, with_interactions);
     }
 
     #[test]
@@ -6142,7 +6262,8 @@ mod app_document_tests {
         crate::ui::IntroductionDefinition::export().unwrap();
         crate::ui::IntroductionStepDefinition::export().unwrap();
         crate::ui::IntroductionPlacement::export().unwrap();
-        crate::ui::IntroductionAdvance::export().unwrap();
+        crate::ui::IntroductionInteractionKind::export().unwrap();
+        crate::ui::IntroductionInteraction::export().unwrap();
         crate::ui::IntroductionLogo::export().unwrap();
         crate::ui::IntroductionPoint::export().unwrap();
         crate::ui::IntroductionGesture::export().unwrap();

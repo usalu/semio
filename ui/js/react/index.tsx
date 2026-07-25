@@ -73,7 +73,6 @@ import {
   type DialogDefinition,
   type DockSkeleton,
   type DockTabSkeleton,
-  type IntroductionAdvance,
   type IntroductionCursor,
   type IntroductionDefinition,
   type IntroductionDemonstration,
@@ -2983,8 +2982,6 @@ export type UiTranslationSchema = {
     readonly back: UiLabelValue;
     readonly next: UiLabelValue;
     readonly done: UiLabelValue;
-    readonly activateToContinue: UiLabelValue;
-    readonly performToContinue: UiLabelValue;
   };
 };
 
@@ -3706,8 +3703,6 @@ export const uiChromeTranslationBundles = {
         back: { label: { normal: "Zurück", beginner: "Zurück" } },
         next: { label: { normal: "Weiter", beginner: "Weiter" } },
         done: { label: { normal: "Fertig", beginner: "Fertig" } },
-        activateToContinue: { label: { normal: 'Aktivieren Sie „{{target}}“, um fortzufahren', beginner: 'Aktivieren Sie „{{target}}“, um fortzufahren' } },
-        performToContinue: { label: { normal: '„{{target}}“ ausführen, um fortzufahren', beginner: '„{{target}}“ ausführen, um fortzufahren' } },
       },
     } satisfies UiTranslationSchema,
   },
@@ -4321,8 +4316,6 @@ export const uiChromeTranslationBundles = {
         back: { label: { normal: "Back", beginner: "Back" } },
         next: { label: { normal: "Next", beginner: "Next" } },
         done: { label: { normal: "Done", beginner: "Done" } },
-        activateToContinue: { label: { normal: 'Activate "{{target}}" to continue', beginner: 'Activate "{{target}}" to continue' } },
-        performToContinue: { label: { normal: 'Perform "{{target}}" to continue', beginner: 'Perform "{{target}}" to continue' } },
       },
     } satisfies UiTranslationSchema,
   },
@@ -5652,7 +5645,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
   );
 };
 
-/** @emoji 🎬 The default demonstration for a purely informational step (`advance.kind === "next"`, the
+/** @emoji 🎬 The default demonstration for a purely informational step (`interactions.length === 0`, the
  * Next/Done button is the only way to continue) — clicking `ui.introduction.next`, the stable id every
  * such button renders under regardless of its Next/Done label. Used by `UIIntroduction` whenever the step
  * doesn't declare its own `demonstration`, so authors never have to spell this out per step. */
@@ -5662,6 +5655,8 @@ const INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION: IntroductionDemonstration = {
 export type UIIntroductionProps = {
   readonly introduction: IntroductionDefinition;
   readonly stepIndex: number;
+  /** ✅ Indices into the active step's `interactions` that are done — drives the checklist rows. */
+  readonly completedInteractionIndices?: readonly number[];
   readonly onStepIndexChange: (index: number) => void;
   readonly onDismiss: (completed: boolean) => void;
 };
@@ -5732,7 +5727,7 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * for a purely informational step whose only way forward is the Next/Done button — an automatic "click
  * Next" demonstration (see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`), so authors never have to spell
  * that one out per step. */
-export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, onStepIndexChange, onDismiss }) => {
+export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, completedInteractionIndices, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
@@ -5750,7 +5745,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     // 🎬 Hand-written brands may omit `demonstrations` (Rust `#[serde(default)]`); treat missing as empty.
     const demonstrations = step.demonstrations ?? [];
     if (demonstrations.length > 0) return demonstrations;
-    return step.advance.kind === "next" ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
+    return (step.interactions ?? []).length === 0 ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
   }, [step]);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
@@ -5782,8 +5777,6 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const backLabel = useLabel("introduction.back");
   const nextLabel = useLabel("introduction.next");
   const doneLabel = useLabel("introduction.done");
-  const activateToContinueTemplate = useLabel("introduction.activateToContinue");
-  const performToContinueTemplate = useLabel("introduction.performToContinue");
 
   const isLast = stepIndex >= introduction.steps.length - 1;
   const skip = reactHostPort.useCallback(() => onDismiss(false), [onDismiss]);
@@ -5792,7 +5785,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     else onStepIndexChange(stepIndex + 1);
   }, [isLast, onDismiss, onStepIndexChange, stepIndex]);
   const back = reactHostPort.useCallback(() => onStepIndexChange(Math.max(0, stepIndex - 1)), [onStepIndexChange, stepIndex]);
-  const advanceByButton = step?.advance.kind === "next";
+  const interactions = step?.interactions ?? [];
+  const advanceByButton = interactions.length === 0;
 
   useHotkeys("escape", skip, { enableOnFormTags: true }, [skip]);
   useHotkeys("enter,arrowright", () => advanceByButton && next(), { enableOnFormTags: true }, [advanceByButton, next]);
@@ -5800,7 +5794,6 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   if (!step) return null;
 
-  const advance: IntroductionAdvance = step.advance;
   const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
   // 🎓 A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
   // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
@@ -5832,18 +5825,25 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
             ))}
           </div>
         )}
+        {interactions.length > 0 && (
+          <ul data-slot="introduction-interactions" className="mb-double flex flex-col gap-half text-xs">
+            {interactions.map((interaction, index) => {
+              const done = completedInteractionIndices?.includes(index) ?? false;
+              return (
+                <li key={index} data-completed={done || undefined} className={cn("flex items-center gap-single", done ? "text-foreground" : "text-muted-foreground")}>
+                  <Icon icon={done ? "check" : "circle"} size="small" />
+                  {step.ordered && <span data-slot="introduction-interaction-index">{index + 1}.</span>}
+                  <span data-slot="introduction-interaction-label">{interaction.label}</span>
+                </li>
+              );
+            })}
+          </ul>
+        )}
         <div className="flex items-center justify-between gap-single">
           <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel} onClick={skip} />
           <div className="flex items-center gap-single">
             {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} />}
-            {advance.kind === "next" ? (
-              <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />
-            ) : (
-              <span className="text-xs text-muted-foreground">
-                {(advance.kind === "utility" || advance.kind === "tool" || advance.kind === "panel" || advance.kind === "expand" ? activateToContinueTemplate : performToContinueTemplate)?.replace("{{target}}", advance.id) ??
-                  (advance.kind === "utility" || advance.kind === "tool" || advance.kind === "panel" || advance.kind === "expand" ? `Activate "${advance.id}" to continue` : `Perform "${advance.id}" to continue`)}
-              </span>
-            )}
+            {advanceByButton && <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />}
           </div>
         </div>
       </div>
@@ -6650,10 +6650,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
                 data-drop-nest={isChildDropTarget ? "true" : undefined}
                 id={tab.id}
                 data-active={isActive ? "true" : undefined}
-                onClick={(event) => {
-                  onSelect(tab.id);
-                  celebrateCompletedInteraction(event);
-                }}
+                onClick={() => onSelect(tab.id)}
                 onDragOver={
                   anchor && dock && tab.kind === "leaf"
                     ? (event) => {
@@ -7800,12 +7797,22 @@ export function celebrateElements(selector: string, durationMs = CELEBRATE_STAMP
   return () => cancels.forEach((cancel) => cancel());
 }
 
-/** @emoji 🎉 Stamps `event.currentTarget` when it is an Element — the shared completion pulse every
- * discrete control activation (panel tab, toggle, button, action, pane chrome) fires after the
- * interaction is applied. */
-function celebrateCompletedInteraction(event: { readonly currentTarget: EventTarget }): void {
-  const target = event.currentTarget;
-  if (target instanceof Element) celebrateElement(target);
+/** @emoji 🎉 Imperatively stamps `data-celebrated="true"` on every mounted UI element id (and every
+ * element carrying a valid `data-element-alias`) for `durationMs` — the tour-finale counterpart of
+ * {@link celebrateElements}. Skips the introduction chrome itself (`ui.introduction.*`) so the
+ * dismiss unmount doesn't race the stamp. Returns a cancel that un-stamps every match immediately. */
+export function celebrateAllElements(durationMs = CELEBRATE_STAMP_DURATION_MS): () => void {
+  const targets = new Set<Element>();
+  for (const el of document.querySelectorAll("[id]")) {
+    if (isElementId(el.id) && !el.id.startsWith("ui.introduction.")) targets.add(el);
+  }
+  for (const el of document.querySelectorAll("[data-element-alias]")) {
+    const aliases = (el.getAttribute("data-element-alias") ?? "").split(/\s+/).filter(Boolean);
+    if (aliases.some((alias) => isElementId(alias) && !alias.startsWith("ui.introduction."))) targets.add(el);
+  }
+  console.log(`[DEBUG] celebrateAllElements stamping ${targets.size} ui elements for ${durationMs}ms`);
+  const cancels = [...targets].map((el) => celebrateElement(el, durationMs));
+  return () => cancels.forEach((cancel) => cancel());
 }
 //#endregion 🧭ElementState
 
@@ -9611,7 +9618,6 @@ function ActionGroupItem({
   icon,
   text,
   as: Component = "button",
-  onClick,
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
@@ -9629,8 +9635,8 @@ function ActionGroupItem({
       data-slot="action-group-item"
       id={id}
       type={Component === "button" ? "button" : undefined}
-      role={Component === "div" && onClick ? "button" : undefined}
-      tabIndex={Component === "div" && onClick ? 0 : undefined}
+      role={Component === "div" && (props as any).onClick ? "button" : undefined}
+      tabIndex={Component === "div" && (props as any).onClick ? 0 : undefined}
       title={accessibleLabel}
       data-level={context.level || level}
       className={cn(
@@ -9642,14 +9648,6 @@ function ActionGroupItem({
         hasText && "aspect-auto gap-single",
         className,
       )}
-      onClick={
-        onClick
-          ? (event: React.MouseEvent<HTMLElement>) => {
-              onClick(event as never);
-              celebrateCompletedInteraction(event);
-            }
-          : undefined
-      }
       {...(props as any)}
     >
       {children}
@@ -9748,7 +9746,7 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
 /**
  * Action holds the data fields for a Action record.
  **/
-function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, onClick, ...props }: ActionProps) {
+function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
   const level = useLevel();
   const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
@@ -9761,8 +9759,8 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
     <Comp
       data-slot="action"
       type={Comp === "button" ? "button" : undefined}
-      role={Comp === "div" && onClick ? "button" : undefined}
-      tabIndex={Comp === "div" && onClick ? 0 : undefined}
+      role={Comp === "div" && (props as any).onClick ? "button" : undefined}
+      tabIndex={Comp === "div" && (props as any).onClick ? 0 : undefined}
       id={id}
       aria-label={ariaLabel}
       aria-busy={loading || waiting || undefined}
@@ -9776,14 +9774,6 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
         (loading && loadingBorderElementClass) || (waiting && waitingBorderElementClass),
         className,
       )}
-      onClick={
-        onClick
-          ? (event: React.MouseEvent<HTMLElement>) => {
-              onClick(event as never);
-              celebrateCompletedInteraction(event);
-            }
-          : undefined
-      }
       {...(props as any)}
     >
       {inlineText ? <span className="text-tiny whitespace-nowrap">{inlineText}</span> : null}
@@ -9881,7 +9871,6 @@ function ButtonGroupItem({
   icon,
   text,
   asChild = false,
-  onClick,
   ...props
 }: React.ComponentProps<"button"> & {
   id?: string;
@@ -9911,10 +9900,6 @@ function ButtonGroupItem({
         inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,
       )}
-      onClick={(event: React.MouseEvent<HTMLElement>) => {
-        onClick?.(event as never);
-        celebrateCompletedInteraction(event);
-      }}
       {...(props as any)}
     >
       {children}
@@ -11689,7 +11674,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
 /**
  * ToggleGroupItem holds the data fields for a ToggleGroupItem record.
  **/
-function ToggleGroupItem({ className, id, icon, text, action, onClick, ...props }: ToggleGroupItemProps) {
+function ToggleGroupItem({ className, id, icon, text, action, ...props }: ToggleGroupItemProps) {
   const context = reactHostPort.useContext(ToggleGroupContext);
   const level = context.level ?? "base";
   const inlineText = useControlInlineText(id, text);
@@ -11712,10 +11697,6 @@ function ToggleGroupItem({ className, id, icon, text, action, onClick, ...props 
         inlineText && "w-auto",
         className,
       )}
-      onClick={(event) => {
-        onClick?.(event);
-        celebrateCompletedInteraction(event);
-      }}
       {...props}
     >
       {inlineText ? (
@@ -17283,10 +17264,7 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
       data-hover-scope
       title={accessibleLabel}
       disabled={disabled}
-      onClick={(event) => {
-        onClick?.();
-        celebrateCompletedInteraction(event);
-      }}
+      onClick={onClick}
       className={cn(windowPaneChromeToggleClass, className)}
     >
       <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
@@ -25076,9 +25054,11 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 //#region 🧭ModeDockStack
 
 /** @emoji 🪟 SVG overlay that paints the dock-stack silhouette outline (tabs + cutout + controls + body)
- * for normal/active chrome and introduced/loading/waiting effects. */
+ * for normal/active chrome and introduced/loading/waiting/celebrated effects. Celebrated uses a masked
+ * spinning three-color conic fill (same grammar as `[data-celebrated="true"]::after`), not a solid stroke. */
 const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => {
   const [epoch, setEpoch] = reactHostPort.useState(0);
+  const celebrateMaskId = `window-silhouette-celebrate-${reactHostPort.useId().replace(/:/g, "")}`;
 
   reactHostPort.useLayoutEffect(() => {
     if (!stack) return;
@@ -25110,18 +25090,39 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; activ
     return <div data-slot="mode-dock-silhouette-border" data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
   const path = windowSilhouettePath(metrics);
+  if (resolvedKind === "celebrated") {
+    return (
+      <svg
+        data-slot="mode-dock-silhouette-border"
+        data-kind={resolvedKind}
+        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+        width={metrics.width}
+        height={metrics.height}
+        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+        aria-hidden
+      >
+        <defs>
+          <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
+            <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
+            <path d={path} fill="none" stroke="white" strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border window-silhouette-border-celebrated-mask" />
+          </mask>
+        </defs>
+        <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
+          <div xmlns="http://www.w3.org/1999/xhtml" className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
+        </foreignObject>
+      </svg>
+    );
+  }
   const stroke =
-    resolvedKind === "celebrated"
-      ? "var(--celebrate-border-color-a, var(--color-primary))"
-      : resolvedKind === "introduced"
-        ? "var(--introduced-border-color, var(--color-secondary))"
-        : resolvedKind === "loading"
-          ? "var(--loading-border-color, var(--border-normal-color))"
-          : resolvedKind === "waiting"
-            ? "var(--waiting-border-color, var(--border-normal-color))"
-            : resolvedKind === "active"
-              ? "var(--active-base)"
-              : "var(--border-normal-color)";
+    resolvedKind === "introduced"
+      ? "var(--introduced-border-color, var(--color-secondary))"
+      : resolvedKind === "loading"
+        ? "var(--loading-border-color, var(--border-normal-color))"
+        : resolvedKind === "waiting"
+          ? "var(--waiting-border-color, var(--border-normal-color))"
+          : resolvedKind === "active"
+            ? "var(--active-base)"
+            : "var(--border-normal-color)";
   return (
     <svg
       data-slot="mode-dock-silhouette-border"
@@ -25140,7 +25141,6 @@ const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; activ
         vectorEffect="non-scaling-stroke"
         className={cn(
           "window-silhouette-border",
-          resolvedKind === "celebrated" && "window-silhouette-border-celebrated",
           resolvedKind === "introduced" && "window-silhouette-border-introduced",
           resolvedKind === "loading" && "window-silhouette-border-loading",
           resolvedKind === "waiting" && "window-silhouette-border-waiting",
@@ -26066,6 +26066,60 @@ if (import.meta.vitest) {
         vi.useRealTimers();
       }
     });
+
+    it("celebrateElement stamps a single target and cancel un-stamps immediately", () => {
+      vi.useFakeTimers();
+      try {
+        const { container } = render(<div id="solo" />);
+        const el = container.querySelector("#solo")!;
+        const cancel = celebrateElement(el, 500);
+        expect(el.getAttribute("data-celebrated")).toBe("true");
+        cancel();
+        expect(el.getAttribute("data-celebrated")).toBeNull();
+        act(() => {
+          vi.advanceTimersByTime(500);
+        });
+        expect(el.getAttribute("data-celebrated")).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("celebrateAllElements stamps every valid UI element id and alias, skips introduction chrome and non-grammar ids", () => {
+      vi.useFakeTimers();
+      const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
+      try {
+        const { container } = render(
+          <div>
+            <div id="framework.window.main" />
+            <div id="framework.panel.catalogue" />
+            <div id="ui.introduction.next" />
+            <div id="not-a-valid-id" />
+            <div data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable" />
+          </div>,
+        );
+        const cancel = celebrateAllElements(1000);
+        expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBe("true");
+        expect(container.querySelector('[id="framework.panel.catalogue"]')?.getAttribute("data-celebrated")).toBe("true");
+        expect(container.querySelector('[id="ui.introduction.next"]')?.getAttribute("data-celebrated")).toBeNull();
+        expect(container.querySelector('[id="not-a-valid-id"]')?.getAttribute("data-celebrated")).toBeNull();
+        expect(container.querySelector('[data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable"]')?.getAttribute("data-celebrated")).toBe("true");
+        expect(logSpy).toHaveBeenCalledWith(expect.stringMatching(/^\[DEBUG\] celebrateAllElements stamping \d+ ui elements for 1000ms$/));
+        cancel();
+        expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBeNull();
+        expect(container.querySelector('[data-element-alias="framework.panelTab.puzzle.catalogue.firstDraggable"]')?.getAttribute("data-celebrated")).toBeNull();
+
+        celebrateAllElements(1000);
+        expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBe("true");
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+        expect(container.querySelector('[id="framework.window.main"]')?.getAttribute("data-celebrated")).toBeNull();
+      } finally {
+        logSpy.mockRestore();
+        vi.useRealTimers();
+      }
+    });
   });
 
   describe("useFirstDraggableElementAlias", () => {
@@ -26120,7 +26174,7 @@ if (import.meta.vitest) {
                   introduce: "framework.panelTab.framework.panel.catalogue",
                   show: [],
                   placement: "right",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26153,7 +26207,7 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                advance: { kind: "next" },
+                interactions: [], ordered: false,
                 logos: [],
                 demonstrations: [],
               },
@@ -26187,7 +26241,8 @@ if (import.meta.vitest) {
                   introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
                   show: [],
                   placement: "right",
-                  advance: { kind: "action", id: "addObjectKind" },
+                  interactions: [{ on: { kind: "action", id: "addObjectKind" }, label: "Add object" }],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26228,7 +26283,7 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "auto",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26276,7 +26331,8 @@ if (import.meta.vitest) {
                   introduce: "transform",
                   show: ["framework.window.puzzle3dMain"],
                   placement: "auto",
-                  advance: { kind: "utility", id: "transform" },
+                  interactions: [{ on: { kind: "utility", id: "transform" }, label: "Activate Transform" }],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26325,7 +26381,7 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "auto",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26396,7 +26452,7 @@ if (import.meta.vitest) {
                   introduce: null,
                   show: ["framework.window.puzzle3dMain"],
                   placement: "right",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26429,7 +26485,7 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "right",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26456,7 +26512,7 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "right",
-                  advance: { kind: "next" },
+                  interactions: [], ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -26482,8 +26538,8 @@ if (import.meta.vitest) {
             introduction={{
               title: "Welcome",
               steps: [
-                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
-                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", interactions: [], ordered: false, logos: [], demonstrations: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", interactions: [], ordered: false, logos: [], demonstrations: [] },
               ],
             }}
             stepIndex={0}
@@ -26505,8 +26561,8 @@ if (import.meta.vitest) {
             introduction={{
               title: "Welcome",
               steps: [
-                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
-                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", advance: { kind: "next" }, logos: [], demonstrations: [] },
+                { id: "a", title: "A", body: "A", introduce: "framework.window.puzzle3dMain", show: [], placement: "right", interactions: [], ordered: false, logos: [], demonstrations: [] },
+                { id: "b", title: "B", body: "B", introduce: "framework.panelTab.framework.panel.catalogue", show: [], placement: "right", interactions: [], ordered: false, logos: [], demonstrations: [] },
               ],
             }}
             stepIndex={1}
@@ -26525,10 +26581,25 @@ if (import.meta.vitest) {
   });
 
   describe("UIIntroduction appearance", () => {
+    it("Done on the last step dismisses as completed; Skip dismisses as not completed", async () => {
+      const onDismiss = vi.fn();
+      const steps: IntroductionStepDefinition[] = [
+        { id: "only", title: "Only", body: "Last step.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+      ];
+      const { unmount } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={onDismiss} />);
+      fireEvent.click(screen.getByRole("button", { name: /done|fertig/i }));
+      expect(onDismiss).toHaveBeenCalledWith(true);
+      unmount();
+      onDismiss.mockClear();
+      render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={onDismiss} />);
+      fireEvent.click(screen.getByRole("button", { name: /skip|überspringen/i }));
+      expect(onDismiss).toHaveBeenCalledWith(false);
+    });
+
     it("stamps an introduced element and clears it on step change", async () => {
       const steps: IntroductionStepDefinition[] = [
-        { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] },
-        { id: "welcome", title: "Welcome", body: "No introduce.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [], demonstrations: [] },
+        { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        { id: "welcome", title: "Welcome", body: "No introduce.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
       ];
       const Harness: React.FC = () => {
         const [stepIndex, setStepIndex] = reactHostPort.useState(0);
@@ -26557,7 +26628,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Cutout.", introduce: "ui.footer", show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Cutout.", introduce: "ui.footer", show: [], placement: "auto", interactions: [], ordered: false, logos: [], demonstrations: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -26580,7 +26651,7 @@ if (import.meta.vitest) {
           <UIIntroduction
             introduction={{
               title: "Welcome",
-              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", introduce: null, show: [], placement: "auto", advance: { kind: "next" }, logos: [], demonstrations: [] }],
+              steps: [{ id: "footer", title: "Footer", body: "Veiled only.", introduce: null, show: [], placement: "auto", interactions: [], ordered: false, logos: [], demonstrations: [] }],
             }}
             stepIndex={0}
             onStepIndexChange={vi.fn()}
@@ -26605,7 +26676,7 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                advance: { kind: "next" },
+                interactions: [], ordered: false,
                 logos: [],
                 demonstrations: [],
               },
@@ -26654,7 +26725,7 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                advance: { kind: "next" },
+                interactions: [], ordered: false,
                 logos: [
                   { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
                   { src: "/asset/logo/zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
@@ -26675,6 +26746,79 @@ if (import.meta.vitest) {
       const images = box?.querySelectorAll("img");
       expect(images).toHaveLength(3);
       expect(Array.from(images ?? []).map((img) => img.getAttribute("src"))).toEqual(["/asset/logo/bbsr.png", "/asset/logo/bbsr-dark.png", "/asset/logo/zukunft-bau.png"]);
+    });
+
+    it("renders an interaction checklist instead of the Next button, ticking off completed rows", () => {
+      const steps: IntroductionStepDefinition[] = [
+        {
+          id: "viewport",
+          title: "Viewport",
+          body: "Navigate.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [
+            { on: { kind: "zoom", id: "puzzle3d-main" }, label: "Zoom" },
+            { on: { kind: "pan", id: "puzzle3d-main" }, label: "Pan" },
+            { on: { kind: "orbit", id: "puzzle3d-main" }, label: "Orbit" },
+          ],
+          ordered: false,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      const { container } = render(
+        <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[1]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
+      );
+      const rows = container.querySelectorAll('[data-slot="introduction-interactions"] li');
+      expect(rows).toHaveLength(3);
+      expect(Array.from(rows).map((row) => row.querySelector("[data-slot='introduction-interaction-label']")?.textContent)).toEqual(["Zoom", "Pan", "Orbit"]);
+      expect(rows[0].getAttribute("data-completed")).toBeNull();
+      expect(rows[1].getAttribute("data-completed")).toBe("true");
+      expect(rows[2].getAttribute("data-completed")).toBeNull();
+      expect(screen.queryByRole("button", { name: /next|done/i })).toBeNull();
+    });
+
+    it("numbers checklist rows when the step is ordered, and omits numbers when it isn't", () => {
+      const orderedSteps: IntroductionStepDefinition[] = [
+        {
+          id: "viewport",
+          title: "Viewport",
+          body: "Navigate in order.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [
+            { on: { kind: "zoom", id: "puzzle3d-main" }, label: "Zoom" },
+            { on: { kind: "pan", id: "puzzle3d-main" }, label: "Pan" },
+          ],
+          ordered: true,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      const { container, rerender } = render(<UIIntroduction introduction={{ title: "Welcome", steps: orderedSteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const orderedRows = container.querySelectorAll('[data-slot="introduction-interactions"] li');
+      expect(orderedRows[0].querySelector("[data-slot='introduction-interaction-index']")?.textContent).toBe("1.");
+      expect(orderedRows[0].querySelector("[data-slot='introduction-interaction-label']")?.textContent).toBe("Zoom");
+      expect(orderedRows[1].querySelector("[data-slot='introduction-interaction-index']")?.textContent).toBe("2.");
+      expect(orderedRows[1].querySelector("[data-slot='introduction-interaction-label']")?.textContent).toBe("Pan");
+
+      const unorderedSteps: IntroductionStepDefinition[] = [{ ...orderedSteps[0], ordered: false }];
+      rerender(<UIIntroduction introduction={{ title: "Welcome", steps: unorderedSteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const unorderedRows = container.querySelectorAll('[data-slot="introduction-interactions"] li');
+      expect(unorderedRows[0].querySelector("[data-slot='introduction-interaction-index']")).toBeNull();
+      expect(unorderedRows[0].querySelector("[data-slot='introduction-interaction-label']")?.textContent).toBe("Zoom");
+      expect(unorderedRows[1].querySelector("[data-slot='introduction-interaction-label']")?.textContent).toBe("Pan");
+    });
+
+    it("renders the Next button and no checklist when the step has no interactions", () => {
+      const steps: IntroductionStepDefinition[] = [
+        { id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+      ];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      expect(container.querySelector('[data-slot="introduction-interactions"]')).toBeNull();
+      expect(screen.getByRole("button", { name: /next|done/i })).toBeTruthy();
     });
   });
 
@@ -26819,7 +26963,8 @@ if (import.meta.vitest) {
         introduce: "tool.fill",
         show: [],
         placement: "auto",
-        advance: { kind: "tool", id: "fill" },
+        interactions: [{ on: { kind: "tool", id: "fill" }, label: "Activate Fill" }],
+        ordered: false,
         logos: [],
         demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } }],
       },
@@ -26871,7 +27016,7 @@ if (import.meta.vitest) {
     it("a purely informational step (Next is the only way forward) auto-demonstrates clicking Next, even without a declared demonstration", () => {
       vi.useFakeTimers();
       try {
-        const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "No demo declared.", introduce: null, show: [], placement: "center", advance: { kind: "next" }, logos: [], demonstrations: [] }];
+        const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "No demo declared.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
         render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         act(() => {
           vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
@@ -26885,7 +27030,7 @@ if (import.meta.vitest) {
     it("omitted demonstrations (Rust serde default) still auto-demonstrates Next on informational steps", () => {
       vi.useFakeTimers();
       try {
-        const steps = [{ id: "welcome", title: "Welcome", body: "No demo field.", introduce: null, show: [], placement: "center" as const, advance: { kind: "next" as const }, logos: [] }] as IntroductionStepDefinition[];
+        const steps = [{ id: "welcome", title: "Welcome", body: "No demo field.", introduce: null, show: [], placement: "center" as const, interactions: [], ordered: false, logos: [] }] as IntroductionStepDefinition[];
         render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         expect(document.querySelector('[data-slot="introduction-info-box"]')).toBeTruthy();
         act(() => {
@@ -26901,7 +27046,7 @@ if (import.meta.vitest) {
       vi.useFakeTimers();
       try {
         const steps: IntroductionStepDefinition[] = [
-          { id: "transform-utility", title: "Transform", body: "No demo declared.", introduce: "transform", show: [], placement: "auto", advance: { kind: "utility", id: "transform" }, logos: [], demonstrations: [] },
+          { id: "transform-utility", title: "Transform", body: "No demo declared.", introduce: "transform", show: [], placement: "auto", interactions: [{ on: { kind: "utility", id: "transform" }, label: "Activate Transform" }], ordered: false, logos: [], demonstrations: [] },
         ];
         render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         act(() => {
@@ -28283,6 +28428,50 @@ if (import.meta.vitest) {
       const outer = document.createElement("div");
       outer.appendChild(scroll);
       expect(resolveWindowSilhouetteBorderKind(outer)).toBe("celebrated");
+    });
+
+    it("Mode dock-stack celebrated silhouette paints a spinning conic fill, not a solid stroke cycle", async () => {
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[{ id: "main", title: "Main", children: <div>Main Body</div> }]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+            activeWindowId="main"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const windowEl = stack.querySelector('[data-slot="window"]') as HTMLElement;
+      windowEl.setAttribute("data-celebrated", "true");
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: 0,
+          height: 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
+      stack.setAttribute("data-silhouette-remeasure", "celebrate");
+      await waitFor(() => {
+        const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
+        expect(border?.getAttribute("data-kind")).toBe("celebrated");
+        expect(border?.querySelector(".window-silhouette-border-celebrated-fill")).toBeTruthy();
+        expect(border?.querySelector(".window-silhouette-border-celebrated-mask")).toBeTruthy();
+        expect(border?.querySelector("path")?.getAttribute("stroke")).toBe("white");
+        expect(border?.querySelector("path.window-silhouette-border-celebrated")).toBeNull();
+      });
     });
 
     it("Mode lays out all windows and marks the active one", () => {
@@ -32704,6 +32893,28 @@ if (treeVitest) {
         expect(markup).toContain('data-level="panel"');
         expect(markup).toContain("ui-glass-panel");
       }
+    });
+
+    it("PanelChromeTabBar does not celebrate an unrelated tab press outside introduction completion", async () => {
+      const { render, screen, fireEvent } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Katalog", tree: { sections: [] } })];
+      let visible = false;
+      const { container } = render(
+        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={["framework.panel.catalogue"]} onActiveTabPathChange={() => undefined} />,
+      );
+      fireEvent.click(screen.getByText("Katalog"));
+      expect(visible).toBe(true);
+      expect(container.querySelector('[id="framework.panel.catalogue"]')?.getAttribute("data-celebrated")).toBeNull();
+    });
+
+    it("Toggle does not celebrate on an ordinary press outside introduction completion", async () => {
+      const { render, fireEvent } = await import("@testing-library/react");
+      const { container } = render(<Toggle id="ui.panelToggle.display" pressed={false} onPressedChange={() => undefined} icon="layout-grid" text="Display" />);
+      const item = container.querySelector('[data-slot="toggle-group-item"]');
+      expect(item).toBeTruthy();
+      fireEvent.click(item!);
+      expect(item?.getAttribute("data-celebrated")).toBeNull();
     });
 
     it("exposes navbar fill helper for trailing chrome alignment", () => {

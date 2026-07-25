@@ -3,7 +3,7 @@
   "emoji": "🎓",
   "status": "closed",
   "description": "Complete the Aggregator (Entwerfen mit Bestand) introduction: add steps for Verbindungspunkte (vortex show window options), suggestion via context menu, and other core missing tour beats so the walkthrough is no longer adhoc/incomplete. Wire introduce/show element ids to real chrome (measures, utilities, windows) with German copy. Update brand.ts and keep puzzle3d reference intro coherent; extend brand assertion tests.",
-  "summary": "Suggest-objects intro step now advances on acceptSuggestion (picking from the suggestion list), not on openVortexSuggestions/right-click. Copy updated to say choose an entry from the list.",
+  "summary": "Fill step no longer drills into the inactive activate-toggle tree or auto-celebrates: Tool category is revealed for pick, user activates Füllen; info box placed top so it does not cover the panel.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2299"
   },
@@ -13,6 +13,9 @@
     "⚪affa339938844338b881718c52067a5d",
     "⚪a39312da5c9049d48b7e2e7a4aff2271",
     "⚪e449aefee1974c0a8e216a72d5dc1a5b",
-    "⚪cff24e10f7984d1bac3e47438e7fc715"
+    "⚪cff24e10f7984d1bac3e47438e7fc715",
+    "⚪2e30f673b6ec4132abd8dcd5fda23a11",
+    "⚪619873341c164dc0b7c319f892b3b79e",
+    "⚪4863391b84a545d79009955ec2a27813"
   ]
 }

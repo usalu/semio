@@ -18831,7 +18831,7 @@ impl ShellState {
                         return;
                     }
                     ui_wgpu::KeyAction::Enter | ui_wgpu::KeyAction::ArrowRight => {
-                        if matches!(step.advance, semio_framework_core::IntroductionAdvance::Next) {
+                        if step.interactions.is_empty() {
                             self.chrome_tour_advance_current_step(&step);
                             return;
                         }
@@ -21066,6 +21066,8 @@ struct ChromeDialogRequest {
 #[derive(Clone, Debug)]
 struct ChromeTourState {
     step_index: usize,
+    /// ✅ Indices into the active step's `interactions` that are done — reset whenever `step_index` changes.
+    completed_interactions: Vec<usize>,
 }
 
 thread_local! {
@@ -21180,7 +21182,7 @@ fn chrome_close_topmost_dialog() {
 /// (`w3-command-palette`, `shell::ActionPanelAndUtilities`, off-limits here).
 fn chrome_start_introduction() {
     CHROME_TOUR_STATE.with(|cell| {
-        *cell.borrow_mut() = Some(ChromeTourState { step_index: 0 });
+        *cell.borrow_mut() = Some(ChromeTourState { step_index: 0, completed_interactions: Vec::new() });
     });
 }
 
@@ -21196,6 +21198,7 @@ fn chrome_advance_introduction(step_count: usize) {
                 *state = None;
             } else {
                 tour.step_index += 1;
+                tour.completed_interactions.clear();
             }
         }
     });
@@ -21206,6 +21209,7 @@ fn chrome_back_introduction() {
     CHROME_TOUR_STATE.with(|cell| {
         if let Some(tour) = cell.borrow_mut().as_mut() {
             tour.step_index = tour.step_index.saturating_sub(1);
+            tour.completed_interactions.clear();
         }
     });
 }
@@ -23175,27 +23179,61 @@ impl ShellState {
 
     /// 🎓 Advance-by-doing (Part B) — called from the single funnel points a user/plugin action can take
     /// (`dispatch_action`'s successful plugin forward, `apply_set_active_utility`'s activation branch) so
-    /// a step whose `advance` is `Action`/`Utility` moves on the instant the described behavior actually
-    /// happens, mirroring the React shell's own advance-by-doing wiring. No-ops when no tour is active or
-    /// the active step's `advance` doesn't match what was performed.
+    /// a step's matching `Action`/`Utility` interaction completes the instant the described behavior
+    /// actually happens, mirroring the React shell's own advance-by-doing wiring. No-ops when no tour is
+    /// active or nothing in the active step's `interactions` matches what was performed.
     fn chrome_tour_note_action_performed(&self, action_id: &str) {
         let Some(step) = self.chrome_tour_active_step() else {
             return;
         };
-        if !matches!(&step.advance, semio_framework_core::IntroductionAdvance::Action(action) if action.as_str() == action_id) {
-            return;
-        }
-        self.chrome_tour_advance_current_step(&step);
+        self.chrome_tour_complete_interaction(&step, |kind| {
+            matches!(kind, semio_framework_core::IntroductionInteractionKind::Action(action) if action.as_str() == action_id)
+        });
     }
 
     fn chrome_tour_note_utility_performed(&self, utility_id: &str) {
         let Some(step) = self.chrome_tour_active_step() else {
             return;
         };
-        if !matches!(&step.advance, semio_framework_core::IntroductionAdvance::Utility(utility) if utility.as_str() == utility_id) {
+        self.chrome_tour_complete_interaction(&step, |kind| {
+            matches!(kind, semio_framework_core::IntroductionInteractionKind::Utility(utility) if utility.as_str() == utility_id)
+        });
+    }
+
+    /// ✅ Shared completion path for interaction-gated steps: finds the first not-yet-completed
+    /// interaction matching `matches` (respecting `step.ordered` — only the next in-order interaction may
+    /// complete), records it, and advances the step once every interaction is done. Mirrors the React
+    /// shell's `completeIntroductionInteraction`.
+    fn chrome_tour_complete_interaction(&self, step: &semio_framework_core::IntroductionStepDefinition, matches: impl Fn(&semio_framework_core::IntroductionInteractionKind) -> bool) {
+        if step.interactions.is_empty() {
             return;
         }
-        self.chrome_tour_advance_current_step(&step);
+        let completed = CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())).unwrap_or_default();
+        let Some(index) = step
+            .interactions
+            .iter()
+            .enumerate()
+            .find(|(i, interaction)| !completed.contains(i) && matches(&interaction.on))
+            .map(|(i, _)| i)
+        else {
+            return;
+        };
+        if step.ordered && index != completed.len() {
+            return;
+        }
+        let completed_len = CHROME_TOUR_STATE.with(|cell| {
+            if let Some(tour) = cell.borrow_mut().as_mut() {
+                if !tour.completed_interactions.contains(&index) {
+                    tour.completed_interactions.push(index);
+                }
+                tour.completed_interactions.len()
+            } else {
+                0
+            }
+        });
+        if completed_len >= step.interactions.len() {
+            self.chrome_tour_advance_current_step(step);
+        }
     }
 
     fn chrome_tour_advance_current_step(&self, step: &semio_framework_core::IntroductionStepDefinition) {
@@ -23362,7 +23400,7 @@ impl ShellState {
         let btn_h = theme.control_height;
         let is_last = step_index + 1 >= intro.steps.len();
         let next_label = shell_chrome_string(if is_last { "introduction.done" } else { "introduction.next" }, is_de);
-        let advance_by_button = matches!(step.advance, semio_framework_core::IntroductionAdvance::Next);
+        let advance_by_button = step.interactions.is_empty();
         let next_rect = Rect::new(x + box_w - pad - 90.0, y + box_h - pad - btn_h, 90.0, btn_h);
         let skip_rect = Rect::new(x + pad, y + box_h - pad - btn_h, 70.0, btn_h);
         let back_rect = Rect::new(next_rect.x - 8.0 - 70.0, y + box_h - pad - btn_h, 70.0, btn_h);
@@ -23404,15 +23442,25 @@ impl ShellState {
                 drag_data: None,
             });
         } else {
-            let hint = match &step.advance {
-                semio_framework_core::IntroductionAdvance::Utility(utility) => {
-                    shell_chrome_string("introduction.activateToContinue", is_de).replacen("{}", utility.as_str(), 1)
-                }
-                semio_framework_core::IntroductionAdvance::Action(action) => {
-                    shell_chrome_string("introduction.performToContinue", is_de).replacen("{}", action.as_str(), 1)
-                }
-                semio_framework_core::IntroductionAdvance::Next => String::new(),
-            };
+            // ✅ Checklist hint: each interaction's label, ✓-prefixed once completed, {n}.-prefixed when
+            // `ordered` so the user knows what's next — single line, this painter has no multi-line text.
+            let completed = CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())).unwrap_or_default();
+            let hint = step
+                .interactions
+                .iter()
+                .enumerate()
+                .map(|(i, interaction)| {
+                    let mark = if completed.contains(&i) {
+                        "✓".to_string()
+                    } else if step.ordered {
+                        format!("{}.", i + 1)
+                    } else {
+                        "•".to_string()
+                    };
+                    format!("{mark} {}", interaction.label)
+                })
+                .collect::<Vec<_>>()
+                .join("   ");
             chrome_text(overlay, atlas, input, theme, &hint, next_rect.x - 120.0, next_rect.y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text_muted);
         }
         input.register_hit(HitTarget {
@@ -25524,10 +25572,6 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("introduction.next", true) => "Weiter",
         ("introduction.done", false) => "Done",
         ("introduction.done", true) => "Fertig",
-        ("introduction.activateToContinue", false) => "Activate \"{}\" to continue",
-        ("introduction.activateToContinue", true) => "Aktivieren Sie „{}“, um fortzufahren",
-        ("introduction.performToContinue", false) => "Perform \"{}\" to continue",
-        ("introduction.performToContinue", true) => "„{}“ ausführen, um fortzufahren",
         (other, _) => other,
     }
 }
@@ -26071,6 +26115,44 @@ mod chrome_overlays_tour_tests {
         reset_chrome_overlay_state();
         chrome_back_introduction();
         assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
+    }
+
+    #[test]
+    fn tour_advance_and_back_reset_completed_interactions() {
+        reset_chrome_overlay_state();
+        chrome_start_introduction();
+        CHROME_TOUR_STATE.with(|cell| cell.borrow_mut().as_mut().unwrap().completed_interactions.push(0));
+        chrome_advance_introduction(3);
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())), Some(vec![]));
+        CHROME_TOUR_STATE.with(|cell| cell.borrow_mut().as_mut().unwrap().completed_interactions.push(0));
+        chrome_back_introduction();
+        assert_eq!(CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())), Some(vec![]));
+    }
+
+    /// 🧪 Ordered interactions gate out-of-order completions (the not-yet-reached one is ignored, no
+    /// dedup entry added) and a repeated already-completed gesture is a no-op — both fall out of
+    /// `chrome_tour_complete_interaction`'s `!completed.contains(i)` + `index != completed.len()` checks.
+    #[test]
+    fn chrome_tour_complete_interaction_respects_order_and_dedups() {
+        reset_chrome_overlay_state();
+        let shell = ShellState::new(Vec::new(), String::new());
+        chrome_start_introduction();
+        let step = semio_framework_core::IntroductionStepDefinition::new("viewport", "Viewport", "…").interact_ordered(vec![
+            semio_framework_core::IntroductionInteraction::zoom("main", "Zoom"),
+            semio_framework_core::IntroductionInteraction::pan("main", "Pan"),
+        ]);
+        let completed_indices =
+            || CHROME_TOUR_STATE.with(|cell| cell.borrow().as_ref().map(|s| s.completed_interactions.clone())).unwrap_or_default();
+        // Pan is index 1; out of order while zoom (index 0) hasn't completed — ignored.
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Pan(id) if id == "main"));
+        assert_eq!(completed_indices(), Vec::<usize>::new());
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
+        assert_eq!(completed_indices(), vec![0]);
+        // Repeating zoom after it's already completed is a no-op.
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
+        assert_eq!(completed_indices(), vec![0]);
+        shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Pan(id) if id == "main"));
+        assert_eq!(completed_indices(), vec![0, 1]);
     }
     //#endregion Tour
 

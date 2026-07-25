@@ -1,9 +1,9 @@
 {
   "title": "Fix Puzzle 3D Fill Options Lag",
   "emoji": "🐢",
-  "status": "open",
+  "status": "closed",
   "description": "Make puzzle 3D fill amount and distribution sliders respond in milliseconds by eliminating Full UI refreshes, skipping redundant attraction work on count changes, and stopping weight edits from wiping the fill precompute queue.",
-  "summary": "Fill amount and distribution sliders now respond in milliseconds: setFillCount and weight actions emit narrow UiDirtyScope instead of Full refresh; distribution weight edits soft-replan the fill tail via update_kind_weights without rebuild_queue; fill count apply skips redundant attraction resolve; Slider holds draft values until the controlled prop catches up. puzzle_3d timing tests confirm sub-millisecond apply/weight paths.",
+  "summary": "Fixed puzzle 3D fill options lag and live viewport update.\n\nPhase 1: Narrow UI scopes, soft-replan tail on weight edits, O(1) fill count apply, slider draft confirmation in UI.\n\nPhase 2: Viewport now renders from precomputed fill plan prefix via `compose_fill_display` + `puzzle3d_fixture_with_fill_display`, so moving the amount slider instantly shows/hides planned placements without waiting for document projection to catch up.\n\nValidated: compose_fill_display, fill_count_renders_planned_prefix, fill_build_tick_only_plans tests all pass.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2306"
   },
@@ -11,7 +11,7 @@
   "plan": {
     "client": "cursor",
     "id": "a4aac711",
-    "source": "/Users/ueli/Documents/semio/.cursor/plans/fill_amount_viewport_live_a4aac711.plan.md"
+    "local": "fill_amount_viewport_live_a4aac711.plan.md"
   },
   "sessions": [
     "⚪bea3ac7bd5e84af7aae628c20815039b",

@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: validate
     content: Run tests and DEBUG-confirm instance count tracks slider
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

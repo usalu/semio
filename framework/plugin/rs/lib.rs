@@ -162,7 +162,7 @@ use semio_framework_core::{
     },
     set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
-    IntroductionAdvance, IntroductionDefinition, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
+    IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, UtilityDefinition,
     UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
     UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
@@ -1010,31 +1010,47 @@ impl AppBuilder {
                 for id in &step.show {
                     validate_element_id(id, "show");
                 }
-                match &step.advance {
-                    IntroductionAdvance::Next => {}
-                    IntroductionAdvance::Action(action_ref) => assert!(
-                        declared_action_ids.contains(action_ref.as_str()),
-                        "app {} introduction step {} advance references undeclared action {}",
+                for interaction in &step.interactions {
+                    assert!(
+                        !interaction.label.trim().is_empty(),
+                        "app {} introduction step {} interaction has an empty label",
                         self.id,
-                        step.id,
-                        action_ref.as_str()
-                    ),
-                    IntroductionAdvance::Utility(utility_ref) => assert!(
-                        declared_utility_ids.contains(utility_ref.as_str()),
-                        "app {} introduction step {} advance references undeclared utility {}",
-                        self.id,
-                        step.id,
-                        utility_ref.as_str()
-                    ),
-                    IntroductionAdvance::Tool(tool_ref) => assert!(
-                        declared_tool_ids.contains(tool_ref.as_str()),
-                        "app {} introduction step {} advance references undeclared tool {}",
-                        self.id,
-                        step.id,
-                        tool_ref.as_str()
-                    ),
-                    IntroductionAdvance::Panel(panel_tab_id) => validate_element_id(panel_tab_id, "advance.panel"),
-                    IntroductionAdvance::Expand(tree_id) => validate_element_id(tree_id, "advance.expand"),
+                        step.id
+                    );
+                    match &interaction.on {
+                        IntroductionInteractionKind::Action(action_ref) => assert!(
+                            declared_action_ids.contains(action_ref.as_str()),
+                            "app {} introduction step {} interaction references undeclared action {}",
+                            self.id,
+                            step.id,
+                            action_ref.as_str()
+                        ),
+                        IntroductionInteractionKind::Utility(utility_ref) => assert!(
+                            declared_utility_ids.contains(utility_ref.as_str()),
+                            "app {} introduction step {} interaction references undeclared utility {}",
+                            self.id,
+                            step.id,
+                            utility_ref.as_str()
+                        ),
+                        IntroductionInteractionKind::Tool(tool_ref) => assert!(
+                            declared_tool_ids.contains(tool_ref.as_str()),
+                            "app {} introduction step {} interaction references undeclared tool {}",
+                            self.id,
+                            step.id,
+                            tool_ref.as_str()
+                        ),
+                        IntroductionInteractionKind::Panel(panel_tab_id) => validate_element_id(panel_tab_id, "interaction.panel"),
+                        IntroductionInteractionKind::Expand(tree_id) => validate_element_id(tree_id, "interaction.expand"),
+                        IntroductionInteractionKind::Pan(window_kind_id)
+                        | IntroductionInteractionKind::Zoom(window_kind_id)
+                        | IntroductionInteractionKind::Orbit(window_kind_id) => assert!(
+                            window_kind_ids.contains(window_kind_id),
+                            "app {} introduction step {} interaction references undeclared window kind {}",
+                            self.id,
+                            step.id,
+                            window_kind_id
+                        ),
+                    }
                 }
             }
         }
@@ -2448,13 +2464,29 @@ mod app_builder_tests {
     }
 
     #[test]
-    fn build_definition_rejects_introduction_step_advancing_on_undeclared_utility() {
-        use semio_framework_core::{IntroductionAdvance, IntroductionDefinition, IntroductionStepDefinition};
+    fn build_definition_rejects_introduction_step_interacting_on_undeclared_utility() {
+        use semio_framework_core::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         let result = std::panic::catch_unwind(|| {
-            minimal_app("bad-advance-utility-app")
+            minimal_app("bad-interaction-utility-app")
                 .introduction(IntroductionDefinition {
                     title: "Welcome".into(),
-                    steps: vec![IntroductionStepDefinition::new("step", "A", "a").advance_on(IntroductionAdvance::Utility("missing".into()))],
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a")
+                        .interact(vec![IntroductionInteraction::utility("missing", "Activate")])],
+                })
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_introduction_step_interacting_on_undeclared_window_kind() {
+        use semio_framework_core::{IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("bad-interaction-window-app")
+                .introduction(IntroductionDefinition {
+                    title: "Welcome".into(),
+                    steps: vec![IntroductionStepDefinition::new("step", "A", "a")
+                        .interact(vec![IntroductionInteraction::orbit("missing", "Orbit")])],
                 })
                 .build_definition()
         });
@@ -2463,7 +2495,7 @@ mod app_builder_tests {
 
     #[test]
     fn build_definition_accepts_introduction_with_declared_window_utility_and_action_targets() {
-        use semio_framework_core::{window_element_id, IntroductionAdvance, IntroductionDefinition, IntroductionStepDefinition};
+        use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")
             .utility_simple("brush", "Brush", "icon.brush")
@@ -2476,13 +2508,16 @@ mod app_builder_tests {
                     IntroductionStepDefinition::new("main-window", "Main Window", "…").introduce(window_element_id("main")),
                     IntroductionStepDefinition::new("brush-utility", "Brush", "…")
                         .introduce("brush")
-                        .advance_on(IntroductionAdvance::Utility("brush".into())),
-                    IntroductionStepDefinition::new("add-layer", "Add Layer", "…").advance_on(IntroductionAdvance::Action("addLayer".into())),
+                        .interact(vec![IntroductionInteraction::utility("brush", "Activate Brush")]),
+                    IntroductionStepDefinition::new("add-layer", "Add Layer", "…")
+                        .interact(vec![IntroductionInteraction::action("addLayer", "Add a Layer")]),
+                    IntroductionStepDefinition::new("navigate-main", "Navigate", "…")
+                        .interact(vec![IntroductionInteraction::pan("main", "Pan"), IntroductionInteraction::zoom("main", "Zoom")]),
                 ],
             })
             .build_definition();
         let introduction = definition.introduction.expect("introduction present");
-        assert_eq!(introduction.steps.len(), 4);
+        assert_eq!(introduction.steps.len(), 5);
     }
 
     #[test]

@@ -44,7 +44,8 @@ import type {
   IntroductionDefinition as GeneratedIntroductionDefinition,
   IntroductionStepDefinition as GeneratedIntroductionStepDefinition,
   IntroductionPlacement as GeneratedIntroductionPlacement,
-  IntroductionAdvance as GeneratedIntroductionAdvance,
+  IntroductionInteraction as GeneratedIntroductionInteraction,
+  IntroductionInteractionKind as GeneratedIntroductionInteractionKind,
   IntroductionLogo as GeneratedIntroductionLogo,
   IntroductionPoint as GeneratedIntroductionPoint,
   IntroductionGesture as GeneratedIntroductionGesture,
@@ -1434,7 +1435,8 @@ export const START_INTRODUCTION_ACTION_ID = "startIntroduction";
 export type IntroductionDefinition = GeneratedIntroductionDefinition;
 export type IntroductionStepDefinition = GeneratedIntroductionStepDefinition;
 export type IntroductionPlacement = GeneratedIntroductionPlacement;
-export type IntroductionAdvance = GeneratedIntroductionAdvance;
+export type IntroductionInteraction = GeneratedIntroductionInteraction;
+export type IntroductionInteractionKind = GeneratedIntroductionInteractionKind;
 export type IntroductionLogo = GeneratedIntroductionLogo;
 export type IntroductionPoint = GeneratedIntroductionPoint;
 export type IntroductionGesture = GeneratedIntroductionGesture;
