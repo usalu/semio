@@ -164,7 +164,10 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         interactions: [{ on: { kind: "action", id: "acceptSuggestion" }, label: "Vorschlag wählen" }],
         ordered: false,
         logos: [],
-        demonstrations: [{ gesture: { kind: "rightClick", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 } } }],
+        demonstrations: [
+          { gesture: { kind: "leftClick", at: { kind: "entity", id: windowElementId("puzzle3d-main"), domain: "vortex", entity: "*" } } },
+          { gesture: { kind: "rightClick", at: { kind: "entity", id: windowElementId("puzzle3d-main"), domain: "vortex", entity: "*" } } },
+        ],
       },
       {
         id: "fill-tool",

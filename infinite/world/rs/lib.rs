@@ -641,6 +641,9 @@ fn resolve_physical_mesh_id(state: &World3dState, logical_id: &str, desired_lod:
             return mesh_id_from_url(url);
         }
     }
+    if let Some(url) = state.mesh_url_fallback.get(logical_id) {
+        return mesh_id_from_url(url);
+    }
     logical_id.to_string()
 }
 
@@ -700,11 +703,11 @@ fn rebuild_instance_draws(state: &mut World3dState, scene_lod: f64) {
         let logical_mesh_id = instance.mesh_id.clone().unwrap_or_else(|| "box".into());
         let physical_mesh_id = resolve_physical_mesh_id(state, &logical_mesh_id, scene_lod);
         if !state.meshes.contains_key(&physical_mesh_id) {
-            if physical_mesh_id == logical_mesh_id {
+            if state.mesh_url_fallback.contains_key(&logical_mesh_id) || state.mesh_lod_catalog.contains_key(&logical_mesh_id) {
+                queue_lod_mesh_fetch(state, &logical_mesh_id, scene_lod);
+            } else {
                 let primitive = mesh_from_kind(&logical_mesh_id);
                 store_mesh(state, physical_mesh_id.clone(), Mesh3d::from_buffers(primitive.positions, primitive.normals, primitive.indices));
-            } else {
-                queue_lod_mesh_fetch(state, &logical_mesh_id, scene_lod);
             }
         }
         let position = instance.position.unwrap_or([instance.x.unwrap_or(index as f64), instance.y.unwrap_or(0.0), instance.z.unwrap_or(0.0)]);
@@ -3882,6 +3885,24 @@ mod tests {
         assert_eq!(detailed, "mesh:tower-high");
         assert_eq!(coarse, "mesh:tower-low");
     }
+
+    //#region GlbAssetTests
+    /// 📦 URL-backed meshes remain fetchable instead of becoming empty procedural primitives.
+    #[test]
+    fn rebuild_instance_draws_keeps_url_backed_mesh_pending() {
+        let mut state = World3dState::new("surface-1".into(), "controller-1".into());
+        state.mesh_url_fallback.insert("mesh:capsule".into(), "/mesh/capsule.glb".into());
+        state.pending_glb_urls.insert("/mesh/capsule.glb".into());
+        state.parsed_instances = vec![WorldInstanceRecord { id: "capsule-1".into(), mesh_id: Some("mesh:capsule".into()), position: Some([0.0, 0.0, 0.0]), ..Default::default() }];
+
+        rebuild_instance_draws(&mut state, 1.0);
+
+        assert!(!state.meshes.contains_key("mesh:capsule"), "a URL-backed mesh must not be shadowed by an empty mesh_from_kind placeholder");
+        let pending = collect_pending_glb_fetches(&HashMap::from([("surface-1".into(), state)]));
+        assert_eq!(pending.len(), 1);
+        assert_eq!(pending[0].url, "/mesh/capsule.glb");
+    }
+    //#endregion GlbAssetTests
 
     #[test]
     fn lod_grid_lines_generate_for_near_camera() {

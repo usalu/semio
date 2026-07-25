@@ -745,6 +745,7 @@ pub mod app_2d {
                 ready: None,
                 loading: None,
                 disabled: None,
+                reveal: None,
                 on_change: gis2d_action("setLayerStrokeScale", Some(json!({ "layerId": layer_id }))),
 
                 waiting: None,})

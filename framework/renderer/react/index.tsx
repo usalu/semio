@@ -245,7 +245,8 @@ import {
   type DragEndEvent,
   type UiRibbonParentCategory,
   Spinner,
-  registerIntroductionSceneProjector,
+  registerIntroductionSurfaceResolver,
+  type IntroductionResolvedGeometry,
   ndcToViewportPoint,
   celebrateElements,
   celebrateAllElements,
@@ -3187,8 +3188,65 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
     if (nextDirection === 0) return;
     if (direction === 0 || nextDirection === direction) queued[queued.length - 1] = value;
     else queued.push(value);
+    // 🔁 A jittery drag (rapid direction reversals while a round trip is in flight) would otherwise grow
+    // `queued` by one entry per reversal; only the last two are ever needed (the pending value and the
+    // anchor used to detect the next reversal), so cap it there.
+    if (queued.length > 2) queued.splice(0, queued.length - 2);
   };
 }
+
+//#region RevealCutoffStore
+/**
+ * @emoji 🪣 Live per-gesture visibility cutoff for reveal-tagged instances (`WorldInstanceRecord.revealIndex`,
+ * set by a `WindowMeasure.Slider.reveal` group). Main-thread-only and never dispatched: a slider drag writes
+ * here directly, `WorldInstancesLayer` subscribes and imperatively toggles `Object3D.visible` — zero React
+ * re-render, zero WASM round trip. Reconciled from the plugin's committed `WorldInteractionRecord.revealCutoffs`
+ * whenever that value changes (a no-op during a live drag, since the committed value only changes on commit).
+ */
+export type RevealCutoffStore = {
+  get(groupId: string): number | undefined;
+  set(groupId: string, value: number): void;
+  subscribe(groupId: string, listener: (value: number | undefined) => void): () => void;
+};
+
+export function createRevealCutoffStore(): RevealCutoffStore {
+  const values = new Map<string, number>();
+  const listeners = new Map<string, Set<(value: number | undefined) => void>>();
+  return {
+    get: (groupId) => values.get(groupId),
+    set: (groupId, value) => {
+      values.set(groupId, value);
+      for (const listener of listeners.get(groupId) ?? []) listener(value);
+    },
+    subscribe: (groupId, listener) => {
+      let group = listeners.get(groupId);
+      if (!group) {
+        group = new Set();
+        listeners.set(groupId, group);
+      }
+      group.add(listener);
+      return () => {
+        group!.delete(listener);
+      };
+    },
+  };
+}
+
+/** Shared instance — a reveal group id is app-instance-global in v1; namespace by app instance id if a second concurrent document instance ever needs independent cutoffs. */
+export const worldRevealCutoffStore = createRevealCutoffStore();
+
+/** The only reveal group that exists today — puzzle3d's fill-plan slider. */
+export const PUZZLE3D_FILL_REVEAL_GROUP_ID = "puzzle3d-fill";
+
+/** @emoji 🙈 True for a reveal-tagged instance beyond the live cutoff — `WorldInstancesLayer` already
+ * hides its root imperatively, but pure functions that read `instances` data directly (marquee hit
+ * testing) don't see three.js `Object3D.visible` and need this check instead. */
+export function isRevealCutoffHidden(instance: Pick<WorldInstanceRecord, "revealIndex">): boolean {
+  if (instance.revealIndex === undefined) return false;
+  const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID);
+  return cutoff !== undefined && instance.revealIndex >= cutoff;
+}
+//#endregion RevealCutoffStore
 
 /**
  * @emoji 🚦 Fires `run` at most once at a time — interval ticks that arrive while a previous run is still
@@ -3239,6 +3297,11 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
   );
   const formatDisplayValue = windowMeasureUsesProbabilityReadout(measure) ? windowMeasureProbabilityReadout : undefined;
   const disabled = measure.disabled === true;
+  // 🪣 A reveal-group measure (e.g. puzzle3d's fill-count slider) must not round-trip through WASM on
+  // every drag value — the plugin already rendered every planned piece tagged with its reveal index, so
+  // dragging only needs to move a main-thread visibility cutoff. Only the final value round-trips, once,
+  // on gesture release.
+  const revealGroupId = measure.reveal;
 
   return (
     <Slider
@@ -3251,11 +3314,28 @@ function WindowMeasureSlider({ measure, onAction }: { readonly measure: Extract<
       waiting={measure.waiting === true}
       step={measure.step}
       disabled={disabled}
+      clampToReady={Boolean(revealGroupId)}
       formatDisplayValue={formatDisplayValue}
       onValueChange={(values) => {
         if (disabled) return;
-        dispatchValue(values[0] ?? measure.value);
+        const value = values[0] ?? measure.value;
+        if (revealGroupId) {
+          worldRevealCutoffStore.set(revealGroupId, value);
+          return;
+        }
+        dispatchValue(value);
       }}
+      onValueCommit={
+        revealGroupId
+          ? (values) => {
+              if (disabled) return;
+              const value = values[0] ?? measure.value;
+              worldRevealCutoffStore.set(revealGroupId, value);
+              onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), value } });
+            }
+          : undefined
+      }
+      onPointerCancel={revealGroupId ? () => worldRevealCutoffStore.set(revealGroupId, measure.value) : undefined}
     />
   );
 }
@@ -4656,26 +4736,37 @@ export function FrameworkOsShell({
   /** 🎓 Shared step-complete path: fires once every interaction-gated step's `interactions` are all done
    * (via `completeIntroductionInteraction` below), celebrating `introduce` on top of each interaction's
    * own celebration, then advances or finishes the tour. Finishing the last step celebrates every UI
-   * element via {@link dismissIntroduction}(true) instead of only the introduce target. */
-  const advanceIntroductionByDoing = useCallback(() => {
-    const stepIndex = introductionStepIndexRef.current;
-    const introduction = activeIntroductionRef.current;
-    if (stepIndex == null || !introduction) return;
-    const step = introduction.steps[stepIndex];
-    if (stepIndex >= introduction.steps.length - 1) {
-      dismissIntroduction(true);
-      return;
-    }
-    if (step && (step.interactions ?? []).length > 0 && step.introduce) celebrateElements(elementIdSelector(step.introduce));
-    dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
-  }, [dismissIntroduction]);
+   * element via {@link dismissIntroduction}(true) instead of only the introduce target. `celebrateOverride`
+   * (threaded through from `completeIntroductionInteraction`) narrows this to the one element responsible
+   * for the just-completed interaction — e.g. the specific 3D window pane that was orbited — instead of
+   * every element aliased to the step's `introduce` kind (every open pane of that window kind). */
+  const advanceIntroductionByDoing = useCallback(
+    (celebrateOverride?: string) => {
+      const stepIndex = introductionStepIndexRef.current;
+      const introduction = activeIntroductionRef.current;
+      if (stepIndex == null || !introduction) return;
+      const step = introduction.steps[stepIndex];
+      if (stepIndex >= introduction.steps.length - 1) {
+        dismissIntroduction(true);
+        return;
+      }
+      const celebrateId = celebrateOverride ?? step?.introduce;
+      if (step && (step.interactions ?? []).length > 0 && celebrateId) celebrateElements(elementIdSelector(celebrateId));
+      dispatch({ type: "SET_INTRODUCTION_STEP", value: stepIndex + 1 });
+    },
+    [dismissIntroduction],
+  );
 
   /** ✅ Completes the first not-yet-done interaction of the active step matching `matches` (respecting
-   * `step.ordered` — only the next in-order interaction may complete), celebrates its target element
-   * (`interaction.celebrate ?? step.introduce`), and advances the step once every interaction is done.
-   * Mirrors the wgpu shell's `chrome_tour_complete_interaction`. */
+   * `step.ordered` — only the next in-order interaction may complete), celebrates its target element, and
+   * advances the step once every interaction is done. Mirrors the wgpu shell's
+   * `chrome_tour_complete_interaction`. `celebrateOverride` — passed by callers that know exactly which
+   * DOM element caused the completion (e.g. the gesture intercept knows the one window pane that was
+   * actually orbited) — takes precedence over `interaction.celebrate ?? step.introduce`. Without it, a
+   * window-kind `introduce`/`celebrate` id would celebrate every pane aliased to that kind, not just the
+   * one that completed the interaction. */
   const completeIntroductionInteraction = useCallback(
-    (matches: (interaction: IntroductionInteraction) => boolean) => {
+    (matches: (interaction: IntroductionInteraction) => boolean, celebrateOverride?: string) => {
       const stepIndex = introductionStepIndexRef.current;
       const introduction = activeIntroductionRef.current;
       if (stepIndex == null || !introduction) return;
@@ -4686,11 +4777,11 @@ export function FrameworkOsShell({
       const index = interactions.findIndex((interaction, i) => !completed.includes(i) && matches(interaction));
       if (index < 0) return;
       if (step.ordered && index !== completed.length) return;
-      const celebrateId = interactions[index].celebrate ?? step.introduce;
+      const celebrateId = celebrateOverride ?? interactions[index].celebrate ?? step.introduce;
       if (celebrateId) celebrateElements(elementIdSelector(celebrateId));
       introductionCompletedInteractionsRef.current = [...completed, index];
       dispatch({ type: "COMPLETE_INTRODUCTION_INTERACTION", index });
-      if (introductionCompletedInteractionsRef.current.length >= interactions.length) advanceIntroductionByDoing();
+      if (introductionCompletedInteractionsRef.current.length >= interactions.length) advanceIntroductionByDoing(celebrateOverride);
     },
     [advanceIntroductionByDoing],
   );
@@ -5537,7 +5628,9 @@ export function FrameworkOsShell({
 
       // 🧭 Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
       // forwarded to the plugin) — completes any pan/zoom/orbit interaction of the active step that
-      // targets the window the gesture happened on.
+      // targets the window the gesture happened on. Celebrates only `windowId`'s own pane (via
+      // `windowElementId`, its unique per-instance element id) — never the whole window-kind alias
+      // selector, which would celebrate every other open pane of that same kind too (e.g. a split view).
       if (action.action === NOTE_WORLD_NAVIGATION_ACTION_ID) {
         const args = typeof action.args === "object" && action.args != null ? (action.args as { windowId?: unknown; gestures?: unknown }) : {};
         const windowId = typeof args.windowId === "string" ? args.windowId : "";
@@ -5545,7 +5638,10 @@ export function FrameworkOsShell({
         if (windowId) {
           const windowKindId = sessionWindowInstances(session.app, extraWindowInstancesRef.current).find((instance) => instance.id === windowId)?.windowKindId ?? windowId;
           for (const gesture of gestures) {
-            completeIntroductionInteraction((interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id));
+            completeIntroductionInteraction(
+              (interaction) => interaction.on.kind === gesture && introductionTargetsWindow(windowId, windowKindId, interaction.on.id),
+              windowElementId(windowId),
+            );
           }
         }
         return;
@@ -5711,7 +5807,7 @@ export function FrameworkOsShell({
         .handleAction(targetSession.instanceId, JSON.stringify(action), dispatchViewState)
         .then((response) => applyHostEffects(response.requestedEffects ?? [], { ...targetSession, viewState: dispatchViewState }, resolveUiDirtyScope(response.uiScope)))
         .catch((actionError) => {
-          console.error("[DEBUG] action failed", actionError);
+          console.error("[DEBUG] action failed", action.action, action.args, actionError);
         });
     },
     [
@@ -7366,6 +7462,7 @@ export function FrameworkOsShell({
           <UIIntroduction
             introduction={brand?.introduction ?? resolveIntroductionDefinition(activeIntroduction, appLabelsOverlay)}
             stepIndex={introductionStepIndex}
+            completedInteractionIndices={introductionCompletedInteractions}
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={dismissIntroduction}
           />
@@ -10136,6 +10233,8 @@ type WorldInstanceRecord = {
   /** 🎨 Non-interactive/locked state — resolves to the muted "disabled" mesh style at reduced opacity. */
   readonly disabled?: boolean;
   readonly smoothShading?: boolean;
+  /** 🪣 0-based position in a background-planned sequence (e.g. puzzle3d's fill plan) — see `RevealCutoffStore`. Absent for ordinary (non-planned) instances. */
+  readonly revealIndex?: number;
 };
 
 type WorldSelectionTargets = {
@@ -10198,6 +10297,7 @@ type WorldSuggestionMenuRecord = {
 
 type WorldFillBuildRecord = {
   readonly count: number;
+  readonly appliedCount: number;
   readonly maxCount: number;
   readonly done: boolean;
 };
@@ -10210,6 +10310,9 @@ type WorldInteractionRecord = {
   readonly gridFactor?: number;
   readonly suggestionMenu?: WorldSuggestionMenuRecord | null;
   readonly fillBuild?: WorldFillBuildRecord;
+  /** 🪣 Committed reveal cutoff per reveal group id (see `WindowMeasure.Slider.reveal`) — instances
+   * tagged `revealIndex` below this value are shown. Seeds `RevealCutoffStore` when no drag is live. */
+  readonly revealCutoffs?: Readonly<Record<string, number>>;
 };
 
 type WorldLodRecord = {
@@ -11997,6 +12100,7 @@ function WorldInstancesLayer({
   mergedInstanceIds,
   blockPick,
   environment,
+  revealCutoffs,
 }: {
   readonly instances: readonly WorldInstanceRecord[];
   readonly meshes: readonly WorldMeshRecord[];
@@ -12021,6 +12125,8 @@ function WorldInstancesLayer({
   /** Disables instance picking; passed for fill and brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
+  /** 🪣 Committed reveal cutoffs (`WorldInteractionRecord.revealCutoffs`) — reconciles `worldRevealCutoffStore` whenever the committed value changes; a live drag already wrote the store directly and this is then a same-value no-op. */
+  readonly revealCutoffs?: Readonly<Record<string, number>>;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
   const geometries = useMemo(() => {
@@ -12070,6 +12176,38 @@ function WorldInstancesLayer({
     if (group) instanceRootsRef.current.set(id, group);
     else instanceRootsRef.current.delete(id);
   }, []);
+
+  /** 🪣 Imperatively shows/hides reveal-tagged instance roots per the live cutoff — zero React re-render,
+   * zero WASM round trip. Re-runs on every instance-list change (new roots to tag) and on every live
+   * cutoff update from `worldRevealCutoffStore` (a slider drag, or the commit reconciliation below). */
+  const applyRevealCutoff = useCallback(() => {
+    const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID) ?? revealCutoffs?.[PUZZLE3D_FILL_REVEAL_GROUP_ID];
+    let changed = false;
+    for (const instance of instances) {
+      if (instance.revealIndex === undefined) continue;
+      const root = instanceRootsRef.current.get(instance.id);
+      if (!root) continue;
+      const visible = cutoff === undefined || instance.revealIndex < cutoff;
+      if (root.visible !== visible) {
+        root.visible = visible;
+        changed = true;
+      }
+    }
+    if (changed) invalidate();
+  }, [instances, revealCutoffs, invalidate]);
+
+  useLayoutEffect(() => {
+    applyRevealCutoff();
+    return worldRevealCutoffStore.subscribe(PUZZLE3D_FILL_REVEAL_GROUP_ID, applyRevealCutoff);
+  }, [applyRevealCutoff]);
+
+  /** 🪣 Reconciles the shared store from the plugin's committed cutoff — a no-op while a local drag is
+   * live (the committed value only changes on gesture commit, at which point the drag already settled
+   * on the same value), and the authoritative sync path otherwise (reconnect, another client's commit). */
+  useEffect(() => {
+    if (!revealCutoffs) return;
+    for (const [groupId, value] of Object.entries(revealCutoffs)) worldRevealCutoffStore.set(groupId, value);
+  }, [revealCutoffs]);
 
   const writeGumballPreviewPoses = useCallback(
     (poses: ReadonlyMap<string, WorldGumballLivePose>) => {
@@ -12895,6 +13033,7 @@ function resolveMarqueeInstanceIds(
   const meshById = new Map(meshes.map((mesh) => [mesh.id, mesh]));
   const hits: string[] = [];
   instances.forEach((instance, index) => {
+    if (isRevealCutoffHidden(instance)) return;
     const meshId = instance.meshId ?? instance.id;
     const meshData = meshById.get(meshId)?.data;
     const position = (instance.position ?? [instance.x ?? index, instance.y ?? 0, instance.z ?? 0]) as [number, number, number];
@@ -12925,24 +13064,107 @@ function CameraRefBridge({ cameraRef }: { readonly cameraRef: React.MutableRefOb
   return null;
 }
 
-/** @emoji 🧊 Registers this window's live camera as the introduction demonstration engine's projector
- * for `IntroductionPoint.Scene` points targeting `windowElementId(windowInstanceId)` — the same element
- * id `windowElementId(kind.id)` builds for authoring (see `mit-bestand/aggregator/brand.ts`). Only the
- * base (non-split) window instance registers under its exact kind id this way, since `windowInstanceId`
- * equals `kind.id` verbatim for it; a split/spawned extra instance registers under its own instance id
- * instead (last-write-wins if multiple instances of a kind are open — acceptable for a single
- * demonstration target, not a general multi-instance broadcast). */
-function IntroductionSceneProjectorBridge({ windowInstanceId }: { readonly windowInstanceId: string }) {
+/** @emoji 🧭 Registers this window's live camera and entity data as the introduction demonstration
+ * engine's resolver for `windowElementId(windowInstanceId)` — the same element id `windowElementId(kind.id)`
+ * builds for authoring (see `mit-bestand/aggregator/brand.ts`). Only the base (non-split) window instance
+ * registers under its exact kind id this way, since `windowInstanceId` equals `kind.id` verbatim for it;
+ * a split/spawned extra instance registers under its own instance id instead (last-write-wins if multiple
+ * instances of a kind are open — acceptable for a single demonstration target, not a general
+ * multi-instance broadcast). Supports `scenePoint` (raw 3D → screen), `canvasPoint` (ground-plane 2D →
+ * screen, z = 0), and `entity` for domains `"vortex"` (`WorldVortexRecord.fullId`), `"object"`
+ * (`WorldInstanceRecord.id`, reveal-cutoff-hidden instances resolve to null), and `"attraction"`
+ * (`WorldAttractionRecord.id`, exposes a `polyline` of its projected endpoints for `Curve` targeting) —
+ * `entity: "*"` picks whichever visible record projects nearest the window's own viewport center. Reads
+ * the latest arrays via a ref so the registration effect (keyed on camera/gl/window id, not on scene data)
+ * never has to re-run just because the scene updated. */
+function IntroductionWorldResolverBridge({
+  windowInstanceId,
+  vortices,
+  instances,
+  attractions,
+}: {
+  readonly windowInstanceId: string;
+  readonly vortices: readonly WorldVortexRecord[];
+  readonly instances: readonly WorldInstanceRecord[];
+  readonly attractions: readonly WorldAttractionRecord[];
+}) {
   const camera = useThree((state) => state.camera);
   const gl = useThree((state) => state.gl);
+  const dataRef = useRef({ vortices, instances, attractions });
+  dataRef.current = { vortices, instances, attractions };
+
   useEffect(() => {
     const windowId = windowElementId(windowInstanceId);
-    return registerIntroductionSceneProjector(windowId, (position) => {
+    const project = (position: readonly [number, number, number]): { readonly x: number; readonly y: number; readonly visible: boolean } => {
       const projected = new Vector3(...cadVec3ToThree(position)).project(camera);
       if (projected.z >= 1 || Math.abs(projected.x) > 1.05 || Math.abs(projected.y) > 1.05) return { x: 0, y: 0, visible: false };
       const rect = gl.domElement.getBoundingClientRect();
       const { x, y } = ndcToViewportPoint(projected, rect);
       return { x, y, visible: true };
+    };
+    const nearestToCenter = <T,>(
+      records: readonly T[],
+      positionOf: (record: T) => readonly [number, number, number],
+    ): { readonly record: T; readonly projected: { readonly x: number; readonly y: number } } | null => {
+      const rect = gl.domElement.getBoundingClientRect();
+      const centerX = rect.left + rect.width / 2;
+      const centerY = rect.top + rect.height / 2;
+      let best: { record: T; projected: { x: number; y: number } } | null = null;
+      let bestDistance = Infinity;
+      for (const record of records) {
+        const projected = project(positionOf(record));
+        if (!projected.visible) continue;
+        const distance = Math.hypot(projected.x - centerX, projected.y - centerY);
+        if (distance < bestDistance) {
+          bestDistance = distance;
+          best = { record, projected };
+        }
+      }
+      return best;
+    };
+    const instancePosition = (instance: WorldInstanceRecord): readonly [number, number, number] => instance.position ?? [instance.x ?? 0, instance.y ?? 0, instance.z ?? 0];
+    const attractionMidpoint = (attraction: WorldAttractionRecord): readonly [number, number, number] => [
+      (attraction.from[0] + attraction.to[0]) / 2,
+      (attraction.from[1] + attraction.to[1]) / 2,
+      (attraction.from[2] + attraction.to[2]) / 2,
+    ];
+
+    return registerIntroductionSurfaceResolver(windowId, {
+      scenePoint: project,
+      canvasPoint: (x, y) => project([x, y, 0]),
+      entity: (domain, entity): IntroductionResolvedGeometry | null => {
+        const { vortices: liveVortices, instances: liveInstances, attractions: liveAttractions } = dataRef.current;
+        if (domain === "vortex") {
+          if (entity === "*") {
+            const nearest = nearestToCenter(liveVortices, (vortex) => vortex.position);
+            return nearest ? { point: nearest.projected, visible: true } : null;
+          }
+          const vortex = liveVortices.find((candidate) => candidate.fullId === entity);
+          if (!vortex) return null;
+          const projected = project(vortex.position);
+          return projected.visible ? { point: projected, visible: true } : null;
+        }
+        if (domain === "object") {
+          const visibleInstances = liveInstances.filter((instance) => !isRevealCutoffHidden(instance));
+          if (entity === "*") {
+            const nearest = nearestToCenter(visibleInstances, instancePosition);
+            return nearest ? { point: nearest.projected, visible: true } : null;
+          }
+          const instance = visibleInstances.find((candidate) => candidate.id === entity);
+          if (!instance) return null;
+          const projected = project(instancePosition(instance));
+          return projected.visible ? { point: projected, visible: true } : null;
+        }
+        if (domain === "attraction") {
+          const attraction = entity === "*" ? nearestToCenter(liveAttractions, attractionMidpoint)?.record : liveAttractions.find((candidate) => candidate.id === entity);
+          if (!attraction) return null;
+          const from = project(attraction.from);
+          const to = project(attraction.to);
+          if (!from.visible || !to.visible) return null;
+          return { point: { x: (from.x + to.x) / 2, y: (from.y + to.y) / 2 }, polyline: [from, to], visible: true };
+        }
+        return null;
+      },
     });
   }, [camera, gl, windowInstanceId]);
   return null;
@@ -13145,9 +13367,9 @@ function axisDragParam(clientX: number, clientY: number, hostRect: DOMRect, came
   return (a * e - b * d) / denominator;
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-middle so it grows upward like other bottom panes and clears the navigation cube. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`), defaulting to bottom-right under the navigation cube — the cube sits above the folded chrome and the unfolded pane grows over it. Falls back to a local overlay when no pane host is mounted yet (or outside one). */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = useState<Anchor>("bottom-middle");
+  const [anchor, setAnchor] = useState<Anchor>("bottom-right");
   const [folded, setFolded] = useState(true);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
@@ -14218,7 +14440,9 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             {fit?.enabled ? <WorldAutoFit groupRef={instancesGroupRef} fitKey={`${fit.revision ?? 0}:${meshes.map((mesh) => mesh.url ?? mesh.id).join(",")}`} padding={fit.padding ?? 1.25} camera={cameraState} onFitted={handleCameraChange} /> : null}
             <CameraRefBridge cameraRef={cameraRef} />
             <RaycasterPickTuning />
-            {windowInstanceId ? <IntroductionSceneProjectorBridge windowInstanceId={windowInstanceId} /> : null}
+            {windowInstanceId ? (
+              <IntroductionWorldResolverBridge windowInstanceId={windowInstanceId} vortices={vortices} instances={instances} attractions={attractions} />
+            ) : null}
             {brushMeshUrls.map((url) => (
               <Suspense key={url} fallback={null}>
                 <BrushMeshRegistrar url={url} onRegister={handleRegisterBrushMesh} />
@@ -14248,6 +14472,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
                 mergedInstanceIds={marqueePreview.mergedInstanceIds}
                 blockPick={worldInstancePickBlocked(activeUtility)}
                 environment={environment}
+                revealCutoffs={interaction.revealCutoffs}
               />
             </group>
             <WorldVortexMarkers

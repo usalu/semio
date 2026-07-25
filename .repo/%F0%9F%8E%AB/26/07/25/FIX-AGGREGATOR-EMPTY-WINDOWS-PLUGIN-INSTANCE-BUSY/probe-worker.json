@@ -1,0 +1,213 @@
+{
+  "posts": [
+    {
+      "t": 691.5,
+      "data": {
+        "type": "manifest",
+        "requestId": "f329d488-d50d-4138-b004-84aef6cc4ded"
+      }
+    },
+    {
+      "t": 714.1999999880791,
+      "data": {
+        "type": "createApp",
+        "requestId": "817901a4-4df1-41a9-9225-9cf1b2b4d6d0",
+        "appId": "puzzle3d-play"
+      }
+    },
+    {
+      "t": 819.1999999880791,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "6277ed3f-515b-464b-ab46-c0dbff43697d",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 837.8999999761581,
+      "data": {
+        "type": "handleAction",
+        "requestId": "78a61abd-2fe6-4e22-a4ba-ee3d9b687bca",
+        "instanceId": 1,
+        "actionJson": "{\"controllerId\":\"puzzle3d-play\",\"action\":\"setActiveExample\",\"args\":{\"exampleId\":\"concrete-forest\"}}",
+        "contextJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"windowId\":\"puzzle3d-main-perspective\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}]},\"actor\":\"local\"}"
+      }
+    },
+    {
+      "t": 916.5,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "b4f708db-5740-438b-8185-43b64b806de0",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 929,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "3d7dd44c-1489-4c3a-93b1-8b68a366cbfa",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 931.6999999880791,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "92a25115-4f42-4d6c-94ed-c819bbad3aea",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 935.5,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "c92b3227-5a60-45f8-a414-8e2fb395de09",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 940.5,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "26ac2f36-c1d8-449e-8ac7-c445d7b84ad5",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 946.6999999880791,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "2fe586f5-29f3-4ab8-85f1-3f89af5aa9b1",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 953.3000000119209,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "efd70e25-b0f8-45fe-847f-82db725e93c3",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 961.8000000119209,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "e9776ce4-eb1e-4c4c-a735-b74115a28ee8",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    },
+    {
+      "t": 971.1000000238419,
+      "data": {
+        "type": "refreshUi",
+        "requestId": "cf86aa18-2b18-4c36-9359-a9ea42686516",
+        "instanceId": 1,
+        "requestJson": "{\"viewState\":{\"activeModeId\":\"edit\",\"activeWindowKindId\":\"puzzle3d-main\",\"contributionsJson\":\"[]\",\"locale\":\"de\",\"terminology\":\"reuse\",\"windowInstances\":[{\"id\":\"puzzle3d-main\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-top\",\"windowKindId\":\"puzzle3d-main\"},{\"id\":\"puzzle3d-main-perspective\",\"windowKindId\":\"puzzle3d-main\"}],\"activeUtilityByWindowId\":{}},\"windows\":[{\"key\":\"puzzle3d-main\",\"bod…"
+      }
+    }
+  ],
+  "replies": [
+    {
+      "t": 916.3999999761581,
+      "data": {
+        "requestId": "78a61abd-2fe6-4e22-a4ba-ee3d9b687bca",
+        "type": "error",
+        "message": "unreachable"
+      }
+    },
+    {
+      "t": 919.3000000119209,
+      "data": {
+        "requestId": "b4f708db-5740-438b-8185-43b64b806de0",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 929.3999999761581,
+      "data": {
+        "requestId": "3d7dd44c-1489-4c3a-93b1-8b68a366cbfa",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 932.1000000238419,
+      "data": {
+        "requestId": "92a25115-4f42-4d6c-94ed-c819bbad3aea",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 935.8000000119209,
+      "data": {
+        "requestId": "c92b3227-5a60-45f8-a414-8e2fb395de09",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 940.8999999761581,
+      "data": {
+        "requestId": "26ac2f36-c1d8-449e-8ac7-c445d7b84ad5",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 947,
+      "data": {
+        "requestId": "2fe586f5-29f3-4ab8-85f1-3f89af5aa9b1",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 953.8000000119209,
+      "data": {
+        "requestId": "efd70e25-b0f8-45fe-847f-82db725e93c3",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 962.1999999880791,
+      "data": {
+        "requestId": "e9776ce4-eb1e-4c4c-a735-b74115a28ee8",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    },
+    {
+      "t": 971.5,
+      "data": {
+        "requestId": "cf86aa18-2b18-4c36-9359-a9ea42686516",
+        "type": "error",
+        "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}"
+      }
+    }
+  ],
+  "workerMsgs": [
+    {
+      "worker": "http://127.0.0.1:6023/plugin-modules/puzzle/plugin-worker.js",
+      "type": "error",
+      "text": "\nthread '<unnamed>' (1) panicked at /Users/ueli/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/js-sys-0.3.103/src/lib.rs:6282:1:\ncannot call wasm-bindgen imported functions on non-wasm targets"
+    },
+    {
+      "worker": "http://127.0.0.1:6023/plugin-modules/puzzle/plugin-worker.js",
+      "type": "error",
+      "text": "note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace"
+    }
+  ]
+}

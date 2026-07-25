@@ -1,7 +1,7 @@
 {
   "title": "Fix Puzzle 3D Fill Options Lag",
   "emoji": "🐢",
-  "status": "closed",
+  "status": "open",
   "description": "Make puzzle 3D fill amount and distribution sliders respond in milliseconds by eliminating Full UI refreshes, skipping redundant attraction work on count changes, and stopping weight edits from wiping the fill precompute queue.",
   "summary": "Fixed puzzle 3D fill options lag and live viewport update.\n\nPhase 1: Narrow UI scopes, soft-replan tail on weight edits, O(1) fill count apply, slider draft confirmation in UI.\n\nPhase 2: Viewport now renders from precomputed fill plan prefix via `compose_fill_display` + `puzzle3d_fixture_with_fill_display`, so moving the amount slider instantly shows/hides planned placements without waiting for document projection to catch up.\n\nValidated: compose_fill_display, fill_count_renders_planned_prefix, fill_build_tick_only_plans tests all pass.",
   "github": {
@@ -15,6 +15,7 @@
   },
   "sessions": [
     "⚪bea3ac7bd5e84af7aae628c20815039b",
-    "⚪c8b75ad6a37b408599f493ef55b8dcc2"
+    "⚪c8b75ad6a37b408599f493ef55b8dcc2",
+    "⚪7763e00f04b04ea78b2a2528561cfc39"
   ]
 }

@@ -652,7 +652,14 @@ function runSerialized(fn) {
         return await fn();
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
-        if (!message.includes("plugin instance busy") && !message.includes("plugin busy")) throw error;
+        const payload = error && typeof error === "object" && "payload" in error ? error.payload : undefined;
+        const detail = payload !== undefined ? \`\${message} payload=\${(() => { try { return JSON.stringify(payload); } catch { return String(payload); } })()}\` : message;
+        const busy = detail.includes("plugin instance busy") || detail.includes("plugin busy");
+        const trapped = detail.includes("unreachable") || /trap|panicked/i.test(detail);
+        if (busy || trapped) {
+          try { plugin.clearInstanceGuard?.(); } catch { /* guard heal is best-effort */ }
+        }
+        if (!busy) throw error;
         await new Promise((resolve) => setTimeout(resolve, attempt + 1));
       }
     }

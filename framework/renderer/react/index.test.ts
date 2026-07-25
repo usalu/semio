@@ -156,6 +156,10 @@ import {
   createLatestAsyncDispatcher,
   createDirectionalAsyncDispatcher,
   createInFlightSkippingInterval,
+  createRevealCutoffStore,
+  worldRevealCutoffStore,
+  isRevealCutoffHidden,
+  PUZZLE3D_FILL_REVEAL_GROUP_ID,
   dispatchOsCommand,
   mergeShellLockSources,
   resolveBootExampleId,
@@ -277,6 +281,67 @@ describe("live measure dispatch", () => {
     finishes.shift()?.();
     await vi.waitFor(() => expect(values).toEqual([20, 8, 20]));
     finishes.shift()?.();
+  });
+
+  it("caps queued direction reversals so a jittery drag cannot grow the queue unbounded", async () => {
+    const values: number[] = [];
+    const finishes: Array<() => void> = [];
+    const dispatch = createDirectionalAsyncDispatcher(
+      (value) =>
+        new Promise<void>((resolve) => {
+          values.push(value);
+          finishes.push(resolve);
+        }),
+    );
+
+    dispatch(0); // starts immediately, in flight
+    // Many alternating up/down values while the first dispatch is still in flight — each reversal used
+    // to push a new entry onto `queued` with no bound.
+    for (let i = 1; i <= 40; i += 1) {
+      dispatch(i % 2 === 0 ? 100 + i : -100 - i);
+    }
+    expect(values).toEqual([0]);
+
+    finishes.shift()?.();
+    await vi.waitFor(() => expect(values).toHaveLength(2));
+    finishes.shift()?.();
+    await vi.waitFor(() => expect(values).toHaveLength(3));
+    finishes.shift()?.();
+    // Never more than 3 total dispatches (the in-flight one plus at most the capped 2 queued) despite
+    // 40 requested reversals.
+    expect(values).toHaveLength(3);
+  });
+});
+
+describe("reveal cutoff store", () => {
+  it("notifies only same-group subscribers and reflects the latest set value", () => {
+    const store = createRevealCutoffStore();
+    const seen: Array<number | undefined> = [];
+    const unsubscribe = store.subscribe("puzzle3d-fill", (value) => seen.push(value));
+    expect(store.get("puzzle3d-fill")).toBeUndefined();
+
+    store.set("puzzle3d-fill", 5);
+    expect(store.get("puzzle3d-fill")).toBe(5);
+    expect(seen).toEqual([5]);
+
+    store.set("other-group", 9);
+    expect(seen, "an unrelated group id must not notify").toEqual([5]);
+
+    unsubscribe();
+    store.set("puzzle3d-fill", 12);
+    expect(seen, "an unsubscribed listener must not fire again").toEqual([5]);
+    expect(store.get("puzzle3d-fill")).toBe(12);
+  });
+
+  it("isRevealCutoffHidden hides instances at or past the live cutoff, and never instances without a revealIndex", () => {
+    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 5);
+    expect(isRevealCutoffHidden({})).toBe(false);
+    expect(isRevealCutoffHidden({ revealIndex: 4 })).toBe(false);
+    expect(isRevealCutoffHidden({ revealIndex: 5 })).toBe(true);
+    expect(isRevealCutoffHidden({ revealIndex: 9 })).toBe(true);
+
+    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 100);
+    expect(isRevealCutoffHidden({ revealIndex: 9 })).toBe(false);
   });
 });
 
@@ -767,6 +832,16 @@ describe("framework plugin runtime", () => {
     });
     await Promise.all([handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {}), handle.handleAction(1, "{}", {})]);
     expect(maxInFlight).toBe(1);
+  });
+
+  it("detects jco payload-shaped plugin instance busy errors", async () => {
+    const { isPluginInstanceBusyError, pluginErrorText } = await import("@semio-tech/framework-core");
+    const jcoBusy = Object.assign(new Error("[object Object] (see error.payload)"), {
+      payload: { tag: "message", val: "plugin instance busy" },
+    });
+    expect(isPluginInstanceBusyError(jcoBusy)).toBe(true);
+    expect(pluginErrorText(jcoBusy)).toContain("plugin instance busy");
+    expect(isPluginInstanceBusyError(new Error("boom"))).toBe(false);
   });
 });
 

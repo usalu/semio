@@ -1151,6 +1151,7 @@ fn lowpoly_utility_param_slider(
         ready: None,
         loading: None,
         disabled: None,
+        reveal: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
 
         waiting: None,}
@@ -1294,6 +1295,7 @@ fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLab
         ready: None,
         loading: None,
         disabled: None,
+        reveal: None,
         on_change: lowpoly_action("setUtilityParam", Some(json!({ "key": key }))),
 
         waiting: None,};

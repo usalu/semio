@@ -5029,8 +5029,8 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
 /** 🪟 The glass overlay box recipe shared by the introduction info box and modal dialogs (see
  * `UIDialog`) — the two mechanisms are styled identically by construction, not by convention.
  * Border color is CSS-owned (`[data-slot="introduction-info-box"|"dialog-box"]`): normal at rest,
- * emphasized while the pointer is inside (introduction is hover-only — `:focus-within` would stick
- * after clicking Next across steps; dialogs also emphasize on `:focus-within` for form fields). */
+ * emphasized on `:hover` only — never `:focus-within`, so clicking a button does not leave the
+ * border stuck after the pointer leaves. */
 export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
@@ -5248,28 +5248,48 @@ export function resolveIntroductionPlacement(
 }
 
 //#region 🎬DemonstrationProjectors
-/** @emoji 🧊 Projects a 3D scene world position to a live viewport pixel through that scene's current
- * camera — `visible: false` (or a `null` return) means off-camera/behind-camera, which callers must treat
- * as "unresolved this frame", not an error. Registered per window element id by the shell surface that
- * owns the live camera (e.g. a react-three-fiber `useThree` bridge). */
-export type IntroductionScenePointProjector = (
-  position: readonly [number, number, number],
-) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
+/** @emoji 🏷️ What a surface resolver returns for `IntroductionPoint.Entity`/`Curve`/`Domain`: a viewport
+ * pixel anchor plus whatever richer geometry the surface can offer — `rect` for offset-within-bounds and
+ * domain-to-track mapping, `polyline` (viewport px) for arc-length curve targeting, `domain` for mapping
+ * a value onto `rect`. `visible: false` means "found but not currently resolvable" (off-camera, hidden,
+ * zero-length geometry) — callers treat that exactly like `null`, never as an error. */
+export type IntroductionResolvedGeometry = {
+  readonly point: { readonly x: number; readonly y: number };
+  readonly rect?: { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+  readonly polyline?: readonly { readonly x: number; readonly y: number }[];
+  readonly domain?: { readonly min: number; readonly max: number; readonly axis: "x" | "y" };
+  readonly visible: boolean;
+};
 
-const introductionSceneProjectors = new Map<string, IntroductionScenePointProjector>();
+/** @emoji 🧭 A surface's live-camera/live-entity capabilities for demonstration targeting, registered per
+ * window element id by the surface that owns the data (a react-three-fiber `useThree` bridge, a WASM
+ * canvas session, a DOM-rendered host). Every method may be omitted — a surface implements only the point
+ * kinds it can genuinely resolve. All three are called every animation frame; implementations must be
+ * cheap (cache parsed JSON keyed by the source string's identity, never re-parse a whole fixture per
+ * frame). */
+export type IntroductionSurfaceResolver = {
+  /** 🧊 3D world position → viewport pixel through the surface's live camera. */
+  readonly scenePoint?: (position: readonly [number, number, number]) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
+  /** 🗺️ 2D world (camera x/y/zoom) position → viewport pixel. */
+  readonly canvasPoint?: (x: number, y: number) => { readonly x: number; readonly y: number; readonly visible: boolean } | null;
+  /** 🏷️ A live entity by domain + id (`"*"` = any representative) → its resolved geometry. */
+  readonly entity?: (domain: string, entity: string) => IntroductionResolvedGeometry | null;
+};
 
-/** @emoji 🧊 Registers the live camera projector for the 3D scene shown by window element `windowId`, so
- * `IntroductionPoint.Scene` points can resolve to a viewport pixel — call from the window's r3f subtree
- * (has `useThree`), unregister on unmount via the returned disposer. Multiple concurrently open instances
- * of the same window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
-export function registerIntroductionSceneProjector(windowId: string, projector: IntroductionScenePointProjector): () => void {
-  introductionSceneProjectors.set(windowId, projector);
+const introductionSurfaceResolvers = new Map<string, IntroductionSurfaceResolver>();
+
+/** @emoji 🧭 Registers the demonstration-targeting resolver for the surface shown by window element
+ * `windowId` — call from the window's own host component (has the live camera/session/DOM refs),
+ * unregister on unmount via the returned disposer. Multiple concurrently open instances of the same
+ * window kind (split panes) last-write-wins; acceptable for a single demonstration target. */
+export function registerIntroductionSurfaceResolver(windowId: string, resolver: IntroductionSurfaceResolver): () => void {
+  introductionSurfaceResolvers.set(windowId, resolver);
   return () => {
-    if (introductionSceneProjectors.get(windowId) === projector) introductionSceneProjectors.delete(windowId);
+    if (introductionSurfaceResolvers.get(windowId) === resolver) introductionSurfaceResolvers.delete(windowId);
   };
 }
 
-/** @emoji 🧊 Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene projector. */
+/** @emoji 🧊 Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
 export function ndcToViewportPoint(
   ndc: { readonly x: number; readonly y: number },
   rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number },
@@ -5281,11 +5301,94 @@ export function ndcToViewportPoint(
 //#region 🎬DemonstrationResolve
 type IntroductionResolvedPoint = { readonly x: number; readonly y: number };
 
+/** @emoji 🪡 A point at `t` (0–1, clamped) along `points` by arc length — linearly interpolates between
+ * the two points straddling `t`'s cumulative distance. Degenerate inputs (0 or 1 points, zero-length
+ * polyline) return the first point (or the origin) for every `t`, never throw. */
+export function polylinePointAt(points: readonly { readonly x: number; readonly y: number }[], t: number): { readonly x: number; readonly y: number } {
+  if (points.length === 0) return { x: 0, y: 0 };
+  if (points.length === 1) return points[0];
+  const segmentLengths: number[] = [];
+  let totalLength = 0;
+  for (let i = 1; i < points.length; i++) {
+    const length = Math.hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    segmentLengths.push(length);
+    totalLength += length;
+  }
+  if (totalLength === 0) return points[0];
+  const targetDistance = Math.min(1, Math.max(0, t)) * totalLength;
+  let accumulated = 0;
+  for (let i = 0; i < segmentLengths.length; i++) {
+    const segmentLength = segmentLengths[i];
+    if (accumulated + segmentLength >= targetDistance || i === segmentLengths.length - 1) {
+      const segmentT = segmentLength === 0 ? 0 : (targetDistance - accumulated) / segmentLength;
+      return {
+        x: points[i].x + (points[i + 1].x - points[i].x) * segmentT,
+        y: points[i].y + (points[i + 1].y - points[i].y) * segmentT,
+      };
+    }
+    accumulated += segmentLength;
+  }
+  return points[points.length - 1];
+}
+
+/** @emoji 🪡 Samples a canvas-layer path (`move`/`line`/`quad`/`cubic` segments, in whatever local
+ * coordinate space the caller's points are already expressed in — apply layer transforms before calling)
+ * into a flat polyline via de Casteljau evaluation — the one parametric-curve evaluator this codebase has,
+ * needed because `IntroductionPoint.Curve` resolves through arc-length interpolation over a polyline, not
+ * a true parametric curve. `arc`/`close` segments are not sampled (curve targeting degrades to the
+ * straight gap between their neighbors); rare enough for a demonstration target to not warrant full SVG
+ * arc-to-bezier conversion. */
+export function sampleBezierSegments(
+  segments: readonly {
+    readonly kind?: string;
+    readonly to?: readonly [number, number];
+    readonly ctrl?: readonly [number, number];
+    readonly ctrl1?: readonly [number, number];
+    readonly ctrl2?: readonly [number, number];
+  }[],
+  samplesPerCurve = 16,
+): readonly { readonly x: number; readonly y: number }[] {
+  const points: { x: number; y: number }[] = [];
+  let current = { x: 0, y: 0 };
+  for (const segment of segments) {
+    if ((segment.kind === "move" || segment.kind === "line") && segment.to) {
+      current = { x: segment.to[0], y: segment.to[1] };
+      points.push(current);
+    } else if (segment.kind === "quad" && segment.ctrl && segment.to) {
+      const ctrl = { x: segment.ctrl[0], y: segment.ctrl[1] };
+      const to = { x: segment.to[0], y: segment.to[1] };
+      for (let i = 1; i <= samplesPerCurve; i++) {
+        const t = i / samplesPerCurve;
+        const oneMinusT = 1 - t;
+        points.push({
+          x: oneMinusT * oneMinusT * current.x + 2 * oneMinusT * t * ctrl.x + t * t * to.x,
+          y: oneMinusT * oneMinusT * current.y + 2 * oneMinusT * t * ctrl.y + t * t * to.y,
+        });
+      }
+      current = to;
+    } else if (segment.kind === "cubic" && segment.ctrl1 && segment.ctrl2 && segment.to) {
+      const ctrl1 = { x: segment.ctrl1[0], y: segment.ctrl1[1] };
+      const ctrl2 = { x: segment.ctrl2[0], y: segment.ctrl2[1] };
+      const to = { x: segment.to[0], y: segment.to[1] };
+      for (let i = 1; i <= samplesPerCurve; i++) {
+        const t = i / samplesPerCurve;
+        const oneMinusT = 1 - t;
+        points.push({
+          x: oneMinusT ** 3 * current.x + 3 * oneMinusT * oneMinusT * t * ctrl1.x + 3 * oneMinusT * t * t * ctrl2.x + t ** 3 * to.x,
+          y: oneMinusT ** 3 * current.y + 3 * oneMinusT * oneMinusT * t * ctrl1.y + 3 * oneMinusT * t * t * ctrl2.y + t ** 3 * to.y,
+        });
+      }
+      current = to;
+    }
+  }
+  return points;
+}
+
 /** @emoji 📌 Resolves an `IntroductionPoint` to a live viewport pixel. Called every animation frame by a
  * playing demonstration — re-resolving (rather than caching) keeps a drag path glued to a target that's
- * still moving (a resizing panel, an orbiting 3D camera). `null` means "not resolvable yet" (element not
- * mounted, scene projector not registered, or the 3D point is off-camera) — callers wait and retry next
- * frame rather than treating it as an error. */
+ * still moving (a resizing panel, an orbiting 3D camera, a panning 2D canvas). `null` means "not
+ * resolvable yet" (element not mounted, no surface resolver registered, entity not found/hidden, or a 3D
+ * point off-camera) — callers wait and retry next frame rather than treating it as an error. */
 export function resolveIntroductionPoint(point: IntroductionPoint): IntroductionResolvedPoint | null {
   switch (point.kind) {
     case "element": {
@@ -5312,11 +5415,41 @@ export function resolveIntroductionPoint(point: IntroductionPoint): Introduction
       return { x: rect.left + point.x * rect.width, y: rect.top + point.y * rect.height };
     }
     case "scene": {
-      const projector = introductionSceneProjectors.get(point.id);
-      if (!projector) return null;
-      const projected = projector(point.position);
+      const resolver = introductionSurfaceResolvers.get(point.id);
+      const projected = resolver?.scenePoint?.(point.position);
       if (!projected || !projected.visible) return null;
       return { x: projected.x, y: projected.y };
+    }
+    case "canvas": {
+      const resolver = introductionSurfaceResolvers.get(point.id);
+      const projected = resolver?.canvasPoint?.(point.x, point.y);
+      if (!projected || !projected.visible) return null;
+      return { x: projected.x, y: projected.y };
+    }
+    case "entity": {
+      const resolver = introductionSurfaceResolvers.get(point.id);
+      const geometry = resolver?.entity?.(point.domain, point.entity);
+      if (!geometry || !geometry.visible) return null;
+      if (!geometry.rect) return geometry.point;
+      const [offsetX, offsetY] = point.offset ?? [0.5, 0.5];
+      return { x: geometry.rect.x + offsetX * geometry.rect.width, y: geometry.rect.y + offsetY * geometry.rect.height };
+    }
+    case "curve": {
+      const resolver = introductionSurfaceResolvers.get(point.id);
+      const geometry = resolver?.entity?.(point.domain, point.entity);
+      if (!geometry || !geometry.visible || !geometry.polyline || geometry.polyline.length === 0) return null;
+      return polylinePointAt(geometry.polyline, point.t);
+    }
+    case "domain": {
+      const resolver = introductionSurfaceResolvers.get(point.id);
+      const geometry = resolver?.entity?.(point.domain, point.entity);
+      if (!geometry || !geometry.visible || !geometry.rect || !geometry.domain) return null;
+      const { min, max, axis } = geometry.domain;
+      const t = max === min ? 0 : (Math.min(max, Math.max(min, point.value)) - min) / (max - min);
+      const rect = geometry.rect;
+      // 🎚️ x-axis tracks read left→right with increasing value; y-axis tracks read bottom→top (screen y
+      // decreases upward), matching how a vertical slider's "up" reads as "more".
+      return axis === "x" ? { x: rect.x + t * rect.width, y: rect.y + rect.height / 2 } : { x: rect.x + rect.width / 2, y: rect.y + (1 - t) * rect.height };
     }
     default:
       return null;
@@ -5788,6 +5921,25 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const interactions = step?.interactions ?? [];
   const advanceByButton = interactions.length === 0;
 
+  // 🎉 Celebrates a checklist row's own label text (conic-gradient ring, see `[data-celebrated="true"]`
+  // in `ui.css`) the instant its interaction flips from pending to done — on top of whatever app element
+  // `interaction.celebrate`/`step.introduce` celebrates, so the completed line item itself visibly glows.
+  const interactionLabelRefs = reactHostPort.useRef<Map<number, HTMLSpanElement>>(new Map());
+  const prevCompletedRef = reactHostPort.useRef<{ stepIndex: number; indices: readonly number[] }>({ stepIndex, indices: [] });
+  reactHostPort.useEffect(() => {
+    const prev = prevCompletedRef.current;
+    const current = completedInteractionIndices ?? [];
+    if (prev.stepIndex === stepIndex) {
+      for (const index of current) {
+        if (!prev.indices.includes(index)) {
+          const label = interactionLabelRefs.current.get(index);
+          if (label) celebrateElement(label);
+        }
+      }
+    }
+    prevCompletedRef.current = { stepIndex, indices: current };
+  }, [stepIndex, completedInteractionIndices]);
+
   useHotkeys("escape", skip, { enableOnFormTags: true }, [skip]);
   useHotkeys("enter,arrowright", () => advanceByButton && next(), { enableOnFormTags: true }, [advanceByButton, next]);
   useHotkeys("arrowleft", back, { enableOnFormTags: true }, [back]);
@@ -5833,7 +5985,16 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
                 <li key={index} data-completed={done || undefined} className={cn("flex items-center gap-single", done ? "text-foreground" : "text-muted-foreground")}>
                   <Icon icon={done ? "check" : "circle"} size="small" />
                   {step.ordered && <span data-slot="introduction-interaction-index">{index + 1}.</span>}
-                  <span data-slot="introduction-interaction-label">{interaction.label}</span>
+                  <span
+                    ref={(el) => {
+                      if (el) interactionLabelRefs.current.set(index, el);
+                      else interactionLabelRefs.current.delete(index);
+                    }}
+                    data-slot="introduction-interaction-label"
+                    className="inline-flex items-center"
+                  >
+                    {interaction.label}
+                  </span>
                 </li>
               );
             })}
@@ -6112,7 +6273,11 @@ export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border 
 
 //#region 🫳DragAffordance
 
-/** @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables. `emphasized` mirrors the ambient active/ready state of the element it belongs to, so the grip reads as clearly as the label/icon beside it. */
+/**
+ * @emoji 🫳 Universal grip that starts a drag — pass `onPointerDown` for pointer-capture drags (and optionally the rest of {@link usePointerDrag}'s handlers), spread dnd-kit `attributes`/`listeners`, or use as a pure affordance on whole-surface draggables.
+ * `emphasized` mirrors the ambient active/ready state of the element it belongs to.
+ * Parent hover emphasis is CSS: `[data-hover-scope]:hover [data-slot="drag-handle"]` in `ui.css` — the grip paints its own muted color at rest and cannot inherit `hover:text-emphasized` from the label/icon beside it.
+ */
 export const DragHandle: React.FC<{
   readonly onPointerDown?: React.PointerEventHandler<HTMLSpanElement>;
   readonly onPointerMove?: React.PointerEventHandler<HTMLSpanElement>;
@@ -10809,6 +10974,15 @@ export function resolveSliderDraftClear(pending: number[] | null, external: read
   return sliderValuesMatch(pending, external, step) ? null : pending;
 }
 
+/** @emoji 🪣 Clamps every value to `ready` (a preloaded/planned extent, e.g. a background fill plan's
+ * progress) — the thumb must never be draggable past what's actually available, and `min` is the floor
+ * so a `ready` of 0 still leaves the slider at its resting position rather than collapsing below `min`. */
+export function clampSliderValuesToReady(values: readonly number[], ready: number | undefined, min: number): number[] {
+  if (ready == null) return values.slice();
+  const ceiling = Math.max(min, ready);
+  return values.map((value) => Math.min(value, ceiling));
+}
+
 /**
  * Slider holds the data fields for a Slider record.
  **/
@@ -10825,6 +10999,7 @@ function Slider({
   showValue = true,
   formatDisplayValue,
   onValueChange,
+  onValueCommit,
   onPointerDown,
   onPointerUp,
   onPointerCancel,
@@ -10833,11 +11008,16 @@ function Slider({
   snapValues,
   step,
   disabled,
+  clampToReady = false,
   ...props
 }: React.ComponentProps<typeof SliderPrimitive.Root> &
   ElementProps & {
     /** @emoji 🎚 Absolute value along the fixed `[min, max]` range that is already preloaded/ready; drawn as a highlight to the right of the knob. */
     ready?: number;
+    /** @emoji 🪣 When true, the thumb cannot be dragged/keyed/typed past `ready` — for measures where
+     * `ready` is a hard availability limit (e.g. a background-planned count), not merely a preload hint.
+     * Most `ready` consumers want the highlight without the hard limit, so this defaults to `false`. */
+    clampToReady?: boolean;
     /** @emoji 🌀 Spinning loading ring around the track only — never the row, so the knob and hover chrome stay visible. */
     loading?: boolean;
     /** @emoji 🌀 Dashed, slow-spinning waiting ring around the track only — never the row, so the knob and hover chrome stay visible. */
@@ -10847,6 +11027,8 @@ function Slider({
     showValue?: boolean;
     /** @emoji 🔢 Optional readout formatter — defaults to {@link formatNumber}. */
     formatDisplayValue?: (value: number) => string;
+    /** @emoji 🪣 Fires once per gesture on release (pointer-up, arrow-key-up, or Enter in the text edit) — snapped and clamped-to-`ready` like `onValueChange`, but never fired mid-drag. Use for callers that must not round-trip on every drag value. */
+    onValueCommit?: (values: number[]) => void;
     onPointerDown?: () => void;
     onPointerUp?: () => void;
     onPointerCancel?: () => void;
@@ -10901,11 +11083,21 @@ function Slider({
 
   const handleValueChange = reactHostPort.useCallback(
     (values: number[]) => {
-      const nextValues = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      const nextValues = clampToReady ? clampSliderValuesToReady(snapped, ready, min) : snapped;
       setPendingDraftValues(nextValues);
       onValueChange?.(nextValues);
     },
-    [snapValues, findNearestSnapValue, onValueChange],
+    [snapValues, findNearestSnapValue, onValueChange, clampToReady, ready, min],
+  );
+
+  const handleValueCommit = reactHostPort.useCallback(
+    (values: number[]) => {
+      const snapped = snapValues && snapValues.length > 0 ? values.map(findNearestSnapValue) : values;
+      const nextValues = clampToReady ? clampSliderValuesToReady(snapped, ready, min) : snapped;
+      onValueCommit?.(nextValues);
+    },
+    [snapValues, findNearestSnapValue, onValueCommit, clampToReady, ready, min],
   );
 
   const handleValueClick = () => {
@@ -10921,6 +11113,7 @@ function Slider({
       const newValue = parseFloat(editValue);
       if (!isNaN(newValue) && newValue >= min && newValue <= max) {
         handleValueChange([newValue]);
+        handleValueCommit([newValue]);
       }
       setIsEditing(false);
       transaction?.finalize?.();
@@ -10995,6 +11188,7 @@ function Slider({
         setIsSliding(false);
         setPendingDraftValues(null);
         transaction?.abort?.();
+        onPointerCancel?.();
       }
     }
   };
@@ -11011,6 +11205,7 @@ function Slider({
       max={max}
       step={step}
       onValueChange={handleValueChange}
+      onValueCommit={handleValueCommit}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -15159,121 +15354,123 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
 
   if (layoutKind === "property") {
+    const PropertyFoldChevron = treeFoldChevronIcon(direction, inline, open);
+    // 🌳 Header-only hover `group` — nested children must be siblings, not descendants, otherwise
+    // parent `group-hover` fill lights up every nested vortex/distribution row at once.
+    const propertyHeader = (
+      <div
+        data-dim
+        data-slot="tree-property-item"
+        data-hover-scope
+        data-tree-row-kind={isExpandable ? "group" : "property"}
+        role="treeitem"
+        id={id}
+        data-state={open ? "open" : "closed"}
+        className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
+        draggable={effectiveDraggable}
+        onDragStart={onDragStart}
+        onDragEnd={handleDragEnd}
+        onDragOver={onDragOver}
+        onDragLeave={onDragLeave}
+        onDrop={onDrop}
+        onDoubleClick={(event) => {
+          if (!onDoubleClick) return;
+          event.preventDefault();
+          event.stopPropagation();
+          onDoubleClick(event);
+        }}
+        onMouseEnter={handlePointerEnter}
+        onMouseLeave={handlePointerLeave}
+        onPointerDown={onPointerDown}
+        onPointerMove={onPointerMove}
+        onPointerUp={onPointerUp}
+        onPointerCancel={onPointerCancel}
+      >
+        <TreeAlignedRow
+          level={level}
+          isLastAtLevel={isLastAtLevel}
+          showLines={showLines}
+          connectCurrentLevel={level > 0}
+          extendBranchStem={isExpandable && open && hasChildren}
+          slot={
+            isExpandable ? (
+              <button
+                type="button"
+                className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
+                onClick={(event) => {
+                  event.preventDefault();
+                  event.stopPropagation();
+                  setOpen(!open);
+                }}
+              >
+                <PropertyFoldChevron className="size-small flex-shrink-0" />
+              </button>
+            ) : undefined
+          }
+          contentClassName="min-w-0"
+          contentChromeClassName={itemContentFillClassName}
+        >
+          <div className={cn(treePropertyHeaderGridClassName, treeInspectorInnerRowClassName)} style={treePropertyHeaderGridStyle}>
+            <div className={treeHeaderMainClassName}>
+              {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text", rowEmphasized)}
+              <span
+                data-slot="tree-label"
+                title={controlHint}
+                className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
+                style={treeItemLabelStyle}
+                onClick={(event) => {
+                  if (event.detail > 1) return;
+                  event.preventDefault();
+                  event.stopPropagation();
+                  if (isExpandable) {
+                    setOpen(!open);
+                    return;
+                  }
+                  onClick?.(event);
+                }}
+              >
+                {resolvedLabel as React.ReactNode}
+              </span>
+            </div>
+            <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")}>
+              {!isExpandable ? (
+                <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
+              ) : headerControl ? (
+                <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
+              ) : null}
+              {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
+              {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+            </div>
+          </div>
+        </TreeAlignedRow>
+      </div>
+    );
+    const propertyContent = isExpandable ? (
+      open ? (
+        <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
+          <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
+            {children}
+          </TreeBranchContent>
+        </TreeContext.Provider>
+      ) : (
+        <div data-slot="tree-property-content" className="min-w-0" />
+      )
+    ) : null;
+    const propertyBlock =
+      direction === "up" ? (
+        <>
+          {propertyContent}
+          {propertyHeader}
+        </>
+      ) : (
+        <>
+          {propertyHeader}
+          {propertyContent}
+        </>
+      );
     return (
       <TreeItemRowContextMenu items={contextMenu}>
-        <div
-          data-dim
-          data-slot="tree-property-item"
-          data-hover-scope
-          data-tree-row-kind={isExpandable ? "group" : "property"}
-          role="treeitem"
-          id={id}
-          data-state={open ? "open" : "closed"}
-          className={cn("min-w-0 w-full", treeRowChromeShellClasses(isSelected, isHighlighted, isHidden), isDropReady && dropZoneReadyTextClass, className)}
-          draggable={effectiveDraggable}
-          onDragStart={onDragStart}
-          onDragEnd={handleDragEnd}
-          onDragOver={onDragOver}
-          onDragLeave={onDragLeave}
-          onDrop={onDrop}
-          onDoubleClick={(event) => {
-            if (!onDoubleClick) return;
-            event.preventDefault();
-            event.stopPropagation();
-            onDoubleClick(event);
-          }}
-          onMouseEnter={handlePointerEnter}
-          onMouseLeave={handlePointerLeave}
-          onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
-          onPointerCancel={onPointerCancel}
-        >
-          {(() => {
-            const PropertyFoldChevron = treeFoldChevronIcon(direction, inline, open);
-            const propertyHeader = (
-              <TreeAlignedRow
-                level={level}
-                isLastAtLevel={isLastAtLevel}
-                showLines={showLines}
-                connectCurrentLevel={level > 0}
-                extendBranchStem={isExpandable && open && hasChildren}
-                slot={
-                  isExpandable ? (
-                    <button
-                      type="button"
-                      className="flex-shrink-0 p-0 border-0 bg-transparent cursor-foldable"
-                      onClick={(event) => {
-                        event.preventDefault();
-                        event.stopPropagation();
-                        setOpen(!open);
-                      }}
-                    >
-                      <PropertyFoldChevron className="size-small flex-shrink-0" />
-                    </button>
-                  ) : undefined
-                }
-                contentClassName="min-w-0"
-                contentChromeClassName={itemContentFillClassName}
-              >
-                <div className={cn(treePropertyHeaderGridClassName, treeInspectorInnerRowClassName)} style={treePropertyHeaderGridStyle}>
-                  <div className={treeHeaderMainClassName}>
-                    {renderTreeRowIcon(icon, isExpandable ? "folder" : "file-text", rowEmphasized)}
-                    <span
-                      data-slot="tree-label"
-                      title={controlHint}
-                      className={cn(treeItemLabelSlotClassName, "truncate font-medium transition-colors", isExpandable ? "cursor-foldable" : "cursor-selectable", "select-text")}
-                      style={treeItemLabelStyle}
-                      onClick={(event) => {
-                        if (event.detail > 1) return;
-                        event.preventDefault();
-                        event.stopPropagation();
-                        if (isExpandable) {
-                          setOpen(!open);
-                          return;
-                        }
-                        onClick?.(event);
-                      }}
-                    >
-                      {resolvedLabel as React.ReactNode}
-                    </span>
-                  </div>
-                  <div data-slot="tree-item-control" className={cn(treeItemControlClassName, "gap-double")}>
-                    {!isExpandable ? (
-                      <PropertyValueColumnContext.Provider value={true}>{children}</PropertyValueColumnContext.Provider>
-                    ) : headerControl ? (
-                      <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
-                    ) : null}
-                    {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                    {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
-                  </div>
-                </div>
-              </TreeAlignedRow>
-            );
-            const propertyContent = isExpandable ? (
-              open ? (
-                <TreeContext.Provider value={{ level: level + 1, isLastAtLevel: [...isLastAtLevel, isLastItem], showLines, isTree, indentMultiplier, direction }}>
-                  <TreeBranchContent slot="tree-property-content" ownerRowKind="group" ownerExpanded={open && hasChildren} className="min-w-0" topPaddingPx={treeItemContentPaddingTopPx}>
-                    {children}
-                  </TreeBranchContent>
-                </TreeContext.Provider>
-              ) : (
-                <div data-slot="tree-property-content" className="min-w-0" />
-              )
-            ) : null;
-            return direction === "up" ? (
-              <>
-                {propertyContent}
-                {propertyHeader}
-              </>
-            ) : (
-              <>
-                {propertyHeader}
-                {propertyContent}
-              </>
-            );
-          })()}
-        </div>
+        {isExpandable ? <div className="min-w-0 w-full">{propertyBlock}</div> : propertyHeader}
       </TreeItemRowContextMenu>
     );
   }
@@ -15659,8 +15856,8 @@ const clearTreeHoverPath = (root: HTMLElement) => {
 
 /**
  * 📦Derive the row element that owns a branch container.
- * Handles all DOM shapes: tree-item-row/control-tree-row siblings (branch below for `down`, above for `up`),
- * tree-section-row beside collapsible-content, tree-property-item parent.
+ * Handles all DOM shapes: tree-item-row/control-tree-row/tree-property-item siblings (branch below for `down`, above for `up`),
+ * tree-section-row beside collapsible-content.
  */
 const rowForBranch = (branch: Element): Element | null => {
   const prev = branch.previousElementSibling;
@@ -15675,7 +15872,6 @@ const rowForBranch = (branch: Element): Element | null => {
   }
   const parent = branch.parentElement;
   const parentSlot = parent?.getAttribute("data-slot");
-  if (parentSlot === "tree-property-item") return parent!;
   if (parentSlot === "collapsible-content") {
     const previousRow = parent!.previousElementSibling;
     if (previousRow?.getAttribute("data-slot") === "tree-section-row") return previousRow;
@@ -15721,10 +15917,10 @@ const markTerminalBranch = (row: Element, pathAttr: string) => {
       }
     }
   } else if (slot === "tree-property-item") {
-    for (const child of Array.from(row.children)) {
-      if (child.getAttribute("data-slot") === "tree-property-content") {
-        child.setAttribute(pathAttr, "branch");
-        break;
+    for (const sibling of [row.nextElementSibling, row.previousElementSibling]) {
+      if (sibling?.getAttribute("data-slot") === "tree-property-content") {
+        sibling.setAttribute(pathAttr, "branch");
+        return;
       }
     }
   }
@@ -21106,15 +21302,19 @@ export const resolveSceneGizmoSnapTarget = (direction: Pick<THREE.Vector3, "x" |
 export const resolveSceneGizmoViewportPlacement = (viewport: { width: number; height: number }): SceneGizmoViewportPlacement => {
   // 🧭 GizmoHelper `margin` is the offset to the widget CENTER. Match pane chrome (`anchorPositionStyle`
   // uses `--spacing-single` from the edge to the widget's outer edge) by adding half the navigation-cube
-  // screen extent so face/corner tips clear the edge by the same inset as panes/windows.
+  // screen extent so face/corner tips clear the edge by the same inset as panes/windows. Bottom margin
+  // additionally clears the folded projection pane chrome (`h-medium`) plus one spacing gap so the cube
+  // sits directly above it; when that pane unfolds it grows upward over the cube (DOM overlay on canvas).
   const chromeInset = Math.max(4, Math.round(uiSpacingPx(1)));
+  const foldedPaneChromePx = Math.round(uiSpacingPx(7));
   const gizmoHalfExtentPx = 28;
-  const preferred = chromeInset + gizmoHalfExtentPx;
-  const maxFit = Math.max(22, Math.floor(Math.min(viewport.width, viewport.height) / 3));
-  const margin = Math.min(preferred, maxFit);
+  const preferredX = chromeInset + gizmoHalfExtentPx;
+  const preferredY = chromeInset + foldedPaneChromePx + chromeInset + gizmoHalfExtentPx;
+  const maxFitX = Math.max(22, Math.floor(viewport.width / 3));
+  const maxFitY = Math.max(22, Math.floor(viewport.height / 3));
   return {
     alignment: "bottom-right",
-    margin: [margin, margin],
+    margin: [Math.min(preferredX, maxFitX), Math.min(preferredY, maxFitY)],
   };
 };
 
@@ -26085,6 +26285,41 @@ if (import.meta.vitest) {
       }
     });
 
+    it("celebrating by a window-kind alias id stamps every pane of that kind, but celebrating by one pane's own element id stamps only that pane", () => {
+      // 🪟 Mirrors two open panes of the same window kind (e.g. a split-view aggregator viewport): each
+      // pane's own `id` is unique (`windowElementId`/`childElementId` of its *instance* id), while both
+      // share the kind-level `data-element-alias` (`windowElementId` of the *kind* id). A completed
+      // pan/zoom/orbit interaction must celebrate only the pane that performed the gesture — never every
+      // aliased pane — so the shell targets the specific pane's own id, not the shared kind alias.
+      vi.useFakeTimers();
+      try {
+        const { container } = render(
+          <div>
+            <div id="framework.window.puzzle3dMainTop" data-element-alias="framework.window.puzzle3dMain" />
+            <div id="framework.window.puzzle3dMainPerspective" data-element-alias="framework.window.puzzle3dMain" />
+          </div>,
+        );
+        const top = container.querySelector("#framework\\.window\\.puzzle3dMainTop")!;
+        const perspective = container.querySelector("#framework\\.window\\.puzzle3dMainPerspective")!;
+
+        celebrateElements(elementIdSelector("framework.window.puzzle3dMain"), 1000);
+        expect(top.getAttribute("data-celebrated")).toBe("true");
+        expect(perspective.getAttribute("data-celebrated")).toBe("true");
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+
+        celebrateElements(elementIdSelector("framework.window.puzzle3dMainTop"), 1000);
+        expect(top.getAttribute("data-celebrated")).toBe("true");
+        expect(perspective.getAttribute("data-celebrated")).toBeNull();
+        act(() => {
+          vi.advanceTimersByTime(1000);
+        });
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("celebrateAllElements stamps every valid UI element id and alias, skips introduction chrome and non-grammar ids", () => {
       vi.useFakeTimers();
       const logSpy = vi.spyOn(console, "log").mockImplementation(() => {});
@@ -26706,7 +26941,7 @@ if (import.meta.vitest) {
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover/);
       expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover[\s\S]*?border-color:\s*var\(--border-emphasized-color\)\s*!important;/);
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
-      expect(css).toMatch(/\[data-slot="dialog-box"\]:focus-within/);
+      expect(css).not.toMatch(/\[data-slot="dialog-box"\]:focus-within/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-emphasized");
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
@@ -26777,6 +27012,48 @@ if (import.meta.vitest) {
       expect(rows[1].getAttribute("data-completed")).toBe("true");
       expect(rows[2].getAttribute("data-completed")).toBeNull();
       expect(screen.queryByRole("button", { name: /next|done/i })).toBeNull();
+    });
+
+    it("celebrates a checklist row's own label text the instant its interaction flips to done, and only that row", () => {
+      vi.useFakeTimers();
+      try {
+        const steps: IntroductionStepDefinition[] = [
+          {
+            id: "viewport",
+            title: "Viewport",
+            body: "Navigate.",
+            introduce: null,
+            show: [],
+            placement: "center",
+            interactions: [
+              { on: { kind: "zoom", id: "puzzle3d-main" }, label: "Zoom" },
+              { on: { kind: "pan", id: "puzzle3d-main" }, label: "Pan" },
+            ],
+            ordered: false,
+            logos: [],
+            demonstrations: [],
+          },
+        ];
+        const { container, rerender } = render(
+          <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
+        );
+        const labels = () => container.querySelectorAll('[data-slot="introduction-interaction-label"]');
+        expect(labels()[0]?.getAttribute("data-celebrated")).toBeNull();
+        expect(labels()[1]?.getAttribute("data-celebrated")).toBeNull();
+
+        rerender(
+          <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[0]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
+        );
+        expect(labels()[0]?.getAttribute("data-celebrated")).toBe("true");
+        expect(labels()[1]?.getAttribute("data-celebrated")).toBeNull();
+
+        act(() => {
+          vi.advanceTimersByTime(CELEBRATE_STAMP_DURATION_MS);
+        });
+        expect(labels()[0]?.getAttribute("data-celebrated")).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
     });
 
     it("numbers checklist rows when the step is ordered, and omits numbers when it isn't", () => {
@@ -27077,6 +27354,26 @@ if (import.meta.vitest) {
       expect(resolveSliderDraftClear([42], [42], 1)).toBeNull();
       expect(sliderValuesMatch([0.5], [0.51], 0.1)).toBe(true);
       expect(sliderValuesMatch([0.5], [0.8], 0.1)).toBe(false);
+    });
+  });
+
+  describe("clampSliderValuesToReady", () => {
+    it("passes values through unchanged when ready is not set", () => {
+      expect(clampSliderValuesToReady([500], undefined, 0)).toEqual([500]);
+    });
+
+    it("clamps every value down to the ready extent", () => {
+      expect(clampSliderValuesToReady([500], 40, 0)).toEqual([40]);
+      expect(clampSliderValuesToReady([10, 500], 40, 0)).toEqual([10, 40]);
+    });
+
+    it("leaves values at or below ready untouched", () => {
+      expect(clampSliderValuesToReady([40], 40, 0)).toEqual([40]);
+      expect(clampSliderValuesToReady([5], 40, 0)).toEqual([5]);
+    });
+
+    it("floors the clamp ceiling at min, even when ready is below it", () => {
+      expect(clampSliderValuesToReady([50], 0, 10)).toEqual([10]);
     });
   });
 
@@ -30678,18 +30975,18 @@ if (import.meta.vitest) {
       });
       const { container, rerender } = render(
         <PaneHost>
-          <Pane id="fold-pane" anchor="bottom-middle" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+          <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
             <div data-testid="fold-pane-content">Modes</div>
           </Pane>
         </PaneHost>,
       );
       expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
-      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-middle");
+      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
       fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
       expect(onFoldToggle).toHaveBeenCalledTimes(1);
       rerender(
         <PaneHost>
-          <Pane id="fold-pane" anchor="bottom-middle" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+          <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
             <div data-testid="fold-pane-content">Modes</div>
           </Pane>
         </PaneHost>,
@@ -31104,6 +31401,24 @@ if (treeVitest) {
       expect(document.getElementById("group-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
       expect(document.getElementById("section-a")?.getAttribute("data-tree-selection-path")).toBe("row");
       expect(document.getElementById("section-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+    });
+
+    it("syncTreeSelectionPath marks property-layout parent rows when nested content is a sibling branch", () => {
+      document.body.innerHTML = `
+        <div id="tree-root">
+          <div data-slot="tree-property-item" id="object-a"></div>
+          <div data-slot="tree-property-content" id="object-branch">
+            <div data-slot="tree-property-item" id="vortex-a"></div>
+            <div data-slot="tree-property-item" id="vortex-b"></div>
+          </div>
+        </div>
+      `;
+      const root = document.getElementById("tree-root")!;
+      syncTreeSelectionPath(root, ["vortex-a"]);
+      expect(document.getElementById("vortex-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("object-a")?.getAttribute("data-tree-selection-path")).toBe("row");
+      expect(document.getElementById("object-branch")?.getAttribute("data-tree-selection-path")).toBe("branch");
+      expect(document.getElementById("vortex-b")?.hasAttribute("data-tree-selection-path")).toBe(false);
     });
 
     it("markGhostTreeInteraction keeps only the active tree ancestry and guides visible", () => {
@@ -31623,7 +31938,7 @@ if (treeVitest) {
 
       expect(markup).toContain('data-slot="tree-property-item"');
       expect(markup).toContain('data-slot="tree-row-content"');
-      expect(markup).toContain('class="flex h-full items-center gap-double min-w-0 w-full"');
+      expect(markup).toContain('data-slot="tree-item-control"');
       expect(markup).toContain('data-slot="tree-row-layout"');
       expect(markup).toContain('data-slot="tree-gutter"');
       expect(markup).toContain("grid-template-columns:calc(");
@@ -31631,6 +31946,52 @@ if (treeVitest) {
       expect(markup).toContain('data-slot="tree-property-content"');
       expect(markup).not.toContain('data-slot="tree-header-actions"');
       expect(markup).toContain('data-slot="property-row"');
+      expect(markup.indexOf('data-slot="tree-property-item"')).toBeLessThan(markup.indexOf('data-slot="tree-property-content"'));
+      expect(markup).toMatch(/data-slot="tree-property-item"[\s\S]*?<\/div><div[^>]*data-slot="tree-property-content"/);
+    });
+
+    it("keeps nested property-layout children outside the parent hover group so sibling rows do not share group-hover fill", () => {
+      const markup = renderToStaticMarkup(
+        <TreeStateProvider>
+          <Tree
+            sections={[
+              {
+                id: "tool.fill.options",
+                label: "",
+                defaultOpen: true,
+                items: [
+                  {
+                    id: "puzzle3d-fill-object-capsule",
+                    label: "Capsule",
+                    defaultOpen: true,
+                    control: <Slider id="puzzle3d-fill-object-capsule-slider" value={[0.5]} min={0} max={1} step={0.01} />,
+                    items: [
+                      { id: "puzzle3d-fill-vortex-a", label: "Joint A", control: <Slider id="puzzle3d-fill-vortex-a-slider" value={[0.25]} min={0} max={0.5} step={0.01} /> },
+                      { id: "puzzle3d-fill-vortex-b", label: "Joint B", control: <Slider id="puzzle3d-fill-vortex-b-slider" value={[0.25]} min={0} max={0.5} step={0.01} /> },
+                    ],
+                  },
+                ],
+              },
+            ]}
+          />
+        </TreeStateProvider>,
+      );
+
+      document.body.innerHTML = markup;
+      const parentRow = document.getElementById("puzzle3d-fill-object-capsule");
+      const branch = document.querySelector('[data-slot="tree-property-content"]');
+      const childA = document.getElementById("puzzle3d-fill-vortex-a");
+      const childB = document.getElementById("puzzle3d-fill-vortex-b");
+      expect(parentRow?.getAttribute("data-slot")).toBe("tree-property-item");
+      expect(parentRow?.className).toContain("group");
+      expect(branch).not.toBeNull();
+      expect(parentRow?.contains(branch)).toBe(false);
+      expect(branch?.contains(childA)).toBe(true);
+      expect(branch?.contains(childB)).toBe(true);
+      expect(childA?.closest('[data-slot="tree-property-item"]')?.className).toContain("group");
+      expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
+      expect(childB?.closest('[data-slot="tree-property-item"]')).not.toBe(parentRow);
+      expect(childA?.closest('[data-slot="tree-property-item"]')).not.toBe(childB?.closest('[data-slot="tree-property-item"]'));
     });
 
     it("keeps leaf and expandable sibling rows on the same gutter rhythm", () => {
@@ -31810,6 +32171,21 @@ if (treeVitest) {
 
       fireEvent.keyDown(thumb!, { key: "ArrowRight" });
       expect(onValueChange).toHaveBeenLastCalledWith([56]);
+    });
+
+    it("clampToReady stops the thumb at the ready extent instead of the fixed max", async () => {
+      // 🪣 Opt-in: most `ready` consumers (the test above) want the highlight without a hard limit;
+      // a background-planned count (e.g. puzzle3d's fill slider) needs `clampToReady` to make the
+      // un-planned tail physically unreachable.
+      const { fireEvent, render } = await import("@testing-library/react");
+      const onValueChange = vi.fn();
+      const { container } = render(<Slider id="ui.slider.ready-clamped" value={[55]} min={0} max={100} ready={55} step={1} clampToReady onValueChange={onValueChange} />);
+      const thumb = container.querySelector('[data-slot="slider-thumb"]');
+      expect(thumb).not.toBeNull();
+
+      fireEvent.keyDown(thumb!, { key: "ArrowRight" });
+      // Clamped back to the ready ceiling (55) instead of advancing to 56.
+      expect(onValueChange).toHaveBeenLastCalledWith([55]);
     });
 
     it("forwards fractional step to the radix root so 0–1 probability sliders are not stuck at 0/1", async () => {
@@ -32540,15 +32916,15 @@ if (treeVitest) {
       });
     });
 
-    it("keeps the gizmo in the bottom-right corner with pane-matched chrome inset", () => {
+    it("keeps the gizmo in the bottom-right corner above the folded projection pane chrome", () => {
       expect(resolveSceneGizmoViewportPlacement({ width: 1280, height: 720 })).toEqual({
         alignment: "bottom-right",
-        margin: [32, 32],
+        margin: [32, 58],
       });
 
       expect(resolveSceneGizmoViewportPlacement({ width: 120, height: 160 })).toEqual({
         alignment: "bottom-right",
-        margin: [32, 32],
+        margin: [32, 53],
       });
 
       expect(resolveSceneGizmoViewportPlacement({ width: 40, height: 48 })).toEqual({
@@ -33178,10 +33554,25 @@ if (treeVitest) {
       expect(css).toContain('[data-slot="footer"]::before');
       expect(css).toMatch(/\[data-slot="navbar"\]:hover::after/);
       expect(css).toMatch(/\[data-slot="footer"\]:hover::before/);
+      expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
+      expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
       expect(css).toContain("background-color: var(--border-emphasized-color)");
       expect(css).toContain(':is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"]');
       expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+      expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
       expect(css).toContain("[data-slot=\"mode-dock-stack\"]:not([data-active=\"true\"]):hover [data-slot=\"mode-dock-silhouette-border\"][data-kind=\"normal\"] path");
+      expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
+      expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+    });
+
+    it("pane and panel chrome toggles keep the drag handle inside data-hover-scope so parent hover can emphasize it", () => {
+      const paneMarkup = renderToStaticMarkup(<WindowPaneChromeToggle id="ui.pane.toggle.hover" icon={WINDOW_PANE_MEASURES_ICON} label="Options" />);
+      expect(paneMarkup).toContain("data-hover-scope");
+      expect(paneMarkup).toContain('data-slot="drag-handle"');
+      expect(paneMarkup).toMatch(/data-hover-scope[\s\S]*data-slot="drag-handle"/);
+      const handleClassName = paneMarkup.match(/data-slot="drag-handle"[^>]*class="([^"]+)"/)?.[1] ?? "";
+      expect(handleClassName).toContain("text-muted-foreground");
+      expect(handleClassName).toContain("hover:text-emphasized");
     });
 
     it("draws exactly one border around the Stepper group, never a second one on its buttons", () => {

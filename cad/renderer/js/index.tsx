@@ -4731,9 +4731,9 @@ export function buildInteractionReplSearch(inputs: InteractionReplEngagementInpu
   };
 }
 
-/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-middle with fold chrome; falls back to a local overlay when no pane host is available. */
+/** @emoji 🔀 Portals the world's projection-kind switch into the enclosing window's pane host (see `usePaneSlot`). Defaults to bottom-right under the navigation cube; the unfolded pane grows over it. Falls back to a local overlay when no pane host is available. */
 function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec: WorldProjectionSpec; readonly onSpecChange: (spec: WorldProjectionSpec) => void }) {
-  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-middle");
+  const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   const [folded, setFolded] = reactHostPort.useState(true);
   const pane = (
     <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label="Projection">

@@ -729,6 +729,19 @@ pub fn build_history_columns<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Ve
 //#endregion 🔖History
 
 //#region 🔖DocumentVcsStore
+/// @emoji 🪢 Caches the post-projection right after the last `AmendLast` into `edit_id`, so the next
+/// amend to the SAME coalesced edit only replays its NEW operations instead of re-materializing the
+/// entire prior history and re-replaying the edit's whole accumulated `forwards` from scratch — without
+/// this, a long coalesced gesture (e.g. dragging a slider for a while) is O(gesture-length²). Validated
+/// against `forwards_len` before use (see `AmendLast`) so any out-of-band mutation of the same edit
+/// (there is none today, but the check is free) falls back to a full, always-correct replay.
+struct AmendCache<P> {
+    edit_id: String,
+    coalesce_key: String,
+    forwards_len: usize,
+    post_projection: P,
+}
+
 pub struct DocumentVcsStore<P, Op>
 where
     P: Clone + Serialize + DeserializeOwned,
@@ -754,6 +767,10 @@ where
     /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
     /// default no-op `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
     conflicts: Vec<StudioConflict>,
+    /// @emoji 🪢 See {@link AmendCache}. `None` whenever there is nothing to reuse (fresh store, or the
+    /// last command wasn't a matching `AmendLast`) — always safe, just forces the next amend onto the
+    /// full-replay path, which also repopulates it.
+    amend_cache: Option<AmendCache<P>>,
 }
 
 /// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
@@ -783,6 +800,7 @@ where
             current_checkpoint_id,
             local_actor_id: None,
             conflicts: Vec::new(),
+            amend_cache: None,
         }
     }
 
@@ -1121,24 +1139,33 @@ where
                             .unwrap_or(false)
                 });
                 if let Some(edit_id) = amend_target {
-                    let pre_ids = &self.applied_edit_ids[..self.applied_edit_ids.len() - 1];
-                    let pre_projection = materialize_document_projection(&self.envelope, pre_ids)?;
-                    let mut combined = self
-                        .envelope
-                        .vcs
-                        .edits
-                        .iter()
-                        .find(|edit| edit.id == edit_id)
-                        .map(|edit| edit.forwards.clone())
-                        .unwrap_or_default();
-                    combined.extend(operations);
-                    let (forwards, backwards, operation_meta, _post) =
-                        Self::replay_operations(&pre_projection, combined);
+                    // 🔒 Infallible: `amend_target`'s filter above requires `coalesce_key.is_some()`.
+                    let key = coalesce_key.clone().expect("amend_target implies coalesce_key.is_some()");
+                    let existing_forwards_len = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).map(|edit| edit.forwards.len()).unwrap_or(0);
+                    let cache_hit = self
+                        .amend_cache
+                        .as_ref()
+                        .is_some_and(|cache| cache.edit_id == edit_id && cache.forwards_len == existing_forwards_len);
+                    // 🪢 Incremental path: replay only the NEW `operations` on top of the cached
+                    // post-projection from the last amend to this same edit, then append (never
+                    // recompute) the existing forwards/backwards/operation_meta — see `AmendCache`.
+                    // On a cache miss, `self.projection()` already replays the full history INCLUDING
+                    // this edit's existing (unchanged) forwards, giving exactly the same post-projection
+                    // to continue from in one pass — always correct, and repopulates the cache for the
+                    // next amend in this gesture.
+                    let (new_forwards, new_backwards, new_operation_meta, post) = if cache_hit {
+                        let cache = self.amend_cache.as_ref().expect("cache_hit implies Some");
+                        Self::replay_operations(&cache.post_projection, operations)
+                    } else {
+                        let post_so_far = self.projection()?;
+                        Self::replay_operations(&post_so_far, operations)
+                    };
                     if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
-                        edit.forwards = forwards;
-                        edit.backwards = backwards;
-                        edit.operation_meta = operation_meta;
+                        edit.forwards.extend(new_forwards);
+                        edit.backwards.extend(new_backwards);
+                        edit.operation_meta.extend(new_operation_meta);
                         edit.finished_at = Some(now_iso());
+                        self.amend_cache = Some(AmendCache { edit_id, coalesce_key: key, forwards_len: edit.forwards.len(), post_projection: post });
                     }
                     self.redo_edit_ids.clear();
                     self.bump();
@@ -1146,24 +1173,29 @@ where
                 } else {
                     let started_at = now_iso();
                     let pre_projection = self.projection()?;
-                    let (forwards, backwards, operation_meta, _post) =
+                    let (forwards, backwards, operation_meta, post) =
                         Self::replay_operations(&pre_projection, operations);
                     let actor = edit_actor_from_meta(&operation_meta);
                     self.local_actor_id = actor.clone();
                     self.edit_sequence += 1;
+                    let edit_id = create_document_vcs_id("edit");
                     let edit = Edit {
-                        id: create_document_vcs_id("edit"),
+                        id: edit_id.clone(),
                         actor,
                         forwards,
                         backwards,
                         operation_meta,
                         description: None,
-                        coalesce_key,
+                        coalesce_key: coalesce_key.clone(),
                         sequence_number: self.edit_sequence,
                         started_at,
                         finished_at: Some(now_iso()),
                     };
                     self.applied_edit_ids.push(edit.id.clone());
+                    // 🪢 Seed the cache so the very next amend to this fresh edit (the common case — a
+                    // gesture's first `AmendLast` creates the edit, every following one amends it) hits
+                    // the incremental path immediately.
+                    self.amend_cache = coalesce_key.map(|key| AmendCache { edit_id, coalesce_key: key, forwards_len: edit.forwards.len(), post_projection: post });
                     self.envelope.vcs.edits.push(edit);
                     self.redo_edit_ids.clear();
                     self.bump();
@@ -3406,6 +3438,65 @@ mod tests {
             0,
             "undo restores pre-gesture state in one step"
         );
+    }
+
+    #[test]
+    fn amend_last_incremental_path_matches_full_replay_over_many_amends() {
+        // 🪢 Regression guard for the incremental `AmendLast` path (see `AmendCache`): many sequential
+        // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
+        // same edit (forwards/backwards/operation_meta length, final projection, one-step undo) as the
+        // previous full-replay-every-time implementation, just without re-replaying history each time.
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        for n in 1..=50 {
+            store
+                .dispatch(DocumentVcsCommand::AmendLast {
+                    operations: vec![DemoOp::SetN { n }],
+                    coalesce_key: Some("drag".into()),
+                })
+                .expect("amend");
+        }
+        assert_eq!(store.envelope().vcs.edits.len(), 1, "still a single coalesced edit");
+        let edit = store.envelope().vcs.edits.last().expect("edit");
+        assert_eq!(edit.forwards.len(), 50);
+        assert_eq!(edit.backwards.len(), 50);
+        assert_eq!(edit.operation_meta.len(), 50);
+        assert_eq!(store.projection().expect("projection").n, 50);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        assert_eq!(
+            store.projection().expect("projection after undo").n,
+            0,
+            "one undo reverts the whole 50-step coalesced gesture"
+        );
+    }
+
+    #[test]
+    fn amend_last_incremental_cache_survives_undo_redo_round_trip() {
+        // 🪢 Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
+        // an edit's own `forwards`, so a cached post-projection keyed by `(edit_id, forwards_len)` stays
+        // valid across an undo immediately followed by a redo of the very same coalesced edit.
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 1 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("first amend");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOp::SetN { n: 2 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("amend after undo/redo");
+        assert_eq!(store.envelope().vcs.edits.len(), 1, "still coalesced into the original edit");
+        assert_eq!(store.projection().expect("projection").n, 2);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo again");
+        assert_eq!(store.projection().expect("projection after undo").n, 0);
     }
 
     #[test]

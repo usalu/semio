@@ -59,4 +59,51 @@ export const LastStep: Story = {
     return <UIIntroduction introduction={walkthrough} stepIndex={walkthrough.steps.length - 1} onStepIndexChange={() => {}} onDismiss={(completed) => setDismissed(completed ? "Completed" : "Skipped")} />;
   },
 };
+
+// 🎉 An interaction-gated step whose checklist rows tick off one at a time — click "Complete next" to
+// watch a row's own label celebrate (conic-gradient ring, see `[data-celebrated="true"]` in `ui.css`)
+// the instant it flips from pending to done, on top of the check icon swap.
+const interactionWalkthrough: IntroductionDefinition = {
+  title: "Try the Viewport",
+  steps: [
+    {
+      id: "step.viewport",
+      title: "Try the Viewport",
+      body: "Complete each interaction below.",
+      introduce: null,
+      show: [],
+      placement: "center",
+      interactions: [
+        { on: { kind: "zoom", id: "puzzle3d-main" }, label: "Zoom in or out" },
+        { on: { kind: "pan", id: "puzzle3d-main" }, label: "Pan the view" },
+        { on: { kind: "orbit", id: "puzzle3d-main" }, label: "Orbit around the model" },
+      ],
+      ordered: false,
+      logos: [],
+      demonstrations: [],
+    },
+  ],
+};
+
+export const WithInteractions: Story = {
+  name: "Interaction checklist",
+  render: () => {
+    const [completed, setCompleted] = useState<readonly number[]>([]);
+    const total = interactionWalkthrough.steps[0].interactions?.length ?? 0;
+    return (
+      <>
+        <UIIntroduction introduction={interactionWalkthrough} stepIndex={0} completedInteractionIndices={completed} onStepIndexChange={() => {}} onDismiss={() => {}} />
+        {completed.length < total && (
+          <button
+            type="button"
+            className="fixed bottom-double left-double z-tutorial rounded bg-primary px-double py-single text-xs text-primary-foreground"
+            onClick={() => setCompleted((prev) => [...prev, prev.length])}
+          >
+            Complete next
+          </button>
+        )}
+      </>
+    );
+  },
+};
 // #endregion 🎓UIIntroduction

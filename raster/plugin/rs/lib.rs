@@ -1254,6 +1254,7 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: raster_action("setBrushSize", None),
             },
             WindowMeasure::Slider {
@@ -1267,6 +1268,7 @@ fn raster_paint_utility_options(runtime: &RasterPlayRuntime, utility: &str, labe
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: raster_action("setBrushOpacity", None),
             },
         ],

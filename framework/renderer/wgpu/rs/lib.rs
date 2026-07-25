@@ -24073,6 +24073,7 @@ impl ShellState {
                 loading: _,
                 waiting: _,
                 disabled,
+                reveal: _,
                 on_change,
             } => {
                 if let Some(label) = label {

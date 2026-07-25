@@ -3828,6 +3828,56 @@ pub enum IntroductionPoint {
     WindowNormalized { id: String, x: f64, y: f64 },
     /// 🧊 3D world-space position in the scene shown by window `id`, projected through its live camera.
     Scene { id: String, position: [f64; 3] },
+    /// 🗺️ 2D world-space coordinates (camera x/y/zoom) on the infinite-canvas surface shown by window
+    /// `id` — the 2D sibling of `Scene`. On a 3D window this resolves via the ground plane (z = 0).
+    Canvas { id: String, x: f64, y: f64 },
+    /// 🏷️ A live entity addressed semantically in the shell's established pick-target grammar (see
+    /// `CanvasPickTarget`): `domain` is the surface's target domain ("vortex", "object", "attraction",
+    /// "node", "edge", "handle", "position", "route", "block", "layer", …), `entity` its id verbatim
+    /// (compound forms like `"objectId:vortexId"` or `"widgetId:port"` included; `"*"` = any — the
+    /// surface picks a representative, nearest the viewport center). `offset` is normalized 0–1 within
+    /// the entity's bounds, default center.
+    Entity {
+        id: String,
+        domain: String,
+        entity: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        offset: Option<[f64; 2]>,
+    },
+    /// 🪡 A parametric point along an entity's curve geometry (an attraction segment, graph edge, ink
+    /// stroke, or canvas path layer) — `t` in 0–1 by arc length.
+    Curve { id: String, domain: String, entity: String, t: f64 },
+    /// 🎚️ A value mapped through an entity's live value domain (e.g. a graph slider's min..max onto its
+    /// track), resolved to the corresponding point along the entity's geometry.
+    Domain { id: String, domain: String, entity: String, value: f64 },
+}
+
+impl IntroductionPoint {
+    /// @emoji 🗺️ 2D world-space coordinates on the infinite-canvas surface shown by window `window_id`.
+    pub fn canvas(window_id: impl Into<String>, x: f64, y: f64) -> Self {
+        Self::Canvas { id: window_id.into(), x, y }
+    }
+
+    /// @emoji 🏷️ A specific entity by domain + id, centered (no `offset`).
+    pub fn entity(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>) -> Self {
+        Self::Entity { id: window_id.into(), domain: domain.into(), entity: entity.into(), offset: None }
+    }
+
+    /// @emoji 🏷️ Any entity in `domain` — the surface picks a representative, nearest the viewport center.
+    pub fn any_entity(window_id: impl Into<String>, domain: impl Into<String>) -> Self {
+        Self::entity(window_id, domain, "*")
+    }
+
+    /// @emoji 🪡 A parametric point at `t` (0–1 by arc length) along an entity's curve geometry.
+    pub fn curve(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, t: f64) -> Self {
+        Self::Curve { id: window_id.into(), domain: domain.into(), entity: entity.into(), t }
+    }
+
+    /// @emoji 🎚️ A value mapped through an entity's live value domain (e.g. a slider's min..max).
+    pub fn domain_value(window_id: impl Into<String>, domain: impl Into<String>, entity: impl Into<String>, value: f64) -> Self {
+        Self::Domain { id: window_id.into(), domain: domain.into(), entity: entity.into(), value }
+    }
 }
 
 /// @emoji 👆 A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
@@ -5924,12 +5974,22 @@ mod app_document_tests {
             (IntroductionPoint::Window { id: window_element_id("puzzle3d-main"), x: 40.0, y: 60.0 }, "window"),
             (IntroductionPoint::WindowNormalized { id: window_element_id("puzzle3d-main"), x: 0.5, y: 0.55 }, "windowNormalized"),
             (IntroductionPoint::Scene { id: window_element_id("puzzle3d-main"), position: [1.0, 2.0, 3.0] }, "scene"),
+            (IntroductionPoint::Canvas { id: window_element_id("puzzle3d-main"), x: 12.0, y: 34.0 }, "canvas"),
+            (IntroductionPoint::entity(window_element_id("puzzle3d-main"), "vortex", "seed-left-001:v0"), "entity"),
+            (IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex"), "entity"),
+            (IntroductionPoint::Entity { id: window_element_id("puzzle3d-main"), domain: "node".into(), entity: "add".into(), offset: Some([0.25, 0.75]) }, "entity"),
+            (IntroductionPoint::curve(window_element_id("puzzle3d-main"), "attraction", "a1", 0.5), "curve"),
+            (IntroductionPoint::domain_value(window_element_id("puzzle3d-main"), "slider", "fillCount", 3.0), "domain"),
         ] {
             let json = serde_json::to_string(&point).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
             let round: IntroductionPoint = serde_json::from_str(&json).unwrap();
             assert_eq!(round, point);
         }
+        // 🏷️ "*" (any-entity wildcard) must round-trip byte-for-byte, not get normalized away.
+        let wildcard = IntroductionPoint::any_entity(window_element_id("puzzle3d-main"), "vortex");
+        let json = serde_json::to_string(&wildcard).unwrap();
+        assert!(json.contains("\"entity\":\"*\""), "{json}");
     }
 
     #[test]

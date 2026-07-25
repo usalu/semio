@@ -4921,6 +4921,8 @@
  * (navbar/footer pseudo-edges, panel/pane `[data-slot="chrome-frame"]`) recolors while the
  * pointer is inside the parent. Never recolor the parent's own Tailwind `!border-*` — those
  * utilities win the cascade and made the previous border-*-color :hover rules invisible.
+ * Use :hover only — never :focus-within — so clicking a toggle/pane does not leave the border
+ * stuck emphasized after the cursor leaves.
  */
 
 [data-slot="navbar"],
@@ -4951,9 +4953,7 @@
 }
 
 [data-slot="navbar"]:hover::after,
-[data-slot="navbar"]:focus-within::after,
-[data-slot="footer"]:hover::before,
-[data-slot="footer"]:focus-within::before {
+[data-slot="footer"]:hover::before {
   background-color: var(--border-emphasized-color);
 }
 
@@ -5522,8 +5522,7 @@
   transition: border-color 120ms ease;
 }
 
-:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"],
-:is([data-slot="panel"], [data-slot="pane"]):focus-within [data-slot="chrome-frame"] {
+:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
 }
 
@@ -5540,15 +5539,27 @@
   transition: border-color 120ms ease;
 }
 
-/* 🎓 Introduction steps are advanced by clicking Next — focus stays on that button across steps, so
-   :focus-within would permanently emphasize the border after the first click. Pointer hover only. */
+/* 🎓 Clicking a toggle/button leaves focus inside the shell — :focus-within would keep the
+   parent border emphasized after the pointer leaves. Pointer :hover only, matching windows. */
 [data-slot="introduction-info-box"]:hover,
-[data-slot="dialog-box"]:hover,
-[data-slot="dialog-box"]:focus-within {
+[data-slot="dialog-box"]:hover {
   border-color: var(--border-emphasized-color) !important;
 }
 
 /* #endregion 🪟ShellParentHover */
+
+/* #region 🫳DragHandleHover
+ * Grip paints its own muted color at rest, so it cannot inherit the parent
+ * `hover:text-emphasized`. Mirror hover-scope emphasis onto the grip whenever
+ * the pointer is inside that scope — same as the label/icon beside it.
+ * Hover-scopes keep nested rows as siblings (not descendants), so this does
+ * not light up parent grips while hovering a child row.
+ */
+[data-hover-scope]:hover [data-slot="drag-handle"] {
+  color: var(--border-emphasized-color);
+}
+
+/* #endregion 🫳DragHandleHover */
 
 /* 🪟 Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
 [data-slot="mode-dock-stack"]

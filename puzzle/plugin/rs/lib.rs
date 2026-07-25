@@ -800,6 +800,7 @@ pub mod d2 {
                 ready: None,
                 loading: None, waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: puzzle2d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Group {
@@ -897,6 +898,7 @@ pub mod d2 {
                 ready: None,
                 loading: None, waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: puzzle2d_action("setFillCount", None),
             }],
         }
@@ -1575,6 +1577,7 @@ pub mod d2 {
                     ready: None,
                     loading: None, waiting: None,
                     disabled: None,
+                    reveal: None,
                     on_change: puzzle2d_action("setBrushKindWeights", Some(json!({ "kindId": kind_id, "catalogSlice": catalog_slice }))),
                 }
             })
@@ -2878,6 +2881,10 @@ pub mod d3 {
         hidden: bool,
         #[serde(default)]
         locked: bool,
+        /// 🪣 Live-viewport-only tag from `compose_fill_display` — this object's 0-based position in the
+        /// fill plan's sequence, never persisted to the committed document. See `world_instances_json`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        reveal_index: Option<usize>,
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
@@ -3504,6 +3511,7 @@ pub mod d3 {
                     "hovered": hovered,
                     "highlighted": kind_highlighted,
                     "disabled": object.locked,
+                    "revealIndex": object.reveal_index,
                 })
             })
             .collect();
@@ -3795,9 +3803,14 @@ pub mod d3 {
         let fill_build: Value = serde_json::from_str(&session.fill_progress()).unwrap_or(Value::Null);
         let fill_build = json!({
             "count": fill_build.get("count").cloned().unwrap_or(json!(0)),
+            "appliedCount": fill_build.get("appliedCount").cloned().unwrap_or(json!(0)),
             "maxCount": fill_build.get("maxCount").cloned().unwrap_or(json!(PUZZLE3D_FILL_COUNT_MAX)),
             "done": fill_build.get("done").cloned().unwrap_or(json!(true)),
         });
+        // 🪣 Committed fill count as a viewport reveal cutoff — instances tagged `revealIndex` (see
+        // `world_instances_json`) below this value are shown, the rest (already planned, not yet
+        // committed) stay hidden until the host commits a higher value or the live drag store overrides
+        // it locally. Keyed so future reveal-driven measures/tools can share the same channel.
         json!({
             "activeUtility": puzzle3d_scene_mode(&envelope.active_utility),
             "brushCandidateIndex": runtime.brush_candidate_index,
@@ -3806,6 +3819,7 @@ pub mod d3 {
             "gridFactor": runtime.grid_spacing,
             "suggestionMenu": suggestion_menu,
             "fillBuild": fill_build,
+            "revealCutoffs": { "puzzle3d-fill": runtime.fill_count },
         })
         .to_string()
     }
@@ -4060,29 +4074,49 @@ pub mod d3 {
         Some(next)
     }
 
-    /// 🪣 Overlays the precomputed fill-plan prefix onto a projection fixture for live viewport rendering.
-    fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, fill_count: u32) -> Puzzle3dFixture {
-        if let Ok(display_json) = precompute.compose_fill_display_rust(fill_count) {
-            if let Ok(parsed) = serde_json::from_str::<Value>(&display_json) {
-                if let Ok(objects) = serde_json::from_value(parsed.get("objects").cloned().unwrap_or(Value::Null)) {
-                    fixture.objects = objects;
-                }
-                if let Ok(attractions) = serde_json::from_value(parsed.get("attractions").cloned().unwrap_or(Value::Null)) {
-                    fixture.attractions = attractions;
-                }
-                if let Ok(target_volumes) = serde_json::from_value(parsed.get("targetVolumes").cloned().unwrap_or(Value::Null)) {
-                    fixture.target_volumes = target_volumes;
-                }
+    #[derive(Deserialize)]
+    #[serde(rename_all = "camelCase")]
+    struct Puzzle3dFillDisplayPayload {
+        #[serde(default)]
+        objects: Vec<Puzzle3dObject>,
+        #[serde(default)]
+        attractions: Vec<Puzzle3dAttraction>,
+    }
+
+    /// 🪣 Appends ONLY the not-yet-committed tail of the fill plan (`applied_count..available_count`,
+    /// each tagged `revealIndex`) onto the live projection fixture — everything up to `applied_count`
+    /// is already correctly present in `fixture` (with its true `locked`/`hidden`/selection state, none
+    /// of which the engine's `Fixture`/`FixtureObject` type carries). Replacing `fixture.objects`
+    /// wholesale with the engine's composed view — the previous approach — silently dropped those flags
+    /// for EVERY object on every render, not just the planned ones, because the engine round trip is
+    /// lossy by design (it only needs geometry for collision planning). `compose_fill_display`'s output
+    /// is `fill.base.objects ++ appended.take(available_count)`; since `fixture` already holds exactly
+    /// `fill.base.len() + applied_count` objects, the tail beyond that boundary is exactly the newly
+    /// revealed, not-yet-committed objects — no duplication, no overwrite.
+    fn puzzle3d_fixture_with_fill_display(mut fixture: Puzzle3dFixture, precompute: &Puzzle3dPrecomputeSession, applied_count: u32, available_count: u32) -> Puzzle3dFixture {
+        if available_count <= applied_count {
+            return fixture;
+        }
+        if let Ok(display_json) = precompute.compose_fill_display_rust(available_count) {
+            if let Ok(payload) = serde_json::from_str::<Puzzle3dFillDisplayPayload>(&display_json) {
+                let reveal_count = (available_count - applied_count) as usize;
+                let objects_tail_start = payload.objects.len().saturating_sub(reveal_count);
+                fixture.objects.extend(payload.objects.into_iter().skip(objects_tail_start));
+                let attractions_tail_start = payload.attractions.len().saturating_sub(reveal_count);
+                fixture.attractions.extend(payload.attractions.into_iter().skip(attractions_tail_start));
             }
         }
         fixture
     }
 
+    /// 🔒 Clamps to what the engine actually has planned so far — the slider primitive already clamps to
+    /// `ready` client-side, this is the root-level backstop so the committed value and the document can
+    /// never disagree with what `compose_fill_display`/`apply_fill_count` actually applied.
     fn apply_puzzle3d_fill_count(precompute: &mut Puzzle3dPrecomputeSession, mut envelope: Puzzle3dScene, count: u32) -> Puzzle3dScene {
-        envelope.runtime.fill_count = count;
         if count > 0 {
             envelope.active_utility = "fill".into();
         }
+        envelope.runtime.fill_count = count.min(precompute.fill_available_count());
         if let Ok(fixture_json) = precompute.apply_fill_count_rust(count) {
             if let Some(next) = fixture_from_engine_json(&envelope, &fixture_json) {
                 envelope = next;
@@ -5825,7 +5859,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some(labels.auto_zoom.into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some(labels.depth_variable.into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod, runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, disabled: None, on_change: puzzle3d_action("setLodManual", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod, runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
     }
@@ -5847,7 +5881,7 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-visible"), icon_id: "layout-grid".into(), label: Some(labels.visible.into()), pressed: runtime.grid_visible, text: None, on_change: puzzle3d_action("setGridVisible", None) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-snap"), icon_id: "magnet".into(), label: Some(labels.snap.into()), pressed: runtime.grid_snap_enabled, text: None, on_change: puzzle3d_action("setGridSnapEnabled", None) },
-                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("{} {:.1}", labels.spacing, runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, disabled: None, on_change: puzzle3d_action("setGridSpacing", None) },
+                WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-grid-spacing"), label: Some(format!("{} {:.1}", labels.spacing, runtime.grid_spacing)), value: runtime.grid_spacing, min: 0.5, max: 50.0, step: Some(0.5), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setGridSpacing", None) },
             ],
         }
     }
@@ -5895,6 +5929,7 @@ pub mod d3 {
                     ready: None,
                     loading: None, waiting: None,
                     disabled: None,
+                    reveal: None,
                     on_change: puzzle3d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
@@ -5948,7 +5983,8 @@ pub mod d3 {
                     loading: None,
                     waiting: None,
                     disabled: if object_kind_zero { Some(true) } else { None },
-                    on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_kind_id, "objectKindId": object_kind_id }))),
+                                        reveal: None,
+on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_kind_id, "objectKindId": object_kind_id }))),
                 }
             })
             .collect()
@@ -6049,6 +6085,9 @@ pub mod d3 {
             ready: Some(available_count as f64),
             loading: if done { None } else { Some(true) }, waiting: None,
             disabled: None,
+            // 🪣 Live drag reveals/hides already-planned pieces client-side (see `WorldInstancesLayer`'s
+            // reveal cutoff store); only the committed value on gesture release round-trips through here.
+            reveal: Some("puzzle3d-fill".into()),
             on_change: puzzle3d_action("setFillCount", None),
         }
     }
@@ -6066,6 +6105,7 @@ pub mod d3 {
             ready: None,
             loading: None, waiting: None,
             disabled: None,
+            reveal: None,
             on_change: puzzle3d_action("setVoxelDims", Some(json!({ "axis": axis }))),
         };
         vec![axis_slider("w", labels.width, w), axis_slider("d", labels.depth, d), axis_slider("h", labels.height, h)]
@@ -6112,6 +6152,7 @@ pub mod d3 {
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: puzzle3d_action("setBrushPlacementOverlapBudget", None),
             },
             puzzle3d_distribution_group(envelope, labels, Some(false)),
@@ -6441,6 +6482,7 @@ pub mod d3 {
                         vortices,
                         hidden: false,
                         locked: false,
+                        reveal_index: None,
                     });
                     envelope.runtime.selection.object_ids = vec![id];
                     resolve_puzzle3d_attractions(&mut envelope.fixture);
@@ -7088,14 +7130,20 @@ pub mod d3 {
                     ui_scope = puzzle3d_suggestions_tick_scope();
                 }
                 "fillBuildTick" => {
+                    // 🪣 No catch-up `setFillCount` dispatch here: `apply_puzzle3d_fill_count` always
+                    // clamps the committed count to what's available at commit time, so `fill_count` can
+                    // never run ahead of `applied_count` — a slider can only request what `render`'s
+                    // reveal-tagged instances already show. Ticks purely advance background planning.
+                    let available_before = self.precompute.fill_available_count();
+                    let done_before = self.precompute.fill_is_done();
                     self.precompute.precompute_step(8);
-                    let progress = serde_json::from_str::<Value>(&self.precompute.fill_progress()).unwrap_or(Value::Null);
-                    let available_count = progress.get("count").and_then(Value::as_u64).unwrap_or(0) as u32;
-                    let applied_count = progress.get("appliedCount").and_then(Value::as_u64).unwrap_or(0) as u32;
-                    if envelope.runtime.fill_count > applied_count && available_count > applied_count {
-                        effects.push(HostEffect::DispatchAction { action: "setFillCount".into(), args: Some(json!({ "value": envelope.runtime.fill_count })), delay_ms: 0 });
-                    }
-                    ui_scope = puzzle3d_fill_build_scope();
+                    let available_after = self.precompute.fill_available_count();
+                    let done_after = self.precompute.fill_is_done();
+                    ui_scope = if available_after != available_before || done_after != done_before {
+                        puzzle3d_fill_build_scope()
+                    } else {
+                        semio_framework_core::kernel::UiDirtyScope::None
+                    };
                 }
                 "registerBrushMesh" => {
                     if let (Some(url), Some(positions), Some(indices)) =
@@ -7147,7 +7195,10 @@ pub mod d3 {
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let mut runtime_for_window = self.runtime.clone();
             runtime_for_window.load_window(wid);
-            let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(doc.projection), &self.precompute, runtime_for_window.fill_count);
+            // 🪣 Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture
+            // (see `puzzle3d_fixture_with_fill_display`) — safe even during a live gumball scratch drag,
+            // since it never touches/replaces any already-present object (the dragged one included).
+            let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(doc.projection), &self.precompute, runtime_for_window.fill_count, self.precompute.fill_available_count());
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
             let labels = puzzle3d_labels(view_state);
             match body_key {
@@ -8507,27 +8558,26 @@ pub mod d3 {
             app.handle_action("setHover", Some(&json!({ "objectId": hovered_id })), &fill_view, &testkit::meta("local")).expect("setHover after fill");
             let reduced = (available_count / 2).max(0);
             app.handle_action("setFillCount", Some(&json!({ "value": reduced })), &fill_view, &testkit::meta("local")).expect("reduce fill count after sync");
-            assert_eq!(object_count(&app), object_count_before + reduced as usize, "sliding down after an incidental sync must still remove fill objects");
-            assert_eq!(instance_count(&render_composite(&mut app)), object_count_before + reduced as usize, "the viewport must hide removed fill objects immediately");
-            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("request old count before replanning completes");
-            assert_eq!(object_count(&app), object_count_before + reduced as usize, "an above-ready target must remain non-blocking while its new tail is planned");
+            assert_eq!(object_count(&app), object_count_before + reduced as usize, "sliding down after an incidental sync must still remove fill objects from the document");
+            let reduced_render = render_composite(&mut app);
+            // 🪣 The viewport keeps showing the FULL available plan (tagged revealIndex) even after
+            // reducing — hiding is a client-side reveal-cutoff concern now, not a server-side instance
+            // count concern; only the document (checked above) and the committed cutoff actually shrink.
+            assert_eq!(instance_count(&reduced_render), object_count_before + available_count, "the viewport still exposes the full plan for instant re-reveal — nothing was discarded");
+            assert_eq!(
+                interaction_of(&reduced_render).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64),
+                Some(reduced as u64),
+                "the committed reveal cutoff tracks the reduced count"
+            );
+            // 🔽🔼 Prefix-stable plan: moving back up to a count that was already planned before must be
+            // INSTANT — no replanning, no `fillBuildTick` catch-up dispatch — because the downward move
+            // never discarded `sequence`/`appended_objects`/`appended_attractions`/`placed`.
+            app.handle_action("setFillCount", Some(&json!({ "value": available_count })), &fill_view, &testkit::meta("local")).expect("move back up to the previously-planned count");
+            assert_eq!(object_count(&app), object_count_before + available_count, "moving back up within the preserved plan is instant, not gated on another fillBuildTick");
             let target_measures = app.tool_measures(&fill_view);
             let target_tool_measures = target_measures.get("fill").expect("fill tool measures");
-            assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64), "the slider thumb must retain the requested target above its ready extent");
-
-            for _ in 0..64 {
-                let tick = app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick after reduction");
-                for effect in tick.requested_effects {
-                    if let HostEffect::DispatchAction { action, args, .. } = effect {
-                        app.handle_action(&action, args.as_ref(), &fill_view, &testkit::meta("local")).expect("apply planned fill target");
-                    }
-                }
-                if object_count(&app) >= object_count_before + available_count {
-                    break;
-                }
-            }
-            assert_eq!(object_count(&app), object_count_before + available_count, "restarted planning must materialize the requested count without another slider gesture");
-            let replanned_fill_ids: HashSet<String> = app
+            assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
+            let restored_fill_ids: HashSet<String> = app
                 .projection()
                 .expect("projection")
                 .get("objects")
@@ -8537,13 +8587,50 @@ pub mod d3 {
                 .skip(object_count_before)
                 .filter_map(|object| object.get("id").and_then(Value::as_str).map(str::to_string))
                 .collect();
-            assert_ne!(replanned_fill_ids, initial_fill_ids, "up-down-up must replace the discarded tail with a newly planned result");
+            assert_eq!(restored_fill_ids, initial_fill_ids, "up-down-up restores the exact same planned objects — the plan is prefix-stable, never discarded and re-rolled");
             app.handle_action("setFillCount", Some(&json!({ "value": 0 })), &fill_view, &testkit::meta("local")).expect("clear fill count");
             assert_eq!(object_count(&app), object_count_before, "moving the fill slider to zero must remove every generated object");
         }
 
         #[test]
-        fn fill_count_renders_planned_prefix_before_document_materializes() {
+        fn set_fill_count_clamps_to_available_and_no_longer_dispatches_catch_up() {
+            // 🔒 Requesting more than is currently planned must clamp (never leave `runtime.fill_count`
+            // and the applied document disagreeing), and `fillBuildTick` must never self-dispatch another
+            // `setFillCount` — the viewport already shows every planned piece (tagged `revealIndex`) via
+            // `compose_fill_display(available_count)`, so there is nothing left for a catch-up round trip
+            // to accomplish, and it used to be the mechanism that turned one drag into a long chain of
+            // expensive document amends.
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let object_count_before = object_count(&app);
+            let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
+            app.handle_action(SET_ACTIVE_TOOL_ACTION_ID, Some(&json!({ "toolId": "fill" })), &fill_view, &testkit::meta("local")).expect("select fill tool");
+            app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("one fillBuildTick");
+            let available_count = app
+                .tool_measures(&fill_view)
+                .get("fill")
+                .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
+                .unwrap_or(0.0) as u32;
+            // Request far beyond what a single tick could have planned.
+            app.handle_action("setFillCount", Some(&json!({ "value": PUZZLE3D_FILL_COUNT_MAX })), &fill_view, &testkit::meta("local")).expect("setFillCount beyond available");
+            let measures = app.tool_measures(&fill_view);
+            let tool_measures = measures.get("fill").expect("fill tool measures");
+            let clamped = find_measure_slider(tool_measures, "puzzle3d-fill-count").expect("fill-count slider value");
+            assert!(clamped <= available_count as f64, "runtime.fill_count must clamp to what's actually planned, not the raw request");
+            assert_eq!(clamped as usize, object_count(&app) - object_count_before, "the clamped measure value must match what the document actually materialized");
+            let tick = app.handle_action("fillBuildTick", None, &fill_view, &testkit::meta("local")).expect("fillBuildTick after an above-ready request");
+            assert!(
+                !tick.requested_effects.iter().any(|effect| matches!(effect, HostEffect::DispatchAction { action, .. } if action == "setFillCount")),
+                "fillBuildTick must never self-dispatch setFillCount — the clamp at commit time means fill_count can never run ahead of what's planned"
+            );
+        }
+
+        #[test]
+        fn fill_render_reveals_the_full_available_plan_tagged_with_reveal_index() {
+            // 🪣 `render()` now composes EVERY currently-planned piece (not just the committed
+            // `fill_count`), each tagged `revealIndex` — the viewport applies its own live, main-thread
+            // cutoff to show/hide them per drag value with zero WASM round trips. The committed cutoff is
+            // separately exposed as `interactionJson.revealCutoffs["puzzle3d-fill"]`, which only advances
+            // on `setFillCount` (the document itself stays untouched until then).
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let object_count_before = object_count(&app);
             let fill_view = ViewState { active_tool_id: Some("fill".into()), ..ViewState::default() };
@@ -8563,12 +8650,32 @@ pub mod d3 {
                 .tool_measures(&fill_view)
                 .get("fill")
                 .and_then(|tool_measures| find_measure_slider_ready(tool_measures, "puzzle3d-fill-count"))
-                .unwrap_or(0.0) as u32;
+                .unwrap_or(0.0) as usize;
             assert!(ready >= 3, "fill planning must expose at least three ready placements");
             assert_eq!(object_count(&app), object_count_before, "background planning must not mutate the document before setFillCount");
-            assert_eq!(instance_count(&render_composite(&mut app)), object_count_before, "idle viewport stays at the base object count before the slider applies");
+
+            let rendered = render_composite(&mut app);
+            assert_eq!(instance_count(&rendered), object_count_before + ready, "render must already expose every planned piece, tagged for client-side reveal");
+            let instances: Vec<Value> = rendered.pointer("/world3d/instancesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or_default();
+            let reveal_indices: Vec<u64> = instances.iter().skip(object_count_before).filter_map(|instance| instance.get("revealIndex").and_then(Value::as_u64)).collect();
+            assert_eq!(reveal_indices.len(), ready, "every planned (not-yet-committed) instance must carry revealIndex");
+            let mut sorted_indices = reveal_indices.clone();
+            sorted_indices.sort_unstable();
+            assert_eq!(sorted_indices, (0..ready as u64).collect::<Vec<_>>(), "revealIndex is a dense 0-based sequence matching plan order");
+            // 🪣 `revealIndex` is always present as a JSON key (`json!` serializes `Option::None` as
+            // `null`, never omits the key) — check for a non-null u64, not mere key presence.
+            let base_reveal_indices = instances.iter().take(object_count_before).filter(|instance| instance.get("revealIndex").and_then(Value::as_u64).is_some()).count();
+            assert_eq!(base_reveal_indices, 0, "base (non-plan) objects never carry revealIndex");
+            let interaction = interaction_of(&rendered);
+            assert_eq!(interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "nothing committed yet — the reveal cutoff mirrors runtime.fill_count (0)");
+            assert_eq!(interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(0));
+
             app.handle_action("setFillCount", Some(&json!({ "value": ready })), &fill_view, &testkit::meta("local")).expect("setFillCount");
-            assert_eq!(instance_count(&render_composite(&mut app)), object_count_before + ready as usize, "viewport must show the precomputed fill prefix immediately");
+            let after_commit = render_composite(&mut app);
+            assert_eq!(instance_count(&after_commit), object_count_before + ready, "instance count is unchanged by commit — only the cutoff (and document) advanced");
+            let committed_interaction = interaction_of(&after_commit);
+            assert_eq!(committed_interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(ready as u64));
+            assert_eq!(committed_interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(ready as u64));
         }
 
         #[test]
@@ -10749,6 +10856,7 @@ pub mod d5 {
                     ready: None,
                     loading: None, waiting: None,
                     disabled: None,
+                    reveal: None,
                     on_change: puzzle5d_action(action, Some(json!({ "kindId": kind_id }))),
                 }
             })
@@ -10806,6 +10914,7 @@ pub mod d5 {
             ready: None,
             loading: None, waiting: None,
             disabled: None,
+            reveal: None,
             on_change: puzzle5d_action("setFillCount", None),
         }
     }
@@ -10844,6 +10953,7 @@ pub mod d5 {
                 ready: None,
                 loading: None, waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: puzzle5d_action("setSuggestionOffset", None),
             },
             WindowMeasure::Slider {
@@ -10856,6 +10966,7 @@ pub mod d5 {
                 ready: None,
                 loading: None, waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: puzzle5d_action("setBrushPlacementOverlapBudget", None),
             },
             WindowMeasure::Group {

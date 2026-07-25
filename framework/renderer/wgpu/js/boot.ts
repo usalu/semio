@@ -31,7 +31,11 @@ type PluginModuleHandle = {
 
 type PluginWorkerMessageType = "init" | "manifest" | "createApp" | "handleAction" | "handleCommand" | "render" | "destroy" | "utilities" | "windowEngagements" | "windowMeasures" | "error";
 
-const PLUGIN_WORKER_TIMEOUT_MS = 5000;
+/** ⏱ Only `init`/`manifest` (boot calls, expected to be fast) restart the worker on timeout. */
+const PLUGIN_WORKER_BOOT_TIMEOUT_MS = 5000;
+/** 🐢 Every other call (handleAction/handleCommand/render/...) only logs past this point — see `request`. */
+const PLUGIN_WORKER_SLOW_CALL_WARN_MS = 2000;
+const PLUGIN_WORKER_BOOT_MESSAGE_TYPES: readonly PluginWorkerMessageType[] = ["init", "manifest"];
 //#endregion PluginTypes
 
 async function loadPluginModule(pluginId: string, moduleUrl: string): Promise<PluginModuleHandle> {
@@ -115,13 +119,23 @@ class PluginWorkerClient {
         return;
       }
       const requestId = crypto.randomUUID();
+      const isBoot = PLUGIN_WORKER_BOOT_MESSAGE_TYPES.includes(type);
+      const startedAt = Date.now();
       const timer = window.setTimeout(() => {
-        this.pending.delete(requestId);
-        void this.restartWorker(`timeout:${type}`).catch((error) => {
-          console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
-        });
-        reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
-      }, PLUGIN_WORKER_TIMEOUT_MS);
+        if (isBoot) {
+          this.pending.delete(requestId);
+          void this.restartWorker(`timeout:${type}`).catch((error) => {
+            console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
+          });
+          reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
+          return;
+        }
+        // 🐢 A long-running call (e.g. a fill-plan `setFillCount`/`render` doing catch-up work) is expected
+        // and must never restart the worker — a restart destroys the running app instance (document, fill
+        // plan, meshes), turning one slow call into total, minutes-long unresponsiveness while everything
+        // replans from zero. Only a genuine crash (`worker.onerror`) restarts a non-boot call.
+        console.warn(`[DEBUG] plugin worker ${this.pluginId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
+      }, isBoot ? PLUGIN_WORKER_BOOT_TIMEOUT_MS : PLUGIN_WORKER_SLOW_CALL_WARN_MS);
       this.pending.set(requestId, { resolve, reject, timer });
       this.worker.postMessage({ type, requestId, ...payload });
     });

@@ -1,0 +1,32 @@
+{
+  "consoleMsgs": [],
+  "info": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "canvasCount": 2,
+    "busyText": false,
+    "windows": [
+      {
+        "active": null,
+        "hasCanvas": true,
+        "text": [
+          "Projektion",
+          "Fensteroptionen",
+          "Aktionen",
+          "Suche",
+          "Hilfsmittel"
+        ]
+      },
+      {
+        "active": "true",
+        "hasCanvas": true,
+        "text": [
+          "Projektion",
+          "Fensteroptionen",
+          "Aktionen",
+          "Suche",
+          "Hilfsmittel"
+        ]
+      }
+    ]
+  }
+}

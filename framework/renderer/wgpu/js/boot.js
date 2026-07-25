@@ -695,7 +695,9 @@ await new Promise((resolve) => {
     resolve();
   }
 });
-var PLUGIN_WORKER_TIMEOUT_MS = 5000;
+var PLUGIN_WORKER_BOOT_TIMEOUT_MS = 5000;
+var PLUGIN_WORKER_SLOW_CALL_WARN_MS = 2000;
+var PLUGIN_WORKER_BOOT_MESSAGE_TYPES = ["init", "manifest"];
 async function loadPluginModule(pluginId, moduleUrl) {
   return loadPluginModuleViaWorker(pluginId, moduleUrl);
 }
@@ -767,13 +769,19 @@ class PluginWorkerClient2 {
         return;
       }
       const requestId = crypto.randomUUID();
+      const isBoot = PLUGIN_WORKER_BOOT_MESSAGE_TYPES.includes(type);
+      const startedAt = Date.now();
       const timer = window.setTimeout(() => {
-        this.pending.delete(requestId);
-        this.restartWorker(`timeout:${type}`).catch((error) => {
-          console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
-        });
-        reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
-      }, PLUGIN_WORKER_TIMEOUT_MS);
+        if (isBoot) {
+          this.pending.delete(requestId);
+          this.restartWorker(`timeout:${type}`).catch((error) => {
+            console.error(`[DEBUG] plugin worker ${this.pluginId} restart failed`, error);
+          });
+          reject(new Error(`plugin worker ${this.pluginId} timeout: ${type}`));
+          return;
+        }
+        console.warn(`[DEBUG] plugin worker ${this.pluginId} slow ${type} call: still waiting after ${Date.now() - startedAt}ms`);
+      }, isBoot ? PLUGIN_WORKER_BOOT_TIMEOUT_MS : PLUGIN_WORKER_SLOW_CALL_WARN_MS);
       this.pending.set(requestId, { resolve, reject, timer });
       this.worker.postMessage({ type, requestId, ...payload });
     });

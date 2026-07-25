@@ -287,6 +287,11 @@ struct FixtureObject {
     scale: Option<serde_json::Value>,
     #[serde(default)]
     vortices: Vec<VortexProps>,
+    /// 🪣 Live-viewport-only tag (never persisted to the document): this object's 0-based position in
+    /// the fill plan's sequence, so the viewport can reveal/hide planned pieces by drag position without
+    /// a WASM round trip. Set only on `compose_fill_display`'s output, stripped from committed fixtures.
+    #[serde(rename = "revealIndex", default, skip_serializing_if = "Option::is_none")]
+    reveal_index: Option<usize>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -1143,6 +1148,28 @@ fn brush_preview_from_candidate(target_full_id: &str, candidate: &BrushCompatibl
     Some(BrushPreviewState { target_vortex_full_id: target_full_id.to_string(), object_kind_id: kind.id.clone(), source_vortex_index: candidate.source_vortex_index, mesh_url, origin, orientation, scale: kind.scale.clone() })
 }
 
+/// ⏱ Monotonic-enough wall clock in milliseconds — `Date.now()` only for wasm-bindgen web targets.
+/// WASI P2 plugin components (`target_env = "p2"`) must not call `js_sys` (no wasm-bindgen imports);
+/// they share the native `Instant` path so precompute budgets still advance.
+/// @link https://docs.rs/js-sys/latest/js_sys/struct.Date.html#method.now
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+fn puzzle3d_now_ms() -> f64 {
+    js_sys::Date::now()
+}
+
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+fn puzzle3d_now_ms() -> f64 {
+    use std::sync::OnceLock;
+    static START: OnceLock<std::time::Instant> = OnceLock::new();
+    START.get_or_init(std::time::Instant::now).elapsed().as_secs_f64() * 1000.0
+}
+
+/// 🪫 Soft wall-clock ceiling for a single `precompute_step` call — a `FillStep` task's own collision
+/// search cost is otherwise unbounded per call, so this only caps how many *additional* tasks beyond
+/// the first are attempted once time runs out; the first task in a call always runs so a tick always
+/// makes forward progress.
+const PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS: f64 = 12.0;
+
 struct FillBuilder {
     base: Fixture,
     fixture: Fixture,
@@ -1471,8 +1498,13 @@ impl Puzzle3dEngine {
     }
 
     fn precompute_step(&mut self, budget: u32) -> bool {
+        let start = puzzle3d_now_ms();
         let mut remaining = budget as usize;
+        let mut steps_done = 0usize;
         while remaining > 0 {
+            if steps_done > 0 && puzzle3d_now_ms() - start >= PUZZLE3D_PRECOMPUTE_STEP_BUDGET_MS {
+                break;
+            }
             let task = match self.queue.first().cloned() {
                 Some(t) => t,
                 None => return false,
@@ -1493,6 +1525,7 @@ impl Puzzle3dEngine {
                     }
                 }
             }
+            steps_done += 1;
             remaining -= 1;
         }
         !self.queue.is_empty()
@@ -1580,7 +1613,7 @@ impl Puzzle3dEngine {
                 // 🔒 Infallible: the length check above proves `apply_brush_placement_to_fixture` actually
                 // appended (rather than returning `fixture.clone()` unchanged), and it only ever appends
                 // exactly one object together with exactly one attraction, never one without the other.
-                let placed_object = next_fixture.objects.last().cloned().expect("objects grew, so last() is Some");
+                let mut placed_object = next_fixture.objects.last().cloned().expect("objects grew, so last() is Some");
                 if let Some(mesh_url) = resolve_object_kind_mesh_url(placed_object.object_kind.as_deref().unwrap_or(""), &catalogs, &next_fixture) {
                     if self.meshes.contains_key(&mesh_url) {
                         fill.placed.push(PlacedCollisionEntry { object_id: placed_object.id.clone(), mesh_url, world: pose_isometry(placed_object.origin, placed_object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &placed_object.scale) });
@@ -1589,6 +1622,8 @@ impl Puzzle3dEngine {
                 let new_attraction = next_fixture.attractions.last().cloned().expect("attractions grew alongside objects, so last() is Some");
                 fill.fixture = next_fixture;
                 fill.sequence.push(payload);
+                // 🪣 Tag with its sequence position so `compose_fill_display` can expose it as `revealIndex`.
+                placed_object.reveal_index = Some(fill.appended_objects.len());
                 fill.appended_objects.push(placed_object);
                 fill.appended_attractions.push(new_attraction);
                 return true;
@@ -1598,26 +1633,20 @@ impl Puzzle3dEngine {
         false
     }
 
+    /// 🔽 Moving the count down (or up) only changes which prefix of the already-planned sequence is
+    /// applied to the document — the plan (`sequence`/`appended_*`/`placed`/`fixture`) is prefix-stable
+    /// and is never discarded here, so a jittery drag can never force expensive replanning.
     fn apply_fill_count(&mut self, count: usize) -> Option<Fixture> {
-        let count = count.min(self.fill.as_ref()?.sequence.len());
-        if count < self.fill.as_ref()?.applied_count {
-            let fill = self.fill.as_mut()?;
-            fill.sequence.truncate(count);
-            fill.appended_objects.truncate(count);
-            fill.appended_attractions.truncate(count);
-            fill.fixture = fill.base.clone();
-            fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
-            fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
-            let retained_ids: std::collections::HashSet<_> = fill.fixture.objects.iter().map(|object| object.id.as_str()).collect();
-            fill.placed.retain(|entry| retained_ids.contains(entry.object_id.as_str()));
-            fill.stalled = false;
-            self.queue.retain(|task| !matches!(task, PrecomputeTask::FillStep));
-            self.queue.extend((count..fill.max_count).map(|_| PrecomputeTask::FillStep));
-        }
         let fill = self.fill.as_mut()?;
+        let count = count.min(fill.sequence.len());
         fill.applied_count = count;
         let mut fixture = fill.base.clone();
-        fixture.objects.extend(fill.appended_objects.iter().take(count).cloned());
+        // 🪣 `revealIndex` is a live-viewport-only hint (see `compose_fill_display`) — never persist it
+        // to the committed document projection.
+        fixture.objects.extend(fill.appended_objects.iter().take(count).cloned().map(|mut object| {
+            object.reveal_index = None;
+            object
+        }));
         fixture.attractions.extend(fill.appended_attractions.iter().take(count).cloned());
         Some(fixture)
     }
@@ -1671,7 +1700,7 @@ pub fn apply_brush_placement_to_fixture(fixture: &Fixture, payload: &BrushPlaceP
         return fixture.clone();
     }
     next.attractions.push(AttractionProps { id: attraction_id, attracting: payload.target_vortex_full_id.clone(), attracted, gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
-    next.objects.push(FixtureObject { id: object_id, object_kind: Some(kind.id.clone()), mesh_url: Some(mesh_url), origin: payload.origin, orientation: Some(payload.orientation), scale: payload.scale.clone().or(kind.scale.clone()), vortices });
+    next.objects.push(FixtureObject { id: object_id, object_kind: Some(kind.id.clone()), mesh_url: Some(mesh_url), origin: payload.origin, orientation: Some(payload.orientation), scale: payload.scale.clone().or(kind.scale.clone()), vortices, reveal_index: None });
     let _ = template;
     next
 }
@@ -1769,6 +1798,16 @@ impl Puzzle3dPrecomputeSession {
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
     }
 
+    /// 🪣 O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON
+    /// round trip just to read `sequence.len()`.
+    pub fn fill_available_count(&self) -> u32 {
+        self.engine.fill.as_ref().map(|fill| fill.sequence.len() as u32).unwrap_or(0)
+    }
+
+    pub fn fill_is_done(&self) -> bool {
+        self.engine.fill.as_ref().map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count).unwrap_or(true)
+    }
+
     pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, JsValue> {
         let payload: BrushPlacePayload = serde_json::from_str(payload_json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let fixture = self.engine.apply_brush_placement(&payload).ok_or_else(|| JsValue::from_str("brush placement rejected"))?;
@@ -1855,6 +1894,7 @@ mod tests {
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
                         scale: None,
                         vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                        reveal_index: None,
                     },
                     FixtureObject {
                         id: "host".to_string(),
@@ -1864,6 +1904,7 @@ mod tests {
                         orientation: Some([0.0, 0.0, 0.0, 1.0]),
                         scale: None,
                         vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                        reveal_index: None,
                     },
                 ],
             },
@@ -1988,6 +2029,7 @@ mod tests {
                     orientation: Some([0.0, 0.0, 0.0, 1.0]),
                     scale: None,
                     vortices: vec![VortexProps { id: "v0".to_string(), vortex_kind: Some("port-a".to_string()), position: [0.0, 0.0, 0.0], direction: Some([0.0, 0.0, -1.0]) }],
+                    reveal_index: None,
                 }],
             },
             kind_catalogs: Some(KindCatalogBundle {
@@ -2011,7 +2053,7 @@ mod tests {
     #[test]
     fn compose_fill_display_is_read_only_and_matches_apply_prefix() {
         let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2038,7 +2080,7 @@ mod tests {
     #[test]
     fn fill_options_paths_are_millisecond_scale() {
         let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2089,6 +2131,52 @@ mod tests {
     }
 
     #[test]
+    fn apply_fill_count_downward_move_keeps_the_plan_intact() {
+        // 🔽 Moving the count DOWN must never discard the already-planned sequence/appended objects/
+        // placed entries or re-enqueue FillSteps — only `applied_count` (and the returned document-prefix
+        // fixture) may change. Otherwise a jittery drag forces expensive replanning on every dip.
+        let object = |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
+        let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
+        let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let mut fill = FillBuilder::new(base.clone(), 7, &HashMap::new(), &catalogs);
+        fill.applied_count = 0;
+        fill.sequence = (0..10).map(payload).collect();
+        fill.appended_objects = (0..10).map(|index| object(&format!("p{index}"))).collect();
+        fill.appended_attractions = (0..10).map(attraction).collect();
+        fill.fixture.objects.extend(fill.appended_objects.iter().cloned());
+        fill.fixture.attractions.extend(fill.appended_attractions.iter().cloned());
+        fill.placed = fill
+            .appended_objects
+            .iter()
+            .map(|object| PlacedCollisionEntry { object_id: object.id.clone(), mesh_url: "/test/placed.glb".into(), world: pose_isometry(object.origin, object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]), &object.scale) })
+            .collect();
+
+        let mut engine = Puzzle3dEngine::new();
+        let base_scene = SceneConfig { fixture: base.clone(), kind_catalogs: Some(catalogs), kind_compatibility: vec![], overlap_budget: 0.0, seed: 7, host_rules: BrushHostRules::default(), weights: BrushKindWeights::default() };
+        engine.set_scene(&serde_json::to_string(&base_scene).unwrap()).expect("seed");
+        engine.fill = Some(fill);
+
+        engine.apply_fill_count(8).expect("apply up to 8");
+        let queue_before = engine.queue.len();
+        let placed_before = engine.fill.as_ref().unwrap().placed.len();
+        let sequence_before = engine.fill.as_ref().unwrap().sequence.len();
+
+        engine.apply_fill_count(3).expect("apply down to 3");
+        let fill = engine.fill.as_ref().expect("fill");
+        assert_eq!(fill.applied_count, 3);
+        assert_eq!(fill.sequence.len(), sequence_before, "the plan is prefix-stable — downward moves never truncate it");
+        assert_eq!(fill.appended_objects.len(), sequence_before);
+        assert_eq!(fill.appended_attractions.len(), sequence_before);
+        assert_eq!(fill.placed.len(), placed_before, "placed collision entries survive a downward move");
+        assert_eq!(engine.queue.len(), queue_before, "no FillSteps get re-enqueued on a downward move");
+
+        let fixture = engine.apply_fill_count(7).expect("apply back up to 7");
+        assert_eq!(fixture.objects.len(), base.objects.len() + 7, "moving back up is instant — the plan was never discarded");
+    }
+
+    #[test]
     fn update_kind_weights_soft_replans_tail_without_rebuilding_queue() {
         let mut engine = Puzzle3dEngine::new();
         let json = single_object_scene_json();
@@ -2135,9 +2223,12 @@ mod tests {
     }
 
     #[test]
-    fn decreasing_fill_count_preserves_prefix_and_replans_tail() {
+    fn decreasing_fill_count_keeps_the_plan_intact_and_does_not_replan() {
+        // 🔽 Downward moves are prefix-stable (see `apply_fill_count`) — the plan/sequence/appended
+        // objects/queue must never be discarded or re-enqueued just because the applied prefix shrank;
+        // that used to force expensive replanning on every jittery drag dip.
         let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2155,22 +2246,24 @@ mod tests {
         engine.fill = Some(fill);
 
         let fixture = engine.apply_fill_count(1).expect("fill session");
-        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"]);
+        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base", "p0"], "the returned document prefix reflects the new applied count");
         let fill = engine.fill.as_ref().expect("fill builder");
-        assert_eq!(fill.appended_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0"], "objects below the slider count must retain their identity");
-        assert_eq!(fill.sequence.len(), 1, "the hidden generated tail must be discarded");
-        assert!(!fill.stalled, "decreasing the slider must resume random planning from the retained prefix");
-        assert_eq!(fill.rng_state, rng_state, "replanning must continue the random stream instead of recreating the discarded tail");
-        assert_eq!(engine.queue.iter().filter(|task| matches!(task, PrecomputeTask::FillStep)).count(), FILL_COUNT_MAX - 1);
+        assert_eq!(fill.appended_objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["p0", "p1", "p2"], "the full plan survives — a downward move never discards the tail");
+        assert_eq!(fill.sequence.len(), 3, "the planned sequence is never truncated by a downward move");
+        assert_eq!(fill.applied_count, 1);
+        assert!(fill.stalled, "apply_fill_count never touches stalled — only actual planning (fill_step_one) does");
+        assert_eq!(fill.rng_state, rng_state, "no replanning happens, so the random stream is untouched");
+        assert!(engine.queue.is_empty(), "no FillSteps get enqueued by a downward move");
 
         let fixture = engine.apply_fill_count(0).expect("zero fill count");
-        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero must remove every generated object");
+        assert_eq!(fixture.objects.iter().map(|object| object.id.as_str()).collect::<Vec<_>>(), vec!["base"], "zero applies nothing to the document");
+        assert_eq!(engine.fill.as_ref().expect("fill builder").sequence.len(), 3, "even at count 0, the plan is preserved for instant re-apply");
     }
 
     #[test]
     fn set_scene_with_applied_fill_projection_preserves_slider_session() {
         let object =
-            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![] };
+            |id: &str| FixtureObject { id: id.to_string(), object_kind: Some("Placed".to_string()), mesh_url: Some("/test/placed.glb".to_string()), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None, vortices: vec![], reveal_index: None };
         let attraction = |index: usize| AttractionProps { id: format!("a{index}"), attracting: format!("p{index}:v0"), attracted: format!("p{}:v0", index + 1), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 };
         let payload = |index: usize| BrushPlacePayload { target_vortex_full_id: format!("p{index}:v0"), object_kind_id: "Placed".to_string(), source_vortex_index: 0, origin: [index as f64, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
         let base = Fixture { objects: vec![object("base")], attractions: vec![], target_volumes: vec![] };
@@ -2287,6 +2380,16 @@ impl Puzzle3dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         let progress = self.engine.fill.as_ref().map(|f| f.progress()).unwrap_or(FillBuildProgress { count: 0, applied_count: 0, max_count: FILL_COUNT_MAX, done: true, appended_objects: vec![], appended_attractions: vec![], sequence: vec![] });
         serde_json::to_string(&progress).unwrap_or_else(|_| "{}".to_string())
+    }
+
+    /// 🪣 O(1) planned-count readout for the render/tick hot path — avoids a `fill_progress` JSON
+    /// round trip just to read `sequence.len()`.
+    pub fn fill_available_count(&self) -> u32 {
+        self.engine.fill.as_ref().map(|fill| fill.sequence.len() as u32).unwrap_or(0)
+    }
+
+    pub fn fill_is_done(&self) -> bool {
+        self.engine.fill.as_ref().map(|fill| fill.stalled || fill.sequence.len() >= fill.max_count).unwrap_or(true)
     }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle3dError> {
@@ -2450,15 +2553,18 @@ fn puzzle3d_is_id_keyed_array(value: Option<&serde_json::Value>) -> bool {
 }
 
 fn puzzle3d_collect_collection_delta(collection: &str, before: &[serde_json::Value], after: &[serde_json::Value], ops: &mut Vec<Puzzle3dOp>) {
+    let before_by_id: std::collections::HashMap<&str, &serde_json::Value> = before.iter().filter_map(|entry| puzzle3d_item_id(entry).map(|id| (id, entry))).collect();
+    let mut after_ids: std::collections::HashSet<&str> = std::collections::HashSet::with_capacity(after.len());
     for entry in after {
         let id = puzzle3d_item_id(entry).unwrap_or_default();
-        if before.iter().find(|candidate| puzzle3d_item_id(candidate) == Some(id)) != Some(entry) {
+        after_ids.insert(id);
+        if before_by_id.get(id).copied() != Some(entry) {
             ops.push(Puzzle3dOp::UpsertItem { collection: collection.to_string(), item: entry.clone(), index: None });
         }
     }
     for entry in before {
         let id = puzzle3d_item_id(entry).unwrap_or_default();
-        if !after.iter().any(|candidate| puzzle3d_item_id(candidate) == Some(id)) {
+        if !after_ids.contains(id) {
             ops.push(Puzzle3dOp::RemoveItem { collection: collection.to_string(), id: id.to_string() });
         }
     }
@@ -2597,6 +2703,53 @@ mod puzzle3d_vcs_tests {
             forward = inverse.diff(&forward).apply(&forward);
         }
         assert_eq!(forward, before);
+    }
+
+    /// 🪢 Regression guard for the linear (`HashMap`-based) rewrite of `puzzle3d_collect_collection_delta`
+    /// — must still emit ops for exactly the changed/added/removed entries and skip untouched ones,
+    /// exactly like the previous O(N²) `find`-based implementation.
+    #[test]
+    fn puzzle3d_collection_delta_only_touches_changed_entries() {
+        let before = serde_json::json!({
+            "schema": PUZZLE_3D_SCHEMA, "camera": {}, "attractions": [],
+            "objects": [
+                { "id": "unchanged", "origin": [0.0, 0.0, 0.0] },
+                { "id": "updated", "origin": [1.0, 0.0, 0.0] },
+                { "id": "removed", "origin": [2.0, 0.0, 0.0] },
+            ],
+        });
+        let after = serde_json::json!({
+            "schema": PUZZLE_3D_SCHEMA, "camera": {}, "attractions": [],
+            "objects": [
+                { "id": "unchanged", "origin": [0.0, 0.0, 0.0] },
+                { "id": "updated", "origin": [1.0, 5.0, 0.0] },
+                { "id": "added", "origin": [3.0, 0.0, 0.0] },
+            ],
+        });
+        let ops = puzzle3d_document_delta_ops(&before, &after);
+        let upserted_ids: Vec<&str> = ops
+            .iter()
+            .filter_map(|op| match op {
+                Puzzle3dOp::UpsertItem { item, .. } => item.get("id").and_then(|value| value.as_str()),
+                _ => None,
+            })
+            .collect();
+        let removed_ids: Vec<&str> = ops
+            .iter()
+            .filter_map(|op| match op {
+                Puzzle3dOp::RemoveItem { id, .. } => Some(id.as_str()),
+                _ => None,
+            })
+            .collect();
+        assert_eq!(upserted_ids.len(), 2, "only changed/added objects are upserted, never unchanged ones: {ops:?}");
+        assert!(upserted_ids.contains(&"updated"));
+        assert!(upserted_ids.contains(&"added"));
+        assert_eq!(removed_ids, vec!["removed"]);
+        let mut forward = before.clone();
+        for op in &ops {
+            forward = op.diff(&forward).apply(&forward);
+        }
+        assert_eq!(forward, after);
     }
 }
 // #endregion 🔖DocumentVcs

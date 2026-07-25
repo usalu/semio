@@ -1,0 +1,36 @@
+{
+  "events": [
+    {
+      "type": "error",
+      "text": "[DEBUG] action failed Error: unreachable\n    at worker.onmessage (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/core/js/index.ts:811:22)"
+    },
+    {
+      "type": "error",
+      "text": "[DEBUG] render failed Error: [object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}\n    at worker.onmessage (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/core/js/index.ts:811:22)"
+    }
+  ],
+  "probe": [
+    {
+      "t": 709.1000000238419,
+      "kind": "console.error",
+      "detail": [
+        "[DEBUG] action failed",
+        {
+          "message": "unreachable",
+          "stack": "Error: unreachable\n    at worker.onmessage (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/core/js/index.ts:811:22)"
+        }
+      ]
+    },
+    {
+      "t": 766.1000000238419,
+      "kind": "console.error",
+      "detail": [
+        "[DEBUG] render failed",
+        {
+          "message": "[object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}",
+          "stack": "Error: [object Object] (see error.payload) payload={\"tag\":\"message\",\"val\":\"plugin instance busy\"}\n    at worker.onmessage (http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/core/js/index.ts:811:22)"
+        }
+      ]
+    }
+  ]
+}

@@ -2133,6 +2133,38 @@ export function parseInvocationResponse(raw: string): InvocationResponse {
 //#endregion InvocationResponse
 
 //#region SerializedPluginWasm
+/** @emoji 🧾 Flattens jco/component errors — message is often `[object Object] (see error.payload)` while the real text lives on `payload.val`. */
+export function pluginErrorText(error: unknown): string {
+  if (error instanceof Error) {
+    const withPayload = error as Error & { payload?: unknown };
+    const payload = withPayload.payload;
+    if (payload && typeof payload === "object") {
+      const record = payload as { val?: unknown; tag?: unknown; message?: unknown };
+      if (typeof record.val === "string" && record.val.length > 0) {
+        return `${withPayload.message} payload=${JSON.stringify(payload)}`;
+      }
+      if (typeof record.message === "string" && record.message.length > 0) {
+        return `${withPayload.message} payload=${JSON.stringify(payload)}`;
+      }
+    }
+    return withPayload.message;
+  }
+  if (error && typeof error === "object" && "payload" in error) {
+    try {
+      return JSON.stringify(error);
+    } catch {
+      return String(error);
+    }
+  }
+  return String(error);
+}
+
+/** @emoji 🔒 True when a plugin call hit the single-flight instance lock (or a poisoned guard after a trap). */
+export function isPluginInstanceBusyError(error: unknown): boolean {
+  const message = pluginErrorText(error);
+  return message.includes("plugin instance busy") || message.includes("plugin busy");
+}
+
 /** @emoji 🔒 Serializes wasm plugin entry points — the host keeps instances in one RefCell. */
 export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): PluginWasmHandle {
   let tail: Promise<void> = Promise.resolve();
@@ -2142,8 +2174,7 @@ export function withSerializedPluginWasmHandle(handle: PluginWasmHandle): Plugin
         try {
           return await fn();
         } catch (error) {
-          const message = error instanceof Error ? error.message : String(error);
-          if (!message.includes("plugin instance busy") && !message.includes("plugin busy")) throw error;
+          if (!isPluginInstanceBusyError(error)) throw error;
           await new Promise((resolve) => setTimeout(resolve, attempt + 1));
         }
       }

@@ -1,0 +1,4 @@
+[DEBUG] {
+  afterLeave: "rgb(123, 130, 125)",
+  ok: true,
+}

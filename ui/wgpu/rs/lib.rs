@@ -496,6 +496,13 @@ pub enum WindowMeasure {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         #[cfg_attr(feature = "typegen", ts(optional))]
         disabled: Option<bool>,
+        /// 🪣 When set, this is a reveal-group id: the host must NOT dispatch `onChange` on every drag
+        /// value — only on gesture commit (pointer-up) — and while dragging must locally cut off
+        /// instances tagged with this reveal group's id instead. See `WorldInstancesLayer`'s reveal
+        /// cutoff store and `revealCutoffs` in `World3dScene.interaction_json`.
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        reveal: Option<String>,
         #[cfg_attr(feature = "typegen", ts(rename = "onChange"))]
         on_change: ActionDescriptor,
     },
@@ -962,6 +969,7 @@ mod layout_wire_format_tests {
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: ActionDescriptor { controller_id: "ctrl".into(), action: "measureSlider".into(), args: None },
             },
             WindowMeasure::Toggle {
@@ -1056,6 +1064,7 @@ mod layout_wire_format_tests {
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: ActionDescriptor { controller_id: "c".into(), action: "z".into(), args: None },
             },
         ];
@@ -1089,6 +1098,7 @@ mod layout_wire_format_tests {
                 value: Some("v".into()),
                 placeholder: None,
                 disabled: None,
+                reveal: None,
                 on_change: None,
                 on_submit: None,
                 on_repeat_last: None,
@@ -1103,6 +1113,7 @@ mod layout_wire_format_tests {
                 step: None,
                 unit: None,
                 disabled: None,
+                reveal: None,
                 on_change: None,
                 on_commit: None,
             }),

@@ -1,0 +1,22 @@
+{
+  "consoleMsgs": [],
+  "pixels": [
+    {
+      "index": 0,
+      "w": 470,
+      "h": 807,
+      "samples": 1024,
+      "nonBg": 0,
+      "ratio": 0
+    },
+    {
+      "index": 1,
+      "w": 947,
+      "h": 807,
+      "samples": 1024,
+      "nonBg": 0,
+      "ratio": 0
+    }
+  ],
+  "title": "Entwerfen mit Bestand · Aggregator"
+}

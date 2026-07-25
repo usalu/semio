@@ -1599,7 +1599,7 @@ function WorldProjectionGizmoViewport(props: WorldProjectionGizmoViewportProps):
 }
 //#endregion 🧭WorldOrbitViewGizmoViewport
 
-/** @emoji 🧭 CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right. */
+/** @emoji 🧭 CAD Z-up viewport navigation cube (faces / corners / center) anchored bottom-right above the folded projection pane. */
 export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactElement | null {
   const { size } = useThree();
   const [axisColors, setAxisColors] = reactHostPort.useState(() => resolveSpatialAxisColors());

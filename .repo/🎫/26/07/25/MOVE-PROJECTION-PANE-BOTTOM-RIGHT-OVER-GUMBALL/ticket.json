@@ -1,0 +1,14 @@
+{
+  "title": "Move Projection Pane Bottom Right Over Gumball",
+  "emoji": "🧭",
+  "status": "closed",
+  "description": "Move the 3D projection pane to the bottom right and the gumball (navigation cube) right above it. When the pane is uncollapsed it grows on top of the gumball. Currently the projection pane defaults to bottom-middle to clear the cube; change the stack so both share the bottom-right corner with the cube sitting above the folded pane chrome and the expanded pane overlaying the cube.",
+  "summary": "Moved the 3D projection pane default anchor to bottom-right and lifted the navigation cube so it sits directly above the folded pane chrome. When uncollapsed, the pane grows upward over the cube (DOM overlay on the canvas). Updated shared gizmo placement math, framework/CAD projection pane defaults, and vitest expectations (2 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2316"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪ece1fae54f4f4963a23ebdda04f40cc6"
+  ]
+}

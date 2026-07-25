@@ -127,6 +127,9 @@ interface plugin {
   /// outputs). `request-json` is reserved for future parameterized requests and currently ignored by
   /// the SDK default.
   produce-media: func(instance-id: u32, port-id: string, request-json: string) -> result<media-artifact, plugin-error>;
+  /// 🩹 Clears the plugin's single-flight instance guard after a wasm trap skipped `Drop`. Hosts
+  /// must only call this between serialized top-level calls — never while another call is in flight.
+  clear-instance-guard: func();
 }
 
 interface host {

@@ -5,7 +5,7 @@ pub mod component {
     //! 🧩 WASI P2 component exports for the plugin world contract.
 
     use crate::plugin_runtime::{
-        ensure_plugin_initialized, plugin_attach_backbone, plugin_consume_media, plugin_create_app,
+        ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_create_app,
         plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_handle_command,
         plugin_ingest_operations, plugin_load_document, plugin_manifest, plugin_produce_media, plugin_refresh_ui,
         plugin_render_with_document,
@@ -123,6 +123,10 @@ pub mod component {
             ensure_plugin_initialized();
             let (descriptor_json, data) = plugin_produce_media(instance_id, &port_id, &request_json).map_err(PluginError::Message)?;
             Ok(MediaArtifact { descriptor_json, data })
+        }
+
+        fn clear_instance_guard() {
+            plugin_clear_instance_guard();
         }
     }
 
@@ -3284,13 +3288,29 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🧱 Builds the `InvocationResult` for a just-dispatched edit: one `KernelOperation` per
-    /// forward operation, each carrying the edit's true `backwards` as its inverse diff.
-    fn result_from_last_edit(&self, verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
+    /// forward operation NEW in this dispatch (`tail_offset`), each carrying just this dispatch's
+    /// `backwards` as its inverse diff. For a coalesced (`AmendLast`) edit, `edit_operations()` returns
+    /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
+    /// serialize every `KernelOperation` since the gesture started (O(edit-size) per dispatch, O(edit-
+    /// size²) over the whole gesture) purely to report ops the caller already knows about.
+    fn result_from_last_edit(
+        &self,
+        verb: &str,
+        meta: &ActionMeta,
+        effects: Vec<HostEffect>,
+        events: Vec<AppEvent>,
+        ui_scope: semio_framework_core::kernel::UiDirtyScope,
+        tail_offset: (usize, usize),
+    ) -> InvocationResult {
         let schema = self.app.document_schema().to_string();
         let invocation_id = InvocationId(format!("{verb}:{}:{}", meta.instance_id, self.store.generation()));
         let document = DocumentHandle(meta.instance_id as u128);
         let mut operations: Vec<KernelOperation> = Vec::new();
         if let Some((forwards, backwards, operation_meta)) = self.store.edit_operations() {
+            let (forwards_offset, backwards_offset) = tail_offset;
+            let forwards = &forwards[forwards_offset.min(forwards.len())..];
+            let backwards = &backwards[backwards_offset.min(backwards.len())..];
+            let operation_meta = &operation_meta[forwards_offset.min(operation_meta.len())..];
             let inverse_payload = serde_json::json!({ "backwards": backwards });
             for (index, forward) in forwards.iter().enumerate() {
                 let entry = operation_meta.get(index);
@@ -3373,6 +3393,12 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
         }
         self.store.set_local_actor_id(Some(meta.actor.clone()));
+        // 🪢 Captured before dispatch so `result_from_last_edit` can report only the ops THIS dispatch
+        // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
+        // are the tail offsets into that edit's now-longer forwards/backwards; if a new edit was created
+        // instead, the offsets are moot (checked via edit identity, not reused blindly).
+        let before_edit_id = self.store.envelope().vcs.edits.last().map(|edit| edit.id.clone());
+        let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
         let vcs_command = match coalesce_key {
             Some(key) => DocumentVcsCommand::AmendLast {
                 operations: ops,
@@ -3385,7 +3411,9 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         };
         self.store.dispatch(vcs_command).map_err(|error| error.to_string())?;
         self.cache = None;
-        Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope))
+        let amended_same_edit = before_edit_id.is_some() && self.store.envelope().vcs.edits.last().map(|edit| &edit.id) == before_edit_id.as_ref();
+        let tail_offset = if amended_same_edit { (before_forwards_len, before_backwards_len) } else { (0, 0) };
+        Ok(self.result_from_last_edit(verb, meta, effects, events, ui_scope, tail_offset))
     }
 }
 
@@ -3746,7 +3774,10 @@ use std::sync::atomic::{AtomicU32, Ordering};
 
 thread_local! {
     static PLUGIN: RefCell<Option<PluginBundle>> = const { RefCell::new(None) };
-    static INSTANCES: RefCell<Vec<AppInstance>> = const { RefCell::new(Vec::new()) };
+    // 🔓 `UnsafeCell` (not `RefCell`): a wasm trap skips `RefMut::drop` and permanently poisons
+    // `RefCell`'s borrow flag. Exclusive access is enforced by `InstanceGuard` + the host's
+    // serialized plugin bridge instead.
+    static INSTANCES: std::cell::UnsafeCell<Vec<AppInstance>> = const { std::cell::UnsafeCell::new(Vec::new()) };
     static INSTANCE_GUARD: Cell<u32> = const { Cell::new(0) };
 }
 
@@ -3760,6 +3791,12 @@ impl InstanceGuard {
         INSTANCE_GUARD.set(1);
         Ok(Self)
     }
+
+    /// 🩹 Clears a guard left set when a prior call trapped without running `Drop` — safe between
+    /// host-serialized top-level calls; must not be invoked mid-call.
+    fn clear_poison() {
+        INSTANCE_GUARD.set(0);
+    }
 }
 
 impl Drop for InstanceGuard {
@@ -3770,7 +3807,14 @@ impl Drop for InstanceGuard {
 
 fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, String>>(f: F) -> Result<R, String> {
     let _guard = InstanceGuard::enter()?;
-    INSTANCES.with(|instances| f(&mut instances.borrow_mut()))
+    // SAFETY: `InstanceGuard` + the JS/host serialized plugin bridge ensure exclusive access.
+    INSTANCES.with(|instances| f(unsafe { &mut *instances.get() }))
+}
+
+/// 🩹 Heals `InstanceGuard` after a wasm trap so the next host-serialized call is not stuck on
+/// `plugin instance busy`. No-op when the guard is already clear.
+pub fn plugin_clear_instance_guard() {
+    InstanceGuard::clear_poison();
 }
 
 
@@ -4698,6 +4742,33 @@ mod semio_plugin_macro_tests {
     }
 
     #[test]
+    fn amend_dispatch_reports_only_this_dispatch_new_operations() {
+        // 🪢 Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
+        // coalesced edit accumulates every amend's ops (3 after this loop), each dispatch's
+        // `InvocationResult` must report only the op IT just added — never re-serializing the whole
+        // growing edit into every `KernelOperation`/`UndoGroup` on every single dispatch.
+        let mut app = contract_app_under_test();
+        app.handle_action("amendLabel", Some(&json!({ "value": "a" })), &ViewState::default(), &meta()).expect("amendLabel a");
+        app.handle_action("amendLabel", Some(&json!({ "value": "ab" })), &ViewState::default(), &meta()).expect("amendLabel ab");
+        let result = app
+            .handle_action("amendLabel", Some(&json!({ "value": "abc" })), &ViewState::default(), &meta())
+            .expect("amendLabel abc");
+        assert_eq!(result.operations.len(), 1, "must report only this dispatch's new op, not the whole coalesced edit");
+        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setLabel", "value": "abc" }));
+        assert_eq!(
+            result.operations[0].inverse.inverse_diff.payload,
+            json!({ "backwards": [{ "op": "setLabel", "value": "ab" }] }),
+            "the new op's own inverse undoes back to the pre-dispatch label, not the whole gesture"
+        );
+        assert_eq!(result.inverse_group.operations.len(), 1);
+        assert_eq!(result.inverse_group.inverse_operations.len(), 1);
+        assert_eq!(app.test_projection().label, "abc");
+        // The narrowed per-dispatch reporting must not affect coalescing/undo semantics.
+        app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo amend");
+        assert_eq!(app.test_projection().label, "");
+    }
+
+    #[test]
     fn operation_command_emits_kernel_op_with_true_inverse() {
         let mut app = contract_app_under_test();
         let result = app
@@ -4833,6 +4904,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: action("setSunAzimuth", None),
             },
             WindowMeasure::Slider {
@@ -4846,6 +4918,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: action("setSunElevation", None),
             },
             WindowMeasure::Slider {
@@ -4859,6 +4932,7 @@ pub fn world3d_sun_measures(id_prefix: &str, sun: &WorldSunConfig, action: impl 
                 loading: None,
                 waiting: None,
                 disabled: None,
+                reveal: None,
                 on_change: action("setSunIntensity", None),
             },
         ],
@@ -5064,6 +5138,7 @@ pub fn world3d_projection_measures(id_prefix: &str, p: &WorldProjectionConfig, a
         loading: None,
         waiting: None,
         disabled: None,
+        reveal: None,
         on_change: action("setProjectionParam", Some(json!({ "param": param }))),
     };
 
