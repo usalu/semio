@@ -2296,8 +2296,8 @@ fn create_lowpoly_app() -> App {
             .mode("paint", "Paint")
             .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone())
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement)
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "box")
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement, "layout-grid")
             .default_layout(create_default_layout(&[LOWPOLY_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Model".into()])))
             .named_layout(create_named_layout(
                 "lowpoly-paint",

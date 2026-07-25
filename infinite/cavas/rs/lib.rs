@@ -1212,9 +1212,20 @@ pub mod gpu_session {
 // #endregion 🔖GpuSession
 
 // #region 🔖IconCodec
+#[path = "../../../asset/metabolism/icon/generated/metabolism_icon_name.rs"]
+mod metabolism_icon_name_gen;
+
+#[path = "../../../ui/asset/icon/generated/icon_name.rs"]
+mod catalog_icon_name_gen;
+
+pub use metabolism_icon_name_gen::MetabolismIconName;
+pub use catalog_icon_name_gen::IconName;
+
 pub mod icon_codec {
     // #region icon_codec
-    //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, typst, emoji, raster, inline SVG, catalog, text).
+    //! 🖼️ Generic icon encoding resolver for board nodes (url, shortcode, typst, emoji, raster, inline SVG, catalog, themed, text).
+
+    pub use super::{IconName, MetabolismIconName};
 
     use base64::Engine as _;
     use serde::{Deserialize, Serialize};
@@ -1250,7 +1261,8 @@ pub mod icon_codec {
         Typst { src: String },
         Text { text: String },
         Svg { svg: String },
-        Catalog { key: String },
+        Catalog { key: IconName },
+        Themed { key: MetabolismIconName },
     }
 
     fn is_raster_data_url_payload(s: &str) -> bool {
@@ -1345,8 +1357,14 @@ pub mod icon_codec {
         if let Some(svg) = resolve_inline_svg(t) {
             return Some(Icon::Svg { svg });
         }
+        if let Some(key) = MetabolismIconName::from_str(t) {
+            return Some(Icon::Themed { key });
+        }
+        if let Some(key) = IconName::from_str(t) {
+            return Some(Icon::Catalog { key });
+        }
         if looks_like_ascii_catalogish_stem(t) {
-            return Some(Icon::Catalog { key: t.to_string() });
+            return None;
         }
         if looks_like_bare_emoji(t) {
             return Some(Icon::Emoji { emoji: t.to_string() });
@@ -1354,7 +1372,7 @@ pub mod icon_codec {
         if t.chars().count() <= 16 {
             return Some(Icon::Text { text: t.to_string() });
         }
-        Some(Icon::Catalog { key: t.to_string() })
+        None
     }
 
     /// @emoji 🔤 Encodes a structured {@link Icon} into the canonical wire string.
@@ -1374,7 +1392,8 @@ pub mod icon_codec {
             }
             Icon::Text { text } => format!("text:{}", text.trim()),
             Icon::Svg { svg } => svg.trim().to_string(),
-            Icon::Catalog { key } => key.trim().to_string(),
+            Icon::Catalog { key } => key.as_str().to_string(),
+            Icon::Themed { key } => key.as_str().to_string(),
         }
     }
 
@@ -1630,7 +1649,15 @@ pub mod icon_codec {
                     BoardResolvedIcon::SvgPlain(svg.clone())
                 }
             }
-            Icon::Catalog { key } => themed_lookup(key).map_or(BoardResolvedIcon::None, |svg| BoardResolvedIcon::SvgThemed(svg.to_string())),
+            Icon::Catalog { key } => match icon_shortcodes::icon_shortcode_resolve(key.as_str()) {
+                Some(icon_shortcodes::ShortcodeResolved::SvgPlain(svg)) => BoardResolvedIcon::SvgPlain(svg.to_string()),
+                Some(icon_shortcodes::ShortcodeResolved::SvgThemed(svg)) => BoardResolvedIcon::SvgThemed(svg.to_string()),
+                _ => themed_lookup(key.as_str()).map_or(BoardResolvedIcon::None, |svg| BoardResolvedIcon::SvgThemed(svg.to_string())),
+            },
+            Icon::Themed { key } => match icon_shortcodes::icon_shortcode_resolve(key.as_str()) {
+                Some(icon_shortcodes::ShortcodeResolved::SvgThemed(svg)) => BoardResolvedIcon::SvgThemed(svg.to_string()),
+                _ => themed_lookup(key.as_str()).map_or(BoardResolvedIcon::None, |svg| BoardResolvedIcon::SvgThemed(svg.to_string())),
+            },
         }
     }
 
@@ -1666,8 +1693,18 @@ pub mod icon_codec {
         }
 
         #[test]
+        fn icon_codec_decodes_themed_stem() {
+            assert!(matches!(decode_icon("capsule_J"), Some(Icon::Themed { .. })));
+        }
+
+        #[test]
         fn icon_codec_decodes_catalog_stem() {
-            assert!(matches!(decode_icon("capsule_J"), Some(Icon::Catalog { .. })));
+            assert!(matches!(decode_icon("plus"), Some(Icon::Catalog { .. })));
+        }
+
+        #[test]
+        fn icon_codec_rejects_unknown_catalogish_stem() {
+            assert!(decode_icon("unknown_icon_stem_with_underscore").is_none());
         }
 
         #[test]

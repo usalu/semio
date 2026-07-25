@@ -77,6 +77,7 @@ import {
   type IntroductionDefinition,
   type IntroductionDemonstration,
   type IntroductionGesture,
+  type IntroductionKeyModifier,
   type IntroductionLogo,
   type IntroductionPlacement,
   type IntroductionPoint,
@@ -124,8 +125,9 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
-export type { IconName };
+import { ICONS, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
+import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/semio-asset";
+export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
 import { createRoot, type Root } from "react-dom/client";
 import { renderToStaticMarkup } from "react-dom/server";
@@ -1035,7 +1037,8 @@ export type Icon =
   | { readonly kind: "typst"; readonly src: string }
   | { readonly kind: "text"; readonly text: string }
   | { readonly kind: "svg"; readonly svg: string }
-  | { readonly kind: "catalog"; readonly key: string }
+  | { readonly kind: "catalog"; readonly key: IconName }
+  | { readonly kind: "themed"; readonly key: MetabolismIconName }
   | { readonly kind: "node"; readonly node: React.ReactNode };
 
 /** @emoji 🎛 Shared icon editor tab buckets aligned with {@link Icon}. */
@@ -1109,8 +1112,14 @@ export function decodeIcon(encoded: string): Icon | undefined {
   if (lower.startsWith("<?xml") || lower.includes("<svg")) {
     return { kind: "svg", svg: t };
   }
-  if (looksLikeAsciiCatalogishStemForIcon(t)) {
+  if (isMetabolismIconName(t)) {
+    return { kind: "themed", key: t };
+  }
+  if (isIconName(t)) {
     return { kind: "catalog", key: t };
+  }
+  if (looksLikeAsciiCatalogishStemForIcon(t)) {
+    return undefined;
   }
   if (looksLikeBareEmojiForIcon(t)) {
     return { kind: "emoji", emoji: t };
@@ -1118,7 +1127,7 @@ export function decodeIcon(encoded: string): Icon | undefined {
   if ([...t].length <= 16) {
     return { kind: "text", text: t };
   }
-  return { kind: "catalog", key: t };
+  return undefined;
 }
 
 /** @emoji 🔤 Encodes a structured {@link Icon} into the canonical wire string. */
@@ -1139,7 +1148,9 @@ export function encodeIcon(icon: Icon): string {
     case "svg":
       return icon.svg.trim();
     case "catalog":
-      return icon.key.trim();
+      return icon.key;
+    case "themed":
+      return icon.key;
     case "node":
       return "";
   }
@@ -1166,6 +1177,7 @@ export function classifyIconSelectorMode(raw: string): IconSelectorMode {
       return "text";
     case "svg":
     case "catalog":
+    case "themed":
       return "vector";
     case "node":
       return "vector";
@@ -1285,6 +1297,20 @@ function isIconSource(value: ControlIcon): value is IconSource {
   return false;
 }
 
+function useThemeIcons(): UiTheme["icons"] {
+  return React.useSyncExternalStore(subscribeActiveUiTheme, () => activeUiTheme().icons, () => activeUiTheme().icons);
+}
+
+/** @emoji 🖼 Resolves catalog icon SVG for the active theme. */
+export function resolveCatalogIconSvg(name: IconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
+  return resolveCatalogIconSvgFromTheme(name, icons);
+}
+
+/** @emoji 🖼 Resolves metabolism icon SVG for the active theme. */
+export function resolveMetabolismIconSvg(name: MetabolismIconName, icons: UiTheme["icons"] = activeUiTheme().icons): string {
+  return resolveMetabolismIconSvgFromTheme(name, icons);
+}
+
 const CATALOG_ICON_ALIASES: Partial<Record<string, IconName>> = {
   trash: "trash-2",
 };
@@ -1307,7 +1333,11 @@ function coerceIconSource(source: IconSource): Icon {
     if (catalog) {
       return { kind: "catalog", key: catalog };
     }
-    return decodeIcon(key) ?? { kind: "catalog", key };
+    const decoded = decodeIcon(key);
+    if (decoded) {
+      return decoded;
+    }
+    return { kind: "text", text: key };
   }
   if ("kind" in source) {
     return source;
@@ -1341,8 +1371,8 @@ export interface IconProps {
 }
 
 /** @emoji 🖼 Raw vendored SVG markup for an icon name, or `undefined` when the name is not a vendored {@link IconName}. */
-export function iconSvgMarkup(name: string): string | undefined {
-  return (ICONS as Record<string, string>)[name];
+export function iconSvgMarkup(name: IconName): string {
+  return resolveCatalogIconSvg(name);
 }
 
 const ICON_SIZE_CLASS: Record<IconSizeToken, string> = {
@@ -1365,6 +1395,7 @@ function iconBoxClassName(size: number | IconSizeToken, className?: string): str
 
 /** @emoji 🖼 Renders canonical icons without depending on an external icon library. */
 export function Icon({ icon, size = "base", className, title }: IconProps): React.ReactElement {
+  const themeIcons = useThemeIcons();
   const boxStyle = iconBoxStyle(size);
   const boxClass = iconBoxClassName(size, className);
   let normalized = coerceIconSource(icon);
@@ -1403,7 +1434,14 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
       </span>
     );
   }
-  const svgMarkup = normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? ((ICONS as Record<string, string>)[normalized.key] ?? iconSvgMarkup(normalized.key)) : undefined;
+  const svgMarkup =
+    normalized.kind === "svg"
+      ? normalized.svg
+      : normalized.kind === "catalog"
+        ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons)
+        : normalized.kind === "themed"
+          ? resolveMetabolismIconSvgFromTheme(normalized.key, themeIcons)
+          : undefined;
   if (!svgMarkup) {
     return (
       <span
@@ -1412,7 +1450,7 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
         style={boxStyle}
         title={title}
       >
-        {normalized.kind === "catalog" ? normalized.key.slice(0, 3) : "?"}
+        {normalized.kind === "catalog" || normalized.kind === "themed" ? normalized.key.slice(0, 3) : "?"}
       </span>
     );
   }
@@ -1421,8 +1459,8 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
       className={cn("inline-flex shrink-0 items-center justify-center [&>svg]:size-full", boxClass)}
       style={boxStyle}
       title={title}
-      data-icon={normalized.kind === "catalog" ? normalized.key : undefined}
-      data-icon-kind={normalized.kind === "catalog" ? "catalog" : "svg"}
+      data-icon={normalized.kind === "catalog" ? normalized.key : normalized.kind === "themed" ? normalized.key : undefined}
+      data-icon-kind={normalized.kind === "catalog" ? "catalog" : normalized.kind === "themed" ? "themed" : "svg"}
       dangerouslySetInnerHTML={{ __html: svgMarkup }}
       aria-hidden={title ? undefined : true}
     />
@@ -1639,9 +1677,9 @@ export const menuListItemClassName = cn(
 
 const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-tiny";
 
-/** @emoji 🪟 Context-menu surface — same glass chrome as {@link floatingMenuSurfaceClass}. */
+/** @emoji 🪟 Context-menu surface — window-chrome wrapper around menu rows. */
 function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
-  return cn(floatingMenuSurfaceClass, "w-auto min-w-[10rem] p-single z-temporary", ...extra);
+  return cn("z-temporary w-auto min-w-[10rem]", ...extra);
 }
 
 /** @emoji 🪟 Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
@@ -1719,7 +1757,9 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
           </DropdownMenuPrimitive.SubTrigger>
           <DropdownMenuPrimitive.Portal>
-            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className={contextMenuContentClassName()}>{renderContextMenuItems(item.children, onClose)}</DropdownMenuPrimitive.SubContent>
+            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className="z-temporary border-0 bg-transparent p-0 shadow-none">
+              <ContextMenuChrome title={item.label ?? item.id}>{renderContextMenuItems(item.children, onClose)}</ContextMenuChrome>
+            </DropdownMenuPrimitive.SubContent>
           </DropdownMenuPrimitive.Portal>
         </DropdownMenuPrimitive.Sub>,
       );
@@ -1803,12 +1843,14 @@ function renderContextMenuTrigger(point: { x: number; y: number } | null): React
 export interface ContextMenuProps {
   items?: readonly ContextMenuItem[];
   children: React.ReactNode;
+  /** @emoji 🪟 Title chip on the window-chrome cap row. */
+  title?: string;
 }
 
 /**
  * 🧩 Right-click host: always suppresses the native menu; opens the Radix menu only when `items` is non-empty.
  **/
-export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => {
+export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
   const flow = useFlow();
@@ -1840,14 +1882,14 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children }) => 
         <DropdownMenuPrimitive.Content
           align="start"
           avoidCollisions={false}
-          className={contextMenuContentClassName()}
+          className="z-temporary border-0 bg-transparent p-0 shadow-none"
           data-slot="context-menu-content"
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
           sideOffset={0}
           style={point ? { left: point.x, position: "fixed", top: point.y } : undefined}
         >
-          {renderContextMenuItems(items, close)}
+          <ContextMenuChrome title={title}>{renderContextMenuItems(items, close)}</ContextMenuChrome>
         </DropdownMenuPrimitive.Content>
       </DropdownMenuPrimitive.Portal>
     </DropdownMenuPrimitive.Root>
@@ -1859,6 +1901,8 @@ export interface ContextMenuControllerProps {
   position: { x: number; y: number } | null;
   items: ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
+  /** @emoji 🪟 Title chip on the window-chrome cap row. */
+  title?: string;
   /** 🖱️ When false, selecting a row does not dismiss — the row action owns closing (e.g. acceptSuggestion). Outside pointer / Escape still dismiss. Default true. */
   closeOnSelect?: boolean;
 }
@@ -1881,9 +1925,9 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
         <span className={contextMenuShortcutClassName}>›</span>
       </button>
       {open && item.children?.length ? (
-        <div className={contextMenuContentClassName("absolute start-full top-0 ms-tiny")} role="menu">
+        <ContextMenuChrome className="absolute start-full top-0 ms-tiny" title={item.label ?? item.id}>
           {renderFixedContextMenuItems(item.children, onClose)}
-        </div>
+        </ContextMenuChrome>
       ) : null}
     </div>
   );
@@ -1932,7 +1976,7 @@ export function isContextMenuPointerTarget(target: EventTarget | null): boolean 
 /**
  * 🧩 Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
-export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, closeOnSelect = true }) => {
+export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ open, position, items, onOpenChange, title = "Menu", closeOnSelect = true }) => {
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
@@ -1971,33 +2015,89 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     return null;
   }
   return renderPortalInto(
-    <div className={contextMenuContentClassName()} data-slot="context-menu-content" dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu" style={{ left: position.x, position: "fixed", top: position.y }}>
-      {renderFixedContextMenuItems(items, closeOnSelect ? close : () => undefined)}
-    </div>,
+    <ContextMenuChrome style={{ left: position.x, position: "fixed", top: position.y }} title={title}>
+      <div dir={flow.inline === "rtl" ? "rtl" : undefined} onContextMenu={(event) => event.preventDefault()} ref={menuRef} role="menu">
+        {renderFixedContextMenuItems(items, closeOnSelect ? close : () => undefined)}
+      </div>
+    </ContextMenuChrome>,
     getDocumentBody(),
   );
 };
 
 // #endregion 🖱️ContextMenu
 
-/** @emoji 🎚 Surface expertise tier for chrome and label resolution. */
-export enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
+// #region 🚗UiDriver
+/** @emoji 🏷️ Inline caption policy: full icon+label chrome vs icons only. */
+export type UiDriverLabels = "full" | "icons";
+/** @emoji 🎚 Which member of a `{normal, beginner}` label pair resolves. */
+export type UiDriverLabelTier = "beginner" | "normal";
+/** @emoji 🫳 Drag affordance: dedicated grip handle vs whole-element draggable surface. */
+export type UiDriverDrag = "handle" | "surface";
+/** @emoji 🫥 Chrome/gumball visibility: always painted vs revealed only while the cursor is in the region. */
+export type UiDriverReveal = "always" | "hover";
+/** @emoji 🎙️ Tooltip richness: full (label + manual/tutorial links + hotkey), minimal (label + hotkey), or none. */
+export type UiDriverTooltips = "full" | "minimal" | "none";
+
+/** @emoji 🚗 A named configuration bundle controlling how the UI presents itself. */
+export interface UiDriver {
+  readonly id: string;
+  readonly label: string;
+  readonly labels: UiDriverLabels;
+  readonly labelTier: UiDriverLabelTier;
+  readonly drag: UiDriverDrag;
+  readonly chrome: UiDriverReveal;
+  readonly gumball: UiDriverReveal;
+  readonly tooltips: UiDriverTooltips;
 }
 
-let _expertiseProvider: (() => Expertise) | undefined;
+/** @emoji 🚗 Every affordance visible: drag handles, full labels, chrome and gumball always painted, rich tooltips. */
+export const DEFAULT_UI_DRIVER: UiDriver = { id: "default", label: "Default", labels: "full", labelTier: "normal", drag: "handle", chrome: "always", gumball: "always", tooltips: "full" };
+/** @emoji 🚗 Assumes the user knows the UI: icon-only chrome that reveals on hover, whole-surface drag, no tooltips. */
+export const COMPACT_UI_DRIVER: UiDriver = { id: "compact", label: "Compact", labels: "icons", labelTier: "normal", drag: "surface", chrome: "hover", gumball: "hover", tooltips: "none" };
 
-/**
- * Registers a function that returns the current expertise level.
- **/
-export function setExpertiseProvider(fn: () => Expertise) {
-  _expertiseProvider = fn;
+/** @emoji 🚗 The built-in drivers shipped with the shell. */
+export function builtinUiDrivers(): readonly UiDriver[] {
+  return [DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER];
 }
+
+function requireUiDriverAxis<T extends string>(value: unknown, path: string, allowed: readonly T[]): T {
+  if (typeof value === "string" && (allowed as readonly string[]).includes(value)) return value as T;
+  throw new Error(`driver.${path} must be one of ${allowed.join(", ")}`);
+}
+
+/** @emoji 🔎 Strictly parses and validates a `UiDriver` (unknown axis values throw). */
+export function parseUiDriver(json: unknown): UiDriver {
+  if (typeof json !== "object" || json === null) throw new Error("driver must be an object");
+  const obj = json as Record<string, unknown>;
+  if (typeof obj.id !== "string") throw new Error("driver.id must be a string");
+  if (typeof obj.label !== "string") throw new Error("driver.label must be a string");
+  return {
+    id: obj.id,
+    label: obj.label,
+    labels: requireUiDriverAxis(obj.labels, "labels", ["full", "icons"] as const),
+    labelTier: requireUiDriverAxis(obj.labelTier, "labelTier", ["beginner", "normal"] as const),
+    drag: requireUiDriverAxis(obj.drag, "drag", ["handle", "surface"] as const),
+    chrome: requireUiDriverAxis(obj.chrome, "chrome", ["always", "hover"] as const),
+    gumball: requireUiDriverAxis(obj.gumball, "gumball", ["always", "hover"] as const),
+    tooltips: requireUiDriverAxis(obj.tooltips, "tooltips", ["full", "minimal", "none"] as const),
+  };
+}
+
+/** @emoji 💾 Serializes a `UiDriver` to canonical JSON. */
+export function serializeUiDriver(driver: UiDriver): string {
+  return JSON.stringify(driver, null, 2);
+}
+
+/** @emoji 🚗 Resolves a driver id against custom drivers, falling back to a builtin, then {@link DEFAULT_UI_DRIVER}. */
+export function resolveUiDriver(id: string, custom: Record<string, UiDriver>): UiDriver {
+  if (custom[id]) return custom[id];
+  const builtin = builtinUiDrivers().find((driver) => driver.id === id);
+  return builtin ?? DEFAULT_UI_DRIVER;
+}
+// #endregion 🚗UiDriver
 
 // #region 🌈SurfaceChrome
-/** @emoji 🌈 Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and tooltip expertise — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
+/** @emoji 🌈 Document-level UI chrome shared by Elements shells: appearance (system/light/dark), device (desktop/tablet/mobile), and driver — mirrors sketchpad `Appearance` / `Device` behavior on `documentElement`. */
 export type ElementsSurfaceAppearance = "system" | "light" | "dark";
 export type ElementsSurfaceDevice = "desktop" | "tablet" | "mobile";
 
@@ -2007,8 +2107,7 @@ export const UI_MOBILE_MEDIA_QUERY = "(max-width: 767px)";
 export interface ElementsSurfaceChromeInput {
   appearance: ElementsSurfaceAppearance;
   device: ElementsSurfaceDevice;
-  expertise: Expertise;
-  compact?: boolean;
+  driver: UiDriver;
 }
 
 function applyDocumentBodyBaseColors(): void {
@@ -2045,13 +2144,106 @@ function activeElementsSurfaceChromeInput(): ElementsSurfaceChromeInput | undefi
 
 function syncElementsSurfaceChromeProviders(input: ElementsSurfaceChromeInput | undefined): void {
   if (input) {
-    setExpertiseProvider(() => input.expertise);
-    setUiChromeCompactProvider(() => input.compact ?? false);
+    setUiDriverProvider(() => input.driver);
     return;
   }
-  setExpertiseProvider(() => Expertise.NORMAL);
-  setUiChromeCompactProvider(() => readStoredUiChromeCompact());
+  setUiDriverProvider(() => readStoredUiDriver());
 }
+
+function applyElementsSurfaceChromeDriverDom(root: HTMLElement, driver: UiDriver): void {
+  root.dataset.uiDriver = driver.id;
+  root.dataset.uiLabels = driver.labels;
+  root.dataset.uiDrag = driver.drag;
+  root.dataset.uiChromeReveal = driver.chrome;
+  root.dataset.uiGumballReveal = driver.gumball;
+  root.dataset.uiTooltips = driver.tooltips;
+  syncUiChromeRevealController(driver.chrome);
+}
+
+function clearElementsSurfaceChromeDriverDom(root: HTMLElement): void {
+  delete root.dataset.uiDriver;
+  delete root.dataset.uiLabels;
+  delete root.dataset.uiDrag;
+  delete root.dataset.uiChromeReveal;
+  delete root.dataset.uiGumballReveal;
+  delete root.dataset.uiTooltips;
+  teardownUiChromeRevealController();
+}
+
+// #region 🫥ChromeReveal
+/** @emoji 🫥 Extra radius (px) around a reveal region's own rect that still counts as "inside" — makes the invisible-until-hovered bar reachable. */
+const CHROME_REVEAL_ACTIVATION_BAND_PX = 24;
+/** @emoji 🫥 Screen-edge band (px) that reveals a region anchored to that edge (navbar top, footer bottom), even before the cursor reaches the region's own rect. */
+const CHROME_REVEAL_EDGE_BAND_PX = 8;
+
+let chromeRevealBindings: ReturnType<typeof createDOMEventBinding> | null = null;
+let chromeRevealFrame = 0;
+let chromeRevealLastPoint: { x: number; y: number } | null = null;
+
+function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): boolean {
+  const rect = region.getBoundingClientRect();
+  if (x >= rect.left - CHROME_REVEAL_ACTIVATION_BAND_PX && x <= rect.right + CHROME_REVEAL_ACTIVATION_BAND_PX && y >= rect.top - CHROME_REVEAL_ACTIVATION_BAND_PX && y <= rect.bottom + CHROME_REVEAL_ACTIVATION_BAND_PX) {
+    return true;
+  }
+  const regionName = region.dataset.uiRevealRegion;
+  if (regionName === "navbar" && y <= CHROME_REVEAL_EDGE_BAND_PX) return true;
+  if (regionName === "footer" && typeof window !== "undefined" && y >= window.innerHeight - CHROME_REVEAL_EDGE_BAND_PX) return true;
+  return false;
+}
+
+function applyChromeRevealAtPoint(x: number, y: number): void {
+  if (typeof document === "undefined") return;
+  document.querySelectorAll<HTMLElement>("[data-ui-reveal-region]").forEach((region) => {
+    if (chromeRevealRegionRevealed(region, x, y)) region.dataset.uiRevealed = "true";
+    else delete region.dataset.uiRevealed;
+  });
+}
+
+function scheduleChromeRevealUpdate(): void {
+  if (chromeRevealFrame !== 0 || typeof requestAnimationFrame === "undefined") return;
+  chromeRevealFrame = requestAnimationFrame(() => {
+    chromeRevealFrame = 0;
+    if (chromeRevealLastPoint) applyChromeRevealAtPoint(chromeRevealLastPoint.x, chromeRevealLastPoint.y);
+  });
+}
+
+function ensureUiChromeRevealController(): void {
+  if (chromeRevealBindings || typeof window === "undefined" || typeof document === "undefined") return;
+  const bindings = createDOMEventBinding();
+  bindings.listen(window, "pointermove", (event: PointerEvent) => {
+    chromeRevealLastPoint = { x: event.clientX, y: event.clientY };
+    scheduleChromeRevealUpdate();
+  });
+  bindings.listen(document, "focusin", (event: FocusEvent) => {
+    const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
+    if (region) region.dataset.uiRevealed = "true";
+  });
+  bindings.listen(document, "focusout", (event: FocusEvent) => {
+    const region = (event.target as HTMLElement | null)?.closest<HTMLElement>("[data-ui-reveal-region]");
+    const related = event.relatedTarget as Node | null;
+    if (region && (!related || !region.contains(related))) delete region.dataset.uiRevealed;
+  });
+  chromeRevealBindings = bindings;
+}
+
+function teardownUiChromeRevealController(): void {
+  chromeRevealBindings?.dispose();
+  chromeRevealBindings = null;
+  if (typeof cancelAnimationFrame !== "undefined" && chromeRevealFrame !== 0) {
+    cancelAnimationFrame(chromeRevealFrame);
+  }
+  chromeRevealFrame = 0;
+  chromeRevealLastPoint = null;
+  if (typeof document === "undefined") return;
+  document.querySelectorAll<HTMLElement>("[data-ui-reveal-region][data-ui-revealed]").forEach((region) => delete region.dataset.uiRevealed);
+}
+
+/** @emoji 🫥 Ensures the pointer/focus reveal tracker is installed iff the driver wants hover-reveal chrome; called whenever driver DOM attrs are (re)applied. */
+function syncUiChromeRevealController(chrome: UiDriverReveal): void {
+  if (chrome === "hover") ensureUiChromeRevealController();
+  else teardownUiChromeRevealController();
+}
+// #endregion 🫥ChromeReveal
 
 function clearElementsSurfaceChromeDom(): void {
   if (typeof document === "undefined") return;
@@ -2059,7 +2251,7 @@ function clearElementsSurfaceChromeDom(): void {
   root.classList.remove("dark");
   root.classList.remove("touch");
   delete root.dataset.uiDevice;
-  delete root.dataset.uiCompact;
+  clearElementsSurfaceChromeDriverDom(root);
   delete root.dataset.uiAppearance;
   root.style.colorScheme = "";
   document.body.style.backgroundColor = "";
@@ -2120,7 +2312,7 @@ function applyElementsSurfaceChromeDom(input: ElementsSurfaceChromeInput): void 
   const root = document.documentElement;
   root.dataset.uiDevice = input.device;
   root.classList.toggle("touch", input.device !== "desktop");
-  root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+  applyElementsSurfaceChromeDriverDom(root, input.driver);
 }
 
 function syncElementsSurfaceChromeDomFromLeaseStack(): void {
@@ -2159,7 +2351,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
     }
     root.dataset.uiDevice = input.device;
     root.classList.toggle("touch", input.device !== "desktop");
-    root.dataset.uiCompact = (input.compact ?? false) ? "true" : "false";
+    applyElementsSurfaceChromeDriverDom(root, input.driver);
   };
   bindings.listen(mq, "change", onSystemAppearanceChange);
   installElementsSurfaceBrowserDefaultSuppression(bindings);
@@ -2167,7 +2359,7 @@ function ensureElementsSurfaceChromeSystemListeners(): void {
 }
 
 /**
- * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and tooltip expertise.
+ * @emoji 🌈 Imperative surface chrome controller for class-based shells; returns a cleanup that reverts DOM state, browser default input, and the active driver.
  */
 export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput): () => void {
   const lease: ElementsSurfaceChromeLease = { id: ++elementsSurfaceChromeLeaseSeq, input };
@@ -2191,10 +2383,10 @@ export function applyElementsSurfaceChrome(input: ElementsSurfaceChromeInput): (
 }
 
 /**
- * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`), body base colors, and {@link setExpertiseProvider} for tooltips; returns `mobile` for {@link AppProps.mobile}.
+ * @emoji 🌓 Syncs `document.documentElement` (`dark`, `touch`, `data-ui-device`, `data-ui-driver` + axis attrs), body base colors, and {@link setUiDriverProvider}; returns `mobile` for {@link AppProps.mobile}.
  */
-export function useElementsSurfaceChrome({ appearance, device, expertise, compact = false }: ElementsSurfaceChromeInput): { mobile: boolean } {
-  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, expertise, compact }), [appearance, compact, device, expertise]);
+export function useElementsSurfaceChrome({ appearance, device, driver }: ElementsSurfaceChromeInput): { mobile: boolean } {
+  reactHostPort.useLayoutEffect(() => applyElementsSurfaceChrome({ appearance, device, driver }), [appearance, device, driver]);
 
   return { mobile: device === "mobile" };
 }
@@ -2226,37 +2418,55 @@ export function resetElementsSurfaceChromeForTests(): void {
   clearElementsSurfaceChromeDom();
 }
 
-// #region 🎛️UiChromeCompact
-/** @emoji 🎛️ localStorage key for icon-only button/toggle chrome. */
-export const UI_CHROME_COMPACT_STORAGE_KEY = "ui.chrome.compact";
+// #region 🎛️UiChromePrefs
+/** @emoji 🚗 localStorage key for the active driver id (builtin or `custom.<slug>`). */
+export const UI_CHROME_DRIVER_STORAGE_KEY = "ui.chrome.driver";
 
-/** @emoji 🎛️ Reads whether compact chrome is enabled from localStorage. */
-export function readStoredUiChromeCompact(): boolean {
-  if (typeof localStorage === "undefined") return false;
-  return localStorage.getItem(UI_CHROME_COMPACT_STORAGE_KEY) === "true";
+/** @emoji 🚗 Reads the persisted active driver id from localStorage, defaulting to `"default"`. */
+export function readStoredUiDriverId(): string {
+  if (typeof localStorage === "undefined") return DEFAULT_UI_DRIVER.id;
+  return localStorage.getItem(UI_CHROME_DRIVER_STORAGE_KEY) || DEFAULT_UI_DRIVER.id;
 }
 
-/** @emoji 🎛️ Persists compact chrome preference to localStorage. */
-export function writeStoredUiChromeCompact(compact: boolean): void {
+/** @emoji 🚗 Persists the active driver id to localStorage. */
+export function writeStoredUiDriverId(id: string): void {
   if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_COMPACT_STORAGE_KEY, compact ? "true" : "false");
+  localStorage.setItem(UI_CHROME_DRIVER_STORAGE_KEY, id);
 }
 
-/** @emoji 🎚 localStorage key for surface expertise tier. */
-export const UI_CHROME_EXPERTISE_STORAGE_KEY = "ui.chrome.expertise";
+/** @emoji 🚗 localStorage key for the user's saved custom drivers, keyed by driver id. */
+export const UI_CUSTOM_DRIVERS_STORAGE_KEY = "ui.drivers.custom";
 
-/** @emoji 🎚 Reads persisted surface expertise from localStorage. */
-export function readStoredUiChromeExpertise(): Expertise {
-  if (typeof localStorage === "undefined") return Expertise.NORMAL;
-  const raw = localStorage.getItem(UI_CHROME_EXPERTISE_STORAGE_KEY);
-  if (raw === Expertise.BEGINNER || raw === Expertise.NORMAL || raw === Expertise.EXPERT) return raw;
-  return Expertise.NORMAL;
+/** @emoji 🚗 Reads the user's saved custom drivers from localStorage; discards any entry that fails to parse. */
+export function readStoredUiCustomDrivers(): Record<string, UiDriver> {
+  if (typeof localStorage === "undefined") return {};
+  const raw = localStorage.getItem(UI_CUSTOM_DRIVERS_STORAGE_KEY);
+  if (!raw) return {};
+  try {
+    const parsed = JSON.parse(raw) as Record<string, unknown>;
+    const out: Record<string, UiDriver> = {};
+    for (const [id, value] of Object.entries(parsed)) {
+      try {
+        out[id] = parseUiDriver(value);
+      } catch {
+        /* drop invalid saved driver */
+      }
+    }
+    return out;
+  } catch {
+    return {};
+  }
 }
 
-/** @emoji 🎚 Persists surface expertise to localStorage. */
-export function writeStoredUiChromeExpertise(expertise: Expertise): void {
+/** @emoji 🚗 Persists the user's saved custom drivers to localStorage. */
+export function writeStoredUiCustomDrivers(drivers: Record<string, UiDriver>): void {
   if (typeof localStorage === "undefined") return;
-  localStorage.setItem(UI_CHROME_EXPERTISE_STORAGE_KEY, expertise);
+  localStorage.setItem(UI_CUSTOM_DRIVERS_STORAGE_KEY, JSON.stringify(drivers));
+}
+
+/** @emoji 🚗 Resolves the active driver from localStorage (non-React fallback for non-hook consumers). */
+export function readStoredUiDriver(): UiDriver {
+  return resolveUiDriver(readStoredUiDriverId(), readStoredUiCustomDrivers());
 }
 
 /** @emoji 🌓 localStorage key for surface appearance (system/light/dark). */
@@ -2448,44 +2658,44 @@ export function writeStoredIntroductionSeen(appId: string): void {
   localStorage.setItem(`${UI_INTRODUCTION_SEEN_STORAGE_KEY_PREFIX}${appId}`, "true");
 }
 
-const UiChromeCompactContext = reactHostPort.createContext<boolean | null>(null);
+const UiDriverContext = reactHostPort.createContext<UiDriver | null>(null);
 
-/** @emoji 🏷️ When `always`, inline button/toggle captions stay visible even if compact chrome is on. */
-export type UiChromeLabelPolicy = "compact" | "always";
+let _uiDriverProvider: (() => UiDriver) | null = null;
 
-const UiChromeLabelPolicyContext = reactHostPort.createContext<UiChromeLabelPolicy>("compact");
-
-/** @emoji 🏷️ Overrides {@link useControlInlineText} for a subtree (e.g. navbar always shows captions). */
-export function UiChromeLabelPolicyProvider({ policy, children }: { readonly policy: UiChromeLabelPolicy; readonly children: React.ReactNode }): React.ReactElement {
-  return <UiChromeLabelPolicyContext.Provider value={policy}>{children}</UiChromeLabelPolicyContext.Provider>;
+/** @emoji 🚗 Registers the active driver resolver for non-React consumers (e.g. {@link resolveTranslationLabel}). */
+export function setUiDriverProvider(fn: () => UiDriver): void {
+  _uiDriverProvider = fn;
 }
 
-/** @emoji 🏷️ True when inline captions should show regardless of compact chrome. */
-export function useUiChromeLabelPolicy(): UiChromeLabelPolicy {
-  return reactHostPort.useContext(UiChromeLabelPolicyContext);
+/** @emoji 🚗 Resolves the active driver outside React render context. */
+export function activeUiDriver(): UiDriver {
+  return _uiDriverProvider ? _uiDriverProvider() : readStoredUiDriver();
 }
 
-let _uiChromeCompactProvider: (() => boolean) | null = null;
-
-/** @emoji 🎛️ Registers the active compact-chrome resolver for non-React consumers. */
-export function setUiChromeCompactProvider(fn: () => boolean): void {
-  _uiChromeCompactProvider = fn;
-}
-
-/** @emoji 🎛️ True when global compact chrome hides inline button/toggle labels. */
-export function useUiChromeCompact(): boolean {
-  const contextValue = reactHostPort.useContext(UiChromeCompactContext);
+/** @emoji 🚗 The active driver controlling labels, drag affordances, chrome/gumball reveal, and tooltips. */
+export function useUiDriver(): UiDriver {
+  const contextValue = reactHostPort.useContext(UiDriverContext);
   if (contextValue !== null) return contextValue;
-  return _uiChromeCompactProvider ? _uiChromeCompactProvider() : readStoredUiChromeCompact();
+  return activeUiDriver();
 }
 
-/** @emoji 🎛️ Supplies compact-chrome state to buttons and toggles in the subtree. */
-export function UiChromeCompactProvider({ compact, children }: { readonly compact: boolean; readonly children: React.ReactNode }): React.ReactElement {
+/** @emoji 🚗 Supplies driver state to a subtree, overriding the ambient/stored driver. */
+export function UiDriverProvider({ driver, children }: { readonly driver: UiDriver; readonly children: React.ReactNode }): React.ReactElement {
   reactHostPort.useEffect(() => {
-    setUiChromeCompactProvider(() => compact);
-    return () => setUiChromeCompactProvider(() => readStoredUiChromeCompact());
-  }, [compact]);
-  return <UiChromeCompactContext.Provider value={compact}>{children}</UiChromeCompactContext.Provider>;
+    setUiDriverProvider(() => driver);
+    return () => setUiDriverProvider(() => readStoredUiDriver());
+  }, [driver]);
+  return <UiDriverContext.Provider value={driver}>{children}</UiDriverContext.Provider>;
+}
+
+/** @emoji 🫳 True when the driver wants whole-surface dragging (no dedicated grip handle). */
+export function useUiDriverDragSurface(): boolean {
+  return useUiDriver().drag === "surface";
+}
+
+/** @emoji 🎙️ The active driver's tooltip richness. */
+export function useUiDriverTooltips(): UiDriverTooltips {
+  return useUiDriver().tooltips;
 }
 
 let _controlLabelIdResolver: (id: string) => string = (id) => id;
@@ -2586,11 +2796,10 @@ export function useControlAccessibleLabel(id: string | undefined, text?: string)
   return undefined;
 }
 
-/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when compact or unset. */
+/** @emoji 🏷️ Resolves inline icon+label caption for buttons/toggles; omitted when the driver hides labels. */
 export function useControlInlineText(id: string | undefined, text?: string): string | undefined {
-  const compact = useUiChromeCompact();
-  const labelPolicy = useUiChromeLabelPolicy();
-  if (compact && labelPolicy !== "always") return undefined;
+  const driver = useUiDriver();
+  if (driver.labels === "icons") return undefined;
   return useControlAccessibleLabel(id, text);
 }
 
@@ -2620,7 +2829,7 @@ export function ChromeControlHint({ id, text, children }: { readonly id?: string
  * `ShellLocale`, so a brand's `locks.locale` and this chrome bundle's coverage can never drift apart. */
 export type UiLocale = ShellLocale;
 
-/** @emoji 🪁 Expertise-specific label pair. */
+/** @emoji 🪁 Label pair resolved by the active driver's `labelTier` axis. */
 export type UiLabelPair = { readonly normal: string; readonly beginner: string };
 
 /** @emoji 🪁 Translation leaf with optional manual, tutorial, and hotkey metadata. */
@@ -2740,8 +2949,7 @@ export type UiTranslationSchema = {
     readonly settings: {
       readonly tab: {
         readonly general: UiLabelValue;
-        readonly mode: UiLabelValue;
-        readonly expertise: UiLabelValue;
+        readonly driver: UiLabelValue;
         readonly app: UiLabelValue;
         readonly appearance: UiLabelValue;
         readonly layout: UiLabelValue;
@@ -2804,10 +3012,9 @@ export type UiTranslationSchema = {
       readonly setAppearance: UiLabelValue;
       readonly setTheme: UiLabelValue;
       readonly setLayout: UiLabelValue;
-      readonly toggleCompact: UiLabelValue;
       readonly setLocale: UiLabelValue;
       readonly setTerminology: UiLabelValue;
-      readonly setExpertise: UiLabelValue;
+      readonly setDriver: UiLabelValue;
     };
     readonly ribbon: {
       readonly group: {
@@ -2960,17 +3167,45 @@ export type UiTranslationSchema = {
       readonly tablet: UiLabelValue;
       readonly mobile: UiLabelValue;
     };
-    readonly compact: UiLabelValue;
-    readonly mode: {
-      readonly dev: UiLabelValue;
-      readonly user: UiLabelValue;
-      readonly beginner: UiLabelValue;
-      readonly normal: UiLabelValue;
-    };
-    readonly expertise: {
-      readonly beginner: UiLabelValue;
-      readonly normal: UiLabelValue;
-      readonly expert: UiLabelValue;
+    readonly driver: {
+      readonly select: UiLabelValue;
+      readonly default: UiLabelValue;
+      readonly compact: UiLabelValue;
+      readonly labels: UiLabelValue;
+      readonly labelsOption: {
+        readonly full: UiLabelValue;
+        readonly icons: UiLabelValue;
+      };
+      readonly labelTier: UiLabelValue;
+      readonly labelTierOption: {
+        readonly beginner: UiLabelValue;
+        readonly normal: UiLabelValue;
+      };
+      readonly drag: UiLabelValue;
+      readonly dragOption: {
+        readonly handle: UiLabelValue;
+        readonly surface: UiLabelValue;
+      };
+      readonly chrome: UiLabelValue;
+      readonly chromeOption: {
+        readonly always: UiLabelValue;
+        readonly hover: UiLabelValue;
+      };
+      readonly gumball: UiLabelValue;
+      readonly gumballOption: {
+        readonly always: UiLabelValue;
+        readonly hover: UiLabelValue;
+      };
+      readonly tooltips: UiLabelValue;
+      readonly tooltipsOption: {
+        readonly full: UiLabelValue;
+        readonly minimal: UiLabelValue;
+        readonly none: UiLabelValue;
+      };
+      readonly save: UiLabelValue;
+      readonly savePlaceholder: UiLabelValue;
+      readonly delete: UiLabelValue;
+      readonly dirty: UiLabelValue;
     };
   };
   readonly tooltip: {
@@ -3331,8 +3566,7 @@ export const uiChromeTranslationBundles = {
         settings: {
           tab: {
             general: { label: { normal: "Allgemein", beginner: "Allgemein" } },
-            mode: { label: { normal: "Modus", beginner: "Modus" } },
-            expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+            driver: { label: { normal: "Treiber", beginner: "Treiber" } },
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Design", beginner: "Design" } },
             layout: { label: { normal: "Layout", beginner: "Layout" } },
@@ -3395,10 +3629,9 @@ export const uiChromeTranslationBundles = {
           setAppearance: { label: { normal: "Erscheinungsbild festlegen", beginner: "Erscheinungsbild festlegen" } },
           setTheme: { label: { normal: "Thema festlegen", beginner: "Thema festlegen" } },
           setLayout: { label: { normal: "Layout festlegen", beginner: "Layout festlegen" } },
-          toggleCompact: { label: { normal: "Kompakt umschalten", beginner: "Kompakt umschalten" } },
           setLocale: { label: { normal: "Sprache festlegen", beginner: "Sprache festlegen" } },
           setTerminology: { label: { normal: "Terminologie festlegen", beginner: "Terminologie festlegen" } },
-          setExpertise: { label: { normal: "Erfahrungsniveau festlegen", beginner: "Erfahrungsniveau festlegen" } },
+          setDriver: { label: { normal: "Treiber festlegen", beginner: "Treiber festlegen" } },
         },
         ribbon: {
           group: {
@@ -3631,57 +3864,45 @@ export const uiChromeTranslationBundles = {
             },
           },
         },
-        compact: {
-          label: {
-            normal: "Kompakt",
-            beginner: "Schaltflächen und Umschalter nur mit Symbol anzeigen, um Platz zu sparen",
+        driver: {
+          select: { label: { normal: "Treiber", beginner: "Treiber" } },
+          default: { label: { normal: "Standard", beginner: "Standard" } },
+          compact: { label: { normal: "Kompakt", beginner: "Kompakt" } },
+          labels: { label: { normal: "Beschriftungen", beginner: "Beschriftungen" } },
+          labelsOption: {
+            full: { label: { normal: "Voll", beginner: "Symbol und Beschriftung" } },
+            icons: { label: { normal: "Nur Symbole", beginner: "Nur Symbole" } },
           },
-        },
-        mode: {
-          dev: {
-            label: {
-              normal: "Developer mode",
-              beginner: "Show developer tools and advanced options.",
-            },
+          labelTier: { label: { normal: "Beschriftungsstufe", beginner: "Beschriftungsstufe" } },
+          labelTierOption: {
+            beginner: { label: { normal: "Anfänger", beginner: "Ausführliche Beschriftungen" } },
+            normal: { label: { normal: "Normal", beginner: "Kurze Beschriftungen" } },
           },
-          user: {
-            label: {
-              normal: "User mode",
-              beginner: "Show standard user port.",
-            },
+          drag: { label: { normal: "Ziehen", beginner: "Ziehen" } },
+          dragOption: {
+            handle: { label: { normal: "Griff", beginner: "Eigener Ziehgriff" } },
+            surface: { label: { normal: "Fläche", beginner: "Ganzes Element ziehbar" } },
           },
-          beginner: {
-            label: {
-              normal: "Beginner mode",
-              beginner: "Show full guidance, tutorials, and detailed tooltips.",
-            },
+          chrome: { label: { normal: "Oberflächenanzeige", beginner: "Oberflächenanzeige" } },
+          chromeOption: {
+            always: { label: { normal: "Immer", beginner: "Immer sichtbar" } },
+            hover: { label: { normal: "Bei Hover", beginner: "Nur bei Mauszeiger sichtbar" } },
           },
-          normal: {
-            label: {
-              normal: "Normal mode",
-              beginner: "Show contextual help without tutorials.",
-            },
+          gumball: { label: { normal: "Gumball-Anzeige", beginner: "Gumball-Anzeige" } },
+          gumballOption: {
+            always: { label: { normal: "Immer", beginner: "Immer sichtbar" } },
+            hover: { label: { normal: "Bei Hover", beginner: "Nur bei Mauszeiger sichtbar" } },
           },
-        },
-        expertise: {
-          beginner: {
-            label: {
-              normal: "Anfänger",
-              beginner: "Show full guidance and tutorials.",
-            },
+          tooltips: { label: { normal: "Tooltips", beginner: "Tooltips" } },
+          tooltipsOption: {
+            full: { label: { normal: "Voll", beginner: "Mit Handbuch- und Tutorial-Links" } },
+            minimal: { label: { normal: "Minimal", beginner: "Nur Name und Tastenkürzel" } },
+            none: { label: { normal: "Keine", beginner: "Keine Tooltips" } },
           },
-          normal: {
-            label: {
-              normal: "Normal",
-              beginner: "Show contextual help.",
-            },
-          },
-          expert: {
-            label: {
-              normal: "Experte",
-              beginner: "Hide guidance.",
-            },
-          },
+          save: { label: { normal: "Speichern unter", beginner: "Speichern unter" } },
+          savePlaceholder: { label: { normal: "Treibername", beginner: "Treibername" } },
+          delete: { label: { normal: "Löschen", beginner: "Löschen" } },
+          dirty: { label: { normal: "Nicht gespeichert", beginner: "Nicht gespeichert" } },
         },
       },
       tooltip: {
@@ -3944,8 +4165,7 @@ export const uiChromeTranslationBundles = {
         settings: {
           tab: {
             general: { label: { normal: "General", beginner: "General" } },
-            mode: { label: { normal: "Mode", beginner: "Mode" } },
-            expertise: { label: { normal: "Expertise", beginner: "Expertise" } },
+            driver: { label: { normal: "Driver", beginner: "Driver" } },
             app: { label: { normal: "App", beginner: "App" } },
             appearance: { label: { normal: "Appearance", beginner: "Appearance" } },
             layout: { label: { normal: "Layout", beginner: "Layout" } },
@@ -4008,10 +4228,9 @@ export const uiChromeTranslationBundles = {
           setAppearance: { label: { normal: "Set Appearance", beginner: "Set Appearance" } },
           setTheme: { label: { normal: "Set Theme", beginner: "Set Theme" } },
           setLayout: { label: { normal: "Set Layout", beginner: "Set Layout" } },
-          toggleCompact: { label: { normal: "Toggle Compact", beginner: "Toggle Compact" } },
           setLocale: { label: { normal: "Set Locale", beginner: "Set Locale" } },
           setTerminology: { label: { normal: "Set Terminology", beginner: "Set Terminology" } },
-          setExpertise: { label: { normal: "Set Expertise", beginner: "Set Expertise" } },
+          setDriver: { label: { normal: "Set Driver", beginner: "Set Driver" } },
         },
         ribbon: {
           group: {
@@ -4244,57 +4463,45 @@ export const uiChromeTranslationBundles = {
             },
           },
         },
-        compact: {
-          label: {
-            normal: "Compact",
-            beginner: "Show icon-only buttons and toggles to save space",
+        driver: {
+          select: { label: { normal: "Driver", beginner: "Driver" } },
+          default: { label: { normal: "Default", beginner: "Default" } },
+          compact: { label: { normal: "Compact", beginner: "Compact" } },
+          labels: { label: { normal: "Labels", beginner: "Labels" } },
+          labelsOption: {
+            full: { label: { normal: "Full", beginner: "Icon and label" } },
+            icons: { label: { normal: "Icons only", beginner: "Icons only" } },
           },
-        },
-        mode: {
-          dev: {
-            label: {
-              normal: "Developer mode",
-              beginner: "Show developer tools and advanced options.",
-            },
+          labelTier: { label: { normal: "Label Tier", beginner: "Label Tier" } },
+          labelTierOption: {
+            beginner: { label: { normal: "Beginner", beginner: "Verbose labels" } },
+            normal: { label: { normal: "Normal", beginner: "Short labels" } },
           },
-          user: {
-            label: {
-              normal: "User mode",
-              beginner: "Show standard user port.",
-            },
+          drag: { label: { normal: "Drag", beginner: "Drag" } },
+          dragOption: {
+            handle: { label: { normal: "Handle", beginner: "Dedicated grip handle" } },
+            surface: { label: { normal: "Surface", beginner: "Whole element draggable" } },
           },
-          beginner: {
-            label: {
-              normal: "Beginner mode",
-              beginner: "Show full guidance, tutorials, and detailed tooltips.",
-            },
+          chrome: { label: { normal: "Chrome Reveal", beginner: "Chrome Reveal" } },
+          chromeOption: {
+            always: { label: { normal: "Always", beginner: "Always visible" } },
+            hover: { label: { normal: "On Hover", beginner: "Visible only near the cursor" } },
           },
-          normal: {
-            label: {
-              normal: "Normal mode",
-              beginner: "Show contextual help without tutorials.",
-            },
+          gumball: { label: { normal: "Gumball Reveal", beginner: "Gumball Reveal" } },
+          gumballOption: {
+            always: { label: { normal: "Always", beginner: "Always visible" } },
+            hover: { label: { normal: "On Hover", beginner: "Visible only near the cursor" } },
           },
-        },
-        expertise: {
-          beginner: {
-            label: {
-              normal: "Beginner",
-              beginner: "Show full guidance and tutorials.",
-            },
+          tooltips: { label: { normal: "Tooltips", beginner: "Tooltips" } },
+          tooltipsOption: {
+            full: { label: { normal: "Full", beginner: "With manual and tutorial links" } },
+            minimal: { label: { normal: "Minimal", beginner: "Name and hotkey only" } },
+            none: { label: { normal: "None", beginner: "No tooltips" } },
           },
-          normal: {
-            label: {
-              normal: "Normal",
-              beginner: "Show contextual help.",
-            },
-          },
-          expert: {
-            label: {
-              normal: "Expert",
-              beginner: "Hide guidance.",
-            },
-          },
+          save: { label: { normal: "Save As", beginner: "Save As" } },
+          savePlaceholder: { label: { normal: "Driver name", beginner: "Driver name" } },
+          delete: { label: { normal: "Delete", beginner: "Delete" } },
+          dirty: { label: { normal: "Unsaved", beginner: "Unsaved" } },
         },
       },
       tooltip: {
@@ -4493,7 +4700,7 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey, opti
 export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined;
 export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | undefined, options?: Record<string, unknown>): string | undefined {
   const { t } = useUiTranslation();
-  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  const labelTier = activeUiDriver().labelTier;
   if (!id) return undefined;
   const value = t(id as UiTranslationKey, options);
 
@@ -4507,7 +4714,7 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | und
     }
 
     if (label && typeof label === "object") {
-      if (expertise === Expertise.BEGINNER && "beginner" in label && label.beginner !== undefined) {
+      if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
         return String(label.beginner);
       }
       if ("normal" in label && label.normal !== undefined) {
@@ -4531,7 +4738,7 @@ export function useLabel(id: UiTranslationKey | UiRegisteredTranslationKey | und
  **/
 export function useIdLabel(id: string | undefined): string | undefined {
   const { t, i18n } = useUiTranslation();
-  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  const labelTier = activeUiDriver().labelTier;
   if (!id || !i18n.exists(id)) return undefined;
   const value = t(id as UiTranslationKey);
 
@@ -4545,7 +4752,7 @@ export function useIdLabel(id: string | undefined): string | undefined {
     }
 
     if (label && typeof label === "object") {
-      if (expertise === Expertise.BEGINNER && "beginner" in label && label.beginner !== undefined) {
+      if (labelTier === "beginner" && "beginner" in label && label.beginner !== undefined) {
         return String(label.beginner);
       }
       if ("normal" in label && label.normal !== undefined) {
@@ -4566,7 +4773,7 @@ export function useIdLabel(id: string | undefined): string | undefined {
  * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
  **/
 export function resolveTranslationLabel(value: unknown): string | undefined {
-  const expertise = _expertiseProvider ? _expertiseProvider() : Expertise.NORMAL;
+  const labelTier = activeUiDriver().labelTier;
 
   if (typeof value === "string") {
     return value;
@@ -4584,7 +4791,7 @@ export function resolveTranslationLabel(value: unknown): string | undefined {
 
       if (label && typeof label === "object") {
         const labelObj = label as Record<string, unknown>;
-        if (expertise === Expertise.BEGINNER && "beginner" in labelObj && labelObj.beginner !== undefined) {
+        if (labelTier === "beginner" && "beginner" in labelObj && labelObj.beginner !== undefined) {
           return String(labelObj.beginner);
         }
         if ("normal" in labelObj && labelObj.normal !== undefined) {
@@ -4597,7 +4804,7 @@ export function resolveTranslationLabel(value: unknown): string | undefined {
     }
 
     if ("normal" in obj || "beginner" in obj) {
-      if (expertise === Expertise.BEGINNER && "beginner" in obj && obj.beginner !== undefined) {
+      if (labelTier === "beginner" && "beginner" in obj && obj.beginner !== undefined) {
         return String(obj.beginner);
       }
       if ("normal" in obj && obj.normal !== undefined) {
@@ -5533,6 +5740,49 @@ const INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR: Record<IntroductionGesture["kind
   orbit: "move",
 };
 
+type IntroductionDemoPointerButton = "left" | "middle" | "right" | "wheel";
+
+type IntroductionDemoFeedbackKind = "leftClick" | "rightClick" | "doubleClick" | "scroll" | "dragLeft" | "dragMiddle" | "dragRight" | "orbit";
+
+type IntroductionDemoVisual = {
+  readonly button: IntroductionDemoPointerButton;
+  readonly modifiers: readonly IntroductionKeyModifier[];
+  readonly feedback: IntroductionDemoFeedbackKind;
+  readonly showDoubleChip: boolean;
+};
+
+/** @emoji 🖱️ Resolves the mini-mouse highlight, modifier chips, and press/trail family for a gesture. */
+function introductionDemoResolveVisual(gesture: IntroductionGesture): IntroductionDemoVisual {
+  switch (gesture.kind) {
+    case "leftClick":
+      return { button: "left", modifiers: [], feedback: "leftClick", showDoubleChip: false };
+    case "rightClick":
+      return { button: "right", modifiers: [], feedback: "rightClick", showDoubleChip: false };
+    case "doubleClick":
+      return { button: "left", modifiers: [], feedback: "doubleClick", showDoubleChip: true };
+    case "scroll":
+      return { button: "wheel", modifiers: [], feedback: "scroll", showDoubleChip: false };
+    case "drag": {
+      const button = gesture.button ?? "left";
+      const feedback = button === "middle" ? "dragMiddle" : button === "right" ? "dragRight" : "dragLeft";
+      return { button, modifiers: gesture.modifiers ?? [], feedback, showDoubleChip: false };
+    }
+    case "orbit":
+      return {
+        button: gesture.button ?? "right",
+        modifiers: gesture.modifiers ?? ["alt"],
+        feedback: "orbit",
+        showDoubleChip: false,
+      };
+  }
+}
+
+function introductionDemoRippleClass(feedback: IntroductionDemoFeedbackKind, double = false): string {
+  const tone = feedback === "rightClick" || feedback === "dragRight" || feedback === "orbit" ? "right" : feedback === "dragMiddle" ? "middle" : "left";
+  const base = `introduction-demo-ripple introduction-demo-ripple--${tone}`;
+  return double ? `${base} introduction-demo-ripple--double` : base;
+}
+
 /** @emoji 🌐 A point along the quadratic-bezier arc from `from` to `to`, bulged perpendicular to the
  * straight line between them — an `orbit` gesture reads as a curved rotation around a pivot, visually
  * distinct from `drag`'s straight-line pan/reposition. */
@@ -5597,7 +5847,10 @@ const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
 const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: readonly IntroductionDemonstration[] }> = ({ demonstrations }) => {
   const { idle, lastPositionRef } = useIntroductionPointerIdle(true);
   const ghostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const calloutRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const trailPathRef = reactHostPort.useRef<SVGPathElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const mouseClipId = reactHostPort.useId().replace(/:/g, "");
   const reducedMotion = reactHostPort.useMemo(() => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true, []);
 
   reactHostPort.useEffect(() => {
@@ -5606,18 +5859,12 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       return;
     }
     document.documentElement.setAttribute("data-introduction-demonstrating", "true");
-    // 🎬 Captured once per idle period (real pointer movement tears this whole effect down before it could
-    // change) so every demonstration's `appear`/`travel` — including every internal repeat of the sequence
-    // while still idle — opens by traveling from the same real, physical resting spot of the user's actual
-    // cursor. `null` only if the pointer has never moved since load; falls back to a fixed offset.
     const origin = lastPositionRef.current;
 
     const setGlyph = (glyph: IntroductionCursor) => {
       const ghost = ghostRef.current;
       if (ghost) ghost.style.backgroundImage = `var(--cursor-ghost-${glyph})`;
     };
-    // 🎬 The ghost glyphs share the real `--cursor-*` SVGs' `0 0` hotspot (default/pointer/grab/grabbing) —
-    // the element's top-left corner IS the cursor tip, so it positions directly at (x, y), not centered.
     const setPosition = (x: number, y: number) => {
       const ghost = ghostRef.current;
       if (ghost) ghost.style.transform = `translate3d(${x}px, ${y}px, 0)`;
@@ -5625,18 +5872,69 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     const setOpacity = (opacity: number) => {
       const ghost = ghostRef.current;
       if (ghost) ghost.style.opacity = String(opacity);
+      const callout = calloutRef.current;
+      if (callout) callout.style.opacity = String(opacity);
     };
-    const spawnRipple = (x: number, y: number) => {
+    const setCallout = (x: number, y: number, visual: IntroductionDemoVisual, pressed: boolean, scrollDirection?: number) => {
+      const callout = calloutRef.current;
+      if (!callout) return;
+      callout.style.transform = `translate3d(${x + 28}px, ${y + 8}px, 0)`;
+      callout.dataset.button = visual.button;
+      callout.dataset.feedback = visual.feedback;
+      if (visual.modifiers.length > 0) callout.setAttribute("data-modifiers", visual.modifiers.join(" "));
+      else callout.removeAttribute("data-modifiers");
+      if (visual.showDoubleChip) callout.setAttribute("data-double", "true");
+      else callout.removeAttribute("data-double");
+      if (pressed) callout.setAttribute("data-pressed", "true");
+      else callout.removeAttribute("data-pressed");
+      if (scrollDirection !== undefined) callout.dataset.scrollDirection = scrollDirection >= 0 ? "down" : "up";
+      else callout.removeAttribute("data-scroll-direction");
+    };
+    const clearTrail = () => {
+      const path = trailPathRef.current;
+      if (!path) return;
+      path.removeAttribute("d");
+      path.removeAttribute("class");
+    };
+    const updateTrail = (from: IntroductionResolvedPoint, to: IntroductionResolvedPoint, orbit: boolean, feedback: IntroductionDemoFeedbackKind) => {
+      const path = trailPathRef.current;
+      if (!path) return;
+      if (orbit) {
+        const dx = to.x - from.x;
+        const dy = to.y - from.y;
+        const distance = Math.hypot(dx, dy) || 1;
+        const bulge = Math.min(64, distance * 0.35);
+        const controlX = (from.x + to.x) / 2 + (-dy / distance) * bulge;
+        const controlY = (from.y + to.y) / 2 + (dx / distance) * bulge;
+        path.setAttribute("d", `M ${from.x} ${from.y} Q ${controlX} ${controlY} ${to.x} ${to.y}`);
+      } else {
+        path.setAttribute("d", `M ${from.x} ${from.y} L ${to.x} ${to.y}`);
+      }
+      path.setAttribute("class", `introduction-demo-trail-path introduction-demo-trail-path--${feedback}`);
+      const length = path.getTotalLength();
+      path.style.setProperty("--introduction-demo-trail-length", String(length));
+    };
+    const spawnRipple = (x: number, y: number, feedback: IntroductionDemoFeedbackKind, double = false) => {
       const host = rippleHostRef.current;
-      if (!host) return;
+      if (!host || feedback === "scroll") return;
       const ripple = document.createElement("div");
-      ripple.className = "introduction-demo-ripple pointer-events-none fixed rounded-full border-2 border-current";
+      ripple.className = `${introductionDemoRippleClass(feedback, double)} pointer-events-none fixed rounded-full`;
       ripple.style.left = `${x - 12}px`;
       ripple.style.top = `${y - 12}px`;
       ripple.style.width = "24px";
       ripple.style.height = "24px";
       host.appendChild(ripple);
       ripple.addEventListener("animationend", () => ripple.remove());
+    };
+    const spawnZoomRing = (x: number, y: number, zoomIn: boolean) => {
+      const host = rippleHostRef.current;
+      if (!host) return;
+      const ring = document.createElement("div");
+      ring.className = `introduction-demo-zoom-ring introduction-demo-zoom-ring--${zoomIn ? "in" : "out"} pointer-events-none`;
+      ring.style.left = `${x}px`;
+      ring.style.top = `${y}px`;
+      host.appendChild(ring);
+      ring.addEventListener("animationend", () => ring.remove());
     };
 
     let cancelled = false;
@@ -5646,12 +5944,15 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     let phaseStart = performance.now();
     let rippleSpawned = false;
     let secondRippleSpawned = false;
+    let thirdZoomSpawned = false;
 
     const tick = (now: number) => {
       if (cancelled) return;
       const demonstration = demonstrations[demoIndex];
       const gesture = demonstration.gesture;
+      const visual = introductionDemoResolveVisual(gesture);
       const isDragLike = gesture.kind === "drag" || gesture.kind === "orbit";
+      const isScroll = gesture.kind === "scroll";
       const hoverCursor = demonstration.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[gesture.kind];
       const dragCursor = demonstration.cursor ?? (gesture.kind === "orbit" ? "move" : "grabbing");
       const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } =
@@ -5664,80 +5965,102 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
         return;
       }
 
-      const duration = INTRODUCTION_DEMO_PHASE_MS[phase];
+      // 🎬 Scroll/zoom needs a longer dwell than a click press — rings and wheel-roll read as zoom only
+      // when they have time to expand/contract instead of flashing like a middle-button click.
+      const duration = isScroll && phase === "press" ? 900 : INTRODUCTION_DEMO_PHASE_MS[phase];
       const t = Math.min(1, (now - phaseStart) / duration);
       const eased = introductionDemoEaseInOutCubic(t);
-      // 🎬 `appear` holds still at `origin` and only fades in; `travel` is the SOLE motion segment, from
-      // `origin` to `start`. Both phases must never animate position over the same range — a stationary
-      // fade followed by a full traversal is one clean journey, not a snap-back-and-repeat.
       const anchor = origin ?? { x: start.x + INTRODUCTION_DEMO_APPEAR_OFFSET.x, y: start.y + INTRODUCTION_DEMO_APPEAR_OFFSET.y };
+      const pressed = !isScroll && (phase === "press" || phase === "dragMove");
 
       switch (phase) {
         case "appear":
           setGlyph("default");
           setOpacity(t);
           setPosition(anchor.x, anchor.y);
+          setCallout(anchor.x, anchor.y, visual, false);
+          clearTrail();
           break;
         case "travel":
           setOpacity(1);
           setPosition(introductionDemoLerp(anchor.x, start.x, eased), introductionDemoLerp(anchor.y, start.y, eased));
+          setCallout(introductionDemoLerp(anchor.x, start.x, eased), introductionDemoLerp(anchor.y, start.y, eased), visual, false);
           if (t > 0.7) setGlyph(hoverCursor);
+          clearTrail();
           break;
         case "press":
           setGlyph(hoverCursor);
-          if (gesture.kind === "scroll") {
-            // 🎬 A scroll/zoom gesture has no press-and-hold — bob the cursor along the wheel axis and drop
-            // a ripple offset in the scroll direction so it doesn't read as an ordinary click.
-            const direction = gesture.deltaY >= 0 ? 1 : -1;
-            const bob = Math.sin(t * Math.PI * 2) * 6 * direction;
-            setPosition(start.x, start.y + bob);
+          if (isScroll) {
+            const zoomIn = gesture.deltaY < 0;
+            const direction = zoomIn ? -1 : 1;
+            setPosition(start.x, start.y);
+            setCallout(start.x, start.y, visual, false, direction);
             if (!rippleSpawned) {
-              spawnRipple(start.x, start.y + direction * 10);
+              spawnZoomRing(start.x, start.y, zoomIn);
               rippleSpawned = true;
             }
-            if (t > 0.5 && !secondRippleSpawned) {
-              spawnRipple(start.x, start.y + direction * 10);
+            if (t > 0.33 && !secondRippleSpawned) {
+              spawnZoomRing(start.x, start.y, zoomIn);
               secondRippleSpawned = true;
+            }
+            if (t > 0.66 && !thirdZoomSpawned) {
+              spawnZoomRing(start.x, start.y, zoomIn);
+              thirdZoomSpawned = true;
             }
           } else {
             setPosition(start.x, start.y);
+            setCallout(start.x, start.y, visual, true);
             if (!rippleSpawned) {
-              spawnRipple(start.x, start.y);
+              spawnRipple(start.x, start.y, visual.feedback);
               rippleSpawned = true;
             }
             if (gesture.kind === "doubleClick" && t > 0.5 && !secondRippleSpawned) {
-              spawnRipple(start.x, start.y);
+              spawnRipple(start.x, start.y, visual.feedback, true);
               secondRippleSpawned = true;
             }
           }
+          clearTrail();
           break;
         case "dragMove": {
           setGlyph(dragCursor);
           if (end) {
             const point = gesture.kind === "orbit" ? introductionDemoArcPoint(start, end, eased) : { x: introductionDemoLerp(start.x, end.x, eased), y: introductionDemoLerp(start.y, end.y, eased) };
             setPosition(point.x, point.y);
-          } else setPosition(start.x, start.y);
+            setCallout(point.x, point.y, visual, true);
+            updateTrail(start, point, gesture.kind === "orbit", visual.feedback);
+          } else {
+            setPosition(start.x, start.y);
+            setCallout(start.x, start.y, visual, true);
+            clearTrail();
+          }
           break;
         }
         case "release": {
           const point = end ?? start;
           setGlyph(hoverCursor);
           setPosition(point.x, point.y);
+          setCallout(point.x, point.y, visual, false);
+          clearTrail();
           break;
         }
         case "linger": {
           const point = end ?? start;
           setPosition(point.x, point.y);
+          setCallout(point.x, point.y, visual, false);
+          clearTrail();
           break;
         }
         case "fadeOut": {
           const point = end ?? start;
           setOpacity(1 - t);
           setPosition(point.x, point.y);
+          setCallout(point.x, point.y, visual, pressed);
+          clearTrail();
           break;
         }
         case "pause":
           setOpacity(0);
+          clearTrail();
           break;
       }
 
@@ -5745,11 +6068,8 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
         phaseStart = now;
         rippleSpawned = false;
         secondRippleSpawned = false;
-        // 🎬 Wrapping out of `pause` advances to the next demonstration in the sequence (looping back to
-        // the first) — the ghost is fully invisible during `pause`, so the handoff is never visible.
+        thirdZoomSpawned = false;
         if (phase === "pause") demoIndex = (demoIndex + 1) % demonstrations.length;
-        // 🎬 A non-drag-like gesture's press phase skips straight to release — there is no from→to path to
-        // move along.
         phase = phase === "press" && !isDragLike ? "release" : INTRODUCTION_DEMO_NEXT_PHASE[phase];
       }
       rafId = requestAnimationFrame(tick);
@@ -5767,12 +6087,62 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
 
   return (
     <div data-slot="introduction-demonstration" className="pointer-events-none fixed inset-0" style={{ zIndex: "calc(var(--z-tutorial) + 2)" }}>
+      <svg className="pointer-events-none fixed inset-0 h-full w-full overflow-visible" aria-hidden="true">
+        <path ref={trailPathRef} />
+      </svg>
       <div
         ref={ghostRef}
         data-slot="introduction-demonstration-cursor"
         className="pointer-events-none fixed h-6 w-6 bg-contain bg-no-repeat opacity-0"
         style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }}
       />
+      <div
+        ref={calloutRef}
+        data-slot="introduction-demonstration-callout"
+        className="introduction-demo-callout pointer-events-none fixed opacity-0 text-foreground"
+        data-button="left"
+        data-feedback="leftClick"
+      >
+        <svg className="introduction-demo-mouse" viewBox="0 0 48 72" aria-hidden="true">
+          <defs>
+            <clipPath id={mouseClipId}>
+              <path d="M24 4C12.954 4 4 12.954 4 24v24c0 11.046 8.954 20 20 20s20-8.954 20-20V24C44 12.954 35.046 4 24 4Z" />
+            </clipPath>
+          </defs>
+          <g clipPath={`url(#${mouseClipId})`}>
+            <path className="introduction-demo-mouse-button" data-part="left" d="M24 4C12.954 4 4 12.954 4 24V28H24Z" />
+            <path className="introduction-demo-mouse-button" data-part="right" d="M24 4C35.046 4 44 12.954 44 24V28H24Z" />
+            <path className="introduction-demo-mouse-button" data-part="middle" d="M21 12H27V22H21Z" />
+          </g>
+          <path className="introduction-demo-mouse-body" d="M24 4C12.954 4 4 12.954 4 24v24c0 11.046 8.954 20 20 20s20-8.954 20-20V24C44 12.954 35.046 4 24 4Z" />
+          <path className="introduction-demo-mouse-divider" d="M24 4V28" />
+          <path className="introduction-demo-mouse-seam" d="M8 28H40" />
+          <path className="introduction-demo-mouse-wheel" d="M24 14v10" />
+        </svg>
+        <div className="introduction-demo-callout-chips">
+          <kbd className="introduction-demo-callout-chip" data-chip="zoom-in">
+            +
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="zoom-out">
+            −
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="double">
+            2×
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="alt">
+            Alt
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="shift">
+            Shift
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="control">
+            Ctrl
+          </kbd>
+          <kbd className="introduction-demo-callout-chip" data-chip="meta">
+            ⌘
+          </kbd>
+        </div>
+      </div>
       <div ref={rippleHostRef} className="pointer-events-none fixed inset-0" />
     </div>
   );
@@ -5877,9 +6247,12 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     if (!step) return [];
     // 🎬 Hand-written brands may omit `demonstrations` (Rust `#[serde(default)]`); treat missing as empty.
     const demonstrations = step.demonstrations ?? [];
-    if (demonstrations.length > 0) return demonstrations;
-    return (step.interactions ?? []).length === 0 ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
-  }, [step]);
+    if (demonstrations.length === 0) return (step.interactions ?? []).length === 0 ? [INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION] : [];
+    const interactions = step.interactions ?? [];
+    if (interactions.length === 0) return demonstrations;
+    const completed = completedInteractionIndices ?? [];
+    return demonstrations.filter((_, index) => index >= interactions.length || !completed.includes(index));
+  }, [step, completedInteractionIndices]);
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
@@ -6003,61 +6376,76 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   return (
     <>
       <div className={cn("ui-glass-veil z-tutorial fixed inset-0", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
-      <div
+      <WindowChrome
         ref={boxRef}
-        data-slot="introduction-info-box"
-        data-dragging={dragging ? "true" : undefined}
-        className={GLASS_OVERLAY_BOX_CLASS}
+        stackSlot="introduction-info-box"
+        stackDataAttrs={dragging ? { "data-dragging": "true" } : undefined}
+        active={false}
+        fillLayer
+        bodyFillClass={cn(getGlassSurfaceClass("panel"), "shadow-lg")}
+        className="pointer-events-auto fixed z-tutorial max-w-sm"
         style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
-      >
-        <div className="mb-single flex items-center gap-double">
-          <h3 className="min-w-0 flex-1 text-sm font-medium">{step.title}</h3>
-          <div data-slot="introduction-info-box-drag" className="flex shrink-0 items-center justify-center">
-            <DragHandle {...dragPointerProps} emphasized={dragging} />
+        titleChips={
+          <div data-hover-scope data-slot="introduction-info-box-chip" className={windowChromeTitleChipClass}>
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</span>
+            <div data-slot="introduction-info-box-drag" className="flex shrink-0 items-center justify-center">
+              <DragHandle {...dragPointerProps} emphasized={dragging} />
+            </div>
           </div>
-          <span className="flex-1 text-right text-xs text-muted-foreground">
-            {stepIndex + 1} / {introduction.steps.length}
-          </span>
-        </div>
-        <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
-        {step.logos && step.logos.length > 0 && (
-          <div className="mb-double flex flex-col gap-double">
-            {[step.logos.slice(0, -1), step.logos.slice(-1)].filter((row) => row.length > 0).map((row, rowIndex) => (
-              <IntroductionLogoRow key={rowIndex} logos={row} />
-            ))}
-          </div>
-        )}
-        {interactions.length > 0 && (
-          <ul data-slot="introduction-interactions" className="mb-double flex flex-col gap-half text-xs">
-            {interactions.map((interaction, index) => {
-              const done = completedInteractionIndices?.includes(index) ?? false;
-              return (
-                <li key={index} data-completed={done || undefined} className={cn("flex items-center gap-single", done ? "text-foreground" : "text-muted-foreground")}>
-                  <Icon icon={done ? "check" : "circle"} size="small" />
-                  {step.ordered && <span data-slot="introduction-interaction-index">{index + 1}.</span>}
-                  <span
-                    ref={(el) => {
-                      if (el) interactionLabelRefs.current.set(index, el);
-                      else interactionLabelRefs.current.delete(index);
-                    }}
-                    data-slot="introduction-interaction-label"
-                    className="inline-flex items-center"
-                  >
-                    {interaction.label}
-                  </span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        <div className="flex items-center justify-between gap-single">
-          <Button id="ui.introduction.skip" variant="ghost" icon="x" text={skipLabel} onClick={skip} />
-          <div className="flex items-center gap-single">
-            {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} />}
-            {advanceByButton && <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />}
-          </div>
-        </div>
-      </div>
+        }
+        close={{
+          id: "ui.introduction.skip",
+          slot: "introduction-close",
+          icon: <CloseIcon className="size-small" />,
+          label: skipLabel,
+          onClick: skip,
+        }}
+        body={
+          <>
+            <div className="mb-single flex justify-end">
+              <span className="text-xs text-muted-foreground">
+                {stepIndex + 1} / {introduction.steps.length}
+              </span>
+            </div>
+            <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
+            {step.logos && step.logos.length > 0 && (
+              <div className="mb-double flex flex-col gap-double">
+                {[step.logos.slice(0, -1), step.logos.slice(-1)].filter((row) => row.length > 0).map((row, rowIndex) => (
+                  <IntroductionLogoRow key={rowIndex} logos={row} />
+                ))}
+              </div>
+            )}
+            {interactions.length > 0 && (
+              <ul data-slot="introduction-interactions" className="mb-double flex flex-col gap-half text-xs">
+                {interactions.map((interaction, index) => {
+                  const done = completedInteractionIndices?.includes(index) ?? false;
+                  return (
+                    <li key={index} data-completed={done || undefined} className={cn("flex items-center gap-single", done ? "text-foreground" : "text-muted-foreground")}>
+                      <Icon icon={done ? "check" : "circle"} size="small" />
+                      {step.ordered && <span data-slot="introduction-interaction-index">{index + 1}.</span>}
+                      <span
+                        ref={(el) => {
+                          if (el) interactionLabelRefs.current.set(index, el);
+                          else interactionLabelRefs.current.delete(index);
+                        }}
+                        data-slot="introduction-interaction-label"
+                        className="inline-flex items-center"
+                      >
+                        {interaction.label}
+                      </span>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+            <div className="flex items-center justify-end gap-single">
+              {stepIndex > 0 && <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} />}
+              {advanceByButton && <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />}
+            </div>
+          </>
+        }
+        bodyClassName="p-double"
+      />
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}
     </>
   );
@@ -6790,6 +7178,70 @@ export function applyDockSkeleton(defaultDock: PanelDock, skeleton: DockSkeleton
 /** @emoji ↔️ Insert-position indicator shown between tab buttons while a drag hovers a row. */
 const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent shrink-0";
 
+/** @emoji 📑 One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call driver-aware hooks per tab. */
+const PanelTabButton: React.FC<{
+  readonly tab: PanelTabNode;
+  readonly buttonClass: string;
+  readonly tabSlot: string;
+  readonly isActive: boolean;
+  readonly showActiveColor: boolean;
+  readonly isDragSource: boolean;
+  readonly isChildDropTarget: boolean;
+  readonly isUnitDropReady: boolean;
+  readonly anchor?: Anchor;
+  readonly dock: PanelDockContextValue | null;
+  readonly onSelect: (tabId: string) => void;
+}> = ({ tab, buttonClass, tabSlot, isActive, showActiveColor, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect }) => {
+  const Icon = tab.icon;
+  const inlineText = useControlInlineText(tab.id, tab.name);
+  const surfaceDrag = useUiDriverDragSurface();
+  const draggable = Boolean(anchor && dock);
+  return (
+    <ChromeControlHint id={tab.id} text={tab.name}>
+      <button
+        data-slot={`${tabSlot}-tab-button`}
+        data-hover-scope
+        data-tab-id={tab.id}
+        data-tab-kind={tab.kind}
+        data-drag-source={isDragSource ? "true" : undefined}
+        data-drop-nest={isChildDropTarget ? "true" : undefined}
+        id={tab.id}
+        data-active={isActive ? "true" : undefined}
+        onClick={() => onSelect(tab.id)}
+        onPointerDown={draggable && surfaceDrag ? (event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event) : undefined}
+        onDragOver={
+          anchor && dock && tab.kind === "leaf"
+            ? (event) => {
+                if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
+              }
+            : undefined
+        }
+        onDrop={
+          anchor && dock && tab.kind === "leaf"
+            ? (event) => {
+                if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) return;
+                event.preventDefault();
+                const session = readActivePanelTreeUnitDrag();
+                if (!session) return;
+                dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { anchor, tabId: tab.id, index: Number.MAX_SAFE_INTEGER } });
+                endPanelTreeUnitDrag();
+              }
+            : undefined
+        }
+        className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent", isUnitDropReady && dropZoneReadyClass)}
+      >
+        <span className={panelTabIconSlotClass}>
+          <Icon size={12} />
+        </span>
+        {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+        {draggable && !surfaceDrag ? (
+          <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} />
+        ) : null}
+      </button>
+    </ChromeControlHint>
+  );
+};
+
 /** @emoji 📑 Props for {@link PanelTabRow}. */
 interface PanelTabRowProps {
   readonly variant: PanelTabBarVariant;
@@ -6847,7 +7299,6 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   return (
     <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} data-slot={`${tabSlot}-tabs`} className={cn(barClass, rowDropReady && dropZoneReadyClass)}>
       {sortedTabs.map((tab, index) => {
-        const Icon = tab.icon;
         const isActive = tab.id === resolvedActiveId;
         const isDragSource = Boolean(anchor && dock?.dragTabId === tab.id);
         const isChildDropTarget = Boolean(anchor && dropTarget?.kind === "child" && dropTarget.anchor === anchor && dropTarget.parentId === tab.id);
@@ -6855,51 +7306,19 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
         return (
           <React.Fragment key={tab.id}>
             {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
-            <ChromeControlHint id={tab.id}>
-              <button
-                data-slot={`${tabSlot}-tab-button`}
-                data-hover-scope
-                data-tab-id={tab.id}
-                data-tab-kind={tab.kind}
-                data-drag-source={isDragSource ? "true" : undefined}
-                data-drop-nest={isChildDropTarget ? "true" : undefined}
-                id={tab.id}
-                data-active={isActive ? "true" : undefined}
-                onClick={() => onSelect(tab.id)}
-                onDragOver={
-                  anchor && dock && tab.kind === "leaf"
-                    ? (event) => {
-                        if (event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) event.preventDefault();
-                      }
-                    : undefined
-                }
-                onDrop={
-                  anchor && dock && tab.kind === "leaf"
-                    ? (event) => {
-                        if (!event.dataTransfer.types.includes(PANEL_TREE_UNIT_MIME)) return;
-                        event.preventDefault();
-                        const session = readActivePanelTreeUnitDrag();
-                        if (!session) return;
-                        dock.onTreeUnitDockDrop({ unitId: session.unitId, fromTabId: session.tabId, target: { anchor, tabId: tab.id, index: Number.MAX_SAFE_INTEGER } });
-                        endPanelTreeUnitDrag();
-                      }
-                    : undefined
-                }
-                className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent", isUnitDropReady && dropZoneReadyClass)}
-              >
-                <span className={panelTabIconSlotClass}>
-                  <Icon size={12} />
-                </span>
-                <span className={panelTabLabelClass}>{tab.name}</span>
-                {anchor && dock ? (
-                  <DragHandle
-                    onPointerDown={(event) => dock.startTabDrag(anchor, tab.id, tab.name, event)}
-                    onClick={(event) => event.stopPropagation()}
-                    emphasized={(isActive && showActiveColor) || isUnitDropReady}
-                  />
-                ) : null}
-              </button>
-            </ChromeControlHint>
+            <PanelTabButton
+              tab={tab}
+              buttonClass={buttonClass}
+              tabSlot={tabSlot}
+              isActive={isActive}
+              showActiveColor={showActiveColor}
+              isDragSource={isDragSource}
+              isChildDropTarget={isChildDropTarget}
+              isUnitDropReady={isUnitDropReady}
+              anchor={anchor}
+              dock={dock}
+              onSelect={onSelect}
+            />
           </React.Fragment>
         );
       })}
@@ -7530,15 +7949,19 @@ export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = W
   return `M${x0},${y0} H${tabs} V${cap} H${gapEnd} V${y0} H${x1} V${y1} H${x0} Z`;
 }
 
-/** @emoji 🪟 Reads live silhouette metrics from a mounted `[data-slot="mode-dock-stack"]` (gap + controls). */
+const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
+const WINDOW_CHROME_CONTROLS_SELECTOR = '[data-slot="window-chrome-controls"], [data-slot="mode-dock-controls-cap"]';
+const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
+
+/** @emoji 🪟 Reads live silhouette metrics from a mounted window-chrome stack (gap + controls). */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const width = stackRect.width;
   const height = stackRect.height;
   if (width <= 0 || height <= 0) return null;
-  const gap = stack.querySelector<HTMLElement>('[data-slot="mode-dock-tab-gap"]');
-  const controls = stack.querySelector<HTMLElement>('[data-slot="mode-dock-controls-cap"]');
-  const tabBar = stack.querySelector<HTMLElement>('[data-slot="mode-dock-tabbar"]');
+  const gap = stack.querySelector<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR);
+  const controls = stack.querySelector<HTMLElement>(WINDOW_CHROME_CONTROLS_SELECTOR);
+  const tabBar = stack.querySelector<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR);
   const gapRect = gap?.getBoundingClientRect();
   const controlsRect = controls?.getBoundingClientRect();
   const tabsWidth = gapRect ? Math.max(0, gapRect.left - stackRect.left) : 0;
@@ -7636,6 +8059,296 @@ export const windowControlsCapActiveClass = windowControlsCapClass;
 
 /** @emoji 📏 Multi-tab controls cap — same transparent cell on the shared tabbar glass. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
+
+//#region 🪟WindowChrome
+
+/** @emoji 🪟 Optional right-cap control on {@link WindowChrome} (enlarge / close). */
+export interface WindowChromeControlAction {
+  readonly id: string;
+  readonly slot: string;
+  readonly icon: React.ReactNode;
+  readonly label: string;
+  readonly onClick: () => void;
+}
+
+/** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag). */
+export const windowChromeTitleChipClass = cn(modeDockTabClassName, "bg-window relative z-30 box-border min-h-medium shrink-0 border", borderNormalClass);
+
+export interface WindowChromeProps {
+  readonly active?: boolean;
+  readonly chipOnly?: boolean;
+  readonly fillLayer?: boolean;
+  readonly className?: string;
+  readonly stackClassName?: string;
+  readonly capGlassClass?: string;
+  readonly bodyClassName?: string;
+  readonly bodyFillClass?: string;
+  readonly style?: React.CSSProperties;
+  readonly stackRef?: React.Ref<HTMLDivElement>;
+  readonly capRef?: React.Ref<HTMLDivElement>;
+  readonly bodyRef?: React.Ref<HTMLDivElement>;
+  readonly stackSlot?: string;
+  readonly bodySlot?: string;
+  readonly titleChips: React.ReactNode;
+  readonly body?: React.ReactNode;
+  readonly enlarge?: WindowChromeControlAction;
+  readonly close?: WindowChromeControlAction;
+  readonly gapProps?: React.HTMLAttributes<HTMLDivElement>;
+  readonly introduceTarget?: Element | null;
+  readonly stackDataAttrs?: Record<string, string | undefined>;
+}
+
+/** @emoji 🪟 SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
+const WindowChromeSilhouetteBorder: React.FC<{
+  readonly stack: HTMLElement | null;
+  readonly active?: boolean;
+  readonly introduceTarget?: Element | null;
+  readonly silhouetteSlot?: string;
+}> = ({ stack, active = false, introduceTarget, silhouetteSlot = "window-chrome-silhouette-border" }) => {
+  const [epoch, setEpoch] = reactHostPort.useState(0);
+  const celebrateMaskId = `window-silhouette-celebrate-${reactHostPort.useId().replace(/:/g, "")}`;
+
+  reactHostPort.useLayoutEffect(() => {
+    if (!stack) return;
+    const bump = () => setEpoch((value) => value + 1);
+    bump();
+    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(bump) : null;
+    resizeObserver?.observe(stack);
+    const mutationObserver = new MutationObserver(bump);
+    mutationObserver.observe(stack, { attributes: true, subtree: true, childList: true });
+    return () => {
+      resizeObserver?.disconnect();
+      mutationObserver.disconnect();
+    };
+  }, [stack]);
+
+  const windowEl = stack?.querySelector('[data-slot="window"]') ?? introduceTarget ?? stack;
+  const kind = resolveWindowSilhouetteBorderKind(windowEl, active);
+  const resolvedKind =
+    stack && [...stack.querySelectorAll('[data-celebrated="true"]')].some(isWindowChromeIntroducedTarget)
+      ? "celebrated"
+      : stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget)
+        ? "introduced"
+        : kind;
+  const metrics = stack ? measureWindowSilhouetteMetrics(stack) : null;
+  void epoch;
+
+  if (!metrics) {
+    return (
+      <div
+        data-slot={silhouetteSlot}
+        data-kind={resolvedKind}
+        data-pending=""
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+      />
+    );
+  }
+  const path = windowSilhouettePath(metrics);
+  if (resolvedKind === "celebrated") {
+    return (
+      <svg
+        data-slot={silhouetteSlot}
+        data-kind={resolvedKind}
+        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+        width={metrics.width}
+        height={metrics.height}
+        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+        aria-hidden
+      >
+        <defs>
+          <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
+            <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
+            <path d={path} fill="none" stroke="white" strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border window-silhouette-border-celebrated-mask" />
+          </mask>
+        </defs>
+        <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
+          <div xmlns="http://www.w3.org/1999/xhtml" className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
+        </foreignObject>
+      </svg>
+    );
+  }
+  const stroke =
+    resolvedKind === "introduced"
+      ? "var(--introduced-border-color, var(--color-secondary))"
+      : resolvedKind === "loading"
+        ? "var(--loading-border-color, var(--border-normal-color))"
+        : resolvedKind === "waiting"
+          ? "var(--waiting-border-color, var(--border-normal-color))"
+          : resolvedKind === "active"
+            ? "var(--active-base)"
+            : "var(--border-normal-color)";
+  return (
+    <svg
+      data-slot={silhouetteSlot}
+      data-kind={resolvedKind}
+      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
+      width={metrics.width}
+      height={metrics.height}
+      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
+      aria-hidden
+    >
+      <path
+        d={path}
+        fill="none"
+        stroke={stroke}
+        strokeLinejoin="miter"
+        vectorEffect="non-scaling-stroke"
+        className={cn(
+          "window-silhouette-border",
+          resolvedKind === "introduced" && "window-silhouette-border-introduced",
+          resolvedKind === "loading" && "window-silhouette-border-loading",
+          resolvedKind === "waiting" && "window-silhouette-border-waiting",
+          resolvedKind === "active" && "window-silhouette-border-active",
+          resolvedKind === "normal" && "window-silhouette-border-normal",
+        )}
+      />
+    </svg>
+  );
+};
+
+const WindowChromeControls: React.FC<{ readonly enlarge?: WindowChromeControlAction; readonly close?: WindowChromeControlAction }> = ({ enlarge, close }) => {
+  if (!enlarge && !close) return null;
+  return (
+    <div data-slot="window-chrome-controls" className={windowControlsCapClass}>
+      {enlarge ? (
+        <button
+          type="button"
+          id={enlarge.id}
+          data-slot={enlarge.slot}
+          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+          onClick={enlarge.onClick}
+        >
+          {enlarge.icon}
+          <span className="text-tiny whitespace-nowrap">{enlarge.label}</span>
+        </button>
+      ) : null}
+      {close ? (
+        <button
+          type="button"
+          id={close.id}
+          data-slot={close.slot}
+          className={cn("flex h-medium w-auto items-center justify-center border-0 bg-transparent transition-colors px-single gap-single text-element", interactiveHoverClass)}
+          onClick={close.onClick}
+        >
+          {close.icon}
+          <span className="text-tiny whitespace-nowrap">{close.label}</span>
+        </button>
+      ) : null}
+    </div>
+  );
+};
+
+/** @emoji 🪟 Shared U-cutout window chrome: left title chip(s), open gap, optional enlarge/close, continuous body border. */
+export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChromeProps>(
+  (
+    {
+      active = false,
+      chipOnly = false,
+      fillLayer = false,
+      className,
+      stackClassName,
+      capGlassClass = modeDockTabBarGlassClass,
+      bodyClassName,
+      bodyFillClass = windowBodyFrameClass,
+      style,
+      stackRef,
+      capRef,
+      bodyRef,
+      stackSlot = "window-chrome-stack",
+      bodySlot = "window-chrome-body",
+      titleChips,
+      body,
+      enlarge,
+      close,
+      gapProps,
+      introduceTarget,
+      stackDataAttrs,
+    },
+    ref,
+  ) => {
+    const [stackEl, setStackEl] = reactHostPort.useState<HTMLDivElement | null>(null);
+    const setStackRef = reactHostPort.useCallback(
+      (element: HTMLDivElement | null) => {
+        setStackEl(element);
+        if (typeof ref === "function") ref(element);
+        else if (ref) (ref as React.MutableRefObject<HTMLDivElement | null>).current = element;
+        if (typeof stackRef === "function") stackRef(element);
+        else if (stackRef) (stackRef as React.MutableRefObject<HTMLDivElement | null>).current = element;
+      },
+      [ref, stackRef],
+    );
+
+    if (chipOnly) {
+      return (
+        <div ref={setStackRef} data-slot={stackSlot} className={cn("relative inline-flex min-w-0", className, stackClassName)} style={style}>
+          <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", windowCapFrameClass, capGlassClass)}>
+            {titleChips}
+          </div>
+        </div>
+      );
+    }
+
+    const { className: gapClassName, ...gapRest } = gapProps ?? {};
+    return (
+      <div
+        ref={setStackRef}
+        data-slot={stackSlot}
+        data-active={active ? "true" : undefined}
+        className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", stackClassName, className)}
+        style={style}
+        {...stackDataAttrs}
+      >
+        {fillLayer ? <div data-dim aria-hidden className={panelChromeFillLayerClass} /> : null}
+        <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} />
+        <div ref={capRef} data-slot="window-chrome-cap" {...(fillLayer ? { "data-dim": true } : {})} className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", capGlassClass)}>
+          <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", windowCapFrameClass)}>
+            {titleChips}
+          </div>
+          <div data-slot="window-chrome-gap" {...gapRest} className={cn("relative min-h-medium min-w-0 flex-1", windowGapFrameClass, gapClassName)} />
+          <WindowChromeControls enlarge={enlarge} close={close} />
+        </div>
+        <div ref={bodyRef} data-slot={bodySlot} data-dim className={cn("relative z-10 min-h-0 flex-1", bodyFillClass, bodyClassName)}>
+          {body}
+        </div>
+      </div>
+    );
+  },
+);
+WindowChrome.displayName = "WindowChrome";
+
+/** @emoji 🪟 Context menu with U-cutout chrome — title chip only, no enlarge/close. */
+function ContextMenuChrome({
+  title,
+  children,
+  className,
+  style,
+}: {
+  readonly title: string;
+  readonly children: React.ReactNode;
+  readonly className?: string;
+  readonly style?: React.CSSProperties;
+}): React.ReactElement {
+  return (
+    <WindowChrome
+      active={false}
+      capGlassClass={glassMenuClass}
+      bodyFillClass={cn(glassMenuClass, "border-0 bg-transparent")}
+      stackSlot="context-menu-content"
+      className={contextMenuContentClassName(className)}
+      style={style}
+      titleChips={
+        <div data-slot="context-menu-title-chip" className={windowChromeTitleChipClass}>
+          <span className="truncate">{title}</span>
+        </div>
+      }
+      body={children}
+      bodyClassName="p-single"
+    />
+  );
+}
+
+//#endregion 🪟WindowChrome
 
 /** @emoji 🪟 Window chrome icon button — element gray by default, emphasize on hover. */
 export const windowChromeControlButtonClass = cn("flex size-medium items-center justify-center border-0 bg-transparent transition-colors", interactiveHoverClass);
@@ -8394,21 +9107,19 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <footer id="ui.footer" data-slot="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <UiChromeLabelPolicyProvider policy="always">
-        <div className="p-single flex gap-single items-center min-w-0 h-full">
-          {normalItems.map((item, index) => (
-            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-              {item.content}
-            </div>
-          ))}
-        </div>
-        {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+    <footer id="ui.footer" data-slot="footer" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        {normalItems.map((item, index) => (
+          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+            {item.content}
           </div>
         ))}
-      </UiChromeLabelPolicyProvider>
+      </div>
+      {centeredItems.map((item, index) => (
+        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+        </div>
+      ))}
     </footer>
   );
 };
@@ -8557,21 +9268,6 @@ export interface DescriptionTooltipData {
 }
 
 /**
- * Registers the expertise provider function for tooltips.
- **/
-export function setTooltipModeProvider(fn: () => Expertise) {
-  setExpertiseProvider(fn);
-}
-
-/**
- * Hook returning the current expertise level for tooltips.
- **/
-export function useTooltipMode(): Expertise {
-  if (!_expertiseProvider) return Expertise.BEGINNER;
-  return _expertiseProvider();
-}
-
-/**
  * TooltipProvider holds the data fields for a TooltipProvider record.
  **/
 function TooltipProvider({ delayDuration = 400, ...props }: React.ComponentProps<typeof TooltipPrimitive.Provider>) {
@@ -8632,13 +9328,13 @@ interface EnhancedTooltipContentProps {
  **/
 function EnhancedTooltipContent({ config }: EnhancedTooltipContentProps) {
   const { t } = useTranslation();
-  const mode = useTooltipMode();
+  const tooltips = useUiDriverTooltips();
 
-  if (mode === Expertise.EXPERT) return null;
+  if (tooltips === "none") return null;
 
   const { labelKey, manualPath, tutorialPath, hotkey } = config;
-  const showManual = mode === Expertise.BEGINNER || mode === Expertise.NORMAL;
-  const showTutorial = mode === Expertise.BEGINNER;
+  const showManual = tooltips === "full";
+  const showTutorial = tooltips === "full";
 
   const label = useLabel(labelKey);
 
@@ -8699,10 +9395,10 @@ interface DescriptionTooltipContentProps {
  **/
 function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
   const { t } = useTranslation();
-  const mode = useTooltipMode();
+  const driver = useUiDriver();
   const labelId = resolveControlLabelId(id);
 
-  if (mode === Expertise.EXPERT) return null;
+  if (driver.tooltips === "none") return null;
   if (isInternalChromeControlId(id)) return null;
 
   const manualLabel = useLabel("tooltip.manual");
@@ -8719,7 +9415,7 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
         ? typeof value.label === "string"
           ? value.label
           : typeof value.label === "object"
-            ? mode === Expertise.BEGINNER && value.label.beginner !== undefined
+            ? driver.labelTier === "beginner" && value.label.beginner !== undefined
               ? String(value.label.beginner)
               : value.label.normal !== undefined
                 ? String(value.label.normal)
@@ -8742,8 +9438,8 @@ function DescriptionTooltipContent({ id }: DescriptionTooltipContentProps) {
     }
   }
 
-  const showManual = (mode === Expertise.BEGINNER || mode === Expertise.NORMAL) && manualPath;
-  const showTutorial = mode === Expertise.BEGINNER && tutorialPath;
+  const showManual = driver.tooltips === "full" && manualPath;
+  const showTutorial = driver.tooltips === "full" && tutorialPath;
 
   const fullManualPath = manualPath ? `/doc/manual/${manualPath}` : undefined;
   const fullTutorialPath = tutorialPath ? `/doc/tutorial/${tutorialPath}` : undefined;
@@ -8987,9 +9683,9 @@ interface ComposeTooltipProps {
  * ComposeTooltip holds the data fields for a ComposeTooltip record.
  **/
 function ComposeTooltip({ children, config }: ComposeTooltipProps) {
-  const mode = useTooltipMode();
+  const tooltips = useUiDriverTooltips();
   const label = useLabel(config.labelKey);
-  if (mode === Expertise.EXPERT) return children;
+  if (tooltips === "none") return children;
   if (!React.isValidElement(children)) return children;
   return <ChromeControlHint text={label}>{children}</ChromeControlHint>;
 }
@@ -9005,8 +9701,8 @@ interface IdComposeTooltipProps {
 /**
  **/
 function IdComposeTooltip({ id, children }: IdComposeTooltipProps) {
-  const mode = useTooltipMode();
-  if (mode === Expertise.EXPERT) return children;
+  const tooltips = useUiDriverTooltips();
+  if (tooltips === "none") return children;
   if (!React.isValidElement(children)) return <>{children}</>;
   return <ChromeControlHint id={id}>{children}</ChromeControlHint>;
 }
@@ -13047,26 +13743,24 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <UiChromeLabelPolicyProvider policy="always">
-        <div className="p-single flex gap-single items-center min-w-0 h-full">
-          {normalItems.map((item, index) => (
-            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-              {item.content}
-            </div>
-          ))}
-          {showFullscreenToggle ? (
-            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
-              <NavbarFullscreenToggle />
-            </div>
-          ) : null}
-        </div>
-        {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+    <nav id="ui.navbar" data-slot="navbar" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        {normalItems.map((item, index) => (
+          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+            {item.content}
           </div>
         ))}
-      </UiChromeLabelPolicyProvider>
+        {showFullscreenToggle ? (
+          <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
+            <NavbarFullscreenToggle />
+          </div>
+        ) : null}
+      </div>
+      {centeredItems.map((item, index) => (
+        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+        </div>
+      ))}
     </nav>
   );
 }
@@ -14818,7 +15512,8 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
   const showDragHandle = Boolean(draggable || isDragHandle);
-  const resolvedDragInitiation = dragInitiation ?? (showDragHandle ? "handle" : "surface");
+  const driverSurfaceDrag = useUiDriverDragSurface();
+  const resolvedDragInitiation = driverSurfaceDrag ? "surface" : (dragInitiation ?? (showDragHandle ? "handle" : "surface"));
   const [dragArmed, setDragArmed] = reactHostPort.useState(false);
   const armDrag = reactHostPort.useCallback(() => {
     setDragArmed(true);
@@ -14842,7 +15537,7 @@ export const TreeSection: React.FC<TreeSectionProps> = ({
     className,
   );
   const rowContentFillClassName = cn(treeRowChromeContentFillClasses(false, false, loading, waiting), isDropReady && dropZoneReadyFillClass);
-  const sectionDragHandle = showDragHandle ? <DragHandle onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
+  const sectionDragHandle = showDragHandle && !driverSurfaceDrag ? <DragHandle onPointerDown={resolvedDragInitiation === "handle" ? armDrag : undefined} emphasized={isDropReady} /> : null;
 
   if (isHeaderlessSection) {
     return <TreeContext.Provider value={{ level, isLastAtLevel, showLines, isTree, indentMultiplier, direction }}>{children}</TreeContext.Provider>;
@@ -15014,7 +15709,17 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
 
   const isDropReady = isSorting && !isDragging;
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
-  const itemShellClasses = cn(treeRowShellClassName, treeRowChromeShellClasses(isSelected, isHighlighted), "w-full", hasChildren ? "cursor-foldable" : "cursor-selectable", isDropReady && dropZoneReadyTextClass, className);
+  const driverSurfaceDrag = useUiDriverDragSurface();
+  const surfaceDragProps = isDragHandle && driverSurfaceDrag ? { ...attributes, ...listeners } : {};
+  const itemShellClasses = cn(
+    treeRowShellClassName,
+    treeRowChromeShellClasses(isSelected, isHighlighted),
+    "w-full",
+    hasChildren ? "cursor-foldable" : "cursor-selectable",
+    isDragHandle && driverSurfaceDrag ? "cursor-grab active:cursor-grabbing" : "",
+    isDropReady && dropZoneReadyTextClass,
+    className,
+  );
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted), isDropReady && dropZoneReadyFillClass);
   const GroupFoldChevron = treeFoldChevronIcon(direction, inline, open);
 
@@ -15034,6 +15739,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             ref={setNodeRef}
             style={style}
             className={itemShellClasses}
+            {...surfaceDragProps}
             onDoubleClick={(event) => {
               if (!onDoubleClick) return;
               event.preventDefault();
@@ -15080,7 +15786,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                   </span>
                 </div>
                 {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-                {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+                {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
               </div>
             </TreeAlignedRow>
           </div>
@@ -15108,6 +15814,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
           ref={setNodeRef}
           style={style}
           className={itemShellClasses}
+          {...surfaceDragProps}
           onDoubleClick={(event) => {
             if (!onDoubleClick) return;
             event.preventDefault();
@@ -15154,7 +15861,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
                 </span>
               </div>
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+              {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
             </div>
           </TreeAlignedRow>
         </div>
@@ -15185,6 +15892,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
         ref={setNodeRef}
         style={style}
         className={itemShellClasses}
+        {...surfaceDragProps}
         onClick={(event) => {
           if (event.detail > 1) return;
           onClick?.(event);
@@ -15205,7 +15913,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
               </span>
             </div>
             {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-            {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+            {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -15223,6 +15931,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
       ref={setNodeRef}
       style={style}
       className={itemShellClasses}
+      {...surfaceDragProps}
       onClick={(event) => {
         if (event.detail > 1) return;
         onClick?.(event);
@@ -15243,7 +15952,7 @@ const SortableTreeItem: React.FC<SortableTreeItemProps> = ({
             </span>
           </div>
           {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-          {isDragHandle && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
+          {isDragHandle && !driverSurfaceDrag && <DragHandle attributes={attributes} listeners={listeners} onClick={(e) => e.stopPropagation()} emphasized={rowEmphasized} />}
         </div>
       </TreeAlignedRow>
     </div>
@@ -15376,12 +16085,14 @@ export const TreeItem: React.FC<TreeItemProps> = ({
   );
   const hasChildren = hasNonEmptyChildren(children);
   const isExpandable = expandable ?? hasChildren;
+  const driverSurfaceDrag = useUiDriverDragSurface();
+  const effectiveDragInitiation = driverSurfaceDrag ? "surface" : dragInitiation;
   const [dragArmed, setDragArmed] = reactHostPort.useState(false);
   const armDrag = reactHostPort.useCallback(() => {
     setDragArmed(true);
     window.addEventListener("pointerup", () => setDragArmed(false), { once: true });
   }, []);
-  const effectiveDraggable = draggable && (dragInitiation === "surface" || dragArmed);
+  const effectiveDraggable = draggable && (effectiveDragInitiation === "surface" || dragArmed);
   const handleDragEnd = reactHostPort.useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       setDragArmed(false);
@@ -15394,13 +16105,13 @@ export const TreeItem: React.FC<TreeItemProps> = ({
     treeRowChromeShellClasses(isSelected, isHighlighted, isHidden),
     "w-full",
     isExpandable ? "cursor-foldable" : "cursor-selectable",
-    draggable && dragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
+    draggable && effectiveDragInitiation === "surface" ? "cursor-grab active:cursor-grabbing" : "",
     isDragging ? "opacity-40" : "",
     isDropReady && dropZoneReadyTextClass,
     className,
   );
   const itemContentFillClassName = cn(treeRowChromeContentFillClasses(isSelected, isHighlighted, loading, waiting), isDropReady && dropZoneReadyFillClass);
-  const treeLabelSelectClass = draggable && dragInitiation === "surface" ? "select-none" : "select-text";
+  const treeLabelSelectClass = draggable && effectiveDragInitiation === "surface" ? "select-none" : "select-text";
   const rowEmphasized = isSelected || isHighlighted || isDropReady;
 
   if (layoutKind === "property") {
@@ -15489,7 +16200,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 <PropertyValueColumnContext.Provider value={true}>{headerControl}</PropertyValueColumnContext.Provider>
               ) : null}
               {actions.length > 0 ? renderTreeHeaderActions(actions) : null}
-              {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+              {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
             </div>
           </div>
         </TreeAlignedRow>
@@ -15630,7 +16341,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                       </button>
                     </div>
                   )}
-                  {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+                  {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
                 </div>
               </TreeAlignedRow>
             </div>
@@ -15691,7 +16402,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           <div className={cn(treeHeaderRowClassName, treeInspectorInnerRowClassName)}>
             <div className={treeHeaderMainClassName}>
               {renderTreeRowIcon(icon, "file-text", rowEmphasized)}
-              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && dragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
+              <span data-slot="tree-label" className={cn(treeItemLabelSlotClassName, draggable && effectiveDragInitiation === "surface" ? "cursor-grab" : "cursor-selectable", treeLabelSelectClass)} style={treeItemLabelStyle}>
                 {resolvedLabel as React.ReactNode}
               </span>
             </div>
@@ -15727,7 +16438,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
                 </button>
               </div>
             )}
-            {draggable && <DragHandle onPointerDown={dragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
+            {draggable && !driverSurfaceDrag && <DragHandle onPointerDown={effectiveDragInitiation === "handle" ? armDrag : undefined} emphasized={rowEmphasized} />}
           </div>
         </TreeAlignedRow>
       </div>
@@ -17502,6 +18213,9 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
   emphasized = false,
 }) => {
   const accessibleLabel = useControlAccessibleLabel(id, label);
+  const inlineText = useControlInlineText(id, label);
+  const surfaceDrag = useUiDriverDragSurface();
+  const draggable = showDragHandle && Boolean(dragPointerProps);
   return (
     <button
       type="button"
@@ -17512,10 +18226,11 @@ export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
       disabled={disabled}
       onClick={onClick}
       className={cn(windowPaneChromeToggleClass, className)}
+      {...(draggable && surfaceDrag ? dragPointerProps : {})}
     >
       <span className={panelTabIconSlotClass}>{renderControlIcon(icon, "tiny")}</span>
-      <span className={panelTabLabelClass}>{label}</span>
-      {showDragHandle ? <DragHandle {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
+      {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+      {draggable && !surfaceDrag ? <DragHandle {...dragPointerProps} onClick={(event) => event.stopPropagation()} emphasized={emphasized} /> : null}
     </button>
   );
 };
@@ -18379,7 +19094,6 @@ const Panel: React.FC<PanelProps> = ({
   if (isChromeHosted && !visible) return null;
 
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
-  const activeAccentSide = resizingSide ?? hoveredSide;
 
   return (
     <LevelProvider level="panel">
@@ -18394,33 +19108,38 @@ const Panel: React.FC<PanelProps> = ({
         style={positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
-          <div {...(visible ? { "data-dim": true } : {})} aria-hidden className={panelChromeFillLayerClass} />
-          <div {...(visible ? { "data-dim": true } : {})} data-slot="chrome-frame" aria-hidden className={cn(shellChromeFrameLayerClass, visible && activeAccentSide && panelResizeEdgeAccentClass(activeAccentSide, true))} />
-          <UiChromeLabelPolicyProvider policy="always">
-            {isChromeHosted ? (
-              // 🎛️ The root row lives in the sibling PanelChromeTabBar — this panel only ever shows depth ≥ 1 (only reachable while open, so no fold-affordance row is needed here).
-              <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
-            ) : (
-              <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={visible ? undefined : 1} showActiveColor={visible} />
-            )}
-          </UiChromeLabelPolicyProvider>
           {visible ? (
             <>
-              <Scrollable className="relative z-10 flex-1 min-h-0">
-                {/* 🌲 Panel body content follows the anchor's flow — trees, labels, and their controls mirror on right anchors, same as the chrome (tab bar, resize handles, panel position). */}
-                <div ref={panelContentRef} data-dim data-slot="panel-content" className="flex min-h-0 flex-1 flex-col">
-                  {activeTabTrees && activeNode ? (
-                    <PanelTreeUnitsPane
-                      anchor={anchor}
-                      tabId={activeNode.id}
-                      units={activeTabTrees}
-                      treeOpenStates={treeOpenStates}
-                      onTreeOpenStateChange={onTreeOpenStateChange}
-                      treeContentRevision={treeContentRevision}
-                    />
-                  ) : null}
-                </div>
-              </Scrollable>
+              <WindowChrome
+                stackSlot="window-chrome-stack"
+                active
+                fillLayer
+                stackClassName={cn("w-full flex-1 min-h-0", isBottom && "flex-col-reverse")}
+                bodyClassName="flex min-h-0 flex-1 flex-col"
+                bodySlot="panel-content"
+                bodyRef={panelContentRef}
+                titleChips={
+                  isChromeHosted ? (
+                    <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
+                  ) : (
+                    <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} showActiveColor={visible} />
+                  )
+                }
+                body={
+                  <Scrollable className="relative flex-1 min-h-0">
+                    {activeTabTrees && activeNode ? (
+                      <PanelTreeUnitsPane
+                        anchor={anchor}
+                        tabId={activeNode.id}
+                        units={activeTabTrees}
+                        treeOpenStates={treeOpenStates}
+                        onTreeOpenStateChange={onTreeOpenStateChange}
+                        treeContentRevision={treeContentRevision}
+                      />
+                    ) : null}
+                  </Scrollable>
+                }
+              />
               {onSizeChange
                 ? resizeSides.map((side) => (
                     <PanelResizeHandle
@@ -18439,7 +19158,13 @@ const Panel: React.FC<PanelProps> = ({
                   ))
                 : null}
             </>
-          ) : null}
+          ) : (
+            <WindowChrome
+              chipOnly
+              stackSlot="window-chrome-stack"
+              titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
+            />
+          )}
         </FlowProvider>
       </PanelGhostRoot>
     </LevelProvider>
@@ -18643,7 +19368,7 @@ export const Pane: React.FC<PaneProps> = ({
       data-dragging={dragging ? "true" : undefined}
       dir={flow.inline === "rtl" ? "rtl" : undefined}
       className={cn(
-        "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-hidden",
+        "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
         flow.block === "up" ? "flex-col-reverse" : "flex-col",
         horizontal === "middle" ? "items-center" : "items-start",
         !effectiveFolded && "w-fit",
@@ -18652,24 +19377,27 @@ export const Pane: React.FC<PaneProps> = ({
       style={positionStyle}
     >
       <FlowProvider inline={flow.inline} block={flow.block}>
-        <div {...(!effectiveFolded ? { "data-dim": true } : {})} aria-hidden className={panelChromeFillLayerClass} />
-        <div {...(!effectiveFolded ? { "data-dim": true } : {})} data-slot="chrome-frame" aria-hidden className={shellChromeFrameLayerClass} />
-        <div {...(!effectiveFolded ? { "data-dim": true } : {})} data-slot="pane-chrome" className={cn("relative z-40", windowMeasuresChromeClass, effectiveFolded && "justify-end border-b-0")}>
-          <WindowPaneChromeToggle
-            id={childElementId(id, "pane", "fold")}
-            icon={icon}
-            label={label ?? id}
-            onClick={mobile ? undefined : onFoldToggle}
-            dragPointerProps={mobile ? undefined : dragPointerProps}
-            showDragHandle={!mobile}
-            emphasized={dragging}
-          />
-        </div>
-        {!effectiveFolded ? (
-          <div data-dim data-slot="pane-body" className="relative z-10 min-h-0 flex-1 overflow-y-auto">
-            {children}
-          </div>
-        ) : null}
+        <WindowChrome
+          stackSlot="window-chrome-stack"
+          chipOnly={effectiveFolded}
+          active={!effectiveFolded}
+          fillLayer={!effectiveFolded}
+          stackClassName={cn(!effectiveFolded && "w-full")}
+          bodyClassName="overflow-y-auto p-single"
+          bodySlot="pane-body"
+          titleChips={
+            <WindowPaneChromeToggle
+              id={childElementId(id, "pane", "fold")}
+              icon={icon}
+              label={label ?? id}
+              onClick={mobile ? undefined : onFoldToggle}
+              dragPointerProps={mobile ? undefined : dragPointerProps}
+              showDragHandle={!mobile}
+              emphasized={dragging}
+            />
+          }
+          body={!effectiveFolded ? children : undefined}
+        />
         {resizable && !mobile && !effectiveFolded && onSizeChange
           ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} deltaFactor={resizeDeltaFactor} />)
           : null}
@@ -24334,6 +25062,7 @@ export const VerticalWindows: React.FC<{ children: React.ReactNode }> = ({ child
 /** @emoji 🪟 Window descriptor rendered inside {@link Mode}. */
 export interface ModeWindowDescriptor extends Omit<WindowConfig, "children" | "onOpenInNewWindow" | "onMaximize" | "onMinimize" | "onClose"> {
   title?: string;
+  iconId: IconName;
   children: React.ReactNode;
 }
 
@@ -25042,23 +25771,23 @@ interface ModeTabInsertPreview {
   index: number;
 }
 
-type ModeDockTabDisplayItem = { id: string; title: string; preview?: "ghost" };
+type ModeDockTabDisplayItem = { id: string; title: string; iconId: IconName; preview?: "ghost" };
 
 /** @emoji 📑 Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
-function modeDockTabsWithInsertPreview(tabs: readonly { id: string; title: string }[], insertPreview: ModeTabInsertPreview | null, stackPath: ModeLayoutPath, ghostTabs: readonly { id: string; title: string }[]): ModeDockTabDisplayItem[] {
+function modeDockTabsWithInsertPreview(tabs: readonly { id: string; title: string; iconId: IconName }[], insertPreview: ModeTabInsertPreview | null, stackPath: ModeLayoutPath, ghostTabs: readonly { id: string; title: string; iconId: IconName }[]): ModeDockTabDisplayItem[] {
   if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
-  row.splice(insertAt, 0, ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, preview: "ghost" as const })));
+  row.splice(insertAt, 0, ...ghostTabs.map((tab) => ({ id: tab.id, title: tab.title, iconId: tab.iconId, preview: "ghost" as const })));
   return row;
 }
 
 /** @emoji 📑 Tab descriptors shown as insert-preview ghosts for the current drag. */
-function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, windowTitle: (windowId: string) => string): readonly { id: string; title: string }[] {
-  if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
+function modeDockDragInsertTabs(layout: WindowLayoutNode, drag: ModeDragState, windowTitle: (windowId: string) => string, windowIconId: (windowId: string) => IconName): readonly { id: string; title: string; iconId: IconName }[] {
+  if (drag.dragKind === "tab") return [{ id: drag.windowId, title: windowTitle(drag.windowId), iconId: windowIconId(drag.windowId) }];
   const stack = readLayoutAtPath(layout, drag.stackPath);
-  if (!stack || stack.kind !== "stack") return [{ id: drag.windowId, title: windowTitle(drag.windowId) }];
-  return stack.children.map((child) => ({ id: child.id, title: windowTitle(child.id) }));
+  if (!stack || stack.kind !== "stack") return [{ id: drag.windowId, title: windowTitle(drag.windowId), iconId: windowIconId(drag.windowId) }];
+  return stack.children.map((child) => ({ id: child.id, title: windowTitle(child.id), iconId: windowIconId(child.id) }));
 }
 
 function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZone | null): ModeTabInsertPreview | null {
@@ -25067,7 +25796,7 @@ function resolveModeTabInsertPreview(drag: ModeDragState | null, zone: ModeDropZ
   return { stackPath: zone.stackPath, index: zone.index };
 }
 
-const modeDockTabInsertPreviewClass = "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
+const modeDockTabInsertPreviewClass = "mx-half my-half flex h-[calc(100%-var(--spacing-single))] min-w-[5.5rem] max-w-[12rem] shrink-0 items-center gap-half rounded-sm border-2 border-accent bg-accent/20 px-single text-xs text-foreground/80 select-none";
 
 //#endregion 🧭ModeDockDrag
 
@@ -25108,7 +25837,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, conten
 interface ModeDockContextValue {
   dragState: ModeDragState | null;
   tabInsertPreview: ModeTabInsertPreview | null;
-  draggedInsertTabs: readonly { id: string; title: string }[];
+  draggedInsertTabs: readonly { id: string; title: string; iconId: IconName }[];
   registerStackDropTargets: (path: ModeLayoutPath, tabBarElement: HTMLElement | null, bodyElement: HTMLElement | null) => void;
   startTabDrag: (windowId: string, stackPath: ModeLayoutPath, tabIndex: number, label: string, event: React.PointerEvent<HTMLElement>) => void;
   startStackDrag: (windowId: string, stackPath: ModeLayoutPath, label: string, event: React.PointerEvent<HTMLElement>) => void;
@@ -25125,7 +25854,7 @@ const ModeDockContext = reactHostPort.createContext<ModeDockContextValue | null>
 
 interface ModeDockTabBarProps {
   stackPath: ModeLayoutPath;
-  tabs: readonly { id: string; title: string }[];
+  tabs: readonly { id: string; title: string; iconId: IconName }[];
   activeId: string | undefined;
   activeWindowId: string | null;
   onSelectTab: (windowId: string) => void;
@@ -25156,8 +25885,9 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         )
       : undefined;
 
-  const renderGhostTab = (tab: { id: string; title: string }) => (
+  const renderGhostTab = (tab: { id: string; title: string; iconId: IconName }) => (
     <div data-slot="mode-dock-tab-insert-preview" className={modeDockTabInsertPreviewClass} aria-hidden>
+      <Icon icon={tab.iconId} size="small" />
       <span className="truncate">{tab.title}</span>
     </div>
   );
@@ -25191,6 +25921,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           dock?.clearPendingDrag?.(event.pointerId);
         }}
       >
+        <Icon icon={tab.iconId} size="small" />
         <span className="truncate">{tab.title}</span>
         <DragHandle onPointerDown={(event) => dock?.startTabDrag(tab.id, stackPath, stackIndex, tab.title, event)} onClick={(event) => event.stopPropagation()} emphasized={tabActive} />
       </div>
@@ -25303,104 +26034,10 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 
 //#region 🧭ModeDockStack
 
-/** @emoji 🪟 SVG overlay that paints the dock-stack silhouette outline (tabs + cutout + controls + body)
- * for normal/active chrome and introduced/loading/waiting/celebrated effects. Celebrated uses a masked
- * spinning three-color conic fill (same grammar as `[data-celebrated="true"]::after`), not a solid stroke. */
-const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => {
-  const [epoch, setEpoch] = reactHostPort.useState(0);
-  const celebrateMaskId = `window-silhouette-celebrate-${reactHostPort.useId().replace(/:/g, "")}`;
-
-  reactHostPort.useLayoutEffect(() => {
-    if (!stack) return;
-    const bump = () => setEpoch((value) => value + 1);
-    bump();
-    const resizeObserver = typeof ResizeObserver !== "undefined" ? new ResizeObserver(bump) : null;
-    resizeObserver?.observe(stack);
-    const mutationObserver = new MutationObserver(bump);
-    mutationObserver.observe(stack, { attributes: true, subtree: true, childList: true });
-    return () => {
-      resizeObserver?.disconnect();
-      mutationObserver.disconnect();
-    };
-  }, [stack]);
-
-  const kind = resolveWindowSilhouetteBorderKind(stack?.querySelector('[data-slot="window"]') ?? null, active);
-  // 🎓 Kind-id introduce/celebrate targets stamp the inner scroll surface; only window-chrome stamps
-  // promote the silhouette — a nested utility introduce (e.g. `transform`) must not pulse the whole
-  // window outline. Celebrated wins over introduced during any overlap between the two stamps.
-  const resolvedKind = stack && [...stack.querySelectorAll('[data-celebrated="true"]')].some(isWindowChromeIntroducedTarget)
-    ? "celebrated"
-    : stack && [...stack.querySelectorAll('[data-introduced="true"]')].some(isWindowChromeIntroducedTarget)
-      ? "introduced"
-      : kind;
-  const metrics = stack ? measureWindowSilhouetteMetrics(stack) : null;
-  void epoch;
-
-  if (!metrics) {
-    return <div data-slot="mode-dock-silhouette-border" data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
-  }
-  const path = windowSilhouettePath(metrics);
-  if (resolvedKind === "celebrated") {
-    return (
-      <svg
-        data-slot="mode-dock-silhouette-border"
-        data-kind={resolvedKind}
-        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-        width={metrics.width}
-        height={metrics.height}
-        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-        aria-hidden
-      >
-        <defs>
-          <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
-            <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
-            <path d={path} fill="none" stroke="white" strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border window-silhouette-border-celebrated-mask" />
-          </mask>
-        </defs>
-        <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
-          <div xmlns="http://www.w3.org/1999/xhtml" className="window-silhouette-border-celebrated-fill" style={{ width: "100%", height: "100%" }} />
-        </foreignObject>
-      </svg>
-    );
-  }
-  const stroke =
-    resolvedKind === "introduced"
-      ? "var(--introduced-border-color, var(--color-secondary))"
-      : resolvedKind === "loading"
-        ? "var(--loading-border-color, var(--border-normal-color))"
-        : resolvedKind === "waiting"
-          ? "var(--waiting-border-color, var(--border-normal-color))"
-          : resolvedKind === "active"
-            ? "var(--active-base)"
-            : "var(--border-normal-color)";
-  return (
-    <svg
-      data-slot="mode-dock-silhouette-border"
-      data-kind={resolvedKind}
-      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-      width={metrics.width}
-      height={metrics.height}
-      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-      aria-hidden
-    >
-      <path
-        d={path}
-        fill="none"
-        stroke={stroke}
-        strokeLinejoin="miter"
-        vectorEffect="non-scaling-stroke"
-        className={cn(
-          "window-silhouette-border",
-          resolvedKind === "introduced" && "window-silhouette-border-introduced",
-          resolvedKind === "loading" && "window-silhouette-border-loading",
-          resolvedKind === "waiting" && "window-silhouette-border-waiting",
-          resolvedKind === "active" && "window-silhouette-border-active",
-          resolvedKind === "normal" && "window-silhouette-border-normal",
-        )}
-      />
-    </svg>
-  );
-};
+/** @emoji 🪟 Mode-dock silhouette — delegates to {@link WindowChromeSilhouetteBorder} with the legacy slot name. */
+const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => (
+  <WindowChromeSilhouetteBorder stack={stack} active={active} silhouetteSlot="mode-dock-silhouette-border" />
+);
 
 interface ModeDockStackProps {
   stackPath: ModeLayoutPath;
@@ -25420,6 +26057,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const tabs = node.children.map((child) => ({
     id: child.id,
     title: child.title ?? windowsById.get(child.id)?.title ?? child.id,
+    iconId: windowsById.get(child.id)?.iconId ?? "app-window",
   }));
 
   reactHostPort.useLayoutEffect(() => {
@@ -25936,9 +26574,14 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
   const draggedPreviewTitle = previewDragState ? (windowsById.get(previewDragState.windowId)?.title ?? previewDragState.ghostLabel) : "";
   const tabInsertPreview = resolveModeTabInsertPreview(previewDragState, dropZone);
   const draggedInsertTabs = reactHostPort.useMemo(() => {
-    if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label }];
+    if (templateDrag) return [{ id: MODE_TEMPLATE_PREVIEW_WINDOW_ID, title: templateDrag.label, iconId: "app-window" }];
     if (!dragState) return [];
-    return modeDockDragInsertTabs(layoutState, dragState, (windowId) => windowsById.get(windowId)?.title ?? windowId);
+    return modeDockDragInsertTabs(
+      layoutState,
+      dragState,
+      (windowId) => windowsById.get(windowId)?.title ?? windowId,
+      (windowId) => windowsById.get(windowId)?.iconId ?? "app-window",
+    );
   }, [dragState, layoutState, templateDrag, windowsById]);
 
   const noopDrag = reactHostPort.useCallback(() => {}, []);
@@ -27003,16 +27646,17 @@ if (import.meta.vitest) {
       expect(box?.querySelector("p")?.className).not.toMatch(/(?:^|\s)text-muted(?:\s|$)/);
     });
 
-    it("introduction and dialog glass boxes emphasize their border only while the pointer is inside", async () => {
+    it("introduction and dialog glass boxes emphasize their silhouette only while the pointer is inside", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
-      expect(css).toMatch(/\[data-slot="introduction-info-box"\][\s\S]*?border-color:\s*var\(--border-normal-color\)\s*!important;/);
-      expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover/);
-      expect(css).toMatch(/\[data-slot="introduction-info-box"\]:hover[\s\S]*?border-color:\s*var\(--border-emphasized-color\)\s*!important;/);
+      expect(css).toContain("window-chrome-silhouette-border");
+      expect(css).toContain('[data-slot="introduction-info-box"]');
+      expect(css).toContain(':not([data-active="true"]):hover');
+      expect(css).toContain("stroke: var(--border-emphasized-color)");
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
       expect(css).not.toMatch(/\[data-slot="dialog-box"\]:focus-within/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
@@ -27171,23 +27815,22 @@ if (import.meta.vitest) {
       expect(screen.getByRole("button", { name: /next|done/i })).toBeTruthy();
     });
 
-    it("renders a header drag handle between title and step count that moves the info box", () => {
+    it("renders a header drag handle in the title chip and moves the info box", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
       ];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const box = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
-      const header = box.firstElementChild as HTMLElement;
+      const chip = container.querySelector('[data-slot="introduction-info-box-chip"]') as HTMLElement;
       const dragRail = container.querySelector('[data-slot="introduction-info-box-drag"]');
       const handle = dragRail?.querySelector('[data-slot="drag-handle"]') as HTMLElement;
-      expect(header).toBeTruthy();
+      expect(chip).toBeTruthy();
       expect(dragRail).toBeTruthy();
       expect(handle).toBeTruthy();
-      expect(header.contains(dragRail)).toBe(true);
-      const headerChildren = Array.from(header.children);
-      expect(headerChildren[0]?.tagName).toBe("H3");
-      expect(headerChildren[1]?.getAttribute("data-slot")).toBe("introduction-info-box-drag");
-      expect(headerChildren[2]?.textContent?.trim()).toMatch(/1\s*\/\s*1/);
+      expect(chip.contains(dragRail)).toBe(true);
+      expect(chip.textContent).toContain("Welcome");
+      expect(container.querySelector('[data-slot="introduction-close"]')).toBeTruthy();
+      expect(container.textContent).toMatch(/1\s*\/\s*1/);
       const startTop = Number.parseFloat(box.style.top);
       const startLeft = Number.parseFloat(box.style.left);
       fireEvent.pointerDown(handle, { pointerId: 1, pointerType: "mouse", clientX: 100, clientY: 100 });
@@ -27383,6 +28026,19 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("introductionDemoResolveVisual", () => {
+    it("maps each gesture kind to a unique button, modifier set, and feedback family", () => {
+      const at = { kind: "screenNormalized" as const, x: 0.5, y: 0.5 };
+      expect(introductionDemoResolveVisual({ kind: "leftClick", at })).toEqual({ button: "left", modifiers: [], feedback: "leftClick", showDoubleChip: false });
+      expect(introductionDemoResolveVisual({ kind: "rightClick", at })).toEqual({ button: "right", modifiers: [], feedback: "rightClick", showDoubleChip: false });
+      expect(introductionDemoResolveVisual({ kind: "doubleClick", at })).toEqual({ button: "left", modifiers: [], feedback: "doubleClick", showDoubleChip: true });
+      expect(introductionDemoResolveVisual({ kind: "scroll", at, deltaY: -100 })).toEqual({ button: "wheel", modifiers: [], feedback: "scroll", showDoubleChip: false });
+      expect(introductionDemoResolveVisual({ kind: "drag", from: at, to: at })).toEqual({ button: "left", modifiers: [], feedback: "dragLeft", showDoubleChip: false });
+      expect(introductionDemoResolveVisual({ kind: "drag", from: at, to: at, button: "middle" })).toEqual({ button: "middle", modifiers: [], feedback: "dragMiddle", showDoubleChip: false });
+      expect(introductionDemoResolveVisual({ kind: "orbit", from: at, to: at })).toEqual({ button: "right", modifiers: ["alt"], feedback: "orbit", showDoubleChip: false });
+    });
+  });
+
   describe("introductionDemoArcPoint", () => {
     it("starts and ends exactly at the endpoints, and bulges away from the straight line in between", () => {
       const from = { x: 0, y: 0 };
@@ -27523,6 +28179,26 @@ if (import.meta.vitest) {
       }
     });
 
+    it("mounts the demonstration callout cluster while demonstrating", () => {
+      vi.useFakeTimers();
+      try {
+        render(
+          <div>
+            <button id="tool.fill">Fill</button>
+            <UIIntroduction introduction={{ title: "Welcome", steps: demoSteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />
+          </div>,
+        );
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.querySelector('[data-slot="introduction-demonstration-callout"]')).toBeTruthy();
+        expect(document.querySelector(".introduction-demo-mouse")).toBeTruthy();
+        expect(document.querySelector('.introduction-demo-mouse-button[data-part="left"]')).toBeTruthy();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
     it("an interaction-gated step with no declared demonstration never mutes the cursor", () => {
       vi.useFakeTimers();
       try {
@@ -27534,6 +28210,102 @@ if (import.meta.vitest) {
           vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
         });
         expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    const viewportDemoSteps: IntroductionStepDefinition[] = [
+      {
+        id: "viewport",
+        title: "3D View",
+        body: "Zoom, pan, orbit.",
+        introduce: "framework.window.puzzle3dMain",
+        show: [],
+        placement: "auto",
+        interactions: [
+          { on: { kind: "zoom", id: "puzzle3d-main" }, label: "Zoom" },
+          { on: { kind: "pan", id: "puzzle3d-main" }, label: "Pan" },
+          { on: { kind: "orbit", id: "puzzle3d-main" }, label: "Orbit" },
+        ],
+        ordered: false,
+        logos: [],
+        demonstrations: [
+          { gesture: { kind: "scroll", at: { kind: "element", id: "framework.window.puzzle3dMain" }, deltaY: -100 } },
+          { gesture: { kind: "drag", from: { kind: "element", id: "framework.window.puzzle3dMain" }, to: { kind: "element", id: "framework.window.puzzle3dMain" }, button: "middle" } },
+          { gesture: { kind: "orbit", from: { kind: "element", id: "framework.window.puzzle3dMain" }, to: { kind: "element", id: "framework.window.puzzle3dMain" } } },
+        ],
+      },
+    ];
+
+    it("still demonstrates remaining interactions when some are already completed", () => {
+      vi.useFakeTimers();
+      try {
+        render(
+          <>
+            <div id="framework.window.puzzle3dMain" style={{ width: 400, height: 300 }} />
+            <UIIntroduction introduction={{ title: "Welcome", steps: viewportDemoSteps }} stepIndex={0} completedInteractionIndices={[0]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />
+          </>,
+        );
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+        expect(document.querySelector('[data-slot="introduction-demonstration-callout"]')).toBeTruthy();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("stops demonstrating when every interaction is completed", () => {
+      vi.useFakeTimers();
+      try {
+        render(
+          <>
+            <div id="framework.window.puzzle3dMain" style={{ width: 400, height: 300 }} />
+            <UIIntroduction introduction={{ title: "Welcome", steps: viewportDemoSteps }} stepIndex={0} completedInteractionIndices={[0, 1, 2]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />
+          </>,
+        );
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+        expect(document.querySelector('[data-slot="introduction-demonstration-callout"]')).toBeNull();
+      } finally {
+        vi.useRealTimers();
+      }
+    });
+
+    it("demonstrates all gestures on gallery steps without interactions regardless of completion indices", () => {
+      vi.useFakeTimers();
+      try {
+        const gallerySteps: IntroductionStepDefinition[] = [
+          {
+            id: "gallery",
+            title: "Gallery",
+            body: "All gestures.",
+            introduce: null,
+            show: [],
+            placement: "center",
+            interactions: [],
+            ordered: false,
+            logos: [],
+            demonstrations: [
+              { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
+              { gesture: { kind: "scroll", at: { kind: "element", id: "tool.fill" }, deltaY: -100 } },
+            ],
+          },
+        ];
+        render(
+          <div>
+            <button id="tool.fill">Fill</button>
+            <UIIntroduction introduction={{ title: "Welcome", steps: gallerySteps }} stepIndex={0} completedInteractionIndices={[0, 1, 2]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
+          </div>,
+        );
+        act(() => {
+          vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
+        });
+        expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
       } finally {
         vi.useRealTimers();
       }
@@ -28012,6 +28784,22 @@ if (import.meta.vitest) {
       });
     });
 
+    it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {
+      render(
+        <ContextMenu items={[{ id: "demo", label: "Demo action" }]} title="Actions">
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }));
+      await waitFor(() => {
+        expect(document.querySelector('[data-slot="context-menu-content"]')).toBeTruthy();
+        expect(document.querySelector('[data-slot="context-menu-title-chip"]')?.textContent).toContain("Actions");
+        expect(document.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+        expect(document.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
+        expect(document.querySelector('[data-slot="window-chrome-controls"]')).toBeNull();
+      });
+    });
+
     it("renders catalog and shortcode menu icons instead of raw labels", async () => {
       render(
         <ContextMenu
@@ -28263,7 +29051,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");
-      expect(container.querySelector('[data-slot="chrome-frame"]')?.className).toContain("z-30");
+      expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
     });
 
     it("Panel only paints the active tab's fill/border while expanded — a folded button group shouldn't claim a tab is active", () => {
@@ -28814,17 +29602,17 @@ if (import.meta.vitest) {
 
     it("renders the label before the trailing icon for Button and Toggle", () => {
       const buttonMarkup = renderToStaticMarkup(
-        <UiChromeLabelPolicyProvider policy="always">
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Button id="tooltip.manual" text="Apply" icon="check" />
-        </UiChromeLabelPolicyProvider>,
+        </UiDriverProvider>,
       );
       expect(buttonMarkup.indexOf(">Apply<")).toBeGreaterThanOrEqual(0);
       expect(buttonMarkup.indexOf(">Apply<")).toBeLessThan(buttonMarkup.indexOf('data-icon="check"'));
 
       const toggleMarkup = renderToStaticMarkup(
-        <UiChromeLabelPolicyProvider policy="always">
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Toggle id="tooltip.manual" text="Focus" icon="crosshair" pressed={false} onPressedChange={() => undefined} />
-        </UiChromeLabelPolicyProvider>,
+        </UiDriverProvider>,
       );
       expect(toggleMarkup.indexOf(">Focus<")).toBeGreaterThanOrEqual(0);
       expect(toggleMarkup.indexOf(">Focus<")).toBeLessThan(toggleMarkup.indexOf('data-icon="crosshair"'));
@@ -28935,7 +29723,7 @@ if (import.meta.vitest) {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
-            windows={[{ id: "main", title: "Main", children: <div>Main Body</div> }]}
+            windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div>Main Body</div> }]}
             layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
             activeWindowId="main"
             onActiveWindowChange={() => {}}
@@ -28980,8 +29768,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "left", title: "Left", children: <div>Left Pane</div> },
-              { id: "right", title: "Right", children: <div>Right Pane</div> },
+              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Pane</div> },
+              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
               kind: "row",
@@ -29000,6 +29788,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="window"][data-active="true"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window"][data-active="true"]')?.className).not.toContain("border-active-base");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="right"][data-active="true"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"] [data-icon-kind]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
@@ -29043,7 +29832,7 @@ if (import.meta.vitest) {
           <Layout
             canvas={
               <Mode
-                windows={[{ id: "main", title: "Main", children: <div>Main Body</div> }]}
+                windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div>Main Body</div> }]}
                 layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
                 activeWindowId="main"
                 onActiveWindowChange={() => {}}
@@ -29071,10 +29860,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-lg">
           <Mode
             windows={[
-              { id: "a1", title: "A1", children: <div>A1 Body</div> },
-              { id: "a2", title: "A2", children: <div>A2 Body</div> },
-              { id: "b1", title: "B1", children: <div>B1 Body</div> },
-              { id: "b2", title: "B2", children: <div>B2 Body</div> },
+              { id: "a1", title: "A1", iconId: "app-window", children: <div>A1 Body</div> },
+              { id: "a2", title: "A2", iconId: "app-window", children: <div>A2 Body</div> },
+              { id: "b1", title: "B1", iconId: "app-window", children: <div>B1 Body</div> },
+              { id: "b2", title: "B2", iconId: "app-window", children: <div>B2 Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -29130,8 +29919,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "left", title: "Left", children: <div>Left Pane</div> },
-              { id: "right", title: "Right", children: <div>Right Pane</div> },
+              { id: "left", title: "Left", iconId: "app-window", children: <div>Left Pane</div> },
+              { id: "right", title: "Right", iconId: "app-window", children: <div>Right Pane</div> },
             ]}
             layout={{
               kind: "row",
@@ -29167,8 +29956,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "top", title: "Top", children: <div>Top Pane</div> },
-              { id: "bottom", title: "Bottom", children: <div>Bottom Pane</div> },
+              { id: "top", title: "Top", iconId: "app-window", children: <div>Top Pane</div> },
+              { id: "bottom", title: "Bottom", iconId: "app-window", children: <div>Bottom Pane</div> },
             ]}
             layout={{
               kind: "column",
@@ -29198,10 +29987,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "lt", title: "Left Top", children: <div>Left Top</div> },
-              { id: "lb", title: "Left Bottom", children: <div>Left Bottom</div> },
-              { id: "rt", title: "Right Top", children: <div>Right Top</div> },
-              { id: "rb", title: "Right Bottom", children: <div>Right Bottom</div> },
+              { id: "lt", title: "Left Top", iconId: "app-window", children: <div>Left Top</div> },
+              { id: "lb", title: "Left Bottom", iconId: "app-window", children: <div>Left Bottom</div> },
+              { id: "rt", title: "Right Top", iconId: "app-window", children: <div>Right Top</div> },
+              { id: "rb", title: "Right Bottom", iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
               kind: "row",
@@ -29237,8 +30026,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "a", title: "Alpha", children: <div>Alpha Body</div> },
-              { id: "b", title: "Beta", children: <div>Beta Body</div> },
+              { id: "a", title: "Alpha", iconId: "app-window", children: <div>Alpha Body</div> },
+              { id: "b", title: "Beta", iconId: "app-window", children: <div>Beta Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -29291,8 +30080,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "shape", title: "Shape", children: <div>Shape Body</div> },
-              { id: "energy", title: "Energy", children: <div>Energy Body</div> },
+              { id: "shape", title: "Shape", iconId: "app-window", children: <div>Shape Body</div> },
+              { id: "energy", title: "Energy", iconId: "app-window", children: <div>Energy Body</div> },
             ]}
             layout={{
               kind: "stack",
@@ -29351,8 +30140,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "solo", title: "Solo", children: <div>Solo Body</div> },
-              { id: "peer", title: "Peer", children: <div>Peer Body</div> },
+              { id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> },
+              { id: "peer", title: "Peer", iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -29683,10 +30472,10 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "lt", title: "Left Top", children: <div>Left Top</div> },
-              { id: "lb", title: "Left Bottom", children: <div>Left Bottom</div> },
-              { id: "rt", title: "Right Top", children: <div>Right Top</div> },
-              { id: "rb", title: "Right Bottom", children: <div>Right Bottom</div> },
+              { id: "lt", title: "Left Top", iconId: "app-window", children: <div>Left Top</div> },
+              { id: "lb", title: "Left Bottom", iconId: "app-window", children: <div>Left Bottom</div> },
+              { id: "rt", title: "Right Top", iconId: "app-window", children: <div>Right Top</div> },
+              { id: "rb", title: "Right Bottom", iconId: "app-window", children: <div>Right Bottom</div> },
             ]}
             layout={{
               kind: "row",
@@ -29963,8 +30752,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "a", title: "A", children: <div>A Body</div> },
-              { id: "b", title: "B", children: <div>B Body</div> },
+              { id: "a", title: "A", iconId: "app-window", children: <div>A Body</div> },
+              { id: "b", title: "B", iconId: "app-window", children: <div>B Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -29987,7 +30776,7 @@ if (import.meta.vitest) {
     it("Mode hides the Focus enlarge control when only one window is on the canvas", () => {
       const { container, rerender } = render(
         <div className="h-layout-story w-layout-story-md">
-          <Mode windows={[{ id: "solo", title: "Solo", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
+          <Mode windows={[{ id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> }]} activeWindowId="solo" onActiveWindowChange={() => {}} />
         </div>,
       );
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')).toBeNull();
@@ -29996,8 +30785,8 @@ if (import.meta.vitest) {
         <div className="h-layout-story w-layout-story-md">
           <Mode
             windows={[
-              { id: "solo", title: "Solo", children: <div>Solo Body</div> },
-              { id: "peer", title: "Peer", children: <div>Peer Body</div> },
+              { id: "solo", title: "Solo", iconId: "app-window", children: <div>Solo Body</div> },
+              { id: "peer", title: "Peer", iconId: "app-window", children: <div>Peer Body</div> },
             ]}
             layout={{
               kind: "row",
@@ -31237,8 +32026,33 @@ if (import.meta.vitest) {
           </Pane>
         </PaneHost>,
       );
-      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="pane-chrome"] [data-icon="box"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-icon="box"]')).toBeTruthy();
+    });
+
+    it("under the compact driver, Pane renders no drag-handle and no label, but the whole toggle stays draggable", () => {
+      let anchor: Anchor = "top-left";
+      const onAnchorChange = vi.fn((next: Anchor) => {
+        anchor = next;
+      });
+      const { container } = render(
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <PaneHost>
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>
+        </UiDriverProvider>,
+      );
+      const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
+      host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="pane-chrome"]')?.textContent).not.toContain("Drag");
+      const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
+      fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
+      fireEvent.pointerMove(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
+      expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+      fireEvent.pointerUp(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
     });
 
     it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {
@@ -31305,7 +32119,7 @@ if (import.meta.vitest) {
           </PaneHost>
         </UiMobileProvider>,
       );
-      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeNull();
       expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
       expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
     });
@@ -31323,7 +32137,7 @@ if (import.meta.vitest) {
       expect(leftContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
       expect(leftContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
       expect(leftContainer.querySelector('[data-icon="box"]')).toBeTruthy();
-      expect(leftContainer.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
+      expect(leftContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
 
       const { container: rightContainer } = render(
         <PaneHost>
@@ -31337,7 +32151,7 @@ if (import.meta.vitest) {
       expect(rightContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
       expect(rightContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
       expect(rightContainer.querySelector('[data-icon="camera"]')).toBeTruthy();
-      expect(rightContainer.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeTruthy();
+      expect(rightContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
     });
 
     it("centers a middle anchor with items-center instead of items-start", () => {
@@ -31796,7 +32610,7 @@ if (treeVitest) {
       const canvas = container.querySelector("#canvas") as HTMLElement;
       expect(chromeBar).toBeTruthy();
       expect(panel).toBeTruthy();
-      expect(panel.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(panel.querySelector('[data-slot="window-chrome-body"]')?.hasAttribute("data-dim")).toBe(true);
       expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
 
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
@@ -31827,11 +32641,9 @@ if (treeVitest) {
       expect(panes.length).toBe(2);
       const open = Array.from(panes).find((pane) => pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
       const folded = Array.from(panes).find((pane) => !pane.querySelector('[data-slot="pane-body"]')) as HTMLElement;
-      expect(open.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(true);
-      expect(open.querySelector('[data-slot="pane-chrome"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(open.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
       expect(open.querySelector('[data-slot="pane-body"]')?.hasAttribute("data-dim")).toBe(true);
-      expect(folded.querySelector('[data-slot="pane-chrome"]')?.hasAttribute("data-dim")).toBe(false);
-      expect(folded.querySelector('[data-slot="chrome-frame"]')?.hasAttribute("data-dim")).toBe(false);
+      expect(folded.querySelector('[data-slot="window-chrome-chip-cap"]')?.hasAttribute("data-dim")).toBe(false);
 
       const canvas = container.querySelector("#canvas") as HTMLElement;
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
@@ -32240,14 +33052,14 @@ if (treeVitest) {
           sections={[
             {
               id: "command.category.general.form",
-              items: [{ id: "command.os.setExpertise.arg.expertise", label: "Expertise", control: <span>beginner</span> }],
+              items: [{ id: "command.os.setDriver.arg.driver", label: "Driver", control: <span>compact</span> }],
             },
           ]}
         />,
       );
 
       expect(markup).not.toContain('data-slot="tree-section-row"');
-      expect(markup).toContain("Expertise");
+      expect(markup).toContain("Driver");
     });
 
     it("renders tree item descriptions inline on one row with muted secondary text", () => {
@@ -32658,6 +33470,18 @@ if (treeVitest) {
       expect(handleClassName).toContain("cursor-grab");
       expect(handleClassName).not.toContain("hover:bg-hover");
       expect(markup).not.toContain('data-slot="drag-handle" class="text-foreground');
+    });
+
+    it("under the compact driver, sortable tree items render no drag handle (whole row is the surface)", () => {
+      const markup = renderToStaticMarkup(
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1 }}>
+            <TreeItem id="tooltip.manual" sortable={true} sortableId="sortable-manual" isDragHandle={true} />
+          </TreeContext.Provider>
+        </UiDriverProvider>,
+      );
+      expect(markup).not.toContain('data-slot="drag-handle"');
+      expect(markup).toContain("cursor-grab");
     });
 
     it("renders control-tree folder branches inside the same continuous guide wrapper", () => {
@@ -33141,8 +33965,8 @@ if (treeVitest) {
   describe("ElementsSurfaceChrome", () => {
     it("keeps dark class while nested leases are active", () => {
       resetElementsSurfaceChromeForTests();
-      const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", expertise: Expertise.NORMAL });
-      const inner = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", expertise: Expertise.NORMAL });
+      const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
+      const inner = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: DEFAULT_UI_DRIVER });
       expect(document.documentElement.classList.contains("dark")).toBe(false);
       inner();
       expect(document.documentElement.classList.contains("dark")).toBe(true);
@@ -33154,13 +33978,13 @@ if (treeVitest) {
 
     it("reapplies the previous lease after the top lease releases", () => {
       resetElementsSurfaceChromeForTests();
-      const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", expertise: Expertise.NORMAL, compact: false });
-      const inner = applyElementsSurfaceChrome({ appearance: "dark", device: "tablet", expertise: Expertise.NORMAL, compact: true });
+      const outer = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
+      const inner = applyElementsSurfaceChrome({ appearance: "dark", device: "tablet", driver: COMPACT_UI_DRIVER });
       expect(document.documentElement.dataset.uiDevice).toBe("tablet");
-      expect(document.documentElement.dataset.uiCompact).toBe("true");
+      expect(document.documentElement.dataset.uiDriver).toBe("compact");
       inner();
       expect(document.documentElement.dataset.uiDevice).toBe("desktop");
-      expect(document.documentElement.dataset.uiCompact).toBe("false");
+      expect(document.documentElement.dataset.uiDriver).toBe("default");
       outer();
       resetElementsSurfaceChromeForTests();
     });
@@ -33172,7 +33996,7 @@ if (treeVitest) {
         scheduled = callback;
         return 1;
       });
-      const release = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", expertise: Expertise.NORMAL });
+      const release = applyElementsSurfaceChrome({ appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER });
       release();
       expect(document.documentElement.classList.contains("dark")).toBe(true);
       expect(raf).toHaveBeenCalled();
@@ -33192,7 +34016,7 @@ if (treeVitest) {
 
     it("applies touch chrome and the mobile device attribute for the mobile device", () => {
       resetElementsSurfaceChromeForTests();
-      const release = applyElementsSurfaceChrome({ appearance: "light", device: "mobile", expertise: Expertise.NORMAL });
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "mobile", driver: DEFAULT_UI_DRIVER });
       expect(document.documentElement.classList.contains("touch")).toBe(true);
       expect(document.documentElement.dataset.uiDevice).toBe("mobile");
       release();
@@ -33201,9 +34025,47 @@ if (treeVitest) {
 
     it("clears touch chrome for the desktop device", () => {
       resetElementsSurfaceChromeForTests();
-      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", expertise: Expertise.NORMAL });
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: DEFAULT_UI_DRIVER });
       expect(document.documentElement.classList.contains("touch")).toBe(false);
       expect(document.documentElement.dataset.uiDevice).toBe("desktop");
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("applies every driver axis attribute and clears them on release", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+      const root = document.documentElement;
+      expect(root.dataset.uiDriver).toBe("compact");
+      expect(root.dataset.uiLabels).toBe("icons");
+      expect(root.dataset.uiDrag).toBe("surface");
+      expect(root.dataset.uiChromeReveal).toBe("hover");
+      expect(root.dataset.uiGumballReveal).toBe("hover");
+      expect(root.dataset.uiTooltips).toBe("none");
+      release();
+      expect(root.dataset.uiDriver).toBeUndefined();
+      expect(root.dataset.uiLabels).toBeUndefined();
+      expect(root.dataset.uiDrag).toBeUndefined();
+      expect(root.dataset.uiChromeReveal).toBeUndefined();
+      expect(root.dataset.uiGumballReveal).toBeUndefined();
+      expect(root.dataset.uiTooltips).toBeUndefined();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("reveals a hover-reveal chrome region only while the pointer is near its edge band", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+      const region = document.createElement("nav");
+      region.dataset.uiRevealRegion = "navbar";
+      region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 200, bottom: 240, width: 100, height: 40 }) as DOMRect;
+      document.body.appendChild(region);
+      applyChromeRevealAtPoint(50, 2);
+      expect(region.dataset.uiRevealed).toBe("true");
+      applyChromeRevealAtPoint(50, 400);
+      expect(region.dataset.uiRevealed).toBeUndefined();
+      applyChromeRevealAtPoint(50, 220);
+      expect(region.dataset.uiRevealed).toBe("true");
+      document.body.removeChild(region);
       release();
       resetElementsSurfaceChromeForTests();
     });
@@ -33225,6 +34087,41 @@ if (treeVitest) {
       document.documentElement.dataset.uiAppearance = "dark";
       await vi.waitFor(() => expect(sync.mock.calls.length).toBeGreaterThan(1));
       delete document.documentElement.dataset.uiAppearance;
+    });
+  });
+
+  describe("UiDriver", () => {
+    it("round-trips a custom driver through parseUiDriver/serializeUiDriver", () => {
+      const custom: UiDriver = { id: "custom.mine", label: "Mine", labels: "icons", labelTier: "beginner", drag: "surface", chrome: "hover", gumball: "always", tooltips: "minimal" };
+      const parsed = parseUiDriver(JSON.parse(serializeUiDriver(custom)));
+      expect(parsed).toEqual(custom);
+    });
+
+    it("throws on an invalid axis value", () => {
+      expect(() => parseUiDriver({ ...DEFAULT_UI_DRIVER, labels: "both" })).toThrow();
+      expect(() => parseUiDriver({ ...DEFAULT_UI_DRIVER, tooltips: "verbose" })).toThrow();
+    });
+
+    it("resolveUiDriver prefers a custom driver over a builtin id, then falls back to default", () => {
+      const custom: UiDriver = { ...COMPACT_UI_DRIVER, id: "compact", label: "My Compact", tooltips: "full" };
+      expect(resolveUiDriver("compact", { compact: custom })).toEqual(custom);
+      expect(resolveUiDriver("compact", {})).toEqual(COMPACT_UI_DRIVER);
+      expect(resolveUiDriver("unknown.id", {})).toEqual(DEFAULT_UI_DRIVER);
+    });
+
+    it("useControlInlineText hides labels only under an icons-only driver", () => {
+      const iconsMarkup = renderToStaticMarkup(
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <Button id="settings.driver.compact" icon={<CheckIcon />} />
+        </UiDriverProvider>,
+      );
+      expect(iconsMarkup).not.toContain(">Compact<");
+      const fullMarkup = renderToStaticMarkup(
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <Button id="settings.driver.compact" icon={<CheckIcon />} />
+        </UiDriverProvider>,
+      );
+      expect(fullMarkup).toContain(">Compact<");
     });
   });
 
@@ -33250,8 +34147,8 @@ if (treeVitest) {
 
   describe("Mode mobile", () => {
     const windows: ModeWindowDescriptor[] = [
-      { id: "a", title: "A", children: <div>A body</div> },
-      { id: "b", title: "B", children: <div>B body</div> },
+      { id: "a", title: "A", iconId: "app-window", children: <div>A body</div> },
+      { id: "b", title: "B", iconId: "app-window", children: <div>B body</div> },
     ];
     const splitLayout: WindowLayoutNode = {
       kind: "row",
@@ -33279,7 +34176,7 @@ if (treeVitest) {
     });
 
     it("drops the Focus control out of the unshrinkable per-tab chrome grid even with many windows — windows always take the full space on mobile", () => {
-      const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: `semio · cad · ${id}`, children: <div>{id} body</div> }));
+      const manyWindows: ModeWindowDescriptor[] = ["a", "b", "c", "d"].map((id) => ({ id, title: `semio · cad · ${id}`, iconId: "app-window", children: <div>{id} body</div> }));
       const manyLayout: WindowLayoutNode = {
         kind: "row",
         children: manyWindows.map((window) => ({ kind: "stack", children: [{ kind: "window", id: window.id }], activeId: window.id })),
@@ -33413,21 +34310,21 @@ if (treeVitest) {
   });
 
   describe("control chrome", () => {
-    it("shows inline labels on buttons when compact is off", () => {
+    it("shows inline labels on buttons for the default driver", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
-          <Button id="settings.compact" icon={<CheckIcon />} />
-        </UiChromeCompactProvider>,
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <Button id="settings.driver.compact" icon={<CheckIcon />} />
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Compact");
       expect(markup).toContain("aspect-auto");
     });
 
-    it("hides inline labels on buttons when compact is on", () => {
+    it("hides inline labels on buttons for the compact driver", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={true}>
-          <Button id="settings.compact" icon={<CheckIcon />} />
-        </UiChromeCompactProvider>,
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <Button id="settings.driver.compact" icon={<CheckIcon />} />
+        </UiDriverProvider>,
       );
       expect(markup).not.toContain(">Compact<");
     });
@@ -33582,11 +34479,11 @@ if (treeVitest) {
 
     it("renders navbar navigation buttons with inline labels when compact is off", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <ButtonGroup id="ui.nav.back">
             <ButtonGroupItem id="ui.nav.back" icon="arrow-left" />
           </ButtonGroup>
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Go back");
       expect(markup).toContain("aspect-auto");
@@ -33663,9 +34560,9 @@ if (treeVitest) {
 
     it("renders toggles with inline labels from the toggle group id when compact is off", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Search");
       expect(markup).toContain("aspect-auto");
@@ -33673,10 +34570,10 @@ if (treeVitest) {
 
     it("renders search and find toggles with distinct labels", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon={<SearchIcon className="size-small" />} />
           <Toggle id="ui.find.toggle" pressed={false} onPressedChange={() => undefined} icon={<FindInViewIcon className="size-small" />} />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Search");
       expect(markup).toContain("Find");
@@ -33724,14 +34621,12 @@ if (treeVitest) {
       expect(ribbonMarkup).not.toContain("border-emphasized");
       const panelMarkup = renderToStaticMarkup(<Panel anchor="top-left" visible tabs={[singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } })]} />);
       expect(panelMarkup).toContain('data-slot="panel"');
-      expect(panelMarkup).toContain('data-slot="chrome-frame"');
-      expect(panelMarkup).not.toMatch(/chrome-frame[^>]*border-normal/);
+      expect(panelMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+      expect(panelMarkup).toContain('data-slot="window-chrome-cap"');
       expect(panelMarkup).not.toContain("border-emphasized");
-      expect(panelMarkup).not.toMatch(/chrome-frame[^>]*divide-x/);
       expect(panelMarkup).not.toContain("border-b-current");
       expect(panelMarkup).not.toMatch(/panel-tabs[^>]*border-emphasized/);
       expect(panelMarkup).toMatch(/panel-tabs[^>]*z-40/);
-      expect(panelMarkup).toMatch(/chrome-frame[^>]*z-30/);
       const paneMarkup = renderToStaticMarkup(
         <PaneHost>
           <Pane id="hover-pane" anchor="top-left" icon="box" label="Pane">
@@ -33740,10 +34635,9 @@ if (treeVitest) {
         </PaneHost>,
       );
       expect(paneMarkup).toContain('data-slot="pane"');
-      expect(paneMarkup).toContain('data-slot="chrome-frame"');
-      expect(paneMarkup).not.toMatch(/chrome-frame[^>]*border-normal/);
+      expect(paneMarkup).toContain('data-slot="window-chrome-silhouette-border"');
+      expect(paneMarkup).toContain('data-slot="window-chrome-cap"');
       expect(paneMarkup).not.toContain("border-emphasized");
-      expect(paneMarkup).toMatch(/chrome-frame[^>]*z-30/);
       const measuresMarkup = renderToStaticMarkup(<div data-slot="window-measures-stack" className={windowMeasuresStackClass} />);
       expect(measuresMarkup).toContain("border-element/40");
       expect(measuresMarkup).not.toContain("border-emphasized");
@@ -33761,8 +34655,7 @@ if (treeVitest) {
       expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
       expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
       expect(css).toContain("background-color: var(--border-emphasized-color)");
-      expect(css).toContain(':is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"]');
-      expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+      expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\],\s*\[data-slot="introduction-info-box"\][\s\S]*?window-chrome-silhouette-border/);
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
       expect(css).toContain("[data-slot=\"mode-dock-stack\"]:not([data-active=\"true\"]):hover [data-slot=\"mode-dock-silhouette-border\"][data-kind=\"normal\"] path");
       expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
@@ -34217,9 +35110,9 @@ if (treeVitest) {
       expect((rightContainer.querySelector('[data-slot="panel-resize-handle"]') as HTMLElement).className).toContain("left-0");
     });
 
-    it("navbar keeps inline labels when compact chrome is enabled", () => {
+    it("navbar hides inline labels under the compact driver", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={true}>
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
           <Navbar
             items={[
               {
@@ -34228,17 +35121,17 @@ if (treeVitest) {
               },
             ]}
           />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
-      expect(markup).toContain("Search");
+      expect(markup).not.toContain(">Search<");
       expect(markup).toContain('id="ui.search.toggle"');
     });
 
     it("renders search suggestions toggle without internal-id humanized labels", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Search input={{ placeholder: "Action" }} possibles={[{ id: "primitive.box", label: "Box", detail: "b", onSelect: () => {} }]} />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain('id="ui.windowSearch.suggestions"');
       expect(markup).not.toMatch(/Search Possibles/i);
@@ -34247,18 +35140,18 @@ if (treeVitest) {
 
     it("renders panel toggle details with inline label when compact is off", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           <Toggle id="ui.panelToggle.details" pressed={false} onPressedChange={() => undefined} icon={<CheckIcon className="size-small" />} />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Details");
       expect(markup).toContain("aspect-auto");
       expect(markup).toContain('data-slot="inline-label"');
     });
 
-    it("navbar keeps workbench and details panel toggle labels when compact chrome is enabled", () => {
+    it("navbar hides workbench and details panel toggle labels under the compact driver", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={true}>
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
           <Navbar
             items={[
               {
@@ -34273,17 +35166,16 @@ if (treeVitest) {
               },
             ]}
           />
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
-      expect(markup).toContain("Workbench");
-      expect(markup).toContain("Details");
-      expect(markup).toContain("Settings");
-      expect(markup).toContain("has-[_[data-slot=inline-label]]:overflow-visible");
+      expect(markup).not.toContain(">Workbench<");
+      expect(markup).not.toContain(">Details<");
+      expect(markup).not.toContain(">Settings<");
     });
 
     it("renders control-tree boolean toggles with inline labels when compact is off", () => {
       const markup = renderToStaticMarkup(
-        <UiChromeCompactProvider compact={false}>
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
           {defaultControlRenderer({
             path: "folder/enabled",
             key: "Enabled",
@@ -34291,7 +35183,7 @@ if (treeVitest) {
             value: true,
             onChange: () => undefined,
           })}
-        </UiChromeCompactProvider>,
+        </UiDriverProvider>,
       );
       expect(markup).toContain("Enabled");
       expect(markup).toContain("aspect-auto");

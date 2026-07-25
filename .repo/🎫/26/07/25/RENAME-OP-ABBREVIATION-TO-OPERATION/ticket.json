@@ -1,8 +1,9 @@
 {
   "title": "Rename Op Abbreviation to Operation",
   "emoji": "✏️",
-  "status": "open",
+  "status": "closed",
   "description": "Make sure that operation is never abbreviated to op in the repo. Use always the long term. Only stop once no op is left, we will use it for something else in the future.",
+  "summary": "Renamed first-party abbreviations of operation (op/Op/Ops/*_op/*_ops) to the long form across the repo. Expanded related operator abbreviations (BinOp→BinaryOperator, RelOp→RelationalOperator, BooleanOp→BooleanOperator). Updated serde/JSON discriminators (\"op\"→\"operation\" or \"operator\" by context), ActionEmit/VCS/sync APIs, fixtures (basic-remote-operations.json, remote-operations-backlog.json), and noop→noOperation. Restored false positives: std::ops, fan operating_point bindings, and VCS match/apply variables wrongly renamed to operator. Left only external APIs that require short names: std::ops, geo::BooleanOps, brepkit blend_ops/shell_op, wgpu LoadOp/StoreOp/ops fields, generated pkg WebGPU bindings, and op.europa.eu URLs. Cargo check blocked by concurrent workspace target lock; static audit confirms no first-party operation abbreviations remain.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2320"
   },

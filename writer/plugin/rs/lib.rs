@@ -1426,7 +1426,7 @@ fn create_writer_app() -> App {
             .icon_id("writer")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor)
+            .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "file-text")
             .default_layout(create_default_layout(
                 &[WRITER_PLAY_WINDOW_KIND.into()],
                 "row",

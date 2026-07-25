@@ -1,12 +1,18 @@
 //! 🖱️ Declarative UI components (default) and retained-mode wgpu engine (feature "engine").
 
+#[path = "../../../ui/asset/icon/generated/icon_name.rs"]
+mod icon_name_gen;
+
+pub use icon_name_gen::IconName;
+
 // #region component
-//! 🧩 Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 plugin builds stay dependency-clean; must never reference `semio_framework_core`.
+// 🧩 Declarative UI component model (declarative `UiNode` tree, scene records, `SurfaceKind`, `WindowLayout`/`WindowEngagement`/`WindowMeasure`, `UtilityNode`) — moved verbatim from framework/core/rs/lib.rs; JSON wire format is byte-identical to the pre-move version (see the inline `*_wire_format_tests` mods). Ungated (default features) so wasm32-wasip2 plugin builds stay dependency-clean; must never reference `semio_framework_core`.
 pub mod component {
 pub mod layout {
 // #region layout
 //! 📐 Window layouts, panel tab constants, and engagement rails.
 
+use crate::IconName;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -263,7 +269,7 @@ pub struct NamedLayout {
     pub label: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     pub layout: WindowLayout,
     pub origin: String,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -393,7 +399,7 @@ pub fn create_named_layout(
     label: impl Into<String>,
     layout: WindowLayout,
     origin: impl Into<String>,
-    icon_id: Option<String>,
+    icon_id: Option<IconName>,
     group_path: Option<Vec<String>>,
 ) -> NamedLayout {
     NamedLayout {
@@ -509,7 +515,7 @@ pub enum WindowMeasure {
     Toggle {
         id: String,
         #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
-        icon_id: String,
+        icon_id: IconName,
         #[cfg_attr(feature = "typegen", ts(optional))]
         label: Option<String>,
         pressed: bool,
@@ -621,7 +627,7 @@ pub struct WindowEngagementOption {
     pub label: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub pressed: Option<bool>,
@@ -946,7 +952,7 @@ mod layout_wire_format_tests {
         assert_eq!(roundtripped, layout);
     }
 
-    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"icon.grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";
+    const GOLDEN_WINDOW_MEASURE_JSON: &str = "[{\"kind\":\"select\",\"id\":\"m1\",\"label\":\"Mode\",\"value\":\"a\",\"items\":[{\"id\":\"a\",\"value\":\"a\",\"label\":\"A\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSelect\"}},{\"kind\":\"slider\",\"id\":\"m2\",\"label\":null,\"value\":1.0,\"min\":0.0,\"max\":2.0,\"step\":0.5,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureSlider\"}},{\"kind\":\"toggle\",\"id\":\"m3\",\"iconId\":\"layout-grid\",\"label\":null,\"pressed\":true,\"text\":null,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"measureToggle\"}},{\"kind\":\"group\",\"id\":\"m4\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[]}]";
 
     #[test]
     fn window_measure_serializes_to_golden_json() {
@@ -974,7 +980,7 @@ mod layout_wire_format_tests {
             },
             WindowMeasure::Toggle {
                 id: "m3".into(),
-                icon_id: "icon.grid".into(),
+                icon_id: IconName::LayoutGrid,
                 label: None,
                 pressed: true,
                 text: None,
@@ -1023,7 +1029,7 @@ mod layout_wire_format_tests {
     fn measure_toggle(id: &str) -> WindowMeasure {
         WindowMeasure::Toggle {
             id: id.into(),
-            icon_id: "icon.toggle".into(),
+            icon_id: IconName::PanelLeft,
             label: Some(id.into()),
             pressed: true,
             text: None,
@@ -1098,7 +1104,6 @@ mod layout_wire_format_tests {
                 value: Some("v".into()),
                 placeholder: None,
                 disabled: None,
-                reveal: None,
                 on_change: None,
                 on_submit: None,
                 on_repeat_last: None,
@@ -1113,7 +1118,6 @@ mod layout_wire_format_tests {
                 step: None,
                 unit: None,
                 disabled: None,
-                reveal: None,
                 on_change: None,
                 on_commit: None,
             }),
@@ -1140,6 +1144,7 @@ pub mod utilities {
 // #region utilities
 //! 🧰 Declarative per-mode utility bar utility trees.
 
+use crate::IconName;
 use super::layout::ActionDescriptor;
 use serde::{Deserialize, Serialize};
 
@@ -1165,7 +1170,7 @@ pub enum UtilityNode {
     },
     Button {
         id: String,
-        icon_id: String,
+        icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1182,7 +1187,7 @@ pub enum UtilityNode {
     },
     Toggle {
         id: String,
-        icon_id: String,
+        icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1201,7 +1206,7 @@ pub enum UtilityNode {
     },
     Collection {
         id: String,
-        icon_id: String,
+        icon_id: IconName,
         #[serde(skip_serializing_if = "Option::is_none")]
         label: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1249,14 +1254,14 @@ pub fn utility_separator(id: impl Into<String>) -> UtilityNode {
 
 pub fn utility_button(
     id: impl Into<String>,
-    icon_id: impl Into<String>,
+    icon_id: IconName,
     label: impl Into<String>,
     on_press: ActionDescriptor,
 ) -> UtilityNode {
     let label = label.into();
     UtilityNode::Button {
         id: id.into(),
-        icon_id: icon_id.into(),
+        icon_id: icon_id,
         label: Some(label.clone()),
         text: None,
         title: Some(label),
@@ -1269,7 +1274,7 @@ pub fn utility_button(
 
 pub fn utility_toggle(
     id: impl Into<String>,
-    icon_id: impl Into<String>,
+    icon_id: IconName,
     label: impl Into<String>,
     pressed: bool,
     on_change: ActionDescriptor,
@@ -1277,7 +1282,7 @@ pub fn utility_toggle(
     let label = label.into();
     UtilityNode::Toggle {
         id: id.into(),
-        icon_id: icon_id.into(),
+        icon_id: icon_id,
         label: Some(label.clone()),
         text: None,
         title: Some(label),
@@ -1291,14 +1296,14 @@ pub fn utility_toggle(
 
 pub fn utility_collection(
     id: impl Into<String>,
-    icon_id: impl Into<String>,
+    icon_id: IconName,
     label: impl Into<String>,
     children: Vec<UtilityNode>,
 ) -> UtilityNode {
     let label = label.into();
     UtilityNode::Collection {
         id: id.into(),
-        icon_id: icon_id.into(),
+        icon_id: icon_id,
         label: Some(label.clone()),
         text: None,
         title: Some(label),
@@ -1317,7 +1322,7 @@ pub fn utility_collection(
 pub struct DerivedUtilitySpec {
     pub id: String,
     pub label: String,
-    pub icon_id: String,
+    pub icon_id: IconName,
     pub group: Option<String>,
     pub category: Option<UtilityCategory>,
 }
@@ -1398,7 +1403,7 @@ mod utility_node_wire_format_tests {
     use super::*;
     use super::super::layout::ActionDescriptor;
 
-    const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.utility\",\"label\":\"Utility\",\"title\":\"Utility\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runUtility\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.toggle\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleUtility\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"icon.group\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
+    const GOLDEN_UTILITY_NODE_JSON: &str = "[{\"kind\":\"separator\",\"id\":\"sep1\",\"order\":1},{\"kind\":\"button\",\"id\":\"btn1\",\"iconId\":\"wrench\",\"label\":\"Utility\",\"title\":\"Utility\",\"category\":\"history\",\"onPress\":{\"controllerId\":\"ctrl\",\"action\":\"runUtility\"}},{\"kind\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"panel-left\",\"label\":\"Toggle\",\"title\":\"Toggle\",\"pressed\":true,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggleUtility\"}},{\"kind\":\"collection\",\"id\":\"col1\",\"iconId\":\"folder\",\"label\":\"Group\",\"title\":\"Group\",\"children\":[{\"kind\":\"separator\",\"id\":\"sep2\"}]}]";
 
     #[test]
     fn utility_node_serializes_to_golden_json() {
@@ -1406,19 +1411,19 @@ mod utility_node_wire_format_tests {
             UtilityNode::Separator { id: "sep1".into(), order: Some(1), disabled: None },
             utility_button(
                 "btn1",
-                "icon.utility",
+                IconName::Wrench,
                 "Utility",
                 ActionDescriptor { controller_id: "ctrl".into(), action: "runUtility".into(), args: None },
             )
             .with_category(UtilityCategory::History),
             utility_toggle(
                 "tog1",
-                "icon.toggle",
+                IconName::PanelLeft,
                 "Toggle",
                 true,
                 ActionDescriptor { controller_id: "ctrl".into(), action: "toggleUtility".into(), args: None },
             ),
-            utility_collection("col1", "icon.group", "Group", vec![utility_separator("sep2")]),
+            utility_collection("col1", IconName::Folder, "Group", vec![utility_separator("sep2")]),
         ];
         let json = serde_json::to_string(&nodes).unwrap();
         assert_eq!(json, GOLDEN_UTILITY_NODE_JSON);
@@ -1430,7 +1435,7 @@ mod utility_node_wire_format_tests {
         DerivedUtilitySpec {
             id: id.into(),
             label: id.to_uppercase(),
-            icon_id: format!("icon.{id}"),
+            icon_id: IconName::CircleDot,
             group: group.map(str::to_string),
             category: None,
         }
@@ -1500,6 +1505,7 @@ pub mod ui {
 // #region ui
 //! 🧩 Declarative UI graph types shared by kernel, plugins, and renderers.
 
+use crate::IconName;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -1567,7 +1573,7 @@ pub struct UiButtonNode {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub id: Option<String>,
-    pub icon_id: String,
+    pub icon_id: IconName,
     pub label: String,
     pub action: ActionDescriptor,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -1661,7 +1667,7 @@ pub struct UiSelectNode {
 #[serde(rename_all = "camelCase")]
 pub struct UiToggleNode {
     pub id: String,
-    pub icon_id: String,
+    pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub text: Option<String>,
@@ -1851,7 +1857,7 @@ pub struct UiSectionNode {
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
 pub struct UiTreeItemAction {
-    pub icon_id: String,
+    pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub label: Option<String>,
@@ -1872,7 +1878,7 @@ pub struct UiTreeItemNode {
     pub description: Option<String>,
     #[serde(skip_serializing_if = "Option::is_none", alias = "icon")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     #[serde(default, skip_serializing_if = "UiPresence::is_default")]
     #[cfg_attr(feature = "typegen", ts(as = "Option<UiPresence>", optional))]
     pub presence: UiPresence,
@@ -2145,7 +2151,7 @@ pub fn ui_inspector_stepper_field(
 pub fn ui_inspector_toggle_field(
     id: impl Into<String>,
     label: impl Into<String>,
-    icon_id: impl Into<String>,
+    icon_id: impl Into<IconName>,
     values: &[bool],
     action: ActionDescriptor,
 ) -> UiNode {
@@ -3119,7 +3125,7 @@ pub struct EventFeedScene {
 pub struct BlockPaletteEntry {
     pub block_kind: String,
     pub label: String,
-    pub icon_id: String,
+    pub icon_id: IconName,
 }
 
 /** @emoji 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
@@ -3953,7 +3959,7 @@ pub fn ui_error_state(id: &str, message: &str, retry: Option<ActionDescriptor>) 
     if let Some(retry) = retry {
         children.push(UiNode::Button(UiButtonNode {
             id: Some(format!("{id}.retry")),
-            icon_id: "icon.retry".into(),
+            icon_id: IconName::RotateCw,
             label: "Retry".into(),
             action: retry,
             style: None,
@@ -4007,7 +4013,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             ui_text(message),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.restartApp".into()),
-                icon_id: "icon.restart".into(),
+                icon_id: IconName::RotateCcw,
                 label: restart_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.restartApp".into(), args: args.clone() },
                 style: None,
@@ -4015,7 +4021,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.disablePlugin".into()),
-                icon_id: "icon.disable".into(),
+                icon_id: IconName::Link2Off,
                 label: disable_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.disablePlugin".into(), args: args.clone() },
                 style: None,
@@ -4023,7 +4029,7 @@ pub fn ui_recovery_panel(plugin_id: &str, quarantined: bool, is_de: bool) -> UiN
             }),
             UiNode::Button(UiButtonNode {
                 id: Some("recovery.showDiagnostics".into()),
-                icon_id: "icon.diagnostics".into(),
+                icon_id: IconName::Info,
                 label: diagnostics_label.into(),
                 action: ActionDescriptor { controller_id: "recovery".into(), action: "recovery.showDiagnostics".into(), args },
                 style: None,
@@ -4085,7 +4091,7 @@ mod ui_node_wire_format_tests {
                 }),
                 UiNode::Button(UiButtonNode {
                     id: Some("btn1".into()),
-                    icon_id: "icon.save".into(),
+                    icon_id: IconName::Save,
                     label: "Save".into(),
                     action: act("save"),
                     style: None,
@@ -4120,7 +4126,7 @@ mod ui_node_wire_format_tests {
                 }),
                 UiNode::Toggle(UiToggleNode {
                     id: "tog1".into(),
-                    icon_id: "icon.bold".into(),
+                    icon_id: IconName::AlignLeft,
                     text: None,
                     on_change: act("toggle"),
                     presence: UiPresence::selected(true),
@@ -4273,7 +4279,7 @@ mod ui_node_wire_format_tests {
         })
     }
 
-    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"icon.save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"icon.bold\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
+    const GOLDEN_UI_NODE_TREE_JSON: &str = "{\"type\":\"stack\",\"direction\":\"vertical\",\"gap\":\"md\",\"id\":\"root\",\"children\":[{\"type\":\"text\",\"value\":\"Hello\",\"emphasize\":true},{\"type\":\"button\",\"id\":\"btn1\",\"iconId\":\"save\",\"label\":\"Save\",\"action\":{\"controllerId\":\"ctrl\",\"action\":\"save\"}},{\"type\":\"separator\"},{\"type\":\"input\",\"id\":\"inp1\",\"inputKind\":\"text\",\"value\":\"abc\",\"placeholder\":\"type...\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"setValue\"}},{\"type\":\"select\",\"id\":\"sel1\",\"value\":\"a\",\"items\":[{\"value\":\"a\",\"label\":\"A\"},{\"value\":\"b\",\"label\":\"B\"}],\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"selectChange\"}},{\"type\":\"toggle\",\"id\":\"tog1\",\"iconId\":\"align-left\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"toggle\"},\"presence\":{\"selected\":true}},{\"type\":\"group\",\"id\":\"grp1\",\"label\":\"Group\",\"defaultOpen\":true,\"children\":[{\"type\":\"text\",\"value\":\"child\"}]},{\"type\":\"keyValue\",\"entries\":[{\"label\":\"K\",\"value\":\"V\"}]},{\"type\":\"slider\",\"id\":\"sl1\",\"value\":0.5,\"min\":0.0,\"max\":1.0,\"step\":0.1,\"unit\":\"%\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"sliderChange\"}},{\"type\":\"numberStepper\",\"id\":\"num1\",\"value\":2.0,\"step\":1.0,\"uniform\":true,\"onAbsolute\":{\"controllerId\":\"ctrl\",\"action\":\"setAbs\"},\"onDelta\":{\"controllerId\":\"ctrl\",\"action\":\"setDelta\"}},{\"type\":\"ring\",\"id\":\"ring1\",\"orbId\":\"orb1\",\"t\":0.25,\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"ringChange\"}},{\"type\":\"iconSelect\",\"id\":\"icn1\",\"value\":\"star\",\"uniform\":true,\"classifierKind\":\"icon\",\"onChange\":{\"controllerId\":\"ctrl\",\"action\":\"iconChange\"}},{\"type\":\"field\",\"id\":\"field1\",\"label\":\"Field\",\"description\":\"desc\",\"required\":true,\"child\":{\"type\":\"text\",\"value\":\"child\"}},{\"type\":\"section\",\"id\":\"sec1\",\"label\":\"Section\",\"defaultOpen\":true,\"children\":[]},{\"type\":\"tree\",\"sections\":[{\"id\":\"treesec1\",\"label\":\"Items\",\"defaultOpen\":true,\"items\":[{\"id\":\"item1\",\"label\":\"Item 1\",\"presence\":{\"selected\":true}}]}]},{\"type\":\"image\",\"id\":\"img1\",\"src\":\"icon.png\",\"alt\":\"alt text\"},{\"type\":\"componentScene\",\"surfaceId\":\"surf1\",\"controllerId\":\"ctrl\",\"componentKind\":\"world-3d\",\"world3d\":{\"cameraJson\":\"{}\",\"meshesJson\":\"[]\",\"instancesJson\":\"[]\",\"selectionJson\":\"{}\"}},{\"type\":\"externalSlot\",\"pluginId\":\"plugin1\",\"appId\":\"app1\",\"bodyKey\":\"body1\",\"paramsJson\":\"{}\"}]}";
 
     #[test]
     fn ui_node_tree_serializes_to_golden_json() {
@@ -4351,11 +4357,11 @@ mod ui_node_wire_format_tests {
         }
         assert_presence_serializes(UiNode::Stack(UiStackNode { direction: "vertical".into(), gap: None, padding: None, id: None, presence: UiPresence::default(), activate: None, drop_action: None, drop_overlay: None, children: vec![] }), "Stack");
         assert_presence_serializes(UiNode::Text(UiTextNode { value: "x".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), "Text");
-        assert_presence_serializes(UiNode::Button(UiButtonNode { id: None, icon_id: "i".into(), label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
+        assert_presence_serializes(UiNode::Button(UiButtonNode { id: None, icon_id: IconName::CircleDot, label: "l".into(), action: act("a"), style: None, presence: UiPresence::default() }), "Button");
         assert_presence_serializes(UiNode::Separator(UiSeparatorNode { presence: UiPresence::default() }), "Separator");
         assert_presence_serializes(UiNode::Input(UiInputNode { id: "i".into(), input_kind: "text".into(), value: "v".into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: act("a"), presence: UiPresence::default() }), "Input");
         assert_presence_serializes(UiNode::Select(UiSelectNode { id: "i".into(), value: "v".into(), items: vec![], placeholder: None, on_change: act("a"), presence: UiPresence::default() }), "Select");
-        assert_presence_serializes(UiNode::Toggle(UiToggleNode { id: "i".into(), icon_id: "i".into(), text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
+        assert_presence_serializes(UiNode::Toggle(UiToggleNode { id: "i".into(), icon_id: IconName::CircleDot, text: None, on_change: act("a"), presence: UiPresence::default() }), "Toggle");
         assert_presence_serializes(UiNode::KeyValue(UiKeyValueNode { entries: vec![], presence: UiPresence::default() }), "KeyValue");
         assert_presence_serializes(UiNode::Slider(UiSliderNode { id: "i".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1, unit: None, on_change: act("a"), presence: UiPresence::default() }), "Slider");
         assert_presence_serializes(UiNode::NumberStepper(UiNumberStepperNode { id: "i".into(), value: 0.0, step: 1.0, uniform: true, on_absolute: act("a"), on_delta: act("a"), presence: UiPresence::default() }), "NumberStepper");
@@ -5165,7 +5171,7 @@ fn children_of(node: &UiNode) -> Vec<Cow<'_, UiNode>> {
 fn select_item_row(select: &UiSelectNode, item: &UiSelectItem) -> UiNode {
     UiNode::Button(UiButtonNode {
         id: Some(item.value.clone()),
-        icon_id: String::new(),
+        icon_id: IconName::CircleDot,
         label: item.label.clone(),
         action: with_item_value_arg(&select.on_change, &item.value),
         style: None,
@@ -5416,7 +5422,7 @@ mod tests {
     fn button(id: &str, label: &str) -> UiNode {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
-            icon_id: "icon".into(),
+            icon_id: IconName::CircleDot,
             label: label.into(),
             action: action(),
             style: None,
@@ -5633,8 +5639,8 @@ mod tests {
     fn tree_item_control_and_trailing_actions_become_retained_children_too() {
         let mut tree = UiTree::new();
         let item = UiTreeItemNode {
-            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: "icon".into(), text: None, on_change: action(), presence: UiPresence::selected(true) })),
-            actions: Some(vec![UiTreeItemAction { icon_id: "trash".into(), label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
+            control: Some(UiControlNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: None, on_change: action(), presence: UiPresence::selected(true) })),
+            actions: Some(vec![UiTreeItemAction { icon_id: IconName::Trash2, label: Some("Delete".into()), action: action(), reveal_on_hover: Some(true) }]),
             ..tree_item("leaf", "Leaf")
         };
         let ui = tree_ui(vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }], None);
@@ -12830,7 +12836,7 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     let bg = dim(item_bg(theme, false, hovered));
     push_control_border(draw, bounds, theme, dim(theme.border_normal), bg);
     let mut text_x = bounds.x + theme.padding_standard;
-    let icon_key = if node.icon_id.is_empty() { node.label.as_str() } else { node.icon_id.as_str() };
+    let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
     if let Some(icons) = icons {
         if icons.icon_uv(icon_key).is_some() {
             push_icon(draw, icons, icon_key, text_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, dim(item_text(theme, false, hovered)));
@@ -12903,8 +12909,8 @@ fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &The
     push_control_border(draw, bounds, theme, theme.border_normal, bg);
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
-        if icons.icon_uv(&node.icon_id).is_some() {
-            push_icon(draw, icons, &node.icon_id, content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
+        if icons.icon_uv(node.icon_id.as_str()).is_some() {
+            push_icon(draw, icons, node.icon_id.as_str(), content_x, bounds.y + (bounds.h - ICON_TINY) * 0.5, ICON_TINY, item_text(theme, pressed, hovered));
             content_x += ICON_TINY + theme.gap_standard;
         }
     }
@@ -13148,8 +13154,8 @@ fn paint_tree_item(
     // its alpha without skipping the row — it stays visible and clickable to un-hide/re-enable.
     let text_color = if selected || previewed { theme.active_foreground } else { theme.text_element };
     let text_color = if dimmed { text_color.with_alpha(text_color.a * 0.5) } else { text_color };
-    if let (Some(icons), Some(icon_id)) = (icons, item.icon_id.as_deref()) {
-        push_icon(draw, icons, icon_id, indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
+    if let (Some(icons), Some(icon_id)) = (icons, item.icon_id) {
+        push_icon(draw, icons, icon_id.as_str(), indent, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, text_color);
     }
     let label_x = indent + if item.icon_id.is_some() { TREE_ICON_SIZE + theme.gap_standard } else { 0.0 };
     draw_text_on(draw, atlas, &item.label, label_x, row.y + (TREE_ROW_HEIGHT + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, text_color);
@@ -13166,7 +13172,7 @@ fn paint_tree_item(
                 continue;
             }
             actions_x -= TREE_ICON_SIZE + theme.padding_standard;
-            push_icon(draw, icons, &action.icon_id, actions_x, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
+            push_icon(draw, icons, action.icon_id.as_str(), actions_x, row.y + (TREE_ROW_HEIGHT - TREE_ICON_SIZE) * 0.5, TREE_ICON_SIZE, theme.text_element);
         }
     }
     // 🎛️ An inline per-row control (e.g. a small toggle/select embedded in a tree row), static data
@@ -13294,7 +13300,7 @@ mod tests {
     fn loading_button(id: &str) -> UiNode {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
-            icon_id: String::new(),
+            icon_id: IconName::CircleDot,
             label: id.into(),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
@@ -13305,7 +13311,7 @@ mod tests {
     fn waiting_button(id: &str) -> UiNode {
         UiNode::Button(UiButtonNode {
             id: Some(id.into()),
-            icon_id: String::new(),
+            icon_id: IconName::CircleDot,
             label: id.into(),
             action: ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None },
             style: None,
@@ -13407,7 +13413,7 @@ mod tests {
     // additive to the pre-existing tests above.
 
     fn button(id: &str, disabled: bool) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled) })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::disabled_if(disabled) })
     }
 
     #[test]
@@ -13601,7 +13607,7 @@ mod tests {
     fn tree_with_item_description() -> UiNode {
         let mut item = UiTreeItemNode::base("i1", "Item One");
         item.description = Some("desc".into());
-        item.actions = Some(vec![UiTreeItemAction { icon_id: "star".into(), label: None, action: action(), reveal_on_hover: Some(false) }]);
+        item.actions = Some(vec![UiTreeItemAction { icon_id: IconName::Sparkles, label: None, action: action(), reveal_on_hover: Some(false) }]);
         UiNode::Tree(UiTreeNode {
             sections: vec![UiTreeSectionNode { id: "s1".into(), label: None, default_open: Some(true), presence: UiPresence::default(), items: vec![item] }],
             presence: UiPresence::default(),
@@ -15146,7 +15152,7 @@ mod tests {
     }
 
     fn button_ui(id: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: id.into(), action: action(), style: None, presence: UiPresence::default() })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: id.into(), action: action(), style: None, presence: UiPresence::default() })
     }
 
     fn leaf(tree: &mut UiTree, parent: Option<NodeId>, ordinal: u32, node: UiNode, rect: (f32, f32, f32, f32)) -> NodeId {
@@ -15959,12 +15965,18 @@ pub struct Shell {
     layout: Option<WindowLayout>,
     navbar: Vec<String>,
     pressed: Option<NodeId>,
+    window_kind_icons: std::collections::HashMap<String, IconName>,
 }
 
 impl Shell {
     /// 🌱 An empty shell: no layout applied yet, no navbar items.
     pub fn new() -> Self {
-        Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None }
+        Self { tree: UiTree::new(), layout: None, navbar: Vec::new(), pressed: None, window_kind_icons: std::collections::HashMap::new() }
+    }
+
+    /// 🪟 Maps window kind ids to Lucide icon ids for tab-cap painting in `set_window_layout`.
+    pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+        self.window_kind_icons = icons;
     }
 
     /// 🔁 Rebuilds the shell's retained tree from `layout` (full teardown+rebuild, see module doc).
@@ -15978,7 +15990,7 @@ impl Shell {
         let mut tree = UiTree::new();
         let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("shell.root".into()), WidgetSpec(root_stack())));
         tree.mark_dirty(root_id, NodeFlags::DIRTY_LAYOUT);
-        build_root(&mut tree, root_id, &layout.root);
+        build_root(&mut tree, root_id, &layout.root, &self.window_kind_icons);
         self.tree = tree;
         self.layout = Some(layout);
         self.pressed = None;
@@ -16059,14 +16071,14 @@ fn root_stack() -> UiNode {
     })
 }
 
-fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot) {
+fn build_root(tree: &mut UiTree, parent: NodeId, root: &WindowLayoutRoot, window_kind_icons: &std::collections::HashMap<String, IconName>) {
     match root {
-        WindowLayoutRoot::Axis(axis) => build_axis(tree, parent, axis, 0),
-        WindowLayoutRoot::Stack(stack) => build_stack(tree, parent, stack, 0),
+        WindowLayoutRoot::Axis(axis) => build_axis(tree, parent, axis, 0, window_kind_icons),
+        WindowLayoutRoot::Stack(stack) => build_stack(tree, parent, stack, 0, window_kind_icons),
     }
 }
 
-fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32) {
+fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, ordinal: u32, window_kind_icons: &std::collections::HashMap<String, IconName>) {
     let spec = UiNode::Stack(UiStackNode {
         direction: axis.kind.clone(),
         gap: Some("none".into()),
@@ -16082,15 +16094,15 @@ fn build_axis(tree: &mut UiTree, parent: NodeId, axis: &WindowLayoutAxisNode, or
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
     for (index, child) in axis.children.iter().enumerate() {
         match child {
-            WindowLayoutChild::Axis(nested) => build_axis(tree, id, nested, index as u32),
-            WindowLayoutChild::Stack(nested) => build_stack(tree, id, nested, index as u32),
+            WindowLayoutChild::Axis(nested) => build_axis(tree, id, nested, index as u32, window_kind_icons),
+            WindowLayoutChild::Stack(nested) => build_stack(tree, id, nested, index as u32, window_kind_icons),
         }
     }
 }
 
 /// 🗂️ A tab group: a `Stack` container marked `CLIPS_CHILDREN` (its content clips to its own bounds)
 /// whose children are the window-cap `Button` leaves built by `build_window`.
-fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32) {
+fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode, ordinal: u32, window_kind_icons: &std::collections::HashMap<String, IconName>) {
     let spec = UiNode::Stack(UiStackNode {
         direction: "column".into(),
         gap: None,
@@ -16108,7 +16120,7 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
     }
     tree.mark_dirty(id, NodeFlags::DIRTY_LAYOUT);
     for (index, window) in stack.children.iter().enumerate() {
-        build_window(tree, id, window, index as u32);
+        build_window(tree, id, window, index as u32, window_kind_icons);
     }
 }
 
@@ -16116,13 +16128,17 @@ fn build_stack(tree: &mut UiTree, parent: NodeId, stack: &WindowLayoutStackNode,
 /// `window_kind_id`). Modeled as a `Button` rather than a `Stack` specifically so `events::hit_test`
 /// treats it as a matchable leaf, not a pass-through container (see `set_window_layout`'s doc
 /// comment).
-fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNode, ordinal: u32) {
+fn build_window(tree: &mut UiTree, parent: NodeId, window: &WindowLayoutWindowNode, ordinal: u32, window_kind_icons: &std::collections::HashMap<String, IconName>) {
     let _ = ordinal;
     let window_id = window.instance_id.clone().unwrap_or_else(|| window.window_kind_id.clone());
     let label = window.title.clone().unwrap_or_else(|| window.window_kind_id.clone());
+    let icon_id = window_kind_icons
+        .get(&window.window_kind_id)
+        .copied()
+        .unwrap_or(IconName::AppWindow);
     let spec = UiNode::Button(UiButtonNode {
         id: Some(window_id.clone()),
-        icon_id: String::new(),
+        icon_id,
         label,
         action: ActionDescriptor { controller_id: "shell.window".into(), action: "activate".into(), args: None },
         style: None,
@@ -16318,6 +16334,10 @@ impl Ui {
         self.window_mut(window_id).tree.apply_tree(ui_node);
     }
 
+    pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+        self.shell.set_window_kind_icons(icons);
+    }
+
     /// 🪟 Rebuilds the shared `Shell`'s retained dock/split/tab chrome from a declarative
     /// `WindowLayout` (independent of any window's `apply_tree`d content — see `shell`'s doc comment).
     pub fn set_window_layout(&mut self, layout: WindowLayout) {
@@ -16485,7 +16505,7 @@ mod tests {
     }
 
     fn button_ui(id: &str, label: &str) -> UiNode {
-        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: String::new(), label: label.into(), action: action(), style: None, presence: UiPresence::default() })
+        UiNode::Button(UiButtonNode { id: Some(id.into()), icon_id: IconName::CircleDot, label: label.into(), action: action(), style: None, presence: UiPresence::default() })
     }
 
     #[test]
@@ -16781,7 +16801,7 @@ mod tests {
 
     #[test]
     fn golden_button() {
-        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: String::new(), label: "Go".into(), action: action(), style: None, presence: UiPresence::default() })));
+        assert_equivalent("Button", &leaf(UiNode::Button(UiButtonNode { id: Some("btn".into()), icon_id: IconName::CircleDot, label: "Go".into(), action: action(), style: None, presence: UiPresence::default() })));
     }
 
     #[test]
@@ -16820,7 +16840,7 @@ mod tests {
         // capability `widgets::render_toggle` (the immediate-mode reference this harness compares
         // against) never had, so a selected fixture would fail this equivalence check for the wrong
         // reason. This test stays scoped to the base (unselected) toggle's fill/label parity.
-        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("Toggle", &leaf(UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default() })));
     }
 
     /// ✨ `presence.selected` draws its outset accent ring universally — proven here on `Toggle`, a
@@ -16829,8 +16849,8 @@ mod tests {
     /// is now a shared channel every element gets for free from `presence_overlay`.
     #[test]
     fn selected_presence_draws_an_outset_ring_on_any_element() {
-        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::default() });
-        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: String::new(), text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true) });
+        let unselected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::default() });
+        let selected = UiNode::Toggle(UiToggleNode { id: "tog".into(), icon_id: IconName::CircleDot, text: Some("On".into()), on_change: action(), presence: UiPresence::selected(true) });
         let (unselected_instances, _, _) = retained_stats(&leaf(unselected));
         let (selected_instances, _, _) = retained_stats(&leaf(selected));
         assert!(selected_instances > unselected_instances, "a selected element should paint more instances than an unselected one (the outset accent ring)");
@@ -16882,7 +16902,7 @@ mod tests {
 
     #[test]
     fn golden_icon_select() {
-        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: "star".into(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles, uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
     }
 
     #[test]
@@ -17153,7 +17173,7 @@ pub struct KeyValueEntry {
 
 #[derive(Clone, Debug)]
 pub struct TreeItemAction<E> {
-    pub icon_id: String,
+    pub icon_id: IconName,
     pub label: Option<String>,
     pub event: E,
     pub reveal_on_hover: bool,
@@ -17164,7 +17184,7 @@ pub struct TreeItem<E> {
     pub id: String,
     pub label: String,
     pub description: Option<String>,
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     pub selected: bool,
     pub highlighted: bool,
     pub default_open: bool,
@@ -17189,7 +17209,7 @@ pub struct TreeSection<E> {
 
 #[derive(Clone, Debug)]
 pub enum ControlNode<E> {
-    Button { id: Option<String>, icon_id: Option<String>, label: String, event: Option<E> },
+    Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
     Input {
         id: String,
         input_kind: String,
@@ -17205,7 +17225,7 @@ pub enum ControlNode<E> {
         placeholder: Option<String>,
         on_change: Option<E>,
     },
-    Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
+    Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
     Slider { id: String, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, on_change: Option<E> },
     NumberStepper {
@@ -17230,7 +17250,7 @@ pub enum WidgetNode<E> {
     },
     Text { value: String, emphasize: bool },
     Separator,
-    Button { id: Option<String>, icon_id: Option<String>, label: String, event: Option<E> },
+    Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
     Input {
         id: String,
         input_kind: String,
@@ -17246,7 +17266,7 @@ pub enum WidgetNode<E> {
         placeholder: Option<String>,
         on_change: Option<E>,
     },
-    Toggle { id: String, icon_id: String, pressed: bool, text: Option<String>, on_change: Option<E> },
+    Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
     KeyValue { entries: Vec<KeyValueEntry> },
     Slider { id: String, value: f64, min: f64, max: f64, step: f64, ready: Option<f64>, disabled: bool, on_change: Option<E> },
     NumberStepper {
@@ -17399,7 +17419,7 @@ pub fn render_widget<E: Clone>(
             ctx.draw.push_line(bounds.x, y, bounds.x + bounds.w, y, ctx.theme.separator, 1.0);
         }
         WidgetNode::Button { id, icon_id, label, event } => {
-            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx);
+            render_button(id.as_ref(), *icon_id, label, event.clone(), bounds, ctx);
         }
         WidgetNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -17494,7 +17514,7 @@ pub fn render_widget<E: Clone>(
 fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut WidgetContext<'_, E>) {
     match control {
         ControlNode::Button { id, icon_id, label, event } => {
-            render_button(id.as_ref(), icon_id.as_deref(), label, event.clone(), bounds, ctx);
+            render_button(id.as_ref(), *icon_id, label, event.clone(), bounds, ctx);
         }
         ControlNode::Input { id, value, placeholder, commit, on_change, .. } => {
             register_input_meta(ctx, id, value, commit.clone(), on_change.clone());
@@ -17555,7 +17575,7 @@ fn register_toggle_meta<E: Clone>(ctx: &mut WidgetContext<'_, E>, id: &str, pres
 
 fn render_button<E: Clone>(
     id: Option<&String>,
-    icon_id: Option<&str>,
+    icon_id: Option<IconName>,
     label: &str,
     event: Option<E>,
     bounds: Rect,
@@ -17566,7 +17586,10 @@ fn render_button<E: Clone>(
     let bg = item_bg(ctx.theme, false, hovered);
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
     let mut text_x = bounds.x + ctx.theme.padding_standard;
-    let icon_key = icon_id.filter(|id| !id.is_empty()).unwrap_or(label);
+    let icon_key = icon_id
+        .filter(|id| *id != IconName::CircleDot)
+        .map(IconName::as_str)
+        .unwrap_or(label);
     if let Some(icons) = ctx.icons {
         if icons.icon_uv(icon_key).is_some() {
             push_icon(
@@ -17727,7 +17750,7 @@ fn render_select_menu<E: Clone>(
 
 fn render_toggle<E: Clone>(
     id: &str,
-    icon_id: &str,
+    icon_id: IconName,
     pressed: bool,
     text: Option<&str>,
     bounds: Rect,
@@ -17738,11 +17761,11 @@ fn render_toggle<E: Clone>(
     push_control_border(ctx.draw, bounds, ctx.theme, ctx.theme.border_normal, bg);
     let mut content_x = bounds.x + ctx.theme.padding_standard;
     if let Some(icons) = ctx.icons {
-        if icons.icon_uv(icon_id).is_some() {
+        if icons.icon_uv(icon_id.as_str()).is_some() {
             push_icon(
                 ctx.draw,
                 icons,
-                icon_id,
+                icon_id.as_str(),
                 content_x,
                 bounds.y + (bounds.h - ICON_TINY) * 0.5,
                 ICON_TINY,
@@ -18157,7 +18180,7 @@ fn tree_gutter_width(depth: u32) -> f32 {
 
 fn tree_icon_id<E>(item: &TreeItem<E>, expandable: bool) -> &str {
     item.icon_id
-        .as_deref()
+        .map(IconName::as_str)
         .unwrap_or(if expandable { "folder" } else { "file-text" })
 }
 
@@ -18335,7 +18358,7 @@ fn render_tree_item<E: Clone>(
         let action_w = TREE_ICON_SIZE + ctx.theme.padding_standard + label_w;
         actions_x -= action_w;
         let action_rect = Rect::new(actions_x, content.y + (content.h - TREE_ICON_SIZE) * 0.5 - 2.0, action_w, TREE_ICON_SIZE + 4.0);
-        if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(&action.icon_id)) {
+        if let Some(uv) = ctx.icons.and_then(|icons| icons.icon_uv(action.icon_id.as_str())) {
             let action_color = if hovered {
                 ctx.theme.border_emphasized
             } else {

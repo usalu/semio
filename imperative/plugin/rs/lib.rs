@@ -352,8 +352,8 @@ fn create_imperative_app() -> App {
             .icon_id("imperative")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
-            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor)
+            .window_kind(IMPERATIVE_PLAY_WINDOW_MAIN, "Imperative", IMPERATIVE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "code")
+            .window_kind(IMPERATIVE_PLAY_WINDOW_SCRIPT, "Script", IMPERATIVE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
             .default_layout(create_stack_layout(
                 &[IMPERATIVE_PLAY_WINDOW_MAIN.into(), IMPERATIVE_PLAY_WINDOW_SCRIPT.into()],
                 Some(&["Imperative".into(), "Script".into()]),

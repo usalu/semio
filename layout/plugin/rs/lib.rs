@@ -1731,8 +1731,8 @@ fn create_layout_app() -> App {
             .icon_id("layout")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d)
-            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d)
+            .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
+            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "eye")
             .default_layout(create_default_layout(
                 &[LAYOUT_PLAY_WINDOW_BLUEPRINT.into(), LAYOUT_PLAY_WINDOW_PREVIEW.into()],
                 "row",

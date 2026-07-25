@@ -126,15 +126,20 @@ import {
   interactiveActiveFillClass,
   shellChromeTitleClassName,
   staticTreePanelDefinition,
-  UiChromeLabelPolicyProvider,
   UI_MOBILE_MEDIA_QUERY,
   usePanelChromeHotkeys,
   usePaneSlot,
   useElementsSurfaceChrome,
   useMediaQuery,
   useActionHotkey,
-  readStoredUiChromeCompact,
-  readStoredUiChromeExpertise,
+  readStoredUiDriverId,
+  readStoredUiCustomDrivers,
+  writeStoredUiDriverId,
+  writeStoredUiCustomDrivers,
+  resolveUiDriver,
+  builtinUiDrivers,
+  DEFAULT_UI_DRIVER,
+  type UiDriver,
   readStoredUiChromeLayout,
   readStoredUiChromeLocale,
   readStoredUiChromeAppearance,
@@ -142,8 +147,6 @@ import {
   readStoredUiChromeThemeId,
   readStoredUiChromeThemeSnapshot,
   readStoredUiCustomThemes,
-  writeStoredUiChromeCompact,
-  writeStoredUiChromeExpertise,
   writeStoredUiChromeLayout,
   writeStoredUiChromeLocale,
   writeStoredUiChromeAppearance,
@@ -162,7 +165,6 @@ import {
   type ThemePaletteGroup,
   type UiTheme,
   windowTemplatePaletteTreeDragController,
-  Expertise,
   setUiLocale,
   UI_TERMINOLOGY_NATIVE,
   UIIntroduction,
@@ -213,6 +215,7 @@ import {
   type SelectionMarqueeMethod,
   type SelectionMarqueePoint,
   useCanvasAppearanceSync,
+  useUiDriver,
   CanvasPickMenu,
   Diagram,
   Handle,
@@ -253,7 +256,7 @@ import {
   CELEBRATE_STAMP_DURATION_MS,
   elementIdSelector,
 } from "@semio-tech/ui-react";
-import { ICONS } from "@semio-tech/ui-asset";
+import { isIconName } from "@semio-tech/ui-asset";
 import {
   type ActionDescriptor,
   type ComponentKind,
@@ -549,9 +552,8 @@ function dispatchUiAction(onAction: UiInterpreterContext["onAction"], descriptor
   });
 }
 
-function resolveDeclarativeControlIcon(iconId: string, size: number | "tiny" | "small" | "base" | "large" = "small"): ReactNode {
-  const iconName = iconId in ICONS ? (iconId as IconName) : "circle-dot";
-  return <Icon icon={iconName} size={size} />;
+function resolveDeclarativeControlIcon(iconId: IconName, size: number | "tiny" | "small" | "base" | "large" = "small"): ReactNode {
+  return <Icon icon={iconId} size={size} />;
 }
 //#endregion ActionDispatch
 
@@ -638,7 +640,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       // 🧭 `Toggle` (`ui/js/react/index.tsx`) has a closed prop type with no passthrough/`data-*`
       // forwarding — `path` best-effort only, via a parent stack/section/group's wrapper (see
       // `UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK`).
-      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
+      return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId as IconName)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
     case "keyValue":
       return (
         <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>
@@ -708,7 +710,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
           id={control.id}
           data-ui-path={path}
           text={control.label}
-          icon={resolveDeclarativeControlIcon(control.iconId)}
+          icon={resolveDeclarativeControlIcon(control.iconId as IconName)}
           disabled={control.disabled}
           onClick={() => onAction(control.action)}
           className={control.loading ? loadingBorderElementClass : control.waiting ? waitingBorderElementClass : undefined}
@@ -1027,7 +1029,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext, pat
         </p>
       );
     case "button":
-      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} data-ui-path={path} />;
+      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId as IconName)} disabled={node.disabled} onClick={() => context.onAction(node.action)} data-ui-path={path} />;
     case "separator":
       return <hr className={cn("border-0", borderNormalTopClass)} data-ui-path={path} />;
     case "image":
@@ -1141,7 +1143,7 @@ export type PluginManifest = {
     readonly appId: string;
     readonly blockKind: string;
     readonly label: string;
-    readonly iconId: string;
+    readonly iconId: IconName;
     readonly defaultValueJson?: string;
     readonly paramsBodyKey: string;
     readonly previewBodyKey: string;
@@ -1426,8 +1428,9 @@ type OverlayState = {
 type UiPrefsState = {
   readonly uiAppearance: ElementsSurfaceAppearance;
   readonly uiLayout: UiChromeLayout;
-  readonly uiCompact: boolean;
-  readonly uiExpertise: Expertise;
+  readonly uiDriverId: string;
+  readonly uiCustomDrivers: Record<string, UiDriver>;
+  readonly uiDriverDraft: UiDriver | null;
   readonly uiLocale: UiLocale;
   readonly uiTerminology: string;
   readonly uiThemeId: string;
@@ -1517,8 +1520,9 @@ export type ShellAction =
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
-  | { readonly type: "SET_UI_COMPACT"; readonly value: Updatable<boolean> }
-  | { readonly type: "SET_UI_EXPERTISE"; readonly value: Updatable<Expertise> }
+  | { readonly type: "SET_UI_DRIVER_ID"; readonly value: Updatable<string> }
+  | { readonly type: "SET_UI_CUSTOM_DRIVERS"; readonly value: Updatable<Record<string, UiDriver>> }
+  | { readonly type: "SET_UI_DRIVER_DRAFT"; readonly value: Updatable<UiDriver | null> }
   | { readonly type: "SET_UI_LOCALE"; readonly value: Updatable<UiLocale> }
   | { readonly type: "SET_UI_TERMINOLOGY"; readonly value: Updatable<string> }
   | { readonly type: "SET_UI_THEME_ID"; readonly value: Updatable<string> }
@@ -1715,10 +1719,12 @@ function uiPrefsReducer(state: UiPrefsState, action: ShellAction): UiPrefsState 
       return { ...state, uiAppearance: resolveUpdatable(action.value, state.uiAppearance) };
     case "SET_UI_LAYOUT":
       return { ...state, uiLayout: resolveUpdatable(action.value, state.uiLayout) };
-    case "SET_UI_COMPACT":
-      return { ...state, uiCompact: resolveUpdatable(action.value, state.uiCompact) };
-    case "SET_UI_EXPERTISE":
-      return { ...state, uiExpertise: resolveUpdatable(action.value, state.uiExpertise) };
+    case "SET_UI_DRIVER_ID":
+      return { ...state, uiDriverId: resolveUpdatable(action.value, state.uiDriverId) };
+    case "SET_UI_CUSTOM_DRIVERS":
+      return { ...state, uiCustomDrivers: resolveUpdatable(action.value, state.uiCustomDrivers) };
+    case "SET_UI_DRIVER_DRAFT":
+      return { ...state, uiDriverDraft: resolveUpdatable(action.value, state.uiDriverDraft) };
     case "SET_UI_LOCALE":
       return { ...state, uiLocale: resolveUpdatable(action.value, state.uiLocale) };
     case "SET_UI_TERMINOLOGY":
@@ -1803,8 +1809,9 @@ export function initialShellState(_props: {
     uiPrefs: {
       uiAppearance: locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()),
       uiLayout: ephemeral ? "desktop" : readStoredUiChromeLayout(),
-      uiCompact: ephemeral ? false : readStoredUiChromeCompact(),
-      uiExpertise: ephemeral ? Expertise.NORMAL : readStoredUiChromeExpertise(),
+      uiDriverId: ephemeral ? DEFAULT_UI_DRIVER.id : readStoredUiDriverId(),
+      uiCustomDrivers: ephemeral ? {} : readStoredUiCustomDrivers(),
+      uiDriverDraft: null,
       uiLocale: locks.locale ?? (ephemeral ? undefined : readStoredUiChromeLocale()) ?? (uiI18n.resolvedLanguage?.toLowerCase().startsWith("de") ? "de" : "en"),
       uiTerminology: locks.terminology ?? (ephemeral ? UI_TERMINOLOGY_NATIVE : readStoredUiChromeTerminology()),
       uiThemeId: locks.themeId ?? (ephemeral ? "semio" : readStoredUiChromeThemeId()) ?? "semio",
@@ -2868,7 +2875,7 @@ function windowEngagementToSpec(engagement: WindowEngagement | undefined, onActi
   const options = engagement.options?.map((option) => ({
     id: option.id,
     label: option.label,
-    icon: option.iconId ? <Icon icon={option.iconId in ICONS ? (option.iconId as IconName) : "circle-dot"} size="small" /> : undefined,
+    icon: option.iconId ? <Icon icon={option.iconId as IconName} size="small" /> : undefined,
     pressed: option.pressed,
     disabled: option.disabled,
     onPress: option.action ? () => onAction(option.action!) : undefined,
@@ -3080,14 +3087,10 @@ export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionD
   };
 }
 
-function shellTabIcon(iconId: string): React.FC<{ size?: number }> {
+function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
   return function ShellTabIcon({ size = 16 }: { size?: number }) {
-    let iconName: IconName = "circle-dot";
-    if (iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID) {
-      iconName = "file-text";
-    } else if (iconId in ICONS) {
-      iconName = iconId as IconName;
-    }
+    const iconName: IconName =
+      iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID ? "file-text" : isIconName(iconId) ? iconId : "circle-dot";
     return <Icon icon={iconName} size={size} />;
   };
 }
@@ -3307,9 +3310,11 @@ export const PUZZLE3D_FILL_REVEAL_GROUP_ID = "puzzle3d-fill";
 
 /** @emoji 🙈 True for a reveal-tagged instance beyond the live cutoff — `WorldInstancesLayer` already
  * hides its root imperatively, but pure functions that read `instances` data directly (marquee hit
- * testing) don't see three.js `Object3D.visible` and need this check instead. */
+ * testing) don't see three.js `Object3D.visible` and need this check instead. Untagged instances are
+ * never cutoff-hidden: the nullish guard also rejects a JSON `null`, which would otherwise compare as `0`
+ * and hide every ordinary object while the cutoff sits at its boot value. */
 export function isRevealCutoffHidden(instance: Pick<WorldInstanceRecord, "revealIndex">): boolean {
-  if (instance.revealIndex === undefined) return false;
+  if (instance.revealIndex == null) return false;
   const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID);
   return cutoff !== undefined && instance.revealIndex >= cutoff;
 }
@@ -3448,7 +3453,7 @@ function windowMeasureToggleControl(measure: Extract<WindowMeasure, { kind: "tog
       id={measure.id}
       pressed={measure.pressed}
       text={measure.text}
-      icon={<Icon icon={measure.iconId in ICONS ? (measure.iconId as IconName) : "circle-dot"} size="small" />}
+      icon={<Icon icon={measure.iconId as IconName} size="small" />}
       onPressedChange={(pressed) => onAction({ ...measure.onChange, args: { ...(measure.onChange.args as object | undefined), pressed } })}
     />
   );
@@ -3761,6 +3766,67 @@ export function isEditableEventTarget(target: EventTarget | null): boolean {
   return target.closest("[contenteditable='true'], [role='textbox']") != null;
 }
 
+/** ⌨️ True on Apple desktop/mobile platforms — drives modifier glyph choice in {@link formatKeybindingShortcut}. */
+function isApplePlatform(): boolean {
+  if (typeof navigator === "undefined") return false;
+  if ("userAgentData" in navigator && navigator.userAgentData && typeof navigator.userAgentData === "object" && "platform" in navigator.userAgentData) {
+    return (navigator.userAgentData as { readonly platform?: string }).platform === "macOS";
+  }
+  return /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
+}
+
+/** ⌨️ Formats the first chord of a keybinding for right-aligned context-menu shortcut labels. */
+export function formatKeybindingShortcut(keys: string): string {
+  const chord = parseKeybindingChords(keys)[0];
+  if (!chord) return "";
+  const apple = isApplePlatform();
+  const glyph = (part: string): string => {
+    switch (part) {
+      case "mod":
+        return apple ? "⌘" : "Ctrl";
+      case "ctrl":
+        return apple ? "⌃" : "Ctrl";
+      case "meta":
+        return "⌘";
+      case "alt":
+        return apple ? "⌥" : "Alt";
+      case "shift":
+        return apple ? "⇧" : "Shift";
+      case "backspace":
+        return "⌫";
+      case "delete":
+        return "⌦";
+      case "enter":
+        return apple ? "↵" : "Enter";
+      case "escape":
+        return apple ? "⎋" : "Esc";
+      case "up":
+        return "↑";
+      case "down":
+        return "↓";
+      case "left":
+        return "←";
+      case "right":
+        return "→";
+      default:
+        if (part.length === 1) return part.toUpperCase();
+        return part.charAt(0).toUpperCase() + part.slice(1);
+    }
+  };
+  const parts = chord.split("+").map((part) => part.trim()).filter(Boolean);
+  const labels = parts.map(glyph);
+  return apple ? labels.join("") : labels.join("+");
+}
+
+/** ⌨️ Last-wins action→keys map from app keybindings — used to enrich context-menu shortcuts. */
+export function buildKeysByActionId(keybindings: readonly { readonly action: { readonly action: string }; readonly keys: string }[]): ReadonlyMap<string, string> {
+  const map = new Map<string, string>();
+  for (const binding of keybindings) {
+    map.set(binding.action.action, binding.keys);
+  }
+  return map;
+}
+
 /** ⌨️ True when a keydown event matches one `+`-joined chord (e.g. `"mod+shift+z"`), where `mod` accepts either ctrl or meta. */
 export function keyboardEventMatchesChord(event: KeyboardEvent, chord: string): boolean {
   const parts = chord.split("+").map((part) => part.trim());
@@ -3850,7 +3916,7 @@ export function buildActionCategoryTree(
       label: category.label,
       defaultOpen: true,
       items: categoryActions.map((action): TreeDataItem => {
-        const icon = action.iconId && action.iconId in ICONS ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
+        const icon = action.iconId ? <Icon icon={action.iconId as IconName} size="small" /> : undefined;
         const rowClassName = disabled ? "pointer-events-none opacity-50" : undefined;
         if (!actionRequiresStagedForm(action)) {
           return { id: `action.${action.id}`, label: action.label, icon, className: rowClassName, onClick: () => !disabled && onExecute({ controllerId, action: action.id }) };
@@ -4015,7 +4081,7 @@ export function resolveCommands(
 }
 
 /** 🎛 Chrome-known command category ids that already have a `ui.settings.tab.*` translation key. */
-const CHROME_KNOWN_COMMAND_CATEGORIES = new Set(["general", "mode", "expertise", "app", "appearance", "layout", "language", "terminology", "theme"]);
+const CHROME_KNOWN_COMMAND_CATEGORIES = new Set(["general", "driver", "app", "appearance", "layout", "language", "terminology", "theme"]);
 
 /** 🎛 Loose title-case for an open-set command category id (e.g. "appearance" -> "Appearance"). Falls back to this for app/plugin-invented categories that have no fixed framework vocabulary entry. */
 function titleizeCommandCategory(category: string): string {
@@ -4024,7 +4090,7 @@ function titleizeCommandCategory(category: string): string {
 
 /** 🎛 Resolves a command category's display label, reusing the existing `ui.settings.tab.*` keys for chrome-known ids and falling back to a loose title-case for open-set app/plugin categories. */
 function commandCategoryLabel(category: string): string {
-  return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "mode" | "expertise" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
+  return CHROME_KNOWN_COMMAND_CATEGORIES.has(category) ? shellLabel(`ui.settings.tab.${category as "general" | "driver" | "app" | "appearance" | "layout" | "language" | "terminology" | "theme"}`) : titleizeCommandCategory(category);
 }
 
 /** 🎛 Ordered, deduped category tabs for the footer command panel, derived from whatever commands actually resolved. */
@@ -4044,12 +4110,12 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
 }
 
 /**
- * 🎛 Os-level built-in commands — app introduction/theme/layout/locale/appearance/expertise,
+ * 🎛 Os-level built-in commands — app introduction/theme/layout/locale/appearance/driver,
  * `scope: "os"`, handled
  * locally by the shell (never routed to a plugin). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
  */
-export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean, locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS): CommandDefinition[] {
+export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean, locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS, driverList: readonly UiDriver[] = builtinUiDrivers()): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
     ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
@@ -4094,7 +4160,6 @@ export function buildOsCommands(themeList: readonly UiTheme[], terminologies: re
         ]),
       ],
     },
-    { id: "os.toggleCompact", label: shellLabel("ui.command.toggleCompact"), scope: "os", category: "layout", inPalette: true, args: [] },
     { id: "os.resetDock", label: shellLabel("ui.settings.resetDock"), scope: "os", category: "layout", inPalette: true, args: [] },
     {
       id: "os.setLocale",
@@ -4124,17 +4189,17 @@ export function buildOsCommands(themeList: readonly UiTheme[], terminologies: re
       ],
     },
     {
-      id: "os.setExpertise",
-      label: shellLabel("ui.command.setExpertise"),
+      id: "os.setDriver",
+      label: shellLabel("ui.command.setDriver"),
       scope: "os",
-      category: "general",
+      category: "layout",
       inPalette: true,
       args: [
-        selectCommandArg("expertise", shellLabel("ui.settings.tab.expertise"), [
-          { value: "beginner", label: shellLabel("settings.expertise.beginner") },
-          { value: "normal", label: shellLabel("settings.expertise.normal") },
-          { value: "expert", label: shellLabel("settings.expertise.expert") },
-        ]),
+        selectCommandArg(
+          "driver",
+          shellLabel("ui.settings.tab.driver"),
+          driverList.map((driver) => ({ value: driver.id, label: driver.label || driver.id })),
+        ),
       ],
     },
   ];
@@ -4165,9 +4230,6 @@ export function dispatchOsCommand(
     case "os.setLayout":
       dispatch({ type: "SET_UI_LAYOUT", value: (args?.layout as UiChromeLayout) ?? "desktop" });
       return;
-    case "os.toggleCompact":
-      dispatch({ type: "SET_UI_COMPACT", value: (current) => !current });
-      return;
     case "os.resetDock":
       dispatch({ type: "RESET_DOCK" });
       dockLayoutStore.reset();
@@ -4184,8 +4246,8 @@ export function dispatchOsCommand(
       if (locks.terminology) return;
       if (typeof args?.terminology === "string") dispatch({ type: "SET_UI_TERMINOLOGY", value: args.terminology });
       return;
-    case "os.setExpertise":
-      if (typeof args?.expertise === "string") dispatch({ type: "SET_UI_EXPERTISE", value: args.expertise as Expertise });
+    case "os.setDriver":
+      if (typeof args?.driver === "string") dispatch({ type: "SET_UI_DRIVER_ID", value: args.driver });
       return;
     default:
       return;
@@ -4259,7 +4321,7 @@ export function buildCommandCategoryTree(
       id: "command.category.list",
       items: listCommands.map((entry): TreeDataItem => {
         const argCarrying = entry.definition.args.length > 0;
-        const icon = entry.definition.iconId && entry.definition.iconId in ICONS ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
+        const icon = entry.definition.iconId ? <Icon icon={entry.definition.iconId as IconName} size="small" /> : undefined;
         if (!argCarrying) return { id: `command.${entry.definition.id}`, label: entry.definition.label, icon, onClick: () => onExecute(entry) };
         return {
           id: `command.${entry.definition.id}`,
@@ -4321,7 +4383,7 @@ export function buildCommandCategoryTabs(
  * so Fill opens directly onto count + distribution with the same chrome as left-corner panel trees.
  */
 function buildToolTree(tool: ToolDefinition, controllerId: string, isActive: boolean, measures: readonly WindowMeasure[] | undefined, onAction: (action: ActionDescriptor) => unknown): { readonly sections: TreeDataSection[]; readonly sortableSections: false } {
-  const iconName: IconName = tool.iconId in ICONS ? (tool.iconId as IconName) : "hammer";
+  const iconName: IconName = tool.iconId as IconName;
   if (isActive && measures && measures.length > 0) {
     return {
       sortableSections: false,
@@ -4596,6 +4658,22 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 /** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
 const SetWindowTitleContext = createContext<((windowId: string, title: string) => void) | null>(null);
 
+const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
+
+/** @emoji ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
+const AppKeybindingsContext = createContext<ReadonlyMap<string, string>>(EMPTY_KEYS_BY_ACTION_ID);
+
+/** @emoji ⌨️ Resolves action→keys bindings from the nearest {@link AppKeybindingsContext} provider. */
+export function useAppKeybindingsByActionId(): ReadonlyMap<string, string> {
+  return useContext(AppKeybindingsContext);
+}
+
+/** @emoji 🖱️ Maps plugin context-menu specs with app keybinding shortcut enrichment. */
+export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<string, unknown>) => void) {
+  const keysByActionId = useAppKeybindingsByActionId();
+  return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
+}
+
 export function FrameworkOsShell({
   pluginFilter,
   plugins,
@@ -4636,7 +4714,7 @@ export function FrameworkOsShell({
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
-  const { uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
+  const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
   const refreshGenerationRef = useRef(0);
@@ -4670,6 +4748,7 @@ export function FrameworkOsShell({
     const found = builtinUiThemes().find((t) => t.id === uiThemeId) ?? uiCustomThemes[uiThemeId];
     return found ?? (ephemeral ? undefined : readStoredUiChromeThemeSnapshot()) ?? semioTheme();
   }, [uiThemeId, uiCustomThemes, uiThemeDraft, ephemeral]);
+  const uiDriver: UiDriver = useMemo(() => uiDriverDraft ?? resolveUiDriver(uiDriverId, uiCustomDrivers), [uiDriverId, uiCustomDrivers, uiDriverDraft]);
   /** 🧵 Lazily-created worker running `backbone-worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
   /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
@@ -5932,7 +6011,7 @@ export function FrameworkOsShell({
     onToggle: (anchor) => (mobile ? dispatch({ type: "SET_MOBILE_PANEL_VISIBLE", value: (visible) => !visible }) : dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: (visible) => !visible })),
   });
 
-  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, expertise: uiExpertise, compact: uiCompact });
+  useElementsSurfaceChrome({ appearance: uiAppearance, device: uiDevice, driver: uiDriver });
 
   //#region 💾 uiPrefs persistence (skips localStorage writes for any locked preference; skipped entirely for ephemeral brands)
   useEffect(() => {
@@ -5943,8 +6022,8 @@ export function FrameworkOsShell({
     }
     if (!locks.appearance) writeStoredUiChromeAppearance(uiAppearance);
     writeStoredUiChromeLayout(uiLayout);
-    writeStoredUiChromeCompact(uiCompact);
-    writeStoredUiChromeExpertise(uiExpertise);
+    writeStoredUiDriverId(uiDriverId);
+    writeStoredUiCustomDrivers(uiCustomDrivers);
     if (!locks.locale) writeStoredUiChromeLocale(uiLocale);
     void setUiLocale(uiLocale);
     if (!locks.terminology) writeStoredUiChromeTerminology(uiTerminology);
@@ -5954,7 +6033,7 @@ export function FrameworkOsShell({
       writeStoredUiChromeThemeId(uiThemeId);
     }
     writeStoredUiCustomThemes(uiCustomThemes);
-  }, [uiAppearance, uiLayout, uiCompact, uiExpertise, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, ephemeral]);
+  }, [uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiLocale, uiTerminology, uiTheme, uiThemeId, uiCustomThemes, locks, ephemeral]);
   //#endregion
 
   useActionHotkey(
@@ -6073,9 +6152,10 @@ export function FrameworkOsShell({
   const uiThemeBase = uiThemeDraft ?? uiTheme;
   const uiThemeDirty = uiThemeDraft !== null;
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
+  const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks),
-    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList],
   );
 
   const draftThemePatch = useCallback(
@@ -6201,7 +6281,56 @@ export function FrameworkOsShell({
   }, [saveTheme]);
   //#endregion 🔖ThemeMutators
 
+  //#region 🚗DriverMutators
+  const uiDriverBase = uiDriverDraft ?? uiDriver;
+  const uiDriverDirty = uiDriverDraft !== null;
+
+  const setDriverId = useCallback((id: string) => {
+    dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+    dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+  }, []);
+
+  const setDriverField = useCallback(
+    <K extends keyof Omit<UiDriver, "id" | "label">>(key: K, value: UiDriver[K]) => {
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: { ...uiDriverBase, [key]: value } });
+    },
+    [uiDriverBase],
+  );
+
+  const saveDriver = useCallback(
+    (label: string) => {
+      const trimmed = label.trim();
+      if (!trimmed) return;
+      const slug = trimmed
+        .toLowerCase()
+        .replace(/[^a-z0-9]+/g, "-")
+        .replace(/(^-+|-+$)/g, "");
+      if (!slug) return;
+      const id = `custom.${slug}`;
+      const saved: UiDriver = { ...uiDriverBase, id, label: trimmed };
+      dispatch({ type: "SET_UI_CUSTOM_DRIVERS", value: (current) => ({ ...current, [id]: saved }) });
+      dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+      dispatch({ type: "SET_UI_DRIVER_ID", value: id });
+    },
+    [uiDriverBase],
+  );
+
+  const deleteDriver = useCallback((id: string) => {
+    if (!id.startsWith("custom.")) return;
+    dispatch({
+      type: "SET_UI_CUSTOM_DRIVERS",
+      value: (current) => {
+        const { [id]: _removed, ...rest } = current;
+        return rest;
+      },
+    });
+    dispatch({ type: "SET_UI_DRIVER_ID", value: (current) => (current === id ? DEFAULT_UI_DRIVER.id : current) });
+    dispatch({ type: "SET_UI_DRIVER_DRAFT", value: null });
+  }, []);
+  //#endregion 🚗DriverMutators
+
   const [themeSaveLabel, setThemeSaveLabel] = useState("");
+  const [driverSaveLabel, setDriverSaveLabel] = useState("");
   const settingsHostRef = useRef<SettingsHostApi | null>(null);
   const settingsHost: SettingsHostApi = useMemo(
     () => ({
@@ -6209,10 +6338,16 @@ export function FrameworkOsShell({
       appLabel: session ? appDocumentLabel(resolveAppDocument(session.app, uiTerminology)) : undefined,
       controllerId: session?.app.controllerId,
       pluginId: session?.pluginId,
-      compact: uiCompact,
-      setCompact: (value: boolean) => dispatch({ type: "SET_UI_COMPACT", value }),
-      expertise: uiExpertise,
-      setExpertise: (value: string) => dispatch({ type: "SET_UI_EXPERTISE", value: value as Expertise }),
+      driverId: uiDriverId,
+      driver: uiDriverBase,
+      driverDirty: uiDriverDirty,
+      drivers: uiDriverList,
+      setDriverId,
+      setDriverField,
+      saveDriver,
+      deleteDriver,
+      driverSaveLabel,
+      setDriverSaveLabel,
       appearance: uiAppearance,
       setAppearance: (value: string) => dispatch({ type: "SET_UI_APPEARANCE", value: value as ElementsSurfaceAppearance }),
       layout: uiLayout,
@@ -6253,8 +6388,16 @@ export function FrameworkOsShell({
     [
       session,
       dockLayoutStore,
-      uiCompact,
-      uiExpertise,
+      uiDriverId,
+      uiDriverBase,
+      uiDriverDirty,
+      uiDriverList,
+      setDriverId,
+      setDriverField,
+      saveDriver,
+      deleteDriver,
+      driverSaveLabel,
+      setDriverSaveLabel,
       uiAppearance,
       uiLayout,
       mobile,
@@ -7263,6 +7406,7 @@ export function FrameworkOsShell({
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
+        iconId: kind.iconId,
         title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
@@ -7298,6 +7442,7 @@ export function FrameworkOsShell({
       return [
         {
           id: instance.id,
+          iconId: kind.iconId,
           title: windowTitlesById[instance.id] ?? instance.title,
           fill: true,
           showControls: true,
@@ -7507,8 +7652,11 @@ export function FrameworkOsShell({
   }, [session, error, pluginFilter]);
   // #endregion 🔖ReadinessBeacon
 
+  const keysByActionId = useMemo(() => buildKeysByActionId(session?.app.keybindings ?? []), [session?.app.keybindings]);
+
   return (
     <SetWindowTitleContext.Provider value={setWindowTitle}>
+    <AppKeybindingsContext.Provider value={keysByActionId}>
     <UIFindProvider>
       <LevelProvider level="window">
         <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
@@ -8268,10 +8416,6 @@ function resolveLeafAction(node: UtilityLeaf | Extract<UtilityNode, { readonly k
   return null;
 }
 
-function utilityIcon(iconId: string): IconName {
-  return iconId in ICONS ? (iconId as IconName) : "circle";
-}
-
 /** @emoji 🔢 Sorts utility nodes by `order`. */
 export function sortUtilityNodes(nodes: readonly UtilityNode[]): UtilityNode[] {
   return [...nodes].sort((left, right) => (left.order ?? 0) - (right.order ?? 0));
@@ -8284,7 +8428,7 @@ const UTILITY_CATEGORY_ORDER: readonly UtilityCategory[] = ["selection", "utilit
 /** @emoji 🪟 Categories that are scoped to whatever window/pane the user is interacting with — selecting or editing content varies per window, so these live in each window's own bottom-left panel. */
 const UTILITY_CATEGORIES: readonly UtilityCategory[] = ["selection", "utilities"];
 
-const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, string>> = {
+const UTILITY_CATEGORY_ICON_ID: Readonly<Record<UtilityCategory, IconName>> = {
   selection: "mouse-pointer",
   utilities: "wrench",
   history: "undo",
@@ -8464,7 +8608,7 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
                   title={entry.title ?? entry.label}
                   disabled={entry.disabled}
                   onClick={() => onAction(action)}
-                  icon={<Icon icon={utilityIcon(entry.iconId)} size="small" />}
+                  icon={<Icon icon={entry.iconId as IconName} size="small" />}
                   text={entry.text ?? entry.label}
                 />
               );
@@ -8494,7 +8638,7 @@ function UtilityRibbonItems({ items, onAction }: { readonly items: readonly Util
             items={run.map((entry) => ({
               value: entry.id,
               id: entry.id,
-              icon: <Icon icon={utilityIcon(entry.iconId)} size="small" />,
+              icon: <Icon icon={entry.iconId as IconName} size="small" />,
               text: entry.text ?? entry.label,
             }))}
           />
@@ -8576,7 +8720,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
           items={segment.collections.map((entry) => ({
             value: entry.id,
             id: `${id}.group.${entry.id}`,
-            icon: <Icon icon={utilityIcon(entry.iconId)} size="small" />,
+            icon: <Icon icon={entry.iconId as IconName} size="small" />,
             text: entry.text ?? entry.label,
           }))}
         />
@@ -8638,11 +8782,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
     });
   }
 
-  return (
-    <UiChromeLabelPolicyProvider policy="always">
-      <Ribbon id={id} direction={direction} rows={rows} />
-    </UiChromeLabelPolicyProvider>
-  );
+  return <Ribbon id={id} direction={direction} rows={rows} />;
 }
 //#endregion 🔖utility-tree
 
@@ -8650,7 +8790,7 @@ export function UtilityTree({ utilities, onAction, id = "ui.utilities", directio
 
 //#region DisplayPanel
 export type DisplayHostApi = {
-  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly surfaceKind?: string }[];
+  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly iconId: IconName; readonly surfaceKind?: string }[];
   readonly namedLayouts: readonly NamedLayout[];
   readonly userLayouts: readonly NamedLayout[];
   readonly saveCurrentLayout: (label: string) => void;
@@ -8732,6 +8872,10 @@ function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjection
     }));
 }
 
+function displayWindowKindIcon(iconId: IconName): ReactNode {
+  return <Icon icon={iconId} size="small" />;
+}
+
 function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
   return {
     dragAndDropController: windowTemplatePaletteTreeDragController(),
@@ -8739,6 +8883,7 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
       ? host.windowKinds.map((kind) => ({
           id: `framework.display.windows.${kind.id}`,
           label: kind.label,
+          icon: displayWindowKindIcon(kind.iconId),
           defaultOpen: false,
           // 🔃 `worldProjectionTemplatesToTreeItems` already returns its items pre-reversed for one "up" render
           // level (see its docstring); the plain kind leaf renders *last* raw so the bottom-anchored Tree's own
@@ -8747,12 +8892,13 @@ function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {
             kind.surfaceKind === "world-3d"
               ? [
                   ...worldProjectionTemplatesToTreeItems(createWorldProjectionTemplates({ controllerId: kind.id }), kind.id, `framework.display.windows.${kind.id}.projection`),
-                  { id: `framework.display.windows.${kind.id}.kind`, label: kind.label, dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) } },
+                  { id: `framework.display.windows.${kind.id}.kind`, label: kind.label, icon: displayWindowKindIcon(kind.iconId), dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }) } },
                 ]
               : [
                   {
                     id: `framework.display.windows.${kind.id}.kind`,
                     label: kind.label,
+                    icon: displayWindowKindIcon(kind.iconId),
                     dragData: {
                       [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId: kind.id }),
                     },
@@ -8859,10 +9005,16 @@ export type SettingsHostApi = {
   readonly appLabel?: string;
   readonly controllerId?: string;
   readonly pluginId?: string;
-  readonly compact: boolean;
-  readonly setCompact: (compact: boolean) => void;
-  readonly expertise: string;
-  readonly setExpertise: (expertise: string) => void;
+  readonly driverId: string;
+  readonly driver: UiDriver;
+  readonly driverDirty: boolean;
+  readonly drivers: readonly UiDriver[];
+  readonly setDriverId: (id: string) => void;
+  readonly setDriverField: <K extends keyof Omit<UiDriver, "id" | "label">>(key: K, value: UiDriver[K]) => void;
+  readonly saveDriver: (label: string) => void;
+  readonly deleteDriver: (id: string) => void;
+  readonly driverSaveLabel: string;
+  readonly setDriverSaveLabel: (value: string) => void;
   readonly appearance: string;
   readonly setAppearance: (appearance: string) => void;
   readonly layout: UiChromeLayout;
@@ -8959,22 +9111,19 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             ),
           },
           {
-            id: "framework.settings.compact",
-            label: shellLabel("settings.compact"),
-            control: <input id="framework.settings.compact" type="checkbox" checked={host.compact} onChange={(event) => host.setCompact(event.target.checked)} />,
-          },
-          {
-            id: "framework.settings.expertise",
-            label: shellLabel("ui.settings.tab.expertise"),
+            id: "framework.settings.driver",
+            label: shellLabel("ui.settings.tab.driver"),
             control: (
-              <Select value={host.expertise} onValueChange={(value) => host.setExpertise(value)}>
-                <SelectTrigger id="framework.settings.expertise" className="h-small w-32" size="sm">
+              <Select value={host.driverId} onValueChange={(value) => host.setDriverId(value)}>
+                <SelectTrigger id="framework.settings.driver" className="h-small w-32" size="sm">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="beginner">{shellLabel("settings.expertise.beginner")}</SelectItem>
-                  <SelectItem value="normal">{shellLabel("settings.expertise.normal")}</SelectItem>
-                  <SelectItem value="expert">{shellLabel("settings.expertise.expert")}</SelectItem>
+                  {host.drivers.map((driver) => (
+                    <SelectItem key={driver.id} value={driver.id}>
+                      {driver.label}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             ),
@@ -9031,7 +9180,106 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
             : []),
         ],
       },
+      {
+        id: "framework.settings.driver.editor",
+        label: `${shellLabel("ui.settings.tab.driver")}${host.driverDirty ? ` (${shellLabel("ui.settings.driver.dirty")})` : ""}`,
+        defaultOpen: false,
+        items: [
+          driverAxisSelectRow("labels", shellLabel("settings.driver.labels"), host.driver.labels, [
+            { value: "full", label: shellLabel("settings.driver.labelsOption.full") },
+            { value: "icons", label: shellLabel("settings.driver.labelsOption.icons") },
+          ], (next) => host.setDriverField("labels", next as UiDriver["labels"])),
+          driverAxisSelectRow("labelTier", shellLabel("settings.driver.labelTier"), host.driver.labelTier, [
+            { value: "beginner", label: shellLabel("settings.driver.labelTierOption.beginner") },
+            { value: "normal", label: shellLabel("settings.driver.labelTierOption.normal") },
+          ], (next) => host.setDriverField("labelTier", next as UiDriver["labelTier"])),
+          driverAxisSelectRow("drag", shellLabel("settings.driver.drag"), host.driver.drag, [
+            { value: "handle", label: shellLabel("settings.driver.dragOption.handle") },
+            { value: "surface", label: shellLabel("settings.driver.dragOption.surface") },
+          ], (next) => host.setDriverField("drag", next as UiDriver["drag"])),
+          driverAxisSelectRow("chrome", shellLabel("settings.driver.chrome"), host.driver.chrome, [
+            { value: "always", label: shellLabel("settings.driver.chromeOption.always") },
+            { value: "hover", label: shellLabel("settings.driver.chromeOption.hover") },
+          ], (next) => host.setDriverField("chrome", next as UiDriver["chrome"])),
+          driverAxisSelectRow("gumball", shellLabel("settings.driver.gumball"), host.driver.gumball, [
+            { value: "always", label: shellLabel("settings.driver.gumballOption.always") },
+            { value: "hover", label: shellLabel("settings.driver.gumballOption.hover") },
+          ], (next) => host.setDriverField("gumball", next as UiDriver["gumball"])),
+          driverAxisSelectRow("tooltips", shellLabel("settings.driver.tooltips"), host.driver.tooltips, [
+            { value: "full", label: shellLabel("settings.driver.tooltipsOption.full") },
+            { value: "minimal", label: shellLabel("settings.driver.tooltipsOption.minimal") },
+            { value: "none", label: shellLabel("settings.driver.tooltipsOption.none") },
+          ], (next) => host.setDriverField("tooltips", next as UiDriver["tooltips"])),
+          {
+            id: "framework.settings.driver.save.label",
+            label: shellLabel("ui.common.name"),
+            control: (
+              <Input
+                id="framework.settings.driver.saveLabel"
+                value={host.driverSaveLabel}
+                onChange={(event) => host.setDriverSaveLabel(event.target.value)}
+                placeholder={shellLabel("settings.driver.savePlaceholder")}
+                className="h-small w-32"
+              />
+            ),
+          },
+          {
+            id: "framework.settings.driver.save.action",
+            label: shellLabel("settings.driver.save"),
+            control: (
+              <Button
+                id="framework.settings.driver.save"
+                size="sm"
+                text={shellLabel("settings.driver.save")}
+                disabled={!host.driverSaveLabel.trim()}
+                onClick={() => {
+                  const label = host.driverSaveLabel.trim();
+                  if (!label) return;
+                  host.saveDriver(label);
+                  host.setDriverSaveLabel("");
+                }}
+              />
+            ),
+          },
+          ...(host.driverId.startsWith("custom.")
+            ? [
+                {
+                  id: "framework.settings.driver.delete.action",
+                  label: shellLabel("settings.driver.delete"),
+                  control: <Button id="framework.settings.driver.delete" size="sm" text={shellLabel("settings.driver.delete")} onClick={() => host.deleteDriver(host.driverId)} />,
+                },
+              ]
+            : []),
+        ],
+      },
     ],
+  };
+}
+
+function driverAxisSelectRow<K extends keyof Omit<UiDriver, "id" | "label">>(
+  key: K,
+  label: string,
+  value: UiDriver[K],
+  options: readonly { readonly value: string; readonly label: string }[],
+  onChange: (next: string) => void,
+): TreeDataItem {
+  return {
+    id: `framework.settings.driver.${key}`,
+    label,
+    control: (
+      <Select value={value as string} onValueChange={onChange}>
+        <SelectTrigger id={`framework.settings.driver.${key}`} className="h-small w-32" size="sm">
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent>
+          {options.map((option) => (
+            <SelectItem key={option.value} value={option.value}>
+              {option.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    ),
   };
 }
 
@@ -9297,7 +9545,7 @@ export function createFrameworkSettingsPanelTabs(getHost: () => SettingsHostApi 
 
 export function useNamedLayoutHost(options: {
   readonly appId: string;
-  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly surfaceKind?: string }[];
+  readonly windowKinds: readonly { readonly id: string; readonly label: string; readonly iconId: IconName; readonly surfaceKind?: string }[];
   readonly builtinLayouts: readonly NamedLayout[];
   readonly currentLayout: WindowLayout | undefined;
   readonly onApplyLayout: (layout: WindowLayout) => void;
@@ -11183,35 +11431,43 @@ function logContextMenuOpen(source: string, specs: readonly ContextMenuItemSpec[
 }
 
 /** @emoji 🖱️ Maps plugin-authored {@link ContextMenuItemSpec} rows onto UI {@link ContextMenuItem} rows, binding select/hover to host `dispatch`. */
-export function mapContextMenuSpecs(specs: readonly ContextMenuItemSpec[], dispatch: (action: string, args?: Record<string, unknown>) => void): ContextMenuItem[] {
-  return specs.map((spec) => ({
-    id: spec.id,
-    label: spec.label,
-    icon: spec.icon,
-    color: spec.color,
-    shortcut: spec.shortcut,
-    disabled: spec.disabled,
-    separator: spec.separator,
-    checked: spec.checked,
-    destructive: spec.destructive,
-    onSelect: spec.action
-      ? (event) => {
-          const clientX = event && "clientX" in event && typeof (event as MouseEvent).clientX === "number" ? (event as MouseEvent).clientX : undefined;
-          const clientY = event && "clientY" in event && typeof (event as MouseEvent).clientY === "number" ? (event as MouseEvent).clientY : undefined;
-          const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
-          dispatch(spec.action!, { ...spec.args, ...pointArgs });
-        }
-      : undefined,
-    onHover: spec.hoverAction
-      ? () => {
-          if (spec.hoverAction === "hoverSuggestion") {
-            console.log(`[DEBUG] hoverSuggestion`, { index: spec.hoverArgs?.index, color: spec.color, icon: spec.icon });
+export function mapContextMenuSpecs(
+  specs: readonly ContextMenuItemSpec[],
+  dispatch: (action: string, args?: Record<string, unknown>) => void,
+  keysByActionId?: ReadonlyMap<string, string>,
+): ContextMenuItem[] {
+  return specs.map((spec) => {
+    const boundKeys = spec.action ? keysByActionId?.get(spec.action) : undefined;
+    const shortcut = spec.shortcut ?? (boundKeys ? formatKeybindingShortcut(boundKeys) : undefined);
+    return {
+      id: spec.id,
+      label: spec.label,
+      icon: spec.icon,
+      color: spec.color,
+      shortcut,
+      disabled: spec.disabled,
+      separator: spec.separator,
+      checked: spec.checked,
+      destructive: spec.destructive,
+      onSelect: spec.action
+        ? (event) => {
+            const clientX = event && "clientX" in event && typeof (event as MouseEvent).clientX === "number" ? (event as MouseEvent).clientX : undefined;
+            const clientY = event && "clientY" in event && typeof (event as MouseEvent).clientY === "number" ? (event as MouseEvent).clientY : undefined;
+            const pointArgs = spec.action === "openVortexSuggestions" && clientX != null && clientY != null ? { x: clientX, y: clientY } : undefined;
+            dispatch(spec.action!, { ...spec.args, ...pointArgs });
           }
-          dispatch(spec.hoverAction!, spec.hoverArgs);
-        }
-      : undefined,
-    children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch) : undefined,
-  }));
+        : undefined,
+      onHover: spec.hoverAction
+        ? () => {
+            if (spec.hoverAction === "hoverSuggestion") {
+              console.log(`[DEBUG] hoverSuggestion`, { index: spec.hoverArgs?.index, color: spec.color, icon: spec.icon });
+            }
+            dispatch(spec.hoverAction!, spec.hoverArgs);
+          }
+        : undefined,
+      children: spec.children?.length ? mapContextMenuSpecs(spec.children, dispatch, keysByActionId) : undefined,
+    };
+  });
 }
 
 /** @emoji 🕸️ Rewrites node-graph context-menu rows for the effective right-click selection so preview/zoom/clear/delete enable immediately without waiting for a plugin round-trip. */
@@ -11804,6 +12060,29 @@ export function worldGumballConfigForProjection(mode: string, projectionSpec?: W
   return gumballConfigForTransformMode(mode, worldProjectionGumballPlane(projectionSpec));
 }
 
+/** @emoji 🫥 True while the canvas is hovered, or always true when `enabled` is false (driver gumball reveal is `"always"`). Listens directly on the R3F canvas DOM element — no prop drilling into the scene graph. */
+function useUiCanvasHovered(enabled: boolean): boolean {
+  const gl = useThree((state) => state.gl);
+  const [hovered, setHovered] = useState(!enabled);
+  useEffect(() => {
+    if (!enabled) {
+      setHovered(true);
+      return;
+    }
+    setHovered(false);
+    const canvas = gl.domElement;
+    const onEnter = () => setHovered(true);
+    const onLeave = () => setHovered(false);
+    canvas.addEventListener("pointerenter", onEnter);
+    canvas.addEventListener("pointerleave", onLeave);
+    return () => {
+      canvas.removeEventListener("pointerenter", onEnter);
+      canvas.removeEventListener("pointerleave", onLeave);
+    };
+  }, [enabled, gl]);
+  return hovered;
+}
+
 function SceneGumball({
   target,
   config,
@@ -11824,6 +12103,8 @@ function SceneGumball({
   const pivotRef = useRef<Object3D>(new Object3D());
   const draggingRef = useRef(false);
   const [ready, setReady] = useState(false);
+  const driver = useUiDriver();
+  const hovered = useUiCanvasHovered(driver.gumball === "hover");
   useEffect(() => {
     if (!target || draggingRef.current) return;
     pivotRef.current.position.set(target[0], target[1], target[2]);
@@ -11832,7 +12113,7 @@ function SceneGumball({
     pivotRef.current.updateMatrixWorld(true);
     setReady(true);
   }, [target]);
-  if (!active || !target || !ready) return null;
+  if (!active || !target || !ready || !hovered) return null;
   return (
     <>
       <primitive object={pivotRef.current} />
@@ -12329,7 +12610,7 @@ function WorldInstancesLayer({
     const cutoff = worldRevealCutoffStore.get(PUZZLE3D_FILL_REVEAL_GROUP_ID) ?? revealCutoffs?.[PUZZLE3D_FILL_REVEAL_GROUP_ID];
     let changed = false;
     for (const instance of instances) {
-      if (instance.revealIndex === undefined) continue;
+      if (instance.revealIndex == null) continue;
       const root = instanceRootsRef.current.get(instance.id);
       if (!root) continue;
       const visible = cutoff === undefined || instance.revealIndex < cutoff;
@@ -12968,17 +13249,18 @@ export function worldSuggestionMenuOwnsWindow(
 }
 
 /** @emoji 🧭 Floating per-vortex candidate popup opened by Alt+right-click or the context menu's "Suggest objects" — a one-shot placement picker that does not switch the active utility into brush mode; hovering a row previews the ghost, clicking places it. Icon + active highlight only (no color swatch — object-kind color stays on the 3D ghost). */
-function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
+export function suggestionMenuItems(menu: WorldSuggestionMenuRecord, activeIndex: number): ContextMenuItemSpec[] {
   if (menu.pending) {
     return [{ id: "pending", label: "Checking placement…", disabled: true }];
   }
   if (menu.candidates.length === 0) {
     return [{ id: "empty", label: "No placement", disabled: true }];
   }
-  return menu.candidates.map((candidate) => ({
+  return menu.candidates.map((candidate, position) => ({
     id: `suggestion-${candidate.index}`,
     label: `${candidate.objectLabel} · ${candidate.vortexLabel}`,
     icon: candidate.icon ?? "box",
+    shortcut: position < 9 ? String(position + 1) : undefined,
     checked: candidate.index === activeIndex,
     action: "acceptSuggestion",
     args: { index: candidate.index, ...(menu.vortexFullId ? { fullId: menu.vortexFullId } : {}) },
@@ -17721,7 +18003,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
 //#region TableHost
 //#region Types
 type TableColumnRecord = { readonly id: string; readonly label: string; readonly sortable?: boolean };
-type TableCellButton = { readonly iconId: string; readonly label?: string; readonly action: ActionDescriptor; readonly revealOnHover?: boolean };
+type TableCellButton = { readonly iconId: IconName; readonly label?: string; readonly action: ActionDescriptor; readonly revealOnHover?: boolean };
 type TableCellRecord =
   | { readonly kind: "text"; readonly value: string }
   | { readonly kind: "number"; readonly value: number }
@@ -17740,10 +18022,6 @@ function dispatchCellAction(onAction: (action: ActionDescriptor) => void, descri
     ...descriptor,
     args: { ...(typeof descriptor.args === "object" && descriptor.args != null ? descriptor.args : {}), ...patch },
   });
-}
-
-function resolveTableCellIcon(iconId: string): IconName {
-  return iconId in ICONS ? (iconId as IconName) : "circle-dot";
 }
 
 function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescriptor) => void): React.ReactNode {
@@ -17769,7 +18047,7 @@ function renderTableCell(cell: TableCellRecord, onAction: (action: ActionDescrip
         <div className="flex min-w-0 items-center gap-1" onClick={(event) => event.stopPropagation()}>
           {cell.buttons.map((button, index) => (
             <Button key={index} className="h-medium shrink-0 px-2" onClick={() => dispatchCellAction(onAction, button.action, {})} title={button.label} type="button" variant="outline">
-              <Icon icon={resolveTableCellIcon(button.iconId)} size="small" />
+              <Icon icon={button.iconId} size="small" />
             </Button>
           ))}
         </div>
@@ -22169,15 +22447,11 @@ export function GraphTimelineHost({ node, onAction }: ComponentSceneHostProps) {
 //#region Types
 type BlockRecord = { readonly id: string; readonly label: string; readonly kind: string; readonly description?: string };
 type StepRecord = { readonly id: string; readonly title: string; readonly description?: string; readonly blocks: readonly BlockRecord[] };
-type PaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: string };
+type PaletteEntryRecord = { readonly blockKind: string; readonly label: string; readonly iconId: IconName };
 const PALETTE_DRAG_MIME = "application/x-semio-block-list-block-kind";
 //#endregion Types
 
 //#region Helpers
-function resolveBlockIcon(iconId: string): IconName {
-  return iconId in ICONS ? (iconId as IconName) : "circle-dot";
-}
-
 function dispatchBlockListAction(onAction: (action: ActionDescriptor) => void, controllerId: string, action: string, args: Record<string, unknown>): void {
   onAction({ controllerId, action, args });
 }
@@ -22281,7 +22555,7 @@ function PalettePanel({ palette, controllerId, onAction }: { readonly palette: r
           className="flex cursor-grab items-center gap-1 rounded border border-border p-single text-xs"
           onClick={() => dispatchBlockListAction(onAction, controllerId, "addBlock", { kind: entry.blockKind })}
         >
-          <Icon icon={resolveBlockIcon(entry.iconId)} size="small" />
+          <Icon icon={entry.iconId} size="small" />
           {entry.label}
         </div>
       ))}
@@ -22499,10 +22773,6 @@ export function DiffViewHost({ node }: ComponentSceneHostProps) {
 //#region 🔖EventFeedHost
 //#region EventFeedHost
 //#region Helpers
-function resolveFeedIcon(iconId: string): IconName {
-  return iconId in ICONS ? (iconId as IconName) : "circle-dot";
-}
-
 const FEED_TONE_CLASS: Record<string, string> = {
   info: "text-foreground",
   success: "text-emerald-400",
@@ -22561,7 +22831,7 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
               : undefined
           }
         >
-          <Icon icon={resolveFeedIcon(entry.iconId)} size="small" />
+          <Icon icon={entry.iconId as IconName} size="small" />
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-single">
               <span className={cn("truncate text-xs font-medium", entry.tone ? FEED_TONE_CLASS[entry.tone] : undefined)}>{entry.title}</span>

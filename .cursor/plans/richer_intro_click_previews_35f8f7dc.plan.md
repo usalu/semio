@@ -4,16 +4,16 @@ overview: Make every introduction ghost-cursor demonstration visually unique by 
 todos:
   - id: schema
     content: Add IntroductionPointerButton + IntroductionKeyModifier; enrich Drag/Orbit with button/modifiers defaults; regenerate TS + Rust tests
-    status: in_progress
+    status: completed
   - id: overlay-visuals
     content: Handcraft mouse SVG; implement mini-mouse, modifier chips, distinct ripples/trails/wheel in IntroductionDemonstrationOverlay + ui.css
-    status: in_progress
+    status: completed
   - id: authoring
     content: Update Aggregator viewport demos (middle drag) and Storybook gesture gallery story
-    status: pending
+    status: completed
   - id: verify
     content: Extend existing vitest/Rust tests; run them; open/close ticket under Design App goal
-    status: pending
+    status: completed
 isProject: false
 ---
 

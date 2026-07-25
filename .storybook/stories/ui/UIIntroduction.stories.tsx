@@ -106,4 +106,57 @@ export const WithInteractions: Story = {
     );
   },
 };
+
+const gestureGalleryTarget = { kind: "screenNormalized" as const, x: 0.5, y: 0.5 };
+
+const gestureGalleryWalkthrough: IntroductionDefinition = {
+  title: "Gesture Gallery",
+  steps: [
+    {
+      id: "step.gestures",
+      title: "Gesture Gallery",
+      body: "Stay idle to cycle each ghost-cursor demonstration — left click, right click, double click, left drag, middle drag, scroll, and Alt + right orbit.",
+      introduce: null,
+      show: [],
+      placement: "center",
+      interactions: [],
+      ordered: false,
+      logos: [],
+      demonstrations: [
+        { gesture: { kind: "leftClick", at: gestureGalleryTarget } },
+        { gesture: { kind: "rightClick", at: gestureGalleryTarget } },
+        { gesture: { kind: "doubleClick", at: gestureGalleryTarget } },
+        {
+          gesture: {
+            kind: "drag",
+            from: { kind: "screenNormalized", x: 0.35, y: 0.5 },
+            to: { kind: "screenNormalized", x: 0.65, y: 0.5 },
+          },
+        },
+        {
+          gesture: {
+            kind: "drag",
+            from: { kind: "screenNormalized", x: 0.35, y: 0.55 },
+            to: { kind: "screenNormalized", x: 0.65, y: 0.45 },
+            button: "middle",
+          },
+          cursor: "move",
+        },
+        { gesture: { kind: "scroll", at: gestureGalleryTarget, deltaY: -100 } },
+        {
+          gesture: {
+            kind: "orbit",
+            from: { kind: "screenNormalized", x: 0.35, y: 0.5 },
+            to: { kind: "screenNormalized", x: 0.65, y: 0.5 },
+          },
+        },
+      ],
+    },
+  ],
+};
+
+export const GestureGallery: Story = {
+  name: "Gesture gallery",
+  render: () => <UIIntroduction introduction={gestureGalleryWalkthrough} stepIndex={0} onStepIndexChange={() => {}} onDismiss={() => {}} />,
+};
 // #endregion 🎓UIIntroduction

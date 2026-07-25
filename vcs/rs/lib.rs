@@ -201,6 +201,63 @@ pub enum VcsError {
 }
 //#endregion 🔖Errors
 
+//#region 🔖Text
+/// @emoji 📍 1-based line/column position inside DSL or op-log source text.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct TextSpan {
+    pub line: u32,
+    pub column: u32,
+    pub length: u32,
+}
+
+impl TextSpan {
+    pub fn at(line: u32, column: u32) -> Self {
+        Self { line, column, length: 0 }
+    }
+}
+
+/// @emoji 🚧 Span-carrying parse/print failure for DSL documents and op lines.
+#[derive(Clone, Debug, PartialEq, Error, Serialize, Deserialize)]
+#[error("{message} at {}:{}", span.line, span.column)]
+pub struct TextError {
+    pub message: String,
+    pub span: TextSpan,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub expected: Option<String>,
+}
+
+impl TextError {
+    pub fn new(message: impl Into<String>, span: TextSpan) -> Self {
+        Self { message: message.into(), span, expected: None }
+    }
+
+    pub fn expected(message: impl Into<String>, span: TextSpan, expected: impl Into<String>) -> Self {
+        Self { message: message.into(), span, expected: Some(expected.into()) }
+    }
+}
+
+/// @emoji 📜 Handcrafted textual representation of a document projection, implemented once per
+/// technology next to its `Projection` type. LAW: `P::parse_dsl(&projection.print_dsl())` recovers
+/// an equal projection — canonical `print_dsl` output is always a `parse_dsl` fixpoint; hand-written
+/// text may normalize (whitespace, ordering) before reaching that fixpoint.
+pub trait DocumentDsl: Sized {
+    /// @emoji 🏷️ Canonical file extension WITHOUT the leading dot, e.g. `"note"`, `"puzzle3d"`.
+    const EXTENSION: &'static str;
+    fn parse_dsl(text: &str) -> Result<Self, TextError>;
+    fn print_dsl(&self) -> String;
+}
+
+/// @emoji ⚡ Handcrafted ONE-LINE textual representation of an operation, implemented once per
+/// technology next to its `Operation` enum. LAWS: `print_op` output never contains `\n` (enforced by
+/// {@link print_edit_lines} and `test_support::assert_op_line_round_trip`); `Op::parse_op` recovers an
+/// equal operation from `op.print_op()`.
+pub trait OpText: Sized {
+    fn parse_op(line: &str) -> Result<Self, TextError>;
+    fn print_op(&self) -> String;
+}
+//#endregion 🔖Text
+
 //#region 🔖CollectionDiff
 /// @emoji 🧩 Sparse collection patch entry (mirrors compose `XModified`).
 #[derive(Clone, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
@@ -400,6 +457,13 @@ pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
     /// only caller already owns a freshly materialized projection.
     fn reconcile(projection: P) -> (P, Vec<StudioConflict>) {
         (projection, Vec::new())
+    }
+    /// @emoji 🛂 Pre-apply validation against the current projection. Defaults to `Ok`, so no existing
+    /// technology needs to override this. {@link parse_document_text} calls it for every op-log line
+    /// before applying, so a corrupt or stale log fails to LOAD with a line number, instead of a
+    /// diff/apply panic deep inside a technology's `OperationDiff::apply`.
+    fn validate(&self, _projection: &P) -> Result<(), String> {
+        Ok(())
     }
 }
 
@@ -602,6 +666,403 @@ where
 
 //#endregion 🔖Materialize
 
+//#region 🔖TextFormat
+/// @emoji 📄 The two files a textual VCS document is made of: the DSL text (initial projection) and
+/// the append-only op log (every edit ever created, forwards-only — see {@link parse_document_text}).
+#[derive(Clone, Debug, Default, PartialEq, Eq)]
+pub struct DocumentTextFiles {
+    pub dsl: String,
+    pub ops: String,
+}
+
+/// @emoji 🧩 The result of loading a document from text: the reconstructed envelope plus the live
+/// projection folded from every edit, so a caller never has to replay again after loading.
+#[derive(Clone, Debug, PartialEq)]
+pub struct ParsedDocumentText<P, Operation> {
+    pub envelope: DocumentVcsEnvelope<P, Operation>,
+    pub projection: P,
+}
+
+fn escape_text_field(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+fn unescape_text_field(value: &str) -> String {
+    let mut out = String::with_capacity(value.len());
+    let mut chars = value.chars();
+    while let Some(ch) = chars.next() {
+        if ch == '\\' {
+            match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => out.push('\\'),
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// @emoji 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, if `chars`
+/// ends with an unescaped closing `"`. Content between the two quotes never contains an unescaped `"`
+/// (escaping guarantees it), so the first unescaped `"` found scanning backwards is the opening one.
+fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
+    if chars.is_empty() || *chars.last().unwrap() != '"' {
+        return None;
+    }
+    let last = chars.len() - 1;
+    let mut i = last;
+    while i > 0 {
+        i -= 1;
+        if chars[i] == '"' {
+            let mut backslashes = 0;
+            let mut j = i;
+            while j > 0 && chars[j - 1] == '\\' {
+                backslashes += 1;
+                j -= 1;
+            }
+            if backslashes % 2 == 0 {
+                return Some(i);
+            }
+        }
+    }
+    None
+}
+
+/// @emoji 🧾 One parsed structural line (`@doc`/`@edit`/`@change`/`@checkpoint`/`@alternative`/`@active`):
+/// the `@kind` marker, its `key=value` tokens, and an optional trailing quoted text field.
+struct StructuralLine {
+    kind: String,
+    fields: HashMap<String, String>,
+    text: Option<String>,
+}
+
+fn parse_structural_line(line: &str, line_no: u32) -> Result<StructuralLine, TextError> {
+    let trimmed = line.trim_end();
+    let chars: Vec<char> = trimmed.chars().collect();
+    let (head, text) = match find_unescaped_trailing_quote(&chars) {
+        Some(open) => {
+            let content: String = chars[open + 1..chars.len() - 1].iter().collect();
+            let head: String = chars[..open].iter().collect();
+            (head.trim_end().to_string(), Some(unescape_text_field(&content)))
+        }
+        None => (trimmed.to_string(), None),
+    };
+    let mut tokens = head.split_whitespace();
+    let kind = tokens
+        .next()
+        .filter(|token| token.starts_with('@'))
+        .ok_or_else(|| TextError::new("expected a structural line starting with '@'", TextSpan::at(line_no, 1)))?
+        .to_string();
+    let mut fields = HashMap::new();
+    for token in tokens {
+        let (key, value) = token
+            .split_once('=')
+            .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(line_no, 1)))?;
+        fields.insert(key.to_string(), value.to_string());
+    }
+    Ok(StructuralLine { kind, fields, text })
+}
+
+fn field<'a>(fields: &'a HashMap<String, String>, key: &str, line_no: u32) -> Result<&'a str, TextError> {
+    fields
+        .get(key)
+        .map(|value| value.as_str())
+        .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(line_no, 1)))
+}
+
+fn optional_field<'a>(fields: &'a HashMap<String, String>, key: &str) -> Option<&'a str> {
+    fields.get(key).map(|value| value.as_str()).filter(|value| *value != "-")
+}
+
+fn split_ids(value: &str) -> Vec<String> {
+    if value == "-" {
+        Vec::new()
+    } else {
+        value.split(',').map(|id| id.to_string()).collect()
+    }
+}
+
+fn join_ids(ids: &[String]) -> String {
+    if ids.is_empty() {
+        "-".to_string()
+    } else {
+        ids.join(",")
+    }
+}
+
+fn print_authors(authors: &[Author]) -> String {
+    if authors.is_empty() {
+        return "-".to_string();
+    }
+    authors
+        .iter()
+        .map(|author| format!("{}:{}", escape_id_component(&author.id), escape_id_component(&author.name)))
+        .collect::<Vec<_>>()
+        .join(",")
+}
+
+fn parse_authors(value: &str) -> Vec<Author> {
+    if value == "-" {
+        return Vec::new();
+    }
+    value
+        .split(',')
+        .map(|entry| {
+            let mut parts = entry.splitn(2, ':');
+            let id = unescape_id_component(parts.next().unwrap_or_default());
+            let name = unescape_id_component(parts.next().unwrap_or_default());
+            Author { id, name, avatar: None }
+        })
+        .collect()
+}
+
+/// @emoji 🔐 Minimal percent-escape for id/name components embedded in comma/colon-delimited lists.
+fn escape_id_component(value: &str) -> String {
+    value.replace('%', "%25").replace(',', "%2C").replace(':', "%3A")
+}
+
+fn unescape_id_component(value: &str) -> String {
+    value.replace("%3A", ":").replace("%2C", ",").replace("%25", "%")
+}
+
+/// @emoji 📤 Prints one edit as `@edit ...` followed by one two-space-indented `print_op` line per
+/// forward operation — the hot-path append unit for the op log. Backwards operations and per-operation
+/// metadata are never serialized; they are recomputed during {@link parse_document_text}'s load replay.
+pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<String, VcsError> {
+    let mut out = String::new();
+    out.push_str("@edit id=");
+    out.push_str(&edit.id);
+    out.push_str(" actor=");
+    out.push_str(&edit.actor.clone().unwrap_or_else(|| "-".to_string()));
+    out.push_str(" started=");
+    out.push_str(&edit.started_at);
+    out.push_str(" finished=");
+    out.push_str(&edit.finished_at.clone().unwrap_or_else(|| "-".to_string()));
+    out.push_str(" key=");
+    out.push_str(&edit.coalesce_key.clone().unwrap_or_else(|| "-".to_string()));
+    out.push_str(" \"");
+    out.push_str(&escape_text_field(edit.description.as_deref().unwrap_or("-")));
+    out.push('"');
+    out.push('\n');
+    for operation in &edit.forwards {
+        let printed = operation.print_op();
+        if printed.contains('\n') {
+            return Err(VcsError::Serialize("op-text print_op must not contain a newline".into()));
+        }
+        out.push_str("  ");
+        out.push_str(&printed);
+        out.push('\n');
+    }
+    Ok(out)
+}
+
+/// @emoji 📤 Prints the full textual VCS document: the DSL text (initial projection) and the complete
+/// op log (`@doc` header, every edit ever created as an `@edit` block, then `@change`/`@checkpoint`/
+/// `@alternative`/`@active` records). Replaces the JSON envelope as the canonical persisted form.
+pub fn print_document_text<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
+where
+    P: DocumentDsl,
+    Operation: OpText,
+{
+    let dsl = envelope.vcs.initial_projection.print_dsl();
+    let mut ops = String::new();
+    ops.push_str(&format!("@doc schema={} id={}\n", envelope.schema, envelope.id));
+    for edit in &envelope.vcs.edits {
+        ops.push_str(&print_edit_lines(edit)?);
+    }
+    for change in &envelope.vcs.changes {
+        ops.push_str(&format!(
+            "@change id={} saved={} edits={} \"{}\"\n",
+            change.id,
+            change.saved_at,
+            join_ids(&change.edit_ids),
+            escape_text_field(change.description.as_deref().unwrap_or("-")),
+        ));
+    }
+    for checkpoint in &envelope.vcs.checkpoints {
+        ops.push_str(&format!(
+            "@checkpoint id={} parent={} changes={} by={} at={} \"{}\"\n",
+            checkpoint.id,
+            checkpoint.parent_id.clone().unwrap_or_else(|| "-".to_string()),
+            join_ids(&checkpoint.change_ids),
+            print_authors(&checkpoint.authors),
+            checkpoint.timestamp,
+            escape_text_field(checkpoint.message.as_deref().unwrap_or("-")),
+        ));
+    }
+    for alternative in &envelope.vcs.alternatives {
+        ops.push_str(&format!(
+            "@alternative id={} checkpoints={} \"{}\"\n",
+            alternative.id,
+            join_ids(&alternative.checkpoint_ids),
+            escape_text_field(&alternative.name),
+        ));
+    }
+    if let Some(active_id) = &envelope.active_alternative_id {
+        ops.push_str(&format!("@active id={active_id}\n"));
+    }
+    Ok(DocumentTextFiles { dsl, ops })
+}
+
+/// @emoji 📥 Parses the textual VCS document back into an envelope plus its live (fully-replayed)
+/// projection. Every `@edit` in the log is treated as applied, in file order — mirroring the existing
+/// JSON `load_document` semantics (undo/redo position and checkout-alternative state are runtime-only
+/// and are not restored across a save/load cycle either way).
+pub fn parse_document_text<P, Operation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+where
+    P: Clone + DocumentDsl,
+    Operation: OpText + crate::Operation<P>,
+{
+    let initial_projection = P::parse_dsl(dsl)?;
+    let mut schema = String::new();
+    let mut id = String::new();
+    let mut edits: Vec<Edit<Operation>> = Vec::new();
+    let mut changes: Vec<Change> = Vec::new();
+    let mut checkpoints: Vec<Checkpoint> = Vec::new();
+    let mut alternatives: Vec<Alternative> = Vec::new();
+    let mut active_alternative_id: Option<String> = None;
+    let mut projection = initial_projection.clone();
+
+    let mut pending_edit: Option<(u32, StructuralLine)> = None;
+    let mut pending_forwards: Vec<Operation> = Vec::new();
+
+    let flush_pending_edit =
+        |pending_edit: &mut Option<(u32, StructuralLine)>, pending_forwards: &mut Vec<Operation>, edits: &mut Vec<Edit<Operation>>, projection: &mut P| -> Result<(), TextError> {
+            let Some((line_no, header)) = pending_edit.take() else {
+                return Ok(());
+            };
+            let forwards = std::mem::take(pending_forwards);
+            let mut backwards = Vec::with_capacity(forwards.len());
+            let mut operation_meta = Vec::with_capacity(forwards.len());
+            for operation in &forwards {
+                operation.validate(projection).map_err(|message| TextError::new(message, TextSpan::at(line_no, 1)))?;
+                let mut back = operation.backwards(projection);
+                back.reverse();
+                backwards.extend(back);
+                operation_meta.push(OperationMeta {
+                    operation_id: operation.operation_id().unwrap_or_else(|| create_document_vcs_id("operation")),
+                    dependencies: operation.dependencies(),
+                    base_version: operation.base_version(),
+                    author_id: operation.author_id().unwrap_or_else(|| "local".into()),
+                    timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                    undo_policy: operation.undo_policy(),
+                    payload_hash: None,
+                });
+                *projection = apply_operation(projection, operation);
+            }
+            let id = field(&header.fields, "id", line_no)?.to_string();
+            let actor = optional_field(&header.fields, "actor").map(|value| value.to_string());
+            let started_at = field(&header.fields, "started", line_no)?.to_string();
+            let finished_at = optional_field(&header.fields, "finished").map(|value| value.to_string());
+            let coalesce_key = optional_field(&header.fields, "key").map(|value| value.to_string());
+            let description = header.text.filter(|text| text != "-");
+            edits.push(Edit {
+                id,
+                actor,
+                forwards,
+                backwards,
+                operation_meta,
+                description,
+                coalesce_key,
+                sequence_number: edits.len() as i32 + 1,
+                started_at,
+                finished_at,
+            });
+            Ok(())
+        };
+
+    for (index, raw_line) in ops.lines().enumerate() {
+        let line_no = index as u32 + 1;
+        let trimmed = raw_line.trim();
+        if trimmed.is_empty() || trimmed.starts_with('#') {
+            continue;
+        }
+        if raw_line.starts_with("  ") && pending_edit.is_some() {
+            let operation = Operation::parse_op(trimmed)
+                .map_err(|error| TextError::new(error.message, TextSpan::at(line_no, error.span.column)))?;
+            pending_forwards.push(operation);
+            continue;
+        }
+        flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
+        let structural = parse_structural_line(raw_line, line_no)?;
+        match structural.kind.as_str() {
+            "@doc" => {
+                schema = field(&structural.fields, "schema", line_no)?.to_string();
+                id = field(&structural.fields, "id", line_no)?.to_string();
+            }
+            "@edit" => {
+                pending_edit = Some((line_no, structural));
+                pending_forwards = Vec::new();
+            }
+            "@change" => {
+                changes.push(Change {
+                    id: field(&structural.fields, "id", line_no)?.to_string(),
+                    edit_ids: split_ids(field(&structural.fields, "edits", line_no)?),
+                    description: structural.text.clone().filter(|text| text != "-"),
+                    saved_at: field(&structural.fields, "saved", line_no)?.to_string(),
+                });
+            }
+            "@checkpoint" => {
+                checkpoints.push(Checkpoint {
+                    id: field(&structural.fields, "id", line_no)?.to_string(),
+                    change_ids: split_ids(field(&structural.fields, "changes", line_no)?),
+                    parent_id: optional_field(&structural.fields, "parent").map(|value| value.to_string()),
+                    authors: parse_authors(optional_field(&structural.fields, "by").unwrap_or("-")),
+                    message: structural.text.clone().filter(|text| text != "-"),
+                    timestamp: field(&structural.fields, "at", line_no)?.to_string(),
+                });
+            }
+            "@alternative" => {
+                alternatives.push(Alternative {
+                    id: field(&structural.fields, "id", line_no)?.to_string(),
+                    name: structural.text.clone().unwrap_or_default(),
+                    checkpoint_ids: split_ids(field(&structural.fields, "checkpoints", line_no)?),
+                });
+            }
+            "@active" => {
+                active_alternative_id = Some(field(&structural.fields, "id", line_no)?.to_string());
+            }
+            other => {
+                return Err(TextError::new(format!("unknown structural line kind '{other}'"), TextSpan::at(line_no, 1)));
+            }
+        }
+    }
+    flush_pending_edit(&mut pending_edit, &mut pending_forwards, &mut edits, &mut projection)?;
+
+    let envelope = DocumentVcsEnvelope {
+        schema,
+        id,
+        vcs: DocumentVcs {
+            initial_projection,
+            edits,
+            changes,
+            checkpoints,
+            alternatives,
+        },
+        backbone: None,
+        active_alternative_id,
+    };
+    let (projection, _conflicts) = Operation::reconcile(projection);
+    Ok(ParsedDocumentText { envelope, projection })
+}
+//#endregion 🔖TextFormat
+
 //#region 🔖History
 /// @emoji 📜 One row of a checkpoint history/ancestor graph.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -729,19 +1190,6 @@ pub fn build_history_columns<P, Operation>(envelope: &DocumentVcsEnvelope<P, Ope
 //#endregion 🔖History
 
 //#region 🔖DocumentVcsStore
-/// @emoji 🪢 Caches the post-projection right after the last `AmendLast` into `edit_id`, so the next
-/// amend to the SAME coalesced edit only replays its NEW operations instead of re-materializing the
-/// entire prior history and re-replaying the edit's whole accumulated `forwards` from scratch — without
-/// this, a long coalesced gesture (e.g. dragging a slider for a while) is O(gesture-length²). Validated
-/// against `forwards_len` before use (see `AmendLast`) so any out-of-band mutation of the same edit
-/// (there is none today, but the check is free) falls back to a full, always-correct replay.
-struct AmendCache<P> {
-    edit_id: String,
-    coalesce_key: String,
-    forwards_len: usize,
-    post_projection: P,
-}
-
 pub struct DocumentVcsStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned,
@@ -767,10 +1215,22 @@ where
     /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
     /// default no-operation `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
     conflicts: Vec<StudioConflict>,
-    /// @emoji 🪢 See {@link AmendCache}. `None` whenever there is nothing to reuse (fresh store, or the
-    /// last command wasn't a matching `AmendLast`) — always safe, just forces the next amend onto the
-    /// full-replay path, which also repopulates it.
-    amend_cache: Option<AmendCache<P>>,
+    /// @emoji ⚡ The live, incrementally-maintained RAW fold of `initial_projection` over every
+    /// `forwards` operation in `applied_edit_ids` order — i.e. exactly what a full
+    /// {@link materialize_document_projection} replay computes BEFORE its single final
+    /// {@link Operation::reconcile} call. Kept in lock-step by every mutating command below instead of
+    /// replaying on every read, so `projection()`/`Apply`/`AmendLast` are O(new work) instead of
+    /// O(total history). Cold-path commands (checkout/switch/set_state, which reassign
+    /// `applied_edit_ids` wholesale rather than appending) fall back to a full raw-fold recompute —
+    /// see `fold_current`. Differential ground truth: `test_support::assert_live_equals_replay`.
+    current: P,
+    /// @emoji 🪢 `(edit_id, projection right before that edit's forwards were first applied)` for
+    /// whichever edit is CURRENTLY the tail of `applied_edit_ids` — refreshed by `Apply`/`AmendLast`
+    /// (fresh-edit branch)/`Redo`, left untouched by further amends to the same edit (so it always
+    /// points at the state before the edit as a whole, not before its latest increment). Powers an
+    /// O(1) `Undo` of exactly this edit; any other undo (not the cached tail, or `None`) falls back
+    /// to `fold_current` — always correct, just not always O(1).
+    tail_undo_cache: Option<(String, P)>,
 }
 
 /// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
@@ -789,6 +1249,7 @@ where
     /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
     pub fn new(envelope: DocumentVcsEnvelope<P, Operation>) -> Self {
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
+        let current = envelope.vcs.initial_projection.clone();
         Self {
             envelope,
             backbone: None,
@@ -800,7 +1261,8 @@ where
             current_checkpoint_id,
             local_actor_id: None,
             conflicts: Vec::new(),
-            amend_cache: None,
+            current,
+            tail_undo_cache: None,
         }
     }
 
@@ -895,12 +1357,15 @@ where
         self.applied_edit_ids = applied_edit_ids;
         self.redo_edit_ids = redo_edit_ids;
         self.conflicts = Vec::new();
+        self.tail_undo_cache = None;
+        self.current = self.fold_current().expect("set_state: fold_current should not fail for a consistent envelope");
         self.bump();
     }
 
     /// @emoji 🧭 Restores applied edits + checkout position for `checkpoint_id`, clearing redo.
     /// Shared by `createAlternative`/`switchAlternative`/`checkoutCheckpoint`. Mirrors premigration
-    /// `checkoutCheckpointInternal`.
+    /// `checkoutCheckpointInternal`. Cold path: reassigns `applied_edit_ids` wholesale (not a tail
+    /// append), so `current` is recomputed by a full raw-fold rather than an incremental update.
     fn checkout_checkpoint_internal(&mut self, checkpoint_id: String) {
         let applied = self
             .envelope
@@ -913,16 +1378,42 @@ where
         self.applied_edit_ids = applied;
         self.redo_edit_ids.clear();
         self.current_checkpoint_id = Some(checkpoint_id);
+        self.tail_undo_cache = None;
+        self.current = self.fold_current().expect("checkout: fold_current should not fail for a consistent envelope");
     }
 
+    /// @emoji ⚡ The live projection: `Operation::reconcile` applied to the incrementally-maintained
+    /// `current` fold. Always `Ok` in practice (kept as `Result` for API stability); O(1) instead of a
+    /// full replay. See the `current` field doc for the maintenance invariant.
     pub fn projection(&self) -> Result<P, VcsError> {
-        materialize_document_projection(&self.envelope, &self.applied_edit_ids)
+        Ok(Operation::reconcile(self.current.clone()).0)
     }
 
-    /// @emoji 🤝 Fresh replay plus whatever {@link Operation::reconcile} reports for the result. See
-    /// {@link materialize_document_projection_with_conflicts}.
+    /// @emoji 🤝 `current` reconciled, plus whatever conflicts {@link Operation::reconcile} reports.
+    /// O(1) instead of a full replay — see {@link projection}.
     pub fn projection_with_conflicts(&self) -> Result<(P, Vec<StudioConflict>), VcsError> {
-        materialize_document_projection_with_conflicts(&self.envelope, &self.applied_edit_ids)
+        Ok(Operation::reconcile(self.current.clone()))
+    }
+
+    /// @emoji 🔂 Full raw fold of `initial_projection` over every `forwards` op in `applied_edit_ids`
+    /// order, WITHOUT the final `Operation::reconcile` pass — the from-scratch computation `current`
+    /// is an incrementally-maintained cache of. Used to recompute `current` on the cold paths that
+    /// reassign `applied_edit_ids` wholesale instead of appending/popping its tail.
+    fn fold_current(&self) -> Result<P, VcsError> {
+        let mut projection = self.envelope.vcs.initial_projection.clone();
+        for edit_id in &self.applied_edit_ids {
+            let edit = self
+                .envelope
+                .vcs
+                .edits
+                .iter()
+                .find(|entry| entry.id == *edit_id)
+                .ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
+            for operation in &edit.forwards {
+                projection = apply_operation(&projection, operation);
+            }
+        }
+        Ok(projection)
     }
 
     /// @emoji 🤝 Conflicts from the last reconciliation pass (see {@link conflicts} field doc).
@@ -953,7 +1444,18 @@ where
                         return Err(VcsError::ForeignEdit(last));
                     }
                     self.applied_edit_ids.pop();
-                    self.redo_edit_ids.push(last);
+                    self.redo_edit_ids.push(last.clone());
+                    // ⚡ O(1) fast path when undoing exactly the cached tail edit; any other shape
+                    // (cache miss, or a prior mid-history undo already invalidated it) falls back to a
+                    // full raw-fold recompute — always correct, see `fold_current`.
+                    match self.tail_undo_cache.take() {
+                        Some((cached_id, cached_pre)) if cached_id == last => {
+                            self.current = cached_pre;
+                        }
+                        _ => {
+                            self.current = self.fold_current()?;
+                        }
+                    }
                     self.bump();
                     Ok(())
                 }
@@ -965,6 +1467,9 @@ where
                         .ok_or(VcsError::NothingToUndo)?;
                     let removed = self.applied_edit_ids.remove(position);
                     self.redo_edit_ids.push(removed);
+                    // 🔂 Removing a MID-history edit has no cheap incremental inverse; cold-path replay.
+                    self.tail_undo_cache = None;
+                    self.current = self.fold_current()?;
                     self.bump();
                     Ok(())
                 }
@@ -979,7 +1484,19 @@ where
             },
             DocumentVcsCommand::Redo => {
                 let next = self.redo_edit_ids.pop().ok_or(VcsError::NothingToRedo)?;
-                self.applied_edit_ids.push(next);
+                self.applied_edit_ids.push(next.clone());
+                // ⚡ Fold the redone edit's forwards onto `current` in their own natural order — cheap
+                // and correct regardless of the edit's internal op grouping (unlike undo, this never
+                // needs `Edit.backwards`). Re-seeds `tail_undo_cache` so a following Undo is O(1) again.
+                if let Some(edit) = self.envelope.vcs.edits.iter().find(|entry| entry.id == next) {
+                    let pre = self.current.clone();
+                    let mut folded = pre.clone();
+                    for operation in &edit.forwards {
+                        folded = apply_operation(&folded, operation);
+                    }
+                    self.current = folded;
+                    self.tail_undo_cache = Some((next, pre));
+                }
                 self.bump();
                 Ok(())
             }
@@ -1095,8 +1612,10 @@ where
                     return Err(VcsError::EmptyApply);
                 }
                 let started_at = now_iso();
-                let pre_projection = self.projection()?;
-                let (forwards, backwards, operation_meta, _post) =
+                // ⚡ `current` is always up to date (maintained by every mutating command below), so
+                // this is an O(1) clone instead of a full replay — see the `current` field doc.
+                let pre_projection = self.current.clone();
+                let (forwards, backwards, operation_meta, post) =
                     Self::replay_operations(&pre_projection, operations);
                 let actor = edit_actor_from_meta(&operation_meta);
                 self.local_actor_id = actor.clone();
@@ -1113,8 +1632,10 @@ where
                     started_at,
                     finished_at: Some(now_iso()),
                 };
+                self.tail_undo_cache = Some((edit.id.clone(), pre_projection));
                 self.applied_edit_ids.push(edit.id.clone());
                 self.envelope.vcs.edits.push(edit);
+                self.current = post;
                 self.redo_edit_ids.clear();
                 self.bump();
                 Ok(())
@@ -1139,40 +1660,25 @@ where
                             .unwrap_or(false)
                 });
                 if let Some(edit_id) = amend_target {
-                    // 🔒 Infallible: `amend_target`'s filter above requires `coalesce_key.is_some()`.
-                    let key = coalesce_key.clone().expect("amend_target implies coalesce_key.is_some()");
-                    let existing_forwards_len = self.envelope.vcs.edits.iter().find(|edit| edit.id == edit_id).map(|edit| edit.forwards.len()).unwrap_or(0);
-                    let cache_hit = self
-                        .amend_cache
-                        .as_ref()
-                        .is_some_and(|cache| cache.edit_id == edit_id && cache.forwards_len == existing_forwards_len);
-                    // 🪢 Incremental path: replay only the NEW `operations` on top of the cached
-                    // post-projection from the last amend to this same edit, then append (never
-                    // recompute) the existing forwards/backwards/operation_meta — see `AmendCache`.
-                    // On a cache miss, `self.projection()` already replays the full history INCLUDING
-                    // this edit's existing (unchanged) forwards, giving exactly the same post-projection
-                    // to continue from in one pass — always correct, and repopulates the cache for the
-                    // next amend in this gesture.
-                    let (new_forwards, new_backwards, new_operation_meta, post) = if cache_hit {
-                        let cache = self.amend_cache.as_ref().expect("cache_hit implies Some");
-                        Self::replay_operations(&cache.post_projection, operations)
-                    } else {
-                        let post_so_far = self.projection()?;
-                        Self::replay_operations(&post_so_far, operations)
-                    };
+                    // ⚡ `current` already reflects this edit's existing forwards (it was folded in
+                    // when the edit was created or last amended), so it's always the correct base for
+                    // the NEW operations — O(1) instead of the old cache-validity dance.
+                    let pre_projection = self.current.clone();
+                    let (new_forwards, new_backwards, new_operation_meta, post) =
+                        Self::replay_operations(&pre_projection, operations);
                     if let Some(edit) = self.envelope.vcs.edits.iter_mut().find(|edit| edit.id == edit_id) {
                         edit.forwards.extend(new_forwards);
                         edit.backwards.extend(new_backwards);
                         edit.operation_meta.extend(new_operation_meta);
                         edit.finished_at = Some(now_iso());
-                        self.amend_cache = Some(AmendCache { edit_id, coalesce_key: key, forwards_len: edit.forwards.len(), post_projection: post });
                     }
+                    self.current = post;
                     self.redo_edit_ids.clear();
                     self.bump();
                     Ok(())
                 } else {
                     let started_at = now_iso();
-                    let pre_projection = self.projection()?;
+                    let pre_projection = self.current.clone();
                     let (forwards, backwards, operation_meta, post) =
                         Self::replay_operations(&pre_projection, operations);
                     let actor = edit_actor_from_meta(&operation_meta);
@@ -1186,17 +1692,15 @@ where
                         backwards,
                         operation_meta,
                         description: None,
-                        coalesce_key: coalesce_key.clone(),
+                        coalesce_key,
                         sequence_number: self.edit_sequence,
                         started_at,
                         finished_at: Some(now_iso()),
                     };
+                    self.tail_undo_cache = Some((edit_id, pre_projection));
                     self.applied_edit_ids.push(edit.id.clone());
-                    // 🪢 Seed the cache so the very next amend to this fresh edit (the common case — a
-                    // gesture's first `AmendLast` creates the edit, every following one amends it) hits
-                    // the incremental path immediately.
-                    self.amend_cache = coalesce_key.map(|key| AmendCache { edit_id, coalesce_key: key, forwards_len: edit.forwards.len(), post_projection: post });
                     self.envelope.vcs.edits.push(edit);
+                    self.current = post;
                     self.redo_edit_ids.clear();
                     self.bump();
                     Ok(())
@@ -1310,11 +1814,17 @@ where
         }
         self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
         let edit_id = edit.id.clone();
+        // ⚡ Fold just the new edit's forwards onto the existing `current` (which already reflects
+        // every prior applied edit) — algebraically identical to a full raw-fold replay, in O(new ops).
+        for operation in &edit.forwards {
+            self.current = apply_operation(&self.current, operation);
+        }
         self.envelope.vcs.edits.push(edit);
         self.applied_edit_ids.push(edit_id);
+        self.tail_undo_cache = None;
         // 🤝 Tail reconciliation hook: remote ingestion is the one path where this store's projection
         // can diverge from what a local `Apply` alone would produce, so refresh conflicts here.
-        let (_, conflicts) = self.projection_with_conflicts()?;
+        let (_, conflicts) = Operation::reconcile(self.current.clone());
         self.conflicts = conflicts;
         self.bump();
         Ok(())
@@ -1341,6 +1851,9 @@ where
             self.dag.seed_applied(applied.iter().cloned());
             self.applied_edit_ids = applied;
             self.redo_edit_ids.clear();
+            self.tail_undo_cache = None;
+            // 🔂 Wholesale replacement, not a tail append — cold-path full raw-fold recompute.
+            self.current = self.fold_current()?;
             self.bump();
             return Ok(());
         }
@@ -1353,12 +1866,18 @@ where
             self.edit_sequence = self.edit_sequence.max(edit.sequence_number);
             self.applied_edit_ids.push(edit.id.clone());
             newly_merged_ids.push(edit.id.clone());
+            // ⚡ Each newly-merged edit is appended at the tail, so folding its forwards onto `current`
+            // in iteration order is exactly a prefix-extension of the existing raw fold.
+            for operation in &edit.forwards {
+                self.current = apply_operation(&self.current, operation);
+            }
             self.envelope.vcs.edits.push(edit);
         }
         self.dag.seed_applied(newly_merged_ids);
         merge_by_id(&mut self.envelope.vcs.changes, remote.vcs.changes, |change| &change.id);
         merge_by_id(&mut self.envelope.vcs.checkpoints, remote.vcs.checkpoints, |checkpoint| &checkpoint.id);
         merge_by_id(&mut self.envelope.vcs.alternatives, remote.vcs.alternatives, |alternative| &alternative.id);
+        self.tail_undo_cache = None;
         self.bump();
         Ok(())
     }
@@ -1951,6 +2470,89 @@ impl FolderSqliteStorage {
             .map_err(|e| VcsError::Backbone(e.to_string()))?
             .collect::<Result<Vec<_>, _>>()
             .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(ids)
+    }
+}
+
+/// @emoji 🗃️ Textual persistence for one folder of documents: `<id>.<ext>` holds the DSL text (initial
+/// projection), `<id>.<ext>.ops` holds the append-only op log (see {@link print_document_text}/
+/// {@link parse_document_text}). No `Backbone` impl: like {@link FileJsonStorage}/
+/// {@link FolderSqliteStorage}, the `framework/sync` actor layer drives this from its own thread; this
+/// crate only owns the file format. Additive alongside the JSON/sqlite storages today — a technology
+/// adopts it by implementing `DocumentDsl`/`OpText` and having its sync endpoint construct one of
+/// these instead; nothing currently reads or writes through it automatically.
+#[cfg(not(target_arch = "wasm32"))]
+pub struct FolderTextStorage {
+    folder: std::path::PathBuf,
+}
+
+#[cfg(not(target_arch = "wasm32"))]
+impl FolderTextStorage {
+    pub fn new(folder: std::path::PathBuf) -> Self {
+        Self { folder }
+    }
+
+    fn dsl_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}"))
+    }
+
+    fn ops_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}.ops"))
+    }
+
+    /// @emoji 📖 Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
+    pub fn read(&self, document_id: &str, extension: &str) -> Result<Option<DocumentTextFiles>, VcsError> {
+        let dsl = match std::fs::read_to_string(self.dsl_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(err) => return Err(VcsError::Backbone(err.to_string())),
+        };
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(err) => return Err(VcsError::Backbone(err.to_string())),
+        };
+        Ok(Some(DocumentTextFiles { dsl, ops }))
+    }
+
+    /// @emoji ✍️ Overwrites both files wholesale (the structural-command cold path — undo/redo/
+    /// checkpoint/alternative — mirrors `FileJsonStorage::write`'s whole-envelope semantics).
+    pub fn write(&self, document_id: &str, extension: &str, files: &DocumentTextFiles) -> Result<(), VcsError> {
+        std::fs::create_dir_all(&self.folder).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, extension), &files.dsl).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji ➕ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
+    /// file without rewriting it — the hot-path append unit, O(new edit) instead of O(whole history).
+    pub fn append_ops(&self, document_id: &str, extension: &str, lines: &str) -> Result<(), VcsError> {
+        use std::io::Write;
+        std::fs::create_dir_all(&self.folder).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        let mut file = std::fs::OpenOptions::new()
+            .create(true)
+            .append(true)
+            .open(self.ops_path(document_id, extension))
+            .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        file.write_all(lines.as_bytes()).map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji 📇 Lists every stored document id (by DSL file stem) for a given extension.
+    pub fn document_ids(&self, extension: &str) -> Result<Vec<String>, VcsError> {
+        let suffix = format!(".{extension}");
+        let entries = match std::fs::read_dir(&self.folder) {
+            Ok(entries) => entries,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(Vec::new()),
+            Err(err) => return Err(VcsError::Backbone(err.to_string())),
+        };
+        let mut ids = Vec::new();
+        for entry in entries {
+            let entry = entry.map_err(|e| VcsError::Backbone(e.to_string()))?;
+            if let Some(name) = entry.file_name().to_str() {
+                if let Some(id) = name.strip_suffix(&suffix) {
+                    ids.push(id.to_string());
+                }
+            }
+        }
         Ok(ids)
     }
 }
@@ -2594,6 +3196,61 @@ pub mod test_support {
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
         assert_eq!(replayed, post, "materialization from replay diverged from store projection");
     }
+
+    /// @emoji 📜 Asserts a DSL round trip: `P::parse_dsl(&projection.print_dsl())` recovers an equal
+    /// projection. The compile-time validation ground truth for every technology's `🔖Dsl` region —
+    /// call this from a `#[test]` over every `include_str!` fixture.
+    pub fn assert_dsl_round_trip<P>(projection: &P)
+    where
+        P: DocumentDsl + PartialEq + std::fmt::Debug,
+    {
+        let printed = projection.print_dsl();
+        let parsed = P::parse_dsl(&printed).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        assert_eq!(&parsed, projection, "dsl round trip diverged;\nprinted:\n{printed}");
+    }
+
+    /// @emoji ⚡ Asserts an op-text round trip for a single operation: `print_op` contains no newline
+    /// and `Op::parse_op` recovers an equal operation from it. The compile-time validation ground
+    /// truth for every technology's `🔖OpText` region — call this once per `Operation` variant.
+    pub fn assert_op_line_round_trip<Op>(operation: &Op)
+    where
+        Op: OpText + PartialEq + std::fmt::Debug,
+    {
+        let printed = operation.print_op();
+        assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
+        let parsed = Op::parse_op(&printed).unwrap_or_else(|error| panic!("op parse failed: {error}"));
+        assert_eq!(&parsed, operation, "op-text round trip diverged; printed: {printed:?}");
+    }
+
+    /// @emoji 📄 Asserts that printing a store's envelope to text and parsing it back yields the same
+    /// live projection the store already holds — the ground truth for {@link print_document_text}/
+    /// {@link parse_document_text} on any technology once it implements `DocumentDsl` + `OpText`.
+    pub fn assert_document_text_round_trip<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    where
+        P: Clone + DocumentDsl + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
+    {
+        let live = store.projection().expect("store projection");
+        let files = print_document_text(store.envelope()).expect("print document text");
+        let parsed: ParsedDocumentText<P, Operation> =
+            parse_document_text(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+        assert_eq!(parsed.projection, live, "document-text round trip diverged from store projection");
+    }
+
+    /// @emoji 🩺 Asserts the store's incrementally-maintained live projection agrees with a
+    /// from-scratch full replay — the differential check for `DocumentVcsStore`'s stateful `current`
+    /// field. Call after arbitrary command sequences (apply/amend/undo/redo/checkpoint/switch
+    /// interleavings) in a tech's own tests to confirm the incremental fast paths never diverge from
+    /// the replay ground truth.
+    pub fn assert_live_equals_replay<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    where
+        P: Clone + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
+    {
+        let live = store.projection().expect("store projection");
+        let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
+        assert_eq!(live, replayed, "store's live projection diverged from full-replay materialization");
+    }
 }
 //#endregion 🔖TestSupport
 
@@ -3160,6 +3817,42 @@ mod tests {
     }
 
     #[test]
+    fn folder_text_storage_round_trips_dsl_and_appends_ops() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let storage = FolderTextStorage::new(dir.path().to_path_buf());
+        assert_eq!(storage.read("demo", "demo").expect("read empty"), None, "absent document reads as None");
+
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        let files = print_document_text(store.envelope()).expect("print document text");
+        storage.write("demo", "demo", &files).expect("write");
+
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply 2");
+        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
+        storage
+            .append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines"))
+            .expect("append ops");
+
+        let reloaded = storage.read("demo", "demo").expect("read").expect("some");
+        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_text(&reloaded.dsl, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        assert_eq!(parsed.projection.n, 2, "write + append reconstructs every edit in order");
+
+        assert_eq!(storage.document_ids("demo").expect("document ids"), vec!["demo".to_string()]);
+    }
+
+    #[test]
     fn blob_store_put_get_dedupes_idempotently() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -3651,6 +4344,177 @@ mod tests {
     fn test_support_round_trip_helpers_pass_for_demo_operation() {
         test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
         test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
+    }
+
+    //#region 🔖Dsl
+    impl DocumentDsl for DemoProjection {
+        const EXTENSION: &'static str = "demo";
+
+        fn parse_dsl(text: &str) -> Result<Self, TextError> {
+            let trimmed = text.trim();
+            let value = trimmed
+                .strip_prefix("n ")
+                .ok_or_else(|| TextError::new("expected 'n <value>'", TextSpan::at(1, 1)))?;
+            let n: i32 = value
+                .trim()
+                .parse()
+                .map_err(|_| TextError::new(format!("expected integer, got '{value}'"), TextSpan::at(1, 3)))?;
+            Ok(DemoProjection { n })
+        }
+
+        fn print_dsl(&self) -> String {
+            format!("n {}\n", self.n)
+        }
+    }
+    //#endregion 🔖Dsl
+
+    //#region 🔖OpText
+    impl OpText for DemoOperation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            let value = line
+                .trim()
+                .strip_prefix("set-n ")
+                .ok_or_else(|| TextError::new("expected 'set-n <value>'", TextSpan::at(1, 1)))?;
+            let n: i32 = value
+                .trim()
+                .parse()
+                .map_err(|_| TextError::new(format!("expected integer, got '{value}'"), TextSpan::at(1, 7)))?;
+            Ok(DemoOperation::SetN { n })
+        }
+
+        fn print_op(&self) -> String {
+            match self {
+                DemoOperation::SetN { n } => format!("set-n {n}"),
+            }
+        }
+    }
+    //#endregion 🔖OpText
+
+    #[test]
+    fn demo_dsl_round_trips() {
+        test_support::assert_dsl_round_trip(&DemoProjection { n: 42 });
+    }
+
+    #[test]
+    fn demo_op_text_round_trips() {
+        test_support::assert_op_line_round_trip(&DemoOperation::SetN { n: 7 });
+    }
+
+    #[test]
+    fn print_edit_lines_emits_one_indented_line_per_forward_op() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        let edit = store.envelope().vcs.edits.last().expect("edit");
+        let printed = print_edit_lines(edit).expect("print edit lines");
+        assert!(printed.starts_with("@edit id="));
+        assert!(printed.contains("\n  set-n 1\n"));
+    }
+
+    #[test]
+    fn document_text_round_trips_after_apply_and_checkpoint() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 3 }],
+                description: Some("bump".into()),
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c1".into()),
+                authors: vec![Author {
+                    id: "a1".into(),
+                    name: "Alice".into(),
+                    avatar: None,
+                }],
+            })
+            .expect("commit");
+        test_support::assert_document_text_round_trip(&store);
+    }
+
+    #[test]
+    fn parse_document_text_rejects_invalid_op_line_with_span() {
+        let files = DocumentTextFiles {
+            dsl: "n 0\n".to_string(),
+            ops: "@doc schema=demo/v1 id=demo\n@edit id=e1 actor=- started=1 finished=- key=- \"-\"\n  not-an-op\n".to_string(),
+        };
+        let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
+        assert_eq!(error.span.line, 3);
+    }
+
+    /// @emoji 🩺 Stresses the stateful `current`/`tail_undo_cache` fast paths — multi-op edits, amend
+    /// gestures, undo/redo, and a checkpoint (cold-path recompute) all interleaved — against the
+    /// full-replay differential oracle, so any divergence between the incremental paths and a
+    /// from-scratch replay fails loudly here rather than surfacing as a silent projection bug later.
+    #[test]
+    fn stateful_current_matches_full_replay_across_interleaved_commands() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+
+        // Multi-operation edit: current must fold both ops, matching a from-scratch replay.
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 1 }, DemoOperation::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply multi-op edit");
+        test_support::assert_live_equals_replay(&store);
+        assert_eq!(store.projection().expect("projection").n, 2);
+
+        // Amend gesture: the first `AmendLast` cannot merge into the preceding `Apply`-created edit
+        // (`Apply` never sets a `coalesce_key`, so it can never match), so it starts a NEW edit; the
+        // second `AmendLast` shares that edit's key and merges into it — two edits total, the second
+        // one carrying two coalesced increments (3 then 4).
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOperation::SetN { n: 3 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("amend 1");
+        store
+            .dispatch(DocumentVcsCommand::AmendLast {
+                operations: vec![DemoOperation::SetN { n: 4 }],
+                coalesce_key: Some("drag".into()),
+            })
+            .expect("amend 2");
+        test_support::assert_live_equals_replay(&store);
+        assert_eq!(store.projection().expect("projection").n, 4);
+        assert_eq!(store.envelope().vcs.edits.len(), 2, "the amend gesture started its own edit, not a third");
+
+        // Undo the whole amended edit (O(1) tail-cache path) restores the `Apply`-edit's state, not
+        // the initial projection — only the amend gesture's edit is undone here.
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        test_support::assert_live_equals_replay(&store);
+        assert_eq!(store.projection().expect("projection").n, 2);
+        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        test_support::assert_live_equals_replay(&store);
+        assert_eq!(store.projection().expect("projection").n, 4);
+
+        // Checkpoint (cold path through `checkout_checkpoint_internal` is NOT exercised by commit
+        // itself, but a following apply + a second, older undo still must agree with replay).
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint {
+                message: Some("c1".into()),
+                authors: Vec::new(),
+            })
+            .expect("commit");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 5 }],
+                description: None,
+            })
+            .expect("apply after checkpoint");
+        test_support::assert_live_equals_replay(&store);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo after checkpoint");
+        test_support::assert_live_equals_replay(&store);
+        assert_eq!(store.projection().expect("projection").n, 4);
     }
 
     //#region 🏛️StudioTests

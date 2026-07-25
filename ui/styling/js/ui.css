@@ -1379,14 +1379,271 @@
   }
 }
 
+@keyframes introduction-demo-press-ripple-diamond {
+  0% {
+    transform: scale(0.4) rotate(45deg);
+    opacity: 0.65;
+  }
+  100% {
+    transform: scale(1.5) rotate(45deg);
+    opacity: 0;
+  }
+}
+
+@keyframes introduction-demo-zoom-in {
+  0% {
+    transform: translate(-50%, -50%) scale(0.35);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(2.4);
+    opacity: 0;
+  }
+}
+
+@keyframes introduction-demo-zoom-out {
+  0% {
+    transform: translate(-50%, -50%) scale(2.2);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(0.4);
+    opacity: 0;
+  }
+}
+
+@keyframes introduction-demo-wheel-roll {
+  from {
+    stroke-dashoffset: 0;
+  }
+  to {
+    stroke-dashoffset: var(--introduction-demo-wheel-roll, 12px);
+  }
+}
+
+@keyframes introduction-demo-trail-draw {
+  from {
+    stroke-dashoffset: var(--introduction-demo-trail-length, 120);
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* 🎬 Gesture identity palette — primary / secondary / tertiary accents so light, dark, and
+   custom themes all recolor the demo without hardcoded hsl channels. */
 .introduction-demo-ripple {
   animation: introduction-demo-press-ripple 420ms ease-out;
+  border-width: var(--stroke-hairline);
+  border-style: solid;
+}
+
+.introduction-demo-ripple--left {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.introduction-demo-ripple--middle {
+  border-color: var(--accent-tertiary);
+  color: var(--accent-tertiary);
+}
+
+.introduction-demo-ripple--right {
+  border-radius: 0;
+  animation-name: introduction-demo-press-ripple-diamond;
+  border-color: var(--accent-secondary);
+  color: var(--accent-secondary);
+}
+
+.introduction-demo-ripple--double {
+  animation-delay: 120ms;
+}
+
+.introduction-demo-callout {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-single);
+  color: var(--foreground);
+  filter: drop-shadow(0 var(--stroke-hairline) var(--spacing-single) color-mix(in oklab, var(--base) 55%, transparent));
+  will-change: transform, opacity;
+}
+
+.introduction-demo-mouse {
+  width: var(--size-medium);
+  height: calc(var(--size-medium) * 1.5);
+  flex: none;
+  overflow: visible;
+}
+
+.introduction-demo-mouse-body,
+.introduction-demo-mouse-wheel,
+.introduction-demo-mouse-divider,
+.introduction-demo-mouse-seam {
+  stroke: currentColor;
+  fill: none;
+}
+
+.introduction-demo-mouse-body {
+  stroke-width: 2.5;
+}
+
+.introduction-demo-mouse-wheel {
+  stroke-width: 2.5;
+  stroke-linecap: round;
+}
+
+.introduction-demo-mouse-divider,
+.introduction-demo-mouse-seam {
+  stroke-width: var(--stroke-hairline);
+  stroke: color-mix(in oklab, var(--foreground) 35%, transparent);
+}
+
+.introduction-demo-mouse-button {
+  fill: transparent;
+  transition: fill 120ms ease-out;
+}
+
+.introduction-demo-callout[data-button="left"] .introduction-demo-mouse-button[data-part="left"] {
+  fill: color-mix(in oklab, var(--accent) 55%, transparent);
+}
+
+.introduction-demo-callout[data-button="middle"] .introduction-demo-mouse-button[data-part="middle"] {
+  fill: color-mix(in oklab, var(--accent-tertiary) 70%, transparent);
+}
+
+.introduction-demo-callout[data-button="right"] .introduction-demo-mouse-button[data-part="right"] {
+  fill: color-mix(in oklab, var(--accent-secondary) 55%, transparent);
+}
+
+.introduction-demo-callout[data-button="wheel"] .introduction-demo-mouse-wheel {
+  stroke: var(--accent);
+  stroke-width: 3.5;
+  stroke-dasharray: 3 3;
+}
+
+.introduction-demo-callout[data-feedback="scroll"][data-scroll-direction="up"] .introduction-demo-mouse-wheel {
+  --introduction-demo-wheel-roll: -12px;
+  animation: introduction-demo-wheel-roll 480ms linear infinite;
+}
+
+.introduction-demo-callout[data-feedback="scroll"][data-scroll-direction="down"] .introduction-demo-mouse-wheel {
+  --introduction-demo-wheel-roll: 12px;
+  animation: introduction-demo-wheel-roll 480ms linear infinite;
+}
+
+.introduction-demo-callout[data-pressed="true"][data-button="left"] .introduction-demo-mouse-button[data-part="left"] {
+  fill: var(--accent);
+}
+
+.introduction-demo-callout[data-pressed="true"][data-button="middle"] .introduction-demo-mouse-button[data-part="middle"] {
+  fill: var(--accent-tertiary);
+}
+
+.introduction-demo-callout[data-pressed="true"][data-button="right"] .introduction-demo-mouse-button[data-part="right"] {
+  fill: var(--accent-secondary);
+}
+
+.introduction-demo-callout-chips {
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--ui-spacing) * 0.5);
+  padding-top: calc(var(--ui-spacing) * 0.5);
+}
+
+.introduction-demo-callout-chip {
+  display: none;
+  align-items: center;
+  border: var(--stroke-hairline) solid var(--accent-foreground);
+  background: color-mix(in oklab, var(--temporary) 92%, transparent);
+  color: var(--muted-foreground);
+  padding: var(--spacing-single);
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: var(--text-2xs--line-height);
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.introduction-demo-callout[data-double="true"] .introduction-demo-callout-chip[data-chip="double"],
+.introduction-demo-callout[data-modifiers~="alt"] .introduction-demo-callout-chip[data-chip="alt"],
+.introduction-demo-callout[data-modifiers~="shift"] .introduction-demo-callout-chip[data-chip="shift"],
+.introduction-demo-callout[data-modifiers~="control"] .introduction-demo-callout-chip[data-chip="control"],
+.introduction-demo-callout[data-modifiers~="meta"] .introduction-demo-callout-chip[data-chip="meta"],
+.introduction-demo-callout[data-scroll-direction="up"] .introduction-demo-callout-chip[data-chip="zoom-in"],
+.introduction-demo-callout[data-scroll-direction="down"] .introduction-demo-callout-chip[data-chip="zoom-out"] {
+  display: inline-flex;
+}
+
+.introduction-demo-callout[data-scroll-direction="up"] .introduction-demo-callout-chip[data-chip="zoom-in"],
+.introduction-demo-callout[data-scroll-direction="down"] .introduction-demo-callout-chip[data-chip="zoom-out"] {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.introduction-demo-zoom-ring {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: var(--size-huge);
+  height: var(--size-huge);
+  margin: 0;
+  border: var(--stroke-hairline) dashed var(--accent);
+  border-radius: 0;
+  pointer-events: none;
+  box-shadow: 0 0 0 var(--stroke-hairline) color-mix(in oklab, var(--accent) 25%, transparent);
+}
+
+.introduction-demo-zoom-ring--in {
+  animation: introduction-demo-zoom-in 720ms ease-out forwards;
+}
+
+.introduction-demo-zoom-ring--out {
+  animation: introduction-demo-zoom-out 720ms ease-out forwards;
+}
+
+.introduction-demo-trail-path {
+  fill: none;
+  stroke-linecap: round;
+  stroke-width: calc(var(--stroke-hairline) * 3);
+  stroke-dasharray: var(--introduction-demo-trail-length, 120);
+  stroke-dashoffset: var(--introduction-demo-trail-length, 120);
+  animation: introduction-demo-trail-draw 900ms ease-out forwards;
+}
+
+.introduction-demo-trail-path--dragLeft,
+.introduction-demo-trail-path--leftClick,
+.introduction-demo-trail-path--doubleClick {
+  stroke: var(--accent);
+}
+
+.introduction-demo-trail-path--dragMiddle {
+  stroke: var(--accent-tertiary);
+}
+
+.introduction-demo-trail-path--dragRight,
+.introduction-demo-trail-path--rightClick,
+.introduction-demo-trail-path--orbit {
+  stroke: var(--accent-secondary);
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .introduction-demo-ripple {
+  .introduction-demo-ripple,
+  .introduction-demo-zoom-ring {
     animation: none;
     opacity: 0;
+  }
+
+  .introduction-demo-mouse-button {
+    transition: none;
+  }
+
+  .introduction-demo-callout[data-feedback="scroll"] .introduction-demo-mouse-wheel {
+    animation: none;
+  }
+
+  .introduction-demo-trail-path {
+    animation: none;
+    stroke-dashoffset: 0;
   }
 }
 
@@ -5531,6 +5788,13 @@
   border-color: var(--border-emphasized-color) !important;
 }
 
+:is([data-slot="panel"], [data-slot="pane"], [data-slot="introduction-info-box"], [data-slot="context-menu-content"], [data-slot="window-chrome-stack"]):not([data-active="true"]):hover
+  [data-slot="window-chrome-silhouette-border"][data-kind="normal"]
+  path {
+  stroke: var(--border-emphasized-color) !important;
+  transition: stroke 120ms ease;
+}
+
 [data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path {
   stroke: var(--border-emphasized-color) !important;
   transition: stroke 120ms ease;
@@ -5538,17 +5802,14 @@
 
 [data-slot="introduction-info-box"],
 [data-slot="dialog-box"] {
-  border-width: var(--stroke-hairline);
-  border-style: solid;
-  border-color: var(--border-normal-color) !important;
-  transition: border-color 120ms ease;
+  border-width: 0;
+  border-style: none;
+  border-color: transparent !important;
 }
 
-/* 🎓 Clicking a toggle/button leaves focus inside the shell — :focus-within would keep the
-   parent border emphasized after the pointer leaves. Pointer :hover only, matching windows. */
 [data-slot="introduction-info-box"]:hover,
 [data-slot="dialog-box"]:hover {
-  border-color: var(--border-emphasized-color) !important;
+  border-color: transparent !important;
 }
 
 /* #endregion 🪟ShellParentHover */

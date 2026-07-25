@@ -17,7 +17,7 @@ use semio_framework_core::{HubClientFrame, HubServerFrame, OperationEnvelope, Pr
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
-use vcs::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentVcsStore, Operation, StudioConflict};
+use vcs::{reconcile_alternative, BackboneMessage, ChannelBackbone, ChannelBackboneRemote, DocumentVcsStore, StudioConflict};
 
 //#region 🔖Errors
 #[derive(Debug, thiserror::Error, PartialEq, Eq)]
@@ -185,7 +185,7 @@ fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
 pub struct SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + vcs::Operation<P>,
 {
     pub store: DocumentVcsStore<P, Operation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
@@ -196,7 +196,7 @@ where
 impl<P, Operation> SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + vcs::Operation<P>,
 {
     pub fn new(store: DocumentVcsStore<P, Operation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }

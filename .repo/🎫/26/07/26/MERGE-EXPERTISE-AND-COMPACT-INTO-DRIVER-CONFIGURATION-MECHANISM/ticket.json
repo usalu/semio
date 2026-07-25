@@ -1,0 +1,13 @@
+{
+  "title": "Merge Expertise And Compact Into Driver Configuration Mechanism",
+  "emoji": "🚗",
+  "status": "open",
+  "description": "Merge the existing \"expertise\" (beginner/normal/expert) and \"compact\" UI preferences into a single new \"driver\" configuration mechanism. A driver is a named bundle of explicit presentation axes: labels (full/icons), labelTier (beginner/normal wording), drag (handle/surface), chrome reveal (always/hover), gumball reveal (always/hover), tooltips (full/minimal/none). Ship two built-in drivers, \"default\" and \"compact\", fully replacing expertise+compact end to end (storage, state, settings UI, commands, i18n, Rust wgpu mirror). Allow users to create their own custom drivers via a structured settings editor, mirroring the existing custom-themes mechanism. Remove expertise/compact entirely — no compat layer, no migration (greenfield repo).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2326"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪9c93d7126ab24e18b0a1f9144e8c35b3"
+  ]
+}

@@ -7,7 +7,7 @@
 
 import type { Preview } from "@storybook/react-vite";
 
-import { Expertise } from "@semio-tech/ui-react";
+import { DEFAULT_UI_DRIVER, COMPACT_UI_DRIVER, resolveUiDriver } from "@semio-tech/ui-react";
 import { scopeActive } from "./scopes.ts";
 
 declare const __STORYBOOK_ACTIVE_SCOPES__: string[];
@@ -110,15 +110,14 @@ const preview: Preview = {
         dynamicTitle: true,
       },
     },
-    expertise: {
-      description: "Tooltip and label verbosity (Elements expertise provider)",
+    driver: {
+      description: "UI presentation driver (Elements driver provider)",
       toolbar: {
-        title: "Expertise",
+        title: "Driver",
         icon: "user",
         items: [
-          { value: Expertise.BEGINNER, title: "Beginner" },
-          { value: Expertise.NORMAL, title: "Normal" },
-          { value: Expertise.EXPERT, title: "Expert" },
+          { value: DEFAULT_UI_DRIVER.id, title: DEFAULT_UI_DRIVER.label },
+          { value: COMPACT_UI_DRIVER.id, title: COMPACT_UI_DRIVER.label },
         ],
         dynamicTitle: true,
       },
@@ -173,7 +172,7 @@ const preview: Preview = {
     appearance: Appearance.SYSTEM,
     level: Level.BASE,
     device: Device.DESKTOP,
-    expertise: Expertise.NORMAL,
+    driver: DEFAULT_UI_DRIVER.id,
     locale: Locale.EN,
     terminology: Terminology.NATIVE,
     iconRenderer: IconRenderer.WEBGL,
@@ -230,19 +229,19 @@ import { useElementsSurfaceChrome, type ElementsSurfaceDevice, type ElementsSurf
 // #region 🌈StorySurfaceHost
 const StorySurfaceHost: React.FC<{
   children: React.ReactNode;
-  globals: { appearance?: string; device?: string; expertise?: string };
+  globals: { appearance?: string; device?: string; driver?: string };
 }> = ({ children, globals }) => {
   const appearance = (globals.appearance as ElementsSurfaceAppearance | undefined) ?? "system";
   const device = (globals.device as ElementsSurfaceDevice | undefined) ?? "desktop";
-  const expertise = (globals.expertise as Expertise | undefined) ?? Expertise.NORMAL;
-  useElementsSurfaceChrome({ appearance, device, expertise });
+  const driver = resolveUiDriver(globals.driver ?? DEFAULT_UI_DRIVER.id, {});
+  useElementsSurfaceChrome({ appearance, device, driver });
   return <>{children}</>;
 };
 // #endregion 🌈StorySurfaceHost
 
 // #region 🌈WithAppearance
 export const withAppearance: Decorator = (Story, context) => (
-  <StorySurfaceHost globals={context.globals as { appearance?: string; device?: string; expertise?: string }}>
+  <StorySurfaceHost globals={context.globals as { appearance?: string; device?: string; driver?: string }}>
     <Story />
   </StorySurfaceHost>
 );

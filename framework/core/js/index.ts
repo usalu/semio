@@ -5,6 +5,8 @@
 
 import { PLAYGROUND_BUILD_TARGETS, type PlaygroundBuildTarget } from "../../plugin/registry/generated/playgrounds.ts";
 import { PLUGIN_BUILD_TARGETS, PLUGIN_HOST_CONFIGS, pluginModuleUrl } from "../../plugin/registry/generated/plugins.ts";
+import type { IconName } from "@semio-tech/ui-asset";
+export type { IconName };
 
 // #region 🧬GeneratedMirror
 /** 🧬 Types generated from `framework/core/rs/lib.rs` via ts-rs (`bun nx run @semio-tech/framework-core:generate`); re-exported below alongside their hand-written neighbors so this stays the one import surface. */
@@ -49,6 +51,8 @@ import type {
   IntroductionLogo as GeneratedIntroductionLogo,
   IntroductionPoint as GeneratedIntroductionPoint,
   IntroductionGesture as GeneratedIntroductionGesture,
+  IntroductionKeyModifier as GeneratedIntroductionKeyModifier,
+  IntroductionPointerButton as GeneratedIntroductionPointerButton,
   IntroductionCursor as GeneratedIntroductionCursor,
   IntroductionDemonstration as GeneratedIntroductionDemonstration,
   DialogDefinition as GeneratedDialogDefinition,
@@ -169,17 +173,11 @@ export type WindowLayout = {
 export type NamedLayout = {
   readonly id: string;
   readonly label: string;
-  readonly iconId?: string;
+  readonly iconId?: IconName;
   readonly layout: WindowLayout;
   readonly origin: "builtin" | "user";
   readonly groupPath?: readonly string[];
 };
-
-export enum Expertise {
-  BEGINNER = "beginner",
-  NORMAL = "normal",
-  EXPERT = "expert",
-}
 
 export type UtilityCategory = "selection" | "utilities" | "history" | "sync";
 
@@ -188,7 +186,7 @@ export type UtilityLeaf =
   | {
       readonly id: string;
       readonly kind: "button";
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly label?: string;
       readonly text?: string;
       readonly title?: string;
@@ -202,7 +200,7 @@ export type UtilityLeaf =
   | {
       readonly id: string;
       readonly kind: "toggle";
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly label?: string;
       readonly text?: string;
       readonly title?: string;
@@ -220,7 +218,7 @@ export type UtilityNode =
   | {
       readonly id: string;
       readonly kind: "collection";
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly label?: string;
       readonly text?: string;
       readonly title?: string;
@@ -232,7 +230,7 @@ export type UtilityNode =
   | {
       readonly id: string;
       readonly kind: "button";
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly label?: string;
       readonly text?: string;
       readonly title?: string;
@@ -244,7 +242,7 @@ export type UtilityNode =
   | {
       readonly id: string;
       readonly kind: "toggle";
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly label?: string;
       readonly text?: string;
       readonly title?: string;
@@ -267,7 +265,7 @@ export type UiSectionNode = {
 
 /** @emoji 🌳 One hover-revealed row action on a {@link UiTreeItemNode}; renderer-side addition on top of the base wasm tree-item shape. */
 export type UiTreeItemAction = {
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly label?: string;
   readonly action: ActionDescriptor;
   readonly revealOnHover?: boolean;
@@ -278,7 +276,7 @@ export type UiTreeItemNode = {
   readonly label: string;
   readonly description?: string;
   readonly icon?: string;
-  readonly iconId?: string;
+  readonly iconId?: IconName;
   readonly selected?: boolean;
   readonly loading?: boolean;
   readonly waiting?: boolean;
@@ -347,7 +345,7 @@ export type UiSelectNode = {
 export type UiToggleNode = {
   readonly type: "toggle";
   readonly id: string;
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly pressed: boolean;
   readonly text?: string;
   readonly onChange: ActionDescriptor;
@@ -436,7 +434,7 @@ export type StyleSpec = {
 export type UiButtonNode = {
   readonly type: "button";
   readonly id?: string;
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly label: string;
   readonly action: ActionDescriptor;
   readonly style?: StyleSpec;
@@ -741,7 +739,7 @@ export type GraphTimelineScene = {
 export type BlockPaletteEntry = {
   readonly blockKind: string;
   readonly label: string;
-  readonly iconId: string;
+  readonly iconId: IconName;
 };
 
 /** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `ProtocolStep[]` array, `paletteJson` is a `BlockPaletteEntry[]` array of the block kinds available to insert. */
@@ -764,7 +762,7 @@ export type DiffViewScene = {
 export type EventFeedEntry = {
   readonly id: string;
   readonly timestampMs: number;
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly title: string;
   readonly detail?: string;
   readonly tone?: string;
@@ -878,7 +876,7 @@ export function createTabStackLayout(windowIds: readonly string[], titles?: read
   return createStackLayout(windowIds, titles);
 }
 
-export function createNamedLayout(id: string, label: string, layout: WindowLayout, origin: NamedLayout["origin"] = "builtin", iconId?: string, groupPath?: readonly string[]): NamedLayout {
+export function createNamedLayout(id: string, label: string, layout: WindowLayout, origin: NamedLayout["origin"] = "builtin", iconId?: IconName, groupPath?: readonly string[]): NamedLayout {
   return {
     id,
     label,
@@ -1306,7 +1304,7 @@ export function uiInspectorStepperField(id: string, label: string, values: reado
 
 /** @emoji 🔘 Builds an editable boolean toggle field row, computing the mixed/uniform display from
  * `values` via {@link uiInspectorMixedToggle}. */
-export function uiInspectorToggleField(id: string, label: string, iconId: string, values: readonly boolean[], action: ActionDescriptor): UiFieldNode {
+export function uiInspectorToggleField(id: string, label: string, iconId: IconName, values: readonly boolean[], action: ActionDescriptor): UiFieldNode {
   const mixed = uiInspectorMixedToggle(values);
   return {
     type: "field",
@@ -1440,6 +1438,8 @@ export type IntroductionInteractionKind = GeneratedIntroductionInteractionKind;
 export type IntroductionLogo = GeneratedIntroductionLogo;
 export type IntroductionPoint = GeneratedIntroductionPoint;
 export type IntroductionGesture = GeneratedIntroductionGesture;
+export type IntroductionKeyModifier = GeneratedIntroductionKeyModifier;
+export type IntroductionPointerButton = GeneratedIntroductionPointerButton;
 export type IntroductionCursor = GeneratedIntroductionCursor;
 export type IntroductionDemonstration = GeneratedIntroductionDemonstration;
 
@@ -1571,7 +1571,7 @@ export type PluginContribution =
       readonly appId: string;
       readonly blockKind: string;
       readonly label: string;
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly defaultValueJson?: string;
       readonly paramsBodyKey: string;
       readonly previewBodyKey: string;
@@ -1581,7 +1581,7 @@ export type PluginContribution =
       readonly appId: string;
       readonly moduleId: string;
       readonly label: string;
-      readonly iconId: string;
+      readonly iconId: IconName;
       readonly typologyJson: string;
       readonly kindsJson: string;
     };
@@ -1655,12 +1655,17 @@ export type AppPanelTabDefinition = GeneratedPanelTabDefinition;
  * widens `WindowLayoutAxisNode.kind`/`WindowLayoutStackNode.kind` to plain `string` since the Rust
  * field is a runtime `String`, not an enum — the narrower `"row" | "column" | "stack" | "window"`
  * literal unions here are domain knowledge worth keeping for exhaustive switches). */
-export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts"> & {
+export type AppActionDefinition = Omit<GeneratedActionDefinition, "iconId"> & { readonly iconId?: IconName };
+export type AppUtilityDefinition = Omit<GeneratedUtilityDefinition, "iconId"> & { readonly iconId: IconName };
+export type AppToolDefinition = Omit<GeneratedToolDefinition, "iconId"> & { readonly iconId: IconName };
+export type AppCommandDefinition = Omit<GeneratedCommandDefinition, "iconId"> & { readonly iconId?: IconName };
+export type AppWindowKindDefinition = Omit<GeneratedWindowKindDefinition, "iconId"> & { readonly iconId: IconName };
+export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "namedLayouts" | "iconId"> & {
   readonly defaultLayout?: WindowLayout;
   readonly namedLayouts: readonly NamedLayout[];
+  readonly iconId?: IconName;
 };
 export type AppModeDefinition = GeneratedModeDefinition;
-export type AppWindowKindDefinition = GeneratedWindowKindDefinition;
 export type AppWindowOptions = GeneratedWindowOptions;
 export type AppWindowEngagementSlot = GeneratedWindowEngagementSlot;
 export type AppActionRef = GeneratedActionRef;
@@ -1752,7 +1757,7 @@ export function resolveLayoutForMode(
 export type DerivedUtilitySpec = {
   readonly id: string;
   readonly label: string;
-  readonly iconId: string;
+  readonly iconId: IconName;
   readonly group?: string;
   readonly groupLabel?: string;
   readonly category?: UtilityCategory;

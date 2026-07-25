@@ -344,6 +344,13 @@ describe("reveal cutoff store", () => {
     worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 100);
     expect(isRevealCutoffHidden({ revealIndex: 9 })).toBe(false);
   });
+
+  it("isRevealCutoffHidden treats a JSON null revealIndex as untagged, even at the boot cutoff of 0", () => {
+    worldRevealCutoffStore.set(PUZZLE3D_FILL_REVEAL_GROUP_ID, 0);
+    expect(isRevealCutoffHidden({ revealIndex: null as unknown as undefined })).toBe(false);
+    expect(isRevealCutoffHidden({})).toBe(false);
+    expect(isRevealCutoffHidden({ revealIndex: 0 })).toBe(true);
+  });
 });
 
 describe("in-flight skipping interval", () => {
@@ -493,8 +500,8 @@ describe("shell store reducer", () => {
 
   it("updates the uiPrefs slice and leaves the sync slice referentially unchanged", () => {
     const state = baseState();
-    const next = shellReducer(state, { type: "SET_UI_COMPACT", value: (prev) => !prev });
-    expect(next.uiPrefs.uiCompact).toBe(!state.uiPrefs.uiCompact);
+    const next = shellReducer(state, { type: "SET_UI_DRIVER_ID", value: "compact" });
+    expect(next.uiPrefs.uiDriverId).toBe("compact");
     expect(next.sync).toBe(state.sync);
   });
 
@@ -2944,14 +2951,14 @@ describe("partitionWindowMeasures", () => {
     // fix: a fill-utility slider group tagged with `activeUtilityId`, plus an untagged toggle. This is the exact
     // class of payload whose snake_case↔camelCase divergence made the puzzle fill slider invisible in React.
     const wireJson =
-      '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"icon.grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
+      '[{"kind":"group","id":"fill-params","label":"Fill","activeUtilityId":"fill","children":[{"kind":"slider","id":"fillCount","label":"Count","value":3,"min":1,"max":9,"step":1,"onChange":{"controllerId":"puzzle","action":"setFillCount"}}]},{"kind":"toggle","id":"grid","iconId":"layout-grid","pressed":true,"onChange":{"controllerId":"puzzle","action":"toggleGrid"}}]';
     const measures = JSON.parse(wireJson) as WindowMeasure[];
     const { general, utilityOptions } = partitionWindowMeasures(measures, "fill");
     expect(utilityOptions.map((m) => m.id)).toEqual(["fillCount"]);
     expect(utilityOptions[0]).toMatchObject({ kind: "slider", id: "fillCount", onChange: { action: "setFillCount" } });
     expect(general.map((m) => m.id)).toEqual(["grid"]);
     const gridToggle = general[0];
-    expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("icon.grid");
+    expect(gridToggle.kind === "toggle" && gridToggle.iconId).toBe("layout-grid");
 
     // Regression guard for the fixed bug: the pre-fix snake_case wire leaves `activeUtilityId` undefined, so the
     // tagged group silently falls through to `general` and the fill slider never reaches the Utility Options rail.
@@ -4177,7 +4184,7 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     source: { kind: "os" },
   };
   const singletonArgCommand: ResolvedCommand = {
-    definition: { id: "os.setExpertise", label: "Set Expertise", scope: "os", category: "general", inPalette: true, args: [{ id: "expertise", label: "Expertise", control: { kind: "text" }, required: true }] },
+    definition: { id: "os.setDriver", label: "Set Driver", scope: "os", category: "general", inPalette: true, args: [{ id: "driver", label: "Driver", control: { kind: "text" }, required: true }] },
     source: { kind: "os" },
   };
 
@@ -4195,8 +4202,8 @@ describe("buildCommandCategoryTree / buildCommandCategoryTabs (command palette a
     const tree = buildCommandCategoryTree([singletonArgCommand], null, {}, vi.fn(), vi.fn(), vi.fn(), vi.fn());
     expect(tree.sections).toHaveLength(1);
     expect(tree.sections[0]!.id).toBe("command.category.general.form");
-    expect(tree.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.setExpertise.arg.expertise"]);
-    expect(tree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setExpertise-execute", "command-os.setExpertise-reset"]);
+    expect(tree.sections[0]!.items?.map((item) => item.id)).toEqual(["command.os.setDriver.arg.driver"]);
+    expect(tree.sections[0]!.actions?.map((action) => action.id)).toEqual(["command-os.setDriver-execute", "command-os.setDriver-reset"]);
   });
 
   it("an arg-carrying command row toggles expansion instead of executing, and a synthetic arg-form section only appears while expanded", () => {
@@ -4435,11 +4442,18 @@ describe("Display Windows tab — projection drag templates", () => {
     return windowsTab.trees[0]!.tree.resolveTree().sections;
   }
 
-  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly items?: readonly LabeledTreeItem[]; readonly dragData?: Record<string, string> };
+  type LabeledTreeItem = { readonly id: string; readonly label?: string; readonly icon?: unknown; readonly items?: readonly LabeledTreeItem[]; readonly dragData?: Record<string, string> };
   const byLabel = (items: readonly LabeledTreeItem[], label: string) => items.find((row) => row.label === label);
 
+  it("shows window kind icons on section headers and kind rows", () => {
+    const sections = windowsTreeSections([{ id: "puzzle2d-overview", label: "Overview", iconId: "layout-grid", surfaceKind: "canvas-2d" }]);
+    expect(sections[0]!.icon).toBeTruthy();
+    const items = sections[0]!.items as LabeledTreeItem[];
+    expect(items[0]?.icon).toBeTruthy();
+  });
+
   it("nests the full Parallel/Perspective projection taxonomy under a world-3d window kind", () => {
-    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }]);
     expect(sections).toHaveLength(1);
     const items = sections[0]!.items as LabeledTreeItem[];
     expect(items).toHaveLength(3);
@@ -4451,12 +4465,12 @@ describe("Display Windows tab — projection drag templates", () => {
   });
 
   it("keeps a flat single drag entry for non-world-3d window kinds", () => {
-    const sections = windowsTreeSections([{ id: "puzzle2d-overview", label: "Overview", surfaceKind: "canvas-2d" }]);
+    const sections = windowsTreeSections([{ id: "puzzle2d-overview", label: "Overview", iconId: "layout-grid", surfaceKind: "canvas-2d" }]);
     expect(sections[0]!.items).toHaveLength(1);
   });
 
   it("pre-reverses every level so the bottom-anchored (direction=\"up\") Tree's own sibling-reversal renders Parallel children top-to-bottom", () => {
-    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
     // Raw (pre-render) order is reversed once more so that after the Tree's own "up" reversal on render,
@@ -4467,7 +4481,7 @@ describe("Display Windows tab — projection drag templates", () => {
   });
 
   it("each projection leaf's drag payload decodes back to its WorldProjectionSpec", () => {
-    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", surfaceKind: "world-3d" }]);
+    const sections = windowsTreeSections([{ id: "puzzle3d-main", label: "Puzzle 3D", iconId: "puzzle", surfaceKind: "world-3d" }]);
     const items = sections[0]!.items as LabeledTreeItem[];
     const parallel = byLabel(items, "Parallel")!;
     const orthographic = byLabel(parallel.items!, "Orthographic")!;

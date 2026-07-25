@@ -1428,7 +1428,7 @@ pub mod app_2d {
                 .icon_id("gis2d")
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap)
+                .window_kind(GIS2D_PLAY_WINDOW_MAIN, "Map", GIS2D_PLAY_BODY_COMPOSITE, SurfaceKind::TiledMap, "globe")
                 .default_layout(create_default_layout(
                     &[GIS2D_PLAY_WINDOW_MAIN.into()],
                     "row",
@@ -1968,7 +1968,7 @@ pub mod app_3d {
                 .icon_id("gis3d")
                 .mode("view", "View")
                 .default_mode_id("view")
-                .window_kind(GIS3D_PLAY_WINDOW_MAIN, "Terrain", GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d)
+                .window_kind(GIS3D_PLAY_WINDOW_MAIN, "Terrain", GIS3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, "move-3d")
                 .default_layout(create_default_layout(&[GIS3D_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Terrain".into()])))
                 .view_action("setCamera", "Set Camera")
                 .view_action("setSelection", "Set Selection")

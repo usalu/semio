@@ -603,11 +603,11 @@ function mount(): void {
   if (!el) {
     return;
   }
-  void import("@semio-tech/animate-present-renderer-react").then(({ Expertise, mountPresentation }) => {
+  void Promise.all([import("@semio-tech/animate-present-renderer-react"), import("@semio-tech/ui-react")]).then(([{ mountPresentation }, { DEFAULT_UI_DRIVER }]) => {
     mountPresentation(el, deck, {
       transition: "fade",
       slideNumber: false,
-      surfaceChrome: { appearance: "dark", device: "desktop", expertise: Expertise.NORMAL },
+      surfaceChrome: { appearance: "dark", device: "desktop", driver: DEFAULT_UI_DRIVER },
     });
   });
 }

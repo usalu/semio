@@ -39,6 +39,14 @@ export type ThemePaletteGroup = "board" | "map" | "canvas" | "chrome";
 /** @emoji 🌓 Light/dark palette dimension within a theme. */
 export type ThemeAppearanceName = "light" | "dark";
 
+/** @emoji 🖼 Optional runtime icon appearance overrides keyed by compile-time icon ids. */
+export interface UiThemeIcons {
+  readonly aliases?: Readonly<Partial<Record<string, string>>>;
+  readonly variants?: Readonly<Partial<Record<string, string>>>;
+  readonly themedAliases?: Readonly<Partial<Record<string, string>>>;
+  readonly themedVariants?: Readonly<Partial<Record<string, string>>>;
+}
+
 const THEME_PALETTE_GROUPS: readonly ThemePaletteGroup[] = ["board", "map", "canvas", "chrome"];
 
 const THEME_APPEARANCE_NAMES: readonly ThemeAppearanceName[] = ["light", "dark"];
@@ -56,6 +64,7 @@ export interface UiTheme {
   readonly opacities: Record<string, number>;
   readonly metrics: Record<string, Record<string, number | number[]>>;
   readonly appearances: Record<ThemeAppearanceName, Record<ThemePaletteGroup, Record<string, ThemePaintRef>>>;
+  readonly icons?: UiThemeIcons;
 }
 //#endregion 🔖types
 
@@ -199,6 +208,28 @@ function parsePaletteGroup(value: unknown, path: string): Record<string, ThemePa
   return out;
 }
 
+function parseStringMap(value: unknown, path: string): Record<string, string> {
+  const obj = requireRecord(value, path);
+  const out: Record<string, string> = {};
+  for (const [k, v] of Object.entries(obj)) {
+    if (typeof v !== "string") {
+      throw new Error(`theme.${path}.${k} must be a string`);
+    }
+    out[k] = v;
+  }
+  return out;
+}
+
+function parseThemeIcons(value: unknown, path: string): UiThemeIcons {
+  const obj = requireRecord(value, path);
+  const out: UiThemeIcons = {};
+  if ("aliases" in obj) out.aliases = parseStringMap(obj.aliases, `${path}.aliases`);
+  if ("variants" in obj) out.variants = parseStringMap(obj.variants, `${path}.variants`);
+  if ("themedAliases" in obj) out.themedAliases = parseStringMap(obj.themedAliases, `${path}.themedAliases`);
+  if ("themedVariants" in obj) out.themedVariants = parseStringMap(obj.themedVariants, `${path}.themedVariants`);
+  return out;
+}
+
 function parseAppearance(value: unknown, path: string): Record<ThemePaletteGroup, Record<string, ThemePaintRef>> {
   const obj = requireRecord(value, path);
   const out = {} as Record<ThemePaletteGroup, Record<string, ThemePaintRef>>;
@@ -271,6 +302,7 @@ export function parseUiTheme(json: unknown): UiTheme {
     opacities,
     metrics: parseMetrics(obj.metrics, "metrics"),
     appearances,
+    ...(obj.icons !== undefined ? { icons: parseThemeIcons(obj.icons, "icons") } : {}),
   };
   // Resolve every paint once so unknown token refs fail loudly at parse time.
   for (const appearance of THEME_APPEARANCE_NAMES) {

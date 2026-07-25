@@ -1000,7 +1000,7 @@ pub mod builder_kit {
 
     use super::{ProtocolBlock, ProtocolOperation, ProtocolSpec, ProtocolStep};
     use serde_json::Value;
-    use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
+    use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖Config
     #[derive(Clone, Debug)]
@@ -1063,7 +1063,7 @@ pub mod builder_kit {
     /// `Contribution::ProtocolBlockKind` modules already resolved by the caller into label/icon pairs.
     pub fn build_palette(builtin: &[(&str, &str, &str)], extensions: &[(String, String, String)]) -> Vec<BlockPaletteEntry> {
         let mut entries: Vec<BlockPaletteEntry> = builtin.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: (*kind).into(), label: (*label).into(), icon_id: (*icon_id).into() }).collect();
-        entries.extend(extensions.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind.clone(), label: label.clone(), icon_id: icon_id.clone() }));
+        entries.extend(extensions.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind.clone(), label: label.clone(), icon_id: IconName::from(icon_id.as_str()) }));
         entries
     }
 

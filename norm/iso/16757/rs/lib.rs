@@ -633,7 +633,7 @@ pub mod part_2 {
                 rotation_deg: *rotation_deg,
                 child: Box::new(substitute_parameters(child, values)),
             },
-            GeometryNode::Boolean { operation, children } => GeometryNode::Boolean { operation: *operation, children: children.iter().map(|c| substitute_parameters(c, values)).collect() },
+            GeometryNode::Boolean { operator, children } => GeometryNode::Boolean { operator: *operator, children: children.iter().map(|c| substitute_parameters(c, values)).collect() },
             GeometryNode::Reference { geometry_id } => GeometryNode::Reference { geometry_id: geometry_id.clone() },
         }
     }

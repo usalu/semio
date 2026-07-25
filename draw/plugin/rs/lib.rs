@@ -6,7 +6,7 @@ use draw::{
     draw_op_for_layer_field, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
     flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard,
-    rgba_to_hex, DrawArtboard, DrawDocument, DrawLayerNode, DrawOperation, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA,
+    rgba_to_hex, DocumentDsl, DrawArtboard, DrawDocument, DrawLayerNode, DrawOperation, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView,
     build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
@@ -37,7 +37,9 @@ const DRAW_PLAY_BODY_CATALOGUE: &str = "draw.play.catalogue";
 const DRAW_PLAY_BODY_PROPERTIES: &str = "draw.play.properties";
 const DRAW_LAYER_KIND_DRAG_MIME: &str = "application/x-semio-draw-layer-kind";
 const DRAW_PLAY_EXAMPLE_DEFAULT_ID: &str = "semio";
-const SEMIO_DRAW_EXAMPLE_JSON: &str = include_str!("../../example/semio.draw.json");
+/// 🗄️ The Semio emblem example fixture, handcrafted in `draw`'s DSL (`vcs::DocumentDsl`) — see
+/// `semio_draw_example_document`/`semio_draw_example_json` for the two shapes downstream code needs.
+const SEMIO_DRAW_EXAMPLE_DSL: &str = include_str!("../../example/semio.draw");
 //#endregion 🔖Constants
 
 //#region 🔖Types
@@ -52,6 +54,23 @@ struct DrawInteractionState {
     engagement_input: String,
 }
 //#endregion 🔖Types
+
+//#region 🔖ExampleFixture
+/// 📄 Parses the handcrafted DSL fixture once per call — used both for `setActiveExample`'s in-plugin
+/// document load and to bridge into the framework's still-JSON-only `App::example`/render-override
+/// surfaces below, so `SEMIO_DRAW_EXAMPLE_DSL` stays the single source of truth for the fixture.
+fn semio_draw_example_document() -> DrawDocument {
+    DrawDocument::parse_dsl(SEMIO_DRAW_EXAMPLE_DSL).unwrap_or_else(|_| empty_draw_projection())
+}
+
+/// 🌉 JSON bridge for `semio_framework_plugin`'s `App::example`/`VcsDocumentApp::render` override,
+/// which hardcode `serde_json::from_str` on their `document_json`/`projection_override_json`
+/// parameters (shared framework machinery, out of scope for this DSL migration) — derives the JSON
+/// from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
+fn semio_draw_example_json() -> String {
+    serde_json::to_string(&semio_draw_example_document()).unwrap_or_default()
+}
+//#endregion 🔖ExampleFixture
 
 //#region 🔖DocumentHelpers
 fn draw_play_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1687,7 +1706,7 @@ impl DocumentApp for DrawPlayApp {
                 let next = if example_id.is_empty() {
                     Some(default_draw_document("empty", None))
                 } else if example_id == DRAW_PLAY_EXAMPLE_DEFAULT_ID {
-                    Some(serde_json::from_str(SEMIO_DRAW_EXAMPLE_JSON).unwrap_or_else(|_| empty_draw_projection()))
+                    Some(semio_draw_example_document())
                 } else {
                     None
                 };
@@ -1975,7 +1994,7 @@ fn create_draw_app() -> App {
             .icon_id("draw")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, "Canvas", DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement)
+            .window_kind_with_engagement(DRAW_PLAY_WINDOW_CANVAS, "Canvas", DRAW_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, engagement, "pen-tool")
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, DRAW_PLAY_BODY_LAYERS)
             .panel_tab("framework.panel.catalogue", "Catalogue", PanelGroup::Workbench, DRAW_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", "Inspection", PanelGroup::Details, DRAW_PLAY_BODY_PROPERTIES)
@@ -2043,7 +2062,7 @@ fn create_draw_app() -> App {
     .example(
         DRAW_PLAY_EXAMPLE_DEFAULT_ID,
         "Semio",
-        SEMIO_DRAW_EXAMPLE_JSON,
+        semio_draw_example_json(),
     )
     .program("draw", "Draw", "2d.drawing")
 }
@@ -2104,7 +2123,8 @@ mod tests {
     #[test]
     fn renders_canvas_scene_with_segments() {
         let mut app = new_app();
-        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(SEMIO_DRAW_EXAMPLE_JSON), &ViewState::default()).expect("render");
+        let example_json = semio_draw_example_json();
+        let node = app.render(DRAW_PLAY_BODY_COMPOSITE, Some(example_json.as_str()), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
         let value = serde_json::to_value(&node).unwrap();
@@ -2219,7 +2239,7 @@ mod tests {
 
     #[test]
     fn semio_example_fixture_parses() {
-        let document: DrawDocument = serde_json::from_str(SEMIO_DRAW_EXAMPLE_JSON).expect("semio fixture");
+        let document = DrawDocument::parse_dsl(SEMIO_DRAW_EXAMPLE_DSL).expect("semio fixture");
         assert_eq!(document.id, "semio");
         assert_eq!(document.title.as_deref(), Some("Semio Emblem"));
         assert!(!document.layers.is_empty());

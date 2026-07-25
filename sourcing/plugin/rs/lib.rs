@@ -548,10 +548,10 @@ pub fn create_sourcing_curate_app() -> App {
             .icon_id("shopping-cart")
             .mode("curate", "Curate")
             .default_mode_id("curate")
-            .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table)
-            .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table)
-            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
-            .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d)
+            .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table, "library")
+            .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table, "tags")
+            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "eye")
+            .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d, "grid-3x3")
             .default_layout(sourcing_three_column_layout())
             // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the
             // `CurateDocument` (filters/sort/runtime all live in the document), so each arm emits a

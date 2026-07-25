@@ -80,7 +80,12 @@ export const ENTWERFEN_MIT_BESTAND_BRAND: ShellBrand = {
         demonstrations: [
           { gesture: { kind: "scroll", at: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 }, deltaY: -100 } },
           {
-            gesture: { kind: "drag", from: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 }, to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.65, y: 0.4 } },
+            gesture: {
+              kind: "drag",
+              from: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.5, y: 0.5 },
+              to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.65, y: 0.4 },
+              button: "middle",
+            },
             cursor: "move",
           },
           { gesture: { kind: "orbit", from: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.35, y: 0.5 }, to: { kind: "windowNormalized", id: windowElementId("puzzle3d-main"), x: 0.65, y: 0.5 } } },

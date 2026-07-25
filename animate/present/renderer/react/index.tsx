@@ -56,7 +56,7 @@ import {
 } from "@semio-tech/animate-present-core";
 import {
     applyElementsSurfaceChrome,
-    Expertise,
+    DEFAULT_UI_DRIVER,
     Icon,
     Scrollable,
     SelectionMarquee,
@@ -155,7 +155,6 @@ export type {
     Slide,
     TextMorphRoot
 } from "@semio-tech/animate-present-core";
-export { Expertise } from "@semio-tech/ui-react";
 
 //#region 🔖MountOptions
 /** @emoji ⚙️ Reveal.js and @semio-tech/ui-react surface chrome options for {@link mountPresentation}. */
@@ -198,9 +197,9 @@ export function readPresentationSlideIndicesFromUrl(
 //#endregion 🔖MountOptions
 
 const DEFAULT_SURFACE_CHROME: ElementsSurfaceChromeInput = {
-	theme: "system",
+	appearance: "system",
 	device: "desktop",
-	expertise: Expertise.NORMAL,
+	driver: DEFAULT_UI_DRIVER,
 };
 
 //#region 🔖RevealChrome

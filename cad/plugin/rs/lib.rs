@@ -2350,7 +2350,7 @@ use semio_framework_plugin::{PanelGroup,
     WindowLayoutWindowNode, WindowMeasure, WorldProjectionConfig, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
     FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, MeshImporter,
-    is_de_locale, localized_label_map, selection_ids, tree_item, PanelTreeBuilder,
+    is_de_locale, localized_label_map, selection_ids, tree_item, PanelTreeBuilder, IconName,
 };
 use semio_framework_core::kernel::HostEffect;
 use serde::{Deserialize, Serialize};
@@ -4146,7 +4146,7 @@ fn reference_tree_item(model_definition_id: &str, reference: &CadReference, labe
 /// the full `UiTreeItemNode` struct literal.
 fn cad_tree_item(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
     let mut item = tree_item(id, label);
-    item.icon_id = icon_id.map(str::to_string);
+    item.icon_id = icon_id.map(IconName::from);
     item.action = Some(action);
     item
 }
@@ -5844,10 +5844,10 @@ fn create_cad_app() -> App {
             .terminology_document("reuse", ["Entwerfen mit Bestand", "cad"])
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d)
-            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d)
-            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY, SurfaceKind::World3d)
-            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC, SurfaceKind::World3d)
+            .window_kind(CAD_PLAY_WINDOW_SHAPE, "Shape", CAD_PLAY_BODY_SHAPE, SurfaceKind::World3d, "box")
+            .window_kind(CAD_PLAY_WINDOW_BUILDING, "Building", CAD_PLAY_BODY_BUILDING, SurfaceKind::World3d, "landmark")
+            .window_kind(CAD_PLAY_WINDOW_ENERGY, "Energy", CAD_PLAY_BODY_ENERGY, SurfaceKind::World3d, "sun")
+            .window_kind(CAD_PLAY_WINDOW_STRUCTURE_CLASSIC, "Structure Classic", CAD_PLAY_BODY_STRUCTURE_CLASSIC, SurfaceKind::World3d, "component")
             .default_layout(cad_quad_layout())
             .operation("addObject", "Add Object")
             .operation("patchObject", "Patch Object")

@@ -157,6 +157,21 @@
 
 /* #endregion 👻PanelGhost */
 
+/* #region 🫥ChromeReveal */
+/* Bars fade in only while the cursor (or focus) is in their region — opacity-only so the canvas never reflows. */
+html[data-ui-chrome-reveal="hover"] [data-ui-reveal-region] {
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 150ms ease;
+}
+
+html[data-ui-chrome-reveal="hover"] [data-ui-reveal-region][data-ui-revealed="true"],
+html[data-ui-chrome-reveal="hover"] [data-ui-reveal-region]:focus-within {
+  opacity: 1;
+  pointer-events: auto;
+}
+/* #endregion 🫥ChromeReveal */
+
 /* #region ↔️ Scrollbar Hiding and Horizontal Scroll for Navbar and Footer */
 [data-slot="navbar"] > div,
 [data-slot="footer"] > div {

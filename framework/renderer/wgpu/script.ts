@@ -12,6 +12,7 @@ import {
   getWorkspaceRoot,
   resolveTestLevel,
   runBundleScriptMain,
+  runCargoTestBudgeted,
   runCmd,
   runCmdStatus,
   runVitest,
@@ -182,9 +183,10 @@ class NativeRunScript extends BundleScript {
 }
 
 class TestScript extends BundleScript {
-  run(segments: string[]): void {
+  async run(segments: string[]): Promise<void> {
     const { rest } = resolveTestLevel(segments);
-    runVitest(this.root, rest, "vitest.config.ts");
+    await runCargoTestBudgeted([crateName], this.repoRoot, rest);
+    await runVitest(this.root, rest, "vitest.config.ts");
   }
 }
 

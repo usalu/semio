@@ -3,13 +3,14 @@
   "emoji": "🐛",
   "status": "open",
   "description": "Puzzle 3D shows only the grid. No object meshes are visible, including after dropping an object: the transform gumball appears for the selected object, but its mesh does not render. Trace the complete object-to-scene mesh path, fix the root cause, add regression coverage in existing tests, and verify runtime viewport behavior with console evidence.",
-  "summary": "Fixed Puzzle 3D meshes disappearing after drop. URL-backed instances now remain pending instead of becoming empty procedural placeholders, and the shared GLB importer now traverses the active scene, skips guide lines, combines every triangle primitive, handles indexed and non-indexed triangle modes, and applies node transforms. The real capsule_J asset decodes to 1,472 vertices and 1,750 triangles, with regressions for fetch persistence and the dropped-object draw key. Verified 56/56 framework-core tests and 42/42 infinite-world tests before a concurrent unrelated ui_wgpu API rename made the shared renderer temporarily uncompilable; that external blocker prevented the final browser rebuild.",
+  "summary": "Fixed Puzzle 3D persistent mesh rendering end to end: URL-backed dropped meshes remain pending until fetched, GLB scene decoding collects transformed triangle primitives after guide-line primitives, the dev asset server stays responsive while Trunk runs, and WGPU selects the declared Puzzle 3D app in the shared multi-app plugin. Added regressions, repaired concurrent rename fallout required for builds, wired Rust tests into the renderer target, and verified 227 Rust tests, the WGPU JS test, core tests, registry generation, WASM build, mesh HTTP responses, and a clean live Puzzle 3D browser render with visible filled meshes.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2315"
   },
   "goal": "🎯r2602/🎯runningsketchpad",
   "sessions": [
     "⚪3d1de0109f2a49779abd9cf919c2eaf1",
-    "⚪9b8c7b198c21429fb2dfa3701f79557f"
+    "⚪9b8c7b198c21429fb2dfa3701f79557f",
+    "⚪dc485f7a4d3b4c44bd4b2ad79e58cddf"
   ]
 }

@@ -1,0 +1,14 @@
+{
+  "title": "Filter Introduction Demos by Incomplete Interactions",
+  "emoji": "🎬",
+  "status": "closed",
+  "description": "Stop introduction ghost-cursor demos from replaying completed interactions by filtering effectiveDemonstrations against completedInteractionIndices, using the existing parallel-index authoring contract (demo[i] teaches interaction[i]).",
+  "summary": "Filtered introduction ghost-cursor demonstrations to only replay incomplete interactions: effectiveDemonstrations now excludes demonstrations[i] when completedInteractionIndices includes i (parallel-index contract demo[i] teaches interaction[i]). Gallery steps with no interactions are unchanged. Documented the contract on IntroductionStepDefinition.demonstrations in Rust. Added vitest coverage for partial completion, full completion, and gallery steps. All 9 UIIntroduction demonstration tests pass.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2325"
+  },
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps🎯runningdesignapp",
+  "sessions": [
+    "⚪a5df7536c8d54ca9b2690524c474cda2"
+  ]
+}

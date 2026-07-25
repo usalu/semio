@@ -1,5 +1,7 @@
 //! 🥅 Render-independent framework kernel: declarative {@link UiNode}, {@link Platform}, {@link ActionBus}.
 
+pub use ui_wgpu::IconName;
+
 pub mod action_bus {
 // #region action_bus
 //! 🎯 Action routing between renderer and app controllers.
@@ -2922,7 +2924,7 @@ mod tests {
                 label: "Canvas".into(),
                 body_key: "composite".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
-                icon_id: None,
+                icon_id: "pen-tool".into(),
                 options: ui_wgpu::WindowOptions::default(),
                 actions: Vec::new(),
                 utilities: Vec::new(),
@@ -2963,6 +2965,7 @@ pub mod ui {
 use serde::{Deserialize, Serialize};
 use ui_wgpu::{ActionDescriptor, NamedLayout, SurfaceKind, WindowLayout, WindowOptions};
 use crate::mesh::{MediaPortSpec, ResourceKindSpec};
+use crate::IconName;
 
 //#region 🔖Manifest
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3134,7 +3137,7 @@ pub struct ActionDefinition {
     pub kind: ActionKind,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     /// 📝 Typed argument declarations. Empty (the common case) = a no-argument action.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3275,7 +3278,7 @@ impl From<String> for ActionRef {
 pub struct UtilityDefinition {
     pub id: String,
     pub label: String,
-    pub icon_id: String,
+    pub icon_id: IconName,
     /// 🧺 Visual ribbon collection this utility groups into; `None` = a flat top-level ribbon entry.
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
@@ -3299,7 +3302,7 @@ pub struct UtilityDefinition {
 
 impl UtilityDefinition {
     /// @emoji 🧰 A utility with sensible defaults (no group/keys/cursor/category, gates actions while active).
-    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
         Self {
             id: id.into(),
             label: label.into(),
@@ -3371,7 +3374,7 @@ pub struct CommandDefinition {
     pub category: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     /// 📝 Reuses `ActionArgDef` — one staged-form contract shared by actions, dialogs, and commands.
     pub args: Vec<ActionArgDef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -3445,7 +3448,7 @@ impl From<String> for CommandRef {
 pub struct ToolDefinition {
     pub id: String,
     pub label: String,
-    pub icon_id: String,
+    pub icon_id: IconName,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub keys: Option<String>,
@@ -3453,7 +3456,7 @@ pub struct ToolDefinition {
 
 impl ToolDefinition {
     /// @emoji 🛠️ A tool with sensible defaults (no keybinding).
-    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+    pub fn new(id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
         Self { id: id.into(), label: label.into(), icon_id: icon_id.into(), keys: None }
     }
 }
@@ -3617,7 +3620,9 @@ pub struct IntroductionStepDefinition {
     #[serde(default)]
     pub logos: Vec<IntroductionLogo>,
     /// 🎬 Ghost-cursor demonstrations played in order, one after another, then looping back to the first —
-    /// e.g. a viewport step showing zoom, then pan, then orbit. Empty means no demonstration.
+    /// e.g. a viewport step showing zoom, then pan, then orbit. When the step also declares `interactions`,
+    /// `demonstrations[i]` previews `interactions[i]` and completed interactions are omitted from replay.
+    /// Empty means no demonstration.
     #[serde(default)]
     pub demonstrations: Vec<IntroductionDemonstration>,
 }
@@ -4223,9 +4228,8 @@ pub struct WindowKindDefinition {
     pub label: String,
     pub body_key: String,
     pub surface_kind: SurfaceKind,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
+    pub icon_id: IconName,
     /// 🎛️ Always-present chrome facets (was: separately-optional `measures`/`engagement`).
     #[serde(default)]
     pub options: WindowOptions,
@@ -4353,7 +4357,7 @@ pub struct AppDefinition {
     pub document: Vec<String>,
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
-    pub icon_id: Option<String>,
+    pub icon_id: Option<IconName>,
     pub controller_id: String,
     /// 🚧 `Modes` is `NonEmptyVec<ModeDefinition>`, whose `serde(try_from/into = "Vec<T>")` wire
     /// format is a flat array — not the `{ first, rest }` shape ts-rs would infer from the struct
@@ -4581,7 +4585,7 @@ pub enum Contribution {
         block_kind: String,
         label: String,
         #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
-        icon_id: String,
+        icon_id: IconName,
         #[serde(default, skip_serializing_if = "String::is_empty")]
         #[cfg_attr(feature = "typegen", ts(rename = "defaultValueJson"))]
         default_value_json: String,
@@ -4598,7 +4602,7 @@ pub enum Contribution {
         module_id: String,
         label: String,
         #[cfg_attr(feature = "typegen", ts(rename = "iconId"))]
-        icon_id: String,
+        icon_id: IconName,
         #[cfg_attr(feature = "typegen", ts(rename = "typologyJson"))]
         typology_json: String,
         #[cfg_attr(feature = "typegen", ts(rename = "kindsJson"))]
@@ -5686,7 +5690,7 @@ mod app_document_tests {
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
         CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
         IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
-        Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
+        Modes, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
     };
@@ -5771,7 +5775,7 @@ mod app_document_tests {
                 label: "Main".into(),
                 body_key: "a.main".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
-                icon_id: None,
+                icon_id: "pen-tool".into(),
                 options: ui_wgpu::WindowOptions::default(),
                 actions: window_actions,
                 utilities: Vec::new(),

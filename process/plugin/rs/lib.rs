@@ -1552,6 +1552,7 @@ fn create_process3d_app() -> App {
                 PROCESS_3D_PLAY_BODY_MAIN,
                 SurfaceKind::World3d,
                 process3d_engagement(&default_document(), &Process3dRuntime::default(), PROCESS3D_DEFAULT_UTILITY, &Process3dLabels::EN),
+                "box",
             )
             .default_layout(create_default_layout(&[PROCESS_3D_PLAY_WINDOW_MAIN.into()], "row", None, Some(&["Workpiece".into()])))
             .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PROCESS_3D_PLAY_BODY_DOCUMENT)

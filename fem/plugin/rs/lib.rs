@@ -1484,11 +1484,11 @@ fn create_fem2d_app() -> App {
     App::from_builder(
         App::builder(FEM2D_APP_ID, "FEM 2D")
             .document(["semio", "fem", "fem2d"])
-            .icon_id("fem")
+            .icon_id("sigma")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(FEM2D_WINDOW_MODEL, "Model", FEM2D_BODY_MODEL, SurfaceKind::Canvas2d)
-            .window_kind(FEM2D_WINDOW_RESULTS, "Results", FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d)
+            .window_kind(FEM2D_WINDOW_MODEL, "Model", FEM2D_BODY_MODEL, SurfaceKind::Canvas2d, "box")
+            .window_kind(FEM2D_WINDOW_RESULTS, "Results", FEM2D_BODY_RESULTS, SurfaceKind::Canvas2d, "bar-chart-3")
             .default_layout(create_default_layout(
                 &[FEM2D_WINDOW_MODEL.into(), FEM2D_WINDOW_RESULTS.into()],
                 "row",
@@ -1549,11 +1549,11 @@ fn create_fem3d_app() -> App {
     App::from_builder(
         App::builder(FEM3D_APP_ID, "FEM 3D")
             .document(["semio", "fem", "fem3d"])
-            .icon_id("fem")
+            .icon_id("sigma")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(FEM3D_WINDOW_MODEL, "Model", FEM3D_BODY_MODEL, SurfaceKind::World3d)
-            .window_kind(FEM3D_WINDOW_RESULTS, "Results", FEM3D_BODY_RESULTS, SurfaceKind::World3d)
+            .window_kind(FEM3D_WINDOW_MODEL, "Model", FEM3D_BODY_MODEL, SurfaceKind::World3d, "box")
+            .window_kind(FEM3D_WINDOW_RESULTS, "Results", FEM3D_BODY_RESULTS, SurfaceKind::World3d, "bar-chart-3")
             .default_layout(create_default_layout(
                 &[FEM3D_WINDOW_MODEL.into(), FEM3D_WINDOW_RESULTS.into()],
                 "row",

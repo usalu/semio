@@ -20,15 +20,15 @@ import {
   singleTreeLeaf,
   TransactionProvider,
   TreeStateProvider,
-  UiChromeCompactProvider,
-  UiChromeLabelPolicyProvider,
+  UiDriverProvider,
+  DEFAULT_UI_DRIVER,
+  COMPACT_UI_DRIVER,
   useFlow,
   useGlassTier,
   usePanelGhost,
   useTransaction,
   useTreeState,
-  useUiChromeCompact,
-  useUiChromeLabelPolicy,
+  useUiDriver,
   type PanelDock,
   type PanelTabDockMove,
 } from "@semio-tech/ui-react";
@@ -231,55 +231,34 @@ export const TreeState: Story = {
 };
 // #endregion 📜TreeStateProvider
 
-// #region 🎛️UiChromeCompactProvider
-function UiChromeCompactProbe() {
-  const compact = useUiChromeCompact();
-  return <span className="text-xs">compact: {String(compact)}</span>;
+// #region 🚗UiDriverProvider
+function UiDriverProbe() {
+  const driver = useUiDriver();
+  return (
+    <span className="text-xs">
+      {driver.id}: labels={driver.labels}, drag={driver.drag}, chrome={driver.chrome}, gumball={driver.gumball}, tooltips={driver.tooltips}
+    </span>
+  );
 }
 
-export const ChromeCompact: Story = {
-  name: "UiChromeCompactProvider",
+export const Driver: Story = {
+  name: "UiDriverProvider",
   render: () => (
     <div className="flex gap-double">
-      <ProbeShell title="compact=false">
-        <UiChromeCompactProvider compact={false}>
-          <UiChromeCompactProbe />
-        </UiChromeCompactProvider>
+      <ProbeShell title="default">
+        <UiDriverProvider driver={DEFAULT_UI_DRIVER}>
+          <UiDriverProbe />
+        </UiDriverProvider>
       </ProbeShell>
-      <ProbeShell title="compact=true">
-        <UiChromeCompactProvider compact={true}>
-          <UiChromeCompactProbe />
-        </UiChromeCompactProvider>
+      <ProbeShell title="compact">
+        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+          <UiDriverProbe />
+        </UiDriverProvider>
       </ProbeShell>
     </div>
   ),
 };
-// #endregion 🎛️UiChromeCompactProvider
-
-// #region 🏷️UiChromeLabelPolicyProvider
-function UiChromeLabelPolicyProbe() {
-  const policy = useUiChromeLabelPolicy();
-  return <span className="text-xs">policy: {policy}</span>;
-}
-
-export const ChromeLabelPolicy: Story = {
-  name: "UiChromeLabelPolicyProvider",
-  render: () => (
-    <div className="flex gap-double">
-      <ProbeShell title='policy="compact" (default)'>
-        <UiChromeLabelPolicyProvider policy="compact">
-          <UiChromeLabelPolicyProbe />
-        </UiChromeLabelPolicyProvider>
-      </ProbeShell>
-      <ProbeShell title='policy="always" (e.g. navbar)'>
-        <UiChromeLabelPolicyProvider policy="always">
-          <UiChromeLabelPolicyProbe />
-        </UiChromeLabelPolicyProvider>
-      </ProbeShell>
-    </div>
-  ),
-};
-// #endregion 🏷️UiChromeLabelPolicyProvider
+// #endregion 🚗UiDriverProvider
 
 // #region 🧭FlowProvider
 function FlowProbe() {

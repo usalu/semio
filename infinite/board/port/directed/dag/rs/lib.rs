@@ -5640,6 +5640,62 @@ mod tests {
     }
 
     #[test]
+    fn dag_host_entity_screen_json_resolves_node_by_id_and_wildcard() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        let json = host.entity_screen_json("node", "scale");
+        let parsed: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(parsed["visible"], true);
+        assert!(parsed["x"].is_number());
+        assert!(parsed["rect"].is_array());
+
+        let wildcard: serde_json::Value = serde_json::from_str(&host.entity_screen_json("node", "*")).unwrap();
+        assert_eq!(wildcard["visible"], true);
+    }
+
+    #[test]
+    fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        let input_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale:in")).unwrap();
+        assert_eq!(input_json["visible"], true);
+        let output_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "combine:b")).unwrap();
+        assert_eq!(output_json["visible"], true);
+        // 🐢 A malformed id (no ":port") or a port that doesn't exist on the node must degrade to
+        // unresolved, never panic.
+        let malformed: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale")).unwrap();
+        assert_eq!(malformed["visible"], false);
+        let missing_port: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale:nope")).unwrap();
+        assert_eq!(missing_port["visible"], false);
+    }
+
+    #[test]
+    fn dag_host_entity_screen_json_resolves_edge_with_a_two_point_polyline() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        let json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("edge", "e1")).unwrap();
+        assert_eq!(json["visible"], true);
+        let polyline = json["polyline"].as_array().expect("edge geometry carries a polyline");
+        assert_eq!(polyline.len(), 2);
+    }
+
+    #[test]
+    fn dag_host_entity_screen_json_unresolved_domain_or_id_never_panics() {
+        let mut host = DagHost::default_demo();
+        host.set_viewport(800, 600, 1.0);
+        for (domain, id) in [("node", "nonexistent"), ("handle", "*"), ("edge", "nonexistent"), ("bogus-domain", "*")] {
+            let json: serde_json::Value = serde_json::from_str(&host.entity_screen_json(domain, id)).unwrap();
+            if json["visible"] == true {
+                continue; // "handle":"*" may legitimately resolve to the demo fixture's first port.
+            }
+            assert_eq!(json["visible"], false, "domain={domain} id={id}");
+        }
+        let empty_fixture = DagFixture { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] };
+        let empty: serde_json::Value = serde_json::from_str(&DagHost::from_fixture(empty_fixture).entity_screen_json("node", "*")).unwrap();
+        assert_eq!(empty["visible"], false);
+    }
+
+    #[test]
     fn dag_host_minimap_bounded_drag_moves_selection_inside_union_bounds() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);

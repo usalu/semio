@@ -164,7 +164,7 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
+    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
     ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, UtilityDefinition,
@@ -199,7 +199,7 @@ pub struct WindowKindSpec {
     pub label: String,
     pub body_key: String,
     pub surface_kind: SurfaceKind,
-    pub icon_id: Option<String>,
+    pub icon_id: IconName,
     pub measures: Vec<WindowMeasure>,
     pub engagement: Option<WindowEngagement>,
     pub actions: Vec<ActionRef>,
@@ -321,7 +321,7 @@ pub struct AppBuilder {
     id: String,
     label: String,
     document: Vec<String>,
-    icon_id: Option<String>,
+    icon_id: Option<IconName>,
     controller_id: String,
     modes: Vec<ModeSpec>,
     default_mode_id: Option<String>,
@@ -422,7 +422,7 @@ impl AppBuilder {
         self
     }
 
-    pub fn icon_id(mut self, icon_id: impl Into<String>) -> Self {
+    pub fn icon_id(mut self, icon_id: impl Into<IconName>) -> Self {
         self.icon_id = Some(icon_id.into());
         self
     }
@@ -486,13 +486,14 @@ impl AppBuilder {
         label: impl Into<String>,
         body_key: impl Into<String>,
         surface_kind: SurfaceKind,
+        icon_id: impl Into<IconName>,
     ) -> Self {
         self.window_kinds.push(WindowKindSpec {
             id: id.into(),
             label: label.into(),
             body_key: body_key.into(),
             surface_kind,
-            icon_id: None,
+            icon_id: icon_id.into(),
             measures: Vec::new(),
             engagement: None,
             actions: Vec::new(),
@@ -508,13 +509,14 @@ impl AppBuilder {
         body_key: impl Into<String>,
         surface_kind: SurfaceKind,
         engagement: WindowEngagement,
+        icon_id: impl Into<IconName>,
     ) -> Self {
         self.window_kinds.push(WindowKindSpec {
             id: id.into(),
             label: label.into(),
             body_key: body_key.into(),
             surface_kind,
-            icon_id: None,
+            icon_id: icon_id.into(),
             measures: Vec::new(),
             engagement: Some(engagement),
             actions: Vec::new(),
@@ -662,7 +664,7 @@ impl AppBuilder {
     }
 
     /// @emoji 🧰 Declares a utility with default settings (no group/keys/cursor/category, gates actions while active).
-    pub fn utility_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+    pub fn utility_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
         self.utility(UtilityDefinition::new(id, label, icon_id))
     }
 
@@ -675,7 +677,7 @@ impl AppBuilder {
     }
 
     /// @emoji 🛠️ Declares a tool with default settings (no keybinding).
-    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<String>) -> Self {
+    pub fn tool_simple(self, id: impl Into<String>, label: impl Into<String>, icon_id: impl Into<IconName>) -> Self {
         self.tool(ToolDefinition::new(id, label, icon_id))
     }
 
@@ -1474,7 +1476,7 @@ impl FormPanelBuilder {
     pub fn submit(mut self, label: &str, action: ActionDescriptor) -> Self {
         self.submit = Some(UiButtonNode {
             id: Some(self.field_id("submit")),
-            icon_id: String::new(),
+            icon_id: IconName::CircleDot,
             label: label.into(),
             action,
             style: None,
@@ -2078,7 +2080,7 @@ mod app_builder_tests {
                 .document(["semio", "bad"])
                 .mode("edit", "Edit")
                 .mode_tools("edit", vec![])
-                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
+                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["missing".into()], "row", None, None))
                 .build_definition();
         });
@@ -2091,11 +2093,12 @@ mod app_builder_tests {
             .document(["semio", "good"])
             .mode("edit", "Edit")
             .mode_tools("edit", vec![])
-            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
+            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .panel_tab("framework.panel.document", "Document", PanelGroup::Workbench, "good.document")
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .build_definition();
         assert_eq!(definition.window_kinds.len(), 1);
+        assert_eq!(definition.window_kinds.iter().next().map(|kind| kind.icon_id.as_str()), Some("app-window"));
         assert_eq!(definition.panel_tabs.len(), 1);
     }
 
@@ -2106,7 +2109,7 @@ mod app_builder_tests {
                 .document(["semio", "bad"])
                 .mode("edit", "Edit")
                 .mode_tools("edit", vec![])
-                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d)
+                .window_kind("main", "Main", "bad.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .default_layout(create_default_layout(&["main".into()], "row", None, None))
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Bad"])
                 .build_definition();
@@ -2120,7 +2123,7 @@ mod app_builder_tests {
             .document(["semio", "good"])
             .mode("edit", "Edit")
             .mode_tools("edit", vec![])
-            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d)
+            .window_kind("main", "Main", "good.main", SurfaceKind::Canvas2d, IconName::AppWindow)
             .default_layout(create_default_layout(&["main".into()], "row", None, None))
             .terminology("reuse")
             .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
@@ -2135,7 +2138,7 @@ mod app_builder_tests {
         App::builder(id, "App")
             .document(["semio", id])
             .mode("edit", "Edit")
-            .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d)
+            .window_kind("main", "Main", format!("{id}.main"), SurfaceKind::Canvas2d, IconName::AppWindow)
     }
 
     #[test]
@@ -2204,8 +2207,8 @@ mod app_builder_tests {
     fn declaring_utilities_injects_set_active_utility_action_and_keybinding() {
         use semio_framework_core::{ActionKind, UtilityDefinition, SET_ACTIVE_UTILITY_ACTION_ID};
         let definition = minimal_app("utility-app")
-            .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", "icon.brush") })
-            .utility_simple("eraser", "Eraser", "icon.eraser")
+            .utility(UtilityDefinition { keys: Some("b".into()), ..UtilityDefinition::new("brush", "Brush", IconName::Paintbrush) })
+            .utility_simple("eraser", "Eraser", IconName::Eraser)
             .build_definition();
         let set_active_utility = definition
             .actions
@@ -2234,7 +2237,7 @@ mod app_builder_tests {
     fn build_definition_accepts_and_resolves_mode_tools() {
         use semio_framework_core::ToolRef;
         let definition = minimal_app("tool-app")
-            .tool_simple("fill", "Fill", "icon.fill")
+            .tool_simple("fill", "Fill", IconName::PaintBucket)
             .mode_tools("edit", vec![ToolRef::new("fill")])
             .build_definition();
         assert_eq!(definition.tools.len(), 1);
@@ -2256,7 +2259,7 @@ mod app_builder_tests {
     fn build_definition_rejects_tool_referenced_by_no_mode() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("orphan-tool-app")
-                .tool_simple("fill", "Fill", "icon.fill")
+                .tool_simple("fill", "Fill", IconName::PaintBucket)
                 .build_definition()
         });
         assert!(result.is_err(), "a declared tool must be referenced by mode_tools on at least one mode");
@@ -2266,7 +2269,7 @@ mod app_builder_tests {
     fn declaring_tools_injects_set_active_tool_action_and_keybinding() {
         use semio_framework_core::{ActionKind, ToolDefinition, ToolRef, SET_ACTIVE_TOOL_ACTION_ID};
         let definition = minimal_app("tool-keybinding-app")
-            .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", "Fill", "icon.fill") })
+            .tool(ToolDefinition { keys: Some("f".into()), ..ToolDefinition::new("fill", "Fill", IconName::PaintBucket) })
             .mode_tools("edit", vec![ToolRef::new("fill")])
             .build_definition();
         let set_active_tool = definition
@@ -2308,7 +2311,7 @@ mod app_builder_tests {
     fn build_definition_rejects_window_kind_utility_referencing_undeclared_utility() {
         let result = std::panic::catch_unwind(|| {
             minimal_app("bad-utility-ref-app")
-                .utility_simple("brush", "Brush", "icon.brush")
+                .utility_simple("brush", "Brush", IconName::Paintbrush)
                 .window_kind_utilities("main", vec!["missing".into()])
                 .build_definition()
         });
@@ -2502,7 +2505,7 @@ mod app_builder_tests {
         use semio_framework_core::{window_element_id, IntroductionDefinition, IntroductionInteraction, IntroductionStepDefinition};
         let definition = minimal_app("good-intro-app")
             .operation("addLayer", "Add Layer")
-            .utility_simple("brush", "Brush", "icon.brush")
+            .utility_simple("brush", "Brush", IconName::Paintbrush)
             .window_kind_utilities("main", vec!["brush".into()])
             .window_kind_actions("main", vec!["addLayer".into()])
             .introduction(IntroductionDefinition {
@@ -4479,7 +4482,7 @@ mod semio_plugin_macro_tests {
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
                 .mode("edit", "Edit")
-                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d),
+                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow),
         )
     }
 
@@ -4491,13 +4494,13 @@ mod semio_plugin_macro_tests {
             App::builder("synthetic-play", "Synthetic")
                 .document(["state"])
                 .mode("edit", "Edit")
-                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d)
+                .window_kind("main", "Main", "synthetic.main", SurfaceKind::Canvas2d, IconName::AppWindow)
                 .operation("setLabelRequired", "Set Label")
                 .action_args("setLabelRequired", vec![ActionArgDef::text("value", "Value").required()])
                 .operation("setLabelDefault", "Set Label Default")
                 .action_args("setLabelDefault", vec![ActionArgDef::text("value", "Value").default_value("seed")])
                 .view_action("badView", "Bad View")
-                .utility_simple("brush", "Brush", "icon.brush")
+                .utility_simple("brush", "Brush", IconName::Paintbrush)
                 .app_command("incrementViaCommand", "Increment", "counter")
                 .app_command("setLabelViaCommand", "Set Label", "counter")
                 .command_args("setLabelViaCommand", vec![ActionArgDef::text("value", "Value").required()]),

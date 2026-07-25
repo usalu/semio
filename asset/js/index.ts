@@ -107,6 +107,8 @@ export const UtilitiesIcon = createIconComponent("wrench");
 export const UtilityBarIcon = createIconComponent("hammer");
 export const WorkbenchIcon = createIconComponent("box");
 export type { IconName } from "@semio-tech/ui-asset";
+export { isMetabolismIconName, METABOLISM_ICONS, METABOLISM_ICON_NAMES, type MetabolismIconName } from "../metabolism/icon/generated/metabolism_icons.ts";
+export { resolveMetabolismIconNameFromTheme, resolveMetabolismIconSvgFromTheme } from "./icon_resolver.ts";
 //#endregion 🔖Icons
 
 //#region 🔖KitBootstrapHelpers

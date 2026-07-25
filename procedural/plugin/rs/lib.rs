@@ -1006,20 +1006,22 @@ pub mod app_2d {
                 .mode("edit", "Edit")
                 .mode("generate", "Generate")
                 .default_mode_id("edit")
-                .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
-                .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d)
+                .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "network")
+                .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "eye")
                 .window_kind(
                     PROCEDURAL2D_PLAY_WINDOW_GENERATIONS,
                     "Generations",
                     PROCEDURAL2D_PLAY_BODY_GENERATIONS,
                     SurfaceKind::Canvas2d,
+                    "sparkles",
                 )
-                .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, "Form", PROCEDURAL2D_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d)
+                .window_kind(PROCEDURAL2D_PLAY_WINDOW_GENERATE_FORM, "Form", PROCEDURAL2D_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
                 .window_kind(
                     PROCEDURAL2D_PLAY_WINDOW_GENERATE_PREVIEW,
                     "Preview",
                     PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW,
                     SurfaceKind::Canvas2d,
+                    "eye",
                 )
                 .default_layout(create_default_layout(
                     &[PROCEDURAL2D_PLAY_WINDOW_MAIN.into(), PROCEDURAL2D_PLAY_WINDOW_PREVIEW.into()],
@@ -2902,30 +2904,35 @@ pub mod app_3d {
                     "Flow",
                     PROCEDURAL_3D_PLAY_BODY_MAIN,
                     SurfaceKind::NodeGraph,
+                    "network",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_PREVIEW,
                     "Preview",
                     PROCEDURAL_3D_PLAY_BODY_PREVIEW,
                     SurfaceKind::World3d,
+                    "eye",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS,
                     "Generations",
                     PROCEDURAL_3D_PLAY_BODY_GENERATIONS,
                     SurfaceKind::Canvas2d,
+                    "sparkles",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_GENERATE_FORM,
                     "Form",
                     PROCEDURAL_3D_PLAY_BODY_GENERATE_FORM,
                     SurfaceKind::Canvas2d,
+                    "clipboard-list",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW,
                     "Preview",
                     PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW,
                     SurfaceKind::World3d,
+                    "eye",
                 )
                 .default_layout(create_default_layout(
                     &[PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(), PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.into()],

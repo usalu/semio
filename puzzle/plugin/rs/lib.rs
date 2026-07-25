@@ -2216,9 +2216,9 @@ pub mod d2 {
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels))
-                .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels))
-                .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION, labels))
+                .window_kind_with_engagement(PUZZLE2D_PANE_OVERVIEW, "Overview", PUZZLE2D_PLAY_BODY_OVERVIEW, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_OVERVIEW, labels), "layout-grid")
+                .window_kind_with_engagement(PUZZLE2D_PANE_DETAIL, "Detail", PUZZLE2D_PLAY_BODY_DETAIL, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_DETAIL, labels), "focus")
+                .window_kind_with_engagement(PUZZLE2D_PANE_SELECTION, "Selection", PUZZLE2D_PLAY_BODY_SELECTION, SurfaceKind::Canvas2d, puzzle2d_engagement(&envelope, &host, PUZZLE2D_PANE_SELECTION, labels), "crosshair")
                 .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_LAYERS)
                 .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE2D_PLAY_BODY_CATALOGUE)
                 .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE2D_PLAY_BODY_PROPERTIES)
@@ -2735,7 +2735,7 @@ pub mod d3 {
         FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
         IntroductionDefinition, IntroductionInteraction, IntroductionPlacement, IntroductionStepDefinition,
         window_element_id, panel_tab_element_id, panel_tab_first_draggable_element_id,
-        ActionRef, AppLabelsOverlayExt, DialogDefinition,
+        ActionRef, AppLabelsOverlayExt, DialogDefinition, IconName,
     };
     use semio_framework_plugin::kernel::HostEffect;
     use serde::{Deserialize, Serialize};
@@ -3485,6 +3485,7 @@ pub mod d3 {
     }
 
     /// 🙈 Hidden objects stay in the emitted array — `worldPick`'s `id` arg is the array index into it — but render at zero scale so they're effectively invisible without shifting any other object's index.
+    /// `revealIndex` is omitted entirely for untagged objects rather than emitted as `null`: the host's reveal cutoff (`framework/renderer/react`'s `applyRevealCutoff`) only skips instances with no reveal index, and a JSON `null` would coerce to `0` and hide every ordinary object behind the boot cutoff.
     fn world_instances_json(fixture: &Puzzle3dFixture, runtime: &Puzzle3dRuntime) -> String {
         let selection = &runtime.selection;
         let instances: Vec<Value> = fixture
@@ -3496,7 +3497,7 @@ pub mod d3 {
                 let kind_highlighted = runtime.hovered_kind_id.is_some() && runtime.hovered_kind_id.as_deref() == object.object_kind.as_deref();
                 let mesh_id = resolve_object_mesh_url(object, &fixture.meta).map(|url| world3d_mesh_id_from_url(&url)).unwrap_or_else(|| PUZZLE3D_FALLBACK_MESH_KIND.into());
                 let scale = if object.hidden { json!([0.0, 0.0, 0.0]) } else { json!(object_scale_json(object)) };
-                json!({
+                let mut instance = json!({
                     "id": object.id,
                     "meshId": mesh_id,
                     "position": [
@@ -3511,8 +3512,11 @@ pub mod d3 {
                     "hovered": hovered,
                     "highlighted": kind_highlighted,
                     "disabled": object.locked,
-                    "revealIndex": object.reveal_index,
-                })
+                });
+                if let Some(reveal_index) = object.reveal_index {
+                    instance["revealIndex"] = json!(reveal_index);
+                }
+                instance
             })
             .collect();
         serde_json::to_string(&instances).unwrap_or_else(|_| "[]".into())
@@ -5117,7 +5121,7 @@ pub mod d3 {
             id: id.into(),
             label: label.into(),
             description: None,
-            icon_id: icon_id.map(str::to_string),
+            icon_id: icon_id.map(IconName::from),
             default_open: None,
             action: Some(action),
             hover_action: None,
@@ -7604,7 +7608,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "Aggregator"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN))
+                .window_kind_with_engagement(PUZZLE3D_PLAY_WINDOW_MAIN, "Puzzle 3D", PUZZLE3D_PLAY_BODY_COMPOSITE, SurfaceKind::World3d, puzzle3d_engagement(&envelope, &PUZZLE3D_LABELS_NATIVE_EN), "puzzle")
                 .default_layout(puzzle3d_default_layout())
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE3D_PLAY_BODY_KINDS)
@@ -8662,10 +8666,10 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let mut sorted_indices = reveal_indices.clone();
             sorted_indices.sort_unstable();
             assert_eq!(sorted_indices, (0..ready as u64).collect::<Vec<_>>(), "revealIndex is a dense 0-based sequence matching plan order");
-            // 🪣 `revealIndex` is always present as a JSON key (`json!` serializes `Option::None` as
-            // `null`, never omits the key) — check for a non-null u64, not mere key presence.
-            let base_reveal_indices = instances.iter().take(object_count_before).filter(|instance| instance.get("revealIndex").and_then(Value::as_u64).is_some()).count();
-            assert_eq!(base_reveal_indices, 0, "base (non-plan) objects never carry revealIndex");
+            // 🪣 Untagged objects omit the `revealIndex` key entirely — a `null` would compare as `0`
+            // against the host's boot cutoff and hide every ordinary object (see `world_instances_json`).
+            let base_reveal_keys = instances.iter().take(object_count_before).filter(|instance| instance.get("revealIndex").is_some()).count();
+            assert_eq!(base_reveal_keys, 0, "base (non-plan) objects never carry a revealIndex key, not even a null one");
             let interaction = interaction_of(&rendered);
             assert_eq!(interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(0), "nothing committed yet — the reveal cutoff mirrors runtime.fill_count (0)");
             assert_eq!(interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(0));
@@ -8676,6 +8680,22 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let committed_interaction = interaction_of(&after_commit);
             assert_eq!(committed_interaction.pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64), Some(ready as u64));
             assert_eq!(committed_interaction.pointer("/fillBuild/appliedCount").and_then(Value::as_u64), Some(ready as u64));
+        }
+
+        #[test]
+        fn seeded_objects_omit_reveal_index_so_the_boot_cutoff_cannot_hide_them() {
+            let mut app = testkit::new_app::<Puzzle3dPlayApp>();
+            let rendered = render_composite(&mut app);
+            let instances: Vec<Value> = rendered.pointer("/world3d/instancesJson").and_then(Value::as_str).and_then(|raw| serde_json::from_str(raw).ok()).unwrap_or_default();
+            assert!(!instances.is_empty(), "the default fixture seeds at least one object");
+            for instance in &instances {
+                assert!(instance.get("revealIndex").is_none(), "seeded object {} must omit revealIndex — a null coerces to 0 and the boot cutoff would hide its mesh", instance.get("id").and_then(Value::as_str).unwrap_or("?"));
+            }
+            assert_eq!(
+                interaction_of(&rendered).pointer("/revealCutoffs/puzzle3d-fill").and_then(Value::as_u64),
+                Some(0),
+                "the boot cutoff really is 0 — this is the value that hid every mesh while revealIndex serialized as null"
+            );
         }
 
         #[test]
@@ -9377,7 +9397,7 @@ pub mod d5 {
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, WindowEngagementStatus,
         merge_world_selection_ids, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_vec3_group, ui_stack_vertical, ui_text, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_urls, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App,
-        ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, ui_tree_stamp_presence,
+        ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, ResourceKindSpec, Board2dScene, SurfaceKind, UtilityCategory, UtilityDefinition, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemNode, UiTreeNode, UiTreeSectionNode, ViewState, WindowEngagement, ui_tree_stamp_presence, IconName,
         WindowEngagementInput, WindowMeasure, WorldSunConfig, is_de_locale, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID,
         FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, SET_ACTIVE_UTILITY_ACTION_ID,
     };
@@ -11039,7 +11059,7 @@ pub mod d5 {
     //#region 🔖Panels
     fn tree_item_with_action(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
         let mut item = UiTreeItemNode::base(id, label);
-        item.icon_id = icon_id.map(str::to_string);
+        item.icon_id = icon_id.map(IconName::from);
         item.action = Some(action);
         item
 }
@@ -12221,8 +12241,8 @@ pub mod d5 {
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "5d"])
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels))
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels))
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "box")
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)

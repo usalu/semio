@@ -65,6 +65,7 @@ pub struct DockRenderContext<'a> {
     pub input: &'a mut InputState<ActionDescriptor>,
     pub theme: &'a Theme,
     pub window_labels: &'a std::collections::HashMap<String, String>,
+    pub window_icon_ids: &'a std::collections::HashMap<String, String>,
 }
 
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -1377,6 +1378,23 @@ fn register_join_corner_hits(
     }
 }
 
+fn dock_tab_content_width(atlas: &FontAtlas, theme: &Theme, label: &str) -> f32 {
+    14.0 + theme.gap_standard + atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0
+}
+
+fn paint_dock_tab_icon(ctx: &mut DockRenderContext<'_>, icon_id: &str, x: f32, tab_rect: Rect, color: Color) -> f32 {
+    const ICON_TINY: f32 = 14.0;
+    if let Some(uv) = ctx.icons.icon_uv(icon_id) {
+        ctx.draw.push_textured(
+            [x, tab_rect.y + (tab_rect.h - ICON_TINY) * 0.5, ICON_TINY, ICON_TINY],
+            uv,
+            color,
+        );
+        ICON_TINY + ctx.theme.gap_standard
+    } else {
+        0.0
+    }
+}
 fn register_split_hit(
     ctx: &mut DockRenderContext<'_>,
     path: &[usize],
@@ -1446,7 +1464,12 @@ fn render_stack(
             .get(window_id)
             .map(String::as_str)
             .unwrap_or(window_id);
-        let tw = ctx.atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0;
+        let icon_id = ctx
+            .window_icon_ids
+            .get(window_id)
+            .map(String::as_str)
+            .unwrap_or("app-window");
+        let tw = dock_tab_content_width(ctx.atlas, theme, label);
         let tab_rect = Rect::new(tab_x, cap_y, tw, tab_h);
         let is_active = window_id == active;
         if is_active {
@@ -1465,7 +1488,19 @@ fn render_stack(
         dock_text(
             ctx,
             label,
-            tab_rect.x + theme.padding_standard,
+            tab_rect.x + theme.padding_standard + paint_dock_tab_icon(
+                ctx,
+                icon_id,
+                tab_rect.x + theme.padding_standard,
+                tab_rect,
+                if stack_active_tab {
+                    theme.active_foreground
+                } else if hovered {
+                    theme.border_emphasized
+                } else {
+                    theme.text_element
+                },
+            ),
             tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0,
             theme.font_size_small,
             if stack_active_tab {
@@ -1611,7 +1646,7 @@ fn layout_stack_cap(
             .get(window_id)
             .map(String::as_str)
             .unwrap_or(window_id.as_str());
-        let tw = atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0;
+        let tw = dock_tab_content_width(atlas, theme, label);
         if window_id == active {
             active_tab_x = tab_x;
         }
@@ -1890,7 +1925,7 @@ mod tests {
                         label: (*id).into(),
                         body_key: format!("{id}.body"),
                         surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
-                        icon_id: None,
+                        icon_id: "app-window".into(),
                         options: WindowOptions::default(),
                         actions: vec![],
                         utilities: vec![],
@@ -2009,6 +2044,16 @@ mod tests {
     }
 
     #[test]
+    fn dock_tab_content_width_reserves_icon_slot() {
+        let theme = Theme::default();
+        let atlas = FontAtlas::builtin();
+        let label = "Main";
+        let with_icon = dock_tab_content_width(&atlas, &theme, label);
+        let text_only = atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0;
+        assert!(with_icon > text_only);
+    }
+
+    #[test]
     fn resize_hits_win_over_later_scroll_region() {
         let mut dock = DockState::from_app(&sample_app(&["a", "b"], None), Some("a"));
         dock.root = even_layout(&["a".into(), "b".into()]);
@@ -2036,6 +2081,7 @@ mod tests {
             input: &mut input,
             theme: &theme,
             window_labels: &labels,
+            window_icon_ids: &HashMap::new(),
         };
         dock.register_resize_hits(&mut ctx, canvas);
         let hit = input.hit_at(200.0, 150.0).expect("split hit");
@@ -7090,7 +7136,7 @@ fn build_frame_stats(engine: &ui_wgpu::Ui) -> DumpFrameStats {
 use wasm_bindgen::prelude::wasm_bindgen;
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = "dumpStructure")]
+#[wasm_bindgen(js_name = dumpStructure)]
 pub fn dump_structure() -> String {
     let dpr = web_sys::window().map(|window| window.device_pixel_ratio() as f32).unwrap_or(1.0);
     let dump = UI_ENGINE.with(|cell| build_structure_dump(&cell.borrow(), dpr));
@@ -7098,7 +7144,7 @@ pub fn dump_structure() -> String {
 }
 
 #[cfg(target_arch = "wasm32")]
-#[wasm_bindgen(js_name = "dumpFrameStats")]
+#[wasm_bindgen(js_name = dumpFrameStats)]
 pub fn dump_frame_stats() -> String {
     let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow()));
     serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
@@ -7453,33 +7499,9 @@ async fn handle_action_js(
     } else {
         result
     };
-    if let Some(text) = resolved.as_string() {
-        if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text) {
-            return Ok(parsed);
-        }
-        if let Ok(operations) = serde_json::from_str::<Vec<String>>(&text) {
-            let descriptor: ui_wgpu::ActionDescriptor =
-                serde_json::from_str(action_json).unwrap_or(ui_wgpu::ActionDescriptor {
-                    controller_id: String::new(),
-                    action: String::new(),
-                    args: None,
-                });
-            return Ok(semio_framework_plugin::action_result_from_patch_operations(
-                operations,
-                &descriptor.action,
-                instance_id,
-                0,
-                "local",
-            ));
-        }
-    }
-    Ok(semio_framework_plugin::action_result_from_patch_operations(
-        Vec::new(),
-        "",
-        instance_id,
-        0,
-        "local",
-    ))
+    let text = resolved.as_string().ok_or_else(|| "handle_action result not string".to_string())?;
+    serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text)
+        .map_err(|error| format!("handle_action result parse failed: {error}"))
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -7634,7 +7656,7 @@ pub fn parse_plugin_entries(plugins: JsValue) -> Result<Vec<PluginBridgeEntry>, 
 // lexically cancelled out) to actually exist; no number of `..`s fixes that. Declaring it at the crate
 // root instead (where `plugin_bridge/`'s directory is real) and re-exporting preserves the
 // `crate::plugin_bridge::{PluginHostConfig, ...}` path every call site already depends on.
-pub use crate::generated_plugin_hosts::{is_studio_mode, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
+pub use crate::generated_plugin_hosts::{is_studio_mode, resolve_playground_app_id, resolve_plugin_host_config, resolve_registry_plugin_id, PluginHostConfig};
 //#endregion 🏠🧳PluginHostConfig
 
 pub fn filter_plugins(entries: Vec<PluginBridgeEntry>, _plugin_filter: &str) -> Vec<PluginBridgeEntry> {
@@ -9940,7 +9962,7 @@ mod block_list_tests {
 
     #[test]
     fn missing_scene_renders_placeholder_without_panicking() {
-        let node = UiComponentSceneNode { presence: UiPresence::default(),
+        let node = UiComponentSceneNode {
             surface_id: "s1".into(),
             controller_id: "controller".into(),
             component_kind: SurfaceKind::BlockList,
@@ -12834,9 +12856,9 @@ mod raster_frame_cost_tests {
     fn paint2d_navigator_fit_viewport_centers_and_scales_to_content_bounds() {
         let flat = vec![Paint2dFlatLayer {
             id: "a".into(),
-            image_key: "k".into(),
-            x: 0.0,
-            y: 0.0,
+            image_key: Some("k".into()),
+            x: 100.0,
+            y: 50.0,
             scale_x: 1.0,
             scale_y: 1.0,
             opacity: 1.0,
@@ -15387,7 +15409,7 @@ use infinite_world::{
     handle_world3d_pointer_button,
     handle_world3d_pointer_drag, handle_world3d_pointer_move, handle_world3d_wheel, World3dState,
 };
-use crate::plugin_bridge::{is_studio_mode, resolve_plugin_host_config, PluginBridgeEntry, PluginHostConfig};
+use crate::plugin_bridge::{is_studio_mode, resolve_playground_app_id, resolve_plugin_host_config, PluginBridgeEntry, PluginHostConfig};
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_sync::{
     DocumentActorMsg, DocumentEvent, DocumentHost, DocumentSyncStatus, PersistenceBinding, RemoteState,
@@ -15623,8 +15645,7 @@ pub struct ShellState {
     pub measures_width: HashMap<String, f32>,
     pub measures_resize_origin_width: f32,
     pub engagement_inputs: HashMap<String, String>,
-    pub compact_mode: bool,
-    pub expertise: String,
+    pub driver_id: String,
     pub tree_drag: Option<TreeDragState>,
     pub tree_hovered_id: Option<String>,
     pub widget_maps: WidgetInteractionMaps<ActionDescriptor>,
@@ -15990,8 +16011,7 @@ impl ShellState {
             measures_width: HashMap::new(),
             measures_resize_origin_width: 0.0,
             engagement_inputs: HashMap::new(),
-            compact_mode: false,
-            expertise: "standard".into(),
+            driver_id: "default".into(),
             tree_drag: None,
             tree_hovered_id: None,
             widget_maps: WidgetInteractionMaps::default(),
@@ -16152,7 +16172,9 @@ impl ShellState {
             let app = plugin
                 .manifest
                 .apps
-                .first()
+                .iter()
+                .find(|app| Some(app.id.as_str()) == resolve_playground_app_id(&self.plugin_filter))
+                .or_else(|| plugin.manifest.apps.first())
                 .ok_or("plugin has no apps")?
                 .clone();
             let instance_id = plugin.create_app(&app.id).await?;
@@ -16287,6 +16309,7 @@ impl ShellState {
         theme: &Theme,
         canvas: Rect,
         labels: &HashMap<String, String>,
+        icon_ids: &HashMap<String, String>,
     ) -> Vec<(Vec<usize>, Rect, Vec<f32>)> {
         self.dock
             .stack_tab_bar_rects(canvas, theme)
@@ -16297,7 +16320,8 @@ impl ShellState {
                     .iter()
                     .map(|id| {
                         let label = labels.get(id).map(String::as_str).unwrap_or(id);
-                        atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0
+                        let _ = icon_ids.get(id);
+                        dock_tab_content_width(atlas, theme, label)
                     })
                     .collect();
                 Some((path, rect, widths))
@@ -16464,10 +16488,17 @@ impl ShellState {
             .window_kinds
             .iter()
             .map(|kind| {
-                UiNode::Text(UiTextNode { presence: UiPresence::default(),
-                    value: format!("{} — {}", kind.label, kind.id),
-                    emphasize: None,
-                    data_attributes: None,
+                UiNode::Button(UiButtonNode {
+                    id: Some(format!("shell.display.window.{}", kind.id)),
+                    icon_id: kind.icon_id.clone(),
+                    label: format!("{} — {}", kind.label, kind.id),
+                    action: ActionDescriptor {
+                        controller_id: session.app.controller_id.clone(),
+                        action: "noOperation".into(),
+                        args: None,
+                    },
+                    style: None,
+                    presence: UiPresence::default(),
                 })
             })
             .collect();
@@ -16568,22 +16599,22 @@ impl ShellState {
                     },
                 }),
                 UiNode::Select(UiSelectNode { presence: UiPresence::default(),
-                    id: "framework.settings.expertise".into(),
-                    value: "standard".into(),
+                    id: "framework.settings.driver".into(),
+                    value: self.driver_id.clone(),
                     items: vec![
                         UiSelectItem {
-                            value: "standard".into(),
-                            label: "Standard".into(),
+                            value: "default".into(),
+                            label: "Default".into(),
                         },
                         UiSelectItem {
-                            value: "expert".into(),
-                            label: "Expert".into(),
+                            value: "compact".into(),
+                            label: "Compact".into(),
                         },
                     ],
                     placeholder: None,
                     on_change: ActionDescriptor {
                         controller_id: "framework".into(),
-                        action: "setExpertise".into(),
+                        action: "setDriver".into(),
                         args: None,
                     },
                 }),
@@ -17203,25 +17234,14 @@ impl ShellState {
                     }
                     return Ok(());
                 }
-                "setExpertise" => {
+                "setDriver" => {
                     if let Some(value) = action
                         .args
                         .as_ref()
                         .and_then(|args| args.get("value"))
                         .and_then(|v| v.as_str())
                     {
-                        self.expertise = value.to_string();
-                    }
-                    return Ok(());
-                }
-                "setCompact" => {
-                    if let Some(value) = action
-                        .args
-                        .as_ref()
-                        .and_then(|args| args.get("value"))
-                        .and_then(|v| v.as_bool())
-                    {
-                        self.compact_mode = value;
+                        self.driver_id = value.to_string();
                     }
                     return Ok(());
                 }
@@ -19629,6 +19649,14 @@ mod shell_input_tests {
     use super::*;
     use ui_wgpu::UiPresence;
 
+    #[test]
+    fn standalone_multi_app_variants_resolve_their_declared_app() {
+        assert_eq!(resolve_playground_app_id("puzzle2d"), Some("puzzle2d-play"));
+        assert_eq!(resolve_playground_app_id("puzzle3d"), Some("puzzle3d-play"));
+        assert_eq!(resolve_playground_app_id("3d"), Some("puzzle3d-play"));
+        assert_eq!(resolve_playground_app_id("puzzle5d"), Some("puzzle5d-play"));
+    }
+
     /// 🧪 `dock_window_order` is a `Self`-less associated fn, so it's callable without constructing a
     /// full `ShellState` fixture (impractically large: 90+ fields, several without `Default`).
     fn window_ids(node: &crate::dock::DockNode) -> Vec<String> {
@@ -20764,9 +20792,9 @@ impl ShellState {
     }
 
     /// 🎛️ Os-level built-in commands — the wgpu mirror of `os-shell.tsx`'s `buildOsCommands`, scoped to
-    /// mutation paths that already exist in this shell: `appearance_id`/`expertise`/`locale_id`/
+    /// mutation paths that already exist in this shell: `appearance_id`/`driver_id`/`locale_id`/
     /// `terminology_id` (all wired through the existing `"framework"` controller `dispatch_action` switch
-    /// — see `apply_os_command`), `compact_mode` (ditto, `"setCompact"`), and the dock's `layout_override`
+    /// — see `apply_os_command`), and the dock's `layout_override`
     /// (`os.resetDock`, applied locally like `RESET_DOCK` resets `dockLayoutStore`/`dockUiStateStore` in
     /// React — no plugin round-trip). Deliberately omits `os.introduceApp`/`os.setThemeId`/`os.setLayout`:
     /// none of the three has any persisted shell state yet (no introduction-playback step, no named
@@ -20795,13 +20823,13 @@ impl ShellState {
                 )
                 .required(),
             ]),
-            CommandDefinition::new("os.setExpertise", "Set Expertise", CommandScope::Os, "general").with_args([
+            CommandDefinition::new("os.setDriver", "Set Driver", CommandScope::Os, "layout").with_args([
                 ActionArgDef::select(
                     "value",
-                    "Expertise",
+                    "Driver",
                     vec![
-                        ActionArgOption { value: "standard".into(), label: "Standard".into() },
-                        ActionArgOption { value: "expert".into(), label: "Expert".into() },
+                        ActionArgOption { value: "default".into(), label: "Default".into() },
+                        ActionArgOption { value: "compact".into(), label: "Compact".into() },
                     ],
                 )
                 .required(),
@@ -21227,7 +21255,7 @@ mod command_registry_tests {
                 label: "Main".into(),
                 body_key: "main.body".into(),
                 surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
-                icon_id: None,
+                icon_id: "app-window".into(),
                 options: Default::default(),
                 actions: vec![],
                 utilities: vec![],
@@ -22708,8 +22736,14 @@ impl ShellState {
                 )
             })
             .collect();
+        let window_icon_ids: HashMap<String, String> = session
+            .app
+            .window_kinds
+            .iter()
+            .map(|kind| (kind.id.clone(), kind.icon_id.clone()))
+            .collect();
         self.dock_canvas_bounds = canvas;
-        self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels);
+        self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels, &window_icon_ids);
         self.dock_drop_bodies = self
             .dock
             .stack_body_rects(canvas, theme, &window_labels, atlas)
@@ -22724,6 +22758,7 @@ impl ShellState {
                 input,
                 theme,
                 window_labels: &window_labels,
+                window_icon_ids: &window_icon_ids,
             };
             self.dock.register_hits(&mut dock_ctx, canvas);
         }
@@ -22822,6 +22857,7 @@ impl ShellState {
                 input,
                 theme,
                 window_labels: &window_labels,
+                window_icon_ids: &window_icon_ids,
             };
             self.dock.paint_chrome(&mut dock_ctx, canvas, false);
         });
@@ -22833,6 +22869,7 @@ impl ShellState {
                 input,
                 theme,
                 window_labels: &window_labels,
+                window_icon_ids: &window_icon_ids,
             };
             self.dock.register_resize_hits(&mut resize_ctx, canvas);
         }

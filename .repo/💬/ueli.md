@@ -240,6 +240,24 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+All technologies should be split/generalized/augmented into these parts:
+- library
+	- stateful (not rebuilding complete document but initial document with operations)
+	- vcs integrated (implemented with commands/operations/diffs, every operation has inverse operation, every operation yields diff, diffs are applied centrally, etc)
+- dsl (handcrafted textual representation for a document with custom syntax, etc)
+- op (handcrafted textual representations for a commands with custom syntax, etc)
+- ui
+	- uses the library under hood
+	- use dsl to initially load the document
+	- all ui actions trigger ops
+Every op is on a single line.
+The vcs stores the initial document in the dsl and then ops.
+Add compile time validation, checks etc for both dsl and ops.
+Develop clean mechanisms, refactor everything, work end to end.
+Plan workforce of parallel agents to achieve this.
+
+---
+
 Introduce tools to app modes:
 Tools are not bound to windows but like commands available to the complete mode of an app.
 There are some legacy tool naming which correctly is called utility (a utility is a tool for a specific window).
@@ -456,6 +474,13 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+Merge expertise and compact into a new configuration mechanism: driver
+In the default drivers all the ui elements must show all the interaction possibilities such as drag handles and fully communicate what they are such as labels. 
+In the compact driver it is assumed that the user fully knows the ui and the mechanisms. Everything is rendered full and ui elements only appear when the user goes with the cursor in the region (e.g. the navbar appears on the top once the cursor is there and disappears again when the cursor leaves. same for footer. same for pane toggles, same for gumball, etc Further all labels are hidden and only the icons are shown. e.g. no drag handles are shown and the complete ui element is draggable
+Introduce configurable driver where everything can be changed and add these two drivers. allow the user to create there own driver.
 
 ---
 

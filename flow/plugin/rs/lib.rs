@@ -1405,15 +1405,16 @@ fn create_flow_app() -> App {
             .mode("edit", "Edit")
             .mode("generate", "Generate")
             .default_mode_id("edit")
-            .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
-            .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
-            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS, SurfaceKind::Canvas2d)
-            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d)
+            .window_kind(FLOW_PLAY_WINDOW_MAIN, "Flow", FLOW_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "network")
+            .window_kind(FLOW_PLAY_WINDOW_COMPILED, "DSL", FLOW_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
+            .window_kind(FLOW_PLAY_WINDOW_GENERATIONS, "Generations", FLOW_PLAY_BODY_GENERATIONS, SurfaceKind::Canvas2d, "sparkles")
+            .window_kind(FLOW_PLAY_WINDOW_GENERATE_FORM, "Form", FLOW_PLAY_BODY_GENERATE_FORM, SurfaceKind::Canvas2d, "clipboard-list")
             .window_kind(
                 FLOW_PLAY_WINDOW_GENERATE_PREVIEW,
                 "Preview",
                 FLOW_PLAY_BODY_GENERATE_PREVIEW,
                 SurfaceKind::Canvas2d,
+                "eye",
             )
             .default_layout(create_default_layout(
                 &[FLOW_PLAY_WINDOW_MAIN.into(), FLOW_PLAY_WINDOW_COMPILED.into()],

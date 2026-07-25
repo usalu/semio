@@ -1839,9 +1839,9 @@ fn create_remodel_app() -> App {
             .mode("model", "Model")
             .mode("analyze", "Analyze")
             .default_mode_id("model")
-            .window_kind(REMODEL_PLAY_WINDOW_MAIN, "Model", REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d)
-            .window_kind(REMODEL_PLAY_WINDOW_FRAMES, "Frames", REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d)
-            .window_kind(REMODEL_PLAY_WINDOW_REPORT, "Report", REMODEL_PLAY_BODY_REPORT, SurfaceKind::Table)
+            .window_kind(REMODEL_PLAY_WINDOW_MAIN, "Model", REMODEL_PLAY_BODY_MAIN, SurfaceKind::World3d, "box")
+            .window_kind(REMODEL_PLAY_WINDOW_FRAMES, "Frames", REMODEL_PLAY_BODY_FRAMES, SurfaceKind::Canvas2d, "layout-grid")
+            .window_kind(REMODEL_PLAY_WINDOW_REPORT, "Report", REMODEL_PLAY_BODY_REPORT, SurfaceKind::Table, "file-text")
             .default_layout(create_default_layout(&[REMODEL_PLAY_WINDOW_MAIN.into(), REMODEL_PLAY_WINDOW_FRAMES.into()], "row", Some(&[70.0, 30.0]), Some(&["Model".into(), "Frames".into()])))
             .named_layout(create_named_layout(
                 "remodel-capture",

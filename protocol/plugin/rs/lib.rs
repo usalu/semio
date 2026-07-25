@@ -238,7 +238,7 @@ fn create_protocol_play_app() -> App {
             .document(["semio", "protocol"])
             .mode("builder", "Builder")
             .default_mode_id("builder")
-            .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::BlockList)
+            .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
             .default_layout(create_default_layout(&[PROTOCOL_PLAY_WINDOW_BUILDER.into()], "row", None, None))
             .operation("addStep", "Add Step")
             .operation("removeStep", "Remove Step")

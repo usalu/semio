@@ -710,7 +710,7 @@ fn create_animate_present_app() -> App {
             .icon_id("animate")
             .mode("main", "Edit")
             .default_mode_id("main")
-            .window_kind(ANIMATE_PRESENT_PLAY_WINDOW_MAIN, "Tile editor", ANIMATE_PRESENT_PLAY_BODY_MAIN, SurfaceKind::Canvas2d)
+            .window_kind(ANIMATE_PRESENT_PLAY_WINDOW_MAIN, "Tile editor", ANIMATE_PRESENT_PLAY_BODY_MAIN, SurfaceKind::Canvas2d, "grid-3x3")
             .default_layout(create_default_layout(
                 &[ANIMATE_PRESENT_PLAY_WINDOW_MAIN.into()],
                 "stack",

@@ -1582,18 +1582,22 @@ async function dumpReactStructure(page: import("playwright").Page): Promise<Pari
 }
 
 /** 🧊Calls the wasm-bindgen introspection hooks exposed by `framework/renderer/wgpu/rs/lib.rs` region
- * `🔬Introspection` once booted. Returns an empty dump (never throws) when the hooks aren't present yet,
- * so triage can distinguish "not booted" from "no hooks" via `DUMP-EMPTY`. */
+ * `🔬Introspection`. Reachable at `window.wasmBindings.dumpStructure()`/`dumpFrameStats()` — Trunk's
+ * dev-server boot glue (`framework/renderer/wgpu/js/boot.ts`) attaches the wasm module's exports there
+ * (the same path `semioRendererBoot`/`uploadIconAtlas` already use), NOT a bespoke global. Returns an
+ * empty dump (never throws) when the hooks aren't present yet, so triage can distinguish "not booted"
+ * from "no hooks" via `DUMP-EMPTY`. */
 async function dumpWgpuStructure(page: import("playwright").Page): Promise<ParityDump> {
-  const json = await page.evaluate(() => (window as unknown as { __semioWgpu?: { dumpStructure?: () => string } }).__semioWgpu?.dumpStructure?.());
+  const json = await page.evaluate(() => (window as unknown as { wasmBindings?: { dumpStructure?: () => string } }).wasmBindings?.dumpStructure?.());
   if (!json) return { viewport: { w: 0, h: 0, dpr: 1 }, focusPath: null, nodes: [] };
   return JSON.parse(json) as ParityDump;
 }
 
 async function dumpWgpuFrameStats(page: import("playwright").Page): Promise<{ readonly drawCalls: number; readonly quads: number; readonly glyphs: number } | null> {
-  const json = await page.evaluate(() => (window as unknown as { __semioWgpu?: { dumpFrameStats?: () => string } }).__semioWgpu?.dumpFrameStats?.());
+  const json = await page.evaluate(() => (window as unknown as { wasmBindings?: { dumpFrameStats?: () => string } }).wasmBindings?.dumpFrameStats?.());
   if (!json) return null;
-  return JSON.parse(json) as { readonly drawCalls: number; readonly quads: number; readonly glyphs: number };
+  const stats = JSON.parse(json) as { readonly drawCalls: number; readonly quadCount: number; readonly glyphCount: number };
+  return { drawCalls: stats.drawCalls, quads: stats.quadCount, glyphs: stats.glyphCount };
 }
 //#endregion 🔖StructuralDump
 
@@ -1612,6 +1616,20 @@ function parityNormalizeText(s: string | null): string | null {
 function parityColorClose(a: ParityColor | null, b: ParityColor | null): boolean {
   if (a === null || b === null) return a === b;
   return Math.abs(a[0] - b[0]) <= PARITY_COLOR_TOLERANCE && Math.abs(a[1] - b[1]) <= PARITY_COLOR_TOLERANCE && Math.abs(a[2] - b[2]) <= PARITY_COLOR_TOLERANCE;
+}
+
+/** 🎨React's dump reports sRGB `rgb()` CSS values as 0–255 ints; wgpu's `Theme` colors are LINEAR-space
+ * 0–1 floats (see `framework/renderer/wgpu/rs/lib.rs`'s `🔬IntrospectionVisualFields` doc comment) —
+ * comparing them raw would treat every color as a mismatch. Converts wgpu's linear floats to sRGB
+ * 0–255 ints so both sides land in the same space before `parityColorClose`'s byte-scale tolerance applies. */
+function parityLinearToSrgbColor(c: ParityColor | null): ParityColor | null {
+  if (c === null) return null;
+  const toByte = (channel: number): number => {
+    const clamped = Math.min(1, Math.max(0, channel));
+    const srgb = clamped <= 0.0031308 ? clamped * 12.92 : 1.055 * Math.pow(clamped, 1 / 2.4) - 0.055;
+    return Math.round(srgb * 255);
+  };
+  return [toByte(c[0]), toByte(c[1]), toByte(c[2]), c[3]];
 }
 
 function compareParityStructural(reactDump: ParityDump, wgpuDump: ParityDump): StructuralResult {
@@ -1635,8 +1653,10 @@ function compareParityStructural(reactDump: ParityDump, wgpuDump: ParityDump): S
     if (Math.abs(rx - wx) > PARITY_RECT_TOLERANCE_PX || Math.abs(ry - wy) > PARITY_RECT_TOLERANCE_PX || Math.abs(rw - ww) > PARITY_RECT_TOLERANCE_PX || Math.abs(rh - wh) > PARITY_RECT_TOLERANCE_PX) {
       mismatches.push({ path, axis: "rect", react: r.rect, wgpu: w.rect });
     }
-    if (!isSceneLeaf && !parityColorClose(r.color, w.color)) mismatches.push({ path, axis: "color", react: r.color, wgpu: w.color });
-    if (!isSceneLeaf && !parityColorClose(r.bg, w.bg)) mismatches.push({ path, axis: "bg", react: r.bg, wgpu: w.bg });
+    const wColorSrgb = parityLinearToSrgbColor(w.color);
+    const wBgSrgb = parityLinearToSrgbColor(w.bg);
+    if (!isSceneLeaf && !parityColorClose(r.color, wColorSrgb)) mismatches.push({ path, axis: "color", react: r.color, wgpu: wColorSrgb });
+    if (!isSceneLeaf && !parityColorClose(r.bg, wBgSrgb)) mismatches.push({ path, axis: "bg", react: r.bg, wgpu: wBgSrgb });
     if (r.fontSize !== null && w.fontSize !== null && Math.abs(r.fontSize - w.fontSize) > PARITY_FONT_SIZE_TOLERANCE_PX) {
       mismatches.push({ path, axis: "fontSize", react: r.fontSize, wgpu: w.fontSize });
     }
@@ -1711,7 +1731,7 @@ async function triageParityBoot(page: import("playwright").Page, renderer: Parit
   }
   if (consoleErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: consoleErrors.join(" | ") };
   try {
-    await page.waitForFunction(() => typeof (window as unknown as { __semioWgpu?: unknown }).__semioWgpu === "object", { timeout: PARITY_BOOT_TIMEOUT_MS });
+    await page.waitForFunction(() => typeof (window as unknown as { wasmBindings?: { dumpStructure?: unknown } }).wasmBindings?.dumpStructure === "function", { timeout: PARITY_BOOT_TIMEOUT_MS });
   } catch {
     return { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
   }
@@ -1742,22 +1762,29 @@ function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): 
 
 type ParityServerHandle = { readonly proc: ReturnType<typeof Bun.spawn>; readonly port: number };
 
+/** ⏱️A cold `bun ./script.ts dev` boot can mean compiling the ENTIRE plugin crate catalog (33 crates)
+ * plus, for wgpu, a from-scratch trunk/cargo build — many minutes with an empty `target/`, not the
+ * ~40-60s a warm-cache boot takes. Default generously; `PARITY_BOOT_BUDGET_MS` overrides for CI/tuning. */
+const PARITY_DEV_SERVER_BOOT_BUDGET_MS = Number(process.env.PARITY_BOOT_BUDGET_MS ?? 900_000);
+
 async function startParityDevServer(renderer: ParityRenderer, variant: string, port: number): Promise<ParityServerHandle> {
   const devScript = join(repoRoot, "framework/product/os/dev/script.ts");
+  const logPath = join(parityOutDir(), `boot-${renderer}-${variant}.log`);
+  const logFile = Bun.file(logPath);
   const proc = Bun.spawn(["bun", devScript, "dev"], {
     cwd: join(repoRoot, "framework/product/os/dev"),
     env: { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, S_OS_PORT: String(port) },
-    stdout: "ignore",
-    stderr: "ignore",
+    stdout: logFile,
+    stderr: logFile,
   });
-  const deadline = Date.now() + 180_000;
+  const deadline = Date.now() + PARITY_DEV_SERVER_BOOT_BUDGET_MS;
   while (Date.now() < deadline) {
     if (isDevPortInUse("127.0.0.1", port)) return { proc, port };
-    if (proc.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${proc.exitCode})`);
+    if (proc.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${proc.exitCode}) — see ${logPath}`);
     await Bun.sleep(500);
   }
   proc.kill();
-  throw new Error(`${renderer} dev server for ${variant} did not open port ${port} within budget`);
+  throw new Error(`${renderer} dev server for ${variant} did not open port ${port} within ${PARITY_DEV_SERVER_BOOT_BUDGET_MS}ms — see ${logPath}`);
 }
 
 /** 🧹Best-effort: kills the spawned wrapper AND whatever ends up bound to the port, since vite/trunk

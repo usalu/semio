@@ -935,8 +935,8 @@ fn create_dag_app() -> App {
             .icon_id("dag")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
-            .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
+            .window_kind(DAG_PLAY_WINDOW_MAIN, "DAG", DAG_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "network")
+            .window_kind(DAG_PLAY_WINDOW_COMPILED, "DSL", DAG_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
             .default_layout(create_default_layout(
                 &[DAG_PLAY_WINDOW_MAIN.into(), DAG_PLAY_WINDOW_COMPILED.into()],
                 "row",

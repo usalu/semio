@@ -708,7 +708,7 @@ pub fn create_wires_app() -> App {
             .icon_id("reasoning-wires")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d)
+            .window_kind("reasoning-wires-composite", "Canvas", WIRES_PLAY_BODY_COMPOSITE, SurfaceKind::Canvas2d, "git-branch")
             .panel_tab("framework.panel.document", FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_DOCUMENT)
             .panel_tab("framework.panel.catalogue", FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, WIRES_PLAY_BODY_CATALOGUE)
             .panel_tab("framework.panel.inspection", FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, WIRES_PLAY_BODY_PROPERTIES)

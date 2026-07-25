@@ -637,9 +637,9 @@ fn create_sequence_app() -> App {
             .icon_id("sequence")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph)
-            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor)
-            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, "DSL", SEQUENCE_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph)
+            .window_kind(SEQUENCE_PLAY_WINDOW_MAIN, "Sequence", SEQUENCE_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "list-ordered")
+            .window_kind(SEQUENCE_PLAY_WINDOW_SCRIPT, "Script", SEQUENCE_PLAY_BODY_SCRIPT, SurfaceKind::TextEditor, "file-code")
+            .window_kind(SEQUENCE_PLAY_WINDOW_COMPILED, "DSL", SEQUENCE_PLAY_BODY_COMPILED, SurfaceKind::NodeGraph, "code")
             .default_layout(create_default_layout(
                 &[
                     SEQUENCE_PLAY_WINDOW_MAIN.into(),
