@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 /** @emoji 🧊 `@semio-tech/framework-renderer-wgpu` task router. */
-import { spawnSync } from "node:child_process";
+import { spawn, spawnSync } from "node:child_process";
 import { copyFileSync, existsSync, mkdirSync, readdirSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -28,11 +28,29 @@ const crateName = "semio-framework-renderer-wgpu";
 const outDir = join(repoRoot, "framework/product/os/dev/renderer-modules/wgpu");
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
 
+//#region 🌐 DevServer
 function trunkEnv(): NodeJS.ProcessEnv {
   const env = { ...process.env };
   delete env.NO_COLOR;
   delete env.FORCE_COLOR;
   return env;
+}
+
+/** 🌐 Runs a long-lived child without blocking Bun's asset-server event loop. */
+async function runInteractiveCommand(command: string, args: string[], cwd: string, env: NodeJS.ProcessEnv): Promise<number> {
+  const child = spawn(command, args, { cwd, env, stdio: "inherit" });
+  const terminate = () => child.kill();
+  process.once("SIGINT", terminate);
+  process.once("SIGTERM", terminate);
+  try {
+    return await new Promise<number>((resolve, reject) => {
+      child.once("error", reject);
+      child.once("exit", (code) => resolve(code ?? 1));
+    });
+  } finally {
+    process.off("SIGINT", terminate);
+    process.off("SIGTERM", terminate);
+  }
 }
 
 function ensureWasmTarget(): void {
@@ -119,9 +137,10 @@ class TrunkServeScript extends BundleScript {
     const port = process.env.S_OS_PORT ?? defaultPort;
     const extra = segments.filter((segment, index, all) => segment !== "--port" && all[index - 1] !== "--port");
     const args = ["serve", "--config", "Trunk.toml", "--port", port, ...extra];
-    if (runCmdStatus("trunk", args, { cwd: this.root, env: trunkEnv(), budgetMs: null }) !== 0) throw new Error("trunk serve failed for wgpu renderer"); // dev server — runs until stopped
+    if ((await runInteractiveCommand("trunk", args, this.root, trunkEnv())) !== 0) throw new Error("trunk serve failed for wgpu renderer");
   }
 }
+//#endregion 🌐 DevServer
 
 class NativeBuildScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
@@ -150,7 +169,7 @@ class NativeRunScript extends BundleScript {
       ...process.env,
       SEMIO_PLUGIN_MODULES: pluginOutRoot,
     };
-    if (variantTileProxyAssets(filterPlugin).length > 0) {
+    if (variantAssetSpecs(filterPlugin).length > 0) {
       nativeEnv[SEMIO_ASSET_BASE_URL_ENV] = assetServerBaseUrl();
     }
     const catalog = loadFrameworkOsPlaygroundCatalog();

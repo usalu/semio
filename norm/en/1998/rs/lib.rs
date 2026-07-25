@@ -625,7 +625,7 @@ pub fn check_full_seismic(document: &Document) -> CheckReport {
 }
 
 // #region 🔖Session
-use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -737,7 +737,7 @@ impl Default for Document {
     }
 }
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<En1998Family>;
 
 fn parse_seismic_zone(value: u8) -> na_de::SeismicZone {
@@ -828,7 +828,7 @@ pub struct En1998Family;
 
 impl NormFamily for En1998Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1998

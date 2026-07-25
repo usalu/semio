@@ -137,7 +137,7 @@ export const EMPTY_COMMAND_RESPONSE: CommandResponse<null>;
 In `CommandSpec`:
 
 - `machine.states[*].selection?: SelectionSpec` — host-side filter. Runtime exposes via `getActiveSelectionSpec(spec, state)` and `listActiveSelectionAccept()`; renderer/host uses it to gate pointer picks.
-- `commit.operation.kind` extended with the new read/write ops below; `commit.outputDataPath?: string` (optional context path whose value is copied into `response.data` for read-only commands).
+- `commit.operation.kind` extended with the new read/write operations below; `commit.outputDataPath?: string` (optional context path whose value is copied into `response.data` for read-only commands).
 
 `parseFactorySpec` -> `parseCommandSpec` validates the new fields, returns `null` on mismatch as today.
 
@@ -170,12 +170,12 @@ Rewrite `commit()` in `CommandRuntime` ([`spatial/js/core/index.ts`](spatial/js/
 async commit(): Promise<CommandResponse> {
   if (!this.canCommit()) return { ok: false, errors: [...], warnings: [], infos: [], diff: EMPTY_TOPOLOGY_DIFF, data: null };
   const ctx = this.sm.getContext();
-  const op  = this.spec.commit.operation;
-  const params = resolveTemplate(op.params, { context: ctx }) as Record<string, unknown>;
+  const operation  = this.spec.commit.operation;
+  const params = resolveTemplate(operation.params, { context: ctx }) as Record<string, unknown>;
 
   let diff: TopologyDiff = EMPTY_TOPOLOGY_DIFF;
   let data: unknown = null;
-  switch (op.kind) {
+  switch (operation.kind) {
     case "cell.createBox":      ({ diff } = await kernel.createBoxFromCornersDiff!(params as any)); break;
     case "wire.extrudeToCell":  ({ diff } = await kernel.extrudeWireDiff!(params as any)); break;
     case "face.offset":         ({ diff } = await kernel.offsetFacesDiff!(params as any)); break;

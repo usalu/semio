@@ -1,0 +1,14 @@
+=== bare op/ops (rs/ts/js) ===
+COUNT: 0
+
+=== remaining *Op types ===
+draw/rs/lib.rs:1167:pub enum DrawOp {
+
+=== JSON "op" keys ===
+
+=== serde tag op ===
+
+=== noop ===
+
+=== report ===
+touched 81 renamed [['framework/sync/fixtures/remote-ops-backlog.json', 'framework/sync/fixtures/remote-operations-backlog.json'], ['framework/sync/fixtures/basic-remote-ops.json', 'framework/sync/fixtures/basic-remote-operations.json'], ['.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/remote-ops-backlog.json', '.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/remote-operations-backlog.json'], ['.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/basic-remote-ops.json', '.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/basic-remote-operations.json']]

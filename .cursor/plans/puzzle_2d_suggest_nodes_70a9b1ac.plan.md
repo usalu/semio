@@ -60,7 +60,7 @@ Next to existing `brushCycleCandidate` / `brushSetCandidateIndex` exports (~424�
 
 - `Puzzle2dRenderer` methods `brushOpenSlot(handleId)`, `brushCommitSlot()`, `brushCancelSlot()` (next to `setBrushCandidateIndex`, ~5020).
 - In region `🖱️SelectionContextMenu`, mirror the 3D API:
-  - `puzzle2dOpenSlotSuggestionsRef: { openFor(handleId, anchor), close }` with no-op defaults (analog of `puzzle3dOpenVortexSuggestionsRef`).
+  - `puzzle2dOpenSlotSuggestionsRef: { openFor(handleId, anchor), close }` with no-operation defaults (analog of `puzzle3dOpenVortexSuggestionsRef`).
   - Brush menu store `{ menuOpen, menuAnchor, menuHoverIndex }` (analog of `puzzle3dBrushUiStore` subset).
   - `Puzzle2dBrushCandidateMenu` portal component mirroring `Puzzle3dBrushCandidateMenu` (3D ~9763–9832): candidates from `puzzle2dGetBrushSessionSnapshot()` (already mirrors WASM `brushCandidates`), hover row → `setBrushCandidateIndex`, click → commit + close, Escape/outside-pointer → cancel + close, empty state text. Same `glassMenuClass`/`cn` styling from `@semio-tech/ui-react`, `createPortal` as in 3D.
 - `buildPuzzle2dSelectionMenuItems(...)`: add optional `onSuggest?: () => void` final param; when provided, prepend `{ id: "suggest", label: "Suggest nodes", icon: "sparkles" }` + separator (icon already registered in `ui/asset`). Mirrors 3D builder signature.

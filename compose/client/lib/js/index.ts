@@ -370,16 +370,16 @@ class WorkerStringTransport {
         reject(new Error("worker init timeout"));
       }, 30_000);
       const onMessage = (ev: MessageEvent<string>) => {
-        let m: { op?: string; message?: string };
+        let m: { operation?: string; message?: string };
         try {
           m = JSON.parse(ev.data) as typeof m;
         } catch {
           return;
         }
-        if (m.op === "ready") {
+        if (m.operation === "ready") {
           cleanup();
           resolve();
-        } else if (m.op === "error") {
+        } else if (m.operation === "error") {
           cleanup();
           reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
         }
@@ -395,7 +395,7 @@ class WorkerStringTransport {
       };
       this.worker.addEventListener("message", onMessage);
       this.worker.addEventListener("error", onError as globalThis.EventListener);
-      this.worker.postMessage(JSON.stringify({ op: "init", uri }));
+      this.worker.postMessage(JSON.stringify({ operator: "init", uri }));
     });
   }
 
@@ -404,26 +404,26 @@ class WorkerStringTransport {
     return await new Promise<string>((resolve, reject) => {
       let result: string | null = null;
       const w = (ev: MessageEvent<string>) => {
-        let m: { op: string; reqId?: string; json?: string; message?: string };
+        let m: { operator: string; reqId?: string; json?: string; message?: string };
         try {
           m = JSON.parse(ev.data) as typeof m;
         } catch {
           return;
         }
         if (m.reqId !== reqId) return;
-        if (m.op === "result" && typeof m.json === "string") result = m.json;
-        if (m.op === "done") {
+        if (m.operation === "result" && typeof m.json === "string") result = m.json;
+        if (m.operation === "done") {
           this.worker.removeEventListener("message", w);
           if (result == null) reject(new Error("graphql: worker completed without result"));
           else resolve(result);
         }
-        if (m.op === "error") {
+        if (m.operation === "error") {
           this.worker.removeEventListener("message", w);
           reject(new Error(m.message ?? "worker error"));
         }
       };
       this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ op: "execute", reqId, body: requestJson }));
+      this.worker.postMessage(JSON.stringify({ operator: "execute", reqId, body: requestJson }));
     });
   }
 
@@ -431,25 +431,25 @@ class WorkerStringTransport {
     const reqId = `s-${++this.nextSerial}-${Date.now().toString(36)}`;
     await new Promise<void>((resolve, reject) => {
       const w = (ev: MessageEvent<string>) => {
-        let m: { op: string; reqId?: string; json?: string; message?: string };
+        let m: { operator: string; reqId?: string; json?: string; message?: string };
         try {
           m = JSON.parse(ev.data) as typeof m;
         } catch {
           return;
         }
         if (m.reqId !== reqId) return;
-        if (m.op === "event" && typeof m.json === "string") onEvent(m.json);
-        if (m.op === "done") {
+        if (m.operation === "event" && typeof m.json === "string") onEvent(m.json);
+        if (m.operation === "done") {
           this.worker.removeEventListener("message", w);
           resolve();
         }
-        if (m.op === "error") {
+        if (m.operation === "error") {
           this.worker.removeEventListener("message", w);
           reject(new Error(m.message ?? "worker error"));
         }
       };
       this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ op: "subscribe", reqId, body: requestJson }));
+      this.worker.postMessage(JSON.stringify({ operator: "subscribe", reqId, body: requestJson }));
     });
   }
 
@@ -459,7 +459,7 @@ class WorkerStringTransport {
 }
 
 //#region 🌐HttpStoreTransport
-/** @emoji 🌐 GraphQL-over-HTTP to native `compose-store` (no WASM); subscriptions are no-ops until the sidecar exposes a stream. */
+/** @emoji 🌐 GraphQL-over-HTTP to native `compose-store` (no WASM); subscriptions are no-operations until the sidecar exposes a stream. */
 class HttpStringTransport {
   constructor(private readonly baseUrl: string) {}
 

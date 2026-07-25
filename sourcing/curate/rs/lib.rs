@@ -244,7 +244,7 @@ impl CurateDocument {
     }
 
     /// ➕➖ Adjusts the curated count for `object_id` by `delta`, clamped to `0..=availability`; removes the
-    /// entry entirely when the count reaches 0. Silently no-ops if `object_id` isn't in the stock.
+    /// entry entirely when the count reaches 0. Silently no-operations if `object_id` isn't in the stock.
     pub fn curate_delta(&mut self, object_id: &str, delta: i64) {
         let Some(kind) = self.stock.iter().find(|kind| kind.id == object_id) else { return };
         let next = (self.curated_count(object_id) as i64 + delta).clamp(0, kind.availability as i64) as u32;
@@ -252,7 +252,7 @@ impl CurateDocument {
     }
 
     /// 🎯 Sets the curated count for `object_id` directly, clamped to `0..=availability`; removes the
-    /// entry when the count is 0. Silently no-ops if `object_id` isn't in the stock.
+    /// entry when the count is 0. Silently no-operations if `object_id` isn't in the stock.
     pub fn curate_set(&mut self, object_id: &str, count: u32) {
         let Some(kind) = self.stock.iter().find(|kind| kind.id == object_id) else { return };
         let clamped = count.min(kind.availability);
@@ -274,7 +274,7 @@ impl CurateDocument {
 /// full document and this carries it, with a true inverse restoring the exact prior document.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum SourcingOp {
+pub enum SourcingOperation {
     SetDocument { document: CurateDocument },
 }
 
@@ -297,18 +297,18 @@ impl OperationDiff<CurateDocument> for SourcingDiff {
     }
 }
 
-impl Operation<CurateDocument> for SourcingOp {
+impl Operation<CurateDocument> for SourcingOperation {
     type Diff = SourcingDiff;
 
     fn diff(&self, _projection: &CurateDocument) -> Self::Diff {
         match self {
-            SourcingOp::SetDocument { document } => SourcingDiff { document: Some(document.clone()) },
+            SourcingOperation::SetDocument { document } => SourcingDiff { document: Some(document.clone()) },
         }
     }
 
     fn backwards(&self, projection: &CurateDocument) -> Vec<Self> {
         match self {
-            SourcingOp::SetDocument { .. } => vec![SourcingOp::SetDocument { document: projection.clone() }],
+            SourcingOperation::SetDocument { .. } => vec![SourcingOperation::SetDocument { document: projection.clone() }],
         }
     }
 }

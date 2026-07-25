@@ -43,9 +43,9 @@ pub mod ode;
 #[path = "src/transforms.rs"]
 pub mod transforms;
 
-pub use assume::{is_even, is_integer, is_nonzero, is_positive, is_real, AssumeSet, Assumptions, RelOp as AssumeRelOp};
+pub use assume::{is_even, is_integer, is_nonzero, is_positive, is_real, AssumeSet, Assumptions, RelationalOperator as AssumeRelationalOperator};
 pub use diff::{diff, gradient, idiff};
-pub use expr::{Constant, Expr, Kind, RelOp, Symbol, WildKind};
+pub use expr::{Constant, Expr, Kind, RelationalOperator, Symbol, WildKind};
 pub use fmt::to_latex;
 pub use fnkind::FnKind;
 pub use integrate::{integrate, integrate_definite, residue};

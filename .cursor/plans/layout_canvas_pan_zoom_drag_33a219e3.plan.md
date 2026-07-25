@@ -64,7 +64,7 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
 - **[layout/rs/wasm_session.rs](layout/rs/wasm_session.rs)**: add `camera: infinite_cavas::camera::Camera`, `viewport: infinite_cavas::camera::Viewport`, and a small `LayoutInteraction { Idle, Pan { origin, start_screen } }` to `LayoutSessionInner`. Add:
   - `setCamera(x, y, zoom)` — seeds camera once (called by JS right after session creation).
   - `setSize` extended to also call `viewport.set_size(width, height, dpr)` (logical px, matching the existing gis/2d/puzzle2d convention).
-  - `pointerDownScreen(sx, sy, button)` — button `1` (middle) starts `Interaction::Pan`; other buttons no-op (left-button hit test stays on the existing button-less `pointerDown`/`pointerMove` pair).
+  - `pointerDownScreen(sx, sy, button)` — button `1` (middle) starts `Interaction::Pan`; other buttons no-operation (left-button hit test stays on the existing button-less `pointerDown`/`pointerMove` pair).
   - `pointerMoveScreen(sx, sy)` — updates `camera.x/y` while panning.
   - `pointerUpScreen(sx, sy)` — ends the pan.
   - `wheelScreen(sx, sy, deltaY)` — delegates to `infinite_cavas::camera::wheel_screen` (cursor-anchored zoom, same feel as gis/2d).
@@ -75,7 +75,7 @@ Reuse `infinite_cavas::camera` (already a dependency of `layout_rs`, see [layout
   - `ensureSession()`: after constructing `LayoutSession`, seed the camera once from the pending document JSON's `camera`/`previewCamera` field (picked by `chromeBlueprint`).
   - `pointerDown(x, y, button, extend)`: button `0` keeps today's hit-test behavior; button `1` calls `session.pointerDownScreen(x, y, 1)` and flips a local `isPanning` flag.
   - `pointerMove(x, y)`: if `isPanning`, forward to `pointerMoveScreen`; else keep existing hover hit-test.
-  - `pointerUp(x, y)`: if `isPanning`, forward to `pointerUpScreen` and clear the flag; else existing no-op.
+  - `pointerUp(x, y)`: if `isPanning`, forward to `pointerUpScreen` and clear the flag; else existing no-operation.
   - New `wheel(x, y, deltaY)` → `session.wheelScreen(...)`.
   - New `screenToWorld(x, y)` → thin wrapper over the wasm call, used by the drop bridge.
   - `LayoutCanvas`: change `enablePointer={chromeMode === "blueprint"}` to always-on (`enablePointer` default `true`) so the **preview** pane can also pan/zoom — selection/hover stay blueprint-only because `onHit`/`onHover` are already `undefined` for preview at the call site ([framework/product/playground/renderer/react/index.tsx:7778](framework/product/playground/renderer/react/index.tsx)).

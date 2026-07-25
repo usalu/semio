@@ -11382,7 +11382,7 @@ def getKitDiffDict(before: dict, after: dict) -> dict:
 
 
 def _kitdiff_deep_equal(a: typing.Any, b: typing.Any) -> bool:
-    """Deep structural equality for noop remove/add detection in kit diff validation."""
+    """Deep structural equality for no_operation remove/add detection in kit diff validation."""
     if a is b:
         return True
     if type(a) != type(b):
@@ -11412,7 +11412,7 @@ def _validate_id_collection_diff(
     raw: dict | None,
     on_updated: typing.Callable[[dict, dict, str], None] | None = None,
 ) -> dict | None:
-    """Validate removed/updated/added ids for one collection diff; heal trims invalid ops when ctx["heal"]."""
+    """Validate removed/updated/added ids for one collection diff; heal trims invalid operations when ctx["heal"]."""
     if not raw:
         return None
     heal: bool = ctx["heal"]
@@ -11452,7 +11452,7 @@ def _validate_id_collection_diff(
             _kitdiff_push(
                 ctx,
                 "warnings",
-                "kitdiff.cycle.noop-restore",
+                "kitdiff.cycle.no-operation-restore",
                 f"{path}: removed and re-added {id_key} {rg} are deeply equal (no effective change)",
             )
             if heal:

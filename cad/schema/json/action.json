@@ -53,9 +53,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "name", "value"],
+          "required": ["operation", "name", "value"],
           "properties": {
-            "op": { "const": "let" },
+            "operation": { "const": "let" },
             "name": { "type": "string", "minLength": 1 },
             "value": { "$ref": "expression.json" }
           }
@@ -63,9 +63,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "values"],
+          "required": ["operation", "values"],
           "properties": {
-            "op": { "const": "setContext" },
+            "operation": { "const": "setContext" },
             "values": {
               "type": "object",
               "additionalProperties": { "$ref": "expression.json" }
@@ -75,9 +75,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "keys"],
+          "required": ["operation", "keys"],
           "properties": {
-            "op": { "const": "deleteContext" },
+            "operation": { "const": "deleteContext" },
             "keys": {
               "type": "array",
               "items": { "type": "string", "minLength": 1 }
@@ -87,9 +87,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "function"],
+          "required": ["operation", "function"],
           "properties": {
-            "op": { "const": "kernel.call" },
+            "operation": { "const": "kernel.call" },
             "function": { "type": "string", "minLength": 1 },
             "args": {
               "type": "object",
@@ -101,9 +101,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "condition"],
+          "required": ["operation", "condition"],
           "properties": {
-            "op": { "const": "guard" },
+            "operation": { "const": "guard" },
             "condition": { "$ref": "expression.json" },
             "message": { "type": "string" }
           }
@@ -111,9 +111,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "return" },
+            "operation": { "const": "return" },
             "diff": { "$ref": "expression.json" },
             "data": { "$ref": "expression.json" },
             "patch": { "$ref": "expression.json" },

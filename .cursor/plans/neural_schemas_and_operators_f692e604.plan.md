@@ -55,16 +55,16 @@ flowchart TB
   subgraph neural["neural/engine (kernel)"]
     Schema["Schema: id + FieldSpec[] (value: ValueType)"]
     Dict["Dictionary + reserved $schema"]
-    Op["Operator: OperatorInfo + OperatorImpl[]"]
+    Operation["Operator: OperatorInfo + OperatorImpl[]"]
     Reg["Registry: schemas + operators + dispatch()"]
     Eval["Evaluator: topo sort + channel wiring + dispatch"]
     Schema --> Reg
-    Op --> Reg
+    Operation --> Reg
     Reg --> Eval
     Dict --> Eval
   end
   subgraph modules["flow/module/*"]
-    Core["core: schemas number/text/.. + value ops (core.number/text/image)"]
+    Core["core: schemas number/text/.. + value operations (core.number/text/image)"]
     Math["math: schemas point/vector + add/move/constructVector (multi-impl)"]
     Others["list / logic / text / dictionary"]
   end
@@ -90,7 +90,7 @@ flowchart TB
   - `struct OperatorInfo { id, module, name, abbreviation, icon, summary, inputs: Vec<ChannelSpec>, outputs: Vec<ChannelSpec>, variadic_input, variadic_output }` (replaces `NeuronKindInfo`).
   - `struct OperatorImpl { schemas: Vec<String>, function: Box<dyn Operation> }` where `schemas` is the accepted input-schema signature (empty = wildcard/fallback).
   - `struct Operator { info: OperatorInfo, implementations: Vec<OperatorImpl> }`.
-  - `Registry { schemas: HashMap<String,Schema>, operators: HashMap<String,Operator> }` with `register_schema`, `register_operator`, `schema/operator/operator_info`, `schema_catalogue/operator_catalogue`, and `dispatch(op_id, &Dictionary)` which reads incoming channel `$schema`s and selects the matching `OperatorImpl` (fallback to wildcard), then runs it.
+  - `Registry { schemas: HashMap<String,Schema>, operators: HashMap<String,Operator> }` with `register_schema`, `register_operator`, `schema/operator/operator_info`, `schema_catalogue/operator_catalogue`, and `dispatch(operation_id, &Dictionary)` which reads incoming channel `$schema`s and selects the matching `OperatorImpl` (fallback to wildcard), then runs it.
 - `#region Evaluator`: rename `kind_infos` -> `operator_infos: HashMap<String,OperatorInfo>`; `collect_neuron_input` and `inject_input_defaults` -> `inject_channel_defaults` work off `ChannelSpec`. Keep the `evaluate_channels_with(..., dispatch: FnMut(&str,&Dictionary))` shape so flow's bridge still drives execution. Outputs always carry `$schema`.
 - Extend `#region Tests`: `$schema` round-trip, `Schema::validate`, multi-impl dispatch (number vs point), variadic add.
 
@@ -98,7 +98,7 @@ flowchart TB
 
 - [flow/module/wasm/lib.rs](flow/module/wasm/lib.rs): `FlowModuleContributes` gains `schemas: Vec<Schema>` and renames `neuron_kinds` -> `operators: Vec<OperatorInfo>`; `build_manifest_json` pulls `registry.operator_catalogue()` + `registry.schema_catalogue()`; `evaluate_json` calls `registry.dispatch(...)` with `inject_channel_defaults`.
 - NEW crate `flow/module/core` (necessary, clean): registers core schemas `number`,`text`,`boolean`,`list`,`dictionary`,`image` and **value operators** `core.number`/`core.text`/`core.image` (read their value from params, emit a `$schema`-tagged dict). These back the input widgets so values live in the tree. Follows the exact `script.ts`/`project.json`/`package.json`/`Cargo.toml`/`wasm_ext` pattern of the other modules. Add to root [Cargo.toml](Cargo.toml) workspace members.
-- [flow/module/math/lib.rs](flow/module/math/lib.rs): register schemas `point` and `vector` (fields x,y,z decimals). Convert each op to an operator with accurate channels; make `math.add`/`subtract` multi-impl (`["number"]`, `["point"]`, `["vector"]`) + variadic; add `math.constructVector`/`math.constructPoint` (inputs `x`,`y`,`z`, default 0 -> vector/point) and `math.move` (impls `["point"]`,`["vector"]`). Remove the `read_number("a").or_else(read_number("number"))` hacks now that channels are accurate. (Sphere/geometry `move` impls are intentionally out of scope to avoid mixing the `geometry`/`procedural` technology — they would register the same way in that module as a follow-up.)
+- [flow/module/math/lib.rs](flow/module/math/lib.rs): register schemas `point` and `vector` (fields x,y,z decimals). Convert each operation to an operator with accurate channels; make `math.add`/`subtract` multi-impl (`["number"]`, `["point"]`, `["vector"]`) + variadic; add `math.constructVector`/`math.constructPoint` (inputs `x`,`y`,`z`, default 0 -> vector/point) and `math.move` (impls `["point"]`,`["vector"]`). Remove the `read_number("a").or_else(read_number("number"))` hacks now that channels are accurate. (Sphere/geometry `move` impls are intentionally out of scope to avoid mixing the `geometry`/`procedural` technology — they would register the same way in that module as a follow-up.)
 - [flow/module/{list,logic,text,dictionary}/lib.rs](flow/module): register their schema (`list`/`boolean`/`text`/`dictionary`) and convert kinds to operators with accurate channels; keep variadic where present (e.g. `dictionary.merge`, `text.concat`). Update each module's `#region Tests`.
 
 ## Part C: flow/core authoritative {flow, tree} ([flow/core/lib.rs](flow/core/lib.rs))

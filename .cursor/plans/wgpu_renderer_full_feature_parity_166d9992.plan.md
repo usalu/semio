@@ -71,7 +71,7 @@ The JS side is already fully ready: `PluginWasmHandle.tools`/`windowEngagements`
 3. Add `kind == "polyline"` rendering: connect `points` pairs with `ctx.draw.push_line`, using dashed segments where the parallel `seams[i]` is true (mirror React's dash logic in `canvas-2d-host.tsx` lines 146-166) plus a checkerboard background under the UV wireframe.
 4. Fix pointer coordinate mapping: `render_canvas_2d`'s hit target (lines 885-892) currently passes raw screen pixels to `canvasPointerDown`; convert through the existing `Viewport::world_to_screen`/inverse so lowpoly's UV-space fallback mapping (`lowpoly/plugin/rs/lib.rs` lines 1922-1927) receives canvas-world coordinates like React's `toCanvasCoords` (`canvas-2d-host.tsx` lines 200-220).
 5. Dispatch `paintStrokeBegin`/`paintStrokeEnd` around the canvas pointer-down/up drag lifecycle (mirror React `canvas-2d-host.tsx` lines 297-302), and add a `canvasWheel` handler path if none exists for zoom, matching React's zoom-on-wheel.
-6. Ensure a mode switch (edit ↔ paint) triggers `refresh_ui()` so `interactionMode`/UV window content updates — currently the navbar mode click only mutates local view state (`shell.rs` lines 1383-1388); route it through the same op-apply path used by command dispatch (`shell.rs` line 815).
+6. Ensure a mode switch (edit ↔ paint) triggers `refresh_ui()` so `interactionMode`/UV window content updates — currently the navbar mode click only mutates local view state (`shell.rs` lines 1383-1388); route it through the same operation-apply path used by command dispatch (`shell.rs` line 815).
 
 ## Phase 2 — Component-level picking data pipeline
 

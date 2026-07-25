@@ -21,7 +21,7 @@ todos:
    content: "Add 🪝FieldHooks region: one `useX<Field>(id?: string): FieldReadState<T>` per (entity, field) pair across every entity in the schema — the optional `id` is **only** that field's owning entity id (same rule as entity hooks). Implementation lives in a private `useEntityField` helper which (a) resolves the JS entity from that single optional id + parent contexts, (b) subscribes to that entity's `on<Field>Changed` callback in compose/js, (c) falls back to a mount-time async read + bus-tick refetch when no field-level callback exists yet. The hook return is `{ value, loading, error, refresh }` — no JS class instance leaks."
    status: pending
  - id: operation-hooks
-   content: "Add 🪝OperationHooks region: one `useX<Op>(id?: string): readonly [(args) => Promise<SetResult>, OperationStatus]` per (entity, mutation) pair — the optional `id` is **only** the receiver entity's id (e.g. `useRenameDesign(id?)` for Design, `useDragPiece(id?)` for Piece). Batch `PiecesOperations` flows use `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` under `DesignContext` (no extra hook params for design or piece list). Implementation lives in a private `useEntityOperation` helper; the consumer never sees the JS class."
+   content: "Add 🪝OperationHooks region: one `useX<Operation>(id?: string): readonly [(args) => Promise<SetResult>, OperationStatus]` per (entity, mutation) pair — the optional `id` is **only** the receiver entity's id (e.g. `useRenameDesign(id?)` for Design, `useDragPiece(id?)` for Piece). Batch `PiecesOperations` flows use `PiecesBatchContextProvider` with `{ pieceIds: readonly string[] }` under `DesignContext` (no extra hook params for design or piece list). Implementation lives in a private `useEntityOperation` helper; the consumer never sees the JS class."
    status: pending
  - id: list-hooks
    content: "Add 🪝ListHooks region: id-list-stable readers like `useKitDesigns(id?: string)`, `useKitTypes(id?)`, …, `useDesignPieces(id?)`, `useDesignConnections(id?)`, `useTypePorts(id?)`, `useTypeConnectors(id?)`, `useTypeRepresentations(id?)`, `usePieceChildPieces(id?)`, `usePieceChildConnections(id?)` — each optional `id` is **only** the list owner's entity id (Kit, Design, Type, or Piece respectively). Output rows are plain `{ id }` records — consumers map them under the matching `<XContextProvider id={row.id}>`."
@@ -384,7 +384,7 @@ In every example above the consumer never imports anything from `@semio-tech/com
 
 - No `compose/js` entity class is reachable from `@semio-tech/compose-react` (tested via banned-substring check on the file's export list).
 - Every entity in the schema has a context, a provider, a `useX(id?)` hook, plus the matching field + operation hooks.
-- Every hook accepts at most **one** optional `id` — always **that hook's own entity id**; parent scope is **only** from context (plus `PiecesBatchContext` for batch piece ops). Without `id`, hooks read the matching `XContext`.
+- Every hook accepts at most **one** optional `id` — always **that hook's own entity id**; parent scope is **only** from context (plus `PiecesBatchContext` for batch piece operations). Without `id`, hooks read the matching `XContext`.
 - `bun nx run @semio-tech/compose-react:lint` + `tsc --noEmit` on `compose/react` pass in isolation.
 - Embedded Vitest banned-substring scan and the new "no JS entity class exported" scan pass.
 

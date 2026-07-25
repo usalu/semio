@@ -56,7 +56,7 @@
                 "target": "selectB",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -114,7 +114,7 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

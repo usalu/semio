@@ -3,34 +3,34 @@ name: Operation Diff Backwards VCS Pattern
 overview: Generalize compose's real Operation→Diff→centralized-mutation pattern (stored operations, computed sparse diffs, one apply_diff per projection, computed backwards) into framework_vcs, migrate every technology onto it, and rewire compose itself onto the shared engine.
 todos:
  - id: phase1-framework-core
-   content: "Rework framework_vcs: add Operation<P>/OperationDiff<P> traits + CollectionDiff/ItemPatch helpers, rewrite DocumentVcsStore/DocumentVcsCommand::Apply to auto-compute backwards via op.backwards()/op.diff().apply(), remove ApplyOp trait entirely, update core unit tests"
+   content: "Rework framework_vcs: add Operation<P>/OperationDiff<P> traits + CollectionDiff/ItemPatch helpers, rewrite DocumentVcsStore/DocumentVcsCommand::Apply to auto-compute backwards via operation.backwards()/operation.diff().apply(), remove ApplyOp trait entirely, update core unit tests"
    status: completed
  - id: phase2-semios
-   content: Migrate semios/rs StudioOp to Operation<SemiosStudioProjection>/StudioDiff pattern
+   content: Migrate semios/rs StudioOperation to Operation<SemiosStudioProjection>/StudioDiff pattern
    status: completed
  - id: phase2-draw
-   content: Migrate draw/rs DrawOp to Operation<DrawDocument>/DrawDiff pattern, including id/path-addressed layer tree diff
+   content: Migrate draw/rs DrawOperation to Operation<DrawDocument>/DrawDiff pattern, including id/path-addressed layer tree diff
    status: completed
  - id: phase2-forms
-   content: Migrate forms/rs FormOp to Operation<FormSpec>/FormDiff pattern
+   content: Migrate forms/rs FormOperation to Operation<FormSpec>/FormDiff pattern
    status: completed
  - id: phase2-shooting
-   content: Migrate shooting/rs ShootingOp to Operation<ShootingScene>/ShootingDiff pattern
+   content: Migrate shooting/rs ShootingOperation to Operation<ShootingScene>/ShootingDiff pattern
    status: completed
  - id: phase2-cad
-   content: Migrate cad/rs CadOp to Operation<CadScene>/CadDiff pattern
+   content: Migrate cad/rs CadOperation to Operation<CadScene>/CadDiff pattern
    status: completed
  - id: phase2-presentation
    content: Migrate framework/product/presentation/rs PresentationOp to Operation<PresentationDeck>/PresentationDiff pattern
    status: completed
  - id: phase2-writer
-   content: Migrate writer/rs WriterOp to Operation<WriterProjection>/WriterDiff pattern
+   content: Migrate writer/rs WriterOperation to Operation<WriterProjection>/WriterDiff pattern
    status: completed
  - id: phase2-raster
-   content: Migrate raster/rs RasterOp to Operation<RasterProjection>/RasterDiff pattern
+   content: Migrate raster/rs RasterOperation to Operation<RasterProjection>/RasterDiff pattern
    status: completed
  - id: phase2-puzzle2d-demo
-   content: Update puzzle/2d/rs test demo (Puzzle2dOp/Puzzle2dApplier) to the new Operation/Diff pattern
+   content: Update puzzle/2d/rs test demo (Puzzle2dOperation/Puzzle2dApplier) to the new Operation/Diff pattern
    status: completed
  - id: phase3-flow
    content: Create Rust crate for flow with Operation/Diff pattern, replace TS applyFlowEditOp reducer with WASM client
@@ -80,16 +80,16 @@ Compose's actual architecture is richer than what `framework_vcs` currently offe
 - `**Kit::apply_diff(&self, diff: &KitDiff)**` (lib.rs:5867) is the single centralized mutation entry point for the whole `Kit` projection: it walks every optional field/collection generically. No other code mutates `Kit` fields directly from operation logic.
 - `**Edit**` (forwards+backwards operations), `**Change**` (groups saved Edits), `**Checkpoint**` (chain of Changes, computes `kit`), `**Alternative**`/`TheKit` (`Workspace`: `checkpoint`, `savedChanges`, `unsavedChanges`, `kit`) are the storage/branching shell around this.
 
-`framework_vcs`'s current `ApplyOp<P, Op>::apply(&self, projection, op) -> P` collapses diff+backwards+apply into one hand-written match per op, and callers must hand-supply `backwards` at `dispatch` time. This plan brings every technology (and compose itself) onto the real pattern.
+`framework_vcs`'s current `ApplyOp<P, Operation>::apply(&self, projection, operator) -> P` collapses diff+backwards+apply into one hand-written match per operation, and callers must hand-supply `backwards` at `dispatch` time. This plan brings every technology (and compose itself) onto the real pattern.
 
 ## Target architecture
 
 ```mermaid
 flowchart TD
-    Op["Operation (stored)"] -->|"diff(pre_state)"| Diff["Diff (sparse, computed)"]
-    Op -->|"backwards(pre_state)"| BackOps["Vec of backward Operations (stored)"]
+    Operation["Operation (stored)"] -->|"diff(pre_state)"| Diff["Diff (sparse, computed)"]
+    Operation -->|"backwards(pre_state)"| BackOps["Vec of backward Operations (stored)"]
     Diff -->|"apply(pre_state)"| NextState["next Projection"]
-    Store["DocumentVcsStore.dispatch(Apply)"] --> Op
+    Store["DocumentVcsStore.dispatch(Apply)"] --> Operation
     Store --> Change["DocumentChange { forwards, backwards }"]
     Change --> Checkpoint["DocumentCheckpoint"]
     Checkpoint --> Alternative["DocumentAlternative"]
@@ -121,22 +121,22 @@ pub struct CollectionDiff<TId, TPatch, TAdded> {
 }
 ```
 
-`DocumentVcsStore<P, Op>` drops the `A: ApplyOp<P, Op>` type parameter and `applier` field entirely — `Op: Operation<P>` is now sufficient, since the op knows how to diff/backward itself and the diff knows how to apply itself. `ApplyOp`, `XApplier` structs everywhere, and `JsonReplaceApplier` remnants are removed.
+`DocumentVcsStore<P, Operation>` drops the `A: ApplyOp<P, Operation>` type parameter and `applier` field entirely — `Operation: ::vcs::Operation<P>` is now sufficient, since the operation knows how to diff/backward itself and the diff knows how to apply itself. `ApplyOp`, `XApplier` structs everywhere, and `JsonReplaceApplier` remnants are removed.
 
-`DocumentVcsCommand::Apply` becomes `Apply { operations: Vec<Op>, description: Option<String> }` — no hand-supplied `backwards`. In `dispatch`, for each `operation` (in order): compute `op.backwards(&projection)` against the running pre-op projection and splice it to the **front** of the accumulated backwards list (so undo replays most-recent-first), then advance `projection = op.diff(&projection).apply(&projection)`. `materialize_document_projection` replays the same `diff().apply()` step per stored forward op.
+`DocumentVcsCommand::Apply` becomes `Apply { operations: Vec<Operation>, description: Option<String> }` — no hand-supplied `backwards`. In `dispatch`, for each `operation` (in order): compute `operation.backwards(&projection)` against the running pre-operation projection and splice it to the **front** of the accumulated backwards list (so undo replays most-recent-first), then advance `projection = operation.diff(&projection).apply(&projection)`. `materialize_document_projection` replays the same `diff().apply()` step per stored forward operation.
 
 ## Phased migration
 
 ### Phase 1 — `framework_vcs` core rework
 
-Implement the traits/helpers above; rewrite `DocumentVcsStore`/`DocumentVcsCommand`/`materialize_document_projection` to use them; delete `ApplyOp`. Update the crate's own unit tests (`DemoProjection`/`DemoOp`) to implement `Operation`/`OperationDiff` instead of `ApplyOp`.
+Implement the traits/helpers above; rewrite `DocumentVcsStore`/`DocumentVcsCommand`/`materialize_document_projection` to use them; delete `ApplyOp`. Update the crate's own unit tests (`DemoProjection`/`DemoOperation`) to implement `Operation`/`OperationDiff` instead of `ApplyOp`.
 
 ### Phase 2 — migrate existing Rust-backed technologies
 
-For each of `semios/rs` (`StudioOp`), `draw/rs` (`DrawOp`, note: `DrawLayerNode` tree needs an id/path-addressed diff, not a flat `CollectionDiff`), `forms/rs` (`FormOp`), `shooting/rs` (`ShootingOp`), `cad/rs` (`CadOp`), `framework/product/presentation/rs` (`PresentationOp`), `writer/rs` (`WriterOp`), `raster/rs` (`RasterOp`), and the `puzzle/2d/rs` test demo:
+For each of `semios/rs` (`StudioOperation`), `draw/rs` (`DrawOperation`, note: `DrawLayerNode` tree needs an id/path-addressed diff, not a flat `CollectionDiff`), `forms/rs` (`FormOperation`), `shooting/rs` (`ShootingOperation`), `cad/rs` (`CadOperation`), `framework/product/presentation/rs` (`PresentationOp`), `writer/rs` (`WriterOperation`), `raster/rs` (`RasterOperation`), and the `puzzle/2d/rs` test demo:
 
 - Add a `XDiff` struct (sparse fields + `CollectionDiff` for sub-entities).
-- Replace `impl ApplyOp<X, XOp>`/`XApplier` with `impl Operation<X> for XOp` (one match arm per variant emitting `XDiff` + inverse op(s) from pre-state) and `impl OperationDiff<X> for XDiff` (the one centralized mutator).
+- Replace `impl ApplyOp<X, XOp>`/`XApplier` with `impl Operation<X> for XOp` (one match arm per variant emitting `XDiff` + inverse operation(s) from pre-state) and `impl OperationDiff<X> for XDiff` (the one centralized mutator).
 - Drop the applier argument from `XStore`/WASM bridge constructors.
 - Re-run/extend each crate's undo/redo unit tests to confirm engine-computed backwards match previous hand-written expectations.
 
@@ -144,9 +144,9 @@ For each of `semios/rs` (`StudioOp`), `draw/rs` (`DrawOp`, note: `DrawLayerNode`
 
 Currently only TS-side reducers exist for `flow/core` (`FlowEditOp`/`applyFlowEditOp`, [flow/core/index.ts](flow/core/index.ts):21-49), `mathematical/graph/port/directed/dag`, `gis/map/rs`, `reasoning/mindmap/rs`, `puzzle/3d/rs` (crate exists but not on `framework_vcs` yet), and no Rust crate at all yet for `trinity/rewrite`, `trinity/jack`, `puzzle/5d`, `procedural/2d`, `procedural/3d`. For each:
 
-- Add/extend a Rust crate with a typed `Projection`, `Op` enum, `Diff` struct, exactly like Phase 2.
+- Add/extend a Rust crate with a typed `Projection`, `Operation` enum, `Diff` struct, exactly like Phase 2.
 - Replace the TS reducer and any `DocumentVcsEnvelope<...>` usage in `*/core/index.ts` with a thin WASM client (matching `draw/play/index.ts`'s current shape).
-- Once every technology is Rust-backed, retire `framework/core/vcs-sync.ts`'s TS mirror (`recordProjectionChange`, `DocumentVcsStoreOptions.applyOp`) and update [semios/core/index.ts](semios/core/index.ts)'s `createTypedAppVcsHandler` registrations to route through the real per-technology WASM stores instead of locally-defined minimal TS op types.
+- Once every technology is Rust-backed, retire `framework/core/vcs-sync.ts`'s TS mirror (`recordProjectionChange`, `DocumentVcsStoreOptions.applyOperation`) and update [semios/core/index.ts](semios/core/index.ts)'s `createTypedAppVcsHandler` registrations to route through the real per-technology WASM stores instead of locally-defined minimal TS operation types.
 
 ### Phase 4 — rewire compose itself onto the generalized engine (highest risk)
 

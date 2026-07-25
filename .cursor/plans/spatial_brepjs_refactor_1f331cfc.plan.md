@@ -78,13 +78,13 @@ type MeshTransfer = {
 
 Re-export this from `@spatial/js-core` and remove `MeshPreview`.
 
-- `🔌BrepjsKernel` (worker-side) — converts received `cellSpec` to `ValidSolid` using the existing builder logic (`topoWireToOrientedFace`, `extrudeTopoWire`, `cellSolidToBrep`, …). Every helper uses `using scope = new DisposalScope()` and registers intermediate handles. Exposed kernel ops `tessellate`, `cellSolid`, `executeCommandDiff`, `offsetFace`, … move into the worker. The main-thread `BrepjsKernel` class becomes a thin client that posts messages and returns Promises (the `SpatialKernel` interface in `@spatial/js-core` is already async).
+- `🔌BrepjsKernel` (worker-side) — converts received `cellSpec` to `ValidSolid` using the existing builder logic (`topoWireToOrientedFace`, `extrudeTopoWire`, `cellSolidToBrep`, …). Every helper uses `using scope = new DisposalScope()` and registers intermediate handles. Exposed kernel operations `tessellate`, `cellSolid`, `executeCommandDiff`, `offsetFace`, … move into the worker. The main-thread `BrepjsKernel` class becomes a thin client that posts messages and returns Promises (the `SpatialKernel` interface in `@spatial/js-core` is already async).
 - `♻️Cache` — content-key cache `(topologyHash + tolerance) → MeshTransfer` like `codeCache`. LRU cap. On `dispose-cell`, drop entries.
 - `🧮PreciseSpatialKernelMath` stays main-thread (pure math, no WASM). `R3FPreviewKernel` move to renderer file (it belongs to the R3F host).
 
 Memory rules applied throughout:
 
-- All `mesh()`, `meshEdges()`, `getFaces()`, `getEdges()`, `castShape()`, boolean ops wrapped in `using` or `scope.register`.
+- All `mesh()`, `meshEdges()`, `getFaces()`, `getEdges()`, `castShape()`, boolean operations wrapped in `using` or `scope.register`.
 - Drop `brepjsScratch` aliasing — it currently mutates shared `Vec3[]` arrays across calls, which causes the "jankiness" when two operations interleave. Use scope-registered locals instead.
 - `meshPreviewFromBrep` → `meshTransferFromBrep(solid, tolerance)` that builds grouped + line data.
 

@@ -1651,10 +1651,10 @@ fn find_closest_bridge(outer: &[u32], holes: &[Vec<u32>], positions: &[[f32; 3]]
     let mut best: Option<(f32, usize, usize, usize)> = None;
     for (hi, hole) in holes.iter().enumerate() {
         for (oi, &ov) in outer.iter().enumerate() {
-            let op = Vec3(positions[ov as usize]);
+            let operation = Vec3(positions[ov as usize]);
             for (hpi, &hv) in hole.iter().enumerate() {
                 let hp = Vec3(positions[hv as usize]);
-                let d = op.sub(hp).length();
+                let d = operation.sub(hp).length();
                 if best.map(|(bd, _, _, _)| d < bd).unwrap_or(true) {
                     best = Some((d, hi, oi, hpi));
                 }

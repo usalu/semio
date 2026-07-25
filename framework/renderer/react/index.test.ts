@@ -39,7 +39,7 @@ import {
   board2dCameraActionArgs,
   buildPuzzle2dSelectionMenuItems,
   beginPuzzle2dPeerGesture,
-  collectPuzzle2dLiveMirrorOps,
+  collectPuzzle2dLiveMirrorOperations,
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
@@ -50,7 +50,8 @@ import {
   puzzle2dFixtureDropPreviewJson,
   puzzle2dPeerOwnsGesture,
   puzzle2dScreenToWorld,
-  pushPuzzle2dLiveMirrorOps,
+  puzzle2dWorldToScreen,
+  pushPuzzle2dLiveMirrorOperations,
   registerBoard2dPeer,
   unregisterBoard2dPeer,
   NodeGraphHost,
@@ -497,13 +498,13 @@ describe("shell store reducer", () => {
     expect(next.sync).toBe(state.sync);
   });
 
-  it("action-panel slice: fold/expand/stage/reset/active-utility update only their own keys and preserve identity on no-ops", () => {
+  it("action-panel slice: fold/expand/stage/reset/active-utility update only their own keys and preserve identity on no-operations", () => {
     const state = baseState();
 
     const folded = shellReducer(state, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false });
     expect(folded.actionPane.foldedByWindowId).toEqual({ w1: false });
     expect(folded.layout).toBe(state.layout);
-    // no-op fold keeps the whole slice referentially stable
+    // no-operation fold keeps the whole slice referentially stable
     expect(shellReducer(folded, { type: "SET_ACTION_PANE_FOLDED", windowId: "w1", value: false }).actionPane).toBe(folded.actionPane);
 
     const expanded = shellReducer(folded, { type: "SET_ACTION_PANE_EXPANDED", windowId: "w1", value: "extrude" });
@@ -529,7 +530,7 @@ describe("shell store reducer", () => {
     expect(deactivated.actionPane.activeUtilityByWindowId["w1"]).toBeNull();
   });
 
-  it("actionPane slice: SET_ACTIVE_TOOL updates only activeToolId and preserves identity on no-ops (mode-scoped, not per-window)", () => {
+  it("actionPane slice: SET_ACTIVE_TOOL updates only activeToolId and preserves identity on no-operations (mode-scoped, not per-window)", () => {
     const state = baseState();
     expect(state.actionPane.activeToolId).toBeNull();
 
@@ -542,7 +543,7 @@ describe("shell store reducer", () => {
     expect(deactivated.actionPane.activeToolId).toBeNull();
   });
 
-  it("commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-ops (category active/fold state now lives in layout.panels['bottom-middle'], not this slice)", () => {
+  it("commandPanel slice: expand/collapse and stage/reset update only their own keys and preserve identity on no-operations (category active/fold state now lives in layout.panels['bottom-middle'], not this slice)", () => {
     const state = baseState();
 
     const expanded = shellReducer(state, { type: "SET_COMMAND_EXPANDED", value: "os.setThemeId" });
@@ -795,7 +796,7 @@ describe("framework plugin runtime", () => {
     const response = parseInvocationResponse(
       JSON.stringify({
         output: null,
-        operations: [{ diff: { payload: { schemaId: "draw.op", document: { id: "forest" } } } }],
+        operations: [{ diff: { payload: { schemaId: "draw.operation", document: { id: "forest" } } } }],
         inverseGroup: { invocationId: "setActiveExample:1:0", operations: [], inverseOperations: [] },
         requestedEffects: [{ navigate: { uri: "/studios/forest" } }],
       }),
@@ -1195,7 +1196,7 @@ describe("declarative forms parity", () => {
         { onAction: noopAction },
       ),
     );
-    expect(markup).toContain('data-ui-stack="forms-blueprint.card.q1"');
+    expect(markup).toContain('data-ui-path="stack[0]#forms-blueprint.card.q1"');
     expect(markup).toContain('role="button"');
     expect(markup).toContain("ring-primary");
   });
@@ -1526,25 +1527,25 @@ describe("framework renderer hosts", () => {
     }
   });
 
-  it("collects live mirror ops: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
-    const ops = collectPuzzle2dLiveMirrorOps([
+  it("collects live mirror operations: coalesces nodeMove to the latest per id, ignores unrelated rows", () => {
+    const operations = collectPuzzle2dLiveMirrorOperations([
       { name: "camera", payload: { x: 1, y: 1, zoom: 1 } },
       { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
       { name: "brushPreview", payload: {} },
       { name: "nodeMove", payload: { id: "alpha", x: 9, y: 9 } },
       { name: "nodeMove", payload: { id: "beta", x: 2, y: 2 } },
     ]);
-    expect(ops.positions).toEqual([
+    expect(operations.positions).toEqual([
       { id: "alpha", x: 9, y: 9 },
       { id: "beta", x: 2, y: 2 },
     ]);
-    expect(ops.selectionIds).toBeNull();
-    expect(ops.preselect).toBeNull();
-    expect(ops.clearPreselect).toBe(false);
+    expect(operations.selectionIds).toBeNull();
+    expect(operations.preselect).toBeNull();
+    expect(operations.clearPreselect).toBe(false);
   });
 
-  it("collects live mirror ops: nodeDragEnd.moves produce final positions", () => {
-    const ops = collectPuzzle2dLiveMirrorOps([
+  it("collects live mirror operations: nodeDragEnd.moves produce final positions", () => {
+    const operations = collectPuzzle2dLiveMirrorOperations([
       { name: "nodeMove", payload: { id: "alpha", x: 1, y: 1 } },
       {
         name: "nodeDragEnd",
@@ -1556,24 +1557,24 @@ describe("framework renderer hosts", () => {
         },
       },
     ]);
-    expect(ops.positions).toEqual([
+    expect(operations.positions).toEqual([
       { id: "alpha", x: 20, y: 20 },
       { id: "beta", x: 5, y: 5 },
     ]);
   });
 
-  it("collects live mirror ops: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
-    expect(collectPuzzle2dLiveMirrorOps([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
+  it("collects live mirror operations: preselect sets the live highlight, select/preselectCancel commit selection and clear it", () => {
+    expect(collectPuzzle2dLiveMirrorOperations([{ name: "preselect", payload: { ids: ["a", "b"], removedIds: ["c"] } }])).toMatchObject({
       preselect: { ids: ["a", "b"], removedIds: ["c"] },
       clearPreselect: false,
       selectionIds: null,
     });
-    expect(collectPuzzle2dLiveMirrorOps([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
+    expect(collectPuzzle2dLiveMirrorOperations([{ name: "select", payload: { ids: ["a"] } }])).toMatchObject({
       selectionIds: ["a"],
       preselect: null,
       clearPreselect: true,
     });
-    expect(collectPuzzle2dLiveMirrorOps([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
+    expect(collectPuzzle2dLiveMirrorOperations([{ name: "preselectCancel", payload: { ids: ["a", "b"] } }])).toMatchObject({
       selectionIds: ["a", "b"],
       preselect: null,
       clearPreselect: true,
@@ -1608,7 +1609,7 @@ describe("framework renderer hosts", () => {
     expect(puzzle2dPeerOwnsGesture("puzzle2d-play", "pane.b")).toBe(false);
   });
 
-  it("pushes live mirror ops into peer sessions, skipping the source pane", () => {
+  it("pushes live mirror operations into peer sessions, skipping the source pane", () => {
     const calls: { pane: string; method: string; arg: string }[] = [];
     const makePeer = (pane: string) => ({
       session: {
@@ -1621,7 +1622,7 @@ describe("framework renderer hosts", () => {
     registerBoard2dPeer("mirror-test", "pane.source", makePeer("pane.source"));
     registerBoard2dPeer("mirror-test", "pane.sibling", makePeer("pane.sibling"));
 
-    pushPuzzle2dLiveMirrorOps("mirror-test", "pane.source", {
+    pushPuzzle2dLiveMirrorOperations("mirror-test", "pane.source", {
       positions: [{ id: "alpha", x: 1, y: 2 }],
       selectionIds: ["alpha"],
       preselect: null,
@@ -1878,6 +1879,21 @@ describe("framework renderer hosts", () => {
     const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
     const world = puzzle2dScreenToWorld(cameraJson, { w: 800, h: 600 }, { x: 400, y: 300 });
     expect(world).toEqual({ x: 120, y: 80 });
+  });
+
+  it("puzzle2dWorldToScreen is the exact inverse of puzzle2dScreenToWorld", () => {
+    const cameraJson = JSON.stringify({ x: 120, y: 80, zoom: 2 });
+    const containerSize = { w: 800, h: 600 };
+    // 🎯 The camera's own world position always maps to the viewport center.
+    expect(puzzle2dWorldToScreen(cameraJson, containerSize, { x: 120, y: 80 })).toEqual({ x: 400, y: 300 });
+    for (const screen of [{ x: 0, y: 0 }, { x: 400, y: 300 }, { x: 733, y: 12 }]) {
+      const world = puzzle2dScreenToWorld(cameraJson, containerSize, screen);
+      expect(world).not.toBeNull();
+      const roundTrip = puzzle2dWorldToScreen(cameraJson, containerSize, world!);
+      expect(roundTrip!.x).toBeCloseTo(screen.x, 5);
+      expect(roundTrip!.y).toBeCloseTo(screen.y, 5);
+    }
+    expect(puzzle2dWorldToScreen("not json", containerSize, { x: 0, y: 0 })).toBeNull();
   });
 
   it("maps a world-centered node inside the viewport with canonical camera math", () => {
@@ -3313,9 +3329,9 @@ describe("s media graph flow routing", () => {
   it("returns every catalogue item for empty query without a 20-item cap", () => {
     const items = Array.from({ length: 25 }, (_, index) => ({
       kind: "neuron",
-      neuronKind: `math.op${index}`,
-      name: `Op ${index}`,
-      abbreviation: `Op${index}`,
+      neuronKind: `math.operation${index}`,
+      name: `Operation ${index}`,
+      abbreviation: `Operation${index}`,
       icon: "emoji:➕",
       summary: "",
     }));
@@ -4036,56 +4052,62 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
       { kind: "pan", id: "puzzle3d-main" },
       { kind: "orbit", id: "puzzle3d-main" },
     ]);
-    expect(viewport.interactions.every((interaction) => interaction.label.trim().length > 0)).toBe(true);
+    expect(viewport.interactions.map((interaction) => interaction.label)).toEqual([
+      "Zoomen (Mausrad)",
+      "Verschieben (Mittelklick ziehen)",
+      "Orbitieren (Alt + Rechtsklick ziehen)",
+    ]);
+    expect(viewport.body).toMatch(/Mausrad|Mittelklick|Alt \+ Rechtsklick/i);
     expect(steps.find((step) => step.id === "panels")).toMatchObject({
       introduce: "framework.panel.catalogue",
-      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" } }],
+      interactions: [{ on: { kind: "panel", id: "framework.panel.catalogue" }, label: "Katalog-Reiter anklicken" }],
     });
-    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/Paneele|Katalog/i);
+    expect(steps.find((step) => step.id === "panels")?.body).toMatch(/linken Maustaste|Katalog-Reiter/i);
     expect(steps.find((step) => step.id === "catalogue-objects")).toMatchObject({
       introduce: "puzzle3d-play-kinds.objects",
       placement: "right",
-      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" } }],
+      interactions: [{ on: { kind: "expand", id: "puzzle3d-play-kinds.objects" }, label: "»Baukomponenten« anklicken" }],
       show: ["framework.panelTab.framework.panel.catalogue"],
     });
-    expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/Baukomponenten/i);
+    expect(steps.find((step) => step.id === "catalogue-objects")?.body).toMatch(/linken Maustaste|Baukomponenten/i);
     expect(steps.find((step) => step.id === "add-object")).toMatchObject({
       introduce: "framework.panelTab.framework.panel.catalogue.firstDraggable",
       placement: "right",
-      interactions: [{ on: { kind: "action", id: "addObjectKind" } }],
+      interactions: [{ on: { kind: "action", id: "addObjectKind" }, label: "Mit linker Maustaste in die Ansicht ziehen" }],
       show: ["framework.panelTab.framework.panel.catalogue", "framework.window.puzzle3dMain"],
     });
-    expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/Drag-and-Drop|ziehen/i);
+    expect(steps.find((step) => step.id === "add-object")?.body).toMatch(/linken Maustaste|Drag-and-Drop/i);
     expect(steps.find((step) => step.id === "transform-utility")).toMatchObject({
       introduce: "transform",
-      interactions: [{ on: { kind: "utility", id: "transform" } }],
+      interactions: [{ on: { kind: "utility", id: "transform" }, label: "Transformieren anklicken" }],
       show: ["framework.window.puzzle3dMain"],
     });
+    expect(steps.find((step) => step.id === "transform-utility")?.body).toMatch(/linken Maustaste|Transformieren/i);
     expect(steps.find((step) => step.id === "verbindungspunkte")).toMatchObject({
       introduce: "puzzle3d-play-vortex-show",
-      interactions: [{ on: { kind: "action", id: "setVortexShow" } }],
+      interactions: [{ on: { kind: "action", id: "setVortexShow" }, label: "»Verbindungspunkte anzeigen« auf »Immer« stellen" }],
       show: ["framework.window.puzzle3dMain"],
     });
-    expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Verbindungspunkte/i);
+    expect(steps.find((step) => step.id === "verbindungspunkte")?.body).toMatch(/Linksklick|Verbindungspunkte/i);
     expect(steps.find((step) => step.id === "suggest-objects")).toMatchObject({
       introduce: "framework.window.puzzle3dMain",
-      interactions: [{ on: { kind: "action", id: "acceptSuggestion" } }],
+      interactions: [{ on: { kind: "action", id: "acceptSuggestion" }, label: "Vorschlag per Linksklick wählen" }],
     });
-    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Liste|wählen|Aktionsmenü|Rechtsklick/i);
+    expect(steps.find((step) => step.id === "suggest-objects")?.body).toMatch(/Linksklick|Rechtsklick|Aktionsmenü/i);
     expect(steps.find((step) => step.id === "fill-tool")).toMatchObject({
       introduce: "tool.fill",
-      interactions: [{ on: { kind: "tool", id: "fill" } }],
+      interactions: [{ on: { kind: "tool", id: "fill" }, label: "»Füllen« anklicken" }],
       show: [],
       placement: "top",
     });
-    expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/Füllen/i);
+    expect(steps.find((step) => step.id === "fill-tool")?.body).toMatch(/linken Maustaste|Füllen/i);
     expect(steps.find((step) => step.id === "fill-distribution")).toMatchObject({
       introduce: "puzzle3d-play-distribution",
       interactions: [],
       show: ["puzzle3d-fill-count", "framework.panelTab.tool.fill"],
       placement: "top",
     });
-    expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Verteilung/i);
+    expect(steps.find((step) => step.id === "fill-distribution")?.body).toMatch(/Schieberegler|Verteilung/i);
 
     const funding = steps.find((step) => step.id === "funding")!;
     expect(funding.logos).toHaveLength(3);
@@ -4137,7 +4159,7 @@ describe("shell option locks (SEMIO_LOCKED_*)", () => {
     expect(ids).toContain("os.setThemeId");
   });
 
-  it("dispatchOsCommand is a no-op for a locked pref even if invoked directly", () => {
+  it("dispatchOsCommand is a no-operation for a locked pref even if invoked directly", () => {
     const dispatch = vi.fn();
     dispatchOsCommand("os.setLocale", { locale: "de" }, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never, { locale: "en" });
     expect(dispatch).not.toHaveBeenCalled();
@@ -4303,7 +4325,7 @@ describe("host effect dispatch (D2 DispatchAction, D3 RequestFileOpen.multiple, 
 
   //#region 🔌jsdom media mocks
   /** 🎞️ jsdom has no real media decoder — `<video>`'s `duration`/`videoWidth`/`videoHeight` are
-   * read-only getters that never change from a `src` assignment, and `currentTime` is a no-op setter
+   * read-only getters that never change from a `src` assignment, and `currentTime` is a no-operation setter
    * that never fires `seeked`. This stubs both to the minimum needed for `runTier2VideoFrames`'s
    * seek-and-capture loop: `currentTime` synchronously (via microtask) fires `seeked`, mirroring how a
    * real browser resolves a seek asynchronously without needing fake timers in these tests. */
@@ -4482,7 +4504,7 @@ describe("windowMeasureTreeContainsId", () => {
         kind: "group" as const,
         id: "group",
         label: "Group",
-        children: [{ kind: "toggle" as const, id: "nested-toggle", pressed: false, iconId: "eye", onChange: { id: "noop" } }],
+        children: [{ kind: "toggle" as const, id: "nested-toggle", pressed: false, iconId: "eye", onChange: { id: "noOperation" } }],
       },
     ];
     expect(windowMeasureTreeContainsId(measures, "puzzle3d-play-vortex-show")).toBe(true);

@@ -73,7 +73,7 @@ Create `puzzle/3d/rs/` with `Cargo.toml`, `lib.rs`, `script.ts`, `project.json`,
 
 ## 2. Worker `puzzle/3d/react/precompute.worker.ts`
 
-New file mirroring `compose/client/lib/js/kit-store.worker.ts` and its transport. JSON-RPC over `postMessage` (ops: `init`, `setScene`, `registerMesh`, `query`, idle `tick`).
+New file mirroring `compose/client/lib/js/kit-store.worker.ts` and its transport. JSON-RPC over `postMessage` (operations: `init`, `setScene`, `registerMesh`, `query`, idle `tick`).
 
 - Loads WASM via `initSync` (fetch `puzzle_3d_bg.wasm`).
 - Drives an idle precompute loop (`setTimeout(0)` chunks like the current fill `PUZZLE_3D_FILL_BUILD_CHUNK_BUDGET = 8`) calling `precompute_step` until the cache is fully warm, yielding between chunks so queries are answered promptly.

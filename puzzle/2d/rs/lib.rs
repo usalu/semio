@@ -558,7 +558,7 @@ impl BoardSession {
         self.state.borrow().host.encoded_scene_hint()
     }
 
-    /// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
+    /// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-operation `Ok`.
     #[wasm_bindgen(js_name = renderFrame)]
     pub fn render_frame(&mut self) -> Result<(), JsValue> {
         self.state.borrow_mut().render_frame_gpu()
@@ -569,7 +569,7 @@ impl BoardSession {
 // #region 🔖DocumentVcs
 // 🧩 Puzzle 2d document VCS on `vcs`: granular JSON-document operations over the bare fixture
 // projection (nodes/edges keyed by id, camera + scalar fields) with a whole-document fallback, so
-// disjoint edits converge instead of clobbering. See `shooting::ShootingOp` for the typed analogue.
+// disjoint edits converge instead of clobbering. See `shooting::ShootingOperation` for the typed analogue.
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use vcs::{Operation, OperationDiff};
@@ -578,36 +578,36 @@ pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
 /// 🧩 The puzzle-2d projection is the bare fixture json (schema/camera/nodes/edges/…).
 pub type Puzzle2dProjection = Value;
-pub type Puzzle2dEnvelope = vcs::DocumentVcsEnvelope<Puzzle2dProjection, Puzzle2dOp>;
-pub type Puzzle2dStore = vcs::DocumentVcsStore<Puzzle2dProjection, Puzzle2dOp>;
+pub type Puzzle2dEnvelope = vcs::DocumentVcsEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
+pub type Puzzle2dStore = vcs::DocumentVcsStore<Puzzle2dProjection, Puzzle2dOperation>;
 
 /// 🔧 One granular mutation of a JSON puzzle document. `UpsertItem`/`RemoveItem` address an element
 /// of a top-level id-keyed array (`nodes`, `edges`, …) so disjoint edits converge; `SetField` writes
 /// a scalar/object field (`camera`, …); `ReplaceDocument` swaps the whole document (example load,
-/// engine fill, layout — the `shooting::ShootingOp::SetFixture` analogue).
+/// engine fill, layout — the `shooting::ShootingOperation::SetFixture` analogue).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum Puzzle2dOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum Puzzle2dOperation {
     UpsertItem { collection: String, item: Value },
     RemoveItem { collection: String, id: String },
     SetField { key: String, value: Value },
     ReplaceDocument { document: Value },
 }
 
-/// 🧮 An ordered list of granular ops replayed over the projection; coalesced edits concatenate.
+/// 🧮 An ordered list of granular operations replayed over the projection; coalesced edits concatenate.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(transparent)]
 pub struct Puzzle2dDiff {
-    pub ops: Vec<Puzzle2dOp>,
+    pub operations: Vec<Puzzle2dOperation>,
 }
 
 fn puzzle2d_item_id(item: &Value) -> Option<&str> {
     item.get("id").and_then(|value| value.as_str())
 }
 
-fn apply_puzzle2d_op(document: &mut Value, op: &Puzzle2dOp) {
-    match op {
-        Puzzle2dOp::UpsertItem { collection, item } => {
+fn apply_puzzle2d_operation(document: &mut Value, operation: &Puzzle2dOperation) {
+    match operation {
+        Puzzle2dOperation::UpsertItem { collection, item } => {
             let Some(object) = document.as_object_mut() else {
                 return;
             };
@@ -623,17 +623,17 @@ fn apply_puzzle2d_op(document: &mut Value, op: &Puzzle2dOp) {
             }
             array.push(item.clone());
         }
-        Puzzle2dOp::RemoveItem { collection, id } => {
+        Puzzle2dOperation::RemoveItem { collection, id } => {
             if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
                 array.retain(|entry| puzzle2d_item_id(entry) != Some(id.as_str()));
             }
         }
-        Puzzle2dOp::SetField { key, value } => {
+        Puzzle2dOperation::SetField { key, value } => {
             if let Some(object) = document.as_object_mut() {
                 object.insert(key.clone(), value.clone());
             }
         }
-        Puzzle2dOp::ReplaceDocument { document: next } => *document = next.clone(),
+        Puzzle2dOperation::ReplaceDocument { document: next } => *document = next.clone(),
     }
 }
 
@@ -644,39 +644,39 @@ fn puzzle2d_find_item<'a>(document: &'a Value, collection: &str, id: &str) -> Op
 impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
     fn apply(&self, projection: &Puzzle2dProjection) -> Puzzle2dProjection {
         let mut next = projection.clone();
-        for op in &self.ops {
-            apply_puzzle2d_op(&mut next, op);
+        for operation in &self.operations {
+            apply_puzzle2d_operation(&mut next, operation);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.ops.extend(other.ops);
+        self.operations.extend(other.operations);
     }
 }
 
-impl Operation<Puzzle2dProjection> for Puzzle2dOp {
+impl Operation<Puzzle2dProjection> for Puzzle2dOperation {
     type Diff = Puzzle2dDiff;
 
     fn diff(&self, _projection: &Puzzle2dProjection) -> Puzzle2dDiff {
-        Puzzle2dDiff { ops: vec![self.clone()] }
+        Puzzle2dDiff { operations: vec![self.clone()] }
     }
 
     fn backwards(&self, projection: &Puzzle2dProjection) -> Vec<Self> {
         match self {
-            Puzzle2dOp::UpsertItem { collection, item } => {
+            Puzzle2dOperation::UpsertItem { collection, item } => {
                 let id = puzzle2d_item_id(item).unwrap_or_default();
                 match puzzle2d_find_item(projection, collection, id) {
-                    Some(previous) => vec![Puzzle2dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
-                    None => vec![Puzzle2dOp::RemoveItem { collection: collection.clone(), id: id.to_string() }],
+                    Some(previous) => vec![Puzzle2dOperation::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+                    None => vec![Puzzle2dOperation::RemoveItem { collection: collection.clone(), id: id.to_string() }],
                 }
             }
-            Puzzle2dOp::RemoveItem { collection, id } => match puzzle2d_find_item(projection, collection, id) {
-                Some(previous) => vec![Puzzle2dOp::UpsertItem { collection: collection.clone(), item: previous.clone() }],
+            Puzzle2dOperation::RemoveItem { collection, id } => match puzzle2d_find_item(projection, collection, id) {
+                Some(previous) => vec![Puzzle2dOperation::UpsertItem { collection: collection.clone(), item: previous.clone() }],
                 None => Vec::new(),
             },
-            Puzzle2dOp::SetField { key, .. } => vec![Puzzle2dOp::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(Value::Null) }],
-            Puzzle2dOp::ReplaceDocument { .. } => vec![Puzzle2dOp::ReplaceDocument { document: projection.clone() }],
+            Puzzle2dOperation::SetField { key, .. } => vec![Puzzle2dOperation::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(Value::Null) }],
+            Puzzle2dOperation::ReplaceDocument { .. } => vec![Puzzle2dOperation::ReplaceDocument { document: projection.clone() }],
         }
     }
 }
@@ -685,35 +685,35 @@ fn puzzle2d_is_id_keyed_array(value: Option<&Value>) -> bool {
     value.and_then(|value| value.as_array()).is_some_and(|array| array.iter().all(|entry| puzzle2d_item_id(entry).is_some()))
 }
 
-fn puzzle2d_collect_collection_delta(collection: &str, before: &[Value], after: &[Value], ops: &mut Vec<Puzzle2dOp>) {
+fn puzzle2d_collect_collection_delta(collection: &str, before: &[Value], after: &[Value], operations: &mut Vec<Puzzle2dOperation>) {
     for entry in after {
         let id = puzzle2d_item_id(entry).unwrap_or_default();
         if before.iter().find(|candidate| puzzle2d_item_id(candidate) == Some(id)) != Some(entry) {
-            ops.push(Puzzle2dOp::UpsertItem { collection: collection.to_string(), item: entry.clone() });
+            operations.push(Puzzle2dOperation::UpsertItem { collection: collection.to_string(), item: entry.clone() });
         }
     }
     for entry in before {
         let id = puzzle2d_item_id(entry).unwrap_or_default();
         if !after.iter().any(|candidate| puzzle2d_item_id(candidate) == Some(id)) {
-            ops.push(Puzzle2dOp::RemoveItem { collection: collection.to_string(), id: id.to_string() });
+            operations.push(Puzzle2dOperation::RemoveItem { collection: collection.to_string(), id: id.to_string() });
         }
     }
 }
 
-/// 🧮 Computes the granular op sequence turning `before` into `after`. Top-level id-keyed arrays diff
+/// 🧮 Computes the granular operation sequence turning `before` into `after`. Top-level id-keyed arrays diff
 /// per element id; other fields become `SetField`. Falls back to a single `ReplaceDocument` whenever
 /// the granular replay would not reproduce `after` exactly (reorders, id-less arrays, structural
-/// changes) — so the emitted ops are always exact while staying granular for the common edits.
-pub fn puzzle2d_document_delta_ops(before: &Value, after: &Value) -> Vec<Puzzle2dOp> {
+/// changes) — so the emitted operations are always exact while staying granular for the common edits.
+pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dOperation> {
     if before == after {
         return Vec::new();
     }
-    let ops = match (before.as_object(), after.as_object()) {
+    let operations = match (before.as_object(), after.as_object()) {
         (Some(before_object), Some(after_object)) => {
             let mut keys: Vec<&String> = before_object.keys().chain(after_object.keys()).collect();
             keys.sort();
             keys.dedup();
-            let mut ops = Vec::new();
+            let mut operations = Vec::new();
             for key in keys {
                 let before_value = before_object.get(key);
                 let after_value = after_object.get(key);
@@ -723,24 +723,24 @@ pub fn puzzle2d_document_delta_ops(before: &Value, after: &Value) -> Vec<Puzzle2
                 match after_value {
                     Some(after_value) if puzzle2d_is_id_keyed_array(before_value) && puzzle2d_is_id_keyed_array(Some(after_value)) => {
                         let before_array = before_value.and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
-                        puzzle2d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut ops);
+                        puzzle2d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut operations);
                     }
-                    Some(after_value) => ops.push(Puzzle2dOp::SetField { key: key.clone(), value: after_value.clone() }),
-                    None => ops.push(Puzzle2dOp::SetField { key: key.clone(), value: Value::Null }),
+                    Some(after_value) => operations.push(Puzzle2dOperation::SetField { key: key.clone(), value: after_value.clone() }),
+                    None => operations.push(Puzzle2dOperation::SetField { key: key.clone(), value: Value::Null }),
                 }
             }
-            ops
+            operations
         }
-        _ => vec![Puzzle2dOp::ReplaceDocument { document: after.clone() }],
+        _ => vec![Puzzle2dOperation::ReplaceDocument { document: after.clone() }],
     };
     let mut replay = before.clone();
-    for op in &ops {
-        apply_puzzle2d_op(&mut replay, op);
+    for operation in &operations {
+        apply_puzzle2d_operation(&mut replay, operation);
     }
     if &replay == after {
-        ops
+        operations
     } else {
-        vec![Puzzle2dOp::ReplaceDocument { document: after.clone() }]
+        vec![Puzzle2dOperation::ReplaceDocument { document: after.clone() }]
     }
 }
 
@@ -4617,14 +4617,14 @@ mod force_graph_tests {
     }
 
     #[test]
-    fn puzzle2d_document_vcs_replays_granular_ops() {
-        use crate::{empty_puzzle2d_projection, Puzzle2dOp, Puzzle2dStore, PUZZLE_2D_SCHEMA};
+    fn puzzle2d_document_vcs_replays_granular_operations() {
+        use crate::{empty_puzzle2d_projection, Puzzle2dOperation, Puzzle2dStore, PUZZLE_2D_SCHEMA};
         use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
         let mut store = Puzzle2dStore::new(create_document_vcs_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle2dOp::UpsertItem { collection: "nodes".into(), item: json!({ "id": "n1", "x": 0.0 }) }],
+                operations: vec![Puzzle2dOperation::UpsertItem { collection: "nodes".into(), item: json!({ "id": "n1", "x": 0.0 }) }],
                 description: None,
             })
             .expect("apply");
@@ -4634,27 +4634,27 @@ mod force_graph_tests {
 
     #[test]
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
-        use crate::{puzzle2d_document_delta_ops, Puzzle2dOp, PUZZLE_2D_SCHEMA};
+        use crate::{puzzle2d_document_delta_operations, Puzzle2dOperation, PUZZLE_2D_SCHEMA};
         use vcs::{Operation, OperationDiff};
 
         let before = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n1", "x": 0.0 }, { "id": "n2", "x": 10.0 }], "edges": [] });
         // Move n2, add n3, remove n1, pan the camera — a disjoint mix of granular edits.
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n2", "x": 99.0 }, { "id": "n3", "x": 1.0 }], "edges": [] });
-        let ops = puzzle2d_document_delta_ops(&before, &after);
-        assert!(ops.iter().any(|op| matches!(op, Puzzle2dOp::UpsertItem { .. })));
-        assert!(!ops.iter().any(|op| matches!(op, Puzzle2dOp::ReplaceDocument { .. })), "granular delta must not fall back to whole-document replace here");
-        // Forward replay reproduces `after`, and each op's backwards restores `before`.
+        let operations = puzzle2d_document_delta_operations(&before, &after);
+        assert!(operations.iter().any(|operation| matches!(operator, Puzzle2dOperation::UpsertItem { .. })));
+        assert!(!operations.iter().any(|operation| matches!(operator, Puzzle2dOperation::ReplaceDocument { .. })), "granular delta must not fall back to whole-document replace here");
+        // Forward replay reproduces `after`, and each operation's backwards restores `before`.
         let mut forward = before.clone();
         let mut inverses = Vec::new();
-        for op in &ops {
-            inverses.extend(op.backwards(&forward));
-            forward = op.diff(&forward).apply(&forward);
+        for operation in &operations {
+            inverses.extend(operation.backwards(&forward));
+            forward = operation.diff(&forward).apply(&forward);
         }
         assert_eq!(forward, after);
         for inverse in inverses.iter().rev() {
             forward = inverse.diff(&forward).apply(&forward);
         }
-        assert_eq!(forward, before, "backwards ops must restore the pre-edit document");
+        assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
     }
 }
 

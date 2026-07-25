@@ -85,9 +85,9 @@ impl Constant {
 }
 // #endregion 🔖Constant
 
-// #region 🔖RelOp
+// #region 🔖RelationalOperator
 #[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
-pub enum RelOp {
+pub enum RelationalOperator {
     Eq,
     Ne,
     Lt,
@@ -95,7 +95,7 @@ pub enum RelOp {
     Gt,
     Ge,
 }
-// #endregion 🔖RelOp
+// #endregion 🔖RelationalOperator
 
 // #region 🔖WildKind
 #[derive(Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
@@ -130,7 +130,7 @@ pub enum Kind {
     RootOf { coeffs: Vec<Rational>, index: u32 },
     /// 🔀 `(value, condition)` pairs; the last condition may be `Bool(true)` for a catch-all default.
     Piecewise(Vec<(Expr, Expr)>),
-    Rel(RelOp, Expr, Expr),
+    Rel(RelationalOperator, Expr, Expr),
     /// 🃏 Pattern-only placeholder; must never appear in a user-facing expression.
     Wild(u16, WildKind),
 }
@@ -219,9 +219,9 @@ fn hash_kind(kind: &Kind) -> u64 {
                 h = fnv1a_mix(h, &c.hash().to_le_bytes());
             }
         }
-        Kind::Rel(op, a, b) => {
+        Kind::Rel(operation, a, b) => {
             h = fnv1a_mix(h, b"rel");
-            h = fnv1a_mix(h, &[*op as u8]);
+            h = fnv1a_mix(h, &[*operation as u8]);
             h = fnv1a_mix(h, &a.hash().to_le_bytes());
             h = fnv1a_mix(h, &b.hash().to_le_bytes());
         }

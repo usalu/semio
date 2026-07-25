@@ -48,7 +48,7 @@ In `Puzzle2dRenderer`:
 - Keep preselect local per pane instead of fanning out via shell React:
   - In the play pane ([framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)), stop driving preselect through controlled shell state during the gesture: drop the per-frame `onPreselect -> setPreselection` (line 1912) and the controlled `preselection` prop (line 1985) so changing the marquee no longer re-renders all 3 panes. Each pane already updates its own marquee chrome from its own WASM drain.
   - Mirror the existing selection peer broadcast: add `puzzle2dBroadcastPreselectSilent(source, snapshot)` next to `puzzle2dBroadcastSelectionSilent` (MultiViewAuthoring region, [~line 7163](puzzle/2d/react/index.tsx)) calling `peer.syncPreselectionSilent(snapshot)` on other panes, and invoke it from the emit path in `updatePreselection`. This keeps cross-pane parity without React.
-- Zoom: leave `syncBaselineFromViewportCamera` (needed for redraw features); it is already coalesced to one camera emit per RAF. The Part 1 overlay cache removes the remaining per-frame zoom cost. `Puzzle2dHostSubtree.setCamera` already no-ops on equal cameras.
+- Zoom: leave `syncBaselineFromViewportCamera` (needed for redraw features); it is already coalesced to one camera emit per RAF. The Part 1 overlay cache removes the remaining per-frame zoom cost. `Puzzle2dHostSubtree.setCamera` already no-operations on equal cameras.
 
 ## Testing
 

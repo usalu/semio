@@ -58,7 +58,7 @@ mod domain {
 
         use super::*;
         #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-        #[serde(tag = "op", content = "value")]
+        #[serde(tag = "operation", content = "value")]
         pub enum FieldPatch<T> {
             #[default]
             NoChange,
@@ -73,7 +73,7 @@ mod domain {
         }
 
         #[derive(Debug, Clone, Serialize, Deserialize, Default)]
-        #[serde(tag = "op", content = "value")]
+        #[serde(tag = "operation", content = "value")]
         pub enum RequiredFieldPatch<T> {
             #[default]
             NoChange,
@@ -446,7 +446,7 @@ mod event {
     }
 
     #[derive(Debug, Clone, Serialize, Deserialize)]
-    #[serde(tag = "op")]
+    #[serde(tag = "operation")]
     pub enum EntityChange {
         Created { entity_kind: EntityKind, entity_id: Uuid, snapshot: serde_json::Value },
         Updated { entity_kind: EntityKind, entity_id: Uuid, changed_fields: serde_json::Value },
@@ -2199,10 +2199,10 @@ mod persistence {
                 None => return,
             };
             for change in changes_arr {
-                let op = change.get("op").and_then(|v| v.as_str()).unwrap_or("");
+                let operation = change.get("operation").and_then(|v| v.as_str()).unwrap_or("");
                 let entity_kind = change.get("entity_kind").and_then(|v| v.as_str()).unwrap_or("");
                 let entity_id = change.get("entity_id").and_then(|v| v.as_str()).unwrap_or("");
-                match op {
+                match operator {
                     "Created" => {
                         let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
                         let mut entity = snapshot.clone();
@@ -5155,7 +5155,7 @@ mod tests {
             let mut kit = serde_json::json!({"id": "abc", "name": "Kit", "types": [], "designs": []});
             let type_id = Uuid::now_v7();
             let changes = serde_json::json!([{
-                "op": "Created",
+                "operation": "Created",
                 "entity_kind": "type",
                 "entity_id": type_id.to_string(),
                 "snapshot": {"id": type_id.to_string(), "name": "NewType"}
@@ -5170,7 +5170,7 @@ mod tests {
         pub fn apply_change_log_update_kit_name() {
             let mut kit = serde_json::json!({"id": "abc", "name": "OldName", "types": []});
             let changes = serde_json::json!([{
-                "op": "Updated",
+                "operation": "Updated",
                 "entity_kind": "kit",
                 "entity_id": "abc",
                 "changed_fields": {"name": "NewName"}
@@ -5187,7 +5187,7 @@ mod tests {
                 {"id": "other", "name": "Keep"}
             ]});
             let changes = serde_json::json!([{
-                "op": "Deleted",
+                "operation": "Deleted",
                 "entity_kind": "type",
                 "entity_id": type_id,
             }]);
@@ -5204,7 +5204,7 @@ mod tests {
                 {"id": type_id, "name": "OldName", "description": null}
             ]});
             let changes = serde_json::json!([{
-                "op": "Updated",
+                "operation": "Updated",
                 "entity_kind": "type",
                 "entity_id": type_id,
                 "changed_fields": {"name": "NewTypeName", "description": "Updated desc"}
@@ -5222,15 +5222,15 @@ mod tests {
             let t2 = Uuid::now_v7().to_string();
             // First: create two types
             let changes1 = serde_json::json!([
-                {"op": "Created", "entity_kind": "type", "entity_id": t1, "snapshot": {"id": t1, "name": "A"}},
-                {"op": "Created", "entity_kind": "type", "entity_id": t2, "snapshot": {"id": t2, "name": "B"}},
+                {"operation": "Created", "entity_kind": "type", "entity_id": t1, "snapshot": {"id": t1, "name": "A"}},
+                {"operation": "Created", "entity_kind": "type", "entity_id": t2, "snapshot": {"id": t2, "name": "B"}},
             ]);
             apply_change_log_to_kit(&mut kit, &changes1);
             assert_eq!(kit["types"].as_array().unwrap().len(), 2);
             // Second: delete one type, update the other
             let changes2 = serde_json::json!([
-                {"op": "Deleted", "entity_kind": "type", "entity_id": t1},
-                {"op": "Updated", "entity_kind": "type", "entity_id": t2, "changed_fields": {"name": "B_updated"}},
+                {"operation": "Deleted", "entity_kind": "type", "entity_id": t1},
+                {"operation": "Updated", "entity_kind": "type", "entity_id": t2, "changed_fields": {"name": "B_updated"}},
             ]);
             apply_change_log_to_kit(&mut kit, &changes2);
             let types = kit["types"].as_array().unwrap();
@@ -5347,7 +5347,7 @@ mod tests {
             let (_, changes) = log.unwrap();
             let changes_arr = changes.as_array().unwrap();
             assert!(!changes_arr.is_empty());
-            assert_eq!(changes_arr[0]["op"].as_str().unwrap(), "Created");
+            assert_eq!(changes_arr[0]["operation"].as_str().unwrap(), "Created");
 
             // Reconstruct kit at version 1
             let kit_v1 = reconstruct_kit_at_version(&pool, session_id, 1).await.unwrap();

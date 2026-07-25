@@ -32,7 +32,7 @@ Right-clicking the flow canvas (in both flow play and procedural play) opens a m
 - `FlowCanvas` already renders a `ContextMenuController` from `surfaceContextMenu` state, but `contextMenu?: readonly ContextMenuItem[]` is a static prop no consumer fills, and `onCanvasContextMenu` builds nothing context-aware ([flow/react/index.tsx](flow/react/index.tsx) ~L1080, L1758, L1921).
 - `ContextMenuController`/`renderFixedContextMenuItems` already invoke `item.onSelect(nativeEvent)` and support `separator`, `checked`, `destructive`, `icon`, `disabled`, `children` ([ui/react/index.tsx](ui/react/index.tsx) L1238).
 - `ProceduralFlowEditor` does NOT forward any context-menu props ([procedural/react/index.tsx](procedural/react/index.tsx) L1548).
-- Session ops available: `add_widget`, `select_all`, `delete_selection`, `set_preview_off`, `reorganize` ([flow/core/lib.rs](flow/core/lib.rs)). FlowCanvas already drives these for keyboard shortcuts and exposes `openImagePicker(widgetId)`.
+- Session operations available: `add_widget`, `select_all`, `delete_selection`, `set_preview_off`, `reorganize` ([flow/core/lib.rs](flow/core/lib.rs)). FlowCanvas already drives these for keyboard shortcuts and exposes `openImagePicker(widgetId)`.
 - Flow play controller is minimal (no selection/preview state); procedural play controller is rich (selection, previewOff, showMode) ([flow/play/index.ts](flow/play/index.ts), [procedural/play/index.ts](procedural/play/index.ts)).
 
 ## Design
@@ -49,7 +49,7 @@ flowchart LR
   bld --> menu["ContextMenuController"]
   menu -->|"onSelect -> dispatch(cmd,args)"| ctrl["play controller"]
   ctrl -->|"bump commandRequest epoch"| fc2["FlowCanvas effect"]
-  fc2 -->|"session op + evaluate/persist/render"| emit["emitInteractionState"]
+  fc2 -->|"session operation + evaluate/persist/render"| emit["emitInteractionState"]
   emit -->|"onSelectionChange / onPreviewOffChange"| ctrl
 ```
 

@@ -6,7 +6,7 @@ todos:
     content: Reopen ARCHITECT-PROGRAM-AND-PLUGIN ticket; write gap checklist in ticket folder
     status: completed
   - id: phase1-fields
-    content: Add all missing typed fields/enums/collections across §1–§65 in registers/kernel/program/ops
+    content: Add all missing typed fields/enums/collections across §1–§65 in registers/kernel/program/operations
     status: completed
   - id: phase2-behavior
     content: Deepen validate/analyze/report/search/trace/exchange/template/status/adjacency + new outputs.rs
@@ -59,9 +59,9 @@ Edit primarily `[architect/program/rs/src/registers.rs](architect/program/rs/src
 
 **P1 structural registers still missing as first-class collections:**
 
-- Assumption register, Constraint register, Compliance register, Approval record, Meeting record (§48) — add to `Program` + `ProgramOp` CollectionOp variants
+- Assumption register, Constraint register, Compliance register, Approval record, Meeting record (§48) — add to `Program` + `ProgramOperation` CollectionOperation variants
 
-Update patches (`*Patch`), `Identified`/`Patchable` macros, `empty_program`/`sample_program` factories, and `ops.rs` for any new collections.
+Update patches (`*Patch`), `Identified`/`Patchable` macros, `empty_program`/`sample_program` factories, and `operations.rs` for any new collections.
 
 ## Phase 2 — Real behavioral APIs (no stubs)
 
@@ -90,7 +90,7 @@ Rewrite/extend `[architect/plugin/rs/lib.rs](architect/plugin/rs/lib.rs)`:
 - Catalogue: templates apply, import JSON/CSV, all analysis kinds, all report kinds, search UI, trace viewer
 - Document tree: all register counts from full `status_summary`
 - Report body: formatted sections (not raw JSON dump)
-- Analysis/report pickers: every kind; persist records into document ops
+- Analysis/report pickers: every kind; persist records into document operations
 
 ## Phase 4 — Tests and verify
 
@@ -102,7 +102,7 @@ Rewrite/extend `[architect/plugin/rs/lib.rs](architect/plugin/rs/lib.rs)`:
 ## Execution order
 
 1. Reopen ticket
-2. Phase 1 field/enum/collection gaps (registers + ops + sample)
+2. Phase 1 field/enum/collection gaps (registers + operations + sample)
 3. Phase 2 behavioral modules + outputs
 4. Phase 3 plugin full CRUD
 5. Phase 4 tests with isolated target dir → ticket_close

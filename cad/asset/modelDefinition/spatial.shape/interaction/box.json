@@ -122,7 +122,7 @@
           },
           {
             "kind": "binop",
-            "op": ">",
+            "operation": ">",
             "left": {
               "kind": "path",
               "root": "context",
@@ -140,12 +140,12 @@
           },
           {
             "kind": "binop",
-            "op": ">",
+            "operation": ">",
             "left": {
               "kind": "abs",
               "arg": {
                 "kind": "binop",
-                "op": "-",
+                "operation": "-",
                 "left": {
                   "kind": "path",
                   "root": "context",
@@ -183,12 +183,12 @@
           },
           {
             "kind": "binop",
-            "op": ">",
+            "operation": ">",
             "left": {
               "kind": "abs",
               "arg": {
                 "kind": "binop",
-                "op": "-",
+                "operation": "-",
                 "left": {
                   "kind": "path",
                   "root": "context",
@@ -231,7 +231,7 @@
       "name": "boxModePoint",
       "expr": {
         "kind": "binop",
-        "op": "==",
+        "operation": "==",
         "left": {
           "kind": "path",
           "root": "context",
@@ -252,7 +252,7 @@
       "name": "boxModeDiagonal",
       "expr": {
         "kind": "binop",
-        "op": "==",
+        "operation": "==",
         "left": {
           "kind": "path",
           "root": "context",
@@ -273,7 +273,7 @@
       "name": "boxModeThreePoint",
       "expr": {
         "kind": "binop",
-        "op": "==",
+        "operation": "==",
         "left": {
           "kind": "path",
           "root": "context",
@@ -294,7 +294,7 @@
       "name": "boxModeVertical",
       "expr": {
         "kind": "binop",
-        "op": "==",
+        "operation": "==",
         "left": {
           "kind": "path",
           "root": "context",
@@ -315,7 +315,7 @@
       "name": "boxModeCenter",
       "expr": {
         "kind": "binop",
-        "op": "==",
+        "operation": "==",
         "left": {
           "kind": "path",
           "root": "context",
@@ -348,7 +348,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -364,7 +364,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -395,7 +395,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -428,7 +428,7 @@
                 "label": "Point",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -455,7 +455,7 @@
                 "label": "Diagonal",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -482,7 +482,7 @@
                 "label": "3Point",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -509,7 +509,7 @@
                 "label": "Vertical",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -536,7 +536,7 @@
                 "label": "Center",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -563,7 +563,7 @@
                 "target": "first_corner_other_or_length",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -585,7 +585,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -603,7 +603,7 @@
                 "target": "diagonal_rubber",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -625,7 +625,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -643,7 +643,7 @@
                 "target": "three_point_edge",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -665,7 +665,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -683,7 +683,7 @@
                 "target": "vertical_end",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -705,7 +705,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -717,7 +717,7 @@
                     }
                   },
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.initPeakAboveOrigin",
                     "params": {}
                   }
@@ -728,7 +728,7 @@
                 "target": "center_corner",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -750,7 +750,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -787,7 +787,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -819,7 +819,7 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -841,7 +841,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -904,12 +904,12 @@
                 "label": "Apply L×W",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.cornerFromLengthWidth",
                     "params": {}
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -950,7 +950,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -982,12 +982,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.aabbFromDiagonalCorners",
                     "params": {}
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1015,7 +1015,7 @@
                 "label": "Cube",
                 "effects": [
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1052,7 +1052,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1084,12 +1084,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.aabbFromDiagonalCorners",
                     "params": {}
                   },
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1119,7 +1119,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1151,7 +1151,7 @@
                 "target": "three_point_width",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1173,7 +1173,7 @@
                     }
                   },
                   {
-                    "op": "clear",
+                    "operation": "clear",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1210,7 +1210,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.tripletRubber",
                     "params": {}
                   }
@@ -1225,12 +1225,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.tripletCommit",
                     "params": {}
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1271,7 +1271,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.peakFromOriginZ",
                     "params": {}
                   }
@@ -1309,7 +1309,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.verticalRubberCorner",
                     "params": {}
                   }
@@ -1324,7 +1324,7 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.verticalFinalizeFootprint",
                     "params": {}
                   }
@@ -1354,7 +1354,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.rubberCornerFromCenter",
                     "params": {}
                   }
@@ -1369,12 +1369,12 @@
                 "target": "first_corner_height",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.rubberCornerFromCenter",
                     "params": {}
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1425,7 +1425,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.rubberSquareFromCenter",
                     "params": {}
                   }
@@ -1440,12 +1440,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.rubberSquareFromCenter",
                     "params": {}
                   },
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1475,7 +1475,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.snapSquareFootprint",
                     "params": {}
                   }
@@ -1490,12 +1490,12 @@
                 "target": "ready",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.snapSquareFootprint",
                     "params": {}
                   },
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "box.setCubeHeightFromFootprint",
                     "params": {}
                   }
@@ -1525,7 +1525,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1575,12 +1575,12 @@
                       ],
                       "in": {
                         "kind": "binop",
-                        "op": "+",
+                        "operation": "+",
                         "left": {
                           "kind": "abs",
                           "arg": {
                             "kind": "binop",
-                            "op": "-",
+                            "operation": "-",
                             "left": {
                               "kind": "var",
                               "name": "z1"
@@ -1610,7 +1610,7 @@
                 "label": "Apply typed height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

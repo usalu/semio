@@ -54,7 +54,7 @@ flowchart LR
 - New `InputSpec { id, type, default?, label? }` replaces input strings. `type` is a free-form string tag (`number`, `integer`, `text`, `boolean`, `list`, `dictionary`, `value`, plus domain tags like `geometry`/`point`/`vector` used by brep) so the engine stays technology-agnostic. `default` is an optional `Value`.
 - Add `Atom::Boolean(bool)` (first untagged serde variant so JSON `true`/`false` deserialize correctly; `1` still matches `Integer`) + `as_bool()`.
 - Defaults are injected in `collect_neuron_input`: for each declared input with a `default`, if the key is absent after wiring synapses, insert the default. Inline `neuron.params` still override (existing `input.merge(&neuron.params)`).
-- UI surfacing: computation nodes render inline editors (number field / text field / boolean checkbox) for unconnected primitive inputs, writing to `neuron.params` via the existing `setNeuronParams` op.
+- UI surfacing: computation nodes render inline editors (number field / text field / boolean checkbox) for unconnected primitive inputs, writing to `neuron.params` via the existing `setNeuronParams` operation.
 
 ## Key edits
 

@@ -1792,7 +1792,7 @@ impl FlowHost {
     fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool) {
         dedupe_fixture_widgets(&mut fixture);
         // 🎥 Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
-        // scene resync reloads fixture content (hover, eval tick, remote ops, …).
+        // scene resync reloads fixture content (hover, eval tick, remote operations, …).
         let camera = self.fixture.camera.clone();
         fixture.camera = camera;
         self.fixture = fixture;
@@ -2597,6 +2597,12 @@ impl FlowHost {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
+    /// @emoji 🎯 Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
+    /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
+    pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+        self.dag.entity_screen_json(domain, id)
+    }
+
     /// 🔌 Hovered widget channel when the pointer is over a port row or handle.
     pub fn hovered_channel_json(&self) -> String {
         self.dag.hovered_channel_json()
@@ -3275,7 +3281,7 @@ fn flow_eval_computing_progress_json(remaining: &[String]) -> String {
 impl FlowEvalDriver {
     /// 🔁 Probes `host` for pending work (cheap — reuses `FlowHost`'s own dirty-set diffing) and
     /// reports whether a `flowEvalTick` chain needs to be (re)armed. Safe to call on every
-    /// mutation/refresh; a no-op when nothing changed or a chain is already running.
+    /// mutation/refresh; a no-operation when nothing changed or a chain is already running.
     pub fn sync(&mut self, host: &FlowHost) -> bool {
         let remaining = host.pending_eval_widget_ids();
         if remaining.is_empty() {
@@ -3856,6 +3862,11 @@ impl FlowSession {
         self.state.borrow().host.pick_targets_at_screen_json(sx, sy)
     }
 
+    #[wasm_bindgen(js_name = entityScreenJson)]
+    pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+        self.state.borrow().host.entity_screen_json(domain, id)
+    }
+
     #[wasm_bindgen(js_name = widgetDragActive)]
     pub fn widget_drag_active(&self) -> bool {
         self.state.borrow().host.widget_drag_active()
@@ -3972,8 +3983,8 @@ pub fn trace_drawing_bitmap(width: u32, height: u32, mask: &[u8], threshold: f64
 
 #[cfg(target_arch = "wasm32")]
 #[wasm_bindgen]
-pub fn boolean_drawing_segments(a_json: &str, b_json: &str, op: &str) -> String {
-    flow_module_draw::boolean_segments_json(a_json, b_json, op)
+pub fn boolean_drawing_segments(a_json: &str, b_json: &str, operation: &str) -> String {
+    flow_module_draw::boolean_segments_json(a_json, b_json, operation)
 }
 
 #[cfg(target_arch = "wasm32")]
@@ -4022,7 +4033,7 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 use vcs::create_document_vcs_envelope;
 #[cfg(test)]
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 
 pub const FLOW_DOCUMENT_SCHEMA: &str = "flow.fixture";
 
@@ -4097,8 +4108,8 @@ fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: 
 }
 //#endregion 🔖CollectionSupport
 
-//#region 🔖Ops
-/// 📍 One node-layout assignment inside a `SetLayout` op; `None` removes the entry.
+//#region 🔖Operations
+/// 📍 One node-layout assignment inside a `SetLayout` operation; `None` removes the entry.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct FlowLayoutEntry {
@@ -4106,14 +4117,14 @@ pub struct FlowLayoutEntry {
     pub layout: Option<WidgetLayout>,
 }
 
-/// 🌊 Typed, invertible flow-document operation. `Widgets`/`Synapses` are id-keyed collection ops for
+/// 🌊 Typed, invertible flow-document operation. `Widgets`/`Synapses` are id-keyed collection operations for
 /// granular convergence; `SetLayout` moves nodes; `SetFixture` replaces the whole fixture (import/reset).
-/// The camera is ephemeral view state (plugin runtime), never a document op.
+/// The camera is ephemeral view state (plugin runtime), never a document operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum FlowOp {
-    Widgets(CollectionOp<String, Widget, Widget>),
-    Synapses(CollectionOp<String, SynapseSpec, SynapseSpec>),
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum FlowOperation {
+    Widgets(CollectionOperation<String, Widget, Widget>),
+    Synapses(CollectionOperation<String, SynapseSpec, SynapseSpec>),
     SetLayout { entries: Vec<FlowLayoutEntry> },
     SetFixture { fixture: FlowFixture },
 }
@@ -4167,59 +4178,59 @@ impl OperationDiff<FlowFixture> for FlowDiff {
     }
 }
 
-impl Operation<FlowFixture> for FlowOp {
+impl Operation<FlowFixture> for FlowOperation {
     type Diff = FlowDiff;
 
     fn diff(&self, projection: &FlowFixture) -> FlowDiff {
         match self {
-            FlowOp::Widgets(op) => FlowDiff { widgets: Some(collection_diff_from_op(&projection.widgets, op)), ..Default::default() },
-            FlowOp::Synapses(op) => FlowDiff { synapses: Some(collection_diff_from_op(&projection.synapses, op)), ..Default::default() },
-            FlowOp::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
-            FlowOp::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
+            FlowOperation::Widgets(operation) => FlowDiff { widgets: Some(collection_diff_from_operation(&projection.widgets, operation)), ..Default::default() },
+            FlowOperation::Synapses(operation) => FlowDiff { synapses: Some(collection_diff_from_operation(&projection.synapses, operation)), ..Default::default() },
+            FlowOperation::SetLayout { entries } => FlowDiff { layout: Some(entries.clone()), ..Default::default() },
+            FlowOperation::SetFixture { fixture } => FlowDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &FlowFixture) -> Vec<Self> {
         match self {
-            FlowOp::Widgets(op) => vec![FlowOp::Widgets(invert_collection_op(&projection.widgets, op))],
-            FlowOp::Synapses(op) => vec![FlowOp::Synapses(invert_collection_op(&projection.synapses, op))],
-            FlowOp::SetLayout { entries } => vec![FlowOp::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() }).collect() }],
-            FlowOp::SetFixture { .. } => vec![FlowOp::SetFixture { fixture: projection.clone() }],
+            FlowOperation::Widgets(operation) => vec![FlowOperation::Widgets(invert_collection_operation(&projection.widgets, operation))],
+            FlowOperation::Synapses(operation) => vec![FlowOperation::Synapses(invert_collection_operation(&projection.synapses, operation))],
+            FlowOperation::SetLayout { entries } => vec![FlowOperation::SetLayout { entries: entries.iter().map(|entry| FlowLayoutEntry { id: entry.id.clone(), layout: projection.layout.get(&entry.id).cloned() }).collect() }],
+            FlowOperation::SetFixture { .. } => vec![FlowOperation::SetFixture { fixture: projection.clone() }],
         }
     }
 }
 
-/// 🌉 Host-mutation → granular-ops bridge: diffs a `FlowFixture` before/after a `FlowHost` mutation into
-/// the minimal set of `FlowOp`s, so the rich stateful engine keeps owning mutation logic (port wiring,
-/// cycle checks, cluster collapse) while the document store still records convergent, invertible ops.
+/// 🌉 Host-mutation → granular-operations bridge: diffs a `FlowFixture` before/after a `FlowHost` mutation into
+/// the minimal set of `FlowOperation`s, so the rich stateful engine keeps owning mutation logic (port wiring,
+/// cycle checks, cluster collapse) while the document store still records convergent, invertible operations.
 /// The camera is intentionally excluded (it is plugin runtime state).
-pub fn flow_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOp> {
-    let mut ops = Vec::new();
+pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOperation> {
+    let mut operations = Vec::new();
     let after_widget_ids: std::collections::BTreeSet<&str> = after.widgets.iter().map(widget_id_for).collect();
     for widget in &before.widgets {
         let id = widget_id_for(widget);
         if !after_widget_ids.contains(id) {
-            ops.push(FlowOp::Widgets(CollectionOp::Remove { id: id.to_string() }));
+            operations.push(FlowOperation::Widgets(CollectionOperation::Remove { id: id.to_string() }));
         }
     }
     for (index, widget) in after.widgets.iter().enumerate() {
         let id = widget_id_for(widget);
         match before.widgets.iter().find(|entry| widget_id_for(entry) == id) {
-            None => ops.push(FlowOp::Widgets(CollectionOp::Add { index, item: widget.clone() })),
-            Some(prev) if prev != widget => ops.push(FlowOp::Widgets(CollectionOp::Patch { id: id.to_string(), patch: widget.clone() })),
+            None => operations.push(FlowOperation::Widgets(CollectionOperation::Add { index, item: widget.clone() })),
+            Some(prev) if prev != widget => operations.push(FlowOperation::Widgets(CollectionOperation::Patch { id: id.to_string(), patch: widget.clone() })),
             Some(_) => {}
         }
     }
     let after_synapse_ids: std::collections::BTreeSet<&str> = after.synapses.iter().map(|synapse| synapse.id.as_str()).collect();
     for synapse in &before.synapses {
         if !after_synapse_ids.contains(synapse.id.as_str()) {
-            ops.push(FlowOp::Synapses(CollectionOp::Remove { id: synapse.id.clone() }));
+            operations.push(FlowOperation::Synapses(CollectionOperation::Remove { id: synapse.id.clone() }));
         }
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         match before.synapses.iter().find(|entry| entry.id == synapse.id) {
-            None => ops.push(FlowOp::Synapses(CollectionOp::Add { index, item: synapse.clone() })),
-            Some(prev) if *prev != *synapse => ops.push(FlowOp::Synapses(CollectionOp::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
+            None => operations.push(FlowOperation::Synapses(CollectionOperation::Add { index, item: synapse.clone() })),
+            Some(prev) if *prev != *synapse => operations.push(FlowOperation::Synapses(CollectionOperation::Patch { id: synapse.id.clone(), patch: synapse.clone() })),
             Some(_) => {}
         }
     }
@@ -4235,14 +4246,14 @@ pub fn flow_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<FlowOp
         }
     }
     if !entries.is_empty() {
-        ops.push(FlowOp::SetLayout { entries });
+        operations.push(FlowOperation::SetLayout { entries });
     }
-    ops
+    operations
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
-pub type FlowEnvelope = DocumentVcsEnvelope<FlowFixture, FlowOp>;
-pub type FlowStore = DocumentVcsStore<FlowFixture, FlowOp>;
+pub type FlowEnvelope = DocumentVcsEnvelope<FlowFixture, FlowOperation>;
+pub type FlowStore = DocumentVcsStore<FlowFixture, FlowOperation>;
 
 pub fn empty_flow_projection() -> FlowFixture {
     FlowFixture::default()
@@ -4510,29 +4521,29 @@ mod flow_vcs_tests {
         Widget::InputNote { id: id.into(), text: format!("note {id}") }
     }
 
-    fn round_trip(fixture: &FlowFixture, op: &FlowOp) -> FlowFixture {
-        let forward = vcs::apply_operation(fixture, op);
-        let backwards = op.backwards(fixture);
+    fn round_trip(fixture: &FlowFixture, operation: &FlowOperation) -> FlowFixture {
+        let forward = vcs::apply_operation(fixture, operation);
+        let backwards = operation.backwards(fixture);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = vcs::apply_operation(&restored, back);
         }
-        assert_eq!(&restored, fixture, "backwards() must exactly restore the pre-op fixture");
+        assert_eq!(&restored, fixture, "backwards() must exactly restore the pre-operation fixture");
         forward
     }
 
     #[test]
     fn widget_add_patch_remove_round_trip() {
         let fixture = FlowFixture { widgets: Vec::new(), synapses: Vec::new(), ..FlowFixture::default() };
-        let add = FlowOp::Widgets(CollectionOp::Add { index: 0, item: sample_widget("w1") });
+        let add = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
         let with_widget = round_trip(&fixture, &add);
         assert_eq!(with_widget.widgets.len(), 1);
 
-        let patch = FlowOp::Widgets(CollectionOp::Patch { id: "w1".into(), patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() } });
+        let patch = FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: Widget::InputNote { id: "w1".into(), text: "renamed".into() } });
         let patched = round_trip(&with_widget, &patch);
         assert!(matches!(&patched.widgets[0], Widget::InputNote { text, .. } if text == "renamed"));
 
-        let remove = FlowOp::Widgets(CollectionOp::Remove { id: "w1".into() });
+        let remove = FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() });
         let removed = round_trip(&patched, &remove);
         assert!(removed.widgets.is_empty());
     }
@@ -4540,8 +4551,8 @@ mod flow_vcs_tests {
     #[test]
     fn set_layout_round_trip() {
         let fixture = FlowFixture::default();
-        let op = FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] };
-        let next = round_trip(&fixture, &op);
+        let operation = FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 12.0, y: 34.0 }) }] };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next.layout.get("slider"), Some(&WidgetLayout { x: 12.0, y: 34.0 }));
     }
 
@@ -4552,8 +4563,8 @@ mod flow_vcs_tests {
         after.widgets.retain(|widget| Identified::id(widget) != "a");
         after.widgets.push(sample_widget("c"));
         after.layout.insert("c".into(), WidgetLayout { x: 1.0, y: 2.0 });
-        let ops = flow_fixture_ops(&before, &after);
-        let materialized = ops.iter().fold(before.clone(), |acc, op| vcs::apply_operation(&acc, op));
+        let operations = flow_fixture_operations(&before, &after);
+        let materialized = operations.iter().fold(before.clone(), |acc, operation| vcs::apply_operation(&acc, operation));
         assert_eq!(materialized.widgets.len(), 2);
         assert!(materialized.widgets.iter().any(|widget| Identified::id(widget) == "c"));
         assert!(materialized.widgets.iter().all(|widget| Identified::id(widget) != "a"));
@@ -4565,7 +4576,7 @@ mod flow_vcs_tests {
         let mut store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow", empty_flow_projection(), None));
         for y in [10.0, 20.0, 30.0] {
             store
-                .dispatch(DocumentVcsCommand::AmendLast { operations: vec![FlowOp::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
+                .dispatch(DocumentVcsCommand::AmendLast { operations: vec![FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "slider".into(), layout: Some(WidgetLayout { x: 0.0, y }) }] }], coalesce_key: Some("move-slider".into()) })
                 .expect("drag tick");
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");

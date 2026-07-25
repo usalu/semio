@@ -3,7 +3,7 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_ops, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOp, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_operations, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOperation, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
@@ -1592,9 +1592,9 @@ pub mod d2 {
 
     //#region 🔖Puzzle2dPlayApp
     /// 🧩 Puzzle-2d play app. Owns the `BoardHost` engine and ephemeral view `runtime`; the persisted
-    /// document (the bare fixture json) lives in the wrapping `VcsDocumentApp`'s op store. Each action
+    /// document (the bare fixture json) lives in the wrapping `VcsDocumentApp`'s operation store. Each action
     /// rehydrates the host from the projection, mutates a transient {@link Puzzle2dScene}, then emits
-    /// the granular op delta (`puzzle2d_document_delta_ops`) turning the old fixture into the new.
+    /// the granular operation delta (`puzzle2d_document_delta_operations`) turning the old fixture into the new.
     pub struct Puzzle2dPlayApp {
         host: BoardHost,
         runtime: Puzzle2dPlayRuntime,
@@ -1612,7 +1612,7 @@ pub mod d2 {
 
     impl DocumentApp for Puzzle2dPlayApp {
         type Projection = Value;
-        type Op = Puzzle2dOp;
+        type Operation = Puzzle2dOperation;
 
         fn app_id(&self) -> &str {
             PUZZLE2D_PLAY_APP_ID
@@ -1626,7 +1626,7 @@ pub mod d2 {
             default_empty_fixture()
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle2dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
             let before = doc.projection.clone();
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE2D_UTILITY_SELECT).to_string();
             let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone(), active_utility: active_utility.clone() };
@@ -1639,7 +1639,7 @@ pub mod d2 {
                 // an `edgeCreate` for every edge as a side effect of parsing — not a real structural
                 // change. Discard that parse-induced noise now so `apply_host_events` below only sees
                 // events genuinely produced by *this* action's own engine calls (delete_selection, brush
-                // ops, …); otherwise those spurious edgeCreate events get replayed into
+                // operations, …); otherwise those spurious edgeCreate events get replayed into
                 // `envelope.fixture.edges` on the *next* action, duplicating every edge every action.
                 let _ = self.host.drain_events_json();
                 self.last_synced_fixture = Some(envelope.fixture.clone());
@@ -2038,13 +2038,13 @@ pub mod d2 {
             }
             apply_host_events(&mut self.host, &mut envelope);
             self.runtime = envelope.runtime;
-            let ops = puzzle2d_document_delta_ops(&before, &envelope.fixture);
+            let operations = puzzle2d_document_delta_operations(&before, &envelope.fixture);
             // 🐢 Safety net: a `None` scope claims nothing needs re-rendering — never pair that with an
-            // actual document mutation (would silently desync remote clients' UI from the committed op).
-            if !ops.is_empty() && matches!(ui_scope, semio_framework_core::kernel::UiDirtyScope::None) {
+            // actual document mutation (would silently desync remote clients' UI from the committed operation).
+            if !operations.is_empty() && matches!(ui_scope, semio_framework_core::kernel::UiDirtyScope::None) {
                 ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
             }
-            ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
+            ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
@@ -2243,7 +2243,7 @@ pub mod d2 {
                 .action_with(puzzle2d_internal_action("setFillCount", "Set Fill Count", ActionKind::Operation))
                 .action_with(puzzle2d_internal_action("brushFillSessionStep", "Brush Fill Session Step", ActionKind::Operation))
                 .action_with(puzzle2d_internal_action("brushCommitSlot", "Brush Commit Slot", ActionKind::Operation))
-                // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no ops.
+                // 🖱️ Internal pointer/gesture/engagement view vocabulary — pure runtime/host state, emit no operations.
                 .action_with(puzzle2d_internal_action("setSelection", "Set Selection", ActionKind::View))
                 .action_with(puzzle2d_internal_action("documentSelect", "Document Select", ActionKind::View))
                 .action_with(puzzle2d_internal_action("engagementInput", "Engagement Input", ActionKind::View))
@@ -2274,7 +2274,7 @@ pub mod d2 {
                         ActionArgOption::new(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower"),
                     ]).required().default_value(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID),
                 ])
-                // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document op). The
+                // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document operation). The
                 // select/brush switcher is rendered by the framework utility bar for the interactive pane.
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "cursor", UtilityCategory::Selection))
                 .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "brush", UtilityCategory::Utilities))
@@ -2321,7 +2321,7 @@ pub mod d2 {
         use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
         use vcs::{Backbone, BackboneMessage, MemoryBackbone};
 
-        /// 🧰 A registry-backed app so kind discipline (View/Shell actions must emit no ops) and the utility
+        /// 🧰 A registry-backed app so kind discipline (View/Shell actions must emit no operations) and the utility
         /// contract are enforced exactly as in production (`VcsDocumentApp::with_registry`).
         fn registry_app() -> VcsDocumentApp<Puzzle2dPlayApp> {
             testkit::new_app_with_registry::<Puzzle2dPlayApp>(create_puzzle2d_app)
@@ -2348,12 +2348,12 @@ pub mod d2 {
         fn add_node_action_emits_upsert_op_and_appends_node() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
-            assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular op");
+            assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular operation");
             assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
         }
 
         #[test]
-        fn set_active_example_loads_concrete_forest_via_ops() {
+        fn set_active_example_loads_concrete_forest_via_operations() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
             assert!(!fixture_nodes(&app.projection().expect("projection")).is_empty());
@@ -2396,7 +2396,7 @@ pub mod d2 {
         /// 🐢 Regression test for a perf-round-2 bug: `sync_host_from_envelope`'s `parse_fixture_v1`
         /// always `clear_scene()`s then rebuilds, so every edge looked "new" and got re-`push_event`'d
         /// as `edgeCreate` — which `apply_host_events` then replayed into `envelope.fixture.edges` on
-        /// the *next* action, duplicating every edge once per action forever. Repeated no-op actions
+        /// the *next* action, duplicating every edge once per action forever. Repeated no-operation actions
         /// (here: repeated selects) must leave the edge count untouched.
         #[test]
         fn repeated_actions_do_not_duplicate_edges() {
@@ -2423,7 +2423,7 @@ pub mod d2 {
             let rendered_once = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
             assert!(rendered_once.contains(&node_id), "selection must be visible immediately after the select action");
             // A second, unrelated action used to silently clear the selection via the stale `host.selection` re-sync.
-            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
+            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-operation");
             let rendered_twice = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
             assert!(rendered_twice.contains(&node_id), "selection must survive a subsequent unrelated action");
         }
@@ -2445,11 +2445,11 @@ pub mod d2 {
         /// `KernelOperation`s (previously it fell back to a whole-document `ReplaceDocument` once the
         /// edge-duplication bug made `before` and `after` genuinely diverge).
         #[test]
-        fn select_action_emits_no_ops() {
+        fn select_action_emits_no_operations() {
             let mut app = concrete_forest_app();
             let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
-            assert!(result.operations.is_empty(), "selection must not produce document ops");
+            assert!(result.operations.is_empty(), "selection must not produce document operations");
         }
 
         /// 🐢 Perf round 3: a select event must declare a narrow `Partial` ui_scope (the 3 canvas panes +
@@ -2496,17 +2496,17 @@ pub mod d2 {
             }
         }
 
-        /// 🐢 Perf round 3: an empty `applyBoardEvents` batch (no-op) must declare `None` — nothing for
+        /// 🐢 Perf round 3: an empty `applyBoardEvents` batch (no-operation) must declare `None` — nothing for
         /// the shell to re-render at all.
         #[test]
         fn empty_board_events_declare_none_ui_scope() {
             use semio_framework_core::kernel::UiDirtyScope;
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
+            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-operation");
             assert!(matches!(result.ui_scope, UiDirtyScope::None), "empty board events must declare None, got {:?}", result.ui_scope);
         }
 
-        /// 🐢 Perf round 3: cold-tier structural actions (document ops) must keep the safe `Full`
+        /// 🐢 Perf round 3: cold-tier structural actions (document operations) must keep the safe `Full`
         /// default — no puzzle2d scope helper narrows them.
         #[test]
         fn add_node_action_declares_full_ui_scope() {
@@ -2558,7 +2558,7 @@ pub mod d2 {
         }
 
         /// 🧪 Definitional convergence proof: two instances on one backbone make DISJOINT node edits
-        /// (each adds its own node) and, after exchanging ops, both converge to contain BOTH nodes —
+        /// (each adds its own node) and, after exchanging operations, both converge to contain BOTH nodes —
         /// impossible under whole-document `setDocument` snapshots, which would clobber one side.
         #[test]
         fn two_instances_converge_disjoint_node_edits_via_backbone() {
@@ -2571,7 +2571,7 @@ pub mod d2 {
             instance_a.handle_action("addNode", Some(&json!({ "kind": "seed" })), &ViewState::default(), &testkit::meta("actor-a")).expect("a adds node");
             instance_b.handle_action("addNode", Some(&json!({ "kind": "other" })), &ViewState::default(), &testkit::meta("actor-b")).expect("b adds node");
 
-            // A neutral history action always calls store.dispatch(), which pumps inbound ops first.
+            // A neutral history action always calls store.dispatch(), which pumps inbound operations first.
             instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
             instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
 
@@ -2588,26 +2588,26 @@ pub mod d2 {
 
             let mut envelopes = Vec::new();
             for message in far.receive().expect("receive") {
-                if let BackboneMessage::Ops { envelopes: ops } = message {
-                    envelopes.extend(ops);
+                if let BackboneMessage::Operations { envelopes: operations } = message {
+                    envelopes.extend(operations);
                 }
             }
-            assert!(!envelopes.is_empty(), "the applied op must flow onto the channel");
+            assert!(!envelopes.is_empty(), "the applied operation must flow onto the channel");
             let operations_json = serde_json::to_string(&envelopes).expect("serialize");
 
             let mut receiver = testkit::new_app::<Puzzle2dPlayApp>();
             receiver.ingest_operations(&operations_json).expect("ingest once");
             receiver.ingest_operations(&operations_json).expect("ingest twice");
-            assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same op twice must not double-apply");
+            assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same operation twice must not double-apply");
         }
 
         /// 🧰 The framework-injected `setActiveUtility` View action is host-owned: switching utilities must emit no
-        /// document ops and add no undo history — the active utility lives in `ViewState.active_utility_id`.
+        /// document operations and add no undo history — the active utility lives in `ViewState.active_utility_id`.
         #[test]
         fn utility_switch_emits_no_ops_and_no_history() {
             let mut app = registry_app();
             let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": PUZZLE2D_UTILITY_BRUSH })), &brush_view_state(), &testkit::meta("local")).expect("switch utility");
-            assert!(result.operations.is_empty(), "a utility switch must not produce document ops");
+            assert!(result.operations.is_empty(), "a utility switch must not produce document operations");
             let can_undo = app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local"));
             assert!(can_undo.map(|r| r.operations.is_empty()).unwrap_or(true), "a utility switch must not have created an undo step");
         }
@@ -2718,7 +2718,7 @@ pub mod d2 {
             for (action, args) in view_dispatches {
                 let args_ref = (!args.is_null()).then_some(&args);
                 let result = app.handle_action(action, args_ref, &brush_view_state(), &testkit::meta("local")).unwrap_or_else(|error| panic!("view action '{action}' must not error: {error}"));
-                assert!(result.operations.is_empty(), "view action '{action}' must not emit document ops");
+                assert!(result.operations.is_empty(), "view action '{action}' must not emit document operations");
             }
         }
     }
@@ -2727,7 +2727,7 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    use puzzle_3d::{puzzle3d_document_delta_ops, BrushPlacePayload, Puzzle3dOp, Puzzle3dPrecomputeSession};
+    use puzzle_3d::{puzzle3d_document_delta_operations, BrushPlacePayload, Puzzle3dOperation, Puzzle3dPrecomputeSession};
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
@@ -3979,7 +3979,7 @@ pub mod d3 {
         .to_string()
     }
 
-    /// 🧊 Scales the unit box fallback (`mesh_from_kind` extent 1.0) past `BRUSH_COLLISION_MESH_MIN_EXTENT` (2.0) in `puzzle_3d`'s collision engine, otherwise its registration is a silent no-op and brush candidates never populate before a real GLB arrives.
+    /// 🧊 Scales the unit box fallback (`mesh_from_kind` extent 1.0) past `BRUSH_COLLISION_MESH_MIN_EXTENT` (2.0) in `puzzle_3d`'s collision engine, otherwise its registration is a silent no-operation and brush candidates never populate before a real GLB arrives.
     const PUZZLE3D_FALLBACK_MESH_SCALE: f32 = 4.0;
 
     fn scaled_mesh_positions(positions: &[f32], scale: f32) -> Vec<f32> {
@@ -6252,14 +6252,14 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 
     //#region 🔖Puzzle3dPlayApp
     /// 🧩 Puzzle-3d play app. Owns the precompute engine and ephemeral view `runtime`; the persisted
-    /// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsDocumentApp`'s op store. Each
+    /// document (bare `Puzzle3dFixture` json) lives in the wrapping `VcsDocumentApp`'s operation store. Each
     /// action rehydrates the engine from the projection, mutates a transient {@link Puzzle3dScene},
-    /// then emits the granular op delta. Undo/redo/checkpoints are handled by the wrapper — the former
+    /// then emits the granular operation delta. Undo/redo/checkpoints are handled by the wrapper — the former
     /// manual `undo_stack`/`redo_stack` machinery is gone.
     ///
     /// 🧲 Gumball drags use a scratch-commit session (`transform_drag_active` + `transform_base` /
     /// `transform_scratch`): mid-drag ticks accumulate incremental deltas onto the scratch and emit no
-    /// ops; `transformEnd` commits the base→scratch fixture delta once.
+    /// operations; `transformEnd` commits the base→scratch fixture delta once.
     pub struct Puzzle3dPlayApp {
         precompute: Puzzle3dPrecomputeSession,
         runtime: Puzzle3dRuntime,
@@ -6297,8 +6297,8 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         }
 
         /// 🧲 One mid-drag gumball tick: accumulates an incremental delta onto `transform_scratch`
-        /// (seeded from the drag-start base) and emits zero ops (scratch-commit pattern b).
-        fn transform_drag_tick(&mut self, action: &str, args: Option<&Value>, projection: &Value) -> ActionEmit<Puzzle3dOp> {
+        /// (seeded from the drag-start base) and emits zero operations (scratch-commit pattern b).
+        fn transform_drag_tick(&mut self, action: &str, args: Option<&Value>, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
             if self.transform_base.is_none() {
                 self.begin_transform_session(projection);
             }
@@ -6336,7 +6336,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         }
 
         /// 📌 Commits the whole gumball drag as ONE fixture delta (base → scratch), resolving attractions once.
-        fn commit_transform(&mut self, projection: &Value) -> ActionEmit<Puzzle3dOp> {
+        fn commit_transform(&mut self, projection: &Value) -> ActionEmit<Puzzle3dOperation> {
             self.transform_drag_active = false;
             let Some(mut scratch) = self.transform_scratch.take() else {
                 self.transform_base = None;
@@ -6348,11 +6348,11 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             puzzle3d_rederive_moved_attractions(&mut scratch, &object_ids, &incoming);
             resolve_puzzle3d_attractions(&mut scratch);
             let after = serde_json::to_value(&scratch).unwrap_or_else(|_| projection.clone());
-            let ops = puzzle3d_document_delta_ops(projection, &after);
-            if ops.is_empty() {
+            let operations = puzzle3d_document_delta_operations(projection, &after);
+            if operations.is_empty() {
                 ActionEmit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
             } else {
-                ActionEmit::commit(ops, "Transform selection")
+                ActionEmit::commit(operations, "Transform selection")
             }
         }
 
@@ -6367,7 +6367,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 
     impl DocumentApp for Puzzle3dPlayApp {
         type Projection = Value;
-        type Op = Puzzle3dOp;
+        type Operation = Puzzle3dOperation;
 
         fn app_id(&self) -> &str {
             PUZZLE3D_PLAY_APP_ID
@@ -6381,7 +6381,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null))
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle3dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle3dOperation> {
             // 🗨️ Shell-only effect (no document interaction, hence no `envelope`/`before`/`after` scaffolding
             // below): opens the declared "addObject" dialog over a glass veil.
             if action == "openAddObjectDialog" {
@@ -6449,7 +6449,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 SET_ACTIVE_UTILITY_ACTION_ID | SET_ACTIVE_TOOL_ACTION_ID => {
                     // 🧰🛠️ Host already applied `view_state.active_utility_id`/`active_tool_id`; clear
                     // in-progress scratch and refresh the placement engine for the new utility/tool. Emits
-                    // no ops (View-kind) and no utility/tool-switch effect (the host already applied it).
+                    // no operations (View-kind) and no utility/tool-switch effect (the host already applied it).
                     self.clear_transform_session();
                     envelope.runtime.hovered_object_id = None;
                     envelope.runtime.hovered_vortex_full_id = None;
@@ -7164,7 +7164,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             envelope.runtime.save_window(&wid);
             self.runtime = envelope.runtime;
             let after = serde_json::to_value(&envelope.fixture).unwrap_or_else(|_| before.clone());
-            let ops = puzzle3d_document_delta_ops(&before, &after);
+            let operations = puzzle3d_document_delta_operations(&before, &after);
             let coalesce_key = match action {
                 "translateSelection" => Some("gumball-translate".to_string()),
                 "rotateSelection" => Some("gumball-rotate".to_string()),
@@ -7186,7 +7186,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             if !next_is_fill_tool && !initial_is_fill_tool && next_active_utility != active_utility_initial {
                 effects.push(HostEffect::SetActiveUtility { window_id: wid, utility_id: next_active_utility });
             }
-            ActionEmit { ops, coalesce_key, effects, ui_scope, ..Default::default() }
+            ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
@@ -7618,7 +7618,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 .keybinding("tab", "cycleBrushCandidate")
                 .keybinding("shift+tab", "cycleBrushCandidateBack")
                 .keybinding("f", "focusSelection")
-                // 🔧 Document-mutating operations (emit VCS ops through the before/after fixture delta).
+                // 🔧 Document-mutating operations (emit VCS operations through the before/after fixture delta).
                 .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
                 .operation("setActiveExample", "Set Active Example")
                 .operation("addObjectKind", "Add Object")
@@ -7881,7 +7881,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         }
 
         #[test]
-        fn nakagin_example_loads_via_ops() {
+        fn nakagin_example_loads_via_operations() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("nakagin");
             let projection = app.projection().expect("projection");
@@ -9048,12 +9048,12 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn add_object_kind_materializes_the_declared_kind_default() {
             // 📝 P1 arg form: firing addObjectKind with no args must materialize the declared `objectKind`
-            // default and emit the object-add op under registry enforcement.
+            // default and emit the object-add operation under registry enforcement.
             let mut app = new_app_with_registry();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             let before = object_count(&app);
             let result = app.handle_action("addObjectKind", None, &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
-            assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits ops");
+            assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits operations");
             assert_eq!(object_count(&app), before + 1, "the materialized default kind adds exactly one object");
             let projection = app.projection().expect("projection");
             let kind = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("objectKind")).and_then(Value::as_str);
@@ -9062,13 +9062,13 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 
         #[test]
         fn set_active_utility_emits_no_ops_and_no_history_entry() {
-            // 🧰 Switching utilities is the framework-injected View action: no document ops, no undo entry, no
+            // 🧰 Switching utilities is the framework-injected View action: no document operations, no undo entry, no
             // re-emitted utility-switch effect (the host already applied `view_state.active_utility_id`).
             let mut app = new_app_with_registry();
             let before = app.projection().expect("projection");
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
-            assert!(result.operations.is_empty(), "utility switching never emits document ops");
+            assert!(result.operations.is_empty(), "utility switching never emits document operations");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
             assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
         }
@@ -9328,7 +9328,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 
         #[test]
         fn gumball_transform_session_commits_once_on_end() {
-            // 🧲 Scratch-commit: mid-drag ticks emit ZERO ops; transformEnd commits ONE edit from base→scratch.
+            // 🧲 Scratch-commit: mid-drag ticks emit ZERO operations; transformEnd commits ONE edit from base→scratch.
             // Incremental host deltas accumulate on scratch — 1 then 5 → final +6.
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
@@ -9348,12 +9348,12 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             app.handle_action("transformBegin", None, &transform_view, &testkit::meta("local")).expect("begin");
             let tick_a = app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": 1.0, "dy": 0.0, "dz": 0.0 })), &transform_view, &testkit::meta("local")).expect("tick a");
             let tick_b = app.handle_action("translateSelection", Some(&json!({ "ids": [object_id], "dx": 5.0, "dy": 0.0, "dz": 0.0 })), &transform_view, &testkit::meta("local")).expect("tick b");
-            assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no ops");
+            assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no operations");
             assert_eq!(origin_of(&app), start, "document stays at the drag-start pose mid-drag");
             let preview = scratch_origin_of(&mut app, &transform_view);
             assert!((preview[0] - start[0] - 6.0).abs() < 1e-9, "scratch render accumulates incremental ticks");
             let end = app.handle_action("transformEnd", None, &transform_view, &testkit::meta("local")).expect("end");
-            assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one op");
+            assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one operation");
             let dragged = origin_of(&app);
             assert!((dragged[0] - start[0] - 6.0).abs() < 1e-9, "transformEnd lands on the accumulated total");
             app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
@@ -9371,7 +9371,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    use puzzle_5d::{puzzle5d_document_delta_ops, BrushPlacePayload, Puzzle5dOp, Puzzle5dPrecomputeSession};
+    use puzzle_5d::{puzzle5d_document_delta_operations, BrushPlacePayload, Puzzle5dOperation, Puzzle5dPrecomputeSession};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
@@ -11302,7 +11302,7 @@ pub mod d5 {
     /// 🧩 Puzzle-5d play app. Owns the precompute engine, the registered-mesh cache, and the ephemeral
     /// view `runtime`; the persisted document (bare `Puzzle5dDocument` json) lives in the wrapping
     /// `VcsDocumentApp`. Each action mutates a transient {@link Puzzle5dScene}, then emits the granular
-    /// op delta. Undo/redo/checkpoints are handled by the wrapper.
+    /// operation delta. Undo/redo/checkpoints are handled by the wrapper.
     pub struct Puzzle5dPlayApp {
         precompute: Puzzle5dPrecomputeSession,
         registered_mesh_urls: HashSet<String>,
@@ -11454,7 +11454,7 @@ pub mod d5 {
 
     impl DocumentApp for Puzzle5dPlayApp {
         type Projection = Value;
-        type Op = Puzzle5dOp;
+        type Operation = Puzzle5dOperation;
 
         fn app_id(&self) -> &str {
             PUZZLE5D_PLAY_APP_ID
@@ -11468,7 +11468,7 @@ pub mod d5 {
             serde_json::to_value(default_document()).unwrap_or(Value::Null)
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle5dOp> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
             let before = doc.projection.clone();
             let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
@@ -11590,7 +11590,7 @@ pub mod d5 {
                 }
                 SET_ACTIVE_UTILITY_ACTION_ID => {
                     // 🧰 Host already applied `view_state.active_utility_id`; clear per-window engagement scratch and
-                    // refresh the placement engine for the new utility. Emits no ops and no utility-switch effect.
+                    // refresh the placement engine for the new utility. Emits no operations and no utility-switch effect.
                     for window in PUZZLE5D_PLAY_WINDOWS {
                         envelope.runtime.engagement_input_by_window.insert(window.to_string(), String::new());
                     }
@@ -12012,7 +12012,7 @@ pub mod d5 {
             let next_active_utility = envelope.active_utility.clone();
             self.runtime = envelope.runtime;
             let after = serde_json::to_value(&envelope.document).unwrap_or_else(|_| before.clone());
-            let ops = puzzle5d_document_delta_ops(&before, &after);
+            let operations = puzzle5d_document_delta_operations(&before, &after);
             // 🌀 Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
             let coalesce_key = match action {
                 "translateSelection" => Some("gumball-translate".to_string()),
@@ -12027,7 +12027,7 @@ pub mod d5 {
             } else {
                 Vec::new()
             };
-            ActionEmit { ops, coalesce_key, effects, ..Default::default() }
+            ActionEmit { operations, coalesce_key, effects, ..Default::default() }
         }
 
         fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
@@ -12227,7 +12227,7 @@ pub mod d5 {
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
                 .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, PUZZLE5D_PLAY_BODY_INSPECTOR)
-                // 🔧 Document-mutating operations (emit VCS ops through the before/after document delta).
+                // 🔧 Document-mutating operations (emit VCS operations through the before/after document delta).
                 .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("setFixtureJson", "Set Fixture Json", ActionKind::Operation) })
                 .operation("setActiveExample", "Set Active Example")
                 .operation("addNode", "Add Node")
@@ -12303,10 +12303,10 @@ pub mod d5 {
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
-                // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball ops
+                // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball operations
                 // (move/rotate/scale/relocate utilities are 3D-only) plus its own camera; the 2D window
                 // (Board2d) owns board-event dispatch and its own camera. Select/brush/fill create
-                // ops, deletion, engagement, and global example/json actions apply to both surfaces and
+                // operations, deletion, engagement, and global example/json actions apply to both surfaces and
                 // stay unscoped orphans, appearing on both windows.
                 .window_kind_actions(PUZZLE5D_PLAY_WINDOW_3D, vec![
                     "translateSelection".into(), "rotateSelection".into(), "scaleSelection".into(),
@@ -12412,9 +12412,9 @@ pub mod d5 {
             };
             let board = resolve(PUZZLE5D_PLAY_WINDOW_2D);
             let world = resolve(PUZZLE5D_PLAY_WINDOW_3D);
-            for transform_op in ["translateSelection", "rotateSelection", "scaleSelection", "worldRelocate", "setCamera3d"] {
-                assert!(world.contains(&transform_op.to_string()), "3D must expose {transform_op}");
-                assert!(!board.contains(&transform_op.to_string()), "2D must NOT expose {transform_op}");
+            for transform_operation in ["translateSelection", "rotateSelection", "scaleSelection", "worldRelocate", "setCamera3d"] {
+                assert!(world.contains(&transform_operation.to_string()), "3D must expose {transform_operation}");
+                assert!(!board.contains(&transform_operation.to_string()), "2D must NOT expose {transform_operation}");
             }
             assert!(board.contains(&"applyBoardEvents".to_string()), "2D must expose applyBoardEvents");
             assert!(!world.contains(&"applyBoardEvents".to_string()), "3D must NOT expose applyBoardEvents");
@@ -12439,7 +12439,7 @@ pub mod d5 {
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             let before = part_count(&app);
             let result = app.handle_action("addPartKind", None, &ViewState::default(), &testkit::meta("local")).expect("addPartKind");
-            assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits ops");
+            assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits operations");
             assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
             let projection = app.projection().expect("projection");
             let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
@@ -12448,12 +12448,12 @@ pub mod d5 {
 
         #[test]
         fn set_active_utility_emits_no_ops_and_no_history_entry() {
-            // 🧰 Switching utilities is the framework View action: no document ops, no undo entry, no re-emitted effect.
+            // 🧰 Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
             let mut app = new_app_with_registry();
             let before = app.projection().expect("projection");
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
-            assert!(result.operations.is_empty(), "utility switching never emits document ops");
+            assert!(result.operations.is_empty(), "utility switching never emits document operations");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
             assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
         }

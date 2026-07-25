@@ -181,7 +181,7 @@ In [lowpoly/react/index.tsx](lowpoly/react/index.tsx) `LowpolyCanvas`:
 ## Phase 8 — VCS-backed undo/redo for paint
 
 - Adopt the shared `vcs/core` + `vcs/rs` engine (already the generic undo/redo backbone for `raster`, `writer`, `forms`, `flow`, `cad`, `draw`, `s`, and others — this is core infra, not a "technology" to avoid mixing).
-- Define a reversible paint operation (before/after layer snapshot or dirty-rect diff) following the same `DocumentVcsEnvelope`/backwards-op pattern `raster/core/index.ts` uses (`backwardsRasterEditOp`), scoped per-object per-layer.
+- Define a reversible paint operation (before/after layer snapshot or dirty-rect diff) following the same `DocumentVcsEnvelope`/backwards-operation pattern `raster/core/index.ts` uses (`backwardsRasterEditOp`), scoped per-object per-layer.
 - Wire Undo/Redo toolbar buttons in Paint mode to the VCS store, and commit a VCS entry at stroke/fill end (not per brush-stamp frame).
 
 ## Phase 9 — Paint mode UI

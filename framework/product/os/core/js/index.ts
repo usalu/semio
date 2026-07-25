@@ -1,9 +1,9 @@
 // #region Header
 /**
  * 🖥️ `@semio-tech/framework-os-core` — JS sync/backbone protocol surface (backbone URIs, document
- * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OpEnvelope`,
+ * envelopes, `backbone-worker.ts` request/response wire types, `PersistenceBinding`/`OperationEnvelope`,
  * {@link buildFrameworkSyncUtilities}) consumed by `framework/renderer/react/index.tsx` and
- * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (op application, program
+ * `framework/product/os/dev/script.ts`. The OS kernel's *stateful* logic (operation application, program
  * registry) is Rust/wasm-only, hosted by the s-plugin wasm — this file is not a JS port of that. The
  * one exception is {@link planMediaFlow}: a pure, side-effect-free scheduling function has no state
  * to keep in sync with a live wasm host, so it's hand-mirrored here against the Rust `plan_media_flow`
@@ -149,11 +149,11 @@ export function wrapDocumentEnvelope(document: unknown, documentId: string, uri:
 //#region 🔀ApplyBackboneMessage
 export type BackboneOpEnvelope = { readonly diff?: { readonly payload?: { readonly id?: string } & Record<string, unknown> } };
 
-export type BackboneMessage = { readonly kind: "snapshot"; readonly envelopeJson: string } | { readonly kind: "ops"; readonly envelopes?: readonly BackboneOpEnvelope[] };
+export type BackboneMessage = { readonly kind: "snapshot"; readonly envelopeJson: string } | { readonly kind: "operations"; readonly envelopes?: readonly BackboneOpEnvelope[] };
 
 /**
  * 🔀 Mirrors `vcs::storage_send` — applies an incoming backbone message on top of a previously
- * stored envelope: a `snapshot` message overwrites, an `ops` message appends into `vcs.edits`
+ * stored envelope: a `snapshot` message overwrites, an `operations` message appends into `vcs.edits`
  * deduped by id. This is the canonical implementation; the dev host shim's generated JS
  * (`hostShimSource` in `framework/product/os/dev/script.ts`) hand-ports the same algorithm and
  * must be kept in sync until a build-time inlining step exists.
@@ -161,14 +161,14 @@ export type BackboneMessage = { readonly kind: "snapshot"; readonly envelopeJson
 export function applyBackboneMessage(storedEnvelopeJson: string | null, messageJson: string): string {
   const message = JSON.parse(messageJson) as BackboneMessage;
   if (message.kind === "snapshot") return message.envelopeJson;
-  if (message.kind === "ops") {
-    if (storedEnvelopeJson == null) throw new Error("cannot append ops before a snapshot exists");
+  if (message.kind === "operations") {
+    if (storedEnvelopeJson == null) throw new Error("cannot append operations before a snapshot exists");
     const envelope = JSON.parse(storedEnvelopeJson) as { vcs?: { edits?: unknown[] } };
     const edits = envelope?.vcs?.edits;
     if (!Array.isArray(edits)) throw new Error("stored envelope missing vcs.edits");
     const seen = new Set(edits.map((edit) => (edit as { id?: unknown })?.id).filter((id): id is string => typeof id === "string"));
-    for (const opEnvelope of message.envelopes ?? []) {
-      const editJson = opEnvelope?.diff?.payload;
+    for (const operationEnvelope of message.envelopes ?? []) {
+      const editJson = operationEnvelope?.diff?.payload;
       const id = editJson?.id;
       if (typeof id === "string") {
         if (seen.has(id)) continue;
@@ -215,7 +215,7 @@ export type DesktopWindowControls = { minimize(): Promise<unknown>; maximize(): 
  * 🔌 Registers host-side handlers for {@link DESKTOP_WINDOW_CONTROL_CHANNELS} against a structural
  * `ipc.handle`-shaped port — no `electron` types leak into this signature; a real Electron app wires
  * its `ipcMain`/`BrowserWindow` in at the call site. `maximize` toggles based on `isMaximized()`;
- * a null `focusedWindow()` is a no-op.
+ * a null `focusedWindow()` is a no-operation.
  */
 export function registerDesktopWindowControlHandlers(
   ipc: { handle(channel: string, fn: () => void): void },
@@ -263,7 +263,7 @@ export const BLOB_ENDPOINT_PATH = "/semio-blob";
  * stays plausible across both runtimes even though this file is a deliberately dumb TS twin (no
  * materialization — it only relays queues, exactly like the Rust actor's `ChannelBackbone` side).
  */
-export type OpEnvelope = {
+export type OperationEnvelope = {
   readonly id: string;
   readonly actor: string;
   readonly document: string;
@@ -296,18 +296,18 @@ export type DocumentPresencePeer = {
 /** 📨 Client→server hub wire frames — mirrors Rust `HubClientFrame` byte-for-byte. */
 export type HubClientFrame =
   | { readonly kind: "hello"; readonly actor: string; readonly token?: string; readonly sinceVersion: number }
-  | { readonly kind: "ops"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "operations"; readonly envelopes: readonly OperationEnvelope[] }
   | { readonly kind: "putEnvelope"; readonly version: number; readonly envelope: unknown }
   | { readonly kind: "presence"; readonly peer: DocumentPresencePeer }
   | { readonly kind: "bye" };
 
 /** 📬 Server→client hub wire frames — mirrors Rust `HubServerFrame` byte-for-byte. */
 export type HubServerFrame =
-  | { readonly kind: "welcome"; readonly version: number; readonly envelope?: unknown; readonly presence: readonly DocumentPresencePeer[]; readonly backlog: readonly OpEnvelope[] }
-  | { readonly kind: "ops"; readonly version: number; readonly envelopes: readonly OpEnvelope[]; readonly origin: string }
+  | { readonly kind: "welcome"; readonly version: number; readonly envelope?: unknown; readonly presence: readonly DocumentPresencePeer[]; readonly backlog: readonly OperationEnvelope[] }
+  | { readonly kind: "operations"; readonly version: number; readonly envelopes: readonly OperationEnvelope[]; readonly origin: string }
   | { readonly kind: "snapshotReplaced"; readonly version: number; readonly envelope: unknown }
   | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
-  | { readonly kind: "ack"; readonly opId: string; readonly version: number }
+  | { readonly kind: "ack"; readonly operationId: string; readonly version: number }
   | { readonly kind: "conflict"; readonly message: string }
   | { readonly kind: "error"; readonly message: string };
 
@@ -325,7 +325,7 @@ export type DocumentActorConfig = {
 
 /** 📨 Caller→actor control messages — mirrors Rust `DocumentActorMsg`. */
 export type DocumentActorMsg =
-  | { readonly kind: "localOps"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "localOperations"; readonly envelopes: readonly OperationEnvelope[] }
   | { readonly kind: "localSnapshot"; readonly envelopeJson: string }
   | { readonly kind: "presenceHeartbeat"; readonly peer: DocumentPresencePeer }
   | { readonly kind: "externalChanged" }
@@ -337,7 +337,7 @@ export type RemoteState = { readonly kind: "detached" } | { readonly kind: "conn
 /** 🚦 Sync health snapshot for status badges — mirrors Rust `DocumentSyncStatus`. */
 export type DocumentSyncStatus = {
   readonly persisted: boolean;
-  readonly pendingOps: number;
+  readonly pendingOperations: number;
   readonly remote: RemoteState;
 };
 
@@ -347,7 +347,7 @@ export type SyncConflict = { readonly message?: string } & Record<string, unknow
 
 /** 📬 Actor→subscriber events — mirrors Rust `DocumentEvent`. */
 export type DocumentEvent =
-  | { readonly kind: "remoteOps"; readonly envelopes: readonly OpEnvelope[] }
+  | { readonly kind: "remoteOperations"; readonly envelopes: readonly OperationEnvelope[] }
   | { readonly kind: "snapshotReplaced"; readonly envelopeJson: string }
   | ({ readonly kind: "status" } & DocumentSyncStatus)
   | { readonly kind: "presence"; readonly peers: readonly DocumentPresencePeer[] }
@@ -508,19 +508,19 @@ if (import.meta.vitest) {
       expect(applyBackboneMessage(null, messageJson)).toBe('{"vcs":{"edits":[]}}');
     });
 
-    it("applies an ops message by appending deduped edits into vcs.edits", () => {
+    it("applies an operations message by appending deduped edits into vcs.edits", () => {
       const stored = JSON.stringify({ vcs: { edits: [{ id: "e1" }] } });
       const messageJson = JSON.stringify({
-        kind: "ops",
+        kind: "operations",
         envelopes: [{ diff: { payload: { id: "e1" } } }, { diff: { payload: { id: "e2" } } }],
       });
       const result = JSON.parse(applyBackboneMessage(stored, messageJson)) as { vcs: { edits: Array<{ id: string }> } };
       expect(result.vcs.edits.map((edit) => edit.id)).toEqual(["e1", "e2"]);
     });
 
-    it("throws when applying an ops message before a snapshot exists", () => {
-      const messageJson = JSON.stringify({ kind: "ops", envelopes: [] });
-      expect(() => applyBackboneMessage(null, messageJson)).toThrow("cannot append ops before a snapshot exists");
+    it("throws when applying an operations message before a snapshot exists", () => {
+      const messageJson = JSON.stringify({ kind: "operations", envelopes: [] });
+      expect(() => applyBackboneMessage(null, messageJson)).toThrow("cannot append operations before a snapshot exists");
     });
 
     it("throws on an unsupported backbone message kind", () => {

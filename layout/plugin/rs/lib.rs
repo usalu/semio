@@ -4,7 +4,7 @@ use base64::Engine;
 use layout_rs::{
     build_display_list_for_page, export_document_pdf, export_document_png_cpu, export_document_svg, export_package_zip,
     parse_layout_document, resolve_page, DisplayList, Frame, FramePatch, ImageLinkPatch, LayoutCamera, LayoutDocument,
-    LayoutOp, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins, PagePatch, TextStoryPatch,
+    LayoutOperation, LAYOUT_FIXTURE_SCHEMA, Page, PageColumns, PageMargins, PagePatch, TextStoryPatch,
 };
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{SurfaceKind,
@@ -19,7 +19,7 @@ use semio_framework_plugin::{SurfaceKind,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -1236,7 +1236,7 @@ struct LayoutPlayApp {
 
 impl DocumentApp for LayoutPlayApp {
     type Projection = LayoutDocument;
-    type Op = LayoutOp;
+    type Operation = LayoutOperation;
 
     fn app_id(&self) -> &str {
         LAYOUT_PLAY_APP_ID
@@ -1256,7 +1256,7 @@ impl DocumentApp for LayoutPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, LayoutDocument>,
         view_state: &ViewState,
-    ) -> ActionEmit<LayoutOp> {
+    ) -> ActionEmit<LayoutOperation> {
         let document = doc.projection;
         match action {
             //#region 👁️View
@@ -1394,7 +1394,7 @@ impl DocumentApp for LayoutPlayApp {
                     },
                 };
                 self.runtime.selected_ids = vec![frame_id];
-                ActionEmit::ops(vec![LayoutOp::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }])
+                ActionEmit::operations(vec![LayoutOperation::AddFrame { page_id, index, frame, layer_id: Some(layer_id) }])
             }
             "addPage" => {
                 let template = document
@@ -1440,7 +1440,7 @@ impl DocumentApp for LayoutPlayApp {
                 };
                 self.runtime.active_page_id = page_id.clone();
                 self.runtime.selected_ids = vec![page_id];
-                ActionEmit::ops(vec![LayoutOp::Pages(CollectionOp::Add { index: document.pages.len(), item: page })])
+                ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Add { index: document.pages.len(), item: page })])
             }
             "patchPage" => {
                 let page_id = args
@@ -1452,7 +1452,7 @@ impl DocumentApp for LayoutPlayApp {
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 match page_patch_for_field(field, &value) {
                     Some(patch) if document.pages.iter().any(|page| page.id == page_id) => {
-                        ActionEmit::ops(vec![LayoutOp::Pages(CollectionOp::Patch { id: page_id, patch })])
+                        ActionEmit::operations(vec![LayoutOperation::Pages(CollectionOperation::Patch { id: page_id, patch })])
                     }
                     _ => ActionEmit::default(),
                 }
@@ -1477,7 +1477,7 @@ impl DocumentApp for LayoutPlayApp {
                 };
                 match field.as_str() {
                     "x" | "y" | "width" | "w" | "height" | "h" => match value.as_f64() {
-                        Some(number) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                        Some(number) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
                             page_id,
                             frame_id,
                             patch: frame_bounds_patch(&field, number),
@@ -1491,10 +1491,10 @@ impl DocumentApp for LayoutPlayApp {
                         } else {
                             FramePatch { stroke: Some(rgba), ..Default::default() }
                         };
-                        ActionEmit::ops(vec![LayoutOp::PatchFrame { page_id, frame_id, patch }])
+                        ActionEmit::operations(vec![LayoutOperation::PatchFrame { page_id, frame_id, patch }])
                     }
                     "wrapMode" => match value.as_str() {
-                        Some(mode) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                        Some(mode) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
                             page_id,
                             frame_id,
                             patch: FramePatch { wrap_mode: Some(mode.into()), ..Default::default() },
@@ -1502,7 +1502,7 @@ impl DocumentApp for LayoutPlayApp {
                         None => ActionEmit::default(),
                     },
                     "columns" => match value.as_f64() {
-                        Some(count) => ActionEmit::ops(vec![LayoutOp::PatchFrame {
+                        Some(count) => ActionEmit::operations(vec![LayoutOperation::PatchFrame {
                             page_id,
                             frame_id,
                             patch: FramePatch { columns: Some(count.max(0.0) as u32), ..Default::default() },
@@ -1516,7 +1516,7 @@ impl DocumentApp for LayoutPlayApp {
                         };
                         match (story_id, value.as_str()) {
                             (Some(story_id), Some(content)) if document.stories.iter().any(|story| story.id == story_id) => {
-                                ActionEmit::ops(vec![LayoutOp::Stories(CollectionOp::Patch {
+                                ActionEmit::operations(vec![LayoutOperation::Stories(CollectionOperation::Patch {
                                     id: story_id,
                                     patch: TextStoryPatch { content: Some(content.into()) },
                                 })])
@@ -1531,7 +1531,7 @@ impl DocumentApp for LayoutPlayApp {
                         };
                         match (link_id, value.as_str()) {
                             (Some(link_id), Some(path)) if document.links.iter().any(|link| link.id == link_id) => {
-                                ActionEmit::ops(vec![LayoutOp::Links(CollectionOp::Patch {
+                                ActionEmit::operations(vec![LayoutOperation::Links(CollectionOperation::Patch {
                                     id: link_id,
                                     patch: ImageLinkPatch { path: Some(path.into()) },
                                 })])
@@ -1550,7 +1550,7 @@ impl DocumentApp for LayoutPlayApp {
                     let zoom = camera_value.get("zoom").and_then(Value::as_f64);
                     if let (Some(x), Some(y), Some(zoom)) = (x, y, zoom) {
                         return ActionEmit {
-                            ops: vec![LayoutOp::SetCamera { blueprint, camera: LayoutCamera { x, y, zoom } }],
+                            operations: vec![LayoutOperation::SetCamera { blueprint, camera: LayoutCamera { x, y, zoom } }],
                             coalesce_key: Some(if blueprint { "camera-blueprint".into() } else { "camera-preview".into() }),
                             ..Default::default()
                         };
@@ -1775,7 +1775,7 @@ fn create_layout_app() -> App {
             .shell_action("exportSvg", "Export Svg")
             .shell_action("exportPdf", "Export Pdf")
             .shell_action("exportPackage", "Export Package")
-            // 🔧 Internal document ops — inspector/DnD/camera-bound, not palette commands.
+            // 🔧 Internal document operations — inspector/DnD/camera-bound, not palette commands.
             .action_with(layout_internal_action("patchPage", "Patch Page", ActionKind::Operation))
             .action_with(layout_internal_action("patchFrame", "Patch Frame", ActionKind::Operation))
             .action_with(layout_internal_action("setCamera", "Set Camera", ActionKind::Operation))
@@ -2398,7 +2398,7 @@ mod tests {
     #[test]
     fn registry_backed_engagement_submit_is_shell_effect_not_operation() {
         // 🧬 engagementSubmit is declared `Shell`: through the real registry the kind-discipline
-        // check must accept it because its handler only routes an export `HostEffect`, never ops.
+        // check must accept it because its handler only routes an export `HostEffect`, never operations.
         let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
         let result = app
             .handle_action("engagementSubmit", Some(&json!({ "value": "export png" })), &ViewState::default(), &testkit::meta("local"))
@@ -2409,7 +2409,7 @@ mod tests {
 
     #[test]
     fn registry_backed_add_frame_emits_operation() {
-        // 🧬 addFrame is declared `Operation`: the registry-backed wrapper must let its ops through.
+        // 🧬 addFrame is declared `Operation`: the registry-backed wrapper must let its operations through.
         let mut app = testkit::new_app_with_registry::<LayoutPlayApp>(create_layout_app);
         let result = app
             .handle_action("addFrame", Some(&json!({ "kind": "rect" })), &ViewState::default(), &testkit::meta("local"))

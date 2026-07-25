@@ -1,7 +1,7 @@
 //! 📦 ISO 16757 building-services product catalogue: parts 1, 2, 4, 5.
 
 use norm_core::{
-    AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind, SetDocumentOp,
+    AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind, SetDocumentOperation,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{HashMap, HashSet};
@@ -563,13 +563,13 @@ pub mod part_2 {
     pub enum GeometryNode {
         Primitive { kind: String, parameters: HashMap<String, f64> },
         Transform { translation: [f64; 3], rotation_deg: [f64; 3], child: Box<GeometryNode> },
-        Boolean { op: BooleanOp, children: Vec<GeometryNode> },
+        Boolean { operator: BooleanOperator, children: Vec<GeometryNode> },
         Reference { geometry_id: String },
     }
 
     /// ➕ Boolean CSG operator.
     #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
-    pub enum BooleanOp {
+    pub enum BooleanOperator {
         Union,
         Intersection,
         Difference,
@@ -633,7 +633,7 @@ pub mod part_2 {
                 rotation_deg: *rotation_deg,
                 child: Box::new(substitute_parameters(child, values)),
             },
-            GeometryNode::Boolean { op, children } => GeometryNode::Boolean { op: *op, children: children.iter().map(|c| substitute_parameters(c, values)).collect() },
+            GeometryNode::Boolean { operation, children } => GeometryNode::Boolean { operation: *operation, children: children.iter().map(|c| substitute_parameters(c, values)).collect() },
             GeometryNode::Reference { geometry_id } => GeometryNode::Reference { geometry_id: geometry_id.clone() },
         }
     }
@@ -1036,11 +1036,11 @@ pub mod part_5 {
         if let Some(inner) = expr.strip_prefix('(').and_then(|s| s.strip_suffix(')')) {
             return eval_expression(inner, inputs, steps - 1, max_recursion, depth + 1, started, timeout_ms);
         }
-        for op in ["+", "-", "*", "/"] {
-            if let Some((left, right)) = split_binary(expr, op) {
+        for operation in ["+", "-", "*", "/"] {
+            if let Some((left, right)) = split_binary(expr, operation) {
                 let l = eval_expression(left, inputs, steps - 1, max_recursion, depth + 1, started, timeout_ms)?;
                 let r = eval_expression(right, inputs, steps - 1, max_recursion, depth + 1, started, timeout_ms)?;
-                return Ok(match op {
+                return Ok(match operation {
                     "+" => l + r,
                     "-" => l - r,
                     "*" => l * r,
@@ -1057,16 +1057,16 @@ pub mod part_5 {
         Err(ScriptError::InvalidExpression(expr.into()))
     }
 
-    fn split_binary<'a>(expr: &'a str, op: &str) -> Option<(&'a str, &'a str)> {
+    fn split_binary<'a>(expr: &'a str, operation: &str) -> Option<(&'a str, &'a str)> {
         let mut depth = 0i32;
         for (idx, ch) in expr.char_indices().rev() {
             if ch == ')' {
                 depth += 1;
             } else if ch == '(' {
                 depth -= 1;
-            } else if depth == 0 && expr[idx..].starts_with(op) {
+            } else if depth == 0 && expr[idx..].starts_with(operation) {
                 let left = expr[..idx].trim();
-                let right = expr[idx + op.len()..].trim();
+                let right = expr[idx + operation.len()..].trim();
                 if !left.is_empty() && !right.is_empty() {
                     return Some((left, right));
                 }
@@ -1417,7 +1417,7 @@ impl Document {
     }
 }
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Iso16757Family>;
 
 fn clause(part: &str, section: &str) -> ClauseId {
@@ -1663,7 +1663,7 @@ pub struct Iso16757Family;
 
 impl NormFamily for Iso16757Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::Iso16757

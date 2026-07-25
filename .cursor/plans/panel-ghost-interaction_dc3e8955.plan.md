@@ -109,4 +109,4 @@ Introduce a panel-scoped "ghost" controller that unifies and replaces the inert 
 
 - Threshold-based activation avoids flicker on plain clicks.
 - Ghost is panel-local (per panel root), not global.
-- `MobilePanel` click-through is a no-op (no overlapped canvas) but the dim still applies for consistency.
+- `MobilePanel` click-through is a no-operation (no overlapped canvas) but the dim still applies for consistency.

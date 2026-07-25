@@ -1474,91 +1474,91 @@ mod kernel {
     }
 }
 
-mod ops {
-    //! 🔁 Program VCS operations — `CollectionOp` per register plus meta, adjacency, and bulk set.
+mod operations {
+    //! 🔁 Program VCS operations — `CollectionOperation` per register plus meta, adjacency, and bulk set.
 
     use crate::adjacency::{clear_adjacency, set_adjacency};
     use crate::kernel::{EntityId, TraceLink};
     use crate::program::Program;
     use crate::registers::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{apply_collection_op, invert_collection_op, CollectionOp, Operation, OperationDiff, Patchable};
+    use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Operation, OperationDiff, Patchable};
 
-    // #region 🔖ProgramOp
+    // #region 🔖ProgramOperation
     /// @emoji 🧩 Typed program document operation for VCS replay and undo.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
+    #[serde(tag = "operation", rename_all = "camelCase")]
     #[allow(
         clippy::large_enum_variant,
-        reason = "~65 variants each wrap CollectionOp<EntityId, T, TPatch> for a different program register T (Stakeholder..Benchmark); sizes inherently vary with T and boxing every payload is a much larger, separately-scoped restructuring (all apply_collection_op/invert_collection_op call sites + external construction sites) — SetProgram (the one outsized, genuinely-fixable single-field outlier) is already boxed"
+        reason = "~65 variants each wrap CollectionOperation<EntityId, T, TPatch> for a different program register T (Stakeholder..Benchmark); sizes inherently vary with T and boxing every payload is a much larger, separately-scoped restructuring (all apply_collection_operation/invert_collection_operation call sites + external construction sites) — SetProgram (the one outsized, genuinely-fixable single-field outlier) is already boxed"
     )]
-    pub enum ProgramOp {
-        Stakeholders(CollectionOp<EntityId, Stakeholder, StakeholderPatch>),
-        Users(CollectionOp<EntityId, UserProfile, UserProfilePatch>),
-        Activities(CollectionOp<EntityId, Activity, ActivityPatch>),
-        Functions(CollectionOp<EntityId, Function, FunctionPatch>),
-        Elements(CollectionOp<EntityId, ProgramElement, ProgramElementPatch>),
-        Quantities(CollectionOp<EntityId, QuantityRequirement, QuantityRequirementPatch>),
-        Relationships(CollectionOp<EntityId, Relationship, RelationshipPatch>),
-        Adjacencies(CollectionOp<EntityId, Adjacency, AdjacencyPatch>),
-        Processes(CollectionOp<EntityId, Process, ProcessPatch>),
-        Flows(CollectionOp<EntityId, FlowRequirement, FlowRequirementPatch>),
-        AccessRules(CollectionOp<EntityId, AccessRule, AccessRulePatch>),
-        Operations(CollectionOp<EntityId, OperationalRequirement, OperationalRequirementPatch>),
-        Equipment(CollectionOp<EntityId, Equipment, EquipmentPatch>),
-        Resources(CollectionOp<EntityId, Resource, ResourcePatch>),
-        Storage(CollectionOp<EntityId, StorageRequirement, StorageRequirementPatch>),
-        Environmental(CollectionOp<EntityId, EnvironmentalRequirement, EnvironmentalRequirementPatch>),
-        HumanFactors(CollectionOp<EntityId, HumanFactorRequirement, HumanFactorRequirementPatch>),
-        Accessibility(CollectionOp<EntityId, AccessibilityRequirement, AccessibilityRequirementPatch>),
-        Privacy(CollectionOp<EntityId, PrivacyRequirement, PrivacyRequirementPatch>),
-        Safety(CollectionOp<EntityId, SafetyRequirement, SafetyRequirementPatch>),
-        Security(CollectionOp<EntityId, SecurityRequirement, SecurityRequirementPatch>),
-        Regulatory(CollectionOp<EntityId, RegulatoryRequirement, RegulatoryRequirementPatch>),
-        SiteContext(CollectionOp<EntityId, SiteContext, SiteContextPatch>),
-        Organizational(CollectionOp<EntityId, OrganizationalRequirement, OrganizationalRequirementPatch>),
-        Services(CollectionOp<EntityId, ServiceRequirement, ServiceRequirementPatch>),
-        Infrastructure(CollectionOp<EntityId, InfrastructureRequirement, InfrastructureRequirementPatch>),
-        Information(CollectionOp<EntityId, InformationRequirement, InformationRequirementPatch>),
-        Communication(CollectionOp<EntityId, CommunicationRequirement, CommunicationRequirementPatch>),
-        Wayfinding(CollectionOp<EntityId, WayfindingRequirement, WayfindingRequirementPatch>),
-        Schedules(CollectionOp<EntityId, ScheduleRequirement, ScheduleRequirementPatch>),
-        Flexibility(CollectionOp<EntityId, FlexibilityRequirement, FlexibilityRequirementPatch>),
-        Growth(CollectionOp<EntityId, GrowthPlan, GrowthPlanPatch>),
-        Sustainability(CollectionOp<EntityId, SustainabilityRequirement, SustainabilityRequirementPatch>),
-        Resilience(CollectionOp<EntityId, ResilienceRequirement, ResilienceRequirementPatch>),
-        Costs(CollectionOp<EntityId, CostRequirement, CostRequirementPatch>),
-        Delivery(CollectionOp<EntityId, DeliveryConstraint, DeliveryConstraintPatch>),
-        Risks(CollectionOp<EntityId, Risk, RiskPatch>),
-        Conflicts(CollectionOp<EntityId, Conflict, ConflictPatch>),
-        Requirements(CollectionOp<EntityId, Requirement, RequirementPatch>),
-        Priorities(CollectionOp<EntityId, PriorityRecord, PriorityRecordPatch>),
-        Scenarios(CollectionOp<EntityId, Scenario, ScenarioPatch>),
-        Options(CollectionOp<EntityId, OptionEvaluation, OptionEvaluationPatch>),
-        Decisions(CollectionOp<EntityId, Decision, DecisionPatch>),
-        Validations(CollectionOp<EntityId, ValidationRecord, ValidationRecordPatch>),
-        Performance(CollectionOp<EntityId, PerformanceCriterion, PerformanceCriterionPatch>),
-        Quality(CollectionOp<EntityId, QualityRecord, QualityRecordPatch>),
-        Documents(CollectionOp<EntityId, DocumentRecord, DocumentRecordPatch>),
-        Changes(CollectionOp<EntityId, ChangeRecord, ChangeRecordPatch>),
-        Collaboration(CollectionOp<EntityId, CollaborationRecord, CollaborationRecordPatch>),
-        Analyses(CollectionOp<EntityId, AnalysisRecord, AnalysisRecordPatch>),
-        Reports(CollectionOp<EntityId, ReportRecord, ReportRecordPatch>),
-        SearchFilters(CollectionOp<EntityId, SearchFilter, SearchFilterPatch>),
-        StatusRecords(CollectionOp<EntityId, StatusRecord, StatusRecordPatch>),
-        Workshops(CollectionOp<EntityId, Workshop, WorkshopPatch>),
-        Surveys(CollectionOp<EntityId, Survey, SurveyPatch>),
-        Issues(CollectionOp<EntityId, Issue, IssuePatch>),
-        AuditEvents(CollectionOp<EntityId, AuditEvent, AuditEventPatch>),
-        Templates(CollectionOp<EntityId, TemplateRecord, TemplateRecordPatch>),
-        Knowledge(CollectionOp<EntityId, KnowledgeRecord, KnowledgeRecordPatch>),
-        Benchmarks(CollectionOp<EntityId, BenchmarkRecord, BenchmarkRecordPatch>),
-        Assumptions(CollectionOp<EntityId, Assumption, AssumptionPatch>),
-        Constraints(CollectionOp<EntityId, ConstraintRecord, ConstraintRecordPatch>),
-        ComplianceRecords(CollectionOp<EntityId, ComplianceRecord, ComplianceRecordPatch>),
-        Approvals(CollectionOp<EntityId, ApprovalRecord, ApprovalRecordPatch>),
-        Meetings(CollectionOp<EntityId, MeetingRecord, MeetingRecordPatch>),
-        Traces(CollectionOp<EntityId, TraceLink, TraceLinkPatch>),
+    pub enum ProgramOperation {
+        Stakeholders(CollectionOperation<EntityId, Stakeholder, StakeholderPatch>),
+        Users(CollectionOperation<EntityId, UserProfile, UserProfilePatch>),
+        Activities(CollectionOperation<EntityId, Activity, ActivityPatch>),
+        Functions(CollectionOperation<EntityId, Function, FunctionPatch>),
+        Elements(CollectionOperation<EntityId, ProgramElement, ProgramElementPatch>),
+        Quantities(CollectionOperation<EntityId, QuantityRequirement, QuantityRequirementPatch>),
+        Relationships(CollectionOperation<EntityId, Relationship, RelationshipPatch>),
+        Adjacencies(CollectionOperation<EntityId, Adjacency, AdjacencyPatch>),
+        Processes(CollectionOperation<EntityId, Process, ProcessPatch>),
+        Flows(CollectionOperation<EntityId, FlowRequirement, FlowRequirementPatch>),
+        AccessRules(CollectionOperation<EntityId, AccessRule, AccessRulePatch>),
+        Operations(CollectionOperation<EntityId, OperationalRequirement, OperationalRequirementPatch>),
+        Equipment(CollectionOperation<EntityId, Equipment, EquipmentPatch>),
+        Resources(CollectionOperation<EntityId, Resource, ResourcePatch>),
+        Storage(CollectionOperation<EntityId, StorageRequirement, StorageRequirementPatch>),
+        Environmental(CollectionOperation<EntityId, EnvironmentalRequirement, EnvironmentalRequirementPatch>),
+        HumanFactors(CollectionOperation<EntityId, HumanFactorRequirement, HumanFactorRequirementPatch>),
+        Accessibility(CollectionOperation<EntityId, AccessibilityRequirement, AccessibilityRequirementPatch>),
+        Privacy(CollectionOperation<EntityId, PrivacyRequirement, PrivacyRequirementPatch>),
+        Safety(CollectionOperation<EntityId, SafetyRequirement, SafetyRequirementPatch>),
+        Security(CollectionOperation<EntityId, SecurityRequirement, SecurityRequirementPatch>),
+        Regulatory(CollectionOperation<EntityId, RegulatoryRequirement, RegulatoryRequirementPatch>),
+        SiteContext(CollectionOperation<EntityId, SiteContext, SiteContextPatch>),
+        Organizational(CollectionOperation<EntityId, OrganizationalRequirement, OrganizationalRequirementPatch>),
+        Services(CollectionOperation<EntityId, ServiceRequirement, ServiceRequirementPatch>),
+        Infrastructure(CollectionOperation<EntityId, InfrastructureRequirement, InfrastructureRequirementPatch>),
+        Information(CollectionOperation<EntityId, InformationRequirement, InformationRequirementPatch>),
+        Communication(CollectionOperation<EntityId, CommunicationRequirement, CommunicationRequirementPatch>),
+        Wayfinding(CollectionOperation<EntityId, WayfindingRequirement, WayfindingRequirementPatch>),
+        Schedules(CollectionOperation<EntityId, ScheduleRequirement, ScheduleRequirementPatch>),
+        Flexibility(CollectionOperation<EntityId, FlexibilityRequirement, FlexibilityRequirementPatch>),
+        Growth(CollectionOperation<EntityId, GrowthPlan, GrowthPlanPatch>),
+        Sustainability(CollectionOperation<EntityId, SustainabilityRequirement, SustainabilityRequirementPatch>),
+        Resilience(CollectionOperation<EntityId, ResilienceRequirement, ResilienceRequirementPatch>),
+        Costs(CollectionOperation<EntityId, CostRequirement, CostRequirementPatch>),
+        Delivery(CollectionOperation<EntityId, DeliveryConstraint, DeliveryConstraintPatch>),
+        Risks(CollectionOperation<EntityId, Risk, RiskPatch>),
+        Conflicts(CollectionOperation<EntityId, Conflict, ConflictPatch>),
+        Requirements(CollectionOperation<EntityId, Requirement, RequirementPatch>),
+        Priorities(CollectionOperation<EntityId, PriorityRecord, PriorityRecordPatch>),
+        Scenarios(CollectionOperation<EntityId, Scenario, ScenarioPatch>),
+        Options(CollectionOperation<EntityId, OptionEvaluation, OptionEvaluationPatch>),
+        Decisions(CollectionOperation<EntityId, Decision, DecisionPatch>),
+        Validations(CollectionOperation<EntityId, ValidationRecord, ValidationRecordPatch>),
+        Performance(CollectionOperation<EntityId, PerformanceCriterion, PerformanceCriterionPatch>),
+        Quality(CollectionOperation<EntityId, QualityRecord, QualityRecordPatch>),
+        Documents(CollectionOperation<EntityId, DocumentRecord, DocumentRecordPatch>),
+        Changes(CollectionOperation<EntityId, ChangeRecord, ChangeRecordPatch>),
+        Collaboration(CollectionOperation<EntityId, CollaborationRecord, CollaborationRecordPatch>),
+        Analyses(CollectionOperation<EntityId, AnalysisRecord, AnalysisRecordPatch>),
+        Reports(CollectionOperation<EntityId, ReportRecord, ReportRecordPatch>),
+        SearchFilters(CollectionOperation<EntityId, SearchFilter, SearchFilterPatch>),
+        StatusRecords(CollectionOperation<EntityId, StatusRecord, StatusRecordPatch>),
+        Workshops(CollectionOperation<EntityId, Workshop, WorkshopPatch>),
+        Surveys(CollectionOperation<EntityId, Survey, SurveyPatch>),
+        Issues(CollectionOperation<EntityId, Issue, IssuePatch>),
+        AuditEvents(CollectionOperation<EntityId, AuditEvent, AuditEventPatch>),
+        Templates(CollectionOperation<EntityId, TemplateRecord, TemplateRecordPatch>),
+        Knowledge(CollectionOperation<EntityId, KnowledgeRecord, KnowledgeRecordPatch>),
+        Benchmarks(CollectionOperation<EntityId, BenchmarkRecord, BenchmarkRecordPatch>),
+        Assumptions(CollectionOperation<EntityId, Assumption, AssumptionPatch>),
+        Constraints(CollectionOperation<EntityId, ConstraintRecord, ConstraintRecordPatch>),
+        ComplianceRecords(CollectionOperation<EntityId, ComplianceRecord, ComplianceRecordPatch>),
+        Approvals(CollectionOperation<EntityId, ApprovalRecord, ApprovalRecordPatch>),
+        Meetings(CollectionOperation<EntityId, MeetingRecord, MeetingRecordPatch>),
+        Traces(CollectionOperation<EntityId, TraceLink, TraceLinkPatch>),
         UpdateMeta { patch: ProgramMetaPatch },
         UpdateProject { patch: ProjectDefinitionPatch },
         UpdateGovernance { patch: GovernancePatch },
@@ -1567,7 +1567,7 @@ mod ops {
         SetProgram { program: Box<Program> },
     }
 
-    /// @emoji 🩹 Inverse patch carrier for trace link collection ops.
+    /// @emoji 🩹 Inverse patch carrier for trace link collection operations.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct TraceLinkPatch {
@@ -1602,223 +1602,223 @@ mod ops {
     // #endregion
 
     // #region 🔖Apply
-    /// @emoji ▶️ Applies one program op to the document in place.
-    pub fn apply_program_op(program: &mut Program, op: &ProgramOp) {
-        match op {
-            ProgramOp::Stakeholders(collection_op) => apply_collection_op(&mut program.stakeholders, collection_op),
-            ProgramOp::Users(collection_op) => apply_collection_op(&mut program.users, collection_op),
-            ProgramOp::Activities(collection_op) => apply_collection_op(&mut program.activities, collection_op),
-            ProgramOp::Functions(collection_op) => apply_collection_op(&mut program.functions, collection_op),
-            ProgramOp::Elements(collection_op) => apply_collection_op(&mut program.elements, collection_op),
-            ProgramOp::Quantities(collection_op) => apply_collection_op(&mut program.quantities, collection_op),
-            ProgramOp::Relationships(collection_op) => apply_collection_op(&mut program.relationships, collection_op),
-            ProgramOp::Adjacencies(collection_op) => apply_collection_op(&mut program.adjacencies, collection_op),
-            ProgramOp::Processes(collection_op) => apply_collection_op(&mut program.processes, collection_op),
-            ProgramOp::Flows(collection_op) => apply_collection_op(&mut program.flows, collection_op),
-            ProgramOp::AccessRules(collection_op) => apply_collection_op(&mut program.access_rules, collection_op),
-            ProgramOp::Operations(collection_op) => apply_collection_op(&mut program.operations, collection_op),
-            ProgramOp::Equipment(collection_op) => apply_collection_op(&mut program.equipment, collection_op),
-            ProgramOp::Resources(collection_op) => apply_collection_op(&mut program.resources, collection_op),
-            ProgramOp::Storage(collection_op) => apply_collection_op(&mut program.storage, collection_op),
-            ProgramOp::Environmental(collection_op) => apply_collection_op(&mut program.environmental, collection_op),
-            ProgramOp::HumanFactors(collection_op) => apply_collection_op(&mut program.human_factors, collection_op),
-            ProgramOp::Accessibility(collection_op) => apply_collection_op(&mut program.accessibility, collection_op),
-            ProgramOp::Privacy(collection_op) => apply_collection_op(&mut program.privacy, collection_op),
-            ProgramOp::Safety(collection_op) => apply_collection_op(&mut program.safety, collection_op),
-            ProgramOp::Security(collection_op) => apply_collection_op(&mut program.security, collection_op),
-            ProgramOp::Regulatory(collection_op) => apply_collection_op(&mut program.regulatory, collection_op),
-            ProgramOp::SiteContext(collection_op) => apply_collection_op(&mut program.site_context, collection_op),
-            ProgramOp::Organizational(collection_op) => apply_collection_op(&mut program.organizational, collection_op),
-            ProgramOp::Services(collection_op) => apply_collection_op(&mut program.services, collection_op),
-            ProgramOp::Infrastructure(collection_op) => apply_collection_op(&mut program.infrastructure, collection_op),
-            ProgramOp::Information(collection_op) => apply_collection_op(&mut program.information, collection_op),
-            ProgramOp::Communication(collection_op) => apply_collection_op(&mut program.communication, collection_op),
-            ProgramOp::Wayfinding(collection_op) => apply_collection_op(&mut program.wayfinding, collection_op),
-            ProgramOp::Schedules(collection_op) => apply_collection_op(&mut program.schedules, collection_op),
-            ProgramOp::Flexibility(collection_op) => apply_collection_op(&mut program.flexibility, collection_op),
-            ProgramOp::Growth(collection_op) => apply_collection_op(&mut program.growth, collection_op),
-            ProgramOp::Sustainability(collection_op) => apply_collection_op(&mut program.sustainability, collection_op),
-            ProgramOp::Resilience(collection_op) => apply_collection_op(&mut program.resilience, collection_op),
-            ProgramOp::Costs(collection_op) => apply_collection_op(&mut program.costs, collection_op),
-            ProgramOp::Delivery(collection_op) => apply_collection_op(&mut program.delivery, collection_op),
-            ProgramOp::Risks(collection_op) => apply_collection_op(&mut program.risks, collection_op),
-            ProgramOp::Conflicts(collection_op) => apply_collection_op(&mut program.conflicts, collection_op),
-            ProgramOp::Requirements(collection_op) => apply_collection_op(&mut program.requirements, collection_op),
-            ProgramOp::Priorities(collection_op) => apply_collection_op(&mut program.priorities, collection_op),
-            ProgramOp::Scenarios(collection_op) => apply_collection_op(&mut program.scenarios, collection_op),
-            ProgramOp::Options(collection_op) => apply_collection_op(&mut program.options, collection_op),
-            ProgramOp::Decisions(collection_op) => apply_collection_op(&mut program.decisions, collection_op),
-            ProgramOp::Validations(collection_op) => apply_collection_op(&mut program.validations, collection_op),
-            ProgramOp::Performance(collection_op) => apply_collection_op(&mut program.performance, collection_op),
-            ProgramOp::Quality(collection_op) => apply_collection_op(&mut program.quality, collection_op),
-            ProgramOp::Documents(collection_op) => apply_collection_op(&mut program.documents, collection_op),
-            ProgramOp::Changes(collection_op) => apply_collection_op(&mut program.changes, collection_op),
-            ProgramOp::Collaboration(collection_op) => apply_collection_op(&mut program.collaboration, collection_op),
-            ProgramOp::Analyses(collection_op) => apply_collection_op(&mut program.analyses, collection_op),
-            ProgramOp::Reports(collection_op) => apply_collection_op(&mut program.reports, collection_op),
-            ProgramOp::SearchFilters(collection_op) => apply_collection_op(&mut program.search_filters, collection_op),
-            ProgramOp::StatusRecords(collection_op) => apply_collection_op(&mut program.status_records, collection_op),
-            ProgramOp::Workshops(collection_op) => apply_collection_op(&mut program.workshops, collection_op),
-            ProgramOp::Surveys(collection_op) => apply_collection_op(&mut program.surveys, collection_op),
-            ProgramOp::Issues(collection_op) => apply_collection_op(&mut program.issues, collection_op),
-            ProgramOp::AuditEvents(collection_op) => apply_collection_op(&mut program.audit_events, collection_op),
-            ProgramOp::Templates(collection_op) => apply_collection_op(&mut program.templates, collection_op),
-            ProgramOp::Knowledge(collection_op) => apply_collection_op(&mut program.knowledge, collection_op),
-            ProgramOp::Benchmarks(collection_op) => apply_collection_op(&mut program.benchmarks, collection_op),
-            ProgramOp::Assumptions(collection_op) => apply_collection_op(&mut program.assumptions, collection_op),
-            ProgramOp::Constraints(collection_op) => apply_collection_op(&mut program.constraints, collection_op),
-            ProgramOp::ComplianceRecords(collection_op) => {
-                apply_collection_op(&mut program.compliance_records, collection_op);
+    /// @emoji ▶️ Applies one program operation to the document in place.
+    pub fn apply_program_operation(program: &mut Program, operation: &ProgramOperation) {
+        match operation {
+            ProgramOperation::Stakeholders(collection_operation) => apply_collection_operation(&mut program.stakeholders, collection_operation),
+            ProgramOperation::Users(collection_operation) => apply_collection_operation(&mut program.users, collection_operation),
+            ProgramOperation::Activities(collection_operation) => apply_collection_operation(&mut program.activities, collection_operation),
+            ProgramOperation::Functions(collection_operation) => apply_collection_operation(&mut program.functions, collection_operation),
+            ProgramOperation::Elements(collection_operation) => apply_collection_operation(&mut program.elements, collection_operation),
+            ProgramOperation::Quantities(collection_operation) => apply_collection_operation(&mut program.quantities, collection_operation),
+            ProgramOperation::Relationships(collection_operation) => apply_collection_operation(&mut program.relationships, collection_operation),
+            ProgramOperation::Adjacencies(collection_operation) => apply_collection_operation(&mut program.adjacencies, collection_operation),
+            ProgramOperation::Processes(collection_operation) => apply_collection_operation(&mut program.processes, collection_operation),
+            ProgramOperation::Flows(collection_operation) => apply_collection_operation(&mut program.flows, collection_operation),
+            ProgramOperation::AccessRules(collection_operation) => apply_collection_operation(&mut program.access_rules, collection_operation),
+            ProgramOperation::Operations(collection_operation) => apply_collection_operation(&mut program.operations, collection_operation),
+            ProgramOperation::Equipment(collection_operation) => apply_collection_operation(&mut program.equipment, collection_operation),
+            ProgramOperation::Resources(collection_operation) => apply_collection_operation(&mut program.resources, collection_operation),
+            ProgramOperation::Storage(collection_operation) => apply_collection_operation(&mut program.storage, collection_operation),
+            ProgramOperation::Environmental(collection_operation) => apply_collection_operation(&mut program.environmental, collection_operation),
+            ProgramOperation::HumanFactors(collection_operation) => apply_collection_operation(&mut program.human_factors, collection_operation),
+            ProgramOperation::Accessibility(collection_operation) => apply_collection_operation(&mut program.accessibility, collection_operation),
+            ProgramOperation::Privacy(collection_operation) => apply_collection_operation(&mut program.privacy, collection_operation),
+            ProgramOperation::Safety(collection_operation) => apply_collection_operation(&mut program.safety, collection_operation),
+            ProgramOperation::Security(collection_operation) => apply_collection_operation(&mut program.security, collection_operation),
+            ProgramOperation::Regulatory(collection_operation) => apply_collection_operation(&mut program.regulatory, collection_operation),
+            ProgramOperation::SiteContext(collection_operation) => apply_collection_operation(&mut program.site_context, collection_operation),
+            ProgramOperation::Organizational(collection_operation) => apply_collection_operation(&mut program.organizational, collection_operation),
+            ProgramOperation::Services(collection_operation) => apply_collection_operation(&mut program.services, collection_operation),
+            ProgramOperation::Infrastructure(collection_operation) => apply_collection_operation(&mut program.infrastructure, collection_operation),
+            ProgramOperation::Information(collection_operation) => apply_collection_operation(&mut program.information, collection_operation),
+            ProgramOperation::Communication(collection_operation) => apply_collection_operation(&mut program.communication, collection_operation),
+            ProgramOperation::Wayfinding(collection_operation) => apply_collection_operation(&mut program.wayfinding, collection_operation),
+            ProgramOperation::Schedules(collection_operation) => apply_collection_operation(&mut program.schedules, collection_operation),
+            ProgramOperation::Flexibility(collection_operation) => apply_collection_operation(&mut program.flexibility, collection_operation),
+            ProgramOperation::Growth(collection_operation) => apply_collection_operation(&mut program.growth, collection_operation),
+            ProgramOperation::Sustainability(collection_operation) => apply_collection_operation(&mut program.sustainability, collection_operation),
+            ProgramOperation::Resilience(collection_operation) => apply_collection_operation(&mut program.resilience, collection_operation),
+            ProgramOperation::Costs(collection_operation) => apply_collection_operation(&mut program.costs, collection_operation),
+            ProgramOperation::Delivery(collection_operation) => apply_collection_operation(&mut program.delivery, collection_operation),
+            ProgramOperation::Risks(collection_operation) => apply_collection_operation(&mut program.risks, collection_operation),
+            ProgramOperation::Conflicts(collection_operation) => apply_collection_operation(&mut program.conflicts, collection_operation),
+            ProgramOperation::Requirements(collection_operation) => apply_collection_operation(&mut program.requirements, collection_operation),
+            ProgramOperation::Priorities(collection_operation) => apply_collection_operation(&mut program.priorities, collection_operation),
+            ProgramOperation::Scenarios(collection_operation) => apply_collection_operation(&mut program.scenarios, collection_operation),
+            ProgramOperation::Options(collection_operation) => apply_collection_operation(&mut program.options, collection_operation),
+            ProgramOperation::Decisions(collection_operation) => apply_collection_operation(&mut program.decisions, collection_operation),
+            ProgramOperation::Validations(collection_operation) => apply_collection_operation(&mut program.validations, collection_operation),
+            ProgramOperation::Performance(collection_operation) => apply_collection_operation(&mut program.performance, collection_operation),
+            ProgramOperation::Quality(collection_operation) => apply_collection_operation(&mut program.quality, collection_operation),
+            ProgramOperation::Documents(collection_operation) => apply_collection_operation(&mut program.documents, collection_operation),
+            ProgramOperation::Changes(collection_operation) => apply_collection_operation(&mut program.changes, collection_operation),
+            ProgramOperation::Collaboration(collection_operation) => apply_collection_operation(&mut program.collaboration, collection_operation),
+            ProgramOperation::Analyses(collection_operation) => apply_collection_operation(&mut program.analyses, collection_operation),
+            ProgramOperation::Reports(collection_operation) => apply_collection_operation(&mut program.reports, collection_operation),
+            ProgramOperation::SearchFilters(collection_operation) => apply_collection_operation(&mut program.search_filters, collection_operation),
+            ProgramOperation::StatusRecords(collection_operation) => apply_collection_operation(&mut program.status_records, collection_operation),
+            ProgramOperation::Workshops(collection_operation) => apply_collection_operation(&mut program.workshops, collection_operation),
+            ProgramOperation::Surveys(collection_operation) => apply_collection_operation(&mut program.surveys, collection_operation),
+            ProgramOperation::Issues(collection_operation) => apply_collection_operation(&mut program.issues, collection_operation),
+            ProgramOperation::AuditEvents(collection_operation) => apply_collection_operation(&mut program.audit_events, collection_operation),
+            ProgramOperation::Templates(collection_operation) => apply_collection_operation(&mut program.templates, collection_operation),
+            ProgramOperation::Knowledge(collection_operation) => apply_collection_operation(&mut program.knowledge, collection_operation),
+            ProgramOperation::Benchmarks(collection_operation) => apply_collection_operation(&mut program.benchmarks, collection_operation),
+            ProgramOperation::Assumptions(collection_operation) => apply_collection_operation(&mut program.assumptions, collection_operation),
+            ProgramOperation::Constraints(collection_operation) => apply_collection_operation(&mut program.constraints, collection_operation),
+            ProgramOperation::ComplianceRecords(collection_operation) => {
+                apply_collection_operation(&mut program.compliance_records, collection_operation);
             }
-            ProgramOp::Approvals(collection_op) => apply_collection_op(&mut program.approvals, collection_op),
-            ProgramOp::Meetings(collection_op) => apply_collection_op(&mut program.meetings, collection_op),
-            ProgramOp::Traces(collection_op) => apply_collection_op(&mut program.traces, collection_op),
-            ProgramOp::UpdateMeta { patch } => {
+            ProgramOperation::Approvals(collection_operation) => apply_collection_operation(&mut program.approvals, collection_operation),
+            ProgramOperation::Meetings(collection_operation) => apply_collection_operation(&mut program.meetings, collection_operation),
+            ProgramOperation::Traces(collection_operation) => apply_collection_operation(&mut program.traces, collection_operation),
+            ProgramOperation::UpdateMeta { patch } => {
                 program.meta.apply_patch(patch);
             }
-            ProgramOp::UpdateProject { patch } => {
+            ProgramOperation::UpdateProject { patch } => {
                 program.project.apply_patch(patch);
             }
-            ProgramOp::UpdateGovernance { patch } => {
+            ProgramOperation::UpdateGovernance { patch } => {
                 program.governance.apply_patch(patch);
             }
-            ProgramOp::SetAdjacency { adjacency } => set_adjacency(program, adjacency.clone()),
-            ProgramOp::ClearAdjacency { id } => clear_adjacency(program, id),
-            ProgramOp::SetProgram { program: replacement } => *program = (**replacement).clone(),
+            ProgramOperation::SetAdjacency { adjacency } => set_adjacency(program, adjacency.clone()),
+            ProgramOperation::ClearAdjacency { id } => clear_adjacency(program, id),
+            ProgramOperation::SetProgram { program: replacement } => *program = (**replacement).clone(),
         }
     }
 
-    /// @emoji ↩️ Computes the inverse op from pre-state for undo.
-    pub fn invert_program_op(program: &Program, op: &ProgramOp) -> ProgramOp {
-        match op {
-            ProgramOp::Stakeholders(collection_op) => ProgramOp::Stakeholders(invert_collection_op(&program.stakeholders, collection_op)),
-            ProgramOp::Users(collection_op) => ProgramOp::Users(invert_collection_op(&program.users, collection_op)),
-            ProgramOp::Activities(collection_op) => ProgramOp::Activities(invert_collection_op(&program.activities, collection_op)),
-            ProgramOp::Functions(collection_op) => ProgramOp::Functions(invert_collection_op(&program.functions, collection_op)),
-            ProgramOp::Elements(collection_op) => ProgramOp::Elements(invert_collection_op(&program.elements, collection_op)),
-            ProgramOp::Quantities(collection_op) => ProgramOp::Quantities(invert_collection_op(&program.quantities, collection_op)),
-            ProgramOp::Relationships(collection_op) => ProgramOp::Relationships(invert_collection_op(&program.relationships, collection_op)),
-            ProgramOp::Adjacencies(collection_op) => ProgramOp::Adjacencies(invert_collection_op(&program.adjacencies, collection_op)),
-            ProgramOp::Processes(collection_op) => ProgramOp::Processes(invert_collection_op(&program.processes, collection_op)),
-            ProgramOp::Flows(collection_op) => ProgramOp::Flows(invert_collection_op(&program.flows, collection_op)),
-            ProgramOp::AccessRules(collection_op) => ProgramOp::AccessRules(invert_collection_op(&program.access_rules, collection_op)),
-            ProgramOp::Operations(collection_op) => ProgramOp::Operations(invert_collection_op(&program.operations, collection_op)),
-            ProgramOp::Equipment(collection_op) => ProgramOp::Equipment(invert_collection_op(&program.equipment, collection_op)),
-            ProgramOp::Resources(collection_op) => ProgramOp::Resources(invert_collection_op(&program.resources, collection_op)),
-            ProgramOp::Storage(collection_op) => ProgramOp::Storage(invert_collection_op(&program.storage, collection_op)),
-            ProgramOp::Environmental(collection_op) => ProgramOp::Environmental(invert_collection_op(&program.environmental, collection_op)),
-            ProgramOp::HumanFactors(collection_op) => ProgramOp::HumanFactors(invert_collection_op(&program.human_factors, collection_op)),
-            ProgramOp::Accessibility(collection_op) => ProgramOp::Accessibility(invert_collection_op(&program.accessibility, collection_op)),
-            ProgramOp::Privacy(collection_op) => ProgramOp::Privacy(invert_collection_op(&program.privacy, collection_op)),
-            ProgramOp::Safety(collection_op) => ProgramOp::Safety(invert_collection_op(&program.safety, collection_op)),
-            ProgramOp::Security(collection_op) => ProgramOp::Security(invert_collection_op(&program.security, collection_op)),
-            ProgramOp::Regulatory(collection_op) => ProgramOp::Regulatory(invert_collection_op(&program.regulatory, collection_op)),
-            ProgramOp::SiteContext(collection_op) => ProgramOp::SiteContext(invert_collection_op(&program.site_context, collection_op)),
-            ProgramOp::Organizational(collection_op) => ProgramOp::Organizational(invert_collection_op(&program.organizational, collection_op)),
-            ProgramOp::Services(collection_op) => ProgramOp::Services(invert_collection_op(&program.services, collection_op)),
-            ProgramOp::Infrastructure(collection_op) => ProgramOp::Infrastructure(invert_collection_op(&program.infrastructure, collection_op)),
-            ProgramOp::Information(collection_op) => ProgramOp::Information(invert_collection_op(&program.information, collection_op)),
-            ProgramOp::Communication(collection_op) => ProgramOp::Communication(invert_collection_op(&program.communication, collection_op)),
-            ProgramOp::Wayfinding(collection_op) => ProgramOp::Wayfinding(invert_collection_op(&program.wayfinding, collection_op)),
-            ProgramOp::Schedules(collection_op) => ProgramOp::Schedules(invert_collection_op(&program.schedules, collection_op)),
-            ProgramOp::Flexibility(collection_op) => ProgramOp::Flexibility(invert_collection_op(&program.flexibility, collection_op)),
-            ProgramOp::Growth(collection_op) => ProgramOp::Growth(invert_collection_op(&program.growth, collection_op)),
-            ProgramOp::Sustainability(collection_op) => ProgramOp::Sustainability(invert_collection_op(&program.sustainability, collection_op)),
-            ProgramOp::Resilience(collection_op) => ProgramOp::Resilience(invert_collection_op(&program.resilience, collection_op)),
-            ProgramOp::Costs(collection_op) => ProgramOp::Costs(invert_collection_op(&program.costs, collection_op)),
-            ProgramOp::Delivery(collection_op) => ProgramOp::Delivery(invert_collection_op(&program.delivery, collection_op)),
-            ProgramOp::Risks(collection_op) => ProgramOp::Risks(invert_collection_op(&program.risks, collection_op)),
-            ProgramOp::Conflicts(collection_op) => ProgramOp::Conflicts(invert_collection_op(&program.conflicts, collection_op)),
-            ProgramOp::Requirements(collection_op) => ProgramOp::Requirements(invert_collection_op(&program.requirements, collection_op)),
-            ProgramOp::Priorities(collection_op) => ProgramOp::Priorities(invert_collection_op(&program.priorities, collection_op)),
-            ProgramOp::Scenarios(collection_op) => ProgramOp::Scenarios(invert_collection_op(&program.scenarios, collection_op)),
-            ProgramOp::Options(collection_op) => ProgramOp::Options(invert_collection_op(&program.options, collection_op)),
-            ProgramOp::Decisions(collection_op) => ProgramOp::Decisions(invert_collection_op(&program.decisions, collection_op)),
-            ProgramOp::Validations(collection_op) => ProgramOp::Validations(invert_collection_op(&program.validations, collection_op)),
-            ProgramOp::Performance(collection_op) => ProgramOp::Performance(invert_collection_op(&program.performance, collection_op)),
-            ProgramOp::Quality(collection_op) => ProgramOp::Quality(invert_collection_op(&program.quality, collection_op)),
-            ProgramOp::Documents(collection_op) => ProgramOp::Documents(invert_collection_op(&program.documents, collection_op)),
-            ProgramOp::Changes(collection_op) => ProgramOp::Changes(invert_collection_op(&program.changes, collection_op)),
-            ProgramOp::Collaboration(collection_op) => ProgramOp::Collaboration(invert_collection_op(&program.collaboration, collection_op)),
-            ProgramOp::Analyses(collection_op) => ProgramOp::Analyses(invert_collection_op(&program.analyses, collection_op)),
-            ProgramOp::Reports(collection_op) => ProgramOp::Reports(invert_collection_op(&program.reports, collection_op)),
-            ProgramOp::SearchFilters(collection_op) => ProgramOp::SearchFilters(invert_collection_op(&program.search_filters, collection_op)),
-            ProgramOp::StatusRecords(collection_op) => ProgramOp::StatusRecords(invert_collection_op(&program.status_records, collection_op)),
-            ProgramOp::Workshops(collection_op) => ProgramOp::Workshops(invert_collection_op(&program.workshops, collection_op)),
-            ProgramOp::Surveys(collection_op) => ProgramOp::Surveys(invert_collection_op(&program.surveys, collection_op)),
-            ProgramOp::Issues(collection_op) => ProgramOp::Issues(invert_collection_op(&program.issues, collection_op)),
-            ProgramOp::AuditEvents(collection_op) => ProgramOp::AuditEvents(invert_collection_op(&program.audit_events, collection_op)),
-            ProgramOp::Templates(collection_op) => ProgramOp::Templates(invert_collection_op(&program.templates, collection_op)),
-            ProgramOp::Knowledge(collection_op) => ProgramOp::Knowledge(invert_collection_op(&program.knowledge, collection_op)),
-            ProgramOp::Benchmarks(collection_op) => ProgramOp::Benchmarks(invert_collection_op(&program.benchmarks, collection_op)),
-            ProgramOp::Assumptions(collection_op) => ProgramOp::Assumptions(invert_collection_op(&program.assumptions, collection_op)),
-            ProgramOp::Constraints(collection_op) => ProgramOp::Constraints(invert_collection_op(&program.constraints, collection_op)),
-            ProgramOp::ComplianceRecords(collection_op) => ProgramOp::ComplianceRecords(invert_collection_op(&program.compliance_records, collection_op)),
-            ProgramOp::Approvals(collection_op) => ProgramOp::Approvals(invert_collection_op(&program.approvals, collection_op)),
-            ProgramOp::Meetings(collection_op) => ProgramOp::Meetings(invert_collection_op(&program.meetings, collection_op)),
-            ProgramOp::Traces(collection_op) => ProgramOp::Traces(invert_collection_op(&program.traces, collection_op)),
-            ProgramOp::UpdateMeta { patch } => {
+    /// @emoji ↩️ Computes the inverse operation from pre-state for undo.
+    pub fn invert_program_operation(program: &Program, operation: &ProgramOperation) -> ProgramOperation {
+        match operation {
+            ProgramOperation::Stakeholders(collection_operation) => ProgramOperation::Stakeholders(invert_collection_operation(&program.stakeholders, collection_operation)),
+            ProgramOperation::Users(collection_operation) => ProgramOperation::Users(invert_collection_operation(&program.users, collection_operation)),
+            ProgramOperation::Activities(collection_operation) => ProgramOperation::Activities(invert_collection_operation(&program.activities, collection_operation)),
+            ProgramOperation::Functions(collection_operation) => ProgramOperation::Functions(invert_collection_operation(&program.functions, collection_operation)),
+            ProgramOperation::Elements(collection_operation) => ProgramOperation::Elements(invert_collection_operation(&program.elements, collection_operation)),
+            ProgramOperation::Quantities(collection_operation) => ProgramOperation::Quantities(invert_collection_operation(&program.quantities, collection_operation)),
+            ProgramOperation::Relationships(collection_operation) => ProgramOperation::Relationships(invert_collection_operation(&program.relationships, collection_operation)),
+            ProgramOperation::Adjacencies(collection_operation) => ProgramOperation::Adjacencies(invert_collection_operation(&program.adjacencies, collection_operation)),
+            ProgramOperation::Processes(collection_operation) => ProgramOperation::Processes(invert_collection_operation(&program.processes, collection_operation)),
+            ProgramOperation::Flows(collection_operation) => ProgramOperation::Flows(invert_collection_operation(&program.flows, collection_operation)),
+            ProgramOperation::AccessRules(collection_operation) => ProgramOperation::AccessRules(invert_collection_operation(&program.access_rules, collection_operation)),
+            ProgramOperation::Operations(collection_operation) => ProgramOperation::Operations(invert_collection_operation(&program.operations, collection_operation)),
+            ProgramOperation::Equipment(collection_operation) => ProgramOperation::Equipment(invert_collection_operation(&program.equipment, collection_operation)),
+            ProgramOperation::Resources(collection_operation) => ProgramOperation::Resources(invert_collection_operation(&program.resources, collection_operation)),
+            ProgramOperation::Storage(collection_operation) => ProgramOperation::Storage(invert_collection_operation(&program.storage, collection_operation)),
+            ProgramOperation::Environmental(collection_operation) => ProgramOperation::Environmental(invert_collection_operation(&program.environmental, collection_operation)),
+            ProgramOperation::HumanFactors(collection_operation) => ProgramOperation::HumanFactors(invert_collection_operation(&program.human_factors, collection_operation)),
+            ProgramOperation::Accessibility(collection_operation) => ProgramOperation::Accessibility(invert_collection_operation(&program.accessibility, collection_operation)),
+            ProgramOperation::Privacy(collection_operation) => ProgramOperation::Privacy(invert_collection_operation(&program.privacy, collection_operation)),
+            ProgramOperation::Safety(collection_operation) => ProgramOperation::Safety(invert_collection_operation(&program.safety, collection_operation)),
+            ProgramOperation::Security(collection_operation) => ProgramOperation::Security(invert_collection_operation(&program.security, collection_operation)),
+            ProgramOperation::Regulatory(collection_operation) => ProgramOperation::Regulatory(invert_collection_operation(&program.regulatory, collection_operation)),
+            ProgramOperation::SiteContext(collection_operation) => ProgramOperation::SiteContext(invert_collection_operation(&program.site_context, collection_operation)),
+            ProgramOperation::Organizational(collection_operation) => ProgramOperation::Organizational(invert_collection_operation(&program.organizational, collection_operation)),
+            ProgramOperation::Services(collection_operation) => ProgramOperation::Services(invert_collection_operation(&program.services, collection_operation)),
+            ProgramOperation::Infrastructure(collection_operation) => ProgramOperation::Infrastructure(invert_collection_operation(&program.infrastructure, collection_operation)),
+            ProgramOperation::Information(collection_operation) => ProgramOperation::Information(invert_collection_operation(&program.information, collection_operation)),
+            ProgramOperation::Communication(collection_operation) => ProgramOperation::Communication(invert_collection_operation(&program.communication, collection_operation)),
+            ProgramOperation::Wayfinding(collection_operation) => ProgramOperation::Wayfinding(invert_collection_operation(&program.wayfinding, collection_operation)),
+            ProgramOperation::Schedules(collection_operation) => ProgramOperation::Schedules(invert_collection_operation(&program.schedules, collection_operation)),
+            ProgramOperation::Flexibility(collection_operation) => ProgramOperation::Flexibility(invert_collection_operation(&program.flexibility, collection_operation)),
+            ProgramOperation::Growth(collection_operation) => ProgramOperation::Growth(invert_collection_operation(&program.growth, collection_operation)),
+            ProgramOperation::Sustainability(collection_operation) => ProgramOperation::Sustainability(invert_collection_operation(&program.sustainability, collection_operation)),
+            ProgramOperation::Resilience(collection_operation) => ProgramOperation::Resilience(invert_collection_operation(&program.resilience, collection_operation)),
+            ProgramOperation::Costs(collection_operation) => ProgramOperation::Costs(invert_collection_operation(&program.costs, collection_operation)),
+            ProgramOperation::Delivery(collection_operation) => ProgramOperation::Delivery(invert_collection_operation(&program.delivery, collection_operation)),
+            ProgramOperation::Risks(collection_operation) => ProgramOperation::Risks(invert_collection_operation(&program.risks, collection_operation)),
+            ProgramOperation::Conflicts(collection_operation) => ProgramOperation::Conflicts(invert_collection_operation(&program.conflicts, collection_operation)),
+            ProgramOperation::Requirements(collection_operation) => ProgramOperation::Requirements(invert_collection_operation(&program.requirements, collection_operation)),
+            ProgramOperation::Priorities(collection_operation) => ProgramOperation::Priorities(invert_collection_operation(&program.priorities, collection_operation)),
+            ProgramOperation::Scenarios(collection_operation) => ProgramOperation::Scenarios(invert_collection_operation(&program.scenarios, collection_operation)),
+            ProgramOperation::Options(collection_operation) => ProgramOperation::Options(invert_collection_operation(&program.options, collection_operation)),
+            ProgramOperation::Decisions(collection_operation) => ProgramOperation::Decisions(invert_collection_operation(&program.decisions, collection_operation)),
+            ProgramOperation::Validations(collection_operation) => ProgramOperation::Validations(invert_collection_operation(&program.validations, collection_operation)),
+            ProgramOperation::Performance(collection_operation) => ProgramOperation::Performance(invert_collection_operation(&program.performance, collection_operation)),
+            ProgramOperation::Quality(collection_operation) => ProgramOperation::Quality(invert_collection_operation(&program.quality, collection_operation)),
+            ProgramOperation::Documents(collection_operation) => ProgramOperation::Documents(invert_collection_operation(&program.documents, collection_operation)),
+            ProgramOperation::Changes(collection_operation) => ProgramOperation::Changes(invert_collection_operation(&program.changes, collection_operation)),
+            ProgramOperation::Collaboration(collection_operation) => ProgramOperation::Collaboration(invert_collection_operation(&program.collaboration, collection_operation)),
+            ProgramOperation::Analyses(collection_operation) => ProgramOperation::Analyses(invert_collection_operation(&program.analyses, collection_operation)),
+            ProgramOperation::Reports(collection_operation) => ProgramOperation::Reports(invert_collection_operation(&program.reports, collection_operation)),
+            ProgramOperation::SearchFilters(collection_operation) => ProgramOperation::SearchFilters(invert_collection_operation(&program.search_filters, collection_operation)),
+            ProgramOperation::StatusRecords(collection_operation) => ProgramOperation::StatusRecords(invert_collection_operation(&program.status_records, collection_operation)),
+            ProgramOperation::Workshops(collection_operation) => ProgramOperation::Workshops(invert_collection_operation(&program.workshops, collection_operation)),
+            ProgramOperation::Surveys(collection_operation) => ProgramOperation::Surveys(invert_collection_operation(&program.surveys, collection_operation)),
+            ProgramOperation::Issues(collection_operation) => ProgramOperation::Issues(invert_collection_operation(&program.issues, collection_operation)),
+            ProgramOperation::AuditEvents(collection_operation) => ProgramOperation::AuditEvents(invert_collection_operation(&program.audit_events, collection_operation)),
+            ProgramOperation::Templates(collection_operation) => ProgramOperation::Templates(invert_collection_operation(&program.templates, collection_operation)),
+            ProgramOperation::Knowledge(collection_operation) => ProgramOperation::Knowledge(invert_collection_operation(&program.knowledge, collection_operation)),
+            ProgramOperation::Benchmarks(collection_operation) => ProgramOperation::Benchmarks(invert_collection_operation(&program.benchmarks, collection_operation)),
+            ProgramOperation::Assumptions(collection_operation) => ProgramOperation::Assumptions(invert_collection_operation(&program.assumptions, collection_operation)),
+            ProgramOperation::Constraints(collection_operation) => ProgramOperation::Constraints(invert_collection_operation(&program.constraints, collection_operation)),
+            ProgramOperation::ComplianceRecords(collection_operation) => ProgramOperation::ComplianceRecords(invert_collection_operation(&program.compliance_records, collection_operation)),
+            ProgramOperation::Approvals(collection_operation) => ProgramOperation::Approvals(invert_collection_operation(&program.approvals, collection_operation)),
+            ProgramOperation::Meetings(collection_operation) => ProgramOperation::Meetings(invert_collection_operation(&program.meetings, collection_operation)),
+            ProgramOperation::Traces(collection_operation) => ProgramOperation::Traces(invert_collection_operation(&program.traces, collection_operation)),
+            ProgramOperation::UpdateMeta { patch } => {
                 let mut probe = program.meta.clone();
                 let inverse = probe.apply_patch(patch);
-                ProgramOp::UpdateMeta { patch: inverse }
+                ProgramOperation::UpdateMeta { patch: inverse }
             }
-            ProgramOp::UpdateProject { patch } => {
+            ProgramOperation::UpdateProject { patch } => {
                 let mut probe = program.project.clone();
                 let inverse = probe.apply_patch(patch);
-                ProgramOp::UpdateProject { patch: inverse }
+                ProgramOperation::UpdateProject { patch: inverse }
             }
-            ProgramOp::UpdateGovernance { patch } => {
+            ProgramOperation::UpdateGovernance { patch } => {
                 let mut probe = program.governance.clone();
                 let inverse = probe.apply_patch(patch);
-                ProgramOp::UpdateGovernance { patch: inverse }
+                ProgramOperation::UpdateGovernance { patch: inverse }
             }
-            ProgramOp::SetAdjacency { adjacency } => {
+            ProgramOperation::SetAdjacency { adjacency } => {
                 if let Some(existing) = program.adjacencies.iter().find(|row| row.header.id == adjacency.header.id) {
-                    ProgramOp::SetAdjacency { adjacency: existing.clone() }
+                    ProgramOperation::SetAdjacency { adjacency: existing.clone() }
                 } else {
-                    ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() }
+                    ProgramOperation::ClearAdjacency { id: adjacency.header.id.clone() }
                 }
             }
-            ProgramOp::ClearAdjacency { id } => match program.adjacencies.iter().find(|row| &row.header.id == id).cloned() {
-                Some(existing) => ProgramOp::SetAdjacency { adjacency: existing },
-                None => ProgramOp::ClearAdjacency { id: id.clone() },
+            ProgramOperation::ClearAdjacency { id } => match program.adjacencies.iter().find(|row| &row.header.id == id).cloned() {
+                Some(existing) => ProgramOperation::SetAdjacency { adjacency: existing },
+                None => ProgramOperation::ClearAdjacency { id: id.clone() },
             },
-            ProgramOp::SetProgram { .. } => ProgramOp::SetProgram { program: Box::new(program.clone()) },
+            ProgramOperation::SetProgram { .. } => ProgramOperation::SetProgram { program: Box::new(program.clone()) },
         }
     }
     // #endregion
 
     // #region 🔖ProgramDiff
-    /// @emoji 📦 Ordered list of program ops materializing a document diff.
+    /// @emoji 📦 Ordered list of program operations materializing a document diff.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct ProgramDiff {
-        pub ops: Vec<ProgramOp>,
+        pub operations: Vec<ProgramOperation>,
     }
 
     impl OperationDiff<Program> for ProgramDiff {
         fn apply(&self, projection: &Program) -> Program {
             let mut next = projection.clone();
-            for op in &self.ops {
-                apply_program_op(&mut next, op);
+            for operation in &self.operations {
+                apply_program_operation(&mut next, operation);
             }
             next
         }
 
         fn absorb(&mut self, other: Self) {
-            self.ops.extend(other.ops);
+            self.operations.extend(other.operations);
         }
     }
 
-    impl Operation<Program> for ProgramOp {
+    impl Operation<Program> for ProgramOperation {
         type Diff = ProgramDiff;
 
         fn diff(&self, _projection: &Program) -> ProgramDiff {
-            ProgramDiff { ops: vec![self.clone()] }
+            ProgramDiff { operations: vec![self.clone()] }
         }
 
         fn backwards(&self, projection: &Program) -> Vec<Self> {
-            vec![invert_program_op(projection, self)]
+            vec![invert_program_operation(projection, self)]
         }
     }
     // #endregion
@@ -1832,16 +1832,16 @@ mod ops {
         #[test]
         fn update_meta_round_trips_undo() {
             let mut program = empty_program();
-            let op = ProgramOp::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } };
-            let inverse = invert_program_op(&program, &op);
-            apply_program_op(&mut program, &op);
+            let operation = ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } };
+            let inverse = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &operation);
             assert_eq!(program.meta.title, "Clinic");
-            apply_program_op(&mut program, &inverse);
+            apply_program_operation(&mut program, &inverse);
             assert_ne!(program.meta.title, "Clinic");
         }
 
         #[test]
-        fn add_stakeholder_via_collection_op() {
+        fn add_stakeholder_via_collection_operation() {
             let mut program = sample_program();
             let before = program.stakeholders.len();
             let stakeholder = Stakeholder {
@@ -1872,11 +1872,11 @@ mod ops {
                 success_metrics: Vec::new(),
             };
             let id = stakeholder.header.id.clone();
-            let op = ProgramOp::Stakeholders(CollectionOp::Add { index: program.stakeholders.len(), item: stakeholder });
-            apply_program_op(&mut program, &op);
+            let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { index: program.stakeholders.len(), item: stakeholder });
+            apply_program_operation(&mut program, &operation);
             assert_eq!(program.stakeholders.len(), before + 1);
-            let undo = invert_program_op(&program, &op);
-            apply_program_op(&mut program, &undo);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
             assert!(!program.stakeholders.iter().any(|s| s.header.id == id));
         }
 
@@ -1884,7 +1884,7 @@ mod ops {
         fn set_program_bulk_replace() {
             let mut program = empty_program();
             let sample = sample_program();
-            apply_program_op(&mut program, &ProgramOp::SetProgram { program: Box::new(sample.clone()) });
+            apply_program_operation(&mut program, &ProgramOperation::SetProgram { program: Box::new(sample.clone()) });
             assert_eq!(program.elements.len(), sample.elements.len());
         }
     }
@@ -10478,14 +10478,14 @@ mod template {
 
     use crate::adjacency::{normalize_pair, set_adjacency};
     use crate::kernel::{EntityHeader, EntityId, TextField};
-    use crate::ops::ProgramOp;
+    use crate::operations::ProgramOperation;
     use crate::program::Program;
     use crate::registers::{
         Activity, Adjacency, AdjacencyKind, ConnectionKind, Equipment, Function, FunctionKind, Process, ProgramElement, ProgramElementKind, Requirement, RequirementKind, Risk, RiskLevel, Stakeholder, TemplateRecord, UserCategory, UserProfile,
         ValidationStatus,
     };
     use serde::{Deserialize, Serialize};
-    use vcs::CollectionOp;
+    use vcs::CollectionOperation;
 
     // #region 🔖TemplateApply
     /// @emoji 📋 Result of applying a template to a program.
@@ -10497,9 +10497,9 @@ mod template {
         pub messages: Vec<String>,
     }
 
-    /// @emoji 🧩 Applies a template record and returns replayable `ProgramOp`s.
-    pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<ProgramOp> {
-        let mut ops = Vec::new();
+    /// @emoji 🧩 Applies a template record and returns replayable `ProgramOperation`s.
+    pub fn apply_template(program: &mut Program, template: &TemplateRecord) -> Vec<ProgramOperation> {
+        let mut operations = Vec::new();
         let mut element_ids = Vec::new();
         for field in &template.default_fields {
             let id = EntityId::new_serial("template-entity");
@@ -10532,7 +10532,7 @@ mod template {
                         communication_channels: Vec::new(),
                         success_metrics: Vec::new(),
                     };
-                    ops.push(ProgramOp::Stakeholders(CollectionOp::Add { index: program.stakeholders.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Stakeholders(CollectionOperation::Add { index: program.stakeholders.len(), item: item.clone() }));
                     program.stakeholders.push(item);
                 }
                 "user" => {
@@ -10563,7 +10563,7 @@ mod template {
                         validated: false,
                         stakeholder_ids: Vec::new(),
                     };
-                    ops.push(ProgramOp::Users(CollectionOp::Add { index: program.users.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Users(CollectionOperation::Add { index: program.users.len(), item: item.clone() }));
                     program.users.push(item);
                 }
                 "activity" => {
@@ -10594,7 +10594,7 @@ mod template {
                         temporal_pattern: None,
                         supervision_level: None,
                     };
-                    ops.push(ProgramOp::Activities(CollectionOp::Add { index: program.activities.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Activities(CollectionOperation::Add { index: program.activities.len(), item: item.clone() }));
                     program.activities.push(item);
                 }
                 "function" => {
@@ -10623,7 +10623,7 @@ mod template {
                         hierarchy_parent_id: None,
                         conflict_ids: Vec::new(),
                     };
-                    ops.push(ProgramOp::Functions(CollectionOp::Add { index: program.functions.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Functions(CollectionOperation::Add { index: program.functions.len(), item: item.clone() }));
                     program.functions.push(item);
                 }
                 "element" | "room" => {
@@ -10655,7 +10655,7 @@ mod template {
                         adjacency_preferences: Vec::new(),
                         environmental_zone: None,
                     };
-                    ops.push(ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: item.clone() }));
                     program.elements.push(item);
                     element_ids.push(id.clone());
                 }
@@ -10683,7 +10683,7 @@ mod template {
                         trace_links: Vec::new(),
                         superseded_by: None,
                     };
-                    ops.push(ProgramOp::Requirements(CollectionOp::Add { index: program.requirements.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Requirements(CollectionOperation::Add { index: program.requirements.len(), item: item.clone() }));
                     program.requirements.push(item);
                 }
                 "risk" => {
@@ -10709,7 +10709,7 @@ mod template {
                         escalation_path: Vec::new(),
                         monitoring_plan: None,
                     };
-                    ops.push(ProgramOp::Risks(CollectionOp::Add { index: program.risks.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Risks(CollectionOperation::Add { index: program.risks.len(), item: item.clone() }));
                     program.risks.push(item);
                 }
                 "process" => {
@@ -10739,7 +10739,7 @@ mod template {
                         handoff_points: Vec::new(),
                         quality_gates: Vec::new(),
                     };
-                    ops.push(ProgramOp::Processes(CollectionOp::Add { index: program.processes.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Processes(CollectionOperation::Add { index: program.processes.len(), item: item.clone() }));
                     program.processes.push(item);
                 }
                 "equipment" => {
@@ -10770,7 +10770,7 @@ mod template {
                         commissioning_notes: Vec::new(),
                         spare_parts: Vec::new(),
                     };
-                    ops.push(ProgramOp::Equipment(CollectionOp::Add { index: program.equipment.len(), item: item.clone() }));
+                    operations.push(ProgramOperation::Equipment(CollectionOperation::Add { index: program.equipment.len(), item: item.clone() }));
                     program.equipment.push(item);
                 }
                 "adjacency" | "adjacency_bundle" if element_ids.len() >= 2 => {
@@ -10798,7 +10798,7 @@ mod template {
                         source_relationship_id: None,
                         internal_external_access: None,
                     };
-                    ops.push(ProgramOp::SetAdjacency { adjacency: adjacency.clone() });
+                    operations.push(ProgramOperation::SetAdjacency { adjacency: adjacency.clone() });
                     set_adjacency(program, adjacency);
                 }
                 _ => {}
@@ -10808,19 +10808,19 @@ mod template {
             existing.usage_count += 1;
             existing.last_applied = Some(program.meta.timestamps.updated.clone());
         }
-        ops
+        operations
     }
     // #endregion
 
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::ops::apply_program_op;
+        use crate::operations::apply_program_operation;
         use crate::program::empty_program;
         use crate::registers::TemplateRecord;
 
         #[test]
-        fn apply_template_returns_program_ops() {
+        fn apply_template_returns_program_operations() {
             let mut program = empty_program();
             let template = TemplateRecord {
                 header: EntityHeader::new(EntityId::new_serial("template"), "Clinic Starter"),
@@ -10844,8 +10844,8 @@ mod template {
                 license: None,
                 source_organization: Some("Semio".into()),
             };
-            let ops = apply_template(&mut program, &template);
-            assert!(!ops.is_empty());
+            let operations = apply_template(&mut program, &template);
+            assert!(!operations.is_empty());
             assert_eq!(program.stakeholders.len(), 1);
             assert_eq!(program.elements.len(), 1);
             assert_eq!(program.requirements.len(), 1);
@@ -10876,10 +10876,10 @@ mod template {
                 license: None,
                 source_organization: None,
             };
-            let ops = apply_template(&mut source, &template);
+            let operations = apply_template(&mut source, &template);
             let mut target = empty_program();
-            for op in &ops {
-                apply_program_op(&mut target, op);
+            for operation in &operations {
+                apply_program_operation(&mut target, operation);
             }
             assert_eq!(target.functions.len(), 1);
         }
@@ -11626,7 +11626,7 @@ pub use adjacency::*;
 pub use analyze::*;
 pub use exchange::*;
 pub use kernel::*;
-pub use ops::*;
+pub use operations::*;
 pub use outputs::*;
 pub use program::*;
 pub use registers::*;

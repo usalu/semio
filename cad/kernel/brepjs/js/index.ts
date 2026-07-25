@@ -1105,7 +1105,7 @@ function kernelFacePoints(model: Model, face: FaceRecord): readonly Vec3[] {
   return [...new Map(pts.map((p) => [p.join(","), p])).values()];
 }
 
-/** @emoji 📍 Face vertex centroid for preview primitive ops. */
+/** @emoji 📍 Face vertex centroid for preview primitive operations. */
 export function faceCentroid(model: Model, face: FaceRecord): Vec3 | null {
   const pts = kernelFacePoints(model, face);
   if (!pts.length) return null;

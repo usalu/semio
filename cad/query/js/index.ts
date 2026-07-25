@@ -616,7 +616,7 @@ function cstToExpr(n: CstNode | undefined): Expr {
     const left = cstToExpr(arr[0]!);
     const right = cstToExpr(arr[1]!);
     const opTok = (n.children.EqEq?.[0] ?? n.children.Eq?.[0] ?? n.children.Neq?.[0] ?? n.children.Lte?.[0] ?? n.children.Gte?.[0] ?? n.children.Lt?.[0] ?? n.children.Gt?.[0]) as IToken | undefined;
-    const opMap: Record<string, ExprBinop["op"]> = {
+    const opMap: Record<string, ExprBinop["operation"]> = {
       "==": "==",
       "=": "==",
       "!=": "!=",
@@ -625,8 +625,8 @@ function cstToExpr(n: CstNode | undefined): Expr {
       "<": "<",
       ">": ">",
     };
-    const op = opTok ? (opMap[opTok.image] ?? "==") : "==";
-    return { kind: "binop", op, left, right };
+    const operation = opTok ? (opMap[opTok.image] ?? "==") : "==";
+    return { kind: "binop", operation, left, right };
   }
   if (n.name === "addExpr") {
     const muls = n.children.mulExpr as CstNode[] | CstNode | undefined;
@@ -635,15 +635,15 @@ function cstToExpr(n: CstNode | undefined): Expr {
     let cur = cstToExpr(arr[0]!);
     const pluses = (n.children.Plus as IToken[] | undefined) ?? [];
     const minuses = (n.children.Minus as IToken[] | undefined) ?? [];
-    const ops: ("+" | "-")[] = [];
+    const operations: ("+" | "-")[] = [];
     for (const _ of arr.slice(1)) {
-      const next = ops.length;
-      if (pluses[next]) ops.push("+");
-      else ops.push("-");
+      const next = operations.length;
+      if (pluses[next]) operations.push("+");
+      else operations.push("-");
     }
     for (let i = 1; i < arr.length; i++) {
-      const o = ops[i - 1] ?? "+";
-      cur = { kind: "binop", op: o, left: cur, right: cstToExpr(arr[i]!) };
+      const o = operations[i - 1] ?? "+";
+      cur = { kind: "binop", operation: o, left: cur, right: cstToExpr(arr[i]!) };
     }
     return cur;
   }
@@ -656,7 +656,7 @@ function cstToExpr(n: CstNode | undefined): Expr {
     const slashes = (n.children.Slash as IToken[] | undefined) ?? [];
     for (let i = 1; i < arr.length; i++) {
       const isStar = Boolean(stars[i - 1]);
-      cur = { kind: "binop", op: isStar ? "*" : "/", left: cur, right: cstToExpr(arr[i]!) };
+      cur = { kind: "binop", operation: isStar ? "*" : "/", left: cur, right: cstToExpr(arr[i]!) };
     }
     return cur;
   }
@@ -664,7 +664,7 @@ function cstToExpr(n: CstNode | undefined): Expr {
     const prim = (n.children.primaryExpr?.[0] ?? n.children.primaryExpr) as CstNode | undefined;
     const neg = n.children.Minus?.[0];
     const inner = cstToExpr(prim);
-    if (neg) return { kind: "binop", op: "-", left: { kind: "const", value: 0 }, right: inner };
+    if (neg) return { kind: "binop", operation: "-", left: { kind: "const", value: 0 }, right: inner };
     return inner;
   }
   if (n.name === "primaryExpr") {

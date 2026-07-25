@@ -2,7 +2,7 @@
 # 2026 Ueli Saluz
 # AGPL-3.0
 # HubStorage implementation over Neo4j (neo4rs) — users/studios/memberships as real nodes and
-# relationships; documents/ops stay a flat node-with-properties log (see lib.rs header for why).
+# relationships; documents/operations stay a flat node-with-properties log (see lib.rs header for why).
 # #endregion 🔖Header
 
 [package]

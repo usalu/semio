@@ -46,7 +46,7 @@ isProject: false
 - `print/tex/semio-components.sty:16,34` `\vspace{\semio@spacing@touch}` (title page emblem→title gap, cover page title→metadata gap).
 - `print/template/flyer/flyer.content.tex:12` `\vspace{\SemioSpacingTouch}`.
 
-Separately, `print/tex/semio-window.sty:254-288` (`\semio@window@cap`, used for every chapter/section/Semiobox title tab and the numbered corner control) sets `\fboxsep` to the padding token but never actually applies it — the caption is placed in an `\hbox to \semio@window@cap@w` where `\semio@window@cap@w` is set to `\wd\semio@window@cap@slot` (the box's own natural width), so the surrounding `\hfil ... \hfil` is a no-op and the caption text touches its border with **zero** padding, while every other box (navbar/footer chips via `\fcolorbox`, window bodies via tcolorbox `left=/right=/top=/bottom=`) correctly gets 1 unit (`\semio@chrome@padding`) on all sides. This is exactly the "text-to-border spacing is inconsistent" symptom.
+Separately, `print/tex/semio-window.sty:254-288` (`\semio@window@cap`, used for every chapter/section/Semiobox title tab and the numbered corner control) sets `\fboxsep` to the padding token but never actually applies it — the caption is placed in an `\hbox to \semio@window@cap@w` where `\semio@window@cap@w` is set to `\wd\semio@window@cap@slot` (the box's own natural width), so the surrounding `\hfil ... \hfil` is a no-operation and the caption text touches its border with **zero** padding, while every other box (navbar/footer chips via `\fcolorbox`, window bodies via tcolorbox `left=/right=/top=/bottom=`) correctly gets 1 unit (`\semio@chrome@padding`) on all sides. This is exactly the "text-to-border spacing is inconsistent" symptom.
 
 ## Refactor
 

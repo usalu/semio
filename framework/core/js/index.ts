@@ -1504,9 +1504,9 @@ export type PluginViewState = {
   readonly activeWindowKindId?: string;
   /** 🧰 Per-call overlay: host-owned active utility for the window targeted by this render/action (`windowId`). */
   readonly activeUtilityId?: string;
-  /** 🧰 Host-owned active utility per window instance (never a document field, never a VCS op). */
+  /** 🧰 Host-owned active utility per window instance (never a document field, never a VCS operation). */
   readonly activeUtilityByWindowId?: Readonly<Record<string, string>>;
-  /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS op) — mutually
+  /** 🛠️ Host-owned active tool of the active mode (never a document field, never a VCS operation) — mutually
    * exclusive with `activeUtilityId`: activating one clears the other. */
   readonly activeToolId?: string;
   readonly selectionJson?: string;
@@ -2558,8 +2558,8 @@ export function pluginHandleForBridge(handle: PluginWasmHandle) {
     manifest: () => JSON.stringify(handle.manifest),
     createApp: (appId: string) => handle.createApp(appId),
     destroyApp: (instanceId: number) => handle.destroyApp(instanceId),
-    handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)),
-    handleCommand: handle.handleCommand ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((ops) => JSON.stringify(ops)) : undefined,
+    handleAction: (instanceId: number, actionJson: string, viewStateJson: string) => handle.handleAction(instanceId, actionJson, JSON.parse(viewStateJson) as PluginViewState).then((operations) => JSON.stringify(operations)),
+    handleCommand: handle.handleCommand ? (instanceId: number, commandJson: string, viewStateJson: string) => handle.handleCommand!(instanceId, commandJson, JSON.parse(viewStateJson) as PluginViewState).then((operations) => JSON.stringify(operations)) : undefined,
     render: (instanceId: number, bodyKey: string, viewStateJson: string) => handle.render(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState).then((node) => JSON.stringify(node)),
     renderWithDocument: handle.renderWithDocument
       ? (instanceId: number, bodyKey: string, viewStateJson: string, documentJson: string) => handle.renderWithDocument!(instanceId, bodyKey, JSON.parse(viewStateJson) as PluginViewState, documentJson).then((node) => JSON.stringify(node))

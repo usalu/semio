@@ -1,6 +1,6 @@
 //! ⚡ Imperative plugin — declarative imperative play app bundled as a hot-swappable WASM component.
 
-use imperative_core::{default_document, Dictionary, ImperativeDocument, ImperativeHost, ImperativeOp, PathRef};
+use imperative_core::{default_document, Dictionary, ImperativeDocument, ImperativeHost, ImperativeOperation, PathRef};
 use imperative_engine::Step;
 use semio_framework_plugin::{
     build_table_scene, build_text_editor_scene, create_stack_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids, tree_item_with_action, ui_declarative_sections_to_tree, ui_inspector_readonly_field, ui_stack_vertical, ui_text,
@@ -11,7 +11,7 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeMap, HashMap};
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const IMPERATIVE_PLAY_APP_ID: &str = "imperative-play";
@@ -223,7 +223,7 @@ struct ImperativePlayApp {
 
 impl DocumentApp for ImperativePlayApp {
     type Projection = ImperativeDocument;
-    type Op = ImperativeOp;
+    type Operation = ImperativeOperation;
 
     fn app_id(&self) -> &str {
         IMPERATIVE_PLAY_APP_ID
@@ -237,7 +237,7 @@ impl DocumentApp for ImperativePlayApp {
         default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _view_state: &ViewState) -> ActionEmit<ImperativeOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ImperativeDocument>, _view_state: &ViewState) -> ActionEmit<ImperativeOperation> {
         let document = doc.projection;
         match action {
             "setSelection" => {
@@ -251,14 +251,14 @@ impl DocumentApp for ImperativePlayApp {
                 let id = next_step_id(document);
                 let step = Step { id: id.clone(), kind: kind.into(), params: Dictionary::new(), bodies: BTreeMap::new() };
                 self.runtime.selected_step_ids = vec![id];
-                ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Add { index, item: step } }])
+                ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Add { index, item: step } }])
             }
             "removeStep" | "removeStepAt" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
                     if resolve_contains(document, args, id) {
                         let path_ref = path_ref_from_args(args, document);
                         self.runtime.selected_step_ids.retain(|step_id| step_id != id);
-                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Remove { id: id.into() } }]);
+                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Remove { id: id.into() } }]);
                     }
                 }
                 ActionEmit::default()
@@ -269,7 +269,7 @@ impl DocumentApp for ImperativePlayApp {
                 if let (Some(id), Some(new_index)) = (id, new_index) {
                     if resolve_contains(document, args, id) {
                         let path_ref = path_ref_from_args(args, document);
-                        return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Move { id: id.into(), to_index: new_index } }]);
+                        return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Move { id: id.into(), to_index: new_index } }]);
                     }
                 }
                 ActionEmit::default()
@@ -281,7 +281,7 @@ impl DocumentApp for ImperativePlayApp {
                     if let Ok(patch) = serde_json::from_value::<Dictionary>(params.clone()) {
                         if resolve_contains(document, args, id) {
                             let path_ref = path_ref_from_args(args, document);
-                            return ActionEmit::ops(vec![ImperativeOp { path_ref, collection: CollectionOp::Patch { id: id.into(), patch } }]);
+                            return ActionEmit::operations(vec![ImperativeOperation { path_ref, collection: CollectionOperation::Patch { id: id.into(), patch } }]);
                         }
                     }
                 }
@@ -326,7 +326,7 @@ fn steps_at<'a>(document: &'a ImperativeDocument, path_ref: &PathRef) -> &'a [St
 }
 
 /// 🔎 True when the step `id` exists in the list the `owner`/`slot` args address — the pre-state
-/// guard the op arms share so a stale id never emits a no-op edit into history.
+/// guard the operation arms share so a stale id never emits a no-operation edit into history.
 fn resolve_contains(document: &ImperativeDocument, args: Option<&Value>, id: &str) -> bool {
     let path_ref = path_ref_from_args(args, document);
     steps_at(document, &path_ref).iter().any(|step| step.id == id)
@@ -428,7 +428,7 @@ mod tests {
     }
 
     /// 🧬 A wrapper carrying the real action registry so `addStep`'s `kind` default materializes and the
-    /// View-kind `run` action is held to the no-ops contract.
+    /// View-kind `run` action is held to the no-operations contract.
     fn new_app_with_registry() -> VcsDocumentApp<ImperativePlayApp> {
         testkit::new_app_with_registry::<ImperativePlayApp>(create_imperative_app)
     }
@@ -449,7 +449,7 @@ mod tests {
     }
 
     #[test]
-    fn add_step_materializes_kind_default_and_run_emits_no_ops() {
+    fn add_step_materializes_kind_default_and_run_emits_no_operations() {
         let mut app = new_app_with_registry();
         // addStep fired with no args: the declared `kind` default ("log.print") must be materialized.
         app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
@@ -559,7 +559,7 @@ mod tests {
 
     /// 🧪 The definitional regression proof: two independent instances start from the same document,
     /// apply DISJOINT edits (A appends a root step, B patches an existing step's params), and
-    /// exchanging ops over a `MemoryBackbone` converges both sides onto an identical projection —
+    /// exchanging operations over a `MemoryBackbone` converges both sides onto an identical projection —
     /// impossible under whole-document `setDocument` snapshots, which would clobber one side's write.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {

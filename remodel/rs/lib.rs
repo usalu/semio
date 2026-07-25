@@ -1,6 +1,6 @@
 //! 📸 Remodel scene document — schema-only photogrammetry/videogrammetry project state (media
 //! streams, calibration, ground control points, reconstruction params/job/results) shared as CRDT
-//! ops. The actual algorithms live in sibling `remodel_image`/`remodel_video`/`remodel_camera`/
+//! operations. The actual algorithms live in sibling `remodel_image`/`remodel_video`/`remodel_camera`/
 //! `remodel_feature`/`remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo`/
 //! `remodel_engine` crates, none of which this crate depends on: heavier runtime types (`Se3`,
 //! `Intrinsics`, `Distortion`, `WatertightReport`, decoded pyramids, match graphs, depth maps, TSDF
@@ -694,16 +694,16 @@ pub fn default_remodel_scene() -> RemodelScene {
 }
 //#endregion 🔖Domain
 
-//#region 🔖Ops
+//#region 🔖Operations
 /// 🔁 The document mutation vocabulary — one field-granular LWW register setter per independent
 /// `RemodelScene` field/sub-field, so disjoint-field edits by concurrent instances converge cleanly.
 /// There is no `setDocument` catch-all: reconstruction is field-granular (import a stream, tune one
-/// param group, publish a partial result) and each op carries its own inverse from the pre-edit state.
+/// param group, publish a partial result) and each operation carries its own inverse from the pre-edit state.
 /// `SetAsset` is per-key (not a whole-map replace) so two peers importing different frames converge
 /// without clobbering each other's assets — see `concurrent_set_asset_ops_converge_regardless_of_order`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum RemodelOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum RemodelOperation {
     SetStreams {
         streams: Vec<MediaStream>,
     },
@@ -755,7 +755,7 @@ pub enum RemodelOp {
     },
     /// 📦 Boxed: `RemodelMesh` (a full `MeshData` plus an optional watertight snapshot) is far larger
     /// than any sibling variant, and `clippy::large_enum_variant` flags the resulting size disparity
-    /// across `RemodelOp`/`RemodelDiff` — boxing keeps every other variant cheap to move.
+    /// across `RemodelOperation`/`RemodelDiff` — boxing keeps every other variant cheap to move.
     SetMeshResult {
         mesh: Box<RemodelMesh>,
     },
@@ -850,11 +850,11 @@ pub enum RemodelDiff {
     },
 }
 
-pub fn apply_remodel_op(scene: &RemodelScene, op: &RemodelOp) -> RemodelScene {
+pub fn apply_remodel_operation(scene: &RemodelScene, operation: &RemodelOperation) -> RemodelScene {
     let mut next = scene.clone();
-    match op {
-        RemodelOp::SetStreams { streams } => next.streams = streams.clone(),
-        RemodelOp::SetAsset { key, value } => match value {
+    match operation {
+        RemodelOperation::SetStreams { streams } => next.streams = streams.clone(),
+        RemodelOperation::SetAsset { key, value } => match value {
             Some(value) => {
                 next.assets.insert(key.clone(), value.clone());
             }
@@ -862,54 +862,54 @@ pub fn apply_remodel_op(scene: &RemodelScene, op: &RemodelOp) -> RemodelScene {
                 next.assets.remove(key);
             }
         },
-        RemodelOp::SetCalibration { calibration } => next.calibration = calibration.clone(),
-        RemodelOp::SetGcps { gcps } => next.gcps = gcps.clone(),
-        RemodelOp::SetIngestParams { params } => next.params.ingest = params.clone(),
-        RemodelOp::SetFeatureParams { params } => next.params.feature = params.clone(),
-        RemodelOp::SetMatchParams { params } => next.params.matching = params.clone(),
-        RemodelOp::SetSfmParams { params } => next.params.sfm = params.clone(),
-        RemodelOp::SetDenseParams { params } => next.params.dense = params.clone(),
-        RemodelOp::SetMeshParams { params } => next.params.mesh = params.clone(),
-        RemodelOp::SetMotionParams { params } => next.params.motion = params.clone(),
-        RemodelOp::SetGeoParams { params } => next.params.geo = params.clone(),
-        RemodelOp::SetJob { job } => next.job = job.clone(),
-        RemodelOp::SetSparse { sparse } => next.results.sparse = sparse.clone(),
-        RemodelOp::SetDense { dense } => next.results.dense = dense.clone(),
-        RemodelOp::SetMeshResult { mesh } => next.results.mesh = mesh.as_ref().clone(),
-        RemodelOp::SetTrajectory { trajectory } => next.results.trajectory = trajectory.clone(),
-        RemodelOp::SetTracks { tracks } => next.results.tracks = tracks.clone(),
-        RemodelOp::SetGeoProducts { geo } => next.results.geo = geo.clone(),
-        RemodelOp::SetQc { qc } => next.results.qc = qc.clone(),
+        RemodelOperation::SetCalibration { calibration } => next.calibration = calibration.clone(),
+        RemodelOperation::SetGcps { gcps } => next.gcps = gcps.clone(),
+        RemodelOperation::SetIngestParams { params } => next.params.ingest = params.clone(),
+        RemodelOperation::SetFeatureParams { params } => next.params.feature = params.clone(),
+        RemodelOperation::SetMatchParams { params } => next.params.matching = params.clone(),
+        RemodelOperation::SetSfmParams { params } => next.params.sfm = params.clone(),
+        RemodelOperation::SetDenseParams { params } => next.params.dense = params.clone(),
+        RemodelOperation::SetMeshParams { params } => next.params.mesh = params.clone(),
+        RemodelOperation::SetMotionParams { params } => next.params.motion = params.clone(),
+        RemodelOperation::SetGeoParams { params } => next.params.geo = params.clone(),
+        RemodelOperation::SetJob { job } => next.job = job.clone(),
+        RemodelOperation::SetSparse { sparse } => next.results.sparse = sparse.clone(),
+        RemodelOperation::SetDense { dense } => next.results.dense = dense.clone(),
+        RemodelOperation::SetMeshResult { mesh } => next.results.mesh = mesh.as_ref().clone(),
+        RemodelOperation::SetTrajectory { trajectory } => next.results.trajectory = trajectory.clone(),
+        RemodelOperation::SetTracks { tracks } => next.results.tracks = tracks.clone(),
+        RemodelOperation::SetGeoProducts { geo } => next.results.geo = geo.clone(),
+        RemodelOperation::SetQc { qc } => next.results.qc = qc.clone(),
     }
     next
 }
 
 impl OperationDiff<RemodelScene> for RemodelDiff {
     fn apply(&self, projection: &RemodelScene) -> RemodelScene {
-        let op = match self {
+        let operation = match self {
             RemodelDiff::Empty => return projection.clone(),
-            RemodelDiff::SetStreams { streams } => RemodelOp::SetStreams { streams: streams.clone() },
-            RemodelDiff::SetAsset { key, value } => RemodelOp::SetAsset { key: key.clone(), value: value.clone() },
-            RemodelDiff::SetCalibration { calibration } => RemodelOp::SetCalibration { calibration: calibration.clone() },
-            RemodelDiff::SetGcps { gcps } => RemodelOp::SetGcps { gcps: gcps.clone() },
-            RemodelDiff::SetIngestParams { params } => RemodelOp::SetIngestParams { params: params.clone() },
-            RemodelDiff::SetFeatureParams { params } => RemodelOp::SetFeatureParams { params: params.clone() },
-            RemodelDiff::SetMatchParams { params } => RemodelOp::SetMatchParams { params: params.clone() },
-            RemodelDiff::SetSfmParams { params } => RemodelOp::SetSfmParams { params: params.clone() },
-            RemodelDiff::SetDenseParams { params } => RemodelOp::SetDenseParams { params: params.clone() },
-            RemodelDiff::SetMeshParams { params } => RemodelOp::SetMeshParams { params: params.clone() },
-            RemodelDiff::SetMotionParams { params } => RemodelOp::SetMotionParams { params: params.clone() },
-            RemodelDiff::SetGeoParams { params } => RemodelOp::SetGeoParams { params: params.clone() },
-            RemodelDiff::SetJob { job } => RemodelOp::SetJob { job: job.clone() },
-            RemodelDiff::SetSparse { sparse } => RemodelOp::SetSparse { sparse: sparse.clone() },
-            RemodelDiff::SetDense { dense } => RemodelOp::SetDense { dense: dense.clone() },
-            RemodelDiff::SetMeshResult { mesh } => RemodelOp::SetMeshResult { mesh: mesh.clone() },
-            RemodelDiff::SetTrajectory { trajectory } => RemodelOp::SetTrajectory { trajectory: trajectory.clone() },
-            RemodelDiff::SetTracks { tracks } => RemodelOp::SetTracks { tracks: tracks.clone() },
-            RemodelDiff::SetGeoProducts { geo } => RemodelOp::SetGeoProducts { geo: geo.clone() },
-            RemodelDiff::SetQc { qc } => RemodelOp::SetQc { qc: qc.clone() },
+            RemodelDiff::SetStreams { streams } => RemodelOperation::SetStreams { streams: streams.clone() },
+            RemodelDiff::SetAsset { key, value } => RemodelOperation::SetAsset { key: key.clone(), value: value.clone() },
+            RemodelDiff::SetCalibration { calibration } => RemodelOperation::SetCalibration { calibration: calibration.clone() },
+            RemodelDiff::SetGcps { gcps } => RemodelOperation::SetGcps { gcps: gcps.clone() },
+            RemodelDiff::SetIngestParams { params } => RemodelOperation::SetIngestParams { params: params.clone() },
+            RemodelDiff::SetFeatureParams { params } => RemodelOperation::SetFeatureParams { params: params.clone() },
+            RemodelDiff::SetMatchParams { params } => RemodelOperation::SetMatchParams { params: params.clone() },
+            RemodelDiff::SetSfmParams { params } => RemodelOperation::SetSfmParams { params: params.clone() },
+            RemodelDiff::SetDenseParams { params } => RemodelOperation::SetDenseParams { params: params.clone() },
+            RemodelDiff::SetMeshParams { params } => RemodelOperation::SetMeshParams { params: params.clone() },
+            RemodelDiff::SetMotionParams { params } => RemodelOperation::SetMotionParams { params: params.clone() },
+            RemodelDiff::SetGeoParams { params } => RemodelOperation::SetGeoParams { params: params.clone() },
+            RemodelDiff::SetJob { job } => RemodelOperation::SetJob { job: job.clone() },
+            RemodelDiff::SetSparse { sparse } => RemodelOperation::SetSparse { sparse: sparse.clone() },
+            RemodelDiff::SetDense { dense } => RemodelOperation::SetDense { dense: dense.clone() },
+            RemodelDiff::SetMeshResult { mesh } => RemodelOperation::SetMeshResult { mesh: mesh.clone() },
+            RemodelDiff::SetTrajectory { trajectory } => RemodelOperation::SetTrajectory { trajectory: trajectory.clone() },
+            RemodelDiff::SetTracks { tracks } => RemodelOperation::SetTracks { tracks: tracks.clone() },
+            RemodelDiff::SetGeoProducts { geo } => RemodelOperation::SetGeoProducts { geo: geo.clone() },
+            RemodelDiff::SetQc { qc } => RemodelOperation::SetQc { qc: qc.clone() },
         };
-        apply_remodel_op(projection, &op)
+        apply_remodel_operation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -919,60 +919,60 @@ impl OperationDiff<RemodelScene> for RemodelDiff {
     }
 }
 
-impl Operation<RemodelScene> for RemodelOp {
+impl Operation<RemodelScene> for RemodelOperation {
     type Diff = RemodelDiff;
 
     fn diff(&self, _projection: &RemodelScene) -> RemodelDiff {
         match self {
-            RemodelOp::SetStreams { streams } => RemodelDiff::SetStreams { streams: streams.clone() },
-            RemodelOp::SetAsset { key, value } => RemodelDiff::SetAsset { key: key.clone(), value: value.clone() },
-            RemodelOp::SetCalibration { calibration } => RemodelDiff::SetCalibration { calibration: calibration.clone() },
-            RemodelOp::SetGcps { gcps } => RemodelDiff::SetGcps { gcps: gcps.clone() },
-            RemodelOp::SetIngestParams { params } => RemodelDiff::SetIngestParams { params: params.clone() },
-            RemodelOp::SetFeatureParams { params } => RemodelDiff::SetFeatureParams { params: params.clone() },
-            RemodelOp::SetMatchParams { params } => RemodelDiff::SetMatchParams { params: params.clone() },
-            RemodelOp::SetSfmParams { params } => RemodelDiff::SetSfmParams { params: params.clone() },
-            RemodelOp::SetDenseParams { params } => RemodelDiff::SetDenseParams { params: params.clone() },
-            RemodelOp::SetMeshParams { params } => RemodelDiff::SetMeshParams { params: params.clone() },
-            RemodelOp::SetMotionParams { params } => RemodelDiff::SetMotionParams { params: params.clone() },
-            RemodelOp::SetGeoParams { params } => RemodelDiff::SetGeoParams { params: params.clone() },
-            RemodelOp::SetJob { job } => RemodelDiff::SetJob { job: job.clone() },
-            RemodelOp::SetSparse { sparse } => RemodelDiff::SetSparse { sparse: sparse.clone() },
-            RemodelOp::SetDense { dense } => RemodelDiff::SetDense { dense: dense.clone() },
-            RemodelOp::SetMeshResult { mesh } => RemodelDiff::SetMeshResult { mesh: mesh.clone() },
-            RemodelOp::SetTrajectory { trajectory } => RemodelDiff::SetTrajectory { trajectory: trajectory.clone() },
-            RemodelOp::SetTracks { tracks } => RemodelDiff::SetTracks { tracks: tracks.clone() },
-            RemodelOp::SetGeoProducts { geo } => RemodelDiff::SetGeoProducts { geo: geo.clone() },
-            RemodelOp::SetQc { qc } => RemodelDiff::SetQc { qc: qc.clone() },
+            RemodelOperation::SetStreams { streams } => RemodelDiff::SetStreams { streams: streams.clone() },
+            RemodelOperation::SetAsset { key, value } => RemodelDiff::SetAsset { key: key.clone(), value: value.clone() },
+            RemodelOperation::SetCalibration { calibration } => RemodelDiff::SetCalibration { calibration: calibration.clone() },
+            RemodelOperation::SetGcps { gcps } => RemodelDiff::SetGcps { gcps: gcps.clone() },
+            RemodelOperation::SetIngestParams { params } => RemodelDiff::SetIngestParams { params: params.clone() },
+            RemodelOperation::SetFeatureParams { params } => RemodelDiff::SetFeatureParams { params: params.clone() },
+            RemodelOperation::SetMatchParams { params } => RemodelDiff::SetMatchParams { params: params.clone() },
+            RemodelOperation::SetSfmParams { params } => RemodelDiff::SetSfmParams { params: params.clone() },
+            RemodelOperation::SetDenseParams { params } => RemodelDiff::SetDenseParams { params: params.clone() },
+            RemodelOperation::SetMeshParams { params } => RemodelDiff::SetMeshParams { params: params.clone() },
+            RemodelOperation::SetMotionParams { params } => RemodelDiff::SetMotionParams { params: params.clone() },
+            RemodelOperation::SetGeoParams { params } => RemodelDiff::SetGeoParams { params: params.clone() },
+            RemodelOperation::SetJob { job } => RemodelDiff::SetJob { job: job.clone() },
+            RemodelOperation::SetSparse { sparse } => RemodelDiff::SetSparse { sparse: sparse.clone() },
+            RemodelOperation::SetDense { dense } => RemodelDiff::SetDense { dense: dense.clone() },
+            RemodelOperation::SetMeshResult { mesh } => RemodelDiff::SetMeshResult { mesh: mesh.clone() },
+            RemodelOperation::SetTrajectory { trajectory } => RemodelDiff::SetTrajectory { trajectory: trajectory.clone() },
+            RemodelOperation::SetTracks { tracks } => RemodelDiff::SetTracks { tracks: tracks.clone() },
+            RemodelOperation::SetGeoProducts { geo } => RemodelDiff::SetGeoProducts { geo: geo.clone() },
+            RemodelOperation::SetQc { qc } => RemodelDiff::SetQc { qc: qc.clone() },
         }
     }
 
     fn backwards(&self, projection: &RemodelScene) -> Vec<Self> {
         vec![match self {
-            RemodelOp::SetStreams { .. } => RemodelOp::SetStreams { streams: projection.streams.clone() },
-            RemodelOp::SetAsset { key, .. } => RemodelOp::SetAsset { key: key.clone(), value: projection.assets.get(key).cloned() },
-            RemodelOp::SetCalibration { .. } => RemodelOp::SetCalibration { calibration: projection.calibration.clone() },
-            RemodelOp::SetGcps { .. } => RemodelOp::SetGcps { gcps: projection.gcps.clone() },
-            RemodelOp::SetIngestParams { .. } => RemodelOp::SetIngestParams { params: projection.params.ingest.clone() },
-            RemodelOp::SetFeatureParams { .. } => RemodelOp::SetFeatureParams { params: projection.params.feature.clone() },
-            RemodelOp::SetMatchParams { .. } => RemodelOp::SetMatchParams { params: projection.params.matching.clone() },
-            RemodelOp::SetSfmParams { .. } => RemodelOp::SetSfmParams { params: projection.params.sfm.clone() },
-            RemodelOp::SetDenseParams { .. } => RemodelOp::SetDenseParams { params: projection.params.dense.clone() },
-            RemodelOp::SetMeshParams { .. } => RemodelOp::SetMeshParams { params: projection.params.mesh.clone() },
-            RemodelOp::SetMotionParams { .. } => RemodelOp::SetMotionParams { params: projection.params.motion.clone() },
-            RemodelOp::SetGeoParams { .. } => RemodelOp::SetGeoParams { params: projection.params.geo.clone() },
-            RemodelOp::SetJob { .. } => RemodelOp::SetJob { job: projection.job.clone() },
-            RemodelOp::SetSparse { .. } => RemodelOp::SetSparse { sparse: projection.results.sparse.clone() },
-            RemodelOp::SetDense { .. } => RemodelOp::SetDense { dense: projection.results.dense.clone() },
-            RemodelOp::SetMeshResult { .. } => RemodelOp::SetMeshResult { mesh: Box::new(projection.results.mesh.clone()) },
-            RemodelOp::SetTrajectory { .. } => RemodelOp::SetTrajectory { trajectory: projection.results.trajectory.clone() },
-            RemodelOp::SetTracks { .. } => RemodelOp::SetTracks { tracks: projection.results.tracks.clone() },
-            RemodelOp::SetGeoProducts { .. } => RemodelOp::SetGeoProducts { geo: projection.results.geo.clone() },
-            RemodelOp::SetQc { .. } => RemodelOp::SetQc { qc: projection.results.qc.clone() },
+            RemodelOperation::SetStreams { .. } => RemodelOperation::SetStreams { streams: projection.streams.clone() },
+            RemodelOperation::SetAsset { key, .. } => RemodelOperation::SetAsset { key: key.clone(), value: projection.assets.get(key).cloned() },
+            RemodelOperation::SetCalibration { .. } => RemodelOperation::SetCalibration { calibration: projection.calibration.clone() },
+            RemodelOperation::SetGcps { .. } => RemodelOperation::SetGcps { gcps: projection.gcps.clone() },
+            RemodelOperation::SetIngestParams { .. } => RemodelOperation::SetIngestParams { params: projection.params.ingest.clone() },
+            RemodelOperation::SetFeatureParams { .. } => RemodelOperation::SetFeatureParams { params: projection.params.feature.clone() },
+            RemodelOperation::SetMatchParams { .. } => RemodelOperation::SetMatchParams { params: projection.params.matching.clone() },
+            RemodelOperation::SetSfmParams { .. } => RemodelOperation::SetSfmParams { params: projection.params.sfm.clone() },
+            RemodelOperation::SetDenseParams { .. } => RemodelOperation::SetDenseParams { params: projection.params.dense.clone() },
+            RemodelOperation::SetMeshParams { .. } => RemodelOperation::SetMeshParams { params: projection.params.mesh.clone() },
+            RemodelOperation::SetMotionParams { .. } => RemodelOperation::SetMotionParams { params: projection.params.motion.clone() },
+            RemodelOperation::SetGeoParams { .. } => RemodelOperation::SetGeoParams { params: projection.params.geo.clone() },
+            RemodelOperation::SetJob { .. } => RemodelOperation::SetJob { job: projection.job.clone() },
+            RemodelOperation::SetSparse { .. } => RemodelOperation::SetSparse { sparse: projection.results.sparse.clone() },
+            RemodelOperation::SetDense { .. } => RemodelOperation::SetDense { dense: projection.results.dense.clone() },
+            RemodelOperation::SetMeshResult { .. } => RemodelOperation::SetMeshResult { mesh: Box::new(projection.results.mesh.clone()) },
+            RemodelOperation::SetTrajectory { .. } => RemodelOperation::SetTrajectory { trajectory: projection.results.trajectory.clone() },
+            RemodelOperation::SetTracks { .. } => RemodelOperation::SetTracks { tracks: projection.results.tracks.clone() },
+            RemodelOperation::SetGeoProducts { .. } => RemodelOperation::SetGeoProducts { geo: projection.results.geo.clone() },
+            RemodelOperation::SetQc { .. } => RemodelOperation::SetQc { qc: projection.results.qc.clone() },
         }]
     }
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
 //#region 🧪Tests
 #[cfg(test)]
@@ -1164,18 +1164,18 @@ mod tests {
     }
     //#endregion Domain
 
-    //#region Ops
+    //#region Operations
     #[test]
     fn set_streams_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let streams = vec![MediaStream { id: "s1".into(), name: "cam".into(), ..MediaStream::default() }];
-        let op = RemodelOp::SetStreams { streams: streams.clone() };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetStreams { streams: streams.clone() };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.streams, streams);
-        assert_eq!(op.diff(&scene).apply(&scene).streams, streams);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetStreams { streams: scene.streams.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(operation.diff(&scene).apply(&scene).streams, streams);
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetStreams { streams: scene.streams.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.streams, scene.streams);
     }
 
@@ -1185,22 +1185,22 @@ mod tests {
         assert!(!scene.assets.contains_key("frame-1"));
 
         let asset = ImageAsset { mime: "image/jpeg".into(), data: "zzz".into(), width: 2, height: 2 };
-        let insert_op = RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) };
-        let after_insert = apply_remodel_op(&scene, &insert_op);
+        let insert_operation = RemodelOperation::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) };
+        let after_insert = apply_remodel_operation(&scene, &insert_operation);
         assert_eq!(after_insert.assets.get("frame-1"), Some(&asset));
-        assert_eq!(insert_op.diff(&scene).apply(&scene).assets.get("frame-1"), Some(&asset));
+        assert_eq!(insert_operation.diff(&scene).apply(&scene).assets.get("frame-1"), Some(&asset));
 
-        let insert_inverse = insert_op.backwards(&scene);
-        assert_eq!(insert_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), value: None }]);
-        let reverted = insert_inverse.iter().fold(after_insert.clone(), |current, op| apply_remodel_op(&current, op));
+        let insert_inverse = insert_operation.backwards(&scene);
+        assert_eq!(insert_inverse, vec![RemodelOperation::SetAsset { key: "frame-1".into(), value: None }]);
+        let reverted = insert_inverse.iter().fold(after_insert.clone(), |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted, scene);
 
-        let remove_op = RemodelOp::SetAsset { key: "frame-1".into(), value: None };
-        let remove_inverse = remove_op.backwards(&after_insert);
-        assert_eq!(remove_inverse, vec![RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) }]);
-        let after_remove = apply_remodel_op(&after_insert, &remove_op);
+        let remove_operation = RemodelOperation::SetAsset { key: "frame-1".into(), value: None };
+        let remove_inverse = remove_operation.backwards(&after_insert);
+        assert_eq!(remove_inverse, vec![RemodelOperation::SetAsset { key: "frame-1".into(), value: Some(asset.clone()) }]);
+        let after_remove = apply_remodel_operation(&after_insert, &remove_operation);
         assert!(!after_remove.assets.contains_key("frame-1"));
-        let restored = remove_inverse.iter().fold(after_remove, |current, op| apply_remodel_op(&current, op));
+        let restored = remove_inverse.iter().fold(after_remove, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(restored.assets.get("frame-1"), Some(&asset));
     }
 
@@ -1209,12 +1209,12 @@ mod tests {
         let scene = default_remodel_scene();
         let mut calibration = scene.calibration.clone();
         calibration.cameras.push(CameraCalibration { id: "cam-1".into(), model: "pinhole".into(), ..CameraCalibration::default() });
-        let op = RemodelOp::SetCalibration { calibration: calibration.clone() };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetCalibration { calibration: calibration.clone() };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.calibration, calibration);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetCalibration { calibration: scene.calibration.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetCalibration { calibration: scene.calibration.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.calibration, scene.calibration);
     }
 
@@ -1222,12 +1222,12 @@ mod tests {
     fn set_gcps_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let gcps = vec![GroundControlPoint { id: "gcp-1".into(), name: "A".into(), world_position: [0.0, 0.0, 0.0], observations: Vec::new() }];
-        let op = RemodelOp::SetGcps { gcps: gcps.clone() };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetGcps { gcps: gcps.clone() };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.gcps, gcps);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetGcps { gcps: scene.gcps.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetGcps { gcps: scene.gcps.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.gcps, scene.gcps);
     }
 
@@ -1238,12 +1238,12 @@ mod tests {
         job.stage = ReconstructionStage::BundleAdjusting;
         job.progress_0_1 = 0.42;
         job.started_at_ms = Some(1000.0);
-        let op = RemodelOp::SetJob { job: job.clone() };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetJob { job: job.clone() };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.job, job);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetJob { job: scene.job.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetJob { job: scene.job.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.job, scene.job);
     }
 
@@ -1251,12 +1251,12 @@ mod tests {
     fn set_sparse_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let sparse = SparseCloud { points: PackedF32::from_f32_slice(&[0.0, 0.0, 0.0]), colors: Some(PackedU8::from_u8_slice(&[255, 255, 255])) };
-        let op = RemodelOp::SetSparse { sparse: Some(sparse.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetSparse { sparse: Some(sparse.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.sparse, Some(sparse));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetSparse { sparse: scene.results.sparse.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetSparse { sparse: scene.results.sparse.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.sparse, scene.results.sparse);
     }
 
@@ -1269,12 +1269,12 @@ mod tests {
             confidence: Some(PackedF32::from_f32_slice(&[0.8])),
             classification: Some(PackedU8::from_u8_slice(&[2])),
         };
-        let op = RemodelOp::SetDense { dense: Some(dense.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetDense { dense: Some(dense.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.dense, Some(dense));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetDense { dense: scene.results.dense.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetDense { dense: scene.results.dense.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.dense, scene.results.dense);
     }
 
@@ -1287,13 +1287,13 @@ mod tests {
             texture_asset_id: Some("tex-1".into()),
             watertight: Some(WatertightReportSnapshot { is_watertight: true, is_two_manifold: true, is_closed: true, ..WatertightReportSnapshot::default() }),
         };
-        let op = RemodelOp::SetMeshResult { mesh: Box::new(mesh.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetMeshResult { mesh: Box::new(mesh.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.mesh, mesh);
-        assert_eq!(op.diff(&scene).apply(&scene).results.mesh, mesh);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        assert_eq!(operation.diff(&scene).apply(&scene).results.mesh, mesh);
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetMeshResult { mesh: Box::new(scene.results.mesh.clone()) }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.mesh, scene.results.mesh);
     }
 
@@ -1301,12 +1301,12 @@ mod tests {
     fn set_trajectory_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let trajectory = CameraTrajectory { poses: vec![CameraPosePreview { camera_id: "cam-1".into(), ..CameraPosePreview::default() }] };
-        let op = RemodelOp::SetTrajectory { trajectory: Some(trajectory.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetTrajectory { trajectory: Some(trajectory.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.trajectory, Some(trajectory));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetTrajectory { trajectory: scene.results.trajectory.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetTrajectory { trajectory: scene.results.trajectory.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.trajectory, scene.results.trajectory);
     }
 
@@ -1314,12 +1314,12 @@ mod tests {
     fn set_tracks_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let tracks = vec![MotionTrackSummary { id: "t1".into(), length: 12, class: TrackClass::Moving, mean_speed_m_s: 0.5 }];
-        let op = RemodelOp::SetTracks { tracks: tracks.clone() };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetTracks { tracks: tracks.clone() };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.tracks, tracks);
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetTracks { tracks: scene.results.tracks.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetTracks { tracks: scene.results.tracks.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.tracks, scene.results.tracks);
     }
 
@@ -1327,12 +1327,12 @@ mod tests {
     fn set_geo_products_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let geo = GeoProducts { dsm_asset_id: Some("dsm".into()), dtm_asset_id: None, ortho_asset_id: Some("ortho".into()) };
-        let op = RemodelOp::SetGeoProducts { geo: Some(geo.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetGeoProducts { geo: Some(geo.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.geo, Some(geo));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetGeoProducts { geo: scene.results.geo.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetGeoProducts { geo: scene.results.geo.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.geo, scene.results.geo);
     }
 
@@ -1340,16 +1340,16 @@ mod tests {
     fn set_qc_op_applies_and_reverts() {
         let scene = default_remodel_scene();
         let qc = QcReportSnapshot { reprojection_rms_px: 0.6, warnings: vec!["w".into()], ..QcReportSnapshot::default() };
-        let op = RemodelOp::SetQc { qc: Some(qc.clone()) };
-        let next = apply_remodel_op(&scene, &op);
+        let operation = RemodelOperation::SetQc { qc: Some(qc.clone()) };
+        let next = apply_remodel_operation(&scene, &operation);
         assert_eq!(next.results.qc, Some(qc));
-        let inverse = op.backwards(&scene);
-        assert_eq!(inverse, vec![RemodelOp::SetQc { qc: scene.results.qc.clone() }]);
-        let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+        let inverse = operation.backwards(&scene);
+        assert_eq!(inverse, vec![RemodelOperation::SetQc { qc: scene.results.qc.clone() }]);
+        let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
         assert_eq!(reverted.results.qc, scene.results.qc);
     }
 
-    /// 🔁 The 8 `Set<Stage>Params` ops are mechanically identical (LWW-replace one
+    /// 🔁 The 8 `Set<Stage>Params` operations are mechanically identical (LWW-replace one
     /// `ReconstructionParams` sub-field, inverse restores the pre-edit value) — generated once per
     /// param family instead of copy-pasted, per the "concise code" rule.
     macro_rules! param_op_roundtrip_test {
@@ -1360,13 +1360,13 @@ mod tests {
                 let mut params: $params_ty = scene.params.$field.clone();
                 let mutate: fn(&mut $params_ty) = $mutate;
                 mutate(&mut params);
-                let op = RemodelOp::$variant { params: params.clone() };
-                let next = apply_remodel_op(&scene, &op);
+                let operation = RemodelOperation::$variant { params: params.clone() };
+                let next = apply_remodel_operation(&scene, &operation);
                 assert_eq!(next.params.$field, params);
-                assert_eq!(op.diff(&scene).apply(&scene).params.$field, params);
-                let inverse = op.backwards(&scene);
-                assert_eq!(inverse, vec![RemodelOp::$variant { params: scene.params.$field.clone() }]);
-                let reverted = inverse.iter().fold(next, |current, op| apply_remodel_op(&current, op));
+                assert_eq!(operation.diff(&scene).apply(&scene).params.$field, params);
+                let inverse = operation.backwards(&scene);
+                assert_eq!(inverse, vec![RemodelOperation::$variant { params: scene.params.$field.clone() }]);
+                let reverted = inverse.iter().fold(next, |current, operation| apply_remodel_operation(&current, operation));
                 assert_eq!(reverted.params.$field, scene.params.$field);
             }
         };
@@ -1380,46 +1380,46 @@ mod tests {
     param_op_roundtrip_test!(set_mesh_params_op_applies_and_reverts, SetMeshParams, mesh, MeshParams, |p| p.guarantee_watertight = false);
     param_op_roundtrip_test!(set_motion_params_op_applies_and_reverts, SetMotionParams, motion, MotionParams, |p| p.enabled = true);
     param_op_roundtrip_test!(set_geo_params_op_applies_and_reverts, SetGeoParams, geo, GeoParams, |p| p.enabled = true);
-    //#endregion Ops
+    //#endregion Operations
 
     //#region Convergence
     /// 🔀 The CRDT convergence contract: two collaborators concurrently importing different frames
     /// (`SetAsset` on disjoint keys) must converge to an identical scene regardless of application
     /// order, and neither import may clobber the other's key. This is what makes `SetAsset` per-key
     /// rather than a whole-`assets`-map replace — a whole-map design would fail this test, since
-    /// applying instance B's op after instance A's would silently drop A's key if B's captured map
+    /// applying instance B's operation after instance A's would silently drop A's key if B's captured map
     /// snapshot predates A's insert.
     #[test]
     fn concurrent_set_asset_ops_converge_regardless_of_order() {
         let base = default_remodel_scene();
         let asset_a = ImageAsset { mime: "image/jpeg".into(), data: "frame-one".into(), width: 8, height: 8 };
         let asset_b = ImageAsset { mime: "image/jpeg".into(), data: "frame-two".into(), width: 8, height: 8 };
-        let op_a = RemodelOp::SetAsset { key: "frame-1".into(), value: Some(asset_a.clone()) };
-        let op_b = RemodelOp::SetAsset { key: "frame-2".into(), value: Some(asset_b.clone()) };
+        let op_a = RemodelOperation::SetAsset { key: "frame-1".into(), value: Some(asset_a.clone()) };
+        let op_b = RemodelOperation::SetAsset { key: "frame-2".into(), value: Some(asset_b.clone()) };
 
-        let a_then_b = apply_remodel_op(&apply_remodel_op(&base, &op_a), &op_b);
-        let b_then_a = apply_remodel_op(&apply_remodel_op(&base, &op_b), &op_a);
+        let a_then_b = apply_remodel_operation(&apply_remodel_operation(&base, &op_a), &op_b);
+        let b_then_a = apply_remodel_operation(&apply_remodel_operation(&base, &op_b), &op_a);
 
         assert_eq!(a_then_b, b_then_a, "concurrent SetAsset on disjoint keys must converge regardless of order");
-        assert_eq!(a_then_b.assets.get("frame-1"), Some(&asset_a), "instance A's import must survive instance B's op");
-        assert_eq!(a_then_b.assets.get("frame-2"), Some(&asset_b), "instance B's import must survive instance A's op");
+        assert_eq!(a_then_b.assets.get("frame-1"), Some(&asset_a), "instance A's import must survive instance B's operation");
+        assert_eq!(a_then_b.assets.get("frame-2"), Some(&asset_b), "instance B's import must survive instance A's operation");
         assert_eq!(a_then_b.assets.len(), base.assets.len() + 2);
     }
 
-    /// 🔀 Same convergence contract across two *disjoint op families* at once (one instance tunes
+    /// 🔀 Same convergence contract across two *disjoint operation families* at once (one instance tunes
     /// feature-detector params, the other adds a GCP) — proves field-granular LWW converges not just
-    /// within one op family but across the whole op vocabulary.
+    /// within one operation family but across the whole operation vocabulary.
     #[test]
     fn concurrent_edits_across_different_op_families_converge() {
         let base = default_remodel_scene();
         let mut feature_params = base.params.feature.clone();
         feature_params.target_count = 9000;
-        let op_feature = RemodelOp::SetFeatureParams { params: feature_params.clone() };
+        let op_feature = RemodelOperation::SetFeatureParams { params: feature_params.clone() };
         let gcps = vec![GroundControlPoint { id: "gcp-1".into(), name: "Corner".into(), world_position: [1.0, 2.0, 3.0], observations: Vec::new() }];
-        let op_gcp = RemodelOp::SetGcps { gcps: gcps.clone() };
+        let op_gcp = RemodelOperation::SetGcps { gcps: gcps.clone() };
 
-        let feature_then_gcp = apply_remodel_op(&apply_remodel_op(&base, &op_feature), &op_gcp);
-        let gcp_then_feature = apply_remodel_op(&apply_remodel_op(&base, &op_gcp), &op_feature);
+        let feature_then_gcp = apply_remodel_operation(&apply_remodel_operation(&base, &op_feature), &op_gcp);
+        let gcp_then_feature = apply_remodel_operation(&apply_remodel_operation(&base, &op_gcp), &op_feature);
 
         assert_eq!(feature_then_gcp, gcp_then_feature);
         assert_eq!(feature_then_gcp.params.feature, feature_params);

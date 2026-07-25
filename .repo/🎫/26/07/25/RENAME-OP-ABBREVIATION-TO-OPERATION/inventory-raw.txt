@@ -1,0 +1,524 @@
+=== Type/ident suffixes *Op / *Ops ===
+ 273 CollectionOp
+ 268 ProgramOp
+ 199 RemodelOp
+ 129 OsOp
+ 127 Fem2dOp
+ 122 Fem3dOp
+ 121 DemoOp
+  89 ShootingOp
+  88 TrinityGraphOp
+  87 CadOp
+  74 ProtocolOp
+  74 DrawOp
+  73 VcsDemoOp
+  70 NoteOp
+  56 Process3dOp
+  56 Procedural3dOp
+  53 Procedural2dOp
+  49 LayoutOp
+  47 RasterOp
+  47 LowpolyOp
+  46 MindmapWiresOp
+  46 DagOp
+  44 StudioOp
+  44 PresentOp
+  41 RelOp
+  37 SetDocumentOp
+  36 Puzzle3dOp
+  36 GenerationOp
+  36 FlowOp
+  35 Puzzle2dOp
+  34 FormOp
+  33 SequenceOp
+  33 GisMapOp
+  31 StudioHistoryOp
+  31 Puzzle5dOp
+  31 BinOp
+  29 WriterOp
+  29 DiffLineOp
+  24 xOp
+  24 rTfVPoRV8vMQLMl39DjOZCbLeQwxHhwgPU0RSoIfX4l1YRJCDUuCngICGhhvuDERoYZXmaE8P56O7HotSlmKZJEBBwgmZDGA5R23h2lR5Op
+  24 mEoCMK15gAL7GbSZBP4FEgRYEYF5ZeEE9Dgs65SApZ0F9JOp
+  24 SZWQrIaAFAOp
+  24 HgT3hlVhfnN4jE5LwhD0j3RkcBfFmKL5iSbskFUrqe2P0QG63YaSWYS60csSUAU638YiW6wIgGG8CdQSxpoZQRf5n1oEvin5VlmaQQfmp9E0Fsbw09c98z7MPUmwMtCQ15yL8FcxvhlOp
+  21 SourcingOp
+  19 RemoteOps
+  18 TestOp
+  17 pendingOps
+  17 StoreOp
+  17 MathOp
+  17 LoadOp
+  16 ImperativeOp
+  14 SHomeOp
+  14 RewriteRuleOp
+  12 TimestampedOp
+  11 remoteOps
+  11 Gis3dTerrainOp
+   9 LocalOps
+   9 BooleanOp
+   8 collectPuzzle2dLiveMirrorOps
+   8 ModulePayloadOp
+   7 PresentationEditOp
+   7 DummyOp
+   6 NodeOps
+   6 EdgeOps
+   6 AppendedOp
+   5 repoOp
+   5 KitOp
+   5 DrawBooleanOp
+   4 pushPuzzle2dLiveMirrorOps
+   4 prNQFBQXtxKugoKq8sKiqrbGzs7Op
+   4 localOps
+   4 applyPresentationEditOp
+   4 FieldOps
+   3 ShellOp
+   3 SetBooleanOp
+   3 ReplayGoldenOps
+   3 Puzzle2dLiveMirrorOps
+   3 HXUdICwOp
+   3 AppendOps
+   2 replayGoldenOps
+   2 booleanOp
+   2 bk1lpP73ov3uhQy5US8W8QOt5YgpM5D8Op
+   2 XformOps
+   2 U3Op
+   2 TextOps
+   2 StyleOps
+   2 ShapeOps
+   2 PortKindNotDeclaredOnOp
+   2 PathOps
+   2 Mi3QurPwD5szOp
+   2 IOp
+   2 GroupOps
+   2 GraphOps
+   2 GradientOps
+   2 EditOps
+   2 DocumentOp
+   2 ContentOps
+   2 CloudOps
+   2 ClipOps
+   2 CertifiedOps
+   2 BoolOps
+   2 BitOps
+   2 AlgebraicOps
+   1 rABce2aOp
+   1 qR4cPtj3FqUDJ5vdSXcbVNQ8CVZodV27yQ3rMA7whTYrjXLwR0TylE7Fa1gTZOp
+   1 qI91ukYuqmdToOp
+   1 processPluginOps
+   1 ldNuOOruInjyUTYoPPU2uMJmKKHrFtW3Op
+   1 hZTUYOp
+   1 eQUHiW0bXXSuOps
+   1 djukuHOlgb1e3TYsi8EmHSY70SyGCSdXi5wyysOpwLfSm4gh8fPCj6wI6zpuHp5TBpFThkVOp
+   1 diffPresentationEditOp
+   1 crzNOps
+   1 cBntfD6bilrgBBxHzmMPhppkgdbh2c9jMUChP5tCc9IeEjfQGNCMr8N7OOp
+   1 binOp
+   1 backwardsPresentationEditOp
+   1 applyOp
+   1 WORtKZiHeqeTWDonpcLHOp
+   1 TMDAAAAAIHLUOp
+   1 SFMWF5JzthSLbgyCAybPqUKujDsAOPmUhERhol5JBVCmJI4RoIMcWXY5WJQsjvSoi7XpNZFxY35ueYqcAOPr2HZO32ve6j3mFITBJ8Op
+   1 PAbt8c7cOymuOp
+   1 DoSoZ2azt6PjEZ3OXlJSksfO7lGgVBqRYrN1wd26NoTOp
+   1 COps
+   1 BooleanOps
+   1 AssumeRelOp
+   1 AG8PiA1nceOp
+   1 AFABQAUAFABQAUAFABQAUAFAHMeKfBXhDxxps2keMfDOheJ9MnjaKWy1zTLPUoGRxhlCXUUmzcOp
+
+=== Snake *op* / *ops* idents ===
+2466 top
+1660 props
+ 431 prop
+ 285 crop
+ 280 loop
+ 268 collection_op
+ 241 drop
+ 214 pop
+ 209 desktop
+ 195 stop
+ 116 stops
+ 100 invert_collection_op
+  87 apply_collection_op
+  77 backdrop
+  75 noop
+  67 drops
+  47 binop
+  41 geo_op
+  38 apply_remodel_op
+  37 loops
+  36 cop
+  32 devlop
+  25 frameloop
+  25 event_loop
+  24 collection_diff_from_op
+  22 workshops
+  22 develop
+  22 apply_ops
+  21 hop
+  20 draw_land_backdrop
+  17 needless_range_loop
+  17 edge_props
+  17 crops
+  16 interop
+  14 hidden_op
+  12 golden_ops
+  12 component_props
+  12 apply_drop
+  11 append_ops
+  10 sup_op
+  10 path_ops
+  10 host_ops
+  10 conn_solver_props
+  10 apply_generation_op
+   9 writer_hidden_op
+   9 update_block_op
+   9 shop
+   9 insert_op
+   9 face_loops
+   9 binary_math_op
+   9 apply_program_op
+   8 von_mises_top
+   8 number_of_selfloops
+   8 collect_quality_from_props
+   8 apply_trinity_graph_ops
+   7 tops
+   7 stencil_ops
+   7 num_op
+   7 nodes_with_selfloops
+   7 margin_top
+   7 graph_op
+   7 depth_ops
+   7 deliver_remote_ops
+   7 bg_metall_ausbau_medunicampus_bike_workshop
+   6 sub_ops
+   6 sequence_fixture_ops
+   6 rated_cop
+   6 puzzle3d_document_delta_ops
+   6 puzzle2d_document_delta_ops
+   6 procedural3d_fixture_ops
+   6 procedural2d_fixture_ops
+   6 piece_props
+   6 load_ops
+   6 invert_generation_op
+   6 hash_prop
+   6 generation_ops
+   6 follow_up_ops
+   6 flow_fixture_ops
+   6 edit_ops
+   6 boolean_op
+   6 apply_lowpoly_op
+   5 variance_pop
+   5 validate_trinity_graph_op
+   5 v_top
+   5 transform_op
+   5 self_loops
+   5 point_op
+   5 persist_ops
+   5 pending_ops
+   5 paint_op
+   5 new_loops
+   5 mesh_op
+   5 g_semio_window_break_prop
+   5 extract_param_props
+   5 dispatch_trinity_graph_ops
+   5 covariance_pop
+   5 clamp_top
+   5 caret_top
+   5 bool_op
+   5 apply_protocol_edit_op
+   5 apply_draw_edit_op
+   5 add_step_op
+   4 workshop
+   4 vec_op
+   4 update_protocol_title_op
+   4 unary_math_op
+   4 type_prop
+   4 try_commit_session_ops
+   4 spawn_app_instance_op
+   4 skop
+   4 self_loop
+   4 replace_spec_ops
+   4 remove_step_op
+   4 remove_nodes_ops
+   4 remove_block_op
+   4 preview_scene_loop
+   4 piece_prop
+   4 move_step_op
+   4 move_block_op
+   4 list_top
+   4 invert_program_op
+   4 insert_step_ops
+   4 hub_document_op
+   4 hops
+   4 hearing_loop
+   4 group_crop
+   4 feedback_loop
+   4 document_op
+   4 devops
+   4 conn_props
+   4 apply_form_edit_op
+   4 add_block_op
+   3 types_props
+   3 text_op
+   3 start_frame_loop
+   3 space_top
+   3 semio_window_frame_pop
+   3 remove_step_ops
+   3 remove_op
+   3 removal_ops
+   3 reference_cop
+   3 puzzle5d_document_delta_ops
+   3 plant_loops
+   3 patch_register_item_op
+   3 patch_parameter_op
+   3 patch_layer_ops
+   3 merge_face_loops
+   3 insert_loop
+   3 htop
+   3 g_semio_appendix_ids_prop
+   3 engagement_submit_ops
+   3 emit_create_ops
+   3 develops
+   3 crop_top
+   3 clamp_tile_crop
+   3 boundary_loops
+   3 apply_puzzle5d_op
+   3 apply_puzzle3d_op
+   3 apply_puzzle2d_op
+   3 append_op
+   3 add_current_design_prop
+   2 vcs_demo_projection_diff_ops
+   2 split_top
+   2 selection_is_view_state_and_emits_no_ops
+   2 segments_to_pdf_ops
+   2 row1_top
+   2 right_top
+   2 reposition_ops
+   2 rename_top
+   2 remove_register_item_op
+   2 raw_ops
+   2 process3d_inspector_patch_op
+   2 prefer_top
+   2 positions_ops
+   2 pops
+   2 patch_ops
+   2 patch_op
+   2 patch_objects_ops
+   2 model_top
+   2 min_top
+   2 kernel_operation_from_patch_op
+   2 invopop
+   2 invert_lowpoly_op
+   2 install_neo4j_desktop
+   2 imageops
+   2 header_top
+   2 from_face_loops
+   2 force_layout_reposition_ops
+   2 extract_patch_ops
+   2 exh_op
+   2 emit_set_op
+   2 dock_tab_bars_for_drop
+   2 detect_loops
+   2 create_core_prop
+   2 count_boundary_loops
+   2 correlation_pop
+   2 composedesktop
+   2 calloop
+   2 bop
+   2 base_cop
+
+=== Camel *Op* / *Ops* ===
+  24 xOp
+  24 rTfVPoRV8vMQLMl39DjOZCbLeQwxHhwgPU0RSoIfX4l1YRJCDUuCngICGhhvuDERoYZXmaE8P56O7HotSlmKZJEBBwgmZDGA5R23h2lR5Op
+  24 mEoCMK15gAL7GbSZBP4FEgRYEYF5ZeEE9Dgs65SApZ0F9JOp
+  17 pendingOps
+  11 remoteOps
+   8 collectPuzzle2dLiveMirrorOps
+   5 repoOp
+   4 pushPuzzle2dLiveMirrorOps
+   4 prNQFBQXtxKugoKq8sKiqrbGzs7Op
+   4 localOps
+   4 applyPresentationEditOp
+   2 replayGoldenOps
+   2 booleanOp
+   2 bk1lpP73ov3uhQy5US8W8QOt5YgpM5D8Op
+   1 rABce2aOp
+   1 qR4cPtj3FqUDJ5vdSXcbVNQ8CVZodV27yQ3rMA7whTYrjXLwR0TylE7Fa1gTZOp
+   1 qI91ukYuqmdToOp
+   1 processPluginOps
+   1 ldNuOOruInjyUTYoPPU2uMJmKKHrFtW3Op
+   1 hZTUYOp
+   1 eQUHiW0bXXSuOps
+   1 djukuHOlgb1e3TYsi8EmHSY70SyGCSdXi5wyysOpwLfSm4gh8fPCj6wI6zpuHp5TBpFThkVOp
+   1 diffPresentationEditOp
+   1 crzNOps
+   1 cBntfD6bilrgBBxHzmMPhppkgdbh2c9jMUChP5tCc9IeEjfQGNCMr8N7OOp
+   1 binOp
+   1 backwardsPresentationEditOp
+   1 applyOp
+
+=== JSON/serde tag "op" ===
+flow/plugin/rs/lib.rs:346:        "args": { "ops": [{ "op": "deleteSelection" }] },
+flow/plugin/rs/lib.rs:1265:                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+vcs/rs/lib.rs:2209:#[serde(tag = "op", rename_all = "camelCase")]
+vcs/rs/lib.rs:2630:    #[serde(tag = "op")]
+vcs/rs/lib.rs:3660:    #[serde(tag = "op")]
+trinity/ram/rs/lib.rs:549:#[serde(tag = "op", rename_all = "camelCase")]
+vcs/plugin/rs/lib.rs:39:#[serde(tag = "op", rename_all = "camelCase")]
+trinity/jack/lsp/js/worker.ts:51:  if ("op" in data) {
+s/rs/lib.rs:88:#[serde(tag = "op", rename_all = "camelCase")]
+puzzle/2d/rs/lib.rs:589:#[serde(tag = "op", rename_all = "camelCase")]
+trinity/plugin/rs/lib.rs:680:                    r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into(),
+trinity/plugin/rs/lib.rs:791:                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+trinity/plugin/rs/lib.rs:1358:                .handle_action("nodeGraphEdit", Some(&json!({ "ops": [{ "op": "deleteSelection" }] })), &ViewState::default(), &meta("local"))
+trinity/plugin/rs/lib.rs:1820:            match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+trinity/plugin/rs/lib.rs:2440:        r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#;
+trinity/plugin/rs/lib.rs:3030:            let result = dispatch(&mut app, "nodeGraphEdit", Some(&json!({ "surfaceId": TRINITY_REWRITE_PLAY_SURFACE_RHS, "ops": [{ "op": "deleteSelection" }] })));
+writer/rs/lib.rs:61:    #[serde(tag = "op", rename_all = "camelCase")]
+reasoning/mindmap/rs/lib.rs:178:#[serde(tag = "op", rename_all = "camelCase")]
+puzzle/5d/rs/lib.rs:106:#[serde(tag = "op", rename_all = "camelCase")]
+trinity/rewrite/engine/rs/lib.rs:313:#[serde(tag = "op", rename_all = "camelCase")]
+norm/core/rs/lib.rs:486:#[serde(tag = "op", rename_all = "camelCase")]
+s/plugin/rs/lib.rs:116:    #[serde(tag = "op", rename_all = "camelCase")]
+s/plugin/rs/lib.rs:2611:                        match edit.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+s/plugin/rs/lib.rs:3694:            let op = patch_parameter_op(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("op");
+s/plugin/rs/lib.rs:4070:                json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] }),
+cad/rs/lib.rs:411:#[serde(tag = "op", rename_all = "camelCase")]
+cad/rs/lib.rs:1054:#[serde(tag = "op", rename_all = "camelCase")]
+animate/present/rs/lib.rs:603:#[serde(tag = "op", rename_all = "camelCase")]
+cad/query/js/index.ts:619:    const opMap: Record<string, ExprBinop["op"]> = {
+cad/query/js/index.ts:710:  if (ids.length === 0) return { kind: "node", ...propsOpt };
+cad/query/js/index.ts:711:  if (colons.length === 0) return { kind: "node", var: tokenText(ids[0]!), ...propsOpt };
+cad/query/js/index.ts:712:  if (ids.length >= 2) return { kind: "node", var: tokenText(ids[0]!), label: tokenText(ids[1]!), ...propsOpt };
+cad/query/js/index.ts:713:  return { kind: "node", label: tokenText(ids[0]!), ...propsOpt };
+protocol/rs/lib.rs:239:#[serde(tag = "op", rename_all = "camelCase")]
+protocol/module/procedural/rs/lib.rs:84:#[serde(tag = "op", rename_all = "camelCase")]
+cad/schema/json/interaction.json:269:          "required": ["op", "target", "value"],
+cad/schema/json/interaction.json:271:            "op": { "const": "assign" },
+cad/schema/json/interaction.json:279:          "required": ["op", "target"],
+cad/schema/json/interaction.json:281:            "op": { "const": "clear" },
+cad/schema/json/interaction.json:288:          "required": ["op", "target", "value"],
+cad/schema/json/interaction.json:290:            "op": { "const": "append" },
+cad/schema/json/interaction.json:298:          "required": ["op", "event"],
+cad/schema/json/interaction.json:300:            "op": { "const": "emit" },
+cad/schema/json/interaction.json:312:          "required": ["op", "event"],
+cad/schema/json/interaction.json:314:            "op": { "const": "raise" },
+cad/schema/json/interaction.json:321:          "required": ["op"],
+cad/schema/json/interaction.json:323:            "op": { "const": "openTransaction" }
+cad/schema/json/interaction.json:329:          "required": ["op"],
+cad/schema/json/interaction.json:331:            "op": { "const": "commitTransaction" }
+cad/schema/json/interaction.json:337:          "required": ["op"],
+cad/schema/json/interaction.json:339:            "op": { "const": "rollbackTransaction" }
+cad/schema/json/interaction.json:345:          "required": ["op"],
+cad/schema/json/interaction.json:347:            "op": { "const": "requestPreview" }
+cad/schema/json/interaction.json:353:          "required": ["op", "query", "assignTo", "params"],
+cad/schema/json/interaction.json:355:            "op": { "const": "kernel.query" },
+cad/schema/json/interaction.json:364:          "required": ["op"],
+cad/schema/json/interaction.json:366:            "op": { "const": "resolveEditable" }
+cad/schema/json/interaction.json:372:          "required": ["op", "severity", "code", "message"],
+cad/schema/json/interaction.json:374:            "op": { "const": "setDiagnostic" },
+cad/schema/json/interaction.json:383:          "required": ["op", "code"],
+cad/schema/json/interaction.json:385:            "op": { "const": "clearDiagnostic" },
+cad/schema/json/interaction.json:392:          "required": ["op", "action"],
+cad/schema/json/interaction.json:394:            "op": { "const": "action" },
+cad/schema/json/expression.json:174:      "required": ["kind", "op", "left", "right"],
+cad/schema/json/expression.json:177:        "op": {
+cad/schema/json/expression.json:188:      "required": ["kind", "op", "args"],
+cad/schema/json/expression.json:191:        "op": { "type": "string", "enum": ["min", "max"] },
+puzzle/3d/rs/lib.rs:2435:#[serde(tag = "op", rename_all = "camelCase")]
+cad/schema/json/action.json:56:          "required": ["op", "name", "value"],
+cad/schema/json/action.json:58:            "op": { "const": "let" },
+cad/schema/json/action.json:66:          "required": ["op", "values"],
+cad/schema/json/action.json:68:            "op": { "const": "setContext" },
+cad/schema/json/action.json:78:          "required": ["op", "keys"],
+cad/schema/json/action.json:80:            "op": { "const": "deleteContext" },
+cad/schema/json/action.json:90:          "required": ["op", "function"],
+cad/schema/json/action.json:92:            "op": { "const": "kernel.call" },
+cad/schema/json/action.json:104:          "required": ["op", "condition"],
+cad/schema/json/action.json:106:            "op": { "const": "guard" },
+cad/schema/json/action.json:114:          "required": ["op"],
+cad/schema/json/action.json:116:            "op": { "const": "return" },
+
+=== Files with ops in name ===
+./.cursor/plans/chrome_always-on-top_rendering_b1ee74b0.plan.md
+./.cursor/plans/puzzle_3d_catalogue_drop_cf7d61f7.plan.md
+./framework/sync/fixtures/remote-ops-backlog.json
+./framework/sync/fixtures/basic-remote-ops.json
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/IPython/core/compilerop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/numpy/typing/tests/data/pass/bitwise_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/numpy/lib/_arraysetops_impl.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/numpy/lib/tests/test_arraysetops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/PIL/ImageChops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/PIL/ImageOps.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/jupyter_builder/extension_commands/develop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/anyio/abc/_eventloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/anyio/_core/_eventloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/tornado/test/ioloop_test.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/tornado/ioloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/sklearn/feature_extraction/_stop_words.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/jupyterlab/schemas/@jupyterlab/application-extension/top-bar.json
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/scipy/integrate/dop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/scipy/integrate/_ivp/dop853_coefficients.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/zmq/green/eventloop/ioloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/zmq/auth/ioloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/zmq/utils/interop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/zmq/eventloop/ioloop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/ipykernel/eventloops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/ipykernel/_eventloop_macos.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/nanops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/groupby/ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/internals/ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/computation/ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/ops/array_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/core/ops/mask_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/series/test_logical_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/series/methods/test_drop_duplicates.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/series/methods/test_pop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/series/methods/test_drop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/extension/base/ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/frame/test_logical_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/frame/methods/test_drop_duplicates.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/frame/methods/test_pop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/frame/methods/test_drop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/test_nanops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/arrays/boolean/test_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/arithmetic/test_array_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/ranges/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/base_class/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/interval/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/multi/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/multi/test_drop.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/period/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/categorical/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/numeric/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/datetimes/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/datetimes/test_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/timedeltas/test_setops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/timedeltas/test_ops.py
+./compose/client/bin/engine/.venv/lib/python3.14/site-packages/pandas/tests/indexes/datetimelike_/test_drop_duplicates.py
+./compose/client/bin/engine/.venv/share/jupyter/lab/schemas/@jupyter-notebook/application-extension/top.json
+./compose/client/bin/engine/.venv/share/jupyter/lab/schemas/@jupyterlab/application-extension/top-bar.json
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/shapely/ops.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/ifcopenshell/api/pset_template/remove_prop_template.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/ifcopenshell/api/pset_template/add_prop_template.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/ifcopenshell/api/pset_template/edit_prop_template.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/sqlalchemy/orm/descriptor_props.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/numpy/typing/tests/data/pass/bitwise_ops.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/numpy/lib/_arraysetops_impl.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/numpy/lib/tests/test_arraysetops.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/PIL/ImageChops.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/PIL/ImageOps.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/anyio/abc/_eventloop.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/anyio/_core/_eventloop.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/graphene/utils/props.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/trimesh/voxel/ops.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/loguru/_asyncio_loop.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/scipy/integrate/dop.py
+./compose/client/lib/py/.venv/lib/python3.14/site-packages/scipy/integrate/_ivp/dop853_coefficients.py
+./.claude/worktrees/agent-afa905cc164f52ed8/.cursor/plans/chrome_always-on-top_rendering_b1ee74b0.plan.md
+./.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/remote-ops-backlog.json
+./.claude/worktrees/agent-afa905cc164f52ed8/framework/sync/fixtures/basic-remote-ops.json
+./.claude/worktrees/agent-afa905cc164f52ed8/cad/asset/modelDefinition/aec.building.concrete/action/constructConcreteWallFromBottomAndTop.json

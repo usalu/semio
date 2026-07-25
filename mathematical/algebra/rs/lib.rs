@@ -887,7 +887,7 @@ impl<T: Field> MatG<T> {
         }
         // `T::from_i64(k)` alone can be an "unbound" value for runtime-modulus types like `ModInt`
         // (no modulus known yet) — anchor it to the matrix's own modulus via a bound zero derived from
-        // an actual entry before inverting, which is a no-op for ordinary fields like `Rational`.
+        // an actual entry before inverting, which is a no-operation for ordinary fields like `Rational`.
         let bound_zero = self.get(0, 0).sub(self.get(0, 0));
         let mut m = MatG::<T>::zeros(n, n);
         let mut c = bound_zero.add(&T::one());

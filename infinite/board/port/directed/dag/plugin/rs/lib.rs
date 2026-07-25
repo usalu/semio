@@ -2,7 +2,7 @@
 
 use infinite_board_port_directed_dag::{
     dag_fixture_from_document, dag_fixture_to_wire_literal, dag_node_kind_tag, default_dag_document, fit_node_size, note_widget_size, preview_widget_size, would_create_cycle, DagCamera, DagDocument,
-    DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec, DagOp, DagPreviewContent, IoPortSpec, DAG_DOCUMENT_SCHEMA,
+    DagFixture, DagFixtureEdge, DagHost, DagLayoutOptions, DagNodeKind, DagNodePatch, DagNodeSpec, DagOperation, DagPreviewContent, IoPortSpec, DAG_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef,
@@ -13,7 +13,7 @@ use semio_framework_plugin::{
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{BTreeSet, HashMap};
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region ⚠️ Errors
 /// ⚠️ Errors from DAG play app edge-connection building.
@@ -211,10 +211,10 @@ fn connect_edge(document: &DagDocument, source_node_id: &str, source_port_id: &s
     Ok(DagFixtureEdge { id: edge_id, source: format!("{source_node_id}:{source_port_id}"), target: format!("{target_node_id}:{target_port_id}"), ..Default::default() })
 }
 
-/// 🗑️ Ops removing `node_ids` and every edge touching them, for delete-node / delete-selection.
-fn remove_nodes_ops(document: &DagDocument, node_ids: &[String]) -> Vec<DagOp> {
-    let mut ops: Vec<DagOp> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagOp::Nodes(CollectionOp::Remove { id: node.id.clone() })).collect();
-    ops.extend(
+/// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.
+fn remove_nodes_operations(document: &DagDocument, node_ids: &[String]) -> Vec<DagOperation> {
+    let mut operations: Vec<DagOperation> = document.nodes.iter().filter(|node| node_ids.contains(&node.id)).map(|node| DagOperation::Nodes(CollectionOperation::Remove { id: node.id.clone() })).collect();
+    operations.extend(
         document
             .edges
             .iter()
@@ -223,9 +223,9 @@ fn remove_nodes_ops(document: &DagDocument, node_ids: &[String]) -> Vec<DagOp> {
                 let (to, _) = split_endpoint(&edge.target);
                 node_ids.iter().any(|id| id == &from || id == &to)
             })
-            .map(|edge| DagOp::Edges(CollectionOp::Remove { id: edge.id.clone() })),
+            .map(|edge| DagOperation::Edges(CollectionOperation::Remove { id: edge.id.clone() })),
     );
-    ops
+    operations
 }
 
 /// 🩹 Builds the `DagNodePatch` for a `patchDagNodes` field write (name, or a slider param that also
@@ -668,7 +668,7 @@ fn render_main_graph(document: &DagDocument, camera: &DagCamera, selected: &[Str
         "label": labels.delete_selection,
         "icon": "trash",
         "action": "nodeGraphEdit",
-        "args": { "ops": [{ "op": "deleteSelection" }] },
+        "args": { "operations": [{ "operation": "deleteSelection" }] },
         "destructive": true,
     }])
     .to_string();
@@ -699,7 +699,7 @@ impl DagPlayApp {
 
 impl DocumentApp for DagPlayApp {
     type Projection = DagDocument;
-    type Op = DagOp;
+    type Operation = DagOperation;
 
     fn app_id(&self) -> &str {
         DAG_PLAY_APP_ID
@@ -713,7 +713,7 @@ impl DocumentApp for DagPlayApp {
         default_dag_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, DagDocument>, _view_state: &ViewState) -> ActionEmit<DagOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, DagDocument>, _view_state: &ViewState) -> ActionEmit<DagOperation> {
         let document = doc.projection;
         match action {
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
@@ -734,50 +734,50 @@ impl DocumentApp for DagPlayApp {
                 ActionEmit::default()
             }
             "nodeGraphEdit" => {
-                let ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
-                let mut emitted: Vec<DagOp> = Vec::new();
-                for op in ops {
-                    match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                let operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let mut emitted: Vec<DagOperation> = Vec::new();
+                for operation in operations {
+                    match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                         "setFixture" => {
-                            if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                            if let Some(fixture_json) = operation.get("fixtureJson").and_then(|value| value.as_str()) {
                                 if let Ok(fixture) = serde_json::from_str::<DagFixture>(fixture_json) {
                                     self.runtime.camera = fixture.camera.clone();
-                                    emitted.push(DagOp::SetDocument { document: infinite_board_port_directed_dag::dag_document_from_fixture(&fixture) });
+                                    emitted.push(DagOperation::SetDocument { document: infinite_board_port_directed_dag::dag_document_from_fixture(&fixture) });
                                 }
                             }
                         }
                         "deleteSelection" => {
                             let ids = self.runtime.selected_node_ids.clone();
-                            let removes = remove_nodes_ops(document, &ids);
+                            let removes = remove_nodes_operations(document, &ids);
                             if !removes.is_empty() {
                                 self.runtime.selected_node_ids.clear();
                                 emitted.extend(removes);
                             }
                         }
                         "connect" => {
-                            let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                            let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                            let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                            let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                            let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                            let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
+                            let to = operation.get("targetNodeId").and_then(|value| value.as_str());
+                            let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                             if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                                 if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                                    emitted.push(DagOp::Edges(CollectionOp::Add { index: document.edges.len(), item: edge }));
+                                    emitted.push(DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge }));
                                 }
                             }
                         }
                         _ => {}
                     }
                 }
-                ActionEmit::ops(emitted)
+                ActionEmit::operations(emitted)
             }
             "deleteSelection" => {
                 let ids = self.runtime.selected_node_ids.clone();
-                let removes = remove_nodes_ops(document, &ids);
+                let removes = remove_nodes_operations(document, &ids);
                 if removes.is_empty() {
                     return ActionEmit::default();
                 }
                 self.runtime.selected_node_ids.clear();
-                ActionEmit::ops(removes)
+                ActionEmit::operations(removes)
             }
             "renameDagNode" => {
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
@@ -800,7 +800,7 @@ impl DocumentApp for DagPlayApp {
                             })
                             .collect();
                         self.runtime.selected_node_ids = vec![trimmed.into()];
-                        return ActionEmit::ops(vec![DagOp::SetNodes { nodes }, DagOp::SetEdges { edges }]);
+                        return ActionEmit::operations(vec![DagOperation::SetNodes { nodes }, DagOperation::SetEdges { edges }]);
                     }
                 }
                 ActionEmit::default()
@@ -808,10 +808,10 @@ impl DocumentApp for DagPlayApp {
             "removeNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str());
                 if let Some(node_id) = node_id {
-                    let removes = remove_nodes_ops(document, &[node_id.to_string()]);
+                    let removes = remove_nodes_operations(document, &[node_id.to_string()]);
                     if !removes.is_empty() {
                         self.runtime.selected_node_ids.retain(|id| id != node_id);
-                        return ActionEmit::ops(removes);
+                        return ActionEmit::operations(removes);
                     }
                 }
                 ActionEmit::default()
@@ -819,7 +819,7 @@ impl DocumentApp for DagPlayApp {
             "disconnect" => {
                 let edge_id = args.and_then(|value| value.get("edgeId")).or_else(|| args.and_then(|value| value.get("synapseId"))).and_then(|value| value.as_str());
                 match edge_id {
-                    Some(edge_id) if document.edges.iter().any(|edge| edge.id == edge_id) => ActionEmit::ops(vec![DagOp::Edges(CollectionOp::Remove { id: edge_id.into() })]),
+                    Some(edge_id) if document.edges.iter().any(|edge| edge.id == edge_id) => ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Remove { id: edge_id.into() })]),
                     _ => ActionEmit::default(),
                 }
             }
@@ -829,7 +829,7 @@ impl DocumentApp for DagPlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                     if document.nodes.iter().any(|node| node.id == node_id) {
-                        return ActionEmit::amend(vec![DagOp::Nodes(CollectionOp::Patch { id: node_id.into(), patch: DagNodePatch { x: Some(x), y: Some(y), ..Default::default() } })], format!("move-{node_id}"));
+                        return ActionEmit::amend(vec![DagOperation::Nodes(CollectionOperation::Patch { id: node_id.into(), patch: DagNodePatch { x: Some(x), y: Some(y), ..Default::default() } })], format!("move-{node_id}"));
                     }
                 }
                 ActionEmit::default()
@@ -841,7 +841,7 @@ impl DocumentApp for DagPlayApp {
                 let target_port_id = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str());
                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (source_node_id, source_port_id, target_node_id, target_port_id) {
                     if let Ok(edge) = connect_edge(document, from, from_port, to, to_port) {
-                        return ActionEmit::ops(vec![DagOp::Edges(CollectionOp::Add { index: document.edges.len(), item: edge })]);
+                        return ActionEmit::operations(vec![DagOperation::Edges(CollectionOperation::Add { index: document.edges.len(), item: edge })]);
                     }
                 }
                 ActionEmit::default()
@@ -853,14 +853,14 @@ impl DocumentApp for DagPlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let node = default_node_for_kind(kind, &id, x, y);
                 self.runtime.selected_node_ids = vec![id];
-                ActionEmit::ops(vec![DagOp::Nodes(CollectionOp::Add { index: document.nodes.len(), item: node })])
+                ActionEmit::operations(vec![DagOperation::Nodes(CollectionOperation::Add { index: document.nodes.len(), item: node })])
             }
             "reorganize" => {
                 if let Ok(mut host) = DagHost::load_fixture_json(&serde_json::to_string(&dag_fixture_from_document(document, self.runtime.camera.clone())).unwrap_or_default()) {
                     let _ = host.reorganize(&DagLayoutOptions::default());
                     if let Ok(json) = host.fixture_json() {
                         if let Ok(fixture) = serde_json::from_str::<DagFixture>(&json) {
-                            return ActionEmit::ops(vec![DagOp::SetNodes { nodes: fixture.nodes }]);
+                            return ActionEmit::operations(vec![DagOperation::SetNodes { nodes: fixture.nodes }]);
                         }
                     }
                 }
@@ -870,12 +870,12 @@ impl DocumentApp for DagPlayApp {
                 let node_ids: Vec<String> = args.and_then(|value| value.get("nodeIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let raw_value = args.and_then(|value| value.get("value"));
-                let ops: Vec<DagOp> =
-                    document.nodes.iter().filter(|node| node_ids.contains(&node.id)).filter_map(|node| node_patch_for_field(node, field, raw_value).map(|patch| DagOp::Nodes(CollectionOp::Patch { id: node.id.clone(), patch }))).collect();
-                if ops.is_empty() {
+                let operations: Vec<DagOperation> =
+                    document.nodes.iter().filter(|node| node_ids.contains(&node.id)).filter_map(|node| node_patch_for_field(node, field, raw_value).map(|patch| DagOperation::Nodes(CollectionOperation::Patch { id: node.id.clone(), patch }))).collect();
+                if operations.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::amend(ops, format!("patch-{field}-{}", node_ids.join(",")))
+                    ActionEmit::amend(operations, format!("patch-{field}-{}", node_ids.join(",")))
                 }
             }
             _ => ActionEmit::default(),

@@ -71,11 +71,11 @@ Tagged union discriminated by `kind` (no more "the operator is the key"):
 { "kind": "not",      "arg":  { ... } }
 { "kind": "abs",      "arg":  { ... } }
 { "kind": "distance", "a": {...}, "b": {...} }
-{ "kind": "binop",    "op": "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/", "left": {...}, "right": {...} }
-{ "kind": "fold",     "op": "min" | "max", "args": [ {...}, {...} ] }
+{ "kind": "binop",    "operation": "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/", "left": {...}, "right": {...} }
+{ "kind": "fold",     "operation": "min" | "max", "args": [ {...}, {...} ] }
 ```
 
-`op` becomes a closed JSON Schema `enum`. `evalExpr` in [spatial/js/core/index.ts](spatial/js/core/index.ts) switches on `expr.kind`.
+`operation` becomes a closed JSON Schema `enum`. `evalExpr` in [spatial/js/core/index.ts](spatial/js/core/index.ts) switches on `expr.kind`.
 
 ### Factory / Command — [spatial/schema/json/factory.json](spatial/schema/json/factory.json)
 
@@ -112,24 +112,24 @@ Replace every name-keyed object:
 
 ### Actions — closed discriminated union
 
-Replace `additionalProperties: true` with a strict per-op shape:
+Replace `additionalProperties: true` with a strict per-operation shape:
 
 ```json
-{ "op": "assign",   "path": "corner", "value": { /* Expr */ } }
-{ "op": "clear",    "path": "cursor" }
-{ "op": "append",   "path": "...", "value": { /* Expr */ } }
-{ "op": "emit",     "event": { "kind": "..." } }
-{ "op": "raise",    "event": "..." }
-{ "op": "openTransaction"|"commitTransaction"|"rollbackTransaction" }
-{ "op": "requestPreview" }
-{ "op": "kernel.query",       "query": "...", "params": { /* tagged */ }, "assignTo": "..." }
-{ "op": "resolveEditable",    ... }
-{ "op": "setDiagnostic",      "severity": "info"|"warning"|"error", "code": "...", "message": "..." }
-{ "op": "clearDiagnostic",    "code": "..." }
-{ "op": "box.transform",      "transform": "aabbFromDiagonalCorners"|"tripletRubber"|"tripletCommit"|"snapSquareFootprint"|"setCubeHeightFromFootprint"|"rubberCornerFromCenter"|"rubberSquareFromCenter"|"verticalFinalizeFootprint"|"initPeakAboveOrigin"|"peakFromOriginZ"|"verticalRubberCorner"|"cornerFromLengthWidth" }
+{ "operation": "assign",   "path": "corner", "value": { /* Expr */ } }
+{ "operation": "clear",    "path": "cursor" }
+{ "operation": "append",   "path": "...", "value": { /* Expr */ } }
+{ "operation": "emit",     "event": { "kind": "..." } }
+{ "operation": "raise",    "event": "..." }
+{ "operation": "openTransaction"|"commitTransaction"|"rollbackTransaction" }
+{ "operation": "requestPreview" }
+{ "operation": "kernel.query",       "query": "...", "params": { /* tagged */ }, "assignTo": "..." }
+{ "operation": "resolveEditable",    ... }
+{ "operation": "setDiagnostic",      "severity": "info"|"warning"|"error", "code": "...", "message": "..." }
+{ "operation": "clearDiagnostic",    "code": "..." }
+{ "operation": "box.transform",      "transform": "aabbFromDiagonalCorners"|"tripletRubber"|"tripletCommit"|"snapSquareFootprint"|"setCubeHeightFromFootprint"|"rubberCornerFromCenter"|"rubberSquareFromCenter"|"verticalFinalizeFootprint"|"initPeakAboveOrigin"|"peakFromOriginZ"|"verticalRubberCorner"|"cornerFromLengthWidth" }
 ```
 
-The `box.*` ops collapse into one `box.transform` action carrying a `transform` enum, eliminating the open `op: string` namespace.
+The `box.*` operations collapse into one `box.transform` action carrying a `transform` enum, eliminating the open `operation: string` namespace.
 
 ### Commit operation — tagged per kind
 
@@ -184,7 +184,7 @@ Action `path` becomes a typed reference (`{ field: "origin", axis?: "x"|"y"|"z" 
 - `TopologyGraphJson` fields become arrays; `TopologyGraph` internally builds `Map<Id, Record>` indexes from those arrays on `fromJSON` and serializes them back in `toJSON`.
 - `CommandSpec.guards: NamedGuard[]`, `machine.states: StateDef[]`, `StateDef.on: EventHandler[]`, `display.states: StateDisplaySection[]`.
 - New `type Expr = ExprPath | ExprConst | ExprEvent | ExprVar | ExprLet | ExprExists | ExprNotEmpty | ExprAll | ExprAny | ExprNot | ExprAbs | ExprDistance | ExprBinop | ExprFold;` — `evalExpr` is a single `switch (expr.kind)`. Delete the `binKeys` loop and the in-key dispatch.
-- `ActionSpec` becomes a discriminated union; `applyActionAsync` switches on `op`. `box.*` ops collapse into one `box.transform` case dispatching on the `transform` enum.
+- `ActionSpec` becomes a discriminated union; `applyActionAsync` switches on `operation`. `box.*` operations collapse into one `box.transform` case dispatching on the `transform` enum.
 - `resolveTemplate` is removed — `Expr` is the only template language; `evalExpr` covers every site (display item field, action `value`, commit operation arg).
 - `TopologyDiff` rewrites `added`/`modified` as arrays; `applyTopologyDiff` builds the inverse the same way. `meshFaceTopologyDiff` returns the new shape.
 - `parseCommandSpec` is replaced by a structural validator that walks the new arrays and rejects unknown enum values; no string-key iteration except inside the array loops it owns.
@@ -210,7 +210,7 @@ In every schema file:
 
 - `additionalProperties: false` everywhere; remove every `additionalProperties: <schemaRef>`.
 - All arrays-of-records get `"uniqueItems": true` enforced on the `id`/`name` field via `items.required`.
-- Every enum is closed: action `op`, expression `kind`, expression `binop.op`, display `kind`, commit `kind`, context-field `kind`, selection `accept` items, requires `editableEntities` items.
+- Every enum is closed: action `operation`, expression `kind`, expression `binop.operation`, display `kind`, commit `kind`, context-field `kind`, selection `accept` items, requires `editableEntities` items.
 - Replace `"type": "object"` placeholders (`commit.operation.params`, `display.item.params`, `action` extras) with the new tagged `oneOf`.
 
 ## 6. Execution order (single sweep, no compat)

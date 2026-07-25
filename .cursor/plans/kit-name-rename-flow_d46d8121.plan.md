@@ -100,13 +100,13 @@ Command::RenameKit { request_id, name, .. } => {
     }
     *self.graph.the_kit.name.write().await = name.clone();
     self.graph.the_kit.bump_touch_epoch().await;
-    let op = op::RenamedKit::new(/* input, kit, diff */ ...).await;
-    self.bus.emit_event(Event::RenamedKit(Arc::new(op))).await;
+    let operation = operation::RenamedKit::new(/* input, kit, diff */ ...).await;
+    self.bus.emit_event(Event::RenamedKit(Arc::new(operation))).await;
     Ok(())
 }
 ```
 
-Ensure `op::RenamedKit` (already defined ~line 5019) and its GraphQL `SimpleObject` expose a `requestId` field correlated to the originating command (thread `request_id` into the constructor / payload).
+Ensure `operation::RenamedKit` (already defined ~line 5019) and its GraphQL `SimpleObject` expose a `requestId` field correlated to the originating command (thread `request_id` into the constructor / payload).
 
 In `Subscription` (around line 6512) add a dedicated stream:
 

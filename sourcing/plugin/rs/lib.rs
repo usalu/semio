@@ -8,7 +8,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use sourcing_curate::{grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument, ObjectKind, SortDirection, SourcingOp, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA};
+use sourcing_curate::{grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument, ObjectKind, SortDirection, SourcingOperation, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA};
 use std::collections::HashSet;
 
 //#region 🔖Constants
@@ -315,7 +315,7 @@ pub struct SourcingCurateApp;
 
 impl DocumentApp for SourcingCurateApp {
     type Projection = CurateDocument;
-    type Op = SourcingOp;
+    type Operation = SourcingOperation;
 
     fn app_id(&self) -> &str {
         SOURCING_CURATE_APP_ID
@@ -329,18 +329,18 @@ impl DocumentApp for SourcingCurateApp {
         default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> ActionEmit<SourcingOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, CurateDocument>, view_state: &ViewState) -> ActionEmit<SourcingOperation> {
         let mut document = doc.projection.clone();
         match action {
             "setDocument" => {
                 if let Some(parsed) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<CurateDocument>(value.clone()).ok()) {
-                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document: parsed }]);
+                    return ActionEmit::operations(vec![SourcingOperation::SetDocument { document: parsed }]);
                 }
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let next = if example_id.is_empty() || example_id == EMPTY_EXAMPLE_ID { empty_document() } else { default_document() };
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document: next }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document: next }]);
             }
             "stockFromCatalogue" => {
                 let existing: HashSet<String> = document.stock.iter().map(|kind| kind.id.clone()).collect();
@@ -351,11 +351,11 @@ impl DocumentApp for SourcingCurateApp {
                         }
                     }
                 }
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "setFilterQuery" => {
                 document.filters.query = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or_default().to_string();
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "setFilterModule" => {
                 if let (Some(module_id), Some(enabled)) = (args.and_then(|value| value.get("moduleId")).and_then(|value| value.as_str()), args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool())) {
@@ -367,25 +367,25 @@ impl DocumentApp for SourcingCurateApp {
                         document.filters.module_ids.retain(|id| id != module_id);
                     }
                 }
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "setFilterTypology" => {
                 let path = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or_default();
                 document.filters.typology_path = if path.is_empty() { Vec::new() } else { path.split('/').map(String::from).collect() };
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "setFilterMinAvailability" => {
                 let current = document.filters.min_availability as f64;
                 let next = args.and_then(|value| value.get("delta")).and_then(|value| value.as_f64()).map(|delta| current + delta).or_else(|| args.and_then(|value| value.get("value")).and_then(|value| value.as_f64())).unwrap_or(current);
                 document.filters.min_availability = next.max(0.0) as u32;
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "sortTable" => {
                 if let Some(column_id) = args.and_then(|value| value.get("columnId")).and_then(|value| value.as_str()) {
                     let direction = args.and_then(|value| value.get("direction")).and_then(|value| value.as_str()).unwrap_or("asc");
                     document.filters.sort = Some(TableSort { column_id: column_id.to_string(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } });
                 }
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "curateAdd" | "curateSetCount" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
@@ -396,30 +396,30 @@ impl DocumentApp for SourcingCurateApp {
                     } else if action == "curateAdd" {
                         document.curate_delta(object_id, 1);
                     }
-                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                    return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
                 }
             }
             "curateRemove" | "dropOnPool" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     document.curate_set(object_id, 0);
-                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                    return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
                 }
             }
             "dropOnCurated" => {
                 if let Some(object_id) = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()) {
                     document.curate_delta(object_id, 1);
-                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                    return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
                 }
             }
             "selectRow" => {
                 document.runtime.selected_object_id = args.and_then(|value| value.get("row")).and_then(|row| row.get("id")).and_then(|value| value.as_str()).map(str::to_string);
-                return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
             }
             "worldSelect" => {
                 let last_id = args.and_then(|value| value.get("ids")).and_then(|value| value.as_array()).and_then(|ids| ids.last()).and_then(|value| value.as_str());
                 if let Some(id) = last_id {
                     document.runtime.selected_object_id = Some(id.to_string());
-                    return ActionEmit::ops(vec![SourcingOp::SetDocument { document }]);
+                    return ActionEmit::operations(vec![SourcingOperation::SetDocument { document }]);
                 }
             }
             _ => {}
@@ -461,7 +461,7 @@ impl DocumentApp for SourcingCurateApp {
 //#endregion 🔖SourcingCurateApp
 
 //#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/hidden-op declared in `create_sourcing_curate_app`'s
+/// 🗣️ (action id) -> localized label for every operation/hidden-operation declared in `create_sourcing_curate_app`'s
 /// static manifest — mirrors `puzzle3d_action_labels`, built on the shared `localized_label_map`.
 fn sourcing_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     localized_label_map(
@@ -513,7 +513,7 @@ fn sourcing_three_column_layout() -> WindowLayout {
 
 /// 🙈 An internal document operation kept out of the command palette — the filter/sort/selection/DnD
 /// arms that mutate the persisted `CurateDocument` but are only ever dispatched from window chrome.
-fn hidden_op(id: &str, label: &str) -> ActionDefinition {
+fn hidden_operation(id: &str, label: &str) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
 }
 
@@ -555,23 +555,23 @@ pub fn create_sourcing_curate_app() -> App {
             .default_layout(sourcing_three_column_layout())
             // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the
             // `CurateDocument` (filters/sort/runtime all live in the document), so each arm emits a
-            // whole-document `SetDocument` op and is declared as an Operation, never a View. The
+            // whole-document `SetDocument` operation and is declared as an Operation, never a View. The
             // filter/sort/selection/table/DnD ids are internal (kept out of the command palette).
             .operation("setActiveExample", "Set Active Example")
             .operation("stockFromCatalogue", "Stock From Catalogue")
-            .action_with(hidden_op("setDocument", "Set Document"))
-            .action_with(hidden_op("setFilterQuery", "Set Filter Query"))
-            .action_with(hidden_op("setFilterModule", "Set Filter Module"))
-            .action_with(hidden_op("setFilterTypology", "Set Filter Typology"))
-            .action_with(hidden_op("setFilterMinAvailability", "Set Filter Min Availability"))
-            .action_with(hidden_op("sortTable", "Sort Table"))
-            .action_with(hidden_op("curateAdd", "Curate Add"))
-            .action_with(hidden_op("curateSetCount", "Curate Set Count"))
-            .action_with(hidden_op("curateRemove", "Curate Remove"))
-            .action_with(hidden_op("dropOnPool", "Drop On Pool"))
-            .action_with(hidden_op("dropOnCurated", "Drop On Curated"))
-            .action_with(hidden_op("selectRow", "Select Row"))
-            .action_with(hidden_op("worldSelect", "World Select"))
+            .action_with(hidden_operation("setDocument", "Set Document"))
+            .action_with(hidden_operation("setFilterQuery", "Set Filter Query"))
+            .action_with(hidden_operation("setFilterModule", "Set Filter Module"))
+            .action_with(hidden_operation("setFilterTypology", "Set Filter Typology"))
+            .action_with(hidden_operation("setFilterMinAvailability", "Set Filter Min Availability"))
+            .action_with(hidden_operation("sortTable", "Sort Table"))
+            .action_with(hidden_operation("curateAdd", "Curate Add"))
+            .action_with(hidden_operation("curateSetCount", "Curate Set Count"))
+            .action_with(hidden_operation("curateRemove", "Curate Remove"))
+            .action_with(hidden_operation("dropOnPool", "Drop On Pool"))
+            .action_with(hidden_operation("dropOnCurated", "Drop On Curated"))
+            .action_with(hidden_operation("selectRow", "Select Row"))
+            .action_with(hidden_operation("worldSelect", "World Select"))
             // 📝 Staged argument form for the panel-visible example switch.
             .action_args("setActiveExample", vec![
                 ActionArgDef::select("exampleId", "Example", vec![
@@ -606,13 +606,13 @@ mod tests {
     #[test]
     fn curate_and_example_actions_survive_registry_enforcement() {
         // 🧬 A registry-backed wrapper so `setActiveExample`'s default materializes and the
-        // document-mutating curate ops pass kind discipline (they are declared Operations, never Views).
+        // document-mutating curate operations pass kind discipline (they are declared Operations, never Views).
         let mut app = testkit::new_app_with_registry::<SourcingCurateApp>(create_sourcing_curate_app);
         // setActiveExample with no args materializes the declared default (demo stock, non-empty).
         app.handle_action("setActiveExample", None, &view_state(), &testkit::meta("local")).expect("set example");
         assert!(!app.projection().expect("projection").stock.is_empty(), "demo-stock default materialized from the registry");
-        // curateAdd mutates the persisted document, so as a declared Operation it emits exactly one op
-        // and is NOT rejected by the View/Shell no-ops kind discipline.
+        // curateAdd mutates the persisted document, so as a declared Operation it emits exactly one operation
+        // and is NOT rejected by the View/Shell no-operations kind discipline.
         let object_id = app.projection().expect("projection").stock[0].id.clone();
         let result = app.handle_action("curateAdd", Some(&json!({ "objectId": object_id })), &view_state(), &testkit::meta("local")).expect("curate");
         assert_eq!(result.operations.len(), 1, "curateAdd is a document operation");
@@ -649,7 +649,7 @@ mod tests {
     }
 
     #[test]
-    fn curate_add_and_remove_round_trip_through_patch_ops() {
+    fn curate_add_and_remove_round_trip_through_patch_operations() {
         let mut app = testkit::new_app::<SourcingCurateApp>();
         let document = app.projection().expect("projection");
         // stock[2] isn't part of the fixture's pre-curated set, so a single add lands on count 1.

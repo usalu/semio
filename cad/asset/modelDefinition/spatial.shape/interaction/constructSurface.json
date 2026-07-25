@@ -90,7 +90,7 @@
                 "label": "Rectangle",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -106,7 +106,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.plane",
                     "outputs": [
                       {
@@ -271,7 +271,7 @@
                 "label": "Pick face",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -299,7 +299,7 @@
                 "label": "Line + extrude",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -315,7 +315,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "curve.line",
                     "outputs": [
                       {
@@ -459,7 +459,7 @@
                 "label": "Tween curves (loft)",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -475,7 +475,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "curve.construct",
                     "outputs": [
                       {
@@ -619,7 +619,7 @@
                 "label": "Sweep 1",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -635,7 +635,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.sweep1",
                     "outputs": [
                       {
@@ -800,7 +800,7 @@
                 "label": "Sweep 2",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -816,7 +816,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.sweep2",
                     "outputs": [
                       {
@@ -981,7 +981,7 @@
                 "label": "Network surface",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -997,7 +997,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.networkSrf",
                     "outputs": [
                       {
@@ -1170,7 +1170,7 @@
                 "target": "committed",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -1217,7 +1217,7 @@
                 "label": "Extrude profile",
                 "effects": [
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.extrudeCrv",
                     "outputs": [
                       {
@@ -1387,7 +1387,7 @@
                 "label": "Loft curves",
                 "effects": [
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.loft",
                     "outputs": [
                       {

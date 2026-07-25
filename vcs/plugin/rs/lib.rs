@@ -36,8 +36,8 @@ struct VcsDemoProjection {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-enum VcsDemoOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+enum VcsDemoOperation {
     SetCounter { counter: i64 },
     SetTitle { title: String },
     SetNotes { notes: String },
@@ -59,20 +59,20 @@ enum VcsDemoDiff {
     RemoveTag { tag: String },
 }
 
-type VcsDemoStore = DocumentVcsStore<VcsDemoProjection, VcsDemoOp>;
+type VcsDemoStore = DocumentVcsStore<VcsDemoProjection, VcsDemoOperation>;
 
 impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
     fn apply(&self, projection: &VcsDemoProjection) -> VcsDemoProjection {
-        let op = match self {
+        let operation = match self {
             VcsDemoDiff::Empty => return projection.clone(),
-            VcsDemoDiff::SetCounter { counter } => VcsDemoOp::SetCounter { counter: *counter },
-            VcsDemoDiff::SetTitle { title } => VcsDemoOp::SetTitle { title: title.clone() },
-            VcsDemoDiff::SetNotes { notes } => VcsDemoOp::SetNotes { notes: notes.clone() },
-            VcsDemoDiff::SetStatus { status } => VcsDemoOp::SetStatus { status: status.clone() },
-            VcsDemoDiff::AddTag { tag } => VcsDemoOp::AddTag { tag: tag.clone() },
-            VcsDemoDiff::RemoveTag { tag } => VcsDemoOp::RemoveTag { tag: tag.clone() },
+            VcsDemoDiff::SetCounter { counter } => VcsDemoOperation::SetCounter { counter: *counter },
+            VcsDemoDiff::SetTitle { title } => VcsDemoOperation::SetTitle { title: title.clone() },
+            VcsDemoDiff::SetNotes { notes } => VcsDemoOperation::SetNotes { notes: notes.clone() },
+            VcsDemoDiff::SetStatus { status } => VcsDemoOperation::SetStatus { status: status.clone() },
+            VcsDemoDiff::AddTag { tag } => VcsDemoOperation::AddTag { tag: tag.clone() },
+            VcsDemoDiff::RemoveTag { tag } => VcsDemoOperation::RemoveTag { tag: tag.clone() },
         };
-        apply_vcs_demo_op(projection, &op)
+        apply_vcs_demo_operation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -82,36 +82,36 @@ impl OperationDiff<VcsDemoProjection> for VcsDemoDiff {
     }
 }
 
-impl Operation<VcsDemoProjection> for VcsDemoOp {
+impl Operation<VcsDemoProjection> for VcsDemoOperation {
     type Diff = VcsDemoDiff;
 
     fn diff(&self, _projection: &VcsDemoProjection) -> Self::Diff {
         match self {
-            VcsDemoOp::SetCounter { counter } => VcsDemoDiff::SetCounter { counter: *counter },
-            VcsDemoOp::SetTitle { title } => VcsDemoDiff::SetTitle { title: title.clone() },
-            VcsDemoOp::SetNotes { notes } => VcsDemoDiff::SetNotes { notes: notes.clone() },
-            VcsDemoOp::SetStatus { status } => VcsDemoDiff::SetStatus { status: status.clone() },
-            VcsDemoOp::AddTag { tag } => VcsDemoDiff::AddTag { tag: tag.clone() },
-            VcsDemoOp::RemoveTag { tag } => VcsDemoDiff::RemoveTag { tag: tag.clone() },
+            VcsDemoOperation::SetCounter { counter } => VcsDemoDiff::SetCounter { counter: *counter },
+            VcsDemoOperation::SetTitle { title } => VcsDemoDiff::SetTitle { title: title.clone() },
+            VcsDemoOperation::SetNotes { notes } => VcsDemoDiff::SetNotes { notes: notes.clone() },
+            VcsDemoOperation::SetStatus { status } => VcsDemoDiff::SetStatus { status: status.clone() },
+            VcsDemoOperation::AddTag { tag } => VcsDemoDiff::AddTag { tag: tag.clone() },
+            VcsDemoOperation::RemoveTag { tag } => VcsDemoDiff::RemoveTag { tag: tag.clone() },
         }
     }
 
     fn backwards(&self, projection: &VcsDemoProjection) -> Vec<Self> {
         match self {
-            VcsDemoOp::SetCounter { .. } => vec![VcsDemoOp::SetCounter {
+            VcsDemoOperation::SetCounter { .. } => vec![VcsDemoOperation::SetCounter {
                 counter: projection.counter,
             }],
-            VcsDemoOp::SetTitle { .. } => vec![VcsDemoOp::SetTitle {
+            VcsDemoOperation::SetTitle { .. } => vec![VcsDemoOperation::SetTitle {
                 title: projection.title.clone(),
             }],
-            VcsDemoOp::SetNotes { .. } => vec![VcsDemoOp::SetNotes {
+            VcsDemoOperation::SetNotes { .. } => vec![VcsDemoOperation::SetNotes {
                 notes: projection.notes.clone(),
             }],
-            VcsDemoOp::SetStatus { .. } => vec![VcsDemoOp::SetStatus {
+            VcsDemoOperation::SetStatus { .. } => vec![VcsDemoOperation::SetStatus {
                 status: projection.status.clone(),
             }],
-            VcsDemoOp::AddTag { tag } => vec![VcsDemoOp::RemoveTag { tag: tag.clone() }],
-            VcsDemoOp::RemoveTag { tag } => vec![VcsDemoOp::AddTag { tag: tag.clone() }],
+            VcsDemoOperation::AddTag { tag } => vec![VcsDemoOperation::RemoveTag { tag: tag.clone() }],
+            VcsDemoOperation::RemoveTag { tag } => vec![VcsDemoOperation::AddTag { tag: tag.clone() }],
         }
     }
 }
@@ -149,19 +149,19 @@ fn demo_authors() -> Vec<vcs::Author> {
     ]
 }
 
-fn apply_vcs_demo_op(projection: &VcsDemoProjection, operation: &VcsDemoOp) -> VcsDemoProjection {
+fn apply_vcs_demo_operation(projection: &VcsDemoProjection, operation: &VcsDemoOperation) -> VcsDemoProjection {
     let mut next = projection.clone();
     match operation {
-        VcsDemoOp::SetCounter { counter } => next.counter = *counter,
-        VcsDemoOp::SetTitle { title } => next.title = title.clone(),
-        VcsDemoOp::SetNotes { notes } => next.notes = notes.clone(),
-        VcsDemoOp::SetStatus { status } => next.status = status.clone(),
-        VcsDemoOp::AddTag { tag } => {
+        VcsDemoOperation::SetCounter { counter } => next.counter = *counter,
+        VcsDemoOperation::SetTitle { title } => next.title = title.clone(),
+        VcsDemoOperation::SetNotes { notes } => next.notes = notes.clone(),
+        VcsDemoOperation::SetStatus { status } => next.status = status.clone(),
+        VcsDemoOperation::AddTag { tag } => {
             if !next.tags.contains(tag) {
                 next.tags.push(tag.clone());
             }
         }
-        VcsDemoOp::RemoveTag { tag } => next.tags.retain(|entry| entry != tag),
+        VcsDemoOperation::RemoveTag { tag } => next.tags.retain(|entry| entry != tag),
     }
     next
 }
@@ -174,28 +174,28 @@ fn vcs_action(action: &str, args: Option<Value>) -> ActionDescriptor {
     }
 }
 
-fn vcs_demo_projection_diff_ops(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoOp> {
+fn vcs_demo_projection_diff_operations(current: &VcsDemoProjection, next: &VcsDemoProjection) -> Vec<VcsDemoOperation> {
     let mut operations = Vec::new();
     if next.title != current.title {
-        operations.push(VcsDemoOp::SetTitle { title: next.title.clone() });
+        operations.push(VcsDemoOperation::SetTitle { title: next.title.clone() });
     }
     if next.counter != current.counter {
-        operations.push(VcsDemoOp::SetCounter { counter: next.counter });
+        operations.push(VcsDemoOperation::SetCounter { counter: next.counter });
     }
     if next.status != current.status {
-        operations.push(VcsDemoOp::SetStatus { status: next.status.clone() });
+        operations.push(VcsDemoOperation::SetStatus { status: next.status.clone() });
     }
     if next.notes != current.notes {
-        operations.push(VcsDemoOp::SetNotes { notes: next.notes.clone() });
+        operations.push(VcsDemoOperation::SetNotes { notes: next.notes.clone() });
     }
     for tag in &next.tags {
         if !current.tags.contains(tag) {
-            operations.push(VcsDemoOp::AddTag { tag: tag.clone() });
+            operations.push(VcsDemoOperation::AddTag { tag: tag.clone() });
         }
     }
     for tag in &current.tags {
         if !next.tags.contains(tag) {
-            operations.push(VcsDemoOp::RemoveTag { tag: tag.clone() });
+            operations.push(VcsDemoOperation::RemoveTag { tag: tag.clone() });
         }
     }
     operations
@@ -214,7 +214,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
         |store: &VcsDemoStore| -> String { store.envelope().vcs.checkpoints.last().expect("checkpoint just committed").id.clone() };
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 1 }, VcsDemoOp::SetTitle { title: "VCS Demo".into() }],
+        operations: vec![VcsDemoOperation::SetCounter { counter: 1 }, VcsDemoOperation::SetTitle { title: "VCS Demo".into() }],
         description: Some("bootstrap".into()),
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -224,7 +224,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let c1 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetNotes { notes: "main line".into() }, VcsDemoOp::SetStatus { status: "draft".into() }],
+        operations: vec![VcsDemoOperation::SetNotes { notes: "main line".into() }, VcsDemoOperation::SetStatus { status: "draft".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -234,7 +234,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let c2 = last_checkpoint_id(store);
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 2 }],
+        operations: vec![VcsDemoOperation::SetCounter { counter: 2 }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -246,7 +246,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
     let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetTitle { title: "Feature A".into() }, VcsDemoOp::AddTag { tag: "feature-a".into() }],
+        operations: vec![VcsDemoOperation::SetTitle { title: "Feature A".into() }, VcsDemoOperation::AddTag { tag: "feature-a".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -257,7 +257,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let feature_a_id = store.envelope().active_alternative_id.clone().expect("feature-a alternative id");
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 10 }],
+        operations: vec![VcsDemoOperation::SetCounter { counter: 10 }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -268,7 +268,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
     let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetTitle { title: "Feature B".into() }, VcsDemoOp::SetNotes { notes: "branch b".into() }],
+        operations: vec![VcsDemoOperation::SetTitle { title: "Feature B".into() }, VcsDemoOperation::SetNotes { notes: "branch b".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -278,7 +278,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let feature_b_id = store.envelope().active_alternative_id.clone().expect("feature-b alternative id");
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 20 }],
+        operations: vec![VcsDemoOperation::SetCounter { counter: 20 }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -288,7 +288,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
 
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c3.clone() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetStatus { status: "active".into() }],
+        operations: vec![VcsDemoOperation::SetStatus { status: "active".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -299,7 +299,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
 
     let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_a_id.clone() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetCounter { counter: 11 }, VcsDemoOp::AddTag { tag: "wip".into() }],
+        operations: vec![VcsDemoOperation::SetCounter { counter: 11 }, VcsDemoOperation::AddTag { tag: "wip".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -310,7 +310,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c4 });
     let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a-hotfix".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetStatus { status: "hotfix".into() }],
+        operations: vec![VcsDemoOperation::SetStatus { status: "hotfix".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -320,7 +320,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
 
     let _ = store.dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: feature_b_id });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::AddTag { tag: "review".into() }],
+        operations: vec![VcsDemoOperation::AddTag { tag: "review".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -331,9 +331,9 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c8 });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
         operations: vec![
-            VcsDemoOp::SetCounter { counter: 3 },
-            VcsDemoOp::SetNotes { notes: "main polish".into() },
-            VcsDemoOp::AddTag { tag: "release".into() },
+            VcsDemoOperation::SetCounter { counter: 3 },
+            VcsDemoOperation::SetNotes { notes: "main polish".into() },
+            VcsDemoOperation::AddTag { tag: "release".into() },
         ],
         description: None,
     });
@@ -343,7 +343,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     });
 
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetStatus { status: "done".into() }],
+        operations: vec![VcsDemoOperation::SetStatus { status: "done".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -354,7 +354,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c2 });
     let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "docs".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetNotes { notes: "documentation pass".into() }],
+        operations: vec![VcsDemoOperation::SetNotes { notes: "documentation pass".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -365,7 +365,7 @@ fn seed_vcs_demo_history(store: &mut VcsDemoStore) {
     let _ = store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: c1 });
     let _ = store.dispatch(DocumentVcsCommand::CreateAlternative { name: "spike".into() });
     let _ = store.dispatch(DocumentVcsCommand::Apply {
-        operations: vec![VcsDemoOp::SetTitle { title: "Spike prototype".into() }],
+        operations: vec![VcsDemoOperation::SetTitle { title: "Spike prototype".into() }],
         description: None,
     });
     let _ = store.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -410,7 +410,7 @@ fn vcs_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
         ("textEdit", "Edit Text", "Text bearbeiten"),
         ("edit", "Edit", "Bearbeiten"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
-        ("noop", "No-op", "Keine Aktion"),
+        ("noOperation", "No-operation", "Keine Aktion"),
         ("canvasPointerDown", "Canvas Pointer Down", "Leinwand-Zeiger gedrückt"),
         ("canvasPointerMove", "Canvas Pointer Move", "Leinwand-Zeiger bewegt"),
         ("canvasPointerUp", "Canvas Pointer Up", "Leinwand-Zeiger losgelassen"),
@@ -643,7 +643,7 @@ struct VcsPlayApp {
 
 impl DocumentApp for VcsPlayApp {
     type Projection = VcsDemoProjection;
-    type Op = VcsDemoOp;
+    type Operation = VcsDemoOperation;
 
     fn app_id(&self) -> &str {
         VCS_PLAY_APP_ID
@@ -657,7 +657,7 @@ impl DocumentApp for VcsPlayApp {
         empty_vcs_demo_projection()
     }
 
-    fn seed(&self, store: &mut DocumentVcsStore<VcsDemoProjection, VcsDemoOp>) {
+    fn seed(&self, store: &mut DocumentVcsStore<VcsDemoProjection, VcsDemoOperation>) {
         seed_vcs_demo_history(store);
     }
 
@@ -667,7 +667,7 @@ impl DocumentApp for VcsPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, VcsDemoProjection>,
         _view_state: &ViewState,
-    ) -> ActionEmit<VcsDemoOp> {
+    ) -> ActionEmit<VcsDemoOperation> {
         // "undo"/"redo"/"commitCheckpoint"/"createAlternative"/"switchAlternative"/"checkoutCheckpoint"
         // never reach here — `VcsDocumentApp` intercepts those six history actions before calling
         // `handle_action`, dispatching them straight to `DocumentVcsCommand`.
@@ -676,34 +676,34 @@ impl DocumentApp for VcsPlayApp {
                 self.selected_checkpoint_ids = selection_ids(args);
                 ActionEmit::default()
             }
-            "incrementCounter" => ActionEmit::ops(vec![VcsDemoOp::SetCounter { counter: doc.projection.counter + 1 }]),
+            "incrementCounter" => ActionEmit::operations(vec![VcsDemoOperation::SetCounter { counter: doc.projection.counter + 1 }]),
             "patchProjection" => {
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
                 let operation = match field {
-                    "title" => value.and_then(|entry| entry.as_str()).map(|title| VcsDemoOp::SetTitle { title: title.into() }),
-                    "counter" => value.and_then(|entry| entry.as_i64()).map(|counter| VcsDemoOp::SetCounter { counter }),
-                    "status" => value.and_then(|entry| entry.as_str()).map(|status| VcsDemoOp::SetStatus { status: status.into() }),
-                    "notes" => value.and_then(|entry| entry.as_str()).map(|notes| VcsDemoOp::SetNotes { notes: notes.into() }),
+                    "title" => value.and_then(|entry| entry.as_str()).map(|title| VcsDemoOperation::SetTitle { title: title.into() }),
+                    "counter" => value.and_then(|entry| entry.as_i64()).map(|counter| VcsDemoOperation::SetCounter { counter }),
+                    "status" => value.and_then(|entry| entry.as_str()).map(|status| VcsDemoOperation::SetStatus { status: status.into() }),
+                    "notes" => value.and_then(|entry| entry.as_str()).map(|notes| VcsDemoOperation::SetNotes { notes: notes.into() }),
                     _ => None,
                 };
                 match operation {
-                    Some(operation) => ActionEmit::ops(vec![operation]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
             "textEdit" | "edit" => {
                 if let Some(text) = args.and_then(|value| value.get("text")).and_then(|value| value.as_str()) {
                     if let Ok(next_projection) = serde_json::from_str::<VcsDemoProjection>(text) {
-                        let operations = vcs_demo_projection_diff_ops(doc.projection, &next_projection);
+                        let operations = vcs_demo_projection_diff_operations(doc.projection, &next_projection);
                         if !operations.is_empty() {
-                            return ActionEmit::ops(operations);
+                            return ActionEmit::operations(operations);
                         }
                     }
                 }
                 ActionEmit::default()
             }
-            "noop" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
+            "noOperation" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
             _ => ActionEmit::default(),
         }
     }
@@ -759,7 +759,7 @@ fn create_vcs_app() -> App {
             .operation("textEdit", "Edit Text")
             .operation("edit", "Edit")
             .view_action("setSelection", "Set Selection")
-            .view_action("noop", "No-op")
+            .view_action("noOperation", "No-operation")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
             .view_action("canvasPointerMove", "Canvas Pointer Move")
             .view_action("canvasPointerUp", "Canvas Pointer Up")
@@ -794,7 +794,7 @@ mod tests {
     /// 📦 Parses `document_json()` (the full envelope) for tests that need to inspect raw
     /// checkpoints/alternatives directly — safe here because none of these tests undo/redo, so every
     /// edit in the log is still applied.
-    fn seeded_envelope(app: &VcsDocumentApp<VcsPlayApp>) -> DocumentVcsEnvelope<VcsDemoProjection, VcsDemoOp> {
+    fn seeded_envelope(app: &VcsDocumentApp<VcsPlayApp>) -> DocumentVcsEnvelope<VcsDemoProjection, VcsDemoOperation> {
         serde_json::from_str(&app.document_json().expect("document json")).expect("envelope")
     }
 

@@ -65,7 +65,7 @@ flowchart TD
 
 ## Efficiency
 
-- Build interference graph once with `checkInterference` (already used), then operate per connected component only — no boolean ops between non-intersecting clusters.
+- Build interference graph once with `checkInterference` (already used), then operate per connected component only — no boolean operations between non-intersecting clusters.
 - Per cluster: one `intersect`/`intersectAll` call; per cell: one `cutAll` call. No pairwise loops in the brep path.
 - Face classification uses the existing solids map; the sample-point-in-other-solid test is O(F·N) but bounded to the cluster.
 - Surface union does one `fuseAll` per (stance, exposure, plane), not per face.

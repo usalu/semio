@@ -77,7 +77,7 @@ flowchart LR
 - Add geometry helpers for resize: `noteSelectionBounds(blocks, ids)`, `noteScaleBlockWithinGroup(block, fromBounds, toBounds)` (recurses into `group` children, scales ink `points`).
 - Add ink-erase helpers: `noteEraseInkStrokeAtPoint(doc, x, y, threshold): NoteDocument` (point-to-segment distance hit test, removes whole block) and `noteEraseInkPointsNearPoint(doc, x, y, radius): NoteDocument` (filters points, splits surviving contiguous runs into separate ink blocks, drops runs with <2 points).
 - Add clipboard helpers: `noteCloneBlocksWithOffset(blocks, dx, dy)` (reuse `cloneNoteBlock`), `noteClipboardPayload(blocks)` / `noteBlocksFromClipboardPayload(json)` using a `{schema:"note.clipboard", blocks:[...]}` envelope.
-- Replace `NOTE_TOOL_IDS` `"eraser"` with `"eraserStroke" | "eraserPoint"`; add `eraserRadius?: number` to `NoteDocument` (default 12) and a corresponding `setEraserRadius` edit op alongside the existing `setPencilWidth`.
+- Replace `NOTE_TOOL_IDS` `"eraser"` with `"eraserStroke" | "eraserPoint"`; add `eraserRadius?: number` to `NoteDocument` (default 12) and a corresponding `setEraserRadius` edit operation alongside the existing `setPencilWidth`.
 - Extend the existing `if (import.meta.vitest)` block in this file with tests for: rich-text plain-text round trip, group bounds scaling, ink erase (stroke + point/split), clipboard payload round trip.
 
 ## 2. Controller commands (`note/core/index.ts`)

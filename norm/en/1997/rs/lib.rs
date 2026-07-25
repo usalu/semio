@@ -273,7 +273,7 @@ pub fn check_full_geotechnical(
 }
 
 // #region 🔖Session
-use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -331,7 +331,7 @@ impl Default for Document {
     }
 }
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<En1997Family>;
 
 fn parse_design_approach(value: &str) -> DesignApproach {
@@ -374,7 +374,7 @@ pub struct En1997Family;
 
 impl NormFamily for En1997Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1997

@@ -795,7 +795,7 @@ impl<'g, G: GraphView + AttrView> AttrView for EdgeSubgraphView<'g, G> {
     }
 }
 
-/// ↩️ Swaps successors and predecessors; only meaningful when the wrapped view is directed — on an undirected view this is a documented no-op (not a panic), since successors already equal predecessors there.
+/// ↩️ Swaps successors and predecessors; only meaningful when the wrapped view is directed — on an undirected view this is a documented no-operation (not a panic), since successors already equal predecessors there.
 pub struct ReversedView<'g, G: GraphView> {
     graph: &'g G,
 }
@@ -1184,7 +1184,7 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
         self.position.contains_key(item)
     }
 
-    /// ➕ Pushes `item` at `priority` if absent, or decreases its priority if `priority` is lower than its current one; no-op if `item` is present with an already-lower-or-equal priority.
+    /// ➕ Pushes `item` at `priority` if absent, or decreases its priority if `priority` is lower than its current one; no-operation if `item` is present with an already-lower-or-equal priority.
     pub fn push_or_decrease(&mut self, item: V, priority: K) {
         if let Some(&i) = self.position.get(&item) {
             if priority < self.heap[i].0 {
@@ -1199,7 +1199,7 @@ impl<K: Ord, V: Eq + std::hash::Hash + Clone> MappedHeap<K, V> {
         }
     }
 
-    /// 🔽 Lowers `item`'s priority; returns `false` (no-op) if `item` isn't present or `priority` isn't lower than its current one.
+    /// 🔽 Lowers `item`'s priority; returns `false` (no-operation) if `item` isn't present or `priority` isn't lower than its current one.
     pub fn decrease_key(&mut self, item: &V, priority: K) -> bool {
         let Some(&i) = self.position.get(item) else { return false };
         if priority < self.heap[i].0 {
@@ -2507,7 +2507,7 @@ mod tests {
         heap.push_or_decrease("a", 10);
         heap.push_or_decrease("b", 20);
         assert!(heap.decrease_key(&"b", 5));
-        assert!(!heap.decrease_key(&"b", 100), "raising priority via decrease_key is a no-op");
+        assert!(!heap.decrease_key(&"b", 100), "raising priority via decrease_key is a no-operation");
         assert_eq!(heap.pop_min(), Some((5, "b")));
         assert!(heap.contains(&"a"));
         assert!(!heap.contains(&"b"));

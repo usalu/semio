@@ -359,7 +359,7 @@ mod tests {
     }
 
     #[test]
-    fn modint_field_ops() {
+    fn modint_field_operations() {
         let a = ModInt::new(7, 13);
         let b = ModInt::new(9, 13);
         assert_eq!(a.add(&b).value(), (7 + 9) % 13);

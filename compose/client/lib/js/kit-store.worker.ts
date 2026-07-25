@@ -27,7 +27,7 @@ function post(out: unknown): void {
 //#region 🧵OnMessage
 self.onmessage = async (ev: MessageEvent<string>) => {
   let msg: {
-    op?: string;
+    operation?: string;
     uri?: string;
     body?: string;
     reqId?: string;
@@ -35,44 +35,44 @@ self.onmessage = async (ev: MessageEvent<string>) => {
   try {
     msg = JSON.parse(ev.data) as typeof msg;
   } catch {
-    post({ op: "error", message: "invalid worker message json" });
+    post({ operator: "error", message: "invalid worker message json" });
     return;
   }
   try {
-    if (msg.op === "init") {
+    if (msg.operation === "init") {
       const mod = await import("@semio-tech/compose-rs-wasm");
       if (typeof mod.default === "function") await mod.default();
       if (typeof mod.boot === "function") mod.boot();
       const uri = typeof msg.uri === "string" ? msg.uri : "";
       if (uri !== RS_WASM_EMPTY_STORE_URI) {
-        post({ op: "error", message: `worker init: only ${RS_WASM_EMPTY_STORE_URI} is allowed` });
+        post({ operator: "error", message: `worker init: only ${RS_WASM_EMPTY_STORE_URI} is allowed` });
         return;
       }
       const created = (mod as { KitStoreHandle: { create: (uri: string) => WasmKitHandle | Promise<WasmKitHandle> } }).KitStoreHandle.create(uri);
       handle = created instanceof Promise ? await created : created;
-      post({ op: "ready" });
+      post({ operator: "ready" });
       return;
     }
     if (!handle) {
-      post({ op: "error", reqId: "op" in msg && msg.op !== "init" ? msg.reqId : undefined, message: "worker not initialized" });
+      post({ operator: "error", reqId: "operation" in msg && msg.operation !== "init" ? msg.reqId : undefined, message: "worker not initialized" });
       return;
     }
-    if (msg.op === "execute") {
+    if (msg.operation === "execute") {
       const json = await handle.execute(msg.body as string);
-      post({ op: "result", reqId: msg.reqId, json: String(json) });
-      post({ op: "done", reqId: msg.reqId });
+      post({ operator: "result", reqId: msg.reqId, json: String(json) });
+      post({ operator: "done", reqId: msg.reqId });
       return;
     }
-    if (msg.op === "subscribe") {
+    if (msg.operation === "subscribe") {
       await handle.subscribe(msg.body as string, (eventJson: string) => {
-        post({ op: "event", reqId: msg.reqId, json: String(eventJson) });
+        post({ operator: "event", reqId: msg.reqId, json: String(eventJson) });
       });
-      post({ op: "done", reqId: msg.reqId });
+      post({ operator: "done", reqId: msg.reqId });
       return;
     }
-    post({ op: "error", message: `unrecognized op ${msg.op ?? ""}` });
+    post({ operator: "error", message: `unrecognized operation ${msg.operation ?? ""}` });
   } catch (e) {
-    post({ op: "error", reqId: msg.reqId, message: String(e) });
+    post({ operator: "error", reqId: msg.reqId, message: String(e) });
   }
 };
 //#endregion 🧵OnMessage

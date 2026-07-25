@@ -1,6 +1,6 @@
 ---
 name: Channel Preview Mechanism
-overview: Introduce a general per-channel preview mechanism across flow and procedural so every geometry component input and output channel previews its value (driven by per-port and per-node hover/selection), and make geometry ops like offset robust on profile inputs so offset-on-circle computes a real result.
+overview: Introduce a general per-channel preview mechanism across flow and procedural so every geometry component input and output channel previews its value (driven by per-port and per-node hover/selection), and make geometry operations like offset robust on profile inputs so offset-on-circle computes a real result.
 todos:
  - id: engine-inputs
    content: "neural/engine/lib.rs: return per-neuron resolved inputs alongside outputs from the evaluator; extend tests."
@@ -67,7 +67,7 @@ Define a **Channel** = `{ widgetId, port, direction: "in" | "out" }`. Every chan
 - Store `hoveredChannel` / `selectedChannels`; extend `setHover`/`setSelection` (lines 1341, 1275) to accept optional channel payloads; add getters and feed them into `ProceduralPreview` props. `setEvalOutputs` (line 1264) uses `extractChannelPreviewItems`.
 - Update the existing play tests (e.g. `setEvalOutputs stores preview items per widget`, line 1717) to the new channel JSON shape and item fields.
 
-### 6. Robust geometry ops ([geometry/brep/js/index.ts](geometry/brep/js/index.ts))
+### 6. Robust geometry operations ([geometry/brep/js/index.ts](geometry/brep/js/index.ts))
 
 - Make `offsetSync` (line 979) accept profile inputs the way `extrudeSync` special-cases drawings (line 929): if the entry is a `drawing` (or `edge`/`wire`), derive its wire/face (`profileDrawingWire` / `asDrawing`, lines 644-668) and offset that, returning the appropriate kind; keep the solid/face/wire path. So circle -> offset yields a real offset profile that previews on the output channel.
 - Extend the brep `import.meta.vitest` tests to cover `offsetSync` on `sketchCircle` and `curve.circle`.

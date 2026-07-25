@@ -294,10 +294,10 @@ mod air_system {
                 let flow = *design_flow_m3_s;
                 let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
                 let coil_result = run_coils(cooling, heating.as_ref(), mixed_t, mixed_w, m_dot, request, request.outdoor_pressure_pa);
-                let sup_op = fan_operating_point(supply_fan, flow, 500.0);
+                let sup_operating_point = fan_operating_point(supply_fan, flow, 500.0);
                 let ret_power = return_fan.as_ref().map_or(0.0, |f| {
-                    let op = fan_operating_point(f, flow * 0.9, 300.0);
-                    fan_power_w(f, &op)
+                    let operating_point = fan_operating_point(f, flow * 0.9, 300.0);
+                    fan_power_w(f, &operating_point)
                 });
                 let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
                 AirSystemOutput {
@@ -309,7 +309,7 @@ mod air_system {
                     mixed_air_humidity_ratio: mixed_w,
                     total_cooling_w: coil_result.cooling_w,
                     total_heating_w: coil_result.heating_w,
-                    supply_fan_power_w: fan_power_w(supply_fan, &sup_op),
+                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
                     return_fan_power_w: ret_power,
                     compressor_power_w: coil_result.compressor_w,
                     economizer_active,
@@ -321,7 +321,7 @@ mod air_system {
                 let flow = min_flow_m3_s + load_frac * (max_flow_m3_s - min_flow_m3_s);
                 let m_dot = fan_mass_flow_kg_s(flow, RHO_AIR_REF);
                 let coil_result = run_coils(cooling, heating.as_ref(), mixed_t, mixed_w, m_dot, request, request.outdoor_pressure_pa);
-                let sup_op = fan_operating_point(supply_fan, flow, 600.0);
+                let sup_operating_point = fan_operating_point(supply_fan, flow, 600.0);
                 let ret_power = return_fan.as_ref().map_or(0.0, |f| fan_power_w(f, &fan_operating_point(f, flow * 0.85, 350.0)));
                 let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
                 AirSystemOutput {
@@ -333,7 +333,7 @@ mod air_system {
                     mixed_air_humidity_ratio: mixed_w,
                     total_cooling_w: coil_result.cooling_w,
                     total_heating_w: coil_result.heating_w,
-                    supply_fan_power_w: fan_power_w(supply_fan, &sup_op),
+                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
                     return_fan_power_w: ret_power,
                     compressor_power_w: coil_result.compressor_w,
                     economizer_active,
@@ -374,7 +374,7 @@ mod air_system {
                 let total_flow = request.requested_supply_flow_m3_s;
                 let m_dot = fan_mass_flow_kg_s(total_flow, RHO_AIR_REF);
                 let coil_result = run_coils(cooling, None, mixed_t, mixed_w, m_dot, request, request.outdoor_pressure_pa);
-                let sup_op = fan_operating_point(supply_fan, total_flow, 550.0);
+                let sup_operating_point = fan_operating_point(supply_fan, total_flow, 550.0);
                 let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
                 let _ = zone_dampers;
                 AirSystemOutput {
@@ -386,7 +386,7 @@ mod air_system {
                     mixed_air_humidity_ratio: mixed_w,
                     total_cooling_w: coil_result.cooling_w,
                     total_heating_w: coil_result.heating_w,
-                    supply_fan_power_w: fan_power_w(supply_fan, &sup_op),
+                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
                     return_fan_power_w: 0.0,
                     compressor_power_w: coil_result.compressor_w,
                     economizer_active,
@@ -399,7 +399,7 @@ mod air_system {
                 let t_erv = request.outdoor_temperature_c + erv_effectiveness * (request.return_temperature_c - request.outdoor_temperature_c);
                 let w_erv = request.outdoor_humidity_ratio + erv_effectiveness * (request.return_humidity_ratio - request.outdoor_humidity_ratio);
                 let coil_result = run_coils(cooling, heating.as_ref(), t_erv, w_erv, m_dot, request, request.outdoor_pressure_pa);
-                let sup_op = fan_operating_point(supply_fan, oa_flow, 450.0);
+                let sup_operating_point = fan_operating_point(supply_fan, oa_flow, 450.0);
                 let terminals = simulate_terminals(&request.zone_terminals, coil_result.outlet.temperature_c, coil_result.outlet.humidity_ratio);
                 AirSystemOutput {
                     supply_temperature_c: coil_result.outlet.temperature_c,
@@ -410,7 +410,7 @@ mod air_system {
                     mixed_air_humidity_ratio: w_erv,
                     total_cooling_w: coil_result.cooling_w,
                     total_heating_w: coil_result.heating_w,
-                    supply_fan_power_w: fan_power_w(supply_fan, &sup_op),
+                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
                     return_fan_power_w: 0.0,
                     compressor_power_w: coil_result.compressor_w,
                     economizer_active: true,
@@ -3108,15 +3108,15 @@ mod fans {
         #[test]
         fn zero_flow_zero_power() {
             let fan = test_fan();
-            let op = FanOperatingPoint { volume_flow_m3_s: 0.0, pressure_rise_pa: 0.0, part_load_ratio: 0.0, speed_ratio: 0.0 };
-            assert_eq!(fan_power_w(&fan, &op), 0.0);
+            let operating_point = FanOperatingPoint { volume_flow_m3_s: 0.0, pressure_rise_pa: 0.0, part_load_ratio: 0.0, speed_ratio: 0.0 };
+            assert_eq!(fan_power_w(&fan, &operating_point), 0.0);
         }
 
         #[test]
         fn full_load_positive_power() {
             let fan = test_fan();
-            let op = fan_operating_point(&fan, 2.0, 600.0);
-            let p = fan_power_w(&fan, &op);
+            let operating_point = fan_operating_point(&fan, 2.0, 600.0);
+            let p = fan_power_w(&fan, &operating_point);
             assert!(p > 0.0);
             let m_dot = fan_mass_flow_kg_s(2.0, RHO_AIR_REF);
             assert!((m_dot - 2.4).abs() < 0.1);
@@ -9958,14 +9958,14 @@ mod terminal {
                     let total_flow = primary_flow + induced_flow;
                     let m_dot = fan_mass_flow_kg_s(total_flow, RHO_AIR_REF);
                     let t_mix = if *parallel_fan { (primary_flow * request.supply_temperature_c + induced_flow * request.zone_temperature_c) / total_flow.max(1e-6) } else { request.supply_temperature_c };
-                    let op = fan_operating_point(fan, induced_flow, 150.0);
+                    let operating_point = fan_operating_point(fan, induced_flow, 150.0);
                     TerminalOutput {
                         discharge_temperature_c: t_mix,
                         discharge_humidity_ratio: request.supply_humidity_ratio,
                         mass_flow_kg_s: m_dot,
                         primary_mass_flow_kg_s: fan_mass_flow_kg_s(primary_flow, RHO_AIR_REF),
                         reheat_w: 0.0,
-                        fan_power_w: fan_power_w(fan, &op),
+                        fan_power_w: fan_power_w(fan, &operating_point),
                         damper_position: frac,
                     }
                 }
@@ -10821,14 +10821,14 @@ mod zone_hvac {
                     let cool = cooling.as_ref().map_or(crate::coils::CoolingCoilOutput { outlet: cool_inlet, total_cooling_w: 0.0, sensible_cooling_w: 0.0, latent_cooling_w: 0.0, compressor_power_w: 0.0, condensate_kg_s: 0.0 }, |c| {
                         cooling_coil_output_w(c, &cool_inlet, request.cooling_load_w, 0.08)
                     });
-                    let op = fan_operating_point(fan, flow, 300.0);
+                    let operating_point = fan_operating_point(fan, flow, 300.0);
                     ZoneEquipmentOutput {
                         delivered_heating_w: heat.total_heating_w,
                         delivered_cooling_w: cool.total_cooling_w,
                         supply_temperature_c: cool.outlet.temperature_c,
                         supply_humidity_ratio: cool.outlet.humidity_ratio,
                         supply_mass_flow_kg_s: m_dot,
-                        fan_power_w: fan_power_w(fan, &op),
+                        fan_power_w: fan_power_w(fan, &operating_point),
                         compressor_power_w: cool.compressor_power_w,
                         gas_consumption_w: heat.gas_consumption_w,
                     }
@@ -10841,14 +10841,14 @@ mod zone_hvac {
                     let inlet = CoilAirState { temperature_c: t_mix, humidity_ratio: w_mix, mass_flow_kg_s: request.supply_mass_flow_kg_s, pressure_pa: request.outdoor_pressure_pa };
                     let heat = heating_coil_output_w(heating, &inlet, request.heating_load_w);
                     let cool = cooling_coil_output_w(cooling, &heat.outlet, request.cooling_load_w, 0.1);
-                    let op = fan_operating_point(fan, request.supply_mass_flow_kg_s / RHO_AIR_REF, 250.0);
+                    let operating_point = fan_operating_point(fan, request.supply_mass_flow_kg_s / RHO_AIR_REF, 250.0);
                     ZoneEquipmentOutput {
                         delivered_heating_w: heat.total_heating_w,
                         delivered_cooling_w: cool.total_cooling_w,
                         supply_temperature_c: cool.outlet.temperature_c,
                         supply_humidity_ratio: cool.outlet.humidity_ratio,
                         supply_mass_flow_kg_s: request.supply_mass_flow_kg_s,
-                        fan_power_w: fan_power_w(fan, &op),
+                        fan_power_w: fan_power_w(fan, &operating_point),
                         compressor_power_w: cool.compressor_power_w,
                         gas_consumption_w: heat.gas_consumption_w,
                     }
@@ -10873,15 +10873,15 @@ mod zone_hvac {
                     let supply = HxAirstream { temperature_c: request.outdoor_temperature_c, humidity_ratio: request.outdoor_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.outdoor_pressure_pa };
                     let exhaust = HxAirstream { temperature_c: request.zone_temperature_c, humidity_ratio: request.zone_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.outdoor_pressure_pa };
                     let hx = heat_recovery_exchange_w(unit, &supply, &exhaust);
-                    let sup_op = fan_operating_point(supply_fan, m_dot / RHO_AIR_REF, 200.0);
-                    let exh_op = fan_operating_point(exhaust_fan, m_dot / RHO_AIR_REF, 200.0);
+                    let sup_operating_point = fan_operating_point(supply_fan, m_dot / RHO_AIR_REF, 200.0);
+                    let exh_operating_point = fan_operating_point(exhaust_fan, m_dot / RHO_AIR_REF, 200.0);
                     ZoneEquipmentOutput {
                         delivered_heating_w: hx.sensible_recovery_w.max(0.0),
                         delivered_cooling_w: (-hx.sensible_recovery_w).max(0.0),
                         supply_temperature_c: hx.supply_out.temperature_c,
                         supply_humidity_ratio: hx.supply_out.humidity_ratio,
                         supply_mass_flow_kg_s: m_dot,
-                        fan_power_w: fan_power_w(supply_fan, &sup_op) + fan_power_w(exhaust_fan, &exh_op) + hx.defrost_power_w,
+                        fan_power_w: fan_power_w(supply_fan, &sup_operating_point) + fan_power_w(exhaust_fan, &exh_operating_point) + hx.defrost_power_w,
                         compressor_power_w: 0.0,
                         gas_consumption_w: 0.0,
                     }
@@ -10890,14 +10890,14 @@ mod zone_hvac {
                     let m_dot = request.supply_mass_flow_kg_s.max(0.2);
                     let inlet = CoilAirState { temperature_c: request.zone_temperature_c, humidity_ratio: request.zone_humidity_ratio, mass_flow_kg_s: m_dot, pressure_pa: request.outdoor_pressure_pa };
                     let heat = heating_coil_output_w(heating, &inlet, request.heating_load_w);
-                    let op = fan_operating_point(fan, m_dot / RHO_AIR_REF, 150.0);
+                    let operating_point = fan_operating_point(fan, m_dot / RHO_AIR_REF, 150.0);
                     ZoneEquipmentOutput {
                         delivered_heating_w: heat.total_heating_w,
                         delivered_cooling_w: 0.0,
                         supply_temperature_c: heat.outlet.temperature_c,
                         supply_humidity_ratio: heat.outlet.humidity_ratio,
                         supply_mass_flow_kg_s: m_dot,
-                        fan_power_w: fan_power_w(fan, &op),
+                        fan_power_w: fan_power_w(fan, &operating_point),
                         compressor_power_w: 0.0,
                         gas_consumption_w: heat.gas_consumption_w,
                     }

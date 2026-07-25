@@ -2,7 +2,7 @@
 //! 🧠 Mindmap Wires plugin — declarative WIRES play app bundled as a hot-swappable WASM component.
 
 use reasoning_mindmap::{
-    empty_board_fixture, empty_mindmap_wires_document, empty_wires_fixture, find_board_node, MindmapWiresDocument, MindmapWiresOp,
+    empty_board_fixture, empty_mindmap_wires_document, empty_wires_fixture, find_board_node, MindmapWiresDocument, MindmapWiresOperation,
     MINDMAP_BOARD_SCHEMA,
 };
 use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
@@ -44,7 +44,7 @@ struct WiresDragState {
 }
 
 /// 🎛️ Ephemeral view state (selection + in-flight drag) held in the app struct, never in the
-/// document — so it stays out of undo history and off the op channel.
+/// document — so it stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct WiresPlayRuntime {
@@ -509,7 +509,7 @@ pub struct ReasoningWiresPlayApp {
 
 impl DocumentApp for ReasoningWiresPlayApp {
     type Projection = MindmapWiresDocument;
-    type Op = MindmapWiresOp;
+    type Operation = MindmapWiresOperation;
 
     fn app_id(&self) -> &str {
         WIRES_PLAY_APP_ID
@@ -529,10 +529,10 @@ impl DocumentApp for ReasoningWiresPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, MindmapWiresDocument>,
         _view_state: &ViewState,
-    ) -> ActionEmit<MindmapWiresOp> {
+    ) -> ActionEmit<MindmapWiresOperation> {
         let document = doc.projection;
         match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" | "documentSelect" => {
                 self.runtime.selected_ids = selection_ids(args);
                 ActionEmit::default()
@@ -563,7 +563,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                 };
                 self.runtime.selected_ids.clear();
                 self.runtime.drag = None;
-                ActionEmit::ops(vec![MindmapWiresOp::ReplaceDocument {
+                ActionEmit::operations(vec![MindmapWiresOperation::ReplaceDocument {
                     wires_fixture: next.wires_fixture,
                     board_fixture: next.board_fixture,
                 }])
@@ -582,7 +582,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "handles": []
                 });
                 self.runtime.selected_ids = vec![id];
-                ActionEmit::ops(vec![MindmapWiresOp::AddNode { node }])
+                ActionEmit::operations(vec![MindmapWiresOperation::AddNode { node }])
             }
             "addRelationship" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("owns");
@@ -600,29 +600,29 @@ impl DocumentApp for ReasoningWiresPlayApp {
                     "targetIdentityId": 2
                 });
                 self.runtime.selected_ids = vec![edge_id];
-                ActionEmit::ops(vec![MindmapWiresOp::AddRelationship { edge, relationship }])
+                ActionEmit::operations(vec![MindmapWiresOperation::AddRelationship { edge, relationship }])
             }
             "deleteSelection" => {
-                let mut ops = Vec::new();
+                let mut operations = Vec::new();
                 for id in &self.runtime.selected_ids {
                     if find_board_node(document, id).is_some() {
-                        ops.push(MindmapWiresOp::RemoveNode { node_id: id.clone() });
+                        operations.push(MindmapWiresOperation::RemoveNode { node_id: id.clone() });
                     } else if fixture_edges(&document.board_fixture)
                         .iter()
                         .any(|edge| edge.get("id").and_then(|value| value.as_str()) == Some(id.as_str()))
                     {
-                        ops.push(MindmapWiresOp::RemoveEdge { edge_id: id.clone() });
+                        operations.push(MindmapWiresOperation::RemoveEdge { edge_id: id.clone() });
                     }
                 }
-                if !ops.is_empty() {
+                if !operations.is_empty() {
                     self.runtime.selected_ids.clear();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "forceLayout" | "reorganize" => {
                 let mut board = document.board_fixture.clone();
                 force_layout_board(&mut board);
-                let ops: Vec<MindmapWiresOp> = fixture_nodes(&board)
+                let operations: Vec<MindmapWiresOperation> = fixture_nodes(&board)
                     .iter()
                     .filter_map(|node| {
                         let id = node.get("id").and_then(|value| value.as_str())?;
@@ -634,10 +634,10 @@ impl DocumentApp for ReasoningWiresPlayApp {
                         let mut patch = Map::new();
                         patch.insert("x".into(), json!(nx));
                         patch.insert("y".into(), json!(ny));
-                        Some(MindmapWiresOp::PatchNode { node_id: id.to_string(), patch })
+                        Some(MindmapWiresOperation::PatchNode { node_id: id.to_string(), patch })
                     })
                     .collect();
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "canvasPointerMove" => {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(0.0);
@@ -652,7 +652,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
                 patch.insert("y".into(), json!(cur_y + dy));
                 self.runtime.drag = Some(WiresDragState { node_id: drag.node_id.clone(), last_x: x, last_y: y });
                 ActionEmit::amend(
-                    vec![MindmapWiresOp::PatchNode { node_id: drag.node_id.clone(), patch }],
+                    vec![MindmapWiresOperation::PatchNode { node_id: drag.node_id.clone(), patch }],
                     format!("drag:{}", drag.node_id),
                 )
             }
@@ -769,7 +769,7 @@ mod tests {
         let document =
             document_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
         app.load_document(
-            &serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOp>(
+            &serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
                 WIRES_FIXTURE_SCHEMA,
                 "reasoning-wires",
                 document,
@@ -911,9 +911,9 @@ mod tests {
         // as edits) so the only edits on the channel are A's and B's disjoint ones.
         let seed_node = |id: &str| json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": id, "handles": [] });
         let mut base = empty_mindmap_wires_document();
-        base = vcs::apply_operation(&base, &MindmapWiresOp::AddNode { node: seed_node("node-1") });
-        base = vcs::apply_operation(&base, &MindmapWiresOp::AddNode { node: seed_node("node-2") });
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOp>(
+        base = vcs::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-1") });
+        base = vcs::apply_operation(&base, &MindmapWiresOperation::AddNode { node: seed_node("node-2") });
+        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
             WIRES_FIXTURE_SCHEMA,
             "reasoning-wires",
             base,

@@ -6,13 +6,13 @@ todos:
    content: Open/reopen ticket via repo mcp and associate with the most appropriate goal from repo://goals
    status: completed
  - id: kernel-unwrap
-   content: Add uniform Result unwrap helper and apply to all Result-returning kernel ops
+   content: Add uniform Result unwrap helper and apply to all Result-returning kernel operations
    status: completed
  - id: kernel-booleans
    content: "Fix booleans: cutSync, intersectSync, and 2D booleans to brepjs@18 signatures"
    status: completed
  - id: kernel-solid
-   content: "Fix solid ops: extrude (honor direction, remove profile shortcut), revolve, loft, sweep, support/twist extrude, fillet, chamfer, shell, thicken, offset, hull, convexHull, minkowski, draft"
+   content: "Fix solid operations: extrude (honor direction, remove profile shortcut), revolve, loft, sweep, support/twist extrude, fillet, chamfer, shell, thicken, offset, hull, convexHull, minkowski, draft"
    status: completed
  - id: kernel-transforms
    content: "Fix transforms: rotate (degrees+axis), mirror (normal/at), clone (unwrap), patterns; verify translate/scale"
@@ -44,14 +44,14 @@ isProject: false
 
 `[geometry/brep/js/index.ts](geometry/brep/js/index.ts)` calls `brepjs` with the wrong API surface. Against `brepjs@18`:
 
-- Many ops return `Result<T>` (via `isOk`/`unwrap`) but are registered raw, so the shape is a Result wrapper and tessellation produces nothing. This is why `cut` (`cutSync`, line ~1038) "does nothing", while `fuseAllSync`/`cutAllSync` (which unwrap) work.
+- Many operations return `Result<T>` (via `isOk`/`unwrap`) but are registered raw, so the shape is a Result wrapper and tessellation produces nothing. This is why `cut` (`cutSync`, line ~1038) "does nothing", while `fuseAllSync`/`cutAllSync` (which unwrap) work.
 - Argument signatures differ: `extrude(face, height: number|Vec3)`, `sketchExtrude(sketch, distance, {extrusionDirection})`, `rotate(shape, angleDeg, {axis,at})`, `mirror(shape, {normal,at})`, `section/slice(shape, plane(s))`, `shell/draft(shape, faces, …)`, `rectangularPattern(shape, options)`, `convexHull(points)`, `makeExternalGear(params)`.
 - The extrude "profile shortcut" (`profileRectangleSolid`/`profileCircleSolid`, used in `extrudeSync`) always builds a Z-axis solid centered at origin, so non-Z extrude vectors are ignored.
 - brepjs rotate/revolve/circularPattern angles are in **degrees**; handlers pass radians.
 
 ## 1. Kernel adapter rewrite — `geometry/brep/js/index.ts`
 
-Add one private `unwrap`-style helper (reuse existing `isOk`/`unwrap`) and apply it uniformly. Fix each op to the real signature:
+Add one private `unwrap`-style helper (reuse existing `isOk`/`unwrap`) and apply it uniformly. Fix each operation to the real signature:
 
 - Booleans: `cutSync`, `intersectSync` -> unwrap `cut`/`intersect`. Keep `fuseAllSync`/`cutAllSync`. `cut2DSync`/`fuse2DSync`/`intersect2DSync` -> verify 2D return types and unwrap/normalize.
 - Solid: `extrudeSync` -> remove profile shortcut; for drawings use `sketchExtrude(sketch, distance, { extrusionDirection: direction })`, for faces use `extrude(face, scale(direction, distance))`; unwrap. `revolveSync` (axis+angle via options, unwrap), `loftSync`, `sweepSync`, `supportExtrudeSync`, `twistExtrudeSync`, `filletSync`, `chamferSync` (`shape, undefined, value`), `shellSync`/`draftSync` (faces arg), `thickenSync`, `offsetSync` (solid path), `hullSync`, `convexHullSync` (points), `minkowskiSync` -> correct args + unwrap.

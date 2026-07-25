@@ -1,10 +1,10 @@
 //! 🔷 Lowpoly core: mesh + paint document projection and its VCS `Operation`, plus a mutable compute
 //! session (`LowpolyDocument`) wrapping `kernel_3d_mesh` used by the plugin to run mesh edits and paint
-//! strokes and read them back out as typed [`LowpolyOp`]s.
+//! strokes and read them back out as typed [`LowpolyOperation`]s.
 
 use kernel_3d_mesh::{EdgeId, FaceId, HalfedgeMesh, MeshKernelError, Vec3, VertexId};
 use serde::{Deserialize, Serialize};
-use vcs::{apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff, Patchable};
+use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 //#region 🔖Pixels
 pub const LOWPOLY_PAINT_TEXTURE_SIZE: usize = 1024;
@@ -157,7 +157,7 @@ impl Default for LowpolySelection {
 }
 //#endregion 🔖Projection
 
-//#region 🔖Ops
+//#region 🔖Operations
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct LowpolyObjectPatch {
@@ -224,12 +224,12 @@ mod run_bytes_base64 {
 }
 
 /// @emoji 🧩 The typed lowpoly document operation. Mesh/object structure flows through the generic
-/// `CollectionOp`; per-object paint-layer structure and pixel edits get dedicated variants whose
+/// `CollectionOperation`; per-object paint-layer structure and pixel edits get dedicated variants whose
 /// inverses restore the exact prior layers / overwritten pixel runs.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum LowpolyOp {
-    Objects(CollectionOp<String, LowpolyObject, LowpolyObjectPatch>),
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum LowpolyOperation {
+    Objects(CollectionOperation<String, LowpolyObject, LowpolyObjectPatch>),
     AddPaintLayer { object_id: String, index: usize, layer: LowpolyPaintLayer },
     RemovePaintLayer { object_id: String, index: usize },
     PatchPaintLayer { object_id: String, index: usize, patch: LowpolyPaintLayerPatch },
@@ -272,39 +272,39 @@ fn apply_pixel_runs(pixels: &mut [u8], runs: &[PixelRun]) {
     }
 }
 
-/// @emoji ▶️ Applies one op to the projection in place. Pure; the store clones the projection before
+/// @emoji ▶️ Applies one operation to the projection in place. Pure; the store clones the projection before
 /// calling so this never observes shared state.
-pub fn apply_lowpoly_op(projection: &mut LowpolyProjection, op: &LowpolyOp) {
-    match op {
-        LowpolyOp::Objects(collection_op) => apply_collection_op(&mut projection.objects, collection_op),
-        LowpolyOp::AddPaintLayer { object_id, index, layer } => {
+pub fn apply_lowpoly_operation(projection: &mut LowpolyProjection, operation: &LowpolyOperation) {
+    match operation {
+        LowpolyOperation::Objects(collection_operation) => apply_collection_operation(&mut projection.objects, collection_operation),
+        LowpolyOperation::AddPaintLayer { object_id, index, layer } => {
             if let Some(object) = object_mut(projection, object_id) {
                 let at = (*index).min(object.paint_layers.len());
                 object.paint_layers.insert(at, layer.clone());
             }
         }
-        LowpolyOp::RemovePaintLayer { object_id, index } => {
+        LowpolyOperation::RemovePaintLayer { object_id, index } => {
             if let Some(object) = object_mut(projection, object_id) {
                 if *index < object.paint_layers.len() {
                     object.paint_layers.remove(*index);
                 }
             }
         }
-        LowpolyOp::PatchPaintLayer { object_id, index, patch } => {
+        LowpolyOperation::PatchPaintLayer { object_id, index, patch } => {
             if let Some(object) = object_mut(projection, object_id) {
                 if let Some(layer) = object.paint_layers.get_mut(*index) {
                     apply_paint_layer_patch(layer, patch);
                 }
             }
         }
-        LowpolyOp::PaintStroke { object_id, layer_index, runs } => {
+        LowpolyOperation::PaintStroke { object_id, layer_index, runs } => {
             if let Some(object) = object_mut(projection, object_id) {
                 if let Some(layer) = object.paint_layers.get_mut(*layer_index) {
                     apply_pixel_runs(&mut layer.pixels, runs);
                 }
             }
         }
-        LowpolyOp::SetProjection { projection: replacement } => {
+        LowpolyOperation::SetProjection { projection: replacement } => {
             *projection = replacement.clone();
         }
     }
@@ -314,22 +314,22 @@ fn layer_pixels_at<'a>(projection: &'a LowpolyProjection, object_id: &str, layer
     projection.objects.iter().find(|object| object.id == object_id).and_then(|object| object.paint_layers.get(layer_index)).map(|layer| layer.pixels.as_slice())
 }
 
-/// @emoji ↩️ Computes the inverse op from pre-state. For `PaintStroke` this reads the currently-stored
+/// @emoji ↩️ Computes the inverse operation from pre-state. For `PaintStroke` this reads the currently-stored
 /// bytes at each run's offset so undo restores the exact overwritten pixels (not merely "clear paint").
-pub fn invert_lowpoly_op(projection: &LowpolyProjection, op: &LowpolyOp) -> LowpolyOp {
-    match op {
-        LowpolyOp::Objects(collection_op) => LowpolyOp::Objects(invert_collection_op(&projection.objects, collection_op)),
-        LowpolyOp::AddPaintLayer { object_id, index, .. } => LowpolyOp::RemovePaintLayer { object_id: object_id.clone(), index: *index },
-        LowpolyOp::RemovePaintLayer { object_id, index } => {
+pub fn invert_lowpoly_operation(projection: &LowpolyProjection, operation: &LowpolyOperation) -> LowpolyOperation {
+    match operation {
+        LowpolyOperation::Objects(collection_operation) => LowpolyOperation::Objects(invert_collection_operation(&projection.objects, collection_operation)),
+        LowpolyOperation::AddPaintLayer { object_id, index, .. } => LowpolyOperation::RemovePaintLayer { object_id: object_id.clone(), index: *index },
+        LowpolyOperation::RemovePaintLayer { object_id, index } => {
             let layer = projection.objects.iter().find(|object| object.id == *object_id).and_then(|object| object.paint_layers.get(*index)).cloned().unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
-            LowpolyOp::AddPaintLayer { object_id: object_id.clone(), index: *index, layer }
+            LowpolyOperation::AddPaintLayer { object_id: object_id.clone(), index: *index, layer }
         }
-        LowpolyOp::PatchPaintLayer { object_id, index, patch } => {
+        LowpolyOperation::PatchPaintLayer { object_id, index, patch } => {
             let mut probe = projection.objects.iter().find(|object| object.id == *object_id).and_then(|object| object.paint_layers.get(*index)).cloned().unwrap_or_else(|| LowpolyPaintLayer::new("Layer"));
             let inverse = apply_paint_layer_patch(&mut probe, patch);
-            LowpolyOp::PatchPaintLayer { object_id: object_id.clone(), index: *index, patch: inverse }
+            LowpolyOperation::PatchPaintLayer { object_id: object_id.clone(), index: *index, patch: inverse }
         }
-        LowpolyOp::PaintStroke { object_id, layer_index, runs } => {
+        LowpolyOperation::PaintStroke { object_id, layer_index, runs } => {
             let pixels = layer_pixels_at(projection, object_id, *layer_index);
             let inverse_runs = runs
                 .iter()
@@ -348,51 +348,51 @@ pub fn invert_lowpoly_op(projection: &LowpolyProjection, op: &LowpolyOp) -> Lowp
                     PixelRun { offset: run.offset, bytes }
                 })
                 .collect();
-            LowpolyOp::PaintStroke { object_id: object_id.clone(), layer_index: *layer_index, runs: inverse_runs }
+            LowpolyOperation::PaintStroke { object_id: object_id.clone(), layer_index: *layer_index, runs: inverse_runs }
         }
-        LowpolyOp::SetProjection { .. } => LowpolyOp::SetProjection { projection: projection.clone() },
+        LowpolyOperation::SetProjection { .. } => LowpolyOperation::SetProjection { projection: projection.clone() },
     }
 }
 
-/// @emoji 📦 A lowpoly diff is just the ordered list of ops it applies — replaying them over a cloned
+/// @emoji 📦 A lowpoly diff is just the ordered list of operations it applies — replaying them over a cloned
 /// projection materializes the result and `absorb` concatenates, so a coalesced gesture stays one edit.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 pub struct LowpolyDiff {
-    pub ops: Vec<LowpolyOp>,
+    pub operations: Vec<LowpolyOperation>,
 }
 
 impl OperationDiff<LowpolyProjection> for LowpolyDiff {
     fn apply(&self, projection: &LowpolyProjection) -> LowpolyProjection {
         let mut next = projection.clone();
-        for op in &self.ops {
-            apply_lowpoly_op(&mut next, op);
+        for operation in &self.operations {
+            apply_lowpoly_operation(&mut next, operation);
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.ops.extend(other.ops);
+        self.operations.extend(other.operations);
     }
 }
 
-impl Operation<LowpolyProjection> for LowpolyOp {
+impl Operation<LowpolyProjection> for LowpolyOperation {
     type Diff = LowpolyDiff;
 
     fn diff(&self, _projection: &LowpolyProjection) -> LowpolyDiff {
-        LowpolyDiff { ops: vec![self.clone()] }
+        LowpolyDiff { operations: vec![self.clone()] }
     }
 
     fn backwards(&self, projection: &LowpolyProjection) -> Vec<Self> {
-        vec![invert_lowpoly_op(projection, self)]
+        vec![invert_lowpoly_operation(projection, self)]
     }
 }
 
-pub type LowpolyEnvelope = vcs::DocumentVcsEnvelope<LowpolyProjection, LowpolyOp>;
-pub type LowpolyStore = vcs::DocumentVcsStore<LowpolyProjection, LowpolyOp>;
-//#endregion 🔖Ops
+pub type LowpolyEnvelope = vcs::DocumentVcsEnvelope<LowpolyProjection, LowpolyOperation>;
+pub type LowpolyStore = vcs::DocumentVcsStore<LowpolyProjection, LowpolyOperation>;
+//#endregion 🔖Operations
 
 //#region ⚠️ Errors
-/// ⚠️ `LowpolyDocument` compute-session and mesh-op failure.
+/// ⚠️ `LowpolyDocument` compute-session and mesh-operation failure.
 #[derive(Debug, thiserror::Error)]
 pub enum LowpolyCoreError {
     #[error(transparent)]
@@ -415,7 +415,7 @@ pub enum LowpolyCoreError {
 //#region 🔖ComputeSession
 /// @emoji 🛠️ Mutable compute session built from a projection clone plus ephemeral editing context
 /// (active object + selection). The plugin runs a mesh/paint edit against it, then reads the mutated
-/// `mesh_json`/pixels back out to construct the typed [`LowpolyOp`] it emits. Never the source of truth.
+/// `mesh_json`/pixels back out to construct the typed [`LowpolyOperation`] it emits. Never the source of truth.
 pub struct LowpolyDocument {
     projection: LowpolyProjection,
     active_object_id: String,
@@ -809,7 +809,7 @@ pub fn sample_pixel_from(composite: &[u8], u: f32, v: f32) -> [u8; 4] {
 }
 
 /// @emoji 🧮 Coalesces a `before`/`after` layer-buffer pair into the minimal contiguous [`PixelRun`]s
-/// that turn `before` into `after`; the seam where a mutated scratch buffer becomes a `PaintStroke` op.
+/// that turn `before` into `after`; the seam where a mutated scratch buffer becomes a `PaintStroke` operation.
 pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<PixelRun> {
     let mut runs = Vec::new();
     let len = before.len().min(after.len());
@@ -952,13 +952,13 @@ mod tests {
     fn paint_stroke_op_backwards_restores_prior_pixels() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let op = LowpolyOp::PaintStroke { object_id: object_id.clone(), layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
-        let backwards = op.backwards(&projection);
+        let operation = LowpolyOperation::PaintStroke { object_id: object_id.clone(), layer_index: 0, runs: vec![PixelRun { offset: 0, bytes: vec![1, 2, 3, 4] }] };
+        let backwards = operation.backwards(&projection);
         let mut painted = projection.clone();
-        apply_lowpoly_op(&mut painted, &op);
+        apply_lowpoly_operation(&mut painted, &operation);
         assert_eq!(&painted.objects[0].paint_layers[0].pixels[0..4], &[1, 2, 3, 4]);
-        for op in &backwards {
-            apply_lowpoly_op(&mut painted, op);
+        for operation in &backwards {
+            apply_lowpoly_operation(&mut painted, operation);
         }
         assert_eq!(painted, projection);
     }
@@ -986,13 +986,13 @@ mod tests {
     fn objects_patch_op_backwards_restores_prior_mesh_and_name() {
         let projection = default_projection();
         let object_id = projection.objects[0].id.clone();
-        let op = LowpolyOp::Objects(CollectionOp::Patch { id: object_id.clone(), patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } });
-        let backwards = op.backwards(&projection);
+        let operation = LowpolyOperation::Objects(CollectionOperation::Patch { id: object_id.clone(), patch: LowpolyObjectPatch { name: Some("Renamed".into()), ..Default::default() } });
+        let backwards = operation.backwards(&projection);
         let mut next = projection.clone();
-        apply_lowpoly_op(&mut next, &op);
+        apply_lowpoly_operation(&mut next, &operation);
         assert_eq!(next.objects[0].name, "Renamed");
-        for op in &backwards {
-            apply_lowpoly_op(&mut next, op);
+        for operation in &backwards {
+            apply_lowpoly_operation(&mut next, operation);
         }
         assert_eq!(next, projection);
     }

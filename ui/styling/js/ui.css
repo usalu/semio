@@ -985,7 +985,7 @@
 
 @property --celebrate-border-angle {
   syntax: "<angle>";
-  inherits: false;
+  inherits: true;
   initial-value: 0deg;
 }
 
@@ -1136,6 +1136,14 @@
 [data-celebrated="true"] {
   position: relative;
   --celebrate-border-angle: 0deg;
+  --celebrate-conic: conic-gradient(
+    from var(--celebrate-border-angle),
+    var(--celebrate-border-color-a, var(--color-primary)),
+    var(--celebrate-border-color-b, var(--color-secondary)),
+    var(--celebrate-border-color-c, var(--color-tertiary)),
+    var(--celebrate-border-color-a, var(--color-primary))
+  );
+  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
 [data-celebrated="true"]::after {
@@ -1146,13 +1154,7 @@
   pointer-events: none;
   border-radius: inherit;
   padding: var(--stroke-hairline);
-  background: conic-gradient(
-    from var(--celebrate-border-angle),
-    var(--celebrate-border-color-a, var(--color-primary)),
-    var(--celebrate-border-color-b, var(--color-secondary)),
-    var(--celebrate-border-color-c, var(--color-tertiary)),
-    var(--celebrate-border-color-a, var(--color-primary))
-  );
+  background: var(--celebrate-conic);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
@@ -1161,9 +1163,7 @@
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation:
-    celebrate-border-spin var(--celebrate-border-duration) linear infinite,
-    celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
+  animation: celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
 }
 
 /* 🪟 Docked windows: the silhouette SVG on [data-slot="mode-dock-stack"] owns the celebrate ring for
@@ -1295,13 +1295,14 @@
 
 .window-silhouette-border-celebrated-fill {
   --celebrate-border-angle: 0deg;
-  background: conic-gradient(
+  --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
     var(--celebrate-border-color-b, var(--color-secondary)),
     var(--celebrate-border-color-c, var(--color-tertiary)),
     var(--celebrate-border-color-a, var(--color-primary))
   );
+  background: var(--celebrate-conic);
   animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
@@ -1314,6 +1315,10 @@
   [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
   [data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
     box-shadow: none !important;
+  }
+
+  [data-celebrated="true"] {
+    animation: none;
   }
 
   [data-celebrated="true"]::after {
@@ -2056,7 +2061,7 @@
    @keyframes here is closed (0% === 100%). */
 
 /* Generic per-part engine: any icon can drive its own SVG children via --icon-part-<N>-anim/-origin/-duration.
-   Slots default to none/center/500ms so this is a no-op for icons that don't set them. */
+   Slots default to none/center/500ms so this is a no-operation for icons that don't set them. */
 :where([data-icon], [data-icon-kind]):hover svg > :nth-child(1),
 :where(button, a, summary, [role="button"], [role="menuitem"], [role="menuitemcheckbox"],
        [role="menuitemradio"], [role="tab"], [role="option"], [role="treeitem"],
@@ -5560,6 +5565,143 @@
 }
 
 /* #endregion 🫳DragHandleHover */
+
+/* #region 🎉CelebrateContent
+ * Leaf controls stamped data-celebrated="true" paint their own chrome with the same spinning
+ * three-brand conic as ::after — text via background-clip, stroke icons via destination-in blend.
+ * Window/dock shells are omitted; nested body text stays unchanged when only the shell is stamped.
+ */
+[data-celebrated="true"]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"],
+  [data-slot="introduction-interaction-label"]
+) > span:not([data-icon]):not([data-icon-kind]):not([data-slot="drag-handle"]),
+[data-celebrated="true"]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+) [data-slot="tree-label"],
+[data-celebrated="true"][data-slot="introduction-interaction-label"] {
+  background-image: var(--celebrate-conic);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+[data-celebrated="true"]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"]) {
+  isolation: isolate;
+  position: relative;
+  display: inline-flex;
+  color: #000;
+}
+
+[data-celebrated="true"]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"])::before {
+  content: "";
+  position: absolute;
+  inset: -100%;
+  background-image: var(--celebrate-conic);
+  z-index: 0;
+}
+
+[data-celebrated="true"]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"]) > svg {
+  position: relative;
+  z-index: 1;
+  mix-blend-mode: destination-in;
+}
+
+[data-hover-scope]:hover
+  [data-celebrated="true"]:is(
+    [data-slot="button-group-item"],
+    [data-slot="toggle-group-item"],
+    [data-slot="action-group-item"],
+    [data-slot="mode-dock-tab"],
+    [data-slot="panel-tab-button"],
+    [data-slot="pane-chrome"],
+    [data-slot="tree-item-row"],
+    [data-slot="tree-section-row"],
+    [data-slot="tree-property-item"],
+    [data-slot="tree-row"],
+    [data-slot="control-tree-row"],
+    [data-slot="window-measure-tree-row"]
+  )
+  [data-slot="drag-handle"],
+[data-celebrated="true"][data-hover-scope]:is(
+  [data-slot="button-group-item"],
+  [data-slot="toggle-group-item"],
+  [data-slot="action-group-item"],
+  [data-slot="mode-dock-tab"],
+  [data-slot="panel-tab-button"],
+  [data-slot="pane-chrome"],
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+):hover
+  [data-slot="drag-handle"] {
+  color: #000;
+}
+
+/* #endregion 🎉CelebrateContent */
 
 /* 🪟 Outer stroke is owned by the stack silhouette SVG — never reintroduce piecewise chrome borders. */
 [data-slot="mode-dock-stack"]

@@ -314,7 +314,7 @@ type ExtractPayload struct {
 
 // #region 🧳Emit
 
-// 📤Emit posts an event to the repo server. No-op when COMPOSE_SERVER_ADDR is unset.
+// 📤Emit posts an event to the repo server. No-operation when COMPOSE_SERVER_ADDR is unset.
 func Emit(kind EventKind, source string, payload interface{}) {
 	addr := strings.TrimSpace(os.Getenv("COMPOSE_SERVER_ADDR"))
 	if addr == "" {

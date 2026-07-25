@@ -79,7 +79,7 @@ flowchart LR
 - [flow/module/math/lib.rs](flow/module/math/lib.rs): remove `ConstructVector`/`ConstructPoint` structs and their `math.constructVector`/`math.constructPoint` registrations (`~561`, `~667-678`); they are superseded by generated `math.vector` / `math.point`. Update the math test (`~726`, `~763`) to dispatch `math.vector`.
 - [flow/module/brep/lib.rs](flow/module/brep/lib.rs) `~79`: change the `vector_channel` operators tag `"math.constructVector"` -> `"math.vector"`.
 - [procedural/fixture/rectangle-extrude-volume.procedural.json](procedural/fixture/rectangle-extrude-volume.procedural.json) `~19` and [procedural/react/index.tsx](procedural/react/index.tsx) `~151`: `neuronKind` `"math.constructVector"` -> `"math.vector"` (ports `x`/`y`/`z` and output `vector` are unchanged).
-- `dictionary.pack/unpack`, `list.pack/get` are collection (not schema-field) ops and stay as-is.
+- `dictionary.pack/unpack`, `list.pack/get` are collection (not schema-field) operations and stay as-is.
 
 ## 5. TS / UI — [flow/react/index.tsx](flow/react/index.tsx)
 
@@ -93,5 +93,5 @@ flowchart LR
 
 ## Notes / decisions
 
-- "All schemas" = every non-core, fixed-field schema; core scalar/media primitives and the fixed-field-less `list`/`dictionary` are intentionally excluded (single-`value` leaves already have source/emitter ops).
+- "All schemas" = every non-core, fixed-field schema; core scalar/media primitives and the fixed-field-less `list`/`dictionary` are intentionally excluded (single-`value` leaves already have source/emitter operations).
 - Field inputs are all optional (`?`/`*`) by necessity so the one operator supports all three modes — the example's `+` markers describe the natural cardinality of the outputs, which is preserved on the output ports.

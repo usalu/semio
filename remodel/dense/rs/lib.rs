@@ -873,7 +873,7 @@ impl TsdfVolume {
 }
 // #endregion 🔖Tsdf
 
-// #region 🔖CloudOps
+// #region 🔖CloudOperations
 /// ✂️ Builds a new [[`PointCloud`]] keeping only the given (order-preserved) indices, across every
 /// present optional attribute.
 fn pick_indexed<T: Copy>(v: &[T], indices: &[usize]) -> Vec<T> {
@@ -1062,7 +1062,7 @@ pub fn radius_outlier_removal(cloud: &PointCloud, radius: f64, min_neighbors: us
     let keep: Vec<usize> = (0..n).filter(|&i| tree.radius(&cloud.positions[i], radius).len().saturating_sub(1) >= min_neighbors).collect();
     keep_indices(cloud, &keep)
 }
-// #endregion 🔖CloudOps
+// #endregion 🔖CloudOperations
 
 // #region 🔖Classify
 /// 🏔️ Morphological min (`erosion = true`) or max (`erosion = false`) filter over a sparse

@@ -32,7 +32,7 @@ const overlappingTargets: CanvasPickTarget[] = [
   { domain: "opening", id: "opening-3", generality: 0, label: "Opening 3" },
 ];
 
-/** @emoji 🎯 Toggleable host so `Default` can show both the open menu and its dismissed (no-op) state on demand. */
+/** @emoji 🎯 Toggleable host so `Default` can show both the open menu and its dismissed (no-operation) state on demand. */
 const CanvasPickMenuDemo = ({ request }: { readonly request: CanvasPickRequest | null }) => {
   const [currentRequest, setCurrentRequest] = useState<CanvasPickRequest | null>(request);
   const [hoveredKey, setHoveredKey] = useState<string | null>(null);

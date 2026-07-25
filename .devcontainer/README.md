@@ -162,7 +162,7 @@ The devcontainer image installs ripgrep (`rg`) as part of the base apt package s
 ## Playwright Browser Cache
 
 Playwright browser downloads live under the workspace `node_modules` volume so the binaries persist across container restarts and editor reloads.
-The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-op once cached.
+The devcontainer sets `PLAYWRIGHT_BROWSERS_PATH` to the shared cache location, and the provisioning script installs Chromium into that path so `npx playwright install` is a no-operation once cached.
 
 # 💯Requirements
 

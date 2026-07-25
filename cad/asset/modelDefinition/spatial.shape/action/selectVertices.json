@@ -5,7 +5,7 @@
   "label": "SelectVertices",
   "steps": [
     {
-      "op": "kernel.call",
+      "operation": "kernel.call",
       "function": "spatial.selection.apply",
       "args": {
         "operation": {
@@ -30,7 +30,7 @@
       "assignTo": "result"
     },
     {
-      "op": "return",
+      "operation": "return",
       "result": {
         "kind": "var",
         "name": "result"

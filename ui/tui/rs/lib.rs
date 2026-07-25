@@ -1164,7 +1164,7 @@ pub mod layout {
         sizes
     }
 
-    /// 🧮 Recomputes rects for the whole tree from `viewport` down (no-op-safe to call every frame).
+    /// 🧮 Recomputes rects for the whole tree from `viewport` down (no-operation-safe to call every frame).
     pub fn solve(scene: &mut Scene, viewport: Rect) {
         layout_node(scene, scene.root(), viewport);
     }

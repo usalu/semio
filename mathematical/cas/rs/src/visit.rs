@@ -31,7 +31,7 @@ pub fn map_children(e: &Expr, f: &mut impl FnMut(&Expr) -> Expr) -> Expr {
         Kind::Pow(base, exp) => Expr::pow(f(base), f(exp)),
         Kind::Fn(kind, args) => Expr::func(kind.clone(), args.iter().map(f).collect()),
         Kind::Piecewise(cases) => Expr::from_kind_unchecked(Kind::Piecewise(cases.iter().map(|(v, c)| (f(v), f(c))).collect())),
-        Kind::Rel(op, a, b) => Expr::from_kind_unchecked(Kind::Rel(*op, f(a), f(b))),
+        Kind::Rel(operation, a, b) => Expr::from_kind_unchecked(Kind::Rel(*operation, f(a), f(b))),
         Kind::Integer(_) | Kind::Rational(_) | Kind::Symbol(_) | Kind::Constant(_) | Kind::Bool(_) | Kind::RootOf { .. } | Kind::Wild(..) => e.clone(),
     }
 }

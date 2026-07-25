@@ -959,7 +959,7 @@ export class PurgeScript extends Script {
       console.warn("[purge.neo4j] cypher-shell unavailable — skip.");
       process.exit(0);
     }
-    console.log("[purge.neo4j] connectivity ok; noop.");
+    console.log("[purge.neo4j] connectivity ok; no_operation.");
   }
 }
 //#endregion 🔖PurgeScript

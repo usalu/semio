@@ -5,29 +5,29 @@ todos:
  - id: field-ext
    content: Add description/icon fields to Tag, Concept, Port, Quality, Connector entities and their Modifications
    status: completed
- - id: tag-ops
+ - id: tag-operations
    content: Add Tag operations subregion + TagOperation union
    status: completed
- - id: concept-ops
+ - id: concept-operations
    content: Add Concept operations subregion + ConceptOperation union
    status: completed
- - id: port-ops
+ - id: port-operations
    content: Add Port operations subregion + PortOperation union
    status: completed
- - id: quality-ops
+ - id: quality-operations
    content: Add Quality operations subregion + QualityOperation union
    status: completed
- - id: type-ops
+ - id: type-operations
    content: Add Type operations + Connector operations subregions and unions
    status: completed
- - id: design-ops
+ - id: design-operations
    content: Add Design operations subregion + DesignOperation union
    status: completed
- - id: piece-ops
-   content: Extend Piece operations subregion with full action set, rename existing ops, add PieceOperation union
+ - id: piece-operations
+   content: Extend Piece operations subregion with full action set, rename existing operations, add PieceOperation union
    status: completed
- - id: kit-ops
-   content: Add KitOperation union and any kit-level ops not yet captured
+ - id: kit-operations
+   content: Add KitOperation union and any kit-level operations not yet captured
    status: completed
  - id: global-unions
    content: Extend Input, ChangeOwned, DiffOwner, DiffsOwner, OwnerEntity, AggregateEntityEdge, EntityConnection, OwnedEntityConnection, every <X>DiffsOwner; add AnyOperation union
@@ -45,10 +45,10 @@ isProject: false
 
 - **Naming:** keep the existing past-tense convention (`CreatedFixedPiece`, `RenamedKit`, `ChangedDescription`, `DraggedPiece`). Each `<ACTION>_<ENTITY>` becomes a type `Verbed<Entity>` (singular) and `Verbed<Entity>s` (plural batch). `IN_DESIGN` / `FROM_TYPE` qualifiers are kept where they disambiguate context (e.g. `RenamedConnectorInType`).
 - **Each operation gets:**
-  - `<Op>Input` (input type — note: the existing schema declares operation inputs as object `type` rather than `input`; we keep that style for consistency, but the global `Input` union remains the registry).
-  - `<Op>` `implements Operation & Entity` with `owner: <Op>Owner!`, `input: <Op>Input!`, `diff: Diff!`, plus typed result fields (`tag: Tag!`, `tags: TagConnection!`, …).
-  - `union <Op>Owner = Change`.
-  - `union <Op>Owned = <ResultEntities>` (omit comment-only when nothing is owned).
+  - `<Operation>Input` (input type — note: the existing schema declares operation inputs as object `type` rather than `input`; we keep that style for consistency, but the global `Input` union remains the registry).
+  - `<Operation>` `implements Operation & Entity` with `owner: <Operation>Owner!`, `input: <Operation>Input!`, `diff: Diff!`, plus typed result fields (`tag: Tag!`, `tags: TagConnection!`, …).
+  - `union <Operation>Owner = Change`.
+  - `union <Operation>Owned = <ResultEntities>` (omit comment-only when nothing is owned).
 - **Per-entity union:** new `union <Entity>Operation = …` listing every operation type that targets that entity. This is the "more specific" union the request calls for.
 - **Global registries to extend:** `Input` (line 1210), `ChangeOwned` (line 4290), `DiffOwner` (line 5880), every `<X>DiffsOwner` line that today repeats `RenamedKit | ChangedDescription | …`, the `OwnerEntity` and `AggregateEntityEdge` / `EntityConnection` / `OwnedEntityConnection` mega-unions, plus `Mutation` and `Subscription`.
 
@@ -93,7 +93,7 @@ Same shape: `CreatedPort`, `CreatedPorts`, `RenamedPort`, `UpdatedPortDescriptio
 
 Same shape: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQualityDescription`, `UpdatedQualityIcon`, `AddedAttributeToQuality`, `AddedAttributesToQuality`, `RemovedAttributeFromQuality`, `RemovedAttributesFromQuality`, `DeletedQuality`, `DeletedQualities`. Add `union QualityOperation`.
 
-### Type (inside `#region Type`, before connector ops)
+### Type (inside `#region Type`, before connector operations)
 
 - `CreatedType`, `CreatedTypes`, `RenamedType`, `UpdatedTypeDescription`, `UpdatedTypeIcon`, `AddedAttributeToType`, `AddedAttributesToType`, `RemovedAttributeFromType`, `RemovedAttributesFromType`, `DeletedType`, `DeletedTypes`.
 - `union TypeOperation`.
@@ -103,12 +103,12 @@ Same shape: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQual
 - `AddedConnectorToTypeInput { typeId: ID!, connector: ConnectorInput! }` → `AddedConnectorToType` (`connector: Connector!`).
 - `AddedConnectorsToTypeInput { typeId: ID!, connectors: [ConnectorInput!]! }` → `AddedConnectorsToType`.
 - `RenamedConnectorInTypeInput { connectorId: ID!, code: String! }` → `RenamedConnectorInType` (rename = change `code` since Connector has no `name`).
-- `UpdatedConnectorDescriptionInTypeInput`, `UpdatedConnectorIconInTypeInput` → matching ops.
-- `RemovedConnectorFromTypeInput`, `RemovedConnectorsFromTypeInput` → matching ops.
+- `UpdatedConnectorDescriptionInTypeInput`, `UpdatedConnectorIconInTypeInput` → matching operations.
+- `RemovedConnectorFromTypeInput`, `RemovedConnectorsFromTypeInput` → matching operations.
 - `union ConnectorOperation = AddedConnectorToType | AddedConnectorsToType | RenamedConnectorInType | UpdatedConnectorDescriptionInType | UpdatedConnectorIconInType | RemovedConnectorFromType | RemovedConnectorsFromType`.
 - Note: a new `input ConnectorInput { code: String!, description: String, icon: String, portId: ID }` is added near `AttributeInput` ([target.schema.graphql:1065](compose/graphql/target.schema.graphql:1065)).
 
-### Design (inside `#region Design`, replaces the orphaned ops emitted today only at kit level)
+### Design (inside `#region Design`, replaces the orphaned operations emitted today only at kit level)
 
 - `CreatedDesign`, `CreatedDesigns`, `DeletedDesign`, `DeletedDesigns`, `FlattenedDesign` (`FlattenedDesignInput { designId: ID! }`).
 - `AddedAttributeToDesign`, `AddedAttributesToDesign`, `RemovedAttributeFromDesign`, `RemovedAttributesFromDesign`.
@@ -133,15 +133,15 @@ Keep the three existing ones (`CreatedFixedPiece`, `FixedPiece`, `DraggedPiece`)
 
 ### Kit (extend the existing `#region Operations` at [target.schema.graphql:4238](compose/graphql/target.schema.graphql:4238))
 
-Keep `RenamedKit`, `ChangedDescription`. Add `union KitOperation = RenamedKit` and a roll-up `union DescriptionChangeOperation = ChangedDescription` (or fold `ChangedDescription` into the per-entity update ops above and remove it — but per the workspace rule "do not remove functionality" we keep `ChangedDescription` and instead reference it from the relevant per-entity unions where appropriate).
+Keep `RenamedKit`, `ChangedDescription`. Add `union KitOperation = RenamedKit` and a roll-up `union DescriptionChangeOperation = ChangedDescription` (or fold `ChangedDescription` into the per-entity update operations above and remove it — but per the workspace rule "do not remove functionality" we keep `ChangedDescription` and instead reference it from the relevant per-entity unions where appropriate).
 
 ## Global / cross-cutting unions
 
-- Extend `union Input` ([target.schema.graphql:1210](compose/graphql/target.schema.graphql:1210)) with every new `<Op>Input`.
+- Extend `union Input` ([target.schema.graphql:1210](compose/graphql/target.schema.graphql:1210)) with every new `<Operation>Input`.
 - Extend `union ChangeOwned` ([target.schema.graphql:4290](compose/graphql/target.schema.graphql:4290)) with every new operation type.
-- Extend each `<X>DiffsOwner` line (e.g. [2355](compose/graphql/target.schema.graphql:2355), [2477](compose/graphql/target.schema.graphql:2477), [2724](compose/graphql/target.schema.graphql:2724), [2848](compose/graphql/target.schema.graphql:2848), [2969](compose/graphql/target.schema.graphql:2969), [3122](compose/graphql/target.schema.graphql:3122), [3542](compose/graphql/target.schema.graphql:3542), [3662](compose/graphql/target.schema.graphql:3662), [4038](compose/graphql/target.schema.graphql:4038)) with the new operation names that own diffs (every new op owns its diff).
-- Extend `union DiffOwner` ([target.schema.graphql:5880](compose/graphql/target.schema.graphql:5880)) and `union DiffsOwner` ([target.schema.graphql:5922](compose/graphql/target.schema.graphql:5922)) with every new op.
-- Extend `union OwnerEntity` ([target.schema.graphql:5506](compose/graphql/target.schema.graphql:5506)) with every new op.
+- Extend each `<X>DiffsOwner` line (e.g. [2355](compose/graphql/target.schema.graphql:2355), [2477](compose/graphql/target.schema.graphql:2477), [2724](compose/graphql/target.schema.graphql:2724), [2848](compose/graphql/target.schema.graphql:2848), [2969](compose/graphql/target.schema.graphql:2969), [3122](compose/graphql/target.schema.graphql:3122), [3542](compose/graphql/target.schema.graphql:3542), [3662](compose/graphql/target.schema.graphql:3662), [4038](compose/graphql/target.schema.graphql:4038)) with the new operation names that own diffs (every new operation owns its diff).
+- Extend `union DiffOwner` ([target.schema.graphql:5880](compose/graphql/target.schema.graphql:5880)) and `union DiffsOwner` ([target.schema.graphql:5922](compose/graphql/target.schema.graphql:5922)) with every new operation.
+- Extend `union OwnerEntity` ([target.schema.graphql:5506](compose/graphql/target.schema.graphql:5506)) with every new operation.
 - Add a top-level `union Operation = …` (rename current `interface Operation`? No — keep the interface, add a sibling `union AnyOperation = TagOperation | ConceptOperation | PortOperation | QualityOperation | TypeOperation | ConnectorOperation | DesignOperation | PieceOperation | KitOperation`). This is the "specific" composite the request asks for.
 
 ## `Mutation` and `Subscription` updates ([target.schema.graphql:5995](compose/graphql/target.schema.graphql:5995), [6002](compose/graphql/target.schema.graphql:6002))
@@ -154,15 +154,15 @@ Keep `RenamedKit`, `ChangedDescription`. Add `union KitOperation = RenamedKit` a
 ```mermaid
 graph TD
   Action["Pure Action (e.g. RENAME_TAG)"] --> Mutation[Mutation field]
-  Mutation --> Op["Operation type (RenamedTag)"]
-  Op -->|implements| OpIface[Operation interface]
-  Op -->|input| Input["Input union (RenamedTagInput)"]
-  Op -->|diff| Diff[Diff -> TagDiff]
-  Op -->|in| EntityUnion["Per-entity TagOperation union"]
+  Mutation --> Operation["Operation type (RenamedTag)"]
+  Operation -->|implements| OpIface[Operation interface]
+  Operation -->|input| Input["Input union (RenamedTagInput)"]
+  Operation -->|diff| Diff[Diff -> TagDiff]
+  Operation -->|in| EntityUnion["Per-entity TagOperation union"]
   EntityUnion --> Composite[AnyOperation union]
-  Op --> ChangeOwned[ChangeOwned union]
-  Op --> DiffOwner[DiffOwner / DiffsOwner unions]
-  Op --> Subscription[Subscription field]
+  Operation --> ChangeOwned[ChangeOwned union]
+  Operation --> DiffOwner[DiffOwner / DiffsOwner unions]
+  Operation --> Subscription[Subscription field]
 ```
 
 ## Out of scope

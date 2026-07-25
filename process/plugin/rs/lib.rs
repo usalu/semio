@@ -3,7 +3,7 @@
 use base64::Engine;
 use kernel_3d_brepkit::{BrepkitKernel, ObjSolidExporter, ObjSolidImporter, SolidExporter, SolidImporter, StepSolidExporter, StepSolidImporter, StlSolidExporter, StlSolidImporter};
 use kernel_3d_engine::{BrepKernel, GeometryHandle};
-use process_3d::{Pose, Process3dOp, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock};
+use process_3d::{Pose, Process3dOperation, ProcessMeasure, ProcessStep, ProcessStepPatch, SolidSpec, StepOrigin, Stock};
 use semio_framework_core::kernel::HostEffect;
 use semio_framework_plugin::{
     app_labels, apply_world3d_sun_action, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, mesh_from_indexed_with_face_groups, mesh_from_kind, resolve_labels, tree_item_desc, tree_item_with_action,
@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Mutex, OnceLock};
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -118,7 +118,7 @@ fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 
 /// 🧰 Host effect that programmatically switches the workpiece window's active utility — the active
-/// utility is host-owned session state (`view_state.active_utility_id`), never a document op.
+/// utility is host-owned session state (`view_state.active_utility_id`), never a document operation.
 fn set_active_utility_effect(utility: &str) -> HostEffect {
     HostEffect::SetActiveUtility { window_id: PROCESS_3D_PLAY_WINDOW_MAIN.into(), utility_id: utility.into() }
 }
@@ -166,24 +166,24 @@ fn fixture_signature(fixture: &process_3d::Process3dDocument) -> u64 {
     hash_value(fixture)
 }
 
-/// ✂️➕🗑️ Read-only op builders for the two structural collection edits every mutating action needs:
+/// ✂️➕🗑️ Read-only operation builders for the two structural collection edits every mutating action needs:
 /// inserting a step at the resolved-up-to cursor (and advancing it), and removing a step by id (and
-/// pulling the cursor back if it sat past the removed step). Building `Process3dOp`s from an immutable
+/// pulling the cursor back if it sat past the removed step). Building `Process3dOperation`s from an immutable
 /// `&Process3dDocument` keeps `handle_action` free of manual mutation — the VCS store applies them.
-fn insert_step_ops(fixture: &process_3d::Process3dDocument, step: ProcessStep) -> Vec<Process3dOp> {
+fn insert_step_operations(fixture: &process_3d::Process3dDocument, step: ProcessStep) -> Vec<Process3dOperation> {
     let cursor = fixture.resolved_up_to.unwrap_or(fixture.steps.len()).min(fixture.steps.len());
-    vec![Process3dOp::Steps { collection: CollectionOp::Add { index: cursor, item: step } }, Process3dOp::SetCursor { resolved_up_to: Some(cursor + 1) }]
+    vec![Process3dOperation::Steps { collection: CollectionOperation::Add { index: cursor, item: step } }, Process3dOperation::SetCursor { resolved_up_to: Some(cursor + 1) }]
 }
 
-fn remove_step_ops(fixture: &process_3d::Process3dDocument, id: &str) -> Option<Vec<Process3dOp>> {
+fn remove_step_operations(fixture: &process_3d::Process3dDocument, id: &str) -> Option<Vec<Process3dOperation>> {
     let index = fixture.steps.iter().position(|step| step.id == id)?;
-    let mut ops = vec![Process3dOp::Steps { collection: CollectionOp::Remove { id: id.to_string() } }];
+    let mut operations = vec![Process3dOperation::Steps { collection: CollectionOperation::Remove { id: id.to_string() } }];
     if let Some(cursor) = fixture.resolved_up_to {
         if cursor > index {
-            ops.push(Process3dOp::SetCursor { resolved_up_to: Some(cursor - 1) });
+            operations.push(Process3dOperation::SetCursor { resolved_up_to: Some(cursor - 1) });
         }
     }
-    Some(ops)
+    Some(operations)
 }
 
 fn default_cut_measure() -> ProcessMeasure {
@@ -521,13 +521,13 @@ fn apply_step_patch(step: &mut ProcessStep, field: &str, value: Option<&Value>) 
     }
 }
 
-/// 🩹 Builds the `Process3dOp` for one inspector field edit — clones the target (stock or step),
+/// 🩹 Builds the `Process3dOperation` for one inspector field edit — clones the target (stock or step),
 /// mutates the clone via `apply_stock_patch`/`apply_step_patch`, then wraps it back into a
-/// `SetStock`/`Steps::Patch` op so the store computes the true pre-state inverse.
-fn process3d_inspector_patch_op(fixture: &process_3d::Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dOp> {
+/// `SetStock`/`Steps::Patch` operation so the store computes the true pre-state inverse.
+fn process3d_inspector_patch_operation(fixture: &process_3d::Process3dDocument, target: &str, field: &str, value: Option<&Value>) -> Option<Process3dOperation> {
     if target == fixture.stock.id {
         let mut stock = fixture.stock.clone();
-        return if apply_stock_patch(&mut stock, field, value) { Some(Process3dOp::SetStock { stock }) } else { None };
+        return if apply_stock_patch(&mut stock, field, value) { Some(Process3dOperation::SetStock { stock }) } else { None };
     }
     let step_id = target.strip_prefix("step:")?;
     let step = fixture.steps.iter().find(|step| step.id == step_id)?;
@@ -536,7 +536,7 @@ fn process3d_inspector_patch_op(fixture: &process_3d::Process3dDocument, target:
         return None;
     }
     let patch = ProcessStepPatch { label: Some(updated.label), enabled: None, measure: Some(updated.measure), origin: None };
-    Some(Process3dOp::Steps { collection: CollectionOp::Patch { id: step_id.to_string(), patch } })
+    Some(Process3dOperation::Steps { collection: CollectionOperation::Patch { id: step_id.to_string(), patch } })
 }
 //#endregion 🔖InspectorPatch
 //#endregion 🔖DocumentHelpers
@@ -1204,7 +1204,7 @@ struct Process3dPlayApp {
 
 impl DocumentApp for Process3dPlayApp {
     type Projection = process_3d::Process3dDocument;
-    type Op = Process3dOp;
+    type Operation = Process3dOperation;
 
     fn app_id(&self) -> &str {
         PROCESS_3D_PLAY_APP_ID
@@ -1218,13 +1218,13 @@ impl DocumentApp for Process3dPlayApp {
         default_document()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> ActionEmit<Process3dOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, process_3d::Process3dDocument>, view_state: &ViewState) -> ActionEmit<Process3dOperation> {
         match action {
             "setDocument" => {
                 if let Some(document_value) = args.and_then(|value| value.get("document")) {
                     if let Ok(document) = serde_json::from_value::<process_3d::Process3dDocument>(document_value.clone()) {
                         self.runtime.selected_id = None;
-                        return ActionEmit::ops(vec![Process3dOp::SetDocument { document }]);
+                        return ActionEmit::operations(vec![Process3dOperation::SetDocument { document }]);
                     }
                 }
                 ActionEmit::default()
@@ -1237,7 +1237,7 @@ impl DocumentApp for Process3dPlayApp {
                     _ => default_document(),
                 };
                 self.runtime.selected_id = None;
-                ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
+                ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
             }
             "toggleSun" | "setSunAzimuth" | "setSunElevation" | "setSunIntensity" => {
                 apply_world3d_sun_action(&mut self.runtime.sun, action, args);
@@ -1286,24 +1286,24 @@ impl DocumentApp for Process3dPlayApp {
                 let origin = StepOrigin { module_id: module.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
                 let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, position) };
                 self.runtime.selected_id = Some(step.id.clone());
-                ActionEmit::ops(insert_step_ops(doc.projection, step))
+                ActionEmit::operations(insert_step_operations(doc.projection, step))
             }
             "removeStep" => {
                 if let Some(id) = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()) {
-                    if let Some(ops) = remove_step_ops(doc.projection, id) {
+                    if let Some(operations) = remove_step_operations(doc.projection, id) {
                         if self.runtime.selected_id.as_deref() == Some(id) {
                             self.runtime.selected_id = None;
                         }
-                        return ActionEmit::ops(ops);
+                        return ActionEmit::operations(operations);
                     }
                 }
                 ActionEmit::default()
             }
             "removeSelectedStep" => {
                 if let Some(id) = self.runtime.selected_id.clone() {
-                    if let Some(ops) = remove_step_ops(doc.projection, &id) {
+                    if let Some(operations) = remove_step_operations(doc.projection, &id) {
                         self.runtime.selected_id = None;
-                        return ActionEmit::ops(ops);
+                        return ActionEmit::operations(operations);
                     }
                 }
                 ActionEmit::default()
@@ -1311,7 +1311,7 @@ impl DocumentApp for Process3dPlayApp {
             "moveStep" => {
                 if let (Some(id), Some(index)) = (args.and_then(|value| value.get("id")).and_then(|value| value.as_str()), args.and_then(|value| value.get("index")).and_then(|value| value.as_u64())) {
                     if doc.projection.steps.iter().any(|step| step.id == id) {
-                        return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Move { id: id.to_string(), to_index: index as usize } }]);
+                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Move { id: id.to_string(), to_index: index as usize } }]);
                     }
                 }
                 ActionEmit::default()
@@ -1321,7 +1321,7 @@ impl DocumentApp for Process3dPlayApp {
                     if let Ok(step) = serde_json::from_value::<ProcessStep>(step_value.clone()) {
                         if doc.projection.steps.iter().any(|existing| existing.id == step.id) {
                             let patch = ProcessStepPatch { label: Some(step.label.clone()), enabled: Some(step.enabled), measure: Some(step.measure.clone()), origin: Some(step.origin.clone()) };
-                            return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: step.id, patch } }]);
+                            return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: step.id, patch } }]);
                         }
                     }
                 }
@@ -1332,7 +1332,7 @@ impl DocumentApp for Process3dPlayApp {
                     let enabled = args.and_then(|value| value.get("enabled")).and_then(|value| value.as_bool()).unwrap_or(true);
                     if doc.projection.steps.iter().any(|step| step.id == id) {
                         let patch = ProcessStepPatch { enabled: Some(enabled), ..Default::default() };
-                        return ActionEmit::ops(vec![Process3dOp::Steps { collection: CollectionOp::Patch { id: id.to_string(), patch } }]);
+                        return ActionEmit::operations(vec![Process3dOperation::Steps { collection: CollectionOperation::Patch { id: id.to_string(), patch } }]);
                     }
                 }
                 ActionEmit::default()
@@ -1347,14 +1347,14 @@ impl DocumentApp for Process3dPlayApp {
                 let stock = Stock { id: doc.projection.stock.id.clone(), label: resolve_labels::<Process3dLabels>(view_state).stock.into(), solid, pose: Pose::default() };
                 let document = process_3d::Process3dDocument { stock, steps: Vec::new(), resolved_up_to: None };
                 self.runtime.selected_id = None;
-                ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
+                ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
             }
             "patchInspector" => {
                 let target = args.and_then(|value| value.get("target")).and_then(|value| value.as_str()).unwrap_or("");
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
-                match process3d_inspector_patch_op(doc.projection, target, field, value) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                match process3d_inspector_patch_operation(doc.projection, target, field, value) {
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1363,7 +1363,7 @@ impl DocumentApp for Process3dPlayApp {
                     None | Some(Value::Null) => None,
                     Some(value) => value.as_u64().map(|n| n as usize),
                 };
-                ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: resolved.map(|n| n.min(doc.projection.steps.len())) }])
+                ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: resolved.map(|n| n.min(doc.projection.steps.len())) }])
             }
             "stepCursor" | "stepCursorBack" | "stepCursorForward" => {
                 let delta = match action {
@@ -1373,7 +1373,7 @@ impl DocumentApp for Process3dPlayApp {
                 };
                 let len = doc.projection.steps.len();
                 let current = doc.projection.resolved_up_to.unwrap_or(len) as i64;
-                ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
+                ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + delta).clamp(0, len as i64) as usize) }])
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
                 self.runtime.selected_face_id = None;
@@ -1398,9 +1398,9 @@ impl DocumentApp for Process3dPlayApp {
                     Some("cut") => ActionEmit::effect(set_active_utility_effect("cut")),
                     Some("drill") => ActionEmit::effect(set_active_utility_effect("drill")),
                     Some("attach") => ActionEmit::effect(set_active_utility_effect("attach")),
-                    Some("back") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }]),
-                    Some("forward") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: Some((current + 1).min(len)) }]),
-                    Some("all") => ActionEmit::ops(vec![Process3dOp::SetCursor { resolved_up_to: None }]),
+                    Some("back") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some(current.saturating_sub(1)) }]),
+                    Some("forward") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: Some((current + 1).min(len)) }]),
+                    Some("all") => ActionEmit::operations(vec![Process3dOperation::SetCursor { resolved_up_to: None }]),
                     _ => ActionEmit::default(),
                 }
             }
@@ -1419,7 +1419,7 @@ impl DocumentApp for Process3dPlayApp {
                     let origin = StepOrigin { module_id: GEOMETRY_MODULE.id.to_string(), machine_id: machine.id.to_string(), modification_kind_id: kind.id.to_string() };
                     let step = ProcessStep { id: next_step_id(), label: kind.label.to_string(), enabled: true, origin: Some(origin), measure: measure_for_modification(machine, kind, Some(point)) };
                     self.runtime.selected_id = Some(step.id.clone());
-                    let mut emit = ActionEmit::ops(insert_step_ops(doc.projection, step));
+                    let mut emit = ActionEmit::operations(insert_step_operations(doc.projection, step));
                     emit.effects.push(set_active_utility_effect("select"));
                     return emit;
                 }
@@ -1444,7 +1444,7 @@ impl DocumentApp for Process3dPlayApp {
                     if let Some(step) = process3d_step_from_face_drag(normal, point, distance, face_extent, resolve_labels::<Process3dLabels>(view_state)) {
                         self.runtime.selected_id = Some(step.id.clone());
                         self.runtime.selected_face_id = None;
-                        return ActionEmit::ops(insert_step_ops(doc.projection, step));
+                        return ActionEmit::operations(insert_step_operations(doc.projection, step));
                     }
                 }
                 ActionEmit::default()
@@ -1474,7 +1474,7 @@ impl DocumentApp for Process3dPlayApp {
                 match import_process3d_model(&name, data_url) {
                     Some(document) => {
                         self.runtime.selected_id = None;
-                        ActionEmit::ops(vec![Process3dOp::SetDocument { document }])
+                        ActionEmit::operations(vec![Process3dOperation::SetDocument { document }])
                     }
                     None => ActionEmit::default(),
                 }
@@ -1575,7 +1575,7 @@ fn create_process3d_app() -> App {
             .action_with(internal_action("patchInspector", "Patch Inspector", ActionKind::Operation))
             .action_with(internal_action("worldPointerDown", "World Pointer Down", ActionKind::Operation))
             .action_with(internal_action("worldFaceDragEnd", "World Face Drag End", ActionKind::Operation))
-            // ⏱️ Document-cursor navigation ops (NOT framework History — they move the replay cursor).
+            // ⏱️ Document-cursor navigation operations (NOT framework History — they move the replay cursor).
             .action_with(internal_action("setCursor", "Set Cursor", ActionKind::Operation))
             .action_with(internal_action("stepCursor", "Step Cursor", ActionKind::Operation))
             .action_with(internal_action("stepCursorBack", "Step Cursor Back", ActionKind::Operation))
@@ -1814,7 +1814,7 @@ mod tests {
     fn set_active_utility_emits_no_operations() {
         let mut app = new_app();
         let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "cut" })), &view_with_utility("cut"), &testkit::meta("local")).expect("set utility");
-        assert!(result.operations.is_empty(), "utility selection is host-owned view state and must never emit document ops or history");
+        assert!(result.operations.is_empty(), "utility selection is host-owned view state and must never emit document operations or history");
     }
 
     #[test]
@@ -1829,7 +1829,7 @@ mod tests {
     fn arg_form_set_stock_emits_ops_reading_kind_arg() {
         let mut app = new_app();
         let result = app.handle_action("setStock", Some(&json!({ "kind": "cylinder" })), &ViewState::default(), &testkit::meta("local")).expect("set stock");
-        assert!(!result.operations.is_empty(), "the setStock arg form must materialize into document ops");
+        assert!(!result.operations.is_empty(), "the setStock arg form must materialize into document operations");
         let document = app.projection().expect("projection");
         assert!(matches!(document.stock.solid, SolidSpec::Cylinder { .. }), "setStock kind=cylinder must swap the stock solid");
         assert!(document.steps.is_empty(), "swapping stock resets the step timeline");
@@ -1952,7 +1952,7 @@ mod tests {
     fn world_face_drag_end_ignored_while_a_placement_utility_is_active() {
         let mut app = new_app();
         let result = app.handle_action("worldFaceDragEnd", Some(&json!({ "normal": [0.0, 0.0, 1.0], "startPoint": [0.5, 0.5, 1.0], "distance": -0.5 })), &view_with_utility("cut"), &testkit::meta("local")).expect("face drag");
-        assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-op while a placement utility is active, not the select utility");
+        assert!(result.operations.is_empty(), "worldFaceDragEnd should be a no-operation while a placement utility is active, not the select utility");
     }
 
     #[test]

@@ -66,6 +66,14 @@
         "command": "bun ./script.ts plugin",
         "forwardAllArgs": true
       }
+    },
+    "parity": {
+      "executor": "nx:run-commands",
+      "options": {
+        "cwd": "framework/product/os/dev",
+        "command": "bun ./script.ts parity",
+        "forwardAllArgs": true
+      }
     }
   }
 }

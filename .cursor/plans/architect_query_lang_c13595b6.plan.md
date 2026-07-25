@@ -12,7 +12,7 @@ todos:
    content: Hand-craft typesafe schema mirror (Label, Predicate, Edge table, Mutation CALL targets, Subscription CALL targets) from compose schema.graphql
    status: completed
  - id: planner
-   content: "Build planner: anchor selection, GraphQL document generation per MATCH, cross-step joins on shared variables, CALL -> mutation/subscription steps, WHERE/UNWIND/RETURN lowered to in-memory ops"
+   content: "Build planner: anchor selection, GraphQL document generation per MATCH, cross-step joins on shared variables, CALL -> mutation/subscription steps, WHERE/UNWIND/RETURN lowered to in-memory operations"
    status: completed
  - id: transport-executor
    content: Define Transport trait, implement Executor driving multi-roundtrip GraphQL with BindEnv; JsTransport (wasm) wrapping a JS callback + subscription factory
@@ -65,7 +65,7 @@ Node labels are exactly the compose GraphQL types: `Kit`, `Design`, `Piece`, `Bl
 //#region 🔖Parser
 //#region 🔖Ast
 //#region 🔖Schema      // hand-crafted typesafe mirror of GraphQL surface
-//#region 🔖Planner    // architect AST -> GraphQL op plan
+//#region 🔖Planner    // architect AST -> GraphQL operation plan
 //#region 🔖Executor   // drives multi-roundtrip Transport
 //#region 🔖Transport  // async callback trait + wasm/native bridges
 //#region 🔖Api        // public Rust + wasm_bindgen entry points
@@ -162,14 +162,14 @@ Multi-roundtrip is the default: the executor keeps a typed `BindEnv` of variable
 ```rust
 #[async_trait::async_trait(?Send)]
 pub trait Transport {
-    async fn execute(&self, op: OpKind, doc: &str, vars: serde_json::Value)
+    async fn execute(&self, operation: OpKind, doc: &str, vars: serde_json::Value)
         -> Result<serde_json::Value, TransportError>;
     fn subscribe(&self, doc: &str, vars: serde_json::Value)
         -> Pin<Box<dyn futures_util::Stream<Item = Result<serde_json::Value, TransportError>>>>;
 }
 ```
 
-The native side ships a no-op stub `HttpTransport` behind a feature flag (only for tests). The WASM side ships a `JsTransport` that takes a `js_sys::Function` callback and a subscription factory — the host (the existing `KitStoreHandle` / `rs-wasm-transport` in [compose/client/lib/js/rs-wasm-transport.ts](compose/client/lib/js/rs-wasm-transport.ts)) provides them.
+The native side ships a no-operation stub `HttpTransport` behind a feature flag (only for tests). The WASM side ships a `JsTransport` that takes a `js_sys::Function` callback and a subscription factory — the host (the existing `KitStoreHandle` / `rs-wasm-transport` in [compose/client/lib/js/rs-wasm-transport.ts](compose/client/lib/js/rs-wasm-transport.ts)) provides them.
 
 `Executor::run(plan, transport)` returns `Result<QueryResult, ArchitectError>` for queries/mutations, and `Result<impl Stream<Item=QueryResult>, _>` for subscriptions.
 

@@ -87,7 +87,7 @@ Update the `Err(...)` message to be built from the array instead of a hardcoded 
 - Call `mathematical_graph_port_directed::force_graph::apply_force_graph_layout_to_fixture_v1_value(&mut value, &ForceGraphLayoutOptions::default())`.
 - Copy the resulting `x`/`y` back onto `self.graph.nodes`, then `self.rebuild_engine()`.
 
-A spring/force layout works regardless of cycles or multi-parent convergence (unlike DAG's Buchheim `hierarchical_tree`, which requires a rooted tree), so this is the mathematically correct generalization for an arbitrary directed port graph rather than either the current no-op stub or a borrowed tree layout.
+A spring/force layout works regardless of cycles or multi-parent convergence (unlike DAG's Buchheim `hierarchical_tree`, which requires a rooted tree), so this is the mathematically correct generalization for an arbitrary directed port graph rather than either the current no-operation stub or a borrowed tree layout.
 
 ### 4. Generalize `recompute_derived` to multiple roots/components
 

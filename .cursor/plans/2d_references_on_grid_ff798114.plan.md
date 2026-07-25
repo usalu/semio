@@ -12,7 +12,7 @@ todos:
    content: "Add #region Reference to infinite/world/r3f: WorldReferenceProps, WorldReferencePlane, WorldReferenceGumball, WorldReferenceLayer, applyWorldReferenceTransform; reuse WorldEntityFlags + UnifiedGumball"
    status: completed
  - id: puzzle-schema
-   content: Extend puzzle 3d Fixture with references[] + parse/encode + pure ops (add/update/relocate)
+   content: Extend puzzle 3d Fixture with references[] + parse/encode + pure operations (add/update/relocate)
    status: completed
  - id: puzzle-scene
    content: Render WorldReferenceLayer in puzzle 3d scene with registry selection/hover and relocate wiring

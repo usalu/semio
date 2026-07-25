@@ -71,15 +71,15 @@ pub mod booleans {
         segments
     }
 
-    pub fn boolean_paths(a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
+    pub fn boolean_paths(a: &[PathSegment], b: &[PathSegment], operation: &str) -> Result<Vec<PathSegment>, DrawingError> {
         let poly_a = segments_to_multipolygon(a)?;
         let poly_b = segments_to_multipolygon(b)?;
-        let result = match op {
+        let result = match operation {
             "union" => poly_a.union(&poly_b),
             "difference" => poly_a.difference(&poly_b),
             "intersection" => poly_a.intersection(&poly_b),
             "xor" => poly_a.xor(&poly_b),
-            _ => return Err(DrawingError::InvalidInput(format!("unknown boolean op: {op}"))),
+            _ => return Err(DrawingError::InvalidInput(format!("unknown boolean operation: {operation}"))),
         };
         let mut segments = Vec::new();
         for polygon in result {
@@ -91,19 +91,19 @@ pub mod booleans {
         Ok(segments)
     }
 
-    pub fn boolean_paths_many(inputs: &[Vec<PathSegment>], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
+    pub fn boolean_paths_many(inputs: &[Vec<PathSegment>], operation: &str) -> Result<Vec<PathSegment>, DrawingError> {
         if inputs.is_empty() {
-            return Err(DrawingError::InvalidInput("boolean op needs at least one path".into()));
+            return Err(DrawingError::InvalidInput("boolean operation needs at least one path".into()));
         }
         let mut acc = segments_to_multipolygon(&inputs[0])?;
         for next in inputs.iter().skip(1) {
             let poly_b = segments_to_multipolygon(next)?;
-            acc = match op {
+            acc = match operation {
                 "union" => acc.union(&poly_b),
                 "difference" => acc.difference(&poly_b),
                 "intersection" => acc.intersection(&poly_b),
                 "xor" => acc.xor(&poly_b),
-                _ => return Err(DrawingError::InvalidInput(format!("unknown boolean op: {op}"))),
+                _ => return Err(DrawingError::InvalidInput(format!("unknown boolean operation: {operation}"))),
             };
         }
         let mut segments = Vec::new();
@@ -764,7 +764,7 @@ fn serialize_svg(scene: &DrawingScene) -> String {
     format!(r#"<svg xmlns="http://www.w3.org/2000/svg" width="{}" height="{}" viewBox="0 0 {} {}">{body}</svg>"#, scene.width, scene.height, scene.width, scene.height)
 }
 
-fn segments_to_pdf_ops(segments: &[PathSegment]) -> String {
+fn segments_to_pdf_operations(segments: &[PathSegment]) -> String {
     let mut out = String::new();
     for segment in segments {
         match segment {
@@ -785,7 +785,7 @@ fn serialize_pdf(scene: &DrawingScene) -> Vec<u8> {
         if segments.is_empty() {
             continue;
         }
-        stream.push_str(&segments_to_pdf_ops(&segments));
+        stream.push_str(&segments_to_pdf_operations(&segments));
         if node.fill.is_some() {
             stream.push_str("f\n");
         } else if node.stroke.is_some() {
@@ -902,24 +902,24 @@ impl DrawingKernel for DrawingStore {
     }
 
     async fn bool_union(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
-        self.bool_op(a, b, "union").await
+        self.bool_operation(a, b, "union").await
     }
 
     async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
-        self.bool_op(a, b, "difference").await
+        self.bool_operation(a, b, "difference").await
     }
 
     async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
-        self.bool_op(a, b, "intersection").await
+        self.bool_operation(a, b, "intersection").await
     }
 
     async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError> {
-        self.bool_op(a, b, "xor").await
+        self.bool_operation(a, b, "xor").await
     }
 
-    async fn bool_op_many(&mut self, op: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError> {
+    async fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError> {
         if handles.is_empty() {
-            return Err(DrawingError::InvalidInput("boolean op needs at least one handle".into()));
+            return Err(DrawingError::InvalidInput("boolean operation needs at least one handle".into()));
         }
         if handles.len() == 1 {
             return self.fork(&handles[0]);
@@ -930,25 +930,25 @@ impl DrawingKernel for DrawingStore {
         }
         #[cfg(feature = "booleans")]
         {
-            let merged = booleans::boolean_paths_many(&segments_list, op)?;
+            let merged = booleans::boolean_paths_many(&segments_list, operation)?;
             return Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }));
         }
         #[cfg(not(feature = "booleans"))]
         {
-            let _ = (segments_list, op);
-            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+            let _ = (segments_list, operation);
+            Err(DrawingError::Operation("boolean operations require booleans feature".into()))
         }
     }
 
-    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError> {
+    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], operation: &str) -> Result<Vec<PathSegment>, DrawingError> {
         #[cfg(feature = "booleans")]
         {
-            return booleans::boolean_paths(a, b, op);
+            return booleans::boolean_paths(a, b, operation);
         }
         #[cfg(not(feature = "booleans"))]
         {
-            let _ = (a, b, op);
-            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+            let _ = (a, b, operation);
+            Err(DrawingError::Operation("boolean operations require booleans feature".into()))
         }
     }
 
@@ -1010,18 +1010,18 @@ impl DrawingKernel for DrawingStore {
 }
 
 impl DrawingStore {
-    async fn bool_op(&mut self, a: &DrawingHandle, b: &DrawingHandle, op: &str) -> Result<DrawingHandle, DrawingError> {
+    async fn bool_operation(&mut self, a: &DrawingHandle, b: &DrawingHandle, operation: &str) -> Result<DrawingHandle, DrawingError> {
         let a_segments = DrawingStore::node_to_segments(&self.entry(a)?.node);
         let b_segments = DrawingStore::node_to_segments(&self.entry(b)?.node);
         #[cfg(feature = "booleans")]
         {
-            let merged = booleans::boolean_paths(&a_segments, &b_segments, op)?;
+            let merged = booleans::boolean_paths(&a_segments, &b_segments, operation)?;
             Ok(self.register(DrawingKind::Path, DrawingNode::Path { segments: merged }))
         }
         #[cfg(not(feature = "booleans"))]
         {
-            let _ = (a_segments, b_segments, op);
-            Err(DrawingError::Operation("boolean ops require booleans feature".into()))
+            let _ = (a_segments, b_segments, operation);
+            Err(DrawingError::Operation("boolean operations require booleans feature".into()))
         }
     }
 }

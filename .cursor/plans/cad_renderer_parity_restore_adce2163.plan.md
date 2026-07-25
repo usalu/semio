@@ -47,7 +47,7 @@ Three concrete, verified bugs:
 3. **"No interactions work"**: `cad/plugin/rs/interaction.rs` has real, tested statechart logic for 4 interactions (box/external-wall/slab/column) that call the real brep kernel on commit. But nothing in the frontend can ever drive it to completion:
    - `framework/renderer/react/components/world-3d-host.tsx`'s `handlePointerDown/Move/Up` (`:1110-1203`) only ever dispatch `worldPick`/`worldSelect`/`setSelection` (2D screen-space marquee selection) — there is **no raycast against a work plane and no dispatch of a 3D point** anywhere in the shared host.
    - `cad/plugin/rs/lib.rs:2716` implements `"engagementPointerDown"` (expects a `position` arg) to drive `apply_event(session, "pointer.down", point)`, but no frontend code ever sends that command.
-   - `cad/plugin/rs/lib.rs:2756` explicitly no-ops the command name that _is_ generically available: `"noop" | "worldPointerDown" => return Vec::new()`.
+   - `cad/plugin/rs/lib.rs:2756` explicitly no-operations the command name that _is_ generically available: `"noOperation" | "worldPointerDown" => return Vec::new()`.
    - The play toolbar (`build_cad_play_toolbar`, `lib.rs:1880-1985`) only exposes View/Save/Transfer buttons — no button starts a box/wall/slab/column interaction; only the generic engagement-bar `possibleEngagements` chips (from `window_engagements`) can start a session, and REPL text (`parse_repl_line`) can only fire keyword transitions (`s`, `set.height 2.5`) — it has no way to type/click a 3D point.
    - Net effect: a session can be _started_ (via engagement-bar chip) but can never receive its first point, so it appears completely dead.
 
@@ -62,7 +62,7 @@ Three concrete, verified bugs:
 
 ### 2. Fix interaction plumbing end-to-end (fixes bug 3)
 
-- In `framework/renderer/react/components/world-3d-host.tsx`, extend `handlePointerDown`/`handlePointerUp` (or add a dedicated handler gated on `engagement.sessionActive`) to raycast the pointer against the active construction plane (ground `z=0`, consistent with existing camera-up `[0,0,1]`) and dispatch a 3D point. Reuse the existing `worldPointerDown` command name (stop treating it as a permanent no-op) with payload `{ pane, position: [x,y,z], shiftKey, ctrlKey, metaKey }`; derive `pane` from the surface id suffix (e.g. `cad.play.scene3d/shape` → `shape`), matching `cad_pane_id_from_suffix`.
+- In `framework/renderer/react/components/world-3d-host.tsx`, extend `handlePointerDown`/`handlePointerUp` (or add a dedicated handler gated on `engagement.sessionActive`) to raycast the pointer against the active construction plane (ground `z=0`, consistent with existing camera-up `[0,0,1]`) and dispatch a 3D point. Reuse the existing `worldPointerDown` command name (stop treating it as a permanent no-operation) with payload `{ pane, position: [x,y,z], shiftKey, ctrlKey, metaKey }`; derive `pane` from the surface id suffix (e.g. `cad.play.scene3d/shape` → `shape`), matching `cad_pane_id_from_suffix`.
 - In `cad/plugin/rs/lib.rs`, merge `"engagementPointerDown"` into the `"worldPointerDown"` arm (single source of truth per AGENTS.md — no duplicate command names) and update tests accordingly.
 - Add toolbar buttons for the 4 already-implemented interactions (Box/External Wall/Slab/Column) to `build_cad_play_toolbar`, each dispatching `engagementPossibleSelect` (or directly starting the session), so interactions are discoverable without relying solely on the engagement-bar text chip.
 - Verify the REPL `set.height <n>` / point-click / commit round trip end-to-end for at least the Box interaction via a manual dev-server smoke test (draw a box in the Shape pane).
@@ -71,7 +71,7 @@ Three concrete, verified bugs:
 
 - The forest fixture's typologies (`building.building.beam`, `.wall`, `structure.structure.reinforcedconcreteinternalwall`, the concrete "mushroom/hexagonal column" family under `cad/asset/modelDefinition/aec.building.concrete/action/constructMushroomColumn.json` etc.) have **no** Rust interaction/transformation counterpart yet — only box/external-wall/slab/column exist in `INTERACTION_CATALOG`/`CAD_TRANSFORMATION_SPECS`.
 - Port the remaining premigration interactions needed to construct/derive every typology actually present in `hexagonal-cut-concrete-forest-{left,right}.model.json` (beam, wall, internal wall, mushroom column) into `cad/plugin/rs/interaction.rs` + `transformation.rs`, following the existing statechart pattern (each is a small, self-contained `match` arm addition — no new architecture needed).
-- Broader spatial.shape general-purpose tooling (circle/arc/loft/sweep/fillet/chamfer/boolean ops, full FEM typologies) is a much larger, open-ended catalog (~40 JSON-defined actions under `cad/asset/modelDefinition/spatial.shape/`) not exercised by the shipped fixture; track as a explicit follow-up rather than blocking this ticket, and note it in the ticket close-out summary.
+- Broader spatial.shape general-purpose tooling (circle/arc/loft/sweep/fillet/chamfer/boolean operations, full FEM typologies) is a much larger, open-ended catalog (~40 JSON-defined actions under `cad/asset/modelDefinition/spatial.shape/`) not exercised by the shipped fixture; track as a explicit follow-up rather than blocking this ticket, and note it in the ticket close-out summary.
 
 ## Files to touch
 

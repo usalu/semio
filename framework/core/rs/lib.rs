@@ -68,8 +68,8 @@ mod tests {
     fn dispatches_to_registered_handler() {
         let mut bus = ActionBus::new();
         bus.register(Box::new(EchoHandler { id: "app".into() }));
-        let ops = bus.dispatch("app", "ping", None);
-        assert_eq!(ops, vec!["ping:ok"]);
+        let operations = bus.dispatch("app", "ping", None);
+        assert_eq!(operations, vec!["ping:ok"]);
     }
 }
 // #endregion action_bus
@@ -644,133 +644,129 @@ pub fn mesh_to_glb(mesh: &MeshData) -> Vec<u8> {
     out
 }
 
-pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
-    if bytes.len() < 12 || &bytes[0..4] != b"glTF" {
-        return Err("invalid glb header".into());
-    }
-    let mut offset = 12usize;
-    let mut json = None;
-    let mut bin = None;
-    while offset + 8 <= bytes.len() {
-        let chunk_len = u32::from_le_bytes(bytes[offset..offset + 4].try_into().unwrap()) as usize;
-        let chunk_type = &bytes[offset + 4..offset + 8];
-        offset += 8;
-        let end = offset + chunk_len;
-        if end > bytes.len() {
-            break;
+type GlbMatrix = [[f32; 4]; 4];
+
+fn glb_identity() -> GlbMatrix {
+    [[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0], [0.0, 0.0, 1.0, 0.0], [0.0, 0.0, 0.0, 1.0]]
+}
+
+fn glb_matrix_mul(left: GlbMatrix, right: GlbMatrix) -> GlbMatrix {
+    let mut result = [[0.0; 4]; 4];
+    for column in 0..4 {
+        for row in 0..4 {
+            result[column][row] = (0..4).map(|axis| left[axis][row] * right[column][axis]).sum();
         }
-        let chunk = &bytes[offset..end];
-        if chunk_type == b"JSON" {
-            json = Some(String::from_utf8_lossy(chunk).to_string());
-        } else if chunk_type == b"BIN\x00" {
-            bin = Some(chunk.to_vec());
-        }
-        offset = end;
     }
-    let json = json.ok_or_else(|| "glb missing json chunk".to_string())?;
-    let bin = bin.ok_or_else(|| "glb missing bin chunk".to_string())?;
-    let root: serde_json::Value = serde_json::from_str(&json).map_err(|err| err.to_string())?;
-    let accessors = root
-        .get("accessors")
-        .and_then(|v| v.as_array())
-        .ok_or_else(|| "glb missing accessors".to_string())?;
-    let buffer_views = root
-        .get("bufferViews")
-        .and_then(|v| v.as_array())
-        .ok_or_else(|| "glb missing bufferViews".to_string())?;
-    let meshes = root
-        .get("meshes")
-        .and_then(|v| v.as_array())
-        .ok_or_else(|| "glb missing meshes".to_string())?;
-    let primitive = meshes[0]
-        .get("primitives")
-        .and_then(|v| v.as_array())
-        .and_then(|v| v.first())
-        .ok_or_else(|| "glb missing primitive".to_string())?;
-    let position_accessor = primitive
-        .get("attributes")
-        .and_then(|v| v.get("POSITION"))
-        .and_then(|v| v.as_u64())
-        .ok_or_else(|| "glb missing POSITION".to_string())? as usize;
-    let normal_accessor = primitive
-        .get("attributes")
-        .and_then(|v| v.get("NORMAL"))
-        .and_then(|v| v.as_u64());
-    let index_accessor = primitive
-        .get("indices")
-        .and_then(|v| v.as_u64())
-        .ok_or_else(|| "glb missing indices".to_string())? as usize;
-    let positions = read_accessor_f32_vec3(&accessors[position_accessor], &buffer_views, &bin)?;
-    let normals = if let Some(index) = normal_accessor {
-        read_accessor_f32_vec3(&accessors[index as usize], &buffer_views, &bin)?
+    result
+}
+
+fn glb_transform_point(matrix: GlbMatrix, point: [f32; 3]) -> [f32; 3] {
+    [
+        matrix[0][0] * point[0] + matrix[1][0] * point[1] + matrix[2][0] * point[2] + matrix[3][0],
+        matrix[0][1] * point[0] + matrix[1][1] * point[1] + matrix[2][1] * point[2] + matrix[3][1],
+        matrix[0][2] * point[0] + matrix[1][2] * point[1] + matrix[2][2] * point[2] + matrix[3][2],
+    ]
+}
+
+fn glb_transform_normal(matrix: GlbMatrix, normal: [f32; 3]) -> [f32; 3] {
+    let (a00, a01, a02) = (matrix[0][0], matrix[1][0], matrix[2][0]);
+    let (a10, a11, a12) = (matrix[0][1], matrix[1][1], matrix[2][1]);
+    let (a20, a21, a22) = (matrix[0][2], matrix[1][2], matrix[2][2]);
+    let det = a00 * (a11 * a22 - a12 * a21) - a01 * (a10 * a22 - a12 * a20) + a02 * (a10 * a21 - a11 * a20);
+    if det.abs() <= f32::EPSILON {
+        return normal;
+    }
+    let inverse_det = det.recip();
+    let transformed = [
+        ((a11 * a22 - a12 * a21) * normal[0] + (a12 * a20 - a10 * a22) * normal[1] + (a10 * a21 - a11 * a20) * normal[2]) * inverse_det,
+        ((a02 * a21 - a01 * a22) * normal[0] + (a00 * a22 - a02 * a20) * normal[1] + (a01 * a20 - a00 * a21) * normal[2]) * inverse_det,
+        ((a01 * a12 - a02 * a11) * normal[0] + (a02 * a10 - a00 * a12) * normal[1] + (a00 * a11 - a01 * a10) * normal[2]) * inverse_det,
+    ];
+    let length = transformed.iter().map(|value| value * value).sum::<f32>().sqrt();
+    if length <= f32::EPSILON {
+        normal
     } else {
-        Vec::new()
+        transformed.map(|value| value / length)
+    }
+}
+
+fn glb_triangle_indices(mode: gltf::mesh::Mode, source: Vec<u32>) -> Vec<u32> {
+    match mode {
+        gltf::mesh::Mode::Triangles => source,
+        gltf::mesh::Mode::TriangleStrip => source.windows(3).enumerate().flat_map(|(index, tri)| if index % 2 == 0 { [tri[0], tri[1], tri[2]] } else { [tri[1], tri[0], tri[2]] }).collect(),
+        gltf::mesh::Mode::TriangleFan => source.first().map(|first| source[1..].windows(2).flat_map(|pair| [*first, pair[0], pair[1]]).collect()).unwrap_or_default(),
+        _ => Vec::new(),
+    }
+}
+
+fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    if !matches!(primitive.mode(), gltf::mesh::Mode::Triangles | gltf::mesh::Mode::TriangleStrip | gltf::mesh::Mode::TriangleFan) {
+        return Ok(());
+    }
+    let reader = primitive.reader(|buffer| (buffer.index() == 0).then_some(bin));
+    let positions: Vec<[f32; 3]> = reader.read_positions().ok_or_else(|| "glb triangle primitive missing POSITION".to_string())?.collect();
+    let source_indices: Vec<u32> = reader.read_indices().map(|indices| indices.into_u32().collect()).unwrap_or_else(|| (0..positions.len() as u32).collect());
+    let indices = glb_triangle_indices(primitive.mode(), source_indices);
+    if indices.iter().any(|index| *index as usize >= positions.len()) {
+        return Err("glb triangle index outside POSITION accessor".into());
+    }
+    let normals: Vec<[f32; 3]> = if let Some(normals) = reader.read_normals() {
+        normals.collect()
+    } else {
+        let mut local = MeshData {
+            positions: positions.iter().flatten().copied().collect(),
+            indices: indices.clone(),
+            ..Default::default()
+        };
+        local.compute_normals();
+        local.normals.as_chunks::<3>().0.to_vec()
     };
-    let indices = read_accessor_u32(&accessors[index_accessor], &buffer_views, &bin)?;
-    let mut mesh = MeshData {
-        positions,
-        normals,
-        colors: Vec::new(),
-        indices,
-        ..Default::default()
-    };
-    if mesh.normals.is_empty() {
-        mesh.compute_normals();
+    if normals.len() != positions.len() {
+        return Err("glb NORMAL and POSITION accessor counts differ".into());
+    }
+    let vertex_offset = mesh.vertex_count() as u32;
+    mesh.positions.extend(positions.into_iter().flat_map(|position| glb_transform_point(matrix, position)));
+    mesh.normals.extend(normals.into_iter().flat_map(|normal| glb_transform_normal(matrix, normal)));
+    mesh.indices.extend(indices.into_iter().map(|index| vertex_offset + index));
+    Ok(())
+}
+
+fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    for primitive in source.primitives() {
+        append_glb_primitive(mesh, primitive, matrix, bin)?;
+    }
+    Ok(())
+}
+
+fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    let matrix = glb_matrix_mul(parent, node.transform().matrix());
+    if let Some(source) = node.mesh() {
+        append_glb_mesh(mesh, source, matrix, bin)?;
+    }
+    for child in node.children() {
+        append_glb_node(mesh, child, matrix, bin)?;
+    }
+    Ok(())
+}
+
+/// 🧊 Decodes every triangle primitive in the active GLB scene into one renderer-neutral mesh.
+pub fn mesh_from_glb(bytes: &[u8]) -> Result<MeshData, String> {
+    let gltf = gltf::Gltf::from_slice(bytes).map_err(|error| error.to_string())?;
+    let bin = gltf.blob.as_deref().ok_or_else(|| "glb missing BIN chunk".to_string())?;
+    let mut mesh = MeshData::default();
+    if let Some(scene) = gltf.default_scene().or_else(|| gltf.scenes().next()) {
+        for node in scene.nodes() {
+            append_glb_node(&mut mesh, node, glb_identity(), bin)?;
+        }
+    } else {
+        for source in gltf.meshes() {
+            append_glb_mesh(&mut mesh, source, glb_identity(), bin)?;
+        }
+    }
+    if mesh.indices.is_empty() {
+        return Err("glb contains no triangle primitives".into());
     }
     Ok(mesh)
-}
-
-fn read_accessor_f32_vec3(
-    accessor: &serde_json::Value,
-    buffer_views: &[serde_json::Value],
-    bin: &[u8],
-) -> Result<Vec<f32>, String> {
-    let count = accessor.get("count").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let view_index = accessor.get("bufferView").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let byte_offset = accessor
-        .get("byteOffset")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(0) as usize;
-    let view = &buffer_views[view_index];
-    let view_offset = view.get("byteOffset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let start = view_offset + byte_offset;
-    let mut out = Vec::with_capacity(count * 3);
-    for index in 0..count {
-        let base = start + index * 12;
-        if base + 12 > bin.len() {
-            break;
-        }
-        for axis in 0..3 {
-            let value = f32::from_le_bytes(bin[base + axis * 4..base + axis * 4 + 4].try_into().unwrap());
-            out.push(value);
-        }
-    }
-    Ok(out)
-}
-
-fn read_accessor_u32(
-    accessor: &serde_json::Value,
-    buffer_views: &[serde_json::Value],
-    bin: &[u8],
-) -> Result<Vec<u32>, String> {
-    let count = accessor.get("count").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let view_index = accessor.get("bufferView").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let byte_offset = accessor
-        .get("byteOffset")
-        .and_then(|v| v.as_u64())
-        .unwrap_or(0) as usize;
-    let view = &buffer_views[view_index];
-    let view_offset = view.get("byteOffset").and_then(|v| v.as_u64()).unwrap_or(0) as usize;
-    let start = view_offset + byte_offset;
-    let mut out = Vec::with_capacity(count);
-    for index in 0..count {
-        let base = start + index * 4;
-        if base + 4 > bin.len() {
-            break;
-        }
-        out.push(u32::from_le_bytes(bin[base..base + 4].try_into().unwrap()));
-    }
-    Ok(out)
 }
 
 fn f32_slice_to_bytes(values: &[f32]) -> Vec<u8> {
@@ -2505,6 +2501,15 @@ mod tests {
         assert_eq!(decoded.indices.len(), mesh.indices.len());
     }
 
+    /// 🏙️ Puzzle GLBs may start with non-triangle guide geometry before their renderable surfaces.
+    #[test]
+    fn glb_import_collects_triangle_primitives_after_guides() {
+        let decoded = mesh_from_glb(include_bytes!("../../../asset/metabolism/representation/capsule_J.glb")).expect("decode Puzzle GLB");
+        assert_eq!(decoded.vertex_count(), 1472);
+        assert_eq!(decoded.triangle_count(), 1750);
+        assert!(decoded.indices.iter().all(|index| (*index as usize) < decoded.vertex_count()));
+    }
+
     #[test]
     fn obj_round_trip() {
         let mesh = mesh_uv_sphere(1.0, 8, 6);
@@ -3263,7 +3268,7 @@ impl From<String> for ActionRef {
 //#region 🔖Utilities
 /// @emoji 🧰 Declares one interactive utility (a live-preview pointer mode) an app exposes. Distinct from
 /// an `ActionDefinition`: exactly one utility is active per window kind at a time, and activation is
-/// host-owned session view state (`ViewState.active_utility_id`), never a document field or VCS op.
+/// host-owned session view state (`ViewState.active_utility_id`), never a document field or VCS operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
 #[serde(rename_all = "camelCase")]
@@ -3432,7 +3437,7 @@ impl From<String> for CommandRef {
 /// Distinct from `UtilityDefinition` (a per-window pointer mode — a utility is a tool for a specific
 /// window) and `CommandDefinition` (a fire-once verb): exactly one tool is active per app at a time,
 /// and activation is host-owned session view state (`ViewState.active_tool_id`), never a document
-/// field or VCS op. A tool's live options are supplied dynamically via `DocumentApp::tool_measures`,
+/// field or VCS operation. A tool's live options are supplied dynamically via `DocumentApp::tool_measures`,
 /// keyed by tool id — not part of this static declaration.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
@@ -3880,6 +3885,40 @@ impl IntroductionPoint {
     }
 }
 
+/// @emoji 🖱️ Which mouse button a drag-like demonstration presses.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IntroductionPointerButton {
+    #[default]
+    Left,
+    Middle,
+    Right,
+}
+
+/// @emoji ⌨️ Keyboard modifier held during a drag-like demonstration.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum IntroductionKeyModifier {
+    Alt,
+    Shift,
+    Control,
+    Meta,
+}
+
+fn introduction_pointer_button_left() -> IntroductionPointerButton {
+    IntroductionPointerButton::Left
+}
+
+fn introduction_pointer_button_right() -> IntroductionPointerButton {
+    IntroductionPointerButton::Right
+}
+
+fn introduction_orbit_default_modifiers() -> Vec<IntroductionKeyModifier> {
+    vec![IntroductionKeyModifier::Alt]
+}
+
 /// @emoji 👆 A gesture a demonstration plays: the ghost cursor travels to (or between) `IntroductionPoint`s
 /// and performs the visual press/release affordance for the gesture kind.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3891,11 +3930,39 @@ pub enum IntroductionGesture {
     LeftClick { at: IntroductionPoint },
     RightClick { at: IntroductionPoint },
     DoubleClick { at: IntroductionPoint },
-    Drag { from: IntroductionPoint, to: IntroductionPoint },
+    Drag {
+        from: IntroductionPoint,
+        to: IntroductionPoint,
+        #[serde(default = "introduction_pointer_button_left", skip_serializing_if = "IntroductionPointerButton::is_left")]
+        button: IntroductionPointerButton,
+        #[serde(default, skip_serializing_if = "Vec::is_empty")]
+        modifiers: Vec<IntroductionKeyModifier>,
+    },
     Scroll { at: IntroductionPoint, delta_y: f64 },
     /// 🌐 A curved (not straight-line) drag around a pivot — camera orbit, distinct from `Drag`'s
     /// straight-line pan/reposition motion.
-    Orbit { from: IntroductionPoint, to: IntroductionPoint },
+    Orbit {
+        from: IntroductionPoint,
+        to: IntroductionPoint,
+        #[serde(default = "introduction_pointer_button_right", skip_serializing_if = "IntroductionPointerButton::is_right")]
+        button: IntroductionPointerButton,
+        #[serde(default = "introduction_orbit_default_modifiers", skip_serializing_if = "introduction_orbit_modifiers_is_default")]
+        modifiers: Vec<IntroductionKeyModifier>,
+    },
+}
+
+impl IntroductionPointerButton {
+    fn is_left(&self) -> bool {
+        matches!(self, Self::Left)
+    }
+
+    fn is_right(&self) -> bool {
+        matches!(self, Self::Right)
+    }
+}
+
+fn introduction_orbit_modifiers_is_default(modifiers: &[IntroductionKeyModifier]) -> bool {
+    modifiers == [IntroductionKeyModifier::Alt]
 }
 
 /// @emoji 🖱️ Ghost-cursor glyph, mirroring `ui.css`'s `--cursor-*` custom cursors.
@@ -3940,7 +4007,10 @@ impl IntroductionDemonstration {
 
     /// @emoji ✋ A click-and-drag demonstration from `from` to `to`.
     pub fn drag(from: IntroductionPoint, to: IntroductionPoint) -> Self {
-        Self { gesture: IntroductionGesture::Drag { from, to }, cursor: None }
+        Self {
+            gesture: IntroductionGesture::Drag { from, to, button: IntroductionPointerButton::Left, modifiers: vec![] },
+            cursor: None,
+        }
     }
 
     /// @emoji 🖲️ A scroll-wheel demonstration at `at`; `delta_y` sign conveys direction.
@@ -3950,7 +4020,15 @@ impl IntroductionDemonstration {
 
     /// @emoji 🌐 A camera-orbit demonstration curving from `from` to `to`.
     pub fn orbit(from: IntroductionPoint, to: IntroductionPoint) -> Self {
-        Self { gesture: IntroductionGesture::Orbit { from, to }, cursor: None }
+        Self {
+            gesture: IntroductionGesture::Orbit {
+                from,
+                to,
+                button: IntroductionPointerButton::Right,
+                modifiers: vec![IntroductionKeyModifier::Alt],
+            },
+            cursor: None,
+        }
     }
 }
 //#endregion 🔖Introduction
@@ -4563,12 +4641,12 @@ pub struct ViewState {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub active_utility_id: Option<String>,
-    /// 🧰 Host-owned active utility per window **instance** (never a document field, never a VCS op). The shell
+    /// 🧰 Host-owned active utility per window **instance** (never a document field, never a VCS operation). The shell
     /// sends the full map on every refresh so plugins can build per-pane scene state; tools stay mode-wide via
     /// `active_tool_id`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub active_utility_by_window_id: std::collections::HashMap<String, String>,
-    /// 🛠️ The host-owned active tool of the active mode (never a document field, never a VCS op) —
+    /// 🛠️ The host-owned active tool of the active mode (never a document field, never a VCS operation) —
     /// mutually exclusive with `active_utility_id`: activating one clears the other (see the React
     /// shell's `onAction` interceptors).
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -4871,7 +4949,7 @@ pub struct ActionInvocation {
 }
 
 /// @emoji 🎛️ A dispatched invocation of a `CommandDefinition` — the command mirror of `ActionInvocation`.
-/// No `causal_context`: commands are not chained off a prior op the way an action's follow-up can be.
+/// No `causal_context`: commands are not chained off a prior operation the way an action's follow-up can be.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CommandInvocation {
@@ -5149,7 +5227,7 @@ pub struct PayloadHash(pub String);
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct OpEnvelope {
+pub struct OperationEnvelope {
     pub id: OperationId,
     pub actor: ActorId,
     pub document: DocumentId,
@@ -5167,10 +5245,10 @@ pub enum OpDagError {
     Duplicate(String),
 }
 
-/// @emoji 🕸️ Causal DAG of exchanged {@link OpEnvelope}s: buffers envelopes until their deps are applied.
+/// @emoji 🕸️ Causal DAG of exchanged {@link OperationEnvelope}s: buffers envelopes until their deps are applied.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct OpDag {
-    envelopes: std::collections::HashMap<String, OpEnvelope>,
+    envelopes: std::collections::HashMap<String, OperationEnvelope>,
     applied: std::collections::HashSet<String>,
     applied_order: Vec<String>,
     drained: usize,
@@ -5189,7 +5267,7 @@ impl OpDag {
         Self::default()
     }
 
-    pub fn insert(&mut self, envelope: OpEnvelope) -> Result<InsertResult, OpDagError> {
+    pub fn insert(&mut self, envelope: OperationEnvelope) -> Result<InsertResult, OpDagError> {
         let id = envelope.id.0.clone();
         if self.applied.contains(&id) {
             return Ok(InsertResult::AlreadyApplied);
@@ -5212,7 +5290,7 @@ impl OpDag {
         Ok(InsertResult::Applied)
     }
 
-    pub fn ready(&self) -> Vec<&OpEnvelope> {
+    pub fn ready(&self) -> Vec<&OperationEnvelope> {
         self.pending
             .iter()
             .filter_map(|id| self.envelopes.get(id))
@@ -5230,7 +5308,7 @@ impl OpDag {
     }
 
     /// @emoji 🧺 Drains envelopes applied since the last drain, in causal application order.
-    pub fn drain_applied_envelopes(&mut self) -> Vec<OpEnvelope> {
+    pub fn drain_applied_envelopes(&mut self) -> Vec<OperationEnvelope> {
         let fresh: Vec<String> = self.applied_order[self.drained..].to_vec();
         self.drained = self.applied_order.len();
         fresh
@@ -5341,8 +5419,8 @@ pub enum HubClientFrame {
         token: Option<String>,
         since_version: i64,
     },
-    Ops {
-        envelopes: Vec<OpEnvelope>,
+    Operations {
+        envelopes: Vec<OperationEnvelope>,
     },
     PutEnvelope {
         version: i64,
@@ -5363,11 +5441,11 @@ pub enum HubServerFrame {
         #[serde(default, skip_serializing_if = "Option::is_none")]
         envelope: Option<Value>,
         presence: Vec<PresencePeer>,
-        backlog: Vec<OpEnvelope>,
+        backlog: Vec<OperationEnvelope>,
     },
-    Ops {
+    Operations {
         version: i64,
-        envelopes: Vec<OpEnvelope>,
+        envelopes: Vec<OperationEnvelope>,
         origin: String,
     },
     SnapshotReplaced {
@@ -5378,7 +5456,7 @@ pub enum HubServerFrame {
         peers: Vec<PresencePeer>,
     },
     Ack {
-        op_id: String,
+        operation_id: String,
         version: i64,
     },
     Conflict {
@@ -5394,8 +5472,8 @@ pub enum HubServerFrame {
 mod op_dag_tests {
     use super::*;
 
-    fn sample_envelope(id: &str, deps: Vec<&str>) -> OpEnvelope {
-        OpEnvelope {
+    fn sample_envelope(id: &str, deps: Vec<&str>) -> OperationEnvelope {
+        OperationEnvelope {
             id: OperationId(id.into()),
             actor: ActorId("actor-1".into()),
             document: DocumentId("document-1".into()),
@@ -5423,11 +5501,11 @@ mod op_dag_tests {
     fn inserts_pending_until_dependencies_arrive() {
         let mut dag = OpDag::new();
         assert!(matches!(
-            dag.insert(sample_envelope("op-2", vec!["op-1"])),
+            dag.insert(sample_envelope("operation-2", vec!["operation-1"])),
             Ok(InsertResult::Pending)
         ));
         assert!(matches!(
-            dag.insert(sample_envelope("op-1", vec![])),
+            dag.insert(sample_envelope("operation-1", vec![])),
             Ok(InsertResult::Applied)
         ));
         assert_eq!(dag.applied_ids().len(), 2);
@@ -5436,18 +5514,18 @@ mod op_dag_tests {
     #[test]
     fn drains_applied_envelopes_in_causal_order() {
         let mut dag = OpDag::new();
-        dag.insert(sample_envelope("op-2", vec!["op-1"])).unwrap();
-        dag.insert(sample_envelope("op-1", vec![])).unwrap();
+        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
+        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
         let drained = dag.drain_applied_envelopes();
         assert_eq!(
             drained.iter().map(|envelope| envelope.id.0.clone()).collect::<Vec<_>>(),
-            vec!["op-1".to_string(), "op-2".to_string()]
+            vec!["operation-1".to_string(), "operation-2".to_string()]
         );
         assert!(dag.drain_applied_envelopes().is_empty(), "second drain yields nothing new");
-        dag.insert(sample_envelope("op-3", vec![])).unwrap();
+        dag.insert(sample_envelope("operation-3", vec![])).unwrap();
         let drained = dag.drain_applied_envelopes();
         assert_eq!(drained.len(), 1);
-        assert_eq!(drained[0].id.0, "op-3");
+        assert_eq!(drained[0].id.0, "operation-3");
     }
 }
 //#endregion 🔖Sync
@@ -5607,7 +5685,7 @@ mod app_document_tests {
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
         CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
-        IntroductionInteraction, IntroductionInteractionKind, IntroductionPoint, IntroductionStepDefinition,
+        IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
         Modes, ToolDefinition, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
@@ -5999,9 +6077,20 @@ mod app_document_tests {
             (IntroductionGesture::LeftClick { at: at.clone() }, "leftClick"),
             (IntroductionGesture::RightClick { at: at.clone() }, "rightClick"),
             (IntroductionGesture::DoubleClick { at: at.clone() }, "doubleClick"),
-            (IntroductionGesture::Drag { from: at.clone(), to: at.clone() }, "drag"),
+            (
+                IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] },
+                "drag",
+            ),
             (IntroductionGesture::Scroll { at: at.clone(), delta_y: 100.0 }, "scroll"),
-            (IntroductionGesture::Orbit { from: at.clone(), to: at.clone() }, "orbit"),
+            (
+                IntroductionGesture::Orbit {
+                    from: at.clone(),
+                    to: at.clone(),
+                    button: IntroductionPointerButton::Right,
+                    modifiers: vec![IntroductionKeyModifier::Alt],
+                },
+                "orbit",
+            ),
         ] {
             let json = serde_json::to_string(&gesture).unwrap();
             assert!(json.contains(&format!("\"kind\":\"{tag}\"")), "{json}");
@@ -6018,6 +6107,44 @@ mod app_document_tests {
     }
 
     #[test]
+    fn introduction_gesture_drag_orbit_default_button_and_modifiers() {
+        let at = IntroductionPoint::Element { id: "puzzle3d-main".into(), offset: None };
+        let drag: IntroductionGesture = serde_json::from_str(r#"{"kind":"drag","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
+        assert_eq!(
+            drag,
+            IntroductionGesture::Drag { from: at.clone(), to: at.clone(), button: IntroductionPointerButton::Left, modifiers: vec![] }
+        );
+        let drag_json = serde_json::to_string(&drag).unwrap();
+        assert!(!drag_json.contains("button"), "{drag_json}");
+        assert!(!drag_json.contains("modifiers"), "{drag_json}");
+
+        let orbit: IntroductionGesture = serde_json::from_str(r#"{"kind":"orbit","from":{"kind":"element","id":"puzzle3d-main"},"to":{"kind":"element","id":"puzzle3d-main"}}"#).unwrap();
+        assert_eq!(
+            orbit,
+            IntroductionGesture::Orbit {
+                from: at.clone(),
+                to: at.clone(),
+                button: IntroductionPointerButton::Right,
+                modifiers: vec![IntroductionKeyModifier::Alt],
+            }
+        );
+        let orbit_json = serde_json::to_string(&orbit).unwrap();
+        assert!(!orbit_json.contains("button"), "{orbit_json}");
+        assert!(!orbit_json.contains("modifiers"), "{orbit_json}");
+
+        let middle_drag = IntroductionGesture::Drag {
+            from: at.clone(),
+            to: at.clone(),
+            button: IntroductionPointerButton::Middle,
+            modifiers: vec![],
+        };
+        let middle_json = serde_json::to_string(&middle_drag).unwrap();
+        assert!(middle_json.contains("\"button\":\"middle\""), "{middle_json}");
+        let round: IntroductionGesture = serde_json::from_str(&middle_json).unwrap();
+        assert_eq!(round, middle_drag);
+    }
+
+    #[test]
     fn introduction_demonstration_round_trips_and_defaults() {
         let at = IntroductionPoint::Element { id: "transform".into(), offset: None };
         let demo = IntroductionDemonstration::left_click(at.clone());
@@ -6027,7 +6154,10 @@ mod app_document_tests {
         let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
         assert_eq!(round, demo);
 
-        let with_cursor = IntroductionDemonstration { gesture: IntroductionGesture::Drag { from: at.clone(), to: at }, cursor: Some(IntroductionCursor::Grabbing) };
+        let with_cursor = IntroductionDemonstration {
+            gesture: IntroductionGesture::Drag { from: at.clone(), to: at, button: IntroductionPointerButton::Left, modifiers: vec![] },
+            cursor: Some(IntroductionCursor::Grabbing),
+        };
         let json = serde_json::to_string(&with_cursor).unwrap();
         assert!(json.contains("\"cursor\":\"grabbing\""), "{json}");
         let round: IntroductionDemonstration = serde_json::from_str(&json).unwrap();
@@ -6326,6 +6456,8 @@ mod app_document_tests {
         crate::ui::IntroductionInteraction::export().unwrap();
         crate::ui::IntroductionLogo::export().unwrap();
         crate::ui::IntroductionPoint::export().unwrap();
+        crate::ui::IntroductionPointerButton::export().unwrap();
+        crate::ui::IntroductionKeyModifier::export().unwrap();
         crate::ui::IntroductionGesture::export().unwrap();
         crate::ui::IntroductionCursor::export().unwrap();
         crate::ui::IntroductionDemonstration::export().unwrap();
@@ -6382,7 +6514,7 @@ pub use ui::kernel::{
     CapabilityToken, ActionContext, ActionDef, ActionId, ActionInvocation, CommandContext, CommandId, CommandInvocation,
     ActionRequest, InvocationId, InvocationResult, Diagnostic, HostEffect, HubClientFrame, HubServerFrame, HybridLogicalTimestamp, IconRenderExportItem, InverseOperation,
     InsertResult, KernelOperation, MergeStrategyKind, DocumentDiff, DocumentHandle, DocumentId, DocumentKind,
-    DocumentVersion, OpDag, OpDagError, OpEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
+    DocumentVersion, OpDag, OpDagError, OperationEnvelope, OperationId, PayloadHash, PhysicalSize, PluginInstanceId, PresencePeer,
     PresencePoint, PresenceViewport,
     ResourceId, ResourceKind, Appearance, Rights, SchemaId, SchemaVersion, Scope, UndoGroup, UndoPolicy,
     WindowEvent, WindowHandle, WindowInput, WindowKindDef, WindowKindId, WindowOutput,

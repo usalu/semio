@@ -5,12 +5,12 @@
   "label": "Construct Hull From 2 Points And Height",
   "steps": [
     {
-      "op": "kernel.call",
+      "operation": "kernel.call",
       "function": "spatial.action.capability",
       "assignTo": "result"
     },
     {
-      "op": "return",
+      "operation": "return",
       "result": {
         "kind": "var",
         "name": "result"

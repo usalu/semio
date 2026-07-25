@@ -1,6 +1,6 @@
 //! 📏 Norm plugin — one WASM DocumentApp per norm family with headless NormHost-backed compliance.
 
-use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOp};
+use norm_core::{CheckReport, NormFamily, NormHost, SetDocumentOperation};
 #[cfg(test)]
 use semio_framework_plugin::testkit;
 use semio_framework_plugin::{
@@ -38,7 +38,7 @@ macro_rules! define_norm_family_app {
 
             type Family = family_crate::$family_ty;
             type Document = family_crate::Document;
-            type Op = family_crate::Op;
+            type Operation = family_crate::Operation;
 
             const BODY_INPUTS: &str = concat!("norm.", $variant, ".play.inputs");
             const BODY_RESULTS: &str = concat!("norm.", $variant, ".play.results");
@@ -53,7 +53,7 @@ macro_rules! define_norm_family_app {
 
             impl DocumentApp for $app_struct {
                 type Projection = Document;
-                type Op = Op;
+                type Operation = Operation;
 
                 fn app_id(&self) -> &str {
                     $app_id
@@ -67,15 +67,15 @@ macro_rules! define_norm_family_app {
                     Document::default()
                 }
 
-                fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> ActionEmit<Self::Op> {
+                fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> ActionEmit<Self::Operation> {
                     match action {
                         "setDocument" => {
                             if let Some(next) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<Document>(value.clone()).ok()) {
-                                return ActionEmit::commit(vec![SetDocumentOp::SetDocument { document: next }], "setDocument");
+                                return ActionEmit::commit(vec![SetDocumentOperation::SetDocument { document: next }], "setDocument");
                             }
                         }
                         "evaluate" => {
-                            return ActionEmit::commit(vec![SetDocumentOp::SetDocument { document: doc.projection.clone() }], "evaluate");
+                            return ActionEmit::commit(vec![SetDocumentOperation::SetDocument { document: doc.projection.clone() }], "evaluate");
                         }
                         _ => {}
                     }

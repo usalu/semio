@@ -148,7 +148,7 @@
             error: function (e) {
               throw new Error(e);
             },
-            noop: function () {},
+            no_operation: function () {},
             isPlainObject: function (e) {
               var t, n;
               return !(!e || "[object Object]" !== p.call(e) || ((t = a(e)) && ("function" != typeof (n = d.call(t, "constructor") && t.constructor) || h.call(n) !== g)));

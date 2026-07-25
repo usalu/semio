@@ -15,7 +15,7 @@ todos:
    content: Skip foreground-tagged layers when building the pre-blur scene_color backdrop in render_scene_content
    status: completed
  - id: foreground-pass
-   content: Add post-composite foreground render pass in composite_to_swapchain reusing render_interleaved_layers/upload_world_passes, targeting swapchain with LoadOp::Load
+   content: Add post-composite foreground render pass in composite_to_swapchain reusing render_interleaved_layers/upload_world_passes, targeting swapchain with LoadOperation::Load
    status: completed
  - id: migrate-panel
    content: Wrap render_floating_panel content (borders, tabs, widget body) with glass-content markers (framework/renderer/wgpu/rs/lib.rs)
@@ -59,7 +59,7 @@ This is self-contained to the `draw` module in `ui/wgpu/rs/lib.rs`; no call-site
 
 The glass fragment shader (`GLASS_SHADER`, line ~4512) returns `fill_alpha` close to `1.0` everywhere inside the rounded rect (only the AA edge fades out), and the pipeline blends with `wgpu::BlendState::ALPHA_BLENDING`. That means compositing a glass region is effectively an **opaque replace** of whatever was already drawn at that pixel -- by design, since it's meant to draw a frosted background _before_ any foreground content.
 
-`composite_to_swapchain` (line 2698) runs in this order: blit `draw`'s already-rendered scene to the swapchain, **then** composite `draw.glass_regions` on top, **then** (if present) composite `overlay.glass_regions` and finally render `overlay`'s own content via `render_overlay` (line 3013, `LoadOp::Load`) crisply on top of its glass.
+`composite_to_swapchain` (line 2698) runs in this order: blit `draw`'s already-rendered scene to the swapchain, **then** composite `draw.glass_regions` on top, **then** (if present) composite `overlay.glass_regions` and finally render `overlay`'s own content via `render_overlay` (line 3013, `LoadOperation::Load`) crisply on top of its glass.
 
 - Context menus / dropdowns / palette / select-popup push both their glass region and their row content onto `overlay` (`framework/renderer/wgpu/rs/lib.rs` lines 9178, 9243, 9954, 9987, 10034) -- so they get the correct order: glass first, crisp content after. This is why menus already look right.
 - The side panel (`render_floating_panel`, line 8531; glass pushed at line 8559) and the window-options rails (`render_window_measures_rail` line 9366 / glass at 9412, `render_window_engagement_rail` line 9649 / glass at 9706) push **both** their glass region and all of their own content (borders, tabs, header, chrome-group buttons, the entire scrollable widget body via `render_ui_node`) onto `draw`. Because `draw`'s content is rendered and blitted to the swapchain _before_ `draw.glass_regions` is composited, the opaque glass pass completely overwrites the panel's own crisp content -- this is why panels currently show only a blurred/tinted rect with no visible text or controls.
@@ -77,7 +77,7 @@ Add a proper foreground tier to `DrawList` (`ui/wgpu/rs/lib.rs`) that supports t
 
 2. **`UiPipelines::render_scene_content`**: when calling `build_layer_batches(draw)` (line 1420) to populate the pre-blur `scene_color`, skip layers tagged `foreground_of: Some(_)` -- so panel/rail content never bleeds into what gets sampled as "behind" it, and the backdrop shown through the glass genuinely reflects what's visually behind the panel.
 
-3. **`UiPipelines::composite_to_swapchain`**: immediately after compositing `draw.glass_regions` (line 2715), add a new step that reuses the existing interleaved renderer (`render_interleaved_layers`, `upload_world_passes`) but scoped to only the foreground-tagged layers, targeting the swapchain view with `LoadOp::Load` (same pattern as `render_overlay`, but with 3D-world support). This draws panel/rail content -- text, icons, buttons, and any embedded `ComponentScene` -- crisply on top of the already-composited glass background.
+3. **`UiPipelines::composite_to_swapchain`**: immediately after compositing `draw.glass_regions` (line 2715), add a new step that reuses the existing interleaved renderer (`render_interleaved_layers`, `upload_world_passes`) but scoped to only the foreground-tagged layers, targeting the swapchain view with `LoadOperation::Load` (same pattern as `render_overlay`, but with 3D-world support). This draws panel/rail content -- text, icons, buttons, and any embedded `ComponentScene` -- crisply on top of the already-composited glass background.
 
 4. **`framework/renderer/wgpu/rs/lib.rs`**: wrap the content-emitting calls with the new begin/end markers, tied to each function's `push_glass` call:
    - `render_floating_panel` (8531): borders (8575-8578), tab bar (8580-8639), scissor + `render_ui_node` body (8652-8681).

@@ -86,7 +86,7 @@ File: [procedural/play/index.ts](procedural/play/index.ts) (`ProceduralPlayContr
   - output channel -> itself `(widget, port)`.
   - input channel -> edge whose target `== widget:port` -> source `(srcWidget, srcPort)`.
   - no channel but node hovered/selected -> every output `portId` present in `previewItems` for that widget (the "all outputs" rule).
-- Commands: `setHoverChannel`, `setSelectChannels` (used by both the flow pane and the 3D pane); keep node-level `setHover`/`setSelection` for node-body and other UI. Prefer channel over node-body when a channel is present. Bump `interactionRevision`; guard no-op updates.
+- Commands: `setHoverChannel`, `setSelectChannels` (used by both the flow pane and the 3D pane); keep node-level `setHover`/`setSelection` for node-body and other UI. Prefer channel over node-body when a channel is present. Bump `interactionRevision`; guard no-operation updates.
 
 ## Step 5 - Playground hosts wiring
 

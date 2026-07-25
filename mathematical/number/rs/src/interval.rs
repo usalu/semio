@@ -109,7 +109,7 @@ impl Interval {
         Self { lo: self.lo.min(other.lo), hi: self.hi.max(other.hi) }
     }
 
-    // #region 🔖CertifiedOps
+    // #region 🔖CertifiedOperations
     pub fn neg(&self) -> Self {
         Self { lo: -self.hi, hi: -self.lo }
     }
@@ -180,7 +180,7 @@ impl Interval {
         }
         result
     }
-    // #endregion 🔖CertifiedOps
+    // #endregion 🔖CertifiedOperations
 
     // #region 🔖HeuristicTranscendental
     /// 🌊 Heuristic (not certified): widens the libm result by 4 ulps per side. Platform libm is

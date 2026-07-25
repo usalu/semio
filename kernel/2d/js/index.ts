@@ -96,12 +96,12 @@ export interface DrawingWasmBridge {
   importDwg(dwgBase64: string): DrawingRef;
   dispose(handle: DrawingRef | string): void;
   traceBitmap(width: number, height: number, maskOrLuma: Uint8Array, threshold: number, simplifyEpsilon: number): PathSegment[];
-  booleanPaths(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[];
-  booleanPathsMany(inputs: readonly (readonly PathSegment[])[], op: DrawBooleanOp): PathSegment[];
+  booleanPaths(a: readonly PathSegment[], b: readonly PathSegment[], operator: DrawBooleanOperation): PathSegment[];
+  booleanPathsMany(inputs: readonly (readonly PathSegment[])[], operator: DrawBooleanOperation): PathSegment[];
 }
 
-export const DRAW_BOOLEAN_OPS = ["union", "difference", "intersection", "xor"] as const;
-export type DrawBooleanOp = (typeof DRAW_BOOLEAN_OPS)[number];
+export const DRAW_BOOLEAN_OPERATIONS = ["union", "difference", "intersection", "xor"] as const;
+export type DrawBooleanOperation = (typeof DRAW_BOOLEAN_OPERATIONS)[number];
 // #endregion 📐Contracts
 
 // #region 📤ExportPorts
@@ -340,7 +340,7 @@ type DrawingWasmModule = {
   export_drawing_dwg?: (handle: string) => string;
   import_drawing_dwg?: (dataBase64: string) => string;
   trace_drawing_bitmap?: (width: number, height: number, mask: Uint8Array, threshold: number, simplifyEpsilon: number) => string;
-  boolean_drawing_segments?: (aJson: string, bJson: string, op: string) => string;
+  boolean_drawing_segments?: (aJson: string, bJson: string, operation: string) => string;
   initSync?: (input: { module: BufferSource }) => void;
   default?: (input?: unknown) => Promise<unknown>;
 };
@@ -365,9 +365,9 @@ function encodeSegmentsForWasm(segments: readonly PathSegment[]): string {
 }
 
 /** @emoji 🔀 Client-side boolean fallback when WASM is unavailable. */
-export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
-  if (op === "union") return [...a, ...b];
-  if (op === "difference") return [...a];
+export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSegment[], operator: DrawBooleanOperation): PathSegment[] {
+  if (operation === "union") return [...a, ...b];
+  if (operation === "difference") return [...a];
   return [...a];
 }
 
@@ -440,11 +440,11 @@ function traceBitmapViaWasm(module: DrawingWasmModule, width: number, height: nu
   return parseSegmentsJson(json);
 }
 
-function booleanPathsViaWasm(module: DrawingWasmModule, a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
+function booleanPathsViaWasm(module: DrawingWasmModule, a: readonly PathSegment[], b: readonly PathSegment[], operator: DrawBooleanOperation): PathSegment[] {
   if (typeof module.boolean_drawing_segments !== "function") {
-    return booleanPathsClient(a, b, op);
+    return booleanPathsClient(a, b, operation);
   }
-  const json = module.boolean_drawing_segments(encodeSegmentsForWasm(a), encodeSegmentsForWasm(b), op);
+  const json = module.boolean_drawing_segments(encodeSegmentsForWasm(a), encodeSegmentsForWasm(b), operation);
   return parseSegmentsJson(json);
 }
 
@@ -480,14 +480,14 @@ export function createDrawingWasmBridge(module: DrawingWasmModule): DrawingExpor
     traceBitmap(width, height, maskOrLuma, threshold, simplifyEpsilon) {
       return traceBitmapViaWasm(module, width, height, maskOrLuma, threshold, simplifyEpsilon);
     },
-    booleanPaths(a, b, op) {
-      return booleanPathsViaWasm(module, a, b, op);
+    booleanPaths(a, b, operation) {
+      return booleanPathsViaWasm(module, a, b, operation);
     },
-    booleanPathsMany(inputs, op) {
+    booleanPathsMany(inputs, operation) {
       if (inputs.length === 0) return [];
       let acc = inputs[0]!;
       for (let i = 1; i < inputs.length; i += 1) {
-        acc = booleanPathsViaWasm(module, acc, inputs[i]!, op);
+        acc = booleanPathsViaWasm(module, acc, inputs[i]!, operation);
       }
       return [...acc];
     },

@@ -63,10 +63,10 @@ struct FlowHistory {
 
 - Helpers on `FlowHost`:
   - `fn content_changed(a: &FlowFixture, b: &FlowFixture) -> bool` → `a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout` (camera ignored; all derive `PartialEq`).
-  - `fn begin_change(&mut self)`: if `history.pending.is_none()` (not in a gesture), push `self.fixture.clone()` onto `past` and clear `future`. No-op during a gesture so a drag = one undo step.
+  - `fn begin_change(&mut self)`: if `history.pending.is_none()` (not in a gesture), push `self.fixture.clone()` onto `past` and clear `future`. No-operation during a gesture so a drag = one undo step.
   - `fn undo(&mut self) -> bool` / `redo(&mut self) -> bool`: pop from `past`/`future`, push current onto the other stack, set `self.fixture = snapshot` but preserve current `camera`, then `rebuild_dag()` + `evaluate_internal()`.
   - `fn can_undo(&self)` / `can_redo(&self)`.
-- Call `self.begin_change()` at the start of each discrete (non-gesture) mutation: `add_widget` (775), `remove_widget` (787), `connect_ports` (813), `add_input_port` (849), `remove_input_port` (892), `disconnect` (937), `reorganize` (949), `delete_selection` (1034), `align_selection` (1196), `set_slider_value` (1344), `set_note_text` (1356), `set_image_src` (1369). The `pending` guard makes these no-op when triggered inside a pointer gesture (e.g. port-insert from `pointer_down`).
+- Call `self.begin_change()` at the start of each discrete (non-gesture) mutation: `add_widget` (775), `remove_widget` (787), `connect_ports` (813), `add_input_port` (849), `remove_input_port` (892), `disconnect` (937), `reorganize` (949), `delete_selection` (1034), `align_selection` (1196), `set_slider_value` (1344), `set_note_text` (1356), `set_image_src` (1369). The `pending` guard makes these no-operation when triggered inside a pointer gesture (e.g. port-insert from `pointer_down`).
 - Gesture coalescing in pointer handlers:
   - `pointer_down_screen` (963): in the non-`pan` branch, set `history.pending = Some(self.fixture.clone())` before delegating to the dag.
   - `pointer_up_screen` (998): after `sync_from_dag()`, `if let Some(pre) = history.pending.take()` and `content_changed(&pre, &self.fixture)`, push `pre` to `past` and clear `future`. This captures widget drags, slider drags, wiring, disconnects, and port inserts as single steps.

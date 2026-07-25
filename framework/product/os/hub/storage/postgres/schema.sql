@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS hub_document (
     version BIGINT NOT NULL DEFAULT 0
 );
 
-CREATE TABLE IF NOT EXISTS hub_document_op (
+CREATE TABLE IF NOT EXISTS hub_document_operation (
     id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL REFERENCES hub_document(id) ON DELETE CASCADE,
     version BIGINT NOT NULL,
@@ -88,5 +88,5 @@ CREATE TABLE IF NOT EXISTS hub_blob (
 
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON hub_node (studio_id, parent_id);
-CREATE INDEX IF NOT EXISTS idx_op_document_version ON hub_document_op (document_id, version);
+CREATE INDEX IF NOT EXISTS idx_op_document_version ON hub_document_operation (document_id, version);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);

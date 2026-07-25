@@ -356,8 +356,8 @@ fn register_typed(registry: &mut Registry, info: OperatorInfo, operation: Box<dy
 }
 
 #[allow(clippy::too_many_arguments, reason = "positional geometry-operator registration helper; ~68 call sites forming this file's operator table, restructuring into a params struct would only churn call sites with no behavior change")]
-fn reg_geo(registry: &mut Registry, id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str], op: Box<dyn Operation>) {
-    register_untyped(registry, operator_info_with_outputs(id, name, abbr, icon, summary, inputs, vec![output], group), op, &["geometry"]);
+fn reg_geo(registry: &mut Registry, id: &str, name: &str, abbr: &str, icon: &str, summary: &str, inputs: Vec<ChannelSpec>, output: ChannelSpec, group: &[&str], operation: Box<dyn Operation>) {
+    register_untyped(registry, operator_info_with_outputs(id, name, abbr, icon, summary, inputs, vec![output], group), operation, &["geometry"]);
 }
 
 fn geometry_schema() -> Schema {
@@ -426,7 +426,7 @@ fn text_schema() -> Schema {
     Schema { id: "text".into(), module: "brep".into(), name: "Text".into(), icon: "emoji:📝".into(), summary: "Text payload".into(), fields: vec![FieldSpec::new("value", ValueType::Text)] }
 }
 
-macro_rules! geo_op {
+macro_rules! geo_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
@@ -441,10 +441,10 @@ macro_rules! geo_op {
     };
 }
 
-// 🔓 `num_op!`/`point_op!`/`vec_op!`/`text_op!` back exclusively `&self` `BrepKernel` trait
+// 🔓 `num_operation!`/`point_operation!`/`vec_operation!`/`text_operation!` back exclusively `&self` `BrepKernel` trait
 // methods (volume/area/length/center_of_mass/distance/curve_point/curve_tangent/curve_domain/
 // curve_curvature/surface_point/surface_normal/validate) — safe to route through the read lock.
-macro_rules! num_op {
+macro_rules! num_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
@@ -459,7 +459,7 @@ macro_rules! num_op {
     };
 }
 
-macro_rules! point_op {
+macro_rules! point_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
@@ -474,7 +474,7 @@ macro_rules! point_op {
     };
 }
 
-macro_rules! vec_op {
+macro_rules! vec_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
@@ -489,7 +489,7 @@ macro_rules! vec_op {
     };
 }
 
-macro_rules! text_op {
+macro_rules! text_operation {
     ($name:ident, $channel:literal, |$k:ident, $i:ident| $expr:expr) => {
         struct $name;
         impl Operation for $name {
@@ -506,11 +506,11 @@ macro_rules! text_op {
 // #endregion 🔖Helpers
 
 // #region 🔖Primitives
-geo_op!(BoxPrim, "solid", |k, i| k.box_prim(read_channel_number(i, "width")?, read_channel_number(i, "depth")?, read_channel_number(i, "height")?));
-geo_op!(SpherePrim, "solid", |k, i| k.sphere_prim(read_channel_number(i, "radius")?));
-geo_op!(CylinderPrim, "solid", |k, i| k.cylinder_prim(read_channel_number(i, "radius")?, read_channel_number(i, "height")?));
-geo_op!(ConePrim, "solid", |k, i| k.cone_prim(read_channel_number(i, "radius")?, read_channel_number(i, "height")?));
-geo_op!(TorusPrim, "solid", |k, i| k.torus_prim(read_channel_number(i, "major")?, read_channel_number(i, "minor")?));
+geo_operation!(BoxPrim, "solid", |k, i| k.box_prim(read_channel_number(i, "width")?, read_channel_number(i, "depth")?, read_channel_number(i, "height")?));
+geo_operation!(SpherePrim, "solid", |k, i| k.sphere_prim(read_channel_number(i, "radius")?));
+geo_operation!(CylinderPrim, "solid", |k, i| k.cylinder_prim(read_channel_number(i, "radius")?, read_channel_number(i, "height")?));
+geo_operation!(ConePrim, "solid", |k, i| k.cone_prim(read_channel_number(i, "radius")?, read_channel_number(i, "height")?));
+geo_operation!(TorusPrim, "solid", |k, i| k.torus_prim(read_channel_number(i, "major")?, read_channel_number(i, "minor")?));
 
 struct ConvexHullPrim;
 impl Operation for ConvexHullPrim {
@@ -525,10 +525,10 @@ impl Operation for ConvexHullPrim {
 // #endregion 🔖Primitives
 
 // #region 🔖Curves
-geo_op!(LineCurve, "curve", |k, i| k.line_curve(read_xyz(i, "start")?, read_xyz(i, "end")?));
-geo_op!(CircleCurve, "curve", |k, i| k.circle_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "radius")?));
-geo_op!(ArcCurve, "curve", |k, i| k.arc_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "radius")?, read_channel_number(i, "startAngle")?, read_channel_number(i, "endAngle")?,));
-geo_op!(EllipseCurve, "curve", |k, i| k.ellipse_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "semiMajor")?, read_channel_number(i, "semiMinor")?,));
+geo_operation!(LineCurve, "curve", |k, i| k.line_curve(read_xyz(i, "start")?, read_xyz(i, "end")?));
+geo_operation!(CircleCurve, "curve", |k, i| k.circle_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "radius")?));
+geo_operation!(ArcCurve, "curve", |k, i| k.arc_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "radius")?, read_channel_number(i, "startAngle")?, read_channel_number(i, "endAngle")?,));
+geo_operation!(EllipseCurve, "curve", |k, i| k.ellipse_curve(read_xyz(i, "center")?, read_xyz(i, "normal")?, read_channel_number(i, "semiMajor")?, read_channel_number(i, "semiMinor")?,));
 
 struct PolylineWire;
 impl Operation for PolylineWire {
@@ -541,8 +541,8 @@ impl Operation for PolylineWire {
     }
 }
 
-geo_op!(RectangleWire, "wire", |k, i| k.rectangle_wire(read_channel_number(i, "width")?, read_channel_number(i, "height")?));
-geo_op!(RegularPolygonWire, "wire", |k, i| k.regular_polygon_wire(read_channel_number(i, "radius")?, read_channel_number(i, "sides")? as usize));
+geo_operation!(RectangleWire, "wire", |k, i| k.rectangle_wire(read_channel_number(i, "width")?, read_channel_number(i, "height")?));
+geo_operation!(RegularPolygonWire, "wire", |k, i| k.regular_polygon_wire(read_channel_number(i, "radius")?, read_channel_number(i, "sides")? as usize));
 
 struct InterpolateCurve;
 impl Operation for InterpolateCurve {
@@ -569,11 +569,11 @@ impl Operation for ApproximateCurve {
     }
 }
 
-geo_op!(HelixCurve, "curve", |k, i| k.helix_curve(read_xyz(i, "origin")?, read_xyz(i, "axis")?, read_channel_number(i, "radius")?, read_channel_number(i, "pitch")?, read_channel_number(i, "turns")?,));
+geo_operation!(HelixCurve, "curve", |k, i| k.helix_curve(read_xyz(i, "origin")?, read_xyz(i, "axis")?, read_channel_number(i, "radius")?, read_channel_number(i, "pitch")?, read_channel_number(i, "turns")?,));
 // #endregion 🔖Curves
 
 // #region 🔖Surfaces
-geo_op!(PlaneSurface, "surface", |k, i| k.plane_surface(read_xyz(i, "origin")?, read_xyz(i, "normal")?));
+geo_operation!(PlaneSurface, "surface", |k, i| k.plane_surface(read_xyz(i, "origin")?, read_xyz(i, "normal")?));
 
 struct PlanarFacePoints;
 impl Operation for PlanarFacePoints {
@@ -586,7 +586,7 @@ impl Operation for PlanarFacePoints {
     }
 }
 
-geo_op!(PlanarFaceWire, "face", |k, i| k.planar_face_from_wire(&read_geometry(i, "wire")?));
+geo_operation!(PlanarFaceWire, "face", |k, i| k.planar_face_from_wire(&read_geometry(i, "wire")?));
 
 struct NurbsGridSurface;
 impl Operation for NurbsGridSurface {
@@ -614,8 +614,8 @@ impl Operation for CoonsPatch {
     }
 }
 
-geo_op!(OffsetFace, "face", |k, i| k.offset_face(&read_geometry(i, "face")?, read_channel_number(i, "distance")?));
-geo_op!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "face")?, read_channel_number(i, "thickness")?));
+geo_operation!(OffsetFace, "face", |k, i| k.offset_face(&read_geometry(i, "face")?, read_channel_number(i, "distance")?));
+geo_operation!(ThickenFace, "solid", |k, i| k.thicken_face(&read_geometry(i, "face")?, read_channel_number(i, "thickness")?));
 // #endregion 🔖Surfaces
 
 // #region 🔖Sweeps
@@ -647,8 +647,8 @@ impl Operation for ExtrudeFace {
         })
     }
 }
-geo_op!(Revolve, "solid", |k, i| k.revolve(&read_geometry(i, "face")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "angle")?,));
-geo_op!(Sweep, "solid", |k, i| k.sweep(&read_geometry(i, "profile")?, &read_geometry(i, "path")?));
+geo_operation!(Revolve, "solid", |k, i| k.revolve(&read_geometry(i, "face")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "angle")?,));
+geo_operation!(Sweep, "solid", |k, i| k.sweep(&read_geometry(i, "profile")?, &read_geometry(i, "path")?));
 
 struct Loft;
 impl Operation for Loft {
@@ -676,13 +676,13 @@ impl Operation for Pipe {
     }
 }
 
-geo_op!(HelicalSweep, "solid", |k, i| k.helical_sweep(&read_geometry(i, "profile")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "radius")?, read_channel_number(i, "pitch")?, read_channel_number(i, "turns")?,));
+geo_operation!(HelicalSweep, "solid", |k, i| k.helical_sweep(&read_geometry(i, "profile")?, read_xyz(i, "axisOrigin")?, read_xyz(i, "axisDirection")?, read_channel_number(i, "radius")?, read_channel_number(i, "pitch")?, read_channel_number(i, "turns")?,));
 // #endregion 🔖Sweeps
 
 // #region 🔖Booleans
-geo_op!(Fuse, "solid", |k, i| k.fuse(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
-geo_op!(Cut, "solid", |k, i| k.cut(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
-geo_op!(Intersect, "solid", |k, i| k.intersect(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+geo_operation!(Fuse, "solid", |k, i| k.fuse(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+geo_operation!(Cut, "solid", |k, i| k.cut(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+geo_operation!(Intersect, "solid", |k, i| k.intersect(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
 
 struct CompoundCut;
 impl Operation for CompoundCut {
@@ -698,14 +698,14 @@ impl Operation for CompoundCut {
 // #endregion 🔖Booleans
 
 // #region 🔖Transforms
-geo_op!(Translate, "geometry", |k, i| k.translate(&read_geometry(i, "geometry")?, read_xyz(i, "offset")?));
-geo_op!(Rotate, "geometry", |k, i| k.rotate(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
-geo_op!(Scale, "geometry", |k, i| k.scale(&read_geometry(i, "geometry")?, read_channel_number(i, "factor")?, read_xyz(i, "center")?));
-geo_op!(Mirror, "geometry", |k, i| k.mirror(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "normal")?));
-geo_op!(CopyShape, "geometry", |k, i| k.copy_shape(&read_geometry(i, "geometry")?));
-geo_op!(LinearPattern, "compound", |k, i| k.linear_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "direction")?, read_channel_number(i, "spacing")?, read_channel_number(i, "count")? as usize,));
-geo_op!(CircularPattern, "compound", |k, i| k.circular_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "count")? as usize,));
-geo_op!(GridPattern, "compound", |k, i| k.grid_pattern(
+geo_operation!(Translate, "geometry", |k, i| k.translate(&read_geometry(i, "geometry")?, read_xyz(i, "offset")?));
+geo_operation!(Rotate, "geometry", |k, i| k.rotate(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "angle")?));
+geo_operation!(Scale, "geometry", |k, i| k.scale(&read_geometry(i, "geometry")?, read_channel_number(i, "factor")?, read_xyz(i, "center")?));
+geo_operation!(Mirror, "geometry", |k, i| k.mirror(&read_geometry(i, "geometry")?, read_xyz(i, "origin")?, read_xyz(i, "normal")?));
+geo_operation!(CopyShape, "geometry", |k, i| k.copy_shape(&read_geometry(i, "geometry")?));
+geo_operation!(LinearPattern, "compound", |k, i| k.linear_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "direction")?, read_channel_number(i, "spacing")?, read_channel_number(i, "count")? as usize,));
+geo_operation!(CircularPattern, "compound", |k, i| k.circular_pattern(&read_geometry(i, "geometry")?, read_xyz(i, "axis")?, read_channel_number(i, "count")? as usize,));
+geo_operation!(GridPattern, "compound", |k, i| k.grid_pattern(
     &read_geometry(i, "geometry")?,
     read_xyz(i, "dirX")?,
     read_xyz(i, "dirY")?,
@@ -717,10 +717,10 @@ geo_op!(GridPattern, "compound", |k, i| k.grid_pattern(
 // #endregion 🔖Transforms
 
 // #region 🔖Features
-geo_op!(Fillet, "solid", |k, i| k.fillet(&read_geometry(i, "geometry")?, read_channel_number(i, "radius")?));
-geo_op!(FilletVariable, "solid", |k, i| k.fillet_variable(&read_geometry(i, "geometry")?, read_channel_number(i, "radiusStart")?, read_channel_number(i, "radiusEnd")?,));
-geo_op!(Chamfer, "solid", |k, i| k.chamfer(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
-geo_op!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geometry(i, "geometry")?, read_channel_number(i, "d1")?, read_channel_number(i, "d2")?,));
+geo_operation!(Fillet, "solid", |k, i| k.fillet(&read_geometry(i, "geometry")?, read_channel_number(i, "radius")?));
+geo_operation!(FilletVariable, "solid", |k, i| k.fillet_variable(&read_geometry(i, "geometry")?, read_channel_number(i, "radiusStart")?, read_channel_number(i, "radiusEnd")?,));
+geo_operation!(Chamfer, "solid", |k, i| k.chamfer(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
+geo_operation!(ChamferAsymmetric, "solid", |k, i| k.chamfer_asymmetric(&read_geometry(i, "geometry")?, read_channel_number(i, "d1")?, read_channel_number(i, "d2")?,));
 
 // 🎯 Selective-edge variants: fillet/chamfer only the given edges instead of the whole solid —
 // avoids the full-solid edge-count cost when a user selects just one or a few edges.
@@ -750,8 +750,8 @@ impl Operation for ChamferEdges {
     }
 }
 
-struct ShellOp;
-impl Operation for ShellOp {
+struct ShellOperation;
+impl Operation for ShellOperation {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
         with_kernel(|kernel| {
             let geometry = read_geometry(input, "geometry")?;
@@ -775,7 +775,7 @@ impl Operation for Draft {
     }
 }
 
-geo_op!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
+geo_operation!(OffsetSolid, "solid", |k, i| k.offset_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "distance")?));
 
 struct Defeature;
 impl Operation for Defeature {
@@ -847,8 +847,8 @@ impl Operation for SurfaceSurfaceIntersect {
 // #endregion 🔖Intersect
 
 // #region 🔖Evaluate
-point_op!(CurvePoint, "point", |k, i| k.curve_point(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
-vec_op!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+point_operation!(CurvePoint, "point", |k, i| k.curve_point(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+vec_operation!(CurveTangent, "tangent", |k, i| k.curve_tangent(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
 
 struct CurveDomain;
 impl Operation for CurveDomain {
@@ -860,18 +860,18 @@ impl Operation for CurveDomain {
     }
 }
 
-num_op!(CurveCurvature, "curvature", |k, i| k.curve_curvature(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
-point_op!(SurfacePoint, "point", |k, i| k.surface_point(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
-vec_op!(SurfaceNormal, "normal", |k, i| k.surface_normal(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
+num_operation!(CurveCurvature, "curvature", |k, i| k.curve_curvature(&read_geometry(i, "curve")?, read_channel_number(i, "parameter")?));
+point_operation!(SurfacePoint, "point", |k, i| k.surface_point(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
+vec_operation!(SurfaceNormal, "normal", |k, i| k.surface_normal(&read_geometry(i, "surface")?, read_channel_number(i, "u")?, read_channel_number(i, "v")?));
 // #endregion 🔖Evaluate
 
 // #region 🔖Measure
-num_op!(Volume, "volume", |k, i| k.volume(&read_geometry(i, "geometry")?));
-num_op!(Area, "area", |k, i| k.area(&read_geometry(i, "geometry")?));
-num_op!(Length, "length", |k, i| k.length(&read_geometry(i, "geometry")?));
-point_op!(CenterOfMass, "center", |k, i| k.center_of_mass(&read_geometry(i, "geometry")?));
-geo_op!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geometry")?));
-num_op!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
+num_operation!(Volume, "volume", |k, i| k.volume(&read_geometry(i, "geometry")?));
+num_operation!(Area, "area", |k, i| k.area(&read_geometry(i, "geometry")?));
+num_operation!(Length, "length", |k, i| k.length(&read_geometry(i, "geometry")?));
+point_operation!(CenterOfMass, "center", |k, i| k.center_of_mass(&read_geometry(i, "geometry")?));
+geo_operation!(BoundingBox, "box", |k, i| k.bounding_box(&read_geometry(i, "geometry")?));
+num_operation!(Distance, "distance", |k, i| k.distance(&read_geometry(i, "a")?, &read_geometry(i, "b")?));
 
 struct ClosestPoint;
 impl Operation for ClosestPoint {
@@ -893,12 +893,12 @@ impl Operation for ClassifyPoint {
     }
 }
 
-text_op!(Validate, "report", |k, i| k.validate(&read_geometry(i, "geometry")?));
+text_operation!(Validate, "report", |k, i| k.validate(&read_geometry(i, "geometry")?));
 // #endregion 🔖Measure
 
 // #region 🔖Utilities
-geo_op!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?));
-geo_op!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "wire")?));
+geo_operation!(Vertex, "vertex", |k, i| k.vertex(read_xyz(i, "point")?));
+geo_operation!(FaceFromWire, "face", |k, i| k.face_from_wire(&read_geometry(i, "wire")?));
 
 struct SewFaces;
 impl Operation for SewFaces {
@@ -912,8 +912,8 @@ impl Operation for SewFaces {
     }
 }
 
-geo_op!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?));
-geo_op!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?));
+geo_operation!(HealSolid, "solid", |k, i| k.heal_solid(&read_geometry(i, "geometry")?, read_channel_number(i, "tolerance")?));
+geo_operation!(ConvertToNurbs, "geometry", |k, i| k.convert_to_nurbs(&read_geometry(i, "geometry")?));
 // #endregion 🔖Utilities
 
 // #region 🔖IO
@@ -1531,7 +1531,7 @@ pub fn register(registry: &mut Registry) {
         vec![geometry_channel("geometry", "brep.solid.shell"), number_channel("thickness", "brep.solid.shell", 0.1), list_channel("openFaces", "brep.solid.shell")],
         out_solid("ShelledSolid"),
         &["Features"],
-        Box::new(ShellOp),
+        Box::new(ShellOperation),
     );
     reg_geo(
         registry,

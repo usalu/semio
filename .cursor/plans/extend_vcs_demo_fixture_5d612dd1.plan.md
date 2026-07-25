@@ -11,7 +11,7 @@ todos:
  - id: store-tests
    content: Extend vcs/core/index.ts test block with fork + checkout round-trip cases
    status: completed
- - id: fixture-ops
+ - id: fixture-operations
    content: Add status/tags fields to VcsDemoProjection and setStatus/addTag/removeTag operations in vcs/play/index.ts
    status: completed
  - id: fixture-authors
@@ -78,7 +78,7 @@ This is backward compatible: any usage that never calls `checkoutCheckpoint`/`sw
 In [vcs/play/index.ts](vcs/play/index.ts), inside the `//#region 🔖demo` block:
 
 1. **Widen the projection** — add `status: string` and `tags: readonly string[]` to `VcsDemoProjection`; update `emptyVcsDemoProjection()`.
-2. **Add 2 new operation kinds** to `VcsDemoOp`/`applyVcsDemoOp`/`backwardsVcsDemoOp`: `setStatus`, and `addTag`/`removeTag` (inverse of each other), alongside the existing `setCounter`/`setTitle`/`setNotes` — 5 operation kinds total.
+2. **Add 2 new operation kinds** to `VcsDemoOperation`/`applyVcsDemoOp`/`backwardsVcsDemoOp`: `setStatus`, and `addTag`/`removeTag` (inverse of each other), alongside the existing `setCounter`/`setTitle`/`setNotes` — 5 operation kinds total.
 3. **Add a third author** (`Carol`) to `VCS_DEMO_AUTHORS`.
 4. **Rewrite `seedVcsDemoHistory`** into a ~15-checkpoint, 5-alternative history with real branching, using the new `checkoutCheckpoint` command:
    - Main line: C1 → C2 (2 batched edits) → C3, later resumed as C8 → C12 (3 batched edits) → C13.

@@ -556,8 +556,11 @@ function resolveDeclarativeControlIcon(iconId: string, size: number | "tiny" | "
 //#endregion ActionDispatch
 
 //#region RenderUiControl
-/** @emoji 🎛 Renders a declarative control node with ui-react primitives. */
-export function renderUiControl(control: UiControlNode, onAction: UiInterpreterContext["onAction"]): ReactElement {
+/** @emoji 🎛 Renders a declarative control node with ui-react primitives. `path` is this control's own full
+ * structural path when it's rendered as a top-level {@link UiNode}; omitted (and so no `data-ui-path` is
+ * attached) when this is called for a {@link UiTreeItemNode}'s inline `control`, which isn't part of the
+ * top-level `UiNode`-tree recursion the wgpu↔React path grammar covers. */
+export function renderUiControl(control: UiControlNode, onAction: UiInterpreterContext["onAction"], path?: string): ReactElement {
   switch (control.type) {
     case "input": {
       const commitOnBlur = control.commit === "blur";
@@ -569,6 +572,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
         return (
           <Textarea
             id={control.id}
+            data-ui-path={path}
             className="min-h-[4.5rem] w-full min-w-0"
             value={control.value}
             placeholder={control.placeholder}
@@ -581,6 +585,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       return (
         <Input
           id={control.id}
+          data-ui-path={path}
           type={inputType}
           className="h-medium w-full min-w-0"
           value={control.inputKind === "file" ? undefined : control.value}
@@ -617,7 +622,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
     case "select":
       return (
         <Select value={control.value || undefined} onValueChange={(value) => dispatchUiAction(onAction, control.onChange, { value })}>
-          <SelectTrigger id={control.id} className="h-medium w-full min-w-0" size="sm">
+          <SelectTrigger id={control.id} data-ui-path={path} className="h-medium w-full min-w-0" size="sm">
             <SelectValue placeholder={control.placeholder ?? interpLabel("ui.common.select")} />
           </SelectTrigger>
           <SelectContent>
@@ -630,10 +635,13 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
         </Select>
       );
     case "toggle":
+      // 🧭 `Toggle` (`ui/js/react/index.tsx`) has a closed prop type with no passthrough/`data-*`
+      // forwarding — `path` best-effort only, via a parent stack/section/group's wrapper (see
+      // `UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK`).
       return <Toggle id={control.id} pressed={control.pressed} text={control.text} icon={resolveDeclarativeControlIcon(control.iconId)} onPressedChange={(pressed) => dispatchUiAction(onAction, control.onChange, { pressed })} />;
     case "keyValue":
       return (
-        <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs">
+        <dl className="grid grid-cols-[auto_1fr] gap-x-single gap-y-single text-xs" data-ui-path={path}>
           {control.entries.map((entry) => (
             <div key={entry.label} className="contents">
               <dt className="text-muted-foreground">{entry.label}</dt>
@@ -646,6 +654,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       const slider = (
         <Slider
           id={control.id}
+          data-ui-path={path}
           className="w-full min-w-0"
           max={control.max}
           min={control.min}
@@ -665,6 +674,8 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       );
     }
     case "numberStepper":
+      // 🧭 `Stepper` has a closed prop type with no passthrough/`data-*` forwarding — `path` best-effort
+      // only, via a parent stack/section/group's wrapper.
       return (
         <Stepper
           id={control.id}
@@ -676,8 +687,12 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
         />
       );
     case "ring":
+      // 🧭 `Ring` has a closed prop type with no passthrough/`data-*` forwarding — `path` best-effort only,
+      // via a parent stack/section/group's wrapper.
       return <Ring id={control.id} onOrbChange={(_orbId, _oldT, newT) => dispatchUiAction(onAction, control.onChange, { t: newT })} orbs={[{ disabled: control.disabled, id: control.orbId, selected: true, t: control.t }]} />;
     case "iconSelect":
+      // 🧭 `IconSelector` has a closed prop type with no passthrough/`data-*` forwarding — `path`
+      // best-effort only, via a parent stack/section/group's wrapper.
       return (
         <IconSelector
           classifyIconSelectorMode={control.classifierKind === "puzzle2d" ? classifyIconSelectorMode : undefined}
@@ -691,6 +706,7 @@ export function renderUiControl(control: UiControlNode, onAction: UiInterpreterC
       return (
         <Button
           id={control.id}
+          data-ui-path={path}
           text={control.label}
           icon={resolveDeclarativeControlIcon(control.iconId)}
           disabled={control.disabled}
@@ -897,8 +913,26 @@ function uiNodeKey(node: UiNode, index: number): string {
   return `${node.type}:${index}`;
 }
 
+/** @emoji 🧭 Computes a {@link UiNode}'s own structural-path segment — `type[index]`, or `type[index]#id`
+ * when the node carries a non-empty string `id` — per the wgpu↔React `data-ui-path` join grammar. */
+function uiNodePathSegment(node: UiNode, index: number): string {
+  const id = "id" in node && typeof node.id === "string" && node.id ? node.id : undefined;
+  return id ? `${node.type}[${index}]#${id}` : `${node.type}[${index}]`;
+}
+
+/** @emoji 🧭 Extends a parent's full structural path with a child's own segment. */
+function uiChildPath(parentPath: string, node: UiNode, index: number): string {
+  return `${parentPath}/${uiNodePathSegment(node, index)}`;
+}
+
+/** @emoji 🧭 `UiNode` kinds whose `@semio-tech/ui-react` component doesn't forward passthrough/`data-*`
+ * props to its own root DOM element (verified against each component's prop type in `ui/js/react/index.tsx`),
+ * so `data-ui-path` for these falls back onto the nearest existing per-child wrapper `<div>` — present only
+ * when the node is a child of a `stack`/`section`/`group` — instead of the node's own rendered element. */
+const UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK = new Set<UiNode["type"]>(["field", "section", "group", "toggle", "numberStepper", "ring", "iconSelect", "tree", "componentScene"]);
+
 /** @emoji 🫳 Stateful host for a {@link UiStackNode} — the plain stack layout/click/drop wiring plus local drag-over tracking so `dropOverlay` can show a full-bleed hint while a drag hovers, ahead of `dropAction` firing on release. */
-function UiStackHost({ node, context }: { readonly node: UiStackNode; readonly context: UiInterpreterContext }) {
+function UiStackHost({ node, context, path }: { readonly node: UiStackNode; readonly context: UiInterpreterContext; readonly path: string }) {
   const [dragOver, setDragOver] = useState(false);
   const activate = node.activate;
   const dropAction = node.dropAction;
@@ -914,7 +948,7 @@ function UiStackHost({ node, context }: { readonly node: UiStackNode; readonly c
         activate && cn(borderElementClass, "border bg-panel cursor-pointer rounded-md"),
         node.selected && "ring-primary border-primary ring-1",
       )}
-      data-ui-stack={node.id}
+      data-ui-path={path}
       role={activate ? "button" : undefined}
       onClick={
         activate
@@ -958,11 +992,14 @@ function UiStackHost({ node, context }: { readonly node: UiStackNode; readonly c
           : undefined
       }
     >
-      {node.children.map((child, index) => (
-        <div key={uiNodeKey(child, index)} className="flex-auto">
-          {interpretUiNode(child, context)}
-        </div>
-      ))}
+      {node.children.map((child, index) => {
+        const childPath = uiChildPath(path, child, index);
+        return (
+          <div key={uiNodeKey(child, index)} className="flex-auto" data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
+            {interpretUiNode(child, context, childPath)}
+          </div>
+        );
+      })}
       {dropOverlay && dragOver ? (
         <div
           className="border-primary pointer-events-none absolute inset-0 z-10 flex flex-col items-center justify-center gap-single rounded-md border-2 border-dashed p-double text-center"
@@ -976,63 +1013,93 @@ function UiStackHost({ node, context }: { readonly node: UiStackNode; readonly c
   );
 }
 
-/** @emoji 🌳 Interprets a declarative {@link UiNode} tree into ui-react components. */
-export function interpretUiNode(node: UiNode, context: UiInterpreterContext): ReactNode {
+/** @emoji 🌳 Interprets a declarative {@link UiNode} tree into ui-react components. `path` is this node's
+ * own full structural path (see {@link uiNodePathSegment}); defaults to a root segment at index 0 so
+ * existing/test call sites that omit it still behave as the root of a window/panel body. */
+export function interpretUiNode(node: UiNode, context: UiInterpreterContext, path: string = uiNodePathSegment(node, 0)): ReactNode {
   switch (node.type) {
     case "stack":
-      return <UiStackHost node={node} context={context} />;
+      return <UiStackHost node={node} context={context} path={path} />;
     case "text":
-      return <p className={cn("text-foreground", node.emphasize ? "font-semibold" : "text-sm")}>{node.value}</p>;
+      return (
+        <p className={cn("text-foreground", node.emphasize ? "font-semibold" : "text-sm")} data-ui-path={path}>
+          {node.value}
+        </p>
+      );
     case "button":
-      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} />;
+      return <Button id={node.id} text={node.label} icon={resolveDeclarativeControlIcon(node.iconId)} disabled={node.disabled} onClick={() => context.onAction(node.action)} data-ui-path={path} />;
     case "separator":
-      return <hr className={cn("border-0", borderNormalTopClass)} />;
+      return <hr className={cn("border-0", borderNormalTopClass)} data-ui-path={path} />;
     case "image":
-      return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-image={node.id} />;
+      return <img id={node.id} src={node.src} alt={node.alt ?? ""} className="max-h-64 max-w-full rounded-md object-contain" data-ui-path={path} />;
     case "input":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "select":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "toggle":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "keyValue":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "slider":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "numberStepper":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "ring":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "iconSelect":
-      return renderUiControl(node, context.onAction);
+      return renderUiControl(node, context.onAction, path);
     case "field":
+      // 🧭 `Field` (`ui/js/react/index.tsx`) has a closed prop type with no passthrough/`data-*` forwarding
+      // and index.tsx renders no wrapper `<div>` of its own here, so `field`'s own `data-ui-path` has no
+      // attachable element at this call site — best-effort only, via a parent stack/section/group's wrapper.
       return (
         <Field id={node.id} label={node.label} description={node.description} required={node.required} error={node.error}>
-          {interpretUiNode(node.child, context)}
+          {interpretUiNode(node.child, context, uiChildPath(path, node.child, 0))}
         </Field>
       );
     case "section":
+      // 🧭 Same best-effort caveat as `field`: `Section` only forwards `id`/`className`, not `data-*`.
       return (
         <Section id={node.id} title={node.label}>
-          {node.children.map((child, index) => (
-            <div key={uiNodeKey(child, index)}>{interpretUiNode(child, context)}</div>
-          ))}
+          {node.children.map((child, index) => {
+            const childPath = uiChildPath(path, child, index);
+            return (
+              <div key={uiNodeKey(child, index)} data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
+                {interpretUiNode(child, context, childPath)}
+              </div>
+            );
+          })}
         </Section>
       );
     case "group":
+      // 🧭 `group` renders through the same `Section` component/caveat as `section` above.
       return (
         <Section id={node.id} title={node.label}>
-          {node.children.map((child, index) => (
-            <div key={uiNodeKey(child, index)}>{interpretUiNode(child, context)}</div>
-          ))}
+          {node.children.map((child, index) => {
+            const childPath = uiChildPath(path, child, index);
+            return (
+              <div key={uiNodeKey(child, index)} data-ui-path={UI_NODE_TYPES_NEEDING_WRAPPER_PATH_FALLBACK.has(child.type) ? childPath : undefined}>
+                {interpretUiNode(child, context, childPath)}
+              </div>
+            );
+          })}
         </Section>
       );
     case "tree":
+      // 🧭 `Tree` (`ui/js/react/index.tsx`) doesn't forward passthrough/`data-*` props to its root either
+      // — best-effort only, via a parent stack/section/group's wrapper.
       return <DeclarativeTreePanel treeNode={node} onAction={context.onAction} />;
     case "componentScene":
+      // 🧭 Dispatches through `<Suspense>` into one of 14 lazily-loaded host components (or
+      // `VirtualFileSystemHost`) — no DOM element of index.tsx's own to attach to — best-effort only, via a
+      // parent stack/section/group's wrapper.
       return renderComponentSceneHost(node, context.onAction);
     case "externalSlot":
-      return <p className="text-muted-foreground text-xs">Extension unavailable: {node.pluginId}</p>;
+      return (
+        <p className="text-muted-foreground text-xs" data-ui-path={path}>
+          Extension unavailable: {node.pluginId}
+        </p>
+      );
   }
 }
 
@@ -1040,7 +1107,7 @@ export function interpretUiNode(node: UiNode, context: UiInterpreterContext): Re
  * @emoji 🐢 `React.memo`'d entry point into `interpretUiNode` — bails on re-interpreting (and
  * reconciling) an entire window/panel subtree when both `node` and `onAction` keep the same object
  * identity as last render. Only pays off when callers pass a stable `onAction` (see `os-shell.tsx`'s
- * `onActionStable`) and a `node` whose identity is preserved across no-op refreshes (see
+ * `onActionStable`) and a `node` whose identity is preserved across no-operation refreshes (see
  * `os-shell.tsx`'s `preserveJsonIdentity`/`mergeRecordPreservingIdentity`) — without both, `node`/
  * `onAction` are fresh every render and this degenerates to the unmemoized call.
  */
@@ -1300,14 +1367,14 @@ type SpawnedWindowState = {
 /**
  * 🧰 Per-window Action rail (P1–P5) state: fold/expand chrome, locally-buffered staged arg values
  * (keyed `${windowId}:${actionId}`, never dispatched until Execute), and the host-owned active utility per
- * window (never a document field, never a VCS op). See {@link WindowActionPane}.
+ * window (never a document field, never a VCS operation). See {@link WindowActionPane}.
  */
 type ActionPaneState = {
   readonly foldedByWindowId: Readonly<Record<string, boolean>>;
   readonly expandedByWindowId: Readonly<Record<string, string | null>>;
   readonly stagedArgsByKey: Readonly<Record<string, Readonly<Record<string, unknown>>>>;
   readonly activeUtilityByWindowId: Readonly<Record<string, string | null>>;
-  /** 🛠️ Host-owned active tool of the active MODE (never per-window, never a document field/VCS op) —
+  /** 🛠️ Host-owned active tool of the active MODE (never per-window, never a document field/VCS operation) —
    * mutually exclusive with any window's active utility. See {@link ToolRegistry}. */
   readonly activeToolId: string | null;
 };
@@ -3201,7 +3268,7 @@ export function createDirectionalAsyncDispatcher(dispatchValue: (value: number) 
  * set by a `WindowMeasure.Slider.reveal` group). Main-thread-only and never dispatched: a slider drag writes
  * here directly, `WorldInstancesLayer` subscribes and imperatively toggles `Object3D.visible` — zero React
  * re-render, zero WASM round trip. Reconciled from the plugin's committed `WorldInteractionRecord.revealCutoffs`
- * whenever that value changes (a no-op during a live drag, since the committed value only changes on commit).
+ * whenever that value changes (a no-operation during a live drag, since the committed value only changes on commit).
  */
 export type RevealCutoffStore = {
   get(groupId: string): number | undefined;
@@ -4371,7 +4438,7 @@ export function preserveJsonIdentity<T>(previous: T | undefined, next: T): T {
 /**
  * @emoji 🐢 Builds a `Record<string, V>` from `entries`, reusing `prev`'s per-key value reference where
  * `preserveJsonIdentity` finds no structural change, and reusing `prev` itself (the whole record) when
- * no key actually changed — so a no-op action's `dispatch` doesn't hand `windowUiByWindowId`/etc. a new
+ * no key actually changed — so a no-operation action's `dispatch` doesn't hand `windowUiByWindowId`/etc. a new
  * object reference and cascade an unmemoizable re-render through every downstream consumer.
  */
 export function mergeRecordPreservingIdentity<V>(prev: Readonly<Record<string, V>>, entries: readonly (readonly [string, V])[]): Readonly<Record<string, V>> {
@@ -4605,7 +4672,7 @@ export function FrameworkOsShell({
   }, [uiThemeId, uiCustomThemes, uiThemeDraft, ephemeral]);
   /** 🧵 Lazily-created worker running `backbone-worker.ts` — one per shell instance, reused across `openDocument` calls. */
   const backboneWorkerRef = useRef<Worker | null>(null);
-  /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and op-origin filtering. */
+  /** 🖋️ Stable per-tab actor id for hub `Hello`/presence frames and operation-origin filtering. */
   const shellActorIdRef = useRef<string>(`client-${Math.random().toString(36).slice(2)}`);
   /** 🗂️ Which session/plugin owns each open document id, so incoming worker events route correctly. */
   const openDocumentSessionsRef = useRef<Map<string, { session: ActiveSession; plugin: PluginWasmHandle }>>(new Map());
@@ -4620,17 +4687,17 @@ export function FrameworkOsShell({
       if (!entry) return;
       const { event } = message;
       if (event.kind === "status") {
-        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOps: event.pendingOps, remote: event.remote } });
+        dispatch({ type: "SET_SYNC_STATUS_FOR_DOCUMENT", documentId: message.documentId, status: { persisted: event.persisted, pendingOperations: event.pendingOperations, remote: event.remote } });
       } else if (event.kind === "presence") {
         const peersJson = JSON.stringify(event.peers.map((peer) => ({ clientId: peer.actor, name: peer.label ?? peer.actor, selectionCount: 0 })));
         dispatch({
           type: "SET_SESSION",
           value: (current) => (current && current.instanceId === entry.session.instanceId ? { ...current, viewState: { ...current.viewState, presencePeersJson: peersJson } } : current),
         });
-      } else if (event.kind === "remoteOps" && entry.plugin.applyOperations) {
+      } else if (event.kind === "remoteOperations" && entry.plugin.applyOperations) {
         void entry.plugin.applyOperations(entry.session.instanceId, JSON.stringify(event.envelopes));
         const actorUri = `actor://${message.documentId}`;
-        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "ops", envelopes: event.envelopes })]);
+        postPluginBackboneInbound(entry.session.pluginId, actorUri, [JSON.stringify({ kind: "operations", envelopes: event.envelopes })]);
       } else if (event.kind === "snapshotReplaced" && entry.plugin.loadAppDocument) {
         void entry.plugin.loadAppDocument(entry.session.instanceId, event.envelopeJson);
         const actorUri = `actor://${message.documentId}`;
@@ -4823,8 +4890,8 @@ export function FrameworkOsShell({
       let actorMessage: DocumentActorMsg;
       try {
         const parsed = JSON.parse(messageJson) as { kind?: string; envelopes?: unknown; envelopeJson?: string };
-        if (parsed.kind === "ops") {
-          actorMessage = { kind: "localOps", envelopes: (parsed.envelopes ?? []) as DocumentActorMsg extends { kind: "localOps"; envelopes: infer E } ? E : never };
+        if (parsed.kind === "operations") {
+          actorMessage = { kind: "localOperations", envelopes: (parsed.envelopes ?? []) as DocumentActorMsg extends { kind: "localOperations"; envelopes: infer E } ? E : never };
         } else if (parsed.kind === "snapshot") {
           actorMessage = { kind: "localSnapshot", envelopeJson: parsed.envelopeJson ?? "{}" };
         } else {
@@ -4998,7 +5065,7 @@ export function FrameworkOsShell({
           viewState,
         };
         // Resolve external slots on freshly-changed window/panel bodies only, before caching them, so a
-        // later no-op refresh reuses the already-resolved cached value instead of re-resolving.
+        // later no-operation refresh reuses the already-resolved cached value instead of re-resolving.
         const resolveIfChanged = async (entry: PluginUiRefreshSectionResponse): Promise<PluginUiRefreshSectionResponse> => (entry.value !== undefined ? { ...entry, value: await resolveExternalSlots(entry.value as UiNode, slotContext) } : entry);
         const [resolvedWindows, resolvedPanels] = await Promise.all([Promise.all((response.windows ?? []).map(resolveIfChanged)), Promise.all((response.panels ?? []).map(resolveIfChanged))]);
         if (generation !== refreshGenerationRef.current) return;
@@ -5246,9 +5313,9 @@ export function FrameworkOsShell({
 
   /**
    * 🐚 Consumes a plugin action's typed `requestedEffects: HostEffect[]` (WS-D's `InvocationResponse`) —
-   * replaces the deleted `processPluginOps` string-matching. The legacy `setDocument`-mirror
+   * replaces the deleted `processPluginOperations` string-matching. The legacy `setDocument`-mirror
    * backbone-write block is gone entirely: document content sync now flows through
-   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-op JS mirror.
+   * `openDocument`/`closeDocument`'s worker-backed `DocumentHost` lifecycle, not a per-operation JS mirror.
    */
   const applyHostEffects = useCallback(
     async (effects: readonly HostEffect[], baseSession: ActiveSession, uiScope: UiDirtyScope = { kind: "full" }) => {
@@ -5647,7 +5714,7 @@ export function FrameworkOsShell({
         return;
       }
 
-      // 🧰 Utility activation (P5): host-owned session state, never a document op. Re-clicking the active
+      // 🧰 Utility activation (P5): host-owned session state, never a document operation. Re-clicking the active
       // utility (or an empty utilityId) deactivates. We resolve the target window from the descriptor's tagged
       // `windowId` (see `tagSetActiveUtilityWindow`), falling back to the active window, update the store,
       // then forward the resolved utility to the plugin so it can clear/prepare scratch.
@@ -5678,7 +5745,7 @@ export function FrameworkOsShell({
         return;
       }
 
-      // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document op.
+      // 🛠️ Tool activation: host-owned session state (mode-scoped, windowless), never a document operation.
       // Re-clicking the active tool (or an empty toolId) deactivates. Mutually exclusive with every
       // window's active utility — activating a tool clears them all, mirroring `SET_ACTIVE_UTILITY_ACTION_ID`.
       if (action.action === SET_ACTIVE_TOOL_ACTION_ID) {
@@ -7615,6 +7682,9 @@ export type FlowWasmSession = GraphWasmSession & {
   hoveredWidgetId(): string | undefined;
   hoveredChannelJson(): string;
   pickTargetsAtScreenJson(sx: number, sy: number): string;
+  /** 🎯 Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) — powers
+   * introduction-demonstration semantic targeting. */
+  entityScreenJson?(domain: string, id: string): string;
   previewText(): string;
   preselectWidgetIdsJson(): string;
   previewOffWidgetIds(): string;
@@ -8116,7 +8186,7 @@ function syncStatusLabel(status: DocumentSyncStatus | null): string | null {
   const remote =
     status.remote.kind === "live" ? `live · ${status.remote.peerCount} peer${status.remote.peerCount === 1 ? "" : "s"}` : status.remote.kind === "connecting" ? "connecting…" : status.remote.kind === "backoff" ? "reconnecting…" : "offline";
   const persisted = status.persisted ? "saved" : "unsaved";
-  const pending = status.pendingOps > 0 ? ` · ${status.pendingOps} pending` : "";
+  const pending = status.pendingOperations > 0 ? ` · ${status.pendingOperations} pending` : "";
   return `${remote} · ${persisted}${pending}`;
 }
 
@@ -10095,6 +10165,7 @@ const DRAG_OVER_THROTTLE_DISTANCE = 4;
 
 export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.canvas2d;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const initialCamera = useMemo(() => ({ x: scene?.cameraX ?? 0, y: scene?.cameraY ?? 0, zoom: scene?.zoom ?? 1 }), [scene?.cameraX, scene?.cameraY, scene?.zoom]);
   const cameraRef = useRef<CanvasCamera>(initialCamera);
@@ -10138,6 +10209,80 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
       return session;
     };
   }, [dispatch, scene?.layersJson]);
+
+  const layersJsonRef = useRef(scene?.layersJson);
+  layersJsonRef.current = scene?.layersJson;
+  const layersCacheRef = useRef<{ readonly json: string; readonly layers: readonly CanvasLayerRecord[] } | null>(null);
+
+  /** 🐢 `layersJson` can be sizeable and the resolver is called every animation frame while a
+   * demonstration targets this surface — cache the parse, keyed by the source string's identity, so a
+   * re-render with the same layers never re-parses. */
+  const readLayers = useCallback((): readonly CanvasLayerRecord[] => {
+    const json = layersJsonRef.current ?? "[]";
+    const cached = layersCacheRef.current;
+    if (cached && cached.json === json) return cached.layers;
+    let layers: readonly CanvasLayerRecord[] = [];
+    try {
+      const parsed = JSON.parse(json) as unknown;
+      layers = Array.isArray(parsed) ? (parsed as CanvasLayerRecord[]) : [];
+    } catch {
+      layers = [];
+    }
+    layersCacheRef.current = { json, layers };
+    return layers;
+  }, []);
+
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
+      canvasPoint: (x, y) => {
+        const container = containerRef.current;
+        if (!container) return null;
+        const rect = container.getBoundingClientRect();
+        const screen = worldToScreenLogical(x, y, cameraRef.current, rect.width, rect.height);
+        return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+      },
+      // 🏷️ `"layer"` is the only domain — a `CanvasLayerRecord.id` is optional and there is no id index,
+      // so only layers that authored one are targetable; `"*"` picks the first that has an id.
+      entity: (domain, entityId): IntroductionResolvedGeometry | null => {
+        if (domain !== "layer") return null;
+        const container = containerRef.current;
+        if (!container) return null;
+        const rect = container.getBoundingClientRect();
+        const layer = entityId === "*" ? readLayers().find((candidate) => candidate.id) : readLayers().find((candidate) => candidate.id === entityId);
+        if (!layer) return null;
+        const toScreen = (wx: number, wy: number) => {
+          const screen = worldToScreenLogical(wx, wy, cameraRef.current, rect.width, rect.height);
+          return { x: rect.left + screen.x, y: rect.top + screen.y };
+        };
+        // 🐢 Layer `transform` (a local affine matrix) is deliberately not applied here — composing it
+        // correctly needs matrix math this resolver has no other use for; an explicitly transformed
+        // layer's demonstration target will be off by that transform until this is extended.
+        if (layer.segments && layer.segments.length > 0) {
+          const polyline = sampleBezierSegments(layer.segments).map((point) => toScreen(point.x, point.y));
+          if (polyline.length > 0) return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+        }
+        if (layer.points && layer.points.length > 0) {
+          const polyline = layer.points.map(([px, py]) => toScreen(px, py));
+          return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+        }
+        const bounds =
+          layer.x !== undefined && layer.y !== undefined && layer.width !== undefined && layer.height !== undefined
+            ? { x: layer.x, y: layer.y, width: layer.width, height: layer.height }
+            : layer.x0 !== undefined && layer.y0 !== undefined && layer.x1 !== undefined && layer.y1 !== undefined
+              ? { x: Math.min(layer.x0, layer.x1), y: Math.min(layer.y0, layer.y1), width: Math.abs(layer.x1 - layer.x0), height: Math.abs(layer.y1 - layer.y0) }
+              : null;
+        if (!bounds) return null;
+        const topLeft = toScreen(bounds.x, bounds.y);
+        const bottomRight = toScreen(bounds.x + bounds.width, bounds.y + bounds.height);
+        return {
+          point: { x: (topLeft.x + bottomRight.x) / 2, y: (topLeft.y + bottomRight.y) / 2 },
+          rect: { x: topLeft.x, y: topLeft.y, width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y },
+          visible: true,
+        };
+      },
+    });
+  }, [windowInstanceId, readLayers]);
 
   const handleDragOver = useCallback(
     (event: DragEvent<HTMLDivElement>) => {
@@ -11103,7 +11248,7 @@ export function enrichNodeGraphContextMenuItems(
           ...spec,
           disabled: !hasSelection,
           action: spec.action ?? "nodeGraphEdit",
-          args: spec.args ?? { ops: [{ op: "deleteSelection" }] },
+          args: spec.args ?? { operations: [{ operator: "deleteSelection" }] },
         };
       default:
         return spec;
@@ -12125,7 +12270,7 @@ function WorldInstancesLayer({
   /** Disables instance picking; passed for fill and brush engagements so a click meant for a vortex marker can't fall through and select/gumball the underlying object instead. */
   readonly blockPick?: boolean;
   readonly environment?: WorldEnvironmentRecord | null;
-  /** 🪣 Committed reveal cutoffs (`WorldInteractionRecord.revealCutoffs`) — reconciles `worldRevealCutoffStore` whenever the committed value changes; a live drag already wrote the store directly and this is then a same-value no-op. */
+  /** 🪣 Committed reveal cutoffs (`WorldInteractionRecord.revealCutoffs`) — reconciles `worldRevealCutoffStore` whenever the committed value changes; a live drag already wrote the store directly and this is then a same-value no-operation. */
   readonly revealCutoffs?: Readonly<Record<string, number>>;
 }) {
   const meshById = useMemo(() => new Map(meshes.map((mesh) => [mesh.id, mesh])), [meshes]);
@@ -12201,7 +12346,7 @@ function WorldInstancesLayer({
     return worldRevealCutoffStore.subscribe(PUZZLE3D_FILL_REVEAL_GROUP_ID, applyRevealCutoff);
   }, [applyRevealCutoff]);
 
-  /** 🪣 Reconciles the shared store from the plugin's committed cutoff — a no-op while a local drag is
+  /** 🪣 Reconciles the shared store from the plugin's committed cutoff — a no-operation while a local drag is
    * live (the committed value only changes on gesture commit, at which point the drag already settled
    * on the same value), and the authoritative sync path otherwise (reconnect, another client's commit). */
   useEffect(() => {
@@ -14183,7 +14328,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
 
   const handleEmptyClick = useCallback(
     (event: MouseEvent) => {
-      // 🧹 Consume the post-marquee suppress flag so a stale `true` cannot permanently no-op background deselect.
+      // 🧹 Consume the post-marquee suppress flag so a stale `true` cannot permanently no-operation background deselect.
       if (wasMarqueeDragRef.current) {
         wasMarqueeDragRef.current = false;
         return;
@@ -14645,6 +14790,9 @@ type FrameworkGraphSession = GraphWasmSession & {
   cameraJson(): string;
   takePendingOpenInstanceId(): string | null | undefined;
   pickTargetsAtScreenJson(sx: number, sy: number): string;
+  /** 🎯 Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) — powers
+   * introduction-demonstration semantic targeting. */
+  entityScreenJson?(domain: string, id: string): string;
   setHover?(widgetId: string | null): void;
   setHoverChannel?(widgetId: string | null, port?: string | null): void;
   alignSelection?(mode: string): void;
@@ -15062,6 +15210,7 @@ function WasmGraphSurface({
   readonly contextMenuItems: readonly GraphContextMenuItem[];
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FrameworkGraphSession | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -15144,6 +15293,11 @@ function WasmGraphSurface({
     };
   }, []);
 
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
+  }, [windowInstanceId]);
+
   const sessionFactory = useCallback(() => {
     if (wasmSession) return wasmSession;
     return {
@@ -15197,7 +15351,7 @@ function WasmGraphSurface({
     if (!session?.fixtureJson) return;
     try {
       const fixtureJson = session.fixtureJson();
-      dispatch(nodeGraphActions.edit, { ops: [{ op: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { operations: [{ operator: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
     }
@@ -15322,7 +15476,7 @@ function WasmGraphSurface({
           }}
         />
       ) : null}
-      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { op: "setSlider", widgetId, value })} />
+      <GraphSliderOverlays stateJson={sliderStateJson} logicalW={overlaySize.w} logicalH={overlaySize.h} editable={editable} onSliderChange={(widgetId, value) => dispatch(nodeGraphActions.edit, { operator: "setSlider", widgetId, value })} />
       <CanvasPickMenu request={pickInteraction.pickMenu} hoveredKey={pickInteraction.menuHoveredKey} onHoverKey={pickInteraction.onMenuHoverKey} onPick={pickInteraction.onMenuPick} onDismiss={pickInteraction.dismissPickMenu} />
       <ContextMenuController
         open={contextMenu != null}
@@ -15429,7 +15583,7 @@ function DiagramGraphFallback({
           editable
             ? (_event, draggedNode) => {
                 dispatch(nodeGraphActions.edit, {
-                  ops: [{ op: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
+                  operations: [{ operator: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
                 });
               }
             : undefined
@@ -15439,9 +15593,9 @@ function DiagramGraphFallback({
             ? (connection) => {
                 if (!connection.source || !connection.target || !connection.sourceHandle || !connection.targetHandle) return;
                 dispatch(nodeGraphActions.edit, {
-                  ops: [
+                  operations: [
                     {
-                      op: "connect",
+                      operation: "connect",
                       sourceNodeId: connection.source,
                       sourcePortId: connection.sourceHandle,
                       targetNodeId: connection.target,
@@ -15769,6 +15923,72 @@ export function parseDagSliderOverlays(stateJson: string): readonly DagSliderOve
   }
 }
 
+/** @emoji 🎯 The subset of `FlowWasmSession`/`FrameworkGraphSession` {@link dagIntroductionResolver} needs
+ * — factored out because both session interfaces expose the same overlay/entity JSON shape and both host
+ * components (`FlowGraphCanvasHost`, `WasmGraphSurface`) register the identical resolver logic. */
+type DagIntroductionSession = {
+  readonly labelOverlayPaintStateJson: () => string;
+  readonly sliderOverlayStateJson: () => string;
+  readonly entityScreenJson?: (domain: string, id: string) => string;
+};
+
+/** @emoji 🎯 Builds the `IntroductionSurfaceResolver` for a dag-engine-backed graph surface. Reads the
+ * session and container via refs (not React state) every call — cheap, and lets registration skip
+ * re-running whenever the surface re-renders. `entity`'s `"slider"` domain resolves entirely from the
+ * already-fetched `sliderOverlayStateJson()` (no Rust round trip); every other domain (`"node"`,
+ * `"handle"`, `"edge"`) goes through `entityScreenJson`, added to the dag engine specifically for this. */
+function dagIntroductionResolver(sessionRef: React.RefObject<DagIntroductionSession | null>, containerRef: React.RefObject<HTMLElement | null>): IntroductionSurfaceResolver {
+  return {
+    canvasPoint: (x, y) => {
+      const session = sessionRef.current;
+      const container = containerRef.current;
+      if (!session || !container) return null;
+      const rect = container.getBoundingClientRect();
+      const camera = parseDagOverlayCamera(session.labelOverlayPaintStateJson());
+      const screen = dagWorldToScreen(camera, rect.width, rect.height, x, y);
+      return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+    },
+    entity: (domain, entityId): IntroductionResolvedGeometry | null => {
+      const session = sessionRef.current;
+      const container = containerRef.current;
+      if (!session || !container) return null;
+      const rect = container.getBoundingClientRect();
+      if (domain === "slider") {
+        const sliders = parseDagSliderOverlays(session.sliderOverlayStateJson());
+        const slider = entityId === "*" ? sliders[0] : sliders.find((row) => row.widgetId === entityId);
+        if (!slider) return null;
+        const camera = parseDagOverlayCamera(session.labelOverlayPaintStateJson());
+        const anchor = dagWorldToScreen(camera, rect.width, rect.height, slider.x, slider.y);
+        return {
+          point: { x: rect.left + anchor.x, y: rect.top + anchor.y },
+          rect: { x: rect.left + anchor.x - slider.w / 2, y: rect.top + anchor.y - slider.h / 2, width: slider.w, height: slider.h },
+          domain: { min: slider.min, max: slider.max, axis: "x" },
+          visible: true,
+        };
+      }
+      if (!session.entityScreenJson) return null;
+      try {
+        const geometry = JSON.parse(session.entityScreenJson(domain, entityId)) as {
+          readonly visible: boolean;
+          readonly x?: number;
+          readonly y?: number;
+          readonly rect?: readonly [number, number, number, number];
+          readonly polyline?: readonly (readonly [number, number])[];
+        };
+        if (!geometry.visible || geometry.x === undefined || geometry.y === undefined) return null;
+        return {
+          point: { x: rect.left + geometry.x, y: rect.top + geometry.y },
+          rect: geometry.rect ? { x: rect.left + geometry.rect[0], y: rect.top + geometry.rect[1], width: geometry.rect[2], height: geometry.rect[3] } : undefined,
+          polyline: geometry.polyline?.map(([px, py]) => ({ x: rect.left + px, y: rect.top + py })),
+          visible: true,
+        };
+      } catch {
+        return null;
+      }
+    },
+  };
+}
+
 export function parseDagOverlayCamera(stateJson: string): DagCameraState {
   try {
     const parsed = JSON.parse(stateJson) as { readonly camera?: DagCameraState; readonly width?: number; readonly height?: number };
@@ -16077,6 +16297,7 @@ export function FlowGraphCanvasHost({
   readonly contextMenuItems: readonly GraphContextMenuItem[];
   readonly onAction: (action: ActionDescriptor) => void;
 }) {
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const sessionRef = useRef<FlowWasmSession | null>(null);
   const gpuCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const labelCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -16105,6 +16326,11 @@ export function FlowGraphCanvasHost({
   }, [contextMenu]);
 
   useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
+  }, [windowInstanceId]);
+
+  useEffect(() => {
     console.log("[DEBUG] FlowGraphCanvasHost mounted", { surfaceId, controllerId });
     return () => console.log("[DEBUG] FlowGraphCanvasHost UNMOUNTED", { surfaceId, controllerId });
   }, [surfaceId, controllerId]);
@@ -16125,7 +16351,7 @@ export function FlowGraphCanvasHost({
     try {
       const fixtureJson = session.fixtureJson();
       console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
-      dispatch(nodeGraphActions.edit, { ops: [{ op: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { operations: [{ operator: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
     }
@@ -17789,6 +18015,7 @@ type Paint2dMarqueeOverlay =
 
 //#region Paint2dCanvasSurface
 function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComponentSceneNode; readonly scene: Paint2dScene; readonly onAction: (action: ActionDescriptor) => void }) {
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const isNavigator = scene.viewMode === "navigator";
   const containerRef = useRef<HTMLDivElement>(null);
   const sessionRef = useRef<RasterWasmSession | null>(null);
@@ -17815,6 +18042,21 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+
+  // 🎯 Raster layers have no per-entity world position — only `canvasPoint` (camera-space world
+  // coordinates) is targetable here, not `entity`/`curve`.
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
+      canvasPoint: (x, y) => {
+        const container = containerRef.current;
+        if (!container) return null;
+        const rect = container.getBoundingClientRect();
+        const screen = worldToScreenLogical(x, y, cameraRef.current, rect.width, rect.height);
+        return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+      },
+    });
+  }, [windowInstanceId]);
 
   //#region Session lifecycle
   useEffect(() => {
@@ -18769,6 +19011,7 @@ function buildTiledMapContextMenuItems(scene: TiledMapScene, feature: MapHovered
 //#region TiledMapHost
 export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.tiledMap;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rendererRef = useRef<MapRenderer | null>(null);
@@ -19353,7 +19596,7 @@ export function coalesceBoard2dEvents(rows: readonly BoardEventRow[]): { readonl
 }
 
 /** @emoji 🐢 Live cross-pane mirror payload extracted from a batch of freshly-drained rows — positions/selection/preselect only, everything else (camera, brush/link chrome, hover) stays pane-local. */
-export type Puzzle2dLiveMirrorOps = {
+export type Puzzle2dLiveMirrorOperations = {
   readonly positions: readonly { readonly id: string; readonly x: number; readonly y: number }[];
   readonly selectionIds: readonly string[] | null;
   readonly preselect: { readonly ids: readonly string[]; readonly removedIds: readonly string[] } | null;
@@ -19372,7 +19615,7 @@ function stringArray(value: unknown): readonly string[] {
  * preselect; `preselect` sets the live marquee highlight). Multiple rows of the same kind in one batch
  * collapse to the latest.
  */
-export function collectPuzzle2dLiveMirrorOps(rows: readonly BoardEventRow[]): Puzzle2dLiveMirrorOps {
+export function collectPuzzle2dLiveMirrorOperations(rows: readonly BoardEventRow[]): Puzzle2dLiveMirrorOperations {
   const positionsById = new Map<string, { readonly id: string; readonly x: number; readonly y: number }>();
   let selectionIds: readonly string[] | null = null;
   let preselect: { readonly ids: readonly string[]; readonly removedIds: readonly string[] } | null = null;
@@ -19499,6 +19742,19 @@ export function puzzle2dScreenToWorld(cameraJson: string, containerSize: { reado
     y: camera.y + (screen.y - containerSize.h / 2) / zoom,
   };
 }
+
+/** @emoji 📐 The canonical `screenX = (worldX - camera.x) * zoom + width / 2` transform shared across
+ * board renderers — the missing inverse of {@link puzzle2dScreenToWorld}, needed for demonstration
+ * targeting (a world point/entity → the viewport pixel a ghost cursor animates to). */
+export function puzzle2dWorldToScreen(cameraJson: string, containerSize: { readonly w: number; readonly h: number }, world: { readonly x: number; readonly y: number }): { readonly x: number; readonly y: number } | null {
+  const camera = parseBoardCamera(cameraJson);
+  if (!camera) return null;
+  const zoom = camera.zoom || 1;
+  return {
+    x: (world.x - camera.x) * zoom + containerSize.w / 2,
+    y: (world.y - camera.y) * zoom + containerSize.h / 2,
+  };
+}
 //#endregion FixtureDrop
 
 //#region Sync
@@ -19578,13 +19834,13 @@ export function puzzle2dPeerOwnsGesture(controllerId: string, surfaceId: string)
   return owner !== undefined && owner !== surfaceId;
 }
 
-export function pushPuzzle2dLiveMirrorOps(controllerId: string, surfaceId: string, ops: Puzzle2dLiveMirrorOps): void {
-  if (ops.positions.length === 0 && !ops.selectionIds && !ops.preselect && !ops.clearPreselect) return;
+export function pushPuzzle2dLiveMirrorOperations(controllerId: string, surfaceId: string, operations: Puzzle2dLiveMirrorOperations): void {
+  if (operations.positions.length === 0 && !operations.selectionIds && !operations.preselect && !operations.clearPreselect) return;
   const peers = board2dPeers(controllerId, surfaceId);
   if (peers.length === 0) return;
-  const positionsJson = ops.positions.length > 0 ? JSON.stringify(ops.positions) : null;
-  const selectionJson = ops.selectionIds ? JSON.stringify(ops.selectionIds) : null;
-  const preselectJson = ops.preselect ? JSON.stringify(ops.preselect) : ops.clearPreselect ? JSON.stringify({ ids: [], removedIds: [] }) : null;
+  const positionsJson = operations.positions.length > 0 ? JSON.stringify(operations.positions) : null;
+  const selectionJson = operations.selectionIds ? JSON.stringify(operations.selectionIds) : null;
+  const preselectJson = operations.preselect ? JSON.stringify(operations.preselect) : operations.clearPreselect ? JSON.stringify({ ids: [], removedIds: [] }) : null;
   for (const peer of peers) {
     try {
       if (positionsJson) peer.session.setNodePositionsJson?.(positionsJson);
@@ -19625,6 +19881,9 @@ export function pushPuzzle2dFixtureDropPreview(controllerId: string, previewJson
 //#region Board2dHost
 export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.board2d;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
+  const sceneRef = useRef(scene);
+  sceneRef.current = scene;
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const containerRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -19673,6 +19932,25 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
     };
   }, []);
 
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
+      // 🎯 `entity` targeting (board nodes/edges/handles by id) needs an id→screen API the board-2d wasm
+      // engine doesn't expose yet (mirroring the dag engine's `entity_screen_json` would be the fix) — a
+      // known gap, not a silent guess: `scene.fixtureJson`'s node schema isn't a framework-owned shape
+      // this file can safely parse. `canvasPoint` (world coordinates) is fully supported.
+      canvasPoint: (x, y) => {
+        const cameraJson = sceneRef.current?.cameraJson;
+        if (!cameraJson) return null;
+        const screen = puzzle2dWorldToScreen(cameraJson, readContainerSize(), { x, y });
+        if (!screen) return null;
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (!rect) return null;
+        return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+      },
+    });
+  }, [windowInstanceId, readContainerSize]);
+
   //#region BoardEventFlush
   const drainIntoBuffer = useCallback((): void => {
     const session = sessionRef.current;
@@ -19682,7 +19960,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       if (!json || json === "[]") return;
       const rows = JSON.parse(json) as BoardEventRow[];
       pendingEventRowsRef.current.push(...rows);
-      pushPuzzle2dLiveMirrorOps(node.controllerId, node.surfaceId, collectPuzzle2dLiveMirrorOps(rows));
+      pushPuzzle2dLiveMirrorOperations(node.controllerId, node.surfaceId, collectPuzzle2dLiveMirrorOperations(rows));
     } catch {
       /* session not ready */
     }
@@ -20434,11 +20712,11 @@ export interface InkBounds {
 }
 
 export type InkCanvasEvent =
-  | { readonly op: "addBlock"; readonly block: InkItem; readonly parentId?: string | null; readonly index?: number | null }
-  | { readonly op: "updateBlock"; readonly blockId: string; readonly block: InkItem }
-  | { readonly op: "removeBlock"; readonly blockId: string }
-  | { readonly op: "putAsset"; readonly key: string; readonly asset: InkImageAsset }
-  | { readonly op: "setCamera"; readonly camera: InkCamera };
+  | { readonly operation: "addBlock"; readonly block: InkItem; readonly parentId?: string | null; readonly index?: number | null }
+  | { readonly operation: "updateBlock"; readonly blockId: string; readonly block: InkItem }
+  | { readonly operation: "removeBlock"; readonly blockId: string }
+  | { readonly operation: "putAsset"; readonly key: string; readonly asset: InkImageAsset }
+  | { readonly operation: "setCamera"; readonly camera: InkCamera };
 
 type InkGesturePhase = "begin" | "live" | "commit" | "atomic";
 
@@ -20662,7 +20940,7 @@ function inkHitsPoint(block: InkStrokeItem, x: number, y: number, threshold: num
 /** @emoji 🧹 Whole-stroke eraser: returns removeBlock events for every ink stroke under the point. */
 export function eraseInkStrokeEventsAtPoint(doc: InkDocument, x: number, y: number, threshold = 8): readonly InkCanvasEvent[] {
   const hits = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke" && inkHitsPoint(block, x, y, threshold));
-  return hits.map((block) => ({ op: "removeBlock", blockId: block.id }));
+  return hits.map((block) => ({ operator: "removeBlock", blockId: block.id }));
 }
 
 /** @emoji ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
@@ -20695,8 +20973,8 @@ export function eraseInkStrokePointEventsNearPoint(doc: InkDocument, x: number, 
   for (const block of inkBlocks) {
     const fragments = eraseInkStrokePointsInItem(block, x, y, radius);
     if (fragments.length === 1 && fragments[0] === block) continue;
-    events.push({ op: "removeBlock", blockId: block.id });
-    for (const fragment of fragments) events.push({ op: "addBlock", block: fragment });
+    events.push({ operator: "removeBlock", blockId: block.id });
+    for (const fragment of fragments) events.push({ operator: "addBlock", block: fragment });
   }
   return events;
 }
@@ -20835,9 +21113,9 @@ export function createInkItemByKind(kind: InkItemKind, x: number, y: number): In
   return { ...base, kind: "text", name: hostLabel("ui.host.blockText"), paragraphs: [{ runs: [{ text: "" }] }], fontSize: 18, fontWeight: "normal", align: "left" };
 }
 
-/** @emoji 🖊️ Local pure application of the generic ink-apply-events op vocabulary — mirrors the note plugin's event-apply function for optimistic in-gesture rendering. */
+/** @emoji 🖊️ Local pure application of the generic ink-apply-events operation vocabulary — mirrors the note plugin's event-apply function for optimistic in-gesture rendering. */
 export function applyInkCanvasEventLocal(doc: InkDocument, event: InkCanvasEvent): InkDocument {
-  switch (event.op) {
+  switch (event.operation) {
     case "addBlock": {
       const blocks = [...doc.blocks];
       if (!event.parentId) {
@@ -20970,6 +21248,7 @@ function InkItemView({
   if (!block.visible) return null;
   const bounds = inkItemBounds(block);
   const common = {
+    "data-ink-block-id": block.id,
     className: cn("bg-background/90 absolute overflow-hidden rounded border shadow-sm", selected && "ring-primary ring-2", hovered && !selected && "ring-primary/60 ring-1", block.locked && "opacity-70", hidden && "pointer-events-none opacity-0"),
     style: {
       left: bounds.x,
@@ -21248,6 +21527,7 @@ const INK_MARQUEE_THRESHOLD_PX = 4;
 //#region InkCanvasHost
 export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.inkCanvas;
+  const windowInstanceId = useContext(WindowInstanceIdContext);
   const rootRef = useRef<HTMLDivElement | null>(null);
   const gestureActiveRef = useRef(false);
   const rafRef = useRef<number | null>(null);
@@ -21261,6 +21541,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
 
   const sceneDoc = useMemo(() => parseInkScene(scene?.documentJson), [scene?.documentJson]);
   const doc = draftDoc ?? sceneDoc;
+  const docRef = useRef(doc);
+  docRef.current = doc;
   const selectedIds = useMemo(() => parseSelectionIds(scene?.selectionJson), [scene?.selectionJson]);
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const hoveredId = scene?.hoveredId ?? null;
@@ -21270,6 +21552,50 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
   useEffect(() => {
     if (!gestureActiveRef.current) setDraftDoc(null);
   }, [scene?.documentJson]);
+
+  useEffect(() => {
+    if (!windowInstanceId) return;
+    return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), {
+      canvasPoint: (x, y) => {
+        const root = rootRef.current;
+        const document = docRef.current;
+        if (!root || !document) return null;
+        const rect = root.getBoundingClientRect();
+        const screen = worldToScreen(document.camera, x, y);
+        return { x: rect.left + screen.x, y: rect.top + screen.y, visible: true };
+      },
+      entity: (domain, entityId): IntroductionResolvedGeometry | null => {
+        const root = rootRef.current;
+        const document = docRef.current;
+        if (!root || !document) return null;
+        const rect = root.getBoundingClientRect();
+        if (domain === "block") {
+          const items = flattenInkItems(document.blocks);
+          const block = entityId === "*" ? items[0] : findInkItem(document, entityId);
+          if (!block) return null;
+          const bounds = inkItemBounds(block);
+          const topLeft = worldToScreen(document.camera, bounds.x, bounds.y);
+          const bottomRight = worldToScreen(document.camera, bounds.x + bounds.width, bounds.y + bounds.height);
+          return {
+            point: { x: rect.left + (topLeft.x + bottomRight.x) / 2, y: rect.top + (topLeft.y + bottomRight.y) / 2 },
+            rect: { x: rect.left + topLeft.x, y: rect.top + topLeft.y, width: bottomRight.x - topLeft.x, height: bottomRight.y - topLeft.y },
+            visible: true,
+          };
+        }
+        if (domain === "stroke") {
+          const block = entityId === "*" ? flattenInkItems(document.blocks).find((item) => item.kind === "stroke") : findInkItem(document, entityId);
+          if (!block || block.kind !== "stroke") return null;
+          const polyline = block.points.map(([px, py]) => {
+            const screen = worldToScreen(document.camera, block.x + px, block.y + py);
+            return { x: rect.left + screen.x, y: rect.top + screen.y };
+          });
+          if (polyline.length === 0) return null;
+          return { point: polyline[Math.floor(polyline.length / 2)], polyline, visible: true };
+        }
+        return null;
+      },
+    });
+  }, [windowInstanceId]);
 
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
@@ -21377,14 +21703,14 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       }
       if (utility === "pencil") {
         const block = createInkItemByKind("stroke", worldX, worldY);
-        beginGesture([{ op: "addBlock", block }], [block.id]);
+        beginGesture([{ operator: "addBlock", block }], [block.id]);
         setDragState({ kind: "stroke", blockId: block.id });
         return;
       }
       if (utility === "text" || utility === "image" || utility === "table" || utility === "math") {
         const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
         const block = createInkItemByKind(utility, placeX, placeY);
-        atomicGesture([{ op: "addBlock", block }], [block.id]);
+        atomicGesture([{ operator: "addBlock", block }], [block.id]);
         if (utility === "text") setTextEdit({ blockId: block.id, created: true });
         return;
       }
@@ -21454,7 +21780,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         for (const [blockId, origin] of Object.entries(dragState.origins)) {
           const block = findInkItem(doc, blockId);
           if (!block) continue;
-          events.push({ op: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
+          events.push({ operator: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
         }
         if (events.length) liveGesture(events);
         return;
@@ -21468,7 +21794,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (!block || block.kind !== "stroke") return;
         const localX = worldX - block.x;
         const localY = worldY - block.y;
-        liveGesture([{ op: "updateBlock", blockId: block.id, block: { ...block, points: [...block.points, [localX, localY]] } }]);
+        liveGesture([{ operator: "updateBlock", blockId: block.id, block: { ...block, points: [...block.points, [localX, localY]] } }]);
         return;
       }
       if (dragState.kind === "eraser") {
@@ -21484,7 +21810,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         for (const blockId of dragState.selectedIds) {
           const block = findInkItem(doc, blockId);
           if (!block) continue;
-          events.push({ op: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
+          events.push({ operator: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
         }
         if (events.length) liveGesture(events);
       }
@@ -21506,21 +21832,21 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (doc.snapEnabled) {
           const spacing = doc.snapGridSpacing ?? 8;
           const [x, y] = inkSnapWorldPoint(block.x, block.y, spacing);
-          events.push({ op: "updateBlock", blockId, block: { ...block, x, y } });
+          events.push({ operator: "updateBlock", blockId, block: { ...block, x, y } });
         } else {
-          events.push({ op: "updateBlock", blockId, block });
+          events.push({ operator: "updateBlock", blockId, block });
         }
       }
       commitGesture(events);
     } else if (dragState?.kind === "stroke") {
       const block = findInkItem(doc, dragState.blockId);
-      if (block) commitGesture([{ op: "updateBlock", blockId: block.id, block }]);
+      if (block) commitGesture([{ operator: "updateBlock", blockId: block.id, block }]);
       else commitGesture([]);
     } else if (dragState?.kind === "resize") {
       const events: InkCanvasEvent[] = [];
       for (const blockId of dragState.selectedIds) {
         const block = findInkItem(doc, blockId);
-        if (block) events.push({ op: "updateBlock", blockId, block });
+        if (block) events.push({ operator: "updateBlock", blockId, block });
       }
       commitGesture(events);
     } else if (dragState?.kind === "eraser") {
@@ -21587,7 +21913,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (top) return;
       const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
       const block = createInkItemByKind("text", placeX, placeY);
-      atomicGesture([{ op: "addBlock", block }], [block.id]);
+      atomicGesture([{ operator: "addBlock", block }], [block.id]);
       setTextEdit({ blockId: block.id, created: true });
     },
     [atomicGesture, dispatch, doc, interactive, isNavigator],
@@ -21606,10 +21932,10 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       }
       const plain = inkTextPlainText(paragraphs).trim();
       if (!plain && created) {
-        atomicGesture([{ op: "removeBlock", blockId }]);
+        atomicGesture([{ operator: "removeBlock", blockId }]);
         dispatch(inkCanvasActions.setSelection, { ids: [] });
       } else {
-        atomicGesture([{ op: "updateBlock", blockId, block: { ...block, paragraphs } }]);
+        atomicGesture([{ operator: "updateBlock", blockId, block: { ...block, paragraphs } }]);
       }
       setTextEdit(null);
     },
@@ -21628,7 +21954,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       const rows = block.rows.map((entry, rowIndex) => (rowIndex === row ? entry.map((cell, colIndex) => (colIndex === col ? { content } : cell)) : entry));
-      atomicGesture([{ op: "updateBlock", blockId, block: { ...block, rows } }]);
+      atomicGesture([{ operator: "updateBlock", blockId, block: { ...block, rows } }]);
       if (advance) {
         const nextCol = col + 1 < block.columns.length ? col + 1 : 0;
         const nextRow = col + 1 < block.columns.length ? row : row + 1;
@@ -21648,8 +21974,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (imageBlock.kind !== "image") return;
       atomicGesture(
         [
-          { op: "putAsset", key: assetKey, asset: { mime, data: dataUrl } },
-          { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+          { operator: "putAsset", key: assetKey, asset: { mime, data: dataUrl } },
+          { operator: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
         ],
         [imageBlock.id],
       );
@@ -21694,7 +22020,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (clipboardBlocks) {
         const clones = cloneInkItemsWithOffset(clipboardBlocks, worldX, worldY);
         atomicGesture(
-          clones.map((block) => ({ op: "addBlock", block }) as const),
+          clones.map((block) => ({ operator: "addBlock", block }) as const),
           clones.map((block) => block.id),
         );
         return;
@@ -21705,8 +22031,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (imageBlock.kind !== "image") return;
         atomicGesture(
           [
-            { op: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } },
-            { op: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+            { operator: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } },
+            { operator: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
           ],
           [imageBlock.id],
         );
@@ -21715,7 +22041,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (text.trim()) {
         const block = createInkItemByKind("text", worldX, worldY);
         const seeded: InkTextItem = { ...(block as InkTextItem), paragraphs: inkTextParagraphsFromPlainText(text.trim()) };
-        atomicGesture([{ op: "addBlock", block: seeded }], [seeded.id]);
+        atomicGesture([{ operator: "addBlock", block: seeded }], [seeded.id]);
       }
     },
     [atomicGesture, doc, pasteImageAsset, textEdit],
@@ -21766,7 +22092,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
           }}
           onCommit={(paragraphs) => commitTextEdit(editingTextBlock.id, paragraphs, textEdit.created)}
           onCancel={() => {
-            if (textEdit.created) atomicGesture([{ op: "removeBlock", blockId: editingTextBlock.id }]);
+            if (textEdit.created) atomicGesture([{ operator: "removeBlock", blockId: editingTextBlock.id }]);
             setTextEdit(null);
           }}
         />

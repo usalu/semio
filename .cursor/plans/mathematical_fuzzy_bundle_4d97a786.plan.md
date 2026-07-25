@@ -100,8 +100,8 @@ Single `lib.rs` organized as `// #region 🔖Name` sections (algebra/random styl
 - **FuzzyError** — validated domains, empty rule bases, singular LSE, etc.
 - **MembershipFunction** — triangular, trapezoidal, Gaussian, generalized bell, sigmoid, singleton, piecewise-linear, custom closure-backed; eval + parameter get/set for adaptation.
 - **FuzzySet** (type-1), **IntervalType2Set** (FOU lower/upper), **IntuitionisticSet** (μ, ν, π with μ+ν≤1).
-- Set ops / hedges — t-norms & t-conorms (min, product, Łukasiewicz, drastic, nilpotent max); complement; concentration/dilation; linguistic hedges.
-- **FuzzyNumber** + α-cut arithmetic and extension-principle application for elementary ops.
+- Set operations / hedges — t-norms & t-conorms (min, product, Łukasiewicz, drastic, nilpotent max); complement; concentration/dilation; linguistic hedges.
+- **FuzzyNumber** + α-cut arithmetic and extension-principle application for elementary operations.
 - **FuzzyRelation** + max-min / max-product composition.
 - **Possibility** / **Necessity** measures from fuzzy sets and distributions-as-possibility.
 
@@ -137,7 +137,7 @@ Typed builder covering the user’s fan example: learn “high” from sensor da
 
 All in `// #region 🔖Tests` inside `lib.rs` (no new test files):
 
-- Fundamental: MF shapes, set ops, each inference engine on a 1–2 rule system, each defuzzifier, FCM toy 2-cluster, AHP/TOPSIS smoke, α-cut arithmetic.
+- Fundamental: MF shapes, set operations, each inference engine on a 1–2 rule system, each defuzzifier, FCM toy 2-cluster, AHP/TOPSIS smoke, α-cut arithmetic.
 - `mod long`: ANFIS fit on a nonlinear target, evolving stream, GA/PSO improvement, hierarchical MIMO, type-2 FOU robustness check.
 
 Validate with `bun nx run @semio-tech/math-fuzzy:test` and `test-long` (never claim pass without running).

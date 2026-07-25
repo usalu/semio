@@ -39,7 +39,7 @@ isProject: false
 
 ## Architecture
 
-vcs stays app-agnostic: it only sees `DocumentVcsEnvelope<P, Op>` where each app provides projection `P`, operations `Op: Operation<P>`, and diffs `Op::Diff: OperationDiff<P>` at compile time. Persistence is owned by the store/shell, never by app plugins (they are sandboxed wasm and the capability lint forbids fs/net).
+vcs stays app-agnostic: it only sees `DocumentVcsEnvelope<P, Operation>` where each app provides projection `P`, operations `Operation: ::vcs::Operation<P>`, and diffs `Operation::Diff: OperationDiff<P>` at compile time. Persistence is owned by the store/shell, never by app plugins (they are sandboxed wasm and the capability lint forbids fs/net).
 
 ```mermaid
 flowchart LR
@@ -71,7 +71,7 @@ Replace the current `DevJsonFileBackbone` / `SqliteFolderBackbone` / `RemoteHttp
 
 - `BackboneKind { Temporary, File, Folder, Remote }`; `DocumentBackboneRef { kind: BackboneKind, uri }`.
 - URI schemes: `temp://<document-id>`, `file:///abs/path.json` (embedded JSON file), `folder:///abs/path` (sqlite at `<path>/.semio/document.db`, single-row `document` table), `remote://host:port/<document-id>` (hub).
-- `TemporaryBackbone` = in-memory (today's `MemoryBackbonePort` behind the trait). `FileJsonBackbone` and `FolderSqliteBackbone` do native fs/rusqlite on non-wasm; on wasm they route through an injected `BackbonePort` (host IO). `RemoteBackbone` loads via hub REST and syncs ops; native uses blocking HTTP, wasm goes through the host port.
+- `TemporaryBackbone` = in-memory (today's `MemoryBackbonePort` behind the trait). `FileJsonBackbone` and `FolderSqliteBackbone` do native fs/rusqlite on non-wasm; on wasm they route through an injected `BackbonePort` (host IO). `RemoteBackbone` loads via hub REST and syncs operations; native uses blocking HTTP, wasm goes through the host port.
 - Store API: `attach_backbone(uri)`, `detach_backbone()`, `backbone_ref()`; `dispatch` auto-syncs to the attached backbone after every successful mutation so state is always persisted.
 - Update `resolve_backbone`, all vcs tests (four round-trip tests, one per kind), and [vcs/rs/studio-store.json](vcs/rs/studio-store.json) to the new schemes.
 
@@ -82,7 +82,7 @@ Replace the current `DevJsonFileBackbone` / `SqliteFolderBackbone` / `RemoteHttp
 
 ## 3. Hub envelope sync — [framework/product/os/hub/rs/bin.rs](framework/product/os/hub/rs/bin.rs)
 
-- Add `GET/PUT /documents/{id}/envelope` for whole-envelope load/sync plus keep op streaming over the existing WebSocket; broadcast envelope updates so other connected clients reload.
+- Add `GET/PUT /documents/{id}/envelope` for whole-envelope load/sync plus keep operation streaming over the existing WebSocket; broadcast envelope updates so other connected clients reload.
 - Fix the stale hub test (it still constructs `AppendOpRequest` with a removed `change` field) and add an envelope round-trip test.
 
 ## 4. Browser host IO — [framework/product/os/dev](framework/product/os/dev/script.ts)

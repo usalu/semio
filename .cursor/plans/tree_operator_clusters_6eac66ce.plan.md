@@ -58,7 +58,7 @@ flowchart TB
 - `#region Evaluator`: make `evaluate_channels_with` recurse:
   - When the current neuron has `neuron.tree = Some(sub)`, instead of `dispatch(kind, …)`:
     1. seed sub-tree: for each `INPUT_KIND` neuron, seed its output with `collected_input.get(channel)` (or the channel default).
-    2. recursively call `evaluate_channels_with(sub, &sub_seeds, operator_infos, dispatch)` (reuse the same `dispatch` for leaf ops).
+    2. recursively call `evaluate_channels_with(sub, &sub_seeds, operator_infos, dispatch)` (reuse the same `dispatch` for leaf operations).
     3. assemble output dict: for each `OUTPUT_KIND` neuron, read its resolved input from `EvalChannels.inputs` and insert under its channel id.
   - Treat `INPUT_KIND`/`OUTPUT_KIND` as engine-internal identity when dispatched directly (output = seeded/identity input) so they never hit the bridge.
 - `#region Tests`: add `cluster_runs_inner_tree` (point/number add inside a cluster), `cluster_contract_derives_channels`, and a `cluster_shakability` round-trip (serialize tree, strip nothing GUI-related, re-evaluate identical outputs).
@@ -72,7 +72,7 @@ flowchart TB
   - `collapse(selected_ids: &[String]) -> Result<String, String>`: partition synapses into internal / crossing-in / crossing-out; synthesize `INPUT_KIND`/`OUTPUT_KIND` boundary neurons (one per distinct crossing port), build inner `Tree` + inner `FlowGui`, replace selected widgets with one `Widget::Cluster` at the selection centroid, and rewire external synapses to the cluster's contract ports.
   - `explode(cluster_id: &str) -> Result<(), String>`: re-add inner neurons as widgets (namespacing ids `{cluster}/{inner}`, offset by cluster layout), reconnect external synapses through each boundary neuron's inner downstream/upstream, drop boundary neurons + the cluster widget.
   - Both push history (`begin_history`/`commit_history` like existing edits) and call `rebuild_dag` + `evaluate_internal`.
-- `evaluate_internal` ([flow/core/lib.rs](flow/core/lib.rs):1524) needs no change beyond the recursive Evaluator (it already passes `kind_infos` + bridge `dispatch`); leaf ops inside clusters dispatch through the same bridge.
+- `evaluate_internal` ([flow/core/lib.rs](flow/core/lib.rs):1524) needs no change beyond the recursive Evaluator (it already passes `kind_infos` + bridge `dispatch`); leaf operations inside clusters dispatch through the same bridge.
 - `#region WasmSession`: add `#[wasm_bindgen(js_name = collapseSelection)]` and `explodeCluster(cluster_id)` exports next to `togglePreview` ([flow/core/lib.rs](flow/core/lib.rs):2166).
 - `#region Tests`: extend with `collapse_then_explode_round_trips`, `cluster_evaluates_inner_tree`, `cluster_ports_from_contract`.
 

@@ -2304,7 +2304,7 @@ impl LogitsWorkspace {
     }
 
     /// 🧰 Grows every buffer to `vocab_size` if it is larger than the workspace's current
-    /// capacity; a no-op (never shrinks) otherwise — the basis of pool reuse across batch slots.
+    /// capacity; a no-operation (never shrinks) otherwise — the basis of pool reuse across batch slots.
     pub fn ensure_capacity(&mut self, vocab_size: usize) {
         if vocab_size <= self.vocab_size {
             return;
@@ -2619,7 +2619,7 @@ pub struct ProcessorStats {
     pub timing_ns: u64,
 }
 
-/// 🔭 Hook points into the engine's per-step lifecycle; every method is a no-op default so
+/// 🔭 Hook points into the engine's per-step lifecycle; every method is a no-operation default so
 /// observers only implement what they need.
 pub trait SamplingObserver {
     fn on_step_start(&mut self, _sequence: SequenceId, _step: StepIndex) {}
@@ -3150,7 +3150,7 @@ impl FreqTable {
 
 /// ⚖️ Open-addressed (via `HashMap`) rolling-context index: maps a hash of the last `order - 1`
 /// tokens to every token observed to follow that context, for [`NoRepeatNgram`]. `undo` records
-/// exactly the key touched by each [`NgramIndex::record`] call (or `None` for a no-op call), so
+/// exactly the key touched by each [`NgramIndex::record`] call (or `None` for a no-operation call), so
 /// [`NgramIndex::rollback_last_n`] can undo precisely `n` prior commits.
 #[derive(Clone, Default)]
 pub struct NgramIndex {
@@ -4441,7 +4441,7 @@ impl StopCondition for TokenStopCondition {
 }
 
 /// 🛑 Text-sequence stop: feeds each token's byte representation (via the [`TokenTextAdapter`] in
-/// [`StepView::adapter`]) through an [`AhoCorasick`] automaton; a no-op (never matches) when no
+/// [`StepView::adapter`]) through an [`AhoCorasick`] automaton; a no-operation (never matches) when no
 /// adapter is supplied, since stop text can't be evaluated without token→byte mapping.
 pub struct TextStopCondition {
     ac: std::rc::Rc<AhoCorasick>,
@@ -5245,7 +5245,7 @@ enum JsonExpect {
 /// (object/array frame stack + an "expected next token class" state) that validates JSON syntax
 /// reactively as token bytes are accepted. Numbers, booleans, and `null` are treated as atomic
 /// (their internal digits/characters aren't byte-validated) — a deliberate simplification, not a
-/// full JSON-number grammar. Does not proactively mask (`fill_mask` is a no-op): building a
+/// full JSON-number grammar. Does not proactively mask (`fill_mask` is a no-operation): building a
 /// per-state token-feasibility cache for this hand-written automaton (mirroring [`DfaTokenCache`])
 /// is a hardening-wave follow-up.
 pub struct JsonModeConstraint {
@@ -6658,7 +6658,7 @@ struct LocalCollectiveMailbox {
 /// 🗂️ Same-process reference [`Collective`]: every rank's handle shares one mailbox. This is
 /// **not** a real network protocol — each call stages this rank's contribution and returns the
 /// reduction over whatever has been staged *so far*, so callers must call every rank once (any
-/// order) per logical collective op, then call once more (or read the last call's result) to see
+/// order) per logical collective operation, then call once more (or read the last call's result) to see
 /// every rank's contribution reflected. Good enough for testing the sharded sampling math against
 /// its unsharded equivalent in a single process; not a substitute for a real collective library.
 pub struct LocalCollective {

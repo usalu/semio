@@ -27,7 +27,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 **Tier 1 — Severe (core interaction/domain broken, user-visible immediately)**
 
 - `puzzle3d`: every object renders as a gray box (ignores `meshUrl`/orientation/kind catalog); brush/fill entirely unported (`puzzle/3d/plugin/rs/lib.rs`, precompute engine `puzzle/3d/rs/lib.rs` unwired)
-- `lowpoly`: paint completely non-functional (no paint commands at all); mesh editing commands (`extrude`/`inset`/`bevel`/...) are no-ops; real halfedge mesh from `lowpoly/core/rs` ignored; default fixture emptied
+- `lowpoly`: paint completely non-functional (no paint commands at all); mesh editing commands (`extrude`/`inset`/`bevel`/...) are no-operations; real halfedge mesh from `lowpoly/core/rs` ignored; default fixture emptied
 - `flow`: no evaluation/compute pipeline (~90% of old `FlowSession` API dropped); undo/redo dead; catalogue trimmed to 5 widgets
 - `sequence`: no nested control/slot/collapse support; no `setStepParams`/`removeStep`
 - `procedural3d`: no brep evaluation, hardcoded box preview mesh, examples not registered
@@ -43,7 +43,7 @@ This is the pattern to fix everywhere: **wire the plugin's `handle_command`/`ren
 
 - `dag`: `renameDagNode` referenced but unimplemented (dead UI), no delete/disconnect, only 4/12+ node kinds, no undo
 - `raster`: composite view renders **empty pixels** (fixture image data never decoded), no paint/selection tools, masks/filters missing
-- `writer`: LSP entirely absent (diagnostics/completions/format/lint all no-ops), AST↔editor sync broken
+- `writer`: LSP entirely absent (diagnostics/completions/format/lint all no-operations), AST↔editor sync broken
 - `shooting`: icon window renders blank raster; model window ignores GLB URLs (hardcoded box); no export commands
 - `layout`: read-only inspector, no export pipeline (PNG/SVG/PDF), canvas is bounding-box stub (no fill/stroke/story content), pointer interaction stubbed
 - `reasoning-wires`: entire inherited Puzzle2d engine dropped; relationships/edges never rendered

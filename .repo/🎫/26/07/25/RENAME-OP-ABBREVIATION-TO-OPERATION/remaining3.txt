@@ -1,0 +1,55 @@
+=== *Op in source (exclude pkg/noise) ===
+
+=== *_op / *_ops snake in source ===
+   1 shell_op
+   1 blend_ops
+
+=== bare op/ops source ===
+framework/core/rs/lib.rs:4100:impl<T> std::ops::Index<usize> for NonEmptyVec<T> {
+
+=== energy fan locals ===
+224:    use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
+297:                let sup_operating_point = fan_operating_point(supply_fan, flow, 500.0);
+299:                    let operating_point = fan_operating_point(f, flow * 0.9, 300.0);
+300:                    fan_power_w(f, &operating_point)
+312:                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
+324:                let sup_operating_point = fan_operating_point(supply_fan, flow, 600.0);
+325:                let ret_power = return_fan.as_ref().map_or(0.0, |f| fan_power_w(f, &fan_operating_point(f, flow * 0.85, 350.0)));
+336:                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
+355:                let sup_power = fan_power_w(hot_fan, &fan_operating_point(hot_fan, hot_flow, 400.0)) + fan_power_w(cold_fan, &fan_operating_point(cold_fan, cold_flow, 400.0));
+377:                let sup_operating_point = fan_operating_point(supply_fan, total_flow, 550.0);
+389:                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
+402:                let sup_operating_point = fan_operating_point(supply_fan, oa_flow, 450.0);
+413:                    supply_fan_power_w: fan_power_w(supply_fan, &sup_operating_point),
+3073:    pub fn fan_operating_point(fan: &Fan, requested_flow_m3_s: f64, system_pressure_pa: f64) -> FanOperatingPoint {
+3112:            assert_eq!(fan_power_w(&fan, &operating_point), 0.0);
+3118:            let operating_point = fan_operating_point(&fan, 2.0, 600.0);
+3119:            let p = fan_power_w(&fan, &operating_point);
+9862:    use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
+9961:                    let operating_point = fan_operating_point(fan, induced_flow, 150.0);
+9968:                        fan_power_w: fan_power_w(fan, &operating_point),
+10730:    use crate::fans::{fan_mass_flow_kg_s, fan_operating_point, fan_power_w, Fan};
+10824:                    let operating_point = fan_operating_point(fan, flow, 300.0);
+10831:                        fan_power_w: fan_power_w(fan, &operating_point),
+10844:                    let operating_point = fan_operating_point(fan, request.supply_mass_flow_kg_s / RHO_AIR_REF, 250.0);
+10851:                        fan_power_w: fan_power_w(fan, &operating_point),
+10876:                    let sup_operating_point = fan_operating_point(supply_fan, m_dot / RHO_AIR_REF, 200.0);
+10877:                    let exh_operating_point = fan_operating_point(exhaust_fan, m_dot / RHO_AIR_REF, 200.0);
+10884:                        fan_power_w: fan_power_w(supply_fan, &sup_operating_point) + fan_power_w(exhaust_fan, &exh_operating_point) + hx.defrost_power_w,
+10893:                    let operating_point = fan_operating_point(fan, m_dot / RHO_AIR_REF, 150.0);
+10900:                        fan_power_w: fan_power_w(fan, &operating_point),
+
+=== broken Operation: Operation or ::vcs ===
+norm/core/rs/lib.rs:458:    type Operation: vcs::Operation<Self::Document> + Clone + PartialEq + Send;
+framework/plugin/rs/lib.rs:2868:    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send;
+vcs/rs/lib.rs:408:    Operation: crate::Operation<P>,
+vcs/rs/lib.rs:415:    Operation: crate::Operation<P>,
+vcs/rs/lib.rs:428:    Operation: crate::Operation<P>,
+vcs/rs/lib.rs:533:    Operation: crate::Operation<P>,
+vcs/rs/lib.rs:549:    Operation: crate::Operation<P>,
+vcs/rs/lib.rs:2555:        Operation: crate::Operation<P>,
+vcs/rs/lib.rs:3689:    fn demo_member<'a, Operation: crate::Operation<DemoProjection> + 'static>(
+
+=== DrawOperation ok ===
+draw/rs/lib.rs:46
+draw/plugin/rs/lib.rs:27

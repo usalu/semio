@@ -77,13 +77,13 @@ Default `proximity_distance` to `48.0` (not `0.0`) so proximity connect works ou
 Register user-facing view actions (in palette):
 
 - `selectAll` — all widget ids; keybinding `mod+a`
-- `focusSelection` — frame camera on selection bounds (label “Zoom to Selection”); no-op when empty
+- `focusSelection` — frame camera on selection bounds (label “Zoom to Selection”); no-operation when empty
 
-Keep document ops in palette: `deleteSelection`, `reorganize`, `addWidget`, `evaluate`.
+Keep document operations in palette: `deleteSelection`, `reorganize`, `addWidget`, `evaluate`.
 
 Mark every internal/config action `in_palette: false` via `action_with(ActionDefinition { in_palette: false, … })` (Puzzle2d’s `puzzle2d_internal_action` pattern): viewport, hover, measures onChange targets (`setLodMode`, `setProximityDistance`, `setGrid*`), generation internals, media graph plumbing, etc.
 
-Handlers (runtime-only, no ops):
+Handlers (runtime-only, no operations):
 
 - `selectAll` / `clearSelection` — update `runtime.selected_node_ids`
 - `focusSelection` — union bounds from selected DAG nodes (position + width/height from host fixture), center camera, zoom to fit with padding and existing flow zoom clamps

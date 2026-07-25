@@ -669,7 +669,7 @@ export function mergeKitWithStoryDesign(kit: unknown, design: Design): unknown {
   return mergeKitDesigns(kit, storyDesignPlain(design));
 }
 
-/** @emoji ⚡ Story hook: runs an async algorithm op when deps change; surfaces loading and errors. */
+/** @emoji ⚡ Story hook: runs an async algorithm operation when deps change; surfaces loading and errors. */
 export function useAlgorithmAsyncRun<T>(enabled: boolean, run: () => Promise<T>, deps: React.DependencyList): { result: T | undefined; loading: boolean; error: string | undefined } {
   const [result, setResult] = React.useState<T | undefined>(undefined);
   const [loading, setLoading] = React.useState(false);

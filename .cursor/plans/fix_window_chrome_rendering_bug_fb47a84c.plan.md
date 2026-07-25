@@ -12,7 +12,7 @@ isProject: false
 Dock chrome (tab caps, per-tab borders, resize handles, navbar/footer backgrounds) is genuinely framework-owned and painted unconditionally, independent of plugin `render()` output:
 
 - `render_stack` (`[framework/renderer/wgpu/rs/lib.rs:1226-1400](framework/renderer/wgpu/rs/lib.rs)`) draws the tab cap, borders, and cap buttons regardless of what the plugin returns for that window's body.
-- `paint_chrome` (`framework/renderer/wgpu/rs/lib.rs:459-482`) walks the dock tree with a **noop** body renderer and is routed through `with_chrome_sink` (`framework/renderer/wgpu/rs/lib.rs:10667`, commented "Chrome content must always win over window bodies").
+- `paint_chrome` (`framework/renderer/wgpu/rs/lib.rs:459-482`) walks the dock tree with a **no_operation** body renderer and is routed through `with_chrome_sink` (`framework/renderer/wgpu/rs/lib.rs:10667`, commented "Chrome content must always win over window bodies").
 - A plugin's `UiNode` tree only ever fills the scissored content rect inside `render_window_content` (`framework/renderer/wgpu/rs/lib.rs:11640-11684`); it cannot structurally replace dock chrome.
 
 So the bug is not "plugins can override chrome" in the naive sense — it's a rendering defect in a specific, real code path plus a set of chrome-adjacent features that are silently plugin-optional. Both need fixing.

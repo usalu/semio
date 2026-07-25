@@ -336,7 +336,7 @@ pub use present::{compile_present_site, compile_scene_to_assets, PresentCompileE
 use serde::{Deserialize, Serialize};
 #[cfg(any(test, target_arch = "wasm32"))]
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_op, create_document_vcs_envelope, invert_collection_op, materialize_document_projection, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use vcs::{collection_diff_from_operation, create_document_vcs_envelope, invert_collection_operation, materialize_document_projection, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 
 pub const PRESENT_DECK_SCHEMA: &str = "animate.present.deck";
 
@@ -397,8 +397,8 @@ pub struct PresentDeck {
     pub tiles: Vec<FigureTileDraft>,
 }
 
-pub type PresentEnvelope = DocumentVcsEnvelope<PresentDeck, PresentOp>;
-pub type PresentStore = DocumentVcsStore<PresentDeck, PresentOp>;
+pub type PresentEnvelope = DocumentVcsEnvelope<PresentDeck, PresentOperation>;
+pub type PresentStore = DocumentVcsStore<PresentDeck, PresentOperation>;
 
 pub fn empty_present_deck() -> PresentDeck {
     PresentDeck { schema: PRESENT_DECK_SCHEMA.into(), source: default_figure_tile_source(), tiles: Vec::new() }
@@ -543,7 +543,7 @@ pub fn export_video_from_scene(scene: &PresentScene, output_dir: &std::path::Pat
 }
 //#endregion 🔖VideoExport
 
-//#region 🔖Ops
+//#region 🔖Operations
 //#region 🔖CollectionSupport
 impl Identified<String> for FigureTileDraft {
     fn id(&self) -> &String {
@@ -600,9 +600,9 @@ fn absorb_tile_diff(target: &mut Option<CollectionDiff<String, FigureTileDraftPa
 //#endregion 🔖CollectionSupport
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum PresentOp {
-    Tiles(CollectionOp<String, FigureTileDraft, FigureTileDraftPatch>),
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum PresentOperation {
+    Tiles(CollectionOperation<String, FigureTileDraft, FigureTileDraftPatch>),
     SetSource { source: FigureTileSource },
     SetTiles { tiles: Vec<FigureTileDraft> },
     SetDeck { deck: PresentDeck },
@@ -650,28 +650,28 @@ impl OperationDiff<PresentDeck> for PresentDiff {
     }
 }
 
-impl Operation<PresentDeck> for PresentOp {
+impl Operation<PresentDeck> for PresentOperation {
     type Diff = PresentDiff;
 
     fn diff(&self, projection: &PresentDeck) -> PresentDiff {
         match self {
-            PresentOp::Tiles(op) => PresentDiff { tiles: Some(collection_diff_from_op(&projection.tiles, op)), ..Default::default() },
-            PresentOp::SetSource { source } => PresentDiff { source: Some(source.clone()), ..Default::default() },
-            PresentOp::SetTiles { tiles } => PresentDiff { set_tiles: Some(tiles.clone()), ..Default::default() },
-            PresentOp::SetDeck { deck } => PresentDiff { deck: Some(deck.clone()), ..Default::default() },
+            PresentOperation::Tiles(operation) => PresentDiff { tiles: Some(collection_diff_from_operation(&projection.tiles, operation)), ..Default::default() },
+            PresentOperation::SetSource { source } => PresentDiff { source: Some(source.clone()), ..Default::default() },
+            PresentOperation::SetTiles { tiles } => PresentDiff { set_tiles: Some(tiles.clone()), ..Default::default() },
+            PresentOperation::SetDeck { deck } => PresentDiff { deck: Some(deck.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &PresentDeck) -> Vec<Self> {
         match self {
-            PresentOp::Tiles(op) => vec![PresentOp::Tiles(invert_collection_op(&projection.tiles, op))],
-            PresentOp::SetSource { .. } => vec![PresentOp::SetSource { source: projection.source.clone() }],
-            PresentOp::SetTiles { .. } => vec![PresentOp::SetTiles { tiles: projection.tiles.clone() }],
-            PresentOp::SetDeck { .. } => vec![PresentOp::SetDeck { deck: projection.clone() }],
+            PresentOperation::Tiles(operation) => vec![PresentOperation::Tiles(invert_collection_operation(&projection.tiles, operation))],
+            PresentOperation::SetSource { .. } => vec![PresentOperation::SetSource { source: projection.source.clone() }],
+            PresentOperation::SetTiles { .. } => vec![PresentOperation::SetTiles { tiles: projection.tiles.clone() }],
+            PresentOperation::SetDeck { .. } => vec![PresentOperation::SetDeck { deck: projection.clone() }],
         }
     }
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
 //#region 🔖VcsEnvelope
 /// @emoji 📦 Creates an empty typed VCS envelope for a presentation deck document.
@@ -774,13 +774,13 @@ mod tests {
         assert!(prompt.contains("Source media"));
     }
 
-    fn round_trip(deck: &PresentDeck, op: &PresentOp) -> PresentDeck {
-        let forward = vcs::apply_operation(deck, op);
+    fn round_trip(deck: &PresentDeck, operation: &PresentOperation) -> PresentDeck {
+        let forward = vcs::apply_operation(deck, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(deck) {
+        for back in operation.backwards(deck) {
             restored = vcs::apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, deck, "backwards() must exactly restore the pre-op deck");
+        assert_eq!(&restored, deck, "backwards() must exactly restore the pre-operation deck");
         forward
     }
 
@@ -788,9 +788,9 @@ mod tests {
     fn set_tiles_and_clear_round_trip() {
         let deck = default_present_deck();
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
-        let seeded = round_trip(&deck, &PresentOp::SetTiles { tiles: tiles.clone() });
+        let seeded = round_trip(&deck, &PresentOperation::SetTiles { tiles: tiles.clone() });
         assert_eq!(seeded.tiles.len(), 4);
-        let cleared = round_trip(&seeded, &PresentOp::SetTiles { tiles: Vec::new() });
+        let cleared = round_trip(&seeded, &PresentOperation::SetTiles { tiles: Vec::new() });
         assert!(cleared.tiles.is_empty());
     }
 
@@ -798,13 +798,13 @@ mod tests {
     fn tile_add_patch_remove_round_trip() {
         let deck = default_present_deck();
         let tile = FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
-        let added = round_trip(&deck, &PresentOp::Tiles(CollectionOp::Add { index: 0, item: tile }));
+        let added = round_trip(&deck, &PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: tile }));
         assert_eq!(added.tiles.len(), 1);
-        let renamed = round_trip(&added, &PresentOp::Tiles(CollectionOp::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
+        let renamed = round_trip(&added, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: Some("Renamed".into()), crop: None } }));
         assert_eq!(renamed.tiles[0].name, "Renamed");
-        let recropped = round_trip(&renamed, &PresentOp::Tiles(CollectionOp::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) } }));
+        let recropped = round_trip(&renamed, &PresentOperation::Tiles(CollectionOperation::Patch { id: "t1".into(), patch: FigureTileDraftPatch { name: None, crop: Some(FigureTileFrame { x: 0.3, y: 0.3, width: 0.4, height: 0.4 }) } }));
         assert_eq!(recropped.tiles[0].crop.width, 0.4);
-        let removed = round_trip(&recropped, &PresentOp::Tiles(CollectionOp::Remove { id: "t1".into() }));
+        let removed = round_trip(&recropped, &PresentOperation::Tiles(CollectionOperation::Remove { id: "t1".into() }));
         assert!(removed.tiles.is_empty());
     }
 
@@ -813,7 +813,7 @@ mod tests {
         let mut store = PresentStore::new(create_document_vcs_envelope(PRESENT_DECK_SCHEMA, "animate-present", empty_present_deck(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![PresentOp::Tiles(CollectionOp::Add { index: 0, item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
+                operations: vec![PresentOperation::Tiles(CollectionOperation::Add { index: 0, item: FigureTileDraft { id: "t1".into(), name: "A".into(), crop: FigureTileFrame { x: 0.0, y: 0.0, width: 1.0, height: 1.0 } } })],
                 description: None,
             })
             .expect("apply");

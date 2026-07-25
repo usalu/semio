@@ -6,7 +6,7 @@ todos:
    content: Extend semios spawn test to assert real materialized projections for every technology; add per-handler-style fixture round-trips; fix forms.dictionary/v1 vs forms.form/v1 format mismatch
    status: pending
  - id: part2b-kit-engine
-   content: Design and implement TypeScript Kit Domain Engine (entity model, typed KitOp union, port compatibility, blueprint/transitive refs, VFS derivation) as a real compose.kit/v1 AppVcsHandler
+   content: Design and implement TypeScript Kit Domain Engine (entity model, typed KitOperation union, port compatibility, blueprint/transitive refs, VFS derivation) as a real compose.kit/v1 AppVcsHandler
    status: pending
  - id: part2c-rewire-sketchpad
    content: Rewire ComposeJsKitStore, sketchpad kit factories, and SemiosSketchpadHost off compose-js/WASM onto the new TS engine; eliminate the nested Platform/duplicate store
@@ -75,7 +75,7 @@ flowchart TB
 ## Part 1 — Verify every technology inside semios (do first, low risk)
 
 - Extend `"spawns every technology program id"` in [semios/core/index.ts](semios/core/index.ts) (currently only asserts `appInstances.length`) to call `materializeAppInstanceProjection` for every spawned instance and assert it returns a sane, non-throwing projection for every format — following the pattern already used for `flow` (`materializeAppInstanceProjection(updated).flow.id === "patched"`) and `draw` (fixture-level assertion in [semios/play/index.ts](semios/play/index.ts)).
-- Add at least one fixture/round-trip assertion per handler style: typed-op handlers (`draw`, `writer`, `raster`, `forms`) and JSON-replace handlers (`flow`, `dag`, `procedural.2d/3d`, `shooting`, `trinity`, `gis.map`, `presentation`, `puzzle.2d/3d/5d`, `cad`, `compose.sketchpad`/home).
+- Add at least one fixture/round-trip assertion per handler style: typed-operation handlers (`draw`, `writer`, `raster`, `forms`) and JSON-replace handlers (`flow`, `dag`, `procedural.2d/3d`, `shooting`, `trinity`, `gis.map`, `presentation`, `puzzle.2d/3d/5d`, `cad`, `compose.sketchpad`/home).
 - Fix the `forms.dictionary/v1` vs `forms.form/v1` mismatch found during the audit: the `forms` program's registry entry declares `sourceFormat: "forms.dictionary"` ([semios/core/index.ts:275](semios/core/index.ts)) but the typed handler `createFormsAppVcsHandler` is registered for `forms.form/v1` ([forms/core/index.ts:1092](forms/core/index.ts)) — align these so `forms` actually exercises its typed handler end-to-end instead of silently falling back to a JSON-replace stub.
 
 ## Part 2 — Port the Rust kit domain engine to TypeScript
@@ -83,7 +83,7 @@ flowchart TB
 ### B. Build the TypeScript Kit Domain Engine
 
 - New region (in `semios/core/index.ts`, or a new package if warranted) implementing the Kit entity model (`Type`, `Design`, `Piece`, `Port`, `Connection`, tags/attributes) matching the DTO shape sketchpad already consumes (`SketchpadKitSnapshot`).
-- Typed `KitOp` union (createDesign, renamePiece, connectPorts, createType, ...), replacing Rust's `Operation`/`KitDiff`/`apply_diff`, dispatched through `framework/core`'s existing `DocumentVcsStore` (no new VCS mechanism needed — that generalization is already done).
+- Typed `KitOperation` union (createDesign, renamePiece, connectPorts, createType, ...), replacing Rust's `Operation`/`KitDiff`/`apply_diff`, dispatched through `framework/core`'s existing `DocumentVcsStore` (no new VCS mechanism needed — that generalization is already done).
 - Port compatibility algorithm (from `Port::compatible_with`, `compose/client/lib/rs/lib.rs` ~3288-3340).
 - Blueprint and transitive-reference resolution (from `Piece::blueprint`, `referencesTypesTransitive`, lib.rs ~4283-5359).
 - VFS derivation (from the `file_system_children` macros, lib.rs ~210-346/14320+).

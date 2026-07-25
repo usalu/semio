@@ -31,7 +31,7 @@ const BUTTON_TREE: UiNode = {
     { type: "button", id: "story-add-item", iconId: "plus", label: "Add Item", action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "addItem", args: {} } },
     { type: "separator" },
     { type: "text", value: "A disabled, loading variant:", emphasize: true },
-    { type: "button", id: "story-add-item-loading", iconId: "loader", label: "Working…", action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "noop", args: {} }, loading: true, disabled: true },
+    { type: "button", id: "story-add-item-loading", iconId: "loader", label: "Working…", action: { controllerId: STORY_UI_INTERPRETER_CONTROLLER_ID, action: "noOperation", args: {} }, loading: true, disabled: true },
   ],
 };
 

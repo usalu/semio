@@ -250,7 +250,7 @@ impl BrepkitKernel {
             && aabb_a.max.z() + margin >= aabb_b.min.z()
     }
 
-    fn boolean_mesh_sync(&mut self, op: BooleanOp, a: SolidId, b: SolidId) -> Result<SolidId, BrepError> {
+    fn boolean_mesh_sync(&mut self, operator: BooleanOp, a: SolidId, b: SolidId) -> Result<SolidId, BrepError> {
         // 🐌 Coarser than the default render deflection on purpose: this only feeds the
         // triangle-triangle boolean, not the final mesh, and a finer value multiplies the
         // CDT/mesh-boolean triangle count enough to turn torus-involving cuts into a
@@ -259,9 +259,9 @@ impl BrepkitKernel {
         let tol = brepkit_math::tolerance::Tolerance::new();
         let mesh_a = self.cached_tessellate_solid(a, deflection)?;
         let mesh_b = self.cached_tessellate_solid(b, deflection)?;
-        let mb = match mesh_boolean(&mesh_a, &mesh_b, op, tol.linear) {
+        let mb = match mesh_boolean(&mesh_a, &mesh_b, operator, tol.linear) {
             Ok(result) => result,
-            Err(brepkit_operations::OperationsError::EmptyResult { .. }) if op == BooleanOp::Intersect => {
+            Err(brepkit_operations::OperationsError::EmptyResult { .. }) if operator == BooleanOp::Intersect => {
                 return Ok(self.topo.add_empty_solid());
             }
             Err(error) => return Err(Self::map_err(error)),
@@ -269,12 +269,12 @@ impl BrepkitKernel {
         import_mesh(&mut self.topo, &mb.mesh, tol.linear).map_err(Self::map_io_err)
     }
 
-    fn boolean_sync(&mut self, op: BooleanOp, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
+    fn boolean_sync(&mut self, operator: BooleanOp, a: &GeometryHandle, b: &GeometryHandle) -> Result<GeometryHandle, BrepError> {
         let a_id = self.solid_id(a)?;
         let b_id = self.solid_id(b)?;
         let torus_involved = self.solid_has_torus_surface(a_id) || self.solid_has_torus_surface(b_id);
         let use_mesh = torus_involved && self.solid_bounds_overlap(a_id, b_id);
-        let solid = if use_mesh { self.boolean_mesh_sync(op, a_id, b_id)? } else { boolean(&mut self.topo, op, a_id, b_id).map_err(Self::map_err)? };
+        let solid = if use_mesh { self.boolean_mesh_sync(operator, a_id, b_id)? } else { boolean(&mut self.topo, operator, a_id, b_id).map_err(Self::map_err)? };
         Ok(self.register_solid(solid))
     }
 

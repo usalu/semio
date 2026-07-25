@@ -15,7 +15,7 @@ todos:
    content: Create geometry/brep/engine (Rust BrepKernel trait + handle/kind/mesh value types) as the external-lib interface; wire Cargo workspace, script.ts, launch.json.
    status: completed
  - id: brep-rust-brepkit
-   content: "Create geometry/brep/brepkit (brepkit-backed impl): Topology+handle registry, supported ops, STEP/STL IO, and tessellation (tris+normals+edges+face groups) to mesh buffers; tests."
+   content: "Create geometry/brep/brepkit (brepkit-backed impl): Topology+handle registry, supported operations, STEP/STL IO, and tessellation (tris+normals+edges+face groups) to mesh buffers; tests."
    status: completed
  - id: brep-flow-module
    content: "Create flow/module/brep WASM module: register geometry schema + operator-typed brep operators (reusing math point/vector + core schemas), stateful kernel, and wasm-bindgen manifest/evaluate/tessellate/dispose; tests."

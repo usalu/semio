@@ -47,7 +47,7 @@ pub enum TrinityRamError {
     #[error("nodes/{node_id}/ports/{port_kind}: port kind {port_kind} not declared on node kind {node_kind}")]
     PortKindNotDeclaredOnFixture { node_id: String, port_kind: String, node_kind: String },
     #[error("nodes/{node_id}/ports/{port_id}: port kind {port_kind} not declared on node kind {node_kind}")]
-    PortKindNotDeclaredOnOp { node_id: String, port_id: String, port_kind: String, node_kind: String },
+    PortKindNotDeclaredOnOperation { node_id: String, port_id: String, port_kind: String, node_kind: String },
     #[error("nodes/{kind}: unknown node kind {kind:?}")]
     UnknownNodeKind { kind: String },
     #[error("edges/{kind}: unknown edge kind {kind:?}")]
@@ -419,7 +419,7 @@ pub fn port_key(node_id: &str, port_id: &str) -> String {
 }
 // #endregion 🔖Runtime
 
-// #region 🔖GraphOps
+// #region 🔖GraphOperations
 use vcs::{apply_operation, create_document_vcs_envelope, CollectionDiff, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, ItemPatch, Operation, OperationDiff};
 
 pub const TRINITY_GRAPH_SCHEMA: &str = GraphFixture::SCHEMA;
@@ -546,8 +546,8 @@ impl OperationDiff<GraphFixture> for TrinityGraphDiff {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum TrinityGraphOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum TrinityGraphOperation {
     CreateNode {
         id: String,
         kind: String,
@@ -599,16 +599,16 @@ pub enum TrinityGraphOp {
     },
 }
 
-pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixture, TrinityGraphOp>;
-pub type TrinityGraphStore = DocumentVcsStore<GraphFixture, TrinityGraphOp>;
+pub type TrinityGraphEnvelope = DocumentVcsEnvelope<GraphFixture, TrinityGraphOperation>;
+pub type TrinityGraphStore = DocumentVcsStore<GraphFixture, TrinityGraphOperation>;
 
 pub fn create_trinity_graph_envelope(id: &str, fixture: GraphFixture) -> TrinityGraphEnvelope {
     create_document_vcs_envelope(TRINITY_GRAPH_SCHEMA, id, fixture, None)
 }
 
-pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
-    match op {
-        TrinityGraphOp::CreateNode { id, kind, ports, .. } => {
+pub fn validate_trinity_graph_operation(operation: &TrinityGraphOperation, fixture: &GraphFixture) -> Result<(), TrinityRamError> {
+    match operation {
+        TrinityGraphOperation::CreateNode { id, kind, ports, .. } => {
             if fixture.nodes.iter().any(|node| node.id == *id) {
                 return Err(TrinityRamError::NodeAlreadyExists(id.clone()));
             }
@@ -617,17 +617,17 @@ pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) ->
                 for port in ports {
                     validate_port_kind_trinity(&fixture.manifest, &port.kind)?;
                     if !node_def.port_kinds.is_empty() && !node_def.port_kinds.iter().any(|p| p == &port.kind) {
-                        return Err(TrinityRamError::PortKindNotDeclaredOnOp { node_id: id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: kind.clone() });
+                        return Err(TrinityRamError::PortKindNotDeclaredOnOperation { node_id: id.clone(), port_id: port.id.clone(), port_kind: port.kind.clone(), node_kind: kind.clone() });
                     }
                 }
             }
         }
-        TrinityGraphOp::DeleteNode { id } => {
+        TrinityGraphOperation::DeleteNode { id } => {
             if !fixture.nodes.iter().any(|node| node.id == *id) {
                 return Err(TrinityRamError::NodeNotFound(id.clone()));
             }
         }
-        TrinityGraphOp::CreateEdge { id, kind, source, target, properties } => {
+        TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => {
             if fixture.edges.iter().any(|edge| edge.id == *id) {
                 return Err(TrinityRamError::EdgeAlreadyExists(id.clone()));
             }
@@ -642,46 +642,46 @@ pub fn validate_trinity_graph_op(op: &TrinityGraphOp, fixture: &GraphFixture) ->
                 return Err(TrinityRamError::TargetNodeNotFound(target_node.to_string()));
             }
         }
-        TrinityGraphOp::DeleteEdge { id } => {
+        TrinityGraphOperation::DeleteEdge { id } => {
             if !fixture.edges.iter().any(|edge| edge.id == *id) {
                 return Err(TrinityRamError::EdgeNotFound(id.clone()));
             }
         }
-        TrinityGraphOp::Rename { id, .. } | TrinityGraphOp::Reposition { id, .. } => {
+        TrinityGraphOperation::Rename { id, .. } | TrinityGraphOperation::Reposition { id, .. } => {
             if !fixture.nodes.iter().any(|node| node.id == *id) {
                 return Err(TrinityRamError::NodeNotFound(id.clone()));
             }
         }
-        TrinityGraphOp::SetDataProperty { entity, key, value } => {
+        TrinityGraphOperation::SetDataProperty { entity, key, value } => {
             validate_set_data_property(fixture, entity, key, value)?;
         }
-        TrinityGraphOp::ClearDataProperty { entity, key } => {
+        TrinityGraphOperation::ClearDataProperty { entity, key } => {
             validate_clear_data_property(fixture, entity, key)?;
         }
-        TrinityGraphOp::SetCamera { .. } | TrinityGraphOp::SetFixture { .. } => {}
+        TrinityGraphOperation::SetCamera { .. } | TrinityGraphOperation::SetFixture { .. } => {}
     }
     Ok(())
 }
 
-pub fn apply_trinity_graph_ops(fixture: GraphFixture, ops: &[TrinityGraphOp]) -> Result<GraphFixture, TrinityRamError> {
+pub fn apply_trinity_graph_operations(fixture: GraphFixture, operations: &[TrinityGraphOperation]) -> Result<GraphFixture, TrinityRamError> {
     let mut projection = fixture;
-    for op in ops {
-        validate_trinity_graph_op(op, &projection)?;
-        projection = apply_operation(&projection, op);
+    for operation in operations {
+        validate_trinity_graph_operation(operation, &projection)?;
+        projection = apply_operation(&projection, operation);
     }
     Ok(projection)
 }
 
-pub fn dispatch_trinity_graph_ops(store: &mut TrinityGraphStore, ops: Vec<TrinityGraphOp>) -> Result<(), TrinityRamError> {
-    if ops.is_empty() {
+pub fn dispatch_trinity_graph_operations(store: &mut TrinityGraphStore, operations: Vec<TrinityGraphOperation>) -> Result<(), TrinityRamError> {
+    if operations.is_empty() {
         return Ok(());
     }
     let mut projection = store.projection()?;
-    for op in &ops {
-        validate_trinity_graph_op(op, &projection)?;
-        projection = apply_operation(&projection, op);
+    for operation in &operations {
+        validate_trinity_graph_operation(operation, &projection)?;
+        projection = apply_operation(&projection, operation);
     }
-    store.dispatch(DocumentVcsCommand::Apply { operations: ops, description: None }).map_err(TrinityRamError::from)
+    store.dispatch(DocumentVcsCommand::Apply { operations: operations, description: None }).map_err(TrinityRamError::from)
 }
 
 fn validate_clear_data_property(fixture: &GraphFixture, entity: &EntityRef, key: &str) -> Result<(), TrinityRamError> {
@@ -814,17 +814,17 @@ fn entity_property_value(fixture: &GraphFixture, entity: &EntityRef, key: &str) 
     }
 }
 
-impl Operation<GraphFixture> for TrinityGraphOp {
+impl Operation<GraphFixture> for TrinityGraphOperation {
     type Diff = TrinityGraphDiff;
 
     fn diff(&self, projection: &GraphFixture) -> TrinityGraphDiff {
         match self {
-            TrinityGraphOp::CreateNode { id, kind, name, x, y, width, height, ports } => TrinityGraphDiff {
+            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports } => TrinityGraphDiff {
                 nodes: CollectionDiff { added: vec![Node { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, properties: PropertyBag::new(), ports: ports.clone() }], ..Default::default() },
                 recompute_derived: true,
                 ..Default::default()
             },
-            TrinityGraphOp::DeleteNode { id } => {
+            TrinityGraphOperation::DeleteNode { id } => {
                 let (node, edges) = delete_node_snapshot(projection, id);
                 TrinityGraphDiff {
                     nodes: CollectionDiff { removed: node.as_ref().map(|node| vec![node.id.clone()]).unwrap_or_default(), ..Default::default() },
@@ -833,19 +833,19 @@ impl Operation<GraphFixture> for TrinityGraphOp {
                     ..Default::default()
                 }
             }
-            TrinityGraphOp::CreateEdge { id, kind, source, target, properties } => TrinityGraphDiff {
+            TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => TrinityGraphDiff {
                 edges: CollectionDiff { added: vec![Edge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() }], ..Default::default() },
                 recompute_derived: true,
                 ..Default::default()
             },
-            TrinityGraphOp::DeleteEdge { id } => TrinityGraphDiff { edges: CollectionDiff { removed: vec![id.clone()], ..Default::default() }, recompute_derived: true, ..Default::default() },
-            TrinityGraphOp::Rename { id, name } => {
+            TrinityGraphOperation::DeleteEdge { id } => TrinityGraphDiff { edges: CollectionDiff { removed: vec![id.clone()], ..Default::default() }, recompute_derived: true, ..Default::default() },
+            TrinityGraphOperation::Rename { id, name } => {
                 TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() }, ..Default::default() }
             }
-            TrinityGraphOp::Reposition { id, x, y } => {
+            TrinityGraphOperation::Reposition { id, x, y } => {
                 TrinityGraphDiff { nodes: CollectionDiff { modified: vec![ItemPatch { id: id.clone(), patch: NodeGeometryPatch { x: Some(*x), y: Some(*y), ..Default::default() } }], ..Default::default() }, ..Default::default() }
             }
-            TrinityGraphOp::SetDataProperty { entity, key, value } => {
+            TrinityGraphOperation::SetDataProperty { entity, key, value } => {
                 let patch = PropertyPatch { key: key.clone(), value: Some(value.clone()) };
                 let recompute = matches!(entity, EntityRef::Edge(_)) && (key == "u" || key == "v");
                 match entity {
@@ -853,57 +853,57 @@ impl Operation<GraphFixture> for TrinityGraphOp {
                     EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: recompute, ..Default::default() },
                 }
             }
-            TrinityGraphOp::ClearDataProperty { entity, key } => {
+            TrinityGraphOperation::ClearDataProperty { entity, key } => {
                 let patch = PropertyPatch { key: key.clone(), value: None };
                 match entity {
                     EntityRef::Node(id) => TrinityGraphDiff { node_properties: vec![ItemPatch { id: id.clone(), patch }], ..Default::default() },
                     EntityRef::Edge(id) => TrinityGraphDiff { edge_properties: vec![ItemPatch { id: id.clone(), patch }], recompute_derived: key == "u" || key == "v", ..Default::default() },
                 }
             }
-            TrinityGraphOp::SetCamera { camera } => TrinityGraphDiff { camera: Some(camera.clone()), ..Default::default() },
-            TrinityGraphOp::SetFixture { fixture } => TrinityGraphDiff { set_fixture: Some(fixture.clone()), recompute_derived: true, ..Default::default() },
+            TrinityGraphOperation::SetCamera { camera } => TrinityGraphDiff { camera: Some(camera.clone()), ..Default::default() },
+            TrinityGraphOperation::SetFixture { fixture } => TrinityGraphDiff { set_fixture: Some(fixture.clone()), recompute_derived: true, ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &GraphFixture) -> Vec<Self> {
         match self {
-            TrinityGraphOp::CreateNode { id, .. } => vec![TrinityGraphOp::DeleteNode { id: id.clone() }],
-            TrinityGraphOp::DeleteNode { id } => {
+            TrinityGraphOperation::CreateNode { id, .. } => vec![TrinityGraphOperation::DeleteNode { id: id.clone() }],
+            TrinityGraphOperation::DeleteNode { id } => {
                 let (node, edges) = delete_node_snapshot(projection, id);
                 let mut out = Vec::new();
                 if let Some(node) = node {
-                    out.push(TrinityGraphOp::CreateNode { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, ports: node.ports });
+                    out.push(TrinityGraphOperation::CreateNode { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, ports: node.ports });
                     for edge in edges {
-                        out.push(TrinityGraphOp::CreateEdge { id: edge.id, kind: edge.kind, source: edge.source, target: edge.target, properties: edge.properties });
+                        out.push(TrinityGraphOperation::CreateEdge { id: edge.id, kind: edge.kind, source: edge.source, target: edge.target, properties: edge.properties });
                     }
                 }
                 out
             }
-            TrinityGraphOp::CreateEdge { id, .. } => vec![TrinityGraphOp::DeleteEdge { id: id.clone() }],
-            TrinityGraphOp::DeleteEdge { id } => projection
+            TrinityGraphOperation::CreateEdge { id, .. } => vec![TrinityGraphOperation::DeleteEdge { id: id.clone() }],
+            TrinityGraphOperation::DeleteEdge { id } => projection
                 .edges
                 .iter()
                 .find(|edge| edge.id == *id)
-                .map(|edge| vec![TrinityGraphOp::CreateEdge { id: edge.id.clone(), kind: edge.kind.clone(), source: edge.source.clone(), target: edge.target.clone(), properties: edge.properties.clone() }])
+                .map(|edge| vec![TrinityGraphOperation::CreateEdge { id: edge.id.clone(), kind: edge.kind.clone(), source: edge.source.clone(), target: edge.target.clone(), properties: edge.properties.clone() }])
                 .unwrap_or_default(),
-            TrinityGraphOp::Rename { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOp::Rename { id: id.clone(), name: node.name.clone() }]).unwrap_or_default(),
-            TrinityGraphOp::Reposition { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOp::Reposition { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
-            TrinityGraphOp::SetDataProperty { entity, key, .. } => {
+            TrinityGraphOperation::Rename { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOperation::Rename { id: id.clone(), name: node.name.clone() }]).unwrap_or_default(),
+            TrinityGraphOperation::Reposition { id, .. } => projection.nodes.iter().find(|node| node.id == *id).map(|node| vec![TrinityGraphOperation::Reposition { id: id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+            TrinityGraphOperation::SetDataProperty { entity, key, .. } => {
                 let prior = entity_property_value(projection, entity, key);
                 match (entity, prior) {
-                    (EntityRef::Node(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty { entity: EntityRef::Node(id.clone()), key: key.clone(), value: old }],
-                    (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphOp::SetDataProperty { entity: EntityRef::Edge(id.clone()), key: key.clone(), value: old }],
-                    (entity, None) => vec![TrinityGraphOp::ClearDataProperty { entity: entity.clone(), key: key.clone() }],
+                    (EntityRef::Node(id), Some(old)) => vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node(id.clone()), key: key.clone(), value: old }],
+                    (EntityRef::Edge(id), Some(old)) => vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Edge(id.clone()), key: key.clone(), value: old }],
+                    (entity, None) => vec![TrinityGraphOperation::ClearDataProperty { entity: entity.clone(), key: key.clone() }],
                 }
             }
-            TrinityGraphOp::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOp::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default(),
-            TrinityGraphOp::SetCamera { .. } => vec![TrinityGraphOp::SetCamera { camera: projection.camera.clone() }],
-            TrinityGraphOp::SetFixture { .. } => vec![TrinityGraphOp::SetFixture { fixture: projection.clone() }],
+            TrinityGraphOperation::ClearDataProperty { entity, key } => entity_property_value(projection, entity, key).map(|old| vec![TrinityGraphOperation::SetDataProperty { entity: entity.clone(), key: key.clone(), value: old }]).unwrap_or_default(),
+            TrinityGraphOperation::SetCamera { .. } => vec![TrinityGraphOperation::SetCamera { camera: projection.camera.clone() }],
+            TrinityGraphOperation::SetFixture { .. } => vec![TrinityGraphOperation::SetFixture { fixture: projection.clone() }],
         }
     }
 }
 
-// #endregion 🔖GraphOps
+// #endregion 🔖GraphOperations
 
 pub fn empty_trinity_graph_fixture() -> GraphFixture {
     GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
@@ -1162,7 +1162,7 @@ mod tests {
     fn graph_op_create_node_and_undo() {
         let fixture = mini_fixture();
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_ops(&mut store, vec![TrinityGraphOp::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "new-piece".into(), x: 200.0, y: 40.0, width: 80.0, height: 40.0, ports: vec![] }]).expect("create");
         assert_eq!(store.projection().expect("projection").nodes.len(), 3);
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").nodes.len(), 2);
@@ -1175,10 +1175,10 @@ mod tests {
             fixture.nodes.push(Node { id: format!("pad-{}", fixture.nodes.len()), kind: "Piece".into(), name: format!("pad-{}", fixture.nodes.len()), x: 0.0, y: 0.0, width: 80.0, height: 40.0, properties: PropertyBag::new(), ports: vec![] });
         }
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", fixture));
-        dispatch_trinity_graph_ops(
+        dispatch_trinity_graph_operations(
             &mut store,
             vec![
-                TrinityGraphOp::CreateNode {
+                TrinityGraphOperation::CreateNode {
                     id: "x-9".into(),
                     kind: "Piece".into(),
                     name: "x".into(),
@@ -1188,7 +1188,7 @@ mod tests {
                     height: 40.0,
                     ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
                 },
-                TrinityGraphOp::CreateNode {
+                TrinityGraphOperation::CreateNode {
                     id: "y-10".into(),
                     kind: "Piece".into(),
                     name: "y".into(),
@@ -1198,7 +1198,7 @@ mod tests {
                     height: 40.0,
                     ports: vec![Port { id: "in".into(), kind: "Connector".into(), direction: PortDirection::In, properties: PropertyBag::new() }],
                 },
-                TrinityGraphOp::CreateEdge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() },
+                TrinityGraphOperation::CreateEdge { id: "e-batch".into(), kind: "Connection".into(), source: port_key("x-9", "out"), target: port_key("y-10", "in"), properties: PropertyBag::new() },
             ],
         )
         .expect("batch create edge");
@@ -1210,14 +1210,14 @@ mod tests {
     #[test]
     fn graph_op_rejects_unknown_node_kind() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_op(&TrinityGraphOp::CreateNode { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![] }, &fixture).expect_err("unknown kind");
+        let err = validate_trinity_graph_operation(&TrinityGraphOperation::CreateNode { id: "new".into(), kind: "Piece2".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![] }, &fixture).expect_err("unknown kind");
         assert!(err.to_string().contains("unknown node kind"));
     }
 
     #[test]
     fn graph_op_rejects_derived_property_set() {
         let fixture = mini_fixture();
-        let err = validate_trinity_graph_op(&TrinityGraphOp::SetDataProperty { entity: EntityRef::Node("root".into()), key: "flatPosition".into(), value: PropertyValue::Null }, &fixture).expect_err("derived");
+        let err = validate_trinity_graph_operation(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "flatPosition".into(), value: PropertyValue::Null }, &fixture).expect_err("derived");
         assert!(err.to_string().contains("derived"));
     }
 }

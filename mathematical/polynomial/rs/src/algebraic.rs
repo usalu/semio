@@ -123,7 +123,7 @@ impl AlgebraicReal {
         None
     }
 
-    /// 🎯 Refines until the interval no longer straddles zero (a no-op for the exact rational `0`,
+    /// 🎯 Refines until the interval no longer straddles zero (a no-operation for the exact rational `0`,
     /// which has no sign to separate); used before sign-dependent transforms like `inv`.
     fn with_definite_sign(&self) -> Self {
         let mut probe = self.clone();
@@ -212,7 +212,7 @@ impl AlgebraicReal {
     }
     // #endregion 🔖CheapTransforms
 
-    // #region 🔖AlgebraicOps
+    // #region 🔖AlgebraicOperations
     /// ➕ Sum of two algebraic reals via the bivariate resultant `res_y(f(x - y), g(y))`, which
     /// vanishes exactly at every pairwise sum of a root of `f` with a root of `g`; the correct
     /// irreducible factor and interval are selected by exact rational interval refinement (never by
@@ -226,15 +226,15 @@ impl AlgebraicReal {
         Self::combine(self, other, Combine::Mul)
     }
 
-    fn combine(a: &Self, b: &Self, op: Combine) -> Self {
+    fn combine(a: &Self, b: &Self, operation: Combine) -> Self {
         if a.is_rational() {
-            return match op {
+            return match operation {
                 Combine::Add => b.add_rational(&a.lo),
                 Combine::Mul => b.scale_rational(&a.lo).unwrap_or_else(|| Self::from_rational(&Rational::zero())),
             };
         }
         if b.is_rational() {
-            return match op {
+            return match operation {
                 Combine::Add => a.add_rational(&b.lo),
                 Combine::Mul => a.scale_rational(&b.lo).unwrap_or_else(|| Self::from_rational(&Rational::zero())),
             };
@@ -242,7 +242,7 @@ impl AlgebraicReal {
         let n = a.poly.degree().unwrap_or(0);
         let f_lifted: PolyU<PolyU<Integer>> = PolyU::from_coeffs(a.poly.coeffs().iter().map(|c| PolyU::constant(c.clone())).collect());
         let g_lifted: PolyU<PolyU<Integer>> = PolyU::from_coeffs(b.poly.coeffs().iter().map(|c| PolyU::constant(c.clone())).collect());
-        let transformed: PolyU<PolyU<Integer>> = match op {
+        let transformed: PolyU<PolyU<Integer>> = match operation {
             Combine::Add => {
                 let shift: PolyU<PolyU<Integer>> = PolyU::from_coeffs(vec![PolyU::x(), PolyU::constant(Integer::from_i64(-1))]);
                 f_lifted.compose(&shift)
@@ -263,7 +263,7 @@ impl AlgebraicReal {
         for _ in 0..200 {
             a_ref.refine_below(&precision);
             b_ref.refine_below(&precision);
-            let (target_lo, target_hi) = match op {
+            let (target_lo, target_hi) = match operation {
                 Combine::Add => (a_ref.lo.add(&b_ref.lo), a_ref.hi.add(&b_ref.hi)),
                 Combine::Mul => {
                     let candidates = [a_ref.lo.mul(&b_ref.lo), a_ref.lo.mul(&b_ref.hi), a_ref.hi.mul(&b_ref.lo), a_ref.hi.mul(&b_ref.hi)];
@@ -289,13 +289,13 @@ impl AlgebraicReal {
             precision = precision.div(&Rational::from_i64(4, 1).unwrap()).unwrap();
         }
         // Defensive fallback: numeric estimate selects the nearest root of the resultant polynomial.
-        let target = match op {
+        let target = match operation {
             Combine::Add => a.to_f64() + b.to_f64(),
             Combine::Mul => a.to_f64() * b.to_f64(),
         };
         Self::root_of_near(&resultant_poly, target).unwrap_or_else(|| Self::from_rational(&Rational::zero()))
     }
-    // #endregion 🔖AlgebraicOps
+    // #endregion 🔖AlgebraicOperations
 }
 
 enum Combine {

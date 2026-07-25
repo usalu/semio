@@ -5,9 +5,9 @@ pub mod app_2d {
 
     use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
-    use procedural_2d::{procedural2d_fixture_ops, Procedural2dDocument, Procedural2dOp, PROCEDURAL_2D_SCHEMA};
+    use procedural_2d::{procedural2d_fixture_operations, Procedural2dDocument, Procedural2dOperation, PROCEDURAL_2D_SCHEMA};
     use protocol::{
-        apply_generation_op, generation_ops, render_generation_form_body, render_generation_preview_text,
+        apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationPlayState,
     };
     use semio_framework_plugin::{SurfaceKind, PanelGroup,
@@ -618,7 +618,7 @@ pub mod app_2d {
             "label": labels.delete_selection,
             "icon": "trash",
             "action": "nodeGraphEdit",
-            "args": { "ops": [{ "op": "deleteSelection" }] },
+            "args": { "operations": [{ "operation": "deleteSelection" }] },
             "destructive": true,
         }]))
         .ok();
@@ -712,29 +712,29 @@ pub mod app_2d {
     }
 
     impl Procedural2dPlayApp {
-        /// 🔀 Runs a host mutation seeded from the projection fixture and diffs the result into ops.
+        /// 🔀 Runs a host mutation seeded from the projection fixture and diffs the result into operations.
         /// Diffs against the host-normalized baseline (not the raw projection) so `FlowHost`'s own
-        /// dedupe/dag-rebuild normalization does not leak spurious collection ops — only the actual
-        /// mutation becomes an op, which keeps concurrent disjoint edits mergeable on the backbone.
+        /// dedupe/dag-rebuild normalization does not leak spurious collection operations — only the actual
+        /// mutation becomes an operation, which keeps concurrent disjoint edits mergeable on the backbone.
         fn ops_from_host_mutation(
             &self,
             fixture: &FlowFixture,
             mutate: impl FnOnce(&mut FlowHost),
-        ) -> Vec<Procedural2dOp> {
+        ) -> Vec<Procedural2dOperation> {
             let mut host = host_from_fixture(fixture);
             let baseline = host.fixture.clone();
             mutate(&mut host);
-            procedural2d_fixture_ops(&baseline, &host.fixture)
+            procedural2d_fixture_operations(&baseline, &host.fixture)
         }
 
-        /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
-        /// preview from the post-op state. `selectGeneration` is a view action (no ops).
+        /// 🧬 Emits generation operations for the generate-mode actions, updating ephemeral selection and
+        /// preview from the post-operation state. `selectGeneration` is a view action (no operations).
         fn handle_generation(
             &mut self,
             action: &str,
             args: Option<&Value>,
             projection: &Procedural2dDocument,
-        ) -> ActionEmit<Procedural2dOp> {
+        ) -> ActionEmit<Procedural2dOperation> {
             let spec = flow_fixture_to_form_spec(&projection.fixture);
             let mut state = projection.generation.clone();
             state.selected_generation_id = self.runtime.selected_generation_id.clone();
@@ -746,17 +746,17 @@ pub mod app_2d {
                 refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
                 return ActionEmit::default();
             }
-            let Some(ops) = generation_ops(action, args, &state, &spec) else {
+            let Some(operations) = generation_operations(action, args, &state, &spec) else {
                 return ActionEmit::default();
             };
-            for op in &ops {
-                apply_generation_op(&mut state, op);
+            for operation in &operations {
+                apply_generation_operation(&mut state, operation);
             }
             self.runtime.selected_generation_id = state.selected_generation_id.clone();
             refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
             let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
             ActionEmit {
-                ops: ops.into_iter().map(Procedural2dOp::Generation).collect(),
+                operations: operations.into_iter().map(Procedural2dOperation::Generation).collect(),
                 coalesce_key,
                 ..Default::default()
             }
@@ -765,7 +765,7 @@ pub mod app_2d {
 
     impl DocumentApp for Procedural2dPlayApp {
         type Projection = Procedural2dDocument;
-        type Op = Procedural2dOp;
+        type Operation = Procedural2dOperation;
 
         fn app_id(&self) -> &str {
             PROCEDURAL2D_PLAY_APP_ID
@@ -785,10 +785,10 @@ pub mod app_2d {
             args: Option<&Value>,
             doc: &DocumentView<'_, Procedural2dDocument>,
             _view_state: &ViewState,
-        ) -> ActionEmit<Procedural2dOp> {
+        ) -> ActionEmit<Procedural2dOperation> {
             let fixture = &doc.projection.fixture;
             match action {
-                // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+                // 👁️ View actions — mutate ephemeral runtime, emit no operations.
                 "setSelection" | "selectNode" | "nodeGraphSelect" => {
                     self.runtime.selected_ids = selection_ids(args);
                     ActionEmit::default()
@@ -818,7 +818,7 @@ pub mod app_2d {
                     ActionEmit { effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() }, ..ActionEmit::default() }
                 }
                 "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
-                // 📷 Graph camera — ephemeral view state (never a document op), same model as flow-play.
+                // 📷 Graph camera — ephemeral view state (never a document operation), same model as flow-play.
                 "nodeGraphViewport" => {
                     if let Some(camera) = args
                         .and_then(|value| value.get("viewportJson"))
@@ -829,20 +829,20 @@ pub mod app_2d {
                     }
                     ActionEmit::default()
                 }
-                // ✏️ Operations — compute the target fixture via the host, emit fixture ops.
+                // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
                 "nodeGraphEdit" => {
-                    let sub_ops = args
-                        .and_then(|value| value.get("ops"))
+                    let sub_operations = args
+                        .and_then(|value| value.get("operations"))
                         .and_then(|value| value.as_array())
                         .cloned()
                         .unwrap_or_default();
                     let selected = self.runtime.selected_ids.clone();
                     let mut cleared = false;
-                    let ops = self.ops_from_host_mutation(fixture, |host| {
-                        for op in &sub_ops {
-                            match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                    let operations = self.ops_from_host_mutation(fixture, |host| {
+                        for operation in &sub_operations {
+                            match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                                 "setFixture" => {
-                                    if let Some(fixture) = op
+                                    if let Some(fixture) = operation
                                         .get("fixtureJson")
                                         .and_then(|value| value.as_str())
                                         .and_then(|json| serde_json::from_str::<FlowFixture>(json).ok())
@@ -858,10 +858,10 @@ pub mod app_2d {
                                     }
                                 }
                                 "connect" => {
-                                    let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                                    let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                                    let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                                    let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                                    let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                                    let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
+                                    let to = operation.get("targetNodeId").and_then(|value| value.as_str());
+                                    let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                                     if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                                         let _ = host.connect_ports(from, from_port, to, to_port);
                                     }
@@ -873,14 +873,14 @@ pub mod app_2d {
                     if cleared {
                         self.runtime.selected_ids.clear();
                     }
-                    ActionEmit::ops(ops)
+                    ActionEmit::operations(operations)
                 }
                 "moveMediaNode" => {
                     let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
                     let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64());
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                     if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
-                        return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                        return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                             let _ = host.move_widget(&node_id, x, y);
                         }));
                     }
@@ -902,20 +902,20 @@ pub mod app_2d {
                     let baseline = host.fixture.clone();
                     if let Ok(id) = host.add_widget(&descriptor, x, y) {
                         self.runtime.selected_ids = vec![id];
-                        return ActionEmit::ops(procedural2d_fixture_ops(&baseline, &host.fixture));
+                        return ActionEmit::operations(procedural2d_fixture_operations(&baseline, &host.fixture));
                     }
                     ActionEmit::default()
                 }
                 "removeWidget" => {
                     let widget_id = args.and_then(|value| value.get("widgetId")).and_then(|value| value.as_str()).map(str::to_string);
                     if let Some(widget_id) = widget_id {
-                        let ops = self.ops_from_host_mutation(fixture, |host| {
+                        let operations = self.ops_from_host_mutation(fixture, |host| {
                             let _ = host.remove_widget(&widget_id);
                         });
-                        if !ops.is_empty() {
+                        if !operations.is_empty() {
                             self.runtime.selected_ids.retain(|id| id != &widget_id);
                         }
-                        return ActionEmit::ops(ops);
+                        return ActionEmit::operations(operations);
                     }
                     ActionEmit::default()
                 }
@@ -925,13 +925,13 @@ pub mod app_2d {
                     let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
                     let to_port = args.and_then(|value| value.get("targetPortId")).and_then(|value| value.as_str()).map(str::to_string);
                     if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
-                        return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                        return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                             let _ = host.connect_ports(&from, &from_port, &to, &to_port);
                         }));
                     }
                     ActionEmit::default()
                 }
-                "reorganize" => ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                "reorganize" => ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     let _ = host.reorganize(r#"{"orientation":"leftRight"}"#);
                 })),
                 "addGeneration" | "removeGeneration" | "selectGeneration" | "renameGeneration" | "updateGenerationValues" => {
@@ -942,7 +942,7 @@ pub mod app_2d {
         }
 
         /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
-        /// covers every mutation path (edits, undo/redo, remote ops) in one place instead of each
+        /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
         /// action re-checking. `FlowEvalDriver::sync` is cheap when nothing changed.
         fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural2dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
             let host = host_from_fixture(&doc.projection.fixture);
@@ -1062,7 +1062,7 @@ pub mod app_2d {
                     PanelGroup::Details,
                     PROCEDURAL2D_PLAY_BODY_INSPECTION,
                 )
-                // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
+                // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
                 .operation("nodeGraphEdit", "Edit Graph")
                 .operation("moveMediaNode", "Move Node")
                 .operation("addWidget", "Add Widget")
@@ -1073,7 +1073,7 @@ pub mod app_2d {
                 .operation("removeGeneration", "Remove Generation")
                 .operation("renameGeneration", "Rename Generation")
                 .operation("updateGenerationValues", "Update Generation Values")
-                // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no ops).
+                // 👁️ Ephemeral view actions — selection, hover, camera, the show-mode display toggle, and evaluation scratch (emit no operations).
                 .view_action("nodeGraphViewport", "Set Viewport")
                 .view_action("setSelection", "Set Selection")
                 .view_action("selectNode", "Select Node")
@@ -1139,12 +1139,12 @@ pub mod app_2d {
         }
 
         #[test]
-        fn add_widget_materializes_declared_kind_default_into_an_op() {
+        fn add_widget_materializes_declared_kind_default_into_an_operation() {
             let mut app = new_app_with_registry();
             let before = app.projection().expect("projection").fixture.widgets.len();
-            // addWidget fired with no args: the declared `kind` default must materialize into a real widget op.
+            // addWidget fired with no args: the declared `kind` default must materialize into a real widget operation.
             app.handle_action("addWidget", None, &ViewState::default(), &meta("local")).expect("add widget");
-            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1, "materialized default kind produced a document op");
+            assert_eq!(app.projection().expect("projection").fixture.widgets.len(), before + 1, "materialized default kind produced a document operation");
         }
 
         #[test]
@@ -1209,7 +1209,7 @@ pub mod app_2d {
         }
 
         #[test]
-        fn generate_is_a_view_action_with_no_document_ops() {
+        fn generate_is_a_view_action_with_no_document_operations() {
             let mut app = new_app();
             let before = app.projection().expect("projection");
             app.handle_action("generate", None, &ViewState::default(), &meta("local")).expect("generate");
@@ -1217,7 +1217,7 @@ pub mod app_2d {
         }
 
         #[test]
-        fn add_generation_records_an_undoable_generation_op() {
+        fn add_generation_records_an_undoable_generation_operation() {
             let mut app = new_app();
             testkit::assert_undo_redo_round_trip(
                 &mut app,
@@ -1307,10 +1307,10 @@ pub mod app_3d {
         CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget,
     };
     use flow_module_brep::tessellate_geometry_json;
-    use procedural_3d::{procedural3d_fixture_ops, Procedural3dDocument, Procedural3dOp, PROCEDURAL_3D_SCHEMA};
+    use procedural_3d::{procedural3d_fixture_operations, Procedural3dDocument, Procedural3dOperation, PROCEDURAL_3D_SCHEMA};
     use protocol::{
-        apply_generation_op, generation_ops, render_generation_form_body, render_generation_preview_text,
-        render_generations_tree, select_generation, selected_generation, GenerationOp, GenerationPlayState,
+        apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
+        render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState,
     };
     use semio_framework_plugin::{PanelGroup,
         apply_world3d_sun_action, build_node_graph_scene, build_world_3d_scene, create_default_layout,
@@ -1649,18 +1649,18 @@ pub mod app_3d {
     }
 
     //#region 🔖GumballTransforms
-    /// 🧭 Maps a gumball drag op to the flow-graph transform neuron kind that persists it.
-    fn gumball_xform_kind(op: &str) -> &'static str {
-        match op {
+    /// 🧭 Maps a gumball drag operation to the flow-graph transform neuron kind that persists it.
+    fn gumball_xform_kind(operation: &str) -> &'static str {
+        match operation {
             "rotate" => "brep.xform.rotate",
             "scale" => "brep.xform.scale",
             _ => "brep.xform.translate",
         }
     }
 
-    /// 🪪 Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `op`.
-    fn gumball_widget_id(source_id: &str, op: &str) -> String {
-        format!("{source_id}__gumball_{op}")
+    /// 🪪 Deterministic id for the transform neuron generated by dragging `source_id`'s gumball for `operation`.
+    fn gumball_widget_id(source_id: &str, operation: &str) -> String {
+        format!("{source_id}__gumball_{operation}")
     }
 
     fn gumball_widget_json(host: &FlowHost, widget_id_str: &str) -> Option<Value> {
@@ -1706,18 +1706,18 @@ pub mod app_3d {
         .to_string()
     }
 
-    /// 🔀 Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for `op` into the flow graph, rewiring downstream consumers so the transformed geometry is what actually evaluates and exports.
-    fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, op: &str) -> Result<String, String> {
-        let own_suffix = format!("__gumball_{op}");
+    /// 🔀 Finds (or splices in) the transform neuron that persists `selected_id`'s gumball drag for `operation` into the flow graph, rewiring downstream consumers so the transformed geometry is what actually evaluates and exports.
+    fn ensure_gumball_node(host: &mut FlowHost, selected_id: &str, operation: &str) -> Result<String, String> {
+        let own_suffix = format!("__gumball_{operation}");
         if selected_id.ends_with(&own_suffix) && host.fixture.widgets.iter().any(|widget| widget_id(widget) == selected_id) {
             return Ok(selected_id.to_string());
         }
-        let transform_id = gumball_widget_id(selected_id, op);
+        let transform_id = gumball_widget_id(selected_id, operation);
         if host.fixture.widgets.iter().any(|widget| widget_id(widget) == transform_id) {
             return Ok(transform_id);
         }
         let (source_x, source_y) = widget_layout_position(&host.fixture, selected_id);
-        let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(op) }).to_string();
+        let descriptor = json!({ "kind": "neuron", "id": transform_id, "neuronKind": gumball_xform_kind(operation) }).to_string();
         host.add_widget(&descriptor, source_x + 220.0, source_y).map_err(|err| err.to_string())?;
         let outgoing_port = host.fixture.synapses.iter().find(|synapse| synapse.from == selected_id).map(|synapse| synapse.from_port.clone());
         if let Some(port) = outgoing_port {
@@ -2336,25 +2336,25 @@ pub mod app_3d {
     }
 
     impl Procedural3dPlayApp {
-        /// 🔀 Diffs a mutated fixture into ops. Diffs against the host-normalized baseline of `before`
+        /// 🔀 Diffs a mutated fixture into operations. Diffs against the host-normalized baseline of `before`
         /// (not the raw projection) so `FlowHost`'s own dedupe/dag-rebuild normalization does not leak
-        /// spurious collection ops — only the actual mutation becomes an op, keeping concurrent
+        /// spurious collection operations — only the actual mutation becomes an operation, keeping concurrent
         /// disjoint edits mergeable on the backbone. Never evaluates: `pending_effects` (called after
         /// every action's `refreshUi` pass) arms the `flowEvalTick` chain that refreshes the preview
         /// cache once the new fixture's dirty set resolves.
-        fn commit_fixture(&mut self, before: &FlowFixture, target: &FlowFixture) -> Vec<Procedural3dOp> {
+        fn commit_fixture(&mut self, before: &FlowFixture, target: &FlowFixture) -> Vec<Procedural3dOperation> {
             let baseline = host_from_fixture(before).fixture;
-            procedural3d_fixture_ops(&baseline, target)
+            procedural3d_fixture_operations(&baseline, target)
         }
 
-        /// 🧬 Emits generation ops for the generate-mode actions, updating ephemeral selection and
-        /// preview from the post-op state. `selectGeneration` is a view action (no ops).
+        /// 🧬 Emits generation operations for the generate-mode actions, updating ephemeral selection and
+        /// preview from the post-operation state. `selectGeneration` is a view action (no operations).
         fn handle_generation(
             &mut self,
             action: &str,
             args: Option<&Value>,
             projection: &Procedural3dDocument,
-        ) -> ActionEmit<Procedural3dOp> {
+        ) -> ActionEmit<Procedural3dOperation> {
             let spec = flow_fixture_to_form_spec(&projection.fixture);
             let mut state = projection.generation.clone();
             state.selected_generation_id = self.runtime.selected_generation_id.clone();
@@ -2367,38 +2367,38 @@ pub mod app_3d {
                 refresh_all_caches(&mut self.runtime, &projection.fixture, &state);
                 return ActionEmit::default();
             }
-            let Some(ops) = generation_ops(action, args, &state, &spec) else {
+            let Some(operations) = generation_operations(action, args, &state, &spec) else {
                 return ActionEmit::default();
             };
-            for op in &ops {
-                apply_generation_op(&mut state, op);
+            for operation in &operations {
+                apply_generation_operation(&mut state, operation);
             }
             self.runtime.selected_generation_id = state.selected_generation_id.clone();
             refresh_generation_preview(&mut self.runtime, &projection.fixture, &state);
             refresh_all_caches(&mut self.runtime, &projection.fixture, &state);
             let coalesce_key = (action == "updateGenerationValues").then(|| "generation-values".to_string());
             ActionEmit {
-                ops: ops.into_iter().map(Procedural3dOp::Generation).collect(),
+                operations: operations.into_iter().map(Procedural3dOperation::Generation).collect(),
                 coalesce_key,
                 ..Default::default()
             }
         }
 
-        /// 🧭 Runs a gumball transform (translate/rotate/scale) as a fixture op, splicing transform
+        /// 🧭 Runs a gumball transform (translate/rotate/scale) as a fixture operation, splicing transform
         /// neurons via `ensure_gumball_node` and re-selecting the resulting transform widgets.
         fn gumball_transform(
             &mut self,
             fixture: &FlowFixture,
             args: Option<&Value>,
-            op: &str,
+            operation: &str,
             apply: impl Fn(&mut FlowHost, &str) -> bool,
-        ) -> ActionEmit<Procedural3dOp> {
+        ) -> ActionEmit<Procedural3dOperation> {
             let ids = mesh_selection_ids(args, &self.runtime.selected_node_ids);
             let mut host = host_from_fixture(fixture);
             let mut new_selection = Vec::new();
             let mut changed = false;
             for id in &ids {
-                if let Ok(transform_id) = ensure_gumball_node(&mut host, id, op) {
+                if let Ok(transform_id) = ensure_gumball_node(&mut host, id, operation) {
                     if apply(&mut host, &transform_id) {
                         new_selection.push(transform_id);
                         changed = true;
@@ -2406,9 +2406,9 @@ pub mod app_3d {
                 }
             }
             if changed {
-                let ops = self.commit_fixture(fixture, &host.fixture);
+                let operations = self.commit_fixture(fixture, &host.fixture);
                 self.runtime.selected_node_ids = new_selection;
-                return ActionEmit::amend(ops, format!("gumball-{op}"));
+                return ActionEmit::amend(operations, format!("gumball-{operation}"));
             }
             ActionEmit::default()
         }
@@ -2416,7 +2416,7 @@ pub mod app_3d {
 
     impl DocumentApp for Procedural3dPlayApp {
         type Projection = Procedural3dDocument;
-        type Op = Procedural3dOp;
+        type Operation = Procedural3dOperation;
 
         fn app_id(&self) -> &str {
             PROCEDURAL_3D_PLAY_APP_ID
@@ -2436,10 +2436,10 @@ pub mod app_3d {
             args: Option<&Value>,
             doc: &DocumentView<'_, Procedural3dDocument>,
             _view_state: &ViewState,
-        ) -> ActionEmit<Procedural3dOp> {
+        ) -> ActionEmit<Procedural3dOperation> {
             let fixture = &doc.projection.fixture;
             match action {
-                // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+                // 👁️ View actions — mutate ephemeral runtime, emit no operations.
                 "setSelection" | "selectNode" | "nodeGraphSelect" => {
                     self.runtime.selected_node_ids = node_graph_selection_ids(args);
                     ActionEmit::default()
@@ -2462,7 +2462,7 @@ pub mod app_3d {
                     ActionEmit::default()
                 }
                 "worldPointerDown" | "graphPointerDown" => ActionEmit::default(),
-                // 🧰 Host-owned active-utility switch — clear in-progress hover scratch, never emit ops.
+                // 🧰 Host-owned active-utility switch — clear in-progress hover scratch, never emit operations.
                 SET_ACTIVE_UTILITY_ACTION_ID => {
                     self.runtime.hovered_node_id = None;
                     ActionEmit::default()
@@ -2508,7 +2508,7 @@ pub mod app_3d {
                     }
                     ActionEmit::default()
                 }
-                // 📷 Graph camera — ephemeral view state (never a document op), same model as flow-play.
+                // 📷 Graph camera — ephemeral view state (never a document operation), same model as flow-play.
                 "nodeGraphViewport" => {
                     if let Some(camera) = args
                         .and_then(|value| value.get("viewportJson"))
@@ -2519,31 +2519,31 @@ pub mod app_3d {
                     }
                     ActionEmit::default()
                 }
-                // ✏️ Operations — compute the target fixture via the host, emit fixture ops.
+                // ✏️ Operations — compute the target fixture via the host, emit fixture operations.
                 "setActiveExample" => {
                     let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                     let target = example_projection(example_id);
-                    let mut ops: Vec<Procedural3dOp> = doc
+                    let mut operations: Vec<Procedural3dOperation> = doc
                         .projection
                         .generation
                         .generations
                         .iter()
-                        .map(|generation| Procedural3dOp::Generation(GenerationOp::Remove { id: generation.id.clone() }))
+                        .map(|generation| Procedural3dOperation::Generation(GenerationOperation::Remove { id: generation.id.clone() }))
                         .collect();
-                    ops.extend(procedural3d_fixture_ops(fixture, &target.fixture));
+                    operations.extend(procedural3d_fixture_operations(fixture, &target.fixture));
                     let camera = target.fixture.camera.clone();
                     self.runtime = Procedural3dRuntime { camera, ..Procedural3dRuntime::default() };
-                    ActionEmit::ops(ops)
+                    ActionEmit::operations(operations)
                 }
                 "nodeGraphEdit" => {
-                    let sub_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                    let sub_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                     let selected = self.runtime.selected_node_ids.clone();
                     let mut host = host_from_fixture(fixture);
                     let mut cleared = false;
-                    for op in &sub_ops {
-                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                    for operation in &sub_operations {
+                        match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(new_fixture) = op.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<FlowFixture>(json).ok()) {
+                                if let Some(new_fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<FlowFixture>(json).ok()) {
                                     host.replace_fixture(new_fixture);
                                 }
                             }
@@ -2555,10 +2555,10 @@ pub mod app_3d {
                                 }
                             }
                             "connect" => {
-                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                                let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                                let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                                let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                                let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
+                                let to = operation.get("targetNodeId").and_then(|value| value.as_str());
+                                let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                                     let _ = host.connect_ports(from, from_port, to, to_port);
                                 }
@@ -2566,11 +2566,11 @@ pub mod app_3d {
                             _ => {}
                         }
                     }
-                    let ops = self.commit_fixture(fixture, &host.fixture);
+                    let operations = self.commit_fixture(fixture, &host.fixture);
                     if cleared {
                         self.runtime.selected_node_ids.clear();
                     }
-                    ActionEmit::ops(ops)
+                    ActionEmit::operations(operations)
                 }
                 "deleteSelection" => {
                     let selected = self.runtime.selected_node_ids.clone();
@@ -2581,11 +2581,11 @@ pub mod app_3d {
                             cleared = true;
                         }
                     }
-                    let ops = self.commit_fixture(fixture, &host.fixture);
+                    let operations = self.commit_fixture(fixture, &host.fixture);
                     if cleared {
                         self.runtime.selected_node_ids.clear();
                     }
-                    ActionEmit::ops(ops)
+                    ActionEmit::operations(operations)
                 }
                 "removeWidget" => {
                     let target_id = args
@@ -2596,9 +2596,9 @@ pub mod app_3d {
                     if let Some(target_id) = target_id {
                         let mut host = host_from_fixture(fixture);
                         if host.remove_widget(&target_id).is_ok() {
-                            let ops = self.commit_fixture(fixture, &host.fixture);
+                            let operations = self.commit_fixture(fixture, &host.fixture);
                             self.runtime.selected_node_ids.retain(|id| id != &target_id);
-                            return ActionEmit::ops(ops);
+                            return ActionEmit::operations(operations);
                         }
                     }
                     ActionEmit::default()
@@ -2610,7 +2610,7 @@ pub mod app_3d {
                     if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                         let mut host = host_from_fixture(fixture);
                         if host.move_widget(&node_id, x, y).is_ok() {
-                            return ActionEmit::ops(self.commit_fixture(fixture, &host.fixture));
+                            return ActionEmit::operations(self.commit_fixture(fixture, &host.fixture));
                         }
                     }
                     ActionEmit::default()
@@ -2625,9 +2625,9 @@ pub mod app_3d {
                     let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                     let mut host = host_from_fixture(fixture);
                     if let Ok(id) = host.add_widget(&descriptor, x, y) {
-                        let ops = self.commit_fixture(fixture, &host.fixture);
+                        let operations = self.commit_fixture(fixture, &host.fixture);
                         self.runtime.selected_node_ids = vec![id];
-                        return ActionEmit::ops(ops);
+                        return ActionEmit::operations(operations);
                     }
                     ActionEmit::default()
                 }
@@ -2647,12 +2647,12 @@ pub mod app_3d {
                             }
                         }
                     }
-                    ActionEmit::ops(procedural3d_fixture_ops(&baseline, &host.fixture))
+                    ActionEmit::operations(procedural3d_fixture_operations(&baseline, &host.fixture))
                 }
                 "reorganize" => {
                     let mut host = host_from_fixture(fixture);
                     if host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok() {
-                        return ActionEmit::ops(self.commit_fixture(fixture, &host.fixture));
+                        return ActionEmit::operations(self.commit_fixture(fixture, &host.fixture));
                     }
                     ActionEmit::default()
                 }
@@ -2709,7 +2709,7 @@ pub mod app_3d {
         }
 
         /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
-        /// covers every mutation path (edits, undo/redo, example load, remote ops) in one place.
+        /// covers every mutation path (edits, undo/redo, example load, remote operations) in one place.
         fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural3dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
             let host = host_from_fixture(&doc.projection.fixture);
             if self.runtime.eval_driver.sync(&host) {
@@ -2740,7 +2740,7 @@ pub mod app_3d {
                         "label": labels.delete_selection,
                         "icon": "trash",
                         "action": "nodeGraphEdit",
-                        "args": { "ops": [{ "op": "deleteSelection" }] },
+                        "args": { "operations": [{ "operation": "deleteSelection" }] },
                         "destructive": true,
                     }]))
                     .ok();
@@ -2968,7 +2968,7 @@ pub mod app_3d {
                     PanelGroup::Details,
                     PROCEDURAL_3D_PLAY_BODY_INSPECTION,
                 )
-                // ✏️ Document-mutating operations — dispatched as VCS ops with a true inverse.
+                // ✏️ Document-mutating operations — dispatched as VCS operations with a true inverse.
                 .operation("setActiveExample", "Set Active Example")
                 .operation("nodeGraphEdit", "Edit Graph")
                 .operation("deleteSelection", "Delete Selection")
@@ -2984,7 +2984,7 @@ pub mod app_3d {
                 .operation("removeGeneration", "Remove Generation")
                 .operation("renameGeneration", "Rename Generation")
                 .operation("updateGenerationValues", "Update Generation Values")
-                // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera (emit no ops).
+                // 👁️ Ephemeral view actions — selection, hover, world picking, graph camera, sun/LOD/show-mode display toggles, preview camera (emit no operations).
                 .view_action("nodeGraphViewport", "Set Viewport")
                 .view_action("setSelection", "Set Selection")
                 .view_action("selectNode", "Select Node")
@@ -3083,9 +3083,9 @@ pub mod app_3d {
         /// to do that draining itself. Mirrors `pending_effects`'s own arming logic so tests don't need
         /// to know whether a mutation left the driver already ticking.
         fn drain_flow_eval_ticks(app: &mut VcsDocumentApp<Procedural3dPlayApp>) {
-            // 🧵 Arms the chain if it isn't already (a no-op if a caller already armed it — `sync`
+            // 🧵 Arms the chain if it isn't already (a no-operation if a caller already armed it — `sync`
             // correctly declines to re-arm one already scheduled, so this must not gate on its return
-            // value). A "flowEvalTick" dispatched with nothing pending is a harmless, immediate no-op
+            // value). A "flowEvalTick" dispatched with nothing pending is a harmless, immediate no-operation
             // (`evaluate_step`'s own early-return), so always ticking at least once is safe.
             app.pending_effects(&ViewState::default());
             for _ in 0..1000 {
@@ -3098,7 +3098,7 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_active_example_arg_form_materializes_into_ops() {
+        fn set_active_example_arg_form_materializes_into_operations() {
             let mut app = new_app_with_registry();
             // The required `exampleId` staged arg drives an operation that rewrites the fixture.
             app.handle_action(
@@ -3145,15 +3145,15 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_active_utility_switch_clears_scratch_and_emits_no_ops() {
+        fn set_active_utility_switch_clears_scratch_and_emits_no_operations() {
             let mut app = new_app_with_registry();
             app.handle_action("worldHover", Some(&json!({ "id": "extrude" })), &ViewState::default(), &meta("local")).expect("hover");
             let before = app.projection().expect("projection");
-            // Switching the gumball utility is the framework-injected View action: it clears scratch and emits no ops.
+            // Switching the gumball utility is the framework-injected View action: it clears scratch and emits no operations.
             let result = app
                 .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &meta("local"))
                 .expect("switch utility");
-            assert!(result.operations.is_empty(), "utility switching never emits document ops");
+            assert!(result.operations.is_empty(), "utility switching never emits document operations");
             assert_eq!(app.projection().expect("projection"), before, "utility switching records no history entry");
         }
 
@@ -3161,7 +3161,7 @@ pub mod app_3d {
         fn gumball_drag_coalesces_multi_tick_translate_into_one_edit() {
             let mut app = new_app();
             let before_widgets = app.projection().expect("projection").fixture.widgets.len();
-            // A whole gumball drag (three ticks, same coalesce key) folds into ONE undoable edit, not one-op-per-tick.
+            // A whole gumball drag (three ticks, same coalesce key) folds into ONE undoable edit, not one-operation-per-tick.
             for dx in [1.0, 1.0, 1.0] {
                 app.handle_action(
                     "translateSelection",
@@ -3209,7 +3209,7 @@ pub mod app_3d {
         }
 
         #[test]
-        fn set_lod_mode_is_a_view_action_with_no_document_ops() {
+        fn set_lod_mode_is_a_view_action_with_no_document_operations() {
             let mut app = new_app();
             let before = app.projection().expect("projection");
             app.handle_action("setLodMode", Some(&json!({ "value": "wireframe" })), &ViewState::default(), &meta("local")).expect("lod");
@@ -3222,7 +3222,7 @@ pub mod app_3d {
             let measures = app.window_measures(&ViewState::default());
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_PREVIEW));
             assert!(measures.contains_key(PROCEDURAL_3D_PLAY_WINDOW_GENERATE_PREVIEW));
-            // 👁️ Sun toggling is a view action: it must not record a document op.
+            // 👁️ Sun toggling is a view action: it must not record a document operation.
             let before = app.projection().expect("projection");
             app.handle_action("toggleSun", None, &ViewState::default(), &meta("local")).expect("toggle sun");
             assert_eq!(app.projection().expect("projection"), before, "toggleSun must not mutate the document");
@@ -3413,7 +3413,7 @@ pub mod app_3d {
         }
 
         #[test]
-        fn add_generation_records_an_undoable_generation_op() {
+        fn add_generation_records_an_undoable_generation_operation() {
             let mut app = new_app();
             testkit::assert_undo_redo_round_trip(
                 &mut app,

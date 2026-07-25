@@ -327,6 +327,31 @@
         "SEMIO_RENDERER": "react"
       },
       "port": 6087
+    },
+    {
+      "name": "parity-smoke",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:parity", "--", "smoke"],
+      "env": {
+        "SEMIO_PLUGIN": "s"
+      },
+      "port": 7300
+    },
+    {
+      "name": "parity-triage",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:parity", "--", "triage"],
+      "env": {
+        "SEMIO_PLUGIN": "s",
+        "HEADED": "1"
+      },
+      "port": 7300
+    },
+    {
+      "name": "parity-sweep",
+      "runtimeExecutable": "bun",
+      "runtimeArgs": ["nx", "run", "@semio-tech/framework-os-dev:parity", "--", "sweep"],
+      "port": 7300
     }
   ]
 }

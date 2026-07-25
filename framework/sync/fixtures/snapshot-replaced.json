@@ -9,8 +9,8 @@
         {
           "id": "sr-1",
           "actor": "peer",
-          "forwards": [{ "op": "SetN", "n": 3 }],
-          "backwards": [{ "op": "SetN", "n": 0 }],
+          "forwards": [{ "operation": "SetN", "n": 3 }],
+          "backwards": [{ "operation": "SetN", "n": 0 }],
           "sequenceNumber": 1,
           "startedAt": "0"
         }
@@ -27,8 +27,8 @@
             {
               "id": "sr-2",
               "actor": "peer",
-              "forwards": [{ "op": "SetN", "n": 8 }],
-              "backwards": [{ "op": "SetN", "n": 0 }],
+              "forwards": [{ "operation": "SetN", "n": 8 }],
+              "backwards": [{ "operation": "SetN", "n": 0 }],
               "sequenceNumber": 1,
               "startedAt": "0"
             }
@@ -40,6 +40,6 @@
       }
     }
   ],
-  "expectedEvents": ["remoteOps", "snapshotReplaced"],
+  "expectedEvents": ["remoteOperations", "snapshotReplaced"],
   "expectedEditIds": ["sr-2"]
 }

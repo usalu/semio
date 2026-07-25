@@ -246,13 +246,13 @@ fn default_camera() -> NoteCamera {
 /// 📐 Typed content mutation for a `NoteDocument`. Every content change flows through one of these so
 /// the `DocumentVcsStore` records a true inverse (`backwards`). Scalar setters carry the field's own
 /// `Option` shape (backwards is a plain prior-value read); block edits use a whole-tree `SetBlocks`
-/// snapshot (the recursive reid/clone tree makes per-node ops far messier than a snapshot); asset and
+/// snapshot (the recursive reid/clone tree makes per-node operations far messier than a snapshot); asset and
 /// full-document loads have dedicated variants.
 ///
-/// See {@link vcs::Operation} and {@link https://../../../vcs/plugin/rs/lib.rs VcsDemoOp}.
+/// See {@link vcs::Operation} and {@link https://../../../vcs/plugin/rs/lib.rs VcsDemoOperation}.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-enum NoteOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+enum NoteOperation {
     SetCamera { camera: NoteCamera },
     SetGridVisible { visible: Option<bool> },
     SetGridSpacing { spacing: Option<f64> },
@@ -267,58 +267,58 @@ enum NoteOp {
     SetDocument { document: NoteDocument },
 }
 
-/// 🧩 Snapshot diff wrapping the forward `NoteOp` — `apply` replays it, `absorb` keeps the latest
+/// 🧩 Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest
 /// (coalescing a whole gesture's `SetBlocks` stream into one edit).
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 struct NoteDiff {
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    op: Option<NoteOp>,
+    operation: Option<NoteOperation>,
 }
 
 impl OperationDiff<NoteDocument> for NoteDiff {
     fn apply(&self, projection: &NoteDocument) -> NoteDocument {
-        match &self.op {
-            Some(op) => apply_note_op(projection, op),
+        match &self.operation {
+            Some(operation) => apply_note_operation(projection, operation),
             None => projection.clone(),
         }
     }
 
     fn absorb(&mut self, other: Self) {
-        if other.op.is_some() {
-            self.op = other.op;
+        if other.operation.is_some() {
+            self.operation = other.operation;
         }
     }
 }
 
-impl Operation<NoteDocument> for NoteOp {
+impl Operation<NoteDocument> for NoteOperation {
     type Diff = NoteDiff;
 
     fn diff(&self, _projection: &NoteDocument) -> NoteDiff {
-        NoteDiff { op: Some(self.clone()) }
+        NoteDiff { operator: Some(self.clone()) }
     }
 
     fn backwards(&self, projection: &NoteDocument) -> Vec<Self> {
         match self {
-            NoteOp::SetCamera { .. } => vec![NoteOp::SetCamera { camera: projection.camera.clone() }],
-            NoteOp::SetGridVisible { .. } => vec![NoteOp::SetGridVisible { visible: projection.grid_visible }],
-            NoteOp::SetGridSpacing { .. } => vec![NoteOp::SetGridSpacing { spacing: projection.grid_spacing }],
-            NoteOp::SetGridSubdivisions { .. } => vec![NoteOp::SetGridSubdivisions { value: projection.grid_subdivisions }],
-            NoteOp::SetGridOpacity { .. } => vec![NoteOp::SetGridOpacity { opacity: projection.grid_opacity }],
-            NoteOp::SetSnapEnabled { .. } => vec![NoteOp::SetSnapEnabled { enabled: projection.snap_enabled }],
-            NoteOp::SetSnapGridSpacing { .. } => vec![NoteOp::SetSnapGridSpacing { spacing: projection.snap_grid_spacing }],
-            NoteOp::SetPencilWidth { .. } => vec![NoteOp::SetPencilWidth { width: projection.pencil_width }],
-            NoteOp::SetEraserRadius { .. } => vec![NoteOp::SetEraserRadius { radius: projection.eraser_radius }],
-            NoteOp::SetBlocks { .. } => vec![NoteOp::SetBlocks { blocks: projection.blocks.clone() }],
-            NoteOp::PutAsset { .. } => vec![NoteOp::SetDocument { document: projection.clone() }],
-            NoteOp::SetDocument { .. } => vec![NoteOp::SetDocument { document: projection.clone() }],
+            NoteOperation::SetCamera { .. } => vec![NoteOperation::SetCamera { camera: projection.camera.clone() }],
+            NoteOperation::SetGridVisible { .. } => vec![NoteOperation::SetGridVisible { visible: projection.grid_visible }],
+            NoteOperation::SetGridSpacing { .. } => vec![NoteOperation::SetGridSpacing { spacing: projection.grid_spacing }],
+            NoteOperation::SetGridSubdivisions { .. } => vec![NoteOperation::SetGridSubdivisions { value: projection.grid_subdivisions }],
+            NoteOperation::SetGridOpacity { .. } => vec![NoteOperation::SetGridOpacity { opacity: projection.grid_opacity }],
+            NoteOperation::SetSnapEnabled { .. } => vec![NoteOperation::SetSnapEnabled { enabled: projection.snap_enabled }],
+            NoteOperation::SetSnapGridSpacing { .. } => vec![NoteOperation::SetSnapGridSpacing { spacing: projection.snap_grid_spacing }],
+            NoteOperation::SetPencilWidth { .. } => vec![NoteOperation::SetPencilWidth { width: projection.pencil_width }],
+            NoteOperation::SetEraserRadius { .. } => vec![NoteOperation::SetEraserRadius { radius: projection.eraser_radius }],
+            NoteOperation::SetBlocks { .. } => vec![NoteOperation::SetBlocks { blocks: projection.blocks.clone() }],
+            NoteOperation::PutAsset { .. } => vec![NoteOperation::SetDocument { document: projection.clone() }],
+            NoteOperation::SetDocument { .. } => vec![NoteOperation::SetDocument { document: projection.clone() }],
         }
     }
 }
 
 /// 🖱️ Batched canvas-event wire shape the `ink-canvas-host` surface emits (`addBlock`/`updateBlock`/
-/// `removeBlock`/`putAsset`/`setCamera`); diffed into `NoteOp`s by `note_ops_from_canvas_events`.
+/// `removeBlock`/`putAsset`/`setCamera`); diffed into `NoteOperation`s by `note_ops_from_canvas_events`.
 #[derive(Clone, Debug, Deserialize)]
-#[serde(tag = "op")]
+#[serde(tag = "operation")]
 enum NoteCanvasEvent {
     #[serde(rename = "addBlock", rename_all = "camelCase")]
     AddBlock {
@@ -931,23 +931,23 @@ fn selection_from_view(view_state: &ViewState) -> Vec<String> {
         .unwrap_or_default()
 }
 
-fn apply_note_op(projection: &NoteDocument, op: &NoteOp) -> NoteDocument {
+fn apply_note_operation(projection: &NoteDocument, operation: &NoteOperation) -> NoteDocument {
     let mut next = projection.clone();
-    match op {
-        NoteOp::SetCamera { camera } => next.camera = camera.clone(),
-        NoteOp::SetGridVisible { visible } => next.grid_visible = *visible,
-        NoteOp::SetGridSpacing { spacing } => next.grid_spacing = *spacing,
-        NoteOp::SetGridSubdivisions { value } => next.grid_subdivisions = *value,
-        NoteOp::SetGridOpacity { opacity } => next.grid_opacity = *opacity,
-        NoteOp::SetSnapEnabled { enabled } => next.snap_enabled = *enabled,
-        NoteOp::SetSnapGridSpacing { spacing } => next.snap_grid_spacing = *spacing,
-        NoteOp::SetPencilWidth { width } => next.pencil_width = *width,
-        NoteOp::SetEraserRadius { radius } => next.eraser_radius = *radius,
-        NoteOp::SetBlocks { blocks } => next.blocks = blocks.clone(),
-        NoteOp::PutAsset { key, asset } => {
+    match operation {
+        NoteOperation::SetCamera { camera } => next.camera = camera.clone(),
+        NoteOperation::SetGridVisible { visible } => next.grid_visible = *visible,
+        NoteOperation::SetGridSpacing { spacing } => next.grid_spacing = *spacing,
+        NoteOperation::SetGridSubdivisions { value } => next.grid_subdivisions = *value,
+        NoteOperation::SetGridOpacity { opacity } => next.grid_opacity = *opacity,
+        NoteOperation::SetSnapEnabled { enabled } => next.snap_enabled = *enabled,
+        NoteOperation::SetSnapGridSpacing { spacing } => next.snap_grid_spacing = *spacing,
+        NoteOperation::SetPencilWidth { width } => next.pencil_width = *width,
+        NoteOperation::SetEraserRadius { radius } => next.eraser_radius = *radius,
+        NoteOperation::SetBlocks { blocks } => next.blocks = blocks.clone(),
+        NoteOperation::PutAsset { key, asset } => {
             next.assets.insert(key.clone(), asset.clone());
         }
-        NoteOp::SetDocument { document } => next = document.clone(),
+        NoteOperation::SetDocument { document } => next = document.clone(),
     }
     next
 }
@@ -973,27 +973,27 @@ fn apply_note_canvas_event(document: &mut NoteDocument, event: &NoteCanvasEvent)
     }
 }
 
-/// 🔀 Applies a batch of canvas events to a cloned document and returns the minimal `NoteOp`s
+/// 🔀 Applies a batch of canvas events to a cloned document and returns the minimal `NoteOperation`s
 /// describing what changed (block-tree snapshot, camera, and per-asset puts) — the empty vec means
 /// no content changed (e.g. a gesture that ended where it began).
-fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteOp> {
+fn note_ops_from_canvas_events(document: &NoteDocument, events: &[NoteCanvasEvent]) -> Vec<NoteOperation> {
     let mut next = document.clone();
     for event in events {
         apply_note_canvas_event(&mut next, event);
     }
-    let mut ops = Vec::new();
+    let mut operations = Vec::new();
     if next.blocks != document.blocks {
-        ops.push(NoteOp::SetBlocks { blocks: next.blocks.clone() });
+        operations.push(NoteOperation::SetBlocks { blocks: next.blocks.clone() });
     }
     if next.camera != document.camera {
-        ops.push(NoteOp::SetCamera { camera: next.camera.clone() });
+        operations.push(NoteOperation::SetCamera { camera: next.camera.clone() });
     }
     for (key, asset) in &next.assets {
         if document.assets.get(key) != Some(asset) {
-            ops.push(NoteOp::PutAsset { key: key.clone(), asset: asset.clone() });
+            operations.push(NoteOperation::PutAsset { key: key.clone(), asset: asset.clone() });
         }
     }
-    ops
+    operations
 }
 //#endregion 🔖CanvasEvents
 //#endregion 🔖DocumentHelpers
@@ -1679,7 +1679,7 @@ fn note_internal_action(id: &str, label: &str, kind: ActionKind) -> ActionDefini
 //#region 🔖NotePlayApp
 /// 🎛️ Ephemeral view state living on the app struct (never in the document): the current multi-selection,
 /// the hovered block, and the pending engagement-rename input. Content lives in the store's `NoteDocument`
-/// projection; every content mutation returns a typed {@link NoteOp} so the store records a true inverse.
+/// projection; every content mutation returns a typed {@link NoteOperation} so the store records a true inverse.
 #[derive(Default)]
 struct NotePlayApp {
     selected_ids: Vec<String>,
@@ -1695,7 +1695,7 @@ impl NotePlayApp {
 
 impl DocumentApp for NotePlayApp {
     type Projection = NoteDocument;
-    type Op = NoteOp;
+    type Operation = NoteOperation;
 
     fn app_id(&self) -> &str {
         NOTE_PLAY_APP_ID
@@ -1715,14 +1715,14 @@ impl DocumentApp for NotePlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, NoteDocument>,
         _view_state: &ViewState,
-    ) -> ActionEmit<NoteOp> {
+    ) -> ActionEmit<NoteOperation> {
         // "undo"/"redo" never reach here — `VcsDocumentApp` intercepts them into store commands.
         let document = doc.projection;
         match action {
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<NoteCamera>(camera.clone()) {
-                        return ActionEmit::ops(vec![NoteOp::SetCamera { camera: parsed }]);
+                        return ActionEmit::operations(vec![NoteOperation::SetCamera { camera: parsed }]);
                     }
                 }
                 let zoom = args
@@ -1732,14 +1732,14 @@ impl DocumentApp for NotePlayApp {
                 if let Some(zoom) = zoom {
                     let mut camera = document.camera.clone();
                     camera.zoom = zoom;
-                    return ActionEmit::ops(vec![NoteOp::SetCamera { camera }]);
+                    return ActionEmit::operations(vec![NoteOperation::SetCamera { camera }]);
                 }
                 ActionEmit::default()
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
                 // 🧰 Host-owned utility switch: the active utility lives in `view_state.active_utility_id`, never
                 // the document. Note keeps no in-progress gesture scratch on the app struct (ink drags
-                // coalesce store-side), so there is nothing to clear and no op to emit.
+                // coalesce store-side), so there is nothing to clear and no operation to emit.
                 ActionEmit::default()
             }
             "setGridVisible" | "toggleGrid" => {
@@ -1748,20 +1748,20 @@ impl DocumentApp for NotePlayApp {
                     .and_then(|value| value.as_bool())
                     .or_else(|| args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()))
                     .unwrap_or(!document.grid_visible.unwrap_or(true));
-                ActionEmit::ops(vec![NoteOp::SetGridVisible { visible: Some(visible) }])
+                ActionEmit::operations(vec![NoteOperation::SetGridVisible { visible: Some(visible) }])
             }
             "setGridSpacing" => match scalar_arg(args, "spacing") {
-                Some(spacing) => ActionEmit::ops(vec![NoteOp::SetGridSpacing { spacing: Some(spacing.max(4.0)) }]),
+                Some(spacing) => ActionEmit::operations(vec![NoteOperation::SetGridSpacing { spacing: Some(spacing.max(4.0)) }]),
                 None => ActionEmit::default(),
             },
             "setGridSubdivisions" => match scalar_arg(args, "subdivisions") {
                 Some(subdivisions) => {
-                    ActionEmit::ops(vec![NoteOp::SetGridSubdivisions { value: Some(subdivisions.round().clamp(1.0, 16.0)) }])
+                    ActionEmit::operations(vec![NoteOperation::SetGridSubdivisions { value: Some(subdivisions.round().clamp(1.0, 16.0)) }])
                 }
                 None => ActionEmit::default(),
             },
             "setGridOpacity" => match scalar_arg(args, "opacity") {
-                Some(opacity) => ActionEmit::ops(vec![NoteOp::SetGridOpacity { opacity: Some(opacity.clamp(0.05, 1.0)) }]),
+                Some(opacity) => ActionEmit::operations(vec![NoteOperation::SetGridOpacity { opacity: Some(opacity.clamp(0.05, 1.0)) }]),
                 None => ActionEmit::default(),
             },
             "setSnapEnabled" | "toggleSnap" => {
@@ -1770,18 +1770,18 @@ impl DocumentApp for NotePlayApp {
                     .and_then(|value| value.as_bool())
                     .or_else(|| args.and_then(|value| value.get("pressed")).and_then(|value| value.as_bool()))
                     .unwrap_or(!document.snap_enabled.unwrap_or(false));
-                ActionEmit::ops(vec![NoteOp::SetSnapEnabled { enabled: Some(enabled) }])
+                ActionEmit::operations(vec![NoteOperation::SetSnapEnabled { enabled: Some(enabled) }])
             }
             "setSnapGridSpacing" => match scalar_arg(args, "spacing") {
-                Some(spacing) => ActionEmit::ops(vec![NoteOp::SetSnapGridSpacing { spacing: Some(spacing.max(1.0)) }]),
+                Some(spacing) => ActionEmit::operations(vec![NoteOperation::SetSnapGridSpacing { spacing: Some(spacing.max(1.0)) }]),
                 None => ActionEmit::default(),
             },
             "setPencilWidth" => match scalar_arg(args, "width") {
-                Some(width) => ActionEmit::ops(vec![NoteOp::SetPencilWidth { width: Some(width.clamp(1.0, 24.0)) }]),
+                Some(width) => ActionEmit::operations(vec![NoteOperation::SetPencilWidth { width: Some(width.clamp(1.0, 24.0)) }]),
                 None => ActionEmit::default(),
             },
             "setEraserRadius" => match scalar_arg(args, "radius") {
-                Some(radius) => ActionEmit::ops(vec![NoteOp::SetEraserRadius { radius: Some(radius.clamp(4.0, 48.0)) }]),
+                Some(radius) => ActionEmit::operations(vec![NoteOperation::SetEraserRadius { radius: Some(radius.clamp(4.0, 48.0)) }]),
                 None => ActionEmit::default(),
             },
             "addBlock" | "dropBlockKind" => {
@@ -1795,7 +1795,7 @@ impl DocumentApp for NotePlayApp {
                 self.selected_ids = vec![block_id(&block).into()];
                 let mut blocks = document.blocks.clone();
                 blocks.push(block);
-                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+                ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "moveBlock" => {
                 let Some(block_id_arg) = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()) else {
@@ -1837,14 +1837,14 @@ impl DocumentApp for NotePlayApp {
                 let mut blocks = document.blocks.clone();
                 remove_block_from_tree(&mut blocks, block_id_arg);
                 insert_block(&mut blocks, parent_id.as_deref(), index, block);
-                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+                ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "deleteBlock" | "deleteSelection" => {
                 if let Some(block_id) = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str()) {
                     let mut blocks = document.blocks.clone();
                     remove_block_from_tree(&mut blocks, block_id);
                     self.selected_ids.retain(|id| id != block_id);
-                    return ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }]);
+                    return ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }]);
                 }
                 if !self.selected_ids.is_empty() {
                     let mut blocks = document.blocks.clone();
@@ -1852,7 +1852,7 @@ impl DocumentApp for NotePlayApp {
                         remove_block_from_tree(&mut blocks, &block_id);
                     }
                     self.selected_ids.clear();
-                    return ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }]);
+                    return ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }]);
                 }
                 ActionEmit::default()
             }
@@ -1884,7 +1884,7 @@ impl DocumentApp for NotePlayApp {
                     return ActionEmit::default();
                 }
                 self.selected_ids = new_ids;
-                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+                ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "patchBlocks" => {
                 let block_ids: Vec<String> = args
@@ -1905,7 +1905,7 @@ impl DocumentApp for NotePlayApp {
                 for block_id in block_ids {
                     next = patch_block_field(&next, &block_id, field, &value);
                 }
-                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks: next.blocks }])
+                ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks: next.blocks }])
             }
             "selectAll" => {
                 self.selected_ids = flatten_blocks(&document.blocks)
@@ -1987,7 +1987,7 @@ impl DocumentApp for NotePlayApp {
                 for (id, updated) in nudges {
                     update_block_in_tree(&mut blocks, &id, updated);
                 }
-                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+                ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks }])
             }
             "engagementInput" => {
                 self.engagement_input = args
@@ -2006,7 +2006,7 @@ impl DocumentApp for NotePlayApp {
                         .unwrap_or_else(|| self.engagement_input.clone());
                     let target_id = self.selected_ids[0].clone();
                     let next = patch_block_field(document, &target_id, "name", &Value::String(name));
-                    ActionEmit::ops(vec![NoteOp::SetBlocks { blocks: next.blocks }])
+                    ActionEmit::operations(vec![NoteOperation::SetBlocks { blocks: next.blocks }])
                 } else {
                     ActionEmit::default()
                 };
@@ -2025,7 +2025,7 @@ impl DocumentApp for NotePlayApp {
                     empty_note_document()
                 };
                 self.selected_ids.clear();
-                ActionEmit::ops(vec![NoteOp::SetDocument { document }])
+                ActionEmit::operations(vec![NoteOperation::SetDocument { document }])
             }
             "setFixtureJson" => {
                 let raw = args
@@ -2046,7 +2046,7 @@ impl DocumentApp for NotePlayApp {
                     return ActionEmit::default();
                 };
                 self.selected_ids.clear();
-                ActionEmit::ops(vec![NoteOp::SetDocument { document }])
+                ActionEmit::operations(vec![NoteOperation::SetDocument { document }])
             }
             "saveDownload" => {
                 let data = serde_json::to_string_pretty(document).unwrap_or_else(|_| "{}".into());
@@ -2079,8 +2079,8 @@ impl DocumentApp for NotePlayApp {
                 if let Some(ids) = select_ids {
                     self.selected_ids = ids;
                 }
-                let ops = note_ops_from_canvas_events(document, &events);
-                if ops.is_empty() {
+                let operations = note_ops_from_canvas_events(document, &events);
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
                 // The whole drag (begin → live* → commit) coalesces into ONE undoable edit; a lone
@@ -2089,7 +2089,7 @@ impl DocumentApp for NotePlayApp {
                     "begin" | "live" | "commit" => Some("note-gesture".into()),
                     _ => None,
                 };
-                ActionEmit { ops, coalesce_key, ..Default::default() }
+                ActionEmit { operations, coalesce_key, ..Default::default() }
             }
             _ => ActionEmit::default(),
         }
@@ -2441,7 +2441,7 @@ fn create_note_app() -> App {
             .action_with(note_internal_action("nudgeSelectionDownFast", "Nudge Selection Down Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionLeftFast", "Nudge Selection Left Fast", ActionKind::Operation))
             .action_with(note_internal_action("nudgeSelectionRightFast", "Nudge Selection Right Fast", ActionKind::Operation))
-            // 👁️ Ephemeral view state — selection/hover/engagement scratch, never a document op.
+            // 👁️ Ephemeral view state — selection/hover/engagement scratch, never a document operation.
             .action_with(note_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(note_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(note_internal_action("engagementInput", "Engagement Input", ActionKind::View))
@@ -2465,7 +2465,7 @@ fn create_note_app() -> App {
                 ]).required().default_value("semio"),
             ])
             .action_args("setFixtureJson", vec![ActionArgDef::text("json", "Document JSON").required()])
-            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
+            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(note_utility("selectDirect", "Direct", "cursor", "Select", UtilityCategory::Selection))
             .utility(note_utility("selectMarquee", "Marquee", "selection", "Select", UtilityCategory::Selection))
             .utility(note_utility("text", "Text", "type", "Block", UtilityCategory::Utilities))
@@ -2647,8 +2647,8 @@ mod tests {
             let mut app = new_app::<NotePlayApp>();
             app.handle_action("addBlock", Some(&json!({ "kind": "text", "x": 0.0, "y": 0.0 })), &ViewState::default(), &meta("local"))
                 .expect("add");
-            let ops = app.handle_action(action, None, &ViewState::default(), &meta("local")).expect(action).operations.len();
-            assert_eq!(ops, 1, "{action} should emit one op");
+            let operations = app.handle_action(action, None, &ViewState::default(), &meta("local")).expect(action).operations.len();
+            assert_eq!(operations, 1, "{action} should emit one operation");
             let projection = app.projection().expect("projection");
             let (x, y, ..) = block_bounds(&projection.blocks[0]);
             assert_eq!((x, y), (expected_dx, expected_dy), "{action} moved block to unexpected position");
@@ -2673,7 +2673,7 @@ mod tests {
         let new_id = block_id(&block).to_string();
 
         let begin_events = json!([
-            { "op": "addBlock", "block": block.clone(), "parentId": null, "index": null }
+            { "operation": "addBlock", "block": block.clone(), "parentId": null, "index": null }
         ])
         .to_string();
         app.handle_action(
@@ -2691,7 +2691,7 @@ mod tests {
                 *block_x = x;
             }
             let live_events = json!([
-                { "op": "updateBlock", "blockId": new_id, "block": moved }
+                { "operation": "updateBlock", "blockId": new_id, "block": moved }
             ])
             .to_string();
             app.handle_action(
@@ -2704,7 +2704,7 @@ mod tests {
         }
         assert_eq!(app.projection().expect("projection").blocks.len(), 1);
 
-        // Commit with no further change emits no op — the gesture is already recorded.
+        // Commit with no further change emits no operation — the gesture is already recorded.
         let commit = app
             .handle_action(
                 "inkApplyEvents",
@@ -2713,7 +2713,7 @@ mod tests {
                 &meta("local"),
             )
             .expect("commit");
-        assert!(commit.operations.is_empty(), "a no-op commit must not create an edit");
+        assert!(commit.operations.is_empty(), "a no-operation commit must not create an edit");
         assert_eq!(app.projection().expect("projection").blocks.len(), 1);
 
         // The whole begin+live gesture coalesced into ONE undoable edit.
@@ -2746,7 +2746,7 @@ mod tests {
     }
 
     #[test]
-    fn camera_action_emits_op() {
+    fn camera_action_emits_operation() {
         let mut app = new_app::<NotePlayApp>();
         let zoom = app
             .handle_action("setCameraZoom", Some(&json!({ "value": 2.0 })), &ViewState::default(), &meta("local"))
@@ -2763,7 +2763,7 @@ mod tests {
         let result = app
             .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pencil" })), &view, &meta("local"))
             .expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
     }
 

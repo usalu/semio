@@ -136,12 +136,12 @@ In `[s/play/index.ts](s/play/index.ts)`:
 
 In `[framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx)`, using the working `draw`/`writer`/`forms` pattern (`store.dispatch({ kind: "patchAppSource" | "applyAppOperation", ... })`) as the template:
 
-- **raster**: wire real `onSelect`/`onHover` (local state) + `onDocumentChange` → dispatch (currently no-ops).
+- **raster**: wire real `onSelect`/`onHover` (local state) + `onDocumentChange` → dispatch (currently no-operations).
 - **flow**, **dag**, **trinity**: wire `onFixtureChange` → dispatch (component prop already exists, just unused — same fix `SMediaGraphCanvas` already applies for the S media graph's own DAG canvas).
 - **map**: bind `materialized` fixture to `<Position>`/`<Route>` children + `onSelect`/`onHoverChange` → dispatch (currently renders a blank map).
 - **puzzle2d**: build `declarativeSceneDescriptor` from the fixture and wire drag/delete/connect callbacks → dispatch (currently renders an empty default scene).
-- **puzzle3d**: replace the local-selection-only `SPuzzle3dHost` with a host that dispatches the full edit-op suite (brush place, delete, relocate, connect) like the standalone `Puzzle3dPlayViewportHost`.
-- **puzzle5d** (bug fix): stop routing through `SPuzzle3dHost`/`parsePuzzle3dFixture`; add a dedicated `SPuzzle5dHost` using `parseModel`/`FiveD` from `puzzle-5d-react`, dispatching `applyAppOperation` with puzzle5d ops.
+- **puzzle3d**: replace the local-selection-only `SPuzzle3dHost` with a host that dispatches the full edit-operation suite (brush place, delete, relocate, connect) like the standalone `Puzzle3dPlayViewportHost`.
+- **puzzle5d** (bug fix): stop routing through `SPuzzle3dHost`/`parsePuzzle3dFixture`; add a dedicated `SPuzzle5dHost` using `parseModel`/`FiveD` from `puzzle-5d-react`, dispatching `applyAppOperation` with puzzle5d operations.
 - **cad**: extend `CadPlayRoot` to optionally accept an external model + `onModelChange` (it currently self-boots with no props), wire to dispatch.
 - **shooting**: wire `onCamera` → dispatch; extend with a fixture write-back bridge mirroring the standalone shooting host bridge.
 - **presentation**: give it its own explicit `case "presentation"` (currently only reached by accident via `panel` fallthrough) with an editable host instead of the bare `PresentationDeck` viewer.
@@ -151,7 +151,7 @@ In `[framework/product/playground/renderer/react/index.tsx](framework/product/pl
 
 ## Phase 7 — Add hosts for the newly-registered technologies
 
-Add `SAppHostRouter` cases (and small host components where needed, following the `SPuzzle3dHost`/`SSketchpadHost` pattern) for: `lowpoly` (`LowpolyCanvas`), `layout` (`LayoutCanvas`), `vcs` (op-log/editor host over `VcsDemoProjection`), `trinityRewrite` (composite host), plus confirm `sequence`/`imperative` (already have cases) get real write-back once their VCS handlers exist.
+Add `SAppHostRouter` cases (and small host components where needed, following the `SPuzzle3dHost`/`SSketchpadHost` pattern) for: `lowpoly` (`LowpolyCanvas`), `layout` (`LayoutCanvas`), `vcs` (operation-log/editor host over `VcsDemoProjection`), `trinityRewrite` (composite host), plus confirm `sequence`/`imperative` (already have cases) get real write-back once their VCS handlers exist.
 
 ## Phase 8 — Tests
 

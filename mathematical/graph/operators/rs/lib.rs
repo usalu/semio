@@ -24,7 +24,7 @@ where
     }
 }
 
-/// 📋 Copies one edge of `src` into `dst`, translating its endpoints through `node_map`/`handle_map`; no-op if the edge id vanished between enumeration and lookup.
+/// 📋 Copies one edge of `src` into `dst`, translating its endpoints through `node_map`/`handle_map`; no-operation if the edge id vanished between enumeration and lookup.
 fn copy_edge<P: PortModel, D: Directedness>(dst: &mut Storage<P, D>, src: &Storage<P, D>, edge_id: EdgeId, node_map: &BTreeMap<NodeId, NodeId>, handle_map: &BTreeMap<HandleId, HandleId>)
 where
     P::Endpoint: From<NodeId>,
@@ -243,7 +243,7 @@ pub fn complement<P: PortModel, D: Directedness>(g: &Storage<P, D>) -> Storage<N
     dst
 }
 
-/// ↩️ NetworkX `reverse`: swaps every edge's source/target, preserving node/edge attributes and `NodeId`s (and, for ported storages, a fresh handle per original handle). Only meaningful for directed graphs — an undirected overload is deliberately not provided since reversing an undirected edge is a no-op by definition, and offering one would just invite dead call sites.
+/// ↩️ NetworkX `reverse`: swaps every edge's source/target, preserving node/edge attributes and `NodeId`s (and, for ported storages, a fresh handle per original handle). Only meaningful for directed graphs — an undirected overload is deliberately not provided since reversing an undirected edge is a no-operation by definition, and offering one would just invite dead call sites.
 pub fn reverse<P: PortModel>(g: &Storage<P, Directed>) -> Storage<P, Directed>
 where
     P::Endpoint: From<NodeId>,

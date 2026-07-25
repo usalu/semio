@@ -49,7 +49,7 @@
           },
           {
             "kind": "binop",
-            "op": "!=",
+            "operation": "!=",
             "left": {
               "kind": "path",
               "root": "context",
@@ -89,7 +89,7 @@
                 "label": "Pick surface",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -119,7 +119,7 @@
                     }
                   },
                   {
-                    "op": "kernel.query",
+                    "operation": "kernel.query",
                     "query": "face.resolveIds",
                     "assignTo": {
                       "root": "context",
@@ -179,7 +179,7 @@
                 "label": "Apply offset",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

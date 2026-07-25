@@ -118,7 +118,7 @@ Repo-wide settings live in [`.repo/config.toml`](../.repo/config.toml) at the mo
 | Key                  | Default    | Description                                                                 |
 | -------------------- | ---------- | --------------------------------------------------------------------------- |
 | `logging.session`    | `false`    | Write per-session `session.json` under `.repo/⚡/🤖/…` on agent hooks       |
-| `logging.operations` | `true`     | Append derived `agent.<op>.<phase>` events (requires `session = true`)      |
+| `logging.operations` | `true`     | Append derived `agent.<operation>.<phase>` events (requires `session = true`)      |
 | `logging.plan`       | `true`     | Track agent plan steps in `session.json` (requires `session = true`)        |
 | `logging.detail`     | `standard` | `minimal` (event only), `standard` (+ response), or `full` (+ native stdin) |
 

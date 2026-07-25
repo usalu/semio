@@ -6,7 +6,7 @@ todos:
    content: Fix setFillCount to accept both count and value keys (d3/mod.rs)
    status: completed
  - id: fix-brush-sync
-   content: Sync precompute session unconditionally at top of handle_command_patch_ops (d3/mod.rs)
+   content: Sync precompute session unconditionally at top of handle_command_patch_operations (d3/mod.rs)
    status: completed
  - id: context-menu-core
    content: Add context_menu_json to World3dScene (core/rs, plugin/rs) and update 3 callers
@@ -29,7 +29,7 @@ Root-caused all three complaints by tracing the exact command/data flow. Each ha
 
 ## 1. Fill is broken — wrong argument key
 
-`framework/renderer/react/os-shell.tsx`'s generic engagement `Slider` dispatcher (`windowEngagementControlToSpec`, ~`os-shell.tsx:396-411`) always sends `{ value: newValue }` on change. But [puzzle/plugin/rs/d3/mod.rs](puzzle/plugin/rs/d3/mod.rs)'s `"setFillCount"` handler (~line 1351-1366) only reads `args.get("count")`, so `count` is always `0` and `envelope.runtime.fill_count` gets reset to `0` on every slider move — fill silently no-ops.
+`framework/renderer/react/os-shell.tsx`'s generic engagement `Slider` dispatcher (`windowEngagementControlToSpec`, ~`os-shell.tsx:396-411`) always sends `{ value: newValue }` on change. But [puzzle/plugin/rs/d3/mod.rs](puzzle/plugin/rs/d3/mod.rs)'s `"setFillCount"` handler (~line 1351-1366) only reads `args.get("count")`, so `count` is always `0` and `envelope.runtime.fill_count` gets reset to `0` on every slider move — fill silently no-operations.
 
 The sibling `puzzle/plugin/rs/d2/mod.rs` already handles this correctly (line 1669-1674): `args.get("count").or_else(|| value.get("value"))`.
 
@@ -41,7 +41,7 @@ The sibling `puzzle/plugin/rs/d2/mod.rs` already handles this correctly (line 16
 
 `puzzle/plugin/rs/d2/mod.rs` avoids this entirely by calling `sync_host_from_envelope(&mut self.host, &envelope)` unconditionally at the top of every command, before the `match`.
 
-**Fix:** mirror that pattern — add `sync_precompute_session(&mut self.precompute, &envelope);` right after `let mut envelope = parse_envelope(document_json);` at the top of `handle_command_patch_ops` (`puzzle/plugin/rs/d3/mod.rs:1008`), so `self.precompute.scene` is always fresh before any render/engagement read. This is cheap (`set_scene` + registering a small fallback mesh under each URL, no `precompute_step`). The existing scattered `sync_precompute_session`/`drive_precompute` calls in specific branches can stay (now redundant but harmless, and `drive_precompute` still adds real precompute warm-up).
+**Fix:** mirror that pattern — add `sync_precompute_session(&mut self.precompute, &envelope);` right after `let mut envelope = parse_envelope(document_json);` at the top of `handle_command_patch_operations` (`puzzle/plugin/rs/d3/mod.rs:1008`), so `self.precompute.scene` is always fresh before any render/engagement read. This is cheap (`set_scene` + registering a small fallback mesh under each URL, no `precompute_step`). The existing scattered `sync_precompute_session`/`drive_precompute` calls in specific branches can stay (now redundant but harmless, and `drive_precompute` still adds real precompute warm-up).
 
 ## 3. No context menu — feature never existed for any world-3d plugin
 

@@ -15,7 +15,7 @@ fn write_into(input: &Dictionary, value: f64) -> Result<Dictionary, EvalError> {
     Ok(Dictionary::new().insert(into, Value::Atom(Atom::Decimal(value))))
 }
 
-macro_rules! binary_math_op {
+macro_rules! binary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operation for $name {
@@ -28,7 +28,7 @@ macro_rules! binary_math_op {
     };
 }
 
-macro_rules! unary_math_op {
+macro_rules! unary_math_operation {
     ($name:ident, $id:expr, $label:expr, $abbr:expr, $summary:expr, $calc:expr) => {
         pub struct $name;
         impl Operation for $name {
@@ -40,18 +40,18 @@ macro_rules! unary_math_op {
     };
 }
 
-binary_math_op!(MathAdd, "math.add", "Add", "Add", "Adds two numbers", |a: f64, b: f64| a + b);
-binary_math_op!(MathSubtract, "math.subtract", "Subtract", "Sub", "Subtracts two numbers", |a: f64, b: f64| a - b);
-binary_math_op!(MathMultiply, "math.multiply", "Multiply", "Mul", "Multiplies two numbers", |a: f64, b: f64| a * b);
-binary_math_op!(MathDivide, "math.divide", "Divide", "Div", "Divides two numbers", |a: f64, b: f64| if b.abs() < f64::EPSILON { 0.0 } else { a / b });
-binary_math_op!(MathModulo, "math.modulo", "Modulo", "Mod", "Remainder of division", |a: f64, b: f64| if b.abs() < f64::EPSILON { 0.0 } else { a % b });
-binary_math_op!(MathPower, "math.power", "Power", "Pow", "Raises a to the power of b", |a: f64, b: f64| a.powf(b));
-binary_math_op!(MathMin, "math.min", "Min", "Min", "Minimum of two numbers", |a: f64, b: f64| a.min(b));
-binary_math_op!(MathMax, "math.max", "Max", "Max", "Maximum of two numbers", |a: f64, b: f64| a.max(b));
+binary_math_operation!(MathAdd, "math.add", "Add", "Add", "Adds two numbers", |a: f64, b: f64| a + b);
+binary_math_operation!(MathSubtract, "math.subtract", "Subtract", "Sub", "Subtracts two numbers", |a: f64, b: f64| a - b);
+binary_math_operation!(MathMultiply, "math.multiply", "Multiply", "Mul", "Multiplies two numbers", |a: f64, b: f64| a * b);
+binary_math_operation!(MathDivide, "math.divide", "Divide", "Div", "Divides two numbers", |a: f64, b: f64| if b.abs() < f64::EPSILON { 0.0 } else { a / b });
+binary_math_operation!(MathModulo, "math.modulo", "Modulo", "Mod", "Remainder of division", |a: f64, b: f64| if b.abs() < f64::EPSILON { 0.0 } else { a % b });
+binary_math_operation!(MathPower, "math.power", "Power", "Pow", "Raises a to the power of b", |a: f64, b: f64| a.powf(b));
+binary_math_operation!(MathMin, "math.min", "Min", "Min", "Minimum of two numbers", |a: f64, b: f64| a.min(b));
+binary_math_operation!(MathMax, "math.max", "Max", "Max", "Maximum of two numbers", |a: f64, b: f64| a.max(b));
 
-unary_math_op!(MathRound, "math.round", "Round", "Rnd", "Rounds a number", |v: f64| v.round());
-unary_math_op!(MathFloor, "math.floor", "Floor", "Flr", "Floors a number", |v: f64| v.floor());
-unary_math_op!(MathCeil, "math.ceil", "Ceil", "Ceil", "Ceils a number", |v: f64| v.ceil());
+unary_math_operation!(MathRound, "math.round", "Round", "Rnd", "Rounds a number", |v: f64| v.round());
+unary_math_operation!(MathFloor, "math.floor", "Floor", "Flr", "Floors a number", |v: f64| v.floor());
+unary_math_operation!(MathCeil, "math.ceil", "Ceil", "Ceil", "Ceils a number", |v: f64| v.ceil());
 
 fn number_channel(name: &str) -> ChannelSpec {
     ChannelSpec::named("N", "Num", name, name)

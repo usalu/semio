@@ -26,8 +26,8 @@ todos:
  - id: kit-vcs-relay
    content: "Phase 3e (parallel subagent): same scaffolding for Kit/Graph/Session/Draft/Transaction/Checkpoint/Alternative/Change."
    status: completed
- - id: ops-relay
-   content: "Phase 3f (parallel subagent): per-entity Operations + per-entity Operation unions per the existing extend_graphql_operations plan; rename CreatedFixedPiece→AddedFixedPieceToDesign, FixedPiece→FixedPieceInDesign, DraggedPiece→DraggedPiecesInDesign; add Mutation + Subscription field per op."
+ - id: operations-relay
+   content: "Phase 3f (parallel subagent): per-entity Operations + per-entity Operation unions per the existing extend_graphql_operations plan; rename CreatedFixedPiece→AddedFixedPieceToDesign, FixedPiece→FixedPieceInDesign, DraggedPiece→DraggedPiecesInDesign; add Mutation + Subscription field per operation."
    status: completed
  - id: validate
    content: "Phase 4 (sequential): regenerate compose/graphql/schema.graphql, diff vs target.schema.graphql, fix unmatched types, ensure cargo build passes for native + wasm32, close ticket."
@@ -61,7 +61,7 @@ isProject: false
 - Type tree: `Type`, `Port`, `Connector`, `Representation`.
 - Design tree: `Design`, `Piece`, `Connection`, `Side`, `Clump`.
 - Kit + VCS: `Kit`, `Graph`, `Session`, `Draft`, `Transaction`, `Checkpoint`, `Alternative`, `Change`.
-- Operations (per `[.cursor/plans/extend_graphql_operations_per_entity_ce90680a.plan.md](.cursor/plans/extend_graphql_operations_per_entity_ce90680a.plan.md)`): `CreatedTag/RenamedTag/UpdatedTagDescription/UpdatedTagIcon/AddedAttributeToTag/.../DeletedTags`, mirrored for `Concept`, `Port`, `Quality`, `Type`, `Connector`, `Design`; full `Piece` op set (`AddedFixedPieceToDesign`, `MovedPieceInDesign`, `DraggedPieceInDesign`, `ChangedPieceToTypeInDesign`, etc.); `Kit` ops (`RenamedKit`, `ChangedDescription`).
+- Operations (per `[.cursor/plans/extend_graphql_operations_per_entity_ce90680a.plan.md](.cursor/plans/extend_graphql_operations_per_entity_ce90680a.plan.md)`): `CreatedTag/RenamedTag/UpdatedTagDescription/UpdatedTagIcon/AddedAttributeToTag/.../DeletedTags`, mirrored for `Concept`, `Port`, `Quality`, `Type`, `Connector`, `Design`; full `Piece` operation set (`AddedFixedPieceToDesign`, `MovedPieceInDesign`, `DraggedPieceInDesign`, `ChangedPieceToTypeInDesign`, etc.); `Kit` operations (`RenamedKit`, `ChangedDescription`).
 
 ### Mechanism in Rust (async-graphql 7)
 
@@ -78,7 +78,7 @@ isProject: false
 - Drop `Design.piece_id_to_index: HashMap<Id, usize>` ([lib.rs:1083](compose/rs/lib.rs:1083)) and `Kit.design_id_to_index` ([lib.rs:1323](compose/rs/lib.rs:1323)). Internal traversal uses `pieces: Vec<Arc<Piece>>` directly. Where `O(1)` lookup is needed at command-apply time, keep a `HashMap<Id, Weak<Piece>>` adjacent to the `Vec` and treat it strictly as a write-side index, never read from a resolver.
 - Delete `*_by_id` from all `#[Object]` resolvers ([lib.rs:619, 622, 625, 1150, 1156, 1391, 1396](compose/rs/lib.rs:619)). Field args like `design.piece(id: Id!): Piece` keep the external `Id` arg but resolve via the new write-side index (since this is the command boundary, not internal traversal).
 - `parent_piece` / `parent_connection` / `child_pieces` / `path` already use `Weak`/`Arc` ([lib.rs:770-775](compose/rs/lib.rs:770)) — keep as is; verify no `Id`-based fallbacks remain.
-- Audit list: every `_by_id` and `_id_to_` symbol in `lib.rs` must either be deleted or marked `#[doc(hidden)]` and only callable from `crate::op::*` command-apply paths. Add a `#[deny]` lint comment in the `gql` region forbidding `_by_id` in resolvers.
+- Audit list: every `_by_id` and `_id_to_` symbol in `lib.rs` must either be deleted or marked `#[doc(hidden)]` and only callable from `crate::operation::*` command-apply paths. Add a `#[deny]` lint comment in the `gql` region forbidding `_by_id` in resolvers.
 
 ### Schema region layout in `lib.rs`
 
@@ -87,7 +87,7 @@ Extend the existing `//#region 🌐 gql` ([lib.rs:3467](compose/rs/lib.rs:3467))
 - `//#region 🪪 interfaces` — `Node`, `Entity`, `WeakEntity`, `StrongEntity`, `Artifact`, `Document`, `Modification`, `Diff`, `Operation` interface enums + `EntityEdge`, `EntityConnectionInterface`, `PageInfo`.
 - `//#region 🌐 unions` — global `EntityOwner`/`OwnerEntity`, `OwnedEntityConnection`, `ChangeOwned`, `DiffOwner`, `DiffsOwner`, `Input`, `AnyOperation`.
 - `//#region 🪢 relay-macros` — `entity_relay!`, `entity_diffs!`, `entity_owner!` macros.
-- `//#region 📐 geom-relay`, `🏷️ meta-relay`, `🏠 type-relay`, `🏘 design-relay`, `📦 kit-relay`, `🌿 vcs-relay`, `⚙️ op-relay` — invoke macros for each entity group.
+- `//#region 📐 geom-relay`, `🏷️ meta-relay`, `🏠 type-relay`, `🏘 design-relay`, `📦 kit-relay`, `🌿 vcs-relay`, `⚙️ operation-relay` — invoke macros for each entity group.
 
 ### Phasing (delegated)
 

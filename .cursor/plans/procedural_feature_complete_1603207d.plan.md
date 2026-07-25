@@ -9,7 +9,7 @@ todos:
    content: Add divideCurve/reparametrizeCurve/reparametrizeSurface to geometry/brep/js/index.ts (interface + impl + tests); delete stale kernel.ts
    status: completed
  - id: brep-nodes
-   content: Expose all missing kernel ops + new utilities as BREP_FLOW_KINDS/handlers in procedural/react/index.tsx with tests; bump manifest version
+   content: Expose all missing kernel operations + new utilities as BREP_FLOW_KINDS/handlers in procedural/react/index.tsx with tests; bump manifest version
    status: completed
  - id: math
    content: Add math.random (seeded + entropy fallback) and fuller arithmetic/trig/remap to flow/module/math/lib.rs; add js_sys to Cargo.toml; extend tests
@@ -35,7 +35,7 @@ Two node systems back the procedural editor:
 - Brep geometry nodes: catalogue `BREP_FLOW_KINDS` + handlers `BREP_EVAL_HANDLERS` in [procedural/react/index.tsx](procedural/react/index.tsx), backed by `BrepjsGeometryKernel` in [geometry/brep/js/index.ts](geometry/brep/js/index.ts).
 - Generic data nodes: Rust/WASM modules in [flow/module/math/lib.rs](flow/module/math/lib.rs), [flow/module/list/lib.rs](flow/module/list/lib.rs), etc., built to `pkg/` and loaded by [flow/react/index.tsx](flow/react/index.tsx).
 
-The kernel already implements many ops not surfaced as nodes; the named utilities (reparametrize, random) do not yet exist. Each addition goes where it belongs: geometry in the brep module, numbers/series in the Rust modules.
+The kernel already implements many operations not surfaced as nodes; the named utilities (reparametrize, random) do not yet exist. Each addition goes where it belongs: geometry in the brep module, numbers/series in the Rust modules.
 
 ```mermaid
 flowchart LR
@@ -58,7 +58,7 @@ Extend the `🧪Tests` region in the same file (no new test files) covering the 
 
 Remove the stale duplicate [geometry/brep/js/kernel.ts](geometry/brep/js/kernel.ts) (not imported anywhere; missing `ellipsoid` import so already non-compiling) per the greenfield no-legacy rule.
 
-## 2. Brep flow nodes: expose all kernel ops + new utilities
+## 2. Brep flow nodes: expose all kernel operations + new utilities
 
 In [procedural/react/index.tsx](procedural/react/index.tsx), add entries to `BREP_FLOW_KINDS` and matching `BREP_EVAL_HANDLERS` (using existing `parseGeometry`/`parseVec3Input`/`geoOut` helpers; list inputs read index-keyed dicts like the Rust list module):
 

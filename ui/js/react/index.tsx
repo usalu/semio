@@ -5854,12 +5854,12 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
 /** @emoji 🎓 Full-screen first-run walkthrough: a single fullscreen glass veil covers the screen, the
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
- * and an info box explains it. Renders the declarative
- * `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step plays a ghost-cursor
- * `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if it has one, otherwise —
- * for a purely informational step whose only way forward is the Next/Done button — an automatic "click
- * Next" demonstration (see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`), so authors never have to spell
- * that one out per step. */
+ * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
+ * for the current step). Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition`
+ * contract. Every step plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared
+ * `demonstration` if it has one, otherwise — for a purely informational step whose only way forward is
+ * the Next/Done button — an automatic "click Next" demonstration (see
+ * `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`), so authors never have to spell that one out per step. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, completedInteractionIndices, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
@@ -5883,6 +5883,14 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
+  // 🫳 User-dragged absolute position — `null` keeps auto/`placement` until the top-center handle moves the box;
+  // reset on every step so each card starts at its authored placement again.
+  const [dragPosition, setDragPosition] = reactHostPort.useState<IntroductionInfoBoxPosition | null>(null);
+  const [dragging, setDragging] = reactHostPort.useState(false);
+  const dragPositionRef = reactHostPort.useRef(dragPosition);
+  dragPositionRef.current = dragPosition;
+  const dragLayoutRef = reactHostPort.useRef({ placement: { top: 0, left: 0 }, boxSize, viewport });
+  const dragSessionRef = reactHostPort.useRef<{ startTop: number; startLeft: number; pointerX: number; pointerY: number } | null>(null);
 
   reactHostPort.useEffect(() => {
     const root = document.documentElement;
@@ -5904,6 +5912,12 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     const observer = new ResizeObserver(measure);
     observer.observe(el);
     return () => observer.disconnect();
+  }, [stepIndex]);
+
+  reactHostPort.useEffect(() => {
+    setDragPosition(null);
+    setDragging(false);
+    dragSessionRef.current = null;
   }, [stepIndex]);
 
   const skipLabel = useLabel("introduction.skip");
@@ -5940,6 +5954,36 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     prevCompletedRef.current = { stepIndex, indices: current };
   }, [stepIndex, completedInteractionIndices]);
 
+  const dragPointerProps = usePointerDrag<HTMLSpanElement>({
+    onStart: (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      const start = dragPositionRef.current ?? dragLayoutRef.current.placement;
+      dragSessionRef.current = { startTop: start.top, startLeft: start.left, pointerX: event.clientX, pointerY: event.clientY };
+      setDragging(true);
+    },
+    onMove: (event) => {
+      const session = dragSessionRef.current;
+      if (!session) return;
+      const { boxSize: size, viewport: vp } = dragLayoutRef.current;
+      const gap = INTRODUCTION_INFO_BOX_GAP_PX;
+      const clampLeft = (left: number) => Math.min(Math.max(left, gap), Math.max(gap, vp.width - size.width - gap));
+      const clampTop = (top: number) => Math.min(Math.max(top, gap), Math.max(gap, vp.height - size.height - gap));
+      setDragPosition({
+        top: clampTop(session.startTop + (event.clientY - session.pointerY)),
+        left: clampLeft(session.startLeft + (event.clientX - session.pointerX)),
+      });
+    },
+    onEnd: () => {
+      dragSessionRef.current = null;
+      setDragging(false);
+    },
+    onCancel: () => {
+      dragSessionRef.current = null;
+      setDragging(false);
+    },
+  });
+
   useHotkeys("escape", skip, { enableOnFormTags: true }, [skip]);
   useHotkeys("enter,arrowright", () => advanceByButton && next(), { enableOnFormTags: true }, [advanceByButton, next]);
   useHotkeys("arrowleft", back, { enableOnFormTags: true }, [back]);
@@ -5947,6 +5991,8 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   if (!step) return null;
 
   const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
+  dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
+  const position = dragPosition ?? boxPosition;
   // 🎓 A targeted element that hasn't mounted yet (a folded utility bar/panel the shell is still revealing)
   // must not trap the user behind an opaque-to-clicks veil — only screen-style steps (`introduce == null`)
   // and steps whose target did resolve block pointer events; an unresolved `introduce` lets clicks through
@@ -5960,12 +6006,16 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
       <div
         ref={boxRef}
         data-slot="introduction-info-box"
+        data-dragging={dragging ? "true" : undefined}
         className={GLASS_OVERLAY_BOX_CLASS}
-        style={{ top: boxPosition.top, left: boxPosition.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
+        style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
       >
-        <div className="mb-single flex items-center justify-between gap-double">
-          <h3 className="text-sm font-medium">{step.title}</h3>
-          <span className="text-xs text-muted-foreground">
+        <div className="mb-single flex items-center gap-double">
+          <h3 className="min-w-0 flex-1 text-sm font-medium">{step.title}</h3>
+          <div data-slot="introduction-info-box-drag" className="flex shrink-0 items-center justify-center">
+            <DragHandle {...dragPointerProps} emphasized={dragging} />
+          </div>
+          <span className="flex-1 text-right text-xs text-muted-foreground">
             {stepIndex + 1} / {introduction.steps.length}
           </span>
         </div>
@@ -7005,7 +7055,7 @@ export interface PanelTabDockMove {
 /**
  * 🎯 Pure move transform: removes the dragged tab's subtree from wherever it lives and reinserts it at `target`.
  * Dropping a subtree into itself (as a child of one of its own descendants, or among the children of one) is a
- * no-op returning the exact same {@link PanelDock} reference. Visibility is never touched here — the shell unfolds
+ * no-operation returning the exact same {@link PanelDock} reference. Visibility is never touched here — the shell unfolds
  * a folded target anchor on drop.
  **/
 export function moveTabInDock(dock: PanelDock, move: PanelTabDockMove): PanelDock {
@@ -8027,7 +8077,7 @@ export function childElementId(parent: string, ...segments: (string | number)[])
 
 /** 🆔 Dev-only console warning when `id` violates {@link ELEMENT_ID_PATTERN} — called by base components
  * so a malformed id surfaces immediately at the call site instead of silently breaking i18n/tooltip/
- * introduction resolution downstream. No-op in production builds. */
+ * introduction resolution downstream. No-operation in production builds. */
 export function assertElementId(id: string, componentName: string): void {
   if (process.env.NODE_ENV === "production") return;
   if (!isElementId(id)) console.error(`${componentName} received id "${id}" which does not match the UI element id grammar (dot-separated camelCase, e.g. "framework.window.main.action.addLayer")`);
@@ -26355,6 +26405,29 @@ if (import.meta.vitest) {
         vi.useRealTimers();
       }
     });
+
+    it("celebrate content paint shares --celebrate-conic on the host and paints leaf chrome, not window shells", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
+      expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
+      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
+      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:\s*celebrate-border-burst/);
+      expect(css).toContain("#endregion 🎉CelebrateContent");
+      expect(css).toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="button-group-item"\]/);
+      expect(css).toMatch(/\[data-celebrated="true"\]\[data-slot="introduction-interaction-label"\][\s\S]*?background-clip:\s*text/);
+      expect(css).toMatch(/mix-blend-mode:\s*destination-in/);
+      expect(css).toMatch(
+        /\[data-hover-scope\]:hover[\s\S]*\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="drag-handle"\][\s\S]*?color:\s*#000/,
+      );
+      expect(css).toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?background:\s*var\(--celebrate-conic\)/);
+      expect(css).not.toMatch(
+        /\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="window"\]/,
+      );
+    });
   });
 
   describe("useFirstDraggableElementAlias", () => {
@@ -27097,6 +27170,36 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="introduction-interactions"]')).toBeNull();
       expect(screen.getByRole("button", { name: /next|done/i })).toBeTruthy();
     });
+
+    it("renders a header drag handle between title and step count that moves the info box", () => {
+      const steps: IntroductionStepDefinition[] = [
+        { id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+      ];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const box = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      const header = box.firstElementChild as HTMLElement;
+      const dragRail = container.querySelector('[data-slot="introduction-info-box-drag"]');
+      const handle = dragRail?.querySelector('[data-slot="drag-handle"]') as HTMLElement;
+      expect(header).toBeTruthy();
+      expect(dragRail).toBeTruthy();
+      expect(handle).toBeTruthy();
+      expect(header.contains(dragRail)).toBe(true);
+      const headerChildren = Array.from(header.children);
+      expect(headerChildren[0]?.tagName).toBe("H3");
+      expect(headerChildren[1]?.getAttribute("data-slot")).toBe("introduction-info-box-drag");
+      expect(headerChildren[2]?.textContent?.trim()).toMatch(/1\s*\/\s*1/);
+      const startTop = Number.parseFloat(box.style.top);
+      const startLeft = Number.parseFloat(box.style.left);
+      fireEvent.pointerDown(handle, { pointerId: 1, pointerType: "mouse", clientX: 100, clientY: 100 });
+      fireEvent.pointerMove(handle, { pointerId: 1, pointerType: "mouse", clientX: 140, clientY: 160 });
+      expect(box.getAttribute("data-dragging")).toBe("true");
+      expect(Number.parseFloat(box.style.top)).toBe(startTop + 60);
+      expect(Number.parseFloat(box.style.left)).toBe(startLeft + 40);
+      fireEvent.pointerUp(handle, { pointerId: 1, pointerType: "mouse", clientX: 140, clientY: 160 });
+      expect(box.getAttribute("data-dragging")).toBeNull();
+      expect(Number.parseFloat(box.style.top)).toBe(startTop + 60);
+      expect(Number.parseFloat(box.style.left)).toBe(startLeft + 40);
+    });
   });
 
   describe("resolveIntroductionPlacement", () => {
@@ -27154,19 +27257,120 @@ if (import.meta.vitest) {
       expect(resolveIntroductionPoint({ kind: "windowNormalized", id: "demo.window", x: 0.5, y: 0.5 })).toEqual({ x: 150, y: 110 });
     });
 
-    it("resolves a scene point through its registered projector, and null once off-camera or unregistered", () => {
-      const unregister = registerIntroductionSceneProjector("demo.scene", (position) =>
-        position[0] > 0 ? { x: 42, y: 84, visible: true } : { x: 0, y: 0, visible: false },
-      );
+    it("resolves a scene point through its registered resolver, and null once off-camera or unregistered", () => {
+      const unregister = registerIntroductionSurfaceResolver("demo.scene", {
+        scenePoint: (position) => (position[0] > 0 ? { x: 42, y: 84, visible: true } : { x: 0, y: 0, visible: false }),
+      });
       expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toEqual({ x: 42, y: 84 });
       expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [-1, 0, 0] })).toBeNull();
       unregister();
       expect(resolveIntroductionPoint({ kind: "scene", id: "demo.scene", position: [1, 0, 0] })).toBeNull();
     });
 
+    it("resolves a canvas (2D world) point through its registered resolver", () => {
+      const unregister = registerIntroductionSurfaceResolver("demo.canvas", {
+        canvasPoint: (x, y) => ({ x: x * 2, y: y * 2, visible: true }),
+      });
+      expect(resolveIntroductionPoint({ kind: "canvas", id: "demo.canvas", x: 10, y: 20 })).toEqual({ x: 20, y: 40 });
+      unregister();
+      expect(resolveIntroductionPoint({ kind: "canvas", id: "demo.canvas", x: 10, y: 20 })).toBeNull();
+    });
+
+    it("resolves an entity point centered, or at a normalized offset within its rect, and a wildcard entity id", () => {
+      const unregister = registerIntroductionSurfaceResolver("demo.entities", {
+        entity: (domain, entityId) => {
+          if (domain !== "vortex") return null;
+          if (entityId === "*") return { point: { x: 5, y: 5 }, visible: true };
+          if (entityId !== "obj:v0") return null;
+          return { point: { x: 100, y: 100 }, rect: { x: 80, y: 90, width: 40, height: 20 }, visible: true };
+        },
+      });
+      expect(resolveIntroductionPoint({ kind: "entity", id: "demo.entities", domain: "vortex", entity: "obj:v0" })).toEqual({ x: 100, y: 100 });
+      expect(resolveIntroductionPoint({ kind: "entity", id: "demo.entities", domain: "vortex", entity: "obj:v0", offset: [0, 0] })).toEqual({ x: 80, y: 90 });
+      expect(resolveIntroductionPoint({ kind: "entity", id: "demo.entities", domain: "vortex", entity: "*" })).toEqual({ x: 5, y: 5 });
+      expect(resolveIntroductionPoint({ kind: "entity", id: "demo.entities", domain: "vortex", entity: "missing" })).toBeNull();
+      expect(resolveIntroductionPoint({ kind: "entity", id: "demo.entities", domain: "edge", entity: "*" })).toBeNull();
+      unregister();
+    });
+
+    it("resolves a curve point by arc-length t along an entity's polyline", () => {
+      const unregister = registerIntroductionSurfaceResolver("demo.curve", {
+        entity: (domain, entityId) => {
+          if (domain !== "attraction" || entityId !== "a1") return null;
+          return { point: { x: 50, y: 0 }, polyline: [{ x: 0, y: 0 }, { x: 100, y: 0 }], visible: true };
+        },
+      });
+      expect(resolveIntroductionPoint({ kind: "curve", id: "demo.curve", domain: "attraction", entity: "a1", t: 0 })).toEqual({ x: 0, y: 0 });
+      expect(resolveIntroductionPoint({ kind: "curve", id: "demo.curve", domain: "attraction", entity: "a1", t: 0.5 })).toEqual({ x: 50, y: 0 });
+      expect(resolveIntroductionPoint({ kind: "curve", id: "demo.curve", domain: "attraction", entity: "missing", t: 0.5 })).toBeNull();
+      unregister();
+    });
+
+    it("resolves a domain point by mapping value onto the entity's rect along its axis", () => {
+      const unregister = registerIntroductionSurfaceResolver("demo.domain", {
+        entity: (domain, entityId) => {
+          if (domain !== "slider" || entityId !== "fillCount") return null;
+          return { point: { x: 100, y: 50 }, rect: { x: 50, y: 40, width: 100, height: 20 }, domain: { min: 0, max: 10, axis: "x" }, visible: true };
+        },
+      });
+      expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 0 })).toEqual({ x: 50, y: 50 });
+      expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 10 })).toEqual({ x: 150, y: 50 });
+      expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 5 })).toEqual({ x: 100, y: 50 });
+      // 🎚️ Out-of-range values clamp into [min, max] rather than extrapolating past the rect.
+      expect(resolveIntroductionPoint({ kind: "domain", id: "demo.domain", domain: "slider", entity: "fillCount", value: 999 })).toEqual({ x: 150, y: 50 });
+      unregister();
+    });
+
     it("returns null for an element/window point that hasn't mounted", () => {
       expect(resolveIntroductionPoint({ kind: "element", id: "nothing.here" })).toBeNull();
       expect(resolveIntroductionPoint({ kind: "window", id: "nothing.here", x: 0, y: 0 })).toBeNull();
+    });
+  });
+
+  describe("polylinePointAt", () => {
+    it("interpolates by arc length across a multi-segment polyline", () => {
+      const points = [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+        { x: 10, y: 10 },
+      ];
+      expect(polylinePointAt(points, 0)).toEqual({ x: 0, y: 0 });
+      expect(polylinePointAt(points, 1)).toEqual({ x: 10, y: 10 });
+      // 🪡 Total length 20 (10 + 10); t=0.25 lands exactly at the corner (5 units along the first segment).
+      expect(polylinePointAt(points, 0.25)).toEqual({ x: 5, y: 0 });
+      // t=0.75 is 5 units into the second segment.
+      expect(polylinePointAt(points, 0.75)).toEqual({ x: 10, y: 5 });
+    });
+
+    it("clamps t outside [0, 1] and degrades gracefully for degenerate polylines", () => {
+      const points = [{ x: 0, y: 0 }, { x: 10, y: 0 }];
+      expect(polylinePointAt(points, -1)).toEqual({ x: 0, y: 0 });
+      expect(polylinePointAt(points, 2)).toEqual({ x: 10, y: 0 });
+      expect(polylinePointAt([], 0.5)).toEqual({ x: 0, y: 0 });
+      expect(polylinePointAt([{ x: 3, y: 4 }], 0.5)).toEqual({ x: 3, y: 4 });
+      expect(polylinePointAt([{ x: 1, y: 1 }, { x: 1, y: 1 }], 0.5)).toEqual({ x: 1, y: 1 });
+    });
+  });
+
+  describe("sampleBezierSegments", () => {
+    it("samples move/line segments verbatim and quad/cubic curves through their control points", () => {
+      const linePoints = sampleBezierSegments([
+        { kind: "move", to: [0, 0] },
+        { kind: "line", to: [10, 0] },
+      ]);
+      expect(linePoints).toEqual([{ x: 0, y: 0 }, { x: 10, y: 0 }]);
+
+      const quadPoints = sampleBezierSegments([{ kind: "move", to: [0, 0] }, { kind: "quad", ctrl: [5, 10], to: [10, 0] }], 2);
+      // 🪡 2 samples of a quad from (0,0) via ctrl (5,10) to (10,0): t=0.5 is the curve's own midpoint.
+      expect(quadPoints).toHaveLength(3);
+      expect(quadPoints[1].x).toBeCloseTo(5, 5);
+      expect(quadPoints[1].y).toBeCloseTo(5, 5);
+      expect(quadPoints[2]).toEqual({ x: 10, y: 0 });
+    });
+
+    it("ignores unsampleable segment kinds without throwing", () => {
+      expect(sampleBezierSegments([{ kind: "close" }])).toEqual([]);
+      expect(sampleBezierSegments([])).toEqual([]);
     });
   });
 
@@ -33794,7 +33998,7 @@ if (treeVitest) {
       expect(isPanelTabInSubtree(child, "parent")).toBe(false);
     });
 
-    it("moveTabInDock reorders within a row, moves across anchors (incl. into a middle anchor), appends as a child, and no-ops on own-subtree drops", () => {
+    it("moveTabInDock reorders within a row, moves across anchors (incl. into a middle anchor), appends as a child, and no-operations on own-subtree drops", () => {
       const StubIcon = (): null => null;
       const a = singleTreeLeaf({ id: "a", icon: StubIcon, name: "A", tree: { sections: [] } });
       const b = singleTreeLeaf({ id: "b", icon: StubIcon, name: "B", tree: { sections: [] } });
@@ -33826,7 +34030,7 @@ if (treeVitest) {
       expect(nestedBranch?.kind === "branch" ? nestedBranch.children.map((child) => child.id) : null).toEqual(["c"]);
       expect(nested.anchors["bottom-right"]).toEqual([]);
 
-      // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-op (same reference).
+      // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-operation (same reference).
       expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "child", anchor: "top-right", parentId: "branch" } })).toBe(dock);
       expect(moveTabInDock(dock, { tabId: "branch", fromAnchor: "top-right", target: { kind: "insert", anchor: "top-right", parentPath: ["branch"], index: 0 } })).toBe(dock);
     });

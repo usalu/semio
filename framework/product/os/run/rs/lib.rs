@@ -1,7 +1,7 @@
 //! 🕸️ Headless computation of an OS studio's media graph — no UI involved. A `StudioRunner` walks
 //! `OsMediaGraph` in topological order, instantiates each node's app through a `MediaNodeHost`, moves
 //! `Media` along edges, and skips any node whose inputs and document are unchanged since the last run.
-//! Importing media is emitting ops: a headless run is an ordinary editing session (actor `runner`)
+//! Importing media is emitting operations: a headless run is an ordinary editing session (actor `runner`)
 //! recorded in each app document's own VCS envelope, so a later UI open sees it as normal history.
 
 //#region 🔖Types
@@ -605,7 +605,7 @@ mod tests {
     }
 
     #[test]
-    fn first_run_recomputes_every_node_second_run_is_a_no_op() {
+    fn first_run_recomputes_every_node_second_run_is_a_no_operation() {
         let (graph, instances) = two_node_graph();
         let mut host = FakeHost::default();
         host.set_output("app-a", "out", "\"hello\"");

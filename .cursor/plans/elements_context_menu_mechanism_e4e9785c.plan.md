@@ -71,7 +71,7 @@ In the same region, add (using `@radix-ui/react-context-menu`, to be added to [e
 - `ContextMenuController` — controlled variant used by board: takes `open`, `position: {x,y} | null`, `items`, `onOpenChange`. Renders an invisible anchor at the cursor and a `Content`.
 - `useContextMenuItems(items)` — small helper to render items recursively (shared between both variants).
 
-If `contextMenu` is empty/undefined the wrapper is a no-op (renders `children` directly), so every consumer can pass it unconditionally.
+If `contextMenu` is empty/undefined the wrapper is a no-operation (renders `children` directly), so every consumer can pass it unconditionally.
 
 ## UI components (`@elements/ui`)
 

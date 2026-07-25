@@ -292,7 +292,7 @@ pub fn discrete_sequence(rng: &mut Rng, n: usize, distribution: &[f64]) -> Vec<u
     (0..n).map(|_| table.sample(rng)).collect()
 }
 
-/// ➕ Running sum of `weights`, normalized so the last entry is `1.0` (a no-op on an all-zero or
+/// ➕ Running sum of `weights`, normalized so the last entry is `1.0` (a no-operation on an all-zero or
 /// empty input, returned unnormalized since there is no meaningful scale to normalize to).
 pub fn cumulative_distribution(weights: &[f64]) -> Vec<f64> {
     let mut cumulative = Vec::with_capacity(weights.len());

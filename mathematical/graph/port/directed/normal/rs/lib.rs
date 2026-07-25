@@ -44,7 +44,7 @@ impl PortDirectedGraph {
     }
     // #endsubregion
 
-    // #subregion 🔖NodeOps
+    // #subregion 🔖NodeOperations
     pub fn add_node(&mut self) -> NodeId {
         self.storage.add_node()
     }
@@ -95,7 +95,7 @@ impl PortDirectedGraph {
     }
     // #endsubregion
 
-    // #subregion 🔖EdgeOps
+    // #subregion 🔖EdgeOperations
     /// ➕ Auto-creates missing endpoints, then always adds a fresh parallel `source -> target` edge (NetworkX
     /// `MultiDiGraph.add_edge` semantics — never an upsert, direction matters).
     pub fn add_edge(&mut self, source: NodeId, target: NodeId) -> EdgeId {

@@ -7,7 +7,7 @@ use serde_json::Value;
 use vcs::create_document_vcs_envelope;
 #[cfg(test)]
 use vcs::DocumentVcsCommand;
-use vcs::{collection_diff_from_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, ItemPatch, Operation, OperationDiff, Patchable};
+use vcs::{collection_diff_from_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, ItemPatch, Operation, OperationDiff, Patchable};
 
 pub const SHOOTING_FIXTURE_SCHEMA: &str = "shooting.fixture";
 
@@ -190,8 +190,8 @@ pub struct ShootingFixture {
     pub active_asset_id: String,
 }
 
-pub type ShootingEnvelope = DocumentVcsEnvelope<ShootingFixture, ShootingOp>;
-pub type ShootingStore = DocumentVcsStore<ShootingFixture, ShootingOp>;
+pub type ShootingEnvelope = DocumentVcsEnvelope<ShootingFixture, ShootingOperation>;
+pub type ShootingStore = DocumentVcsStore<ShootingFixture, ShootingOperation>;
 
 pub fn empty_shooting_fixture() -> ShootingFixture {
     ShootingFixture {
@@ -353,7 +353,7 @@ impl Patchable<ShootingSavedCameraPatch> for ShootingSavedCamera {
     }
 }
 
-/// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_op`'s
+/// ▶️ Applies a `CollectionDiff` (removed → modified → added, matching `apply_collection_operation`'s
 /// ordering) to an owned `Vec` — `vcs::CollectionDiff` has no generic apply helper of its own since
 /// `modified` patches require the item's `Patchable` impl.
 fn apply_collection_diff<TId, TItem, TPatch>(items: &mut Vec<TItem>, diff: &CollectionDiff<TId, TPatch, TItem>)
@@ -389,17 +389,17 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 }
 //#endregion 🔖CollectionSupport
 
-//#region 🔖Ops
+//#region 🔖Operations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
+#[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
     reason = "boxing SetFixture.fixture is a public field-type change; shooting/plugin/rs (its only external constructor, 3 call sites) has a live concurrent edit in progress right now (see CONFLICTS.md) and cannot be safely updated in the same pass — revisit once that edit lands"
 )]
-pub enum ShootingOp {
-    Assets(CollectionOp<String, ShootingAsset, ShootingAssetPatch>),
-    Shots(CollectionOp<String, ShootingShot, ShootingShotPatch>),
-    SavedCameras(CollectionOp<String, ShootingSavedCamera, ShootingSavedCameraPatch>),
+pub enum ShootingOperation {
+    Assets(CollectionOperation<String, ShootingAsset, ShootingAssetPatch>),
+    Shots(CollectionOperation<String, ShootingShot, ShootingShotPatch>),
+    SavedCameras(CollectionOperation<String, ShootingSavedCamera, ShootingSavedCameraPatch>),
     SetActiveShot { shot_id: Option<String> },
     SetActiveAsset { asset_id: Option<String> },
     SetCamera { camera: ShootingCamera },
@@ -588,58 +588,58 @@ impl OperationDiff<ShootingFixture> for ShootingDiff {
     }
 }
 
-impl Operation<ShootingFixture> for ShootingOp {
+impl Operation<ShootingFixture> for ShootingOperation {
     type Diff = ShootingDiff;
 
     fn diff(&self, projection: &ShootingFixture) -> ShootingDiff {
         match self {
-            ShootingOp::Assets(op) => ShootingDiff { assets: Some(collection_diff_from_op(&projection.assets, op)), ..Default::default() },
-            ShootingOp::Shots(op) => ShootingDiff { shots: Some(collection_diff_from_op(&projection.shots, op)), ..Default::default() },
-            ShootingOp::SavedCameras(op) => ShootingDiff { saved_cameras: Some(collection_diff_from_op(&projection.saved_cameras, op)), ..Default::default() },
-            ShootingOp::SetActiveShot { shot_id } => ShootingDiff { active_shot_id: Some(shot_id.clone().unwrap_or_default()), ..Default::default() },
-            ShootingOp::SetActiveAsset { asset_id } => ShootingDiff { active_asset_id: Some(asset_id.clone().unwrap_or_default()), ..Default::default() },
-            ShootingOp::SetCamera { camera } => camera_diff_for_target(projection, active_shot_id(projection).as_deref(), camera),
-            ShootingOp::SetShotCamera { shot_id, camera } => camera_diff_for_target(projection, Some(shot_id), camera),
-            ShootingOp::PatchScene { patch } => ShootingDiff { scene: Some(patch.clone()), ..Default::default() },
-            ShootingOp::TranslateAssets { asset_ids, dx, dy, dz } => transform_assets_diff(projection, asset_ids, |asset| ShootingAssetPatch { origin: Some([asset.origin[0] + dx, asset.origin[1] + dy, asset.origin[2] + dz]), ..Default::default() }),
-            ShootingOp::RotateAssets { asset_ids, ax, ay, az, angle } => {
+            ShootingOperation::Assets(operation) => ShootingDiff { assets: Some(collection_diff_from_operation(&projection.assets, operation)), ..Default::default() },
+            ShootingOperation::Shots(operation) => ShootingDiff { shots: Some(collection_diff_from_operation(&projection.shots, operation)), ..Default::default() },
+            ShootingOperation::SavedCameras(operation) => ShootingDiff { saved_cameras: Some(collection_diff_from_operation(&projection.saved_cameras, operation)), ..Default::default() },
+            ShootingOperation::SetActiveShot { shot_id } => ShootingDiff { active_shot_id: Some(shot_id.clone().unwrap_or_default()), ..Default::default() },
+            ShootingOperation::SetActiveAsset { asset_id } => ShootingDiff { active_asset_id: Some(asset_id.clone().unwrap_or_default()), ..Default::default() },
+            ShootingOperation::SetCamera { camera } => camera_diff_for_target(projection, active_shot_id(projection).as_deref(), camera),
+            ShootingOperation::SetShotCamera { shot_id, camera } => camera_diff_for_target(projection, Some(shot_id), camera),
+            ShootingOperation::PatchScene { patch } => ShootingDiff { scene: Some(patch.clone()), ..Default::default() },
+            ShootingOperation::TranslateAssets { asset_ids, dx, dy, dz } => transform_assets_diff(projection, asset_ids, |asset| ShootingAssetPatch { origin: Some([asset.origin[0] + dx, asset.origin[1] + dy, asset.origin[2] + dz]), ..Default::default() }),
+            ShootingOperation::RotateAssets { asset_ids, ax, ay, az, angle } => {
                 let delta = quat_from_axis_angle(*ax, *ay, *az, *angle);
                 transform_assets_diff(projection, asset_ids, |asset| {
                     let current = asset.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                     ShootingAssetPatch { orientation: Some(quat_mul(delta, current)), ..Default::default() }
                 })
             }
-            ShootingOp::ScaleAssets { asset_ids, sx, sy, sz } => transform_assets_diff(projection, asset_ids, |asset| {
+            ShootingOperation::ScaleAssets { asset_ids, sx, sy, sz } => transform_assets_diff(projection, asset_ids, |asset| {
                 let current = shooting_asset_scale(asset);
                 ShootingAssetPatch { scale: Some(serde_json::json!([current[0] * sx, current[1] * sy, current[2] * sz])), ..Default::default() }
             }),
-            ShootingOp::SetFixture { fixture } => ShootingDiff { fixture: Some(fixture.clone()), ..Default::default() },
+            ShootingOperation::SetFixture { fixture } => ShootingDiff { fixture: Some(fixture.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &ShootingFixture) -> Vec<Self> {
         match self {
-            ShootingOp::Assets(op) => vec![ShootingOp::Assets(vcs::invert_collection_op(&projection.assets, op))],
-            ShootingOp::Shots(op) => vec![ShootingOp::Shots(vcs::invert_collection_op(&projection.shots, op))],
-            ShootingOp::SavedCameras(op) => {
-                vec![ShootingOp::SavedCameras(vcs::invert_collection_op(&projection.saved_cameras, op))]
+            ShootingOperation::Assets(operation) => vec![ShootingOperation::Assets(vcs::invert_collection_operation(&projection.assets, operation))],
+            ShootingOperation::Shots(operation) => vec![ShootingOperation::Shots(vcs::invert_collection_operation(&projection.shots, operation))],
+            ShootingOperation::SavedCameras(operation) => {
+                vec![ShootingOperation::SavedCameras(vcs::invert_collection_operation(&projection.saved_cameras, operation))]
             }
-            ShootingOp::SetActiveShot { .. } => vec![ShootingOp::SetActiveShot { shot_id: if projection.active_shot_id.is_empty() { None } else { Some(projection.active_shot_id.clone()) } }],
-            ShootingOp::SetActiveAsset { .. } => vec![ShootingOp::SetActiveAsset { asset_id: if projection.active_asset_id.is_empty() { None } else { Some(projection.active_asset_id.clone()) } }],
-            ShootingOp::SetCamera { .. } => vec![ShootingOp::SetCamera { camera: camera_for_target(projection, active_shot_id(projection).as_deref()) }],
-            ShootingOp::SetShotCamera { shot_id, .. } => vec![ShootingOp::SetShotCamera { shot_id: shot_id.clone(), camera: camera_for_target(projection, Some(shot_id)) }],
-            ShootingOp::PatchScene { patch } => vec![ShootingOp::PatchScene { patch: reverse_scene_patch(&projection.scene, patch) }],
-            ShootingOp::TranslateAssets { asset_ids, dx, dy, dz } => vec![ShootingOp::TranslateAssets { asset_ids: asset_ids.clone(), dx: -dx, dy: -dy, dz: -dz }],
-            ShootingOp::RotateAssets { asset_ids, ax, ay, az, angle } => vec![ShootingOp::RotateAssets { asset_ids: asset_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: -angle }],
-            ShootingOp::ScaleAssets { asset_ids, sx, sy, sz } => {
+            ShootingOperation::SetActiveShot { .. } => vec![ShootingOperation::SetActiveShot { shot_id: if projection.active_shot_id.is_empty() { None } else { Some(projection.active_shot_id.clone()) } }],
+            ShootingOperation::SetActiveAsset { .. } => vec![ShootingOperation::SetActiveAsset { asset_id: if projection.active_asset_id.is_empty() { None } else { Some(projection.active_asset_id.clone()) } }],
+            ShootingOperation::SetCamera { .. } => vec![ShootingOperation::SetCamera { camera: camera_for_target(projection, active_shot_id(projection).as_deref()) }],
+            ShootingOperation::SetShotCamera { shot_id, .. } => vec![ShootingOperation::SetShotCamera { shot_id: shot_id.clone(), camera: camera_for_target(projection, Some(shot_id)) }],
+            ShootingOperation::PatchScene { patch } => vec![ShootingOperation::PatchScene { patch: reverse_scene_patch(&projection.scene, patch) }],
+            ShootingOperation::TranslateAssets { asset_ids, dx, dy, dz } => vec![ShootingOperation::TranslateAssets { asset_ids: asset_ids.clone(), dx: -dx, dy: -dy, dz: -dz }],
+            ShootingOperation::RotateAssets { asset_ids, ax, ay, az, angle } => vec![ShootingOperation::RotateAssets { asset_ids: asset_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: -angle }],
+            ShootingOperation::ScaleAssets { asset_ids, sx, sy, sz } => {
                 let inv = |value: f64| if value.abs() < 1e-8 { 1.0 } else { 1.0 / value };
-                vec![ShootingOp::ScaleAssets { asset_ids: asset_ids.clone(), sx: inv(*sx), sy: inv(*sy), sz: inv(*sz) }]
+                vec![ShootingOperation::ScaleAssets { asset_ids: asset_ids.clone(), sx: inv(*sx), sy: inv(*sy), sz: inv(*sz) }]
             }
-            ShootingOp::SetFixture { .. } => vec![ShootingOp::SetFixture { fixture: projection.clone() }],
+            ShootingOperation::SetFixture { .. } => vec![ShootingOperation::SetFixture { fixture: projection.clone() }],
         }
     }
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -693,36 +693,36 @@ mod tests {
         ShootingShot { id: id.into(), label: format!("Shot {id}"), width: 256, height: 256, format: "png".into(), shape: "rectangle".into(), background: None, camera_id: None }
     }
 
-    fn round_trip(fixture: &ShootingFixture, op: &ShootingOp) -> ShootingFixture {
-        let forward = vcs::apply_operation(fixture, op);
-        let backwards = op.backwards(fixture);
+    fn round_trip(fixture: &ShootingFixture, operation: &ShootingOperation) -> ShootingFixture {
+        let forward = vcs::apply_operation(fixture, operation);
+        let backwards = operation.backwards(fixture);
         let mut restored = forward.clone();
         for back in &backwards {
             restored = vcs::apply_operation(&restored, back);
         }
-        assert_eq!(&restored, fixture, "backwards() must exactly restore the pre-op fixture");
+        assert_eq!(&restored, fixture, "backwards() must exactly restore the pre-operation fixture");
         forward
     }
 
     #[test]
     fn shooting_projection_round_trip() {
         let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ShootingOp::Assets(CollectionOp::Add { index: 0, item: sample_asset("a1") })], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").assets.len(), 1);
     }
 
     #[test]
     fn assets_add_remove_patch_round_trip() {
         let fixture = empty_shooting_fixture();
-        let add = ShootingOp::Assets(CollectionOp::Add { index: 0, item: sample_asset("a1") });
+        let add = ShootingOperation::Assets(CollectionOperation::Add { index: 0, item: sample_asset("a1") });
         let with_asset = round_trip(&fixture, &add);
         assert_eq!(with_asset.assets.len(), 1);
 
-        let patch = ShootingOp::Assets(CollectionOp::Patch { id: "a1".into(), patch: ShootingAssetPatch { name: Some("Renamed".into()), ..Default::default() } });
+        let patch = ShootingOperation::Assets(CollectionOperation::Patch { id: "a1".into(), patch: ShootingAssetPatch { name: Some("Renamed".into()), ..Default::default() } });
         let patched = round_trip(&with_asset, &patch);
         assert_eq!(patched.assets[0].name, "Renamed");
 
-        let remove = ShootingOp::Assets(CollectionOp::Remove { id: "a1".into() });
+        let remove = ShootingOperation::Assets(CollectionOperation::Remove { id: "a1".into() });
         let removed = round_trip(&patched, &remove);
         assert!(removed.assets.is_empty());
     }
@@ -731,7 +731,7 @@ mod tests {
     fn shots_patch_round_trip() {
         let mut fixture = empty_shooting_fixture();
         fixture.shots.push(sample_shot("s1"));
-        let patch = ShootingOp::Shots(CollectionOp::Patch { id: "s1".into(), patch: ShootingShotPatch { label: Some("Hero".into()), width: Some(512), ..Default::default() } });
+        let patch = ShootingOperation::Shots(CollectionOperation::Patch { id: "s1".into(), patch: ShootingShotPatch { label: Some("Hero".into()), width: Some(512), ..Default::default() } });
         let patched = round_trip(&fixture, &patch);
         assert_eq!(patched.shots[0].label, "Hero");
         assert_eq!(patched.shots[0].width, 512);
@@ -740,7 +740,7 @@ mod tests {
     #[test]
     fn saved_cameras_add_round_trip() {
         let fixture = empty_shooting_fixture();
-        let add = ShootingOp::SavedCameras(CollectionOp::Add { index: 0, item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() } });
+        let add = ShootingOperation::SavedCameras(CollectionOperation::Add { index: 0, item: ShootingSavedCamera { id: "cam1".into(), label: "Hero".into(), camera: ShootingCamera::default() } });
         let added = round_trip(&fixture, &add);
         assert_eq!(added.saved_cameras.len(), 1);
     }
@@ -750,11 +750,11 @@ mod tests {
         let mut fixture = empty_shooting_fixture();
         fixture.shots.push(sample_shot("s1"));
         fixture.assets.push(sample_asset("a1"));
-        let op = ShootingOp::SetActiveShot { shot_id: Some("s1".into()) };
-        let next = round_trip(&fixture, &op);
+        let operation = ShootingOperation::SetActiveShot { shot_id: Some("s1".into()) };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next.active_shot_id, "s1");
-        let op = ShootingOp::SetActiveAsset { asset_id: Some("a1".into()) };
-        let next2 = round_trip(&next, &op);
+        let operation = ShootingOperation::SetActiveAsset { asset_id: Some("a1".into()) };
+        let next2 = round_trip(&next, &operation);
         assert_eq!(next2.active_asset_id, "a1");
     }
 
@@ -762,8 +762,8 @@ mod tests {
     fn set_camera_targets_fixture_camera_without_shot_reference() {
         let fixture = empty_shooting_fixture();
         let camera = ShootingCamera { position: [1.0, 2.0, 3.0], ..Default::default() };
-        let op = ShootingOp::SetCamera { camera: camera.clone() };
-        let next = round_trip(&fixture, &op);
+        let operation = ShootingOperation::SetCamera { camera: camera.clone() };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next.camera.position, [1.0, 2.0, 3.0]);
     }
 
@@ -776,8 +776,8 @@ mod tests {
         fixture.shots.push(shot);
         fixture.active_shot_id = "s1".into();
         let camera = ShootingCamera { position: [9.0, 9.0, 9.0], ..Default::default() };
-        let op = ShootingOp::SetCamera { camera };
-        let next = round_trip(&fixture, &op);
+        let operation = ShootingOperation::SetCamera { camera };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next.saved_cameras[0].camera.position, [9.0, 9.0, 9.0]);
         assert_eq!(next.camera.position, fixture.camera.position, "fixture camera untouched when shot references saved camera");
     }
@@ -785,8 +785,8 @@ mod tests {
     #[test]
     fn patch_scene_round_trip() {
         let fixture = empty_shooting_fixture();
-        let op = ShootingOp::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(90.0), shadow_enabled: Some(false), ..Default::default() } };
-        let next = round_trip(&fixture, &op);
+        let operation = ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_azimuth: Some(90.0), shadow_enabled: Some(false), ..Default::default() } };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next.scene.sun.azimuth, 90.0);
         assert!(!next.scene.shadow.enabled);
     }
@@ -801,15 +801,15 @@ mod tests {
         // the round-trip assertion checks real equality instead of that representation quirk.
         asset.scale = Some(serde_json::json!([1.0, 1.0, 1.0]));
         fixture.assets.push(asset);
-        let translate = ShootingOp::TranslateAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 };
+        let translate = ShootingOperation::TranslateAssets { asset_ids: vec!["a1".into()], dx: 1.0, dy: 2.0, dz: 3.0 };
         let translated = round_trip(&fixture, &translate);
         assert_eq!(translated.assets[0].origin, [1.0, 2.0, 3.0]);
 
-        let rotate = ShootingOp::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 };
+        let rotate = ShootingOperation::RotateAssets { asset_ids: vec!["a1".into()], ax: 0.0, ay: 0.0, az: 1.0, angle: 1.0 };
         let rotated = round_trip(&translated, &rotate);
         assert_ne!(rotated.assets[0].orientation, Some([0.0, 0.0, 0.0, 1.0]));
 
-        let scale = ShootingOp::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 };
+        let scale = ShootingOperation::ScaleAssets { asset_ids: vec!["a1".into()], sx: 2.0, sy: 2.0, sz: 2.0 };
         let scaled = round_trip(&rotated, &scale);
         assert_eq!(shooting_asset_scale(&scaled.assets[0]), [2.0, 2.0, 2.0]);
     }
@@ -820,16 +820,16 @@ mod tests {
         let mut replacement = empty_shooting_fixture();
         replacement.assets.push(sample_asset("a1"));
         replacement.shots.push(sample_shot("s1"));
-        let op = ShootingOp::SetFixture { fixture: replacement.clone() };
-        let next = round_trip(&fixture, &op);
+        let operation = ShootingOperation::SetFixture { fixture: replacement.clone() };
+        let next = round_trip(&fixture, &operation);
         assert_eq!(next, replacement);
     }
 
     #[test]
     fn coalesced_camera_drag_produces_one_edit() {
         let mut store = ShootingStore::new(create_document_vcs_envelope(SHOOTING_FIXTURE_SCHEMA, "shooting", empty_shooting_fixture(), None));
-        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOp::SetCamera { camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
-        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOp::SetCamera { camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
+        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [1.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("first drag tick");
+        store.dispatch(DocumentVcsCommand::AmendLast { operations: vec![ShootingOperation::SetCamera { camera: ShootingCamera { position: [2.0, 0.0, 0.0], ..Default::default() } }], coalesce_key: Some("camera".into()) }).expect("second drag tick");
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
         assert_eq!(store.projection().expect("projection").camera.position, [2.0, 0.0, 0.0]);
     }

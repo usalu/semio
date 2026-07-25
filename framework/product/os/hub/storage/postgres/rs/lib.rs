@@ -9,7 +9,7 @@ use async_trait::async_trait;
 use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
-use semio_framework_core::OpEnvelope;
+use semio_framework_core::OperationEnvelope;
 use semio_framework_hash::hash_bytes;
 pub use sqlx_core::row::Row;
 pub use sqlx_postgres::{PgPool, PgPoolOptions};
@@ -113,10 +113,10 @@ impl HubStorage for PostgresStorage {
         Ok(())
     }
 
-    async fn insert_op(&self, document_id: &str, version: i64, envelope: &OpEnvelope) -> StorageResult<bool> {
+    async fn insert_operation(&self, document_id: &str, version: i64, envelope: &OperationEnvelope) -> StorageResult<bool> {
         let payload = serde_json::to_value(envelope).unwrap_or(serde_json::Value::Null);
         let result = sqlx_core::query::query(
-            "INSERT INTO hub_document_op (id, document_id, version, actor, envelope, created_at) VALUES ($1, $2, $3, $4, $5, $6)
+            "INSERT INTO hub_document_operation (id, document_id, version, actor, envelope, created_at) VALUES ($1, $2, $3, $4, $5, $6)
              ON CONFLICT (id) DO NOTHING",
         )
         .bind(&envelope.id.0)
@@ -131,8 +131,8 @@ impl HubStorage for PostgresStorage {
         Ok(result.rows_affected() > 0)
     }
 
-    async fn load_ops(&self, document_id: &str) -> StorageResult<Vec<(i64, OpEnvelope)>> {
-        let rows: Vec<(i64, serde_json::Value)> = sqlx_core::query_as::query_as("SELECT version, envelope FROM hub_document_op WHERE document_id = $1 ORDER BY version ASC").bind(document_id).fetch_all(&self.pool).await.map_err(backend)?;
+    async fn load_operations(&self, document_id: &str) -> StorageResult<Vec<(i64, OperationEnvelope)>> {
+        let rows: Vec<(i64, serde_json::Value)> = sqlx_core::query_as::query_as("SELECT version, envelope FROM hub_document_operation WHERE document_id = $1 ORDER BY version ASC").bind(document_id).fetch_all(&self.pool).await.map_err(backend)?;
         Ok(rows.into_iter().filter_map(|(version, envelope)| serde_json::from_value(envelope).ok().map(|e| (version, e))).collect())
     }
     //#endregion

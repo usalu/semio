@@ -7,7 +7,7 @@ use kernel_3d_mesh::{EdgeId, FaceId, MirrorAxis, Vec3, WeldMode};
 use lowpoly_core::{
     composite_layer_pixels, default_projection, empty_paint_pixels, flood_fill, pixel_runs_from_diff,
     projection_from_mesh_json, sample_pixel_from, stamp_brush, LowpolyDocument, LowpolyObject,
-    LowpolyObjectPatch, LowpolyOp, LowpolyPaintLayer, LowpolyProjection, LowpolySelection,
+    LowpolyObjectPatch, LowpolyOperation, LowpolyPaintLayer, LowpolyProjection, LowpolySelection,
     LowpolySelectionTargets, LOWPOLY_DOCUMENT_SCHEMA, LOWPOLY_PAINT_TEXTURE_SIZE,
 };
 use png::{BitDepth, ColorType, Encoder};
@@ -30,7 +30,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -1324,7 +1324,7 @@ fn lowpoly_paint_params_group(utility: &str, params: &Value, labels: &LowpolyLab
 
 //#region 🔖LowpolyPlayApp
 /// @emoji 🖌️ In-progress paint drag: the pre-stroke layer buffer and the accumulating scratch buffer.
-/// Mid-drag ticks mutate `scratch` (view state); the stroke commits as ONE `PaintStroke` op on end.
+/// Mid-drag ticks mutate `scratch` (view state); the stroke commits as ONE `PaintStroke` operation on end.
 struct PaintStrokeSession {
     object_id: String,
     layer_index: usize,
@@ -1332,10 +1332,10 @@ struct PaintStrokeSession {
     scratch: Vec<u8>,
 }
 
-/// @emoji 🧲 In-progress gumball transform drag. The mesh-transform op re-serializes the WHOLE
+/// @emoji 🧲 In-progress gumball transform drag. The mesh-transform operation re-serializes the WHOLE
 /// `mesh_json` buffer per apply, so a per-tick `amend` would `combined.extend` N full-mesh patches and
 /// replay them all (O(N) retained megabyte-scale JSON + O(N²) replay). Instead every mid-drag tick
-/// applies its delta to this scratch `LowpolyDocument` emitting ZERO ops, and the whole gesture commits
+/// applies its delta to this scratch `LowpolyDocument` emitting ZERO operations, and the whole gesture commits
 /// as ONE `Objects(Patch)` (base → final mesh) on drag end (`ActionEmit::commit`, coalesce-key `None`).
 struct TransformSession {
     object_id: String,
@@ -1443,7 +1443,7 @@ impl LowpolyPlayApp {
         &self,
         projection: &LowpolyProjection,
         edit: impl FnOnce(&mut LowpolyDocument) -> Result<(), String>,
-    ) -> ActionEmit<LowpolyOp> {
+    ) -> ActionEmit<LowpolyOperation> {
         let Some(mut doc) = build_doc(projection, &self.runtime) else {
             return ActionEmit::default();
         };
@@ -1464,12 +1464,12 @@ impl LowpolyPlayApp {
         if patch == LowpolyObjectPatch::default() {
             return ActionEmit::default();
         }
-        ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Patch { id: object_id, patch })])
+        ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: object_id, patch })])
     }
 
     /// @emoji 📌 Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
     /// pattern b — the whole drag is one undoable edit; megabyte pixel buffers never coalesce per tick).
-    fn commit_stroke(&mut self) -> ActionEmit<LowpolyOp> {
+    fn commit_stroke(&mut self) -> ActionEmit<LowpolyOperation> {
         let Some(session) = self.stroke.take() else {
             return ActionEmit::default();
         };
@@ -1479,7 +1479,7 @@ impl LowpolyPlayApp {
             return ActionEmit::default();
         }
         ActionEmit::commit(
-            vec![LowpolyOp::PaintStroke {
+            vec![LowpolyOperation::PaintStroke {
                 object_id: session.object_id,
                 layer_index: session.layer_index,
                 runs,
@@ -1489,8 +1489,8 @@ impl LowpolyPlayApp {
     }
 
     /// @emoji 🖌️ One mid-drag paint tick: brush/eraser/fill mutate the stroke scratch, eyedropper samples
-    /// the paint color. Emits ZERO ops — the stroke commits only on `paintStrokeEnd` (View-kind safe).
-    fn paint_tick(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
+    /// the paint color. Emits ZERO operations — the stroke commits only on `paintStrokeEnd` (View-kind safe).
+    fn paint_tick(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOperation> {
         let utility = self.runtime.paint_utility.clone();
         if utility == "eyedropper" {
             if let Some(object) = projection.objects.iter().find(|object| object.id == object_id) {
@@ -1537,7 +1537,7 @@ impl LowpolyPlayApp {
 
     /// @emoji 🪣 A single-shot flood fill emitted as ONE `PaintStroke` edit (the `fillBucket`/`paintFill`
     /// operation path — not drag-bracketed, so it commits immediately).
-    fn fill_at(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOp> {
+    fn fill_at(&mut self, projection: &LowpolyProjection, object_id: String, u: f32, v: f32) -> ActionEmit<LowpolyOperation> {
         let layer_index = self.runtime.active_paint_layer as usize;
         let color = self.runtime.paint_color;
         let Some(layer) = projection
@@ -1555,7 +1555,7 @@ impl LowpolyPlayApp {
             return ActionEmit::default();
         }
         self.stroke_dirty += 1;
-        ActionEmit::commit(vec![LowpolyOp::PaintStroke { object_id, layer_index, runs }], "Fill")
+        ActionEmit::commit(vec![LowpolyOperation::PaintStroke { object_id, layer_index, runs }], "Fill")
     }
 
     /// @emoji 🧲 Runs one gumball transform delta against a working scratch document. Mid-drag it emits
@@ -1567,7 +1567,7 @@ impl LowpolyPlayApp {
         ids: Vec<u32>,
         transform: Transform,
         description: &str,
-    ) -> ActionEmit<LowpolyOp> {
+    ) -> ActionEmit<LowpolyOperation> {
         if self.transform_drag_active {
             if self.transform.is_none() {
                 self.begin_transform_session(projection);
@@ -1580,16 +1580,16 @@ impl LowpolyPlayApp {
             }
             return ActionEmit::default();
         }
-        let ops = self.mesh_edit(projection, move |doc| {
+        let operations = self.mesh_edit(projection, move |doc| {
             if !ids.is_empty() {
                 doc.apply_selection(mode, ids);
             }
             apply_transform(doc, transform)
         });
-        if ops.ops.is_empty() {
+        if operations.operations.is_empty() {
             ActionEmit::default()
         } else {
-            ActionEmit::commit(ops.ops, description)
+            ActionEmit::commit(operations.operations, description)
         }
     }
 
@@ -1606,7 +1606,7 @@ impl LowpolyPlayApp {
     }
 
     /// @emoji 📌 Commits the whole gumball drag as ONE `Objects(Patch)` diff (base → final mesh).
-    fn commit_transform(&mut self) -> ActionEmit<LowpolyOp> {
+    fn commit_transform(&mut self) -> ActionEmit<LowpolyOperation> {
         let Some(mut session) = self.transform.take() else {
             return ActionEmit::default();
         };
@@ -1621,7 +1621,7 @@ impl LowpolyPlayApp {
             return ActionEmit::default();
         }
         ActionEmit::commit(
-            vec![LowpolyOp::Objects(CollectionOp::Patch { id: session.object_id, patch })],
+            vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: session.object_id, patch })],
             "Transform selection",
         )
     }
@@ -1645,7 +1645,7 @@ fn paint_uv(args: Option<&Value>) -> Option<(f32, f32)> {
 
 impl DocumentApp for LowpolyPlayApp {
     type Projection = LowpolyProjection;
-    type Op = LowpolyOp;
+    type Operation = LowpolyOperation;
 
     fn app_id(&self) -> &str {
         LOWPOLY_PLAY_APP_ID
@@ -1665,7 +1665,7 @@ impl DocumentApp for LowpolyPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, LowpolyProjection>,
         view_state: &ViewState,
-    ) -> ActionEmit<LowpolyOp> {
+    ) -> ActionEmit<LowpolyOperation> {
         let projection = doc.projection;
         match action {
             //#region 👁️ View actions
@@ -1927,7 +1927,7 @@ impl DocumentApp for LowpolyPlayApp {
                     .find(|object| object.id == object_id)
                     .map(|object| object.paint_layers.len())
                     .unwrap_or(0);
-                ActionEmit::ops(vec![LowpolyOp::AddPaintLayer {
+                ActionEmit::operations(vec![LowpolyOperation::AddPaintLayer {
                     object_id,
                     index,
                     layer: LowpolyPaintLayer::new(name),
@@ -1953,7 +1953,7 @@ impl DocumentApp for LowpolyPlayApp {
                 let index = projection.objects.len();
                 self.runtime.active_object_id = new_id;
                 self.runtime.selection = LowpolySelection::default();
-                ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Add { index, item: new_object })])
+                ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Add { index, item: new_object })])
             }
             "patchObject" => {
                 let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1976,7 +1976,7 @@ impl DocumentApp for LowpolyPlayApp {
                 if patch == LowpolyObjectPatch::default() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![LowpolyOp::Objects(CollectionOp::Patch { id: object_id.into(), patch })])
+                ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: object_id.into(), patch })])
             }
             "extrude" => {
                 let distance = arg_f32(args, "extrudeDistance", utility_param_f32(&self.runtime.utility_params, "extrudeDistance", 0.25));
@@ -2133,7 +2133,7 @@ impl DocumentApp for LowpolyPlayApp {
             "setProjectionJson" | "setFixtureJson" => {
                 if let Some(json_text) = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()) {
                     if let Ok(parsed) = serde_json::from_str::<LowpolyProjection>(json_text) {
-                        return ActionEmit::ops(vec![LowpolyOp::SetProjection { projection: parsed }]);
+                        return ActionEmit::operations(vec![LowpolyOperation::SetProjection { projection: parsed }]);
                     }
                 }
                 ActionEmit::default()
@@ -2316,7 +2316,7 @@ fn create_lowpoly_app() -> App {
             .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, LOWPOLY_PLAY_BODY_CATALOGUE)
             .panel_tab(FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL, PanelGroup::Details, LOWPOLY_PLAY_BODY_INSPECTION)
             .panel_tab("framework.panel.layers", "Layers", PanelGroup::Workbench, LOWPOLY_PLAY_BODY_LAYERS)
-            // 🔧 Document-mutating operations — dispatched as VCS ops with true inverses.
+            // 🔧 Document-mutating operations — dispatched as VCS operations with true inverses.
             .operation("addPrimitive", "Add Primitive")
             .operation("patchObject", "Patch Object")
             .operation("extrude", "Extrude")
@@ -2346,7 +2346,7 @@ fn create_lowpoly_app() -> App {
             .operation("setProjectionJson", "Set Projection Json")
             .operation("setFixtureJson", "Set Fixture Json")
             .operation("engagementSubmit", "Engagement Submit")
-            // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no ops
+            // 👁️ Ephemeral view state — selection, camera, hover, and the gesture drafts that emit no operations
             // mid-drag (paint ticks, gumball scratch, eyedropper sample).
             .view_action("setActiveObject", "Set Active Object")
             .view_action("setSelection", "Set Selection")
@@ -2398,7 +2398,7 @@ fn create_lowpoly_app() -> App {
             ]).default_value("box")])
             .action_args("markUvSeam", vec![ActionArgDef::toggle("seam", "Seam").default_value(true)])
             // 🧰 Transform gumball + paint utilities — exclusive per-window active utility is host-owned (never a
-            // document op). Selection method/merge/kind live as an always-visible Select window-options group
+            // document operation). Selection method/merge/kind live as an always-visible Select window-options group
             // (mirrors puzzle 3d); the transform group defaults to "move", paint bridges into `runtime.paint_utility`.
             .utility(lowpoly_utility("move", "Move", "move", "transform"))
             .utility(lowpoly_utility("rotate", "Rotate", "rotate-cw", "transform"))
@@ -2543,13 +2543,13 @@ mod tests {
         };
         let main = resolve(LOWPOLY_PLAY_WINDOW_MAIN);
         let uv = resolve(LOWPOLY_PLAY_WINDOW_UV);
-        for mesh_op in ["extrude", "addPrimitive", "bevel", "loopCut", "mirror", "unwrapActive", "markUvSeam"] {
-            assert!(main.contains(&mesh_op.to_string()), "MAIN must expose mesh op {mesh_op}");
-            assert!(!uv.contains(&mesh_op.to_string()), "UV must NOT expose mesh op {mesh_op}");
+        for mesh_operation in ["extrude", "addPrimitive", "bevel", "loopCut", "mirror", "unwrapActive", "markUvSeam"] {
+            assert!(main.contains(&mesh_operation.to_string()), "MAIN must expose mesh operation {mesh_operation}");
+            assert!(!uv.contains(&mesh_operation.to_string()), "UV must NOT expose mesh operation {mesh_operation}");
         }
-        for paint_op in ["paintFill", "fillBucket", "addPaintLayer"] {
-            assert!(main.contains(&paint_op.to_string()), "MAIN must expose paint op {paint_op}");
-            assert!(uv.contains(&paint_op.to_string()), "UV must expose paint op {paint_op}");
+        for paint_operation in ["paintFill", "fillBucket", "addPaintLayer"] {
+            assert!(main.contains(&paint_operation.to_string()), "MAIN must expose paint operation {paint_operation}");
+            assert!(uv.contains(&paint_operation.to_string()), "UV must expose paint operation {paint_operation}");
         }
     }
 
@@ -2570,10 +2570,10 @@ mod tests {
         assert_eq!(group_tag("lowpoly-measure-snap"), Some(None));
         // 🎯 Select options are always-visible window options (untagged), matching puzzle 3d.
         assert_eq!(group_tag("lowpoly-select"), Some(None));
-        // 🗑️ The mesh-op param sliders now live ONLY in the Action Panel's staged `action_args`, never a measure.
+        // 🗑️ The mesh-operation param sliders now live ONLY in the Action Panel's staged `action_args`, never a measure.
         let json = serde_json::to_string(&measures).unwrap();
         for removed in ["lowpoly-measure-extrude", "lowpoly-measure-inset", "lowpoly-measure-bevel", "lowpoly-measure-bevel-segments", "lowpoly-measure-loop-cuts", "lowpoly-measure-decimate", "lowpoly-measure-mirror"] {
-            assert!(!json.contains(removed), "mesh-op measure {removed} must be gone (covered by action_args)");
+            assert!(!json.contains(removed), "mesh-operation measure {removed} must be gone (covered by action_args)");
         }
     }
 
@@ -2649,7 +2649,7 @@ mod tests {
     }
 
     #[test]
-    fn add_primitive_emits_objects_add_op() {
+    fn add_primitive_emits_objects_add_operation() {
         let mut app = new_app();
         app.handle_action("addPrimitive", Some(&json!({ "kind": "box" })), &ViewState::default(), &testkit::meta("a")).unwrap();
         let projection = projection(&app);
@@ -2680,10 +2680,10 @@ mod tests {
     }
 
     #[test]
-    fn selection_is_view_state_and_emits_no_ops() {
+    fn selection_is_view_state_and_emits_no_operations() {
         let mut app = new_app();
         let result = app.handle_action("worldPick", Some(&face_selection()), &ViewState::default(), &testkit::meta("a")).unwrap();
-        assert!(result.operations.is_empty(), "picking must not create an undoable op");
+        assert!(result.operations.is_empty(), "picking must not create an undoable operation");
     }
 
     #[test]
@@ -2699,9 +2699,9 @@ mod tests {
         let tick_b = app
             .handle_action("paintAt", Some(&json!({ "objectId": object_id, "u": 0.52, "v": 0.5 })), &ViewState::default(), &testkit::meta("a"))
             .unwrap();
-        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag ticks emit no ops");
+        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag ticks emit no operations");
         let end = app.handle_action("paintStrokeEnd", None, &ViewState::default(), &testkit::meta("a")).unwrap();
-        assert_eq!(end.operations.len(), 1, "the whole drag commits as one op");
+        assert_eq!(end.operations.len(), 1, "the whole drag commits as one operation");
         let painted = projection(&app).objects[0].paint_layers[0].pixels.clone();
         assert_ne!(painted, before, "the stroke changed pixels");
         // ONE undo restores the exact prior pixels.
@@ -2714,9 +2714,9 @@ mod tests {
     }
 
     #[test]
-    fn eyedropper_updates_paint_color_without_ops() {
+    fn eyedropper_updates_paint_color_without_operations() {
         let mut app = new_app();
-        // 🧰 The host-owned utility switch bridges into runtime.paint_utility and emits no ops.
+        // 🧰 The host-owned utility switch bridges into runtime.paint_utility and emits no operations.
         let switch = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "eyedropper" })), &ViewState::default(), &testkit::meta("a")).unwrap();
         assert!(switch.operations.is_empty());
         let result = app.handle_action("paintSample", Some(&json!({ "u": 0.5, "v": 0.5 })), &ViewState::default(), &testkit::meta("a")).unwrap();
@@ -2732,7 +2732,7 @@ mod tests {
     }
 
     #[test]
-    fn add_paint_layer_emits_op() {
+    fn add_paint_layer_emits_operation() {
         let mut app = new_app();
         let before = projection(&app).objects[0].paint_layers.len();
         app.handle_action("addPaintLayer", Some(&json!({ "name": "Detail" })), &ViewState::default(), &testkit::meta("a")).unwrap();
@@ -2740,7 +2740,7 @@ mod tests {
     }
 
     #[test]
-    fn extrude_reads_staged_arg_distance_into_the_op() {
+    fn extrude_reads_staged_arg_distance_into_the_operation() {
         // 🧪 Arg-form action: the staged `extrudeDistance` (not the runtime backing store) drives the edit.
         let mut small = new_app();
         let mut large = new_app();
@@ -2759,8 +2759,8 @@ mod tests {
         // 🧰 Selecting a host-owned utility must never create an undoable edit.
         let mut app = new_app();
         let result = app.handle_action("setActiveUtility", Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &testkit::meta("a")).unwrap();
-        assert!(result.operations.is_empty(), "utility switch must emit no ops");
-        // No history entry — an undo right after is a no-op leaving the projection untouched.
+        assert!(result.operations.is_empty(), "utility switch must emit no operations");
+        // No history entry — an undo right after is a no-operation leaving the projection untouched.
         let before = projection(&app);
         app.handle_action("undo", None, &ViewState::default(), &testkit::meta("a")).unwrap();
         assert_eq!(projection(&app), before, "utility switch left nothing to undo");
@@ -2782,8 +2782,8 @@ mod tests {
 
     #[test]
     fn gumball_drag_coalesces_to_one_committed_edit() {
-        // 🧲 THE COALESCING REGRESSION: a multi-tick gumball translate must emit ZERO ops mid-drag and
-        // exactly ONE commit op (base → final mesh) on drag end — never a full-mesh patch per tick.
+        // 🧲 THE COALESCING REGRESSION: a multi-tick gumball translate must emit ZERO operations mid-drag and
+        // exactly ONE commit operation (base → final mesh) on drag end — never a full-mesh patch per tick.
         let mut app = new_app();
         let object_id = projection(&app).objects[0].id.clone();
         let before_mesh = projection(&app).objects[0].mesh_json.clone();
@@ -2794,10 +2794,10 @@ mod tests {
         let tick_b = app
             .handle_action("translateSelection", Some(&json!({ "mode": "mesh", "ids": [], "dx": 0.25, "dy": 0.0, "dz": 0.0 })), &ViewState::default(), &testkit::meta("a"))
             .unwrap();
-        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no ops");
-        assert_eq!(projection(&app).objects[0].mesh_json, before_mesh, "no op reached the document mid-drag");
+        assert!(tick_a.operations.is_empty() && tick_b.operations.is_empty(), "mid-drag transform ticks emit no operations");
+        assert_eq!(projection(&app).objects[0].mesh_json, before_mesh, "no operation reached the document mid-drag");
         let end = app.handle_action("transformEnd", None, &ViewState::default(), &testkit::meta("a")).unwrap();
-        assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one op");
+        assert_eq!(end.operations.len(), 1, "the whole drag commits as exactly one operation");
         // The final diff reflects the accumulated 0.75 translation (both ticks), not just the last tick.
         let after_mesh = projection(&app).objects[0].mesh_json.clone();
         assert_ne!(after_mesh, before_mesh, "the drag moved the mesh");

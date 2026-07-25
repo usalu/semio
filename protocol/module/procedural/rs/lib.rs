@@ -75,14 +75,14 @@ fn default_payload() -> ModuleRenderPayload {
     ModuleRenderPayload { fixture_slug: "hexagonal-mushroom-column".into(), params: json!({ "height": 6.0, "radius": 0.5, "sides": 6.0 }), question_id: String::new(), controller_id: String::new(), surface: "try".into(), interactive: true }
 }
 
-//#region 🔖DocumentOp
-/// ✏️ Whole-payload replace op for the procedural block-kind slot document. The module's document is a
+//#region 🔖DocumentOperation
+/// ✏️ Whole-payload replace operation for the procedural block-kind slot document. The module's document is a
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
-/// store still records the pre-op payload as a true inverse, so undo works.
+/// store still records the pre-operation payload as a true inverse, so undo works.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-enum ModulePayloadOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+enum ModulePayloadOperation {
     SetPayload { payload: ModuleRenderPayload },
 }
 
@@ -105,20 +105,20 @@ impl OperationDiff<ModuleRenderPayload> for ModulePayloadDiff {
     }
 }
 
-impl Operation<ModuleRenderPayload> for ModulePayloadOp {
+impl Operation<ModuleRenderPayload> for ModulePayloadOperation {
     type Diff = ModulePayloadDiff;
 
     fn diff(&self, _projection: &ModuleRenderPayload) -> ModulePayloadDiff {
         match self {
-            ModulePayloadOp::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
+            ModulePayloadOperation::SetPayload { payload } => ModulePayloadDiff { payload: Some(payload.clone()) },
         }
     }
 
     fn backwards(&self, projection: &ModuleRenderPayload) -> Vec<Self> {
-        vec![ModulePayloadOp::SetPayload { payload: projection.clone() }]
+        vec![ModulePayloadOperation::SetPayload { payload: projection.clone() }]
     }
 }
-//#endregion 🔖DocumentOp
+//#endregion 🔖DocumentOperation
 
 fn fixture_json_for_slug(slug: &str) -> Option<&'static str> {
     match slug {
@@ -505,7 +505,7 @@ struct ModuleApp;
 
 impl DocumentApp for ModuleApp {
     type Projection = ModuleRenderPayload;
-    type Op = ModulePayloadOp;
+    type Operation = ModulePayloadOperation;
 
     fn app_id(&self) -> &str {
         MODULE_APP_ID
@@ -519,17 +519,17 @@ impl DocumentApp for ModuleApp {
         default_payload()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, ModuleRenderPayload>, _view_state: &ViewState) -> ActionEmit<ModulePayloadOperation> {
         match action {
             ACTION_EXPORT_SOLID => {
                 let mut payload = doc.projection.clone();
                 handle_export_solid(&mut payload, args);
-                ActionEmit::ops(vec![ModulePayloadOp::SetPayload { payload }])
+                ActionEmit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
             }
             ACTION_IMPORT_SOLID => {
                 let mut payload = doc.projection.clone();
                 handle_import_solid(&mut payload, args);
-                ActionEmit::ops(vec![ModulePayloadOp::SetPayload { payload }])
+                ActionEmit::operations(vec![ModulePayloadOperation::SetPayload { payload }])
             }
             _ => ActionEmit::default(),
         }
@@ -559,7 +559,7 @@ fn create_module_app() -> App {
                 Some(&["Params".into(), "Preview".into()]),
             ))
             // 🔧 Whole-payload import/export of the block's solid geometry — legitimate coarse-grained
-            // ops for this non-collaborative render slot (not the deleted framework `setDocument`).
+            // operations for this non-collaborative render slot (not the deleted framework `setDocument`).
             .operation(ACTION_EXPORT_SOLID, "Export Solid")
             .operation(ACTION_IMPORT_SOLID, "Import Solid")
             // 📝 Only the interchange `format` is a user-facing panel choice; the import `data` payload
@@ -662,20 +662,20 @@ mod tests {
     fn export_solid_action_stashes_result_and_is_undoable() {
         let mut app = new_app();
         assert!(app.projection().expect("projection").params.get("__solidExport").is_none());
-        // The export action emits a whole-payload `SetPayload` op; the store applies it and the
+        // The export action emits a whole-payload `SetPayload` operation; the store applies it and the
         // stashed result is read back through the materialized projection.
         app.handle_action(ACTION_EXPORT_SOLID, Some(&json!({ "format": "obj" })), &ViewState::default(), &meta()).expect("export");
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload op");
-        // The op carries a true inverse (the pre-op payload), so undo removes the stashed result.
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed on params via the SetPayload operation");
+        // The operation carries a true inverse (the pre-operation payload), so undo removes the stashed result.
         app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
-        assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-op payload");
+        assert!(app.projection().expect("projection").params.get("__solidExport").is_none(), "undo restores the pre-operation payload");
     }
 
     #[test]
     fn import_solid_action_stashes_result_on_params() {
         let mut app = new_app();
         app.handle_action(ACTION_IMPORT_SOLID, Some(&json!({ "format": "obj", "data": "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 1 2 3\n" })), &ViewState::default(), &meta()).expect("import");
-        assert!(app.projection().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload op");
+        assert!(app.projection().expect("projection").params.get("__solidImport").is_some(), "import result stashed on params via the SetPayload operation");
     }
 
     #[test]
@@ -698,7 +698,7 @@ mod tests {
         let registry = AppActionRegistry::from_definition(&definition);
         let mut app = VcsDocumentApp::with_registry(ModuleApp, registry);
         // exportSolid fired with no args: the declared `format` default is materialized before dispatch,
-        // so the whole-payload op still applies and stashes a result.
+        // so the whole-payload operation still applies and stashes a result.
         app.handle_action(ACTION_EXPORT_SOLID, None, &ViewState::default(), &meta()).expect("export");
         assert!(app.projection().expect("projection").params.get("__solidExport").is_some(), "export result stashed under the materialized format");
     }
@@ -707,7 +707,7 @@ mod tests {
     fn unknown_action_yields_no_document_change() {
         let mut app = new_app();
         let before = app.projection().expect("projection");
-        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noop");
+        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noOperation");
         assert_eq!(app.projection().expect("projection"), before);
     }
 

@@ -1626,7 +1626,7 @@ export function WorldOrbitViewGizmo(props: WorldOrbitViewGizmoProps): ReactEleme
         font="12px Inter var, Arial, sans-serif"
         onHitSelect={(hit) => {
           const spec = resolveProjectionGizmoSpec(hit, props.projectionSpec);
-          // 🧭 Skip only true no-ops (e.g. center while already on the same perspective kind).
+          // 🧭 Skip only true no-operations (e.g. center while already on the same perspective kind).
           if (props.projectionSpec && worldProjectionSpecsEqual(spec, props.projectionSpec)) return;
           props.onSpecSelect(spec);
           const view = worldProjectionSpecToOrbitView(spec);
@@ -2668,7 +2668,7 @@ export function projectionGizmoFaceToOrthographicView(axis: "x" | "y" | "z", sig
   return sign > 0 ? "top" : "bottom";
 }
 
-/** @emoji 🧭 Structural equality for {@link WorldProjectionSpec} (gizmo no-op when a hit cannot change angle). */
+/** @emoji 🧭 Structural equality for {@link WorldProjectionSpec} (gizmo no-operation when a hit cannot change angle). */
 export function worldProjectionSpecsEqual(a: WorldProjectionSpec, b: WorldProjectionSpec): boolean {
   return JSON.stringify(a) === JSON.stringify(b);
 }

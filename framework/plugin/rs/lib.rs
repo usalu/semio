@@ -161,7 +161,7 @@ pub mod app {
 use semio_framework_core::{
     effective_action_args, element_id_segment, history_action_definitions, is_element_id, missing_required_args, kernel::{
         ActorId, AppEvent, CapabilityRequirement, InvocationId, InvocationResult, HostEffect, HybridLogicalTimestamp,
-        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OpEnvelope, OperationId, Rights,
+        InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
     set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition,
@@ -1854,7 +1854,7 @@ pub fn assert_undo_redo_round_trip<A, P>(
 }
 
 /// 🧪 `action_a`/`action_b` are applied to two `paired_apps` instances, a neutral history action
-/// (`commitCheckpoint`) pumps each side's inbound ops, then `probe` must agree on both — the repeated
+/// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
 /// two-instance-convergence test body (see `protocol-plugin`'s
 /// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
 pub fn assert_two_instances_converge<A, P>(
@@ -1876,7 +1876,7 @@ pub fn assert_two_instances_converge<A, P>(
 
 /// 🧪 The `Operation::reconcile` counterpart to `assert_two_instances_converge`: `action_delete`/
 /// `action_wire` race on two `paired_apps` instances (typically one deletes a graph node, the other
-/// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound ops, then both
+/// concurrently wires an edge to it), a `commitCheckpoint` pumps each side's inbound operations, then both
 /// sides' post-reconcile `probe` results (`(projection, conflicts)`) must agree, `has_dangling_ref`
 /// must be false for the converged projection, and at least one `StudioConflict` must have been
 /// reported (dropping a dangling reference silently, with no conflict, would hide real data loss).
@@ -1904,7 +1904,7 @@ pub fn assert_graph_merge_preserves_referential_integrity<A, P>(
 }
 
 /// 🧪 Applies `action` on a sender attached to a backbone, replays the resulting envelopes onto a
-/// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same op
+/// fresh receiver twice, and asserts `probe` sees the same result both times — feeding the same operation
 /// twice must not double-apply.
 pub fn assert_ingest_idempotent<A, P>(
     action: &str,
@@ -1921,8 +1921,8 @@ pub fn assert_ingest_idempotent<A, P>(
 
     let mut envelopes = Vec::new();
     for message in far.receive().expect("receive") {
-        if let BackboneMessage::Ops { envelopes: ops } = message {
-            envelopes.extend(ops);
+        if let BackboneMessage::Operations { envelopes: operations } = message {
+            envelopes.extend(operations);
         }
     }
     let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
@@ -1931,7 +1931,7 @@ pub fn assert_ingest_idempotent<A, P>(
     receiver.ingest_operations(&operations_json).expect("ingest once");
     let once = probe(&receiver);
     receiver.ingest_operations(&operations_json).expect("ingest twice");
-    assert_eq!(probe(&receiver), once, "feeding the same op twice must not double-apply");
+    assert_eq!(probe(&receiver), once, "feeding the same operation twice must not double-apply");
 }
 
 #[cfg(test)]
@@ -1968,22 +1968,22 @@ mod testkit_tests {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    enum DummyOp {
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    enum DummyOperation {
         SetCount { value: i32 },
     }
 
-    impl Operation<DummyProjection> for DummyOp {
+    impl Operation<DummyProjection> for DummyOperation {
         type Diff = DummyDiff;
 
         fn diff(&self, _projection: &DummyProjection) -> DummyDiff {
             match self {
-                DummyOp::SetCount { value } => DummyDiff { count: Some(*value) },
+                DummyOperation::SetCount { value } => DummyDiff { count: Some(*value) },
             }
         }
 
         fn backwards(&self, projection: &DummyProjection) -> Vec<Self> {
-            vec![DummyOp::SetCount { value: projection.count }]
+            vec![DummyOperation::SetCount { value: projection.count }]
         }
     }
 
@@ -1992,7 +1992,7 @@ mod testkit_tests {
 
     impl DocumentApp for DummyApp {
         type Projection = DummyProjection;
-        type Op = DummyOp;
+        type Operation = DummyOperation;
 
         fn app_id(&self) -> &str {
             "testkit-dummy"
@@ -2012,10 +2012,10 @@ mod testkit_tests {
             _args: Option<&Value>,
             doc: &DocumentView<'_, DummyProjection>,
             _view_state: &ViewState,
-        ) -> ActionEmit<DummyOp> {
+        ) -> ActionEmit<DummyOperation> {
             match action {
                 "increment" => ActionEmit {
-                    ops: vec![DummyOp::SetCount { value: doc.projection.count + 1 }],
+                    operations: vec![DummyOperation::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment".into()),
                     ..Default::default()
                 },
@@ -2743,9 +2743,9 @@ pub struct HistoryView {
 /// @emoji 📤 What a typed `DocumentApp::handle_action` emits: zero-or-more typed operations (applied
 /// through the store with a true inverse), an optional description/coalesce key for the resulting
 /// edit, host effects (navigate/export/spawn…), and app events. A view action returns an empty
-/// `ops` (no history entry); an operation action returns one or more `ops`.
-pub struct ActionEmit<Op> {
-    pub ops: Vec<Op>,
+/// `operations` (no history entry); an operation action returns one or more `operations`.
+pub struct ActionEmit<Operation> {
+    pub operations: Vec<Operation>,
     pub description: Option<String>,
     pub coalesce_key: Option<String>,
     pub effects: Vec<HostEffect>,
@@ -2755,10 +2755,10 @@ pub struct ActionEmit<Op> {
     pub ui_scope: semio_framework_core::kernel::UiDirtyScope,
 }
 
-impl<Op> Default for ActionEmit<Op> {
+impl<Operation> Default for ActionEmit<Operation> {
     fn default() -> Self {
         Self {
-            ops: Vec::new(),
+            operations: Vec::new(),
             description: None,
             coalesce_key: None,
             effects: Vec::new(),
@@ -2768,24 +2768,24 @@ impl<Op> Default for ActionEmit<Op> {
     }
 }
 
-impl<Op> ActionEmit<Op> {
-    /// @emoji ✏️ An operation emission carrying `ops` and nothing else.
-    pub fn ops(ops: Vec<Op>) -> Self {
-        Self { ops, ..Default::default() }
+impl<Operation> ActionEmit<Operation> {
+    /// @emoji ✏️ An operation emission carrying `operations` and nothing else.
+    pub fn operations(operations: Vec<Operation>) -> Self {
+        Self { operations, ..Default::default() }
     }
 
     /// @emoji 🔁 Preview pattern (a): a per-tick coalesced emission. The `coalesce_key` folds every
     /// tick of one live gesture (drag/scrub) into a single amendable edit, so the whole gesture is one
-    /// undo. Use for cheap per-tick ops (camera/opacity). See the `🔖UtilityPreviewContract` doc region.
-    pub fn amend(ops: Vec<Op>, coalesce_key: impl Into<String>) -> Self {
-        Self { ops, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
+    /// undo. Use for cheap per-tick operations (camera/opacity). See the `🔖UtilityPreviewContract` doc region.
+    pub fn amend(operations: Vec<Operation>, coalesce_key: impl Into<String>) -> Self {
+        Self { operations, coalesce_key: Some(coalesce_key.into()), ..Default::default() }
     }
 
     /// @emoji 📌 Preview pattern (b): the gesture-end commit of an app-runtime scratch draft as one
     /// described edit (`coalesce_key: None`). Use for megabyte-scale content where per-tick amending
     /// would be O(N²) (draw drafts, lowpoly strokes). See the `🔖UtilityPreviewContract` doc region.
-    pub fn commit(ops: Vec<Op>, description: impl Into<String>) -> Self {
-        Self { ops, description: Some(description.into()), ..Default::default() }
+    pub fn commit(operations: Vec<Operation>, description: impl Into<String>) -> Self {
+        Self { operations, description: Some(description.into()), ..Default::default() }
     }
 
     /// @emoji 🐚 A single host effect and no operations (a shell action).
@@ -2840,7 +2840,7 @@ macro_rules! app_action_enum {
     };
 }
 
-/// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Op` (a
+/// @emoji 🧩 Typed, per-app author surface. An app declares its `Projection` and `Operation` (a
 /// `vcs::Operation<Projection>`), mutates nothing directly, and returns an {@link ActionEmit} whose
 /// operations flow through a persistent `DocumentVcsStore` owned by {@link VcsDocumentApp}. Ephemeral
 /// view state (selection/camera/active utility) lives in the app struct itself, not in the document.
@@ -2848,16 +2848,16 @@ macro_rules! app_action_enum {
 /// # 🔖UtilityPreviewContract
 /// The formalized actions-vs-utilities contract:
 /// - **Actions** are non-interactive: they carry optional declared `ActionArgDef`s, stage in the
-///   renderer, and execute once. `Operation`-kind actions emit ops; `View`/`Shell`-kind actions must
-///   emit **zero** ops ({@link VcsDocumentApp} enforces this — a View/Shell action returning ops is a
+///   renderer, and execute once. `Operation`-kind actions emit operations; `View`/`Shell`-kind actions must
+///   emit **zero** operations ({@link VcsDocumentApp} enforces this — a View/Shell action returning operations is a
 ///   hard error).
 /// - **Utilities** are interactive live-preview pointer modes. Exactly one utility is active per window kind;
 ///   the active utility arrives via `view_state.active_utility_id` and is **never** stored in the document
-///   nor emitted as an op. Switching utilities dispatches the framework `setActiveUtility` View action; on a
+///   nor emitted as an operation. Switching utilities dispatches the framework `setActiveUtility` View action; on a
 ///   switch the app must clear any in-progress preview scratch.
 /// - **Two blessed preview patterns** (both funnel through {@link ActionEmit}):
 ///   1. per-tick coalesced — {@link ActionEmit::amend} folds each tick of a gesture into one amendable
-///      edit (one undo per gesture); use for cheap ops (camera/opacity drags).
+///      edit (one undo per gesture); use for cheap operations (camera/opacity drags).
 ///   2. scratch + commit — hold a draft in app-runtime state, render it as an overlay, and on gesture
 ///      end emit {@link ActionEmit::commit} once; use for megabyte-scale content where per-tick
 ///      amending is O(N²) (draw drafts, lowpoly strokes).
@@ -2865,7 +2865,7 @@ macro_rules! app_action_enum {
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
     type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send;
-    type Op: Operation<Self::Projection> + PartialEq + Send;
+    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -2876,23 +2876,23 @@ pub trait DocumentApp: Send + 'static {
         args: Option<&Value>,
         doc: &DocumentView<'_, Self::Projection>,
         view_state: &ViewState,
-    ) -> ActionEmit<Self::Op>;
+    ) -> ActionEmit<Self::Operation>;
     /// 🎛️ Handles a dispatched `CommandDefinition` (os/plugin/app/mode-scoped — never window-level).
-    /// Default no-op: apps that declare no `AppDefinition.commands` never need to override this.
+    /// Default no-operation: apps that declare no `AppDefinition.commands` never need to override this.
     fn handle_command(
         &mut self,
         _command: &str,
         _args: Option<&Value>,
         _doc: &DocumentView<'_, Self::Projection>,
         _view_state: &ViewState,
-    ) -> ActionEmit<Self::Op> {
+    ) -> ActionEmit<Self::Operation> {
         ActionEmit::default()
     }
     /// ⏱️ Effects the host should dispatch right after a refresh (not tied to any one action) —
     /// the chokepoint for self-sustaining background work: since every action, document load, undo,
-    /// and remote op is followed by a `refreshUi` pass, an app that needs to notice "something changed,
+    /// and remote operation is followed by a `refreshUi` pass, an app that needs to notice "something changed,
     /// keep going" (e.g. a `flowEvalTick` chain resuming an off-main-thread evaluation) arms it here
-    /// instead of duplicating the check into every mutating action. Default no-op.
+    /// instead of duplicating the check into every mutating action. Default no-operation.
     fn pending_effects(&mut self, _doc: &DocumentView<'_, Self::Projection>, _view_state: &ViewState) -> Vec<HostEffect> {
         Vec::new()
     }
@@ -2936,10 +2936,10 @@ pub trait DocumentApp: Send + 'static {
     }
     /// 🌱 One-time hook for seeding the store's history (checkpoints/alternatives) beyond the bare
     /// `initial_projection` — called once from `VcsDocumentApp::new`, right after the store is
-    /// constructed, via direct `store.dispatch(...)` calls. Default no-op; only apps whose fixture is
+    /// constructed, via direct `store.dispatch(...)` calls. Default no-operation; only apps whose fixture is
     /// itself a rich history (e.g. a history-UI demo/exerciser) need this — every plugin driven purely
     /// by user actions leaves it untouched.
-    fn seed(&self, _store: &mut DocumentVcsStore<Self::Projection, Self::Op>) {}
+    fn seed(&self, _store: &mut DocumentVcsStore<Self::Projection, Self::Operation>) {}
 
     /// 🎞️ Declares this app's media-graph ports (empty by default — an app with no ports simply
     /// cannot be wired into a media graph; every other capability is unaffected).
@@ -2956,14 +2956,14 @@ pub trait DocumentApp: Send + 'static {
     ) -> Result<Media, MediaError> {
         Err(MediaError::NotImplemented)
     }
-    /// 🎞️ Translates an incoming media value on one declared input port into ops — never mutates
+    /// 🎞️ Translates an incoming media value on one declared input port into operations — never mutates
     /// state directly, so a headless import is exactly as undoable/syncable as a UI edit.
     fn import_media(
         &mut self,
         _port: &str,
         _media: &Media,
         _doc: &DocumentView<'_, Self::Projection>,
-    ) -> Result<ActionEmit<Self::Op>, MediaError> {
+    ) -> Result<ActionEmit<Self::Operation>, MediaError> {
         Err(MediaError::NotImplemented)
     }
     /// 🎞️ Cheap identity for one output port's current value, without serializing the payload.
@@ -3025,7 +3025,7 @@ pub enum MediaArtifactError {
 /// @emoji 🗄️ Object-safe runtime contract every hosted app satisfies. Owns persistent document state
 /// (via {@link VcsDocumentApp}'s store) across calls — no per-call document JSON is threaded in.
 /// History actions (undo/redo/checkpoint/alternative) are intercepted by the wrapper; typed
-/// operations are dispatched with real inverses; ops flow to/from the backbone as the wire format.
+/// operations are dispatched with real inverses; operations flow to/from the backbone as the wire format.
 pub trait PluginApp: Send {
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -3072,7 +3072,7 @@ pub trait PluginApp: Send {
         AppLabelsOverlay::default()
     }
     /// 🎞️ Object-safe counterpart to `DocumentApp::export_media` — the seam a headless media-graph
-    /// runner calls without knowing the app's concrete `Projection`/`Op` types.
+    /// runner calls without knowing the app's concrete `Projection`/`Operation` types.
     fn export_media(&mut self, _port: &str) -> Result<Media, MediaError> {
         Err(MediaError::NotImplemented)
     }
@@ -3155,7 +3155,7 @@ impl AppActionRegistry {
 }
 
 /// @emoji 🧬 Generic wrapper turning any typed {@link DocumentApp} into the object-safe runtime
-/// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Op>` — the single source of
+/// {@link PluginApp}. Owns a persistent `DocumentVcsStore<Projection, Operation>` — the single source of
 /// truth for the app's document across every call — intercepts the six injected history actions into
 /// `DocumentVcsCommand`s, dispatches `Apply`/`AmendLast` for typed operations, and builds an
 /// `InvocationResult` whose inverses come from the just-recorded `Edit.backwards`. A projection cache
@@ -3163,7 +3163,7 @@ impl AppActionRegistry {
 /// enforce the actions contract before/after delegating to the app.
 pub struct VcsDocumentApp<A: DocumentApp> {
     app: A,
-    store: DocumentVcsStore<A::Projection, A::Op>,
+    store: DocumentVcsStore<A::Projection, A::Operation>,
     cache: Option<(u64, A::Projection, HistoryView)>,
     registry: AppActionRegistry,
 }
@@ -3187,7 +3187,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// @emoji 🧬 Constructs a wrapper carrying the app's {@link AppActionRegistry} so `handle_action`
     /// enforces default materialization, required-arg validation, and kind discipline.
     pub fn with_registry(app: A, registry: AppActionRegistry) -> Self {
-        let envelope = create_document_vcs_envelope::<A::Projection, A::Op>(
+        let envelope = create_document_vcs_envelope::<A::Projection, A::Operation>(
             app.document_schema(),
             app.app_id(),
             app.initial_projection(),
@@ -3215,7 +3215,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         self.store.projection().map_err(|error| error.to_string())
     }
 
-    /// @emoji 🤝 Fresh replay plus whatever `Op::reconcile` reports for the result — the typed
+    /// @emoji 🤝 Fresh replay plus whatever `Operation::reconcile` reports for the result — the typed
     /// counterpart to `vcs::DocumentVcsStore::projection_with_conflicts`.
     pub fn projection_with_conflicts(&self) -> Result<(A::Projection, Vec<StudioConflict>), String> {
         self.store.projection_with_conflicts().map_err(|error| error.to_string())
@@ -3248,7 +3248,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🕰️ Maps one of the six injected history action ids to its `DocumentVcsCommand`.
-    fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentVcsCommand<A::Op>> {
+    fn history_command(action: &str, args: Option<&Value>) -> Option<DocumentVcsCommand<A::Operation>> {
         let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "undo" => Some(DocumentVcsCommand::Undo),
@@ -3269,7 +3269,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 📇 An empty `InvocationResult` carrying only host effects/events (view/shell actions,
-    /// no-op commands, and history notifications produce no `KernelOperation`s).
+    /// no-operation commands, and history notifications produce no `KernelOperation`s).
     fn empty_result(verb: &str, meta: &ActionMeta, effects: Vec<HostEffect>, events: Vec<AppEvent>, ui_scope: semio_framework_core::kernel::UiDirtyScope) -> InvocationResult {
         let invocation_id = InvocationId(format!("{verb}:{}", meta.instance_id));
         InvocationResult {
@@ -3292,7 +3292,7 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     /// `backwards` as its inverse diff. For a coalesced (`AmendLast`) edit, `edit_operations()` returns
     /// the WHOLE accumulated edit — without slicing to `tail_offset`, every dispatch would rebuild and
     /// serialize every `KernelOperation` since the gesture started (O(edit-size) per dispatch, O(edit-
-    /// size²) over the whole gesture) purely to report ops the caller already knows about.
+    /// size²) over the whole gesture) purely to report operations the caller already knows about.
     fn result_from_last_edit(
         &self,
         verb: &str,
@@ -3331,13 +3331,13 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                     base_version,
                     invocation_id: invocation_id.clone(),
                     diff: DocumentDiff {
-                        schema_id: SchemaId(format!("{schema}.op")),
+                        schema_id: SchemaId(format!("{schema}.operation")),
                         payload: serde_json::to_value(forward).unwrap_or(Value::Null),
                     },
                     inverse: InverseOperation {
                         target_operation: operation_id,
                         inverse_diff: DocumentDiff {
-                            schema_id: SchemaId(format!("{schema}.op.inverse")),
+                            schema_id: SchemaId(format!("{schema}.operation.inverse")),
                             payload: inverse_payload.clone(),
                         },
                         base_version,
@@ -3350,8 +3350,8 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
                 });
             }
         }
-        let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
-        let inverse_operations: Vec<InverseOperation> = operations.iter().map(|op| op.inverse.clone()).collect();
+        let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
+        let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
         InvocationResult {
             output: Value::Null,
             operations,
@@ -3384,16 +3384,16 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
     }
 
     /// @emoji 🧬 Shared dispatch tail for `handle_action`/`handle_command`: given the app's `ActionEmit`,
-    /// either returns an empty result (no ops) or commits `Apply`/`AmendLast` and builds the
+    /// either returns an empty result (no operations) or commits `Apply`/`AmendLast` and builds the
     /// `InvocationResult` from the just-recorded edit. `verb` is the action/command id, used only to
     /// synthesize the `InvocationId`.
-    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Op>, meta: &ActionMeta) -> Result<InvocationResult, String> {
-        let ActionEmit { ops, description, coalesce_key, effects, events, ui_scope } = emit;
-        if ops.is_empty() {
+    fn dispatch_emit(&mut self, verb: &str, emit: ActionEmit<A::Operation>, meta: &ActionMeta) -> Result<InvocationResult, String> {
+        let ActionEmit { operations, description, coalesce_key, effects, events, ui_scope } = emit;
+        if operations.is_empty() {
             return Ok(Self::empty_result(verb, meta, effects, events, ui_scope));
         }
         self.store.set_local_actor_id(Some(meta.actor.clone()));
-        // 🪢 Captured before dispatch so `result_from_last_edit` can report only the ops THIS dispatch
+        // 🪢 Captured before dispatch so `result_from_last_edit` can report only the operations THIS dispatch
         // added — if `AmendLast` amends the same edit (`before_edit_id` unchanged after dispatch), these
         // are the tail offsets into that edit's now-longer forwards/backwards; if a new edit was created
         // instead, the offsets are moot (checked via edit identity, not reused blindly).
@@ -3401,11 +3401,11 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
         let (before_forwards_len, before_backwards_len) = self.store.edit_operations().map(|(f, b, _)| (f.len(), b.len())).unwrap_or((0, 0));
         let vcs_command = match coalesce_key {
             Some(key) => DocumentVcsCommand::AmendLast {
-                operations: ops,
+                operations: operations,
                 coalesce_key: Some(key),
             },
             None => DocumentVcsCommand::Apply {
-                operations: ops,
+                operations: operations,
                 description,
             },
         };
@@ -3452,7 +3452,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                     // document — always Full, never opt into a narrower scope.
                     Ok(Self::empty_result(action, meta, Vec::new(), vec![history_changed_event()], semio_framework_core::kernel::UiDirtyScope::Full))
                 }
-                // Benign no-ops (nothing to undo/redo, foreign tail) collapse to an empty result.
+                // Benign no-operations (nothing to undo/redo, foreign tail) collapse to an empty result.
                 Err(vcs::VcsError::NothingToUndo)
                 | Err(vcs::VcsError::NothingToRedo)
                 | Err(vcs::VcsError::ForeignEdit(_)) => {
@@ -3474,7 +3474,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
                 app.handle_action(action, dispatch_args, &doc, view_state)
             };
             if let Some(def) = &definition {
-                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.ops.is_empty() {
+                if matches!(def.kind, ActionKind::View | ActionKind::Shell) && !emit.operations.is_empty() {
                     return Err(format!(
                         "{:?}-kind action '{action}' must not emit operations",
                         def.kind
@@ -3506,7 +3506,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String> {
-        let envelopes: Vec<OpEnvelope> =
+        let envelopes: Vec<OperationEnvelope> =
             serde_json::from_str(operations_json).map_err(|error| error.to_string())?;
         for envelope in envelopes {
             self.store.ingest_remote(envelope).map_err(|error| error.to_string())?;
@@ -3520,7 +3520,7 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
     }
 
     fn load_document(&mut self, document_json: &str) -> Result<(), String> {
-        let envelope: DocumentVcsEnvelope<A::Projection, A::Op> =
+        let envelope: DocumentVcsEnvelope<A::Projection, A::Operation> =
             serde_json::from_str(document_json).map_err(|error| error.to_string())?;
         let applied: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
         self.store.set_envelope(envelope, applied);
@@ -3727,7 +3727,7 @@ impl PluginBundle {
 
     /// @emoji 🧬 Registers a typed {@link DocumentApp}, wrapping each instance in a
     /// {@link VcsDocumentApp} so it satisfies the object-safe runtime {@link PluginApp} contract with
-    /// a persistent op store. The only public app-registration entry point — this structurally
+    /// a persistent operation store. The only public app-registration entry point — this structurally
     /// guarantees every app's state lives in a `DocumentVcsStore`.
     pub fn register_document_app<A>(
         self,
@@ -3812,7 +3812,7 @@ fn with_instances_mut<R, F: FnOnce(&mut Vec<AppInstance>) -> Result<R, String>>(
 }
 
 /// 🩹 Heals `InstanceGuard` after a wasm trap so the next host-serialized call is not stuck on
-/// `plugin instance busy`. No-op when the guard is already clear.
+/// `plugin instance busy`. No-operation when the guard is already clear.
 pub fn plugin_clear_instance_guard() {
     InstanceGuard::clear_poison();
 }
@@ -3954,8 +3954,8 @@ pub fn plugin_handle_command(
     })
 }
 
-/// @emoji 📥 Ingests a JSON array of remote `OpEnvelope`s into the instance's document store
-/// (idempotent — duplicate op ids are dropped by the causal DAG / edit-id dedupe).
+/// @emoji 📥 Ingests a JSON array of remote `OperationEnvelope`s into the instance's document store
+/// (idempotent — duplicate operation ids are dropped by the causal DAG / edit-id dedupe).
 pub fn plugin_ingest_operations(instance_id: u32, operations_json: &str) -> Result<(), String> {
     with_instances_mut(|list| {
         let instance = find_instance(list, instance_id)?;
@@ -4262,7 +4262,7 @@ macro_rules! plugin_exports {
 /// instantiated for it — that type must implement `Default` (multi-app crates list one entry per
 /// app, e.g. puzzle's `d2::create_puzzle2d_app => d2::Puzzle2dApp, d3::create_puzzle3d_app =>
 /// d3::Puzzle3dApp`). Each app is wrapped in a [`VcsDocumentApp`](crate::VcsDocumentApp) so it
-/// satisfies the object-safe runtime [`PluginApp`](crate::PluginApp) contract with a persistent op
+/// satisfies the object-safe runtime [`PluginApp`](crate::PluginApp) contract with a persistent operation
 /// store. Expands to the equivalent `bundle()` fn plus a `plugin_exports!(bundle)` call, and a
 /// `#[cfg(test)]` regression check asserting every declared app id actually lands in the built
 /// `PluginBundle`'s manifest.
@@ -4305,7 +4305,7 @@ macro_rules! semio_plugin {
 mod semio_plugin_macro_tests {
     //! 🧪 The plugin contract's own unit test: a `TestApp` implementing the typed `DocumentApp`
     //! surface, wrapped in `VcsDocumentApp`, exercising typed operations with true inverses, view
-    //! actions that emit no ops, history interception, and remote-op ingest idempotency.
+    //! actions that emit no operations, history interception, and remote-operation ingest idempotency.
 
     use crate::app::{
         ActionEmit, ActionMeta, App, AppActionRegistry, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
@@ -4348,26 +4348,26 @@ mod semio_plugin_macro_tests {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    enum TestOp {
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    enum TestOperation {
         SetCount { value: i32 },
         SetLabel { value: String },
     }
 
-    impl Operation<TestProjection> for TestOp {
+    impl Operation<TestProjection> for TestOperation {
         type Diff = TestDiff;
 
         fn diff(&self, _projection: &TestProjection) -> TestDiff {
             match self {
-                TestOp::SetCount { value } => TestDiff { count: Some(*value), label: None },
-                TestOp::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
+                TestOperation::SetCount { value } => TestDiff { count: Some(*value), label: None },
+                TestOperation::SetLabel { value } => TestDiff { count: None, label: Some(value.clone()) },
             }
         }
 
         fn backwards(&self, projection: &TestProjection) -> Vec<Self> {
             match self {
-                TestOp::SetCount { .. } => vec![TestOp::SetCount { value: projection.count }],
-                TestOp::SetLabel { .. } => vec![TestOp::SetLabel { value: projection.label.clone() }],
+                TestOperation::SetCount { .. } => vec![TestOperation::SetCount { value: projection.count }],
+                TestOperation::SetLabel { .. } => vec![TestOperation::SetLabel { value: projection.label.clone() }],
             }
         }
     }
@@ -4381,7 +4381,7 @@ mod semio_plugin_macro_tests {
 
     impl DocumentApp for TestApp {
         type Projection = TestProjection;
-        type Op = TestOp;
+        type Operation = TestOperation;
 
         fn app_id(&self) -> &str {
             "synthetic-play"
@@ -4401,7 +4401,7 @@ mod semio_plugin_macro_tests {
             args: Option<&Value>,
             doc: &DocumentView<'_, TestProjection>,
             view_state: &ViewState,
-        ) -> ActionEmit<TestOp> {
+        ) -> ActionEmit<TestOperation> {
             let label_arg = || {
                 args.and_then(|value| value.get("value"))
                     .and_then(Value::as_str)
@@ -4410,24 +4410,24 @@ mod semio_plugin_macro_tests {
             };
             match action {
                 "increment" => ActionEmit {
-                    ops: vec![TestOp::SetCount { value: doc.projection.count + 1 }],
+                    operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment".into()),
                     ..Default::default()
                 },
                 "setLabel" | "setLabelRequired" | "setLabelDefault" => {
                     ActionEmit {
-                        ops: vec![TestOp::SetLabel { value: label_arg() }],
+                        operations: vec![TestOperation::SetLabel { value: label_arg() }],
                         coalesce_key: Some("label".into()),
                         ..Default::default()
                     }
                 }
-                "amendLabel" => ActionEmit::amend(vec![TestOp::SetLabel { value: label_arg() }], "label"),
-                "commitLabel" => ActionEmit::commit(vec![TestOp::SetLabel { value: label_arg() }], "commit label"),
-                // 🧪 A deliberately mis-behaving View action: emits ops it must not — the registry-backed
+                "amendLabel" => ActionEmit::amend(vec![TestOperation::SetLabel { value: label_arg() }], "label"),
+                "commitLabel" => ActionEmit::commit(vec![TestOperation::SetLabel { value: label_arg() }], "commit label"),
+                // 🧪 A deliberately mis-behaving View action: emits operations it must not — the registry-backed
                 // kind-discipline check rejects it.
-                "badView" => ActionEmit::ops(vec![TestOp::SetCount { value: 99 }]),
+                "badView" => ActionEmit::operations(vec![TestOperation::SetCount { value: 99 }]),
                 // 🧪 Reads the host-owned active utility from view state (never the document) and echoes it
-                // as an event — proving `setActiveUtility` forwards `view_state.active_utility_id` and emits no ops.
+                // as an event — proving `setActiveUtility` forwards `view_state.active_utility_id` and emits no operations.
                 "setActiveUtility" => ActionEmit::event(AppEvent {
                     kind: "active-utility".into(),
                     payload: json!({ "utilityId": view_state.active_utility_id.clone().unwrap_or_default() }),
@@ -4450,16 +4450,16 @@ mod semio_plugin_macro_tests {
             args: Option<&Value>,
             doc: &DocumentView<'_, TestProjection>,
             _view_state: &ViewState,
-        ) -> ActionEmit<TestOp> {
+        ) -> ActionEmit<TestOperation> {
             match command {
                 "incrementViaCommand" => ActionEmit {
-                    ops: vec![TestOp::SetCount { value: doc.projection.count + 1 }],
+                    operations: vec![TestOperation::SetCount { value: doc.projection.count + 1 }],
                     description: Some("increment via command".into()),
                     ..Default::default()
                 },
                 "setLabelViaCommand" => {
                     let value = args.and_then(|value| value.get("value")).and_then(Value::as_str).unwrap_or_default().to_string();
-                    ActionEmit::ops(vec![TestOp::SetLabel { value }])
+                    ActionEmit::operations(vec![TestOperation::SetLabel { value }])
                 }
                 _ => ActionEmit::default(),
             }
@@ -4539,10 +4539,10 @@ mod semio_plugin_macro_tests {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app.handle_action("increment", None, &ViewState::default(), &meta()).expect("increment");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setCount", "value": 1 }));
+        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setCount", "value": 1 }));
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "op": "setCount", "value": 0 }] })
+            json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
         assert_eq!(app.test_projection().count, 1);
@@ -4602,7 +4602,7 @@ mod semio_plugin_macro_tests {
     }
 
     #[test]
-    fn undo_on_empty_history_is_a_benign_no_op() {
+    fn undo_on_empty_history_is_a_benign_no_operation() {
         let mut app = VcsDocumentApp::new(TestApp::default());
         let result = app.handle_action("undo", None, &ViewState::default(), &meta()).expect("undo");
         assert!(result.operations.is_empty());
@@ -4630,17 +4630,17 @@ mod semio_plugin_macro_tests {
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
-            if let BackboneMessage::Ops { envelopes: ops } = message {
-                envelopes.extend(ops);
+            if let BackboneMessage::Operations { envelopes: operations } = message {
+                envelopes.extend(operations);
             }
         }
-        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
+        assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
         let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
 
         let mut receiver = VcsDocumentApp::new(TestApp::default());
         receiver.ingest_operations(&operations_json).expect("ingest once");
         receiver.ingest_operations(&operations_json).expect("ingest twice");
-        assert_eq!(receiver.test_projection().count, 1, "feeding the same op twice must not double-apply");
+        assert_eq!(receiver.test_projection().count, 1, "feeding the same operation twice must not double-apply");
     }
 
     #[test]
@@ -4702,13 +4702,13 @@ mod semio_plugin_macro_tests {
         let mut app = contract_app_under_test();
         let error = app
             .handle_action("badView", None, &ViewState::default(), &meta())
-            .expect_err("a View action emitting ops must be rejected");
+            .expect_err("a View action emitting operations must be rejected");
         assert!(error.contains("must not emit operations"), "unexpected error: {error}");
         assert_eq!(app.test_projection(), TestProjection::default());
     }
 
     #[test]
-    fn set_active_utility_forwards_view_state_active_utility_and_emits_no_ops() {
+    fn set_active_utility_forwards_view_state_active_utility_and_emits_no_operations() {
         let mut app = contract_app_under_test();
         let view_state = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
         let result = app
@@ -4744,8 +4744,8 @@ mod semio_plugin_macro_tests {
     #[test]
     fn amend_dispatch_reports_only_this_dispatch_new_operations() {
         // 🪢 Regression guard for `result_from_last_edit`'s `tail_offset` slicing: even though the
-        // coalesced edit accumulates every amend's ops (3 after this loop), each dispatch's
-        // `InvocationResult` must report only the op IT just added — never re-serializing the whole
+        // coalesced edit accumulates every amend's operations (3 after this loop), each dispatch's
+        // `InvocationResult` must report only the operation IT just added — never re-serializing the whole
         // growing edit into every `KernelOperation`/`UndoGroup` on every single dispatch.
         let mut app = contract_app_under_test();
         app.handle_action("amendLabel", Some(&json!({ "value": "a" })), &ViewState::default(), &meta()).expect("amendLabel a");
@@ -4753,12 +4753,12 @@ mod semio_plugin_macro_tests {
         let result = app
             .handle_action("amendLabel", Some(&json!({ "value": "abc" })), &ViewState::default(), &meta())
             .expect("amendLabel abc");
-        assert_eq!(result.operations.len(), 1, "must report only this dispatch's new op, not the whole coalesced edit");
-        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setLabel", "value": "abc" }));
+        assert_eq!(result.operations.len(), 1, "must report only this dispatch's new operation, not the whole coalesced edit");
+        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setLabel", "value": "abc" }));
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "op": "setLabel", "value": "ab" }] }),
-            "the new op's own inverse undoes back to the pre-dispatch label, not the whole gesture"
+            json!({ "backwards": [{ "operation": "setLabel", "value": "ab" }] }),
+            "the new operation's own inverse undoes back to the pre-dispatch label, not the whole gesture"
         );
         assert_eq!(result.inverse_group.operations.len(), 1);
         assert_eq!(result.inverse_group.inverse_operations.len(), 1);
@@ -4775,10 +4775,10 @@ mod semio_plugin_macro_tests {
             .handle_command("incrementViaCommand", None, &ViewState::default(), &meta())
             .expect("incrementViaCommand");
         assert_eq!(result.operations.len(), 1);
-        assert_eq!(result.operations[0].diff.payload, json!({ "op": "setCount", "value": 1 }));
+        assert_eq!(result.operations[0].diff.payload, json!({ "operation": "setCount", "value": 1 }));
         assert_eq!(
             result.operations[0].inverse.inverse_diff.payload,
-            json!({ "backwards": [{ "op": "setCount", "value": 0 }] })
+            json!({ "backwards": [{ "operation": "setCount", "value": 0 }] })
         );
         assert_eq!(app.test_projection().count, 1);
     }

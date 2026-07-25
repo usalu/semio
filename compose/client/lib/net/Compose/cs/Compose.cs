@@ -1399,9 +1399,9 @@ public class Operation : Term
     public Operator Operator { get; set; }
     public Term[] Operands { get; set; }
 
-    public Operation(Operator op, params Term[] operands)
+    public Operation(Operator operation, params Term[] operands)
     {
-        Operator = op ?? throw new ArgumentNullException(nameof(op));
+        Operator = operation ?? throw new ArgumentNullException(nameof(operation));
         Operands = operands ?? Array.Empty<Term>();
     }
 
@@ -1423,8 +1423,8 @@ public class Operation : Term
                 if (ctx == null || !ctx.TryGetValue(v.Name, out var val))
                     throw new KeyNotFoundException($"No value provided for variable '{v.Name}'.");
                 return val;
-            case Operation op:
-                return op.Evaluate(ctx, targetUnit);
+            case Operation operation:
+                return operation.Evaluate(ctx, targetUnit);
             default:
                 throw new InvalidOperationException($"Unknown term type: {t?.GetType().Name ?? "null"}");
         }
@@ -1553,13 +1553,13 @@ public class Expression
             case Variable v:
                 sb.Append(v.Name);
                 break;
-            case Operation op:
-                sb.Append(op.Operator.Keyword);
+            case Operation operation:
+                sb.Append(operation.Operator.Keyword);
                 sb.Append(" ( ");
-                for (int i = 0; i < op.Operands.Length; i++)
+                for (int i = 0; i < operation.Operands.Length; i++)
                 {
                     if (i > 0) sb.Append(' ');
-                    SerializeTerm(op.Operands[i], sb);
+                    SerializeTerm(operation.Operands[i], sb);
                 }
                 sb.Append(" )");
                 break;
@@ -1760,12 +1760,12 @@ public class Expression
                     throw new FormatException($"Missing closing ')' for call starting at {idPos}.");
                 index++;
 
-                var op = InstantiateOperator(ident, idPos);
+                var operation = InstantiateOperator(ident, idPos);
 
-                if (op is Divide && args.Count < 2)
+                if (operation is Divide && args.Count < 2)
                     throw new FormatException("divide requires at least 2 operands.");
 
-                return new Operation(op, args.ToArray());
+                return new Operation(operator, args.ToArray());
             }
             else
             {
@@ -14211,7 +14211,7 @@ public static class ComposeDiff
                     var rg = rm["id"]?.Value<string>() ?? "";
                     if (baseBy.TryGetValue(rg, out var orig) && addBy.TryGetValue(rg, out var add) && KitDiffDeepEqual(orig, add))
                     {
-                        ctx.Push("warnings", "kitdiff.cycle.noop-restore", $"{path}: removed and re-added {idKey} {rg} are deeply equal (no effective change)");
+                        ctx.Push("warnings", "kitdiff.cycle.no-operation-restore", $"{path}: removed and re-added {idKey} {rg} are deeply equal (no effective change)");
                         if (ctx.Heal)
                         {
                             if (hRem != null)
@@ -15176,8 +15176,8 @@ public static class StoreGraphqlWire
             break;
         }
         var head = rest.Split((char[]?)null, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? "";
-        var op = head.Split('(')[0];
-        if (!string.Equals(op, kind, StringComparison.OrdinalIgnoreCase))
+        var operation = head.Split('(')[0];
+        if (!string.Equals(operator, kind, StringComparison.OrdinalIgnoreCase))
             throw new IOException($"graphql: expected {kind}, got {head}");
     }
 
@@ -15639,10 +15639,10 @@ public sealed class StoreSession : IDisposable
     {
         var (query, variables) = StoreGraphql.ScopedKitMutation(StoreId, changeId, kitSelection);
         var data = _client.ExecuteMutation(query, variables);
-        var op = kitSelection.Trim().Split('(')[0].Trim();
+        var operation = kitSelection.Trim().Split('(')[0].Trim();
         var node = StoreGraphqlJson.FindKitCommandResponse(data)
-            ?? data.SelectToken($"session.store.theKit.unsavedChange.kit.{op}");
-        StoreGraphqlJson.AssertResponseOk(node, op);
+            ?? data.SelectToken($"session.store.theKit.unsavedChange.kit.{operation}");
+        StoreGraphqlJson.AssertResponseOk(node, operator);
         Events.AfterCommand(fieldEventKind);
     }
 

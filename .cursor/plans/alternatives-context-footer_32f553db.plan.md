@@ -43,7 +43,7 @@ flowchart LR
 New region `🌱KitAlternativeSelection` placed just above the existing `⚛️Context` region:
 
 - `type KitAlternativeSummary = { id: string; name: string }` — minimal projection used by the dropdown.
-- `KitAlternativeSelectionContext = createContext<{ selectedAlternativeId: string | null; setSelectedAlternativeId: (id: string | null) => void; alternatives: ReadonlyArray<KitAlternativeSummary> }>` with a frozen default `{ selectedAlternativeId: null, setSelectedAlternativeId: noop, alternatives: [] }`.
+- `KitAlternativeSelectionContext = createContext<{ selectedAlternativeId: string | null; setSelectedAlternativeId: (id: string | null) => void; alternatives: ReadonlyArray<KitAlternativeSummary> }>` with a frozen default `{ selectedAlternativeId: null, setSelectedAlternativeId: no_operation, alternatives: [] }`.
 - `KitAlternativeSelectionProvider({ children })` — internal `useState<string | null>(null)`. Reads alternatives from the active `KitStoreClient` via `useSyncExternalStore` on a small subscription helper (`graph.alternatives { id name }` using the existing `kitClient.execute` GraphQL surface — same pattern as `useKitName`). When the currently-selected id disappears from the rs list, falls back to `null` (the kit) automatically.
 - `useKitAlternativeSelection()` → `[selectedAlternativeId, setSelectedAlternativeId]`.
 - `useKitAlternatives()` → `ReadonlyArray<KitAlternativeSummary>` from the same context.

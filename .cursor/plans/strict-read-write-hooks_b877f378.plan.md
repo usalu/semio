@@ -27,12 +27,12 @@ isProject: false
 - **Read** = a `StoreField<T>` fed by one GraphQL query. No side-effects. No public mutator.
 - **Command** = a `StoreCommand<TArgs>` -- the only side-effect carrier in the system. Every write is a command.
 - **Operation** = a _kit-modifying_ command. Operations correspond 1:1 to the SDL `Mutation` fields backed by `union OperationKind` (`renameKit`, `dragPiecesInDesign`, `changeDescription`, `addFixedPieceToDesign`, `fixPieceInDesign`, ...). Operations are always scoped inside a draft + transaction and complete asynchronously through the rs operation stream (correlated by `requestId`).
-- **Scope** = the ids that pinpoint _where_ an operation runs (`draftId`, `transactionId`, plus operation-specific addressing such as `entityId`, `designId`, `pieceId`, `tagId`, `ownerId`, `tagIds`). Every operation takes a `scope: <Op>Scope!` GraphQL variable. Caller-side, the user-facing `scope` excludes `draftId` and `transactionId`; the `operation<...>` helper opens the draft + transaction itself and merges those ids in before dispatch.
-- **Input** = the data the operation needs to perform its change (`name`, `description`, `offset`, `position`, `tag`, `tags`, `concept`, `quality`, `blueprintId`, ...). Every operation takes an `input: <Op>Input!` GraphQL variable. Empty inputs are still passed (`input: {}`) for uniformity.
+- **Scope** = the ids that pinpoint _where_ an operation runs (`draftId`, `transactionId`, plus operation-specific addressing such as `entityId`, `designId`, `pieceId`, `tagId`, `ownerId`, `tagIds`). Every operation takes a `scope: <Operation>Scope!` GraphQL variable. Caller-side, the user-facing `scope` excludes `draftId` and `transactionId`; the `operation<...>` helper opens the draft + transaction itself and merges those ids in before dispatch.
+- **Input** = the data the operation needs to perform its change (`name`, `description`, `offset`, `position`, `tag`, `tags`, `concept`, `quality`, `blueprintId`, ...). Every operation takes an `input: <Operation>Input!` GraphQL variable. Empty inputs are still passed (`input: {}`) for uniformity.
 - **Finalize** = the act of closing a transaction. The operation helper finalizes the transaction with `applied: true` after `operationSucceeded` arrives (the SDL term used in `Draft.finalizedTransactions` and the existing `KitStore.finalizeKitWriteTransaction()`); on failure it finalizes with `applied: false`. There is no separate "commit" or "abort" verb.
 - **Save** = the act of turning the current draft into a checkpoint. `Save` belongs to the workspace command tier (built via `command<TArgs>`), not the operation tier. Inside an SDL operation we never "save" -- we only "finalize the open transaction".
 
-Every operation has the _same_ GraphQL signature: `<fieldName>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The TypeScript signature mirrors it: `StoreCommand<{ scope: TScope; input: TInput }>` where `TScope` is the operation-specific scope (no `draftId` / `transactionId` -- those are auto-supplied) and `TInput` is the operation-specific input. This is the only shape any operation ever carries.
+Every operation has the _same_ GraphQL signature: `<fieldName>(scope: <Operation>Scope!, input: <Operation>Input!): Id!`. The TypeScript signature mirrors it: `StoreCommand<{ scope: TScope; input: TInput }>` where `TScope` is the operation-specific scope (no `draftId` / `transactionId` -- those are auto-supplied) and `TInput` is the operation-specific input. This is the only shape any operation ever carries.
 
 Operations are a strict subset of commands. The `operation<TScope, TInput>` helper builds a kit-modifying `StoreCommand` (transactional, finalized per call); the `command<TArgs>` helper builds a non-transactional `StoreCommand` (e.g. save draft -> checkpoint, backbone attach, sync now, file import / export). Both produce the same `StoreCommand<...>` public type; consumers never need to care which kind they hold.
 
@@ -213,7 +213,7 @@ private query<T>(body: string, parse: (data: JsonValue) => T, initial: T): Store
   });
 }
 
-/** @emoji 🪪 Transactional kit-modifying operation. Every SDL operation has the uniform signature `<name>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The helper opens draft + tx, merges `{ draftId, transactionId }` into `scope`, runs the mutation, awaits `operationSucceeded` by `requestId`, then finalizes the transaction (`applied: true|false`). Maps 1:1 to a SDL `Mutation` field backed by `union OperationKind`. */
+/** @emoji 🪪 Transactional kit-modifying operation. Every SDL operation has the uniform signature `<name>(scope: <Operation>Scope!, input: <Operation>Input!): Id!`. The helper opens draft + tx, merges `{ draftId, transactionId }` into `scope`, runs the mutation, awaits `operationSucceeded` by `requestId`, then finalizes the transaction (`applied: true|false`). Maps 1:1 to a SDL `Mutation` field backed by `union OperationKind`. */
 private operation<TScope extends Record<string, JsonValue> = Record<string, never>, TInput extends Record<string, JsonValue> = Record<string, never>>(
   fieldName: string,                  // e.g. "renameKit"
   scopeTypeName: string,              // e.g. "RenameKitScope"
@@ -334,7 +334,7 @@ typeName(typeId: string): StoreField<string> {
 
 ### Defining operations (kit-modifying, transactional)
 
-One declaration per SDL `Mutation` field. Every operation has the _same_ shape: `<name>(scope: <Op>Scope!, input: <Op>Input!): Id!`. The helper takes `(fieldName, scopeTypeName, inputTypeName)` and the TS type params declare the user-facing scope (no draft/tx -- those are auto-supplied) and input.
+One declaration per SDL `Mutation` field. Every operation has the _same_ shape: `<name>(scope: <Operation>Scope!, input: <Operation>Input!): Id!`. The helper takes `(fieldName, scopeTypeName, inputTypeName)` and the TS type params declare the user-facing scope (no draft/tx -- those are auto-supplied) and input.
 
 ```ts
 // compose/js/index.ts -- KitStore constructor.

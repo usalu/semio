@@ -47,9 +47,9 @@ id if id.starts_with("dock.tab.") => {
 
 ([framework/renderer/wgpu/rs/shell.rs:1545-1547](framework/renderer/wgpu/rs/shell.rs))
 
-Because this arm reports "handled" without doing anything, the caller returns immediately at line 993 and the real drag-init logic at lines 995-1023 is dead code — `begin_pending_dock_drag` is never invoked for tab pointer-downs, so `pending_dock_drag` stays `None`, the drag-promotion threshold check in `handle_pointer_move` (lines 1171-1198) never fires, and dragging a tab is a no-op. This also silently breaks plain tab-click activation, since activation happens on pointer-up keyed off `pending_dock_drag` being set.
+Because this arm reports "handled" without doing anything, the caller returns immediately at line 993 and the real drag-init logic at lines 995-1023 is dead code — `begin_pending_dock_drag` is never invoked for tab pointer-downs, so `pending_dock_drag` stays `None`, the drag-promotion threshold check in `handle_pointer_move` (lines 1171-1198) never fires, and dragging a tab is a no-operation. This also silently breaks plain tab-click activation, since activation happens on pointer-up keyed off `pending_dock_drag` being set.
 
-**Fix:** Remove the no-op `id if id.starts_with("dock.tab.") => { return Ok(true); }` arm from `handle_shell_hit` (the default arm already falls through to `Ok(false)`), so the caller's existing drag-init block in the pointer-down handler executes as designed.
+**Fix:** Remove the no-operation `id if id.starts_with("dock.tab.") => { return Ok(true); }` arm from `handle_shell_hit` (the default arm already falls through to `Ok(false)`), so the caller's existing drag-init block in the pointer-down handler executes as designed.
 
 ## Secondary cleanup (same feature area)
 
@@ -68,7 +68,7 @@ Because this arm reports "handled" without doing anything, the caller returns im
    </plan>
    <todos>
    <todo id="fix-focus-bounds" content="Fix DockState::register_hits, stack_body_rects, stack_tab_bar_rects in dock.rs to use full bounds instead of solve_node_bounds for the maximized stack"/>
-   <todo id="fix-tab-drag" content="Remove the no-op dock.tab.* early-return arm in handle_shell_hit (shell.rs) so begin_pending_dock_drag runs on tab pointer-down"/>
+   <todo id="fix-tab-drag" content="Remove the no-operation dock.tab.* early-return arm in handle_shell_hit (shell.rs) so begin_pending_dock_drag runs on tab pointer-down"/>
    <todo id="cleanup-dead-drag-code" content="Remove unused promote_dock_drag function and reconcile with inline threshold logic in handle_pointer_move"/>
    <todo id="drop-zone-overlay" content="Render a drop-zone highlight overlay during active dock_drag using compute_dock_drop_zone, matching React's split/tab indicator"/>
    <todo id="verify-e2e" content="Rebuild wgpu wasm, manually verify Focus and tab drag in browser via MCP, and re-run wgpu E2E smoke for s and forms"/>

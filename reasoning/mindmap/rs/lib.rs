@@ -48,7 +48,7 @@ pub const MINDMAP_BOARD_SCHEMA: &str = "reasoning.mindmap.fixture";
 // #region 🔖Document
 /// 🧠 The mindmap-wires document: the semantic wires fixture (identities/relationships/kind catalogs)
 /// paired with its own `reasoning.mindmap.fixture` board fixture (nodes/edges/camera). Both are kept
-/// as opaque JSON so this crate stays free of any board-engine schema types, while ops still address
+/// as opaque JSON so this crate stays free of any board-engine schema types, while operations still address
 /// board nodes/edges and wires relationships by id for mergeable, granular edits.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -173,10 +173,10 @@ fn apply_step(wires: &mut Value, board: &mut Value, step: &MindmapWiresStep) {
 }
 // #endregion 🔖Steps
 
-// #region 🔖Ops
+// #region 🔖Operations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum MindmapWiresOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum MindmapWiresOperation {
     AddNode { node: Value },
     RemoveNode { node_id: String },
     PatchNode { node_id: String, patch: Map<String, Value> },
@@ -216,21 +216,21 @@ fn steps_diff(steps: Vec<MindmapWiresStep>) -> MindmapWiresDiff {
     MindmapWiresDiff { steps, replace: None }
 }
 
-impl Operation<MindmapWiresDocument> for MindmapWiresOp {
+impl Operation<MindmapWiresDocument> for MindmapWiresOperation {
     type Diff = MindmapWiresDiff;
 
     fn diff(&self, _projection: &MindmapWiresDocument) -> MindmapWiresDiff {
         match self {
-            MindmapWiresOp::AddNode { node } => steps_diff(vec![MindmapWiresStep::AddNode { node: node.clone() }]),
-            MindmapWiresOp::RemoveNode { node_id } => steps_diff(vec![MindmapWiresStep::RemoveNode { node_id: node_id.clone() }]),
-            MindmapWiresOp::PatchNode { node_id, patch } => {
+            MindmapWiresOperation::AddNode { node } => steps_diff(vec![MindmapWiresStep::AddNode { node: node.clone() }]),
+            MindmapWiresOperation::RemoveNode { node_id } => steps_diff(vec![MindmapWiresStep::RemoveNode { node_id: node_id.clone() }]),
+            MindmapWiresOperation::PatchNode { node_id, patch } => {
                 steps_diff(vec![MindmapWiresStep::PatchNode { node_id: node_id.clone(), patch: patch.clone() }])
             }
-            MindmapWiresOp::AddRelationship { edge, relationship } => {
+            MindmapWiresOperation::AddRelationship { edge, relationship } => {
                 steps_diff(vec![MindmapWiresStep::AddEdge { edge: edge.clone(), relationship: relationship.clone() }])
             }
-            MindmapWiresOp::RemoveEdge { edge_id } => steps_diff(vec![MindmapWiresStep::RemoveEdge { edge_id: edge_id.clone() }]),
-            MindmapWiresOp::ReplaceDocument { wires_fixture, board_fixture } => MindmapWiresDiff {
+            MindmapWiresOperation::RemoveEdge { edge_id } => steps_diff(vec![MindmapWiresStep::RemoveEdge { edge_id: edge_id.clone() }]),
+            MindmapWiresOperation::ReplaceDocument { wires_fixture, board_fixture } => MindmapWiresDiff {
                 steps: Vec::new(),
                 replace: Some(Box::new(MindmapWiresDocument {
                     wires_fixture: wires_fixture.clone(),
@@ -242,13 +242,13 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOp {
 
     fn backwards(&self, projection: &MindmapWiresDocument) -> Vec<Self> {
         match self {
-            MindmapWiresOp::AddNode { node } => entity_id(node, "id")
-                .map(|node_id| vec![MindmapWiresOp::RemoveNode { node_id: node_id.to_string() }])
+            MindmapWiresOperation::AddNode { node } => entity_id(node, "id")
+                .map(|node_id| vec![MindmapWiresOperation::RemoveNode { node_id: node_id.to_string() }])
                 .unwrap_or_default(),
-            MindmapWiresOp::RemoveNode { node_id } => find_board_node(projection, node_id)
-                .map(|node| vec![MindmapWiresOp::AddNode { node: node.clone() }])
+            MindmapWiresOperation::RemoveNode { node_id } => find_board_node(projection, node_id)
+                .map(|node| vec![MindmapWiresOperation::AddNode { node: node.clone() }])
                 .unwrap_or_default(),
-            MindmapWiresOp::PatchNode { node_id, patch } => {
+            MindmapWiresOperation::PatchNode { node_id, patch } => {
                 let node = find_board_node(projection, node_id);
                 let inverse: Map<String, Value> = patch
                     .keys()
@@ -257,19 +257,19 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOp {
                         (key.clone(), prior)
                     })
                     .collect();
-                vec![MindmapWiresOp::PatchNode { node_id: node_id.clone(), patch: inverse }]
+                vec![MindmapWiresOperation::PatchNode { node_id: node_id.clone(), patch: inverse }]
             }
-            MindmapWiresOp::AddRelationship { edge, .. } => entity_id(edge, "id")
-                .map(|edge_id| vec![MindmapWiresOp::RemoveEdge { edge_id: edge_id.to_string() }])
+            MindmapWiresOperation::AddRelationship { edge, .. } => entity_id(edge, "id")
+                .map(|edge_id| vec![MindmapWiresOperation::RemoveEdge { edge_id: edge_id.to_string() }])
                 .unwrap_or_default(),
-            MindmapWiresOp::RemoveEdge { edge_id } => find_board_edge(projection, edge_id)
-                .map(|edge| MindmapWiresOp::AddRelationship {
+            MindmapWiresOperation::RemoveEdge { edge_id } => find_board_edge(projection, edge_id)
+                .map(|edge| MindmapWiresOperation::AddRelationship {
                     edge: edge.clone(),
                     relationship: find_relationship(projection, edge_id).cloned().unwrap_or(Value::Null),
                 })
                 .into_iter()
                 .collect(),
-            MindmapWiresOp::ReplaceDocument { .. } => vec![MindmapWiresOp::ReplaceDocument {
+            MindmapWiresOperation::ReplaceDocument { .. } => vec![MindmapWiresOperation::ReplaceDocument {
                 wires_fixture: projection.wires_fixture.clone(),
                 board_fixture: projection.board_fixture.clone(),
             }],
@@ -277,9 +277,9 @@ impl Operation<MindmapWiresDocument> for MindmapWiresOp {
     }
 }
 
-pub type MindmapWiresEnvelope = vcs::DocumentVcsEnvelope<MindmapWiresDocument, MindmapWiresOp>;
-pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, MindmapWiresOp>;
-// #endregion 🔖Ops
+pub type MindmapWiresEnvelope = vcs::DocumentVcsEnvelope<MindmapWiresDocument, MindmapWiresOperation>;
+pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, MindmapWiresOperation>;
+// #endregion 🔖Operations
 // #endregion 🔖DocumentVcs
 
 // #region 🧪Tests
@@ -293,40 +293,40 @@ mod tests {
         json!({ "id": id, "nodeKind": "identity", "shape": "circle", "x": 0.0, "y": 0.0, "radius": 24.0, "text": text, "handles": [] })
     }
 
-    fn round_trip(document: &MindmapWiresDocument, op: &MindmapWiresOp) -> MindmapWiresDocument {
-        let forward = apply_operation(document, op);
+    fn round_trip(document: &MindmapWiresDocument, operation: &MindmapWiresOperation) -> MindmapWiresDocument {
+        let forward = apply_operation(document, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(document) {
+        for back in operation.backwards(document) {
             restored = apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, document, "backwards() must restore the pre-op document");
+        assert_eq!(&restored, document, "backwards() must restore the pre-operation document");
         forward
     }
 
     #[test]
     fn add_remove_patch_node_round_trip() {
         let document = empty_mindmap_wires_document();
-        let with_node = round_trip(&document, &MindmapWiresOp::AddNode { node: node("node-1", "Alpha") });
+        let with_node = round_trip(&document, &MindmapWiresOperation::AddNode { node: node("node-1", "Alpha") });
         assert_eq!(with_node.board_fixture["nodes"].as_array().unwrap().len(), 1);
         let mut patch = Map::new();
         patch.insert("text".into(), json!("Renamed"));
-        let patched = round_trip(&with_node, &MindmapWiresOp::PatchNode { node_id: "node-1".into(), patch });
+        let patched = round_trip(&with_node, &MindmapWiresOperation::PatchNode { node_id: "node-1".into(), patch });
         assert_eq!(find_board_node(&patched, "node-1").unwrap()["text"], json!("Renamed"));
-        let removed = round_trip(&patched, &MindmapWiresOp::RemoveNode { node_id: "node-1".into() });
+        let removed = round_trip(&patched, &MindmapWiresOperation::RemoveNode { node_id: "node-1".into() });
         assert!(removed.board_fixture["nodes"].as_array().unwrap().is_empty());
     }
 
     #[test]
     fn add_remove_relationship_round_trip() {
         let mut document = empty_mindmap_wires_document();
-        document = apply_operation(&document, &MindmapWiresOp::AddNode { node: node("node-1", "A") });
-        document = apply_operation(&document, &MindmapWiresOp::AddNode { node: node("node-2", "B") });
+        document = apply_operation(&document, &MindmapWiresOperation::AddNode { node: node("node-1", "A") });
+        document = apply_operation(&document, &MindmapWiresOperation::AddNode { node: node("node-2", "B") });
         let edge = json!({ "id": "edge-1", "edgeKind": "wires.owns", "source": "node-1", "target": "node-2" });
         let relationship = json!({ "edgeId": "edge-1", "kind": "owns", "sourceIdentityId": 1, "targetIdentityId": 2 });
-        let with_edge = round_trip(&document, &MindmapWiresOp::AddRelationship { edge, relationship });
+        let with_edge = round_trip(&document, &MindmapWiresOperation::AddRelationship { edge, relationship });
         assert_eq!(with_edge.board_fixture["edges"].as_array().unwrap().len(), 1);
         assert_eq!(with_edge.wires_fixture["relationships"].as_array().unwrap().len(), 1);
-        let removed = round_trip(&with_edge, &MindmapWiresOp::RemoveEdge { edge_id: "edge-1".into() });
+        let removed = round_trip(&with_edge, &MindmapWiresOperation::RemoveEdge { edge_id: "edge-1".into() });
         assert!(removed.board_fixture["edges"].as_array().unwrap().is_empty());
         assert!(removed.wires_fixture["relationships"].as_array().unwrap().is_empty());
     }
@@ -341,7 +341,7 @@ mod tests {
         ));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![MindmapWiresOp::AddNode { node: node("node-1", "Alpha") }],
+                operations: vec![MindmapWiresOperation::AddNode { node: node("node-1", "Alpha") }],
                 description: None,
             })
             .expect("apply");

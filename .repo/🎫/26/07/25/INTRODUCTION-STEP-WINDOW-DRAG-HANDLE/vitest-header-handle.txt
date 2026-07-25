@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/ui-react:test -- -t "header drag handle"
+
+> nx run @semio-tech/ui-react:test -t header drag handle
+
+> bun ./script.ts test -t "header drag handle"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 405 skipped (406)
+   Start at  22:36:09
+   Duration  5.94s (transform 1.84s, setup 119ms, import 5.15s, tests 54ms, environment 433ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

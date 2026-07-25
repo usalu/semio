@@ -72,7 +72,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -88,7 +88,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -104,7 +104,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -120,7 +120,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -136,7 +136,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -174,7 +174,7 @@
                 "label": "Select",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addSelection",
                     "params": {
                       "field": {
@@ -229,7 +229,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -262,7 +262,7 @@
                 "label": "Free",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -289,7 +289,7 @@
                 "label": "Normal",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -316,7 +316,7 @@
                 "label": "Vertical",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -351,7 +351,7 @@
                 "label": "Use selection center",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.selectionBboxCenter",
                     "params": {
                       "field": {
@@ -371,7 +371,7 @@
                 "target": "point_to_copy_to",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -420,7 +420,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.constrainMoveCursor",
                     "params": {
                       "point": {
@@ -447,7 +447,7 @@
                 "label": "Free",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -474,7 +474,7 @@
                 "label": "Normal",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -501,7 +501,7 @@
                 "label": "Vertical",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -529,7 +529,7 @@
                 "label": "Undo pick",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.undoPick",
                     "params": {
                       "field": {
@@ -553,7 +553,7 @@
                 "target": "committed",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {

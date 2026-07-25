@@ -7189,7 +7189,7 @@ pub mod vcs {
         pub saved_at: RwLock<Option<Timestamp>>,
         pub description: RwLock<String>,
         pub origin: RwLock<String>,
-        /// @emoji 📜 Forward [`operation::Operation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each op's `to_diff` at projection time).
+        /// @emoji 📜 Forward [`operation::Operation`] steps (materialized via `Kit::apply_diff`; persisted `kitDiff` in bundles is derived from each operation's `to_diff` at projection time).
         pub forwards: RwLock<Vec<operation::Operation>>,
         /// @emoji 📜 Backward companion operations for explicit undo/redo (same pipeline).
         pub backwards: RwLock<Vec<operation::Operation>>,
@@ -7827,8 +7827,8 @@ pub mod vcs {
         }
 
         impl ComposeWireOperation {
-            pub fn from_operation(op: &crate::operation::Operation) -> Self {
-                Self { kind: op.kind().to_string(), input: crate::kit_backbone::kit_operation_step_input_json(op) }
+            pub fn from_operation(operation: &crate::operation::Operation) -> Self {
+                Self { kind: operation.kind().to_string(), input: crate::kit_backbone::kit_operation_step_input_json(operation) }
             }
         }
 
@@ -7841,10 +7841,10 @@ pub mod vcs {
                         .await
                         .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
                     let kit = graph.mutable_kit.read().await.clone();
-                    let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
+                    let operation = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
-                    let diff = op.to_diff(&kit).await.expect("VcsOperation::diff returns a bare value, not Result: a resolved op that fails to diff has no propagation path");
+                    let diff = operation.to_diff(&kit).await.expect("VcsOperation::diff returns a bare value, not Result: a resolved operation that fails to diff has no propagation path");
                     ComposeKitDiff(crate::kit_backbone::canonical_kit_diff_to_wire_json(&diff.0))
                 })
             }
@@ -7855,10 +7855,10 @@ pub mod vcs {
                         .await
                         .expect("VCS OperationDiff/VcsOperation trait methods return bare values, not Result, so a persisted projection that fails to reconstruct as an overlay graph has no propagation path");
                     let kit = graph.mutable_kit.read().await.clone();
-                    let op = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
+                    let operation = crate::kit_backbone::kit_operation_from_stored(&self.kind, &self.input)
                         .await
                         .expect("VCS trait methods return bare values, not Result: a stored kind/input pair that fails to resolve back to an Operation has no propagation path");
-                    op.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved op that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
+                    operation.to_backwards(&kit).await.expect("VcsOperation::backwards returns a bare Vec, not Result: a resolved operation that fails to invert has no propagation path").into_iter().map(|row| ComposeWireOperation::from_operation(&row)).collect()
                 })
             }
         }
@@ -7905,8 +7905,8 @@ pub mod vcs {
             fn kit_snapshot_vcs_rename_roundtrip() {
                 let baseline = Value::Object(Default::default());
                 let mut store = create_kit_snapshot_store(&crate::id::Id::from("ws-test"), baseline);
-                let op = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
-                store.dispatch(DocumentVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&op)], description: None }).expect("apply");
+                let operation = Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "patched".into() } };
+                store.dispatch(DocumentVcsCommand::Apply { operations: vec![ComposeWireOperation::from_operation(&operation)], description: None }).expect("apply");
                 let snap = store.projection().expect("projection");
                 assert_eq!(snap.0.get("name").and_then(|v| v.as_str()), Some("patched"));
             }
@@ -8107,8 +8107,8 @@ pub mod vcs {
                     let changes = ed.changes.read().await.clone();
                     for ch in changes {
                         let forwards = ch.forwards.read().await.clone();
-                        for op in forwards {
-                            let diff = match op.to_diff(&mat).await {
+                        for operation in forwards {
+                            let diff = match operation.to_diff(&mat).await {
                                 Ok(d) => d,
                                 Err(_) => continue,
                             };
@@ -8137,18 +8137,18 @@ pub mod vcs {
                 for (ci, c_arc) in changes.iter().enumerate() {
                     let forwards = c_arc.forwards.read().await.clone();
                     if same_ed && ci == change_idx {
-                        for (fi, op) in forwards.into_iter().enumerate() {
+                        for (fi, operation) in forwards.into_iter().enumerate() {
                             if fi >= forward_idx {
                                 return mat;
                             }
-                            if let Ok(d) = op.to_diff(&mat).await {
+                            if let Ok(d) = operation.to_diff(&mat).await {
                                 let _ = mat.apply_diff(&d).await;
                             }
                         }
                         return mat;
                     }
-                    for op in forwards {
-                        if let Ok(d) = op.to_diff(&mat).await {
+                    for operation in forwards {
+                        if let Ok(d) = operation.to_diff(&mat).await {
                             let _ = mat.apply_diff(&d).await;
                         }
                     }
@@ -11855,10 +11855,10 @@ pub mod kit_backbone {
         }
     }
 
-    pub(crate) fn kit_operation_step_input_json(op: &crate::operation::Operation) -> crate::external_adapters::serde_json::Value {
+    pub(crate) fn kit_operation_step_input_json(operation: &crate::operation::Operation) -> crate::external_adapters::serde_json::Value {
         use crate::operation::{Operation, Scope};
         let pair = |scope: &Scope, input: &crate::operation::Input| crate::external_adapters::serde_json::json!({ "scope": kit_scope_json(scope), "input": kit_input_json(input) });
-        match op {
+        match operation {
             Operation::RenameKit { scope, input } => crate::external_adapters::serde_json::json!({ "RenameKit": pair(scope, input) }),
             Operation::ChangeDescription { scope, input } => crate::external_adapters::serde_json::json!({ "ChangeDescription": pair(scope, input) }),
             Operation::ChangeIcon { scope, input } => crate::external_adapters::serde_json::json!({ "ChangeIcon": pair(scope, input) }),
@@ -13338,7 +13338,7 @@ pub mod kit_backbone {
             }
         }
 
-        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that op's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
+        /// @emoji 📸 Project one live change into a bundle edit; each step's `kitDiff` is computed from that operation's `to_diff` against a [`Kit`] materialized for the same [`Workspace`](../../../schema/graphql/schema.golden.graphql) / [`Edit`](../../../schema/graphql/schema.golden.graphql) cursor as full materialization.
         async fn edit_from_runtime_change(
             graph: &std::sync::Arc<crate::vcs::Graph>,
             workspace_id: &crate::id::Id,
@@ -13351,19 +13351,19 @@ pub mod kit_backbone {
             let mut backward_items: Vec<OperationStep> = Vec::new();
             let forwards_list = ch.forwards.read().await.clone();
             let forward_ids = ch.forward_record_ids.read().await.clone();
-            for (fi, op) in forwards_list.iter().enumerate() {
+            for (fi, operation) in forwards_list.iter().enumerate() {
                 let kit_cursor = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, fi).await;
-                let kit_diff = match op.to_diff(&kit_cursor).await {
+                let kit_diff = match operation.to_diff(&kit_cursor).await {
                     Ok(d) => Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0)),
                     Err(_) => None,
                 };
                 let step_id = forward_ids.get(fi).cloned().unwrap_or_else(Id::new_sync).as_str().to_string();
-                forward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
+                forward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: operation.kind().to_string(), description: None, input: kit_operation_step_input_json(operation), kit_diff });
             }
             let kit_bw = graph.kit_materialized_for_workspace_before_operation_step(workspace_id, tx, change_idx, forwards_list.len()).await;
             let backward_ids = ch.backward_record_ids.read().await.clone();
-            for (bi, op) in ch.backwards.read().await.iter().enumerate() {
-                let kit_diff = match op.to_diff(&kit_bw).await {
+            for (bi, operation) in ch.backwards.read().await.iter().enumerate() {
+                let kit_diff = match operation.to_diff(&kit_bw).await {
                     Ok(d) => {
                         let w = Some(crate::kit_backbone::canonical_kit_diff_to_wire_json(&d.0));
                         let _ = kit_bw.apply_diff(&d).await;
@@ -13372,7 +13372,7 @@ pub mod kit_backbone {
                     Err(_) => None,
                 };
                 let step_id = backward_ids.get(bi).cloned().unwrap_or_else(Id::new_sync).as_str().to_string();
-                backward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: op.kind().to_string(), description: None, input: kit_operation_step_input_json(op), kit_diff });
+                backward_items.push(OperationStep { id: step_id, hash: KIT_BUNDLE_HASH_STUB.to_string(), kind: operation.kind().to_string(), description: None, input: kit_operation_step_input_json(operation), kit_diff });
             }
             VersionEdit {
                 id: ch.id.as_str().to_string(),
@@ -13806,8 +13806,8 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         for operation in operations {
             let workspace_id = Id::from(operation.workspace_id.as_str());
             let transaction_id = Id::from(operation.transaction_id.as_str());
-            let op = kit_operation_from_stored(operation.kind.as_str(), &operation.input).await?;
-            crate::kit_graph_engine::apply_kit_operation(graph, &workspace_id, &transaction_id, op).await?;
+            let operation = kit_operation_from_stored(operation.kind.as_str(), &operation.input).await?;
+            crate::kit_graph_engine::apply_kit_operation(graph, &workspace_id, &transaction_id, operation).await?;
         }
         Ok(())
     }
@@ -13937,7 +13937,7 @@ CREATE TABLE IF NOT EXISTS conflict_init_slot (
         src.get("operations").and_then(|v| v.as_array()).ok_or_else(|| ComposeError::invalid("golden operations missing `operations` array"))
     }
 
-    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.ops.compose.json` (US-001 fixture) for persistence tests.
+    /// @emoji 🧪 Build [`StoredOperation`] entities from `kit-store.golden.operations.compose.json` (US-001 fixture) for persistence tests.
     pub fn stored_operations_from_golden_operations_json(src: &crate::external_adapters::serde_json::Value) -> Result<Vec<StoredOperation>, ComposeError> {
         let workspace_id = src["draftId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing draftId"))?.to_string();
         let transaction_id = src["transactionId"].as_str().ok_or_else(|| ComposeError::invalid("golden operations missing transactionId"))?.to_string();
@@ -18284,8 +18284,8 @@ pub mod gql {
                 let mut broadcast_rx = if filtered { None } else { Some(bus.subscribe()) };
                 let path_rx = if filtered { Some(bus.subscribe_paths(&watched)) } else { None };
                 loop {
-                    let op = rt.wip_graph.op_history.read().await.last().cloned().unwrap_or_default();
-                    yield Ok((*op).clone());
+                    let operation = rt.wip_graph.op_history.read().await.last().cloned().unwrap_or_default();
+                    yield Ok((*operation).clone());
                     if let Some(ref prx) = path_rx {
                         if prx.recv().await.is_err() {
                             break;
@@ -18624,9 +18624,9 @@ pub mod gql {
                 req = req.variables(Variables::from_json(vars.clone()));
             }
         }
-        if let Some(op) = v.get("operationName").and_then(|x| x.as_str()) {
-            if !op.is_empty() {
-                req = req.operation_name(op);
+        if let Some(operation) = v.get("operationName").and_then(|x| x.as_str()) {
+            if !operation.is_empty() {
+                req = req.operation_name(operation);
             }
         }
         Ok(req)
@@ -18690,7 +18690,7 @@ pub mod wasm_bridge {
         })
     }
 
-    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — no-op host hook until iframe wiring lands.
+    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — no-operation host hook until iframe wiring lands.
     #[wasm_bindgen(js_name = parent_boot)]
     pub fn parent_boot() -> js_sys::Promise {
         future_to_promise(async move {
@@ -18794,10 +18794,10 @@ pub mod kit_store_comprehensive_e2e {
     /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) under `compose/asset/compose/`.
     pub fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
-        let ops = base.join("kit-store.golden.ops.compose.json");
+        let operations = base.join("kit-store.golden.operations.compose.json");
         let exp = base.join("kit-store.golden.expected.compose.json");
-        if ops.is_file() && exp.is_file() {
-            Some((ops, exp))
+        if operations.is_file() && exp.is_file() {
+            Some((operations, exp))
         } else {
             None
         }
@@ -18871,7 +18871,7 @@ pub mod kit_store_comprehensive_e2e {
     /// 🏷️ Typed comprehensive-fixture step-kind wire-tag, parsed once at [`kit_store_run_comprehensive_fixture_steps`]'s boundary.
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     enum FixtureStepKind {
-        ReplayGoldenOps,
+        ReplayGoldenOperations,
         AssertGoldenInvariants,
         Graphql,
         SleepMs,
@@ -18881,7 +18881,7 @@ pub mod kit_store_comprehensive_e2e {
         type Err = String;
         fn from_str(s: &str) -> Result<Self, String> {
             Ok(match s {
-                "replayGoldenOps" => Self::ReplayGoldenOps,
+                "replayGoldenOperations" => Self::ReplayGoldenOperations,
                 "assertGoldenInvariants" => Self::AssertGoldenInvariants,
                 "graphql" => Self::Graphql,
                 "sleepMs" => Self::SleepMs,
@@ -18910,8 +18910,8 @@ pub mod kit_store_comprehensive_e2e {
     async fn kit_store_replay_golden_ops_on_graph(g: &std::sync::Arc<crate::vcs::Graph>, ops_json: &crate::external_adapters::serde_json::Value, engine: &str) {
         let workspace_id = g.id.clone();
         let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-        let golden_ops = crate::kit_backbone::golden_operation_records_ref(ops_json).expect("operations");
-        for rec in golden_ops {
+        let golden_operations = crate::kit_backbone::golden_operation_records_ref(ops_json).expect("operations");
+        for rec in golden_operations {
             let kind = rec["kind"].as_str().expect("operation kind");
             let input = rec.get("input").expect("input");
             match engine.parse::<ReplayEngineKind>().unwrap_or_else(|e| panic!("{e}")) {
@@ -18927,8 +18927,8 @@ pub mod kit_store_comprehensive_e2e {
                     g.apply_create_fixed_piece(workspace_id.clone(), tx_id.clone(), design_id, blueprint_id, position, name, description).await.expect("apply createFixedPiece");
                 }
                 ReplayEngineKind::KitGraphEngine => {
-                    let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
-                    let applied = crate::kit_graph_engine::apply_kit_operation(g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
+                    let operation = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
+                    let applied = crate::kit_graph_engine::apply_kit_operation(g, &workspace_id, &tx_id, operation).await.expect("apply_kit_operation");
                     assert!(applied.created_piece.is_some(), "expected piece for {kind}");
                 }
             }
@@ -19032,7 +19032,7 @@ pub mod kit_store_comprehensive_e2e {
         let coverage = fixture.get("coverage").and_then(|c| c.as_object()).expect("coverage object");
         assert!(coverage.get("reads").and_then(|v| v.as_array()).is_some(), "coverage.reads");
         assert!(coverage.get("writes").and_then(|v| v.as_array()).is_some(), "coverage.writes");
-        assert!(kit_store_golden_fixture_paths().is_some(), "golden ops+expected files");
+        assert!(kit_store_golden_fixture_paths().is_some(), "golden operations+expected files");
         assert!(kit_store_comprehensive_fixture_path().is_some(), "comprehensive fixture path");
     }
 
@@ -19046,9 +19046,9 @@ pub mod kit_store_comprehensive_e2e {
                 let golden_draft_id = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g.id.as_str().to_string();
                 let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(ops_json).expect("golden → stored operations");
-                for op in &mut stored {
-                    if op.workspace_id == golden_draft_id {
-                        op.workspace_id = graph_workspace.clone();
+                for operation in &mut stored {
+                    if operation.workspace_id == golden_draft_id {
+                        operation.workspace_id = graph_workspace.clone();
                     }
                 }
                 let uri_full = format!("file://{}", path.display());
@@ -19073,9 +19073,9 @@ pub mod kit_store_comprehensive_e2e {
                 let golden_draft_id = ops_json["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
                 let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(ops_json).expect("golden → stored operations");
-                for op in &mut stored {
-                    if op.workspace_id == golden_draft_id {
-                        op.workspace_id = graph_workspace.clone();
+                for operation in &mut stored {
+                    if operation.workspace_id == golden_draft_id {
+                        operation.workspace_id = graph_workspace.clone();
                     }
                 }
                 let db_path = proj_canon.join(".compose").join("wip.db");
@@ -19099,21 +19099,21 @@ pub mod kit_store_comprehensive_e2e {
 
     async fn kit_store_run_comprehensive_fixture_steps(fixture: &crate::external_adapters::serde_json::Value, rt: &std::sync::Arc<crate::worker::ParentStore>, schema: &AppSchema) {
         let store_id = fixture["storeId"].as_str().expect("storeId");
-        let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden ops+expected beside comprehensive fixture");
-        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden ops")).expect("parse golden ops");
+        let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden operations+expected beside comprehensive fixture");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read golden operations")).expect("parse golden operations");
         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read golden expected")).expect("parse golden expected");
         let mut vars = std::collections::HashMap::new();
         let mut replayed = false;
         for step in fixture["steps"].as_array().expect("steps") {
             match step["kind"].as_str().expect("kind").parse::<FixtureStepKind>().unwrap_or_else(|e| panic!("{e}")) {
-                FixtureStepKind::ReplayGoldenOps => {
+                FixtureStepKind::ReplayGoldenOperations => {
                     let engine = step.get("engine").and_then(|e| e.as_str()).unwrap_or("kit_graph_engine");
                     kit_store_replay_golden_ops_on_graph(&rt.wip_graph, &ops_json, engine).await;
                     kit_store_assert_golden_invariants(&rt.wip_graph, &exp).await;
                     replayed = true;
                 }
                 FixtureStepKind::AssertGoldenInvariants => {
-                    assert!(replayed, "assertGoldenInvariants requires replayGoldenOps on the same store");
+                    assert!(replayed, "assertGoldenInvariants requires replayGoldenOperations on the same store");
                     kit_store_assert_golden_invariants(&rt.wip_graph, &exp).await;
                 }
                 FixtureStepKind::Graphql => {
@@ -19125,7 +19125,7 @@ pub mod kit_store_comprehensive_e2e {
                 }
             }
         }
-        assert!(replayed, "comprehensive fixture must replay golden ops on wip");
+        assert!(replayed, "comprehensive fixture must replay golden operations on wip");
         if let Some(native_steps) = fixture.get("nativeSteps").and_then(|v| v.as_array()) {
             for step in native_steps {
                 match step["kind"].as_str().expect("native step kind").parse::<NativeStepKind>().unwrap_or_else(|e| panic!("{e}")) {
@@ -19150,7 +19150,7 @@ pub mod kit_store_comprehensive_e2e {
     pub async fn run_all_replay_engines(fixture: &crate::external_adapters::serde_json::Value) {
         kit_store_validate_comprehensive_fixture(fixture);
         let (ops_path, exp_path) = kit_store_golden_fixture_paths().expect("golden paths");
-        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read ops")).expect("parse ops");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(ops_path).expect("read operations")).expect("parse operations");
         let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(exp_path).expect("read expected")).expect("parse expected");
         for engine in fixture["replayEngines"].as_array().expect("replayEngines") {
             let engine = engine.as_str().expect("engine name");
@@ -19206,28 +19206,28 @@ mod tests {
         }
 
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-        #[serde(tag = "op")]
-        enum KitOp {
+        #[serde(tag = "operation")]
+        enum KitOperation {
             SetId { id: String },
         }
 
-        impl Operation<KitProjection> for KitOp {
+        impl Operation<KitProjection> for KitOperation {
             type Diff = KitDiff;
 
             fn diff(&self, _projection: &KitProjection) -> KitDiff {
                 match self {
-                    KitOp::SetId { id } => KitDiff { id: Some(id.clone()) },
+                    KitOperation::SetId { id } => KitDiff { id: Some(id.clone()) },
                 }
             }
 
             fn backwards(&self, projection: &KitProjection) -> Vec<Self> {
-                vec![KitOp::SetId { id: projection.id.clone() }]
+                vec![KitOperation::SetId { id: projection.id.clone() }]
             }
         }
 
         let envelope = create_document_vcs_envelope("compose.kit", "kit-test", KitProjection { id: "base".into() }, None);
         let mut store = DocumentVcsStore::new(envelope);
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![KitOp::SetId { id: "patched".into() }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![KitOperation::SetId { id: "patched".into() }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").id, "patched");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
@@ -19257,10 +19257,10 @@ mod tests {
     /// @emoji 📎 US-001 replay fixtures (`kit-store.golden.*`) live under `compose/asset/compose/` when present in the checkout.
     fn kit_store_golden_fixture_paths() -> Option<(PathBuf, PathBuf)> {
         let base = Path::new(env!("CARGO_MANIFEST_DIR")).join("../../../../asset/compose");
-        let ops = base.join("kit-store.golden.ops.compose.json");
+        let operations = base.join("kit-store.golden.operations.compose.json");
         let exp = base.join("kit-store.golden.expected.compose.json");
-        if ops.is_file() && exp.is_file() {
-            Some((ops, exp))
+        if operations.is_file() && exp.is_file() {
+            Some((operations, exp))
         } else {
             None
         }
@@ -19309,18 +19309,18 @@ mod tests {
         #[test]
         fn kit_store_golden_operations_replay_matches_expected_invariants() {
             block_on(async {
-                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                let Some((path_operations, path_exp)) = kit_store_golden_fixture_paths() else {
                     eprintln!("[DEBUG] skip kit_store_golden_operations_replay_matches_expected_invariants: missing compose/asset/compose/kit-store.golden.*.json");
                     return;
                 };
-                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_operations).expect("read kit-store.golden.operations")).expect("parse operations");
                 let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
                 let g = crate::vcs::Graph::new().await;
                 let workspace_id = g.id.clone();
                 let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-                let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
-                for rec in golden_ops {
+                let golden_operations = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
+                for rec in golden_operations {
                     let kind = rec["kind"].as_str().expect("operation kind");
                     let input = &rec["input"];
                     match kind {
@@ -19370,22 +19370,22 @@ mod tests {
         #[test]
         fn kit_store_golden_operations_via_kit_graph_engine_match_fingerprint() {
             block_on(async {
-                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                let Some((path_operations, path_exp)) = kit_store_golden_fixture_paths() else {
                     eprintln!("[DEBUG] skip kit_store_golden_operations_via_kit_graph_engine_match_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
                     return;
                 };
-                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read kit-store.golden.ops")).expect("parse operations");
+                let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_operations).expect("read kit-store.golden.operations")).expect("parse operations");
                 let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read kit-store.golden.expected")).expect("parse expected");
 
                 let g = crate::vcs::Graph::new().await;
                 let workspace_id = g.id.clone();
                 let tx_id = crate::id::Id::from(ops_json["transactionId"].as_str().expect("transactionId"));
-                let golden_ops = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
-                for rec in golden_ops {
+                let golden_operations = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations");
+                for rec in golden_operations {
                     let kind = rec["kind"].as_str().expect("operation kind");
                     let input = rec.get("input").expect("input");
-                    let op = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
-                    let applied = crate::kit_graph_engine::apply_kit_operation(&g, &workspace_id, &tx_id, op).await.expect("apply_kit_operation");
+                    let operation = crate::kit_backbone::kit_operation_from_stored(kind, input).await.expect("kit_operation_from_stored");
+                    let applied = crate::kit_graph_engine::apply_kit_operation(&g, &workspace_id, &tx_id, operation).await.expect("apply_kit_operation");
                     assert!(applied.created_piece.is_some(), "expected piece for {kind}");
                     assert!(applied.diff.summary.as_ref().map(|s| !s.is_empty()).unwrap_or(false), "diff summary");
                 }
@@ -19400,23 +19400,23 @@ mod tests {
         #[test]
         fn dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
             block_on(async {
-                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                let Some((path_operations, path_exp)) = kit_store_golden_fixture_paths() else {
                     eprintln!("[DEBUG] skip dev_json_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
                     return;
                 };
                 let dir = tempfile::tempdir().expect("temp dir");
                 let path = dir.path().join("dev-kit.json");
 
-                let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+                let golden_operations: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_operations).expect("read operations")).expect("parse golden operations");
                 let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
                 let g = crate::vcs::Graph::new().await;
-                let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
+                let golden_draft_id = golden_operations["draftId"].as_str().expect("draftId");
                 let graph_workspace = g.id.as_str().to_string();
-                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
-                for op in &mut stored {
-                    if op.workspace_id == golden_draft_id {
-                        op.workspace_id = graph_workspace.clone();
+                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_operations).expect("golden → stored operations");
+                for operation in &mut stored {
+                    if operation.workspace_id == golden_draft_id {
+                        operation.workspace_id = graph_workspace.clone();
                     }
                 }
                 let uri_full = format!("file://{}", path.display());
@@ -19437,7 +19437,7 @@ mod tests {
         #[test]
         fn local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint() {
             block_on(async {
-                let Some((path_ops, path_exp)) = kit_store_golden_fixture_paths() else {
+                let Some((path_operations, path_exp)) = kit_store_golden_fixture_paths() else {
                     eprintln!("[DEBUG] skip local_compose_sqlite_backbone_persisted_operations_replay_matches_us001_projection_fingerprint: missing compose/asset/compose/kit-store.golden.*.json");
                     return;
                 };
@@ -19448,19 +19448,19 @@ mod tests {
                 let uri_local = format!("local://{}", proj_canon.display());
                 let norm = crate::kit_backbone::normalize_connection_uri(&uri_local);
 
-                let golden_ops: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read operations")).expect("parse golden operations");
+                let golden_operations: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_operations).expect("read operations")).expect("parse golden operations");
                 let exp: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_exp).expect("read expected")).expect("parse golden expected");
 
                 let g_bootstrap = crate::vcs::Graph::new().await;
                 let _bones = crate::kit_backbone::AttachedBackbone::mount_and_replay(&norm, "wip", &g_bootstrap).await.expect("bootstrap .compose layout");
 
                 let g2 = crate::vcs::Graph::new().await;
-                let golden_draft_id = golden_ops["draftId"].as_str().expect("draftId");
+                let golden_draft_id = golden_operations["draftId"].as_str().expect("draftId");
                 let graph_workspace = g2.id.as_str().to_string();
-                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_ops).expect("golden → stored operations");
-                for op in &mut stored {
-                    if op.workspace_id == golden_draft_id {
-                        op.workspace_id = graph_workspace.clone();
+                let mut stored = crate::kit_backbone::stored_operations_from_golden_operations_json(&golden_operations).expect("golden → stored operations");
+                for operation in &mut stored {
+                    if operation.workspace_id == golden_draft_id {
+                        operation.workspace_id = graph_workspace.clone();
                     }
                 }
 
@@ -20565,13 +20565,13 @@ mod tests {
 
     #[test]
     fn golden_operations_fixture_uses_canonical_shape() {
-        let Some((path_ops, _)) = kit_store_golden_fixture_paths() else {
-            eprintln!("[DEBUG] skip golden_operations_fixture_uses_canonical_shape: missing golden ops");
+        let Some((path_operations, _)) = kit_store_golden_fixture_paths() else {
+            eprintln!("[DEBUG] skip golden_operations_fixture_uses_canonical_shape: missing golden operations");
             return;
         };
-        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_ops).expect("read golden ops")).expect("parse golden ops");
+        let ops_json: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(&std::fs::read_to_string(path_operations).expect("read golden operations")).expect("parse golden operations");
         assert!(ops_json.get("operations").and_then(|v| v.as_array()).is_some());
-        assert!(ops_json.get("ops").is_none());
+        assert!(ops_json.get("operations").is_none());
         let records = crate::kit_backbone::golden_operation_records_ref(&ops_json).expect("operations array");
         for rec in records {
             assert_eq!(rec["kind"].as_str().expect("kind"), "createFixedPiece");

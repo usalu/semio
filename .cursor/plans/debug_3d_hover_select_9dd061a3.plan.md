@@ -91,7 +91,7 @@ I will add temporary `[DEBUG]` prefixed `web_sys::console::log_1` calls (WGPU/in
 ## Fixes to apply once root cause(s) are confirmed
 
 - Remove or correct `apply_runtime_draw_flags`'s independent index/flag recomputation in [infinite/world/rs/lib.rs](infinite/world/rs/lib.rs) — most likely fix is to stop fully replacing `instance.selected`/`instance.hovered` and instead only OR in the local optimistic overrides on top of what `sync_world3d_state` already parsed from the plugin JSON, removing the divergent index-map entirely.
-- Fix whatever the instrumentation reveals as the actual blocker (e.g. pointer events not reaching the world3d handler, `controller_id` mismatch preventing `apply_world_command_preview`/dispatch from targeting the right `World3dState`, a guard/early-return silently no-op'ing, or `state.granularity` not matching the plugin's default `fixture.selection.mode` on first frame).
+- Fix whatever the instrumentation reveals as the actual blocker (e.g. pointer events not reaching the world3d handler, `controller_id` mismatch preventing `apply_world_command_preview`/dispatch from targeting the right `World3dState`, a guard/early-return silently no-operation'ing, or `state.granularity` not matching the plugin's default `fixture.selection.mode` on first frame).
 - Apply the equivalent verified fix to the React renderer path in [framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx), verified the same way against the React dev server for this plugin.
 - Remove all temporary `[DEBUG]` instrumentation once behavior is confirmed correct via console evidence and screenshots.
 

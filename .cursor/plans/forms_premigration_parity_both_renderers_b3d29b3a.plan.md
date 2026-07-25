@@ -60,7 +60,7 @@ Expand `FormQuestion` to carry every pre-migration field (`required`, `descripti
 - `FormVectorField { key, label, value }`.
 - `FormExpr` enum (`Const`/`Var`/`Eq`/`And`/`Or`/`Truthy`) + `eval_form_expr(expr, values) -> Value` + `is_question_visible(question, values) -> bool`, porting `evalFormExpr`/`isQuestionVisible` from `/tmp/forms_internal_premigration.ts` (lines ~900-961).
 - `default_value_for_question(question) -> Value`, `visible_questions(step, values)`, `step_errors(step, values) -> Vec<{question_id, message}>`, `can_advance(step, values) -> bool` — Rust port of `FormRuntime`'s validation (`getStepErrors`/`canAdvance`, same file lines 1004-1032): required + non-empty check, skipping `note`/`image`, treating `buildingComponent`-style extension questions as requiring a non-empty `params` object.
-- Update `FormOp`/`apply_form_edit_op` only as needed for the richer struct (should be mostly pass-through).
+- Update `FormOperation`/`apply_form_edit_operation` only as needed for the richer struct (should be mostly pass-through).
 - Extend the existing `#[cfg(test)]` module (no new test files) to cover round-tripping every field and condition evaluation.
 
 ## Phase 2 — wgpu nested `ComponentScene` fix (generic framework, root-cause)

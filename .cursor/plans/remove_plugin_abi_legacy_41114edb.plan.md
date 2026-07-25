@@ -3,7 +3,7 @@ name: Remove Plugin ABI Legacy
 overview: "Finish the command-kernel migration for real: delete the C-ABI/wasm-bindgen plugin transport entirely, make the WASI P2 component model (wasmtime::component host + jco-transpiled browser host) the only plugin runtime, wire the kernel command router into the live dispatch path, unify the capability model, and strip every piece of framework code that hardcodes knowledge of specific plugins."
 todos:
  - id: phase1-delete-cabi-guest
-   content: Delete wasm_plugin_exports!/native_plugin_exports! and guest-side apply_document_op/merge_json from framework/plugin/rs; collapse plugin_exports! to the WIT component path only; change PluginApp::handle_command to return KernelOperations
+   content: Delete wasm_plugin_exports!/native_plugin_exports! and guest-side apply_document_operation/merge_json from framework/plugin/rs; collapse plugin_exports! to the WIT component path only; change PluginApp::handle_command to return KernelOperations
    status: completed
  - id: phase1-migrate-plugin-handlers
    content: Update all 21 plugin crates' handle_command implementations to the new KernelOperation return type
@@ -15,10 +15,10 @@ todos:
    content: Delete ManifestCapability; migrate PluginManifest.capabilities to kernel::CapabilityRequirement everywhere (host gating, s/plugin, dev script lint, PluginBundle::capability)
    status: completed
  - id: phase3-wire-kernel-router
-   content: Replace dispatch_command/PluginBridgeEntry to route through PluginHost::invoke_command with CommandInvocation/CommandResult instead of raw JSON ops
+   content: Replace dispatch_command/PluginBridgeEntry to route through PluginHost::invoke_command with CommandInvocation/CommandResult instead of raw JSON operations
    status: completed
  - id: phase3-delete-json-patch-pipeline
-   content: Delete apply_ops/apply_document_op/merge_json from framework/product/os/core/rs; commit_command_result applies KernelOperations via vcs merge machinery exclusively
+   content: Delete apply_operations/apply_document_operation/merge_json from framework/product/os/core/rs; commit_command_result applies KernelOperations via vcs merge machinery exclusively
    status: completed
  - id: phase4-wasip2-only-build
    content: Delete wasm32-unknown-unknown/wasm-bindgen build path and SEMIO_PLUGIN_WASIP2 toggle from framework/product/os/dev/script.ts; wasip2 is the only target; remove s-plugin test special-case
@@ -45,8 +45,8 @@ No `framework/**` crate has a Cargo/TS dependency on a domain plugin crate today
 flowchart LR
   UI[ShellState::dispatch_command] --> PB[PluginBridgeEntry::handle_command]
   PB --> RT["WasmPluginRuntime (wasmtime::Module/Instance, C-ABI)"]
-  RT --> GUEST["plugin_handle_command + apply_document_op in guest"]
-  PB --> OPS[ShellState::apply_ops]
+  RT --> GUEST["plugin_handle_command + apply_document_operation in guest"]
+  PB --> OPS[ShellState::apply_operations]
   KERNEL["PluginHost::invoke_command (kernel router)"] -.unit test only.-> KERNEL
   WIT["world.wit component contract"] -.no host caller.-> WIT
 ```
@@ -66,12 +66,12 @@ In [framework/plugin/rs/lib.rs](framework/plugin/rs/lib.rs):
 
 - Delete `wasm_plugin_exports!` (lines ~1193-1275, already dead — no `wasm_bindgen` dep).
 - Delete `native_plugin_exports!` (lines ~1277-1430) and its `semio_plugin_alloc`/CString marshaling helpers.
-- Delete the duplicate `apply_document_op`/`merge_json` guest-side helpers (lines ~1153-1191); document mutation moves entirely to the host via kernel `KernelOperation`s applied through `vcs`.
+- Delete the duplicate `apply_document_operation`/`merge_json` guest-side helpers (lines ~1153-1191); document mutation moves entirely to the host via kernel `KernelOperation`s applied through `vcs`.
 - Collapse `plugin_exports!` to be a direct alias for the WIT component export path (no `cfg(target_env = "p2")` branch, no fallback) — every plugin always exports the `semio:framework/plugin` world.
-- Change `PluginApp::handle_command` to return the kernel `CommandResult`/`Vec<KernelOperation>` shape instead of `Vec<String>` JSON ops, so `component_plugin_exports!`'s `handle_command` no longer needs to synthesize `{"operations": ops}`.
+- Change `PluginApp::handle_command` to return the kernel `CommandResult`/`Vec<KernelOperation>` shape instead of `Vec<String>` JSON operations, so `component_plugin_exports!`'s `handle_command` no longer needs to synthesize `{"operations": operations}`.
 - Remove the `wit-bindgen` `target_env = "p2"` cfg gate in `Cargo.toml` — it's the only target now.
 
-Update all 21 plugin crates' `PluginApp::handle_command` implementations to return `KernelOperation`s directly (each currently returns `Vec<String>` patch ops).
+Update all 21 plugin crates' `PluginApp::handle_command` implementations to return `KernelOperation`s directly (each currently returns `Vec<String>` patch operations).
 
 ## Phase 2 — Rebuild the host runtime on `wasmtime::component`
 
@@ -93,14 +93,14 @@ Delete `ManifestCapability` from [framework/core/rs/lib.rs](framework/core/rs/li
 
 In [framework/renderer/wgpu/rs/lib.rs](framework/renderer/wgpu/rs/lib.rs):
 
-- Replace `dispatch_command` (lines ~7927-7984) so it builds a `CommandInvocation`, calls `PluginHost::invoke_command`, and applies the returned `CommandResult`'s `KernelOperation`s — not `plugin.handle_command(&command_json) -> apply_ops(&ops)`.
-- Delete `PluginBridgeEntry::handle_command`'s raw JSON-ops signature; the bridge now exchanges `CommandInvocation`/`CommandResponseJson` per the WIT contract.
+- Replace `dispatch_command` (lines ~7927-7984) so it builds a `CommandInvocation`, calls `PluginHost::invoke_command`, and applies the returned `CommandResult`'s `KernelOperation`s — not `plugin.handle_command(&command_json) -> apply_operations(&operations)`.
+- Delete `PluginBridgeEntry::handle_command`'s raw JSON-operations signature; the bridge now exchanges `CommandInvocation`/`CommandResponseJson` per the WIT contract.
 
 In [framework/product/os/core/rs/lib.rs](framework/product/os/core/rs/lib.rs):
 
-- Delete the legacy `apply_ops`/`apply_document_op`/`merge_json` JSON-patch pipeline (lines ~236-247, ~611-649).
+- Delete the legacy `apply_operations`/`apply_document_operation`/`merge_json` JSON-patch pipeline (lines ~236-247, ~611-649).
 - `commit_command_result` (lines ~310-331) applies `KernelOperation` diffs directly through `vcs`'s `Operation`/`OperationDiff`/merge-strategy machinery (from Phase 3 of the prior refactor) as the single source of truth for document mutation — no generic JSON merge left anywhere.
-- `invoke_command` becomes the only entry point a plugin command goes through; delete the now-redundant unit test that exercised it in isolation with synthetic patch ops, replacing it with an integration test that round-trips a real command through a loaded component.
+- `invoke_command` becomes the only entry point a plugin command goes through; delete the now-redundant unit test that exercised it in isolation with synthetic patch operations, replacing it with an integration test that round-trips a real command through a loaded component.
 
 ## Phase 4 — WASI P2 is the only build target
 

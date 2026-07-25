@@ -63,7 +63,7 @@ In `ShellModeCanvas` ([framework/product/platform/renderer/react/index.tsx](fram
 
 ### 3. Allow a null active window
 
-- Widen `onActiveWindowChange` to accept `null` through the chain: `Mode` (lines 16498), `ShellModeCanvas` (line 1504), and platform `handleActiveWindowChange` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) lines 4364-4370). UI `onActiveWindowChange` consumers (e.g. CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) lines 775-779) already no-op on unknown ids.
+- Widen `onActiveWindowChange` to accept `null` through the chain: `Mode` (lines 16498), `ShellModeCanvas` (line 1504), and platform `handleActiveWindowChange` ([framework/product/platform/renderer/react/index.tsx](framework/product/platform/renderer/react/index.tsx) lines 4364-4370). UI `onActiveWindowChange` consumers (e.g. CAD [cad/js/renderer/play/index.tsx](cad/js/renderer/play/index.tsx) lines 775-779) already no-operation on unknown ids.
 
 ### 4. Empty-shell notice (restore hint)
 

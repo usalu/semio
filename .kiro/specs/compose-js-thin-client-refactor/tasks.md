@@ -20,7 +20,7 @@ Transform `compose/js/index.ts` (~31k lines) into a pure OO thin client by: (1) 
   - Ensure all tests pass, ask the user if questions arise.
 
 - [x] 3. Delete all domain logic classes
-  - [x] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `ops`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
+  - [x] 3.1 Delete `KitImpl` class and all its methods, private fields (`#historyDone`, `#historyUndone`, `#flattenMerkleByDesign`, `operations`, `transactions`, `_applyDiff`, `replayChangeUnchecked`, etc.)
     - Remove the entire `KitImpl` class definition and any helper code only used by it
     - _Requirements: 1.15, 2.1, 2.2, 2.5, 9.3_
 

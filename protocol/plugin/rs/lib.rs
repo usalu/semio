@@ -2,9 +2,9 @@
 //! WASM component. Independently launchable/testable without going through `forms`.
 
 use protocol::{
-    add_block_op, add_step_op, empty_protocol_projection, move_block_op, move_step_op, remove_block_op,
-    remove_step_op, render_protocol_builder, update_protocol_title_op, ProtocolBlock, ProtocolBuilderConfig,
-    ProtocolOp, ProtocolSpec, PROTOCOL_BUILDER_LABELS_EN, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA,
+    add_block_operation, add_step_operation, empty_protocol_projection, move_block_operation, move_step_operation, remove_block_operation,
+    remove_step_operation, render_protocol_builder, update_protocol_title_operation, ProtocolBlock, ProtocolBuilderConfig,
+    ProtocolOperation, ProtocolSpec, PROTOCOL_BUILDER_LABELS_EN, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef,
@@ -120,7 +120,7 @@ struct ProtocolPlayApp {
 
 impl DocumentApp for ProtocolPlayApp {
     type Projection = ProtocolSpec;
-    type Op = ProtocolOp;
+    type Operation = ProtocolOperation;
 
     fn app_id(&self) -> &str {
         PROTOCOL_PLAY_APP_ID
@@ -140,7 +140,7 @@ impl DocumentApp for ProtocolPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, ProtocolSpec>,
         _view_state: &ViewState,
-    ) -> ActionEmit<ProtocolOp> {
+    ) -> ActionEmit<ProtocolOperation> {
         let spec = doc.projection;
         match action {
             "setSelection" => {
@@ -151,14 +151,14 @@ impl DocumentApp for ProtocolPlayApp {
             }
             "addStep" => {
                 let step_id = format!("step-{}", spec.steps.len() + 1);
-                ActionEmit::ops(vec![add_step_op(spec, step_id)])
+                ActionEmit::operations(vec![add_step_operation(spec, step_id)])
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
                 if step_id.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![remove_step_op(step_id)])
+                ActionEmit::operations(vec![remove_step_operation(step_id)])
             }
             "moveStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -166,7 +166,7 @@ impl DocumentApp for ProtocolPlayApp {
                 if step_id.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![move_step_op(step_id, index)])
+                ActionEmit::operations(vec![move_step_operation(step_id, index)])
             }
             "addBlock" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("text");
@@ -180,7 +180,7 @@ impl DocumentApp for ProtocolPlayApp {
                 };
                 let block_id = format!("block-{}", spec.steps.iter().map(|step| step.blocks.len()).sum::<usize>() + 1);
                 self.selected_ids = vec![block_id.clone()];
-                ActionEmit::ops(vec![add_block_op(&step_id, default_block(block_id, kind), None)])
+                ActionEmit::operations(vec![add_block_operation(&step_id, default_block(block_id, kind), None)])
             }
             "removeBlock" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -189,7 +189,7 @@ impl DocumentApp for ProtocolPlayApp {
                     return ActionEmit::default();
                 }
                 self.selected_ids.retain(|id| id != block_id);
-                ActionEmit::ops(vec![remove_block_op(step_id, block_id)])
+                ActionEmit::operations(vec![remove_block_operation(step_id, block_id)])
             }
             "moveBlock" => {
                 let block_id = args.and_then(|value| value.get("blockId")).and_then(|value| value.as_str());
@@ -199,12 +199,12 @@ impl DocumentApp for ProtocolPlayApp {
                 let (Some(block_id), Some(from_step_id), Some(to_step_id)) = (block_id, from_step_id, to_step_id) else {
                     return ActionEmit::default();
                 };
-                ActionEmit::ops(vec![move_block_op(block_id, from_step_id, to_step_id, index)])
+                ActionEmit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, index)])
             }
             "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 ActionEmit::amend(
-                    vec![update_protocol_title_op(Some(title.to_string()).filter(|title| !title.is_empty()))],
+                    vec![update_protocol_title_operation(Some(title.to_string()).filter(|title| !title.is_empty()))],
                     "protocol.title",
                 )
             }
@@ -316,12 +316,12 @@ mod tests {
     }
 
     #[test]
-    fn set_selection_is_a_view_action_without_ops() {
+    fn set_selection_is_a_view_action_without_operations() {
         let mut app = testkit::new_app::<ProtocolPlayApp>();
         let result = app
             .handle_action("setSelection", Some(&json!({ "ids": ["block-1"] })), &ViewState::default(), &testkit::meta("local"))
             .expect("set selection");
-        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document op");
+        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document operation");
     }
 
     #[test]
@@ -356,7 +356,7 @@ mod tests {
     }
 
     /// 🧪 The definitional proof: two independent instances start from the same document, apply
-    /// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging ops over
+    /// DISJOINT edits (A adds a step, B adds a block to the pre-existing step), and exchanging operations over
     /// a backbone converges both sides onto the same projection — impossible under whole-document
     /// `setDocument` snapshots, where one side's write would clobber the other's.
     #[test]

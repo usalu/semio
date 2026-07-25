@@ -69,7 +69,7 @@ This is the literal "partial / default / invertive" the user referenced — it c
 
 ## 5. Inspector completeness (`draw/play/index.ts`)
 
-Currently the inspector only exposes name/opacity/blend/visible plus boolean-op/trace-params — there is no fill, stroke, or transform editing at all even though the data model fully supports it. Add, gated by layer kind:
+Currently the inspector only exposes name/opacity/blend/visible plus boolean-operation/trace-params — there is no fill, stroke, or transform editing at all even though the data model fully supports it. Add, gated by layer kind:
 
 - **All kinds**: fill color (hex text field via `rgbaToHex`/`hexToRgba`, wired to `setFill`), stroke color + width (wired to `setStroke`), transform `x`/`y`/`scaleX`/`scaleY`/`rotation` number fields (wired to `setLayerTransform`).
 - **shape**: numeric fields for the active `shapeKind`'s geometry (rect: x/y/width/height; ellipse: cx/cy/rx/ry; circle: cx/cy/r; line: x1/y1/x2/y2; polygon: read-only point count + "Edit on canvas" hint).
@@ -81,13 +81,13 @@ Currently the inspector only exposes name/opacity/blend/visible plus boolean-op/
 
 Add a single new controller command `commitDocument` (`{ document: DrawDocument; selectLayerId?: string }`) that replaces `this.document` directly and updates selection/bumps — this is the one new wiring point all authoring gestures funnel through. Wire a matching `onCommit?: (document: DrawDocument, selectLayerId?: string) => void` prop on `DrawCanvas`, connected in [framework/product/playground/renderer/react/index.tsx](framework/product/playground/renderer/react/index.tsx) to `ctrl.run("commitDocument", { document, selectLayerId })`.
 
-In `DrawCanvas`, add pointer-gesture state machines per tool, each ending in `onCommit?.(applyDrawEditOp(doc, op), newLayer.id)`:
+In `DrawCanvas`, add pointer-gesture state machines per tool, each ending in `onCommit?.(applyDrawEditOp(doc, operator), newLayer.id)`:
 
 - **`shapeRect` / `shapeLine`**: pointerdown anchors world point, pointermove shows a live preview overlay, pointerup computes bounds/endpoints and commits `addShapeLayer`.
 - **`shapeEllipse`**: same drag gesture, computing `cx/cy/rx/ry` from the drag bounding box.
 - **`shapePolygon`**: click-to-add-point state machine (append world point per click, live polyline preview), double-click or Enter commits `addShapeLayer` with the accumulated points, Escape cancels.
 - **`pen`**: click-to-add-point state machine producing `PathSegment[]` (move + line per click), double-click/Enter commits `addPathLayer`, Escape cancels.
-- **`trace`**: click resolves the layer under the cursor; if it's an `image` layer, commit `addTraceLayer` referencing that layer's `imageKey`; if there is no image under the cursor, fall back to the first key in `doc.assets` (if any); no-op if no assets exist.
+- **`trace`**: click resolves the layer under the cursor; if it's an `image` layer, commit `addTraceLayer` referencing that layer's `imageKey`; if there is no image under the cursor, fall back to the first key in `doc.assets` (if any); no-operation if no assets exist.
 - After each commit, the tool auto-resets to `selectDirect` (issue `setActiveTool` alongside `commitDocument`) and the new layer is auto-selected, mirroring the existing `patchDocument(..., selectLayerId)` pattern used by `addLayer`.
 
 ## 7. Verification

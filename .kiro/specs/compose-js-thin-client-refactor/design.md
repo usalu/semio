@@ -240,7 +240,7 @@ export class Kit {
 }
 ```
 
-No `ops`, no `transactions`, no `#historyDone`/`#historyUndone`, no `#flattenMerkleByDesign`, no `backbone`, no `_applyDiff`, no `replayChangeUnchecked`.
+No `operations`, no `transactions`, no `#historyDone`/`#historyUndone`, no `#flattenMerkleByDesign`, no `backbone`, no `_applyDiff`, no `replayChangeUnchecked`.
 
 ### Compose Utility Class
 

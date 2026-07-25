@@ -11,7 +11,7 @@
 use base64::Engine as _;
 use remodel_document::{
     default_remodel_scene, CameraCalibration, CameraPosePreview, CameraTrajectory, DenseParams, DenseResolution, FeatureDetector, FeatureParams, FrameRef, GcpObservation, GeoParams, GeoProducts, GroundControlPoint, ImageAsset, IngestParams,
-    MatchParams, MatcherKind, MediaKind, MediaStream, MeshParams as DocumentMeshParams, MeshSource, MotionParams, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionParams, ReconstructionStage, RemodelMesh, RemodelOp, RemodelScene,
+    MatchParams, MatcherKind, MediaKind, MediaStream, MeshParams as DocumentMeshParams, MeshSource, MotionParams, PackedF32, QcReportSnapshot, ReconstructionJob, ReconstructionParams, ReconstructionStage, RemodelMesh, RemodelOperation, RemodelScene,
     RobustLossKind, SfmParams, SparseCloud, VideoCodec as DocumentVideoCodec, VideoSource, WatertightReportSnapshot, REMODEL_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
@@ -1063,11 +1063,11 @@ struct RemodelPlayApp {
 
 impl RemodelPlayApp {
     //#region 🔖Ingestion
-    fn handle_import_frames(&mut self) -> ActionEmit<RemodelOp> {
+    fn handle_import_frames(&mut self) -> ActionEmit<RemodelOperation> {
         ActionEmit::effect(HostEffect::RequestFileOpen { accept: REMODEL_MEDIA_ACCEPT.into(), read_as: Some("dataUrl".into()), import_action: "importFramePayload".into(), multiple: true })
     }
 
-    fn handle_import_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_import_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         if mime.starts_with("video/") {
@@ -1109,10 +1109,10 @@ impl RemodelPlayApp {
                 });
             }
         }
-        ActionEmit::amend(vec![RemodelOp::SetAsset { key: asset_key, value: Some(asset) }, RemodelOp::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
+        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
     }
 
-    fn handle_import_video(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_import_video(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let ingest = &doc.projection.params.ingest;
         ActionEmit::effect(HostEffect::RequestMediaFrames {
             accept: REMODEL_VIDEO_ACCEPT.into(),
@@ -1130,7 +1130,7 @@ impl RemodelPlayApp {
 
     /// 🎞️ Host-decoded video frame tick (Tier 1/2 `RequestMediaFrames` frame dispatch): decodes the
     /// sampled JPEG, runs it through the relative blur gate, and amends it into the active stream.
-    fn handle_import_video_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_import_video_frame_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((_mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         let Ok(image) = remodel_image::decode_jpeg(&bytes) else { return ActionEmit::default() };
@@ -1173,13 +1173,13 @@ impl RemodelPlayApp {
                 source: None,
             }),
         }
-        ActionEmit::amend(vec![RemodelOp::SetAsset { key: asset_key, value: Some(asset) }, RemodelOp::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
+        ActionEmit::amend(vec![RemodelOperation::SetAsset { key: asset_key, value: Some(asset) }, RemodelOperation::SetStreams { streams }], format!("remodel-import:{}", self.runtime.import_counter))
     }
 
     /// ✅ Host-decoded video import finished: writes `VideoSource` provenance on the just-imported
     /// stream. Uses the SAME coalesce key as every preceding `importVideoFramePayload` tick, so the
     /// whole import (every accepted frame plus this final metadata write) collapses into one undo step.
-    fn handle_import_video_done(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_import_video_done(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let Some(stream_id) = self.runtime.active_stream_id.clone() else { return ActionEmit::default() };
         let name = arg_str(args, "name").unwrap_or("video").to_string();
         let duration_ms = args.and_then(|value| value.get("durationMs")).and_then(Value::as_f64).unwrap_or(0.0);
@@ -1193,7 +1193,7 @@ impl RemodelPlayApp {
         let mut streams = doc.projection.streams.clone();
         let Some(stream) = streams.iter_mut().find(|stream| stream.id == stream_id) else { return ActionEmit::default() };
         stream.source = Some(VideoSource { name, container: "unknown".into(), codec, duration_ms, frame_count, width, height });
-        ActionEmit::amend(vec![RemodelOp::SetStreams { streams }], format!("remodel-import:{import_counter}"))
+        ActionEmit::amend(vec![RemodelOperation::SetStreams { streams }], format!("remodel-import:{import_counter}"))
     }
 
     /// 🎞️ Tier-3 fallback (or `importFrames`' own video-mime branch): the host couldn't decode the
@@ -1205,7 +1205,7 @@ impl RemodelPlayApp {
     /// self-referential storage — a documented simplification, not a correctness gap (the whole batch
     /// still collapses into one amended undo step). An undecodable codec surfaces as a `Notify` naming
     /// it, with provenance from the probe.
-    fn handle_import_video_bytes_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_import_video_bytes_payload(&mut self, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         let Some(payload) = arg_str(args, "payload") else { return ActionEmit::default() };
         let Some((_mime, bytes)) = payload_from_data_url(payload) else { return ActionEmit::default() };
         let probe = match remodel_video::probe(&bytes) {
@@ -1227,7 +1227,7 @@ impl RemodelPlayApp {
         let min_sharpness = ingest.min_sharpness;
         let mut scratch = VideoImportScratch::default();
         let mut frames = Vec::new();
-        let mut ops = Vec::new();
+        let mut operations = Vec::new();
         for extracted in iter {
             let Ok(extracted) = extracted else { continue };
             let score = local_sharpness_score(&extracted.image);
@@ -1236,7 +1236,7 @@ impl RemodelPlayApp {
             }
             let jpeg = remodel_image::encode_jpeg(&extracted.image, 90);
             let asset_key = format!("{stream_id}-frame-{}", extracted.index);
-            ops.push(RemodelOp::SetAsset { key: asset_key.clone(), value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }) });
+            operations.push(RemodelOperation::SetAsset { key: asset_key.clone(), value: Some(ImageAsset { mime: "image/jpeg".into(), data: base64::engine::general_purpose::STANDARD.encode(&jpeg), width: extracted.image.width, height: extracted.image.height }) });
             frames.push(FrameRef { index: extracted.index, timestamp_ms: extracted.timestamp_ms, asset_id: asset_key });
         }
         let mut streams = doc.projection.streams.clone();
@@ -1250,8 +1250,8 @@ impl RemodelPlayApp {
             frames,
             source: Some(VideoSource { name: String::new(), container: container.into(), codec: video_codec_to_document(codec), duration_ms, frame_count: 0, width, height }),
         });
-        ops.push(RemodelOp::SetStreams { streams });
-        ActionEmit::amend(ops, format!("remodel-import:{}", self.runtime.import_counter))
+        operations.push(RemodelOperation::SetStreams { streams });
+        ActionEmit::amend(operations, format!("remodel-import:{}", self.runtime.import_counter))
     }
     //#endregion 🔖Ingestion
 
@@ -1261,7 +1261,7 @@ impl RemodelPlayApp {
     /// document, already an image sequence with true timestamps — see `remodel_document`'s own doc
     /// comment — so both `MediaKind` variants push identically), and schedules the first
     /// `advanceReconstruction` tick.
-    fn handle_run_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_run_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         if self.runtime.engine.is_some() {
             return ActionEmit::default(); // a run is already in progress
         }
@@ -1285,11 +1285,11 @@ impl RemodelPlayApp {
         let job_id = format!("job-{}", self.runtime.job_counter);
         self.runtime.engine = Some(engine);
         let job = ReconstructionJob { id: job_id.clone(), stage: ReconstructionStage::Ingesting, progress_0_1: 0.0, cancel_requested: false, stage_cursor: 0, started_at_ms: None, error: None, camera_poses_preview: Vec::new(), sparse_point_cloud_preview: PackedF32::default() };
-        ActionEmit { ops: vec![RemodelOp::SetJob { job }], coalesce_key: Some(format!("remodel-reconstruction:{job_id}")), effects: vec![HostEffect::DispatchAction { action: "advanceReconstruction".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() }
+        ActionEmit { operations: vec![RemodelOperation::SetJob { job }], coalesce_key: Some(format!("remodel-reconstruction:{job_id}")), effects: vec![HostEffect::DispatchAction { action: "advanceReconstruction".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() }
     }
 
     /// ⚙️ Advances the pipeline by one bounded chunk, mirrors `EngineStatus` into an amended `SetJob`,
-    /// distills result ops once `Done`, and re-dispatches itself unless terminal. Every emit here
+    /// distills result operations once `Done`, and re-dispatches itself unless terminal. Every emit here
     /// (including the terminal one) uses `ActionEmit::amend` with the SAME `remodel-reconstruction:{id}`
     /// coalesce key: `DocumentVcsCommand::AmendLast` (see `vcs`) only folds a new edit into the
     /// previous one when both its coalesce key AND its position (still the last, still-uncommitted
@@ -1297,7 +1297,7 @@ impl RemodelPlayApp {
     /// collapse into exactly one undo step — using `ActionEmit::commit` on the terminal tick instead
     /// would start a brand-new `Apply`-based edit and defeat that contract (verified directly by
     /// `full_run_collapses_into_a_single_undo_step` below).
-    fn handle_advance_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_advance_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         if self.runtime.engine.is_none() {
             return ActionEmit::default();
         }
@@ -1312,7 +1312,7 @@ impl RemodelPlayApp {
             job.stage = ReconstructionStage::Idle;
             job.cancel_requested = false;
             job.error = Some("Cancelled by user".into());
-            return ActionEmit::amend(vec![RemodelOp::SetJob { job }], coalesce_key);
+            return ActionEmit::amend(vec![RemodelOperation::SetJob { job }], coalesce_key);
         }
         let engine = self.runtime.engine.as_mut().expect("checked above");
         match engine.advance(RECONSTRUCTION_STEP_BUDGET) {
@@ -1324,7 +1324,7 @@ impl RemodelPlayApp {
                 job.stage_cursor += 1;
                 job.camera_poses_preview = preview.camera_poses.iter().enumerate().map(|(index, pose)| camera_pose_preview(index as u32, pose)).collect();
                 job.sparse_point_cloud_preview = PackedF32::from_f32_slice(&preview.packed_points);
-                ActionEmit { ops: vec![RemodelOp::SetJob { job }], coalesce_key: Some(coalesce_key), effects: vec![HostEffect::DispatchAction { action: "advanceReconstruction".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() }
+                ActionEmit { operations: vec![RemodelOperation::SetJob { job }], coalesce_key: Some(coalesce_key), effects: vec![HostEffect::DispatchAction { action: "advanceReconstruction".into(), args: None, delay_ms: 0 }], ..ActionEmit::default() }
             }
             remodel_engine::EngineStatus::Done => {
                 let accepted_count = engine.frame_source().accepted_count();
@@ -1345,10 +1345,10 @@ impl RemodelPlayApp {
                 job.camera_poses_preview = camera_previews.clone();
                 job.sparse_point_cloud_preview = PackedF32::from_f32_slice(&preview.packed_points);
 
-                let mut ops = vec![RemodelOp::SetJob { job }];
-                ops.push(RemodelOp::SetSparse { sparse: Some(SparseCloud { points: PackedF32::from_f32_slice(&preview.packed_points), colors: None }) });
+                let mut operations = vec![RemodelOperation::SetJob { job }];
+                operations.push(RemodelOperation::SetSparse { sparse: Some(SparseCloud { points: PackedF32::from_f32_slice(&preview.packed_points), colors: None }) });
                 if !camera_previews.is_empty() {
-                    ops.push(RemodelOp::SetTrajectory { trajectory: Some(CameraTrajectory { poses: camera_previews }) });
+                    operations.push(RemodelOperation::SetTrajectory { trajectory: Some(CameraTrajectory { poses: camera_previews }) });
                 }
                 if let Some(mesh_data) = mesh_data {
                     let watertight = quality.as_ref().and_then(|quality| quality.watertight.as_ref()).map(watertight_snapshot);
@@ -1356,41 +1356,41 @@ impl RemodelPlayApp {
                     if let Some(texture) = &mesh_data.paint_texture_base64 {
                         let texture_size = doc.projection.params.mesh.texture_size;
                         let asset_id = format!("mesh-texture-{job_id}");
-                        ops.push(RemodelOp::SetAsset { key: asset_id.clone(), value: Some(ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }) });
+                        operations.push(RemodelOperation::SetAsset { key: asset_id.clone(), value: Some(ImageAsset { mime: "image/png".into(), data: texture.clone(), width: texture_size, height: texture_size }) });
                         texture_asset_id = Some(asset_id);
                     }
-                    ops.push(RemodelOp::SetMeshResult { mesh: Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight }) });
+                    operations.push(RemodelOperation::SetMeshResult { mesh: Box::new(RemodelMesh { mesh: mesh_data, source: MeshSource::Reconstructed, texture_asset_id, watertight }) });
                 }
                 if let Some(quality) = &quality {
-                    ops.push(RemodelOp::SetQc { qc: Some(build_qc_snapshot(quality, registered_count, accepted_count, doc.projection.gcps.len())) });
+                    operations.push(RemodelOperation::SetQc { qc: Some(build_qc_snapshot(quality, registered_count, accepted_count, doc.projection.gcps.len())) });
                 }
                 if let Some(geo) = geo_products {
                     let dsm_id = format!("geo-dsm-{job_id}");
                     let dtm_id = format!("geo-dtm-{job_id}");
-                    ops.push(RemodelOp::SetAsset { key: dsm_id.clone(), value: Some(raster_to_png_asset(&geo.dsm)) });
-                    ops.push(RemodelOp::SetAsset { key: dtm_id.clone(), value: Some(raster_to_png_asset(&geo.dtm)) });
-                    ops.push(RemodelOp::SetGeoProducts { geo: Some(GeoProducts { dsm_asset_id: Some(dsm_id), dtm_asset_id: Some(dtm_id), ortho_asset_id: None }) });
+                    operations.push(RemodelOperation::SetAsset { key: dsm_id.clone(), value: Some(raster_to_png_asset(&geo.dsm)) });
+                    operations.push(RemodelOperation::SetAsset { key: dtm_id.clone(), value: Some(raster_to_png_asset(&geo.dtm)) });
+                    operations.push(RemodelOperation::SetGeoProducts { geo: Some(GeoProducts { dsm_asset_id: Some(dsm_id), dtm_asset_id: Some(dtm_id), ortho_asset_id: None }) });
                 }
-                ActionEmit::amend(ops, coalesce_key)
+                ActionEmit::amend(operations, coalesce_key)
             }
             remodel_engine::EngineStatus::Failed(message) => {
                 self.runtime.engine = None;
                 let mut job = doc.projection.job.clone();
                 job.stage = ReconstructionStage::Failed;
                 job.error = Some(message);
-                ActionEmit::amend(vec![RemodelOp::SetJob { job }], coalesce_key)
+                ActionEmit::amend(vec![RemodelOperation::SetJob { job }], coalesce_key)
             }
         }
     }
 
-    fn handle_cancel_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_cancel_reconstruction(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         if self.runtime.engine.is_none() {
             return ActionEmit::default();
         }
         let mut job = doc.projection.job.clone();
         job.cancel_requested = true;
         let job_id = job.id.clone();
-        ActionEmit::amend(vec![RemodelOp::SetJob { job }], format!("remodel-reconstruction:{job_id}"))
+        ActionEmit::amend(vec![RemodelOperation::SetJob { job }], format!("remodel-reconstruction:{job_id}"))
     }
 
     /// 🔁 The cooperative engine cannot resume from an arbitrary interior stage (`advance` is a strict
@@ -1398,7 +1398,7 @@ impl RemodelPlayApp {
     /// plugin oversight. `retryStage`/`runStage` therefore both start a brand-new full run, exactly like
     /// `runReconstruction`; `runStage`'s `stage` arg is accepted but currently has no effect beyond that
     /// — a documented scope-down.
-    fn handle_retry_or_run_stage(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOp> {
+    fn handle_retry_or_run_stage(&mut self, doc: &DocumentView<'_, RemodelScene>) -> ActionEmit<RemodelOperation> {
         self.handle_run_reconstruction(doc)
     }
     //#endregion 🔖StagedReconstruction
@@ -1407,7 +1407,7 @@ impl RemodelPlayApp {
 
 impl DocumentApp for RemodelPlayApp {
     type Projection = RemodelScene;
-    type Op = RemodelOp;
+    type Operation = RemodelOperation;
 
     fn app_id(&self) -> &str {
         REMODEL_PLAY_APP_ID
@@ -1421,7 +1421,7 @@ impl DocumentApp for RemodelPlayApp {
         default_remodel_scene()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>, _view_state: &ViewState) -> ActionEmit<RemodelOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, RemodelScene>, _view_state: &ViewState) -> ActionEmit<RemodelOperation> {
         match action {
             //#region 🔖ViewActions
             SET_ACTIVE_UTILITY_ACTION_ID => ActionEmit::default(),
@@ -1489,19 +1489,19 @@ impl DocumentApp for RemodelPlayApp {
                 let id = format!("stream-{}", self.runtime.stream_counter);
                 let mut streams = doc.projection.streams.clone();
                 streams.push(MediaStream { id, name, kind, camera_id, sync_offset_ms: 0.0, fps_hint: 30.0, frames: Vec::new(), source: None });
-                ActionEmit::ops(vec![RemodelOp::SetStreams { streams }])
+                ActionEmit::operations(vec![RemodelOperation::SetStreams { streams }])
             }
             "removeStream" => {
                 let Some(stream_id) = arg_str(args, "streamId") else { return ActionEmit::default() };
                 let streams: Vec<MediaStream> = doc.projection.streams.iter().filter(|stream| stream.id != stream_id).cloned().collect();
-                ActionEmit::ops(vec![RemodelOp::SetStreams { streams }])
+                ActionEmit::operations(vec![RemodelOperation::SetStreams { streams }])
             }
             "setStreamSync" => {
                 let (Some(stream_id), Some(offset)) = (arg_str(args, "streamId"), arg_f64(args, "syncOffsetMs")) else { return ActionEmit::default() };
                 let mut streams = doc.projection.streams.clone();
                 let Some(stream) = streams.iter_mut().find(|stream| stream.id == stream_id) else { return ActionEmit::default() };
                 stream.sync_offset_ms = offset;
-                ActionEmit::ops(vec![RemodelOp::SetStreams { streams }])
+                ActionEmit::operations(vec![RemodelOperation::SetStreams { streams }])
             }
             //#endregion 🔖Ingestion
 
@@ -1528,7 +1528,7 @@ impl DocumentApp for RemodelPlayApp {
                     Some(existing) => *existing = entry,
                     None => calibration.cameras.push(entry),
                 }
-                ActionEmit::ops(vec![RemodelOp::SetCalibration { calibration }])
+                ActionEmit::operations(vec![RemodelOperation::SetCalibration { calibration }])
             }
             // 🎯 Auto-derives placeholder pinhole intrinsics (`fx = fy = max(width, height)`, principal
             // point centered, no distortion — mirroring `remodel_engine`'s own uncalibrated-input
@@ -1560,7 +1560,7 @@ impl DocumentApp for RemodelPlayApp {
                         locked: false,
                     });
                 }
-                ActionEmit::ops(vec![RemodelOp::SetCalibration { calibration }])
+                ActionEmit::operations(vec![RemodelOperation::SetCalibration { calibration }])
             }
             "addGcp" => {
                 let name = arg_str(args, "name").unwrap_or("GCP").to_string();
@@ -1568,12 +1568,12 @@ impl DocumentApp for RemodelPlayApp {
                 self.runtime.gcp_counter += 1;
                 let mut gcps = doc.projection.gcps.clone();
                 gcps.push(GroundControlPoint { id: format!("gcp-{}", self.runtime.gcp_counter), name, world_position, observations: Vec::new() });
-                ActionEmit::ops(vec![RemodelOp::SetGcps { gcps }])
+                ActionEmit::operations(vec![RemodelOperation::SetGcps { gcps }])
             }
             "removeGcp" => {
                 let Some(gcp_id) = arg_str(args, "gcpId") else { return ActionEmit::default() };
                 let gcps: Vec<GroundControlPoint> = doc.projection.gcps.iter().filter(|gcp| gcp.id != gcp_id).cloned().collect();
-                ActionEmit::ops(vec![RemodelOp::SetGcps { gcps }])
+                ActionEmit::operations(vec![RemodelOperation::SetGcps { gcps }])
             }
             "placeGcpObservation" => {
                 let Some(gcp_id) = arg_str(args, "gcpId") else { return ActionEmit::default() };
@@ -1582,12 +1582,12 @@ impl DocumentApp for RemodelPlayApp {
                 let mut gcps = doc.projection.gcps.clone();
                 let Some(gcp) = gcps.iter_mut().find(|gcp| gcp.id == gcp_id) else { return ActionEmit::default() };
                 gcp.observations.push(GcpObservation { stream_id: stream_id.into(), frame_index, pixel });
-                ActionEmit::ops(vec![RemodelOp::SetGcps { gcps }])
+                ActionEmit::operations(vec![RemodelOperation::SetGcps { gcps }])
             }
             //#endregion 🔖CalibrationAndGcps
 
             //#region 🔖ParamSetters
-            "setIngestParams" => ActionEmit::ops(vec![RemodelOp::SetIngestParams {
+            "setIngestParams" => ActionEmit::operations(vec![RemodelOperation::SetIngestParams {
                 params: IngestParams {
                     frame_sample_stride: arg_u32(args, "frameSampleStride").unwrap_or(5),
                     max_frames: arg_u32(args, "maxFrames").unwrap_or(200),
@@ -1595,7 +1595,7 @@ impl DocumentApp for RemodelPlayApp {
                     min_sharpness: arg_f32(args, "minSharpness").unwrap_or(0.3),
                 },
             }]),
-            "setFeatureParams" => ActionEmit::ops(vec![RemodelOp::SetFeatureParams {
+            "setFeatureParams" => ActionEmit::operations(vec![RemodelOperation::SetFeatureParams {
                 params: FeatureParams {
                     detector: match arg_str(args, "detector") {
                         Some("akaze") => FeatureDetector::Akaze,
@@ -1607,7 +1607,7 @@ impl DocumentApp for RemodelPlayApp {
                     edge_threshold: arg_f32(args, "edgeThreshold").unwrap_or(10.0),
                 },
             }]),
-            "setMatchParams" => ActionEmit::ops(vec![RemodelOp::SetMatchParams {
+            "setMatchParams" => ActionEmit::operations(vec![RemodelOperation::SetMatchParams {
                 params: MatchParams {
                     matcher: if arg_str(args, "matcher") == Some("kd-tree") { MatcherKind::KdTree } else { MatcherKind::BruteForce },
                     ratio_test: arg_f32(args, "ratioTest").unwrap_or(0.8),
@@ -1617,7 +1617,7 @@ impl DocumentApp for RemodelPlayApp {
                     loop_closure: arg_bool(args, "loopClosure").unwrap_or(true),
                 },
             }]),
-            "setSfmParams" => ActionEmit::ops(vec![RemodelOp::SetSfmParams {
+            "setSfmParams" => ActionEmit::operations(vec![RemodelOperation::SetSfmParams {
                 params: SfmParams {
                     ransac_iterations: arg_u32(args, "ransacIterations").unwrap_or(1000),
                     ransac_threshold_px: arg_f32(args, "ransacThresholdPx").unwrap_or(2.0),
@@ -1631,7 +1631,7 @@ impl DocumentApp for RemodelPlayApp {
                     huber_delta_px: arg_f32(args, "huberDeltaPx").unwrap_or(1.5),
                 },
             }]),
-            "setDenseParams" => ActionEmit::ops(vec![RemodelOp::SetDenseParams {
+            "setDenseParams" => ActionEmit::operations(vec![RemodelOperation::SetDenseParams {
                 params: DenseParams {
                     resolution: match arg_str(args, "resolution") {
                         Some("low") => DenseResolution::Low,
@@ -1644,7 +1644,7 @@ impl DocumentApp for RemodelPlayApp {
                     max_points: arg_u32(args, "maxPoints").unwrap_or(500_000),
                 },
             }]),
-            "setMeshParams" => ActionEmit::ops(vec![RemodelOp::SetMeshParams {
+            "setMeshParams" => ActionEmit::operations(vec![RemodelOperation::SetMeshParams {
                 params: DocumentMeshParams {
                     tsdf_voxel_size_mm: arg_f32(args, "tsdfVoxelSizeMm").unwrap_or(5.0),
                     tsdf_truncation_mm: arg_f32(args, "tsdfTruncationMm").unwrap_or(20.0),
@@ -1657,7 +1657,7 @@ impl DocumentApp for RemodelPlayApp {
                     self_intersection_check: arg_bool(args, "selfIntersectionCheck").unwrap_or(false),
                 },
             }]),
-            "setMotionParams" => ActionEmit::ops(vec![RemodelOp::SetMotionParams {
+            "setMotionParams" => ActionEmit::operations(vec![RemodelOperation::SetMotionParams {
                 params: MotionParams {
                     enabled: arg_bool(args, "enabled").unwrap_or(false),
                     max_tracks: arg_u32(args, "maxTracks").unwrap_or(64),
@@ -1666,7 +1666,7 @@ impl DocumentApp for RemodelPlayApp {
                     min_track_length_frames: arg_u32(args, "minTrackLengthFrames").unwrap_or(5),
                 },
             }]),
-            "setGeoParams" => ActionEmit::ops(vec![RemodelOp::SetGeoParams {
+            "setGeoParams" => ActionEmit::operations(vec![RemodelOperation::SetGeoParams {
                 params: GeoParams {
                     enabled: arg_bool(args, "enabled").unwrap_or(false),
                     origin_lon: arg_f64(args, "originLon"),
@@ -1688,20 +1688,20 @@ impl DocumentApp for RemodelPlayApp {
             //#endregion 🔖StagedReconstruction
 
             //#region 🔖ClearReset
-            "resetPlaceholderMesh" => ActionEmit::ops(vec![RemodelOp::SetMeshResult { mesh: Box::new(placeholder_result()) }]),
-            "clearSparse" => ActionEmit::ops(vec![RemodelOp::SetSparse { sparse: None }]),
-            "clearDense" => ActionEmit::ops(vec![RemodelOp::SetDense { dense: None }]),
-            "clearMeshResult" => ActionEmit::ops(vec![RemodelOp::SetMeshResult { mesh: Box::new(empty_result()) }]),
-            "clearTracks" => ActionEmit::ops(vec![RemodelOp::SetTracks { tracks: Vec::new() }]),
-            "clearGeoProducts" => ActionEmit::ops(vec![RemodelOp::SetGeoProducts { geo: None }]),
-            "clearResult" => ActionEmit::ops(vec![
-                RemodelOp::SetMeshResult { mesh: Box::new(empty_result()) },
-                RemodelOp::SetSparse { sparse: None },
-                RemodelOp::SetDense { dense: None },
-                RemodelOp::SetTrajectory { trajectory: None },
-                RemodelOp::SetTracks { tracks: Vec::new() },
-                RemodelOp::SetGeoProducts { geo: None },
-                RemodelOp::SetQc { qc: None },
+            "resetPlaceholderMesh" => ActionEmit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(placeholder_result()) }]),
+            "clearSparse" => ActionEmit::operations(vec![RemodelOperation::SetSparse { sparse: None }]),
+            "clearDense" => ActionEmit::operations(vec![RemodelOperation::SetDense { dense: None }]),
+            "clearMeshResult" => ActionEmit::operations(vec![RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) }]),
+            "clearTracks" => ActionEmit::operations(vec![RemodelOperation::SetTracks { tracks: Vec::new() }]),
+            "clearGeoProducts" => ActionEmit::operations(vec![RemodelOperation::SetGeoProducts { geo: None }]),
+            "clearResult" => ActionEmit::operations(vec![
+                RemodelOperation::SetMeshResult { mesh: Box::new(empty_result()) },
+                RemodelOperation::SetSparse { sparse: None },
+                RemodelOperation::SetDense { dense: None },
+                RemodelOperation::SetTrajectory { trajectory: None },
+                RemodelOperation::SetTracks { tracks: Vec::new() },
+                RemodelOperation::SetGeoProducts { geo: None },
+                RemodelOperation::SetQc { qc: None },
             ]),
             //#endregion 🔖ClearReset
 
@@ -2189,7 +2189,7 @@ mod tests {
     }
 
     #[test]
-    fn view_actions_mutate_runtime_without_emitting_ops() {
+    fn view_actions_mutate_runtime_without_emitting_operations() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
         let result = app.handle_action("setCamera", Some(&json!({ "position": [1.0, 2.0, 3.0], "target": [0.0, 0.0, 0.0], "fov": 60.0 })), &ViewState::default(), &testkit::meta("local")).expect("set camera");
         assert!(result.operations.is_empty());
@@ -2201,17 +2201,17 @@ mod tests {
     fn set_active_utility_switches_host_view_state_without_ops_or_history() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
         let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "measure" })), &ViewState::default(), &testkit::meta("local")).expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switch is host-owned view state, never a document op");
+        assert!(result.operations.is_empty(), "utility switch is host-owned view state, never a document operation");
     }
 
     //#region 🔖ArgFormTests
     #[test]
-    fn set_sfm_params_arg_form_materializes_typed_args_into_ops() {
+    fn set_sfm_params_arg_form_materializes_typed_args_into_operations() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
         let result = app
             .handle_action("setSfmParams", Some(&json!({ "ransacIterations": 500, "ransacThresholdPx": 1.5, "minTrackLength": 4, "baMaxIterations": 20, "robustLoss": "cauchy", "huberDeltaPx": 2.5 })), &ViewState::default(), &testkit::meta("local"))
             .expect("set sfm params");
-        assert_eq!(result.operations.len(), 1, "typed args produce one SetSfmParams op");
+        assert_eq!(result.operations.len(), 1, "typed args produce one SetSfmParams operation");
         let params = app.projection().expect("materialize projection").params.sfm;
         assert_eq!(params.ransac_iterations, 500);
         assert_eq!(params.min_track_length, 4);
@@ -2220,7 +2220,7 @@ mod tests {
     }
 
     #[test]
-    fn set_geo_params_arg_form_materializes_typed_args_into_ops() {
+    fn set_geo_params_arg_form_materializes_typed_args_into_operations() {
         let mut app = testkit::new_app::<RemodelPlayApp>();
         app.handle_action("setGeoParams", Some(&json!({ "enabled": true, "gsdM": 0.02, "dsmCellM": 0.2, "orthoMaxPx": 2048 })), &ViewState::default(), &testkit::meta("local")).expect("set geo params");
         let params = app.projection().expect("materialize projection").params.geo;
@@ -2317,7 +2317,7 @@ mod tests {
         let mut app = testkit::new_app::<RemodelPlayApp>();
         import_checker_stream(&mut app, 2);
         let run = app.handle_action("runReconstruction", None, &ViewState::default(), &testkit::meta("local")).expect("run reconstruction");
-        assert_eq!(run.operations.len(), 1, "starting a run is one SetJob op");
+        assert_eq!(run.operations.len(), 1, "starting a run is one SetJob operation");
         assert!(matches!(run.requested_effects.first(), Some(HostEffect::DispatchAction { action, .. }) if action == "advanceReconstruction"), "runReconstruction must schedule the first advanceReconstruction tick: {:?}", run.requested_effects);
         assert_eq!(app.projection().expect("projection").job.stage, ReconstructionStage::Ingesting);
 
@@ -2343,7 +2343,7 @@ mod tests {
         app.handle_action("runReconstruction", None, &ViewState::default(), &testkit::meta("local")).expect("run reconstruction");
         // 🎯 Cancel immediately after the run starts, before any `advanceReconstruction` tick: the tiny
         // 2-frame checker fixture can reach a terminal stage (and clear `runtime.engine`) within a single
-        // tick under `RECONSTRUCTION_STEP_BUDGET`, which would make cancellation a no-op — cancelling
+        // tick under `RECONSTRUCTION_STEP_BUDGET`, which would make cancellation a no-operation — cancelling
         // right after start is the only tick-count-independent way to exercise "mid-run" cancellation.
         app.handle_action("cancelReconstruction", None, &ViewState::default(), &testkit::meta("local")).expect("cancel");
         assert!(app.projection().expect("projection").job.cancel_requested);
@@ -2389,7 +2389,7 @@ mod tests {
     //#endregion 🔖StagedReconstructionTests
 
     /// 🧪 The definitional proof: two independent instances start from the same document, apply
-    /// DISJOINT field edits (A tunes feature params, B adds a ground control point), and exchanging ops
+    /// DISJOINT field edits (A tunes feature params, B adds a ground control point), and exchanging operations
     /// over a `MemoryBackbone` converges both sides to contain BOTH edits — impossible under a
     /// whole-document `setDocument` snapshot, where one side's write would clobber the other's.
     #[test]

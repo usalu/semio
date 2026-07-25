@@ -316,7 +316,7 @@ pub fn check_full_masonry(document: &Document) -> CheckReport {
 }
 
 // #region 🔖Session
-use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -381,7 +381,7 @@ impl Default for Document {
     }
 }
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<En1996Family>;
 
 pub fn evaluate(document: &Document) -> CheckReport {
@@ -392,7 +392,7 @@ pub struct En1996Family;
 
 impl NormFamily for En1996Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::En1996

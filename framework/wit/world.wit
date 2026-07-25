@@ -89,7 +89,7 @@ interface plugin {
     context: invocation-context-json,
   ) -> result<invocation-response-json, plugin-error>;
   /// 🎛️ Dispatches a scoped command (os/plugin/app/mode — never window-level; see `ActionDescriptor`
-  /// for window-level verbs) through the same op-emitting pipeline as `handle-action`.
+  /// for window-level verbs) through the same operation-emitting pipeline as `handle-action`.
   handle-command: func(
     instance-id: u32,
     command: command-invocation-json,

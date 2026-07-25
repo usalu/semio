@@ -6,7 +6,7 @@ todos:
    content: Read repo://goals and open ticket via ticket_open
    status: completed
  - id: core-model
-   content: Create note/core with NoteDocument model, blocks, edit ops, VCS handler, tests
+   content: Create note/core with NoteDocument model, blocks, edit operations, VCS handler, tests
    status: completed
  - id: core-playground
    content: Implement NotePlayController, windows, tools, measures, engagement, panel trees, notePlayAppDefinition
@@ -57,7 +57,7 @@ Mirror draw's layout: `note/core/` (`index.ts`, `internal.ts`, `playground.ts`, 
   - `math` — TeX source string, display/inline mode
   - `ink` — freehand pencil strokes (points + width + color), from pen-drag like draw's `pen` → path
   - `group` — nesting for document
-- Edit ops (`NoteEditOp`) + VCS envelope + `createNoteAppVcsHandler()` following `createDrawAppVcsHandler` ([draw/core/internal.ts](draw/core/internal.ts) ~line 1386).
+- Edit operations (`NoteEditOp`) + VCS envelope + `createNoteAppVcsHandler()` following `createDrawAppVcsHandler` ([draw/core/internal.ts](draw/core/internal.ts) ~line 1386).
 - Pointer-focus key encoding `note:${kind}:${id}`, `NoteHoverPayload`, in-file vitest tests via `import.meta.vitest`.
 
 ### Playground (`note/core/playground.ts`)

@@ -105,7 +105,7 @@ pub fn tokenize_language(text: &str, language_id: &str) -> Vec<GrammarToken> {
 
 use grammar::{tokenize_language, GrammarToken};
 use trinity_jack::{complete, example_graph, format as jack_format, lint, semantic_tokens, Diagnostic};
-use writer::{empty_writer_projection, WriterCamera, WriterOp, WriterProjection};
+use writer::{empty_writer_projection, WriterCamera, WriterOperation, WriterProjection};
 use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
@@ -1004,7 +1004,7 @@ fn render_main_scene(document: &WriterProjection, runtime: &WriterPlayRuntime) -
 /// spaced form (wgpu REPL) and the React shell's PascalCased, separator-stripped drafts (e.g.
 /// `"Font16"`, `"LineNumbers"` — see `strip_engagement_prefix`). Mutates ephemeral `runtime`
 /// state in place; returns `Some(new_text)` only for the `format` branch when the source changed,
-/// so the caller can emit a `SetText` op — every other branch returns `None` (view-only).
+/// so the caller can emit a `SetText` operation — every other branch returns `None` (view-only).
 fn apply_engagement(runtime: &mut WriterPlayRuntime, current_text: &str, language_id: &str, value: &str) -> Option<String> {
     let trimmed = value.trim();
     runtime.engagement_input.clear();
@@ -1050,7 +1050,7 @@ struct WriterPlayApp {
 
 impl DocumentApp for WriterPlayApp {
     type Projection = WriterProjection;
-    type Op = WriterOp;
+    type Operation = WriterOperation;
 
     fn app_id(&self) -> &str {
         WRITER_PLAY_APP_ID
@@ -1070,7 +1070,7 @@ impl DocumentApp for WriterPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, WriterProjection>,
         _view_state: &ViewState,
-    ) -> ActionEmit<WriterOp> {
+    ) -> ActionEmit<WriterOperation> {
         // undo/redo/checkpoint/alternative never reach here — `VcsDocumentApp` intercepts them.
         let document = doc.projection;
         let str_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str);
@@ -1081,14 +1081,14 @@ impl DocumentApp for WriterPlayApp {
                     // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
                     // a few undo steps, not one-per-keystroke. Any interrupting action (format, example
                     // load, engagement submit) applies without this key and breaks the coalescing run.
-                    return ActionEmit::amend(vec![WriterOp::SetText { text: text.into() }], "writer-text-edit");
+                    return ActionEmit::amend(vec![WriterOperation::SetText { text: text.into() }], "writer-text-edit");
                 }
                 ActionEmit::default()
             }
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(parsed) = serde_json::from_value::<WriterProjection>(next.clone()) {
-                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
+                        return ActionEmit::operations(vec![WriterOperation::SetDocument { document: parsed }]);
                     }
                 }
                 ActionEmit::default()
@@ -1096,7 +1096,7 @@ impl DocumentApp for WriterPlayApp {
             "setDocumentJson" | "setFixtureJson" => {
                 if let Some(json_text) = str_arg("json") {
                     if let Ok(parsed) = serde_json::from_str::<WriterProjection>(json_text) {
-                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
+                        return ActionEmit::operations(vec![WriterOperation::SetDocument { document: parsed }]);
                     }
                 }
                 ActionEmit::default()
@@ -1108,13 +1108,13 @@ impl DocumentApp for WriterPlayApp {
                     "dag.jack" => serde_json::from_str::<WriterProjection>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
                     _ => empty_writer_projection(),
                 };
-                ActionEmit::ops(vec![WriterOp::SetDocument { document }])
+                ActionEmit::operations(vec![WriterOperation::SetDocument { document }])
             }
             "setCamera" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")) {
                     if let Ok(parsed) = serde_json::from_value::<WriterCamera>(camera.clone()) {
-                        // 🎥 Camera is a doc op by policy; a pan/zoom drag coalesces into one undo step.
-                        return ActionEmit::amend(vec![WriterOp::SetCamera { camera: parsed }], "writer-camera");
+                        // 🎥 Camera is a doc operation by policy; a pan/zoom drag coalesces into one undo step.
+                        return ActionEmit::amend(vec![WriterOperation::SetCamera { camera: parsed }], "writer-camera");
                     }
                 }
                 ActionEmit::default()
@@ -1123,7 +1123,7 @@ impl DocumentApp for WriterPlayApp {
                 self.runtime.format_signal += 1;
                 let formatted = format_writer_text(&document.text, &document.language_id);
                 if formatted != document.text {
-                    return ActionEmit::ops(vec![WriterOp::SetText { text: formatted }]);
+                    return ActionEmit::operations(vec![WriterOperation::SetText { text: formatted }]);
                 }
                 ActionEmit::default()
             }
@@ -1147,13 +1147,13 @@ impl DocumentApp for WriterPlayApp {
                     .filter(|items| !items.is_empty());
                 if let Some(occurrences) = occurrences {
                     let text = apply_jack_rename(&document.text, &occurrences, new_text);
-                    return ActionEmit::ops(vec![WriterOp::SetText { text }]);
+                    return ActionEmit::operations(vec![WriterOperation::SetText { text }]);
                 }
                 if let (Some(start), Some(end)) = (usize_arg("start"), usize_arg("end")) {
                     if start <= end && end <= document.text.len() {
                         let mut text = document.text.clone();
                         text.replace_range(start..end, new_text);
-                        return ActionEmit::ops(vec![WriterOp::SetText { text }]);
+                        return ActionEmit::operations(vec![WriterOperation::SetText { text }]);
                     }
                 }
                 ActionEmit::default()
@@ -1268,7 +1268,7 @@ impl DocumentApp for WriterPlayApp {
             "engagementSubmit" => {
                 let value = str_arg("value").map(str::to_string).unwrap_or_else(|| self.runtime.engagement_input.clone());
                 match apply_engagement(&mut self.runtime, &document.text, &document.language_id, &value) {
-                    Some(text) => ActionEmit::ops(vec![WriterOp::SetText { text }]),
+                    Some(text) => ActionEmit::operations(vec![WriterOperation::SetText { text }]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1398,7 +1398,7 @@ impl DocumentApp for WriterPlayApp {
 //#region 🔖Manifest
 /// 🙈 An internal document operation kept out of the command palette — editor events (text edits,
 /// camera, rename, engagement submit) and dev-only whole-document setters dispatched from chrome.
-fn writer_hidden_op(id: &str, label: &str) -> ActionDefinition {
+fn writer_hidden_operation(id: &str, label: &str) -> ActionDefinition {
     ActionDefinition { in_palette: false, ..ActionDefinition::new(id, label, ActionKind::Operation) }
 }
 
@@ -1455,21 +1455,21 @@ fn create_writer_app() -> App {
                 WRITER_PLAY_BODY_INSPECTION,
             )
             // 🔧 Panel-visible P0 effects: format rewrites the buffer (Operation), lint re-runs
-            // diagnostics into runtime (View — an effect, not a document op).
+            // diagnostics into runtime (View — an effect, not a document operation).
             .operation("formatDocument", "Format Document")
             .view_action("lintDocument", "Lint Document")
             // 🔧 P1 example switch (whole-document load) with a staged example choice.
             .operation("setActiveExample", "Set Active Example")
-            // 🙈 Internal document ops — text edits (coalesced), aliases, camera, rename, engagement,
+            // 🙈 Internal document operations — text edits (coalesced), aliases, camera, rename, engagement,
             // and dev-only whole-document JSON setters.
-            .action_with(writer_hidden_op("textEdit", "Edit Text"))
-            .action_with(writer_hidden_op("setText", "Set Text"))
-            .action_with(writer_hidden_op("setCamera", "Set Camera"))
-            .action_with(writer_hidden_op("commitRename", "Commit Rename"))
-            .action_with(writer_hidden_op("engagementSubmit", "Engagement Submit"))
-            .action_with(writer_hidden_op("setDocument", "Set Document"))
-            .action_with(writer_hidden_op("setDocumentJson", "Set Document JSON"))
-            .action_with(writer_hidden_op("setFixtureJson", "Set Fixture JSON"))
+            .action_with(writer_hidden_operation("textEdit", "Edit Text"))
+            .action_with(writer_hidden_operation("setText", "Set Text"))
+            .action_with(writer_hidden_operation("setCamera", "Set Camera"))
+            .action_with(writer_hidden_operation("commitRename", "Commit Rename"))
+            .action_with(writer_hidden_operation("engagementSubmit", "Engagement Submit"))
+            .action_with(writer_hidden_operation("setDocument", "Set Document"))
+            .action_with(writer_hidden_operation("setDocumentJson", "Set Document JSON"))
+            .action_with(writer_hidden_operation("setFixtureJson", "Set Fixture JSON"))
             // 🙈 Internal View measures — selection, hover, AST navigation, completions, editor settings.
             .action_with(writer_hidden_view("requestCompletions", "Request Completions"))
             .action_with(writer_hidden_view("textSelect", "Text Select"))
@@ -1539,7 +1539,7 @@ mod tests {
     #[test]
     fn lint_is_a_view_action_and_example_default_materializes() {
         let mut app = new_app_with_registry::<WriterPlayApp>(create_writer_app);
-        // lintDocument is a declared View action: registry kind discipline requires it emit no ops.
+        // lintDocument is a declared View action: registry kind discipline requires it emit no operations.
         let result = app.handle_action("lintDocument", None, &ViewState::default(), &meta("local")).expect("lint");
         assert!(result.operations.is_empty(), "lint re-runs diagnostics into runtime, never the document");
         // setActiveExample fired with no args materializes the declared default example ("jack").
@@ -1582,8 +1582,8 @@ mod tests {
     }
 
     #[test]
-    fn format_document_without_change_emits_no_op() {
-        // A no-op format (already-formatted or non-jack empty doc) bumps the format signal but must
+    fn format_document_without_change_emits_no_operation() {
+        // A no-operation format (already-formatted or non-jack empty doc) bumps the format signal but must
         // not record a history entry.
         let mut app = new_app::<WriterPlayApp>();
         let result = app.handle_action("formatDocument", None, &ViewState::default(), &meta("local")).expect("format");

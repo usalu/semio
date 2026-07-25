@@ -6,7 +6,7 @@ use draw::{
     draw_op_for_layer_field, draw_play_boolean_child_row_id, draw_play_layer_id_from_tree_row_id, draw_play_layers_tree_row_id, draw_transform_to_matrix,
     empty_draw_projection, find_draw_layer, find_draw_layer_location, flatten_draw_document_to_scene_nodes,
     flatten_draw_layers, layer_base, layer_id, layer_kind_label, layer_to_path_segments, resolve_draw_artboard,
-    rgba_to_hex, DrawArtboard, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPS, DRAW_DOCUMENT_SCHEMA,
+    rgba_to_hex, DrawArtboard, DrawDocument, DrawLayerNode, DrawOperation, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView,
     build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, selection_ids,
@@ -296,9 +296,9 @@ fn draft_preview_segments(utility: &str, points: &[[f64; 2]], cursor: [f64; 2]) 
     segments
 }
 
-/// 🔷 Emits the ops that commit a shape drag (add the shape layer + return to direct-select) and
+/// 🔷 Emits the operations that commit a shape drag (add the shape layer + return to direct-select) and
 /// records the new layer as the current selection; empty when the drag is too small to commit.
-fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOp> {
+fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOperation> {
     let x = start[0].min(end[0]);
     let y = start[1].min(end[1]);
     let width = (end[0] - start[0]).abs();
@@ -330,12 +330,12 @@ fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument,
     });
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
-/// ✒️ Emits the ops that commit a freehand/polygon draft into a path or polygon layer and records it
+/// ✒️ Emits the operations that commit a freehand/polygon draft into a path or polygon layer and records it
 /// as the current selection; empty when the draft has too few points to form a shape.
-fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOp> {
+fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOperation> {
     if points.len() < 2 {
         return Vec::new();
     }
@@ -358,12 +358,12 @@ fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, util
     };
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
-/// 🖍️ Emits the ops that add a trace layer over the picked image (or first asset) and records it as
+/// 🖍️ Emits the operations that add a trace layer over the picked image (or first asset) and records it as
 /// the current selection; empty when no bitmap source is available.
-fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOp> {
+fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOperation> {
     let tolerance = DRAW_PICK_TOLERANCE_PX / doc.camera.zoom.max(1e-6);
     let hit_layer_id = best_pick_layer_id(&resolve_pick_targets_at(doc, world, tolerance, false));
     let source_key = hit_layer_id
@@ -377,16 +377,16 @@ fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, w
     let layer = create_draw_trace_layer("Trace", &source_key);
     let select_id = layer_id(&layer).to_string();
     interaction.selected_ids = vec![select_id];
-    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+    vec![DrawOperation::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
 }
 
-/// 🧰 Wraps a committed gesture's `ops` as a single described edit plus the host effect that returns
-/// the canvas to the default select utility (the active utility is host-owned, never a document op).
-fn commit_with_utility_reset(ops: Vec<DrawOp>, description: &str) -> ActionEmit<DrawOp> {
-    if ops.is_empty() {
+/// 🧰 Wraps a committed gesture's `operations` as a single described edit plus the host effect that returns
+/// the canvas to the default select utility (the active utility is host-owned, never a document operation).
+fn commit_with_utility_reset(operations: Vec<DrawOperation>, description: &str) -> ActionEmit<DrawOperation> {
+    if operations.is_empty() {
         return ActionEmit::default();
     }
-    let mut emit = ActionEmit::commit(ops, description);
+    let mut emit = ActionEmit::commit(operations, description);
     emit.effects.push(HostEffect::SetActiveUtility {
         window_id: DRAW_PLAY_WINDOW_CANVAS.into(),
         utility_id: DRAW_DEFAULT_UTILITY.into(),
@@ -660,7 +660,7 @@ semio_framework_plugin::app_labels! {
         kind_group: &'static str = en: "Group", de: "Gruppe";
         kind_boolean: &'static str = en: "Boolean", de: "Boolean";
         kind_trace: &'static str = en: "Trace", de: "Nachzeichnung";
-        boolean_op: &'static str = en: "Boolean Op", de: "Boolean-Operation";
+        boolean_operation: &'static str = en: "Boolean Operation", de: "Boolean-Operation";
         children: &'static str = en: "Children", de: "Kinder";
         trace_threshold: &'static str = en: "Trace Threshold", de: "Trace-Schwellenwert";
         simplify: &'static str = en: "Simplify", de: "Vereinfachen";
@@ -776,7 +776,7 @@ fn layer_tree_item(doc: &DrawDocument, layer: &draw::DrawLayerNode) -> UiTreeIte
         _ => None,
     };
     let description = Some(match layer {
-        draw::DrawLayerNode::Boolean(boolean) => boolean.op.clone(),
+        draw::DrawLayerNode::Boolean(boolean) => boolean.operation.clone(),
         _ => base.blend_mode.clone(),
     });
     let action = draw_play_action("setSelection", Some(json!({ "ids": [base.id] })));
@@ -871,14 +871,14 @@ fn render_catalogue_panel(_document: &DrawDocument, interaction: &DrawInteractio
             }
         })
         .collect();
-    for op in DRAW_BOOLEAN_OPS {
+    for operation in DRAW_BOOLEAN_OPERATIONS {
         items.push(UiTreeItemNode {
             icon_id: Some("combine".into()),
             ..tree_item_with_action(
-                format!("draw-play-catalogue.bool.{op}"),
-                format!("{} {op}", labels.kind_boolean),
+                format!("draw-play-catalogue.bool.{operation}"),
+                format!("{} {operation}", labels.kind_boolean),
                 None,
-                draw_play_action("combineBoolean", Some(json!({ "op": op, "ids": interaction.selected_ids }))),
+                draw_play_action("combineBoolean", Some(json!({ "operation": operation, "ids": interaction.selected_ids }))),
             )
         });
     }
@@ -958,24 +958,24 @@ fn inspector_kind_group(doc: &DrawDocument, layers: &[&draw::DrawLayerNode], lab
     let mut fields: Vec<UiNode> = Vec::new();
     match layer {
         draw::DrawLayerNode::Boolean(boolean) => {
-            let ops: Vec<String> = uniform
+            let operations: Vec<String> = uniform
                 .iter()
                 .filter_map(|entry| match entry {
-                    draw::DrawLayerNode::Boolean(entry) => Some(entry.op.clone()),
+                    draw::DrawLayerNode::Boolean(entry) => Some(entry.operation.clone()),
                     _ => None,
                 })
                 .collect();
-            let op_mixed = ui_inspector_mixed_select(&ops);
+            let op_mixed = ui_inspector_mixed_select(&operations);
             fields.push(UiNode::Field(UiFieldNode {
                 presence: UiPresence::default(),
-                id: "draw-play-inspector.boolean-op".into(),
-                label: labels.boolean_op.into(),
+                id: "draw-play-inspector.boolean-operation".into(),
+                label: labels.boolean_operation.into(),
                 child: Box::new(UiNode::Select(UiSelectNode { presence: UiPresence::default(),
-                    id: "draw-play-inspector.boolean-op.select".into(),
+                    id: "draw-play-inspector.boolean-operation.select".into(),
                     value: op_mixed.value,
                     placeholder: op_mixed.placeholder,
-                    items: DRAW_BOOLEAN_OPS.iter().map(|op| UiSelectItem { value: (*op).into(), label: (*op).into() }).collect(),
-                    on_change: inspector_patch(&layer_ids, "booleanOp"),
+                    items: DRAW_BOOLEAN_OPERATIONS.iter().map(|operation| UiSelectItem { value: (*operation).into(), label: (*operation).into() }).collect(),
+                    on_change: inspector_patch(&layer_ids, "booleanOperation"),
                 })),
                 description: None,
                 required: None,
@@ -1555,10 +1555,10 @@ impl DrawPlayApp {
     /// 🎭 Feeds one gesture event through the shared `fsm` statechart, then drains and executes any
     /// requested `GestureEffect`s against the live document — the only place gesture control-flow
     /// (owned by `fsm`) meets document-mutating logic (owned by `draw`, unchanged from before the migration).
-    fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOp> {
+    fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOperation> {
         let mut sink: Vec<fsm::Command<draw_gesture::DrawGesture>> = Vec::new();
         fsm::macrostep(&mut self.gesture, event, &mut sink, &mut fsm::NullInspector);
-        let mut ops = Vec::new();
+        let mut operations = Vec::new();
         let mut commit_description: Option<&'static str> = None;
         for command in sink {
             let fsm::Command::Effect(effect) = command else { continue };
@@ -1573,15 +1573,15 @@ impl DrawPlayApp {
                     }
                 }
                 GestureEffect::CommitShape { utility, start, end } => {
-                    ops.extend(commit_shape_drag(&mut self.interaction, document, &utility, start, end));
+                    operations.extend(commit_shape_drag(&mut self.interaction, document, &utility, start, end));
                     commit_description = Some("Add shape");
                 }
                 GestureEffect::CommitDraft { utility, points } => {
-                    ops.extend(commit_draft(&mut self.interaction, document, &utility, &points));
+                    operations.extend(commit_draft(&mut self.interaction, document, &utility, &points));
                     commit_description = Some("Commit draft");
                 }
                 GestureEffect::CommitTrace { world } => {
-                    ops.extend(commit_trace_at(&mut self.interaction, document, world));
+                    operations.extend(commit_trace_at(&mut self.interaction, document, world));
                     commit_description = Some("Trace image");
                 }
                 GestureEffect::PickPoint { world, shift, ctrl, meta } => {
@@ -1590,7 +1590,7 @@ impl DrawPlayApp {
             }
         }
         match commit_description {
-            Some(description) => commit_with_utility_reset(ops, description),
+            Some(description) => commit_with_utility_reset(operations, description),
             None => ActionEmit::default(),
         }
     }
@@ -1598,7 +1598,7 @@ impl DrawPlayApp {
 
 impl DocumentApp for DrawPlayApp {
     type Projection = DrawDocument;
-    type Op = DrawOp;
+    type Operation = DrawOperation;
 
     fn app_id(&self) -> &str {
         DRAW_PLAY_APP_ID
@@ -1618,15 +1618,15 @@ impl DocumentApp for DrawPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, DrawDocument>,
         view_state: &ViewState,
-    ) -> ActionEmit<DrawOp> {
+    ) -> ActionEmit<DrawOperation> {
         let document = doc.projection;
         let active_utility = view_state.active_utility_id.clone().unwrap_or_else(|| DRAW_DEFAULT_UTILITY.into());
         match action {
-            //#region 🔖ContentOps
+            //#region 🔖ContentOperations
             "setDocument" | "commitDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")) {
                     if let Ok(document) = serde_json::from_value::<DrawDocument>(next.clone()) {
-                        return ActionEmit::ops(vec![DrawOp::SetDocument { document }]);
+                        return ActionEmit::operations(vec![DrawOperation::SetDocument { document }]);
                     }
                 }
                 ActionEmit::default()
@@ -1642,7 +1642,7 @@ impl DocumentApp for DrawPlayApp {
                         if camera == document.camera {
                             return ActionEmit::default();
                         }
-                        return ActionEmit { ops: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+                        return ActionEmit { operations: vec![DrawOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
                     }
                 }
                 ActionEmit::default()
@@ -1654,21 +1654,21 @@ impl DocumentApp for DrawPlayApp {
                 if camera == document.camera {
                     return ActionEmit::default();
                 }
-                ActionEmit { ops: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() }
+                ActionEmit { operations: vec![DrawOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() }
             }
             "setSelectedOpacity" => {
                 let opacity = args.and_then(|value| value.get("value")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                let ops: Vec<DrawOp> = self
+                let operations: Vec<DrawOperation> = self
                     .interaction
                     .selected_ids
                     .iter()
                     .filter(|id| find_draw_layer(document, id).is_some())
-                    .map(|id| DrawOp::SetLayerOpacity { layer_id: id.clone(), opacity })
+                    .map(|id| DrawOperation::SetLayerOpacity { layer_id: id.clone(), opacity })
                     .collect();
-                if ops.is_empty() {
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit { ops, coalesce_key: Some("opacity".into()), ..Default::default() }
+                ActionEmit { operations, coalesce_key: Some("opacity".into()), ..Default::default() }
             }
             "engagementSubmit" => {
                 let value = args
@@ -1680,7 +1680,7 @@ impl DocumentApp for DrawPlayApp {
                 if value.is_empty() || self.interaction.selected_ids.len() != 1 {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![DrawOp::SetLayerName { layer_id: self.interaction.selected_ids[0].clone(), name: value.into() }])
+                ActionEmit::operations(vec![DrawOperation::SetLayerName { layer_id: self.interaction.selected_ids[0].clone(), name: value.into() }])
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1694,7 +1694,7 @@ impl DocumentApp for DrawPlayApp {
                 match next {
                     Some(document) => {
                         self.interaction.selected_ids.clear();
-                        ActionEmit::ops(vec![DrawOp::SetDocument { document }])
+                        ActionEmit::operations(vec![DrawOperation::SetDocument { document }])
                     }
                     None => ActionEmit::default(),
                 }
@@ -1703,7 +1703,7 @@ impl DocumentApp for DrawPlayApp {
                 let json_text = args.and_then(|value| value.get("json")).and_then(|value| value.as_str()).unwrap_or("");
                 if json_text.contains(DRAW_DOCUMENT_SCHEMA) {
                     if let Ok(document) = serde_json::from_str::<DrawDocument>(json_text) {
-                        return ActionEmit::ops(vec![DrawOp::SetDocument { document }]);
+                        return ActionEmit::operations(vec![DrawOperation::SetDocument { document }]);
                     }
                 }
                 ActionEmit::default()
@@ -1712,7 +1712,7 @@ impl DocumentApp for DrawPlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("path");
                 let layer = create_layer_by_kind(kind);
                 self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                ActionEmit::ops(vec![DrawOp::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
+                ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
             }
             "dropLayerKind" | "moveLayer" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str());
@@ -1730,11 +1730,11 @@ impl DocumentApp for DrawPlayApp {
                         let layer = create_layer_by_kind(kind);
                         let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
                         self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                        return ActionEmit::ops(vec![DrawOp::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }]);
+                        return ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id, index: Some(index), layer: Box::new(layer) }]);
                     }
                 } else if let Some(layer_id) = layer_id_arg {
                     let (parent_id, index) = resolve_reorder_target(document, target_row_id, drop_position);
-                    return ActionEmit::ops(vec![DrawOp::ReorderLayer { layer_id: layer_id.into(), parent_id, index }]);
+                    return ActionEmit::operations(vec![DrawOperation::ReorderLayer { layer_id: layer_id.into(), parent_id, index }]);
                 }
                 ActionEmit::default()
             }
@@ -1744,27 +1744,27 @@ impl DocumentApp for DrawPlayApp {
                     return ActionEmit::default();
                 }
                 self.interaction.selected_ids.retain(|id| id != layer_id);
-                ActionEmit::ops(vec![DrawOp::RemoveLayer { layer_id: layer_id.into() }])
+                ActionEmit::operations(vec![DrawOperation::RemoveLayer { layer_id: layer_id.into() }])
             }
             "duplicateLayer" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
                 if layer_id.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![DrawOp::DuplicateLayer { layer_id: layer_id.into() }])
+                ActionEmit::operations(vec![DrawOperation::DuplicateLayer { layer_id: layer_id.into() }])
             }
             "toggleLayerVisible" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
                 match find_draw_layer(document, layer_id) {
                     Some(layer) => {
                         let visible = !layer_base(layer).visible;
-                        ActionEmit::ops(vec![DrawOp::SetLayerVisible { layer_id: layer_id.into(), visible }])
+                        ActionEmit::operations(vec![DrawOperation::SetLayerVisible { layer_id: layer_id.into(), visible }])
                     }
                     None => ActionEmit::default(),
                 }
             }
             "combineBoolean" => {
-                let op = args.and_then(|value| value.get("op")).and_then(|value| value.as_str()).unwrap_or("union");
+                let operation = args.and_then(|value| value.get("operation")).and_then(|value| value.as_str()).unwrap_or("union");
                 let ids: Vec<String> = args
                     .and_then(|value| value.get("ids"))
                     .and_then(|value| value.as_array())
@@ -1774,9 +1774,9 @@ impl DocumentApp for DrawPlayApp {
                 if ids.len() < 2 {
                     return ActionEmit::default();
                 }
-                let layer = create_draw_boolean_layer("Boolean", op, ids);
+                let layer = create_draw_boolean_layer("Boolean", operation, ids);
                 self.interaction.selected_ids = vec![layer_id(&layer).to_string()];
-                ActionEmit::ops(vec![DrawOp::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
+                ActionEmit::operations(vec![DrawOperation::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
             }
             "patchLayer" => {
                 let layer_id = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1787,7 +1787,7 @@ impl DocumentApp for DrawPlayApp {
                     .cloned()
                     .unwrap_or(Value::Null);
                 match draw_op_for_layer_field(document, layer_id, field, &value) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1803,16 +1803,16 @@ impl DocumentApp for DrawPlayApp {
                     .or_else(|| args.and_then(|value| value.get("pressed")))
                     .cloned()
                     .unwrap_or(Value::Null);
-                let ops: Vec<DrawOp> = layer_ids
+                let operations: Vec<DrawOperation> = layer_ids
                     .iter()
                     .filter_map(|id| draw_op_for_layer_field(document, id, field, &value))
                     .collect();
-                if ops.is_empty() {
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
-            //#endregion 🔖ContentOps
+            //#endregion 🔖ContentOperations
             //#region 🔖ViewState
             "setSelection" => {
                 self.interaction.selected_ids = selection_ids(args);
@@ -1998,7 +1998,7 @@ fn create_draw_app() -> App {
             .action_with(draw_internal_action("toggleLayerVisible", "Toggle Layer Visible", ActionKind::Operation))
             .action_with(draw_internal_action("patchLayer", "Patch Layer", ActionKind::Operation))
             .action_with(draw_internal_action("patchLayers", "Patch Layers", ActionKind::Operation))
-            // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit ops, the rest are pure View.
+            // 🖱️ Internal pointer/gesture vocabulary — commit-time handlers emit operations, the rest are pure View.
             .action_with(draw_internal_action("canvasPointerDown", "Canvas Pointer Down", ActionKind::Operation))
             .action_with(draw_internal_action("canvasPointerUp", "Canvas Pointer Up", ActionKind::Operation))
             .action_with(draw_internal_action("canvasDoubleClick", "Canvas Double Click", ActionKind::Operation))
@@ -2011,7 +2011,7 @@ fn create_draw_app() -> App {
             .action_with(draw_internal_action("setSelection", "Set Selection", ActionKind::View))
             .action_with(draw_internal_action("setHover", "Set Hover", ActionKind::View))
             .action_with(draw_internal_action("engagementInput", "Engagement Input", ActionKind::View))
-            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document op).
+            // 🧰 Canvas utilities — one exclusive set per window, active utility host-owned (never a document operation).
             .utility(draw_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
@@ -2082,7 +2082,7 @@ mod tests {
         testkit::new_app::<DrawPlayApp>()
     }
 
-    /// 🧬 A wrapper carrying the real registry so kind discipline (View-emits-ops rejection) runs.
+    /// 🧬 A wrapper carrying the real registry so kind discipline (View-emits-operations rejection) runs.
     fn new_app_with_registry() -> VcsDocumentApp<DrawPlayApp> {
         testkit::new_app_with_registry::<DrawPlayApp>(create_draw_app)
     }
@@ -2148,7 +2148,7 @@ mod tests {
     }
 
     #[test]
-    fn catalogue_panel_lists_boolean_ops() {
+    fn catalogue_panel_lists_boolean_operations() {
         let mut app = new_app();
         let node = app.render(DRAW_PLAY_BODY_CATALOGUE, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
@@ -2168,7 +2168,7 @@ mod tests {
     }
 
     #[test]
-    fn patch_layers_opacity_emits_granular_op() {
+    fn patch_layers_opacity_emits_granular_operation() {
         let mut app = new_app();
         let id = first_layer_id(&app);
         let result = app
@@ -2195,7 +2195,7 @@ mod tests {
         let mut app = new_app();
         let id = first_layer_id(&app);
         let result = app.handle_action("setSelection", Some(&json!({ "ids": [id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
-        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document op");
+        assert!(result.operations.is_empty(), "selection is ephemeral view state, not a document operation");
         let node = app.render(DRAW_PLAY_BODY_PROPERTIES, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("Orientation"));
@@ -2208,9 +2208,9 @@ mod tests {
         // Begin a shape gesture so there is scratch to clear.
         app.handle_action("canvasPointerDown", Some(&json!({ "x": 10.0, "y": 10.0, "width": 800.0, "height": 600.0 })), &view_with_utility("shapeRect"), &testkit::meta("local")).expect("down");
         let before = app.projection().unwrap();
-        // Switching utilities is the framework View action: no document ops, nothing to sync/undo.
+        // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
         let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "pen" })), &view_with_utility("pen"), &testkit::meta("local")).expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().unwrap(), before, "utility switching does not mutate the document");
         // The cleared scratch means a follow-up pointer up commits nothing.
         let up = app.handle_action("canvasPointerUp", Some(&json!({ "x": 40.0, "y": 40.0, "width": 800.0, "height": 600.0, "shift": false, "ctrl": false, "meta": false })), &view_with_utility("pen"), &testkit::meta("local")).expect("up");
@@ -2232,7 +2232,7 @@ mod tests {
         app.handle_action("addLayer", Some(&json!({ "kind": "shape:rect" })), &ViewState::default(), &testkit::meta("local")).expect("add rect");
         let second_id = last_layer_id(&app);
         let result = app
-            .handle_action("combineBoolean", Some(&json!({ "op": "union", "ids": [first_id, second_id] })), &ViewState::default(), &testkit::meta("local"))
+            .handle_action("combineBoolean", Some(&json!({ "operation": "union", "ids": [first_id, second_id] })), &ViewState::default(), &testkit::meta("local"))
             .expect("combine");
         assert_eq!(result.operations.len(), 1);
         assert!(app.projection().unwrap().layers.iter().any(|layer| matches!(layer, DrawLayerNode::Boolean(_))));
@@ -2249,7 +2249,7 @@ mod tests {
     #[test]
     fn shape_rect_drag_commits_one_layer_and_requests_utility_reset() {
         // Under the real registry: canvasPointerUp is an Operation-kind pointer handler, so emitting
-        // the AddLayer op is allowed; the return-to-select is a HostEffect, not a document op.
+        // the AddLayer operation is allowed; the return-to-select is a HostEffect, not a document operation.
         let mut app = new_app_with_registry();
         let view = view_with_utility("shapeRect");
         app.handle_action("canvasPointerDown", Some(&json!({ "x": 500.0, "y": 400.0, "width": 1000.0, "height": 800.0 })), &view, &testkit::meta("local")).expect("down");
@@ -2268,7 +2268,7 @@ mod tests {
         assert!(matches!(
             result.requested_effects.as_slice(),
             [HostEffect::SetActiveUtility { window_id, utility_id }] if window_id == DRAW_PLAY_WINDOW_CANVAS && utility_id == "selectDirect"
-        ), "the canvas returns to select-direct via a host effect, not a document op");
+        ), "the canvas returns to select-direct via a host effect, not a document operation");
     }
 
     #[test]
@@ -2331,7 +2331,7 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_emits_one_coalesced_op() {
+    fn set_camera_emits_one_coalesced_operation() {
         let mut app = new_app();
         let result = app
             .handle_action("setCamera", Some(&json!({ "camera": { "x": 5.0, "y": 5.0, "zoom": 2.0 } })), &ViewState::default(), &testkit::meta("local"))
@@ -2369,7 +2369,7 @@ mod tests {
         assert_eq!(scene.utilities.len(), definition.utilities.len(), "every utility is scoped to the canvas window kind");
         // The framework auto-injects the setActiveUtility View action once utilities are declared.
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
-        // The retired document op vocabulary is gone.
+        // The retired document operation vocabulary is gone.
         assert!(!definition.actions.iter().any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
     }
 

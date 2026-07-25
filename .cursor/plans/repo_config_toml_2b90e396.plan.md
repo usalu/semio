@@ -35,7 +35,7 @@ All session-file logging is in the repo CLI (`repo/client/cli/main.go`), driven 
 
 - [repo/client/cli/main.go](repo/client/cli/main.go) `writeHookArtifacts` (~line 43660): the single entry that builds the `.repo/⚡/🤖/YY/MM/DD/<session>/` dir and calls the writers.
 - `writeSessionHookLog` (~line 43694): writes `session.json` events, attaches raw `native.event` input and `response` block, and tracks plan steps.
-- `logRepoOperationHook` (~line 44212): appends derived `agent.<op>.<phase>` events into `session.json`.
+- `logRepoOperationHook` (~line 44212): appends derived `agent.<operation>.<phase>` events into `session.json`.
 
 There is no TOML decode library in [repo/client/cli/go.mod](repo/client/cli/go.mod); the codebase already hand-parses TOML (`dependencyBoundaryMergeCargoToml`, ~line 20489), so the config will be parsed the same way (no new dependency, consistent with `AGENTS.md`).
 
@@ -45,7 +45,7 @@ There is no TOML decode library in [repo/client/cli/go.mod](repo/client/cli/go.m
 [logging]
 # Write per-session session.json hook logs under .repo/⚡/🤖/...
 session = false
-# Include derived agent.<op>.<phase> events (only applies when session = true)
+# Include derived agent.<operation>.<phase> events (only applies when session = true)
 operations = true
 # Track agent plan steps in session.json (only applies when session = true)
 plan = true

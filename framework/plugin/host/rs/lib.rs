@@ -283,7 +283,7 @@ impl WasmPluginRuntime {
         Ok(())
     }
 
-    /// @emoji 📥 Ingests a JSON array of remote `OpEnvelope`s into the plugin instance's store.
+    /// @emoji 📥 Ingests a JSON array of remote `OperationEnvelope`s into the plugin instance's store.
     pub fn apply_operations(&self, instance_id: u32, operations_json: &str) -> Result<(), PluginHostError> {
         let mut store = self.store_guard()?;
         let bindings = self.bindings_guard()?;

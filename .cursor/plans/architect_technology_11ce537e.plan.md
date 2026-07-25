@@ -11,11 +11,11 @@ todos:
   - id: kernel-document
     content: Implement kernel types + Program root with all 65-area registers and serde
     status: completed
-  - id: adjacency-ops
-    content: Undirected adjacency model, conflicts, ProgramOp VCS, validate/analyze/report/search/trace/exchange
+  - id: adjacency-operations
+    content: Undirected adjacency model, conflicts, ProgramOperation VCS, validate/analyze/report/search/trace/exchange
     status: completed
   - id: tests-program
-    content: "Co-located tests: round-trip, ops/undo, adjacency, analysis, exchange"
+    content: "Co-located tests: round-trip, operations/undo, adjacency, analysis, exchange"
     status: completed
   - id: plugin-app
     content: "DocumentApp: adjacency triangle list, graph, registers, reports, panels, full actions"
@@ -41,7 +41,7 @@ isProject: false
 ```mermaid
 flowchart TB
   plugin["architect_plugin\nDocumentApp WASM"]
-  program["architect_program\nProgram + Ops + Analysis"]
+  program["architect_program\nProgram + Operations + Analysis"]
   vcs["vcs"]
   graph["mathematical_graph"]
   sdk["semio-framework-plugin"]
@@ -178,9 +178,9 @@ Adjacency {
 
 API: `normalize_pair`, `set_adjacency`, `adjacency_matrix` (dense lower-triangle view), `detect_adjacency_conflicts` (required vs prohibited, incompatible separations), `undirected_edges` for graph render.
 
-### VCS ops
+### VCS operations
 
-`ProgramOp` enum covering upsert/remove/reorder for every register + bulk replace + adjacency set/clear + meta update. Implements `vcs::Operation<Program>` with diffs and backwards for undo.
+`ProgramOperation` enum covering upsert/remove/reorder for every register + bulk replace + adjacency set/clear + meta update. Implements `vcs::Operation<Program>` with diffs and backwards for undo.
 
 ### Analysis / reporting / search / exchange (real, not stubs)
 
@@ -199,14 +199,14 @@ API: `normalize_pair`, `set_adjacency`, `adjacency_matrix` (dense lower-triangle
 
 - Round-trip serde for `Program` with every register populated
 - Adjacency normalize + conflict detection
-- Op apply/undo for representative ops per register
+- Operation apply/undo for representative operations per register
 - `validate_program` catches broken refs and adjacency conflicts
 - Analysis and report smoke on a fixture program
 - Exchange import/export preserve ids and undirected edges
 
 ## Plugin — `architect/plugin`
 
-Follow [`forms/plugin`](forms/plugin/rs) + [`flow/plugin`](flow/plugin/rs) patterns: `DocumentApp<Program, ProgramOp>` + `semio_plugin!`.
+Follow [`forms/plugin`](forms/plugin/rs) + [`flow/plugin`](flow/plugin/rs) patterns: `DocumentApp<Program, ProgramOperation>` + `semio_plugin!`.
 
 ### Manifest
 
@@ -231,7 +231,7 @@ ElemC   [○]    [●]
 ElemD   [×]    [ ]    [●]
 ```
 
-Rendered as a **list of pair rows** (`BlockList` or custom `UiNode::Tree` rows) ordered by `(row, col)` with `col < row`, plus a left-side **triangle glyph strip** (CSS/scene chrome) so the matrix identity is obvious. Each cell/row edits `Adjacency.kind` / weight / separations via inspector. Mutations emit `ProgramOp::SetAdjacency` / `ClearAdjacency` with normalized endpoints.
+Rendered as a **list of pair rows** (`BlockList` or custom `UiNode::Tree` rows) ordered by `(row, col)` with `col < row`, plus a left-side **triangle glyph strip** (CSS/scene chrome) so the matrix identity is obvious. Each cell/row edits `Adjacency.kind` / weight / separations via inspector. Mutations emit `ProgramOperation::SetAdjacency` / `ClearAdjacency` with normalized endpoints.
 
 Graph window: elements as nodes; edges from `adjacencies`; no direction arrows; layout via existing undirected board helpers if needed (`infinite_board_normal_undirected`) without leaking puzzle fixtures.
 

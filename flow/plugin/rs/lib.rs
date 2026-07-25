@@ -2,9 +2,9 @@
 
 use flow_core::{
     dag::{dag_lod_scale_json, DagDrawLod, DagFixture},
-    flow_backed_node_graph_extras, flow_fixture_ops, flow_operator_catalogue_json,
+    flow_backed_node_graph_extras, flow_fixture_operations, flow_operator_catalogue_json,
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
-    CameraJson, FlowEvalDriver, FlowFixture, FlowHost, FlowOp, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
+    CameraJson, FlowEvalDriver, FlowFixture, FlowHost, FlowOperation, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
 };
 use protocol::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{
@@ -187,13 +187,13 @@ fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHo
 }
 
 /// 🌉 Runs a `FlowHost` mutation over the current document fixture and diffs the result into granular
-/// `FlowOp`s. `mutate` returns `true` if it changed the fixture; a non-mutating call yields no ops.
-fn host_ops(fixture: &FlowFixture, runtime: &FlowPlayRuntime, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOp> {
+/// `FlowOperation`s. `mutate` returns `true` if it changed the fixture; a non-mutating call yields no operations.
+fn host_operations(fixture: &FlowFixture, runtime: &FlowPlayRuntime, mutate: impl FnOnce(&mut FlowHost) -> bool) -> Vec<FlowOperation> {
     let mut host = host_from_fixture(fixture, runtime);
     if !mutate(&mut host) {
         return Vec::new();
     }
-    flow_fixture_ops(fixture, &host.fixture)
+    flow_fixture_operations(fixture, &host.fixture)
 }
 
 fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
@@ -343,7 +343,7 @@ fn build_node_graph_context_menu_json(runtime: &FlowPlayRuntime, fixture: &FlowF
         "label": labels.delete_selection,
         "icon": "trash",
         "action": "nodeGraphEdit",
-        "args": { "ops": [{ "op": "deleteSelection" }] },
+        "args": { "operations": [{ "operation": "deleteSelection" }] },
         "destructive": true,
         "disabled": !has_selection,
     }));
@@ -892,7 +892,7 @@ fn evaluate_generation_preview(fixture: &FlowFixture, runtime: &FlowPlayRuntime,
 }
 
 /// 👁️ Re-evaluates the selected generation into the runtime preview text (ephemeral view state — never
-/// a document op).
+/// a document operation).
 fn refresh_generation_preview(fixture: &FlowFixture, runtime: &mut FlowPlayRuntime) {
     let Some(generation) = selected_generation(&runtime.generation) else {
         runtime.generation.preview_text = None;
@@ -1000,7 +1000,7 @@ impl FlowPlayApp {
 
 impl DocumentApp for FlowPlayApp {
     type Projection = FlowFixture;
-    type Op = FlowOp;
+    type Operation = FlowOperation;
 
     fn app_id(&self) -> &str {
         FLOW_PLAY_APP_ID
@@ -1014,10 +1014,10 @@ impl DocumentApp for FlowPlayApp {
         FlowFixture::default()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> ActionEmit<FlowOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> ActionEmit<FlowOperation> {
         let fixture = doc.projection;
         match action {
-            // 👁️ View/config actions — mutate runtime, emit no ops (never pollute undo).
+            // 👁️ View/config actions — mutate runtime, emit no operations (never pollute undo).
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 self.runtime.selected_node_ids = Self::parse_selection(args);
                 ActionEmit::default()
@@ -1151,7 +1151,7 @@ impl DocumentApp for FlowPlayApp {
                 }
                 ActionEmit::default()
             }
-            // ✏️ Operation actions — run the stateful `FlowHost` mutation, diff into granular ops.
+            // ✏️ Operation actions — run the stateful `FlowHost` mutation, diff into granular operations.
             "addWidget" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("inputSlider");
                 let descriptor = match kind {
@@ -1164,7 +1164,7 @@ impl DocumentApp for FlowPlayApp {
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()).unwrap_or(120.0);
                 let mut new_id = None;
-                let ops = host_ops(fixture, &self.runtime, |host| match host.add_widget(&descriptor, x, y) {
+                let operations = host_operations(fixture, &self.runtime, |host| match host.add_widget(&descriptor, x, y) {
                     Ok(id) => {
                         new_id = Some(id);
                         true
@@ -1174,36 +1174,36 @@ impl DocumentApp for FlowPlayApp {
                 if let Some(id) = new_id {
                     self.runtime.selected_node_ids = vec![id];
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "removeWidget" => {
                 let widget_id = args.and_then(|value| value.get("widgetId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(widget_id) = widget_id else {
                     return ActionEmit::default();
                 };
-                let ops = host_ops(fixture, &self.runtime, |host| host.remove_widget(&widget_id).is_ok());
-                if !ops.is_empty() {
+                let operations = host_operations(fixture, &self.runtime, |host| host.remove_widget(&widget_id).is_ok());
+                if !operations.is_empty() {
                     self.runtime.selected_node_ids.retain(|id| id != &widget_id);
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "deleteSelection" => {
                 let selected = self.runtime.selected_node_ids.clone();
-                let ops = host_ops(fixture, &self.runtime, |host| {
+                let operations = host_operations(fixture, &self.runtime, |host| {
                     sync_host_selection(host, &selected);
                     host.delete_selection().is_ok()
                 });
-                if !ops.is_empty() {
+                if !operations.is_empty() {
                     self.runtime.selected_node_ids.clear();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "disconnect" => {
                 let synapse_id = args.and_then(|value| value.get("synapseId")).or_else(|| args.and_then(|value| value.get("edgeId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(synapse_id) = synapse_id else {
                     return ActionEmit::default();
                 };
-                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.disconnect(&synapse_id).is_ok()))
+                ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.disconnect(&synapse_id).is_ok()))
             }
             "connectMediaPorts" => {
                 let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
@@ -1213,7 +1213,7 @@ impl DocumentApp for FlowPlayApp {
                 let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) else {
                     return ActionEmit::default();
                 };
-                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
+                ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
             }
             "moveMediaNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
@@ -1222,26 +1222,26 @@ impl DocumentApp for FlowPlayApp {
                 let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) else {
                     return ActionEmit::default();
                 };
-                let ops = host_ops(fixture, &self.runtime, |host| {
+                let operations = host_operations(fixture, &self.runtime, |host| {
                     host.begin_change();
                     host.move_widget(&node_id, x, y).is_ok()
                 });
-                if ops.is_empty() {
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::amend(ops, format!("move-{node_id}"))
+                ActionEmit::amend(operations, format!("move-{node_id}"))
             }
-            "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+            "reorganize" => ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
             "patchFlowWidgets" => {
                 let widget_ids: Vec<String> = args.and_then(|value| value.get("widgetIds")).and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("").to_string();
                 let raw_value = args.and_then(|value| value.get("value")).cloned();
                 let next = Self::patched_widgets_fixture(fixture, &widget_ids, &field, raw_value.as_ref());
-                let ops = flow_fixture_ops(fixture, &next);
-                if ops.is_empty() {
+                let operations = flow_fixture_operations(fixture, &next);
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::amend(ops, format!("patch-{field}-{}", widget_ids.join(",")))
+                ActionEmit::amend(operations, format!("patch-{field}-{}", widget_ids.join(",")))
             }
             "renameFlowWidget" => {
                 let old_id = args.and_then(|value| value.get("oldId")).and_then(|value| value.as_str());
@@ -1253,18 +1253,18 @@ impl DocumentApp for FlowPlayApp {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_node_ids = vec![new_id.trim().into()];
-                ActionEmit::ops(flow_fixture_ops(fixture, &next))
+                ActionEmit::operations(flow_fixture_operations(fixture, &next))
             }
             "nodeGraphEdit" | "spotlightCommit" => {
-                let raw_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let raw_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let selected = self.runtime.selected_node_ids.clone();
                 let mut clear_selection = false;
-                let ops = host_ops(fixture, &self.runtime, |host| {
+                let operations = host_operations(fixture, &self.runtime, |host| {
                     let mut changed = false;
-                    for op in &raw_ops {
-                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                    for operation in &raw_operations {
+                        match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(fixture_json) = op.get("fixtureJson").and_then(|value| value.as_str()) {
+                                if let Some(fixture_json) = operation.get("fixtureJson").and_then(|value| value.as_str()) {
                                     if let Ok(parsed) = serde_json::from_str::<FlowFixture>(fixture_json) {
                                         host.begin_change();
                                         host.set_fixture_preserving_history(parsed);
@@ -1280,10 +1280,10 @@ impl DocumentApp for FlowPlayApp {
                                 }
                             }
                             "connect" => {
-                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                                let from_port = op.get("sourcePortId").and_then(|value| value.as_str());
-                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
-                                let to_port = op.get("targetPortId").and_then(|value| value.as_str());
+                                let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                                let from_port = operation.get("sourcePortId").and_then(|value| value.as_str());
+                                let to = operation.get("targetNodeId").and_then(|value| value.as_str());
+                                let to_port = operation.get("targetPortId").and_then(|value| value.as_str());
                                 if let (Some(from), Some(from_port), Some(to), Some(to_port)) = (from, from_port, to, to_port) {
                                     if host.connect_ports(from, from_port, to, to_port).is_ok() {
                                         changed = true;
@@ -1298,7 +1298,7 @@ impl DocumentApp for FlowPlayApp {
                 if clear_selection {
                     self.runtime.selected_node_ids.clear();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "runExtensionAction" => {
                 let action_id = args.and_then(|value| value.get("actionId")).and_then(|value| value.as_str());
@@ -1313,7 +1313,7 @@ impl DocumentApp for FlowPlayApp {
                     return ActionEmit::default();
                 }
                 match *effect {
-                    "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+                    "reorganize" => ActionEmit::operations(host_operations(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
                     "evaluate" => {
                         let host = host_from_fixture(fixture, &self.runtime);
                         if self.runtime.eval_driver.sync(&host) {
@@ -1470,7 +1470,7 @@ fn create_flow_app() -> App {
             .operation("spotlightCommit", "Spotlight Commit")
             // 🧩 Dynamic extension-provided action — id resolved at runtime, kept out of the palette.
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("runExtensionAction", "Run Extension Action", ActionKind::Operation) })
-            // 👁️ Ephemeral view/config actions — mutate runtime, emit no ops.
+            // 👁️ Ephemeral view/config actions — mutate runtime, emit no operations.
             .view_action("evaluate", "Evaluate")
             .view_action("selectAll", "Select All")
             .view_action("focusSelection", "Zoom to Selection")
@@ -1597,7 +1597,7 @@ mod tests {
         let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
         let result = app.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 40.0, "y": 40.0 })), &ViewState::default(), &meta("local")).expect("addWidget");
-        assert!(!result.operations.is_empty(), "addWidget must emit ops");
+        assert!(!result.operations.is_empty(), "addWidget must emit operations");
         assert_eq!(app.projection().expect("projection").widgets.len(), before + 1);
     }
 
@@ -1609,14 +1609,14 @@ mod tests {
     }
 
     #[test]
-    fn selection_is_view_state_and_emits_no_ops() {
+    fn selection_is_view_state_and_emits_no_operations() {
         let mut app = new_app::<FlowPlayApp>();
         let result = app.handle_action("setSelection", Some(&json!({ "ids": ["slider"] })), &ViewState::default(), &meta("local")).expect("setSelection");
-        assert!(result.operations.is_empty(), "selection must not produce document ops");
+        assert!(result.operations.is_empty(), "selection must not produce document operations");
     }
 
     #[test]
-    fn evaluate_updates_preview_state_without_ops() {
+    fn evaluate_updates_preview_state_without_operations() {
         let mut app = new_app::<FlowPlayApp>();
         let result = app.handle_action("evaluate", None, &ViewState::default(), &meta("local")).expect("evaluate");
         assert!(result.operations.is_empty(), "evaluate is a view action");
@@ -1644,7 +1644,7 @@ mod tests {
         let mut app = new_app::<FlowPlayApp>();
         let before = app.projection().expect("projection").widgets.len();
         let ignored = app.handle_action("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &ViewState::default(), &meta("local")).expect("ignored");
-        assert!(ignored.operations.is_empty(), "disabled extension action must be a no-op");
+        assert!(ignored.operations.is_empty(), "disabled extension action must be a no-operation");
         app.handle_action("toggleExtension", Some(&json!({ "id": "auto-layout", "enabled": true })), &ViewState::default(), &meta("local")).expect("toggle");
         app.handle_action("runExtensionAction", Some(&json!({ "actionId": "flow.extension.reorganize" })), &ViewState::default(), &meta("local")).expect("reorganize");
         assert_eq!(app.projection().expect("projection").widgets.len(), before, "reorganize keeps every widget");
@@ -1660,7 +1660,7 @@ mod tests {
     }
 
     /// 🤝 Definitional merge proof: two instances on one backbone make DISJOINT edits (one renames a
-    /// widget, the other adds a widget); after exchanging ops both converge — impossible under
+    /// widget, the other adds a widget); after exchanging operations both converge — impossible under
     /// whole-fixture `setDocument` snapshots, which would clobber one side.
     #[test]
     fn default_runtime_enables_proximity_distance() {
@@ -1769,7 +1769,7 @@ mod tests {
         instance_a.handle_action("renameFlowWidget", Some(&json!({ "oldId": "slider", "value": "input" })), &ViewState::default(), &meta("actor-a")).expect("a renames slider");
         instance_b.handle_action("addWidget", Some(&json!({ "kind": "inputNote", "x": 10.0, "y": 10.0 })), &ViewState::default(), &meta("actor-b")).expect("b adds a note");
 
-        // A neutral history action always dispatches through the store, which pumps inbound ops first.
+        // A neutral history action always dispatches through the store, which pumps inbound operations first.
         instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
 

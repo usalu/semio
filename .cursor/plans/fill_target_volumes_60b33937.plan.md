@@ -9,7 +9,7 @@ todos:
    content: Add shared WorldVolume* oriented-box primitive (props, pose/transform helpers, BoxItem, Layer, worldVolumesContainAabb) in infinite/world/r3f
    status: completed
  - id: fixture
-   content: "Extend Fixture with targetVolumes[]: parse/encode, pure ops (add/update/remove/relocate), selection snapshot targetVolumeIds + pick kind"
+   content: "Extend Fixture with targetVolumes[]: parse/encode, pure operations (add/update/remove/relocate), selection snapshot targetVolumeIds + pick kind"
    status: completed
  - id: render-layer
    content: Render WorldVolumeLayer in puzzle 3d scene wired to registry selection/hover + onTargetVolumeRelocate; canvas props fillEditTargetVolumes/onTargetVolumeRelocate/onTargetVolumeDraw
@@ -57,7 +57,7 @@ New `#region Volume` mirroring the `WorldReference*` block (lines ~1656-1860):
 
 - Import `WorldVolumeLayer`, `applyWorldVolumeTransform`, `WorldVolumeProps`, `WorldVolumeRelocatePayload` (next to the existing reference imports, lines 70-74).
 - Extend `Fixture` (line 1260) with `targetVolumes: WorldVolumeProps[]` (default `[]`); parse in `parseFixture` (line ~1612, mirror `references` flatMap) and include in any encode path.
-- Pure ops mirroring `addReferenceToFixture`/`updatePuzzle3dReferenceInFixture`/`applyReferenceRelocateToFixture` (lines 1507-1532): `addTargetVolumeToFixture`, `updatePuzzle3dTargetVolumeInFixture`, `removeTargetVolumeFromFixture`, `applyTargetVolumeRelocateToFixture`.
+- Pure operations mirroring `addReferenceToFixture`/`updatePuzzle3dReferenceInFixture`/`applyReferenceRelocateToFixture` (lines 1507-1532): `addTargetVolumeToFixture`, `updatePuzzle3dTargetVolumeInFixture`, `removeTargetVolumeFromFixture`, `applyTargetVolumeRelocateToFixture`.
 - Selection: add `targetVolumeIds` to `SelectionSnapshot` (line 452), `EMPTY_SELECTION_SNAPSHOT` (483), `{ kind: "targetVolume"; id }` pick (492/888), `selectionFromPick` + merge (498-575), equality checks.
 - Canvas props: add `fillEditTargetVolumes?: boolean`, `onTargetVolumeRelocate?`, `onTargetVolumeDraw?(volume)` near `onReferenceRelocate` (line 1069).
 - Scene: render `<WorldVolumeLayer .../>` in `Inner` (next to the references layer), wired to registry selection/hover and `onTargetVolumeRelocate`. Volumes always render as faint guides; select/gumball enabled only when `fillEditTargetVolumes`.
@@ -73,7 +73,7 @@ Concise box-draw session reusing CAD box semantics (reference: [cad/asset/modelD
 
 ### 4. Fill sub-mode + engagement — [puzzle/3d/play/index.ts](puzzle/3d/play/index.ts) and [puzzle/3d/react/index.tsx](puzzle/3d/react/index.tsx)
 
-- Controller: add `fillEditTargetVolumes: boolean` to `Puzzle3dPlayShellController` + `Puzzle3dPlaySnapshot`; commands `setFillEditTargetVolumes` / `toggleFillTargetVolumeEdit`; `deleteSelectedTargetVolume`. Add `addTargetVolume`/`relocateTargetVolume` patch cases (use the pure ops).
+- Controller: add `fillEditTargetVolumes: boolean` to `Puzzle3dPlayShellController` + `Puzzle3dPlaySnapshot`; commands `setFillEditTargetVolumes` / `toggleFillTargetVolumeEdit`; `deleteSelectedTargetVolume`. Add `addTargetVolume`/`relocateTargetVolume` patch cases (use the pure operations).
 - `buildPuzzle3dPlayEngagement` (lines 7664-7776): when `activeTool === "fill"`, add an `options` toggle "Edit target volumes"; while editing, set status hint ("Pick 3 points then drag height; select a volume to move/scale") and a "Delete volume" option when a target volume is selected. Keep the fill-count slider available.
 - Activating edit sets `puzzle3dTargetVolumeToolActiveRef` and enables interactive volumes + draw tool via the `fillEditTargetVolumes` canvas prop.
 

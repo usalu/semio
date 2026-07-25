@@ -548,7 +548,7 @@ pub fn register(registry: &mut Registry) {
     register_simple(registry, operator_info("math.power", "Power", "Pow", "Raises a to the power of b", binary_scalar.clone(), vec![power_out()]), Box::new(Power), vec!["number", "number"], &["number"]);
     register_simple(registry, operator_info("math.modulo", "Modulo", "Mod", "Remainder of a divided by b", binary_scalar, vec![modulo_out()]), Box::new(Modulo), vec!["number", "number"], &["number"]);
 
-    for (id, name, abbreviation, summary, output, op) in [
+    for (id, name, abbreviation, summary, output, operation) in [
         ("math.negate", "Negate", "Neg", "Negates a number", vec![negated_out()], Box::new(Negate) as Box<dyn Operation>),
         ("math.abs", "Abs", "Abs", "Absolute value", vec![absolute_out()], Box::new(Abs)),
         ("math.sqrt", "Sqrt", "Sqrt", "Square root", vec![root_out()], Box::new(Sqrt)),
@@ -560,7 +560,7 @@ pub fn register(registry: &mut Registry) {
         ("math.tan", "Tan", "Tan", "Tangent in radians", vec![tangent_out()], Box::new(Tan)),
         ("math.passThrough", "PassThrough", "Pass", "Forwards a number", vec![number_out()], Box::new(PassThrough)),
     ] {
-        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number", id)], output), op, vec!["number"], &["number"]);
+        register_simple(registry, operator_info(id, name, abbreviation, summary, vec![number_channel("number", id)], output), operation, vec!["number"], &["number"]);
     }
 
     register_simple(registry, operator_info("math.min", "Min", "Min", "Minimum of two numbers", vec![number_channel("a", "math.min"), number_channel("b", "math.min")], vec![minimum_out()]), Box::new(Min), vec!["number", "number"], &["number"]);

@@ -308,7 +308,7 @@ impl<C: GcdDomain> PolyU<C> {
 }
 // #endregion 🔖PolyDivision
 
-// #region 🔖FieldOps
+// #region 🔖FieldOperations
 impl<C: Field> PolyU<C> {
     pub fn make_monic(&self) -> Self {
         let Some(lc) = self.leading_coeff().cloned() else {
@@ -445,7 +445,7 @@ impl<C: Field> PolyU<C> {
         Some(result)
     }
 }
-// #endregion 🔖FieldOps
+// #endregion 🔖FieldOperations
 
 // #region 🔖RingTraitImpls
 impl<C: CommutativeRing> Ring for PolyU<C> {

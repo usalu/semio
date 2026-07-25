@@ -547,13 +547,13 @@ export interface ExprKernelCall {
 }
 export interface ExprBinop {
   readonly kind: "binop";
-  readonly op: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/";
+  readonly operation: "==" | "!=" | ">" | "<" | ">=" | "<=" | "+" | "-" | "*" | "/";
   readonly left: Expr;
   readonly right: Expr;
 }
 export interface ExprFold {
   readonly kind: "fold";
-  readonly op: "min" | "max";
+  readonly operation: "min" | "max";
   readonly args: readonly [Expr, Expr];
 }
 
@@ -653,11 +653,11 @@ export function evalExpr(expr: Expr, env: ExprEnv): unknown {
       return env.preview.vec3Distance(va, vb);
     }
     case "fold":
-      return expr.op === "min" ? env.preview.min2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env))) : env.preview.max2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)));
+      return expr.operation === "min" ? env.preview.min2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env))) : env.preview.max2(Number(evalExpr(expr.args[0], env)), Number(evalExpr(expr.args[1], env)));
     case "binop": {
       const left = evalExpr(expr.left, env);
       const right = evalExpr(expr.right, env);
-      switch (expr.op) {
+      switch (expr.operation) {
         case "==":
           return left === right;
         case "!=":
@@ -717,22 +717,22 @@ export interface TransitionSpec {
 }
 
 export type EffectSpec =
-  | { readonly op: "assign"; readonly target: PathTarget; readonly value: Expr }
-  | { readonly op: "clear"; readonly target: PathTarget }
-  | { readonly op: "append"; readonly target: PathTarget; readonly value: Expr }
-  | { readonly op: "emit"; readonly event: { readonly kind: string } }
-  | { readonly op: "raise"; readonly event: string }
-  | { readonly op: "openTransaction" }
-  | { readonly op: "commitTransaction" }
-  | { readonly op: "rollbackTransaction" }
-  | { readonly op: "requestPreview" }
-  | { readonly op: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params?: Record<string, Expr> }
-  | { readonly op: "resolveEditable" }
-  | { readonly op: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
-  | { readonly op: "clearDiagnostic"; readonly code: string }
-  | { readonly op: "action"; readonly action: string; readonly params?: Record<string, Expr> }
+  | { readonly operation: "assign"; readonly target: PathTarget; readonly value: Expr }
+  | { readonly operation: "clear"; readonly target: PathTarget }
+  | { readonly operation: "append"; readonly target: PathTarget; readonly value: Expr }
+  | { readonly operation: "emit"; readonly event: { readonly kind: string } }
+  | { readonly operation: "raise"; readonly event: string }
+  | { readonly operation: "openTransaction" }
+  | { readonly operation: "commitTransaction" }
+  | { readonly operation: "rollbackTransaction" }
+  | { readonly operation: "requestPreview" }
+  | { readonly operation: "kernel.query"; readonly query: string; readonly assignTo: PathTarget; readonly params?: Record<string, Expr> }
+  | { readonly operation: "resolveEditable" }
+  | { readonly operation: "setDiagnostic"; readonly severity: "info" | "warning" | "error"; readonly code: string; readonly message: string }
+  | { readonly operation: "clearDiagnostic"; readonly code: string }
+  | { readonly operation: "action"; readonly action: string; readonly params?: Record<string, Expr> }
   | {
-      readonly op: "interaction.call";
+      readonly operation: "interaction.call";
       readonly interaction: string;
       readonly inputs?: Record<string, Expr>;
       readonly outputs?: readonly InteractionOutputBinding[] | Record<string, unknown>;
@@ -928,7 +928,7 @@ function listFinalInteractionStates(spec: InteractionSpec): string[] {
 }
 
 function normalizeInteractionCallEffectRaw(fx: Record<string, unknown>): boolean {
-  if (fx.op !== "interaction.call" || typeof fx.interaction !== "string") return false;
+  if (fx.operation !== "interaction.call" || typeof fx.interaction !== "string") return false;
   const outputs = fx.outputs;
   if (outputs === undefined) return true;
   if (Array.isArray(outputs)) return outputs.every((row) => row && typeof row === "object" && "target" in (row as object) && "value" in (row as object));
@@ -1031,9 +1031,9 @@ export function parseInteractionSpec(raw: unknown): InteractionSpec | null {
   const commit = r.commit;
   if (!commit || typeof commit !== "object") return null;
   const c = commit as Record<string, unknown>;
-  const op = c.operation;
-  if (!op || typeof op !== "object") return null;
-  const o = op as Record<string, unknown>;
+  const operation = c.operation;
+  if (!operation || typeof operation !== "object") return null;
+  const o = operation as Record<string, unknown>;
   if (o.kind !== "action" || typeof o.action !== "string") return null;
   if (r.invocation !== undefined && r.invocation !== "standalone" && r.invocation !== "callable") return null;
   normalizeInteractionDocumentRaw(r);
@@ -1064,10 +1064,10 @@ function staticInitialContext(spec: InteractionSpec, transition: TransitionSpec 
   if (!transition?.effects) return context;
   const env: ExprEnv = { context, event: { kind: "start" } };
   for (const effect of transition.effects) {
-    if (effect.op === "interaction.call") continue;
-    if (effect.op === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
-    else if (effect.op === "clear") clearPathTarget(effect.target, env);
-    else if (effect.op === "append") {
+    if (effect.operation === "interaction.call") continue;
+    if (effect.operation === "assign") writePathTarget(effect.target, env, evalExpr(effect.value, env));
+    else if (effect.operation === "clear") clearPathTarget(effect.target, env);
+    else if (effect.operation === "append") {
       const cur = readPathTarget(effect.target, env);
       const next = Array.isArray(cur) ? [...cur, evalExpr(effect.value, env)] : [evalExpr(effect.value, env)];
       writePathTarget(effect.target, env, next);
@@ -3209,7 +3209,7 @@ export function interactionIdsReferencedByInteractionSpec(spec: InteractionSpec)
     for (const h of st.on ?? []) {
       for (const tr of h.transitions) {
         for (const fx of tr.effects ?? []) {
-          if (fx.op === "interaction.call") ids.add(fx.interaction);
+          if (fx.operation === "interaction.call") ids.add(fx.interaction);
         }
       }
     }
@@ -3234,7 +3234,7 @@ export function actionIdsReferencedByInteractionSpec(spec: InteractionSpec): rea
     for (const h of st.on ?? []) {
       for (const tr of h.transitions) {
         for (const fx of tr.effects ?? []) {
-          if (fx.op === "action") ids.add(fx.action);
+          if (fx.operation === "action") ids.add(fx.action);
         }
       }
     }
@@ -3625,8 +3625,8 @@ export function capabilityActionSpecJson(id: string, label: string): ActionSpec 
     version: "1.0.0",
     label,
     steps: [
-      { op: "kernel.call", function: "spatial.action.capability", assignTo: "result" },
-      { op: "return", result: { kind: "var", name: "result" } },
+      { operation: "kernel.call", function: "spatial.action.capability", assignTo: "result" },
+      { operation: "return", result: { kind: "var", name: "result" } },
     ],
   } as ActionSpec;
 }
@@ -3971,12 +3971,12 @@ export interface ActionParameterSpec {
 }
 
 export type ActionStepSpec =
-  | { readonly op: "let"; readonly name: string; readonly value: Expr }
-  | { readonly op: "setContext"; readonly values: Record<string, Expr> }
-  | { readonly op: "deleteContext"; readonly keys: readonly string[] }
-  | { readonly op: "kernel.call"; readonly function: string; readonly args?: Record<string, Expr>; readonly assignTo?: string }
-  | { readonly op: "guard"; readonly condition: Expr; readonly message?: string }
-  | { readonly op: "return"; readonly diff?: Expr; readonly data?: Expr; readonly patch?: Expr; readonly result?: Expr };
+  | { readonly operation: "let"; readonly name: string; readonly value: Expr }
+  | { readonly operation: "setContext"; readonly values: Record<string, Expr> }
+  | { readonly operation: "deleteContext"; readonly keys: readonly string[] }
+  | { readonly operation: "kernel.call"; readonly function: string; readonly args?: Record<string, Expr>; readonly assignTo?: string }
+  | { readonly operation: "guard"; readonly condition: Expr; readonly message?: string }
+  | { readonly operation: "return"; readonly diff?: Expr; readonly data?: Expr; readonly patch?: Expr; readonly result?: Expr };
 
 export interface ActionSpec {
   readonly schema: "spatial.action";
@@ -4013,13 +4013,13 @@ function hasExecutableActionField(raw: Record<string, unknown>): boolean {
 function isActionStepSpec(raw: unknown): raw is ActionStepSpec {
   if (!raw || typeof raw !== "object") return false;
   const r = raw as Record<string, unknown>;
-  if (typeof r.op !== "string") return false;
-  if (r.op === "let") return typeof r.name === "string" && Boolean(r.value);
-  if (r.op === "setContext") return Boolean(r.values) && typeof r.values === "object" && !Array.isArray(r.values);
-  if (r.op === "deleteContext") return Array.isArray(r.keys) && r.keys.every((k) => typeof k === "string");
-  if (r.op === "kernel.call") return typeof r.function === "string";
-  if (r.op === "guard") return Boolean(r.condition);
-  if (r.op === "return") return true;
+  if (typeof r.operation !== "string") return false;
+  if (r.operation === "let") return typeof r.name === "string" && Boolean(r.value);
+  if (r.operation === "setContext") return Boolean(r.values) && typeof r.values === "object" && !Array.isArray(r.values);
+  if (r.operation === "deleteContext") return Array.isArray(r.keys) && r.keys.every((k) => typeof k === "string");
+  if (r.operation === "kernel.call") return typeof r.function === "string";
+  if (r.operation === "guard") return Boolean(r.condition);
+  if (r.operation === "return") return true;
   return false;
 }
 
@@ -4387,16 +4387,16 @@ export class DeclarativeActionRuntime {
     };
     for (const v of this.spec.variables ?? []) vars[v.name] = await Promise.resolve(evalExpr(v.value, env));
     for (const step of this.spec.steps) {
-      if (step.op === "let") vars[step.name] = await Promise.resolve(evalExpr(step.value, env));
-      else if (step.op === "setContext") Object.assign(env.context, evalExprRecord(step.values, env));
-      else if (step.op === "deleteContext") for (const key of step.keys) delete env.context[key];
-      else if (step.op === "guard") {
+      if (step.operation === "let") vars[step.name] = await Promise.resolve(evalExpr(step.value, env));
+      else if (step.operation === "setContext") Object.assign(env.context, evalExprRecord(step.values, env));
+      else if (step.operation === "deleteContext") for (const key of step.keys) delete env.context[key];
+      else if (step.operation === "guard") {
         const ok = Boolean(await Promise.resolve(evalExpr(step.condition, env)));
         if (!ok) throw new Error(step.message ?? `Action guard failed: ${this.spec.id}`);
-      } else if (step.op === "kernel.call") {
+      } else if (step.operation === "kernel.call") {
         const result = await executeKernelFunction(step.function, this.spec.id, params, evalExprRecord(step.args, env), ctx);
         if (step.assignTo) vars[step.assignTo] = result;
-      } else if (step.op === "return") {
+      } else if (step.operation === "return") {
         const result = step.result ? await Promise.resolve(evalExpr(step.result, env)) : undefined;
         if (result && typeof result === "object" && !Array.isArray(result)) return result as ActionResult;
         return {
@@ -5040,19 +5040,19 @@ export async function applyEffectAsync(
   if (!math) return;
   const env: ExprEnv = { context: ctx, event, model, activeModelDefinitionId, preview: math };
   const reg = actions ?? ActionRegistry.withModelDefinitionActions();
-  if (a.op === "assign") {
+  if (a.operation === "assign") {
     const v = evalExpr(a.value, env);
     writePathTarget(a.target, env, v);
-  } else if (a.op === "clear") {
+  } else if (a.operation === "clear") {
     clearPathTarget(a.target, env);
-  } else if (a.op === "append") {
+  } else if (a.operation === "append") {
     const cur = readPathTarget(a.target, env);
     const v = evalExpr(a.value, env);
     if (Array.isArray(cur)) {
       const next = [...cur, v];
       writePathTarget(a.target, env, next);
     }
-  } else if (a.op === "kernel.query") {
+  } else if (a.operation === "kernel.query") {
     const queryCtx: KernelQueryContext = { model, activeModelDefinitionId };
     if (a.query === "face.resolveIds") {
       const target = (event as SelectionEvent).targets?.[0];
@@ -5065,9 +5065,9 @@ export async function applyEffectAsync(
       const res = await kernel.query(a.query, params, queryCtx);
       writePathTarget(a.assignTo, env, res);
     }
-  } else if (a.op === "interaction.call") {
+  } else if (a.operation === "interaction.call") {
     return;
-  } else if (a.op === "action") {
+  } else if (a.operation === "action") {
     const def = reg.get(a.action);
     if (!def) return;
     assertActionAvailableInModelDefinition(a.action, activeModelDefinitionId);
@@ -5111,7 +5111,7 @@ export async function applyTransition(
     let childCall: InteractionChildCallSpec | undefined;
     const resumeTarget = tr.target ?? state;
     for (const eff of tr.effects ?? []) {
-      if (eff.op === "interaction.call") {
+      if (eff.operation === "interaction.call") {
         childCall = {
           interactionId: eff.interaction,
           inputs: eff.inputs,
@@ -6470,7 +6470,7 @@ export class InteractionRuntime {
       return fail("interaction.cannotCommit", "Commit guard or fromStates rejected this commit.");
     }
     const ctx = this.sm.getContext();
-    const op = this.spec.commit.operation;
+    const operation = this.spec.commit.operation;
     const env: ExprEnv = { context: ctx, preview: this.previewKernel() };
     const k = this.opts.kernel;
     const model = this.opts.document.model;
@@ -6478,11 +6478,11 @@ export class InteractionRuntime {
     let data: unknown = null;
     try {
       const paramBag: Record<string, unknown> = { __context: ctx, __event: { kind: "commit" } };
-      for (const [key, ex] of Object.entries(op.params ?? {})) {
+      for (const [key, ex] of Object.entries(operation.params ?? {})) {
         paramBag[key] = evalExpr(ex, env);
       }
       const kit = typologyConstructKitByInteraction().get(this.spec.id);
-      const actionId = kit ? typologyConstructCommitActionForMode(kit, String(paramBag.constructMode ?? ctx.constructMode ?? "")) : op.action;
+      const actionId = kit ? typologyConstructCommitActionForMode(kit, String(paramBag.constructMode ?? ctx.constructMode ?? "")) : operation.action;
       const ar = await this.actions.run(actionId, paramBag, {
         kernel: k,
         preview: this.previewKernel(),
@@ -6492,7 +6492,7 @@ export class InteractionRuntime {
       if (ar.patch) applyActionPatchToContext(this.sm.getContext(), ar.patch);
       diff = ar.diff ?? EMPTY_MODEL_DIFF;
       data = ar.data ?? null;
-      if (isEmptyModelDiff(diff) && op.action === "command.finish") {
+      if (isEmptyModelDiff(diff) && operation.action === "command.finish") {
         return fail("interaction.emptyCommit", "Command produced no geometry; add more points and finish again.");
       }
     } catch (e) {
@@ -7242,7 +7242,7 @@ if (import.meta.vitest) {
     it("evaluates numeric fold min expr", () => {
       const e: Expr = {
         kind: "fold",
-        op: "min",
+        operation: "min",
         args: [
           { kind: "const", value: 3 },
           { kind: "const", value: 7 },
@@ -7257,7 +7257,7 @@ if (import.meta.vitest) {
           { kind: "exists", target: { root: "context", segments: [{ kind: "field", name: "origin" }] } },
           {
             kind: "binop",
-            op: ">",
+            operation: ">",
             left: { kind: "path", root: "context", segments: [{ kind: "field", name: "height" }] },
             right: { kind: "const", value: 0 },
           },
@@ -7610,12 +7610,12 @@ if (import.meta.vitest) {
         schema: "spatial.action",
         id: "x",
         version: "1.0.0",
-        steps: [{ op: "return", data: { kind: "const", value: 1 } }],
+        steps: [{ operation: "return", data: { kind: "const", value: 1 } }],
       };
       expect(parseActionSpec({ ...base, run: "x" })).toBeNull();
       expect(parseActionSpec({ ...base, code: "x" })).toBeNull();
       expect(parseActionSpec({ ...base, function: "x" })).toBeNull();
-      expect(parseActionSpec({ ...base, steps: [{ op: "eval", code: "x" }] })).toBeNull();
+      expect(parseActionSpec({ ...base, steps: [{ operation: "eval", code: "x" }] })).toBeNull();
     });
     it("loads model-definition actions from data-only JSON specs", () => {
       const specs = listModelDefinitionActionSpecs();
@@ -7624,10 +7624,10 @@ if (import.meta.vitest) {
       expect(specs.every((s) => registry.get(s.id)?.spec?.schema === "spatial.action")).toBe(true);
       expect(specs.every((s) => registry.get(s.id) !== null)).toBe(true);
       expect(registry.get("command.finish")?.spec?.schema).toBe("spatial.action");
-      expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
-      expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.op === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
+      expect(registry.get("selection.selectAll")?.spec?.steps.some((s) => s.operation === "kernel.call" && s.function === "spatial.selection.apply")).toBe(true);
+      expect(registry.get("command.addPoint")?.spec?.steps.some((s) => s.operation === "kernel.call" && s.function === "spatial.action.capability")).toBe(true);
       const allowedKernelFunctions = new Set(["spatial.selection.apply", "spatial.action.capability"]);
-      expect(specs.every((spec) => spec.steps.every((step) => step.op !== "kernel.call" || allowedKernelFunctions.has(step.function)))).toBe(true);
+      expect(specs.every((spec) => spec.steps.every((step) => step.operation !== "kernel.call" || allowedKernelFunctions.has(step.function)))).toBe(true);
     });
     it("typology actions reference shipped declarative action specs", () => {
       const actionIds = new Set(listModelDefinitionActionSpecs().map((row) => row.id));
@@ -7933,7 +7933,7 @@ if (import.meta.vitest) {
                       target: "committed",
                       effects: [
                         {
-                          op: "assign",
+                          operation: "assign",
                           target: { root: "context", segments: [{ kind: "field", name: "faceId" }] },
                           value: {
                             kind: "path",
@@ -7972,9 +7972,9 @@ if (import.meta.vitest) {
                     {
                       target: "committed",
                       effects: [
-                        { op: "assign", target: { root: "context", segments: [{ kind: "field", name: "constructMode" }] }, value: { kind: "const", value: "surface" } },
+                        { operation: "assign", target: { root: "context", segments: [{ kind: "field", name: "constructMode" }] }, value: { kind: "const", value: "surface" } },
                         {
-                          op: "interaction.call",
+                          operation: "interaction.call",
                           interaction: "test.nested.pick",
                           outputs: [
                             {
@@ -8057,7 +8057,7 @@ if (import.meta.vitest) {
                       target: "done",
                       effects: [
                         {
-                          op: "interaction.call",
+                          operation: "interaction.call",
                           interaction: "test.pick.grandchild",
                           outputs: [
                             {
@@ -8097,7 +8097,7 @@ if (import.meta.vitest) {
                       target: "done",
                       effects: [
                         {
-                          op: "interaction.call",
+                          operation: "interaction.call",
                           interaction: "test.pick.child",
                           outputs: [
                             {

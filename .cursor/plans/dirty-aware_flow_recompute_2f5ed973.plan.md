@@ -58,7 +58,7 @@ Add exported, testable `flowTreeDirtyNeuronIds(prevFixtureJson, currFixtureJson)
 
 - Add field `last_tree_signature: Option<u64>` to `FlowHost` (init `None` in `from_fixture`).
 - Add `fn tree_signature(tree: &Tree, seeds: &HashMap<String, Dictionary>) -> u64` (hash sorted neurons/synapses via `serde_json` + sorted seed entries).
-- In `evaluate_internal` (line 1820): compute signature first; if `self.last_tree_signature == Some(sig) && !self.outputs.is_empty()`, return early (keep outputs/`last_eval_json`, skip dispatch + `retain_geometry_handles`); else store sig and proceed. This makes `pointer_up_screen`/native paths and any stray worker eval no-ops when the tree is unchanged, encoding "only a tree change recomputes" at the engine boundary.
+- In `evaluate_internal` (line 1820): compute signature first; if `self.last_tree_signature == Some(sig) && !self.outputs.is_empty()`, return early (keep outputs/`last_eval_json`, skip dispatch + `retain_geometry_handles`); else store sig and proceed. This makes `pointer_up_screen`/native paths and any stray worker eval no-operations when the tree is unchanged, encoding "only a tree change recomputes" at the engine boundary.
 
 ### 4. Tests
 

@@ -130,7 +130,7 @@ pub mod part_1 {
         }
     }
 
-    /// 🌤️ Adaptive comfort operative temperature centre [°C]: θ_c,op = 0.33·θ_rm + 18.8 (EN 16798-1 Annex A).
+    /// 🌤️ Adaptive comfort operative temperature centre [°C]: θ_c,operation = 0.33·θ_rm + 18.8 (EN 16798-1 Annex A).
     pub fn adaptive_comfort_temperature_c(theta_rm_c: f64) -> f64 {
         0.33 * theta_rm_c + 18.8
     }
@@ -831,7 +831,7 @@ fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
 }
 
 // #region 🔖Session
-use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -985,7 +985,7 @@ impl Default for Document {
     }
 }
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<DinEn16798Family>;
 
 /// 📋 Full EN 16798 normative parts (1, 3, 5-1, 5-2, 7, 9, 13, 15, 17) plus DE-NA divergent checks.
@@ -1054,7 +1054,7 @@ pub struct DinEn16798Family;
 
 impl NormFamily for DinEn16798Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinEn16798

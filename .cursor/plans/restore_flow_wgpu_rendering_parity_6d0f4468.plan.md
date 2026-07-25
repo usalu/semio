@@ -44,7 +44,7 @@ flowchart TD
     plugin["flow plugin (Rust/WASM)\nbuild_node_graph_scene"] --> scene["UiComponentSceneNode.node_graph\n(NodeGraphScene JSON)"]
     scene --> sync["sync_flow_host()\nengine_canvas region"]
     sync --> host["FlowHost (flow_core)"]
-    host --> paint["dag::paint_scene()\nvector ops: fills/strokes/text"]
+    host --> paint["dag::paint_scene()\nvector operations: fills/strokes/text"]
     paint --> vello["Vello render_to_texture"]
     vello --> quad["push_raster_quad composite"]
     sync --> labels["paint_node_graph_labels()\nseparate text overlay pass"]

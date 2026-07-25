@@ -1,0 +1,210 @@
+=== BinOp ===
+141-        Field { object: Box<Expr>, name: String },
+142:        BinOp { op: BinOp, left: Box<Expr>, right: Box<Expr> },
+143-        UnaryNeg(Box<Expr>),
+--
+148-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+149:    pub enum BinOp {
+150-        Eq,
+--
+250-        for (op, rhs) in tail {
+251:            cur = Expr::BinOp { op: if op == '*' { BinOp::Mul } else { BinOp::Div }, left: Box::new(cur), right: Box::new(rhs) };
+252-        }
+--
+260-        for (op, rhs) in tail {
+261:            cur = Expr::BinOp { op: if op == '+' { BinOp::Add } else { BinOp::Sub }, left: Box::new(cur), right: Box::new(rhs) };
+262-        }
+--
+270-            let bop = match op {
+271:                "==" | "=" => BinOp::Eq,
+272:                "!=" => BinOp::Ne,
+273:                "<=" => BinOp::Le,
+=== RelOp ===
+87-
+88:// #region 🔖RelOp
+89-#[derive(Clone, Copy, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
+90:pub enum RelOp {
+91-    Eq,
+--
+97-}
+98:// #endregion 🔖RelOp
+99-
+--
+132-    Piecewise(Vec<(Expr, Expr)>),
+133:    Rel(RelOp, Expr, Expr),
+134-    /// 🃏 Pattern-only placeholder; must never appear in a user-facing expression.
+=== BooleanOp ===
+564-        Primitive { kind: String, parameters: HashMap<String, f64> },
+565-        Transform { translation: [f64; 3], rotation_deg: [f64; 3], child: Box<GeometryNode> },
+566:        Boolean { op: BooleanOp, children: Vec<GeometryNode> },
+567-        Reference { geometry_id: String },
+568-    }
+--
+570-    /// ➕ Boolean CSG operator.
+571-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+572:    pub enum BooleanOp {
+573-        Union,
+574-        Intersection,
+=== MathOp ===
+141-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+142-#[serde(tag = "op", rename_all = "camelCase")]
+143:enum MathOp {
+144-    SetGraph { graph: MathGraph },
+145-    SetGeometry { geometry: MathGeometry },
+--
+151-    fn diff(&self, _projection: &MathProjection) -> MathDiff {
+152-        match self {
+153:            MathOp::SetGraph { graph } => MathDiff { graph: Some(graph.clone()), geometry: None },
+154:            MathOp::SetGeometry { geometry } => MathDiff { graph: None, geometry: Some(geometry.clone()) },
+155-        }
+156-    }
+--
+158-    fn backwards(&self, projection: &MathProjection) -> Vec<Self> {
+159-        match self {
+160:            MathOp::SetGraph { .. } => vec![MathOp::SetGraph { graph: projection.graph.clone() }],
+161:            MathOp::SetGeometry { .. } => vec![MathOp::SetGeometry { geometry: projection.geometry.clone() }],
+162-        }
+163-    }
+--
+381-                    let mut ops = Vec::new();
+382-                    if next.graph != doc.projection.graph {
+383:                        ops.push(MathOp::SetGraph { graph: next.graph });
+384-                    }
+385-                    if next.geometry != doc.projection.geometry {
+386:                        ops.push(MathOp::SetGeometry { geometry: next.geometry });
+387-                    }
+388-                    return ActionEmit::ops(ops);
+--
+394-                    graph.algorithm = algorithm.to_string();
+=== ShellOp ===
+751-}
+752-
+753:struct ShellOp;
+754:impl Operation for ShellOp {
+755-    fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
+756-        with_kernel(|kernel| {
+--
+1532-        out_solid("ShelledSolid"),
+1533-        &["Features"],
+1534:        Box::new(ShellOp),
+1535-    );
+1536-    reg_geo(
+=== DrawBooleanOp / BOOLEAN ===
+kernel/2d/js/index.ts-97-  dispose(handle: DrawingRef | string): void;
+kernel/2d/js/index.ts-98-  traceBitmap(width: number, height: number, maskOrLuma: Uint8Array, threshold: number, simplifyEpsilon: number): PathSegment[];
+kernel/2d/js/index.ts:99:  booleanPaths(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[];
+kernel/2d/js/index.ts:100:  booleanPathsMany(inputs: readonly (readonly PathSegment[])[], op: DrawBooleanOp): PathSegment[];
+kernel/2d/js/index.ts-101-}
+kernel/2d/js/index.ts-102-
+kernel/2d/js/index.ts:103:export const DRAW_BOOLEAN_OPS = ["union", "difference", "intersection", "xor"] as const;
+kernel/2d/js/index.ts:104:export type DrawBooleanOp = (typeof DRAW_BOOLEAN_OPS)[number];
+kernel/2d/js/index.ts-105-// #endregion 📐Contracts
+kernel/2d/js/index.ts-106-
+--
+kernel/2d/js/index.ts-366-
+kernel/2d/js/index.ts-367-/** @emoji 🔀 Client-side boolean fallback when WASM is unavailable. */
+kernel/2d/js/index.ts:368:export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
+kernel/2d/js/index.ts-369-  if (op === "union") return [...a, ...b];
+kernel/2d/js/index.ts-370-  if (op === "difference") return [...a];
+--
+kernel/2d/js/index.ts-441-}
+kernel/2d/js/index.ts-442-
+kernel/2d/js/index.ts:443:function booleanPathsViaWasm(module: DrawingWasmModule, a: readonly PathSegment[], b: readonly PathSegment[], op: DrawBooleanOp): PathSegment[] {
+kernel/2d/js/index.ts-444-  if (typeof module.boolean_drawing_segments !== "function") {
+kernel/2d/js/index.ts-445-    return booleanPathsClient(a, b, op);
+=== CAD JSON op key sample ===
+269:          "required": ["op", "target", "value"],
+271:            "op": { "const": "assign" },
+279:          "required": ["op", "target"],
+281:            "op": { "const": "clear" },
+288:          "required": ["op", "target", "value"],
+290:            "op": { "const": "append" },
+298:          "required": ["op", "event"],
+300:            "op": { "const": "emit" },
+312:          "required": ["op", "event"],
+314:            "op": { "const": "raise" },
+321:          "required": ["op"],
+323:            "op": { "const": "openTransaction" }
+329:          "required": ["op"],
+331:            "op": { "const": "commitTransaction" }
+337:          "required": ["op"],
+125:            "op": ">",
+143:            "op": ">",
+148:                "op": "-",
+186:            "op": ">",
+191:                "op": "-",
+234:        "op": "==",
+255:        "op": "==",
+276:        "op": "==",
+297:        "op": "==",
+318:        "op": "==",
+=== noop ===
+protocol/module/procedural/rs/lib.rs:710:        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noop");
+s/plugin/rs/lib.rs:1772:                        on_change: s_play_action("noop", None),
+compose/client/lib/go/main.go:10077:				kitdiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
+cad/renderer/js/index.tsx:6722:    const noop = () => {};
+cad/renderer/js/index.tsx:6726:        { kind: "selection", key: "sel", label: "Select all", detail: undefined, onRun: noop },
+cad/renderer/js/index.tsx:6727:        { kind: "action", key: "box", label: "Box", onRun: noop },
+compose/client/lib/sketchpad/js/pw-loader.mjs:71:    return { ...result, format: "css-noop", shortCircuit: true };
+compose/client/lib/sketchpad/js/pw-loader.mjs:129:  if (url.endsWith(".css") || context.format === "css-noop") {
+compose/client/lib/net/Compose/cs/Compose.cs:14214:                        ctx.Push("warnings", "kitdiff.cycle.noop-restore", $"{path}: removed and re-added {idKey} {rg} are deeply equal (no effective change)");
+compose/client/lib/py/main.py:11385:    """Deep structural equality for noop remove/add detection in kit diff validation."""
+compose/client/lib/py/main.py:11455:                "kitdiff.cycle.noop-restore",
+vcs/plugin/rs/lib.rs:413:        ("noop", "No-op", "Keine Aktion"),
+vcs/plugin/rs/lib.rs:706:            "noop" | "canvasPointerDown" | "canvasPointerMove" | "canvasPointerUp" | "canvasWheel" => ActionEmit::default(),
+vcs/plugin/rs/lib.rs:762:            .view_action("noop", "No-op")
+coda/client/bin/assistant/js/vite.mcp-app.config.ts:4:// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @semio-tech/ui-react and meshopt noop.
+coda/client/bin/assistant/js/vite.mcp-app.config.ts:34:const noop = () => {};
+coda/client/bin/assistant/js/vite.mcp-app.config.ts:35:const MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: noop, decodeGltfBuffer: noop };
+coda/client/bin/assistant/js/vite.mcp-app.config.ts:40:    name: "meshopt-noop",
+coda/client/bin/assistant/js/vite.mcp-app.config.ts:74:      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => (p === '__esModule' ? true : p === 'default' ? noop : noop) });\n";
+script.ts:962:    console.log("[purge.neo4j] connectivity ok; noop.");
+framework/renderer/react/index.test.ts:4485:        children: [{ kind: "toggle" as const, id: "nested-toggle", pressed: false, iconId: "eye", onChange: { id: "noop" } }],
+animate/plugin/rs/lib.rs:417:                        on_change: animate_present_action("noop", None),
+animate/plugin/rs/lib.rs:759:            .view_action("noop", "No Op")
+framework/renderer/wgpu/rs/lib.rs:2619:                        action: "noop".into(),
+framework/renderer/wgpu/rs/lib.rs:16039:                        action: "noop".into(),
+=== Operation trait ===
+vcs/rs/lib.rs:365:pub trait OperationDiff<P>: Clone + Default + Serialize + DeserializeOwned {
+vcs/rs/lib.rs:371:pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
+=== type param Op collision sites ===
+framework/sync/rs/lib.rs:185:pub struct SyncSession<P, Op>
+framework/sync/rs/lib.rs:190:    pub store: DocumentVcsStore<P, Op>,
+framework/sync/rs/lib.rs:196:impl<P, Op> SyncSession<P, Op>
+framework/sync/rs/lib.rs:201:    pub fn new(store: DocumentVcsStore<P, Op>) -> Self {
+vcs/rs/lib.rs:62:pub struct Edit<Op> {
+vcs/rs/lib.rs:69:    pub forwards: Vec<Op>,
+vcs/rs/lib.rs:70:    pub backwards: Vec<Op>,
+vcs/rs/lib.rs:117:pub struct DocumentVcs<P, Op> {
+vcs/rs/lib.rs:119:    pub edits: Vec<Edit<Op>>,
+vcs/rs/lib.rs:127:pub struct DocumentVcsEnvelope<P, Op> {
+vcs/rs/lib.rs:130:    pub vcs: DocumentVcs<P, Op>,
+vcs/rs/lib.rs:139:pub enum DocumentVcsCommand<Op> {
+vcs/rs/lib.rs:141:        operations: Vec<Op>,
+vcs/rs/lib.rs:169:        operations: Vec<Op>,
+vcs/rs/lib.rs:406:pub fn apply_operation<P, Op>(projection: &P, operation: &Op) -> P
+vcs/rs/lib.rs:408:    Op: Operation<P>,
+vcs/rs/lib.rs:413:pub fn absorb_diff<P, Op>(_projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+vcs/rs/lib.rs:415:    Op: Operation<P>,
+vcs/rs/lib.rs:422:pub fn merge_concurrent_diffs<P, Op>(
+vcs/rs/lib.rs:428:    Op: Operation<P>,
+vcs/rs/lib.rs:439:pub fn reconcile_alternative<P, Op>(
+vcs/rs/lib.rs:440:    envelope: &mut DocumentVcsEnvelope<P, Op>,
+vcs/rs/lib.rs:489:pub fn create_document_vcs_envelope<P, Op>(
+vcs/rs/lib.rs:494:) -> DocumentVcsEnvelope<P, Op>
+vcs/rs/lib.rs:513:pub fn edit_ids_for_changes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, change_ids: &[String]) -> Vec<String>
+vcs/rs/lib.rs:527:pub fn materialize_document_projection<P, Op>(
+vcs/rs/lib.rs:528:    envelope: &DocumentVcsEnvelope<P, Op>,
+vcs/rs/lib.rs:533:    Op: Operation<P>,
+vcs/rs/lib.rs:543:pub fn materialize_document_projection_with_conflicts<P, Op>(
+vcs/rs/lib.rs:544:    envelope: &DocumentVcsEnvelope<P, Op>,
+vcs/rs/lib.rs:549:    Op: Operation<P>,
+vcs/rs/lib.rs:585:fn uncommitted_edit_ids<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, applied_edit_ids: &[String]) -> Vec<String>
+vcs/rs/lib.rs:623:    envelope: &'a DocumentVcsEnvelope<P, Op>,
+vcs/rs/lib.rs:634:fn is_checkpoint_main_only<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, checkpoint_id: &str) -> bool {
+vcs/rs/lib.rs:638:fn has_main_only_descendant<P, Op>(
+vcs/rs/lib.rs:639:    envelope: &DocumentVcsEnvelope<P, Op>,
+vcs/rs/lib.rs:659:fn assign_history_checkpoint_lanes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> HashMap<String, usize> {
+vcs/rs/lib.rs:701:pub fn build_history_columns<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Vec<HistoryColumn> {
+vcs/rs/lib.rs:745:pub struct DocumentVcsStore<P, Op>
+vcs/rs/lib.rs:750:    envelope: DocumentVcsEnvelope<P, Op>,

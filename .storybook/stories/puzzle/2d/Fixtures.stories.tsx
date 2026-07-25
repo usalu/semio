@@ -106,7 +106,7 @@ function applyStoryBoardEvents(state: StoryPuzzle2dState, eventsJson: string): S
   return { fixture, runtime };
 }
 
-/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_ops` — enough to click/pan/zoom/delete against the real fixtures. */
+/** @emoji 🧩 Story-local mirror of a subset of `Puzzle2dPlayApp::handle_action_patch_operations` — enough to click/pan/zoom/delete against the real fixtures. */
 function reduceStoryPuzzle2dAction(state: StoryPuzzle2dState, action: string, args: Record<string, unknown> | undefined): StoryPuzzle2dState {
   const { fixture, runtime } = state;
   switch (action) {

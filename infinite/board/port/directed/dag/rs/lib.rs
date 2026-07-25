@@ -2262,6 +2262,108 @@ impl DagHost {
         .to_string()
     }
 
+    /// @emoji 🎯 Screen-space geometry (canvas-local px) for a live entity in the shell's pick-target
+    /// grammar (`domain`: `"node"` | `"handle"` | `"edge"`; `id`: a node's widget id, `"widgetId:port"`
+    /// for a handle, or a mirrored edge id — `"*"` picks whichever matching entity's screen anchor is
+    /// nearest the viewport center) — powers introduction-demonstration semantic targeting
+    /// (`IntroductionPoint::Entity`/`Curve`). Never errors: an unresolved domain/id returns
+    /// `{"visible":false}`.
+    pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+        #[derive(serde::Serialize)]
+        struct EntityGeometry {
+            visible: bool,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            x: Option<f64>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            y: Option<f64>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            rect: Option<[f64; 4]>,
+            #[serde(skip_serializing_if = "Option::is_none")]
+            polyline: Option<Vec<[f64; 2]>>,
+        }
+        use cavas::camera::{world_to_screen, Camera as CavasCamera, Viewport};
+        use cavas::Point;
+        let unresolved = EntityGeometry { visible: false, x: None, y: None, rect: None, polyline: None };
+        let cam = CavasCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom };
+        let viewport = Viewport { width: self.width.max(1), height: self.height.max(1), dpr: self.dpr.max(1.0) };
+        let viewport_center = (self.width as f64 * 0.5, self.height as f64 * 0.5);
+
+        let world_rect_to_screen = |min_x: f64, min_y: f64, max_x: f64, max_y: f64| -> ([f64; 4], (f64, f64)) {
+            let tl = world_to_screen(&cam, &viewport, Point::new(min_x, min_y));
+            let br = world_to_screen(&cam, &viewport, Point::new(max_x, max_y));
+            ([tl.x, tl.y, (br.x - tl.x).max(1.0), (br.y - tl.y).max(1.0)], ((tl.x + br.x) * 0.5, (tl.y + br.y) * 0.5))
+        };
+        let handle_world_bounds = |widget_id: &str, port: &str| -> Option<(f64, f64, f64, f64)> {
+            let node = self.fixture.nodes.iter().find(|node| node.id == widget_id)?;
+            if let Some(index) = node.inputs().iter().position(|candidate| candidate.id == port) {
+                return input_port_row_hit_bounds(node, index);
+            }
+            let index = node.outputs().iter().position(|candidate| candidate.id == port)?;
+            output_port_row_hit_bounds(node, index)
+        };
+        let nearest_center_screen = |candidates: &[(f64, f64, f64, f64)]| -> Option<(f64, f64, f64, f64)> {
+            let mut best: Option<((f64, f64, f64, f64), f64)> = None;
+            for &bounds in candidates {
+                let (_, screen_center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
+                let distance = (screen_center.0 - viewport_center.0).hypot(screen_center.1 - viewport_center.1);
+                if best.map(|(_, best_distance)| distance < best_distance).unwrap_or(true) {
+                    best = Some((bounds, distance));
+                }
+            }
+            best.map(|(bounds, _)| bounds)
+        };
+
+        let bounds_result: Option<(f64, f64, f64, f64)> = match domain {
+            "node" => {
+                if id == "*" {
+                    let all: Vec<(f64, f64, f64, f64)> = self.fixture.nodes.iter().map(|node| { let b = Self::dag_node_world_bounds(node); (b.min_x, b.min_y, b.max_x, b.max_y) }).collect();
+                    nearest_center_screen(&all)
+                } else {
+                    self.fixture.nodes.iter().find(|node| node.id == id).map(|node| { let b = Self::dag_node_world_bounds(node); (b.min_x, b.min_y, b.max_x, b.max_y) })
+                }
+            }
+            "handle" => {
+                if id == "*" {
+                    let mut all: Vec<(f64, f64, f64, f64)> = Vec::new();
+                    for node in &self.fixture.nodes {
+                        for port in node.inputs().iter().chain(node.outputs().iter()) {
+                            if let Some(bounds) = handle_world_bounds(&node.id, &port.id) {
+                                all.push(bounds);
+                            }
+                        }
+                    }
+                    nearest_center_screen(&all)
+                } else {
+                    id.split_once(':').and_then(|(widget_id, port)| handle_world_bounds(widget_id, port))
+                }
+            }
+            "edge" => {
+                let edge = if id == "*" { self.fixture.edges.first() } else { self.fixture.edges.iter().find(|edge| edge.id == id) };
+                let Some(edge) = edge else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some((source_widget, source_port)) = edge.source.split_once(':') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some((target_widget, target_port)) = edge.target.split_once(':') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
+                let (_, target_center) = world_rect_to_screen(target_bounds.0, target_bounds.1, target_bounds.2, target_bounds.3);
+                let midpoint = ((source_center.0 + target_center.0) * 0.5, (source_center.1 + target_center.1) * 0.5);
+                return serde_json::to_string(&EntityGeometry {
+                    visible: true,
+                    x: Some(midpoint.0),
+                    y: Some(midpoint.1),
+                    rect: None,
+                    polyline: Some(vec![[source_center.0, source_center.1], [target_center.0, target_center.1]]),
+                })
+                .unwrap_or_default();
+            }
+            _ => None,
+        };
+
+        let Some(bounds) = bounds_result else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+        let (rect, center) = world_rect_to_screen(bounds.0, bounds.1, bounds.2, bounds.3);
+        serde_json::to_string(&EntityGeometry { visible: true, x: Some(center.0), y: Some(center.1), rect: Some(rect), polyline: None }).unwrap_or_default()
+    }
+
     /// 📐 Aligns or distributes the current multi-node selection.
     pub fn align_selection(&mut self, mode: &str) -> Result<(), DagError> {
         use cavas::Point;
@@ -6718,7 +6820,7 @@ mod tests {
 // #endregion 🔖Tests
 
 // #region 🔖DocumentVcs
-use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
+use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 #[cfg(any(test, target_arch = "wasm32"))]
 use vcs::create_document_vcs_envelope;
 #[cfg(test)]
@@ -6877,18 +6979,18 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 }
 //#endregion 🔖CollectionSupport
 
-/// 📦 Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionOp}
+/// 📦 Typed DAG operation. Node/edge add/remove/patch/move flow through a generic {@link CollectionOperation}
 /// for granular convergence; `SetNodes`/`SetEdges` are bulk writes (relayout/rename) and `SetDocument`
 /// replaces the whole projection (import/reset).
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
+#[serde(tag = "operation", rename_all = "camelCase")]
 #[allow(
     clippy::large_enum_variant,
-    reason = "boxing `Nodes`'s CollectionOp would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOp values are short-lived per-dispatch operations, not stored in bulk"
+    reason = "boxing `Nodes`'s CollectionOperation would require rewrapping every construction/match site across this crate and infinite/board/port/directed/dag/plugin/rs (10+ call sites, out of this crate's scope); DagOperation values are short-lived per-dispatch operations, not stored in bulk"
 )]
-pub enum DagOp {
-    Nodes(CollectionOp<String, DagNodeSpec, DagNodePatch>),
-    Edges(CollectionOp<String, DagFixtureEdge, DagEdgePatch>),
+pub enum DagOperation {
+    Nodes(CollectionOperation<String, DagNodeSpec, DagNodePatch>),
+    Edges(CollectionOperation<String, DagFixtureEdge, DagEdgePatch>),
     SetNodes { nodes: Vec<DagNodeSpec> },
     SetEdges { edges: Vec<DagFixtureEdge> },
     SetDocument { document: DagDocument },
@@ -6941,32 +7043,32 @@ impl OperationDiff<DagDocument> for DagDiff {
     }
 }
 
-impl Operation<DagDocument> for DagOp {
+impl Operation<DagDocument> for DagOperation {
     type Diff = DagDiff;
 
     fn diff(&self, projection: &DagDocument) -> DagDiff {
         match self {
-            DagOp::Nodes(op) => DagDiff { nodes: Some(collection_diff_from_op(&projection.nodes, op)), ..Default::default() },
-            DagOp::Edges(op) => DagDiff { edges: Some(collection_diff_from_op(&projection.edges, op)), ..Default::default() },
-            DagOp::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
-            DagOp::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
-            DagOp::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
+            DagOperation::Nodes(operation) => DagDiff { nodes: Some(collection_diff_from_operation(&projection.nodes, operation)), ..Default::default() },
+            DagOperation::Edges(operation) => DagDiff { edges: Some(collection_diff_from_operation(&projection.edges, operation)), ..Default::default() },
+            DagOperation::SetNodes { nodes } => DagDiff { set_nodes: Some(nodes.clone()), ..Default::default() },
+            DagOperation::SetEdges { edges } => DagDiff { set_edges: Some(edges.clone()), ..Default::default() },
+            DagOperation::SetDocument { document } => DagDiff { document: Some(document.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &DagDocument) -> Vec<Self> {
         match self {
-            DagOp::Nodes(op) => vec![DagOp::Nodes(invert_collection_op(&projection.nodes, op))],
-            DagOp::Edges(op) => vec![DagOp::Edges(invert_collection_op(&projection.edges, op))],
-            DagOp::SetNodes { .. } => vec![DagOp::SetNodes { nodes: projection.nodes.clone() }],
-            DagOp::SetEdges { .. } => vec![DagOp::SetEdges { edges: projection.edges.clone() }],
-            DagOp::SetDocument { .. } => vec![DagOp::SetDocument { document: projection.clone() }],
+            DagOperation::Nodes(operation) => vec![DagOperation::Nodes(invert_collection_operation(&projection.nodes, operation))],
+            DagOperation::Edges(operation) => vec![DagOperation::Edges(invert_collection_operation(&projection.edges, operation))],
+            DagOperation::SetNodes { .. } => vec![DagOperation::SetNodes { nodes: projection.nodes.clone() }],
+            DagOperation::SetEdges { .. } => vec![DagOperation::SetEdges { edges: projection.edges.clone() }],
+            DagOperation::SetDocument { .. } => vec![DagOperation::SetDocument { document: projection.clone() }],
         }
     }
 }
 
-pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOp>;
-pub type DagStore = DocumentVcsStore<DagDocument, DagOp>;
+pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOperation>;
+pub type DagStore = DocumentVcsStore<DagDocument, DagOperation>;
 
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
@@ -7025,32 +7127,32 @@ mod dag_vcs_tests {
         DagNodeSpec { id: id.into(), name: id.into(), ..Default::default() }
     }
 
-    fn round_trip(document: &DagDocument, op: &DagOp) -> DagDocument {
-        let forward = vcs::apply_operation(document, op);
+    fn round_trip(document: &DagDocument, operation: &DagOperation) -> DagDocument {
+        let forward = vcs::apply_operation(document, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(document) {
+        for back in operation.backwards(document) {
             restored = vcs::apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, document, "backwards() must exactly restore the pre-op document");
+        assert_eq!(&restored, document, "backwards() must exactly restore the pre-operation document");
         forward
     }
 
     #[test]
-    fn dag_document_vcs_replays_node_ops() {
+    fn dag_document_vcs_replays_node_operations() {
         let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", empty_dag_document(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") })], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").nodes.len(), 1);
     }
 
     #[test]
     fn node_add_patch_remove_round_trip() {
         let document = empty_dag_document();
-        let added = round_trip(&document, &DagOp::Nodes(CollectionOp::Add { index: 0, item: sample_node("n1") }));
+        let added = round_trip(&document, &DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
         assert_eq!(added.nodes.len(), 1);
-        let patched = round_trip(&added, &DagOp::Nodes(CollectionOp::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
+        let patched = round_trip(&added, &DagOperation::Nodes(CollectionOperation::Patch { id: "n1".into(), patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), ..Default::default() } }));
         assert_eq!(patched.nodes[0].name, "Renamed");
         assert_eq!(patched.nodes[0].x, 42.0);
-        let removed = round_trip(&patched, &DagOp::Nodes(CollectionOp::Remove { id: "n1".into() }));
+        let removed = round_trip(&patched, &DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
         assert!(removed.nodes.is_empty());
     }
 
@@ -7059,9 +7161,9 @@ mod dag_vcs_tests {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
         let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
-        let added = round_trip(&document, &DagOp::Edges(CollectionOp::Add { index: 0, item: edge }));
+        let added = round_trip(&document, &DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
         assert_eq!(added.edges.len(), 1);
-        let removed = round_trip(&added, &DagOp::Edges(CollectionOp::Remove { id: "e1".into() }));
+        let removed = round_trip(&added, &DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
         assert!(removed.edges.is_empty());
     }
 }

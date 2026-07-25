@@ -5,7 +5,7 @@
 //! characteristic coefficients directly, since there's no `Expr` syntax for "the equation
 //! `y''' - 2y'' + y = 0`" to parse in the first place.
 
-use crate::expr::{Expr, Kind, RelOp};
+use crate::expr::{Expr, Kind, RelationalOperator};
 use crate::fnkind::FnKind;
 use mathematical_number::{Integer, Rational};
 use mathematical_polynomial::PolyU;
@@ -40,7 +40,7 @@ fn try_separable(f: &Expr, x: &Expr, y: &Expr) -> Option<OdeSolution> {
     let lhs = crate::integrate::integrate(&Expr::pow(h, Expr::integer(-1)), y)?;
     let rhs = crate::integrate::integrate(&g, x)?;
     let c1 = Expr::symbol("§C1");
-    Some(OdeSolution { rhs: Expr::from_kind_unchecked(Kind::Rel(RelOp::Eq, lhs, rhs + c1.clone())), constants: vec![c1] })
+    Some(OdeSolution { rhs: Expr::from_kind_unchecked(Kind::Rel(RelationalOperator::Eq, lhs, rhs + c1.clone())), constants: vec![c1] })
 }
 
 /// 🧩 Extracts `(coeff, constant)` such that `f == coeff * y + constant`, both free of `y`; `None` if
@@ -245,7 +245,7 @@ mod tests {
         // y' = x/y  =>  y dy = x dx  =>  y^2/2 = x^2/2 + C
         let f = x.clone() * Expr::pow(y.clone(), Expr::integer(-1));
         let sol = solve_ode_first_order(&f, &x, &y).unwrap();
-        assert!(matches!(sol.rhs.kind(), Kind::Rel(RelOp::Eq, ..)));
+        assert!(matches!(sol.rhs.kind(), Kind::Rel(RelationalOperator::Eq, ..)));
     }
 
     #[test]

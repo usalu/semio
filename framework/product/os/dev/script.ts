@@ -28,6 +28,8 @@ import {
 } from "../../../../repo/lib/js/index.ts";
 import { BACKBONE_ENDPOINT_PATH, BLOB_ENDPOINT_PATH, backboneKindFromUri } from "@semio-tech/framework-os-core";
 import { generatePluginRegistry, isStudioPluginFilter, writePlaygroundSession, type PluginRegistryEntry } from "../../../plugin/registry/script.ts";
+import { PNG } from "pngjs";
+import pixelmatch from "pixelmatch";
 
 const repoRoot = getWorkspaceRoot();
 const pluginOutRoot = join(repoRoot, "framework/product/os/dev/plugin-modules");
@@ -1471,11 +1473,466 @@ class VerifyScript extends BundleScript {
   }
 }
 
+//#region 🔬ParityScript
+/** 🔬wgpu↔React UI-parity verification harness — structural DOM/retained-tree comparison, per-region
+ * pixel diffing, and a boot-triage ladder, driven per catalog playground. Ticket:
+ * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/`. */
+
+//#region 🔖ParityTypes
+type ParityRenderer = "react" | "wgpu";
+type ParityRect = readonly [number, number, number, number];
+type ParityColor = readonly [number, number, number, number];
+
+type ParityNode = {
+  readonly path: string;
+  readonly kind: string;
+  readonly rect: ParityRect;
+  readonly text: string | null;
+  readonly color: ParityColor | null;
+  readonly bg: ParityColor | null;
+  readonly fontSize: number | null;
+  readonly fontWeight: number | null;
+  readonly visible: boolean;
+  readonly state: { readonly hovered: boolean; readonly disabled: boolean; readonly selected: boolean };
+};
+
+type ParityDump = {
+  readonly viewport: { readonly w: number; readonly h: number; readonly dpr: number };
+  readonly focusPath: string | null;
+  readonly nodes: readonly ParityNode[];
+};
+
+type ParityMismatchAxis = "topology" | "text" | "rect" | "color" | "bg" | "fontSize" | "focus";
+type ParityMismatch = { readonly path: string; readonly axis: ParityMismatchAxis; readonly react: unknown; readonly wgpu: unknown };
+type StructuralResult = { readonly status: "PASS" | "FAIL"; readonly nodeCount: number; readonly mismatches: readonly ParityMismatch[] };
+
+/** 🪜Boot-triage ladder status — evaluated before any structural/pixel comparison, never conflated with a mismatch. */
+type BootStatus = "PASS" | "SERVER-FAIL" | "BOOT-TIMEOUT" | "ENV-FAIL" | "DUMP-EMPTY" | "BLANK-PAINT";
+
+type PixelRegionResult = { readonly path: string; readonly ratio: number; readonly threshold: number; readonly diffPng?: string };
+
+type ParityPlaygroundReport = {
+  readonly variant: string;
+  readonly boot: { readonly react: BootStatus; readonly wgpu: BootStatus; readonly detail?: string };
+  readonly structural?: StructuralResult;
+  readonly pixel?: { readonly status: "PASS" | "FAIL"; readonly regions: readonly PixelRegionResult[] };
+  readonly durationMs: number;
+};
+//#endregion 🔖ParityTypes
+
+//#region 🔖StructuralDump
+/** 🌳DOM-side structural walk — every element carrying `data-ui-path` (see `framework/renderer/react/index.tsx`
+ * region `🔖UiInterpreter`) is one matched node. `text` is only captured for non-container kinds since
+ * `textContent` on a container aggregates all descendant text, which would false-positive against wgpu's
+ * per-node (non-aggregated) text field. */
+const PARITY_CONTAINER_KINDS = new Set(["stack", "field", "section", "group", "tree", "componentScene", "externalSlot"]);
+
+const REACT_DOM_DUMP_SCRIPT = `(() => {
+  const CONTAINER_KINDS = new Set(${JSON.stringify([...PARITY_CONTAINER_KINDS])});
+  function parseColor(str) {
+    const m = /rgba?\\(([^)]+)\\)/.exec(str || "");
+    if (!m) return null;
+    const parts = m[1].split(",").map((s) => parseFloat(s.trim()));
+    if (parts.length < 3) return null;
+    return [Math.round(parts[0]), Math.round(parts[1]), Math.round(parts[2]), parts[3] === undefined ? 1 : parts[3]];
+  }
+  function nearestPath(el) {
+    let cur = el;
+    while (cur) {
+      const p = cur.getAttribute && cur.getAttribute("data-ui-path");
+      if (p) return p;
+      cur = cur.parentElement;
+    }
+    return null;
+  }
+  const nodes = [];
+  document.querySelectorAll("[data-ui-path]").forEach((el) => {
+    const rect = el.getBoundingClientRect();
+    const style = getComputedStyle(el);
+    const path = el.getAttribute("data-ui-path");
+    const kind = (path.split("/").pop() || "").replace(/\\[.*/, "").replace(/^#.*/, "");
+    nodes.push({
+      path,
+      kind,
+      rect: [Math.round(rect.x), Math.round(rect.y), Math.round(rect.width), Math.round(rect.height)],
+      text: CONTAINER_KINDS.has(kind) ? null : (el.textContent || "").replace(/\\s+/g, " ").trim() || null,
+      color: parseColor(style.color),
+      bg: parseColor(style.backgroundColor),
+      fontSize: parseFloat(style.fontSize) || null,
+      fontWeight: parseFloat(style.fontWeight) || null,
+      visible: rect.width > 0 && rect.height > 0 && style.visibility !== "hidden" && style.display !== "none",
+      state: {
+        hovered: el.matches(":hover"),
+        disabled: el.hasAttribute("disabled") || el.getAttribute("aria-disabled") === "true",
+        selected: el.getAttribute("aria-selected") === "true" || el.getAttribute("aria-pressed") === "true",
+      },
+    });
+  });
+  const active = document.activeElement;
+  return JSON.stringify({
+    viewport: { w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio },
+    focusPath: active ? nearestPath(active) : null,
+    nodes,
+  });
+})()`;
+
+async function dumpReactStructure(page: import("playwright").Page): Promise<ParityDump> {
+  const json = await page.evaluate(REACT_DOM_DUMP_SCRIPT);
+  return JSON.parse(json as unknown as string) as ParityDump;
+}
+
+/** 🧊Calls the wasm-bindgen introspection hooks exposed by `framework/renderer/wgpu/rs/lib.rs` region
+ * `🔬Introspection` once booted. Returns an empty dump (never throws) when the hooks aren't present yet,
+ * so triage can distinguish "not booted" from "no hooks" via `DUMP-EMPTY`. */
+async function dumpWgpuStructure(page: import("playwright").Page): Promise<ParityDump> {
+  const json = await page.evaluate(() => (window as unknown as { __semioWgpu?: { dumpStructure?: () => string } }).__semioWgpu?.dumpStructure?.());
+  if (!json) return { viewport: { w: 0, h: 0, dpr: 1 }, focusPath: null, nodes: [] };
+  return JSON.parse(json) as ParityDump;
+}
+
+async function dumpWgpuFrameStats(page: import("playwright").Page): Promise<{ readonly drawCalls: number; readonly quads: number; readonly glyphs: number } | null> {
+  const json = await page.evaluate(() => (window as unknown as { __semioWgpu?: { dumpFrameStats?: () => string } }).__semioWgpu?.dumpFrameStats?.());
+  if (!json) return null;
+  return JSON.parse(json) as { readonly drawCalls: number; readonly quads: number; readonly glyphs: number };
+}
+//#endregion 🔖StructuralDump
+
+//#region 🔖StructuralCompare
+const PARITY_RECT_TOLERANCE_PX = 1.5;
+const PARITY_COLOR_TOLERANCE = 3;
+const PARITY_FONT_SIZE_TOLERANCE_PX = 0.5;
+/** 🎨Scene canvases are rasterized by two different pipelines — structural comparison covers only
+ * their rect (placement), never their internal text/color, which is a pixel/behavioral-probe concern. */
+const PARITY_SCENE_LEAF_KINDS = new Set(["componentScene", "image"]);
+
+function parityNormalizeText(s: string | null): string | null {
+  return s === null ? null : s.normalize("NFC").replace(/\s+/g, " ").trim();
+}
+
+function parityColorClose(a: ParityColor | null, b: ParityColor | null): boolean {
+  if (a === null || b === null) return a === b;
+  return Math.abs(a[0] - b[0]) <= PARITY_COLOR_TOLERANCE && Math.abs(a[1] - b[1]) <= PARITY_COLOR_TOLERANCE && Math.abs(a[2] - b[2]) <= PARITY_COLOR_TOLERANCE;
+}
+
+function compareParityStructural(reactDump: ParityDump, wgpuDump: ParityDump): StructuralResult {
+  const mismatches: ParityMismatch[] = [];
+  const reactByPath = new Map(reactDump.nodes.map((n) => [n.path, n]));
+  const wgpuByPath = new Map(wgpuDump.nodes.map((n) => [n.path, n]));
+  const allPaths = new Set([...reactByPath.keys(), ...wgpuByPath.keys()]);
+  for (const path of allPaths) {
+    const r = reactByPath.get(path);
+    const w = wgpuByPath.get(path);
+    if (!r || !w) {
+      mismatches.push({ path, axis: "topology", react: r?.kind ?? null, wgpu: w?.kind ?? null });
+      continue;
+    }
+    const isSceneLeaf = PARITY_SCENE_LEAF_KINDS.has(r.kind);
+    if (!isSceneLeaf && parityNormalizeText(r.text) !== parityNormalizeText(w.text)) {
+      mismatches.push({ path, axis: "text", react: r.text, wgpu: w.text });
+    }
+    const [rx, ry, rw, rh] = r.rect;
+    const [wx, wy, ww, wh] = w.rect;
+    if (Math.abs(rx - wx) > PARITY_RECT_TOLERANCE_PX || Math.abs(ry - wy) > PARITY_RECT_TOLERANCE_PX || Math.abs(rw - ww) > PARITY_RECT_TOLERANCE_PX || Math.abs(rh - wh) > PARITY_RECT_TOLERANCE_PX) {
+      mismatches.push({ path, axis: "rect", react: r.rect, wgpu: w.rect });
+    }
+    if (!isSceneLeaf && !parityColorClose(r.color, w.color)) mismatches.push({ path, axis: "color", react: r.color, wgpu: w.color });
+    if (!isSceneLeaf && !parityColorClose(r.bg, w.bg)) mismatches.push({ path, axis: "bg", react: r.bg, wgpu: w.bg });
+    if (r.fontSize !== null && w.fontSize !== null && Math.abs(r.fontSize - w.fontSize) > PARITY_FONT_SIZE_TOLERANCE_PX) {
+      mismatches.push({ path, axis: "fontSize", react: r.fontSize, wgpu: w.fontSize });
+    }
+  }
+  if (parityNormalizeText(reactDump.focusPath) !== parityNormalizeText(wgpuDump.focusPath)) {
+    mismatches.push({ path: "$focus", axis: "focus", react: reactDump.focusPath, wgpu: wgpuDump.focusPath });
+  }
+  return { status: mismatches.length === 0 ? "PASS" : "FAIL", nodeCount: allPaths.size, mismatches: mismatches.slice(0, 200) };
+}
+//#endregion 🔖StructuralCompare
+
+//#region 🔖PixelCompare
+/** 📐Pixel-region gate covers only structural *containers* (matches the design's "container-level
+ * matched node pairs" — navbar/footer/panel-level regions are shell chrome, out of scope for this
+ * pass since they're not part of the UiNode tree) plus scene/image leaves, not every leaf text node —
+ * bounding pixel-diff cost to O(containers) rather than O(all nodes) per playground. */
+const PARITY_PIXEL_REGION_KINDS = new Set(["stack", "field", "section", "group", "tree", "componentScene", "image"]);
+const PARITY_PIXEL_THRESHOLD_DEFAULT = 0.005;
+const PARITY_PIXEL_THRESHOLD_SCENE = 0.02;
+
+function parityPixelThreshold(kind: string): number {
+  return PARITY_SCENE_LEAF_KINDS.has(kind) ? PARITY_PIXEL_THRESHOLD_SCENE : PARITY_PIXEL_THRESHOLD_DEFAULT;
+}
+
+function compareParityRegion(reactPng: PNG, wgpuPng: PNG, node: ParityNode, outDir: string, variant: string): PixelRegionResult {
+  const [rx, ry, rw, rh] = node.rect;
+  const width = Math.max(1, Math.min(Math.round(rw), reactPng.width - Math.round(rx), wgpuPng.width - Math.round(rx)));
+  const height = Math.max(1, Math.min(Math.round(rh), reactPng.height - Math.round(ry), wgpuPng.height - Math.round(ry)));
+  const threshold = parityPixelThreshold(node.kind);
+  if (width <= 0 || height <= 0 || rx < 0 || ry < 0) return { path: node.path, ratio: 0, threshold };
+  const reactCrop = new PNG({ width, height });
+  const wgpuCrop = new PNG({ width, height });
+  PNG.bitblt(reactPng, reactCrop, Math.round(rx), Math.round(ry), width, height, 0, 0);
+  PNG.bitblt(wgpuPng, wgpuCrop, Math.round(rx), Math.round(ry), width, height, 0, 0);
+  const diff = new PNG({ width, height });
+  const mismatched = pixelmatch(reactCrop.data, wgpuCrop.data, diff.data, width, height, { threshold: 0.1, includeAA: false });
+  const ratio = mismatched / (width * height);
+  let diffPng: string | undefined;
+  if (ratio > threshold) {
+    diffPng = join(outDir, `diff-${variant}-${node.path.replace(/[^a-zA-Z0-9]+/g, "_")}.png`);
+    writeFileSync(diffPng, PNG.sync.write(diff));
+  }
+  return { path: node.path, ratio, threshold, diffPng };
+}
+//#endregion 🔖PixelCompare
+
+//#region 🔖Triage
+const PARITY_BOOT_TIMEOUT_MS = 45_000;
+
+/** 🪜Boot-triage ladder — each rung is a distinct terminal status, never conflated with a structural/pixel mismatch. */
+async function triageParityBoot(page: import("playwright").Page, renderer: ParityRenderer, url: string): Promise<{ readonly status: BootStatus; readonly detail?: string }> {
+  try {
+    await page.goto(url, { waitUntil: "domcontentloaded", timeout: 30_000 });
+  } catch (e) {
+    return { status: "SERVER-FAIL", detail: String(e) };
+  }
+  if (renderer === "react") {
+    try {
+      await page.waitForFunction(() => document.querySelectorAll("#root *").length > 20, { timeout: PARITY_BOOT_TIMEOUT_MS });
+    } catch {
+      return { status: "BOOT-TIMEOUT", detail: "react #root never populated" };
+    }
+    const nodeCount = await page.evaluate(() => document.querySelectorAll("[data-ui-path]").length);
+    return nodeCount === 0 ? { status: "DUMP-EMPTY", detail: "no data-ui-path nodes" } : { status: "PASS" };
+  }
+  const consoleErrors: string[] = [];
+  page.on("pageerror", (e) => consoleErrors.push(String(e)));
+  try {
+    await page.waitForFunction(() => document.querySelector("#semio-wgpu-canvas") != null, { timeout: PARITY_BOOT_TIMEOUT_MS });
+  } catch {
+    return { status: "BOOT-TIMEOUT", detail: "wgpu canvas never mounted" };
+  }
+  if (consoleErrors.some((e) => /NoCompatibleDevice|WebGPU/i.test(e))) return { status: "ENV-FAIL", detail: consoleErrors.join(" | ") };
+  try {
+    await page.waitForFunction(() => typeof (window as unknown as { __semioWgpu?: unknown }).__semioWgpu === "object", { timeout: PARITY_BOOT_TIMEOUT_MS });
+  } catch {
+    return { status: "BOOT-TIMEOUT", detail: "wgpu introspection hook never appeared" };
+  }
+  const dump = await dumpWgpuStructure(page);
+  if (dump.nodes.length === 0) return { status: "DUMP-EMPTY", detail: "wgpu structural dump empty (plugin-bridge/kernel wiring)" };
+  const stats = await dumpWgpuFrameStats(page);
+  if (stats && stats.drawCalls === 0) return { status: "BLANK-PAINT", detail: "zero draw calls (paint pipeline)" };
+  return { status: "PASS" };
+}
+//#endregion 🔖Triage
+
+//#region 🔖ServerPool
+/** 🔌Harness dev-server pool — clear of the catalog's per-variant 6012–6205 ports so a sweep never
+ * collides with another concurrent dev's running playground. One react+wgpu port pair per shard,
+ * reused (restart-between-variants) across that shard's playground list. React bakes its plugin
+ * choice at boot via `VITE_SEMIO_PLUGIN` (no runtime `?query=` switch — see `js/index.ts`), so a
+ * fresh server per variant is required on both renderers, not just wgpu. */
+const PARITY_PORT_BASE = 7300;
+
+function parityPortsForShard(shardIndex: number): { readonly react: number; readonly wgpu: number } {
+  const base = PARITY_PORT_BASE + shardIndex * 2;
+  return { react: base, wgpu: base + 1 };
+}
+
+function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): string {
+  return renderer === "wgpu" ? wgpuDevPlayUrl("127.0.0.1", port, variant) : devServerUrl("127.0.0.1", port);
+}
+
+type ParityServerHandle = { readonly proc: ReturnType<typeof Bun.spawn>; readonly port: number };
+
+async function startParityDevServer(renderer: ParityRenderer, variant: string, port: number): Promise<ParityServerHandle> {
+  const devScript = join(repoRoot, "framework/product/os/dev/script.ts");
+  const proc = Bun.spawn(["bun", devScript, "dev"], {
+    cwd: join(repoRoot, "framework/product/os/dev"),
+    env: { ...process.env, SEMIO_PLUGIN: variant, SEMIO_RENDERER: renderer, S_OS_PORT: String(port) },
+    stdout: "ignore",
+    stderr: "ignore",
+  });
+  const deadline = Date.now() + 180_000;
+  while (Date.now() < deadline) {
+    if (isDevPortInUse("127.0.0.1", port)) return { proc, port };
+    if (proc.exitCode !== null) throw new Error(`${renderer} dev server for ${variant} exited early (code ${proc.exitCode})`);
+    await Bun.sleep(500);
+  }
+  proc.kill();
+  throw new Error(`${renderer} dev server for ${variant} did not open port ${port} within budget`);
+}
+
+/** 🧹Best-effort: kills the spawned wrapper AND whatever ends up bound to the port, since vite/trunk
+ * fork their own child processes that a plain wrapper-kill doesn't always reap. */
+function stopParityDevServer(handle: ParityServerHandle): void {
+  try {
+    handle.proc.kill();
+  } catch {
+    /* already gone */
+  }
+  const occupant = describeDevPortOccupant(handle.port);
+  const pid = Number(occupant?.match(/PID (\d+)/)?.[1]);
+  if (Number.isFinite(pid)) {
+    try {
+      process.kill(pid, "SIGTERM");
+    } catch {
+      /* already gone */
+    }
+  }
+}
+//#endregion 🔖ServerPool
+
+//#region 🔖Report
+function parityOutDir(): string {
+  const dir = process.env.PARITY_OUT_DIR ?? join(repoRoot, ".repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY");
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+function writeParityReport(reports: readonly ParityPlaygroundReport[]): void {
+  const outDir = parityOutDir();
+  writeFileSync(join(outDir, "parity-report-v2.json"), JSON.stringify(reports, null, 2), "utf8");
+  const lines = ["# Wgpu Parity Report (v2 harness)", "", `Generated: ${reports.length} playground(s)`, "", "| Variant | React Boot | Wgpu Boot | Structural | Pixel |", "|---|---|---|---|---|"];
+  for (const r of reports) lines.push(`| ${r.variant} | ${r.boot.react} | ${r.boot.wgpu} | ${r.structural?.status ?? "-"} | ${r.pixel?.status ?? "-"} |`);
+  const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL");
+  lines.push("", `**${reports.length - failed.length}/${reports.length} PASS**`);
+  writeFileSync(join(outDir, "parity-report-v2.md"), lines.join("\n"), "utf8");
+}
+//#endregion 🔖Report
+
+//#region 🔖Sweep
+async function verifyParityVariant(variant: string, ports: { readonly react: number; readonly wgpu: number }, opts: { readonly skipDev?: boolean } = {}): Promise<ParityPlaygroundReport> {
+  const start = Date.now();
+  const { chromium } = await import("playwright");
+  const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+  let reactServer: ParityServerHandle | undefined;
+  let wgpuServer: ParityServerHandle | undefined;
+  try {
+    if (!opts.skipDev) {
+      reactServer = await startParityDevServer("react", variant, ports.react);
+      wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
+    }
+    const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+    const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
+    const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
+    if (reactBoot.status !== "PASS" || wgpuBoot.status !== "PASS") {
+      return { variant, boot: { react: reactBoot.status, wgpu: wgpuBoot.status, detail: reactBoot.detail ?? wgpuBoot.detail }, durationMs: Date.now() - start };
+    }
+    await reactPage.waitForTimeout(400);
+    await wgpuPage.waitForTimeout(400);
+    const reactDump = await dumpReactStructure(reactPage);
+    const wgpuDump = await dumpWgpuStructure(wgpuPage);
+    const structural = compareParityStructural(reactDump, wgpuDump);
+    const outDir = parityOutDir();
+    const reactPng = PNG.sync.read(await reactPage.screenshot());
+    const wgpuPng = PNG.sync.read(await wgpuPage.screenshot());
+    const wgpuPaths = new Set(wgpuDump.nodes.map((n) => n.path));
+    const regionNodes = reactDump.nodes.filter((n) => PARITY_PIXEL_REGION_KINDS.has(n.kind) && wgpuPaths.has(n.path));
+    const regions = regionNodes.map((n) => compareParityRegion(reactPng, wgpuPng, n, outDir, variant));
+    const failingRegions = regions.filter((r) => r.ratio > r.threshold);
+    return {
+      variant,
+      boot: { react: reactBoot.status, wgpu: wgpuBoot.status },
+      structural,
+      pixel: { status: failingRegions.length === 0 ? "PASS" : "FAIL", regions: failingRegions },
+      durationMs: Date.now() - start,
+    };
+  } finally {
+    await browser.close();
+    if (reactServer) stopParityDevServer(reactServer);
+    if (wgpuServer) stopParityDevServer(wgpuServer);
+  }
+}
+
+class ParitySmokeScript extends BundleScript {
+  async run(): Promise<void> {
+    const variant = process.env.SEMIO_PLUGIN || "s";
+    const report = await verifyParityVariant(variant, parityPortsForShard(0));
+    console.log(JSON.stringify(report, null, 2));
+    if (report.boot.react !== "PASS" || report.boot.wgpu !== "PASS") {
+      throw new Error(`parity smoke FAILED: boot react=${report.boot.react} wgpu=${report.boot.wgpu}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
+    }
+    console.log(`[DEBUG] parity smoke PASS for ${variant}: structural=${report.structural?.status} pixel=${report.pixel?.status} (${report.durationMs}ms)`);
+  }
+}
+
+class ParityTriageScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const variant = segments[0] || process.env.SEMIO_PLUGIN || "s";
+    const ports = parityPortsForShard(0);
+    const { chromium } = await import("playwright");
+    const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
+    const reactServer = await startParityDevServer("react", variant, ports.react);
+    const wgpuServer = await startParityDevServer("wgpu", variant, ports.wgpu);
+    try {
+      const reactPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+      const wgpuPage = await browser.newPage({ viewport: { width: 1280, height: 720 } });
+      const reactBoot = await triageParityBoot(reactPage, "react", parityDevUrl("react", variant, ports.react));
+      const wgpuBoot = await triageParityBoot(wgpuPage, "wgpu", parityDevUrl("wgpu", variant, ports.wgpu));
+      console.log(`[DEBUG] triage ${variant}: react=${reactBoot.status}${reactBoot.detail ? ` (${reactBoot.detail})` : ""}`);
+      console.log(`[DEBUG] triage ${variant}: wgpu=${wgpuBoot.status}${wgpuBoot.detail ? ` (${wgpuBoot.detail})` : ""}`);
+    } finally {
+      await browser.close();
+      stopParityDevServer(reactServer);
+      stopParityDevServer(wgpuServer);
+    }
+  }
+}
+
+class ParityVerifyScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const variants = segments.filter((s) => !s.startsWith("--"));
+    if (variants.length === 0) throw new Error("usage: parity verify <variant…>");
+    const skipDev = process.env.SKIP_DEV === "1";
+    const reports: ParityPlaygroundReport[] = [];
+    for (const variant of variants) {
+      const report = await verifyParityVariant(variant, parityPortsForShard(0), { skipDev });
+      reports.push(report);
+      console.log(`[DEBUG] ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"}`);
+    }
+    writeParityReport(reports);
+    const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL");
+    if (failed.length > 0) throw new Error(`parity verify: ${failed.length}/${reports.length} playground(s) failed`);
+  }
+}
+
+class ParitySweepScript extends BundleScript {
+  async run(segments: string[]): Promise<void> {
+    const shardArg = segments.find((s) => s.startsWith("--shard="))?.slice("--shard=".length);
+    const [shardIndex, shardCount] = shardArg ? shardArg.split("/").map(Number) : [0, 1];
+    const variants = playgroundCatalog.map((r) => r.variant).filter((_, i) => i % (shardCount ?? 1) === (shardIndex ?? 0));
+    const reports: ParityPlaygroundReport[] = [];
+    for (const variant of variants) {
+      const report = await verifyParityVariant(variant, parityPortsForShard(shardIndex ?? 0));
+      reports.push(report);
+      console.log(`[DEBUG] sweep ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"}`);
+    }
+    writeParityReport(reports);
+    const failed = reports.filter((r) => r.boot.react !== "PASS" || r.boot.wgpu !== "PASS" || r.structural?.status === "FAIL" || r.pixel?.status === "FAIL");
+    console.log(`[DEBUG] parity sweep complete: ${reports.length - failed.length}/${reports.length} PASS`);
+    if (failed.length > 0) throw new Error(`parity sweep: ${failed.length}/${reports.length} playground(s) failed`);
+  }
+}
+//#endregion 🔖Sweep
+//#endregion 🔬ParityScript
+
 const router = new ScriptRouter(import.meta.dir)
   .register("dev", DevScript)
   .register("build", BuildScript)
   .register("test", TestScript)
   .register("verify", VerifyScript)
+  .register(
+    "parity",
+    class extends BundleScript {
+      async run(segments: string[]): Promise<void> {
+        const sub = segments[0];
+        if (sub === "smoke") return new ParitySmokeScript(this.root).run(segments.slice(1));
+        if (sub === "triage") return new ParityTriageScript(this.root).run(segments.slice(1));
+        if (sub === "verify") return new ParityVerifyScript(this.root).run(segments.slice(1));
+        if (sub === "sweep") return new ParitySweepScript(this.root).run(segments.slice(1));
+        throw new Error(`unknown parity subcommand: ${sub} (expected smoke|triage|verify|sweep)`);
+      }
+    },
+  )
   .register(
     "plugin",
     class extends BundleScript {

@@ -18,7 +18,7 @@ class TestScript extends BundleScript {
 }
 
 /**
- * ▶️ Builds `semio` (always — cargo's own incremental cache makes a no-op rebuild fast, and skipping
+ * ▶️ Builds `semio` (always — cargo's own incremental cache makes a no-operation rebuild fast, and skipping
  * the build whenever the binary happened to already exist silently ran a stale binary after any
  * source edit) then execs it with forwarded argv and inherited stdio.
  */

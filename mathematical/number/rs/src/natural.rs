@@ -133,7 +133,7 @@ impl Natural {
     }
     // #endregion 🔖Shifts
 
-    // #region 🔖BitOps
+    // #region 🔖BitOperations
     pub fn bitand(&self, rhs: &Self) -> Self {
         let n = self.limbs.len().min(rhs.limbs.len());
         Self::normalize((0..n).map(|i| self.limbs[i] & rhs.limbs[i]).collect())
@@ -148,7 +148,7 @@ impl Natural {
         let n = self.limbs.len().max(rhs.limbs.len());
         Self::normalize((0..n).map(|i| self.limbs.get(i).copied().unwrap_or(0) ^ rhs.limbs.get(i).copied().unwrap_or(0)).collect())
     }
-    // #endregion 🔖BitOps
+    // #endregion 🔖BitOperations
 
     // #region 🔖AddSub
     pub fn add(&self, rhs: &Self) -> Self {

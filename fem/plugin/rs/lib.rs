@@ -521,7 +521,7 @@ fn render_fem2d_results_buckling(doc: &fem_2d::Fem2dDocument, source_id: Option<
 //#region 🔖ResultDisplay
 /// 👁️ Ephemeral (non-document) view state selecting what the results window shows — which
 /// `fem2d_solve_all`/`fem3d_solve_all` case-or-combination id (`source_id`) and which `DisplayMode`.
-/// Mutated by the `setResultDisplay` VIEW action (`ActionEmit::default()`, no ops — never recorded in
+/// Mutated by the `setResultDisplay` VIEW action (`ActionEmit::default()`, no operations — never recorded in
 /// history) and lives directly on the app struct, per `DocumentApp::handle_action`'s `&mut self`.
 #[derive(Clone, Debug, Default)]
 struct ResultDisplay {
@@ -556,7 +556,7 @@ fn parse_result_display(args: Option<&Value>) -> ResultDisplay {
 //#region 🔖Fem2dPlayApp
 /// 🧮 v0 design: results are never persisted or cached — `fem2d_solve`/`fem2d_solve_all` run fresh
 /// inside `render()` whenever the results window is drawn. At v0 scale (≤10 nodes) this is cheap and
-/// correct-by-construction (no cache-invalidation bugs to get wrong). There is no `RunAnalysis` op:
+/// correct-by-construction (no cache-invalidation bugs to get wrong). There is no `RunAnalysis` operation:
 /// solving is a pure function of the document. `result_display` is ephemeral view state (see
 /// `ResultDisplay`'s doc) — mutated by the `setResultDisplay` view action, defaulting to the first
 /// load case in `Static` mode.
@@ -567,7 +567,7 @@ struct Fem2dPlayApp {
 
 impl DocumentApp for Fem2dPlayApp {
     type Projection = fem_2d::Fem2dDocument;
-    type Op = fem_2d::Fem2dOp;
+    type Operation = fem_2d::Fem2dOperation;
 
     fn app_id(&self) -> &str {
         FEM2D_APP_ID
@@ -581,13 +581,13 @@ impl DocumentApp for Fem2dPlayApp {
         fem_2d::empty_fem2d_projection()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, fem_2d::Fem2dDocument>, _view_state: &ViewState) -> ActionEmit<fem_2d::Fem2dOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, fem_2d::Fem2dDocument>, _view_state: &ViewState) -> ActionEmit<fem_2d::Fem2dOperation> {
         match action {
             "addNode" => {
                 if let (Some(x), Some(y)) = (args.and_then(|v| v.get("x")).and_then(Value::as_f64), args.and_then(|v| v.get("y")).and_then(Value::as_f64)) {
                     let id = next_id(doc.projection.nodes.iter().map(|n| n.id.clone()), "n");
                     let index = doc.projection.nodes.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetNode { index, node: fem_2d::FemNode { id, x, y } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetNode { index, node: fem_2d::FemNode { id, x, y } }]);
                 }
             }
             "addBar" | "addBeam" => {
@@ -604,14 +604,14 @@ impl DocumentApp for Fem2dPlayApp {
                     } else {
                         fem_2d::FemElement::Beam { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() }
                     };
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetElement { index, element }]);
                 }
             }
             "addMaterial" => {
                 if let (Some(name), Some(e)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("e")).and_then(Value::as_f64)) {
                     let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
                     let index = doc.projection.materials.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetMaterial { index, material: fem_2d::FemMaterial { id, name: name.into(), e, nu: 0.3, rho: 7850.0 } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetMaterial { index, material: fem_2d::FemMaterial { id, name: name.into(), e, nu: 0.3, rho: 7850.0 } }]);
                 }
             }
             "addSection" => {
@@ -622,7 +622,7 @@ impl DocumentApp for Fem2dPlayApp {
                 ) {
                     let id = next_id(doc.projection.sections.iter().map(|s| s.id.clone()), "s");
                     let index = doc.projection.sections.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetSection { index, section: fem_2d::FemSection { id, name: name.into(), area, iy } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetSection { index, section: fem_2d::FemSection { id, name: name.into(), area, iy } }]);
                 }
             }
             "addSupport" => {
@@ -630,7 +630,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let fixed: Vec<Dof> = args.and_then(|v| v.get("fixed")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
                     let id = next_id(doc.projection.supports.iter().map(|s| s.id.clone()), "sup");
                     let index = doc.projection.supports.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetSupport { index, support: fem_2d::FemSupport { id, node_id: node_id.into(), fixed } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetSupport { index, support: fem_2d::FemSupport { id, node_id: node_id.into(), fixed } }]);
                 }
             }
             "addNodalLoad" => {
@@ -643,7 +643,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_2d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_2d::FemLoad::Nodal { id: load_id, node_id: node_id.into(), dof, value });
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addMemberUdl" => {
@@ -656,7 +656,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_2d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_2d::FemLoad::MemberUdl { id: load_id, element_id: element_id.into(), wx, wy });
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addAreaLoad" => {
@@ -665,7 +665,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let (index, mut load_case) = fem2d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_2d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_2d::FemLoad::Area { id: load_id, region_id: region_id.into(), pressure });
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addRegion" => {
@@ -681,7 +681,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let id = next_id(doc.projection.regions.iter().map(|r| r.id.clone()), "r");
                     let index = doc.projection.regions.len();
                     let outline = vec![[x, y], [x + width, y], [x + width, y + height], [x, y + height]];
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetRegion { index, region: fem_2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness, material_id: material_id.into(), mesh_size } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetRegion { index, region: fem_2d::FemRegion { id, name: "Region".into(), outline, holes: Vec::new(), thickness, material_id: material_id.into(), mesh_size } }]);
                 }
             }
             "addLoadCase" => {
@@ -689,7 +689,7 @@ impl DocumentApp for Fem2dPlayApp {
                     let self_weight = args.and_then(|v| v.get("selfWeight")).and_then(Value::as_bool).unwrap_or(false);
                     let id = next_id(doc.projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
                     let index = doc.projection.load_cases.len();
-                    return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetLoadCase { index, load_case: fem_2d::FemLoadCase { id, name: name.into(), loads: Vec::new(), self_weight } }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetLoadCase { index, load_case: fem_2d::FemLoadCase { id, name: name.into(), loads: Vec::new(), self_weight } }]);
                 }
             }
             "addCombination" => {
@@ -697,7 +697,7 @@ impl DocumentApp for Fem2dPlayApp {
                     if let Ok(terms) = serde_json::from_str::<Vec<(String, f64)>>(terms_json) {
                         let id = next_id(doc.projection.combinations.iter().map(|c| c.id.clone()), "c");
                         let index = doc.projection.combinations.len();
-                        return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetCombination { index, combination: fem_2d::FemCombination { id, name: name.into(), terms } }]);
+                        return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetCombination { index, combination: fem_2d::FemCombination { id, name: name.into(), terms } }]);
                     }
                 }
             }
@@ -706,7 +706,7 @@ impl DocumentApp for Fem2dPlayApp {
                     if let Some(index) = doc.projection.load_cases.iter().position(|lc| lc.id == case_id) {
                         let mut load_case = doc.projection.load_cases[index].clone();
                         load_case.self_weight = enabled;
-                        return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetLoadCase { index, load_case }]);
+                        return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetLoadCase { index, load_case }]);
                     }
                 }
             }
@@ -715,32 +715,32 @@ impl DocumentApp for Fem2dPlayApp {
                 let modal_count = args.and_then(|v| v.get("modalCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.modal_count);
                 let buckling_count = args.and_then(|v| v.get("bucklingCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.buckling_count);
                 let deformation_scale = args.and_then(|v| v.get("deformationScale")).and_then(Value::as_f64).unwrap_or(current.deformation_scale);
-                return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetAnalysisSettings { settings: fem_2d::FemAnalysisSettings { modal_count, buckling_count, deformation_scale } }]);
+                return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetAnalysisSettings { settings: fem_2d::FemAnalysisSettings { modal_count, buckling_count, deformation_scale } }]);
             }
             "removeSelection" => {
                 let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-                let mut ops = Vec::new();
+                let mut operations = Vec::new();
                 for id in ids {
                     if doc.projection.nodes.iter().any(|n| n.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveNode { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveNode { id });
                     } else if doc.projection.elements.iter().any(|e| fem_2d::element_id(e) == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveElement { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveElement { id });
                     } else if doc.projection.materials.iter().any(|m| m.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveMaterial { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveMaterial { id });
                     } else if doc.projection.sections.iter().any(|s| s.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveSection { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveSection { id });
                     } else if doc.projection.supports.iter().any(|s| s.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveSupport { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveSupport { id });
                     } else if doc.projection.load_cases.iter().any(|l| l.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveLoadCase { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveLoadCase { id });
                     } else if doc.projection.regions.iter().any(|r| r.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveRegion { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveRegion { id });
                     } else if doc.projection.combinations.iter().any(|c| c.id == id) {
-                        ops.push(fem_2d::Fem2dOp::RemoveCombination { id });
+                        operations.push(fem_2d::Fem2dOperation::RemoveCombination { id });
                     }
                 }
-                if !ops.is_empty() {
-                    return ActionEmit::ops(ops);
+                if !operations.is_empty() {
+                    return ActionEmit::operations(operations);
                 }
             }
             "setCamera" => {
@@ -749,7 +749,7 @@ impl DocumentApp for Fem2dPlayApp {
                     args.and_then(|v| v.get("y")).and_then(Value::as_f64),
                     args.and_then(|v| v.get("zoom")).and_then(Value::as_f64),
                 ) {
-                    return ActionEmit::amend(vec![fem_2d::Fem2dOp::SetCamera { camera: fem_2d::FemCamera { x, y, zoom } }], "camera");
+                    return ActionEmit::amend(vec![fem_2d::Fem2dOperation::SetCamera { camera: fem_2d::FemCamera { x, y, zoom } }], "camera");
                 }
             }
             "setResultDisplay" => {
@@ -763,7 +763,7 @@ impl DocumentApp for Fem2dPlayApp {
                     fem_2d::empty_fem2d_projection()
                 };
                 self.result_display = ResultDisplay::default();
-                return ActionEmit::ops(vec![fem_2d::Fem2dOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetDocument { document }]);
             }
             _ => {}
         }
@@ -1174,7 +1174,7 @@ fn render_fem3d_results_buckling(doc: &fem_3d::Fem3dDocument, source_id: Option<
 
 //#region 🔖Fem3dPlayApp
 /// 🧮 v0 design: mirrors `Fem2dPlayApp` — results are recomputed fresh inside `render()`, no cache, no
-/// `RunAnalysis` op. `result_display` is ephemeral view state (see `ResultDisplay`'s doc), defaulting
+/// `RunAnalysis` operation. `result_display` is ephemeral view state (see `ResultDisplay`'s doc), defaulting
 /// to the first load case in `Static` mode.
 #[derive(Default)]
 struct Fem3dPlayApp {
@@ -1183,7 +1183,7 @@ struct Fem3dPlayApp {
 
 impl DocumentApp for Fem3dPlayApp {
     type Projection = fem_3d::Fem3dDocument;
-    type Op = fem_3d::Fem3dOp;
+    type Operation = fem_3d::Fem3dOperation;
 
     fn app_id(&self) -> &str {
         FEM3D_APP_ID
@@ -1197,7 +1197,7 @@ impl DocumentApp for Fem3dPlayApp {
         fem_3d::empty_fem3d_projection()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, fem_3d::Fem3dDocument>, _view_state: &ViewState) -> ActionEmit<fem_3d::Fem3dOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, fem_3d::Fem3dDocument>, _view_state: &ViewState) -> ActionEmit<fem_3d::Fem3dOperation> {
         match action {
             "addNode" => {
                 if let (Some(x), Some(y), Some(z)) = (
@@ -1207,7 +1207,7 @@ impl DocumentApp for Fem3dPlayApp {
                 ) {
                     let id = next_id(doc.projection.nodes.iter().map(|n| n.id.clone()), "n");
                     let index = doc.projection.nodes.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetNode { index, node: fem_3d::FemNode { id, x, y, z } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetNode { index, node: fem_3d::FemNode { id, x, y, z } }]);
                 }
             }
             "addBar" => {
@@ -1220,7 +1220,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let id = next_id(doc.projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                     let index = doc.projection.elements.len();
                     let element = fem_3d::FemElement::Bar { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() };
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element }]);
                 }
             }
             "addFrame" => {
@@ -1234,7 +1234,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let id = next_id(doc.projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                     let index = doc.projection.elements.len();
                     let element = fem_3d::FemElement::Frame { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into(), roll };
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element }]);
                 }
             }
             "addMaterial" => {
@@ -1245,7 +1245,7 @@ impl DocumentApp for Fem3dPlayApp {
                 ) {
                     let id = next_id(doc.projection.materials.iter().map(|m| m.id.clone()), "m");
                     let index = doc.projection.materials.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g, nu: 0.3, rho: 7850.0 } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetMaterial { index, material: fem_3d::FemMaterial { id, name: name.into(), e, g, nu: 0.3, rho: 7850.0 } }]);
                 }
             }
             "addSection" => {
@@ -1258,7 +1258,7 @@ impl DocumentApp for Fem3dPlayApp {
                 ) {
                     let id = next_id(doc.projection.sections.iter().map(|s| s.id.clone()), "s");
                     let index = doc.projection.sections.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetSection { index, section: fem_3d::FemSection { id, name: name.into(), area, iy, iz, j } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetSection { index, section: fem_3d::FemSection { id, name: name.into(), area, iy, iz, j } }]);
                 }
             }
             "addSupport" => {
@@ -1266,7 +1266,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let fixed: Vec<Dof> = args.and_then(|v| v.get("fixed")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
                     let id = next_id(doc.projection.supports.iter().map(|s| s.id.clone()), "sup");
                     let index = doc.projection.supports.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetSupport { index, support: fem_3d::FemSupport { id, node_id: node_id.into(), fixed } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetSupport { index, support: fem_3d::FemSupport { id, node_id: node_id.into(), fixed } }]);
                 }
             }
             "addNodalLoad" => {
@@ -1279,7 +1279,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let (index, mut load_case) = fem3d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_3d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_3d::FemLoad::Nodal { id: load_id, node_id: node_id.into(), dof, value });
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addMemberUdl" => {
@@ -1293,7 +1293,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let (index, mut load_case) = fem3d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_3d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_3d::FemLoad::MemberUdl { id: load_id, element_id: element_id.into(), wx, wy, wz });
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addAreaLoad" => {
@@ -1302,7 +1302,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let (index, mut load_case) = fem3d_resolve_load_case(doc.projection, case_id);
                     let load_id = next_id(load_case.loads.iter().map(|l| fem_3d::load_id(l).to_string()), "l");
                     load_case.loads.push(fem_3d::FemLoad::Area { id: load_id, solid_id: solid_id.into(), pressure });
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetLoadCase { index, load_case }]);
                 }
             }
             "addSolid" => {
@@ -1320,7 +1320,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let id = next_id(doc.projection.solids.iter().map(|s| s.id.clone()), "sol");
                     let index = doc.projection.solids.len();
                     let outline = vec![[x, y], [x + width, y], [x + width, y + depth], [x, y + depth]];
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetSolid { index, solid: fem_3d::FemSolid { id, name: "Solid".into(), outline, holes: Vec::new(), base_z, height, layers, mesh_size, material_id: material_id.into() } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetSolid { index, solid: fem_3d::FemSolid { id, name: "Solid".into(), outline, holes: Vec::new(), base_z, height, layers, mesh_size, material_id: material_id.into() } }]);
                 }
             }
             "addLoadCase" => {
@@ -1328,7 +1328,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let self_weight = args.and_then(|v| v.get("selfWeight")).and_then(Value::as_bool).unwrap_or(false);
                     let id = next_id(doc.projection.load_cases.iter().map(|lc| lc.id.clone()), "case-");
                     let index = doc.projection.load_cases.len();
-                    return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case: fem_3d::FemLoadCase { id, name: name.into(), loads: Vec::new(), self_weight } }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetLoadCase { index, load_case: fem_3d::FemLoadCase { id, name: name.into(), loads: Vec::new(), self_weight } }]);
                 }
             }
             "addCombination" => {
@@ -1336,7 +1336,7 @@ impl DocumentApp for Fem3dPlayApp {
                     if let Ok(terms) = serde_json::from_str::<Vec<(String, f64)>>(terms_json) {
                         let id = next_id(doc.projection.combinations.iter().map(|c| c.id.clone()), "c");
                         let index = doc.projection.combinations.len();
-                        return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetCombination { index, combination: fem_3d::FemCombination { id, name: name.into(), terms } }]);
+                        return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetCombination { index, combination: fem_3d::FemCombination { id, name: name.into(), terms } }]);
                     }
                 }
             }
@@ -1345,7 +1345,7 @@ impl DocumentApp for Fem3dPlayApp {
                     if let Some(index) = doc.projection.load_cases.iter().position(|lc| lc.id == case_id) {
                         let mut load_case = doc.projection.load_cases[index].clone();
                         load_case.self_weight = enabled;
-                        return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetLoadCase { index, load_case }]);
+                        return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetLoadCase { index, load_case }]);
                     }
                 }
             }
@@ -1354,37 +1354,37 @@ impl DocumentApp for Fem3dPlayApp {
                 let modal_count = args.and_then(|v| v.get("modalCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.modal_count);
                 let buckling_count = args.and_then(|v| v.get("bucklingCount")).and_then(Value::as_u64).map(|n| n as usize).unwrap_or(current.buckling_count);
                 let deformation_scale = args.and_then(|v| v.get("deformationScale")).and_then(Value::as_f64).unwrap_or(current.deformation_scale);
-                return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetAnalysisSettings { settings: fem_3d::FemAnalysisSettings { modal_count, buckling_count, deformation_scale } }]);
+                return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetAnalysisSettings { settings: fem_3d::FemAnalysisSettings { modal_count, buckling_count, deformation_scale } }]);
             }
             "removeSelection" => {
                 let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
-                let mut ops = Vec::new();
+                let mut operations = Vec::new();
                 for id in ids {
                     if doc.projection.nodes.iter().any(|n| n.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveNode { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveNode { id });
                     } else if doc.projection.elements.iter().any(|e| fem3d_element_id(e) == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveElement { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveElement { id });
                     } else if doc.projection.materials.iter().any(|m| m.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveMaterial { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveMaterial { id });
                     } else if doc.projection.sections.iter().any(|s| s.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveSection { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveSection { id });
                     } else if doc.projection.supports.iter().any(|s| s.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveSupport { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveSupport { id });
                     } else if doc.projection.load_cases.iter().any(|l| l.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveLoadCase { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveLoadCase { id });
                     } else if doc.projection.solids.iter().any(|s| s.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveSolid { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveSolid { id });
                     } else if doc.projection.combinations.iter().any(|c| c.id == id) {
-                        ops.push(fem_3d::Fem3dOp::RemoveCombination { id });
+                        operations.push(fem_3d::Fem3dOperation::RemoveCombination { id });
                     }
                 }
-                if !ops.is_empty() {
-                    return ActionEmit::ops(ops);
+                if !operations.is_empty() {
+                    return ActionEmit::operations(operations);
                 }
             }
             "setCamera" => {
                 if let Some(json_str) = args.and_then(|v| v.get("json")).and_then(Value::as_str) {
-                    return ActionEmit::amend(vec![fem_3d::Fem3dOp::SetCamera { camera: fem_3d::FemCamera { json: json_str.into() } }], "camera");
+                    return ActionEmit::amend(vec![fem_3d::Fem3dOperation::SetCamera { camera: fem_3d::FemCamera { json: json_str.into() } }], "camera");
                 }
             }
             "setResultDisplay" => {
@@ -1398,7 +1398,7 @@ impl DocumentApp for Fem3dPlayApp {
                     fem_3d::empty_fem3d_projection()
                 };
                 self.result_display = ResultDisplay::default();
-                return ActionEmit::ops(vec![fem_3d::Fem3dOp::SetDocument { document }]);
+                return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetDocument { document }]);
             }
             _ => {}
         }
@@ -1711,9 +1711,9 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "x": 1.0, "y": 2.0 });
         let emit = app.handle_action("addNode", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetNode { node, .. } => {
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetNode { node, .. } => {
                 assert_eq!(node.x, 1.0);
                 assert_eq!(node.y, 2.0);
             }
@@ -1729,9 +1729,9 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "x": 1.0, "y": 2.0, "z": 3.0 });
         let emit = app.handle_action("addNode", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_3d::Fem3dOp::SetNode { node, .. } => {
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetNode { node, .. } => {
                 assert_eq!(node.x, 1.0);
                 assert_eq!(node.y, 2.0);
                 assert_eq!(node.z, 3.0);
@@ -1809,7 +1809,7 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "sourceId": "dead", "mode": "modal", "modeIndex": 0 });
         let emit = app.handle_action("setResultDisplay", Some(&args), &doc, &ViewState::default());
-        assert!(emit.ops.is_empty(), "setResultDisplay must not emit operations (it's ephemeral view state)");
+        assert!(emit.operations.is_empty(), "setResultDisplay must not emit operations (it's ephemeral view state)");
         assert_eq!(app.result_display.mode, DisplayMode::Modal(0));
         assert_eq!(app.result_display.source_id.as_deref(), Some("dead"));
     }
@@ -1823,9 +1823,9 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "default" })), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
             _ => panic!("expected SetDocument"),
         }
     }
@@ -1837,8 +1837,8 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &doc, &ViewState::default());
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetDocument { document } => assert_eq!(document, &fem_2d::empty_fem2d_projection()),
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetDocument { document } => assert_eq!(document, &fem_2d::empty_fem2d_projection()),
             _ => panic!("expected SetDocument"),
         }
     }
@@ -1850,14 +1850,14 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setActiveExample", Some(&json!({ "exampleId": "default" })), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_3d::Fem3dOp::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetDocument { document } => assert!(!document.nodes.is_empty(), "expected the default fixture's nodes"),
             _ => panic!("expected SetDocument"),
         }
     }
 
-    /// 🧬 `setActiveExample` replaces document content via `SetDocument` ops, so it MUST be declared as
+    /// 🧬 `setActiveExample` replaces document content via `SetDocument` operations, so it MUST be declared as
     /// an Operation, not a View/Shell action — the framework's "View/Shell actions must not emit
     /// operations" guard would otherwise reject it (mirrors `gis/plugin/rs`'s equivalent test).
     #[test]
@@ -1865,7 +1865,7 @@ mod tests {
         use semio_framework_plugin::ActionKind;
         let definition = create_fem2d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-        assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument ops, so it is an Operation");
+        assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument operations, so it is an Operation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
 
@@ -1874,7 +1874,7 @@ mod tests {
         use semio_framework_plugin::ActionKind;
         let definition = create_fem3d_app().definition;
         let action = definition.actions.iter().find(|action| action.id == "setActiveExample").expect("setActiveExample declared");
-        assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument ops, so it is an Operation");
+        assert!(matches!(action.kind, ActionKind::Operation), "loading an example emits SetDocument operations, so it is an Operation");
         assert!(!action.args.is_empty(), "the palette stages the example choice via a declared select arg");
     }
     //#endregion 🔖SetActiveExample
@@ -2012,9 +2012,9 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "x": 0.0, "y": 0.0, "width": 4.0, "height": 2.0, "materialId": "steel" });
         let emit = app.handle_action("addRegion", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetRegion { region, .. } => {
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetRegion { region, .. } => {
                 assert_eq!(region.outline, vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]]);
                 assert_eq!(region.thickness, 0.02);
             }
@@ -2030,9 +2030,9 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "x": 0.0, "y": 0.0, "width": 2.0, "depth": 1.0, "height": 0.5, "materialId": "concrete" });
         let emit = app.handle_action("addSolid", Some(&args), &doc, &ViewState::default());
-        assert_eq!(emit.ops.len(), 1);
-        match &emit.ops[0] {
-            fem_3d::Fem3dOp::SetSolid { solid, .. } => {
+        assert_eq!(emit.operations.len(), 1);
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetSolid { solid, .. } => {
                 assert_eq!(solid.outline, vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]]);
                 assert_eq!(solid.height, 0.5);
                 assert_eq!(solid.layers, 1);
@@ -2050,17 +2050,17 @@ mod tests {
         let history = history_view();
         let doc_2d = DocumentView { projection: &projection_2d, history: &history };
         let emit_2d = app_2d.handle_action("removeSelection", Some(&json!({ "ids": ["r1", "uls"] })), &doc_2d, &ViewState::default());
-        assert_eq!(emit_2d.ops.len(), 2);
-        assert!(matches!(emit_2d.ops[0], fem_2d::Fem2dOp::RemoveRegion { .. }));
-        assert!(matches!(emit_2d.ops[1], fem_2d::Fem2dOp::RemoveCombination { .. }));
+        assert_eq!(emit_2d.operations.len(), 2);
+        assert!(matches!(emit_2d.operations[0], fem_2d::Fem2dOperation::RemoveRegion { .. }));
+        assert!(matches!(emit_2d.operations[1], fem_2d::Fem2dOperation::RemoveCombination { .. }));
 
         let mut app_3d = Fem3dPlayApp::default();
         let mut projection_3d = fem_3d::empty_fem3d_projection();
         projection_3d.solids.push(fem_3d::FemSolid { id: "sol1".into(), name: "S".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 1.0, layers: 1, mesh_size: 0.5, material_id: "concrete".into() });
         let doc_3d = DocumentView { projection: &projection_3d, history: &history };
         let emit_3d = app_3d.handle_action("removeSelection", Some(&json!({ "ids": ["sol1"] })), &doc_3d, &ViewState::default());
-        assert_eq!(emit_3d.ops.len(), 1);
-        assert!(matches!(emit_3d.ops[0], fem_3d::Fem3dOp::RemoveSolid { .. }));
+        assert_eq!(emit_3d.operations.len(), 1);
+        assert!(matches!(emit_3d.operations[0], fem_3d::Fem3dOperation::RemoveSolid { .. }));
     }
     //#endregion 🔖StructureActions
 
@@ -2074,14 +2074,14 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
 
         let emit_case = app.handle_action("addLoadCase", Some(&json!({ "name": "Live", "selfWeight": false })), &doc, &ViewState::default());
-        match &emit_case.ops[0] {
-            fem_2d::Fem2dOp::SetLoadCase { load_case, .. } => assert_eq!(load_case.name, "Live"),
+        match &emit_case.operations[0] {
+            fem_2d::Fem2dOperation::SetLoadCase { load_case, .. } => assert_eq!(load_case.name, "Live"),
             _ => panic!("expected SetLoadCase"),
         }
 
         let emit_combo = app.handle_action("addCombination", Some(&json!({ "name": "ULS", "terms": "[[\"dead\",1.35]]" })), &doc, &ViewState::default());
-        match &emit_combo.ops[0] {
-            fem_2d::Fem2dOp::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![("dead".to_string(), 1.35)]),
+        match &emit_combo.operations[0] {
+            fem_2d::Fem2dOperation::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![("dead".to_string(), 1.35)]),
             _ => panic!("expected SetCombination"),
         }
     }
@@ -2095,8 +2095,8 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("addAreaLoad", Some(&json!({ "regionId": "r1", "pressure": 5000.0, "caseId": "live" })), &doc, &ViewState::default());
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetLoadCase { index, load_case } => {
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetLoadCase { index, load_case } => {
                 assert_eq!(*index, 1);
                 assert_eq!(load_case.id, "live");
                 assert!(matches!(load_case.loads[0], fem_2d::FemLoad::Area { .. }));
@@ -2113,8 +2113,8 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setSelfWeight", Some(&json!({ "caseId": "dead", "enabled": true })), &doc, &ViewState::default());
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetLoadCase { load_case, .. } => assert!(load_case.self_weight),
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetLoadCase { load_case, .. } => assert!(load_case.self_weight),
             _ => panic!("expected SetLoadCase"),
         }
     }
@@ -2127,8 +2127,8 @@ mod tests {
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let emit = app.handle_action("setAnalysisSettings", Some(&json!({ "deformationScale": 300.0 })), &doc, &ViewState::default());
-        match &emit.ops[0] {
-            fem_2d::Fem2dOp::SetAnalysisSettings { settings } => {
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetAnalysisSettings { settings } => {
                 assert_eq!(settings.modal_count, 4);
                 assert_eq!(settings.buckling_count, 6);
                 assert_eq!(settings.deformation_scale, 300.0);
@@ -2146,8 +2146,8 @@ mod tests {
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "elementId": "e1", "wx": 0.0, "wy": 0.0, "wz": -2000.0 });
         let emit = app.handle_action("addMemberUdl", Some(&args), &doc, &ViewState::default());
-        match &emit.ops[0] {
-            fem_3d::Fem3dOp::SetLoadCase { load_case, .. } => assert!(matches!(load_case.loads[0], fem_3d::FemLoad::MemberUdl { .. })),
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetLoadCase { load_case, .. } => assert!(matches!(load_case.loads[0], fem_3d::FemLoad::MemberUdl { .. })),
             _ => panic!("expected SetLoadCase"),
         }
     }

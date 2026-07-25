@@ -7,7 +7,7 @@ use semio_framework_plugin::{
     PanelTreeBuilder, ResourceKindSpec, SurfaceKind, TextEditorScene, UiControlNode, UiInspectorFieldGroup, UiNode, UiPresence, UiToggleNode, UiTreeItemNode, ViewState, FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL,
     FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use sequence_core::{default_fixture, sequence_fixture_ops, SequenceFixture, SequenceHost, SequenceOp, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
+use sequence_core::{default_fixture, sequence_fixture_operations, SequenceFixture, SequenceHost, SequenceOperation, SequenceStep, SlotRef, SEQUENCE_FIXTURE_SCHEMA};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -30,7 +30,7 @@ const SEQUENCE_PLAY_WINDOW_COMPILED: &str = "sequence-compiled-dag";
 
 //#region 🔖Types
 /// 🎛️ Ephemeral view state (selection, last run output, layout orientation) held in the app struct,
-/// never in the document — so it stays out of undo history and off the op channel.
+/// never in the document — so it stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct SequencePlayRuntime {
@@ -78,7 +78,7 @@ fn sequence_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 
 /// 🧰 Builds a {@link SequenceHost} seeded from a projection so an action can mutate it (with all the
-/// host's cycle/slot/layout logic) and then diff the result into typed ops.
+/// host's cycle/slot/layout logic) and then diff the result into typed operations.
 fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
     SequenceHost::from_fixture(fixture.clone())
 }
@@ -333,7 +333,7 @@ fn render_main_graph(fixture: &SequenceFixture, runtime: &SequencePlayRuntime) -
         NodeGraphScene {
             editable: Some(true),
             selection_json,
-            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into()),
+            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"operations":[{"operation":"deleteSelection"}]},"destructive":true}]"#.into()),
             ..NodeGraphScene::base(nodes_json, edges_json, viewport_json)
         },
     )
@@ -362,17 +362,17 @@ struct SequencePlayApp {
 }
 
 impl SequencePlayApp {
-    /// 🔀 Runs a host mutation seeded from the current projection and diffs the result into typed ops.
-    fn ops_from_host_mutation(&self, fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOp> {
+    /// 🔀 Runs a host mutation seeded from the current projection and diffs the result into typed operations.
+    fn ops_from_host_mutation(&self, fixture: &SequenceFixture, mutate: impl FnOnce(&mut SequenceHost)) -> Vec<SequenceOperation> {
         let mut host = host_from_fixture(fixture);
         mutate(&mut host);
-        sequence_fixture_ops(fixture, &host.fixture)
+        sequence_fixture_operations(fixture, &host.fixture)
     }
 }
 
 impl DocumentApp for SequencePlayApp {
     type Projection = SequenceFixture;
-    type Op = SequenceOp;
+    type Operation = SequenceOperation;
 
     fn app_id(&self) -> &str {
         SEQUENCE_PLAY_APP_ID
@@ -386,10 +386,10 @@ impl DocumentApp for SequencePlayApp {
         default_fixture()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _view_state: &ViewState) -> ActionEmit<SequenceOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, SequenceFixture>, _view_state: &ViewState) -> ActionEmit<SequenceOperation> {
         let fixture = doc.projection;
         match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" | "selectNode" | "nodeGraphSelect" => {
                 self.runtime.selected_step_ids = node_graph_selection_ids(args);
                 ActionEmit::default()
@@ -417,14 +417,14 @@ impl DocumentApp for SequencePlayApp {
                 self.runtime.last_run_json.clear();
                 ActionEmit::default()
             }
-            // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+            // 📷 Camera — a coalesced scalar operation so a pan/zoom gesture is one undo step.
             "nodeGraphViewport" => {
                 if let Some(camera) = args.and_then(|value| value.get("viewportJson")).and_then(|value| value.as_str()).and_then(|json| serde_json::from_str(json).ok()) {
-                    return ActionEmit::amend(vec![SequenceOp::SetCamera { camera }], "camera");
+                    return ActionEmit::amend(vec![SequenceOperation::SetCamera { camera }], "camera");
                 }
                 ActionEmit::default()
             }
-            // ✏️ Operations — compute the target fixture via the host, emit granular ops.
+            // ✏️ Operations — compute the target fixture via the host, emit granular operations.
             "addStep" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
                 let x = args.and_then(|value| value.get("x")).and_then(|value| value.as_f64()).unwrap_or(120.0);
@@ -432,7 +432,7 @@ impl DocumentApp for SequencePlayApp {
                 let mut host = host_from_fixture(fixture);
                 let id = host.add_step(&kind, x, y);
                 self.runtime.selected_step_ids = vec![id];
-                ActionEmit::ops(sequence_fixture_ops(fixture, &host.fixture))
+                ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
             }
             "addStepToSlot" | "addStepDropped" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("log.print").to_string();
@@ -452,27 +452,27 @@ impl DocumentApp for SequencePlayApp {
                     host.add_step_dropped(&kind, x, y, picked.as_deref())
                 };
                 self.runtime.selected_step_ids = vec![id];
-                ActionEmit::ops(sequence_fixture_ops(fixture, &host.fixture))
+                ActionEmit::operations(sequence_fixture_operations(fixture, &host.fixture))
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(step_id) = step_id else { return ActionEmit::default() };
                 self.runtime.selected_step_ids.retain(|id| id != &step_id);
-                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     host.remove_step(&step_id);
                 }))
             }
             "deleteSelection" => {
                 let selected = self.runtime.selected_step_ids.clone();
-                let ops = self.ops_from_host_mutation(fixture, |host| {
+                let operations = self.ops_from_host_mutation(fixture, |host| {
                     for step_id in &selected {
                         host.remove_step(step_id);
                     }
                 });
-                if !ops.is_empty() {
+                if !operations.is_empty() {
                     self.runtime.selected_step_ids.clear();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "moveMediaNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).map(str::to_string);
@@ -480,7 +480,7 @@ impl DocumentApp for SequencePlayApp {
                 let y = args.and_then(|value| value.get("y")).and_then(|value| value.as_f64());
                 if let (Some(node_id), Some(x), Some(y)) = (node_id, x, y) {
                     if fixture.steps.iter().any(|step| step.id == node_id) {
-                        let ops = self.ops_from_host_mutation(fixture, |host| {
+                        let operations = self.ops_from_host_mutation(fixture, |host| {
                             let mut next = host.fixture.clone();
                             if let Some(step) = next.steps.iter_mut().find(|step| step.id == node_id) {
                                 step.x = x;
@@ -488,7 +488,7 @@ impl DocumentApp for SequencePlayApp {
                             }
                             let _ = host.replace_fixture(next);
                         });
-                        return ActionEmit::ops(ops);
+                        return ActionEmit::operations(operations);
                     }
                 }
                 ActionEmit::default()
@@ -497,7 +497,7 @@ impl DocumentApp for SequencePlayApp {
                 let from = args.and_then(|value| value.get("sourceNodeId")).and_then(|value| value.as_str()).map(str::to_string);
                 let to = args.and_then(|value| value.get("targetNodeId")).and_then(|value| value.as_str()).map(str::to_string);
                 if let (Some(from), Some(to)) = (from, to) {
-                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                         let _ = host.connect_steps(&from, &to);
                     }));
                 }
@@ -507,7 +507,7 @@ impl DocumentApp for SequencePlayApp {
                 let from_id = args.and_then(|value| value.get("fromId")).and_then(|value| value.as_str()).map(str::to_string);
                 let to_id = args.and_then(|value| value.get("toId")).and_then(|value| value.as_str()).map(str::to_string);
                 if let (Some(from_id), Some(to_id)) = (from_id, to_id) {
-                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                         host.disconnect_steps(&from_id, &to_id);
                     }));
                 }
@@ -517,7 +517,7 @@ impl DocumentApp for SequencePlayApp {
                 let step_id = args.and_then(|value| value.get("id")).or_else(|| args.and_then(|value| value.get("stepId"))).and_then(|value| value.as_str()).map(str::to_string);
                 let params = args.and_then(|value| value.get("params")).map(|value| value.to_string());
                 if let (Some(step_id), Some(params)) = (step_id, params) {
-                    return ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                    return ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                         let _ = host.set_step_params_json(&step_id, &params);
                     }));
                 }
@@ -527,26 +527,26 @@ impl DocumentApp for SequencePlayApp {
                 let step_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).map(str::to_string);
                 let Some(step_id) = step_id else { return ActionEmit::default() };
                 let collapsed = fixture.steps.iter().find(|step| step.id == step_id).map(|step| !step.collapsed).unwrap_or(true);
-                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     host.set_step_collapsed(&step_id, collapsed);
                 }))
             }
             "reorganize" => {
                 let orientation = self.runtime.orientation;
-                ActionEmit::ops(self.ops_from_host_mutation(fixture, |host| {
+                ActionEmit::operations(self.ops_from_host_mutation(fixture, |host| {
                     let opts = DagLayoutOptions { orientation, ..DagLayoutOptions::default() };
                     let _ = host.reorganize(&opts);
                 }))
             }
             "nodeGraphEdit" => {
-                let sub_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let sub_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let selected = self.runtime.selected_step_ids.clone();
                 let mut cleared = false;
-                let ops = self.ops_from_host_mutation(fixture, |host| {
-                    for op in &sub_ops {
-                        match op.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                let operations = self.ops_from_host_mutation(fixture, |host| {
+                    for operation in &sub_operations {
+                        match operation.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
-                                if let Some(fixture) = op.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok()) {
+                                if let Some(fixture) = operation.get("fixtureJson").and_then(|value| value.as_str()).and_then(|json| serde_json::from_str::<SequenceFixture>(json).ok()) {
                                     let _ = host.replace_fixture(fixture);
                                 }
                             }
@@ -558,8 +558,8 @@ impl DocumentApp for SequencePlayApp {
                                 }
                             }
                             "connect" => {
-                                let from = op.get("sourceNodeId").and_then(|value| value.as_str());
-                                let to = op.get("targetNodeId").and_then(|value| value.as_str());
+                                let from = operation.get("sourceNodeId").and_then(|value| value.as_str());
+                                let to = operation.get("targetNodeId").and_then(|value| value.as_str());
                                 if let (Some(from), Some(to)) = (from, to) {
                                     let _ = host.connect_steps(from, to);
                                 }
@@ -571,7 +571,7 @@ impl DocumentApp for SequencePlayApp {
                 if cleared {
                     self.runtime.selected_step_ids.clear();
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             _ => ActionEmit::default(),
         }
@@ -765,7 +765,7 @@ mod tests {
     fn run_stores_result_and_renders_in_script() {
         let mut app = new_app();
         let result = app.handle_action("run", None, &ViewState::default(), &testkit::meta("local")).expect("run");
-        assert!(result.operations.is_empty(), "run is a view action and emits no ops");
+        assert!(result.operations.is_empty(), "run is a view action and emits no operations");
         let node = app.render(SEQUENCE_PLAY_BODY_SCRIPT, None, &ViewState::default()).expect("render");
         assert!(serde_json::to_string(&node).unwrap().contains("run result"));
     }
@@ -827,7 +827,7 @@ mod tests {
     }
 
     /// 🧪 The definitional regression proof: two independent instances start from the same fixture,
-    /// apply DISJOINT edits (A moves step-1, B moves step-2), and exchanging ops over a `MemoryBackbone`
+    /// apply DISJOINT edits (A moves step-1, B moves step-2), and exchanging operations over a `MemoryBackbone`
     /// converges both sides onto an identical projection.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {

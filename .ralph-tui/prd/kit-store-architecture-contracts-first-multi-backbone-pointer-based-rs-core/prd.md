@@ -17,7 +17,7 @@ This PRD is **contracts-first**: finalize contracts (assets + GraphQL) before lo
 
 ## Goals
 
-- Establish an **unambiguous kit versioning/history model**: root snapshot + ordered semantic changes for **checkpoints, drafts, and transactions**, using **one persisted ordered semantic-op sequence** for all three, distinguished by **metadata and lifecycle**, not by incompatible persistence shapes.
+- Establish an **unambiguous kit versioning/history model**: root snapshot + ordered semantic changes for **checkpoints, drafts, and transactions**, using **one persisted ordered semantic-operation sequence** for all three, distinguished by **metadata and lifecycle**, not by incompatible persistence shapes.
 - Provide **two backbone implementations** (dev JSON + local multi-db/blobs) with **attach/detach** runtime switching without leaking backbone details into React.
 - Ensure **`compose/graphql` covers snapshots, diffs, connections, operations, and backbone lifecycle** end-to-end as the primary “done” signal.
 - Ensure **`compose/js` exposes RS capabilities as conventional OO APIs** using RxJS internally, **without duplicating kit caching/state ownership** in JS.
@@ -77,9 +77,9 @@ For **UI / sketchpad** stories, also include:
 As a contributor, I want the canonical kit asset shapes under `compose/asset/compose` (including patterns exemplified by `compose/asset/compose/metabolism.new.kit.compose.json`) to match the target architecture so that contracts and fixtures are unambiguous for codegen, tests, and GraphQL mapping.
 
 **Acceptance Criteria:**
-- [ ] Document and encode the intended kit graph model as **one root snapshot + ordered semantic changes**, consistent with how checkpoints/drafts/transactions reference history (**same ordered op persistence model**, differing by **metadata/lifecycle**).
+- [ ] Document and encode the intended kit graph model as **one root snapshot + ordered semantic changes**, consistent with how checkpoints/drafts/transactions reference history (**same ordered operation persistence model**, differing by **metadata/lifecycle**).
 - [ ] Update or replace incompatible example assets/schemas in `compose/asset/compose` needed for the new model (**greenfield replacement**, no legacy compatibility requirement).
-- [ ] Provide at least **one minimal golden fixture** pair: **( persisted op log inputs ) → ( expected derived snapshot hash or structural invariant checks )** suitable for automated testing (exact mechanism chosen in RS tests).
+- [ ] Provide at least **one minimal golden fixture** pair: **( persisted operation log inputs ) → ( expected derived snapshot hash or structural invariant checks )** suitable for automated testing (exact mechanism chosen in RS tests).
 
 ### US-002: Finalize `compose/graphql` Contract For Kits, Changes, Diffs, Connections, Operations, And Backbone Lifecycle
 
@@ -109,7 +109,7 @@ As a user/developer, I want two backbone implementations so kits can be develope
 - [ ] **Dev backbone** persists and replays **operation + input** records from **one JSON file** (atomic rewrite strategy documented; crash safety expectations documented).
 - [ ] **Local backbone** persists under `.compose/` using separate **SQLite** databases: `wip.db`, `staged.db`, `authoritative.db`, `conflicts.db`, plus `blobs/BLOBHASH.EXT` for referenced payloads.
 - [ ] Backbones can be **attached/detached at runtime** without restarting sketchpad in dev workflows (detach semantics define what remains cached vs cleared).
-- [ ] Replay from persisted ops reproduces the same derived snapshot/diff behavior as in-memory application (**golden test hooked to US-001 fixture**).
+- [ ] Replay from persisted operations reproduces the same derived snapshot/diff behavior as in-memory application (**golden test hooked to US-001 fixture**).
 
 ### US-005: Implement GraphQL Target In `compose/rs` Matching `compose/graphql/schema.graphql`
 
@@ -154,10 +154,10 @@ As a reviewer, I want `compose/sketchpad` to prove checkpoints/drafts/transactio
 
 - **FR-1:** The system must persist **only** `{operationKind, inputPayload}` records (plus necessary indexing metadata) on backbones; it must **never** require persisted kit diffs for correctness.
 - **FR-2:** Applying any semantic operation must yield a **kit diff** available to readers/query fields defined by GraphQL.
-- **FR-3:** The kit graph must maintain exactly **one root snapshot reference per graph**; all mutations must be expressible as appends/replays of ordered semantic changes scoped to checkpoint/draft/transaction containers, with **checkpoints/drafts/transactions sharing the same underlying ordered-op persistence approach** distinguished by **metadata/lifecycle**.
+- **FR-3:** The kit graph must maintain exactly **one root snapshot reference per graph**; all mutations must be expressible as appends/replays of ordered semantic changes scoped to checkpoint/draft/transaction containers, with **checkpoints/drafts/transactions sharing the same underlying ordered-operation persistence approach** distinguished by **metadata/lifecycle**.
 - **FR-4:** `compose/rs` must support **multiple readable states** concurrently and **writes targeting explicitly selected writable states**.
 - **FR-5:** Backbone attach/detach must be safe against ongoing async operations; semantics must define cancellation vs draining vs error propagation.
-- **FR-6:** Dev backbone must operate from **one JSON file** containing the persisted op log (implementation chooses compaction strategy; must be documented).
+- **FR-6:** Dev backbone must operate from **one JSON file** containing the persisted operation log (implementation chooses compaction strategy; must be documented).
 - **FR-7:** Local backbone must create/use `.compose/` containing **`wip.db`**, **`staged.db`**, **`authoritative.db`**, **`conflicts.db`**, and **`blobs/BLOBHASH.EXT`**.
 - **FR-8:** IPC must remain **`compose/graphql/schema.graphql`**-based; no parallel IPC channel is introduced for kit store functionality.
 - **FR-9:** `compose/js` must not cache kit graphs independently of `compose/rs` ownership rules; caching belongs in RS’s computed/cache layers only.
@@ -183,7 +183,7 @@ As a reviewer, I want `compose/sketchpad` to prove checkpoints/drafts/transactio
 ## Success Metrics
 
 - **Primary:** GraphQL supports snapshots/diffs/connections/semantic operations/backbone lifecycle end-to-end with sketchpad exercising realistic flows.
-- **Secondary:** RS replay tests demonstrate persisted op logs reproduce deterministic derived structure/hash invariants from golden fixtures.
+- **Secondary:** RS replay tests demonstrate persisted operation logs reproduce deterministic derived structure/hash invariants from golden fixtures.
 - **Secondary:** React tests demonstrate subscription granularity avoids unnecessary rerenders for narrow projections.
 
 ## Open Questions

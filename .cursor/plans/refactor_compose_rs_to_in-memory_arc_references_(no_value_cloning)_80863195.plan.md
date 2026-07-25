@@ -3,7 +3,7 @@ name: Refactor compose/rs to in-memory Arc references (no value cloning)
 overview: Refactor [compose/rs/lib.rs](compose/rs/lib.rs) so every entity lives behind a single shared `Arc<Entity>` with interior `async_lock::RwLock` per mutable field. GraphQL resolvers take `&self` on the entity (deref'd through the Arc) and return `Arc<Child>` for relationships, so a query like `wip.theKit.design(id).piece(id).pose` only acquires the locks it actually needs and never deep-copies an aggregate Vec.
 todos:
  - id: field-rwlocks
-   content: Convert every mutable field on every entity (Connector, Representation, Type, Side, Connection, Piece, Design, Kit, Change, Transaction, Draft, Checkpoint, Alternative, Graph, Session, Conflict, Op*, meta entities) into async_lock::RwLock<FieldT>; switch owned-child Vec<T> to RwLock<Vec<Arc<T>>> and back-pointers to Weak<Parent>.
+   content: Convert every mutable field on every entity (Connector, Representation, Type, Side, Connection, Piece, Design, Kit, Change, Transaction, Draft, Checkpoint, Alternative, Graph, Session, Conflict, Operation*, meta entities) into async_lock::RwLock<FieldT>; switch owned-child Vec<T> to RwLock<Vec<Arc<T>>> and back-pointers to Weak<Parent>.
    status: completed
  - id: ctor-mut-rewrite
    content: Rewrite every constructor to return Arc<Self>; rewrite every &mut self mutator to take &self and acquire its own interior write-lock. No &mut self anywhere on entities.
@@ -14,8 +14,8 @@ todos:
  - id: graph-root
    content: Drop Arc<RwLock<Graph>> in favour of Arc<Graph> in worker::ParentRuntime. Delete snapshot_wip_graph/snapshot_auth_graph. Make Query.wip / Query.authoritative return Arc<Graph> directly. Make Graph::apply_create_fixed_piece take &self via interior locks.
    status: completed
- - id: ops-arc-payload
-   content: "Change Operation structs to carry Arc<Entity> payloads (e.g. CreatedFixedPiece.piece: Arc<Piece>). Update KitEvent variants to wrap Arc<Op>. Update Subscription filter macro and OperationKind/OperationIface derives to operate over Arc<*> variants."
+ - id: operations-arc-payload
+   content: "Change Operation structs to carry Arc<Entity> payloads (e.g. CreatedFixedPiece.piece: Arc<Piece>). Update KitEvent variants to wrap Arc<Operation>. Update Subscription filter macro and OperationKind/OperationIface derives to operate over Arc<*> variants."
    status: completed
  - id: tests-no-clone
    content: "Update lib.rs tests: keep the existing 4 green; add no_deep_clone_on_traversal (Arc::strong_count guard around a deep GraphQL query) and mutation_visible_without_resnapshotting (two reads across a mutation prove in-place mutability through interior locks)."
@@ -56,7 +56,7 @@ pub struct Piece {
 }
 ```
 
-The same pattern applies uniformly to: `Connector`, `Representation`, `Type`, `Side`, `Connection`, `Design`, `Kit`, `Change`, `Transaction`, `Draft`, `Checkpoint`, `Alternative`, `Graph`, `Session`, `Conflict`, every `Op*` struct, and the strong meta entities (`Location`, `File`, `Folder`, `Author`, `Attribute`, `Prop`, `Benchmark`, `Quality`, `Tag`, `Concept`, `Stat`, `Layer`, `Group`).
+The same pattern applies uniformly to: `Connector`, `Representation`, `Type`, `Side`, `Connection`, `Design`, `Kit`, `Change`, `Transaction`, `Draft`, `Checkpoint`, `Alternative`, `Graph`, `Session`, `Conflict`, every `Operation*` struct, and the strong meta entities (`Location`, `File`, `Folder`, `Author`, `Attribute`, `Prop`, `Benchmark`, `Quality`, `Tag`, `Concept`, `Stat`, `Layer`, `Group`).
 
 Pure value types (`Vector`, `Point`, `Coordinate`, `Offset`, `Plane`, `Position`, `Id`, `Timestamp`) stay plain `Copy`/`Clone` values — they are only ever leaf bytes.
 
@@ -143,15 +143,15 @@ async fn wip(&self, ctx: &Context<'_>) -> async_graphql::Result<Arc<Graph>> {
 
 ```rust
 let piece: Arc<Piece> = self.graph.apply_create_fixed_piece(draft_id, transaction_id, design_id, blueprint_id, pose, name, description).await?;
-let op = Arc::new(CreatedFixedPiece { id: request_id, owner_change: Weak::new(), input, diff: Diff::default(), piece: piece.clone() });
-self.bus.emit_event(KitEvent::CreatedFixedPiece(op)).await; // op is Arc, not deep-cloned
+let operation = Arc::new(CreatedFixedPiece { id: request_id, owner_change: Weak::new(), input, diff: Diff::default(), piece: piece.clone() });
+self.bus.emit_event(KitEvent::CreatedFixedPiece(operation)).await; // operation is Arc, not deep-cloned
 ```
 
-`KitEvent` variants carry `Arc<Op>` instead of owned `Op`. The single `EventBus::emit_event` definition is unchanged — guard test still asserts uniqueness of the canonical signature.
+`KitEvent` variants carry `Arc<Operation>` instead of owned `Operation`. The single `EventBus::emit_event` definition is unchanged — guard test still asserts uniqueness of the canonical signature.
 
 `Graph::apply_create_fixed_piece` becomes `&self` (interior mutability), constructs `Arc<Piece>`, write-locks the design's `pieces` Vec, pushes the Arc, returns it.
 
-## 7. Op carrier shape
+## 7. Operation carrier shape
 
 Operation structs carry `Arc<Entity>` payloads:
 
@@ -186,7 +186,7 @@ For each entity in the file, the conversion is mechanical:
   - Owner -> `Option<Arc<Owner>>` (`weak.upgrade()`).
   - Value leaves -> deref the read-guard once: `*self.pose.read().await` for `Copy`, `self.name.read().await.clone()` for owned `String`/`Option<String>`.
 - Replace `Arc<RwLock<Graph>>` with `Arc<Graph>` in `worker::ParentRuntime`; delete `snapshot_wip_graph` / `snapshot_auth_graph`; rewrite `Query.wip` / `Query.authoritative` to return `Arc<Graph>` directly.
-- Update `KitEvent::*` variants to carry `Arc<Op>`; update `Subscription` filter macro to yield `Arc<Op>`.
+- Update `KitEvent::*` variants to carry `Arc<Operation>`; update `Subscription` filter macro to yield `Arc<Operation>`.
 
 ## 10. Out of scope
 

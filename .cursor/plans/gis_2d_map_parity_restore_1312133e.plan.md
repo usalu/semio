@@ -27,7 +27,7 @@ isProject: false
 
 ## Root cause
 
-The Rust plugin side (`gis/plugin/rs/app_2d.rs`) is already nearly complete: `render_canvas` emits a fully-populated `GisMapScene` (fixture JSON, camera, render mode, vector style, LOD mode, tile URL templates, layer visibility/weights, selection, hover) via `build_gis_map_scene`, and `handle_command_patch_ops` already implements every interaction command (`setCamera`, `setRenderMode`, `setFeatureSelection`, `toggleLayerVisibility`, `fitWorld`, `focusFeature`, `openSource`, etc.). Two things are missing:
+The Rust plugin side (`gis/plugin/rs/app_2d.rs`) is already nearly complete: `render_canvas` emits a fully-populated `GisMapScene` (fixture JSON, camera, render mode, vector style, LOD mode, tile URL templates, layer visibility/weights, selection, hover) via `build_gis_map_scene`, and `handle_command_patch_operations` already implements every interaction command (`setCamera`, `setRenderMode`, `setFeatureSelection`, `toggleLayerVisibility`, `fitWorld`, `focusFeature`, `openSource`, etc.). Two things are missing:
 
 1. **No tiles show** — the React renderer has no component for `componentKind === "gis2d-map"` (`SurfaceKind::GisMap.as_str()` in `framework/core/rs/lib.rs:2169`). `ui-interpreter.tsx`'s `renderComponentSceneHost` switch (`framework/renderer/react/ui-interpreter.tsx:42-67`) falls through to "Unknown component", so the WASM `MapSession` (from `gis/2d/rs/pkg/gis_2d.js`, already built — see `gis/2d/rs/pkg/gis_2d.d.ts`) never gets attached to a canvas, tiles never get uploaded, and nothing renders.
 2. **No window options** — `Gis2dPlayApp` never overrides `PluginApp::window_measures()` (default in `framework/plugin/rs/lib.rs:422-428` returns empty), so the window options rail is empty even though the Inspector tab already exposes equivalent controls via `map_view_field_group` (`gis/plugin/rs/app_2d.rs:442-526`).
@@ -87,7 +87,7 @@ In `gis/plugin/rs/app_2d.rs`:
 - `Select` "Selection Method" (`rectangle`/`lasso`) → `on_change: gis2d_cmd("setSelectionMethod", None)`.
 - `Group` "Layers" containing one `Toggle` per `GIS_MAP_LAYER_IDS` (icon from the existing table, `pressed: layer_visible(...)`) → `on_change: gis2d_cmd("toggleLayerVisibility", Some(json!({"layerId": id})))`.
 - `Group` "Layer Weights" containing one `Slider` per `layer_weight_entries(play)` (min 0.25, max 3.0, step 0.05) → `on_change: gis2d_cmd("setLayerStrokeScale", Some(json!({"layerId": layer_id})))`.
-- These reuse commands already implemented in `handle_command_patch_ops` (all read `value`/`pressed` merged in by `renderWindowMeasure` in `os-shell.tsx:545-602`), so **no Rust command-handling changes are needed**.
+- These reuse commands already implemented in `handle_command_patch_operations` (all read `value`/`pressed` merged in by `renderWindowMeasure` in `os-shell.tsx:545-602`), so **no Rust command-handling changes are needed**.
 
 4. Implement `fn window_measures(&self, document_json: &str, _view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>>` on `impl PluginApp for Gis2dPlayApp`, returning `{ GIS2D_PLAY_WINDOW_MAIN: gis2d_window_measures(&parse_envelope(document_json)) }`.
 5. Extend the existing `#[cfg(test)] mod tests` block (do not add a new test file) with a test asserting `window_measures()` includes the render-mode select and a layers toggle group.

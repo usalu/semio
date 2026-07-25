@@ -191,8 +191,8 @@ pub mod host {
                 if operation.diff.schema_id.0 != JSON_PATCH_SCHEMA_ID {
                     continue;
                 }
-                let op_json = serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
-                instance.document_json = apply_kernel_patch_op(&instance.document_json, &op_json)?;
+                let operation_json = serde_json::to_string(&operation.diff.payload).map_err(|error| error.to_string())?;
+                instance.document_json = apply_kernel_patch_operation(&instance.document_json, &operation_json)?;
                 instance.generation += 1;
             }
             Ok(())
@@ -210,10 +210,10 @@ pub mod host {
             let _context = ActionContext { invocation: invocation.clone(), document_projection, view_state, granted_capabilities: vec![] };
             let document = DocumentHandle(instance_id as u128);
             let base_version = DocumentVersion(generation);
-            let patch_ops = extract_patch_ops(&invocation.input);
-            let operations: Vec<KernelOperation> = patch_ops.iter().enumerate().map(|(index, op)| kernel_operation_from_patch_op(&invocation, op, index, base_version, document)).collect::<Result<Vec<_>, _>>()?;
-            let operation_ids: Vec<OperationId> = operations.iter().map(|op| op.id.clone()).collect();
-            let inverse_operations: Vec<InverseOperation> = operations.iter().map(|op| op.inverse.clone()).collect();
+            let patch_operations = extract_patch_operations(&invocation.input);
+            let operations: Vec<KernelOperation> = patch_operations.iter().enumerate().map(|(index, operation)| kernel_operation_from_patch_operation(&invocation, operation, index, base_version, document)).collect::<Result<Vec<_>, _>>()?;
+            let operation_ids: Vec<OperationId> = operations.iter().map(|operation| operation.id.clone()).collect();
+            let inverse_operations: Vec<InverseOperation> = operations.iter().map(|operation| operation.inverse.clone()).collect();
             let result = InvocationResult {
                 output: invocation.input.clone(),
                 operations,
@@ -361,12 +361,12 @@ pub mod host {
         Ok(())
     }
 
-    fn extract_patch_ops(input: &Value) -> Vec<String> {
-        input.get("ops").and_then(|value| value.as_array()).map(|ops| ops.iter().filter_map(|op| op.as_str().map(str::to_string).or_else(|| serde_json::to_string(op).ok())).collect()).unwrap_or_default()
+    fn extract_patch_operations(input: &Value) -> Vec<String> {
+        input.get("operations").and_then(|value| value.as_array()).map(|operations| operations.iter().filter_map(|operation| operation.as_str().map(str::to_string).or_else(|| serde_json::to_string(operation).ok())).collect()).unwrap_or_default()
     }
 
-    fn kernel_operation_from_patch_op(invocation: &ActionInvocation, op_json: &str, index: usize, base_version: DocumentVersion, document: DocumentHandle) -> Result<KernelOperation, String> {
-        let payload: Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
+    fn kernel_operation_from_patch_operation(invocation: &ActionInvocation, operation_json: &str, index: usize, base_version: DocumentVersion, document: DocumentHandle) -> Result<KernelOperation, String> {
+        let payload: Value = serde_json::from_str(operation_json).map_err(|error| error.to_string())?;
         let operation_id = OperationId(format!("{}:{index}", invocation.id.0));
         let inverse_diff = DocumentDiff { schema_id: SchemaId("semio.kernel.json-patch.inverse".into()), payload: Value::Null };
         Ok(KernelOperation {
@@ -382,17 +382,17 @@ pub mod host {
         })
     }
 
-    fn apply_kernel_patch_op(document_json: &str, op_json: &str) -> Result<String, String> {
+    fn apply_kernel_patch_operation(document_json: &str, operation_json: &str) -> Result<String, String> {
         let mut document: serde_json::Value = serde_json::from_str(document_json).map_err(|error| error.to_string())?;
-        let op: serde_json::Value = serde_json::from_str(op_json).map_err(|error| error.to_string())?;
-        match op.get("op").and_then(|value| value.as_str()) {
+        let operation: serde_json::Value = serde_json::from_str(operation_json).map_err(|error| error.to_string())?;
+        match operation.get("operation").and_then(|value| value.as_str()) {
             Some("setDocument") => {
-                if let Some(next) = op.get("document") {
+                if let Some(next) = operation.get("document") {
                     document = next.clone();
                 }
             }
             Some("patch") => {
-                if let Some(patch) = op.get("patch") {
+                if let Some(patch) = operation.get("patch") {
                     merge_json(&mut document, patch);
                 }
             }
@@ -437,8 +437,8 @@ pub mod host {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    pub enum OsOp {
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    pub enum OsOperation {
         SetActiveProgram {
             #[serde(skip_serializing_if = "Option::is_none")]
             program_id: Option<String>,
@@ -490,7 +490,7 @@ pub mod host {
         SyncParameterPorts,
     }
 
-    pub type OsVcs = DocumentVcs<OsProjection, OsOp>;
+    pub type OsVcs = DocumentVcs<OsProjection, OsOperation>;
 
     /// @emoji 🩹 Explicit reexport of `serde_json::Value` — the shape of a parameter patch, so callers
     /// don't reach across the crate boundary into `serde_json` directly.
@@ -509,7 +509,7 @@ pub mod host {
         pub backbone: Option<DocumentBackboneRef>,
     }
 
-    pub type OsEnvelope = DocumentVcsEnvelope<OsProjection, OsOp>;
+    pub type OsEnvelope = DocumentVcsEnvelope<OsProjection, OsOperation>;
 
     pub fn default_os_projection() -> OsProjection {
         OsProjection { programs: Vec::new(), active_program_id: None, active_alternative_id: None, app_instances: Vec::new(), media_graph: empty_media_graph(), parameters: Vec::new(), parameter_bindings: Vec::new() }
@@ -519,16 +519,16 @@ pub mod host {
         OsDocument { schema: OS_STUDIO_SCHEMA.into(), id: id.into(), name: name.into(), vcs: create_document_vcs_envelope(OS_STUDIO_SCHEMA, id, default_os_projection(), None).vcs, applied_edit_ids: Vec::new(), backbone: None }
     }
 
-    pub fn apply_os_operation(projection: &OsProjection, operation: &OsOp) -> OsProjection {
+    pub fn apply_os_operation(projection: &OsProjection, operation: &OsOperation) -> OsProjection {
         let mut next = projection.clone();
         match operation {
-            OsOp::SetActiveProgram { program_id } => {
+            OsOperation::SetActiveProgram { program_id } => {
                 next.active_program_id = program_id.clone();
             }
-            OsOp::SetActiveAlternative { alternative_id } => {
+            OsOperation::SetActiveAlternative { alternative_id } => {
                 next.active_alternative_id = alternative_id.clone();
             }
-            OsOp::SpawnAppInstance { instance, position } => {
+            OsOperation::SpawnAppInstance { instance, position } => {
                 if !next.programs.contains(&instance.program_id) {
                     next.programs.push(instance.program_id.clone());
                 }
@@ -538,7 +538,7 @@ pub mod host {
                 }
                 next.app_instances.push(instance.clone());
             }
-            OsOp::RemoveAppInstance { instance_id } => {
+            OsOperation::RemoveAppInstance { instance_id } => {
                 let node_id = next.media_graph.nodes.iter().find(|node| node.instance_id == *instance_id).map(|node| node.id.clone());
                 next.app_instances.retain(|instance| instance.id != *instance_id);
                 next.parameter_bindings.retain(|binding| binding.instance_id != *instance_id);
@@ -547,9 +547,9 @@ pub mod host {
                     next.media_graph.edges.retain(|edge| edge.source_node_id != node_id && edge.target_node_id != node_id);
                 }
             }
-            OsOp::ConnectMediaPorts { edge } => next.media_graph.edges.push(edge.clone()),
-            OsOp::DisconnectMediaEdge { edge_id } => next.media_graph.edges.retain(|edge| edge.id != *edge_id),
-            OsOp::MoveMediaNode { node_id, x, y } => {
+            OsOperation::ConnectMediaPorts { edge } => next.media_graph.edges.push(edge.clone()),
+            OsOperation::DisconnectMediaEdge { edge_id } => next.media_graph.edges.retain(|edge| edge.id != *edge_id),
+            OsOperation::MoveMediaNode { node_id, x, y } => {
                 for node in &mut next.media_graph.nodes {
                     if node.id == *node_id {
                         node.x = *x;
@@ -557,7 +557,7 @@ pub mod host {
                     }
                 }
             }
-            OsOp::PatchAppInstance { instance_id, label } => {
+            OsOperation::PatchAppInstance { instance_id, label } => {
                 if let Some(label) = label {
                     for instance in &mut next.app_instances {
                         if instance.id == *instance_id {
@@ -566,29 +566,29 @@ pub mod host {
                     }
                 }
             }
-            OsOp::AddParameter { parameter } => next.parameters.push(parameter.clone()),
-            OsOp::RemoveParameter { parameter_id } => {
+            OsOperation::AddParameter { parameter } => next.parameters.push(parameter.clone()),
+            OsOperation::RemoveParameter { parameter_id } => {
                 next.parameters.retain(|parameter| parameter_entity_id(parameter) != *parameter_id);
                 next.parameter_bindings.retain(|binding| binding.parameter_id != *parameter_id);
                 next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
             }
-            OsOp::PatchParameter { parameter_id, parameter } => {
+            OsOperation::PatchParameter { parameter_id, parameter } => {
                 for entry in &mut next.parameters {
                     if parameter_entity_id(entry) == *parameter_id {
                         *entry = parameter.clone();
                     }
                 }
             }
-            OsOp::BindParameterField { binding } => {
+            OsOperation::BindParameterField { binding } => {
                 next.parameter_bindings.retain(|entry| !(entry.instance_id == binding.instance_id && entry.field_path == binding.field_path));
                 next.parameter_bindings.push(binding.clone());
                 next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
             }
-            OsOp::UnbindParameterField { instance_id, field_path } => {
+            OsOperation::UnbindParameterField { instance_id, field_path } => {
                 next.parameter_bindings.retain(|binding| !(binding.instance_id == *instance_id && binding.field_path == *field_path));
                 next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
             }
-            OsOp::SyncParameterPorts => {
+            OsOperation::SyncParameterPorts => {
                 next.media_graph = sync_media_graph_parameter_ports(&next.media_graph, &next.parameter_bindings);
             }
         }
@@ -663,24 +663,24 @@ pub mod host {
 
     impl OperationDiff<OsProjection> for OsDiff {
         fn apply(&self, projection: &OsProjection) -> OsProjection {
-            let op = match self {
+            let operation = match self {
                 OsDiff::Empty => return projection.clone(),
-                OsDiff::SetActiveProgram { program_id } => OsOp::SetActiveProgram { program_id: program_id.clone() },
-                OsDiff::SetActiveAlternative { alternative_id } => OsOp::SetActiveAlternative { alternative_id: alternative_id.clone() },
-                OsDiff::SpawnAppInstance { instance, position } => OsOp::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
-                OsDiff::RemoveAppInstance { instance_id } => OsOp::RemoveAppInstance { instance_id: instance_id.clone() },
-                OsDiff::ConnectMediaPorts { edge } => OsOp::ConnectMediaPorts { edge: edge.clone() },
-                OsDiff::DisconnectMediaEdge { edge_id } => OsOp::DisconnectMediaEdge { edge_id: edge_id.clone() },
-                OsDiff::MoveMediaNode { node_id, x, y } => OsOp::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
-                OsDiff::PatchAppInstance { instance_id, label } => OsOp::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
-                OsDiff::AddParameter { parameter } => OsOp::AddParameter { parameter: parameter.clone() },
-                OsDiff::RemoveParameter { parameter_id } => OsOp::RemoveParameter { parameter_id: parameter_id.clone() },
-                OsDiff::PatchParameter { parameter_id, parameter } => OsOp::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
-                OsDiff::BindParameterField { binding } => OsOp::BindParameterField { binding: binding.clone() },
-                OsDiff::UnbindParameterField { instance_id, field_path } => OsOp::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
-                OsDiff::SyncParameterPorts => OsOp::SyncParameterPorts,
+                OsDiff::SetActiveProgram { program_id } => OsOperation::SetActiveProgram { program_id: program_id.clone() },
+                OsDiff::SetActiveAlternative { alternative_id } => OsOperation::SetActiveAlternative { alternative_id: alternative_id.clone() },
+                OsDiff::SpawnAppInstance { instance, position } => OsOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+                OsDiff::RemoveAppInstance { instance_id } => OsOperation::RemoveAppInstance { instance_id: instance_id.clone() },
+                OsDiff::ConnectMediaPorts { edge } => OsOperation::ConnectMediaPorts { edge: edge.clone() },
+                OsDiff::DisconnectMediaEdge { edge_id } => OsOperation::DisconnectMediaEdge { edge_id: edge_id.clone() },
+                OsDiff::MoveMediaNode { node_id, x, y } => OsOperation::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+                OsDiff::PatchAppInstance { instance_id, label } => OsOperation::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
+                OsDiff::AddParameter { parameter } => OsOperation::AddParameter { parameter: parameter.clone() },
+                OsDiff::RemoveParameter { parameter_id } => OsOperation::RemoveParameter { parameter_id: parameter_id.clone() },
+                OsDiff::PatchParameter { parameter_id, parameter } => OsOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
+                OsDiff::BindParameterField { binding } => OsOperation::BindParameterField { binding: binding.clone() },
+                OsDiff::UnbindParameterField { instance_id, field_path } => OsOperation::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
+                OsDiff::SyncParameterPorts => OsOperation::SyncParameterPorts,
             };
-            apply_os_operation(projection, &op)
+            apply_os_operation(projection, &operation)
         }
 
         fn absorb(&mut self, other: Self) {
@@ -690,61 +690,61 @@ pub mod host {
         }
     }
 
-    impl Operation<OsProjection> for OsOp {
+    impl Operation<OsProjection> for OsOperation {
         type Diff = OsDiff;
 
         fn diff(&self, _projection: &OsProjection) -> OsDiff {
             match self {
-                OsOp::SetActiveProgram { program_id } => OsDiff::SetActiveProgram { program_id: program_id.clone() },
-                OsOp::SetActiveAlternative { alternative_id } => OsDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
-                OsOp::SpawnAppInstance { instance, position } => OsDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
-                OsOp::RemoveAppInstance { instance_id } => OsDiff::RemoveAppInstance { instance_id: instance_id.clone() },
-                OsOp::ConnectMediaPorts { edge } => OsDiff::ConnectMediaPorts { edge: edge.clone() },
-                OsOp::DisconnectMediaEdge { edge_id } => OsDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
-                OsOp::MoveMediaNode { node_id, x, y } => OsDiff::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
-                OsOp::PatchAppInstance { instance_id, label } => OsDiff::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
-                OsOp::AddParameter { parameter } => OsDiff::AddParameter { parameter: parameter.clone() },
-                OsOp::RemoveParameter { parameter_id } => OsDiff::RemoveParameter { parameter_id: parameter_id.clone() },
-                OsOp::PatchParameter { parameter_id, parameter } => OsDiff::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
-                OsOp::BindParameterField { binding } => OsDiff::BindParameterField { binding: binding.clone() },
-                OsOp::UnbindParameterField { instance_id, field_path } => OsDiff::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
-                OsOp::SyncParameterPorts => OsDiff::SyncParameterPorts,
+                OsOperation::SetActiveProgram { program_id } => OsDiff::SetActiveProgram { program_id: program_id.clone() },
+                OsOperation::SetActiveAlternative { alternative_id } => OsDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
+                OsOperation::SpawnAppInstance { instance, position } => OsDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+                OsOperation::RemoveAppInstance { instance_id } => OsDiff::RemoveAppInstance { instance_id: instance_id.clone() },
+                OsOperation::ConnectMediaPorts { edge } => OsDiff::ConnectMediaPorts { edge: edge.clone() },
+                OsOperation::DisconnectMediaEdge { edge_id } => OsDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
+                OsOperation::MoveMediaNode { node_id, x, y } => OsDiff::MoveMediaNode { node_id: node_id.clone(), x: *x, y: *y },
+                OsOperation::PatchAppInstance { instance_id, label } => OsDiff::PatchAppInstance { instance_id: instance_id.clone(), label: label.clone() },
+                OsOperation::AddParameter { parameter } => OsDiff::AddParameter { parameter: parameter.clone() },
+                OsOperation::RemoveParameter { parameter_id } => OsDiff::RemoveParameter { parameter_id: parameter_id.clone() },
+                OsOperation::PatchParameter { parameter_id, parameter } => OsDiff::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() },
+                OsOperation::BindParameterField { binding } => OsDiff::BindParameterField { binding: binding.clone() },
+                OsOperation::UnbindParameterField { instance_id, field_path } => OsDiff::UnbindParameterField { instance_id: instance_id.clone(), field_path: field_path.clone() },
+                OsOperation::SyncParameterPorts => OsDiff::SyncParameterPorts,
             }
         }
 
         fn backwards(&self, projection: &OsProjection) -> Vec<Self> {
             match self {
-                OsOp::SetActiveProgram { .. } => vec![OsOp::SetActiveProgram { program_id: projection.active_program_id.clone() }],
-                OsOp::SetActiveAlternative { .. } => vec![OsOp::SetActiveAlternative { alternative_id: projection.active_alternative_id.clone() }],
-                OsOp::SpawnAppInstance { instance, .. } => vec![OsOp::RemoveAppInstance { instance_id: instance.id.clone() }],
-                OsOp::RemoveAppInstance { instance_id } => projection
+                OsOperation::SetActiveProgram { .. } => vec![OsOperation::SetActiveProgram { program_id: projection.active_program_id.clone() }],
+                OsOperation::SetActiveAlternative { .. } => vec![OsOperation::SetActiveAlternative { alternative_id: projection.active_alternative_id.clone() }],
+                OsOperation::SpawnAppInstance { instance, .. } => vec![OsOperation::RemoveAppInstance { instance_id: instance.id.clone() }],
+                OsOperation::RemoveAppInstance { instance_id } => projection
                     .app_instances
                     .iter()
                     .find(|instance| instance.id == *instance_id)
                     .map(|instance| {
                         let node = projection.media_graph.nodes.iter().find(|entry| entry.instance_id == *instance_id);
-                        vec![OsOp::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) } }]
+                        vec![OsOperation::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) } }]
                     })
                     .unwrap_or_default(),
-                OsOp::ConnectMediaPorts { edge } => vec![OsOp::DisconnectMediaEdge { edge_id: edge.id.clone() }],
-                OsOp::DisconnectMediaEdge { edge_id } => projection.media_graph.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![OsOp::ConnectMediaPorts { edge: edge.clone() }]).unwrap_or_default(),
-                OsOp::MoveMediaNode { node_id, .. } => projection.media_graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![OsOp::MoveMediaNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
-                OsOp::PatchAppInstance { instance_id, .. } => {
-                    projection.app_instances.iter().find(|instance| instance.id == *instance_id).map(|instance| vec![OsOp::PatchAppInstance { instance_id: instance_id.clone(), label: Some(instance.label.clone()) }]).unwrap_or_default()
+                OsOperation::ConnectMediaPorts { edge } => vec![OsOperation::DisconnectMediaEdge { edge_id: edge.id.clone() }],
+                OsOperation::DisconnectMediaEdge { edge_id } => projection.media_graph.edges.iter().find(|edge| edge.id == *edge_id).map(|edge| vec![OsOperation::ConnectMediaPorts { edge: edge.clone() }]).unwrap_or_default(),
+                OsOperation::MoveMediaNode { node_id, .. } => projection.media_graph.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![OsOperation::MoveMediaNode { node_id: node_id.clone(), x: node.x, y: node.y }]).unwrap_or_default(),
+                OsOperation::PatchAppInstance { instance_id, .. } => {
+                    projection.app_instances.iter().find(|instance| instance.id == *instance_id).map(|instance| vec![OsOperation::PatchAppInstance { instance_id: instance_id.clone(), label: Some(instance.label.clone()) }]).unwrap_or_default()
                 }
-                OsOp::AddParameter { parameter } => vec![OsOp::RemoveParameter { parameter_id: parameter_entity_id(parameter).into() }],
-                OsOp::RemoveParameter { parameter_id } => projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == *parameter_id).map(|parameter| vec![OsOp::AddParameter { parameter: parameter.clone() }]).unwrap_or_default(),
-                OsOp::PatchParameter { parameter_id, parameter } => projection
+                OsOperation::AddParameter { parameter } => vec![OsOperation::RemoveParameter { parameter_id: parameter_entity_id(parameter).into() }],
+                OsOperation::RemoveParameter { parameter_id } => projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == *parameter_id).map(|parameter| vec![OsOperation::AddParameter { parameter: parameter.clone() }]).unwrap_or_default(),
+                OsOperation::PatchParameter { parameter_id, parameter } => projection
                     .parameters
                     .iter()
                     .find(|entry| parameter_entity_id(entry) == *parameter_id)
-                    .map(|current| vec![OsOp::PatchParameter { parameter_id: parameter_id.clone(), parameter: current.clone() }])
-                    .unwrap_or_else(|| vec![OsOp::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() }]),
-                OsOp::BindParameterField { binding } => vec![OsOp::UnbindParameterField { instance_id: binding.instance_id.clone(), field_path: binding.field_path.clone() }],
-                OsOp::UnbindParameterField { instance_id, field_path } => {
-                    projection.parameter_bindings.iter().find(|binding| binding.instance_id == *instance_id && binding.field_path == *field_path).map(|binding| vec![OsOp::BindParameterField { binding: binding.clone() }]).unwrap_or_default()
+                    .map(|current| vec![OsOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: current.clone() }])
+                    .unwrap_or_else(|| vec![OsOperation::PatchParameter { parameter_id: parameter_id.clone(), parameter: parameter.clone() }]),
+                OsOperation::BindParameterField { binding } => vec![OsOperation::UnbindParameterField { instance_id: binding.instance_id.clone(), field_path: binding.field_path.clone() }],
+                OsOperation::UnbindParameterField { instance_id, field_path } => {
+                    projection.parameter_bindings.iter().find(|binding| binding.instance_id == *instance_id && binding.field_path == *field_path).map(|binding| vec![OsOperation::BindParameterField { binding: binding.clone() }]).unwrap_or_default()
                 }
-                OsOp::SyncParameterPorts => Vec::new(),
+                OsOperation::SyncParameterPorts => Vec::new(),
             }
         }
 
@@ -756,11 +756,11 @@ pub mod host {
     }
 
     //#region 🔖GraphReconcile
-    /// @emoji 🧵 Post-materialization media-graph integrity pass run by `OsOp::reconcile`. Runs, in
+    /// @emoji 🧵 Post-materialization media-graph integrity pass run by `OsOperation::reconcile`. Runs, in
     /// order: (1) drop edges whose source/target node or port no longer exists (a concurrent delete
     /// tombstone wins over the wiring), (2) drop edges whose port types no longer match (a concurrent
     /// re-typing wins over the wiring), (3) dedupe edges with identical endpoints down to the
-    /// lexicographically smallest id (deterministic across peers replaying the same op log), (4) break
+    /// lexicographically smallest id (deterministic across peers replaying the same operation log), (4) break
     /// any cycle the previous rules left behind. Each rule operates on the edge set the previous one
     /// produced.
     fn reconcile_os_media_graph(mut projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
@@ -926,7 +926,7 @@ pub mod host {
 
     //#region 🔖OsStore
     pub struct OsStore {
-        inner: DocumentVcsStore<OsProjection, OsOp>,
+        inner: DocumentVcsStore<OsProjection, OsOperation>,
         name: String,
     }
 
@@ -950,7 +950,7 @@ pub mod host {
             self.inner.projection()
         }
 
-        /// @emoji 🤝 Fresh replay plus whatever `OsOp::reconcile`'s media-graph pass reports. See
+        /// @emoji 🤝 Fresh replay plus whatever `OsOperation::reconcile`'s media-graph pass reports. See
         /// `vcs::DocumentVcsStore::projection_with_conflicts`.
         pub fn projection_with_conflicts(&self) -> Result<(OsProjection, Vec<StudioConflict>), VcsError> {
             self.inner.projection_with_conflicts()
@@ -965,7 +965,7 @@ pub mod host {
             self.inner.dispatch_json(command_json)
         }
 
-        pub fn dispatch_apply(&mut self, operations: Vec<OsOp>) -> Result<(), VcsError> {
+        pub fn dispatch_apply(&mut self, operations: Vec<OsOperation>) -> Result<(), VcsError> {
             self.inner.dispatch(DocumentVcsCommand::Apply { operations, description: None })
         }
 
@@ -977,7 +977,7 @@ pub mod host {
         pub fn spawn_app_instance(&mut self, program_id: &str, app_id: &str, label: Option<&str>, position: MediaGraphPosition) -> Result<String, VcsError> {
             let registration = os_app_registration(program_id, app_id).ok_or_else(|| VcsError::Deserialize(format!("unknown app {program_id}/{app_id}")))?;
             let instance_id = create_os_id("app");
-            // 🆔 Minted once, here, at dispatch time; the id is embedded in the stored `OsOp` itself so
+            // 🆔 Minted once, here, at dispatch time; the id is embedded in the stored `OsOperation` itself so
             // replay is deterministic (it never re-mints) — same idempotency property `create_os_id`
             // already relies on for `instance_id`.
             let document_id = create_os_document_id();
@@ -989,14 +989,14 @@ pub mod host {
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id, schema: registration.source_format.clone() },
             };
-            self.dispatch_apply(vec![OsOp::SpawnAppInstance { instance, position }])?;
+            self.dispatch_apply(vec![OsOperation::SpawnAppInstance { instance, position }])?;
             Ok(instance_id)
         }
 
         pub fn add_parameter(&mut self, parameter_type: &OsParameterType, name: &str) -> Result<String, VcsError> {
             let parameter = create_default_os_parameter(parameter_type, name, None);
             let parameter_id_value = parameter_entity_id(&parameter).to_string();
-            self.dispatch_apply(vec![OsOp::AddParameter { parameter }])?;
+            self.dispatch_apply(vec![OsOperation::AddParameter { parameter }])?;
             Ok(parameter_id_value)
         }
 
@@ -1004,7 +1004,7 @@ pub mod host {
             let projection = self.projection()?;
             let current = projection.parameters.iter().find(|parameter| parameter_entity_id(parameter) == target_parameter_id).cloned().ok_or_else(|| VcsError::Deserialize(format!("unknown parameter {target_parameter_id}")))?;
             let next = patch_os_parameter(&current, patch);
-            self.dispatch_apply(vec![OsOp::PatchParameter { parameter_id: target_parameter_id.into(), parameter: next }])
+            self.dispatch_apply(vec![OsOperation::PatchParameter { parameter_id: target_parameter_id.into(), parameter: next }])
         }
 
         /// @emoji 📡 Pumps any queued inbound backbone messages into the edit timeline.
@@ -1520,8 +1520,8 @@ pub mod host {
             };
             host.load_plugin(LoadedPlugin { plugin_id: "draw".into(), manifest, artifact_uri: "plugin://draw".into() });
             let instance_id = host.create_instance("draw-play", "{}".into()).expect("instance");
-            let patch_op = serde_json::json!({
-                "op": "patch",
+            let patch_operation = serde_json::json!({
+                "operation": "patch",
                 "patch": { "title": "Hello" }
             })
             .to_string();
@@ -1530,7 +1530,7 @@ pub mod host {
                     id: InvocationId("invoke-1".into()),
                     app: AppInstanceId(instance_id.to_string()),
                     action: ActionId("setTitle".into()),
-                    input: serde_json::json!({ "ops": [patch_op] }),
+                    input: serde_json::json!({ "operations": [patch_operation] }),
                     actor: ActorId("tester".into()),
                     causal_context: vec![],
                 })
@@ -1679,9 +1679,9 @@ pub mod host {
 
             // 🏃 Actor A deletes node B; actor B (unaware of the delete) concurrently wires a new edge
             // to a port on node B — the classic delete/wire race `reconcile` must clean up post-merge.
-            store_a.dispatch_apply(vec![OsOp::RemoveAppInstance { instance_id: node_b_instance.clone() }]).expect("remove node b");
+            store_a.dispatch_apply(vec![OsOperation::RemoveAppInstance { instance_id: node_b_instance.clone() }]).expect("remove node b");
             store_b
-                .dispatch_apply(vec![OsOp::ConnectMediaPorts {
+                .dispatch_apply(vec![OsOperation::ConnectMediaPorts {
                     edge: OsMediaGraphEdge { id: "edge-race".into(), source_node_id: source_node_id.clone(), source_port_id, target_node_id: target_node_id.clone(), target_port_id, contract: placeholder_media_contract("draw") },
                 }])
                 .expect("wire edge to node b");
@@ -1823,7 +1823,7 @@ pub mod host_runtime {
     //!    which links both, is the one that actually performs that registration call using the
     //!    {@link OpenedDocument} this module hands back.
     //! 4. `DocumentHost::subscribe(&document_id)` → `broadcast::Receiver<DocumentEvent>`; on each event:
-    //!    - `RemoteOps`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
+    //!    - `RemoteOperations`/`SnapshotReplaced` are already pushed into the store's inbound queue by the actor
     //!      — the caller just needs to call `store.tick()` (step 5) to materialize them.
     //!    - `Presence{peers}` translates into `ViewState.presence_peers_json` via
     //!      {@link presence_peers_json} — the ONLY place presence now flows through; the old `presence:`
@@ -1833,7 +1833,7 @@ pub mod host_runtime {
     //! 6. On `HostEffect::SpawnPluginInstance`/`OpenPluginInstance` from an action result: mint (if
     //!    needed) a fresh `OsDocumentRef` (see {@link crate::instance::create_os_document_id}), then repeat
     //!    steps 1-5 for that app's own document.
-    //! 7. On close: send `DocumentActorMsg::Detach` (flushes pending ops) via `host.send(id, Detach)`, then
+    //! 7. On close: send `DocumentActorMsg::Detach` (flushes pending operations) via `host.send(id, Detach)`, then
     //!    `DocumentHost::close(&id)`, then `store.detach_backbone()` /
     //!    `WasmPluginRuntime::deregister_host_backbone(uri)`.
 
@@ -2291,8 +2291,8 @@ pub mod instance {
     /// host dispatches each as a snapshot replace into that app's own document store (e.g. via the plugin
     /// WIT boundary's `load-app-document`, or `framework/sync`'s document actor once the app is wired onto
     /// `DocumentHost`). This covers the "common/simple case" per the JSON-pointer overlay convention
-    /// {@link apply_parameter_values_to_projection} already established — a true typed op into the bound
-    /// app's own `Op` vocabulary requires that app's real (non-opaque) Op type and is left to each app's
+    /// {@link apply_parameter_values_to_projection} already established — a true typed operation into the bound
+    /// app's own `Operation` vocabulary requires that app's real (non-opaque) Operation type and is left to each app's
     /// own `DocumentApp` migration (WS-F); until then this snapshot-replace path is the host's only lever.
     pub fn app_instance_document_patches_for_binding(parameter_id: &str, instances: &[OsAppInstance], bindings: &[OsParameterFieldBinding], parameters: &[OsParameter], current_document_json: impl Fn(&str) -> Option<String>) -> Vec<(String, String)> {
         let bound_instance_ids: HashSet<String> = bindings.iter().filter(|binding| binding.parameter_id == parameter_id).map(|binding| binding.instance_id.clone()).collect();
@@ -2724,7 +2724,7 @@ pub mod media_graph {
     // #region media_graph
     //! 🎬 Media graph, VFS projection types, and media export registry.
 
-    use crate::host::OsOp;
+    use crate::host::OsOperation;
     use crate::instance::{create_os_id, is_parameter_port_id, media_port_spec_id, parameter_id_from_port_id, parameter_port_id, OsAppInstance, OsParameter, OsParameterFieldBinding};
     use crate::registry::{os_app_primary_output_kind, os_app_registration, os_resource_descriptor, OsAppRegistration, OsResourceDescriptor};
     use semio_framework_core::{media_types_compatible, MediaClass, MediaCompat, MediaForm, MediaType, MediaWireFormat};
@@ -2989,11 +2989,11 @@ pub mod media_graph {
     }
 
     /** @emoji 🔁 Diffs a flow fixture back into media-graph operations — inverse of [`os_media_graph_to_flow_fixture`]. */
-    pub fn apply_flow_fixture_to_os_media_graph(graph: &OsMediaGraph, fixture_json: &str) -> Vec<OsOp> {
+    pub fn apply_flow_fixture_to_os_media_graph(graph: &OsMediaGraph, fixture_json: &str) -> Vec<OsOperation> {
         let Ok(fixture) = serde_json::from_str::<Value>(fixture_json) else {
             return Vec::new();
         };
-        let mut ops = Vec::new();
+        let mut operations = Vec::new();
         if let Some(layout) = fixture.get("layout").and_then(Value::as_object) {
             for node in &graph.nodes {
                 let Some(position) = layout.get(&node.id) else { continue };
@@ -3003,7 +3003,7 @@ pub mod media_graph {
                 let x = center_x - node.width / 2.0;
                 let y = center_y - node.height / 2.0;
                 if (x - node.x).abs() > 1e-6 || (y - node.y).abs() > 1e-6 {
-                    ops.push(OsOp::MoveMediaNode { node_id: node.id.clone(), x, y });
+                    operations.push(OsOperation::MoveMediaNode { node_id: node.id.clone(), x, y });
                 }
             }
         }
@@ -3013,7 +3013,7 @@ pub mod media_graph {
             for node in &graph.nodes {
                 if !widget_ids.contains(node.id.as_str()) {
                     removed_node_ids.insert(node.id.clone());
-                    ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
+                    operations.push(OsOperation::RemoveAppInstance { instance_id: node.instance_id.clone() });
                 }
             }
         }
@@ -3038,7 +3038,7 @@ pub mod media_graph {
             let Some(target_port) = node_by_id.get(target_node_id.as_str()).and_then(|node| node.inputs.iter().find(|port| port.id == target_port_id)) else { continue };
             let Ok(contract) = negotiate_media_contract(source_port, target_port) else { continue };
             let id = synapse.get("id").and_then(Value::as_str).filter(|value| !value.is_empty()).map(str::to_string).unwrap_or_else(|| create_os_id("edge"));
-            ops.push(OsOp::ConnectMediaPorts { edge: OsMediaGraphEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
+            operations.push(OsOperation::ConnectMediaPorts { edge: OsMediaGraphEdge { id, source_node_id, source_port_id, target_node_id, target_port_id, contract } });
         }
         if fixture.get("synapses").and_then(Value::as_array).is_some() {
             for edge in &graph.edges {
@@ -3048,10 +3048,10 @@ pub mod media_graph {
                 if removed_node_ids.contains(&edge.source_node_id) || removed_node_ids.contains(&edge.target_node_id) {
                     continue;
                 }
-                ops.push(OsOp::DisconnectMediaEdge { edge_id: edge.id.clone() });
+                operations.push(OsOperation::DisconnectMediaEdge { edge_id: edge.id.clone() });
             }
         }
-        ops
+        operations
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -3883,7 +3883,7 @@ pub mod media_graph {
         }
 
         #[test]
-        fn flow_fixture_round_trips_camera_and_diffs_back_to_ops() {
+        fn flow_fixture_round_trips_camera_and_diffs_back_to_operations() {
             let mut graph = empty_media_graph();
             graph.nodes.push(media_node("node-1", "app-1", 40.0, 80.0));
             graph.nodes.push(media_node("node-2", "app-2", 300.0, 80.0));
@@ -3896,8 +3896,8 @@ pub mod media_graph {
             assert!(unchanged.is_empty());
             let mut moved = fixture.clone();
             moved["layout"]["node-1"] = json!({ "x": 220.0, "y": 156.0 });
-            let ops = apply_flow_fixture_to_os_media_graph(&graph, &moved.to_string());
-            assert_eq!(ops, vec![OsOp::MoveMediaNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
+            let operations = apply_flow_fixture_to_os_media_graph(&graph, &moved.to_string());
+            assert_eq!(operations, vec![OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 140.0, y: 120.0 }]);
         }
 
         #[test]
@@ -3910,18 +3910,18 @@ pub mod media_graph {
             fixture["synapses"] = json!([
                 { "id": "", "from": "node-2", "fromPort": "app-2:out", "to": "node-1", "toPort": "app-1:in" }
             ]);
-            let ops = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
+            let operations = apply_flow_fixture_to_os_media_graph(&graph, &fixture.to_string());
             assert!(matches!(
-                &ops[0],
-                OsOp::ConnectMediaPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "app-1:in" && !edge.id.is_empty()
+                &operations[0],
+                OsOperation::ConnectMediaPorts { edge } if edge.source_node_id == "node-2" && edge.target_port_id == "app-1:in" && !edge.id.is_empty()
             ));
-            assert!(ops.contains(&OsOp::DisconnectMediaEdge { edge_id: "edge-1".into() }));
+            assert!(operations.contains(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() }));
             let mut removal = os_media_graph_to_flow_fixture(&graph, &[], &OsMediaGraphCamera::default());
             removal["widgets"] = json!([{ "id": "node-1" }]);
             removal["synapses"] = json!([]);
-            let removal_ops = apply_flow_fixture_to_os_media_graph(&graph, &removal.to_string());
-            assert!(removal_ops.contains(&OsOp::RemoveAppInstance { instance_id: "app-2".into() }));
-            assert!(!removal_ops.iter().any(|op| matches!(op, OsOp::DisconnectMediaEdge { .. })));
+            let removal_operations = apply_flow_fixture_to_os_media_graph(&graph, &removal.to_string());
+            assert!(removal_operations.contains(&OsOperation::RemoveAppInstance { instance_id: "app-2".into() }));
+            assert!(!removal_operations.iter().any(|operation| matches!(operator, OsOperation::DisconnectMediaEdge { .. })));
         }
 
         //#region 🔖MediaFlow
@@ -4498,7 +4498,7 @@ pub mod registry {
 pub use backbone::{open_file_studio_backbone, open_folder_studio_backbone};
 pub use host::{
     apply_os_operation, create_empty_os_document, create_ephemeral_os_studio, create_os_studio, default_os_projection, delete_os_studio, import_os_studio_from_json, list_os_studio_catalog_entries, load_os_studio_document, materialize_os_projection, os_document_from_json,
-    os_document_to_envelope_json, os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOp, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
+    os_document_to_envelope_json, os_document_to_json, seed_os_studio_catalog_if_empty, LoadedPlugin, OsBackbonePort, OsDiff, OsDocument, OsEnvelope, OsOperation, OsProjection, OsStore, OsStudioCatalogEntry, OsVcs, PluginHost, PluginHotSwapEvent, PluginSupervisorState,
     OS_HOME_VFS_ROOT_ID, OS_STUDIO_BACKBONE_URI_PREFIX,
 };
 pub use instance::{

@@ -68,7 +68,7 @@ backend = "http://127.0.0.1:6141/osm/"
 backend = "http://127.0.0.1:6141/vt/"
 ```
 
-so browser requests to `/osm/...`/`/vt/...` on the Trunk dev server are transparently forwarded to the tile-proxy server. Harmless no-op for other plugins (route just never gets hit).
+so browser requests to `/osm/...`/`/vt/...` on the Trunk dev server are transparently forwarded to the tile-proxy server. Harmless no-operation for other plugins (route just never gets hit).
 
 4. **`framework/renderer/wgpu/script.ts`**:
    - `TrunkServeScript.run()`: when the resolved plugin is `"gis2d"`, call `startGisMapTileProxyServer(repoRoot, 6141)` before `spawnSync("trunk", ["serve", ...])`.

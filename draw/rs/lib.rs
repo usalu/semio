@@ -9,7 +9,7 @@ use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const DRAW_DOCUMENT_SCHEMA: &str = "draw.document";
 pub const DRAW_BLEND_MODES: &[&str] = &["normal", "multiply", "screen", "overlay", "darken", "lighten", "colorDodge", "colorBurn", "hardLight", "softLight", "difference", "exclusion", "hue", "saturation", "color", "luminosity"];
-pub const DRAW_BOOLEAN_OPS: &[&str] = &["union", "difference", "intersection", "xor"];
+pub const DRAW_BOOLEAN_OPERATIONS: &[&str] = &["union", "difference", "intersection", "xor"];
 pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "polygon"];
 pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
 
@@ -200,7 +200,7 @@ pub struct DrawGroupBody {
 pub struct DrawBooleanBody {
     #[serde(flatten)]
     pub base: DrawLayerBase,
-    pub op: String,
+    pub operation: String,
     pub children: Vec<String>,
 }
 
@@ -317,8 +317,8 @@ pub struct DrawCanvasLayerRecord {
     pub height: Option<f64>,
 }
 
-pub type DrawEnvelope = DocumentVcsEnvelope<DrawDocument, DrawOp>;
-pub type DrawStore = DocumentVcsStore<DrawDocument, DrawOp>;
+pub type DrawEnvelope = DocumentVcsEnvelope<DrawDocument, DrawOperation>;
+pub type DrawStore = DocumentVcsStore<DrawDocument, DrawOperation>;
 
 static DRAW_ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -353,10 +353,10 @@ pub fn create_draw_group_layer(name: &str) -> DrawLayerNode {
     })
 }
 
-pub fn create_draw_boolean_layer(name: &str, op: &str, children: Vec<String>) -> DrawLayerNode {
+pub fn create_draw_boolean_layer(name: &str, operation: &str, children: Vec<String>) -> DrawLayerNode {
     DrawLayerNode::Boolean(DrawBooleanBody {
         base: DrawLayerBase { id: create_draw_id("boolean"), name: name.into(), visible: true, locked: false, opacity: 1.0, blend_mode: "normal".into(), transform: default_draw_transform(), attributes: DrawAttributes::default() },
-        op: op.into(),
+        operation: operation.into(),
         children,
     })
 }
@@ -1095,7 +1095,7 @@ fn resolve_boolean_layer_segments(doc: &DrawDocument, boolean: &DrawBooleanBody)
         return Vec::new();
     }
     let kernel_inputs: Vec<Vec<kernel_2d_engine::PathSegment>> = child_segments.iter().map(|segments| to_kernel_segments(segments)).collect();
-    match kernel_2d_rs::booleans::boolean_paths_many(&kernel_inputs, &boolean.op) {
+    match kernel_2d_rs::booleans::boolean_paths_many(&kernel_inputs, &boolean.operation) {
         Ok(result) => from_kernel_segments(&result),
         Err(_) => Vec::new(),
     }
@@ -1161,10 +1161,10 @@ fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Ve
 }
 //#endregion 🔖KernelResolve
 
-//#region 🔖EditOps
+//#region 🔖EditOperations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum DrawOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum DrawOperation {
     SetLayerVisible {
         layer_id: String,
         visible: bool,
@@ -1199,9 +1199,9 @@ pub enum DrawOp {
         #[serde(skip_serializing_if = "Option::is_none")]
         stroke: Option<StrokeStyle>,
     },
-    SetBooleanOp {
+    SetBooleanOperation {
         layer_id: String,
-        boolean_op: String,
+        boolean_operation: String,
     },
     SetTraceParams {
         layer_id: String,
@@ -1234,51 +1234,51 @@ pub enum DrawOp {
     },
 }
 
-pub fn apply_draw_edit_op(doc: &DrawDocument, edit: &DrawOp) -> DrawDocument {
+pub fn apply_draw_edit_operation(doc: &DrawDocument, edit: &DrawOperation) -> DrawDocument {
     match edit {
-        DrawOp::SetDocument { document } => document.clone(),
-        DrawOp::SetCamera { camera } => DrawDocument { camera: camera.clone(), ..doc.clone() },
-        DrawOp::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetDocument { document } => document.clone(),
+        DrawOperation::SetCamera { camera } => DrawDocument { camera: camera.clone(), ..doc.clone() },
+        DrawOperation::SetLayerVisible { layer_id, visible } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).visible = *visible;
         }),
-        DrawOp::SetLayerLocked { layer_id, locked } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetLayerLocked { layer_id, locked } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).locked = *locked;
         }),
-        DrawOp::SetLayerOpacity { layer_id, opacity } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetLayerOpacity { layer_id, opacity } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).opacity = *opacity;
         }),
-        DrawOp::SetLayerBlendMode { layer_id, blend_mode } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetLayerBlendMode { layer_id, blend_mode } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).blend_mode = blend_mode.clone();
         }),
-        DrawOp::SetLayerName { layer_id, name } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetLayerName { layer_id, name } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).name = name.clone();
         }),
-        DrawOp::SetLayerTransform { layer_id, transform } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetLayerTransform { layer_id, transform } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).transform = transform.clone();
         }),
-        DrawOp::SetFill { layer_id, fill } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetFill { layer_id, fill } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).attributes.fill = fill.clone();
         }),
-        DrawOp::SetStroke { layer_id, stroke } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetStroke { layer_id, stroke } => mutate_draw_layer(doc, layer_id, |layer| {
             layer_base_mut(layer).attributes.stroke = stroke.clone();
         }),
-        DrawOp::SetBooleanOp { layer_id, boolean_op } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetBooleanOperation { layer_id, boolean_operation } => mutate_draw_layer(doc, layer_id, |layer| {
             if let DrawLayerNode::Boolean(boolean) = layer {
-                boolean.op = boolean_op.clone();
+                boolean.operation = boolean_operation.clone();
             }
         }),
-        DrawOp::SetTraceParams { layer_id, params } => mutate_draw_layer(doc, layer_id, |layer| {
+        DrawOperation::SetTraceParams { layer_id, params } => mutate_draw_layer(doc, layer_id, |layer| {
             if let DrawLayerNode::Trace(trace) = layer {
                 trace.params = params.clone();
             }
         }),
-        DrawOp::AddLayer { parent_id, index, layer } => {
+        DrawOperation::AddLayer { parent_id, index, layer } => {
             let mut next = doc.clone();
             let at = index.unwrap_or(next.layers.len());
             insert_layer(&mut next.layers, parent_id.as_deref(), at, layer.as_ref().clone());
             next
         }
-        DrawOp::DuplicateLayer { layer_id: source_id } => {
+        DrawOperation::DuplicateLayer { layer_id: source_id } => {
             if let Some(layer) = find_draw_layer(doc, source_id).cloned() {
                 let duplicate = clone_draw_layer_node(&layer, " copy");
                 let mut next = doc.clone();
@@ -1292,12 +1292,12 @@ pub fn apply_draw_edit_op(doc: &DrawDocument, edit: &DrawOp) -> DrawDocument {
                 doc.clone()
             }
         }
-        DrawOp::RemoveLayer { layer_id } => {
+        DrawOperation::RemoveLayer { layer_id } => {
             let mut next = doc.clone();
             remove_layer_from_tree(&mut next.layers, layer_id);
             next
         }
-        DrawOp::ReorderLayer { layer_id, parent_id, index } => {
+        DrawOperation::ReorderLayer { layer_id, parent_id, index } => {
             let mut next = doc.clone();
             if let Some(node) = extract_layer_node(&mut next.layers, layer_id) {
                 insert_layer(&mut next.layers, parent_id.as_deref(), *index, node);
@@ -1466,17 +1466,17 @@ pub fn rgba_to_hex(color: [f64; 4]) -> String {
 }
 
 /// 🩹 Resolves an inspector field write (`name`/`opacity`/`fillColor`/`transformX`/…) to the granular
-/// {@link DrawOp} that carries it, so field edits flow through the typed VCS as convergent operations
+/// {@link DrawOperation} that carries it, so field edits flow through the typed VCS as convergent operations
 /// instead of whole-document snapshots. Returns `None` for a missing layer or an unmapped field.
-pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawOp> {
+pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> Option<DrawOperation> {
     let layer = find_draw_layer(doc, layer_id)?;
-    let op = match field {
-        "name" => DrawOp::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() },
-        "opacity" => DrawOp::SetLayerOpacity { layer_id: layer_id.into(), opacity: value.as_f64().unwrap_or(1.0) },
-        "visible" => DrawOp::SetLayerVisible { layer_id: layer_id.into(), visible: value.as_bool().unwrap_or(true) },
-        "locked" => DrawOp::SetLayerLocked { layer_id: layer_id.into(), locked: value.as_bool().unwrap_or(false) },
-        "blendMode" => DrawOp::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: value.as_str().unwrap_or("normal").into() },
-        "booleanOp" => DrawOp::SetBooleanOp { layer_id: layer_id.into(), boolean_op: value.as_str().unwrap_or("union").into() },
+    let operation = match field {
+        "name" => DrawOperation::SetLayerName { layer_id: layer_id.into(), name: value.as_str().unwrap_or("").into() },
+        "opacity" => DrawOperation::SetLayerOpacity { layer_id: layer_id.into(), opacity: value.as_f64().unwrap_or(1.0) },
+        "visible" => DrawOperation::SetLayerVisible { layer_id: layer_id.into(), visible: value.as_bool().unwrap_or(true) },
+        "locked" => DrawOperation::SetLayerLocked { layer_id: layer_id.into(), locked: value.as_bool().unwrap_or(false) },
+        "blendMode" => DrawOperation::SetLayerBlendMode { layer_id: layer_id.into(), blend_mode: value.as_str().unwrap_or("normal").into() },
+        "booleanOperation" => DrawOperation::SetBooleanOperation { layer_id: layer_id.into(), boolean_operation: value.as_str().unwrap_or("union").into() },
         "transformX" | "transformY" | "transformScaleX" | "transformScaleY" | "transformRotation" => {
             let mut transform = layer_base(layer).transform.clone();
             match field {
@@ -1486,7 +1486,7 @@ pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, 
                 "transformScaleY" => transform.scale_y = value.as_f64().unwrap_or(1.0),
                 _ => transform.rotation = value.as_f64().unwrap_or(0.0),
             }
-            DrawOp::SetLayerTransform { layer_id: layer_id.into(), transform }
+            DrawOperation::SetLayerTransform { layer_id: layer_id.into(), transform }
         }
         "fillColor" => {
             let alpha = layer_base(layer)
@@ -1498,36 +1498,36 @@ pub fn draw_op_for_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, 
                     FillStyle::LinearGradient { .. } | FillStyle::RadialGradient { .. } => 1.0,
                 })
                 .unwrap_or(1.0);
-            DrawOp::SetFill { layer_id: layer_id.into(), fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }) }
+            DrawOperation::SetFill { layer_id: layer_id.into(), fill: Some(FillStyle::Solid { color: hex_to_rgba(value.as_str().unwrap_or("#000000"), alpha) }) }
         }
         "strokeWidth" => {
             let stroke = layer_base(layer).attributes.stroke.clone().unwrap_or(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 1.0, cap: "butt".into(), join: "miter".into(), dash: None });
-            DrawOp::SetStroke { layer_id: layer_id.into(), stroke: Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }) }
+            DrawOperation::SetStroke { layer_id: layer_id.into(), stroke: Some(StrokeStyle { width: value.as_f64().unwrap_or(1.0), ..stroke }) }
         }
         "traceThreshold" => {
             let DrawLayerNode::Trace(trace) = layer else { return None };
             let mut params = trace.params.clone();
             params.threshold = value.as_f64().unwrap_or(0.5);
-            DrawOp::SetTraceParams { layer_id: layer_id.into(), params }
+            DrawOperation::SetTraceParams { layer_id: layer_id.into(), params }
         }
         "traceSimplify" => {
             let DrawLayerNode::Trace(trace) = layer else { return None };
             let mut params = trace.params.clone();
             params.simplify_epsilon = value.as_f64().unwrap_or(1.5);
-            DrawOp::SetTraceParams { layer_id: layer_id.into(), params }
+            DrawOperation::SetTraceParams { layer_id: layer_id.into(), params }
         }
         _ => return None,
     };
-    Some(op)
+    Some(operation)
 }
 
 pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value: &serde_json::Value) -> DrawDocument {
     match draw_op_for_layer_field(doc, layer_id, field, value) {
-        Some(op) => apply_draw_edit_op(doc, &op),
+        Some(operation) => apply_draw_edit_operation(doc, &operation),
         None => doc.clone(),
     }
 }
-//#endregion 🔖EditOps
+//#endregion 🔖EditOperations
 
 //#region 🔖Vcs
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1618,28 +1618,28 @@ impl OperationDiff<DrawDocument> for DrawDiff {
     }
 }
 
-impl Operation<DrawDocument> for DrawOp {
+impl Operation<DrawDocument> for DrawOperation {
     type Diff = DrawDiff;
 
     fn diff(&self, _projection: &DrawDocument) -> DrawDiff {
         match self {
-            DrawOp::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
-            DrawOp::SetCamera { camera } => DrawDiff { camera: Some(camera.clone()), ..Default::default() },
-            DrawOp::SetLayerVisible { layer_id, visible } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }], ..Default::default() },
-            DrawOp::SetLayerLocked { layer_id, locked } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }], ..Default::default() },
-            DrawOp::SetLayerName { layer_id, name } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() },
-            DrawOp::SetLayerOpacity { layer_id, opacity } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { opacity: Some(*opacity), ..Default::default() } }], ..Default::default() },
-            DrawOp::SetLayerBlendMode { layer_id, blend_mode } => {
+            DrawOperation::SetDocument { document } => DrawDiff { document: Some(document.clone()), ..Default::default() },
+            DrawOperation::SetCamera { camera } => DrawDiff { camera: Some(camera.clone()), ..Default::default() },
+            DrawOperation::SetLayerVisible { layer_id, visible } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { visible: Some(*visible), ..Default::default() } }], ..Default::default() },
+            DrawOperation::SetLayerLocked { layer_id, locked } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { locked: Some(*locked), ..Default::default() } }], ..Default::default() },
+            DrawOperation::SetLayerName { layer_id, name } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { name: Some(name.clone()), ..Default::default() } }], ..Default::default() },
+            DrawOperation::SetLayerOpacity { layer_id, opacity } => DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { opacity: Some(*opacity), ..Default::default() } }], ..Default::default() },
+            DrawOperation::SetLayerBlendMode { layer_id, blend_mode } => {
                 DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: layer_id.clone(), base: DrawLayerBasePatch { blend_mode: Some(blend_mode.clone()), ..Default::default() } }], ..Default::default() }
             }
-            DrawOp::AddLayer { parent_id, index, layer } => DrawDiff { layers_added: vec![DrawLayerTreeAdd { parent_id: parent_id.clone(), index: *index, layer: layer.as_ref().clone() }], ..Default::default() },
-            DrawOp::RemoveLayer { layer_id } => DrawDiff { layers_removed: vec![layer_id.clone()], ..Default::default() },
-            _ => DrawDiff { document: Some(apply_draw_edit_op(_projection, self)), ..Default::default() },
+            DrawOperation::AddLayer { parent_id, index, layer } => DrawDiff { layers_added: vec![DrawLayerTreeAdd { parent_id: parent_id.clone(), index: *index, layer: layer.as_ref().clone() }], ..Default::default() },
+            DrawOperation::RemoveLayer { layer_id } => DrawDiff { layers_removed: vec![layer_id.clone()], ..Default::default() },
+            _ => DrawDiff { document: Some(apply_draw_edit_operation(_projection, self)), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &DrawDocument) -> Vec<Self> {
-        vec![DrawOp::SetDocument { document: projection.clone() }]
+        vec![DrawOperation::SetDocument { document: projection.clone() }]
     }
 }
 //#endregion 🔖Vcs
@@ -1900,9 +1900,9 @@ mod tests {
         let doc = empty_draw_projection();
         let layer = create_draw_shape_layer_rect("Rect");
         let id = layer_id(&layer).to_string();
-        let next = apply_draw_edit_op(&doc, &DrawOp::AddLayer { parent_id: None, index: None, layer: Box::new(layer) });
+        let next = apply_draw_edit_operation(&doc, &DrawOperation::AddLayer { parent_id: None, index: None, layer: Box::new(layer) });
         assert_eq!(next.layers.len(), 2);
-        let renamed = apply_draw_edit_op(&next, &DrawOp::SetLayerName { layer_id: id.clone(), name: "Box".into() });
+        let renamed = apply_draw_edit_operation(&next, &DrawOperation::SetLayerName { layer_id: id.clone(), name: "Box".into() });
         assert_eq!(find_draw_layer(&renamed, &id).map(|layer| layer_base(layer).name.as_str()), Some("Box"));
     }
 
@@ -1941,7 +1941,7 @@ mod tests {
     }
 
     #[test]
-    fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_op() {
+    fn resolve_boolean_layer_segments_flattens_arcs_before_boolean_operation() {
         let mut doc = default_draw_document("bool-arc-test", None);
         doc.layers.clear();
         let path_a =

@@ -48,7 +48,7 @@ impl PortUndirectedGraph {
 }
 // #endregion 🔖Construction
 
-// #region 🔖NodeOps
+// #region 🔖NodeOperations
 impl PortUndirectedGraph {
     pub fn add_node(&mut self) -> NodeId {
         self.storage.add_node()
@@ -99,9 +99,9 @@ impl PortUndirectedGraph {
         self.storage.nodes()
     }
 }
-// #endregion 🔖NodeOps
+// #endregion 🔖NodeOperations
 
-// #region 🔖EdgeOps
+// #region 🔖EdgeOperations
 impl PortUndirectedGraph {
     /// ➕ Always creates a NEW parallel edge (NetworkX `MultiGraph.add_edge`); auto-creates `u`/`v` if unseen.
     pub fn add_edge(&mut self, u: NodeId, v: NodeId) -> EdgeId {
@@ -191,7 +191,7 @@ impl PortUndirectedGraph {
         nodes[1..].iter().map(|&leaf| self.add_edge(hub, leaf)).collect()
     }
 }
-// #endregion 🔖EdgeOps
+// #endregion 🔖EdgeOperations
 
 // #region 🔖Queries
 impl PortUndirectedGraph {

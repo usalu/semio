@@ -12,7 +12,7 @@ todos:
    content: Implement QueryableGraph once for GraphEngine<P,D>, covering flow/sequence/dag/puzzle2d/wires
    status: completed
  - id: phase2-trinity-thin
-   content: Shrink trinity/jack/core/lib.rs to a thin specialization re-exporting the shared DSL + trinity_ram QueryableGraph impl + TrinityGraphOp mutations
+   content: Shrink trinity/jack/core/lib.rs to a thin specialization re-exporting the shared DSL + trinity_ram QueryableGraph impl + TrinityGraphOperation mutations
    status: completed
  - id: phase2-lsp-domain
    content: Generalize trinity/jack/lsp to accept a graphDomain selector and dispatch to the right adapter
@@ -95,7 +95,7 @@ The cleanest single-source-of-truth fix: give `GraphEngine<P,D>` itself a runtim
   }
   ```
 - `impl<P: GraphPortModel, D: Directedness> QueryableGraph for GraphEngine<P,D>` once in `mathematical/graph/dsl` (or `mathematical/graph/port/directed`) — this single impl covers flow, sequence, dag, puzzle/2d, wires.
-- `trinity/jack/core/lib.rs` shrinks to: re-export the shared `run`/`run_json`/`complete`/`lint`/`hover`/`format` API from `mathematical_graph_dsl`, plus `impl QueryableGraph for trinity_ram::Graph` and Trinity-specific `TrinityGraphOp` emission for CREATE/SET/DELETE/MERGE. Existing public API signatures stay stable so `trinity/jack/lsp`, `trinity/rewrite`, `trinity/react`'s `runJackOnFixture` keep working unchanged.
+- `trinity/jack/core/lib.rs` shrinks to: re-export the shared `run`/`run_json`/`complete`/`lint`/`hover`/`format` API from `mathematical_graph_dsl`, plus `impl QueryableGraph for trinity_ram::Graph` and Trinity-specific `TrinityGraphOperation` emission for CREATE/SET/DELETE/MERGE. Existing public API signatures stay stable so `trinity/jack/lsp`, `trinity/rewrite`, `trinity/react`'s `runJackOnFixture` keep working unchanged.
 - `trinity/jack/lsp/lib.rs`: generalize fixture loading to accept a `graphDomain` selector (`trinity` | `dag` | `puzzle2d` | `s-media-graph` | ...) that picks the right `QueryableGraph` adapter, so the same LSP binary can power query editors across domains (needed for Phase 4's per-playground Jack windows).
 - Writer/TS side needs **no functional change** — `tokenizeJackSource`, `JackAstParser`, `jackSymbolAtOffset`, `jackVariableOccurrences` in `writer/core/index.ts` already operate purely on query text and are already domain-agnostic.
 

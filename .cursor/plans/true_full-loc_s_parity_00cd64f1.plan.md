@@ -72,7 +72,7 @@ Line-for-line port of [s/core/js/index.ts](s/core/js/index.ts) (1,579) + old `s/
 
 ## Phase 5 — Demo-studio tech plugins full port (~15k LOC Rust)
 
-Full ports (core + internal + react surface behavior as Rust scene builders) for the demo studio apps: draw (4,133), writer (3,908), raster (3,931), note (3,145). Every tool, layer op, inspector field, canvas interaction command from the old react packages.
+Full ports (core + internal + react surface behavior as Rust scene builders) for the demo studio apps: draw (4,133), writer (3,908), raster (3,931), note (3,145). Every tool, layer operation, inspector field, canvas interaction command from the old react packages.
 
 ## Phase 6 — Graph-family tech plugins (~15k LOC Rust)
 

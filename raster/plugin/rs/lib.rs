@@ -1,7 +1,7 @@
 //! 🖼️ Raster plugin — declarative raster board bundled as a hot-swappable WASM component.
 
 //#region 🔖Domain
-/// 🖼️ Raster's own document/VCS domain model (layer tree, ops, diffs) kept app-owned while
+/// 🖼️ Raster's own document/VCS domain model (layer tree, operations, diffs) kept app-owned while
 /// `RasterHost`/`RasterSession` (the generic paint-canvas hosting mechanism) live in
 /// `framework_surface_paint`.
 pub(crate) mod domain {
@@ -381,7 +381,7 @@ pub(crate) mod domain {
     }
     //#endregion 🔖Tree
     
-    //#region 🔖Ops
+    //#region 🔖Operations
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterLayerPatch {
@@ -425,8 +425,8 @@ pub(crate) mod domain {
     }
     
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    pub enum RasterOp {
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    pub enum RasterOperation {
         AddLayer { parent_id: Option<String>, index: usize, layer: RasterLayerNode },
         RemoveLayer { layer_id: String },
         PatchLayer { layer_id: String, patch: RasterLayerPatch },
@@ -471,53 +471,53 @@ pub(crate) mod domain {
         RasterDiff { steps: vec![step], ..Default::default() }
     }
     
-    impl Operation<RasterProjection> for RasterOp {
+    impl Operation<RasterProjection> for RasterOperation {
         type Diff = RasterDiff;
     
         fn diff(&self, _projection: &RasterProjection) -> RasterDiff {
             match self {
-                RasterOp::AddLayer { parent_id, index, layer } => {
+                RasterOperation::AddLayer { parent_id, index, layer } => {
                     step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: layer.clone() })
                 }
-                RasterOp::RemoveLayer { layer_id } => step_diff(RasterStep::RemoveLayer { layer_id: layer_id.clone() }),
-                RasterOp::PatchLayer { layer_id, patch } => {
+                RasterOperation::RemoveLayer { layer_id } => step_diff(RasterStep::RemoveLayer { layer_id: layer_id.clone() }),
+                RasterOperation::PatchLayer { layer_id, patch } => {
                     step_diff(RasterStep::PatchLayer { layer_id: layer_id.clone(), patch: patch.clone() })
                 }
-                RasterOp::MoveLayer { layer_id, parent_id, index } => {
+                RasterOperation::MoveLayer { layer_id, parent_id, index } => {
                     step_diff(RasterStep::MoveLayer { layer_id: layer_id.clone(), parent_id: parent_id.clone(), index: *index })
                 }
-                RasterOp::SetCamera { camera } => RasterDiff { camera: Some(camera.clone()), ..Default::default() },
-                RasterOp::ReplaceDocument { document } => RasterDiff { replace: Some(Box::new(document.clone())), ..Default::default() },
+                RasterOperation::SetCamera { camera } => RasterDiff { camera: Some(camera.clone()), ..Default::default() },
+                RasterOperation::ReplaceDocument { document } => RasterDiff { replace: Some(Box::new(document.clone())), ..Default::default() },
             }
         }
     
         fn backwards(&self, projection: &RasterProjection) -> Vec<Self> {
             match self {
-                RasterOp::AddLayer { layer, .. } => vec![RasterOp::RemoveLayer { layer_id: layer_node_id(layer).to_string() }],
-                RasterOp::RemoveLayer { layer_id } => match (locate_layer(&projection.layers, layer_id), find_layer(&projection.layers, layer_id)) {
-                    (Some((parent_id, index)), Some(layer)) => vec![RasterOp::AddLayer { parent_id, index, layer: layer.clone() }],
+                RasterOperation::AddLayer { layer, .. } => vec![RasterOperation::RemoveLayer { layer_id: layer_node_id(layer).to_string() }],
+                RasterOperation::RemoveLayer { layer_id } => match (locate_layer(&projection.layers, layer_id), find_layer(&projection.layers, layer_id)) {
+                    (Some((parent_id, index)), Some(layer)) => vec![RasterOperation::AddLayer { parent_id, index, layer: layer.clone() }],
                     _ => Vec::new(),
                 },
-                RasterOp::PatchLayer { layer_id, patch } => {
+                RasterOperation::PatchLayer { layer_id, patch } => {
                     let mut probe = projection.layers.clone();
                     match patch_layer_in_tree(&mut probe, layer_id, patch) {
-                        Some(inverse) => vec![RasterOp::PatchLayer { layer_id: layer_id.clone(), patch: inverse }],
+                        Some(inverse) => vec![RasterOperation::PatchLayer { layer_id: layer_id.clone(), patch: inverse }],
                         None => Vec::new(),
                     }
                 }
-                RasterOp::MoveLayer { layer_id, .. } => match locate_layer(&projection.layers, layer_id) {
-                    Some((parent_id, index)) => vec![RasterOp::MoveLayer { layer_id: layer_id.clone(), parent_id, index }],
+                RasterOperation::MoveLayer { layer_id, .. } => match locate_layer(&projection.layers, layer_id) {
+                    Some((parent_id, index)) => vec![RasterOperation::MoveLayer { layer_id: layer_id.clone(), parent_id, index }],
                     None => Vec::new(),
                 },
-                RasterOp::SetCamera { .. } => vec![RasterOp::SetCamera { camera: projection.camera.clone() }],
-                RasterOp::ReplaceDocument { .. } => vec![RasterOp::ReplaceDocument { document: projection.clone() }],
+                RasterOperation::SetCamera { .. } => vec![RasterOperation::SetCamera { camera: projection.camera.clone() }],
+                RasterOperation::ReplaceDocument { .. } => vec![RasterOperation::ReplaceDocument { document: projection.clone() }],
             }
         }
     }
     
-    pub type RasterEnvelope = vcs::DocumentVcsEnvelope<RasterProjection, RasterOp>;
-    pub type RasterStore = vcs::DocumentVcsStore<RasterProjection, RasterOp>;
-    //#endregion 🔖Ops
+    pub type RasterEnvelope = vcs::DocumentVcsEnvelope<RasterProjection, RasterOperation>;
+    pub type RasterStore = vcs::DocumentVcsStore<RasterProjection, RasterOperation>;
+    //#endregion 🔖Operations
     
     //#region 🔖WasmDocumentVcs
     #[cfg(target_arch = "wasm32")]
@@ -595,28 +595,28 @@ pub(crate) mod domain {
             }
         }
     
-        fn round_trip(projection: &RasterProjection, op: &RasterOp) -> RasterProjection {
-            let forward = apply_operation(projection, op);
+        fn round_trip(projection: &RasterProjection, operation: &RasterOperation) -> RasterProjection {
+            let forward = apply_operation(projection, operation);
             let mut restored = forward.clone();
-            for back in op.backwards(projection) {
+            for back in operation.backwards(projection) {
                 restored = apply_operation(&restored, &back);
             }
-            assert_eq!(&restored, projection, "backwards() must restore the pre-op projection");
+            assert_eq!(&restored, projection, "backwards() must restore the pre-operation projection");
             forward
         }
     
         #[test]
         fn add_remove_patch_layer_round_trip() {
             let projection = empty_raster_projection();
-            let added = round_trip(&projection, &RasterOp::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") });
+            let added = round_trip(&projection, &RasterOperation::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") });
             assert_eq!(added.layers.len(), 1);
             let patched = round_trip(
                 &added,
-                &RasterOp::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } },
+                &RasterOperation::PatchLayer { layer_id: "l1".into(), patch: RasterLayerPatch { name: Some("Renamed".into()), visible: Some(false), ..Default::default() } },
             );
             assert_eq!(layer_name(&patched.layers[0]), "Renamed");
             assert!(!layer_visible(&patched.layers[0]));
-            let removed = round_trip(&patched, &RasterOp::RemoveLayer { layer_id: "l1".into() });
+            let removed = round_trip(&patched, &RasterOperation::RemoveLayer { layer_id: "l1".into() });
             assert!(removed.layers.is_empty());
         }
     
@@ -634,7 +634,7 @@ pub(crate) mod domain {
                 children: Vec::new(),
             });
             projection.layers.push(pixel_layer("l1", "Base"));
-            let moved = round_trip(&projection, &RasterOp::MoveLayer { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 });
+            let moved = round_trip(&projection, &RasterOperation::MoveLayer { layer_id: "l1".into(), parent_id: Some("g1".into()), index: 0 });
             let RasterLayerNode::Group { children, .. } = &moved.layers[0] else { panic!("expected group") };
             assert_eq!(children.len(), 1);
             assert_eq!(layer_node_id(&children[0]), "l1");
@@ -643,11 +643,11 @@ pub(crate) mod domain {
         #[test]
         fn set_camera_and_replace_round_trip() {
             let projection = empty_raster_projection();
-            let next = round_trip(&projection, &RasterOp::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+            let next = round_trip(&projection, &RasterOperation::SetCamera { camera: RasterCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
             assert_eq!(next.camera.zoom, 2.0);
             let mut replacement = empty_raster_projection();
             replacement.layers.push(pixel_layer("l9", "Replaced"));
-            let replaced = round_trip(&projection, &RasterOp::ReplaceDocument { document: replacement.clone() });
+            let replaced = round_trip(&projection, &RasterOperation::ReplaceDocument { document: replacement.clone() });
             assert_eq!(replaced, replacement);
         }
     
@@ -661,7 +661,7 @@ pub(crate) mod domain {
             ));
             store
                 .dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![RasterOp::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") }],
+                    operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") }],
                     description: None,
                 })
                 .expect("apply");
@@ -688,7 +688,7 @@ use semio_framework_plugin::{SurfaceKind,
 };
 use crate::domain::{
     empty_raster_projection, find_layer, flatten_raster_layers, layer_name, layer_node_id, layer_visible,
-    RasterCamera, RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterOp,
+    RasterCamera, RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterOperation,
     RasterProjection as RasterDocument, RasterTransform,
 };
 use std::collections::HashMap;
@@ -722,7 +722,7 @@ static RASTER_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
 //#region 🔖Document
 /// 🎛️ Ephemeral view state (selection, hover, utility/brush settings, navigator viewport) held in the
-/// app struct — never in the document — so it stays out of undo history and off the op channel.
+/// app struct — never in the document — so it stays out of undo history and off the operation channel.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct RasterPlayRuntime {
@@ -833,7 +833,7 @@ fn mask_row_id(target_id: &str) -> String {
     format!("{RASTER_TREE_PREFIX}.mask.{target_id}")
 }
 
-/// 📄 Duplicates a layer subtree with freshly minted ids (a new document node, not an op inverse).
+/// 📄 Duplicates a layer subtree with freshly minted ids (a new document node, not an operation inverse).
 fn clone_layer(layer: &RasterLayerNode) -> RasterLayerNode {
     match layer {
         RasterLayerNode::Pixel { name, visible, opacity, blend_mode, transform, mask, width, height, image_key, .. } => {
@@ -1205,14 +1205,14 @@ struct RasterPlayApp {
 }
 
 impl RasterPlayApp {
-    /// 🩹 Builds `PatchLayer` ops for a `patchLayer`/`patchLayers` field write across ids.
-    fn patch_layer_ops(&self, document: &RasterDocument, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterOp> {
+    /// 🩹 Builds `PatchLayer` operations for a `patchLayer`/`patchLayers` field write across ids.
+    fn patch_layer_operations(&self, document: &RasterDocument, layer_ids: &[String], field: &str, value: &Value) -> Vec<RasterOperation> {
         layer_ids
             .iter()
             .filter_map(|layer_id| {
                 let prior = find_layer(&document.layers, layer_id)?;
                 let patch = layer_patch_for_field(field, value, prior)?;
-                Some(RasterOp::PatchLayer { layer_id: layer_id.clone(), patch })
+                Some(RasterOperation::PatchLayer { layer_id: layer_id.clone(), patch })
             })
             .collect()
     }
@@ -1284,7 +1284,7 @@ fn raster_window_measures(runtime: &RasterPlayRuntime) -> Vec<WindowMeasure> {
 
 impl DocumentApp for RasterPlayApp {
     type Projection = RasterDocument;
-    type Op = RasterOp;
+    type Operation = RasterOperation;
 
     fn app_id(&self) -> &str {
         RASTER_PLAY_APP_ID
@@ -1304,10 +1304,10 @@ impl DocumentApp for RasterPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, RasterDocument>,
         _view_state: &ViewState,
-    ) -> ActionEmit<RasterOp> {
+    ) -> ActionEmit<RasterOperation> {
         let document = doc.projection;
         match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setBrushSize" => {
                 if let Some(size) = args.and_then(|value| value.get("value").or_else(|| value.get("brushSize"))).and_then(|value| value.as_f64()) {
                     self.runtime.brush_size = size as f32;
@@ -1323,7 +1323,7 @@ impl DocumentApp for RasterPlayApp {
             SET_ACTIVE_UTILITY_ACTION_ID => {
                 // 🧰 Host-owned utility switch: the active utility lives in session view state (never the
                 // document). There is no plugin-side paint scratch to clear — brush strokes are painted
-                // host-side in the WASM canvas — so this simply acknowledges with no ops or history.
+                // host-side in the WASM canvas — so this simply acknowledges with no operations or history.
                 ActionEmit::default()
             }
             "setSelection" => {
@@ -1350,14 +1350,14 @@ impl DocumentApp for RasterPlayApp {
                     .collect();
                 ActionEmit::default()
             }
-            // 📷 Camera — a coalesced scalar op so a pan/zoom gesture is one undo step.
+            // 📷 Camera — a coalesced scalar operation so a pan/zoom gesture is one undo step.
             "setCamera" | "setCameraZoom" => {
                 if let Some(camera) = args.and_then(|value| value.get("camera")).and_then(|value| serde_json::from_value::<RasterCamera>(value.clone()).ok()) {
-                    return ActionEmit { ops: vec![RasterOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+                    return ActionEmit { operations: vec![RasterOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
                 }
                 if let Some(zoom) = args.and_then(|value| value.get("zoom")).and_then(|value| value.as_f64()) {
                     let camera = RasterCamera { zoom, ..document.camera.clone() };
-                    return ActionEmit { ops: vec![RasterOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+                    return ActionEmit { operations: vec![RasterOperation::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
                 }
                 ActionEmit::default()
             }
@@ -1370,10 +1370,10 @@ impl DocumentApp for RasterPlayApp {
                     empty_raster_document()
                 };
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(vec![RasterOp::ReplaceDocument { document: replacement }])
+                ActionEmit::operations(vec![RasterOperation::ReplaceDocument { document: replacement }])
             }
             "setDocument" => match args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<RasterDocument>(value.clone()).ok()) {
-                Some(replacement) => ActionEmit::ops(vec![RasterOp::ReplaceDocument { document: replacement }]),
+                Some(replacement) => ActionEmit::operations(vec![RasterOperation::ReplaceDocument { document: replacement }]),
                 None => ActionEmit::default(),
             },
             "setLayerVisible" | "toggleLayerVisible" => {
@@ -1385,7 +1385,7 @@ impl DocumentApp for RasterPlayApp {
                     .and_then(|value| value.get("visible"))
                     .and_then(|value| value.as_bool())
                     .unwrap_or_else(|| !layer_visible(layer));
-                ActionEmit::ops(vec![RasterOp::PatchLayer {
+                ActionEmit::operations(vec![RasterOperation::PatchLayer {
                     layer_id: target_id.into(),
                     patch: RasterLayerPatch { visible: Some(visible), ..Default::default() },
                 }])
@@ -1394,13 +1394,13 @@ impl DocumentApp for RasterPlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
                 self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::ops(vec![RasterOp::AddLayer { parent_id: None, index: document.layers.len(), layer }])
+                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer }])
             }
             "dropLayerKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
                 self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::ops(vec![RasterOp::AddLayer { parent_id: None, index: document.layers.len(), layer }])
+                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer }])
             }
             "deleteLayer" => {
                 let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
@@ -1410,7 +1410,7 @@ impl DocumentApp for RasterPlayApp {
                     return ActionEmit::default();
                 }
                 self.runtime.selected_ids.retain(|id| id != target_id);
-                ActionEmit::ops(vec![RasterOp::RemoveLayer { layer_id: target_id.into() }])
+                ActionEmit::operations(vec![RasterOperation::RemoveLayer { layer_id: target_id.into() }])
             }
             "duplicateLayer" => {
                 let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
@@ -1420,7 +1420,7 @@ impl DocumentApp for RasterPlayApp {
                     Some(layer) => {
                         let copy = clone_layer(layer);
                         self.runtime.selected_ids = vec![layer_node_id(&copy).to_string()];
-                        ActionEmit::ops(vec![RasterOp::AddLayer { parent_id: None, index: document.layers.len(), layer: copy }])
+                        ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: copy }])
                     }
                     None => ActionEmit::default(),
                 }
@@ -1436,7 +1436,7 @@ impl DocumentApp for RasterPlayApp {
                 if layer_id.is_empty() || field.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(self.patch_layer_ops(document, &[layer_id.to_string()], field, &value))
+                ActionEmit::operations(self.patch_layer_operations(document, &[layer_id.to_string()], field, &value))
             }
             "patchLayers" => {
                 let layer_ids: Vec<String> = args
@@ -1453,7 +1453,7 @@ impl DocumentApp for RasterPlayApp {
                 if field.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(self.patch_layer_ops(document, &layer_ids, field, &value))
+                ActionEmit::operations(self.patch_layer_operations(document, &layer_ids, field, &value))
             }
             "moveLayer" => {
                 let Some(layer_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
@@ -1477,7 +1477,7 @@ impl DocumentApp for RasterPlayApp {
                 } else {
                     document.layers.len()
                 };
-                ActionEmit::ops(vec![RasterOp::MoveLayer { layer_id: layer_id.into(), parent_id, index }])
+                ActionEmit::operations(vec![RasterOperation::MoveLayer { layer_id: layer_id.into(), parent_id, index }])
             }
             _ => ActionEmit::default(),
         }
@@ -1609,7 +1609,7 @@ fn create_raster_app() -> App {
             .action_args("setDocument", vec![
                 ActionArgDef::text("document", "Document"),
             ])
-            // 🧰 Composite-window utilities — one exclusive set, active utility host-owned (never a document op).
+            // 🧰 Composite-window utilities — one exclusive set, active utility host-owned (never a document operation).
             .utility(raster_utility("selectMarquee", "Marquee Select", "square-dashed", "Select", UtilityCategory::Selection))
             .utility(raster_utility("paintBrush", "Brush", "brush", "Paint", UtilityCategory::Utilities))
             .utility(raster_utility("paintEraser", "Eraser", "eraser", "Paint", UtilityCategory::Utilities))
@@ -1672,7 +1672,7 @@ mod tests {
         let mut app = testkit::new_app::<RasterPlayApp>();
         let document: RasterDocument = serde_json::from_str(SEMIO_EXAMPLE_JSON).expect("semio raster json");
         app.load_document(
-            &serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOp>(
+            &serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOperation>(
                 RASTER_DOCUMENT_SCHEMA,
                 "raster",
                 document,
@@ -1835,7 +1835,7 @@ mod tests {
         let layer_id = layer_node_id(&app.projection().expect("projection").layers[0]).to_string();
         let row_id = layer_row_id(find_layer(&app.projection().expect("projection").layers, &layer_id).expect("layer"));
         let result = app.handle_action("setHover", Some(&json!({ "id": layer_id })), &ViewState::default(), &testkit::meta("local")).expect("hover");
-        assert!(result.operations.is_empty(), "hover is a view action and emits no ops");
+        assert!(result.operations.is_empty(), "hover is a view action and emits no operations");
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_LAYERS, None, &ViewState::default()).expect("render")).unwrap();
         assert!(json.contains(&format!("\"id\":\"{row_id}\"")), "hovered layer row must be present");
         assert!(json.contains("\"state\":\"previewed\""), "hover stamps UiState::Previewed onto the layer row");
@@ -1916,7 +1916,7 @@ mod tests {
             height: Some(512),
             image_key: None,
         }];
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOp>(
+        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<RasterDocument, RasterOperation>(
             RASTER_DOCUMENT_SCHEMA,
             "raster",
             base,
@@ -1958,11 +1958,11 @@ mod tests {
         let mut app = testkit::new_app_with_registry::<RasterPlayApp>(create_raster_app);
         let before = app.projection().expect("projection");
         let view = ViewState { active_utility_id: Some("paintBrush".into()), ..ViewState::default() };
-        // Switching utilities is the framework View action: no document ops, nothing to sync/undo.
+        // Switching utilities is the framework View action: no document operations, nothing to sync/undo.
         let result = app
             .handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "paintBrush" })), &view, &testkit::meta("local"))
             .expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert!(result.operations.is_empty(), "utility switching never emits document operations");
         assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
         // The composite scene reads the host-owned active utility from session view state, not the runtime.
         let json = serde_json::to_string(&app.render(RASTER_PLAY_BODY_COMPOSITE, None, &view).expect("render")).unwrap();
@@ -1979,7 +1979,7 @@ mod tests {
         assert_eq!(selects, ["selectMarquee"]);
         let composite = definition.window_kinds.iter().find(|window| window.id == RASTER_PLAY_WINDOW_COMPOSITE).expect("composite window");
         assert_eq!(composite.utilities.len(), definition.utilities.len(), "every utility is scoped to the composite window kind");
-        // The framework auto-injects the setActiveUtility View action once utilities are declared; no doc op survives.
+        // The framework auto-injects the setActiveUtility View action once utilities are declared; no doc operation survives.
         assert!(definition.actions.iter().any(|action| action.id == SET_ACTIVE_UTILITY_ACTION_ID && matches!(action.kind, ActionKind::View)));
         assert!(!definition.actions.iter().any(|action| action.id == "setActiveUtility" && !matches!(action.kind, ActionKind::View)));
     }

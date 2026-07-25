@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/ui-react:test -- -t UIIntroduction
+
+> nx run @semio-tech/ui-react:test -t UIIntroduction
+
+> bun ./script.ts test -t UIIntroduction
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  26 passed | 371 skipped (397)
+   Start at  22:24:03
+   Duration  10.75s (transform 2.15s, setup 202ms, import 8.86s, tests 535ms, environment 779ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

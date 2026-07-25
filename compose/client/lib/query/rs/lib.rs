@@ -139,14 +139,14 @@ mod ast {
         Const(serde_json::Value),
         Var { name: String },
         Field { object: Box<Expr>, name: String },
-        BinOp { op: BinOp, left: Box<Expr>, right: Box<Expr> },
+        BinaryOperator { operator: BinaryOperator, left: Box<Expr>, right: Box<Expr> },
         UnaryNeg(Box<Expr>),
         And(Vec<Expr>),
         Or(Vec<Expr>),
     }
 
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-    pub enum BinOp {
+    pub enum BinaryOperator {
         Eq,
         Ne,
         Lt,
@@ -247,8 +247,8 @@ mod parser {
         let (rest, first) = unary_expr(input)?;
         let (rest, tail) = many0(pair(ws(alt((char('*'), char('/')))), cut(unary_expr)))(rest)?;
         let mut cur = first;
-        for (op, rhs) in tail {
-            cur = Expr::BinOp { op: if op == '*' { BinOp::Mul } else { BinOp::Div }, left: Box::new(cur), right: Box::new(rhs) };
+        for (operator, rhs) in tail {
+            cur = Expr::BinaryOperator { operator: if operation == '*' { BinaryOperator::Mul } else { BinaryOperator::Div }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
@@ -257,8 +257,8 @@ mod parser {
         let (rest, first) = mul_expr(input)?;
         let (rest, tail) = many0(pair(ws(alt((char('+'), char('-')))), cut(mul_expr)))(rest)?;
         let mut cur = first;
-        for (op, rhs) in tail {
-            cur = Expr::BinOp { op: if op == '+' { BinOp::Add } else { BinOp::Sub }, left: Box::new(cur), right: Box::new(rhs) };
+        for (operator, rhs) in tail {
+            cur = Expr::BinaryOperator { operator: if operation == '+' { BinaryOperator::Add } else { BinaryOperator::Sub }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
@@ -266,17 +266,17 @@ mod parser {
     fn cmp_expr(input: &str) -> IResult<&str, Expr> {
         let (rest, left) = add_expr(input)?;
         let (rest, op_rhs) = opt(pair(ws(alt((tag("=="), tag("!="), tag("<="), tag(">="), tag("="), tag("<"), tag(">")))), cut(add_expr)))(rest)?;
-        if let Some((op, right)) = op_rhs {
-            let bop = match op {
-                "==" | "=" => BinOp::Eq,
-                "!=" => BinOp::Ne,
-                "<=" => BinOp::Le,
-                ">=" => BinOp::Ge,
-                "<" => BinOp::Lt,
-                ">" => BinOp::Gt,
-                _ => BinOp::Eq,
+        if let Some((operator, right)) = op_rhs {
+            let binary_operator = match operator {
+                "==" | "=" => BinaryOperator::Eq,
+                "!=" => BinaryOperator::Ne,
+                "<=" => BinaryOperator::Le,
+                ">=" => BinaryOperator::Ge,
+                "<" => BinaryOperator::Lt,
+                ">" => BinaryOperator::Gt,
+                _ => BinaryOperator::Eq,
             };
-            return Ok((rest, Expr::BinOp { op: bop, left: Box::new(left), right: Box::new(right) }));
+            return Ok((rest, Expr::BinaryOperator { operator: binary_operator, left: Box::new(left), right: Box::new(right) }));
         }
         Ok((rest, left))
     }
@@ -868,14 +868,14 @@ mod planner {
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum Step {
-        GraphQl { op: OpKind, document: String, variables: Value, bind: BindSpec },
+        GraphQl { operator: OpKind, document: String, variables: Value, bind: BindSpec },
         Join { on_var: String, key: String },
         Filter { expr: Expr },
         Unwind { source_var: String, alias: String, where_expr: Option<Expr> },
         Project { projections: Vec<ProjectionItem>, where_expr: Option<Expr> },
         Order { expr: Expr },
         Limit { n: usize },
-        Call { op: OpKind, document: String, variables: Value, yield_items: Vec<YieldItem> },
+        Call { operator: OpKind, document: String, variables: Value, yield_items: Vec<YieldItem> },
     }
 
     #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
@@ -926,7 +926,7 @@ mod planner {
                     for pat in &m.patterns {
                         let plan = plan_pattern(pat)?;
                         if emitted_patterns.insert(plan.document.clone()) {
-                            steps.push(Step::GraphQl { op: OpKind::Query, document: plan.document, variables: json!({}), bind: plan.bind });
+                            steps.push(Step::GraphQl { operator: OpKind::Query, document: plan.document, variables: json!({}), bind: plan.bind });
                         }
                     }
                     for (var, count) in &shared {
@@ -961,7 +961,7 @@ mod planner {
                 }
                 Clause::Call(c) => {
                     let target = schema::resolve_call(&c.action_id)?;
-                    steps.push(Step::Call { op: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.action_id, &c.args), yield_items: c.yield_items.clone() });
+                    steps.push(Step::Call { operator: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.action_id, &c.args), yield_items: c.yield_items.clone() });
                 }
             }
         }
@@ -1012,7 +1012,7 @@ mod planner {
                 serde_json::Value::Number(n) => Expr::Const(serde_json::Value::Number(n.clone())),
                 _ => continue,
             };
-            conjuncts.push(Expr::BinOp { op: BinOp::Eq, left: Box::new(lhs), right: Box::new(rhs) });
+            conjuncts.push(Expr::BinaryOperator { operator: BinaryOperator::Eq, left: Box::new(lhs), right: Box::new(rhs) });
         }
         match conjuncts.len() {
             0 => None,
@@ -1205,14 +1205,14 @@ mod executor {
         }
 
         pub async fn run_subscription(plan: &OpPlan, transport: &dyn Transport) -> Result<Pin<Box<dyn futures_util::Stream<Item = Result<QueryResult, ArchitectError>> + Send>>, ArchitectError> {
-            let has_sub = plan.steps.iter().any(|s| matches!(s, Step::Call { op: OpKind::Subscription, .. }));
+            let has_sub = plan.steps.iter().any(|s| matches!(s, Step::Call { operator: OpKind::Subscription, .. }));
             if !has_sub {
                 return Err(ArchitectError::Execute("plan has no subscription CALL".into()));
             }
             let mut env = BindEnv::default();
             for step in &plan.steps {
                 match step {
-                    Step::Call { op: OpKind::Subscription, document, variables, yield_items } => {
+                    Step::Call { operator: OpKind::Subscription, document, variables, yield_items } => {
                         let mut sub_stream = transport.subscribe(document, variables.clone()).await?;
                         let yield_items = yield_items.clone();
                         let ret = plan.return_clause.clone();
@@ -1237,8 +1237,8 @@ mod executor {
     impl BindEnv {
         async fn apply(&mut self, step: &Step, transport: &dyn Transport) -> Result<(), ArchitectError> {
             match step {
-                Step::GraphQl { op, document, variables, bind } => {
-                    let data = transport.execute(*op, document, variables.clone()).await?;
+                Step::GraphQl { operation, document, variables, bind } => {
+                    let data = transport.execute(*operation, document, variables.clone()).await?;
                     let expanded = extract_rows(&data, bind)?;
                     if self.rows.is_empty() {
                         self.rows = expanded;
@@ -1298,11 +1298,11 @@ mod executor {
                 Step::Limit { n } => {
                     self.rows.truncate(*n);
                 }
-                Step::Call { op, document, variables, yield_items } => {
-                    if *op == OpKind::Subscription {
+                Step::Call { operation, document, variables, yield_items } => {
+                    if *operation == OpKind::Subscription {
                         return Ok(());
                     }
-                    let data = transport.execute(*op, document, variables.clone()).await?;
+                    let data = transport.execute(*operation, document, variables.clone()).await?;
                     self.ingest_call_yield(&data, yield_items);
                 }
             }
@@ -1496,20 +1496,20 @@ mod executor {
                 let v = eval_expr(inner, row)?;
                 json_num(-json_as_f64(&v)?)
             }
-            Expr::BinOp { op, left, right } => {
+            Expr::BinaryOperator { operation, left, right } => {
                 let l = eval_expr(left, row)?;
                 let r = eval_expr(right, row)?;
-                match op {
-                    BinOp::Eq => Value::Bool(json_eq(&l, &r)),
-                    BinOp::Ne => Value::Bool(!json_eq(&l, &r)),
-                    BinOp::Lt => Value::Bool(json_as_f64(&l)? < json_as_f64(&r)?),
-                    BinOp::Le => Value::Bool(json_as_f64(&l)? <= json_as_f64(&r)?),
-                    BinOp::Gt => Value::Bool(json_as_f64(&l)? > json_as_f64(&r)?),
-                    BinOp::Ge => Value::Bool(json_as_f64(&l)? >= json_as_f64(&r)?),
-                    BinOp::Add => json_num(json_as_f64(&l)? + json_as_f64(&r)?),
-                    BinOp::Sub => json_num(json_as_f64(&l)? - json_as_f64(&r)?),
-                    BinOp::Mul => json_num(json_as_f64(&l)? * json_as_f64(&r)?),
-                    BinOp::Div => json_num(json_as_f64(&l)? / json_as_f64(&r)?),
+                match operator {
+                    BinaryOperator::Eq => Value::Bool(json_eq(&l, &r)),
+                    BinaryOperator::Ne => Value::Bool(!json_eq(&l, &r)),
+                    BinaryOperator::Lt => Value::Bool(json_as_f64(&l)? < json_as_f64(&r)?),
+                    BinaryOperator::Le => Value::Bool(json_as_f64(&l)? <= json_as_f64(&r)?),
+                    BinaryOperator::Gt => Value::Bool(json_as_f64(&l)? > json_as_f64(&r)?),
+                    BinaryOperator::Ge => Value::Bool(json_as_f64(&l)? >= json_as_f64(&r)?),
+                    BinaryOperator::Add => json_num(json_as_f64(&l)? + json_as_f64(&r)?),
+                    BinaryOperator::Sub => json_num(json_as_f64(&l)? - json_as_f64(&r)?),
+                    BinaryOperator::Mul => json_num(json_as_f64(&l)? * json_as_f64(&r)?),
+                    BinaryOperator::Div => json_num(json_as_f64(&l)? / json_as_f64(&r)?),
                 }
             }
             Expr::And(xs) => Value::Bool(xs.iter().all(|x| eval_expr(x, row).ok().and_then(|v| v.as_bool()).unwrap_or(false))),
@@ -1568,7 +1568,7 @@ mod api {
     pub async fn run(text: &str, transport: &dyn Transport) -> Result<QueryResult, ArchitectError> {
         let ast = parse(text)?;
         let plan = plan(&ast)?;
-        if plan.steps.iter().any(|s| matches!(s, super::planner::Step::Call { op: super::transport::OpKind::Subscription, .. })) {
+        if plan.steps.iter().any(|s| matches!(s, super::planner::Step::Call { operator: super::transport::OpKind::Subscription, .. })) {
             let mut stream = Executor::run_subscription(&plan, transport).await?;
             if let Some(first) = stream.next().await {
                 return first;
@@ -1595,9 +1595,9 @@ mod wasm_api {
             Expr::Var { name } => json!({ "kind": "var", "name": name }),
             Expr::Field { object, name } => json!({ "kind": "field", "name": name, "object": export_expr(object) }),
             Expr::UnaryNeg(inner) => json!({ "kind": "neg", "expr": export_expr(inner) }),
-            Expr::BinOp { op, left, right } => json!({
-                "kind": "binOp",
-                "op": format!("{op:?}"),
+            Expr::BinaryOperator { operation, left, right } => json!({
+                "kind": "binaryOperator",
+                "operation": format!("{operation:?}"),
                 "left": export_expr(left),
                 "right": export_expr(right),
             }),
@@ -1636,14 +1636,14 @@ mod wasm_api {
             .steps
             .iter()
             .map(|step| match step {
-                Step::GraphQl { op, document, variables, bind } => {
+                Step::GraphQl { operation, document, variables, bind } => {
                     let mut paths = serde_json::Map::new();
                     for (k, p) in &bind.paths {
                         paths.insert(k.clone(), Value::Array(p.segments.iter().map(export_path_seg).collect()));
                     }
                     json!({
                         "kind": "graphQl",
-                        "op": format!("{op:?}"),
+                        "operation": format!("{operation:?}"),
                         "document": document,
                         "variables": variables,
                         "bind": {
@@ -1668,9 +1668,9 @@ mod wasm_api {
                 }),
                 Step::Order { expr } => json!({ "kind": "order", "expr": export_expr(expr) }),
                 Step::Limit { n } => json!({ "kind": "limit", "n": n }),
-                Step::Call { op, document, variables, yield_items } => json!({
+                Step::Call { operation, document, variables, yield_items } => json!({
                     "kind": "call",
-                    "op": format!("{op:?}"),
+                    "operation": format!("{operation:?}"),
                     "document": document,
                     "variables": variables,
                     "yieldItems": yield_items.iter().map(|y| json!({ "key": y.key, "alias": y.alias })).collect::<Vec<_>>(),
@@ -1778,9 +1778,9 @@ mod tests {
         let mut idx = 0usize;
         for step in &plan.steps {
             match step {
-                planner::Step::GraphQl { document, op, .. } | planner::Step::Call { document, op, .. } => {
+                planner::Step::GraphQl { document, operator, .. } | planner::Step::Call { document, operator, .. } => {
                     let payload = canned.get(idx).expect("canned step payload").clone();
-                    responses.insert(format!("{op:?}:{document}"), payload.clone());
+                    responses.insert(format!("{operation:?}:{document}"), payload.clone());
                     responses.insert(document.clone(), payload);
                     idx += 1;
                 }

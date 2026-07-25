@@ -15,7 +15,7 @@ todos:
    content: Add InteractionRegistry + withBuiltins loading the 5 fixtures in core
    status: completed
  - id: effect-action-routing
-   content: Replace box.transform op with EffectSpec {op:'action'}; collapse commit.operation to {kind:'action', action, params}; wire runtime through ActionRegistry
+   content: Replace box.transform operation with EffectSpec {operation:'action'}; collapse commit.operation to {kind:'action', action, params}; wire runtime through ActionRegistry
    status: completed
  - id: fixtures
    content: Rename *.command.json -> *.interaction.json, bump schema to spatial.interaction/v1, rewrite actions->effects and commit.operation; delete orphaned factory.json variants
@@ -49,12 +49,12 @@ Open `spatial-interactions-and-actions` via repo MCP `ticket_open`. All scratch 
 
 - **Action** — pure, non-interactive function with typed inputs and a typed result (`{ diff?, data? }`). Examples: `createBoxFromCorners`, `createBoxFrom3Points`, `extrudeWireToCell`, `offsetFaces`, `measureVertexDistance`, `measureFaceArea`, `measureCellVolume`, and the previously-hardcoded `box.transform` helpers (`aabbFromDiagonalCorners`, `tripletRubber`, `snapSquareFootprint`, `rubberCornerFromCenter`, `rubberSquareFromCenter`, `setCubeHeightFromFootprint`, `verticalFinalizeFootprint`, `initPeakAboveOrigin`, `peakFromOriginZ`, `verticalRubberCorner`, `cornerFromLengthWidth`, `tripletCommit`). Registerable at runtime via `ActionRegistry`.
 - **Interaction** — interactive state machine (previous `CommandSpec`). Headless or rendered. Uses Actions via `EffectSpec` (during transitions) and via `commit.operation` (at commit time). Registerable at runtime via `InteractionRegistry`.
-- **Effect** — declarative side-effect on a transition (previous `ActionSpec`: `assign` / `clear` / `append` / `emit` / `raise` / `openTransaction` / `commitTransaction` / `rollbackTransaction` / `requestPreview` / `resolveEditable` / `setDiagnostic` / `clearDiagnostic` / `kernel.query` / new `action`). Replaces the hardcoded `box.transform` op.
+- **Effect** — declarative side-effect on a transition (previous `ActionSpec`: `assign` / `clear` / `append` / `emit` / `raise` / `openTransaction` / `commitTransaction` / `rollbackTransaction` / `requestPreview` / `resolveEditable` / `setDiagnostic` / `clearDiagnostic` / `kernel.query` / new `action`). Replaces the hardcoded `box.transform` operation.
 
 ```mermaid
 flowchart LR
   Interaction[Interaction state machine] -- transition fires --> Effects[EffectSpec list]
-  Effects -- "{op: action}" --> ActionRegistry
+  Effects -- "{operation: action}" --> ActionRegistry
   Interaction -- commit --> ActionRegistry
   ActionRegistry --> Action[Pure Action fn]
   Action --> Result["{diff?, data?}"]
@@ -71,9 +71,9 @@ Region renames + symbol renames (kept in same file per `AGENTS.md`):
 - `📦Commands` → `📦Interactions`; `SpatialCommandPreset` → `SpatialInteractionPreset`; `listSpatialCommandPresets` / `loadSpatialCommandPreset` / `resolveSpatialCommandPresetKey` → `listSpatialInteractionPresets` / `loadSpatialInteractionPreset` / `resolveSpatialInteractionPresetKey`; `buildBoxCommandSpec` → `buildBoxInteractionSpec`; same for `Extrude`/`OffsetSurface`/`Distance`/`Area`.
 - Existing transition `ActionSpec` → `EffectSpec`; field `transitions[*].actions` → `effects`; helper `applyActionAsync` → `applyEffectAsync`. `EffectSpec` drops the `box.transform` variant and gains a generic action variant:
   ```ts
-  | { op: "action"; action: string; params?: Record<string, Expr>; assignTo?: PathTarget }
+  | { operator: "action"; action: string; params?: Record<string, Expr>; assignTo?: PathTarget }
   ```
-- Remove `applyBoxGeometryTransform` (~120 lines in [spatial/js/core/index.ts](spatial/js/core/index.ts)); its 12 sub-ops become registered Actions (see §3).
+- Remove `applyBoxGeometryTransform` (~120 lines in [spatial/js/core/index.ts](spatial/js/core/index.ts)); its 12 sub-operations become registered Actions (see §3).
 - Remove `history.excludeEvents` from `InteractionSpec` and from `InteractionRuntime.excludeFromHistory` — every non-transient transition is undoable per requirement. `transient: true` remains the single opt-out.
 
 New region `🧮ActionRegistry` (after `🪪Refs`):
@@ -102,7 +102,7 @@ export class ActionRegistry {
 Built-in actions registered by `ActionRegistry.withBuiltins`:
 
 - Geometry actions (call `KernelAdapter`): `primitive.createBoxFromCorners`, `primitive.createBoxFrom3Points` (composed of `aabbFromDiagonalCorners` + `setCubeHeightFromFootprint`), `feature.extrudeWireToCell`, `feature.offsetFaces`, `measure.vertexDistance`, `measure.faceArea`, `measure.cellVolume`.
-- Pure geometry helpers (no kernel): the 12 ex-`box.transform` ops, each as its own `ActionDef` reading typed params (`origin`, `corner`, `cursor`, `p0`/`p1`, …) and returning `{ data: { origin?, corner?, height?, … } }` so transitions assign them back via `assignTo`.
+- Pure geometry helpers (no kernel): the 12 ex-`box.transform` operations, each as its own `ActionDef` reading typed params (`origin`, `corner`, `cursor`, `p0`/`p1`, …) and returning `{ data: { origin?, corner?, height?, … } }` so transitions assign them back via `assignTo`.
 
 New region `🧭InteractionRegistry`:
 
@@ -115,7 +115,7 @@ export class InteractionRegistry {
 }
 ```
 
-`InteractionRuntimeOptions` gains `actions?: ActionRegistry` (defaults to `ActionRegistry.withBuiltins()`); the runtime resolves `EffectSpec` `{op:"action"}` and `commit.operation { kind:"action", action, params }` against it.
+`InteractionRuntimeOptions` gains `actions?: ActionRegistry` (defaults to `ActionRegistry.withBuiltins()`); the runtime resolves `EffectSpec` `{operation:"action"}` and `commit.operation { kind:"action", action, params }` against it.
 
 `commit.operation` collapses to a single tagged variant:
 
@@ -129,7 +129,7 @@ All previous variants (`cell.createBox`, `wire.extrudeToCell`, `face.offset`, `m
 
 - Rename files: `box.command.json` → `box.interaction.json`, plus `extrude-wire`, `offset-surface`, `distance`, `area`. Delete the orphaned `factory.json`, `extrude.factory.json`, `offset-surface.factory.json` (per repo "no legacy api" rule) unless still referenced — verify with rg first.
 - Bump schema string `"spatial.command/v1"` → `"spatial.interaction"`. Update the matching schema file under `spatial/schema/json/`.
-- In every fixture rewrite `actions: [...]` → `effects: [...]`; rewrite every `{op:"box.transform", transform:"X"}` to `{op:"action", action:"box.X", params:{ point:{kind:"path",…}, value:{kind:"path",…} }, assignTo:{root:"context",segments:[…]}}` (one `assign` per slot the helper writes), or alternatively a single `{op:"action"}` whose `assignTo` is a `context` sub-object that the transition's next `assign` effect spreads — pick the per-slot form for explicitness.
+- In every fixture rewrite `actions: [...]` → `effects: [...]`; rewrite every `{operation:"box.transform", transform:"X"}` to `{operation:"action", action:"box.X", params:{ point:{kind:"path",…}, value:{kind:"path",…} }, assignTo:{root:"context",segments:[…]}}` (one `assign` per slot the helper writes), or alternatively a single `{operation:"action"}` whose `assignTo` is a `context` sub-object that the transition's next `assign` effect spreads — pick the per-slot form for explicitness.
 - Rewrite each `commit.operation` to the unified `{kind:"action", action:"…", params:{…}, outputDataPath?:…}` form.
 - Drop the entire `normalizeLegacyCommandDocument` + `migrateLegacyActionObject` + `legacyPathToTarget` block in `parseInteractionSpec` (greenfield, no legacy compat).
 
@@ -156,7 +156,7 @@ In the `🧪Tests` region of [spatial/js/core/index.ts](spatial/js/core/index.ts
 
 - `ActionRegistry`: `withBuiltins` lists all built-in ids; `register` allows overriding; `createBoxFrom3Points` returns the same diff as `createBoxFromCorners` for axis-aligned inputs.
 - `InteractionRegistry.withBuiltins` returns all 5 presets and `get("primitive.box")` matches `buildBoxInteractionSpec`.
-- Box interaction end-to-end through the new `effects:[{op:"action",action:"box.aabbFromDiagonalCorners",…}]` path produces identical context to the old test (snapshot of `state` + `context` after each `pointer.down`).
+- Box interaction end-to-end through the new `effects:[{operation:"action",action:"box.aabbFromDiagonalCorners",…}]` path produces identical context to the old test (snapshot of `state` + `context` after each `pointer.down`).
 - `send` push to `snapUndoStack` on every non-transient transition (regression: previously `excludeEvents` could skip).
 
 Extend `spatial/js/machine-stately/index.ts` `🧪Tests` to assert pure-ts vs XState parity through the new `effects` + `{kind:"action"}` commit path.

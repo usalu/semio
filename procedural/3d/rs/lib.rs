@@ -1,7 +1,7 @@
 //! 📐 Procedural 3d document model on `vcs`.
 
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-use protocol::{apply_generation_op, invert_generation_op, GenerationOp, GenerationPlayState};
+use protocol::{apply_generation_operation, invert_generation_operation, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
@@ -86,7 +86,7 @@ fn apply_synapses_diff(synapses: &mut Vec<SynapseSpec>, diff: &SynapsesDiff) {
 }
 //#endregion 🔖Collections
 
-//#region 🔖Ops
+//#region 🔖Operations
 /// 🩹 Sparse procedural-3d diff over the flow fixture's collections plus scalar canvas/schema fields
 /// and an ordered list of generation edits applied in sequence.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -98,7 +98,7 @@ pub struct Procedural3dDiff {
     pub camera: Option<CameraJson>,
     pub schema: Option<String>,
     #[serde(default)]
-    pub generation: Vec<GenerationOp>,
+    pub generation: Vec<GenerationOperation>,
 }
 
 impl OperationDiff<Procedural3dDocument> for Procedural3dDiff {
@@ -118,8 +118,8 @@ impl OperationDiff<Procedural3dDocument> for Procedural3dDiff {
         if let Some(schema) = &self.schema {
             next.fixture.schema = schema.clone();
         }
-        for op in &self.generation {
-            apply_generation_op(&mut next.generation, op);
+        for operation in &self.generation {
+            apply_generation_operation(&mut next.generation, operation);
         }
         next
     }
@@ -142,10 +142,10 @@ impl OperationDiff<Procedural3dDocument> for Procedural3dDiff {
 }
 
 /// 🧮 Procedural-3d operation: id-keyed widget/synapse/layout collection edits, the scalar canvas
-/// camera and fixture schema, and a single {@link GenerationOp} generation edit with its true inverse.
+/// camera and fixture schema, and a single {@link GenerationOperation} generation edit with its true inverse.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum Procedural3dOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum Procedural3dOperation {
     SetWidget { index: usize, widget: Widget },
     RemoveWidget { id: String },
     SetSynapse { index: usize, synapse: SynapseSpec },
@@ -154,7 +154,7 @@ pub enum Procedural3dOp {
     RemoveLayout { id: String },
     SetCamera { camera: CameraJson },
     SetSchema { schema: String },
-    Generation(GenerationOp),
+    Generation(GenerationOperation),
 }
 
 fn widget_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
@@ -165,21 +165,21 @@ fn synapse_index(fixture: &FlowFixture, id: &str) -> Option<usize> {
     fixture.synapses.iter().position(|synapse| synapse.id == id)
 }
 
-impl Operation<Procedural3dDocument> for Procedural3dOp {
+impl Operation<Procedural3dDocument> for Procedural3dOperation {
     type Diff = Procedural3dDiff;
 
     fn diff(&self, _projection: &Procedural3dDocument) -> Procedural3dDiff {
         let mut diff = Procedural3dDiff::default();
         match self {
-            Procedural3dOp::SetWidget { index, widget } => diff.widgets.set.push((*index, widget.clone())),
-            Procedural3dOp::RemoveWidget { id } => diff.widgets.removed.push(id.clone()),
-            Procedural3dOp::SetSynapse { index, synapse } => diff.synapses.set.push((*index, synapse.clone())),
-            Procedural3dOp::RemoveSynapse { id } => diff.synapses.removed.push(id.clone()),
-            Procedural3dOp::SetLayout { id, layout } => diff.layout.set.push((id.clone(), layout.clone())),
-            Procedural3dOp::RemoveLayout { id } => diff.layout.removed.push(id.clone()),
-            Procedural3dOp::SetCamera { camera } => diff.camera = Some(camera.clone()),
-            Procedural3dOp::SetSchema { schema } => diff.schema = Some(schema.clone()),
-            Procedural3dOp::Generation(op) => diff.generation.push(op.clone()),
+            Procedural3dOperation::SetWidget { index, widget } => diff.widgets.set.push((*index, widget.clone())),
+            Procedural3dOperation::RemoveWidget { id } => diff.widgets.removed.push(id.clone()),
+            Procedural3dOperation::SetSynapse { index, synapse } => diff.synapses.set.push((*index, synapse.clone())),
+            Procedural3dOperation::RemoveSynapse { id } => diff.synapses.removed.push(id.clone()),
+            Procedural3dOperation::SetLayout { id, layout } => diff.layout.set.push((id.clone(), layout.clone())),
+            Procedural3dOperation::RemoveLayout { id } => diff.layout.removed.push(id.clone()),
+            Procedural3dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
+            Procedural3dOperation::SetSchema { schema } => diff.schema = Some(schema.clone()),
+            Procedural3dOperation::Generation(operation) => diff.generation.push(operation.clone()),
         }
         diff
     }
@@ -187,75 +187,75 @@ impl Operation<Procedural3dDocument> for Procedural3dOp {
     fn backwards(&self, projection: &Procedural3dDocument) -> Vec<Self> {
         let fixture = &projection.fixture;
         match self {
-            Procedural3dOp::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
-                Some(index) => vec![Procedural3dOp::SetWidget { index, widget: fixture.widgets[index].clone() }],
-                None => vec![Procedural3dOp::RemoveWidget { id: widget_id(widget).to_string() }],
+            Procedural3dOperation::SetWidget { widget, .. } => match widget_index(fixture, widget_id(widget)) {
+                Some(index) => vec![Procedural3dOperation::SetWidget { index, widget: fixture.widgets[index].clone() }],
+                None => vec![Procedural3dOperation::RemoveWidget { id: widget_id(widget).to_string() }],
             },
-            Procedural3dOp::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural3dOp::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
-            Procedural3dOp::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
-                Some(index) => vec![Procedural3dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
-                None => vec![Procedural3dOp::RemoveSynapse { id: synapse.id.clone() }],
+            Procedural3dOperation::RemoveWidget { id } => widget_index(fixture, id).map(|index| vec![Procedural3dOperation::SetWidget { index, widget: fixture.widgets[index].clone() }]).unwrap_or_default(),
+            Procedural3dOperation::SetSynapse { synapse, .. } => match synapse_index(fixture, &synapse.id) {
+                Some(index) => vec![Procedural3dOperation::SetSynapse { index, synapse: fixture.synapses[index].clone() }],
+                None => vec![Procedural3dOperation::RemoveSynapse { id: synapse.id.clone() }],
             },
-            Procedural3dOp::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural3dOp::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
-            Procedural3dOp::SetLayout { id, .. } => match fixture.layout.get(id) {
-                Some(layout) => vec![Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() }],
-                None => vec![Procedural3dOp::RemoveLayout { id: id.clone() }],
+            Procedural3dOperation::RemoveSynapse { id } => synapse_index(fixture, id).map(|index| vec![Procedural3dOperation::SetSynapse { index, synapse: fixture.synapses[index].clone() }]).unwrap_or_default(),
+            Procedural3dOperation::SetLayout { id, .. } => match fixture.layout.get(id) {
+                Some(layout) => vec![Procedural3dOperation::SetLayout { id: id.clone(), layout: layout.clone() }],
+                None => vec![Procedural3dOperation::RemoveLayout { id: id.clone() }],
             },
-            Procedural3dOp::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
-            Procedural3dOp::SetCamera { .. } => vec![Procedural3dOp::SetCamera { camera: fixture.camera.clone() }],
-            Procedural3dOp::SetSchema { .. } => vec![Procedural3dOp::SetSchema { schema: fixture.schema.clone() }],
-            Procedural3dOp::Generation(op) => invert_generation_op(&projection.generation, op).into_iter().map(Procedural3dOp::Generation).collect(),
+            Procedural3dOperation::RemoveLayout { id } => fixture.layout.get(id).map(|layout| vec![Procedural3dOperation::SetLayout { id: id.clone(), layout: layout.clone() }]).unwrap_or_default(),
+            Procedural3dOperation::SetCamera { .. } => vec![Procedural3dOperation::SetCamera { camera: fixture.camera.clone() }],
+            Procedural3dOperation::SetSchema { .. } => vec![Procedural3dOperation::SetSchema { schema: fixture.schema.clone() }],
+            Procedural3dOperation::Generation(operation) => invert_generation_operation(&projection.generation, operation).into_iter().map(Procedural3dOperation::Generation).collect(),
         }
     }
 }
 
-/// 🔀 Diffs two fixtures into a minimal, invertible, mergeable op set: removed/added/patched widgets
+/// 🔀 Diffs two fixtures into a minimal, invertible, mergeable operation set: removed/added/patched widgets
 /// and synapses (keyed by id), layout entries, and the fixture schema. The canvas camera is ephemeral
-/// view state (plugin runtime), never a document op. Lets action handlers keep computing the target
-/// fixture via `FlowHost` while emitting granular ops.
-pub fn procedural3d_fixture_ops(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dOp> {
-    let mut ops = Vec::new();
+/// view state (plugin runtime), never a document operation. Lets action handlers keep computing the target
+/// fixture via `FlowHost` while emitting granular operations.
+pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec<Procedural3dOperation> {
+    let mut operations = Vec::new();
     for widget in &before.widgets {
         if !after.widgets.iter().any(|entry| widget_id(entry) == widget_id(widget)) {
-            ops.push(Procedural3dOp::RemoveWidget { id: widget_id(widget).to_string() });
+            operations.push(Procedural3dOperation::RemoveWidget { id: widget_id(widget).to_string() });
         }
     }
     for (index, widget) in after.widgets.iter().enumerate() {
         let prior = before.widgets.iter().find(|entry| widget_id(entry) == widget_id(widget));
         if prior != Some(widget) {
-            ops.push(Procedural3dOp::SetWidget { index, widget: widget.clone() });
+            operations.push(Procedural3dOperation::SetWidget { index, widget: widget.clone() });
         }
     }
     for synapse in &before.synapses {
         if !after.synapses.iter().any(|entry| entry.id == synapse.id) {
-            ops.push(Procedural3dOp::RemoveSynapse { id: synapse.id.clone() });
+            operations.push(Procedural3dOperation::RemoveSynapse { id: synapse.id.clone() });
         }
     }
     for (index, synapse) in after.synapses.iter().enumerate() {
         let prior = before.synapses.iter().find(|entry| entry.id == synapse.id);
         if prior != Some(synapse) {
-            ops.push(Procedural3dOp::SetSynapse { index, synapse: synapse.clone() });
+            operations.push(Procedural3dOperation::SetSynapse { index, synapse: synapse.clone() });
         }
     }
     for id in before.layout.keys() {
         if !after.layout.contains_key(id) {
-            ops.push(Procedural3dOp::RemoveLayout { id: id.clone() });
+            operations.push(Procedural3dOperation::RemoveLayout { id: id.clone() });
         }
     }
     for (id, layout) in &after.layout {
         if before.layout.get(id) != Some(layout) {
-            ops.push(Procedural3dOp::SetLayout { id: id.clone(), layout: layout.clone() });
+            operations.push(Procedural3dOperation::SetLayout { id: id.clone(), layout: layout.clone() });
         }
     }
     if before.schema != after.schema {
-        ops.push(Procedural3dOp::SetSchema { schema: after.schema.clone() });
+        operations.push(Procedural3dOperation::SetSchema { schema: after.schema.clone() });
     }
-    ops
+    operations
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
-pub type Procedural3dEnvelope = DocumentVcsEnvelope<Procedural3dDocument, Procedural3dOp>;
-pub type Procedural3dStore = DocumentVcsStore<Procedural3dDocument, Procedural3dOp>;
+pub type Procedural3dEnvelope = DocumentVcsEnvelope<Procedural3dDocument, Procedural3dOperation>;
+pub type Procedural3dStore = DocumentVcsStore<Procedural3dDocument, Procedural3dOperation>;
 
 pub fn empty_procedural3d_projection() -> Procedural3dDocument {
     Procedural3dDocument::default()
@@ -316,27 +316,27 @@ mod tests {
     use super::*;
     use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
 
-    fn round_trip(projection: &Procedural3dDocument, op: &Procedural3dOp) -> Procedural3dDocument {
-        let forward = apply_operation(projection, op);
+    fn round_trip(projection: &Procedural3dDocument, operation: &Procedural3dOperation) -> Procedural3dDocument {
+        let forward = apply_operation(projection, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(projection) {
+        for back in operation.backwards(projection) {
             restored = apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, projection, "backwards() must restore the pre-op document");
+        assert_eq!(&restored, projection, "backwards() must restore the pre-operation document");
         forward
     }
 
     #[test]
     fn store_applies_widget_add() {
         let mut store = Procedural3dStore::new(create_document_vcs_envelope(PROCEDURAL_3D_SCHEMA, "procedural3d", empty_procedural3d_projection(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Procedural3dOp::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Procedural3dOperation::SetWidget { index: 3, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } }], description: None }).expect("apply");
         assert!(store.projection().expect("projection").fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
     #[test]
     fn set_widget_round_trips() {
         let before = empty_procedural3d_projection();
-        let after = round_trip(&before, &Procedural3dOp::SetWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } });
+        let after = round_trip(&before, &Procedural3dOperation::SetWidget { index: 9, widget: Widget::InputNote { id: "note-9".into(), text: String::new() } });
         assert!(after.fixture.widgets.iter().any(|w| widget_id(w) == "note-9"));
     }
 
@@ -344,7 +344,7 @@ mod tests {
     fn generation_op_round_trips() {
         let before = empty_procedural3d_projection();
         let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
-        let after = round_trip(&before, &Procedural3dOp::Generation(GenerationOp::Add { generation }));
+        let after = round_trip(&before, &Procedural3dOperation::Generation(GenerationOperation::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }
 
@@ -353,7 +353,7 @@ mod tests {
         let before = FlowFixture::default();
         let mut after = before.clone();
         after.camera = CameraJson { x: 7.0, y: 8.0, zoom: 2.0 };
-        let ops = procedural3d_fixture_ops(&before, &after);
-        assert!(ops.iter().all(|op| !matches!(op, Procedural3dOp::SetCamera { .. })));
+        let operations = procedural3d_fixture_operations(&before, &after);
+        assert!(operations.iter().all(|operation| !matches!(operation, Procedural3dOperation::SetCamera { .. })));
     }
 }

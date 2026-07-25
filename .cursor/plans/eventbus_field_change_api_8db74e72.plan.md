@@ -30,7 +30,7 @@ todos:
    content: Add on*Change for Author, Quality, Tag, Concept, Representation, Family, FileEntity, FolderEntity, LayerEntity, GroupEntity, StatEntity, PropEntity
    status: pending
  - id: tests
-   content: 'Extend embedded describe("compose/js field-only kit") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-op suppression'
+   content: 'Extend embedded describe("compose/js field-only kit") block: subscribeFieldChange unit, Kit/Design/Piece on*Change end-to-end, multi-listener, unsubscribe, no-operation suppression'
    status: pending
  - id: validate
    content: Run tsc --noEmit and vitest run in compose/js until green
@@ -45,7 +45,7 @@ isProject: false
 
 - **Field-level events (this ticket):** `on${Field}Change(cb)` reacts to the value of a GraphQL leaf changing in the WIP graph (e.g. `onNameChange` fires when `kit.name` is now different from before). Same intent as MobX `observe` / Svelte stores.
 - **Operation-level events (out of scope):** `on${Operation}(cb)` would fire whenever a specific mutation succeeds (`onRenamed`, `onPieceMoved`, …). Not added here; the obsolete bus kinds (`kitRenamed`, `changedDescription`) emitted from `wip` ticks are removed because they conflate the two notions.
-- **Transport limitation:** `[compose/js/index.ts](compose/js/index.ts)` lines 137–193 — `WorkerStringTransport.subscribe` returns `Promise<void>` with no per-subscription cancel handle. We therefore keep the single coarse `subscription { wip { id hash } }` (line 252) and diff per listener. The `subscribeFieldChange` API is designed transport-agnostic so a follow-up ticket can swap each listener to its own `subscription { wip { theKit { kit { … field … } } } }` once `op: "unsubscribe"` lands in `[compose/js/kit-store.worker.ts](compose/js/kit-store.worker.ts)`.
+- **Transport limitation:** `[compose/js/index.ts](compose/js/index.ts)` lines 137–193 — `WorkerStringTransport.subscribe` returns `Promise<void>` with no per-subscription cancel handle. We therefore keep the single coarse `subscription { wip { id hash } }` (line 252) and diff per listener. The `subscribeFieldChange` API is designed transport-agnostic so a follow-up ticket can swap each listener to its own `subscription { wip { theKit { kit { … field … } } } }` once `operation: "unsubscribe"` lands in `[compose/js/kit-store.worker.ts](compose/js/kit-store.worker.ts)`.
 
 ## Architecture
 
@@ -198,8 +198,8 @@ Extend that block (no new files) with:
 - `Design#onDescriptionChange` end-to-end mirrors above on a design.
 - `Piece#onScaleChange`, `Piece#onPositionChange`:
   - `move`/`drag` produces exactly one diff per real change.
-  - `eqDeep` correctly suppresses no-op moves.
-- Multi-listener: two subscribers on `Kit#onNameChange` both fire on a real change, neither fires on a no-op rename.
+  - `eqDeep` correctly suppresses no-operation moves.
+- Multi-listener: two subscribers on `Kit#onNameChange` both fire on a real change, neither fires on a no-operation rename.
 
 ## Ticket lifecycle (per AGENTS.md)
 
@@ -211,4 +211,4 @@ Extend that block (no new files) with:
 ## Out of scope (explicit follow-ups)
 
 - Operation-level event API (`onRenamed`, `onPieceMoved`, …) — separate ticket; will reuse `EventBus.subscribeKind` with a typed payload union.
-- Per-field server-side live queries — needs `op: "unsubscribe"` in the worker protocol and an `Unsubscribe` return from `WorkerStringTransport.subscribe`. Once landed, `subscribeFieldChange` can switch from "tick + refetch" to "one live subscription per leaf" without changing the public `on*Change` surface.
+- Per-field server-side live queries — needs `operation: "unsubscribe"` in the worker protocol and an `Unsubscribe` return from `WorkerStringTransport.subscribe`. Once landed, `subscribeFieldChange` can switch from "tick + refetch" to "one live subscription per leaf" without changing the public `on*Change` surface.

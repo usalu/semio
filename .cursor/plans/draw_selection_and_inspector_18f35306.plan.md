@@ -125,18 +125,18 @@ Per-kind specific/position groups (all fields always rendered, editable or read-
 - shape:polygon — specific "Polygon": point count (read-only, as today)
 - text — specific "Text": Content, Size; general "Position": X, Y (**new** — `layer.x`/`layer.y` exist on `DrawTextLayer` but are currently not exposed at all)
 - image — specific "Image": Image Key, Width, Height (all read-only, as today; no local position field on this kind)
-- boolean — specific "Boolean": Op (editable, as today) + Children (**new**, read-only list of child ids/names)
+- boolean — specific "Boolean": Operation (editable, as today) + Children (**new**, read-only list of child ids/names)
 - trace — specific "Trace": Threshold, Simplify (as today) + Source Key (**new**, read-only)
 - path — specific "Path": Segment Count (**new**, read-only — path currently has zero kind-specific fields)
 - group — specific "Group": Children Count (**new**, read-only)
 
-Orientation group (general, all kinds): keep existing editable Position X/Y, Scale X/Y, Rotation inputs, and add 6 new editable Matrix inputs (A–F) computed via `drawTransformToMatrix(layer.transform)`. On matrix-field change, read all 6 current values, override the changed one, decompose via `drawMatrixToTransform`, and apply through a new `patchLayer` field handling (`transformMatrixA`..`transformMatrixF` cases in `draw/play/index.ts` `run("patchLayer", ...)`, `draw/play/index.ts:999-1138` area) that calls `applyDrawEditOp(doc, { op: "setLayerTransform", layerId, transform })`.
+Orientation group (general, all kinds): keep existing editable Position X/Y, Scale X/Y, Rotation inputs, and add 6 new editable Matrix inputs (A–F) computed via `drawTransformToMatrix(layer.transform)`. On matrix-field change, read all 6 current values, override the changed one, decompose via `drawMatrixToTransform`, and apply through a new `patchLayer` field handling (`transformMatrixA`..`transformMatrixF` cases in `draw/play/index.ts` `run("patchLayer", ...)`, `draw/play/index.ts:999-1138` area) that calls `applyDrawEditOp(doc, { operator: "setLayerTransform", layerId, transform })`.
 
 Layer group (most general, new fields added): keep existing Name/Opacity/Blend/Visible, add:
 
 - Id (read-only)
 - Kind (read-only, e.g. `"shape:ellipse"`)
-- Locked (**new** editable toggle — `DrawLayerBase.locked` exists in the model but has no UI or `patchLayer` handling at all today; add a `case "locked":` branch alongside the existing `case "visible":` in `draw/play/index.ts:999-1138`, calling a new `setLayerLocked` edit op already defined in `DrawEditOp` — confirm/wire `applyDrawEditOp` handling for `"setLayerLocked"`)
+- Locked (**new** editable toggle — `DrawLayerBase.locked` exists in the model but has no UI or `patchLayer` handling at all today; add a `case "locked":` branch alongside the existing `case "visible":` in `draw/play/index.ts:999-1138`, calling a new `setLayerLocked` edit operation already defined in `DrawEditOp` — confirm/wire `applyDrawEditOp` handling for `"setLayerLocked"`)
 
 Appearance group unchanged in content (Fill, Fill Alpha, Stroke, Stroke Width), just relabeled as its own section.
 
@@ -148,7 +148,7 @@ Appearance group unchanged in content (Fill, Fill Alpha, Stroke, Stroke Width), 
 
 ## Files touched
 
-- `draw/core/index.ts` — `drawLayerDescendantLeafIds`, `drawMatrixToTransform`, confirm/add `setLayerLocked` edit op handling.
+- `draw/core/index.ts` — `drawLayerDescendantLeafIds`, `drawMatrixToTransform`, confirm/add `setLayerLocked` edit operation handling.
 - `draw/react/index.tsx` — semantic-color hover/selection, descendant-id-based highlighting.
 - `draw/react/package.json` — add `@semio-tech/ui-styling` dependency.
 - `draw/play/index.ts` — toggle-based toolbar tools with dynamic `pressed`, rebuilt inspector grouping, new `locked`/matrix `patchLayer` cases.

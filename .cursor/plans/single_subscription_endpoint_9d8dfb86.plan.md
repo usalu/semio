@@ -1,6 +1,6 @@
 ---
 name: single subscription endpoint
-overview: "Introduce a top-level general-purpose `Event` interface with `involved: [Entity!]!` (replacing per-op `scope: Entity!`), make `Operation` a specialization of `Event`, add `FailedOperation` as a sibling event kind, rewrite all 95 concrete operation types to use `involved`, and collapse Subscription to a single `event: Event!` endpoint."
+overview: "Introduce a top-level general-purpose `Event` interface with `involved: [Entity!]!` (replacing per-operation `scope: Entity!`), make `Operation` a specialization of `Event`, add `FailedOperation` as a sibling event kind, rewrite all 95 concrete operation types to use `involved`, and collapse Subscription to a single `event: Event!` endpoint."
 todos:
  - id: add_event_interface
    content: "Add root-level `interface Event implements Entity` with `involved: [Entity!]!` (+ EventEdge + EventConnection) next to Operation."
@@ -8,7 +8,7 @@ todos:
  - id: rebase_operation
    content: "Re-declare `interface Operation implements Event & Entity`; drop scope, inherit involved, keep modification."
    status: pending
- - id: rewrite_concrete_ops
+ - id: rewrite_concrete_operations
    content: "Bulk rewrite 95 concrete operation types: replace `scope: Entity! # reference // ...` with `involved: [Entity!]! # reference // ...` (preserve trailing comments)."
    status: pending
  - id: add_failed_operation
@@ -52,7 +52,7 @@ graph TD
   Operation --> RenamedTag
   Operation --> MovedPiece
   Operation --> CreatedDesign
-  Operation -.-> Others["... existing concrete ops ..."]
+  Operation -.-> Others["... existing concrete operations ..."]
 ```
 
 `Event` carries only the fields common to every emission: `id`, `hash`, `owner`, `owns`, `involved: [Entity!]!`. `Operation` adds `modification: Modification!`. `FailedOperation` adds `message: String!`. Anything operation-specific lives on `Operation`, never on `Event`.
@@ -178,12 +178,12 @@ No other fields. No `commandSucceeded`, `operationSucceeded`, `operationFailed`,
 - `rg -n "interface Event\b|type Event(Edge|Connection)\b|FailedOperation" compose/graphql/target.schema.graphql` → new definitions only
 - `rg -n "implements Event" compose/graphql/target.schema.graphql` → at least `Operation` and `FailedOperation`
 - `rg -nc "^\s*scope: Entity!" compose/graphql/target.schema.graphql` → 0 matches
-- `rg -nc "^\s*involved: \[Entity!\]!" compose/graphql/target.schema.graphql` → 97 matches (1 Event + 1 Operation + 95 concrete ops + 1 FailedOperation = 98; allow ±1 if `Operation` interface omits the redundant redeclaration). Acceptable: between 96 and 98.
+- `rg -nc "^\s*involved: \[Entity!\]!" compose/graphql/target.schema.graphql` → 97 matches (1 Event + 1 Operation + 95 concrete operations + 1 FailedOperation = 98; allow ±1 if `Operation` interface omits the redundant redeclaration). Acceptable: between 96 and 98.
 
 ## Ticket Update
 
 Append to `.repo/🎫/26/05/10/GRAPHQL-TARGET-MUTATION-CLEANUP/ticket.md`:
 
 - Problem: flat per-event Subscription duplicates the Operation interface; `FailedOperation` cannot implement `Operation` (no `modification`/`after`); events are a general concept, not just operations; a single event commonly involves multiple entities so `scope: Entity!` is the wrong shape.
-- Change: introduce top-level general-purpose `Event` interface (+ edge/connection) with `involved: [Entity!]!`; rewrite all 96 `scope: Entity!` lines (Operation interface + 95 concrete ops) to `involved: [Entity!]!` via `scope_to_involved.cjs`; `Operation` becomes one specialization of `Event`; add `FailedOperation` as a sibling specialization; collapse Subscription to a single `event: Event!`; remove orphaned `Command` / `Error`.
+- Change: introduce top-level general-purpose `Event` interface (+ edge/connection) with `involved: [Entity!]!`; rewrite all 96 `scope: Entity!` lines (Operation interface + 95 concrete operations) to `involved: [Entity!]!` via `scope_to_involved.cjs`; `Operation` becomes one specialization of `Event`; add `FailedOperation` as a sibling specialization; collapse Subscription to a single `event: Event!`; remove orphaned `Command` / `Error`.
 - Verification: parse + build commands above, plus the rg sweeps (zero `scope: Entity!`, ~97 `involved: [Entity!]!`).

@@ -25,7 +25,7 @@ export const nodeGraphCommands = {
 } as const;
 ```
 
-Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for these exact names. The other 5 plugins that mount `node-graph-host` instead implement legacy/custom names (`setSelection`, `selectNode`, `graphPointerDown`) that the host never sends, so **clicking/hovering/dragging nodes on the canvas is silently a no-op** in:
+Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for these exact names. The other 5 plugins that mount `node-graph-host` instead implement legacy/custom names (`setSelection`, `selectNode`, `graphPointerDown`) that the host never sends, so **clicking/hovering/dragging nodes on the canvas is silently a no-operation** in:
 
 - `trinity/jack/plugin/rs/lib.rs:700` (`"setSelection"`), `:864` (`"graphPointerDown"`)
 - `trinity/rewrite/plugin/rs/lib.rs:712` (`"setSelection"`), `:769` (`"graphPointerDown"`)
@@ -54,7 +54,7 @@ Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for the
 - **puzzle2d**: 3-pane LOD architecture (overview/detail/selection) collapsed to one pane; engagement REPL input/candidate-cycling control/fill-slider all stripped (`puzzle2d_engagement`, `puzzle/2d/plugin/rs/lib.rs:440-489` leaves `input`/`control`/`controls` all `None`); suggestion-offset and kind-weight sliders have working handlers but no UI ever calls them.
 - **gis2d**: most of `MapHost`'s capability (render mode, vector style, LOD, feature hit-testing/selection, route editing) never invoked from the plugin.
 - **flow**: ~18 of ~28 old commands ported; missing LOD/proximity/catalogue/extension/generation commands (`setLodMode`, `setProximityDistance`, `setCatalogueSections`, `toggleExtension`, `runExtensionCommand`, etc.).
-- **writer**: `formatDocument` is a no-op; completions/lint run against an empty graph (schema-blind).
+- **writer**: `formatDocument` is a no-operation; completions/lint run against an empty graph (schema-blind).
 - **shooting**: icon window shows a hardcoded placeholder PNG; export produces a generic title-card SVG, not a real render of the model/icon.
 - **layout**: inspector only edits bounds/name/size (missing fill/stroke/story-content/margins/columns/link-path); `exportPng`/`exportPdf`/`exportPackage` are stubbed despite real export code existing in `layout/rs/export.rs`.
 - **reasoning/wires**: edges/relationships render, but node/wire dragging and live force-layout (inherited from puzzle2d) never made it into the port — canvas is static/click-only.
@@ -67,7 +67,7 @@ Only `s/plugin/rs/lib.rs` and `flow/plugin/rs/lib.rs` implement handlers for the
 - **sequence**: footer toolbar (Run/Stop/Reorganize/orientation toggle) unwired.
 - **procedural3d**: gumball drag transforms only write ephemeral runtime state (not persisted to the flow graph); no undo/redo/delete-widget.
 - **presentation**: canvas never draws the actual source image behind crop tiles, only labeled boxes.
-- **note**: arrow-key nudge is a no-op (keybinding builder can't pass `dx`/`dy` args).
+- **note**: arrow-key nudge is a no-operation (keybinding builder can't pass `dx`/`dy` args).
 
 ## Execution waves
 

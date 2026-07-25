@@ -23,7 +23,7 @@ todos:
  - id: phase6-kit
    content: Phase 6 — Kit + ladder + full KitDiff/KitModification body matching golden
    status: pending
- - id: phase7-ops
+ - id: phase7-operations
    content: Phase 7 — ~80 operation!() invocations (quality/tag/concept/port/type/connector/piece/design/kit) — parallel subagents per domain
    status: pending
  - id: phase8-vcs

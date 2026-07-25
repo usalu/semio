@@ -1,6 +1,6 @@
 ---
 name: Fix Window Row/Stack/TOC Regressions
-overview: "Fix three concrete regressions in `print/tex/semio-window.sty` introduced by the recent weighted-window-spacing work: multi-column window rows collapse to near-zero width and overlap, the Stack's per-item height allocation silently no-ops, and the table of contents renders with zero entries."
+overview: "Fix three concrete regressions in `print/tex/semio-window.sty` introduced by the recent weighted-window-spacing work: multi-column window rows collapse to near-zero width and overlap, the Stack's per-item height allocation silently no-operations, and the table of contents renders with zero entries."
 todos:
  - id: fix-row-width
    content: Fix group-scoping bug in semio_window_row_inner_width:n and semio_window_row_assign_width_set:nn so column widths persist

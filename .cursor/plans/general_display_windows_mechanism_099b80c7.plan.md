@@ -23,7 +23,7 @@ isProject: false
 ## Problems
 
 - CAD play registers 4 window kinds with no `templates`, so the Display "Windows" tab renders empty sections ("window tabs with no windows").
-- Puzzle 2D templates use wrong arg names/tokens (`{ paneId, mode: "auto"|"manual" }` vs handler `{ pane, value: "automatic"|<DrawLodKind> }`), and bodies key state by pane (not instance), so a drop is a silent no-op and duplicates collide.
+- Puzzle 2D templates use wrong arg names/tokens (`{ paneId, mode: "auto"|"manual" }` vs handler `{ pane, value: "automatic"|<DrawLodKind> }`), and bodies key state by pane (not instance), so a drop is a silent no-operation and duplicates collide.
 - Puzzle 3D works because its body scopes camera by `useShellWindowInstance().instanceId` and its template command takes `instanceId`. We make that the general rule.
 
 ## Part 1 - General mechanism: draggable kinds + optional templateId

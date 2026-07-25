@@ -23,7 +23,7 @@
               o = 38,
               r = 39,
               a = 40,
-              l = t.noop;
+              l = t.no_operation;
             function h(e, i) {
               var s = this;
               ((s.element = e),
@@ -158,7 +158,7 @@
                     s = e.el.val(),
                     n = e.getQuery(s);
                   e.blurTimeoutId = setTimeout(function () {
-                    (e.hide(), e.selection && e.currentValue !== n && (i.onInvalidateSelection || t.noop).call(e.element));
+                    (e.hide(), e.selection && e.currentValue !== n && (i.onInvalidateSelection || t.no_operation).call(e.element));
                   }, 200);
                 },
                 abortAjax: function () {
@@ -279,7 +279,7 @@
                       i = e.options,
                       s = e.el.val(),
                       n = e.getQuery(s);
-                    (e.selection && e.currentValue !== n && ((e.selection = null), (i.onInvalidateSelection || t.noop).call(e.element)),
+                    (e.selection && e.currentValue !== n && ((e.selection = null), (i.onInvalidateSelection || t.no_operation).call(e.element)),
                       clearTimeout(e.onChangeTimeout),
                       (e.currentValue = s),
                       (e.selectedIndex = -1),
@@ -423,7 +423,7 @@
                 signalHint: function (e) {
                   var i = "",
                     s = this;
-                  (e && (i = s.currentValue + e.value.substr(s.currentValue.length)), s.hintValue !== i && ((s.hintValue = i), (s.hint = e), (this.options.onHint || t.noop)(i)));
+                  (e && (i = s.currentValue + e.value.substr(s.currentValue.length)), s.hintValue !== i && ((s.hintValue = i), (s.hint = e), (this.options.onHint || t.no_operation)(i)));
                 },
                 verifySuggestionsFormat: function (e) {
                   return e.length && "string" == typeof e[0]

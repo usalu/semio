@@ -10979,7 +10979,7 @@ mod tests {
     }
 
     #[test]
-    fn recomputing_with_nothing_dirty_is_a_no_op() {
+    fn recomputing_with_nothing_dirty_is_a_no_operation() {
         let mut tree = UiTree::new();
         tree.apply_tree(&stack("vertical", vec![text("hello")]));
         let root = tree.root.unwrap();
@@ -12788,7 +12788,7 @@ fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme:
 }
 
 /// 🧱 `Stack`'s own paint (beyond `paint_node`'s separate `paint_stack_frame` call for its
-/// `activate`/`selected` affordance) is a no-op — it's pure layout; this just recurses into its
+/// `activate`/`selected` affordance) is a no-operation — it's pure layout; this just recurses into its
 /// retained children, each offset by this node's absolute top-left. Also reused by `Field`/`Section`,
 /// whose single/`children` nested `UiNode`s reconcile already expands into retained children (see
 /// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
@@ -13362,7 +13362,7 @@ mod tests {
         assert!(!after_first.contains(NodeFlags::DIRTY_LAYOUT), "paint must not touch DIRTY_LAYOUT, that's flex's job");
         assert!(!after_first.contains(NodeFlags::SUBTREE_DIRTY), "flex::compute already cleared SUBTREE_DIRTY before paint ran");
 
-        // Second call must be a no-op w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
+        // Second call must be a no-operation w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
         // (calling twice shouldn't set or double-clear something it shouldn't).
         paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
         let after_second = tree.node(root).unwrap().flags;
@@ -14065,7 +14065,7 @@ impl FocusState {
     }
 
     /// 🎯 Sets/clears focus, flipping `NodeFlags::FOCUSED` on the old and new targets and marking
-    /// both `DIRTY_PAINT` (a focus ring likely needs repainting) via `UiTree::mark_dirty`. A no-op
+    /// both `DIRTY_PAINT` (a focus ring likely needs repainting) via `UiTree::mark_dirty`. A no-operation
     /// (no flag churn) when `node` already matches the current focus. Also owns `EditState`'s
     /// lifecycle: blurring a node clears its `WidgetState::edit` (the buffer relinquishes control,
     /// so the node's declarative `value` governs again on the next `apply_tree`); focusing a
@@ -14805,7 +14805,7 @@ impl EventRouter {
     }
 
     /// ⌨️ Caret motion (with `Shift` extending the selection), `Home`/`End`, `Backspace`/`Delete`,
-    /// and clipboard shortcuts for the focused node's `EditState`. A no-op if nothing is focused or
+    /// and clipboard shortcuts for the focused node's `EditState`. A no-operation if nothing is focused or
     /// the focused node has no `EditState` (isn't a `UiNode::Input`, or hasn't been focused since
     /// `FocusState::set_focus` seeded one).
     fn route_edit_key(&mut self, tree: &mut UiTree, key: &str, modifiers: EventModifiers) -> Vec<UiCommand> {
@@ -16343,7 +16343,7 @@ impl Ui {
     }
 
     /// 🖼️ The dirty-gated per-tick pipeline for `window_id`: `flex::LayoutEngine::compute` (itself a
-    /// no-op unless the root carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY`) followed — only if that or the
+    /// no-operation unless the root carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY`) followed — only if that or the
     /// root's own `DIRTY_PAINT` fired — by `paint::paint_tree`, then handing every
     /// `scene_slots::collect_scene_slots` leaf to the registered `SceneHost`. Returns `None` if
     /// `window_id` has no tree yet (`apply_tree` never called). A dirty window always repaints its
@@ -16412,6 +16412,38 @@ impl Default for Ui {
     }
 }
 //#endregion 🔖Ui
+
+//#region 🔬Introspection
+/// 🔬 Read-only accessors for the wgpu↔React parity structural-dump harness (see
+/// `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY` and `framework/renderer/wgpu`'s own
+/// `🔬Introspection` region, which is the actual JSON-building caller): exposes just enough of
+/// `Ui`'s private `windows`/`theme` state for a caller to walk a window's retained `UiTree` (via
+/// `UiTree::node`/`UiTree::children`, both already public) and know which theme it last painted
+/// with. Purely additive and read-only — no new engine behavior, nothing here is called from
+/// `apply_tree`/`frame`/`dispatch_event`'s own pipeline.
+impl Ui {
+    /// 🪟 Every window id this façade currently tracks retained state for (`HashMap` iteration
+    /// order — not insertion order; a caller needing a deterministic pick must sort/filter itself).
+    pub fn window_ids(&self) -> impl Iterator<Item = &str> {
+        self.windows.keys().map(String::as_str)
+    }
+
+    /// 📐 `window_id`'s last `set_viewport`/`frame` viewport, if that window has any retained state.
+    pub fn viewport(&self, window_id: &str) -> Option<(f32, f32)> {
+        self.windows.get(window_id).map(|window| window.viewport)
+    }
+
+    /// 🌲 Read-only access to `window_id`'s retained tree (root + `Node` arena) for a caller to walk.
+    pub fn tree(&self, window_id: &str) -> Option<&UiTree> {
+        self.windows.get(window_id).map(|window| &window.tree)
+    }
+
+    /// 🎨 The theme this façade last painted every window with (`Theme` is `Copy`).
+    pub fn theme(&self) -> Theme {
+        self.theme
+    }
+}
+//#endregion 🔬Introspection
 
 #[cfg(test)]
 mod tests {
@@ -16971,6 +17003,27 @@ mod tests {
         assert!(instances > 0, "ExternalSlot should paint its placeholder chrome plus its body_key label");
     }
     //#endregion 🔖GoldenHarness
+
+    //#region 🔬IntrospectionTests
+    #[test]
+    fn window_ids_viewport_tree_and_theme_expose_private_window_state() {
+        let mut ui = Ui::new();
+        assert_eq!(ui.window_ids().count(), 0);
+        assert_eq!(ui.viewport("win"), None);
+        assert!(ui.tree("win").is_none());
+
+        let node = UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() });
+        ui.apply_tree("win", &node);
+        ui.set_viewport("win", 800.0, 600.0);
+
+        let ids: Vec<&str> = ui.window_ids().collect();
+        assert_eq!(ids, vec!["win"]);
+        assert_eq!(ui.viewport("win"), Some((800.0, 600.0)));
+        let tree = ui.tree("win").expect("tree exists after apply_tree");
+        assert!(tree.root.is_some());
+        assert_eq!(ui.theme().text.a, Theme::default().text.a);
+    }
+    //#endregion 🔬IntrospectionTests
 }
 // #endregion engine
 }

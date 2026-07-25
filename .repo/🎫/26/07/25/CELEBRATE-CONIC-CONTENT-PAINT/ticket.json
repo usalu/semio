@@ -1,0 +1,14 @@
+{
+  "title": "Celebrate Conic Content Paint",
+  "emoji": "🎉",
+  "status": "closed",
+  "description": "When elements celebrate (data-celebrated=true), paint emphasized chrome (label text, icons, drag handles) with the same spinning three-brand conic gradient as the celebrate border ring—not solid foreground gray. Scope to leaf controls, not window/dock shell descendants.",
+  "summary": "Celebrate content paint now shares the spinning three-brand conic with the border ring. Refactored celebrate CSS: --celebrate-conic on [data-celebrated=true] host, spin on host and burst on ::after, inheritable --celebrate-border-angle, silhouette fill uses var(--celebrate-conic). Added CelebrateContent region painting leaf control chrome (buttons, toggles, tabs, tree rows, introduction labels, pane chrome): text via background-clip, stroke icons and drag handles via destination-in blend; celebrated drag handles override hover-scope emphasized color. Window/dock shells excluded. Extended celebrateElements vitest for CSS contract.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2322"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪a5322cbfe07644ccbbcc701394780858"
+  ]
+}

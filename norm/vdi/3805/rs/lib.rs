@@ -2,12 +2,12 @@
 
 use norm_core::{
     AnnexChoice, CheckReport, CheckResult, CheckStatus, ClauseId, NormError, NormFamily, NormFamilyId, NormHost, Quantity,
-    QuantityKind, SetDocumentOp,
+    QuantityKind, SetDocumentOperation,
 };
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, BTreeSet, HashMap};
 
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Vdi3805Family>;
 
 const FAMILY: &str = "VDI 3805";
@@ -2612,7 +2612,7 @@ pub struct Vdi3805Family;
 
 impl NormFamily for Vdi3805Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::Vdi3805

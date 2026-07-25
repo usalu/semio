@@ -835,7 +835,7 @@ export function getDiscordChannel(eventKind: string): string {
   if (eventKind.startsWith("ticket.")) return "#tickets";
   if (eventKind.includes("warning") || eventKind.includes("breach")) return "#quality";
   if (eventKind.startsWith("goal.")) return "#goals";
-  if (eventKind.startsWith("checkpoint")) return "#ops";
+  if (eventKind.startsWith("checkpoint")) return "#operations";
   return "#activity";
 }
 // #endregion 🔷Discord

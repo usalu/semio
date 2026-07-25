@@ -19,10 +19,10 @@ use semio_framework_core::DwgDrawing;
 use shooting::{
     default_camera_position, default_fov, empty_shooting_fixture, shooting_asset_scale,
     shooting_resolve_shot_camera, ShootingAsset, ShootingAssetPatch, ShootingCamera, ShootingFixture,
-    ShootingOp, ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch,
+    ShootingOperation, ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch,
     SHOOTING_FIXTURE_SCHEMA,
 };
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -957,7 +957,7 @@ struct ShootingPlayApp {
 
 impl DocumentApp for ShootingPlayApp {
     type Projection = ShootingFixture;
-    type Op = ShootingOp;
+    type Operation = ShootingOperation;
 
     fn app_id(&self) -> &str {
         SHOOTING_PLAY_APP_ID
@@ -977,7 +977,7 @@ impl DocumentApp for ShootingPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, ShootingFixture>,
         _view_state: &ViewState,
-    ) -> ActionEmit<ShootingOp> {
+    ) -> ActionEmit<ShootingOperation> {
         let fixture = doc.projection;
         match action {
             "setFixtureJson" => {
@@ -992,7 +992,7 @@ impl DocumentApp for ShootingPlayApp {
                     });
                 if let Some(json_text) = json_text {
                     if let Ok(fixture) = serde_json::from_str::<ShootingFixture>(&json_text) {
-                        return ActionEmit::ops(vec![ShootingOp::SetFixture { fixture }]);
+                        return ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture }]);
                     }
                 }
                 ActionEmit::default()
@@ -1011,7 +1011,7 @@ impl DocumentApp for ShootingPlayApp {
                     None
                 };
                 match next {
-                    Some(fixture) => ActionEmit::ops(vec![ShootingOp::SetFixture { fixture }]),
+                    Some(fixture) => ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture }]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1033,7 +1033,7 @@ impl DocumentApp for ShootingPlayApp {
                     .and_then(|value| value.as_str())
                     .filter(|id| !id.is_empty());
                 match shot_id {
-                    Some(id) => ActionEmit::ops(vec![ShootingOp::SetActiveShot { shot_id: Some(id.into()) }]),
+                    Some(id) => ActionEmit::operations(vec![ShootingOperation::SetActiveShot { shot_id: Some(id.into()) }]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1046,7 +1046,7 @@ impl DocumentApp for ShootingPlayApp {
                 match asset_id {
                     Some(id) => {
                         self.runtime.fit_revision += 1;
-                        ActionEmit::ops(vec![ShootingOp::SetActiveAsset { asset_id: Some(id.into()) }])
+                        ActionEmit::operations(vec![ShootingOperation::SetActiveAsset { asset_id: Some(id.into()) }])
                     }
                     None => ActionEmit::default(),
                 }
@@ -1055,7 +1055,7 @@ impl DocumentApp for ShootingPlayApp {
                 if let Some(camera_value) = args.and_then(|value| value.get("camera")) {
                     if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
                         return ActionEmit {
-                            ops: vec![ShootingOp::SetCamera { camera }],
+                            operations: vec![ShootingOperation::SetCamera { camera }],
                             coalesce_key: Some("camera".into()),
                             ..Default::default()
                         };
@@ -1067,7 +1067,7 @@ impl DocumentApp for ShootingPlayApp {
                 let shot_id = args.and_then(|value| value.get("shotId")).and_then(|value| value.as_str()).map(str::to_string);
                 if let (Some(shot_id), Some(camera_value)) = (shot_id, args.and_then(|value| value.get("camera"))) {
                     if let Ok(camera) = serde_json::from_value::<ShootingCamera>(camera_value.clone()) {
-                        return ActionEmit::ops(vec![ShootingOp::SetShotCamera { shot_id, camera }]);
+                        return ActionEmit::operations(vec![ShootingOperation::SetShotCamera { shot_id, camera }]);
                     }
                 }
                 ActionEmit::default()
@@ -1076,7 +1076,7 @@ impl DocumentApp for ShootingPlayApp {
                 let draft = self.runtime.camera_draft_label.trim().to_string();
                 let label = if draft.is_empty() { format!("Camera {}", fixture.saved_cameras.len() + 1) } else { draft };
                 self.runtime.camera_draft_label.clear();
-                ActionEmit::ops(vec![ShootingOp::SavedCameras(CollectionOp::Add {
+                ActionEmit::operations(vec![ShootingOperation::SavedCameras(CollectionOperation::Add {
                     index: fixture.saved_cameras.len(),
                     item: ShootingSavedCamera { id: next_shooting_id("camera"), label, camera: fixture.camera.clone() },
                 })])
@@ -1084,7 +1084,7 @@ impl DocumentApp for ShootingPlayApp {
             "loadSavedCamera" => {
                 let camera_id = args.and_then(|value| value.get("id")).and_then(|value| value.as_str()).unwrap_or("");
                 match fixture.saved_cameras.iter().find(|entry| entry.id == camera_id) {
-                    Some(saved) => ActionEmit::ops(vec![ShootingOp::SetCamera { camera: saved.camera.clone() }]),
+                    Some(saved) => ActionEmit::operations(vec![ShootingOperation::SetCamera { camera: saved.camera.clone() }]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1120,7 +1120,7 @@ impl DocumentApp for ShootingPlayApp {
                         "setAmbientIntensity" => ShootingScenePatch { ambient_intensity: Some(value), ..Default::default() },
                         _ => ShootingScenePatch { material_roughness: Some(value), ..Default::default() },
                     };
-                    return ActionEmit::ops(vec![ShootingOp::PatchScene { patch }]);
+                    return ActionEmit::operations(vec![ShootingOperation::PatchScene { patch }]);
                 }
                 ActionEmit::default()
             }
@@ -1129,19 +1129,19 @@ impl DocumentApp for ShootingPlayApp {
                     .and_then(|value| value.get("value").or_else(|| value.get("pressed")))
                     .and_then(|value| value.as_bool())
                     .unwrap_or(!fixture.scene.shadow.enabled);
-                ActionEmit::ops(vec![ShootingOp::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(next), ..Default::default() } }])
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { shadow_enabled: Some(next), ..Default::default() } }])
             }
             "toggleSun" => {
                 let next = args
                     .and_then(|value| value.get("value").or_else(|| value.get("pressed")))
                     .and_then(|value| value.as_bool())
                     .unwrap_or(!fixture.scene.sun.enabled);
-                ActionEmit::ops(vec![ShootingOp::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(next), ..Default::default() } }])
+                ActionEmit::operations(vec![ShootingOperation::PatchScene { patch: ShootingScenePatch { sun_enabled: Some(next), ..Default::default() } }])
             }
             "setActiveShotLabel" => {
                 if let Some(label) = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()) {
                     if let Some(shot_id) = active_shot(fixture).map(|shot| shot.id.clone()) {
-                        return ActionEmit::ops(vec![ShootingOp::Shots(CollectionOp::Patch {
+                        return ActionEmit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch {
                             id: shot_id,
                             patch: ShootingShotPatch { label: Some(label.into()), ..Default::default() },
                         })]);
@@ -1153,12 +1153,12 @@ impl DocumentApp for ShootingPlayApp {
                 let field = if action == "setActiveShotFormat" { "format" } else { "shape" };
                 if let Some(value) = args.and_then(|value| value.get("value")) {
                     if let (Some(shot_id), Some(patch)) = (active_shot(fixture).map(|shot| shot.id.clone()), shot_patch_for_field(field, value)) {
-                        return ActionEmit::ops(vec![ShootingOp::Shots(CollectionOp::Patch { id: shot_id, patch })]);
+                        return ActionEmit::operations(vec![ShootingOperation::Shots(CollectionOperation::Patch { id: shot_id, patch })]);
                     }
                 }
                 ActionEmit::default()
             }
-            "resetFixture" => ActionEmit::ops(vec![ShootingOp::SetFixture { fixture: default_fixture() }]),
+            "resetFixture" => ActionEmit::operations(vec![ShootingOperation::SetFixture { fixture: default_fixture() }]),
             "saveDownload" => match serde_json::to_string_pretty(fixture) {
                 Ok(fixture_json) => ActionEmit::effect(HostEffect::DownloadMediaExport {
                     filename: "shooting.fixture.json".into(),
@@ -1201,9 +1201,9 @@ impl DocumentApp for ShootingPlayApp {
                     self.runtime.selected_asset_ids = vec![id.clone()];
                     self.runtime.selected_shot_ids.clear();
                     self.runtime.fit_revision += 1;
-                    return ActionEmit::ops(vec![
-                        ShootingOp::Assets(CollectionOp::Add { index: fixture.assets.len(), item: asset }),
-                        ShootingOp::SetActiveAsset { asset_id: Some(id) },
+                    return ActionEmit::operations(vec![
+                        ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }),
+                        ShootingOperation::SetActiveAsset { asset_id: Some(id) },
                     ]);
                 }
                 ActionEmit::default()
@@ -1236,7 +1236,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::amend(vec![ShootingOp::TranslateAssets { asset_ids: ids, dx, dy, dz }], "gumball-translate")
+                    ActionEmit::amend(vec![ShootingOperation::TranslateAssets { asset_ids: ids, dx, dy, dz }], "gumball-translate")
                 }
             }
             "rotateSelection" => {
@@ -1248,7 +1248,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::amend(vec![ShootingOp::RotateAssets { asset_ids: ids, ax, ay, az, angle }], "gumball-rotate")
+                    ActionEmit::amend(vec![ShootingOperation::RotateAssets { asset_ids: ids, ax, ay, az, angle }], "gumball-rotate")
                 }
             }
             "scaleSelection" => {
@@ -1259,7 +1259,7 @@ impl DocumentApp for ShootingPlayApp {
                 if ids.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::amend(vec![ShootingOp::ScaleAssets { asset_ids: ids, sx, sy, sz }], "gumball-scale")
+                    ActionEmit::amend(vec![ShootingOperation::ScaleAssets { asset_ids: ids, sx, sy, sz }], "gumball-scale")
                 }
             }
             "patchShot" | "patchShots" => {
@@ -1276,10 +1276,10 @@ impl DocumentApp for ShootingPlayApp {
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 match shot_patch_for_field(field, &value) {
-                    Some(patch) if !shot_ids.is_empty() => ActionEmit::ops(
+                    Some(patch) if !shot_ids.is_empty() => ActionEmit::operations(
                         shot_ids
                             .into_iter()
-                            .map(|id| ShootingOp::Shots(CollectionOp::Patch { id, patch: patch.clone() }))
+                            .map(|id| ShootingOperation::Shots(CollectionOperation::Patch { id, patch: patch.clone() }))
                             .collect(),
                     ),
                     _ => ActionEmit::default(),
@@ -1299,10 +1299,10 @@ impl DocumentApp for ShootingPlayApp {
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
                 match asset_patch_for_field(field, &value) {
-                    Some(patch) if !asset_ids.is_empty() => ActionEmit::ops(
+                    Some(patch) if !asset_ids.is_empty() => ActionEmit::operations(
                         asset_ids
                             .into_iter()
-                            .map(|id| ShootingOp::Assets(CollectionOp::Patch { id, patch: patch.clone() }))
+                            .map(|id| ShootingOperation::Assets(CollectionOperation::Patch { id, patch: patch.clone() }))
                             .collect(),
                     ),
                     _ => ActionEmit::default(),
@@ -1324,9 +1324,9 @@ impl DocumentApp for ShootingPlayApp {
                 };
                 self.runtime.selected_shot_ids = vec![id.clone()];
                 self.runtime.selected_asset_ids.clear();
-                ActionEmit::ops(vec![
-                    ShootingOp::Shots(CollectionOp::Add { index: fixture.shots.len(), item: shot }),
-                    ShootingOp::SetActiveShot { shot_id: Some(id) },
+                ActionEmit::operations(vec![
+                    ShootingOperation::Shots(CollectionOperation::Add { index: fixture.shots.len(), item: shot }),
+                    ShootingOperation::SetActiveShot { shot_id: Some(id) },
                 ])
             }
             "addAsset" => {
@@ -1343,9 +1343,9 @@ impl DocumentApp for ShootingPlayApp {
                 };
                 self.runtime.selected_asset_ids = vec![id.clone()];
                 self.runtime.selected_shot_ids.clear();
-                ActionEmit::ops(vec![
-                    ShootingOp::Assets(CollectionOp::Add { index: fixture.assets.len(), item: asset }),
-                    ShootingOp::SetActiveAsset { asset_id: Some(id) },
+                ActionEmit::operations(vec![
+                    ShootingOperation::Assets(CollectionOperation::Add { index: fixture.assets.len(), item: asset }),
+                    ShootingOperation::SetActiveAsset { asset_id: Some(id) },
                 ])
             }
             "worldSelect" => {
@@ -1722,7 +1722,7 @@ mod tests {
     #[test]
     fn world_pick_and_hover_drive_selection_protocol() {
         let mut app = new_app();
-        // worldPick is a View action: it drives runtime selection only, emitting no document ops.
+        // worldPick is a View action: it drives runtime selection only, emitting no document operations.
         let result = app.handle_action("worldPick", Some(&json!({ "granularity": "mesh", "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
         assert!(result.operations.is_empty(), "worldPick mutates only ephemeral selection, never the document");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState::default()).expect("render");
@@ -1737,7 +1737,7 @@ mod tests {
     }
 
     #[test]
-    fn export_import_and_download_ops() {
+    fn export_import_and_download_operations() {
         let mut app = new_app();
         let result = app.handle_action("exportActiveShot", None, &ViewState::default(), &testkit::meta("local")).expect("export active");
         assert_eq!(result.requested_effects.len(), 1);
@@ -1995,7 +1995,7 @@ mod tests {
     }
 
     /// 🧪 The definitional regression proof: two independent instances start from the same fixture,
-    /// apply DISJOINT edits (A renames a shot, B translates an asset), and exchanging ops over a
+    /// apply DISJOINT edits (A renames a shot, B translates an asset), and exchanging operations over a
     /// `MemoryBackbone` converges both sides to contain BOTH edits — impossible with whole-document
     /// `setDocument` snapshots, which would have one side's write clobber the other's.
     #[test]
@@ -2027,7 +2027,7 @@ mod tests {
         // Switching utilities is the framework-injected View action: it clears in-progress scratch and
         // must produce no document operations (zero history entries, nothing to sync).
         let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "rotate" })), &ViewState::default(), &testkit::meta("local")).expect("switch utility");
-        assert!(result.operations.is_empty(), "utility switching never emits document ops");
+        assert!(result.operations.is_empty(), "utility switching never emits document operations");
         let node = app.render(SHOOTING_PLAY_BODY_SCENE, None, &ViewState { active_utility_id: Some("rotate".into()), ..ViewState::default() }).expect("render");
         let selection: Value = serde_json::from_str(serde_json::to_value(&node).unwrap()["world3d"]["selectionJson"].as_str().unwrap()).unwrap();
         assert_eq!(selection["transformMode"], json!("rotate"), "the gumball follows the host-owned active utility");
@@ -2046,7 +2046,7 @@ mod tests {
             )
             .expect("drag tick");
         }
-        // A whole gumball drag (three ticks, same coalesce key) is ONE undo step, not one-op-per-tick.
+        // A whole gumball drag (three ticks, same coalesce key) is ONE undo step, not one-operation-per-tick.
         app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
         let restored = app.projection().expect("materialize projection");
         let original = default_fixture().assets.iter().find(|asset| asset.id == asset_id).map(|asset| asset.origin).expect("original origin");
@@ -2054,14 +2054,14 @@ mod tests {
     }
 
     #[test]
-    fn world_pick_requires_no_args_and_emits_no_ops() {
+    fn world_pick_requires_no_args_and_emits_no_operations() {
         let definition = create_shooting_app().definition;
         let world_pick = definition.actions.iter().find(|action| action.id == "worldPick").expect("worldPick declared");
         assert!(matches!(world_pick.kind, ActionKind::View), "worldPick is a View action");
         assert!(world_pick.args.is_empty(), "worldPick carries no required args");
         let mut app = new_app_with_registry();
         let result = app.handle_action("worldPick", Some(&json!({ "id": 0, "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("pick");
-        assert!(result.operations.is_empty(), "worldPick (View) emits no ops even under registry enforcement");
+        assert!(result.operations.is_empty(), "worldPick (View) emits no operations even under registry enforcement");
     }
 
     #[test]

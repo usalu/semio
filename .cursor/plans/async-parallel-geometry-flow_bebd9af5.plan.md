@@ -1,6 +1,6 @@
 ---
 name: async-parallel-geometry-flow
-overview: Make the Rust BREP kernel fully async, evaluate the neural DAG in parallel, and run flow's heavy compute (e.g. boolean ops) on WASM shared-memory threads (wasm-bindgen-rayon) sized to CPU cores, so the UI is never blocked. Adds a configurable worker-count setting.
+overview: Make the Rust BREP kernel fully async, evaluate the neural DAG in parallel, and run flow's heavy compute (e.g. boolean operations) on WASM shared-memory threads (wasm-bindgen-rayon) sized to CPU cores, so the UI is never blocked. Adds a configurable worker-count setting.
 todos:
  - id: build-threads
    content: Add nightly rust-toolchain.toml; extend runWasmPackWebBuild with threaded build flags (-Z build-std, +atomics) and snippets in pkg files
@@ -9,7 +9,7 @@ todos:
    content: Add COOP/COEP (credentialless) cross-origin-isolation headers to dev/preview/build vite configs; runtime crossOriginIsolated fallback
    status: completed
  - id: brep-async
-   content: Convert BrepKernel trait + BrepkitKernel impl to async (async-trait); rayon-backed heavy ops; async TS bridge
+   content: Convert BrepKernel trait + BrepkitKernel impl to async (async-trait); rayon-backed heavy operations; async TS bridge
    status: completed
  - id: neural-parallel
    content: Parallelize neural Evaluator via topo-level rayon batching; make dispatch hook Sync; add parallel feature
@@ -21,7 +21,7 @@ todos:
    content: Run FlowSession in dedicated worker (async evaluate + debounce); add configurable worker-count setting defaulting to hardwareConcurrency
    status: completed
  - id: validate
-   content: Test crates serially, build threaded wasm, verify cross-origin isolation and responsive UI under heavy boolean ops
+   content: Test crates serially, build threaded wasm, verify cross-origin isolation and responsive UI under heavy boolean operations
    status: completed
 isProject: false
 ---

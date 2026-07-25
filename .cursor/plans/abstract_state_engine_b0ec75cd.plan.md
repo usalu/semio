@@ -60,7 +60,7 @@ In a new `🎭StateEngine` region, just before `🏭Factory`:
 - Export `StateEngineSendResult = { ok: boolean; transient?: boolean }`.
 - Export interface `StateEngine` mirroring the public surface of the current inline runner: `getState(): string`, `getContext(): Record<string, unknown>`, `reset(): void`, `restore(state, context): void`, `send(event: FactoryEvent, kernel?: KernelAdapter): Promise<StateEngineSendResult>`.
 - Export interface `StateEngineProvider { create(spec: FactorySpec): StateEngine; readonly id: string }`.
-- Export the existing private helpers `applyActionAsync`, `expandMachineTransitions`, `evalGuard` (already exported), and a new `applyTransition(spec, state, context, event, kernel?)` so external backends share guard/action semantics without duplicating box-geometry ops.
+- Export the existing private helpers `applyActionAsync`, `expandMachineTransitions`, `evalGuard` (already exported), and a new `applyTransition(spec, state, context, event, kernel?)` so external backends share guard/action semantics without duplicating box-geometry operations.
 - Rename the existing class `StatechartRuntime` → keep name but make it `implements StateEngine`, and ship `pureTsStateEngineProvider: StateEngineProvider` (id `"pure-ts"`) that returns `new StatechartRuntime(spec)`. This preserves zero-dep default behaviour.
 
 ## 2. Make `FactoryRuntime` engine-agnostic

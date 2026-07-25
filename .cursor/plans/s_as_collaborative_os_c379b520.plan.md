@@ -18,10 +18,10 @@ todos:
    content: Upgrade OsVcs to document-VCS model (checkpoint parents, authors, checkout); wire History window to HistoryTable branch lanes
    status: completed
  - id: os-hub
-   content: "Build framework/product/os/hub Rust service: VFS nodes, document snapshots, op log, sessions, WebSocket op/presence streaming"
+   content: "Build framework/product/os/hub Rust service: VFS nodes, document snapshots, operation log, sessions, WebSocket operation/presence streaming"
    status: completed
  - id: backbone-remote
-   content: Implement RemoteOsBackbone (REST push, WS pull, conflict surfacing) and BroadcastChannel multi-tab sync; OsStore remote-change path with pending-op queue
+   content: Implement RemoteOsBackbone (REST push, WS pull, conflict surfacing) and BroadcastChannel multi-tab sync; OsStore remote-change path with pending-operation queue
    status: completed
  - id: files-app-presence
    content: OsStorageVirtualFileSystemController + s.system files app; presence store and peer indicators in media graph
@@ -58,9 +58,9 @@ flowchart LR
     BC["BroadcastChannel multi-tab"]
   end
   subgraph hub [os-hub service]
-    Rest["REST: nodes + documents + ops"]
-    Ws["WebSocket: op + presence stream"]
-    Pg["Postgres: vfs nodes, op log, sessions"]
+    Rest["REST: nodes + documents + operations"]
+    Ws["WebSocket: operation + presence stream"]
+    Pg["Postgres: vfs nodes, operation log, sessions"]
   end
   Shell --> Store --> Media
   Store --> BB
@@ -90,19 +90,19 @@ flowchart LR
 
 - Upgrade `OsVcs`/`OsStore` in [framework/product/os/core/index.ts](framework/product/os/core/index.ts) to the document-VCS model from [vcs/core/internal.ts](vcs/core/internal.ts): checkpoints gain `parentId` + `authors`, add `checkoutCheckpoint` command, keep alternatives. Reuse `DocumentVcsStore` semantics rather than duplicating (os-core already depends on vcs-core).
 - Wire the OS History window to `buildHistoryColumns` + vcs/react `HistoryTable` (branch lanes, checkout, alternatives) instead of the current slider stub in `SPlayController`.
-- Per-app VCS (envelope in `sourceDocument.vcsJson`) stays; studio checkpoints snapshot both structural ops and app-op change ids (already the case via `applyAppOperation`).
+- Per-app VCS (envelope in `sourceDocument.vcsJson`) stays; studio checkpoints snapshot both structural operations and app-operation change ids (already the case via `applyAppOperation`).
 
 ## Phase 4 — Generic hub extracted as VFS storage layer
 
 - New Rust service `framework/product/os/hub/` (axum + sqlx-postgres, modeled on [compose/server/hub/bin.rs](compose/server/hub/bin.rs)): extract the generic shell — sessions, owner/share tokens, command envelope + idempotency, actor directory, WebSocket broadcast — with a **document/VFS domain** instead of the kit domain:
-  - Tables: `node` (folder/file tree: id, parent_id, name, kind), `document` (node_id, schema, snapshot json, version), `document_op` (op log of `OsChange` json, version, author), `session`, `share_token`.
-  - REST: node CRUD (`/nodes`), document read (`/documents/{id}` snapshot + version), op append (`/documents/{id}/ops` with optimistic version check), history read.
-  - WS: `/documents/{id}/ws` streaming accepted ops + presence events to other clients.
+  - Tables: `node` (folder/file tree: id, parent_id, name, kind), `document` (node_id, schema, snapshot json, version), `document_operation` (operation log of `OsChange` json, version, author), `session`, `share_token`.
+  - REST: node CRUD (`/nodes`), document read (`/documents/{id}` snapshot + version), operation append (`/documents/{id}/operations` with optimistic version check), history read.
+  - WS: `/documents/{id}/ws` streaming accepted operations + presence events to other clients.
   - `script.ts` + `project.json` (setup/build/test), port constant `OS_HUB_PORT` in [repo/lib/js/index.ts](repo/lib/js/index.ts). compose-hub stays untouched for now.
 - TS storage layer in os-core: replace the three backbone classes with one `OsBackbone` interface + implementations:
-  - `DevJsonBackbone` (localStorage, kept) gains a `BroadcastChannel` port so multiple tabs on the same document converge (op re-dispatch on message).
-  - `RemoteOsBackbone` (implements the stub): attach `remote://host/path`, initial load = snapshot + version, `sync` = push local `OsChange` ops with version, subscribe WS → dispatch inbound ops into `OsStore` as remote changes (new internal `applyRemoteChange` that bypasses the undo stack). Version-conflict rejections surface as `OsConflict` in the shell (toast/banner + rebase-by-replay of local pending ops).
-- `OsStore` changes: distinguish local vs remote changes, pending-op queue with ack, generation bump on remote apply. Extend os-core tests with a fake transport covering push/pull/conflict.
+  - `DevJsonBackbone` (localStorage, kept) gains a `BroadcastChannel` port so multiple tabs on the same document converge (operation re-dispatch on message).
+  - `RemoteOsBackbone` (implements the stub): attach `remote://host/path`, initial load = snapshot + version, `sync` = push local `OsChange` operations with version, subscribe WS → dispatch inbound operations into `OsStore` as remote changes (new internal `applyRemoteChange` that bypasses the undo stack). Version-conflict rejections surface as `OsConflict` in the shell (toast/banner + rebase-by-replay of local pending operations).
+- `OsStore` changes: distinguish local vs remote changes, pending-operation queue with ack, generation bump on remote apply. Extend os-core tests with a fake transport covering push/pull/conflict.
 
 ## Phase 5 — OS Files app + presence
 
@@ -118,6 +118,6 @@ flowchart LR
 
 ## Explicit non-goals
 
-- No CRDT merge (op-log + optimistic versioning with replay-rebase is the concurrency model).
+- No CRDT merge (operation-log + optimistic versioning with replay-rebase is the concurrency model).
 - compose-hub is not ported onto the new generic shell in this pass; compose kits keep their own path.
 - No AGENTS.md edits (workspace rule).

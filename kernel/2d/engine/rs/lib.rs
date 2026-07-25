@@ -281,8 +281,8 @@ pub trait DrawingKernel {
     async fn bool_difference(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
     async fn bool_intersection(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
     async fn bool_xor(&mut self, a: &DrawingHandle, b: &DrawingHandle) -> Result<DrawingHandle, DrawingError>;
-    async fn bool_op_many(&mut self, op: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError>;
-    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], op: &str) -> Result<Vec<PathSegment>, DrawingError>;
+    async fn bool_op_many(&mut self, operation: &str, handles: &[DrawingHandle]) -> Result<DrawingHandle, DrawingError>;
+    async fn boolean_segments(&self, a: &[PathSegment], b: &[PathSegment], operation: &str) -> Result<Vec<PathSegment>, DrawingError>;
     // #endregion Booleans
 
     // #region Trace

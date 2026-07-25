@@ -11,7 +11,7 @@ use serde::{Deserialize, Serialize};
 use std::cell::Cell;
 use std::collections::HashMap;
 use trinity_jack::{execute, parse};
-use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_ops, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOp, TrinityGraphStore};
+use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -236,9 +236,9 @@ pub fn build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) 
 pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
     let query = build_rule_query(rule, bindings);
     let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
-    let (result, ops) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
-    if !ops.is_empty() {
-        let fixture = trinity_ram::apply_trinity_graph_ops(graph.to_fixture(), &ops)?;
+    let (result, operations) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
+    if !operations.is_empty() {
+        let fixture = trinity_ram::apply_trinity_graph_operations(graph.to_fixture(), &operations)?;
         *graph = Graph::from_fixture(fixture)?;
     }
     Ok(result)
@@ -310,27 +310,27 @@ impl OperationDiff<RewriteRuleState> for RewriteRuleDiff {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum RewriteRuleOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum RewriteRuleOperation {
     SetState { state: RewriteRuleState },
 }
 
-impl Operation<RewriteRuleState> for RewriteRuleOp {
+impl Operation<RewriteRuleState> for RewriteRuleOperation {
     type Diff = RewriteRuleDiff;
 
     fn diff(&self, _projection: &RewriteRuleState) -> Self::Diff {
         match self {
-            RewriteRuleOp::SetState { state } => RewriteRuleDiff { next: Some(state.clone()) },
+            RewriteRuleOperation::SetState { state } => RewriteRuleDiff { next: Some(state.clone()) },
         }
     }
 
     fn backwards(&self, projection: &RewriteRuleState) -> Vec<Self> {
-        vec![RewriteRuleOp::SetState { state: projection.clone() }]
+        vec![RewriteRuleOperation::SetState { state: projection.clone() }]
     }
 }
 
-pub type RewriteRuleEnvelope = DocumentVcsEnvelope<RewriteRuleState, RewriteRuleOp>;
-pub type RewriteRuleStore = DocumentVcsStore<RewriteRuleState, RewriteRuleOp>;
+pub type RewriteRuleEnvelope = DocumentVcsEnvelope<RewriteRuleState, RewriteRuleOperation>;
+pub type RewriteRuleStore = DocumentVcsStore<RewriteRuleState, RewriteRuleOperation>;
 
 pub const REWRITE_RULE_SCHEMA: &str = "trinity.rewrite.rule";
 
@@ -343,7 +343,7 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteR
     if current == state {
         return Ok(());
     }
-    store.dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOp::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
+    store.dispatch(DocumentVcsCommand::Apply { operations: vec![RewriteRuleOperation::SetState { state }], description: None }).map_err(TrinityRewriteError::from)
 }
 // #endregion 🔖RuleVcs
 
@@ -565,20 +565,20 @@ fn apply_force_layout_positions_to_trinity_graph(graph: &mut Graph, fixture: &se
     Ok(())
 }
 
-fn force_layout_reposition_ops(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOp>, TrinityRewriteError> {
+fn force_layout_reposition_operations(fixture: &GraphFixture) -> Result<Vec<TrinityGraphOperation>, TrinityRewriteError> {
     let mut graph = Graph::from_fixture(fixture.clone())?;
     apply_force_layout_to_trinity_graph(&mut graph)?;
     let next = graph.to_fixture();
-    let mut ops = Vec::new();
+    let mut operations = Vec::new();
     for node in &next.nodes {
         let Some(prev) = fixture.nodes.iter().find(|entry| entry.id == node.id) else {
             continue;
         };
         if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-            ops.push(TrinityGraphOp::Reposition { id: node.id.clone(), x: node.x, y: node.y });
+            operations.push(TrinityGraphOperation::Reposition { id: node.id.clone(), x: node.x, y: node.y });
         }
     }
-    Ok(ops)
+    Ok(operations)
 }
 
 fn apply_force_layout_to_trinity_graph(graph: &mut Graph) -> Result<(), TrinityRewriteError> {
@@ -642,8 +642,8 @@ impl TrinityHost {
         Ok(())
     }
 
-    fn dispatch(&mut self, ops: Vec<TrinityGraphOp>) -> Result<(), TrinityRewriteError> {
-        dispatch_trinity_graph_ops(&mut self.store, ops)?;
+    fn dispatch(&mut self, operations: Vec<TrinityGraphOperation>) -> Result<(), TrinityRewriteError> {
+        dispatch_trinity_graph_operations(&mut self.store, operations)?;
         self.refresh_graph_from_store()
     }
 
@@ -718,9 +718,9 @@ impl TrinityHost {
     }
 
     pub fn reorganize(&mut self) {
-        match force_layout_reposition_ops(&self.store.projection().unwrap_or_else(|_| self.graph.to_fixture())) {
-            Ok(ops) if !ops.is_empty() => {
-                if let Err(err) = self.dispatch(ops) {
+        match force_layout_reposition_operations(&self.store.projection().unwrap_or_else(|_| self.graph.to_fixture())) {
+            Ok(operations) if !operations.is_empty() => {
+                if let Err(err) = self.dispatch(operations) {
                     eprintln!("[DEBUG] trinity reorganize dispatch failed: {err}");
                     return;
                 }
@@ -733,9 +733,9 @@ impl TrinityHost {
 
     pub fn run_jack(&mut self, query: &str) -> Result<QueryResult, TrinityRewriteError> {
         let parsed = parse(query).map_err(TrinityRewriteError::Jack)?;
-        let (result, ops) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
-        if !ops.is_empty() {
-            self.dispatch(ops)?;
+        let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
+        if !operations.is_empty() {
+            self.dispatch(operations)?;
             self.rebuild_engine();
         }
         Ok(result)
@@ -768,9 +768,9 @@ impl TrinityHost {
         let bindings = parse_bindings_json(bindings_json)?;
         let query = build_rule_query(&rule, &bindings);
         let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
-        let (result, ops) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
-        if !ops.is_empty() {
-            self.dispatch(ops)?;
+        let (result, operations) = execute(&self.graph, &parsed).map_err(TrinityRewriteError::Jack)?;
+        if !operations.is_empty() {
+            self.dispatch(operations)?;
             self.rebuild_engine();
         }
         Ok(serde_json::to_string(&ApplyRuleResult { fixture: self.fixture_json()?, query: result })?)
@@ -858,7 +858,7 @@ impl TrinityHost {
 
     fn commit_drag_positions(&mut self) -> Result<(), TrinityRewriteError> {
         let projection = self.store.projection()?;
-        let mut ops = Vec::new();
+        let mut operations = Vec::new();
         for (nid, widget_id) in &self.node_id_map {
             let Some(engine_node) = self.engine.nodes.get(nid) else {
                 continue;
@@ -867,13 +867,13 @@ impl TrinityHost {
                 continue;
             };
             if (fixture_node.x - engine_node.center.x).abs() > 1e-6 || (fixture_node.y - engine_node.center.y).abs() > 1e-6 {
-                ops.push(TrinityGraphOp::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
+                operations.push(TrinityGraphOperation::Reposition { id: widget_id.clone(), x: engine_node.center.x, y: engine_node.center.y });
             }
         }
-        if ops.is_empty() {
+        if operations.is_empty() {
             return Ok(());
         }
-        self.dispatch(ops)
+        self.dispatch(operations)
     }
 
     fn sync_positions_from_engine(&mut self) {

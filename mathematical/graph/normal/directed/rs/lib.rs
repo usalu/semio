@@ -17,7 +17,7 @@ impl DirectedGraph {
     }
     // #endsubregion
 
-    // #subregion NodeOps
+    // #subregion NodeOperations
     /// ➕ Adds a fresh node with no attributes, returning its auto-assigned id.
     pub fn add_node(&mut self) -> NodeId {
         self.0.add_node()
@@ -70,7 +70,7 @@ impl DirectedGraph {
     }
     // #endsubregion
 
-    // #subregion EdgeOps
+    // #subregion EdgeOperations
     /// 🔗 Ensures `id` exists (inserting an empty-attr node if absent), matching NetworkX's implicit node creation on `add_edge`.
     fn ensure_node(&mut self, id: NodeId) {
         self.0.add_node_with_id(id, PropertyBag::new());

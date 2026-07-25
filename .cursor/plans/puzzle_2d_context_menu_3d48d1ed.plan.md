@@ -79,7 +79,7 @@ Puzzle2d picking lives in Rust, so locked must be enforced there (the 2d analog 
 New region `🖱️SelectionContextMenu` mirroring 3d:
 
 - `Puzzle2dSelectionEntityFlags { hidden, locked }`, `puzzle2dSelectionEntityFlagsFromScene(scene, ids)`.
-- `Puzzle2dSelectionMenuActions { toggleHidden, toggleLocked, deleteSelection, duplicateSelection, selectSameKind }` + `puzzle2dSelectionActionsRef` (no-op defaults).
+- `Puzzle2dSelectionMenuActions { toggleHidden, toggleLocked, deleteSelection, duplicateSelection, selectSameKind }` + `puzzle2dSelectionActionsRef` (no-operation defaults).
 - `buildPuzzle2dSelectionMenuItems(ids, entityFlags, hoveredKind, actions): ContextMenuItem[]` with the same items/order/icons/conditions as 3d (no "Suggest objects"): Hide/Show (`anyNotHidden` semantics), Lock/Unlock, Duplicate (nodes only), Select all of same kind, Zoom to selection, separator, destructive Delete.
 - Zoom to selection: compute world bounds of selected scene objects and call `renderer.setCamera(x, y, zoom)` (~5422) to fit with padding.
 

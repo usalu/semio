@@ -75,7 +75,7 @@ In [`s/plugin/rs/lib.rs`](s/plugin/rs/lib.rs) home app:
 In studio app `openStudio` ([`s/plugin/rs/lib.rs`](s/plugin/rs/lib.rs) ~2771):
 
 - Resolve ephemeral → then catalog ports.
-- On miss: emit `LoadDocument` of `create_empty_os_document(studio_id, "Untitled Studio")` (or no-op empty), **not** `parse_demo_studio_document()`.
+- On miss: emit `LoadDocument` of `create_empty_os_document(studio_id, "Untitled Studio")` (or no-operation empty), **not** `parse_demo_studio_document()`.
 - Keep demo only when `studio_id == "demo"` explicitly (example route), or drop example fallback entirely and require seed id `"default"` only when opening that catalog entry.
 
 ### 4. Stop demo as create/open default chrome

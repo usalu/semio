@@ -3,7 +3,7 @@
 use architect_program::{
     adjacency_matrix, apply_template, audit_trail, build_report, detect_adjacency_conflicts, empty_program, export_json, export_registers_csv, import_json, import_registers_csv, normalize_pair, run_analysis, sample_program, search_program,
     status_summary, trace_chain, trace_impact, undirected_edges, validate_program, Adjacency, AdjacencyKind, AdjacencyPatch, AnalysisKind, AnalysisRecord, AnalysisResult, ConnectionKind, EngagementLevel, EntityHeader, EntityId, Function,
-    FunctionKind, InfluenceLevel, Issue, IssueSeverity, MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOp, ProgramReport, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
+    FunctionKind, InfluenceLevel, Issue, IssueSeverity, MergeStrategy, Program, ProgramElement, ProgramElementKind, ProgramElementPatch, ProgramOperation, ProgramReport, ReportKind, ReportRecord, Requirement, RequirementKind, Risk, RiskLevel, SearchQuery,
     Stakeholder, StakeholderPatch, TextField, TraceChain, TraceKind, TraceLink, UserCategory, UserProfile, ValidationStatus, ARCHITECT_PROGRAM_SCHEMA,
 };
 use semio_framework_plugin::{
@@ -16,7 +16,7 @@ use serde::de::DeserializeOwned;
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::{HashMap, HashSet};
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const ARCHITECT_APP_ID: &str = "architect";
@@ -621,19 +621,19 @@ fn default_from_json<T: DeserializeOwned>(register: &str, label: &str, extra: Va
     serde_json::from_value(value).ok()
 }
 
-fn add_register_item_op(program: &Program, register: &str, label: &str) -> Option<(ProgramOp, EntityId)> {
+fn add_register_item_operation(program: &Program, register: &str, label: &str) -> Option<(ProgramOperation, EntityId)> {
     macro_rules! add {
-        ($field:ident, $op:ident, $item:expr) => {{
+        ($field:ident, $operation:ident, $item:expr) => {{
             let item = $item;
             let id = item.header.id.clone();
-            (ProgramOp::$op(CollectionOp::Add { index: program.$field.len(), item }), id)
+            (ProgramOperation::$operation(CollectionOperation::Add { index: program.$field.len(), item }), id)
         }};
     }
     Some(match register {
         "elements" => {
             let item = default_element(label);
             let id = item.header.id.clone();
-            (ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item }), id)
+            (ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item }), id)
         }
         "stakeholders" => add!(stakeholders, Stakeholders, default_stakeholder(label)),
         "requirements" => add!(requirements, Requirements, default_requirement(label)),
@@ -674,16 +674,16 @@ fn add_register_item_op(program: &Program, register: &str, label: &str) -> Optio
             let to = program.elements.get(1).map_or_else(|| EntityId::new_serial("to"), |element| element.header.id.clone());
             let item = TraceLink::new(from, to, TraceKind::FunctionToProgramElement);
             let id = item.id.clone();
-            (ProgramOp::Traces(CollectionOp::Add { index: program.traces.len(), item }), id)
+            (ProgramOperation::Traces(CollectionOperation::Add { index: program.traces.len(), item }), id)
         }
         _ => return None,
     })
 }
 
-fn remove_register_item_op(register: &str, entity_id: EntityId) -> Option<ProgramOp> {
+fn remove_register_item_operation(register: &str, entity_id: EntityId) -> Option<ProgramOperation> {
     macro_rules! remove {
-        ($op:ident) => {
-            ProgramOp::$op(CollectionOp::Remove { id: entity_id })
+        ($operation:ident) => {
+            ProgramOperation::$operation(CollectionOperation::Remove { id: entity_id })
         };
     }
     Some(match register {
@@ -757,10 +757,10 @@ fn remove_register_item_op(register: &str, entity_id: EntityId) -> Option<Progra
     })
 }
 
-fn patch_register_item_op(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramOp> {
+fn patch_register_item_operation(register: &str, entity_id: EntityId, patch: Value) -> Option<ProgramOperation> {
     macro_rules! patch {
-        ($op:ident, $ty:ty) => {
-            ProgramOp::$op(CollectionOp::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
+        ($operation:ident, $ty:ty) => {
+            ProgramOperation::$operation(CollectionOperation::Patch { id: entity_id, patch: serde_json::from_value::<$ty>(patch).ok()? })
         };
     }
     Some(match register {
@@ -1413,7 +1413,7 @@ impl ArchitectApp {
 
 impl DocumentApp for ArchitectApp {
     type Projection = Program;
-    type Op = ProgramOp;
+    type Operation = ProgramOperation;
 
     fn app_id(&self) -> &str {
         ARCHITECT_APP_ID
@@ -1427,7 +1427,7 @@ impl DocumentApp for ArchitectApp {
         sample_program()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _view_state: &ViewState) -> ActionEmit<ProgramOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Program>, _view_state: &ViewState) -> ActionEmit<ProgramOperation> {
         self.ensure_default_register();
         let program = doc.projection;
         match action {
@@ -1453,16 +1453,16 @@ impl DocumentApp for ArchitectApp {
                     let template_id = EntityId(template_id.into());
                     if let Some(template) = program.templates.iter().find(|row| row.header.id == template_id).cloned() {
                         let mut scratch = program.clone();
-                        let ops = apply_template(&mut scratch, &template);
-                        return ActionEmit::ops(ops);
+                        let operations = apply_template(&mut scratch, &template);
+                        return ActionEmit::operations(operations);
                     }
                 }
-                let Some((op, id)) = add_register_item_op(program, &register, label) else {
+                let Some((operation, id)) = add_register_item_operation(program, &register, label) else {
                     return ActionEmit::default();
                 };
                 self.runtime.active_register = register;
                 self.runtime.selected_ids = vec![id.to_string()];
-                ActionEmit::ops(vec![op])
+                ActionEmit::operations(vec![operation])
             }
             "removeRegisterItem" => {
                 let Some(register) = parse_register_id(args) else {
@@ -1472,16 +1472,16 @@ impl DocumentApp for ArchitectApp {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_ids.retain(|selected| selected != &entity_id.0);
-                let mut ops = Vec::new();
-                if let Some(op) = remove_register_item_op(&register, entity_id.clone()) {
-                    ops.push(op);
+                let mut operations = Vec::new();
+                if let Some(operation) = remove_register_item_operation(&register, entity_id.clone()) {
+                    operations.push(operation);
                 }
                 if register == "elements" {
                     for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id == entity_id || row.element_b_id == entity_id) {
-                        ops.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
+                        operations.push(ProgramOperation::ClearAdjacency { id: adjacency.header.id.clone() });
                     }
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "patchRegisterItem" => {
                 let Some(register) = parse_register_id(args) else {
@@ -1493,8 +1493,8 @@ impl DocumentApp for ArchitectApp {
                 let Some(patch) = args.and_then(|value| value.get("patch")).cloned() else {
                     return ActionEmit::default();
                 };
-                if let Some(op) = patch_register_item_op(&register, entity_id, patch) {
-                    ActionEmit::ops(vec![op])
+                if let Some(operation) = patch_register_item_operation(&register, entity_id, patch) {
+                    ActionEmit::operations(vec![operation])
                 } else {
                     ActionEmit::default()
                 }
@@ -1510,8 +1510,8 @@ impl DocumentApp for ArchitectApp {
                 };
                 let mut patch = serde_json::Map::new();
                 patch.insert(field.into(), value);
-                if let Some(op) = patch_register_item_op("adjacencies", entity_id, Value::Object(patch)) {
-                    ActionEmit::ops(vec![op])
+                if let Some(operation) = patch_register_item_operation("adjacencies", entity_id, Value::Object(patch)) {
+                    ActionEmit::operations(vec![operation])
                 } else {
                     ActionEmit::default()
                 }
@@ -1544,11 +1544,11 @@ impl DocumentApp for ArchitectApp {
                         } else {
                             new_adjacency(program, &a, &b, kind)
                         };
-                        ActionEmit::ops(vec![ProgramOp::SetAdjacency { adjacency }])
+                        ActionEmit::operations(vec![ProgramOperation::SetAdjacency { adjacency }])
                     }
                     None => {
                         if let Some(row) = existing {
-                            ActionEmit::ops(vec![ProgramOp::ClearAdjacency { id: row.header.id.clone() }])
+                            ActionEmit::operations(vec![ProgramOperation::ClearAdjacency { id: row.header.id.clone() }])
                         } else {
                             ActionEmit::default()
                         }
@@ -1561,7 +1561,7 @@ impl DocumentApp for ArchitectApp {
                 let id = element.header.id.to_string();
                 self.runtime.selected_ids = vec![id];
                 self.runtime.active_register = "elements".into();
-                ActionEmit::ops(vec![ProgramOp::Elements(CollectionOp::Add { index: program.elements.len(), item: element })])
+                ActionEmit::operations(vec![ProgramOperation::Elements(CollectionOperation::Add { index: program.elements.len(), item: element })])
             }
             "removeElement" => {
                 let id = args.and_then(|value| value.get("elementId")).or_else(|| args.and_then(|value| value.get("id"))).and_then(|value| value.as_str());
@@ -1569,11 +1569,11 @@ impl DocumentApp for ArchitectApp {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_ids.retain(|selected| selected != id);
-                let mut ops = vec![ProgramOp::Elements(CollectionOp::Remove { id: EntityId(id.into()) })];
+                let mut operations = vec![ProgramOperation::Elements(CollectionOperation::Remove { id: EntityId(id.into()) })];
                 for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
-                    ops.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
+                    operations.push(ProgramOperation::ClearAdjacency { id: adjacency.header.id.clone() });
                 }
-                ActionEmit::ops(ops)
+                ActionEmit::operations(operations)
             }
             "runValidation" => {
                 let diagnostics = validate_program(program);
@@ -1586,7 +1586,7 @@ impl DocumentApp for ArchitectApp {
                 let record = analysis_record_from(program, kind, &result);
                 self.runtime.last_analysis = Some(result.clone());
                 store_runtime_json(&mut self.runtime, &result);
-                ActionEmit::ops(vec![ProgramOp::Analyses(CollectionOp::Add { index: program.analyses.len(), item: record })])
+                ActionEmit::operations(vec![ProgramOperation::Analyses(CollectionOperation::Add { index: program.analyses.len(), item: record })])
             }
             "runReport" => {
                 let kind = report_kind_from_args(args);
@@ -1594,7 +1594,7 @@ impl DocumentApp for ArchitectApp {
                 let record = report_record_from(program, kind, &report);
                 self.runtime.last_report = Some(report.clone());
                 store_runtime_json(&mut self.runtime, &report);
-                ActionEmit::ops(vec![ProgramOp::Reports(CollectionOp::Add { index: program.reports.len(), item: record })])
+                ActionEmit::operations(vec![ProgramOperation::Reports(CollectionOperation::Add { index: program.reports.len(), item: record })])
             }
             "applyTemplate" => {
                 let Some(template_id) = parse_entity_id_from_args(args, "templateId") else {
@@ -1604,7 +1604,7 @@ impl DocumentApp for ArchitectApp {
                     return ActionEmit::default();
                 };
                 let mut scratch = program.clone();
-                ActionEmit::ops(apply_template(&mut scratch, &template))
+                ActionEmit::operations(apply_template(&mut scratch, &template))
             }
             "exportRegistersCsv" => {
                 let csv = export_registers_csv(program).unwrap_or_default();
@@ -1623,7 +1623,7 @@ impl DocumentApp for ArchitectApp {
                 if import_registers_csv(&mut next, csv, strategy).is_err() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![ProgramOp::SetProgram { program: Box::new(next) }])
+                ActionEmit::operations(vec![ProgramOperation::SetProgram { program: Box::new(next) }])
             }
             "exportProgram" => {
                 let json_text = export_json(program).unwrap_or_else(|error| json!({ "error": error.to_string() }).to_string());
@@ -1637,29 +1637,29 @@ impl DocumentApp for ArchitectApp {
                     return ActionEmit::default();
                 };
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(vec![ProgramOp::SetProgram { program: Box::new(next) }])
+                ActionEmit::operations(vec![ProgramOperation::SetProgram { program: Box::new(next) }])
             }
             "nodeGraphEdit" => {
-                let edit_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let edit_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let mut emitted = Vec::new();
-                for op in edit_ops {
-                    match op.get("op").and_then(Value::as_str).unwrap_or("") {
+                for operation in edit_operations {
+                    match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
                         "connect" => {
-                            let source = op.get("sourceNodeId").and_then(Value::as_str);
-                            let target = op.get("targetNodeId").and_then(Value::as_str);
+                            let source = operation.get("sourceNodeId").and_then(Value::as_str);
+                            let target = operation.get("targetNodeId").and_then(Value::as_str);
                             if let (Some(source), Some(target)) = (source, target) {
                                 let a = EntityId(source.into());
                                 let b = EntityId(target.into());
                                 let kind = find_adjacency(program, &a, &b).map_or(AdjacencyKind::Preferred, |row| row.kind.clone());
-                                emitted.push(ProgramOp::SetAdjacency { adjacency: new_adjacency(program, &a, &b, kind) });
+                                emitted.push(ProgramOperation::SetAdjacency { adjacency: new_adjacency(program, &a, &b, kind) });
                             }
                         }
                         "deleteSelection" => {
-                            if let Some(ids) = op.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
+                            if let Some(ids) = operation.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
                                 for id in ids {
-                                    emitted.push(ProgramOp::Elements(CollectionOp::Remove { id: EntityId(id.clone()) }));
+                                    emitted.push(ProgramOperation::Elements(CollectionOperation::Remove { id: EntityId(id.clone()) }));
                                     for adjacency in program.adjacencies.iter().filter(|row| row.element_a_id.0 == id || row.element_b_id.0 == id) {
-                                        emitted.push(ProgramOp::ClearAdjacency { id: adjacency.header.id.clone() });
+                                        emitted.push(ProgramOperation::ClearAdjacency { id: adjacency.header.id.clone() });
                                     }
                                 }
                             }
@@ -1670,7 +1670,7 @@ impl DocumentApp for ArchitectApp {
                 if emitted.is_empty() {
                     ActionEmit::default()
                 } else {
-                    ActionEmit::ops(emitted)
+                    ActionEmit::operations(emitted)
                 }
             }
             "nodeGraphViewport" => {
@@ -1893,8 +1893,8 @@ mod tests {
                 &ViewState::default(),
             );
             assert!(matches!(
-                emit.ops.first(),
-                Some(ProgramOp::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
+                emit.operations.first(),
+                Some(ProgramOperation::SetAdjacency { adjacency: updated }) if updated.kind == AdjacencyKind::Preferred
             ));
         });
     }
@@ -1948,8 +1948,8 @@ mod tests {
                 &ViewState::default(),
             );
             assert!(matches!(
-                emit.ops.first(),
-                Some(ProgramOp::Elements(CollectionOp::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
+                emit.operations.first(),
+                Some(ProgramOperation::Elements(CollectionOperation::Patch { patch, .. })) if patch.name.as_deref() == Some("Updated Reception")
             ));
         });
     }
@@ -1986,7 +1986,7 @@ mod tests {
         let csv = export_registers_csv(&program).expect("export csv");
         with_doc_view(&program, |doc| {
             let emit = app.handle_action("importRegistersCsv", Some(&json!({ "csv": csv, "strategy": "upsert" })), &doc, &ViewState::default());
-            assert!(matches!(emit.ops.first(), Some(ProgramOp::SetProgram { .. })));
+            assert!(matches!(emit.operations.first(), Some(ProgramOperation::SetProgram { .. })));
         });
     }
 }

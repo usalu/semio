@@ -18,7 +18,7 @@ use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
 use rusqlite::{Connection, OptionalExtension};
-use semio_framework_core::OpEnvelope;
+use semio_framework_core::OperationEnvelope;
 use semio_framework_hash::hash_bytes;
 use std::sync::{Arc, Mutex};
 use uuid::Uuid;
@@ -39,7 +39,7 @@ CREATE TABLE IF NOT EXISTS document (
     snapshot TEXT NOT NULL,
     version INTEGER NOT NULL DEFAULT 0
 );
-CREATE TABLE IF NOT EXISTS document_op (
+CREATE TABLE IF NOT EXISTS document_operation (
     id TEXT PRIMARY KEY,
     document_id TEXT NOT NULL,
     version INTEGER NOT NULL,
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS hub_blob (
 );
 CREATE INDEX IF NOT EXISTS idx_membership_user ON hub_studio_membership (user_id);
 CREATE INDEX IF NOT EXISTS idx_node_studio_parent ON node (studio_id, parent_id);
-CREATE INDEX IF NOT EXISTS idx_op_document_version ON document_op (document_id, version);
+CREATE INDEX IF NOT EXISTS idx_op_document_version ON document_operation (document_id, version);
 CREATE INDEX IF NOT EXISTS idx_sync_session_document ON hub_sync_session (document_id, disconnected_at);
 ";
 //#endregion 🔖Schema
@@ -224,22 +224,22 @@ impl HubStorage for SqliteStorage {
         Ok(())
     }
 
-    async fn insert_op(&self, document_id: &str, version: i64, envelope: &OpEnvelope) -> StorageResult<bool> {
+    async fn insert_operation(&self, document_id: &str, version: i64, envelope: &OperationEnvelope) -> StorageResult<bool> {
         let payload = serde_json::to_string(envelope).unwrap_or_default();
         let changed = self
             .lock()?
             .execute(
-                "INSERT OR IGNORE INTO document_op (id, document_id, version, actor, envelope, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
+                "INSERT OR IGNORE INTO document_operation (id, document_id, version, actor, envelope, created_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6)",
                 rusqlite::params![envelope.id.0, document_id, version, envelope.actor.0, payload, now_ms()],
             )
             .map_err(backend)?;
         Ok(changed > 0)
     }
 
-    async fn load_ops(&self, document_id: &str) -> StorageResult<Vec<(i64, OpEnvelope)>> {
+    async fn load_operations(&self, document_id: &str) -> StorageResult<Vec<(i64, OperationEnvelope)>> {
         let conn = self.lock()?;
         let mut stmt = conn
-            .prepare("SELECT version, envelope FROM document_op WHERE document_id = ?1 ORDER BY version ASC")
+            .prepare("SELECT version, envelope FROM document_operation WHERE document_id = ?1 ORDER BY version ASC")
             .map_err(backend)?;
         let rows = stmt
             .query_map([document_id], |row| Ok((row.get::<_, i64>(0)?, row.get::<_, String>(1)?)))

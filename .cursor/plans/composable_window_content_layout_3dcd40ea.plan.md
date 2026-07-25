@@ -47,7 +47,7 @@ Keep everything on the single existing key module `semio / window / kind` (alrea
 - `**text-size**` (new: a dimension, or the literal `fit`) → `text-size=14pt` issues `\fontsize{14pt}{14pt}\selectfont` (matches this file's existing tight chrome-typography convention, e.g. `\semio@panel@font`) right after the box opens. `text-size=fit` instead adds tcolorbox's `fit` key (from the already-loaded `fitting` library, `\tcbuselibrary{skins,breakable,fitting}` at line 17) so the box's font size auto-scales to fill its dimensions — this requires a fixed `height`, so `text-size=fit` without `height=` raises a `\PackageError` (no silent fallback, per repo conventions). `fit` also forces `breakable=false` on that box (the fitting library cannot break boxes).
 - `**image-fit**` (new choice: `contain` default | `cover` | `fill` | `none`) → sets the _default_ fit mode that `\SemioImage` (new command) uses inside that window; `\SemioImage` also accepts a local override so a single window/row can mix fit modes across multiple images.
 
-All four new/reworked keys reset to safe no-op defaults (`valign=top`, `halign=justify` — matching current native tcolorbox/LaTeX defaults, **not** `left`, to avoid silently de-justifying every existing window's body text) at the start of every window, in both the kind-path and the generic path.
+All four new/reworked keys reset to safe no-operation defaults (`valign=top`, `halign=justify` — matching current native tcolorbox/LaTeX defaults, **not** `left`, to avoid silently de-justifying every existing window's body text) at the start of every window, in both the kind-path and the generic path.
 
 ```mermaid
 flowchart TB

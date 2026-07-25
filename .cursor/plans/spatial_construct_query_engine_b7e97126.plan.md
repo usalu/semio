@@ -90,7 +90,7 @@ Key components inside `index.ts`:
   - `adjacentCells(cell)` via shared face lookup (uses face→cell reverse index built once on top of `KernelIndex`).
   - `sharesVertex(a,b)` / `hasVertex(entity, depthRange)`.
 - `#region Planner` — picks the most selective starting node (id-equality > label+prop > label scan), order rels by direction, push down WHERE filters before traversal where possible.
-- `#region Executor` — interprets plan: each step yields binding rows `Record<varName, EntityHandle>`; lazy via async generator; eval expressions through reused `evalExpr` (extended with `field` / `fn` ops added in core).
+- `#region Executor` — interprets plan: each step yields binding rows `Record<varName, EntityHandle>`; lazy via async generator; eval expressions through reused `evalExpr` (extended with `field` / `fn` operations added in core).
 - `#region Write` — `CALL ns.action(arg, ...)` resolves via `ActionRegistry`; arguments evaluated against current row bindings; results stored in `YIELD` names; write actions still must round-trip through the safe action layer (no direct topology mutation in the engine).
 - `#region Api` — public surface:
   - `parseConstruct(text): ConstructAst`

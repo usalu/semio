@@ -3,7 +3,7 @@
 // Specs: Host the framework renderer's `InkCanvasHost` with zero WASM engine — the whiteboard-style ink
 // surface (pointer gestures, hit-testing, resize handles) is implemented entirely in React/DOM (`framework/
 // renderer/react/index.tsx`), so a story-local reducer over `InkCanvasEvent`s is enough for real interaction.
-// Summary: `applyStoryInkEvents` mirrors `applyEventsLocal`'s op vocabulary (`addBlock`/`updateBlock`/
+// Summary: `applyStoryInkEvents` mirrors `applyEventsLocal`'s operation vocabulary (`addBlock`/`updateBlock`/
 // `removeBlock`/`putAsset`/`setCamera`) that a real plugin's `inkApplyEvents` handler would apply; the reducer
 // also handles the sibling `setSelection`/`setCamera`/`setHover` actions `InkCanvasHost` dispatches directly
 // (`inkCanvasActions`). Interactive drag/draw/pan/erase and click-to-select therefore all round-trip live.
@@ -84,12 +84,12 @@ const STORY_INK_DOCUMENT: InkDocument = {
 //#region Reducer
 type StoryInkState = { readonly document: InkDocument; readonly selection: readonly string[]; readonly hoveredId: string | null };
 
-/** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/renderer/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` op vocabulary the stories exercise. */
+/** @emoji ✍️ Story-local mirror of `applyEventsLocal` (`framework/renderer/react/index.tsx`) — the subset of a real plugin's `inkApplyEvents` operation vocabulary the stories exercise. */
 function applyStoryInkEvents(document: InkDocument, events: readonly InkCanvasEvent[]): InkDocument {
   let blocks = document.blocks;
   let next = document;
   for (const event of events) {
-    switch (event.op) {
+    switch (event.operation) {
       case "addBlock":
         blocks = [...blocks, event.block];
         break;

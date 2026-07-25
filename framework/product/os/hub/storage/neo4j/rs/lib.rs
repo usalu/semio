@@ -1,11 +1,11 @@
 mod header {
     // 🧲Header
     // HubStorage over Neo4j (neo4rs). Users/Studios/Memberships are real nodes+relationships —
-    // where graph traversal earns its keep (role lookups, VFS tree walks). The document op-log
-    // stays a flat `(:Document)-[:HAS_OP]->(:Op)` fan-out, not a chained graph: an append-only log
-    // gains nothing from `(:Op)-[:NEXT]->(:Op)` edges that an indexed `ORDER BY version` doesn't
+    // where graph traversal earns its keep (role lookups, VFS tree walks). The document operation-log
+    // stays a flat `(:Document)-[:HAS_OP]->(:Operation)` fan-out, not a chained graph: an append-only log
+    // gains nothing from `(:Operation)-[:NEXT]->(:Operation)` edges that an indexed `ORDER BY version` doesn't
     // already give a relational store, and dedupe-by-id is `MERGE` (an idempotent insert), not a
-    // graph feature. Causal deps (`OpEnvelope.deps`) stay a JSON property, mirroring Postgres's
+    // graph feature. Causal deps (`OperationEnvelope.deps`) stay a JSON property, mirroring Postgres's
     // `jsonb` — the in-memory `OpDag` is the only thing that ever walks the causal graph.
 }
 
@@ -15,7 +15,7 @@ use neo4rs::{query, Graph};
 use os_hub_storage::error::{StorageError, StorageResult};
 use os_hub_storage::model::*;
 use os_hub_storage::HubStorage;
-use semio_framework_core::OpEnvelope;
+use semio_framework_core::OperationEnvelope;
 use semio_framework_hash::hash_bytes;
 use uuid::Uuid;
 
@@ -52,7 +52,7 @@ const CONSTRAINTS: &[&str] = &[
     "CREATE CONSTRAINT IF NOT EXISTS FOR (u:User) REQUIRE u.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (s:Studio) REQUIRE s.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (d:Document) REQUIRE d.id IS UNIQUE",
-    "CREATE CONSTRAINT IF NOT EXISTS FOR (o:Op) REQUIRE o.id IS UNIQUE",
+    "CREATE CONSTRAINT IF NOT EXISTS FOR (o:Operation) REQUIRE o.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (t:ShareToken) REQUIRE t.token IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (n:Node) REQUIRE n.id IS UNIQUE",
     "CREATE CONSTRAINT IF NOT EXISTS FOR (a:AuthSession) REQUIRE a.id IS UNIQUE",
@@ -140,14 +140,14 @@ impl HubStorage for Neo4jStorage {
         Ok(())
     }
 
-    async fn insert_op(&self, document_id: &str, version: i64, envelope: &OpEnvelope) -> StorageResult<bool> {
+    async fn insert_operation(&self, document_id: &str, version: i64, envelope: &OperationEnvelope) -> StorageResult<bool> {
         let payload = serde_json::to_string(envelope).unwrap_or_default();
         let mut result = self
             .graph
             .execute(
                 query(
                     "MATCH (d:Document {id: $document_id})
-                     MERGE (o:Op {id: $id})
+                     MERGE (o:Operation {id: $id})
                      ON CREATE SET o.documentId = $document_id, o.version = $version, o.actor = $actor,
                                     o.envelope = $envelope, o.createdAt = $created_at, o.fresh = true
                      ON MATCH SET o.fresh = false
@@ -167,12 +167,12 @@ impl HubStorage for Neo4jStorage {
         Ok(fresh)
     }
 
-    async fn load_ops(&self, document_id: &str) -> StorageResult<Vec<(i64, OpEnvelope)>> {
+    async fn load_operations(&self, document_id: &str) -> StorageResult<Vec<(i64, OperationEnvelope)>> {
         let mut result = self
             .graph
             .execute(
                 query(
-                    "MATCH (:Document {id: $document_id})-[:HAS_OP]->(o:Op)
+                    "MATCH (:Document {id: $document_id})-[:HAS_OP]->(o:Operation)
                      RETURN o.version AS version, o.envelope AS envelope ORDER BY o.version ASC",
                 )
                 .param("document_id", document_id),
@@ -570,7 +570,7 @@ impl HubStorage for Neo4jStorage {
     //#region Blobs
     /// @emoji 🔡 Neo4j properties have no first-class byte-array type in this driver's ergonomic
     /// param API, so bytes are base64-encoded into a string property — the same "structured payload
-    /// as a string" convention this backend already uses for `Document.snapshot`/`Op.envelope` (see
+    /// as a string" convention this backend already uses for `Document.snapshot`/`Operation.envelope` (see
     /// `header`). Dedupe is `MERGE`-free here (an explicit existence check) so a re-put never pays
     /// the cost of re-encoding/re-writing the (potentially large) property.
     async fn put_blob(&self, bytes: &[u8], media_type: &str) -> StorageResult<BlobRecord> {

@@ -6,7 +6,7 @@
  */
 // #endregion Header
 
-import type { BackboneWorkerRequest, BackboneWorkerResponse, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, HubClientFrame, HubServerFrame, OpEnvelope, PersistenceBinding, RemoteState } from "./index";
+import type { BackboneWorkerRequest, BackboneWorkerResponse, DocumentActorConfig, DocumentActorMsg, DocumentEvent, DocumentSyncStatus, HubClientFrame, HubServerFrame, OperationEnvelope, PersistenceBinding, RemoteState } from "./index";
 
 type RustWorkerHost = {
   handleRequestJson(json: string): void;
@@ -72,7 +72,7 @@ type DocumentState = {
   pollTimer: ReturnType<typeof setInterval> | null;
   reconnectTimer: ReturnType<typeof setTimeout> | null;
   reconnectDelayMs: number;
-  pendingOps: OpEnvelope[];
+  pendingOperations: OperationEnvelope[];
   status: DocumentSyncStatus;
   sinceVersion: number;
   closed: boolean;
@@ -207,12 +207,12 @@ function handleHubFrame(state: DocumentState, frame: HubServerFrame): void {
       state.sinceVersion = frame.version;
       setRemote(state, { kind: "live", peerCount: frame.presence.length });
       if (frame.envelope != null) emitEvent(state.config.documentId, { kind: "snapshotReplaced", envelopeJson: JSON.stringify(frame.envelope) });
-      if (frame.backlog.length > 0) emitEvent(state.config.documentId, { kind: "remoteOps", envelopes: frame.backlog });
+      if (frame.backlog.length > 0) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: frame.backlog });
       emitEvent(state.config.documentId, { kind: "presence", peers: frame.presence });
       break;
-    case "ops":
+    case "operations":
       state.sinceVersion = frame.version;
-      if (frame.origin !== state.config.actor) emitEvent(state.config.documentId, { kind: "remoteOps", envelopes: frame.envelopes });
+      if (frame.origin !== state.config.actor) emitEvent(state.config.documentId, { kind: "remoteOperations", envelopes: frame.envelopes });
       break;
     case "snapshotReplaced":
       state.sinceVersion = frame.version;
@@ -222,8 +222,8 @@ function handleHubFrame(state: DocumentState, frame: HubServerFrame): void {
       emitEvent(state.config.documentId, { kind: "presence", peers: frame.peers });
       break;
     case "ack":
-      state.pendingOps = state.pendingOps.filter((envelope) => envelope.id !== frame.opId);
-      setStatus(state, { pendingOps: state.pendingOps.length });
+      state.pendingOperations = state.pendingOperations.filter((envelope) => envelope.id !== frame.operationId);
+      setStatus(state, { pendingOperations: state.pendingOperations.length });
       break;
     case "conflict":
       emitEvent(state.config.documentId, { kind: "conflict", message: frame.message });
@@ -382,15 +382,15 @@ function openDocument(config: DocumentActorConfig): void {
     pollTimer: null,
     reconnectTimer: null,
     reconnectDelayMs: HUB_RECONNECT_MIN_MS,
-    pendingOps: [],
-    status: { persisted: false, pendingOps: 0, remote: { kind: "detached" } },
+    pendingOperations: [],
+    status: { persisted: false, pendingOperations: 0, remote: { kind: "detached" } },
     sinceVersion: 0,
     closed: false,
   };
   documents.set(config.documentId, state);
   channel.onmessage = (messageEvent) => {
-    const envelopes = messageEvent.data as OpEnvelope[];
-    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteOps", envelopes });
+    const envelopes = messageEvent.data as OperationEnvelope[];
+    if (Array.isArray(envelopes) && envelopes.length > 0) emitEvent(config.documentId, { kind: "remoteOperations", envelopes });
   };
   const folder = folderBinding(config);
   if (folder) {
@@ -415,15 +415,15 @@ function closeDocument(documentId: string): void {
 
 async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): Promise<void> {
   switch (message.kind) {
-    case "localOps": {
+    case "localOperations": {
       if (message.envelopes.length === 0) break; // pure wake
-      state.pendingOps.push(...message.envelopes);
-      setStatus(state, { pendingOps: state.pendingOps.length });
+      state.pendingOperations.push(...message.envelopes);
+      setStatus(state, { pendingOperations: state.pendingOperations.length });
       state.channel.postMessage(message.envelopes);
-      sendHubFrame(state, { kind: "ops", envelopes: message.envelopes });
+      sendHubFrame(state, { kind: "operations", envelopes: message.envelopes });
       const folder = folderBinding(state.config);
       // 📁 Folder persistence only understands whole-envelope snapshots today (`vcs::FolderSqliteStorage`
-      // stores one json blob per document) — a local op still marks the document dirty so the next
+      // stores one json blob per document) — a local operation still marks the document dirty so the next
       // `localSnapshot` (which every `store.dispatch` triggers via `flush_outbound`) persists it.
       if (folder) setStatus(state, { persisted: false });
       break;
@@ -433,8 +433,8 @@ async function handleLocalMsg(state: DocumentState, message: DocumentActorMsg): 
       if (folder) {
         try {
           await writeFolder(state, folder, message.envelopeJson);
-          state.pendingOps = [];
-          setStatus(state, { pendingOps: 0 });
+          state.pendingOperations = [];
+          setStatus(state, { pendingOperations: 0 });
         } catch (error) {
           console.error("[backbone-worker] folder write failed", state.config.documentId, error);
         }

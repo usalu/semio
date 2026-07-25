@@ -1121,12 +1121,12 @@ mod tests {
 }
 
 // #region 🔖DocumentVcs
-use vcs::{collection_diff_from_op, invert_collection_op, CollectionDiff, CollectionOp, Identified, Operation, OperationDiff, Patchable};
+use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
 pub const SEQUENCE_FIXTURE_SCHEMA: &str = "sequence.fixture";
 
-pub type SequenceEnvelope = vcs::DocumentVcsEnvelope<SequenceFixture, SequenceOp>;
-pub type SequenceStore = vcs::DocumentVcsStore<SequenceFixture, SequenceOp>;
+pub type SequenceEnvelope = vcs::DocumentVcsEnvelope<SequenceFixture, SequenceOperation>;
+pub type SequenceStore = vcs::DocumentVcsStore<SequenceFixture, SequenceOperation>;
 
 // #region 🔖Collections
 impl Identified<String> for SequenceStep {
@@ -1224,13 +1224,13 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 }
 // #endregion 🔖Collections
 
-// #region 🔖Ops
+// #region 🔖Operations
 /// 🧮 Typed sequence operation: id-keyed step/edge collection edits plus the scalar canvas camera.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum SequenceOp {
-    Steps(CollectionOp<String, SequenceStep, SequenceStepPatch>),
-    Edges(CollectionOp<String, SequenceEdge, SequenceEdgePatch>),
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum SequenceOperation {
+    Steps(CollectionOperation<String, SequenceStep, SequenceStepPatch>),
+    Edges(CollectionOperation<String, SequenceEdge, SequenceEdgePatch>),
     SetCamera { camera: DagCamera },
 }
 
@@ -1266,39 +1266,39 @@ impl OperationDiff<SequenceFixture> for SequenceDiff {
     }
 }
 
-impl Operation<SequenceFixture> for SequenceOp {
+impl Operation<SequenceFixture> for SequenceOperation {
     type Diff = SequenceDiff;
 
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
-            SequenceOp::Steps(op) => SequenceDiff { steps: Some(collection_diff_from_op(&projection.steps, op)), ..Default::default() },
-            SequenceOp::Edges(op) => SequenceDiff { edges: Some(collection_diff_from_op(&projection.edges, op)), ..Default::default() },
-            SequenceOp::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
+            SequenceOperation::Steps(operation) => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, operation)), ..Default::default() },
+            SequenceOperation::Edges(operation) => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, operation)), ..Default::default() },
+            SequenceOperation::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &SequenceFixture) -> Vec<Self> {
         match self {
-            SequenceOp::Steps(op) => vec![SequenceOp::Steps(invert_collection_op(&projection.steps, op))],
-            SequenceOp::Edges(op) => vec![SequenceOp::Edges(invert_collection_op(&projection.edges, op))],
-            SequenceOp::SetCamera { .. } => vec![SequenceOp::SetCamera { camera: projection.camera.clone() }],
+            SequenceOperation::Steps(operation) => vec![SequenceOperation::Steps(invert_collection_operation(&projection.steps, operation))],
+            SequenceOperation::Edges(operation) => vec![SequenceOperation::Edges(invert_collection_operation(&projection.edges, operation))],
+            SequenceOperation::SetCamera { .. } => vec![SequenceOperation::SetCamera { camera: projection.camera.clone() }],
         }
     }
 }
 
-/// 🔀 Diffs two fixtures into a minimal typed op set: removed/added/patched steps and edges plus a
+/// 🔀 Diffs two fixtures into a minimal typed operation set: removed/added/patched steps and edges plus a
 /// camera change. Lets action handlers keep computing the target fixture via {@link SequenceHost}
-/// (with all its cycle/slot/layout logic) while emitting granular, mergeable ops.
-pub fn sequence_fixture_ops(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceOp> {
-    let mut ops = Vec::new();
+/// (with all its cycle/slot/layout logic) while emitting granular, mergeable operations.
+pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFixture) -> Vec<SequenceOperation> {
+    let mut operations = Vec::new();
     for step in &before.steps {
         if !after.steps.iter().any(|entry| entry.id == step.id) {
-            ops.push(SequenceOp::Steps(CollectionOp::Remove { id: step.id.clone() }));
+            operations.push(SequenceOperation::Steps(CollectionOperation::Remove { id: step.id.clone() }));
         }
     }
     for (index, step) in after.steps.iter().enumerate() {
         match before.steps.iter().find(|entry| entry.id == step.id) {
-            None => ops.push(SequenceOp::Steps(CollectionOp::Add { index, item: step.clone() })),
+            None => operations.push(SequenceOperation::Steps(CollectionOperation::Add { index, item: step.clone() })),
             Some(prior) => {
                 let patch = SequenceStepPatch {
                     params: (prior.params != step.params).then(|| step.params.clone()),
@@ -1307,33 +1307,33 @@ pub fn sequence_fixture_ops(before: &SequenceFixture, after: &SequenceFixture) -
                     collapsed: (prior.collapsed != step.collapsed).then_some(step.collapsed),
                 };
                 if patch != SequenceStepPatch::default() {
-                    ops.push(SequenceOp::Steps(CollectionOp::Patch { id: step.id.clone(), patch }));
+                    operations.push(SequenceOperation::Steps(CollectionOperation::Patch { id: step.id.clone(), patch }));
                 }
             }
         }
     }
     for edge in &before.edges {
         if !after.edges.iter().any(|entry| entry.id == edge.id) {
-            ops.push(SequenceOp::Edges(CollectionOp::Remove { id: edge.id.clone() }));
+            operations.push(SequenceOperation::Edges(CollectionOperation::Remove { id: edge.id.clone() }));
         }
     }
     for (index, edge) in after.edges.iter().enumerate() {
         match before.edges.iter().find(|entry| entry.id == edge.id) {
-            None => ops.push(SequenceOp::Edges(CollectionOp::Add { index, item: edge.clone() })),
+            None => operations.push(SequenceOperation::Edges(CollectionOperation::Add { index, item: edge.clone() })),
             Some(prior) => {
                 let patch = SequenceEdgePatch { from: (prior.from != edge.from).then(|| edge.from.clone()), to: (prior.to != edge.to).then(|| edge.to.clone()) };
                 if patch != SequenceEdgePatch::default() {
-                    ops.push(SequenceOp::Edges(CollectionOp::Patch { id: edge.id.clone(), patch }));
+                    operations.push(SequenceOperation::Edges(CollectionOperation::Patch { id: edge.id.clone(), patch }));
                 }
             }
         }
     }
     if before.camera != after.camera {
-        ops.push(SequenceOp::SetCamera { camera: after.camera.clone() });
+        operations.push(SequenceOperation::SetCamera { camera: after.camera.clone() });
     }
-    ops
+    operations
 }
-// #endregion 🔖Ops
+// #endregion 🔖Operations
 
 // #region 🧪OpsTests
 #[cfg(test)]
@@ -1341,13 +1341,13 @@ mod ops_tests {
     use super::*;
     use vcs::{apply_operation, create_document_vcs_envelope, DocumentVcsCommand};
 
-    fn round_trip(fixture: &SequenceFixture, op: &SequenceOp) -> SequenceFixture {
-        let forward = apply_operation(fixture, op);
+    fn round_trip(fixture: &SequenceFixture, operation: &SequenceOperation) -> SequenceFixture {
+        let forward = apply_operation(fixture, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(fixture) {
+        for back in operation.backwards(fixture) {
             restored = apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, fixture, "backwards() must restore the pre-op fixture");
+        assert_eq!(&restored, fixture, "backwards() must restore the pre-operation fixture");
         forward
     }
 
@@ -1355,18 +1355,18 @@ mod ops_tests {
     fn add_remove_patch_steps_round_trip() {
         let fixture = default_fixture();
         let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: Dictionary::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        let added = round_trip(&fixture, &SequenceOp::Steps(CollectionOp::Add { index: 2, item: step }));
+        let added = round_trip(&fixture, &SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: step }));
         assert_eq!(added.steps.len(), 3);
-        let patched = round_trip(&added, &SequenceOp::Steps(CollectionOp::Patch { id: "step-99".into(), patch: SequenceStepPatch { x: Some(120.0), ..Default::default() } }));
+        let patched = round_trip(&added, &SequenceOperation::Steps(CollectionOperation::Patch { id: "step-99".into(), patch: SequenceStepPatch { x: Some(120.0), ..Default::default() } }));
         assert_eq!(patched.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
-        let removed = round_trip(&patched, &SequenceOp::Steps(CollectionOp::Remove { id: "step-99".into() }));
+        let removed = round_trip(&patched, &SequenceOperation::Steps(CollectionOperation::Remove { id: "step-99".into() }));
         assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
     }
 
     #[test]
     fn set_camera_round_trip() {
         let fixture = default_fixture();
-        let next = round_trip(&fixture, &SequenceOp::SetCamera { camera: DagCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
+        let next = round_trip(&fixture, &SequenceOperation::SetCamera { camera: DagCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
         assert_eq!(next.camera.zoom, 2.0);
     }
 
@@ -1375,8 +1375,8 @@ mod ops_tests {
         let mut host = SequenceHost::default();
         let before = host.fixture.clone();
         let id = host.add_step("math.add", 40.0, 40.0);
-        let ops = sequence_fixture_ops(&before, &host.fixture);
-        assert!(ops.iter().any(|op| matches!(op, SequenceOp::Steps(CollectionOp::Add { item, .. }) if item.id == id)));
+        let operations = sequence_fixture_operations(&before, &host.fixture);
+        assert!(operations.iter().any(|operation| matches!(operation, SequenceOperation::Steps(CollectionOperation::Add { item, .. }) if item.id == id)));
     }
 
     #[test]
@@ -1384,7 +1384,7 @@ mod ops_tests {
         let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence", default_fixture(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![SequenceOp::Steps(CollectionOp::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } })],
+                operations: vec![SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } })],
                 description: None,
             })
             .expect("apply");

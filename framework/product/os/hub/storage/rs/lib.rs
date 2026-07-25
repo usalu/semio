@@ -120,7 +120,7 @@ pub mod model {
     }
 
     /// @emoji 🔴 A realtime document connection — the "session as live-features backend" record;
-    /// written by `DocumentActor` on `Subscribe`/disconnect, not per-op.
+    /// written by `DocumentActor` on `Subscribe`/disconnect, not per-operation.
     pub struct SyncSessionRecord {
         pub id: String,
         pub document_id: String,
@@ -156,8 +156,8 @@ pub trait HubStorage: Send + Sync + 'static {
     //#region Documents
     async fn ensure_document(&self, studio_id: &str, id: &str) -> StorageResult<DocumentRecord>;
     async fn save_document(&self, id: &str, schema: &str, snapshot: &serde_json::Value, version: i64) -> StorageResult<()>;
-    async fn insert_op(&self, document_id: &str, version: i64, envelope: &semio_framework_core::OpEnvelope) -> StorageResult<bool>;
-    async fn load_ops(&self, document_id: &str) -> StorageResult<Vec<(i64, semio_framework_core::OpEnvelope)>>;
+    async fn insert_operation(&self, document_id: &str, version: i64, envelope: &semio_framework_core::OperationEnvelope) -> StorageResult<bool>;
+    async fn load_operations(&self, document_id: &str) -> StorageResult<Vec<(i64, semio_framework_core::OperationEnvelope)>>;
     //#endregion
 
     //#region Vfs

@@ -1,0 +1,63 @@
+=== All remaining tokens ending in Op (code) ===
+  74 DrawOp
+  15 storeOp
+  15 stencilStoreOp
+  15 stencilLoadOp
+  15 passOp
+  15 loadOp
+  15 failOp
+  15 depthStoreOp
+  15 depthLoadOp
+  15 depthFailOp
+
+=== ending in Ops ===
+   1 BooleanOps
+
+=== _op / _ops snake leftovers ===
+   2 raw_ops
+   2 positions_ops
+   2 patch_ops
+   2 patch_op
+   2 exh_op
+   2 back_op
+   1 shell_op
+   1 blend_ops
+
+=== DrawOp context ===
+draw/plugin/rs/lib.rs:9:    rgba_to_hex, DrawArtboard, DrawDocument, DrawLayerNode, DrawOp, PathSegment, DRAW_BLEND_MODES, DRAW_BOOLEAN_OPERATIONS, DRAW_DOCUMENT_SCHEMA,
+draw/plugin/rs/lib.rs:301:fn commit_shape_drag(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, start: [f64; 2], end: [f64; 2]) -> Vec<DrawOp> {
+draw/plugin/rs/lib.rs:333:    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+draw/plugin/rs/lib.rs:338:fn commit_draft(interaction: &mut DrawInteractionState, doc: &DrawDocument, utility: &str, points: &[[f64; 2]]) -> Vec<DrawOp> {
+draw/plugin/rs/lib.rs:361:    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+draw/plugin/rs/lib.rs:366:fn commit_trace_at(interaction: &mut DrawInteractionState, doc: &DrawDocument, world: [f64; 2]) -> Vec<DrawOp> {
+draw/plugin/rs/lib.rs:380:    vec![DrawOp::AddLayer { parent_id: None, index: Some(doc.layers.len()), layer: Box::new(layer) }]
+draw/plugin/rs/lib.rs:385:fn commit_with_utility_reset(operations: Vec<DrawOp>, description: &str) -> ActionEmit<DrawOp> {
+draw/plugin/rs/lib.rs:1558:    fn step_gesture(&mut self, event: draw_gesture::Event, document: &DrawDocument) -> ActionEmit<DrawOp> {
+draw/plugin/rs/lib.rs:1601:    type Operation = DrawOp;
+draw/plugin/rs/lib.rs:1621:    ) -> ActionEmit<DrawOp> {
+draw/plugin/rs/lib.rs:1629:                        return ActionEmit::operations(vec![DrawOp::SetDocument { document }]);
+draw/plugin/rs/lib.rs:1645:                        return ActionEmit { operations: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() };
+draw/plugin/rs/lib.rs:1657:                ActionEmit { operations: vec![DrawOp::SetCamera { camera }], coalesce_key: Some("camera".into()), ..Default::default() }
+draw/plugin/rs/lib.rs:1661:                let operations: Vec<DrawOp> = self
+draw/plugin/rs/lib.rs:1666:                    .map(|id| DrawOp::SetLayerOpacity { layer_id: id.clone(), opacity })
+draw/plugin/rs/lib.rs:1683:                ActionEmit::operations(vec![DrawOp::SetLayerName { layer_id: self.interaction.selected_ids[0].clone(), name: value.into() }])
+draw/plugin/rs/lib.rs:1697:                        ActionEmit::operations(vec![DrawOp::SetDocument { document }])
+draw/plugin/rs/lib.rs:1706:                        return ActionEmit::operations(vec![DrawOp::SetDocument { document }]);
+draw/plugin/rs/lib.rs:1715:                ActionEmit::operations(vec![DrawOp::AddLayer { parent_id: None, index: Some(document.layers.len()), layer: Box::new(layer) }])
+
+=== ActionEmit field check ===
+2747:pub struct ActionEmit<Operation> {
+2748:    pub operations: Vec<Operation>,
+2773:    pub fn operations(operations: Vec<Operation>) -> Self {
+2868:    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send;
+
+=== vcs Edit/apply ===
+62:pub struct Edit<Operation> {
+406:pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
+408:    Operation: crate::Operation<P>,
+415:    Operation: crate::Operation<P>,
+428:    Operation: crate::Operation<P>,
+533:    Operation: crate::Operation<P>,
+549:    Operation: crate::Operation<P>,
+2555:        Operation: crate::Operation<P>,
+3689:    fn demo_member<'a, Operation: crate::Operation<DemoProjection> + 'static>(

@@ -123,7 +123,7 @@
       "description": "The operating expenses during one year.",
       "si": "€/a",
       "imperial": "$/yr",
-      "symbol": "C_{op}",
+      "symbol": "C_{operation}",
       "formula": "Add ( compose.costs.annual.operating.expenses.maintenance compose.costs.annual.operating.expenses.energy )",
       "format": "#,##0.##"
     },

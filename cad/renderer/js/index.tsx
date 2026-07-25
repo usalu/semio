@@ -6719,12 +6719,12 @@ if (import.meta.vitest) {
   });
 
   describe("replFilterSuggestions", () => {
-    const noop = () => {};
+    const no_operation = () => {};
 
     it("ranks suggestions without optional detail", () => {
       const rows = replFilterSuggestions("sel", [
-        { kind: "selection", key: "sel", label: "Select all", detail: undefined, onRun: noop },
-        { kind: "action", key: "box", label: "Box", onRun: noop },
+        { kind: "selection", key: "sel", label: "Select all", detail: undefined, onRun: no_operation },
+        { kind: "action", key: "box", label: "Box", onRun: no_operation },
       ]);
       expect(rows.map((row) => row.key)).toEqual(["sel"]);
     });

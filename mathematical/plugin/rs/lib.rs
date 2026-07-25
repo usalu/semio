@@ -137,28 +137,28 @@ impl OperationDiff<MathProjection> for MathDiff {
     }
 }
 
-/// 📤 Coarse-grained ops: each replaces one top-level projection slice; `backwards` snapshots the pre-state.
+/// 📤 Coarse-grained operations: each replaces one top-level projection slice; `backwards` snapshots the pre-state.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-enum MathOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+enum MathOperation {
     SetGraph { graph: MathGraph },
     SetGeometry { geometry: MathGeometry },
 }
 
-impl Operation<MathProjection> for MathOp {
+impl Operation<MathProjection> for MathOperation {
     type Diff = MathDiff;
 
     fn diff(&self, _projection: &MathProjection) -> MathDiff {
         match self {
-            MathOp::SetGraph { graph } => MathDiff { graph: Some(graph.clone()), geometry: None },
-            MathOp::SetGeometry { geometry } => MathDiff { graph: None, geometry: Some(geometry.clone()) },
+            MathOperation::SetGraph { graph } => MathDiff { graph: Some(graph.clone()), geometry: None },
+            MathOperation::SetGeometry { geometry } => MathDiff { graph: None, geometry: Some(geometry.clone()) },
         }
     }
 
     fn backwards(&self, projection: &MathProjection) -> Vec<Self> {
         match self {
-            MathOp::SetGraph { .. } => vec![MathOp::SetGraph { graph: projection.graph.clone() }],
-            MathOp::SetGeometry { .. } => vec![MathOp::SetGeometry { geometry: projection.geometry.clone() }],
+            MathOperation::SetGraph { .. } => vec![MathOperation::SetGraph { graph: projection.graph.clone() }],
+            MathOperation::SetGeometry { .. } => vec![MathOperation::SetGeometry { geometry: projection.geometry.clone() }],
         }
     }
 }
@@ -360,7 +360,7 @@ struct MathematicalPlayApp;
 
 impl DocumentApp for MathematicalPlayApp {
     type Projection = MathProjection;
-    type Op = MathOp;
+    type Operation = MathOperation;
 
     fn app_id(&self) -> &str {
         MATH_APP_ID
@@ -374,18 +374,18 @@ impl DocumentApp for MathematicalPlayApp {
         MathProjection::default()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, MathProjection>, _view_state: &ViewState) -> ActionEmit<MathOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, MathProjection>, _view_state: &ViewState) -> ActionEmit<MathOperation> {
         match action {
             "setDocument" => {
                 if let Some(next) = args.and_then(|value| value.get("document")).and_then(|value| serde_json::from_value::<MathProjection>(value.clone()).ok()) {
-                    let mut ops = Vec::new();
+                    let mut operations = Vec::new();
                     if next.graph != doc.projection.graph {
-                        ops.push(MathOp::SetGraph { graph: next.graph });
+                        operations.push(MathOperation::SetGraph { graph: next.graph });
                     }
                     if next.geometry != doc.projection.geometry {
-                        ops.push(MathOp::SetGeometry { geometry: next.geometry });
+                        operations.push(MathOperation::SetGeometry { geometry: next.geometry });
                     }
-                    return ActionEmit::ops(ops);
+                    return ActionEmit::operations(operations);
                 }
             }
             "setAlgorithm" => {
@@ -393,38 +393,38 @@ impl DocumentApp for MathematicalPlayApp {
                     let mut graph = doc.projection.graph.clone();
                     graph.algorithm = algorithm.to_string();
                     graph.algorithm_seed = args.and_then(|value| value.get("seed")).and_then(Value::as_str).map(str::to_string);
-                    return ActionEmit::commit(vec![MathOp::SetGraph { graph }], "setAlgorithm");
+                    return ActionEmit::commit(vec![MathOperation::SetGraph { graph }], "setAlgorithm");
                 }
             }
             "setDirected" => {
                 if let Some(directed) = args.and_then(|value| value.get("directed")).and_then(Value::as_bool) {
                     let mut graph = doc.projection.graph.clone();
                     graph.directed = directed;
-                    return ActionEmit::ops(vec![MathOp::SetGraph { graph }]);
+                    return ActionEmit::operations(vec![MathOperation::SetGraph { graph }]);
                 }
             }
             "nodeGraphEdit" => {
-                let edit_ops = args.and_then(|value| value.get("ops")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
+                let edit_operations = args.and_then(|value| value.get("operations")).and_then(|value| value.as_array()).cloned().unwrap_or_default();
                 let mut graph = doc.projection.graph.clone();
                 let mut changed = false;
-                for op in edit_ops {
-                    match op.get("op").and_then(Value::as_str).unwrap_or("") {
+                for operation in edit_operations {
+                    match operation.get("operation").and_then(Value::as_str).unwrap_or("") {
                         "addNode" => {
-                            let x = op.get("x").and_then(Value::as_f64).unwrap_or(0.0);
-                            let y = op.get("y").and_then(Value::as_f64).unwrap_or(0.0);
+                            let x = operation.get("x").and_then(Value::as_f64).unwrap_or(0.0);
+                            let y = operation.get("y").and_then(Value::as_f64).unwrap_or(0.0);
                             let id = format!("n{}", graph.nodes.len());
                             graph.nodes.push(MathNode { label: id.to_uppercase(), id, x, y });
                             changed = true;
                         }
                         "connect" => {
-                            if let (Some(source), Some(target)) = (op.get("sourceNodeId").and_then(Value::as_str), op.get("targetNodeId").and_then(Value::as_str)) {
+                            if let (Some(source), Some(target)) = (operation.get("sourceNodeId").and_then(Value::as_str), operation.get("targetNodeId").and_then(Value::as_str)) {
                                 let id = format!("e{}", graph.edges.len());
                                 graph.edges.push(MathEdge { id, source: source.into(), target: target.into() });
                                 changed = true;
                             }
                         }
                         "deleteSelection" => {
-                            if let Some(ids) = op.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
+                            if let Some(ids) = operation.get("nodeIds").and_then(|value| serde_json::from_value::<Vec<String>>(value.clone()).ok()) {
                                 graph.nodes.retain(|node| !ids.contains(&node.id));
                                 graph.edges.retain(|edge| !ids.contains(&edge.source) && !ids.contains(&edge.target));
                                 changed = true;
@@ -434,7 +434,7 @@ impl DocumentApp for MathematicalPlayApp {
                     }
                 }
                 if changed {
-                    return ActionEmit::ops(vec![MathOp::SetGraph { graph }]);
+                    return ActionEmit::operations(vec![MathOperation::SetGraph { graph }]);
                 }
             }
             "nodeGraphViewport" => {
@@ -442,13 +442,13 @@ impl DocumentApp for MathematicalPlayApp {
                     if let Ok(camera) = serde_json::from_str::<MathCamera>(viewport_json) {
                         let mut graph = doc.projection.graph.clone();
                         graph.camera = camera;
-                        return ActionEmit::amend(vec![MathOp::SetGraph { graph }], "viewport");
+                        return ActionEmit::amend(vec![MathOperation::SetGraph { graph }], "viewport");
                     }
                 }
             }
             "setPoints" => {
                 if let Some(points) = args.and_then(|value| value.get("points")).and_then(|value| serde_json::from_value::<Vec<(f64, f64)>>(value.clone()).ok()) {
-                    return ActionEmit::ops(vec![MathOp::SetGeometry { geometry: MathGeometry { points } }]);
+                    return ActionEmit::operations(vec![MathOperation::SetGeometry { geometry: MathGeometry { points } }]);
                 }
             }
             _ => {}

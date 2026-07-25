@@ -1,0 +1,21 @@
+$ bun ./script.ts nx run @semio-tech/ui-react:test -- -t "renders a top-center drag handle"
+
+> nx run @semio-tech/ui-react:test -t renders a top-center drag handle
+
+> bun ./script.ts test -t "renders a top-center drag handle"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  1 passed | 396 skipped (397)
+   Start at  22:23:51
+   Duration  6.07s (transform 1.37s, setup 147ms, import 5.23s, tests 61ms, environment 448ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

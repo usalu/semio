@@ -1,7 +1,7 @@
 # #region 🔖Header
 # 2026 Ueli Saluz
 # AGPL-3.0
-# OS hub backend — VFS nodes, document snapshots, op log, sessions, WebSocket streaming.
+# OS hub backend — VFS nodes, document snapshots, operation log, sessions, WebSocket streaming.
 # #endregion 🔖Header
 
 [package]

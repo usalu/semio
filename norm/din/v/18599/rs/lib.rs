@@ -521,10 +521,10 @@ pub fn check_primary_energy(inputs: &BalancingInputs) -> Result<CheckResult, Nor
 }
 
 // #region 🔖Session
-use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOp};
+use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
 pub type Document = BalancingInputs;
-pub type Op = SetDocumentOp<Document>;
+pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<DinV18599Family>;
 
 impl Default for Document {
@@ -545,7 +545,7 @@ pub struct DinV18599Family;
 
 impl NormFamily for DinV18599Family {
     type Document = Document;
-    type Op = Op;
+    type Operation = Operation;
 
     fn family_id() -> NormFamilyId {
         NormFamilyId::DinV18599

@@ -3791,7 +3791,7 @@ pub struct ExtractedFrame {
     pub image: remodel_image::ImageRgba8,
 }
 
-/// 🔻 Box-filtered (bilinear-sampled) downscale so the longer side is at most `max_long_edge_px`; a no-op
+/// 🔻 Box-filtered (bilinear-sampled) downscale so the longer side is at most `max_long_edge_px`; a no-operation
 /// when already within budget or `max_long_edge_px == 0`. Built on [`remodel_image::ImageRgba8::sample_rgb`]
 /// rather than a new resize primitive in `remodel_image` itself.
 fn resize_to_max_long_edge(img: remodel_image::ImageRgba8, max_long_edge_px: u32) -> remodel_image::ImageRgba8 {

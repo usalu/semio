@@ -266,9 +266,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "target", "value"],
+          "required": ["operation", "target", "value"],
           "properties": {
-            "op": { "const": "assign" },
+            "operation": { "const": "assign" },
             "target": { "$ref": "#/$defs/pathTarget" },
             "value": { "$ref": "expression.json" }
           }
@@ -276,18 +276,18 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "target"],
+          "required": ["operation", "target"],
           "properties": {
-            "op": { "const": "clear" },
+            "operation": { "const": "clear" },
             "target": { "$ref": "#/$defs/pathTarget" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "target", "value"],
+          "required": ["operation", "target", "value"],
           "properties": {
-            "op": { "const": "append" },
+            "operation": { "const": "append" },
             "target": { "$ref": "#/$defs/pathTarget" },
             "value": { "$ref": "expression.json" }
           }
@@ -295,9 +295,9 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "event"],
+          "required": ["operation", "event"],
           "properties": {
-            "op": { "const": "emit" },
+            "operation": { "const": "emit" },
             "event": {
               "type": "object",
               "additionalProperties": false,
@@ -309,50 +309,50 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "event"],
+          "required": ["operation", "event"],
           "properties": {
-            "op": { "const": "raise" },
+            "operation": { "const": "raise" },
             "event": { "type": "string" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "openTransaction" }
+            "operation": { "const": "openTransaction" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "commitTransaction" }
+            "operation": { "const": "commitTransaction" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "rollbackTransaction" }
+            "operation": { "const": "rollbackTransaction" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "requestPreview" }
+            "operation": { "const": "requestPreview" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "query", "assignTo", "params"],
+          "required": ["operation", "query", "assignTo", "params"],
           "properties": {
-            "op": { "const": "kernel.query" },
+            "operation": { "const": "kernel.query" },
             "query": { "type": "string" },
             "assignTo": { "$ref": "#/$defs/pathTarget" },
             "params": { "$ref": "#/$defs/kernelQueryParams" }
@@ -361,17 +361,17 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op"],
+          "required": ["operation"],
           "properties": {
-            "op": { "const": "resolveEditable" }
+            "operation": { "const": "resolveEditable" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "severity", "code", "message"],
+          "required": ["operation", "severity", "code", "message"],
           "properties": {
-            "op": { "const": "setDiagnostic" },
+            "operation": { "const": "setDiagnostic" },
             "severity": { "type": "string", "enum": ["info", "warning", "error"] },
             "code": { "type": "string" },
             "message": { "type": "string" }
@@ -380,18 +380,18 @@
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "code"],
+          "required": ["operation", "code"],
           "properties": {
-            "op": { "const": "clearDiagnostic" },
+            "operation": { "const": "clearDiagnostic" },
             "code": { "type": "string" }
           }
         },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["op", "action"],
+          "required": ["operation", "action"],
           "properties": {
-            "op": { "const": "action" },
+            "operation": { "const": "action" },
             "action": { "type": "string", "minLength": 1 },
             "params": {
               "type": "object",

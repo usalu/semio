@@ -3,7 +3,7 @@
 //! symbolic-coefficient linear systems via Cramer's rule, and univariate rational-function inequalities
 //! via root isolation + sign sampling.
 
-use crate::expr::{Constant, Expr, Kind, RelOp};
+use crate::expr::{Constant, Expr, Kind, RelationalOperator};
 use crate::fnkind::FnKind;
 use mathematical_number::{Integer, Natural, Rational};
 use mathematical_polynomial::PolyU;
@@ -261,13 +261,13 @@ fn linear_coeffs_expr(eq: &Expr, vars: &[Expr]) -> Option<(Vec<Expr>, Expr)> {
 // #endregion 🔖LinearSystems
 
 // #region 🔖Inequalities
-/// 📏 Solves a univariate rational-function inequality `e <op> 0` via real root isolation of the
+/// 📏 Solves a univariate rational-function inequality `e <operation> 0` via real root isolation of the
 /// numerator and denominator, then samples the sign of `e` at the midpoint of each interval between
 /// consecutive critical points. The sampling itself uses `f64` midpoints (a documented heuristic —
 /// exact Sturm-based sign evaluation at rational sample points would be fully certified, but midpoint
 /// sampling is correct as long as no two distinct critical points round to the same `f64`, which is
 /// true for any inputs realistic at this scale).
-pub fn solve_inequality(e: &Expr, op: RelOp, x: &Expr) -> SolutionSet {
+pub fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> SolutionSet {
     let Some((num_m, den_m, map)) = crate::polybridge::as_ratfunc_auto(e) else { return SolutionSet::Unknown };
     if map.gens.len() != 1 || map.gens[0] != *x {
         return SolutionSet::Unknown;
@@ -307,12 +307,12 @@ pub fn solve_inequality(e: &Expr, op: RelOp, x: &Expr) -> SolutionSet {
             0.0
         };
         let value = sample_at(sample);
-        let holds = match op {
-            RelOp::Gt => value > 0.0,
-            RelOp::Ge => value >= 0.0,
-            RelOp::Lt => value < 0.0,
-            RelOp::Le => value <= 0.0,
-            RelOp::Eq | RelOp::Ne => false, // equalities/disequalities go through solve_univariate, not here
+        let holds = match operation {
+            RelationalOperator::Gt => value > 0.0,
+            RelationalOperator::Ge => value >= 0.0,
+            RelationalOperator::Lt => value < 0.0,
+            RelationalOperator::Le => value <= 0.0,
+            RelationalOperator::Eq | RelationalOperator::Ne => false, // equalities/disequalities go through solve_univariate, not here
         };
         if holds {
             let lo_bound = if lo.is_finite() { Bound::Value(Expr::from(Rational::from_f64(lo).unwrap_or_else(Rational::zero))) } else { Bound::NegInf };
@@ -426,7 +426,7 @@ mod tests {
         let x = Expr::symbol("x");
         // x^2 - 1 > 0  ->  x < -1 or x > 1
         let e = Expr::pow(x.clone(), Expr::integer(2)) - Expr::integer(1);
-        let result = solve_inequality(&e, RelOp::Gt, &x);
+        let result = solve_inequality(&e, RelationalOperator::Gt, &x);
         match result {
             SolutionSet::Intervals(intervals) => assert_eq!(intervals.len(), 2),
             other => panic!("expected Intervals, got {other:?}"),

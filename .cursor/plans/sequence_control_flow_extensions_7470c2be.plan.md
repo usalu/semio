@@ -30,7 +30,7 @@ todos:
    content: Create sequence.worker.ts hosting headless imperative_core WASM run(); wire SequencePlayController run/stop commands through worker with terminate-based cancellation
    status: completed
  - id: imperative-play-parity
-   content: Refactor imperative/react into a recursive StepListEditor with path-scoped session ops for nested bodies; route run() through the same worker pattern
+   content: Refactor imperative/react into a recursive StepListEditor with path-scoped session operations for nested bodies; route run() through the same worker pattern
    status: completed
  - id: tests-verification
    content: Extend Rust and Vitest test suites across all touched crates/packages; run cargo test and bun nx test; browser-verify both dev servers including a long-loop Stop scenario; open/close repo ticket

@@ -297,7 +297,7 @@ const ThemeHost: React.FC<{ children: React.ReactNode; themeId: string }> = ({ c
   return <>{children}</>;
 };
 
-/** @emoji 🎨 Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-op until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
+/** @emoji 🎨 Applies the `theme` toolbar selection via `setActiveUiTheme`; a no-operation until the toolbar's `items` are populated (see `populateThemeToolbarItems` below) since `initialGlobals.theme` is unset by default. */
 export const withTheme: Decorator = (Story, context) => {
   const themeId = context.globals.theme as string | undefined;
   if (!themeId) return <Story />;

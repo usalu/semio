@@ -2,7 +2,7 @@
 
 use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
-    MergeStrategyKind, OpEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
+    MergeStrategyKind, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_hash::hash_bytes;
@@ -59,15 +59,15 @@ pub struct OperationMeta {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct Edit<Op> {
+pub struct Edit<Operation> {
     pub id: String,
     /// @emoji 🖋️ Authoring actor id. Local edits carry the dispatching actor; ingested edits carry
-    /// the incoming {@link OpEnvelope}'s actor. Drives {@link UndoPolicy} (foreign edits are never
+    /// the incoming {@link OperationEnvelope}'s actor. Drives {@link UndoPolicy} (foreign edits are never
     /// undone locally). `None` means unauthored/legacy and is treated as local.
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub actor: Option<String>,
-    pub forwards: Vec<Op>,
-    pub backwards: Vec<Op>,
+    pub forwards: Vec<Operation>,
+    pub backwards: Vec<Operation>,
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub operation_meta: Vec<OperationMeta>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -114,9 +114,9 @@ pub struct Alternative {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentVcs<P, Op> {
+pub struct DocumentVcs<P, Operation> {
     pub initial_projection: P,
-    pub edits: Vec<Edit<Op>>,
+    pub edits: Vec<Edit<Operation>>,
     pub changes: Vec<Change>,
     pub checkpoints: Vec<Checkpoint>,
     pub alternatives: Vec<Alternative>,
@@ -124,10 +124,10 @@ pub struct DocumentVcs<P, Op> {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct DocumentVcsEnvelope<P, Op> {
+pub struct DocumentVcsEnvelope<P, Operation> {
     pub schema: String,
     pub id: String,
-    pub vcs: DocumentVcs<P, Op>,
+    pub vcs: DocumentVcs<P, Operation>,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub backbone: Option<DocumentBackboneRef>,
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -136,9 +136,9 @@ pub struct DocumentVcsEnvelope<P, Op> {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum DocumentVcsCommand<Op> {
+pub enum DocumentVcsCommand<Operation> {
     Apply {
-        operations: Vec<Op>,
+        operations: Vec<Operation>,
         #[serde(skip_serializing_if = "Option::is_none")]
         description: Option<String>,
     },
@@ -166,7 +166,7 @@ pub enum DocumentVcsCommand<Op> {
         checkpoint_id: String,
     },
     AmendLast {
-        operations: Vec<Op>,
+        operations: Vec<Operation>,
         /// @emoji 🪢 Matches the last uncommitted edit's `coalesce_key` to absorb into it instead of creating a new edit.
         coalesce_key: Option<String>,
     },
@@ -230,8 +230,8 @@ impl<TId, TPatch, TAdded> Default for CollectionDiff<TId, TPatch, TAdded> {
 }
 //#endregion 🔖CollectionDiff
 
-//#region 🔖CollectionOp
-/// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection ops.
+//#region 🔖CollectionOperation
+/// @emoji 🏷️ Identifies an item within a `Vec` by a stable id, for generic collection operations.
 pub trait Identified<TId> {
     fn id(&self) -> &TId;
 }
@@ -244,35 +244,35 @@ pub trait Patchable<TPatch> {
 /// @emoji 🧺 Generic ordered-collection operation (add/remove/move/patch) with mechanical pre-state inverses.
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum CollectionOp<TId, TItem, TPatch> {
+pub enum CollectionOperation<TId, TItem, TPatch> {
     Add { index: usize, item: TItem },
     Remove { id: TId },
     Move { id: TId, to_index: usize },
     Patch { id: TId, patch: TPatch },
 }
 
-/// @emoji ▶️ Applies a `CollectionOp` to a `Vec` in place.
-pub fn apply_collection_op<TId, TItem, TPatch>(items: &mut Vec<TItem>, op: &CollectionOp<TId, TItem, TPatch>)
+/// @emoji ▶️ Applies a `CollectionOperation` to a `Vec` in place.
+pub fn apply_collection_operation<TId, TItem, TPatch>(items: &mut Vec<TItem>, operation: &CollectionOperation<TId, TItem, TPatch>)
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
 {
-    match op {
-        CollectionOp::Add { index, item } => {
+    match operation {
+        CollectionOperation::Add { index, item } => {
             let at = (*index).min(items.len());
             items.insert(at, item.clone());
         }
-        CollectionOp::Remove { id } => {
+        CollectionOperation::Remove { id } => {
             items.retain(|item| item.id() != id);
         }
-        CollectionOp::Move { id, to_index } => {
+        CollectionOperation::Move { id, to_index } => {
             if let Some(from) = items.iter().position(|item| item.id() == id) {
                 let item = items.remove(from);
                 let at = (*to_index).min(items.len());
                 items.insert(at, item);
             }
         }
-        CollectionOp::Patch { id, patch } => {
+        CollectionOperation::Patch { id, patch } => {
             if let Some(item) = items.iter_mut().find(|item| item.id() == id) {
                 item.apply_patch(patch);
             }
@@ -280,46 +280,46 @@ where
     }
 }
 
-/// @emoji ↩️ Computes the inverse `CollectionOp` from the pre-state `items`. Panics if `op` targets
+/// @emoji ↩️ Computes the inverse `CollectionOperation` from the pre-state `items`. Panics if `operation` targets
 /// an id absent from `items` (Remove/Move/Patch always target an existing item by construction).
-pub fn invert_collection_op<TId, TItem, TPatch>(
+pub fn invert_collection_operation<TId, TItem, TPatch>(
     items: &[TItem],
-    op: &CollectionOp<TId, TItem, TPatch>,
-) -> CollectionOp<TId, TItem, TPatch>
+    operation: &CollectionOperation<TId, TItem, TPatch>,
+) -> CollectionOperation<TId, TItem, TPatch>
 where
     TId: PartialEq + Clone,
     TItem: Identified<TId> + Clone + Patchable<TPatch>,
 {
-    match op {
-        CollectionOp::Add { item, .. } => CollectionOp::Remove { id: item.id().clone() },
-        CollectionOp::Remove { id } => {
+    match operation {
+        CollectionOperation::Add { item, .. } => CollectionOperation::Remove { id: item.id().clone() },
+        CollectionOperation::Remove { id } => {
             let index = items
                 .iter()
                 .position(|item| item.id() == id)
                 .expect("remove target must exist in pre-state");
-            CollectionOp::Add {
+            CollectionOperation::Add {
                 index,
                 item: items[index].clone(),
             }
         }
-        CollectionOp::Move { id, .. } => {
+        CollectionOperation::Move { id, .. } => {
             let index = items
                 .iter()
                 .position(|item| item.id() == id)
                 .expect("move target must exist in pre-state");
-            CollectionOp::Move {
+            CollectionOperation::Move {
                 id: id.clone(),
                 to_index: index,
             }
         }
-        CollectionOp::Patch { id, patch } => {
+        CollectionOperation::Patch { id, patch } => {
             let mut prior = items
                 .iter()
                 .find(|item| item.id() == id)
                 .cloned()
                 .expect("patch target must exist in pre-state");
             let inverse_patch = prior.apply_patch(patch);
-            CollectionOp::Patch {
+            CollectionOperation::Patch {
                 id: id.clone(),
                 patch: inverse_patch,
             }
@@ -327,14 +327,14 @@ where
     }
 }
 
-/// @emoji 🧮 Projects a `CollectionOp` onto a sparse {@link CollectionDiff}, so a plugin's
+/// @emoji 🧮 Projects a `CollectionOperation` onto a sparse {@link CollectionDiff}, so a plugin's
 /// `Operation::diff` can produce a diff in one call instead of hand-writing `removed`/`modified`/
 /// `added`. `Add` → `added`, `Remove` → `removed`, `Patch` → `modified`. `CollectionDiff` has no
 /// positional-move channel, so `Move` is encoded as `removed` + `added` (delete then re-add by
 /// identity); a plugin that keeps items keyed by id reconstructs order from item identity.
-pub fn collection_diff_from_op<TId, TItem, TPatch>(
+pub fn collection_diff_from_operation<TId, TItem, TPatch>(
     items: &[TItem],
-    op: &CollectionOp<TId, TItem, TPatch>,
+    operation: &CollectionOperation<TId, TItem, TPatch>,
 ) -> CollectionDiff<TId, TPatch, TItem>
 where
     TId: PartialEq + Clone,
@@ -342,14 +342,14 @@ where
     TPatch: Clone,
 {
     let mut diff = CollectionDiff::default();
-    match op {
-        CollectionOp::Add { item, .. } => diff.added.push(item.clone()),
-        CollectionOp::Remove { id } => diff.removed.push(id.clone()),
-        CollectionOp::Patch { id, patch } => diff.modified.push(ItemPatch {
+    match operation {
+        CollectionOperation::Add { item, .. } => diff.added.push(item.clone()),
+        CollectionOperation::Remove { id } => diff.removed.push(id.clone()),
+        CollectionOperation::Patch { id, patch } => diff.modified.push(ItemPatch {
             id: id.clone(),
             patch: patch.clone(),
         }),
-        CollectionOp::Move { id, .. } => {
+        CollectionOperation::Move { id, .. } => {
             if let Some(item) = items.iter().find(|item| item.id() == id) {
                 diff.removed.push(id.clone());
                 diff.added.push(item.clone());
@@ -358,7 +358,7 @@ where
     }
     diff
 }
-//#endregion 🔖CollectionOp
+//#endregion 🔖CollectionOperation
 
 //#region 🔖Operation
 /// @emoji 📦 Centralized projection mutation — one `apply` per technology.
@@ -394,7 +394,7 @@ pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
         MergeStrategyKind::LwwRegister
     }
     /// @emoji 🤝 Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
-    /// Defaults to a no-op so every existing document kind keeps its exact prior behavior; a
+    /// Defaults to a no-operation so every existing document kind keeps its exact prior behavior; a
     /// technology opts in by overriding this to inspect `projection` and report {@link StudioConflict}s.
     /// Takes `projection` by value (rather than adding a `P: Clone` bound to this trait) since the
     /// only caller already owns a freshly materialized projection.
@@ -403,29 +403,29 @@ pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
     }
 }
 
-pub fn apply_operation<P, Op>(projection: &P, operation: &Op) -> P
+pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
 where
-    Op: Operation<P>,
+    Operation: crate::Operation<P>,
 {
     operation.diff(projection).apply(projection)
 }
 
-pub fn absorb_diff<P, Op>(_projection: &P, existing: &mut Op::Diff, incoming: Op::Diff)
+pub fn absorb_diff<P, Operation>(_projection: &P, existing: &mut Operation::Diff, incoming: Operation::Diff)
 where
-    Op: Operation<P>,
+    Operation: crate::Operation<P>,
 {
     existing.absorb(incoming);
 }
 //#endregion 🔖Operation
 
 //#region 🔖MergeStrategy
-pub fn merge_concurrent_diffs<P, Op>(
+pub fn merge_concurrent_diffs<P, Operation>(
     _projection: &P,
     strategy: MergeStrategyKind,
-    existing: &mut Op::Diff,
-    incoming: Op::Diff,
+    existing: &mut Operation::Diff,
+    incoming: Operation::Diff,
 ) where
-    Op: Operation<P>,
+    Operation: crate::Operation<P>,
 {
     match strategy {
         MergeStrategyKind::LwwRegister | MergeStrategyKind::OrderedSequence
@@ -436,15 +436,15 @@ pub fn merge_concurrent_diffs<P, Op>(
     }
 }
 
-pub fn reconcile_alternative<P, Op>(
-    envelope: &mut DocumentVcsEnvelope<P, Op>,
+pub fn reconcile_alternative<P, Operation>(
+    envelope: &mut DocumentVcsEnvelope<P, Operation>,
     alternative_name: &str,
     checkpoint_message: Option<String>,
     authors: Vec<Author>,
 ) -> Result<String, VcsError>
 where
     P: Clone + Serialize + DeserializeOwned,
-    Op: Clone + Serialize + DeserializeOwned,
+    Operation: Clone + Serialize + DeserializeOwned,
 {
     if envelope.vcs.checkpoints.is_empty() {
         return Err(VcsError::NoCheckpoint);
@@ -486,12 +486,12 @@ where
 //#endregion 🔖MergeStrategy
 
 //#region 🔖Materialize
-pub fn create_document_vcs_envelope<P, Op>(
+pub fn create_document_vcs_envelope<P, Operation>(
     schema: &str,
     id: &str,
     initial_projection: P,
     backbone: Option<DocumentBackboneRef>,
-) -> DocumentVcsEnvelope<P, Op>
+) -> DocumentVcsEnvelope<P, Operation>
 where
     P: Clone,
 {
@@ -510,9 +510,9 @@ where
     }
 }
 
-pub fn edit_ids_for_changes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, change_ids: &[String]) -> Vec<String>
+pub fn edit_ids_for_changes<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, change_ids: &[String]) -> Vec<String>
 where
-    Op: Clone,
+    Operation: Clone,
     P: Clone,
 {
     let mut edit_ids = Vec::new();
@@ -524,13 +524,13 @@ where
     edit_ids
 }
 
-pub fn materialize_document_projection<P, Op>(
-    envelope: &DocumentVcsEnvelope<P, Op>,
+pub fn materialize_document_projection<P, Operation>(
+    envelope: &DocumentVcsEnvelope<P, Operation>,
     applied_edit_ids: &[String],
 ) -> Result<P, VcsError>
 where
     P: Clone,
-    Op: Operation<P>,
+    Operation: crate::Operation<P>,
 {
     materialize_document_projection_with_conflicts(envelope, applied_edit_ids).map(|(projection, _conflicts)| projection)
 }
@@ -540,13 +540,13 @@ where
 /// than changing `materialize_document_projection`'s signature) so every existing caller across the
 /// workspace is unaffected; call sites that care about conflicts (e.g. `DocumentVcsStore`) opt into
 /// this one instead.
-pub fn materialize_document_projection_with_conflicts<P, Op>(
-    envelope: &DocumentVcsEnvelope<P, Op>,
+pub fn materialize_document_projection_with_conflicts<P, Operation>(
+    envelope: &DocumentVcsEnvelope<P, Operation>,
     applied_edit_ids: &[String],
 ) -> Result<(P, Vec<StudioConflict>), VcsError>
 where
     P: Clone,
-    Op: Operation<P>,
+    Operation: crate::Operation<P>,
 {
     let mut projection = envelope.vcs.initial_projection.clone();
     for edit_id in applied_edit_ids {
@@ -560,7 +560,7 @@ where
             projection = apply_operation(&projection, operation);
         }
     }
-    Ok(Op::reconcile(projection))
+    Ok(Operation::reconcile(projection))
 }
 
 fn now_iso() -> String {
@@ -582,9 +582,9 @@ fn now_ms() -> u64 {
     }
 }
 
-fn uncommitted_edit_ids<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, applied_edit_ids: &[String]) -> Vec<String>
+fn uncommitted_edit_ids<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, applied_edit_ids: &[String]) -> Vec<String>
 where
-    Op: Clone,
+    Operation: Clone,
     P: Clone,
 {
     let committed: std::collections::HashSet<String> = envelope
@@ -619,8 +619,8 @@ pub struct HistoryColumn {
     pub alternative_ids: Vec<String>,
 }
 
-fn checkpoint_alternatives<'a, P, Op>(
-    envelope: &'a DocumentVcsEnvelope<P, Op>,
+fn checkpoint_alternatives<'a, P, Operation>(
+    envelope: &'a DocumentVcsEnvelope<P, Operation>,
     checkpoint_id: &str,
 ) -> Vec<&'a Alternative> {
     envelope
@@ -631,12 +631,12 @@ fn checkpoint_alternatives<'a, P, Op>(
         .collect()
 }
 
-fn is_checkpoint_main_only<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>, checkpoint_id: &str) -> bool {
+fn is_checkpoint_main_only<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, checkpoint_id: &str) -> bool {
     checkpoint_alternatives(envelope, checkpoint_id).is_empty()
 }
 
-fn has_main_only_descendant<P, Op>(
-    envelope: &DocumentVcsEnvelope<P, Op>,
+fn has_main_only_descendant<P, Operation>(
+    envelope: &DocumentVcsEnvelope<P, Operation>,
     children_of: &HashMap<String, Vec<String>>,
     checkpoint_id: &str,
     seen: &mut HashSet<String>,
@@ -656,7 +656,7 @@ fn has_main_only_descendant<P, Op>(
 /// `0` is the main trunk. A checkpoint sits on lane 0 if it belongs to no alternative or has any
 /// main-only descendant (cycle-guarded DFS); otherwise it takes its single alternative's lane, or
 /// the minimum lane among several. Mirrors premigration `assignHistoryCheckpointLanes`.
-fn assign_history_checkpoint_lanes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> HashMap<String, usize> {
+fn assign_history_checkpoint_lanes<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> HashMap<String, usize> {
     let mut lane_by_alternative: HashMap<String, usize> = HashMap::new();
     for (index, alternative) in envelope.vcs.alternatives.iter().enumerate() {
         lane_by_alternative.insert(alternative.id.clone(), index + 1);
@@ -698,7 +698,7 @@ fn assign_history_checkpoint_lanes<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>)
 /// @emoji 📜 Builds the ancestor-graph rows for a checkpoint history view: newest checkpoint first,
 /// each carrying its swimlane, labels (alternative names, `"main"` fallback on the newest unlabeled
 /// row), and authors. Mirrors premigration `buildHistoryColumns`.
-pub fn build_history_columns<P, Op>(envelope: &DocumentVcsEnvelope<P, Op>) -> Vec<HistoryColumn> {
+pub fn build_history_columns<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Vec<HistoryColumn> {
     let lane_by_checkpoint_id = assign_history_checkpoint_lanes(envelope);
     envelope
         .vcs
@@ -742,12 +742,12 @@ struct AmendCache<P> {
     post_projection: P,
 }
 
-pub struct DocumentVcsStore<P, Op>
+pub struct DocumentVcsStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned,
-    Op: Clone + Serialize + DeserializeOwned + Operation<P>,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
 {
-    envelope: DocumentVcsEnvelope<P, Op>,
+    envelope: DocumentVcsEnvelope<P, Operation>,
     backbone: Option<Box<dyn Backbone>>,
     dag: semio_framework_core::OpDag,
     applied_edit_ids: Vec<String>,
@@ -765,7 +765,7 @@ where
     local_actor_id: Option<String>,
     /// @emoji 🤝 Conflicts reported by the last {@link Operation::reconcile} pass, refreshed after
     /// remote ingestion (see {@link ingest_envelope}). Empty for every document kind that keeps the
-    /// default no-op `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
+    /// default no-operation `reconcile`. Not part of the wire envelope — it is derived, not source of truth.
     conflicts: Vec<StudioConflict>,
     /// @emoji 🪢 See {@link AmendCache}. `None` whenever there is nothing to reuse (fresh store, or the
     /// last command wasn't a matching `AmendLast`) — always safe, just forces the next amend onto the
@@ -779,15 +779,15 @@ fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
     operation_meta.first().map(|meta| meta.author_id.clone())
 }
 
-impl<P, Op> DocumentVcsStore<P, Op>
+impl<P, Operation> DocumentVcsStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned,
-    Op: Clone + Serialize + DeserializeOwned + Operation<P>,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
 {
     /// @emoji 🚫 A store is always constructed with no backbone attached — the envelope's
     /// `backbone` field is a descriptor of the last attachment, never an instruction to
     /// reconnect. Callers attach explicitly via {@link attach_backbone}/{@link attach_backbone_uri}.
-    pub fn new(envelope: DocumentVcsEnvelope<P, Op>) -> Self {
+    pub fn new(envelope: DocumentVcsEnvelope<P, Operation>) -> Self {
         let current_checkpoint_id = envelope.vcs.checkpoints.last().map(|checkpoint| checkpoint.id.clone());
         Self {
             envelope,
@@ -808,7 +808,7 @@ where
         self.generation
     }
 
-    pub fn envelope(&self) -> &DocumentVcsEnvelope<P, Op> {
+    pub fn envelope(&self) -> &DocumentVcsEnvelope<P, Operation> {
         &self.envelope
     }
 
@@ -850,7 +850,7 @@ where
     /// @emoji 🔧 The most recently created/amended edit's `(forwards, backwards, per-operation meta)`.
     /// Used right after `dispatch(Apply{..})`/`AmendLast` to build a `KernelOperation`/`InvocationResult`
     /// with a true inverse from the just-recorded `Edit.backwards`.
-    pub fn edit_operations(&self) -> Option<(&[Op], &[Op], &[OperationMeta])> {
+    pub fn edit_operations(&self) -> Option<(&[Operation], &[Operation], &[OperationMeta])> {
         self.envelope.vcs.edits.last().map(|edit| {
             (
                 edit.forwards.as_slice(),
@@ -865,7 +865,7 @@ where
         build_history_columns(&self.envelope)
     }
 
-    pub fn set_envelope(&mut self, envelope: DocumentVcsEnvelope<P, Op>, applied_edit_ids: Vec<String>) {
+    pub fn set_envelope(&mut self, envelope: DocumentVcsEnvelope<P, Operation>, applied_edit_ids: Vec<String>) {
         self.set_state(envelope, applied_edit_ids, Vec::new());
     }
 
@@ -873,7 +873,7 @@ where
     /// round-tripping through a serialized envelope (e.g. one `dispatch` call per request).
     pub fn set_state(
         &mut self,
-        envelope: DocumentVcsEnvelope<P, Op>,
+        envelope: DocumentVcsEnvelope<P, Operation>,
         applied_edit_ids: Vec<String>,
         redo_edit_ids: Vec<String>,
     ) {
@@ -930,14 +930,14 @@ where
         &self.conflicts
     }
 
-    pub fn dispatch(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
+    pub fn dispatch(&mut self, command: DocumentVcsCommand<Operation>) -> Result<(), VcsError> {
         self.pump()?;
         let is_apply = matches!(command, DocumentVcsCommand::Apply { .. });
         self.dispatch_inner(command)?;
         self.flush_outbound(is_apply)
     }
 
-    fn dispatch_inner(&mut self, command: DocumentVcsCommand<Op>) -> Result<(), VcsError> {
+    fn dispatch_inner(&mut self, command: DocumentVcsCommand<Operation>) -> Result<(), VcsError> {
         match command {
             DocumentVcsCommand::Undo => self.dispatch(DocumentVcsCommand::UndoWithPolicy {
                 policy: UndoPolicy::ExactBaseOnly,
@@ -972,7 +972,7 @@ where
                     let command_json = semantic_command.ok_or_else(|| {
                         VcsError::Backbone("semantic undo requires compensating command".into())
                     })?;
-                    let command: DocumentVcsCommand<Op> =
+                    let command: DocumentVcsCommand<Operation> =
                         serde_json::from_str(&command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
                     self.dispatch_inner(command)
                 }
@@ -1207,7 +1207,7 @@ where
 
     /// @emoji 🔂 Replays `operations` over `pre_projection`, returning forwards, reversed-backwards,
     /// per-operation metadata, and the resulting projection. Shared by `Apply` and `AmendLast`.
-    fn replay_operations(pre_projection: &P, operations: Vec<Op>) -> (Vec<Op>, Vec<Op>, Vec<OperationMeta>, P) {
+    fn replay_operations(pre_projection: &P, operations: Vec<Operation>) -> (Vec<Operation>, Vec<Operation>, Vec<OperationMeta>, P) {
         let mut projection = pre_projection.clone();
         let mut forwards = Vec::with_capacity(operations.len());
         let mut backwards = Vec::new();
@@ -1238,7 +1238,7 @@ where
     }
 
     pub fn dispatch_json(&mut self, command_json: &str) -> Result<(), VcsError> {
-        let command: DocumentVcsCommand<Op> =
+        let command: DocumentVcsCommand<Operation> =
             serde_json::from_str(command_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
         self.dispatch(command)
     }
@@ -1289,10 +1289,10 @@ where
         self.pump()
     }
 
-    /// @emoji 🕸️ Feeds a remote {@link OpEnvelope} through the causal DAG, applying it (and any
+    /// @emoji 🕸️ Feeds a remote {@link OperationEnvelope} through the causal DAG, applying it (and any
     /// now-unblocked dependents) into the edit timeline. Closes the sync gap between
     /// `framework/sync`'s `OpDag` and the vcs edit history.
-    pub fn ingest_remote(&mut self, envelope: OpEnvelope) -> Result<(), VcsError> {
+    pub fn ingest_remote(&mut self, envelope: OperationEnvelope) -> Result<(), VcsError> {
         self.dag
             .insert(envelope)
             .map_err(|error| VcsError::Backbone(error.to_string()))?;
@@ -1302,8 +1302,8 @@ where
         Ok(())
     }
 
-    fn ingest_envelope(&mut self, envelope: OpEnvelope) -> Result<(), VcsError> {
-        let mut edit: Edit<Op> = edit_from_op_envelope(&envelope)?;
+    fn ingest_envelope(&mut self, envelope: OperationEnvelope) -> Result<(), VcsError> {
+        let mut edit: Edit<Operation> = edit_from_operation_envelope(&envelope)?;
         edit.actor = Some(envelope.actor.0.clone());
         if self.envelope.vcs.edits.iter().any(|existing| existing.id == edit.id) {
             return Ok(());
@@ -1321,7 +1321,7 @@ where
     }
 
     fn merge_remote_snapshot(&mut self, envelope_json: &str) -> Result<(), VcsError> {
-        let remote: DocumentVcsEnvelope<P, Op> =
+        let remote: DocumentVcsEnvelope<P, Operation> =
             serde_json::from_str(envelope_json).map_err(|e| VcsError::Deserialize(e.to_string()))?;
         if self.envelope.vcs.edits.is_empty() {
             let applied: Vec<String> = remote.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
@@ -1387,7 +1387,7 @@ where
         for message in messages {
             match message {
                 BackboneMessage::Snapshot { envelope_json } => self.merge_remote_snapshot(&envelope_json)?,
-                BackboneMessage::Ops { envelopes } => {
+                BackboneMessage::Operations { envelopes } => {
                     let op_ids: Vec<String> = envelopes.iter().map(|envelope| envelope.id.0.clone()).collect();
                     for envelope in envelopes {
                         self.ingest_remote(envelope)?;
@@ -1408,7 +1408,7 @@ where
         Ok(true)
     }
 
-    /// @emoji 📤 Sends the just-applied change outward: a single {@link OpEnvelope} for `Apply`,
+    /// @emoji 📤 Sends the just-applied change outward: a single {@link OperationEnvelope} for `Apply`,
     /// or a full snapshot for every structural command (undo/redo/checkpoint/alternative/amend).
     fn flush_outbound(&mut self, is_apply: bool) -> Result<(), VcsError> {
         let Some(mut backbone) = self.backbone.take() else {
@@ -1418,12 +1418,12 @@ where
             match self.envelope.vcs.edits.last() {
                 Some(edit) => {
                     let deps = self.previous_edit_dependency();
-                    match op_envelope_from_edit(&self.envelope, edit, deps) {
+                    match operation_envelope_from_edit(&self.envelope, edit, deps) {
                         Ok(op_envelope) => {
                             // Registers this locally-authored edit as already-applied in our own
                             // DAG, so a later remote envelope that depends on it doesn't stall as pending.
                             let _ = self.dag.insert(op_envelope.clone());
-                            backbone.send(BackboneMessage::Ops { envelopes: vec![op_envelope] })
+                            backbone.send(BackboneMessage::Operations { envelopes: vec![op_envelope] })
                         }
                         Err(error) => Err(error),
                     }
@@ -1465,13 +1465,13 @@ fn merge_by_id<T: Clone>(local: &mut Vec<T>, remote: Vec<T>, id_of: impl Fn(&T) 
 }
 
 /// @emoji 📦 Serializes an `Edit` into the causal wire envelope exchanged over a backbone channel.
-pub fn op_envelope_from_edit<P, Op>(
-    envelope: &DocumentVcsEnvelope<P, Op>,
-    edit: &Edit<Op>,
+pub fn operation_envelope_from_edit<P, Operation>(
+    envelope: &DocumentVcsEnvelope<P, Operation>,
+    edit: &Edit<Operation>,
     deps: Vec<OperationId>,
-) -> Result<OpEnvelope, VcsError>
+) -> Result<OperationEnvelope, VcsError>
 where
-    Op: Serialize,
+    Operation: Serialize,
 {
     let payload = serde_json::to_value(edit).map_err(|e| VcsError::Serialize(e.to_string()))?;
     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
@@ -1485,7 +1485,7 @@ where
         .last()
         .map(|meta| meta.undo_policy)
         .unwrap_or(UndoPolicy::ExactBaseOnly);
-    Ok(OpEnvelope {
+    Ok(OperationEnvelope {
         id: OperationId(edit.id.clone()),
         actor: ActorId(author_id),
         document: DocumentId(envelope.id.clone()),
@@ -1509,10 +1509,10 @@ where
     })
 }
 
-/// @emoji 📦 Recovers an `Edit` from the causal wire envelope produced by `op_envelope_from_edit`.
-pub fn edit_from_op_envelope<Op>(envelope: &OpEnvelope) -> Result<Edit<Op>, VcsError>
+/// @emoji 📦 Recovers an `Edit` from the causal wire envelope produced by `operation_envelope_from_edit`.
+pub fn edit_from_operation_envelope<Operation>(envelope: &OperationEnvelope) -> Result<Edit<Operation>, VcsError>
 where
-    Op: DeserializeOwned,
+    Operation: DeserializeOwned,
 {
     serde_json::from_value(envelope.diff.payload.clone()).map_err(|e| VcsError::Deserialize(e.to_string()))
 }
@@ -1532,8 +1532,8 @@ pub struct StudioConflict {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum BackboneMessage {
     Snapshot { envelope_json: String },
-    Ops { envelopes: Vec<OpEnvelope> },
-    /// @emoji ✅ Acknowledges inbound ops the store has ingested (store→actor). Lets a future actor
+    Operations { envelopes: Vec<OperationEnvelope> },
+    /// @emoji ✅ Acknowledges inbound operations the store has ingested (store→actor). Lets a future actor
     /// implement at-least-once redelivery with id-based dedupe — safe across store crashes/reloads.
     Ack { op_ids: Vec<String> },
 }
@@ -2033,9 +2033,9 @@ impl BlobStore for FolderSqliteStorage {
 
 //#region 🔖Studio
 //#region StudioMember
-/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentVcsStore<P, Op>` so a studio host can hold a
+/// @emoji 🧑‍🤝‍🧑 Object-safe façade over a `DocumentVcsStore<P, Operation>` so a studio host can hold a
 /// heterogeneous registry of documents (`HashMap<String, Box<dyn StudioMember>>`) without knowing
-/// each member's concrete `P`/`Op`. Blanket-implemented below by delegating to `dispatch` — never
+/// each member's concrete `P`/`Operation`. Blanket-implemented below by delegating to `dispatch` — never
 /// reimplement the underlying VCS mechanics here.
 pub trait StudioMember {
     fn document_id(&self) -> &str;
@@ -2052,16 +2052,16 @@ pub trait StudioMember {
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
-    /// `DocumentVcsStore<P, Op>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
-    /// technology-specific `Op`, which can't appear in this object-safe trait. `Self: 'static` is
-    /// implied by every real `P`/`Op` pair, so this never fails for a genuine member.
+    /// `DocumentVcsStore<P, Operation>` back out of a `Box<dyn StudioMember>` — e.g. to `Apply` a
+    /// technology-specific `Operation`, which can't appear in this object-safe trait. `Self: 'static` is
+    /// implied by every real `P`/`Operation` pair, so this never fails for a genuine member.
     fn as_any_mut(&mut self) -> &mut dyn std::any::Any;
 }
 
-impl<P, Op> StudioMember for DocumentVcsStore<P, Op>
+impl<P, Operation> StudioMember for DocumentVcsStore<P, Operation>
 where
     P: Clone + Serialize + DeserializeOwned + 'static,
-    Op: Clone + Serialize + DeserializeOwned + Operation<P> + 'static,
+    Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P> + 'static,
 {
     fn document_id(&self) -> &str {
         self.envelope().id.as_str()
@@ -2206,8 +2206,8 @@ pub struct StudioHistoryProjection {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum StudioHistoryOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum StudioHistoryOperation {
     CommitStudioCheckpoint { checkpoint: StudioCheckpoint },
     CreateStudioAlternative { alternative: StudioAlternative },
     SwitchStudioAlternative { alternative_id: String },
@@ -2276,33 +2276,33 @@ impl OperationDiff<StudioHistoryProjection> for StudioHistoryDiff {
     }
 }
 
-impl Operation<StudioHistoryProjection> for StudioHistoryOp {
+impl Operation<StudioHistoryProjection> for StudioHistoryOperation {
     type Diff = StudioHistoryDiff;
 
     fn diff(&self, _projection: &StudioHistoryProjection) -> StudioHistoryDiff {
         match self {
-            StudioHistoryOp::CommitStudioCheckpoint { checkpoint } => StudioHistoryDiff {
+            StudioHistoryOperation::CommitStudioCheckpoint { checkpoint } => StudioHistoryDiff {
                 add_checkpoint: Some(checkpoint.clone()),
                 ..Default::default()
             },
-            StudioHistoryOp::CreateStudioAlternative { alternative } => StudioHistoryDiff {
+            StudioHistoryOperation::CreateStudioAlternative { alternative } => StudioHistoryDiff {
                 add_alternative: Some(alternative.clone()),
                 set_active_alternative_id: Some(Some(alternative.id.clone())),
                 ..Default::default()
             },
-            StudioHistoryOp::SwitchStudioAlternative { alternative_id } => StudioHistoryDiff {
+            StudioHistoryOperation::SwitchStudioAlternative { alternative_id } => StudioHistoryDiff {
                 set_active_alternative_id: Some(Some(alternative_id.clone())),
                 ..Default::default()
             },
-            StudioHistoryOp::RemoveStudioCheckpoint { checkpoint_id } => StudioHistoryDiff {
+            StudioHistoryOperation::RemoveStudioCheckpoint { checkpoint_id } => StudioHistoryDiff {
                 remove_checkpoint_id: Some(checkpoint_id.clone()),
                 ..Default::default()
             },
-            StudioHistoryOp::RemoveStudioAlternative { alternative_id } => StudioHistoryDiff {
+            StudioHistoryOperation::RemoveStudioAlternative { alternative_id } => StudioHistoryDiff {
                 remove_alternative_id: Some(alternative_id.clone()),
                 ..Default::default()
             },
-            StudioHistoryOp::SetActiveStudioAlternative { alternative_id } => StudioHistoryDiff {
+            StudioHistoryOperation::SetActiveStudioAlternative { alternative_id } => StudioHistoryDiff {
                 set_active_alternative_id: Some(alternative_id.clone()),
                 ..Default::default()
             },
@@ -2311,35 +2311,35 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOp {
 
     fn backwards(&self, projection: &StudioHistoryProjection) -> Vec<Self> {
         match self {
-            StudioHistoryOp::CommitStudioCheckpoint { checkpoint } => {
-                vec![StudioHistoryOp::RemoveStudioCheckpoint {
+            StudioHistoryOperation::CommitStudioCheckpoint { checkpoint } => {
+                vec![StudioHistoryOperation::RemoveStudioCheckpoint {
                     checkpoint_id: checkpoint.id.clone(),
                 }]
             }
-            StudioHistoryOp::CreateStudioAlternative { alternative } => vec![
-                StudioHistoryOp::SetActiveStudioAlternative {
+            StudioHistoryOperation::CreateStudioAlternative { alternative } => vec![
+                StudioHistoryOperation::SetActiveStudioAlternative {
                     alternative_id: projection.active_alternative_id.clone(),
                 },
-                StudioHistoryOp::RemoveStudioAlternative {
+                StudioHistoryOperation::RemoveStudioAlternative {
                     alternative_id: alternative.id.clone(),
                 },
             ],
-            StudioHistoryOp::SwitchStudioAlternative { .. } => vec![StudioHistoryOp::SetActiveStudioAlternative {
+            StudioHistoryOperation::SwitchStudioAlternative { .. } => vec![StudioHistoryOperation::SetActiveStudioAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
-            StudioHistoryOp::RemoveStudioCheckpoint { checkpoint_id } => projection
+            StudioHistoryOperation::RemoveStudioCheckpoint { checkpoint_id } => projection
                 .checkpoints
                 .iter()
                 .find(|checkpoint| checkpoint.id == *checkpoint_id)
-                .map(|checkpoint| vec![StudioHistoryOp::CommitStudioCheckpoint { checkpoint: checkpoint.clone() }])
+                .map(|checkpoint| vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint: checkpoint.clone() }])
                 .unwrap_or_default(),
-            StudioHistoryOp::RemoveStudioAlternative { alternative_id } => projection
+            StudioHistoryOperation::RemoveStudioAlternative { alternative_id } => projection
                 .alternatives
                 .iter()
                 .find(|alternative| alternative.id == *alternative_id)
-                .map(|alternative| vec![StudioHistoryOp::CreateStudioAlternative { alternative: alternative.clone() }])
+                .map(|alternative| vec![StudioHistoryOperation::CreateStudioAlternative { alternative: alternative.clone() }])
                 .unwrap_or_default(),
-            StudioHistoryOp::SetActiveStudioAlternative { .. } => vec![StudioHistoryOp::SetActiveStudioAlternative {
+            StudioHistoryOperation::SetActiveStudioAlternative { .. } => vec![StudioHistoryOperation::SetActiveStudioAlternative {
                 alternative_id: projection.active_alternative_id.clone(),
             }],
         }
@@ -2352,12 +2352,12 @@ impl Operation<StudioHistoryProjection> for StudioHistoryOp {
 /// timeline, itself stored in a dogfooded `"os.studio.history"` meta-document. App-agnostic: this
 /// crate has no notion of what a member document *is*, only that it satisfies `StudioMember`.
 pub struct StudioVcsHost {
-    meta: DocumentVcsStore<StudioHistoryProjection, StudioHistoryOp>,
+    meta: DocumentVcsStore<StudioHistoryProjection, StudioHistoryOperation>,
     members: HashMap<String, Box<dyn StudioMember>>,
 }
 
 impl StudioVcsHost {
-    pub fn new(meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOp>) -> Self {
+    pub fn new(meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOperation>) -> Self {
         Self {
             meta: DocumentVcsStore::new(meta_envelope),
             members: HashMap::new(),
@@ -2444,7 +2444,7 @@ impl StudioVcsHost {
             members: pins,
         };
         self.meta.dispatch(DocumentVcsCommand::Apply {
-            operations: vec![StudioHistoryOp::CommitStudioCheckpoint { checkpoint }],
+            operations: vec![StudioHistoryOperation::CommitStudioCheckpoint { checkpoint }],
             description: Some(message),
         })?;
         self.meta.dispatch(DocumentVcsCommand::CommitCheckpoint {
@@ -2465,7 +2465,7 @@ impl StudioVcsHost {
             checkpoint_ids: checkpoint_id.into_iter().collect(),
         };
         self.meta.dispatch(DocumentVcsCommand::Apply {
-            operations: vec![StudioHistoryOp::CreateStudioAlternative { alternative }],
+            operations: vec![StudioHistoryOperation::CreateStudioAlternative { alternative }],
             description: None,
         })?;
         Ok(alternative_id)
@@ -2498,7 +2498,7 @@ impl StudioVcsHost {
             .ok_or_else(|| VcsError::UnknownAlternative(alternative_id.to_string()))?;
         let checkpoint_id = alternative.checkpoint_ids.last().cloned().ok_or(VcsError::NoCheckpoint)?;
         self.meta.dispatch(DocumentVcsCommand::Apply {
-            operations: vec![StudioHistoryOp::SwitchStudioAlternative {
+            operations: vec![StudioHistoryOperation::SwitchStudioAlternative {
                 alternative_id: alternative_id.to_string(),
             }],
             description: None,
@@ -2508,7 +2508,7 @@ impl StudioVcsHost {
 
     /// @emoji ↩️ Derived, local-only undo: targets whichever registered member has the most recent
     /// `last_local_edit_timestamp` (by {@link HybridLogicalTimestamp::cmp_key}) and undoes just that
-    /// member. Never dispatched against the meta-document — studio-level undo has no `StudioHistoryOp`
+    /// member. Never dispatched against the meta-document — studio-level undo has no `StudioHistoryOperation`
     /// of its own, it is purely a cross-member ordering policy.
     pub fn undo(&mut self) -> Result<(), VcsError> {
         let target = self
@@ -2548,33 +2548,33 @@ impl StudioVcsHost {
 pub mod test_support {
     use super::*;
 
-    /// @emoji 🔁 Asserts that applying `op` then applying its reversed `backwards(pre)` restores `pre`.
-    pub fn assert_operation_round_trip<P, Op>(pre: &P, op: Op)
+    /// @emoji 🔁 Asserts that applying `operation` then applying its reversed `backwards(pre)` restores `pre`.
+    pub fn assert_operation_round_trip<P, Operation>(pre: &P, operation: Operation)
     where
         P: Clone + PartialEq + std::fmt::Debug,
-        Op: Operation<P>,
+        Operation: crate::Operation<P>,
     {
-        let post = apply_operation(pre, &op);
-        let mut backwards = op.backwards(pre);
+        let post = apply_operation(pre, &operation);
+        let mut backwards = operation.backwards(pre);
         backwards.reverse();
         let restored = backwards
             .iter()
-            .fold(post, |projection, back_op| apply_operation(&projection, back_op));
+            .fold(post, |projection, back_operation| apply_operation(&projection, back_operation));
         assert_eq!(&restored, pre, "operation backwards did not restore pre-state");
     }
 
     /// @emoji 🗄️ Asserts a full store round trip: Apply→Undo restores `initial`, Redo restores the
     /// post-apply projection, and replay-materialization agrees with the live store projection.
-    pub fn assert_store_roundtrip<P, Op>(initial: P, op: Op)
+    pub fn assert_store_roundtrip<P, Operation>(initial: P, operation: Operation)
     where
         P: Clone + Serialize + DeserializeOwned + PartialEq + std::fmt::Debug,
-        Op: Clone + Serialize + DeserializeOwned + Operation<P>,
+        Operation: Clone + Serialize + DeserializeOwned + crate::Operation<P>,
     {
         let envelope = create_document_vcs_envelope("test/v1", "test", initial.clone(), None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![op],
+                operations: vec![operation],
                 description: None,
             })
             .expect("apply");
@@ -2627,52 +2627,52 @@ mod tests {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op")]
-    enum DemoOp {
+    #[serde(tag = "operation")]
+    enum DemoOperation {
         SetN { n: i32 },
     }
 
-    impl Operation<DemoProjection> for DemoOp {
+    impl Operation<DemoProjection> for DemoOperation {
         type Diff = DemoDiff;
 
         fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
             match self {
-                DemoOp::SetN { n } => DemoDiff { n: Some(*n) },
+                DemoOperation::SetN { n } => DemoDiff { n: Some(*n) },
             }
         }
 
         fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![DemoOp::SetN { n: projection.n }]
+            vec![DemoOperation::SetN { n: projection.n }]
         }
     }
 
-    /// @emoji 🛰️ Builds a foreign {@link OpEnvelope} (as if authored by `actor` on another peer) by
-    /// applying `op` in a throwaway peer store and stamping the envelope's actor id.
-    fn foreign_op_envelope(actor: &str, op: DemoOp) -> OpEnvelope {
-        let mut peer = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+    /// @emoji 🛰️ Builds a foreign {@link OperationEnvelope} (as if authored by `actor` on another peer) by
+    /// applying `operation` in a throwaway peer store and stamping the envelope's actor id.
+    fn foreign_operation_envelope(actor: &str, operation: DemoOperation) -> OperationEnvelope {
+        let mut peer = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "demo",
             DemoProjection { n: 0 },
             None,
         ));
         peer.dispatch(DocumentVcsCommand::Apply {
-            operations: vec![op],
+            operations: vec![operation],
             description: None,
         })
         .expect("peer apply");
         let edit = peer.envelope().vcs.edits.last().expect("peer edit").clone();
-        let mut envelope = op_envelope_from_edit(peer.envelope(), &edit, Vec::new()).expect("op envelope");
+        let mut envelope = operation_envelope_from_edit(peer.envelope(), &edit, Vec::new()).expect("operation envelope");
         envelope.actor = ActorId(actor.to_string());
         envelope
     }
 
     #[test]
-    fn materialize_replays_forward_ops() {
+    fn materialize_replays_forward_operations() {
         let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2686,7 +2686,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2702,12 +2702,12 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 5 }],
+                operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
         let edit = &store.envelope().vcs.edits[0];
-        assert_eq!(edit.backwards, vec![DemoOp::SetN { n: 0 }]);
+        assert_eq!(edit.backwards, vec![DemoOperation::SetN { n: 0 }]);
     }
 
     #[test]
@@ -2716,7 +2716,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2741,7 +2741,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2754,7 +2754,7 @@ mod tests {
         let checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 9 }],
+                operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
             .expect("apply2");
@@ -2773,7 +2773,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2785,7 +2785,7 @@ mod tests {
         let alt_id = store.envelope().vcs.alternatives[0].id.clone();
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply on branch");
@@ -2803,7 +2803,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2816,7 +2816,7 @@ mod tests {
         let c1 = store.envelope().vcs.checkpoints[0].id.clone();
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
@@ -2832,7 +2832,7 @@ mod tests {
         assert_eq!(store.current_checkpoint_id(), Some(c1.as_str()));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 9 }],
+                operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
             .expect("apply");
@@ -2858,7 +2858,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2873,7 +2873,7 @@ mod tests {
             .expect("create alternative");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
@@ -2893,7 +2893,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2905,7 +2905,7 @@ mod tests {
             .expect("commit c1");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
@@ -2931,7 +2931,7 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply");
@@ -2948,7 +2948,7 @@ mod tests {
             .expect("create feature-a");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply");
@@ -2967,7 +2967,7 @@ mod tests {
             .expect("create feature-b");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 3 }],
+                operations: vec![DemoOperation::SetN { n: 3 }],
                 description: None,
             })
             .expect("apply");
@@ -2983,7 +2983,7 @@ mod tests {
             .expect("checkout root again");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 4 }],
+                operations: vec![DemoOperation::SetN { n: 4 }],
                 description: None,
             })
             .expect("apply");
@@ -3017,7 +3017,7 @@ mod tests {
 
     #[test]
     fn no_backbone_by_default() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         assert!(envelope.backbone.is_none(), "a fresh document has no attached backbone");
         let store = DocumentVcsStore::new(envelope);
@@ -3027,9 +3027,9 @@ mod tests {
     #[test]
     fn memory_backbone_pair_propagates_edits_bidirectionally() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        let envelope_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store_a = DocumentVcsStore::new(envelope_a);
         let mut store_b = DocumentVcsStore::new(envelope_b);
@@ -3038,7 +3038,7 @@ mod tests {
 
         store_a
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply on a");
@@ -3047,7 +3047,7 @@ mod tests {
 
         store_b
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply on b");
@@ -3058,7 +3058,7 @@ mod tests {
     #[test]
     fn detach_backbone_stops_synchronizing_but_keeps_the_wip_graph() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("peer-a", "peer-b");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store_a = DocumentVcsStore::new(envelope.clone());
         let mut store_b = DocumentVcsStore::new(envelope);
@@ -3069,7 +3069,7 @@ mod tests {
 
         store_a
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 9 }],
+                operations: vec![DemoOperation::SetN { n: 9 }],
                 description: None,
             })
             .expect("apply after detach still works on the in-memory graph");
@@ -3080,22 +3080,22 @@ mod tests {
 
     #[test]
     fn deserialized_envelope_with_stale_backbone_ref_never_auto_attaches() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut stale_json: serde_json::Value =
             serde_json::to_value(&envelope).expect("serialize envelope");
         stale_json["backbone"] = serde_json::json!({ "uri": "folder:///nonexistent/path" });
-        let stale_envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let stale_envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_value(stale_json).expect("deserialize envelope with stale backbone ref");
 
         let mut store = DocumentVcsStore::new(stale_envelope.clone());
         assert!(
-            store.tick().expect("tick with no live backbone is a no-op") == false,
+            store.tick().expect("tick with no live backbone is a no-operation") == false,
             "no backbone was ever attached, so there is nothing to pump"
         );
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply works purely against the in-memory graph");
@@ -3103,7 +3103,7 @@ mod tests {
 
         store.set_state(stale_envelope, Vec::new(), Vec::new());
         assert!(
-            store.tick().expect("tick after set_state with no live backbone is a no-op") == false,
+            store.tick().expect("tick after set_state with no live backbone is a no-operation") == false,
             "set_state must not resurrect IO from a stale backbone descriptor either"
         );
     }
@@ -3113,12 +3113,12 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FileJsonStorage::new(dir.path().join("demo.json"));
         assert_eq!(storage.read().expect("read empty"), None, "absent file reads as None");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
         storage
             .write(&serde_json::to_string(&envelope).expect("json"))
             .expect("write");
-        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read().expect("read").expect("some")).expect("parse");
         assert_eq!(loaded.id, "demo");
     }
@@ -3128,9 +3128,9 @@ mod tests {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
         assert_eq!(storage.read("doc-a").expect("read empty"), None, "absent document reads as None");
-        let env_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let env_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
-        let env_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let env_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "doc-b", DemoProjection { n: 7 }, None);
         storage
             .write("doc-a", "demo/v1", &serde_json::to_string(&env_a).expect("json a"))
@@ -3138,19 +3138,19 @@ mod tests {
         storage
             .write("doc-b", "demo/v1", &serde_json::to_string(&env_b).expect("json b"))
             .expect("write b");
-        let loaded_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let loaded_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-a").expect("read a").expect("some a")).expect("parse a");
-        let loaded_b: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let loaded_b: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-b").expect("read b").expect("some b")).expect("parse b");
         assert_eq!(loaded_a.vcs.initial_projection.n, 3, "documents are keyed independently");
         assert_eq!(loaded_b.vcs.initial_projection.n, 7);
 
-        let env_a2: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let env_a2: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 5 }, None);
         storage
             .write("doc-a", "demo/v1", &serde_json::to_string(&env_a2).expect("json a2"))
             .expect("upsert a");
-        let reloaded_a: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let reloaded_a: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             serde_json::from_str(&storage.read("doc-a").expect("reread a").expect("some a2")).expect("parse a2");
         assert_eq!(reloaded_a.vcs.initial_projection.n, 5, "writing the same id upserts in place");
 
@@ -3187,12 +3187,12 @@ mod tests {
     #[test]
     fn attach_reconciles_a_pushed_snapshot() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let seeded: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let seeded: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut seed_store = DocumentVcsStore::new(seeded);
         seed_store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 5 }],
+                operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
@@ -3202,7 +3202,7 @@ mod tests {
             })
             .expect("push snapshot");
 
-        let fresh: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let fresh: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(fresh);
         store.attach_backbone(Box::new(channel)).expect("attach reconciles the pushed snapshot");
@@ -3212,7 +3212,7 @@ mod tests {
     #[test]
     fn channel_backbone_round_trips_between_store_and_actor() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
@@ -3224,64 +3224,64 @@ mod tests {
 
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 4 }],
+                operations: vec![DemoOperation::SetN { n: 4 }],
                 description: None,
             })
             .expect("apply");
         let outbound = remote.drain().expect("drain apply");
         assert!(
-            outbound.iter().any(|message| matches!(message, BackboneMessage::Ops { .. })),
-            "a local apply is sent outbound as ops: {outbound:?}"
+            outbound.iter().any(|message| matches!(message, BackboneMessage::Operations { .. })),
+            "a local apply is sent outbound as operations: {outbound:?}"
         );
 
         remote
-            .push(BackboneMessage::Ops {
-                envelopes: vec![foreign_op_envelope("peer", DemoOp::SetN { n: 8 })],
+            .push(BackboneMessage::Operations {
+                envelopes: vec![foreign_operation_envelope("peer", DemoOperation::SetN { n: 8 })],
             })
-            .expect("push inbound ops");
+            .expect("push inbound operations");
         store.tick().expect("tick");
-        assert_eq!(store.projection().expect("projection").n, 8, "store ingests the actor's inbound ops");
+        assert_eq!(store.projection().expect("projection").n, 8, "store ingests the actor's inbound operations");
     }
 
     #[test]
-    fn pump_acks_ingested_ops() {
+    fn pump_acks_ingested_operations() {
         let (channel, remote) = ChannelBackbone::pair("chan");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store.attach_backbone(Box::new(channel)).expect("attach");
         let _ = remote.drain().expect("drain attach snapshot");
 
-        let inbound = foreign_op_envelope("peer", DemoOp::SetN { n: 7 });
-        let op_id = inbound.id.0.clone();
+        let inbound = foreign_operation_envelope("peer", DemoOperation::SetN { n: 7 });
+        let operation_id = inbound.id.0.clone();
         remote
-            .push(BackboneMessage::Ops { envelopes: vec![inbound] })
-            .expect("push inbound ops");
+            .push(BackboneMessage::Operations { envelopes: vec![inbound] })
+            .expect("push inbound operations");
         store.tick().expect("tick");
-        assert_eq!(store.projection().expect("projection").n, 7, "ingested the inbound op");
+        assert_eq!(store.projection().expect("projection").n, 7, "ingested the inbound operation");
 
         let outbound = remote.drain().expect("drain ack");
         assert!(
             outbound
                 .iter()
-                .any(|message| matches!(message, BackboneMessage::Ack { op_ids } if op_ids == &vec![op_id.clone()])),
-            "successful ops ingest emits an Ack for the ingested op ids: {outbound:?}"
+                .any(|message| matches!(message, BackboneMessage::Ack { op_ids } if op_ids == &vec![operation_id.clone()])),
+            "successful operations ingest emits an Ack for the ingested operation ids: {outbound:?}"
         );
     }
 
     #[test]
     fn exact_base_only_undo_refuses_a_foreign_tail() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("local apply");
         store
-            .ingest_remote(foreign_op_envelope("peer", DemoOp::SetN { n: 2 }))
+            .ingest_remote(foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 }))
             .expect("ingest foreign");
         assert_eq!(store.projection().expect("projection").n, 2, "foreign edit sits at the tail");
 
@@ -3297,17 +3297,17 @@ mod tests {
 
     #[test]
     fn transform_against_concurrent_undo_skips_over_a_foreign_tail() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("local apply");
         let local_edit_id = store.applied_edit_ids()[0].clone();
-        let foreign = foreign_op_envelope("peer", DemoOp::SetN { n: 2 });
+        let foreign = foreign_operation_envelope("peer", DemoOperation::SetN { n: 2 });
         let foreign_id = foreign.id.0.clone();
         store.ingest_remote(foreign).expect("ingest foreign");
         assert_eq!(store.applied_edit_ids().len(), 2, "local + foreign are both applied");
@@ -3337,17 +3337,17 @@ mod tests {
 
     #[test]
     fn compensating_undo_dispatches_semantic_command() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 5 }],
+                operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
         let undo_apply = serde_json::to_string(&DocumentVcsCommand::Apply {
-            operations: vec![DemoOp::SetN { n: 0 }],
+            operations: vec![DemoOperation::SetN { n: 0 }],
             description: Some("compensate".into()),
         })
         .expect("serialize undo apply");
@@ -3366,9 +3366,9 @@ mod tests {
             DemoItem { id: "a".into(), value: 1 },
             DemoItem { id: "b".into(), value: 2 },
         ];
-        let added = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(
+        let added = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(
             &items,
-            &CollectionOp::Add {
+            &CollectionOperation::Add {
                 index: 0,
                 item: DemoItem { id: "c".into(), value: 3 },
             },
@@ -3376,12 +3376,12 @@ mod tests {
         assert_eq!(added.added.len(), 1);
         assert!(added.removed.is_empty() && added.modified.is_empty());
 
-        let removed = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(&items, &CollectionOp::Remove { id: "a".into() });
+        let removed = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(&items, &CollectionOperation::Remove { id: "a".into() });
         assert_eq!(removed.removed, vec!["a".to_string()]);
 
-        let patched = collection_diff_from_op(
+        let patched = collection_diff_from_operation(
             &items,
-            &CollectionOp::Patch {
+            &CollectionOperation::Patch {
                 id: "b".into(),
                 patch: DemoItemPatch { value: Some(9) },
             },
@@ -3389,7 +3389,7 @@ mod tests {
         assert_eq!(patched.modified.len(), 1);
         assert_eq!(patched.modified[0].id, "b");
 
-        let moved = collection_diff_from_op::<String, DemoItem, DemoItemPatch>(&items, &CollectionOp::Move { id: "a".into(), to_index: 1 });
+        let moved = collection_diff_from_operation::<String, DemoItem, DemoItemPatch>(&items, &CollectionOperation::Move { id: "a".into(), to_index: 1 });
         assert_eq!(moved.removed, vec!["a".to_string()], "move is encoded as remove + re-add by identity");
         assert_eq!(moved.added.len(), 1);
         assert_eq!(moved.added[0].id, "a");
@@ -3397,36 +3397,36 @@ mod tests {
 
     #[test]
     fn edit_operations_exposes_the_latest_edit() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         assert!(store.edit_operations().is_none(), "no edits yet");
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 5 }],
+                operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply");
         let (forwards, backwards, meta) = store.edit_operations().expect("edit operations");
-        assert_eq!(forwards, &[DemoOp::SetN { n: 5 }]);
-        assert_eq!(backwards, &[DemoOp::SetN { n: 0 }], "backwards restores the pre-state");
+        assert_eq!(forwards, &[DemoOperation::SetN { n: 5 }]);
+        assert_eq!(backwards, &[DemoOperation::SetN { n: 0 }], "backwards restores the pre-state");
         assert_eq!(meta.len(), 1);
     }
 
     #[test]
     fn amend_last_absorbs_into_matching_coalesce_key() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("first amend");
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("second amend");
@@ -3446,13 +3446,13 @@ mod tests {
         // amends into the same coalesced edit — e.g. a long slider drag — must still produce exactly the
         // same edit (forwards/backwards/operation_meta length, final projection, one-step undo) as the
         // previous full-replay-every-time implementation, just without re-replaying history each time.
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         for n in 1..=50 {
             store
                 .dispatch(DocumentVcsCommand::AmendLast {
-                    operations: vec![DemoOp::SetN { n }],
+                    operations: vec![DemoOperation::SetN { n }],
                     coalesce_key: Some("drag".into()),
                 })
                 .expect("amend");
@@ -3476,12 +3476,12 @@ mod tests {
         // 🪢 Undo/redo only move edit ids between `applied_edit_ids`/`redo_edit_ids` — they never mutate
         // an edit's own `forwards`, so a cached post-projection keyed by `(edit_id, forwards_len)` stays
         // valid across an undo immediately followed by a redo of the very same coalesced edit.
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("first amend");
@@ -3489,7 +3489,7 @@ mod tests {
         store.dispatch(DocumentVcsCommand::Redo).expect("redo");
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend after undo/redo");
@@ -3501,18 +3501,18 @@ mod tests {
 
     #[test]
     fn amend_last_starts_new_edit_when_coalesce_key_differs() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag-a".into()),
             })
             .expect("first drag");
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag-b".into()),
             })
             .expect("second drag");
@@ -3521,12 +3521,12 @@ mod tests {
 
     #[test]
     fn amend_last_does_not_absorb_into_committed_edit() {
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOp> =
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
             create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend");
@@ -3538,7 +3538,7 @@ mod tests {
             .expect("commit");
         store
             .dispatch(DocumentVcsCommand::AmendLast {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 coalesce_key: Some("drag".into()),
             })
             .expect("amend after commit");
@@ -3582,7 +3582,7 @@ mod tests {
             id: "a".into(),
             value: 1,
         }];
-        let op = CollectionOp::Add {
+        let operation = CollectionOperation::Add {
             index: 1,
             item: DemoItem {
                 id: "b".into(),
@@ -3590,11 +3590,11 @@ mod tests {
             },
         };
         let mut applied = items.clone();
-        apply_collection_op(&mut applied, &op);
+        apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied.len(), 2);
         assert_eq!(applied[1].id, "b");
-        let inverse = invert_collection_op(&items, &op);
-        apply_collection_op(&mut applied, &inverse);
+        let inverse = invert_collection_operation(&items, &operation);
+        apply_collection_operation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -3605,30 +3605,30 @@ mod tests {
             DemoItem { id: "b".into(), value: 2 },
             DemoItem { id: "c".into(), value: 3 },
         ];
-        let op = CollectionOp::Move {
+        let operation = CollectionOperation::Move {
             id: "a".into(),
             to_index: 2,
         };
         let mut applied = items.clone();
-        apply_collection_op(&mut applied, &op);
+        apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied.iter().map(|i| i.id.clone()).collect::<Vec<_>>(), vec!["b", "c", "a"]);
-        let inverse = invert_collection_op(&items, &op);
-        apply_collection_op(&mut applied, &inverse);
+        let inverse = invert_collection_operation(&items, &operation);
+        apply_collection_operation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
     #[test]
     fn collection_op_patch_and_invert() {
         let items: Vec<DemoItem> = vec![DemoItem { id: "a".into(), value: 1 }];
-        let op = CollectionOp::Patch {
+        let operation = CollectionOperation::Patch {
             id: "a".into(),
             patch: DemoItemPatch { value: Some(9) },
         };
         let mut applied = items.clone();
-        apply_collection_op(&mut applied, &op);
+        apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied[0].value, 9);
-        let inverse = invert_collection_op(&items, &op);
-        apply_collection_op(&mut applied, &inverse);
+        let inverse = invert_collection_operation(&items, &operation);
+        apply_collection_operation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
@@ -3638,41 +3638,41 @@ mod tests {
             DemoItem { id: "a".into(), value: 1 },
             DemoItem { id: "b".into(), value: 2 },
         ];
-        let op = CollectionOp::Remove { id: "a".into() };
+        let operation = CollectionOperation::Remove { id: "a".into() };
         let mut applied = items.clone();
-        apply_collection_op(&mut applied, &op);
+        apply_collection_operation(&mut applied, &operation);
         assert_eq!(applied.len(), 1);
-        let inverse = invert_collection_op(&items, &op);
-        apply_collection_op(&mut applied, &inverse);
+        let inverse = invert_collection_operation(&items, &operation);
+        apply_collection_operation(&mut applied, &inverse);
         assert_eq!(applied, items);
     }
 
     #[test]
-    fn test_support_round_trip_helpers_pass_for_demo_op() {
-        test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
-        test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOp::SetN { n: 9 });
+    fn test_support_round_trip_helpers_pass_for_demo_operation() {
+        test_support::assert_operation_round_trip(&DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
+        test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
     }
 
     //#region 🏛️StudioTests
-    /// @emoji ⏱️ Like `DemoOp` but with an explicit, test-controlled `timestamp()` override, so
+    /// @emoji ⏱️ Like `DemoOperation` but with an explicit, test-controlled `timestamp()` override, so
     /// undo-ordering-by-HLT tests don't depend on real wall-clock resolution.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op")]
-    enum TimestampedOp {
+    #[serde(tag = "operation")]
+    enum TimestampedOperation {
         SetN { n: i32, physical_ms: u64 },
     }
 
-    impl Operation<DemoProjection> for TimestampedOp {
+    impl Operation<DemoProjection> for TimestampedOperation {
         type Diff = DemoDiff;
 
         fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
             match self {
-                TimestampedOp::SetN { n, .. } => DemoDiff { n: Some(*n) },
+                TimestampedOperation::SetN { n, .. } => DemoDiff { n: Some(*n) },
             }
         }
 
         fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![TimestampedOp::SetN {
+            vec![TimestampedOperation::SetN {
                 n: projection.n,
                 physical_ms: 0,
             }]
@@ -3680,26 +3680,26 @@ mod tests {
 
         fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
             match self {
-                TimestampedOp::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
+                TimestampedOperation::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
             }
         }
     }
 
     /// @emoji 🪄 Downcasts a registered `dyn StudioMember` back to its concrete demo store.
-    fn demo_member<'a, Op: Operation<DemoProjection> + 'static>(
+    fn demo_member<'a, Operation: crate::Operation<DemoProjection> + 'static>(
         host: &'a mut StudioVcsHost,
         document_id: &str,
-    ) -> &'a mut DocumentVcsStore<DemoProjection, Op> {
+    ) -> &'a mut DocumentVcsStore<DemoProjection, Operation> {
         host.member_mut(document_id)
             .expect("member registered")
             .as_any_mut()
-            .downcast_mut::<DocumentVcsStore<DemoProjection, Op>>()
+            .downcast_mut::<DocumentVcsStore<DemoProjection, Operation>>()
             .expect("concrete member type matches")
     }
 
     #[test]
     fn studio_checkpoint_commits_dirty_members_and_pins_their_checkpoints() {
-        let mut member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+        let mut member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
@@ -3707,12 +3707,12 @@ mod tests {
         ));
         member_a
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply a");
 
-        let mut member_b = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+        let mut member_b = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-b",
             DemoProjection { n: 0 },
@@ -3720,7 +3720,7 @@ mod tests {
         ));
         member_b
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 5 }],
+                operations: vec![DemoOperation::SetN { n: 5 }],
                 description: None,
             })
             .expect("apply b");
@@ -3768,7 +3768,7 @@ mod tests {
     #[test]
     fn studio_vcs_host_meta_document_is_backbone_attachable_and_detachable() {
         let (backbone_a, backbone_b) = MemoryBackbone::pair("studio-a", "studio-b");
-        let meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOp> =
+        let meta_envelope: DocumentVcsEnvelope<StudioHistoryProjection, StudioHistoryOperation> =
             create_document_vcs_envelope("os.studio.history/v1", "studio", StudioHistoryProjection::default(), None);
         let mut host_a = StudioVcsHost::new(meta_envelope.clone());
         let mut host_b = StudioVcsHost::new(meta_envelope);
@@ -3778,7 +3778,7 @@ mod tests {
         host_b.attach_backbone(Box::new(backbone_b)).expect("attach b");
         assert!(host_a.backbone_ref().is_some());
 
-        let mut member = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+        let mut member = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
@@ -3786,7 +3786,7 @@ mod tests {
         ));
         member
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply on member, so it's dirty and can be committed");
@@ -3817,7 +3817,7 @@ mod tests {
 
     #[test]
     fn studio_checkout_checkpoint_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
@@ -3831,30 +3831,30 @@ mod tests {
         ));
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoOp>(&mut host, "member-a")
+        demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply 1");
         let studio_checkpoint_1 = host.commit_studio_checkpoint("first".into(), Vec::new()).expect("commit 1");
 
-        demo_member::<DemoOp>(&mut host, "member-a")
+        demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply 2");
         host.commit_studio_checkpoint("second".into(), Vec::new()).expect("commit 2");
         assert_eq!(
-            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             2,
             "member reflects the second studio checkpoint before checking out the first"
         );
 
         host.checkout_studio_checkpoint(&studio_checkpoint_1).expect("checkout studio checkpoint 1");
         assert_eq!(
-            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             1,
             "checking out the first studio checkpoint fans out and restores member-a's pinned state"
         );
@@ -3862,7 +3862,7 @@ mod tests {
 
     #[test]
     fn studio_switch_alternative_fans_out_and_restores_pinned_member_state() {
-        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(
+        let member_a = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(
             "demo/v1",
             "member-a",
             DemoProjection { n: 0 },
@@ -3876,9 +3876,9 @@ mod tests {
         ));
         host.register_member(Box::new(member_a));
 
-        demo_member::<DemoOp>(&mut host, "member-a")
+        demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 1 }],
+                operations: vec![DemoOperation::SetN { n: 1 }],
                 description: None,
             })
             .expect("apply 1");
@@ -3886,21 +3886,21 @@ mod tests {
 
         let alt_id = host.create_studio_alternative("branch-a".into()).expect("create alternative");
 
-        demo_member::<DemoOp>(&mut host, "member-a")
+        demo_member::<DemoOperation>(&mut host, "member-a")
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 2 }],
+                operations: vec![DemoOperation::SetN { n: 2 }],
                 description: None,
             })
             .expect("apply 2 (uncommitted at the studio level)");
         assert_eq!(
-            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             2,
             "uncommitted edit is live before switching"
         );
 
         host.switch_studio_alternative(&alt_id).expect("switch alternative fans out to its pinned checkpoint");
         assert_eq!(
-            demo_member::<DemoOp>(&mut host, "member-a").projection().expect("projection").n,
+            demo_member::<DemoOperation>(&mut host, "member-a").projection().expect("projection").n,
             1,
             "switching alternatives restores each member to its pinned checkpoint, discarding the uncommitted edit"
         );
@@ -3908,7 +3908,7 @@ mod tests {
 
     #[test]
     fn studio_undo_and_redo_target_the_member_with_the_most_recent_local_edit_by_hlt() {
-        let mut member_early = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOp>(
+        let mut member_early = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOperation>(
             "demo-ts/v1",
             "member-early",
             DemoProjection { n: 0 },
@@ -3916,12 +3916,12 @@ mod tests {
         ));
         member_early
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![TimestampedOp::SetN { n: 1, physical_ms: 1_000 }],
+                operations: vec![TimestampedOperation::SetN { n: 1, physical_ms: 1_000 }],
                 description: None,
             })
             .expect("apply early");
 
-        let mut member_late = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOp>(
+        let mut member_late = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, TimestampedOperation>(
             "demo-ts/v1",
             "member-late",
             DemoProjection { n: 0 },
@@ -3929,7 +3929,7 @@ mod tests {
         ));
         member_late
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![TimestampedOp::SetN { n: 9, physical_ms: 2_000 }],
+                operations: vec![TimestampedOperation::SetN { n: 9, physical_ms: 2_000 }],
                 description: None,
             })
             .expect("apply late");
@@ -3945,19 +3945,19 @@ mod tests {
 
         host.undo().expect("studio undo targets the member with the higher HLT");
         assert_eq!(
-            demo_member::<TimestampedOp>(&mut host, "member-early").projection().expect("early projection").n,
+            demo_member::<TimestampedOperation>(&mut host, "member-early").projection().expect("early projection").n,
             1,
             "earlier local edit (lower HLT) is untouched"
         );
         assert_eq!(
-            demo_member::<TimestampedOp>(&mut host, "member-late").projection().expect("late projection").n,
+            demo_member::<TimestampedOperation>(&mut host, "member-late").projection().expect("late projection").n,
             0,
             "later local edit (higher HLT) is the one undone"
         );
 
         host.redo().expect("studio redo targets the most recently undone edit");
         assert_eq!(
-            demo_member::<TimestampedOp>(&mut host, "member-late").projection().expect("late projection after redo").n,
+            demo_member::<TimestampedOperation>(&mut host, "member-late").projection().expect("late projection after redo").n,
             9,
             "redo restores the member's most recently undone edit"
         );
@@ -3966,7 +3966,7 @@ mod tests {
     #[test]
     fn default_reconcile_hook_is_a_no_op_for_existing_document_kinds() {
         let projection = DemoProjection { n: 4 };
-        let (reconciled, conflicts) = DemoOp::reconcile(projection.clone());
+        let (reconciled, conflicts) = DemoOperation::reconcile(projection.clone());
         assert_eq!(reconciled, projection, "default reconcile leaves the projection untouched");
         assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
 
@@ -3974,12 +3974,12 @@ mod tests {
         let mut store = DocumentVcsStore::new(envelope);
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![DemoOp::SetN { n: 3 }],
+                operations: vec![DemoOperation::SetN { n: 3 }],
                 description: None,
             })
             .expect("apply");
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("replay");
-        assert_eq!(replayed.n, 3, "materialize_document_projection is unaffected by the no-op default reconcile hook");
+        assert_eq!(replayed.n, 3, "materialize_document_projection is unaffected by the no-operation default reconcile hook");
         let (with_conflicts, conflicts) = store.projection_with_conflicts().expect("projection with conflicts");
         assert_eq!(with_conflicts.n, 3);
         assert!(conflicts.is_empty());
@@ -4002,7 +4002,7 @@ mod tests {
         };
         test_support::assert_operation_round_trip(
             &StudioHistoryProjection::default(),
-            StudioHistoryOp::CommitStudioCheckpoint {
+            StudioHistoryOperation::CommitStudioCheckpoint {
                 checkpoint: checkpoint.clone(),
             },
         );
@@ -4019,7 +4019,7 @@ mod tests {
         };
         test_support::assert_operation_round_trip(
             &with_checkpoint,
-            StudioHistoryOp::CreateStudioAlternative { alternative },
+            StudioHistoryOperation::CreateStudioAlternative { alternative },
         );
 
         let with_alternative_active = StudioHistoryProjection {
@@ -4028,7 +4028,7 @@ mod tests {
         };
         test_support::assert_operation_round_trip(
             &with_alternative_active,
-            StudioHistoryOp::SwitchStudioAlternative {
+            StudioHistoryOperation::SwitchStudioAlternative {
                 alternative_id: "sa-other".into(),
             },
         );

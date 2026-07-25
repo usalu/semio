@@ -304,8 +304,8 @@ fn default_model_definition_id() -> String {
     "spatial.shape".into()
 }
 
-pub type CadEnvelope = DocumentVcsEnvelope<CadScene, CadOp>;
-pub type CadStore = DocumentVcsStore<CadScene, CadOp>;
+pub type CadEnvelope = DocumentVcsEnvelope<CadScene, CadOperation>;
+pub type CadStore = DocumentVcsStore<CadScene, CadOperation>;
 
 pub fn empty_cad_projection() -> CadScene {
     CadScene {
@@ -360,7 +360,7 @@ pub fn cad_pane_from_model_definition_id(model_definition_id: &str) -> Option<Ca
 }
 //#endregion 🔖Domain
 
-//#region 🔖Ops
+//#region 🔖Operations
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct CadObjectPatch {
@@ -384,7 +384,7 @@ pub struct CadNodePatch {
     pub label: Option<String>,
 }
 
-/// 🎥 A per-pane camera assignment carried by `CadOp::SetCamera`/`CadDiff` — pairs the target pane
+/// 🎥 A per-pane camera assignment carried by `CadOperation::SetCamera`/`CadDiff` — pairs the target pane
 /// with its new camera so viewpoint moves flow through the store like any other document operation.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -408,8 +408,8 @@ pub struct CadReferencePatch {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum CadOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum CadOperation {
     AddObject { pane: CadPaneId, object: CadObject },
     RemoveObject { pane: CadPaneId, object_id: String },
     PatchObject { pane: CadPaneId, object_id: String, patch: CadObjectPatch },
@@ -628,55 +628,55 @@ fn absorb_object_diff(target: &mut Option<CollectionDiff<String, CadObjectPatch,
     }
 }
 
-impl Operation<CadScene> for CadOp {
+impl Operation<CadScene> for CadOperation {
     type Diff = CadDiff;
 
     fn diff(&self, projection: &CadScene) -> CadDiff {
         match self {
-            CadOp::AddObject { pane, object } => CadDiff {
+            CadOperation::AddObject { pane, object } => CadDiff {
                 objects: pane_collection_diff_for_add(*pane, object),
                 building_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::Building, object),
                 energy_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::Energy, object),
                 structure_classic_objects: pane_collection_diff_for_add_if(*pane, CadPaneId::StructureClassic, object),
                 ..Default::default()
             },
-            CadOp::RemoveObject { pane, object_id } => CadDiff {
+            CadOperation::RemoveObject { pane, object_id } => CadDiff {
                 objects: pane_collection_diff_for_remove(*pane, CadPaneId::Shape, object_id),
                 building_objects: pane_collection_diff_for_remove(*pane, CadPaneId::Building, object_id),
                 energy_objects: pane_collection_diff_for_remove(*pane, CadPaneId::Energy, object_id),
                 structure_classic_objects: pane_collection_diff_for_remove(*pane, CadPaneId::StructureClassic, object_id),
                 ..Default::default()
             },
-            CadOp::PatchObject { pane, object_id, patch } => CadDiff {
+            CadOperation::PatchObject { pane, object_id, patch } => CadDiff {
                 objects: pane_collection_diff_for_patch(*pane, CadPaneId::Shape, object_id, patch),
                 building_objects: pane_collection_diff_for_patch(*pane, CadPaneId::Building, object_id, patch),
                 energy_objects: pane_collection_diff_for_patch(*pane, CadPaneId::Energy, object_id, patch),
                 structure_classic_objects: pane_collection_diff_for_patch(*pane, CadPaneId::StructureClassic, object_id, patch),
                 ..Default::default()
             },
-            CadOp::TranslateObjects { object_ids, dx, dy, dz } => transform_objects_diff(projection, object_ids, |object| CadObjectPatch { origin: Some([object.origin[0] + dx, object.origin[1] + dy, object.origin[2] + dz]), ..Default::default() }),
-            CadOp::RotateObjects { object_ids, ax, ay, az, angle } => {
+            CadOperation::TranslateObjects { object_ids, dx, dy, dz } => transform_objects_diff(projection, object_ids, |object| CadObjectPatch { origin: Some([object.origin[0] + dx, object.origin[1] + dy, object.origin[2] + dz]), ..Default::default() }),
+            CadOperation::RotateObjects { object_ids, ax, ay, az, angle } => {
                 let delta = quat_from_axis_angle(*ax, *ay, *az, *angle);
                 transform_objects_diff(projection, object_ids, |object| {
                     let current = object.orientation.unwrap_or([0.0, 0.0, 0.0, 1.0]);
                     CadObjectPatch { orientation: Some(quat_mul(delta, current)), ..Default::default() }
                 })
             }
-            CadOp::ScaleObjects { object_ids, sx, sy, sz } => transform_objects_diff(projection, object_ids, |object| {
+            CadOperation::ScaleObjects { object_ids, sx, sy, sz } => transform_objects_diff(projection, object_ids, |object| {
                 let current = object.scale.unwrap_or([1.0, 1.0, 1.0]);
                 CadObjectPatch { scale: Some([current[0] * sx, current[1] * sy, current[2] * sz]), ..Default::default() }
             }),
-            CadOp::SetPaneObjects { pane, objects } => {
+            CadOperation::SetPaneObjects { pane, objects } => {
                 let mut diff = CadDiff::default();
                 let removed: Vec<String> = cad_pane_objects(projection, *pane).iter().map(|object| object.id.clone()).collect();
                 let collection = CollectionDiff { removed, modified: Vec::new(), added: objects.clone() };
                 set_pane_collection_diff(&mut diff, *pane, collection);
                 diff
             }
-            CadOp::AddNode { node } => CadDiff { nodes: Some(CollectionDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
-            CadOp::RemoveNode { node_id } => CadDiff { nodes: Some(CollectionDiff { removed: vec![node_id.clone()], ..Default::default() }), ..Default::default() },
-            CadOp::RenameNode { node_id, label } => CadDiff { nodes: Some(CollectionDiff { modified: vec![ItemPatch { id: node_id.clone(), patch: CadNodePatch { label: Some(label.clone()) } }], ..Default::default() }), ..Default::default() },
-            CadOp::PatchReference { model_definition_id, reference_id, patch } => {
+            CadOperation::AddNode { node } => CadDiff { nodes: Some(CollectionDiff { added: vec![node.clone()], ..Default::default() }), ..Default::default() },
+            CadOperation::RemoveNode { node_id } => CadDiff { nodes: Some(CollectionDiff { removed: vec![node_id.clone()], ..Default::default() }), ..Default::default() },
+            CadOperation::RenameNode { node_id, label } => CadDiff { nodes: Some(CollectionDiff { modified: vec![ItemPatch { id: node_id.clone(), patch: CadNodePatch { label: Some(label.clone()) } }], ..Default::default() }), ..Default::default() },
+            CadOperation::PatchReference { model_definition_id, reference_id, patch } => {
                 let references = projection.references_by_model_definition_id.get(model_definition_id).cloned().unwrap_or_default();
                 let next = references
                     .into_iter()
@@ -689,50 +689,50 @@ impl Operation<CadScene> for CadOp {
                     .collect();
                 CadDiff { references_by_model_definition_id: Some(HashMap::from([(model_definition_id.clone(), next)])), ..Default::default() }
             }
-            CadOp::SetReferences { model_definition_id, references } => CadDiff { references_by_model_definition_id: Some(HashMap::from([(model_definition_id.clone(), references.clone())])), ..Default::default() },
-            CadOp::SetActiveModelDefinition { model_definition_id } => CadDiff { active_model_definition_id: Some(model_definition_id.clone()), ..Default::default() },
-            CadOp::SetCamera { pane, camera } => CadDiff { camera: Some(CadCameraSet { pane: *pane, camera: camera.clone() }), ..Default::default() },
-            CadOp::SetScene { scene } => CadDiff { scene: Some(scene.clone()), ..Default::default() },
+            CadOperation::SetReferences { model_definition_id, references } => CadDiff { references_by_model_definition_id: Some(HashMap::from([(model_definition_id.clone(), references.clone())])), ..Default::default() },
+            CadOperation::SetActiveModelDefinition { model_definition_id } => CadDiff { active_model_definition_id: Some(model_definition_id.clone()), ..Default::default() },
+            CadOperation::SetCamera { pane, camera } => CadDiff { camera: Some(CadCameraSet { pane: *pane, camera: camera.clone() }), ..Default::default() },
+            CadOperation::SetScene { scene } => CadDiff { scene: Some(scene.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &CadScene) -> Vec<Self> {
         match self {
-            CadOp::AddObject { pane, object } => vec![CadOp::RemoveObject { pane: *pane, object_id: object.id.clone() }],
-            CadOp::RemoveObject { pane, object_id } => cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|object| vec![CadOp::AddObject { pane: *pane, object: object.clone() }]).unwrap_or_default(),
-            CadOp::PatchObject { pane, object_id, patch } => {
-                cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|before| vec![CadOp::PatchObject { pane: *pane, object_id: object_id.clone(), patch: reverse_object_patch(before, patch) }]).unwrap_or_default()
+            CadOperation::AddObject { pane, object } => vec![CadOperation::RemoveObject { pane: *pane, object_id: object.id.clone() }],
+            CadOperation::RemoveObject { pane, object_id } => cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|object| vec![CadOperation::AddObject { pane: *pane, object: object.clone() }]).unwrap_or_default(),
+            CadOperation::PatchObject { pane, object_id, patch } => {
+                cad_pane_objects(projection, *pane).iter().find(|object| object.id == *object_id).map(|before| vec![CadOperation::PatchObject { pane: *pane, object_id: object_id.clone(), patch: reverse_object_patch(before, patch) }]).unwrap_or_default()
             }
-            CadOp::TranslateObjects { object_ids, dx, dy, dz } => vec![CadOp::TranslateObjects { object_ids: object_ids.clone(), dx: -dx, dy: -dy, dz: -dz }],
-            CadOp::RotateObjects { object_ids, ax, ay, az, angle } => vec![CadOp::RotateObjects { object_ids: object_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: -angle }],
-            CadOp::ScaleObjects { object_ids, sx, sy, sz } => {
+            CadOperation::TranslateObjects { object_ids, dx, dy, dz } => vec![CadOperation::TranslateObjects { object_ids: object_ids.clone(), dx: -dx, dy: -dy, dz: -dz }],
+            CadOperation::RotateObjects { object_ids, ax, ay, az, angle } => vec![CadOperation::RotateObjects { object_ids: object_ids.clone(), ax: *ax, ay: *ay, az: *az, angle: -angle }],
+            CadOperation::ScaleObjects { object_ids, sx, sy, sz } => {
                 let inv = |value: f64| if value.abs() < 1e-8 { 1.0 } else { 1.0 / value };
-                vec![CadOp::ScaleObjects { object_ids: object_ids.clone(), sx: inv(*sx), sy: inv(*sy), sz: inv(*sz) }]
+                vec![CadOperation::ScaleObjects { object_ids: object_ids.clone(), sx: inv(*sx), sy: inv(*sy), sz: inv(*sz) }]
             }
-            CadOp::SetPaneObjects { pane, objects: _ } => {
+            CadOperation::SetPaneObjects { pane, objects: _ } => {
                 let before = cad_pane_objects(projection, *pane).to_vec();
-                vec![CadOp::SetPaneObjects { pane: *pane, objects: before }]
+                vec![CadOperation::SetPaneObjects { pane: *pane, objects: before }]
             }
-            CadOp::AddNode { node } => vec![CadOp::RemoveNode { node_id: node.id.clone() }],
-            CadOp::RemoveNode { node_id } => projection.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![CadOp::AddNode { node: node.clone() }]).unwrap_or_default(),
-            CadOp::RenameNode { node_id, .. } => projection.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![CadOp::RenameNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default(),
-            CadOp::PatchReference { model_definition_id, reference_id, patch } => projection
+            CadOperation::AddNode { node } => vec![CadOperation::RemoveNode { node_id: node.id.clone() }],
+            CadOperation::RemoveNode { node_id } => projection.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![CadOperation::AddNode { node: node.clone() }]).unwrap_or_default(),
+            CadOperation::RenameNode { node_id, .. } => projection.nodes.iter().find(|node| node.id == *node_id).map(|node| vec![CadOperation::RenameNode { node_id: node_id.clone(), label: node.label.clone() }]).unwrap_or_default(),
+            CadOperation::PatchReference { model_definition_id, reference_id, patch } => projection
                 .references_by_model_definition_id
                 .get(model_definition_id)
                 .and_then(|references| {
                     references
                         .iter()
                         .find(|reference| reference.id == *reference_id)
-                        .map(|before| vec![CadOp::PatchReference { model_definition_id: model_definition_id.clone(), reference_id: reference_id.clone(), patch: reverse_reference_patch(before, patch) }])
+                        .map(|before| vec![CadOperation::PatchReference { model_definition_id: model_definition_id.clone(), reference_id: reference_id.clone(), patch: reverse_reference_patch(before, patch) }])
                 })
                 .unwrap_or_default(),
-            CadOp::SetReferences { model_definition_id, .. } => {
+            CadOperation::SetReferences { model_definition_id, .. } => {
                 let before = projection.references_by_model_definition_id.get(model_definition_id).cloned().unwrap_or_default();
-                vec![CadOp::SetReferences { model_definition_id: model_definition_id.clone(), references: before }]
+                vec![CadOperation::SetReferences { model_definition_id: model_definition_id.clone(), references: before }]
             }
-            CadOp::SetActiveModelDefinition { .. } => vec![CadOp::SetActiveModelDefinition { model_definition_id: projection.active_model_definition_id.clone() }],
-            CadOp::SetCamera { pane, .. } => vec![CadOp::SetCamera { pane: *pane, camera: cad_pane_camera(projection, *pane).clone() }],
-            CadOp::SetScene { .. } => vec![CadOp::SetScene { scene: Box::new(projection.clone()) }],
+            CadOperation::SetActiveModelDefinition { .. } => vec![CadOperation::SetActiveModelDefinition { model_definition_id: projection.active_model_definition_id.clone() }],
+            CadOperation::SetCamera { pane, .. } => vec![CadOperation::SetCamera { pane: *pane, camera: cad_pane_camera(projection, *pane).clone() }],
+            CadOperation::SetScene { .. } => vec![CadOperation::SetScene { scene: Box::new(projection.clone()) }],
         }
     }
 }
@@ -819,7 +819,7 @@ fn transform_objects_diff(projection: &CadScene, object_ids: &[String], patch_fo
     }
     diff
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
 //#region 🔖InteractionSpec
 // 📐 Declarative interaction machine types mirroring `cad/schema/json/interaction.json` and
@@ -912,12 +912,12 @@ pub enum Expr {
         args: std::collections::HashMap<String, Expr>,
     },
     Binop {
-        op: String,
+        operation: String,
         left: Box<Expr>,
         right: Box<Expr>,
     },
     Fold {
-        op: String,
+        operation: String,
         args: Vec<Expr>,
     },
 }
@@ -1022,10 +1022,10 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv, vars: &std::collections::HashMa
         // `kernel.call` expressions are only used inside `spatial.action` step specs (not executed
         // generically by this interpreter); evaluating one directly yields null.
         Expr::KernelCall { .. } => Value::Null,
-        Expr::Binop { op, left, right } => {
+        Expr::Binop { operation, left, right } => {
             let lv = evaluate_expr(left, env, vars);
             let rv = evaluate_expr(right, env, vars);
-            match op.as_str() {
+            match operation.as_str() {
                 "==" => Value::Bool(lv == rv),
                 "!=" => Value::Bool(lv != rv),
                 ">" => Value::Bool(expr_as_f64(&lv) > expr_as_f64(&rv)),
@@ -1039,9 +1039,9 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv, vars: &std::collections::HashMa
                 _ => Value::Null,
             }
         }
-        Expr::Fold { op, args } => {
+        Expr::Fold { operation, args } => {
             let values: Vec<f64> = args.iter().map(|arg| expr_as_f64(&evaluate_expr(arg, env, vars))).collect();
-            match op.as_str() {
+            match operation.as_str() {
                 "min" => values.into_iter().fold(f64::INFINITY, f64::min).into(),
                 "max" => values.into_iter().fold(f64::NEG_INFINITY, f64::max).into(),
                 _ => Value::Null,
@@ -1051,7 +1051,7 @@ pub fn evaluate_expr(expr: &Expr, env: &ExprEnv, vars: &std::collections::HashMa
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
+#[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Effect {
     Assign {
         target: ExprPathTarget,
@@ -1468,7 +1468,7 @@ mod tests {
             solid_handle: None,
             primitives: vec![CadPrimitiveSlot { slot: "solid".into(), primitive_id: "solid-1".into(), kind: "solid".into() }],
         };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects.len(), 1);
         assert_eq!(scene.objects[0].primitives[0].kind, "solid");
@@ -1479,7 +1479,7 @@ mod tests {
         let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![CadOp::AddObject {
+                operations: vec![CadOperation::AddObject {
                     pane: CadPaneId::Shape,
                     object: CadObject {
                         id: "object-1".into(),
@@ -1499,7 +1499,7 @@ mod tests {
                 description: None,
             })
             .expect("apply");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::TranslateObjects { object_ids: vec!["object-1".into()], dx: 1.0, dy: -1.0, dz: 0.5 }], description: None }).expect("translate");
         let scene = store.projection().expect("projection");
         assert_eq!(scene.objects[0].origin, [2.0, 1.0, 3.5]);
     }
@@ -1510,7 +1510,7 @@ mod tests {
         let mut replacement = empty_cad_projection();
         replacement.id = "replaced".into();
         replacement.nodes.push(CadNode { id: "node-1".into(), label: "Root".into(), kind: "group".into() });
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::SetScene { scene: Box::new(replacement) }], description: None }).expect("set scene");
         assert_eq!(store.projection().expect("projection").id, "replaced");
         store.dispatch(DocumentVcsCommand::Undo).expect("undo");
         assert_eq!(store.projection().expect("projection").id, "cad");
@@ -1518,10 +1518,10 @@ mod tests {
     }
 
     #[test]
-    fn set_camera_flows_through_ops() {
+    fn set_camera_flows_through_operations() {
         let mut store = CadStore::new(create_document_vcs_envelope(CAD_DOCUMENT_SCHEMA, "cad", empty_cad_projection(), None));
         let camera = CadCamera { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], zoom: 2.0, fov: 60.0, projection: Value::Null };
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOp::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![CadOperation::SetCamera { pane: CadPaneId::Building, camera: camera.clone() }], description: None }).expect("apply");
         let scene = store.projection().expect("projection");
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Building).zoom, 2.0);
         assert_eq!(cad_pane_camera(&scene, CadPaneId::Shape).zoom, 1.0);
@@ -1646,7 +1646,7 @@ mod tests {
         let missing_exists_expr = Expr::Exists { target: ExprPathTarget { root: ExprPathRoot::Context, segments: vec![ExprPathSegment::Field { name: "missing".into() }] } };
         assert_eq!(evaluate_expr(&missing_exists_expr, &env, &vars), json!(false));
 
-        let binop_expr = Expr::Binop { op: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: json!(1.0) }) };
+        let binop_expr = Expr::Binop { operation: ">".into(), left: Box::new(path_expr.clone()), right: Box::new(Expr::Const { value: json!(1.0) }) };
         assert_eq!(evaluate_expr(&binop_expr, &env, &vars), json!(true));
 
         let all_expr = Expr::All { args: vec![exists_expr, binop_expr] };
@@ -1654,7 +1654,7 @@ mod tests {
 
         let let_expr = Expr::Let {
             bindings: vec![ExprBinding { name: "h".into(), value: Box::new(path_expr) }],
-            body: Box::new(Expr::Binop { op: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: json!(2.0) }) }),
+            body: Box::new(Expr::Binop { operation: "*".into(), left: Box::new(Expr::Var { name: "h".into() }), right: Box::new(Expr::Const { value: json!(2.0) }) }),
         };
         assert_eq!(evaluate_expr(&let_expr, &env, &vars), json!(5.0));
     }

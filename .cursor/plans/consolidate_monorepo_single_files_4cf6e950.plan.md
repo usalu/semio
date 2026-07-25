@@ -99,7 +99,7 @@ Using the generic helpers already in `repo/lib/js` (`runCargo`, `runCmd`, `runVi
 - Vite direct calls: `compose/client/ui/vscode`, `compose/client/ui/3dm/ui`, `compose/client/lib/sketchpad/{doc,js,play}`, `repo/client/vscode`
 - `bun test`/`bunx tsc` direct calls: `kernel/2d/js`, `ui/styling/js`, `repo/lib/js`
 - Electron/Storybook/eslint/vsce bypasses: `compose/client/ui/desktop`, `compose/dev/algorithm`, `repo/client/vscode`
-- Stub no-op targets with no `script.ts` at all: `asset`, `asset/icon`, `puzzle/asset`, `compose/fixture`
+- Stub no-operation targets with no `script.ts` at all: `asset`, `asset/icon`, `puzzle/asset`, `compose/fixture`
 
 This phase is the largest and riskiest (touches Rust/Go/.NET/Python/Electron toolchains); it is scoped last so Phases 1-4 land safely first.
 

@@ -1,7 +1,7 @@
 mod header {
     // 🧲Header
-    // OS hub v2 — pluggable-storage VFS + per-document op-log actors with duplex WebSocket sync.
-    // CQRS split: op appends are causally ordered (OpDag) and never version-gated; only whole-envelope
+    // OS hub v2 — pluggable-storage VFS + per-document operation-log actors with duplex WebSocket sync.
+    // CQRS split: operation appends are causally ordered (OpDag) and never version-gated; only whole-envelope
     // snapshot replacement keeps optimistic concurrency (CAS → Conflict). Persistence is behind
     // {@link HubStorage} (os-hub-storage) — sqlite today, postgres/neo4j are sibling backends.
 }
@@ -18,7 +18,7 @@ use futures::{SinkExt, StreamExt};
 use os_hub_storage::model::{BlobRecord, DocumentRecord, NodeRecord, StudioRole};
 use os_hub_storage::HubStorage;
 use os_hub_storage_sqlite::SqliteStorage;
-use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OpEnvelope, PresencePeer};
+use semio_framework_core::{HubClientFrame, HubServerFrame, OpDag, OperationEnvelope, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use std::collections::{HashMap, HashSet};
@@ -46,9 +46,9 @@ fn now_ms() -> i64 {
 }
 
 //#region 🔖DocumentActor
-struct AppendedOp {
+struct AppendedOperation {
     version: i64,
-    op_id: String,
+    operation_id: String,
     is_new: bool,
 }
 
@@ -57,17 +57,17 @@ struct SubscribeReply {
     version: i64,
     envelope: Value,
     presence: Vec<PresencePeer>,
-    backlog: Vec<OpEnvelope>,
+    backlog: Vec<OperationEnvelope>,
 }
 
 /// @emoji 📬 Mailbox messages for a {@link DocumentActor}.
 enum DocMsg {
     Subscribe { since_version: i64, reply: oneshot::Sender<SubscribeReply> },
-    AppendOps { envelopes: Vec<OpEnvelope>, origin: String, reply: oneshot::Sender<Vec<AppendedOp>> },
+    AppendOperations { envelopes: Vec<OperationEnvelope>, origin: String, reply: oneshot::Sender<Vec<AppendedOperation>> },
     PutEnvelope { version: i64, envelope: Value, reply: oneshot::Sender<Result<i64, i64>> },
     GetDocument { reply: oneshot::Sender<(Value, i64)> },
     GetEnvelope { reply: oneshot::Sender<(Value, i64)> },
-    OpsSince { since: i64, reply: oneshot::Sender<Vec<(i64, OpEnvelope)>> },
+    OpsSince { since: i64, reply: oneshot::Sender<Vec<(i64, OperationEnvelope)>> },
     PresenceUpdate { peer: PresencePeer },
     PresenceLeave { actor: String },
 }
@@ -85,9 +85,9 @@ impl DocumentHandle {
         rx.await.ok()
     }
 
-    async fn append_ops(&self, envelopes: Vec<OpEnvelope>, origin: String) -> Vec<AppendedOp> {
+    async fn append_operations(&self, envelopes: Vec<OperationEnvelope>, origin: String) -> Vec<AppendedOperation> {
         let (reply, rx) = oneshot::channel();
-        if self.tx.send(DocMsg::AppendOps { envelopes, origin, reply }).await.is_err() {
+        if self.tx.send(DocMsg::AppendOperations { envelopes, origin, reply }).await.is_err() {
             return Vec::new();
         }
         rx.await.unwrap_or_default()
@@ -113,7 +113,7 @@ impl DocumentHandle {
         rx.await.ok()
     }
 
-    async fn ops_since(&self, since: i64) -> Vec<(i64, OpEnvelope)> {
+    async fn ops_since(&self, since: i64) -> Vec<(i64, OperationEnvelope)> {
         let (reply, rx) = oneshot::channel();
         if self.tx.send(DocMsg::OpsSince { since, reply }).await.is_err() {
             return Vec::new();
@@ -130,7 +130,7 @@ impl DocumentHandle {
     }
 }
 
-/// @emoji 🎭 One actor per open document: owns the `OpDag`, the log version counter, the in-memory op
+/// @emoji 🎭 One actor per open document: owns the `OpDag`, the log version counter, the in-memory operation
 /// cache, the presence roster, and the per-document broadcast fan-out. All persistence goes through
 /// the injected {@link HubStorage}.
 struct DocumentActor {
@@ -140,7 +140,7 @@ struct DocumentActor {
     snapshot: Value,
     version: i64,
     dag: OpDag,
-    ops: Vec<(i64, OpEnvelope)>,
+    operations: Vec<(i64, OperationEnvelope)>,
     seen: HashSet<String>,
     presence: HashMap<String, PresencePeer>,
     broadcast: broadcast::Sender<HubServerFrame>,
@@ -149,57 +149,57 @@ struct DocumentActor {
 impl DocumentActor {
     async fn load(studio_id: String, document_id: String, storage: Arc<dyn HubStorage>) -> Result<Self, os_hub_storage::error::StorageError> {
         let record: DocumentRecord = storage.ensure_document(&studio_id, &document_id).await?;
-        let ops = storage.load_ops(&document_id).await?;
+        let operations = storage.load_operations(&document_id).await?;
         let mut dag = OpDag::new();
         let mut seen = HashSet::new();
-        for (_, envelope) in &ops {
+        for (_, envelope) in &operations {
             let _ = dag.insert(envelope.clone());
             seen.insert(envelope.id.0.clone());
         }
         let (broadcast, _) = broadcast::channel(256);
-        Ok(Self { document_id, storage, schema: record.schema, snapshot: record.snapshot, version: record.version, dag, ops, seen, presence: HashMap::new(), broadcast })
+        Ok(Self { document_id, storage, schema: record.schema, snapshot: record.snapshot, version: record.version, dag, operations, seen, presence: HashMap::new(), broadcast })
     }
 
     async fn run(mut self, mut rx: mpsc::Receiver<DocMsg>) {
         while let Some(msg) = rx.recv().await {
             match msg {
                 DocMsg::Subscribe { since_version, reply } => {
-                    let backlog = self.ops.iter().filter(|(version, _)| *version > since_version).map(|(_, envelope)| envelope.clone()).collect();
+                    let backlog = self.operations.iter().filter(|(version, _)| *version > since_version).map(|(_, envelope)| envelope.clone()).collect();
                     let _ = reply.send(SubscribeReply { receiver: self.broadcast.subscribe(), version: self.version, envelope: self.snapshot.clone(), presence: self.presence.values().cloned().collect(), backlog });
                 }
-                DocMsg::AppendOps { envelopes, origin, reply } => {
+                DocMsg::AppendOperations { envelopes, origin, reply } => {
                     let mut appended = Vec::new();
                     let mut fresh = Vec::new();
                     for envelope in envelopes {
-                        let op_id = envelope.id.0.clone();
-                        if self.seen.contains(&op_id) {
-                            appended.push(AppendedOp { version: self.version, op_id, is_new: false });
+                        let operation_id = envelope.id.0.clone();
+                        if self.seen.contains(&operation_id) {
+                            appended.push(AppendedOperation { version: self.version, operation_id, is_new: false });
                             continue;
                         }
-                        let inserted = match self.storage.insert_op(&self.document_id, self.version + 1, &envelope).await {
+                        let inserted = match self.storage.insert_operation(&self.document_id, self.version + 1, &envelope).await {
                             Ok(inserted) => inserted,
                             Err(error) => {
-                                tracing::error!(%error, op_id = %op_id, "failed to insert op; dropping from this batch");
+                                tracing::error!(%error, operation_id = %operation_id, "failed to insert operation; dropping from this batch");
                                 continue;
                             }
                         };
                         if !inserted {
-                            self.seen.insert(op_id.clone());
-                            appended.push(AppendedOp { version: self.version, op_id, is_new: false });
+                            self.seen.insert(operation_id.clone());
+                            appended.push(AppendedOperation { version: self.version, operation_id, is_new: false });
                             continue;
                         }
                         self.version += 1;
                         let _ = self.dag.insert(envelope.clone());
-                        self.seen.insert(op_id.clone());
-                        self.ops.push((self.version, envelope.clone()));
-                        appended.push(AppendedOp { version: self.version, op_id, is_new: true });
+                        self.seen.insert(operation_id.clone());
+                        self.operations.push((self.version, envelope.clone()));
+                        appended.push(AppendedOperation { version: self.version, operation_id, is_new: true });
                         fresh.push(envelope);
                     }
                     if !fresh.is_empty() {
                         if let Err(error) = self.storage.save_document(&self.document_id, &self.schema, &self.snapshot, self.version).await {
                             tracing::error!(%error, document_id = %self.document_id, "failed to persist document snapshot after append");
                         }
-                        let _ = self.broadcast.send(HubServerFrame::Ops { version: self.version, envelopes: fresh, origin });
+                        let _ = self.broadcast.send(HubServerFrame::Operations { version: self.version, envelopes: fresh, origin });
                     }
                     let _ = reply.send(appended);
                 }
@@ -223,7 +223,7 @@ impl DocumentActor {
                     let _ = reply.send((self.envelope_view(), self.version));
                 }
                 DocMsg::OpsSince { since, reply } => {
-                    let rows = self.ops.iter().filter(|(version, _)| *version > since).map(|(version, envelope)| (*version, envelope.clone())).collect();
+                    let rows = self.operations.iter().filter(|(version, _)| *version > since).map(|(version, envelope)| (*version, envelope.clone())).collect();
                     let _ = reply.send(rows);
                 }
                 DocMsg::PresenceUpdate { peer } => {
@@ -349,7 +349,7 @@ struct PutEnvelopeResponse {
 
 #[derive(Deserialize)]
 struct AppendOpRequest {
-    envelope: OpEnvelope,
+    envelope: OperationEnvelope,
 }
 
 #[derive(Serialize)]
@@ -360,7 +360,7 @@ struct AppendOpResponse {
 #[derive(Serialize)]
 struct OpSinceRow {
     version: i64,
-    envelope: OpEnvelope,
+    envelope: OperationEnvelope,
 }
 
 #[derive(Deserialize)]
@@ -431,13 +431,13 @@ async fn put_envelope(Path((studio_id, document_id)): Path<(String, String)>, he
     }
 }
 
-async fn append_op(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<AppendOpRequest>) -> Result<Json<AppendOpResponse>, StatusCode> {
+async fn append_operation(Path((studio_id, document_id)): Path<(String, String)>, headers: HeaderMap, State(state): State<HubState>, Json(body): Json<AppendOpRequest>) -> Result<Json<AppendOpResponse>, StatusCode> {
     if !authorized(&state, &studio_id, &document_id, bearer(&headers).as_deref()).await {
         return Err(StatusCode::UNAUTHORIZED);
     }
     let origin = body.envelope.actor.0.clone();
-    let appended = state.actor(&studio_id, &document_id).append_ops(vec![body.envelope], origin).await;
-    let version = appended.last().map(|op| op.version).unwrap_or(0);
+    let appended = state.actor(&studio_id, &document_id).append_operations(vec![body.envelope], origin).await;
+    let version = appended.last().map(|operation| operation.version).unwrap_or(0);
     Ok(Json(AppendOpResponse { version }))
 }
 
@@ -612,10 +612,10 @@ async fn handle_ws(socket: WebSocket, studio_id: String, document_id: String, st
                 match incoming {
                     Some(Ok(Message::Text(text))) => {
                         match serde_json::from_str::<HubClientFrame>(&text) {
-                            Ok(HubClientFrame::Ops { envelopes }) => {
-                                let appended = handle.append_ops(envelopes, actor.clone()).await;
-                                for op in appended {
-                                    if op.is_new && sender.send(encode(&HubServerFrame::Ack { op_id: op.op_id, version: op.version })).await.is_err() {
+                            Ok(HubClientFrame::Operations { envelopes }) => {
+                                let appended = handle.append_operations(envelopes, actor.clone()).await;
+                                for operation in appended {
+                                    if operation.is_new && sender.send(encode(&HubServerFrame::Ack { operation_id: operation.operation_id, version: operation.version })).await.is_err() {
                                         break;
                                     }
                                 }
@@ -669,7 +669,7 @@ fn router(state: HubState) -> Router {
         .route("/studios/{studio_id}/blobs/{hash}", get(get_blob).head(head_blob).put(put_blob))
         .route("/studios/{studio_id}/documents/{id}", get(get_document))
         .route("/studios/{studio_id}/documents/{id}/envelope", get(get_envelope).put(put_envelope))
-        .route("/studios/{studio_id}/documents/{id}/ops", post(append_op).get(get_ops_since))
+        .route("/studios/{studio_id}/documents/{id}/operations", post(append_operation).get(get_ops_since))
         .route("/studios/{studio_id}/documents/{id}/share", post(create_share))
         .route("/studios/{studio_id}/documents/{id}/ws", get(document_ws))
         .with_state(state)
@@ -749,8 +749,8 @@ mod tests {
         HubState { storage: Arc::new(storage), actors: Arc::new(DashMap::new()), admin_token: None }
     }
 
-    fn sample_envelope(id: &str) -> OpEnvelope {
-        OpEnvelope {
+    fn sample_envelope(id: &str) -> OperationEnvelope {
+        OperationEnvelope {
             id: OperationId(id.into()),
             actor: ActorId("actor-1".into()),
             document: DocumentId("default".into()),
@@ -795,7 +795,7 @@ mod tests {
         WsMessage::Text(serde_json::to_string(frame).unwrap().into())
     }
 
-    // 🔬 WS duplex fan-out: A's op reaches B over its own socket.
+    // 🔬 WS duplex fan-out: A's operation reaches B over its own socket.
     #[tokio::test]
     async fn ws_duplex_fan_out() {
         let addr = spawn_server(memory_state().await).await;
@@ -809,15 +809,15 @@ mod tests {
         b.send(client_text(&HubClientFrame::Hello { actor: "B".into(), token: None, since_version: 0 })).await.unwrap();
         assert!(matches!(next_server_frame(&mut b).await, HubServerFrame::Welcome { .. }));
 
-        a.send(client_text(&HubClientFrame::Ops { envelopes: vec![sample_envelope("op-1")] })).await.unwrap();
+        a.send(client_text(&HubClientFrame::Operations { envelopes: vec![sample_envelope("operation-1")] })).await.unwrap();
 
-        // B must observe the op fanned out with origin "A".
+        // B must observe the operation fanned out with origin "A".
         loop {
             match next_server_frame(&mut b).await {
-                HubServerFrame::Ops { version, envelopes, origin } => {
+                HubServerFrame::Operations { version, envelopes, origin } => {
                     assert_eq!(version, 1);
                     assert_eq!(envelopes.len(), 1);
-                    assert_eq!(envelopes[0].id.0, "op-1");
+                    assert_eq!(envelopes[0].id.0, "operation-1");
                     assert_eq!(origin, "A");
                     break;
                 }
@@ -827,35 +827,35 @@ mod tests {
         }
     }
 
-    // 🔬 Persistence round-trip: ops survive a full server/state teardown against the same sqlite file.
+    // 🔬 Persistence round-trip: operations survive a full server/state teardown against the same sqlite file.
     #[tokio::test]
     async fn persistence_round_trip_from_file() {
         let path = temp_db_path();
         {
             let state = file_state(&path).await;
             let handle = state.actor(STUDIO, "default");
-            for id in ["op-1", "op-2", "op-3"] {
-                handle.append_ops(vec![sample_envelope(id)], "actor-1".into()).await;
+            for id in ["operation-1", "operation-2", "operation-3"] {
+                handle.append_operations(vec![sample_envelope(id)], "actor-1".into()).await;
             }
         }
         // Rebuild fresh state + actors against the same db file.
         let reopened = file_state(&path).await;
-        let ops = reopened.actor(STUDIO, "default").ops_since(0).await;
-        assert_eq!(ops.len(), 3);
-        assert_eq!(ops.iter().map(|(_, e)| e.id.0.clone()).collect::<Vec<_>>(), vec!["op-1", "op-2", "op-3"]);
+        let operations = reopened.actor(STUDIO, "default").ops_since(0).await;
+        assert_eq!(operations.len(), 3);
+        assert_eq!(operations.iter().map(|(_, e)| e.id.0.clone()).collect::<Vec<_>>(), vec!["operation-1", "operation-2", "operation-3"]);
         let _ = std::fs::remove_file(&path);
     }
 
-    // 🔬 Op-id dedupe: the same envelope appended twice yields one row and one new append.
+    // 🔬 Operation-id dedupe: the same envelope appended twice yields one row and one new append.
     #[tokio::test]
     async fn op_id_dedupe() {
         let state = memory_state().await;
         let handle = state.actor(STUDIO, "default");
-        let first = handle.append_ops(vec![sample_envelope("dup")], "actor-1".into()).await;
-        let second = handle.append_ops(vec![sample_envelope("dup")], "actor-1".into()).await;
+        let first = handle.append_operations(vec![sample_envelope("dup")], "actor-1".into()).await;
+        let second = handle.append_operations(vec![sample_envelope("dup")], "actor-1".into()).await;
         assert!(first[0].is_new);
         assert!(!second[0].is_new);
-        assert_eq!(state.storage.load_ops("default").await.unwrap().len(), 1);
+        assert_eq!(state.storage.load_operations("default").await.unwrap().len(), 1);
         assert_eq!(handle.ops_since(0).await.len(), 1);
     }
 
@@ -874,7 +874,7 @@ mod tests {
         assert_eq!(after, 1, "state not corrupted by rejected CAS");
     }
 
-    // 🔬 Op append never 409s on version mismatch (the bug fix): two "concurrent" appends both succeed.
+    // 🔬 Operation append never 409s on version mismatch (the bug fix): two "concurrent" appends both succeed.
     #[tokio::test]
     async fn op_append_never_version_conflicts() {
         let state = memory_state().await;
@@ -883,33 +883,33 @@ mod tests {
         let envelope = serde_json::json!({ "schema": "s.studio/v1", "id": "default", "vcs": { "operations": [] } });
         assert_eq!(handle.put_envelope(0, envelope).await, Ok(1));
         // Both appends succeed regardless of any base-version assumption.
-        let a = handle.append_ops(vec![sample_envelope("concurrent-a")], "A".into()).await;
-        let b = handle.append_ops(vec![sample_envelope("concurrent-b")], "B".into()).await;
+        let a = handle.append_operations(vec![sample_envelope("concurrent-a")], "A".into()).await;
+        let b = handle.append_operations(vec![sample_envelope("concurrent-b")], "B".into()).await;
         assert!(a[0].is_new && a[0].version == 2);
         assert!(b[0].is_new && b[0].version == 3);
         assert_eq!(handle.ops_since(0).await.len(), 2);
     }
 
-    // 🔬 REST op append assigns and returns an incrementing version.
+    // 🔬 REST operation append assigns and returns an incrementing version.
     #[tokio::test]
     async fn rest_append_increments_version() {
         let state = memory_state().await;
-        let response = append_op(Path((STUDIO.to_string(), "default".to_string())), HeaderMap::new(), State(state.clone()), Json(AppendOpRequest { envelope: sample_envelope("op-1") })).await.expect("append");
+        let response = append_operation(Path((STUDIO.to_string(), "default".to_string())), HeaderMap::new(), State(state.clone()), Json(AppendOpRequest { envelope: sample_envelope("operation-1") })).await.expect("append");
         assert_eq!(response.0.version, 1);
     }
 
-    // 🔬 GET /ops?since= filters by assigned version.
+    // 🔬 GET /operations?since= filters by assigned version.
     #[tokio::test]
     async fn rest_ops_since_filters() {
         let state = memory_state().await;
         let handle = state.actor(STUDIO, "default");
-        handle.append_ops(vec![sample_envelope("op-1")], "actor-1".into()).await;
-        handle.append_ops(vec![sample_envelope("op-2")], "actor-1".into()).await;
+        handle.append_operations(vec![sample_envelope("operation-1")], "actor-1".into()).await;
+        handle.append_operations(vec![sample_envelope("operation-2")], "actor-1".into()).await;
         let all = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: None }), HeaderMap::new(), State(state.clone())).await.unwrap();
         assert_eq!(all.0.len(), 2);
         let newer = get_ops_since(Path((STUDIO.to_string(), "default".to_string())), Query(SinceQuery { since: Some(1) }), HeaderMap::new(), State(state.clone())).await.unwrap();
         assert_eq!(newer.0.len(), 1);
-        assert_eq!(newer.0[0].envelope.id.0, "op-2");
+        assert_eq!(newer.0[0].envelope.id.0, "operation-2");
     }
 
     // 🔬 VFS nodes are durable and creatable.
@@ -950,9 +950,9 @@ mod tests {
         let state = memory_state().await;
         let handle_a = state.actor("studio-a", "shared-doc");
         let handle_b = state.actor("studio-b", "shared-doc");
-        handle_a.append_ops(vec![sample_envelope("only-in-a")], "actor-1".into()).await;
+        handle_a.append_operations(vec![sample_envelope("only-in-a")], "actor-1".into()).await;
         assert_eq!(handle_a.ops_since(0).await.len(), 1);
-        assert_eq!(handle_b.ops_since(0).await.len(), 0, "studio-b's actor must not see studio-a's ops");
+        assert_eq!(handle_b.ops_since(0).await.len(), 0, "studio-b's actor must not see studio-a's operations");
     }
 
     // 🔬 Auth sessions: POST /auth/sessions mints a session that resolves the caller's studio role

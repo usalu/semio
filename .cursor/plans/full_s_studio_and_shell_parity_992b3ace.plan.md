@@ -31,7 +31,7 @@ const matches = (event: KeyboardEvent, binding: string) => {
 
 Since every plugin declares `mod+z` (undo) before `mod+shift+z` (redo), and the loop returns on first match, **Cmd/Ctrl+Shift+Z currently fires undo instead of redo for every plugin** (draw, writer, note, raster, layout, s, and 10+ more). Fix: require exact modifier match (`needsCtrl === hasCtrl`, `needsShift === event.shiftKey`, `needsAlt === event.altKey`).
 
-### 0.2 Desktop side-panel tab clicks are no-ops for every plugin except S Studio
+### 0.2 Desktop side-panel tab clicks are no-operations for every plugin except S Studio
 
 [framework/renderer/react/os-shell.tsx:1629-1653](framework/renderer/react/os-shell.tsx) always supplies a controlled `onActiveTabChange`/`activeTabId` pair to the left/right `SidePanel`s, but the callback body only does something `if (studioMode && session?.app.id === S_PLAY_APP_ID)`. Because [ui/js/react/index.tsx:14072-14078](ui/js/react/index.tsx)'s `SidePanel` only falls back to its own working internal tab state `if (!onActiveTabChange)`, and `activeTabId` is always forced back to `workbenchLeftTabs[0]?.id`/`detailsRightTabs[0]?.id` for non-S sessions, **clicking any panel tab besides the first is dead for every other plugin** (draw, note, raster, layout, forms, puzzle/2d/3d/5d, cad, procedural/2d/3d, writer, gis/2d, and more — nearly all of which declare 2+ tabs per side).
 
@@ -60,7 +60,7 @@ Fix: only pass a controlled `activeTabId`/`onActiveTabChange` pair when S Studio
 
 ## Phase 4 — Cross-plugin media export coverage
 
-`framework/product/os/core/rs/media_graph.rs`'s own test (`export_coverage_reports_missing_handlers`) documents that most resource kinds have no export handler. `s/plugin/rs/lib.rs`'s `exportMedia` command silently no-ops for any technology without one ([s/plugin/rs/lib.rs:1739-1767](s/plugin/rs/lib.rs)).
+`framework/product/os/core/rs/media_graph.rs`'s own test (`export_coverage_reports_missing_handlers`) documents that most resource kinds have no export handler. `s/plugin/rs/lib.rs`'s `exportMedia` command silently no-operations for any technology without one ([s/plugin/rs/lib.rs:1739-1767](s/plugin/rs/lib.rs)).
 
 1. **puzzle/5d regression (quick, true regression):** restore the OBJ/GLB `register_os_media_export_handler` calls that exist for the other 3D techs (`cad/plugin/rs/lib.rs:1062-1083`, `procedural/3d/plugin/rs/lib.rs`, `puzzle/3d/plugin/rs/lib.rs`, `lowpoly/plugin/rs/lib.rs`) but are entirely absent from `puzzle/5d/plugin/rs/lib.rs`, mirroring the same pattern.
 2. **Shared PNG rasterization helper:** add a small `web_sys`-based canvas rasterizer (same pattern already used for `LocalStorageBackbonePort` in `vcs/rs/lib.rs`) in a shared crate, taking an SVG string + dimensions and returning PNG bytes, so every 2D plugin can reuse it instead of duplicating canvas glue.

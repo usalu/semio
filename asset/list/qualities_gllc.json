@@ -3731,7 +3731,7 @@
       "description": "Ongoing operational costs during building use phase.",
       "si": "€",
       "imperial": "$",
-      "symbol": "C_{op}",
+      "symbol": "C_{operation}",
       "formula": "Add ( compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.operational-management compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.energy compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.water-wastewater-fees compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.waste-disposal compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.security-and-maintenance compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.common-facilities )",
       "format": "#,##0.##"
     },
@@ -3744,7 +3744,7 @@
       "description": "Costs for operational management and administration.",
       "si": "€",
       "imperial": "$",
-      "symbol": "C_{op-mgmt}",
+      "symbol": "C_{operation-mgmt}",
       "formula": "Add ( compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.property-management compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.caretaker compose.costs.global-life-cycle.life-cycle.operating-ongoing-use.operational-management.insurance )",
       "format": "#,##0.##"
     },
@@ -3854,7 +3854,7 @@
       "description": "Waste disposal and management costs.",
       "si": "€",
       "imperial": "$",
-      "symbol": "C_{waste-op}",
+      "symbol": "C_{waste-operation}",
       "format": "#,##0.##"
     },
     {
@@ -3891,7 +3891,7 @@
       "description": "Operating costs for elevators.",
       "si": "€",
       "imperial": "$",
-      "symbol": "C_{elev-op}",
+      "symbol": "C_{elev-operation}",
       "format": "#,##0.##"
     },
     {

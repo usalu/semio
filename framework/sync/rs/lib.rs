@@ -1,6 +1,6 @@
 //! 🔁 Local-first sync actor layer: a schema-agnostic per-document backbone actor that runs all IO
 //! (persist, hub WebSocket sync, file watching) off the UI thread, plus the causal {@link SyncSession}
-//! that feeds remote {@link OpEnvelope}s into a document's vcs edit timeline.
+//! that feeds remote {@link OperationEnvelope}s into a document's vcs edit timeline.
 //!
 //! # Threading model
 //! - **Native** (wgpu native host, tests): {@link DocumentHost::open} spawns a dedicated `std::thread`
@@ -13,7 +13,7 @@
 //! - **WASI-P2 plugins never link this crate** — inside the sandbox a store attaches vcs's pure
 //!   `PortBackbone` (an in-memory queue relayed to the host). This actor is a host-side concern only.
 
-use semio_framework_core::{HubClientFrame, HubServerFrame, OpEnvelope, PresencePeer};
+use semio_framework_core::{HubClientFrame, HubServerFrame, OperationEnvelope, PresencePeer};
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use tokio::sync::{broadcast, mpsc};
@@ -58,7 +58,7 @@ pub struct DocumentActorConfig {
     /// @emoji 👁️ Watch the folder binding for external edits (other processes writing the file).
     #[serde(default)]
     pub watch_external: bool,
-    /// @emoji 🖋️ The authoring actor id used for hub `Hello`/presence and op origin filtering.
+    /// @emoji 🖋️ The authoring actor id used for hub `Hello`/presence and operation origin filtering.
     pub actor: String,
 }
 
@@ -66,16 +66,16 @@ pub struct DocumentActorConfig {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DocumentActorMsg {
-    /// @emoji ⬆️ Wakes the actor to drain the store's outbound ops promptly. `envelopes` is a
+    /// @emoji ⬆️ Wakes the actor to drain the store's outbound operations promptly. `envelopes` is a
     /// direct-injection fallback used only when no store is attached to the channel (empty = pure wake).
-    LocalOps { envelopes: Vec<OpEnvelope> },
-    /// @emoji 📸 Same as {@link LocalOps} for a full-envelope snapshot (structural commands / seeding).
+    LocalOperations { envelopes: Vec<OperationEnvelope> },
+    /// @emoji 📸 Same as {@link LocalOperations} for a full-envelope snapshot (structural commands / seeding).
     LocalSnapshot { envelope_json: String },
     /// @emoji 📡 Broadcasts this peer's presence/selection to the hub.
     PresenceHeartbeat { peer: PresencePeer },
     /// @emoji 🔄 Forces an immediate re-read + diff of the folder binding (test/manual poke hook).
     ExternalChanged,
-    /// @emoji ✂️ Flushes any pending outbound ops, then stops the actor.
+    /// @emoji ✂️ Flushes any pending outbound operations, then stops the actor.
     Detach,
 }
 
@@ -94,13 +94,13 @@ pub enum RemoteState {
 #[serde(rename_all = "camelCase")]
 pub struct DocumentSyncStatus {
     pub persisted: bool,
-    pub pending_ops: usize,
+    pub pendingOperations: usize,
     pub remote: RemoteState,
 }
 
 impl Default for DocumentSyncStatus {
     fn default() -> Self {
-        Self { persisted: false, pending_ops: 0, remote: RemoteState::Detached }
+        Self { persisted: false, pendingOperations: 0, remote: RemoteState::Detached }
     }
 }
 
@@ -108,22 +108,22 @@ impl Default for DocumentSyncStatus {
 #[derive(Clone, Debug, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum DocumentEvent {
-    /// @emoji 🕸️ Remote ops (hub fan-out or appended external edits) — also pushed into the store's
+    /// @emoji 🕸️ Remote operations (hub fan-out or appended external edits) — also pushed into the store's
     /// inbound queue so `store.tick()` materializes them.
-    RemoteOps { envelopes: Vec<OpEnvelope> },
+    RemoteOperations { envelopes: Vec<OperationEnvelope> },
     /// @emoji 📸 The whole envelope was replaced (divergent external history / hub snapshot swap).
     SnapshotReplaced { envelope_json: String },
     /// @emoji 🚦 Sync status changed.
     Status(DocumentSyncStatus),
     /// @emoji 📡 The presence roster changed.
     Presence { peers: Vec<PresencePeer> },
-    /// @emoji ⚠️ A structural conflict (external divergence with local pending ops / hub CAS reject).
+    /// @emoji ⚠️ A structural conflict (external divergence with local pending operations / hub CAS reject).
     Conflict(StudioConflict),
 }
 //#endregion 🔖Protocol
 
 //#region 🔖Endpoints
-/// @emoji 🧱 Core wire types used only when reconstructing an {@link OpEnvelope} from a stored edit,
+/// @emoji 🧱 Core wire types used only when reconstructing an {@link OperationEnvelope} from a stored edit,
 /// which happens exclusively on the native folder path.
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_core::{ActorId, DocumentDiff, DocumentId, DocumentVersion, InverseOperation, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy};
@@ -140,17 +140,17 @@ fn envelope_edits(value: &Value) -> Vec<Value> {
     value.get("vcs").and_then(|v| v.get("edits")).and_then(|e| e.as_array()).cloned().unwrap_or_default()
 }
 
-/// @emoji 📦 Rebuilds an {@link OpEnvelope} from a stored `Edit` JSON so an appended external edit can
-/// flow through the store's causal DAG (`ingest_remote` → `edit_from_op_envelope`). Mirrors vcs's
-/// `op_envelope_from_edit` field-for-field.
+/// @emoji 📦 Rebuilds an {@link OperationEnvelope} from a stored `Edit` JSON so an appended external edit can
+/// flow through the store's causal DAG (`ingest_remote` → `edit_from_operation_envelope`). Mirrors vcs's
+/// `operation_envelope_from_edit` field-for-field.
 #[cfg(not(target_arch = "wasm32"))]
-fn op_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) -> OpEnvelope {
+fn operation_envelope_from_stored_edit(schema: &str, document_id: &str, edit: Value) -> OperationEnvelope {
     let id = edit.get("id").and_then(|v| v.as_str()).unwrap_or_default().to_string();
     let actor = edit.get("actor").and_then(|v| v.as_str()).unwrap_or("external").to_string();
     let sequence = edit.get("sequenceNumber").and_then(|v| v.as_i64()).unwrap_or(0);
     let backwards = edit.get("backwards").cloned().unwrap_or_else(|| Value::Array(Vec::new()));
     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(&edit).unwrap_or_default());
-    OpEnvelope {
+    OperationEnvelope {
         id: OperationId(id.clone()),
         actor: ActorId(actor),
         document: DocumentId(document_id.to_string()),
@@ -182,23 +182,23 @@ fn hub_ws_url(base_url: &str, studio_id: &str, document_id: &str) -> String {
 /// @emoji 🔁 Pairs a document's vcs store with the causal DAG that reconciles remote envelopes into
 /// it. Extended into the actor world via {@link SyncSession::attach}: it holds the actor command
 /// channel and event stream, drains status on {@link SyncSession::tick}, and delegates store IO.
-pub struct SyncSession<P, Op>
+pub struct SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
 {
-    pub store: DocumentVcsStore<P, Op>,
+    pub store: DocumentVcsStore<P, Operation>,
     cmd_tx: Option<mpsc::UnboundedSender<DocumentActorMsg>>,
     events: Option<broadcast::Receiver<DocumentEvent>>,
     status: DocumentSyncStatus,
 }
 
-impl<P, Op> SyncSession<P, Op>
+impl<P, Operation> SyncSession<P, Operation>
 where
     P: Clone + serde::Serialize + serde::de::DeserializeOwned,
-    Op: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
+    Operation: Clone + serde::Serialize + serde::de::DeserializeOwned + Operation<P>,
 {
-    pub fn new(store: DocumentVcsStore<P, Op>) -> Self {
+    pub fn new(store: DocumentVcsStore<P, Operation>) -> Self {
         Self { store, cmd_tx: None, events: None, status: DocumentSyncStatus::default() }
     }
 
@@ -224,7 +224,7 @@ where
     /// @emoji 🔔 Nudges the actor to drain the store's outbound queue without waiting for its poll tick.
     pub fn wake(&self) {
         if let Some(cmd_tx) = &self.cmd_tx {
-            let _ = cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() });
+            let _ = cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() });
         }
     }
 
@@ -248,7 +248,7 @@ where
 
     /// @emoji 🕸️ Feeds a remote envelope through the store's causal DAG, materializing it (and any
     /// now-unblocked dependents) into the edit timeline. Kept for direct/test injection.
-    pub fn receive(&mut self, envelope: semio_framework_core::OpEnvelope) -> Result<(), SyncError> {
+    pub fn receive(&mut self, envelope: semio_framework_core::OperationEnvelope) -> Result<(), SyncError> {
         self.store.ingest_remote(envelope).map_err(|error| SyncError::Vcs(error.to_string()))
     }
 
@@ -334,7 +334,7 @@ impl DocumentHost {
         }
     }
 
-    /// @emoji ✂️ Stops a document's actor (flushing pending outbound ops first) and, on native, joins
+    /// @emoji ✂️ Stops a document's actor (flushing pending outbound operations first) and, on native, joins
     /// its thread.
     pub fn close(&self, document_id: &str) {
         let document = self.inner.lock().unwrap_or_else(std::sync::PoisonError::into_inner).remove(document_id);
@@ -560,11 +560,11 @@ mod native_actor {
         /// @emoji 📨 Handles a caller control message. Returns `true` when the actor should stop.
         async fn handle_cmd(&mut self, message: DocumentActorMsg) -> bool {
             match message {
-                DocumentActorMsg::LocalOps { envelopes } => {
+                DocumentActorMsg::LocalOperations { envelopes } => {
                     let drained = self.drain_and_relay().await;
                     if !drained && !envelopes.is_empty() {
-                        self.persist_ops(&envelopes);
-                        self.relay_ops_to_hub(&envelopes).await;
+                        self.persist_operations(&envelopes);
+                        self.relay_operations_to_hub(&envelopes).await;
                     }
                     false
                 }
@@ -598,9 +598,9 @@ mod native_actor {
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
-                    BackboneMessage::Ops { envelopes } => {
-                        self.persist_ops(&envelopes);
-                        self.relay_ops_to_hub(&envelopes).await;
+                    BackboneMessage::Operations { envelopes } => {
+                        self.persist_operations(&envelopes);
+                        self.relay_operations_to_hub(&envelopes).await;
                     }
                     BackboneMessage::Snapshot { envelope_json } => {
                         self.persist_snapshot(&envelope_json);
@@ -633,9 +633,9 @@ mod native_actor {
             self.persist_write(envelope_json);
         }
 
-        /// @emoji ➕ Appends locally-applied ops to the persisted envelope's `vcs.edits` (append-only),
+        /// @emoji ➕ Appends locally-applied operations to the persisted envelope's `vcs.edits` (append-only),
         /// keeping the on-disk copy coherent so self-writes are never mistaken for external edits.
-        fn persist_ops(&mut self, envelopes: &[OpEnvelope]) {
+        fn persist_operations(&mut self, envelopes: &[OperationEnvelope]) {
             if self.folder.is_none() {
                 return;
             }
@@ -652,8 +652,8 @@ mod native_actor {
             self.persist_write(&json);
         }
 
-        /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteOps`,
-        /// divergence → `SnapshotReplaced`, divergence with local pending ops → `Conflict`. Self-writes
+        /// @emoji 👁️ Re-reads the folder binding and classifies the change: append-only → `RemoteOperations`,
+        /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         fn handle_external_change(&mut self) {
             let Some(json) = self.folder.as_ref().and_then(|folder| folder.read()) else { return };
@@ -667,15 +667,15 @@ mod native_actor {
             let new_ids: HashSet<String> = file_ids.difference(&self.known_edit_ids).cloned().collect();
 
             if lost.is_empty() && !new_ids.is_empty() {
-                let appended: Vec<OpEnvelope> =
-                    envelope_edits(&value).into_iter().filter(|edit| edit.get("id").and_then(|id| id.as_str()).map(|id| new_ids.contains(id)).unwrap_or(false)).map(|edit| op_envelope_from_stored_edit(&self.schema, &self.document_id, edit)).collect();
+                let appended: Vec<OperationEnvelope> =
+                    envelope_edits(&value).into_iter().filter(|edit| edit.get("id").and_then(|id| id.as_str()).map(|id| new_ids.contains(id)).unwrap_or(false)).map(|edit| operation_envelope_from_stored_edit(&self.schema, &self.document_id, edit)).collect();
                 self.known_edit_ids.extend(new_ids);
                 self.current_envelope = Some(value);
                 self.last_written_hash = Some(hash);
-                self.deliver_remote_ops(appended);
+                self.deliver_remote_operations(appended);
             } else if !lost.is_empty() {
                 if !self.pending_hub.is_empty() {
-                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local ops are pending".into() }));
+                    self.emit(DocumentEvent::Conflict(StudioConflict { kind: "externalDivergence".into(), uri: format!("folder://{}", self.document_id), message: "external history diverged while local operations are pending".into() }));
                 } else {
                     self.known_edit_ids = file_ids;
                     self.current_envelope = Some(value);
@@ -741,16 +741,16 @@ mod native_actor {
                         self.deliver_snapshot(envelope.to_string());
                     }
                     if !backlog.is_empty() {
-                        self.persist_ops(&backlog);
-                        self.deliver_remote_ops(backlog);
+                        self.persist_operations(&backlog);
+                        self.deliver_remote_operations(backlog);
                     }
                     self.emit(DocumentEvent::Presence { peers: presence });
                 }
-                HubServerFrame::Ops { version, envelopes, origin } => {
+                HubServerFrame::Operations { version, envelopes, origin } => {
                     self.hub_version = version;
                     if origin != self.actor {
-                        self.persist_ops(&envelopes);
-                        self.deliver_remote_ops(envelopes);
+                        self.persist_operations(&envelopes);
+                        self.deliver_remote_operations(envelopes);
                     }
                 }
                 HubServerFrame::SnapshotReplaced { version, envelope } => {
@@ -761,9 +761,9 @@ mod native_actor {
                     self.set_remote_state(RemoteState::Live { peer_count: peers.len() });
                     self.emit(DocumentEvent::Presence { peers });
                 }
-                HubServerFrame::Ack { op_id, version } => {
+                HubServerFrame::Ack { operation_id, version } => {
                     self.hub_version = version;
-                    self.pending_hub.remove(&op_id);
+                    self.pending_hub.remove(&operation_id);
                     self.emit_status_if_changed();
                 }
                 HubServerFrame::Conflict { message } => {
@@ -773,14 +773,14 @@ mod native_actor {
             }
         }
 
-        async fn relay_ops_to_hub(&mut self, envelopes: &[OpEnvelope]) {
+        async fn relay_operations_to_hub(&mut self, envelopes: &[OperationEnvelope]) {
             if self.hub.is_none() || envelopes.is_empty() {
                 return;
             }
             for envelope in envelopes {
                 self.pending_hub.insert(envelope.id.0.clone());
             }
-            self.send_client_frame(HubClientFrame::Ops { envelopes: envelopes.to_vec() }).await;
+            self.send_client_frame(HubClientFrame::Operations { envelopes: envelopes.to_vec() }).await;
             self.emit_status_if_changed();
         }
 
@@ -814,13 +814,13 @@ mod native_actor {
         //#endregion 🔖Hub
 
         //#region 🔖Deliver
-        /// @emoji 🕸️ Pushes remote ops into the store's inbound queue and notifies subscribers.
-        fn deliver_remote_ops(&mut self, envelopes: Vec<OpEnvelope>) {
+        /// @emoji 🕸️ Pushes remote operations into the store's inbound queue and notifies subscribers.
+        fn deliver_remote_operations(&mut self, envelopes: Vec<OperationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Ops { envelopes: envelopes.clone() });
-            self.emit(DocumentEvent::RemoteOps { envelopes });
+            let _ = self.remote.push(BackboneMessage::Operations { envelopes: envelopes.clone() });
+            self.emit(DocumentEvent::RemoteOperations { envelopes });
         }
 
         /// @emoji 📸 Pushes a full-envelope snapshot into the store's inbound queue and notifies subscribers.
@@ -834,7 +834,7 @@ mod native_actor {
         }
 
         fn status(&self) -> DocumentSyncStatus {
-            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.hub_version > 0, pending_ops: self.pending_hub.len(), remote: self.remote_state.clone() }
+            DocumentSyncStatus { persisted: self.last_written_hash.is_some() || self.hub_version > 0, pendingOperations: self.pending_hub.len(), remote: self.remote_state.clone() }
         }
 
         fn set_remote_state(&mut self, state: RemoteState) {
@@ -992,11 +992,11 @@ mod wasm_actor {
             let drained = !messages.is_empty();
             for message in messages {
                 match message {
-                    BackboneMessage::Ops { envelopes } => {
+                    BackboneMessage::Operations { envelopes } => {
                         for envelope in &envelopes {
                             self.pending_hub.insert(envelope.id.0.clone());
                         }
-                        self.send_frame(&HubClientFrame::Ops { envelopes });
+                        self.send_frame(&HubClientFrame::Operations { envelopes });
                     }
                     BackboneMessage::Snapshot { envelope_json } => {
                         if let Ok(envelope) = serde_json::from_str::<Value>(&envelope_json) {
@@ -1011,13 +1011,13 @@ mod wasm_actor {
 
         fn handle_cmd(&mut self, message: DocumentActorMsg) {
             match message {
-                DocumentActorMsg::LocalOps { envelopes } => {
+                DocumentActorMsg::LocalOperations { envelopes } => {
                     let drained = self.drain_and_relay();
                     if !drained && !envelopes.is_empty() {
                         for envelope in &envelopes {
                             self.pending_hub.insert(envelope.id.0.clone());
                         }
-                        self.send_frame(&HubClientFrame::Ops { envelopes });
+                        self.send_frame(&HubClientFrame::Operations { envelopes });
                     }
                 }
                 DocumentActorMsg::LocalSnapshot { envelope_json } => {
@@ -1043,14 +1043,14 @@ mod wasm_actor {
                         self.deliver_snapshot(envelope.to_string());
                     }
                     if !backlog.is_empty() {
-                        self.deliver_remote_ops(backlog);
+                        self.deliver_remote_operations(backlog);
                     }
                     let _ = self.events.send(DocumentEvent::Presence { peers: presence });
                 }
-                HubServerFrame::Ops { version, envelopes, origin } => {
+                HubServerFrame::Operations { version, envelopes, origin } => {
                     self.hub_version = version;
                     if origin != self.actor {
-                        self.deliver_remote_ops(envelopes);
+                        self.deliver_remote_operations(envelopes);
                     }
                 }
                 HubServerFrame::SnapshotReplaced { version, envelope } => {
@@ -1060,9 +1060,9 @@ mod wasm_actor {
                 HubServerFrame::Presence { peers } => {
                     let _ = self.events.send(DocumentEvent::Presence { peers });
                 }
-                HubServerFrame::Ack { op_id, version } => {
+                HubServerFrame::Ack { operation_id, version } => {
                     self.hub_version = version;
-                    self.pending_hub.remove(&op_id);
+                    self.pending_hub.remove(&operation_id);
                 }
                 HubServerFrame::Conflict { message } => {
                     let _ = self.events.send(DocumentEvent::Conflict(StudioConflict { kind: "hubCas".into(), uri: self.hub_base_url.clone().unwrap_or_default(), message }));
@@ -1071,12 +1071,12 @@ mod wasm_actor {
             }
         }
 
-        fn deliver_remote_ops(&self, envelopes: Vec<OpEnvelope>) {
+        fn deliver_remote_operations(&self, envelopes: Vec<OperationEnvelope>) {
             if envelopes.is_empty() {
                 return;
             }
-            let _ = self.remote.push(BackboneMessage::Ops { envelopes: envelopes.clone() });
-            let _ = self.events.send(DocumentEvent::RemoteOps { envelopes });
+            let _ = self.remote.push(BackboneMessage::Operations { envelopes: envelopes.clone() });
+            let _ = self.events.send(DocumentEvent::RemoteOperations { envelopes });
         }
 
         fn deliver_snapshot(&self, envelope_json: String) {
@@ -1194,7 +1194,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{create_document_vcs_envelope, op_envelope_from_edit, Edit, OperationDiff};
+    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit, Edit, OperationDiff};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct DemoProjection {
@@ -1219,31 +1219,31 @@ mod tests {
     }
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op")]
-    enum DemoOp {
+    #[serde(tag = "operation")]
+    enum DemoOperation {
         SetN { n: i32 },
     }
 
-    impl Operation<DemoProjection> for DemoOp {
+    impl Operation<DemoProjection> for DemoOperation {
         type Diff = DemoDiff;
 
         fn diff(&self, _projection: &DemoProjection) -> DemoDiff {
             match self {
-                DemoOp::SetN { n } => DemoDiff { n: Some(*n) },
+                DemoOperation::SetN { n } => DemoDiff { n: Some(*n) },
             }
         }
 
         fn backwards(&self, projection: &DemoProjection) -> Vec<Self> {
-            vec![DemoOp::SetN { n: projection.n }]
+            vec![DemoOperation::SetN { n: projection.n }]
         }
     }
 
-    fn sample_op_envelope(edit_id: &str, n: i32) -> semio_framework_core::OpEnvelope {
+    fn sample_operation_envelope(edit_id: &str, n: i32) -> semio_framework_core::OperationEnvelope {
         let edit = Edit {
             id: edit_id.into(),
             actor: None,
-            forwards: vec![DemoOp::SetN { n }],
-            backwards: vec![DemoOp::SetN { n: 0 }],
+            forwards: vec![DemoOperation::SetN { n }],
+            backwards: vec![DemoOperation::SetN { n: 0 }],
             operation_meta: Vec::new(),
             description: None,
             coalesce_key: None,
@@ -1251,31 +1251,31 @@ mod tests {
             started_at: "0".into(),
             finished_at: None,
         };
-        let placeholder: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
-        op_envelope_from_edit(&placeholder, &edit, Vec::new()).expect("op envelope")
+        let placeholder: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        operation_envelope_from_edit(&placeholder, &edit, Vec::new()).expect("operation envelope")
     }
 
     //#region 🧪SyncSession
     #[test]
     fn receive_materializes_remote_envelope_into_the_edit_timeline() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let store = DocumentVcsStore::new(envelope);
         let mut session = SyncSession::new(store);
-        session.receive(sample_op_envelope("edit-1", 5)).expect("receive");
+        session.receive(sample_operation_envelope("edit-1", 5)).expect("receive");
         assert_eq!(session.store.projection().expect("projection").n, 5);
         assert_eq!(session.store.envelope().vcs.edits.len(), 1);
     }
 
     #[test]
     fn receive_buffers_out_of_order_envelopes_until_dependencies_arrive() {
-        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let envelope: vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
         let store = DocumentVcsStore::new(envelope);
         let mut session = SyncSession::new(store);
-        let mut second = sample_op_envelope("edit-2", 9);
+        let mut second = sample_operation_envelope("edit-2", 9);
         second.deps = vec![semio_framework_core::OperationId("edit-1".into())];
         session.receive(second).expect("receive second first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 0, "buffered until edit-1 arrives");
-        session.receive(sample_op_envelope("edit-1", 5)).expect("receive first");
+        session.receive(sample_operation_envelope("edit-1", 5)).expect("receive first");
         assert_eq!(session.store.envelope().vcs.edits.len(), 2, "both edits now applied");
         assert_eq!(session.store.projection().expect("projection").n, 9);
     }
@@ -1295,15 +1295,15 @@ mod tests {
         let edit_json = serde_json::json!({
             "id": "ext-1",
             "actor": "peer",
-            "forwards": [{ "op": "SetN", "n": 42 }],
-            "backwards": [{ "op": "SetN", "n": 0 }],
+            "forwards": [{ "operation": "SetN", "n": 42 }],
+            "backwards": [{ "operation": "SetN", "n": 0 }],
             "sequenceNumber": 3,
             "startedAt": "0"
         });
-        let envelope = op_envelope_from_stored_edit("demo/v1", "demo", edit_json);
+        let envelope = operation_envelope_from_stored_edit("demo/v1", "demo", edit_json);
         assert_eq!(envelope.id.0, "ext-1");
-        let recovered: Edit<DemoOp> = serde_json::from_value(envelope.diff.payload.clone()).expect("recover edit");
-        assert_eq!(recovered.forwards, vec![DemoOp::SetN { n: 42 }]);
+        let recovered: Edit<DemoOperation> = serde_json::from_value(envelope.diff.payload.clone()).expect("recover edit");
+        assert_eq!(recovered.forwards, vec![DemoOperation::SetN { n: 42 }]);
     }
     //#endregion 🧪Helpers
 
@@ -1317,7 +1317,7 @@ mod tests {
         use tokio::sync::{broadcast as tokio_broadcast, Mutex};
         use tokio_tungstenite::tungstenite::Message as WsMessage;
 
-        fn demo_envelope(document_id: &str) -> vcs::DocumentVcsEnvelope<DemoProjection, DemoOp> {
+        fn demo_envelope(document_id: &str) -> vcs::DocumentVcsEnvelope<DemoProjection, DemoOperation> {
             create_document_vcs_envelope("demo/v1", document_id, DemoProjection { n: 0 }, None)
         }
 
@@ -1336,9 +1336,9 @@ mod tests {
             }
         }
 
-        // 🔬 External folder edit → RemoteOps event + the store timeline grows on tick().
+        // 🔬 External folder edit → RemoteOperations event + the store timeline grows on tick().
         #[tokio::test]
-        async fn folder_external_edit_delivers_remote_ops() {
+        async fn folder_external_edit_delivers_remote_operations() {
             let dir = tempfile::tempdir().expect("tempdir");
             let host = DocumentHost::new();
             let channels = host.open(DocumentActorConfig { document_id: "doc-a".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
@@ -1347,8 +1347,8 @@ mod tests {
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
 
             // A local apply establishes a persisted edit on disk.
-            store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOp::SetN { n: 1 }], description: None }).expect("apply");
-            channels.cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() }).expect("wake");
+            store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+            channels.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake");
 
             // Wait until the actor has persisted the local edit to the folder db.
             let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -1366,8 +1366,8 @@ mod tests {
             let external_edit = serde_json::json!({
                 "id": "external-1",
                 "actor": "peer",
-                "forwards": [{ "op": "SetN", "n": 42 }],
-                "backwards": [{ "op": "SetN", "n": 1 }],
+                "forwards": [{ "operation": "SetN", "n": 42 }],
+                "backwards": [{ "operation": "SetN", "n": 1 }],
                 "sequenceNumber": 9,
                 "startedAt": "0"
             });
@@ -1377,16 +1377,16 @@ mod tests {
             // Deterministically poke the actor to re-read (notify also wired, but timing-independent here).
             channels.cmd_tx.send(DocumentActorMsg::ExternalChanged).expect("poke");
 
-            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::RemoteOps { .. })).await;
+            let event = wait_for_event(&mut events, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
             match event {
-                DocumentEvent::RemoteOps { envelopes } => {
+                DocumentEvent::RemoteOperations { envelopes } => {
                     assert_eq!(envelopes.len(), 1);
                     assert_eq!(envelopes[0].id.0, "external-1");
                 }
-                other => panic!("expected RemoteOps, got {other:?}"),
+                other => panic!("expected RemoteOperations, got {other:?}"),
             }
 
-            // The store ingests the pushed op on tick(); the timeline grows and projection updates.
+            // The store ingests the pushed operation on tick(); the timeline grows and projection updates.
             store.tick().expect("tick");
             assert_eq!(store.envelope().vcs.edits.len(), 2, "external edit joined the timeline");
             assert_eq!(store.projection().expect("projection").n, 42);
@@ -1397,7 +1397,7 @@ mod tests {
         /// @emoji 🧪 A minimal in-process hub speaking the real `HubClientFrame`/`HubServerFrame`
         /// protocol, so the hub endpoint is exercised end-to-end without linking WS-C's `os-hub` bin.
         struct MockHub {
-            log: Arc<Mutex<Vec<(i64, OpEnvelope)>>>,
+            log: Arc<Mutex<Vec<(i64, OperationEnvelope)>>>,
             broadcast: tokio_broadcast::Sender<HubServerFrame>,
         }
 
@@ -1434,7 +1434,7 @@ mod tests {
             let (version, backlog) = {
                 let log = hub.log.lock().await;
                 let version = log.last().map(|(v, _)| *v).unwrap_or(0);
-                let backlog: Vec<OpEnvelope> = log.iter().filter(|(v, _)| *v > since_version).map(|(_, envelope)| envelope.clone()).collect();
+                let backlog: Vec<OperationEnvelope> = log.iter().filter(|(v, _)| *v > since_version).map(|(_, envelope)| envelope.clone()).collect();
                 (version, backlog)
             };
             let welcome = HubServerFrame::Welcome { version, envelope: None, presence: Vec::new(), backlog };
@@ -1448,7 +1448,7 @@ mod tests {
                         match incoming {
                             Some(Ok(WsMessage::Text(text))) => {
                                 match serde_json::from_str::<HubClientFrame>(text.as_str()) {
-                                    Ok(HubClientFrame::Ops { envelopes }) => {
+                                    Ok(HubClientFrame::Operations { envelopes }) => {
                                         for envelope in envelopes {
                                             let (assigned, origin) = {
                                                 let mut log = hub.log.lock().await;
@@ -1456,9 +1456,9 @@ mod tests {
                                                 log.push((next, envelope.clone()));
                                                 (next, envelope.actor.0.clone())
                                             };
-                                            let ack = HubServerFrame::Ack { op_id: envelope_id(&envelope), version: assigned };
+                                            let ack = HubServerFrame::Ack { operation_id: envelope_id(&envelope), version: assigned };
                                             let _ = write.send(WsMessage::Text(serde_json::to_string(&ack).unwrap().into())).await;
-                                            let _ = hub.broadcast.send(HubServerFrame::Ops {
+                                            let _ = hub.broadcast.send(HubServerFrame::Operations {
                                                 version: assigned,
                                                 envelopes: vec![envelope],
                                                 origin,
@@ -1488,12 +1488,12 @@ mod tests {
             }
         }
 
-        fn envelope_id(envelope: &OpEnvelope) -> String {
+        fn envelope_id(envelope: &OperationEnvelope) -> String {
             envelope.id.0.clone()
         }
         //#endregion 🔖MockHub
 
-        // 🔬 Two DocumentHosts converge through a hub: A's op fans out to B, whose store materializes it.
+        // 🔬 Two DocumentHosts converge through a hub: A's operation fans out to B, whose store materializes it.
         #[tokio::test]
         async fn two_hosts_converge_through_hub() {
             let (addr, _hub) = spawn_mock_hub().await;
@@ -1525,23 +1525,23 @@ mod tests {
             // Give both actors time to connect + Hello.
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOp::SetN { n: 7 }], description: None }).expect("apply on a");
-            channels_a.cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() }).expect("wake a");
+            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 7 }], description: None }).expect("apply on a");
+            channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOps { .. })).await;
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
             match event {
-                DocumentEvent::RemoteOps { envelopes } => assert_eq!(envelopes.len(), 1),
-                other => panic!("expected RemoteOps on B, got {other:?}"),
+                DocumentEvent::RemoteOperations { envelopes } => assert_eq!(envelopes.len(), 1),
+                other => panic!("expected RemoteOperations on B, got {other:?}"),
             }
             store_b.tick().expect("tick b");
-            assert_eq!(store_b.projection().expect("projection b").n, 7, "B converged on A's op");
+            assert_eq!(store_b.projection().expect("projection b").n, 7, "B converged on A's operation");
 
             host_a.close("shared");
             host_b.close("shared");
         }
 
-        // 🔬 Reconnect with `since` catch-up: after A appends ops while B is offline, B reconnects and
-        // its Welcome backlog carries only the ops it missed.
+        // 🔬 Reconnect with `since` catch-up: after A appends operations while B is offline, B reconnects and
+        // its Welcome backlog carries only the operations it missed.
         #[tokio::test]
         async fn reconnect_since_catch_up_replays_backlog() {
             let (addr, _hub) = spawn_mock_hub().await;
@@ -1559,14 +1559,14 @@ mod tests {
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            // A applies two ops while nobody else is connected.
+            // A applies two operations while nobody else is connected.
             for n in [3, 4] {
-                store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOp::SetN { n }], description: None }).expect("apply on a");
-                channels_a.cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() }).expect("wake a");
+                store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n }], description: None }).expect("apply on a");
+                channels_a.cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() }).expect("wake a");
                 tokio::time::sleep(Duration::from_millis(80)).await;
             }
 
-            // B connects fresh (since_version 0) and its Welcome backlog replays both ops.
+            // B connects fresh (since_version 0) and its Welcome backlog replays both operations.
             let host_b = DocumentHost::new();
             let channels_b =
                 host_b.open(DocumentActorConfig { document_id: "catchup".into(), schema: "demo/v1".into(), bindings: vec![PersistenceBinding::Hub { base_url, studio_id: "studio-1".into(), token: None }], watch_external: false, actor: "B".into() });
@@ -1574,9 +1574,9 @@ mod tests {
             let mut store_b = DocumentVcsStore::new(demo_envelope("catchup"));
             store_b.attach_backbone(Box::new(channels_b.channel_backbone)).expect("attach b");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOps { .. })).await;
-            if let DocumentEvent::RemoteOps { envelopes } = event {
-                assert_eq!(envelopes.len(), 2, "backlog replays both missed ops");
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
+            if let DocumentEvent::RemoteOperations { envelopes } = event {
+                assert_eq!(envelopes.len(), 2, "backlog replays both missed operations");
             }
             store_b.tick().expect("tick b");
             assert_eq!(store_b.envelope().vcs.edits.len(), 2, "B caught up on the full backlog");
@@ -1586,13 +1586,13 @@ mod tests {
             host_b.close("catchup");
         }
 
-        // 🔬 Detach drains the outbox: an op applied right before close still reaches the hub (and B).
+        // 🔬 Detach drains the outbox: an operation applied right before close still reaches the hub (and B).
         #[tokio::test]
-        async fn detach_drains_pending_outbound_ops() {
+        async fn detach_drains_pending_outbound_operations() {
             let (addr, _hub) = spawn_mock_hub().await;
             let base_url = format!("ws://{addr}");
 
-            // Observer B stays connected to witness A's last op.
+            // Observer B stays connected to witness A's last operation.
             let host_b = DocumentHost::new();
             let channels_b = host_b.open(DocumentActorConfig {
                 document_id: "drain".into(),
@@ -1612,13 +1612,13 @@ mod tests {
             store_a.attach_backbone(Box::new(channels_a.channel_backbone)).expect("attach a");
             tokio::time::sleep(Duration::from_millis(300)).await;
 
-            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOp::SetN { n: 5 }], description: None }).expect("apply on a");
+            store_a.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 5 }], description: None }).expect("apply on a");
             // Immediately close A without waiting for the poll tick: Detach must flush the outbox first.
             host_a.close("drain");
 
-            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOps { .. })).await;
-            if let DocumentEvent::RemoteOps { envelopes } = event {
-                assert_eq!(envelopes.len(), 1, "the op applied before detach was not lost");
+            let event = wait_for_event(&mut events_b, |event| matches!(event, DocumentEvent::RemoteOperations { .. })).await;
+            if let DocumentEvent::RemoteOperations { envelopes } = event {
+                assert_eq!(envelopes.len(), 1, "the operation applied before detach was not lost");
             }
             store_b.tick().expect("tick b");
             assert_eq!(store_b.projection().expect("projection b").n, 5);
@@ -1643,7 +1643,7 @@ mod tests {
             let channels =
                 host.open(DocumentActorConfig { document_id: fixture.document_id.clone(), schema: fixture.schema.clone(), bindings: vec![PersistenceBinding::Folder { path: dir.path().to_path_buf() }], watch_external: true, actor: "local".into() });
             let mut events = host.subscribe(&fixture.document_id);
-            let mut store = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOp>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
+            let mut store = DocumentVcsStore::new(create_document_vcs_envelope::<DemoProjection, DemoOperation>(&fixture.schema, &fixture.document_id, DemoProjection { n: 0 }, None));
             store.attach_backbone(Box::new(channels.channel_backbone)).expect("attach");
             let storage = vcs::FolderSqliteStorage::new(dir.path().to_path_buf());
             // Wait for the seed snapshot to land on disk.
@@ -1692,7 +1692,7 @@ mod tests {
 
         fn document_event_tag(event: &DocumentEvent) -> &'static str {
             match event {
-                DocumentEvent::RemoteOps { .. } => "remoteOps",
+                DocumentEvent::RemoteOperations { .. } => "remoteOperations",
                 DocumentEvent::SnapshotReplaced { .. } => "snapshotReplaced",
                 DocumentEvent::Status(_) => "status",
                 DocumentEvent::Presence { .. } => "presence",

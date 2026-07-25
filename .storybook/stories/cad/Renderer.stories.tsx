@@ -64,7 +64,7 @@ function buildStoryBoxMesh({ cornerA, cornerB, height }: StoryBoxInput): MeshTra
   };
 }
 
-/** @emoji 🧊 Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid ops hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
+/** @emoji 🧊 Story-local `SpatialKernel` stub: preview math inherited from `r3fPreviewKernel`, solid operations hand-authored — mirrors `RecordingStubKernel` in `cad/core/js/index.ts`'s interaction test suite. */
 class StoryBoxKernel {
   readonly id = "story-box-kernel";
   readonly operations = ["solid.createBox", "entity.tessellate"] as const;

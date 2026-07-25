@@ -1,6 +1,6 @@
 ---
 name: Operation Input Interface
-overview: "Design a uniform Operation Input API in `compose/graphql/target.schema.graphql`: every operation that has real argument data gets a `<Op>Input implements Input` WeakEntity (hash-id) owned by the Operation; operations whose data is fully carried by `scope` drop their `*Input` type entirely and inherit nullable `input: Input` from the `Operation` interface."
+overview: "Design a uniform Operation Input API in `compose/graphql/target.schema.graphql`: every operation that has real argument data gets a `<Operation>Input implements Input` WeakEntity (hash-id) owned by the Operation; operations whose data is fully carried by `scope` drop their `*Input` type entirely and inherit nullable `input: Input` from the `Operation` interface."
 todos:
  - id: input_interface
    content: Sharpen `interface Input` (owner // Operation, owns empty)
@@ -18,7 +18,7 @@ todos:
    content: Delete 35 empty `*Input` placeholder types and their operation `input:` fields
    status: completed
  - id: owns_unions
-   content: Update each operation's `owns` reference comment to include `<Op>Input` where applicable
+   content: Update each operation's `owns` reference comment to include `<Operation>Input` where applicable
    status: completed
 isProject: false
 ---
@@ -29,7 +29,7 @@ isProject: false
 
 Replace today's 109 inconsistent `type *Input { ... }` bag types with a uniform contract:
 
-- **Non-empty inputs** become `type <Op>Input implements Input` (WeakEntity, hash-id) that is owned by its `<Op>` Operation.
+- **Non-empty inputs** become `type <Operation>Input implements Input` (WeakEntity, hash-id) that is owned by its `<Operation>` Operation.
 - **Empty inputs** (the 35 placeholders that today carry only `hasInput: Boolean! # computed`) are deleted; their operations inherit `input: Input` (nullable) from the `Operation` interface and resolve to `null` at runtime.
 
 All edits land in [compose/graphql/target.schema.graphql](compose/graphql/target.schema.graphql). The non-target [compose/graphql/schema.graphql](compose/graphql/schema.graphql) is the current/source schema and is NOT touched in this design pass.
@@ -61,7 +61,7 @@ Changes vs. today: tighten `owner` comment from `# reference` to `# reference //
 
 ### 2. Add abstract `InputEdge` / `InputConnection`
 
-Sit right under the `interface Input` block. We add ONLY the abstract pair (parallel to `DiffEdge`/`DiffConnection`, `ModificationEdge`/`ModificationConnection`). We deliberately do NOT generate `<Op>InputEdge`/`<Op>InputConnection` for each of the ~74 concrete inputs because Inputs are always accessed via `Operation.input` and are never enumerated as a connection — that would add ~150 unused types.
+Sit right under the `interface Input` block. We add ONLY the abstract pair (parallel to `DiffEdge`/`DiffConnection`, `ModificationEdge`/`ModificationConnection`). We deliberately do NOT generate `<Operation>InputEdge`/`<Operation>InputConnection` for each of the ~74 concrete inputs because Inputs are always accessed via `Operation.input` and are never enumerated as a connection — that would add ~150 unused types.
 
 ```graphql
 type InputEdge implements EntityEdge {
@@ -136,11 +136,11 @@ The 74 concrete Inputs to convert, grouped by region:
 - **Design** (~lines 5610–5760): `CreatedDesignInput`, `CreatedDesignsInput`, `AddedAttributeToDesignInput`, `AddedAttributesToDesignInput`.
 - **Kit** (~lines 5920–5955): `RenamedKitInput`, `ChangedDescriptionInput`.
 
-For each converted Input, also append `// <Op>Input |` (or insert at the right alphabetical spot) to the corresponding operation's `owns: EntityConnection # reference // ...` comment, so the union accurately reflects ownership.
+For each converted Input, also append `// <Operation>Input |` (or insert at the right alphabetical spot) to the corresponding operation's `owns: EntityConnection # reference // ...` comment, so the union accurately reflects ownership.
 
 ### 5. Delete 35 empty `*Input` placeholder types and their operation `input` fields
 
-For each empty input listed below, delete the `type *Input { hasInput: Boolean! ... }` block AND remove the `input: <Op>Input! # data` line from its corresponding operation. The operation then inherits `input: Input` (nullable) from the interface and resolves to `null`.
+For each empty input listed below, delete the `type *Input { hasInput: Boolean! ... }` block AND remove the `input: <Operation>Input! # data` line from its corresponding operation. The operation then inherits `input: Input` (nullable) from the interface and resolves to `null`.
 
 Empty inputs to drop (line numbers from current file):
 
@@ -161,16 +161,16 @@ None. The 7 graphql `input X { ... }` types (`VectorInput`, `PointInput`, `Coord
 
 ```mermaid
 flowchart LR
-  Edit -->|owns| Op["Operation (StrongEntity, uuidv7)"]
-  Op -->|"owns (when input has args)"| Input["<Op>Input implements Input (WeakEntity, hash)"]
-  Op -->|"input: null (when no args)"| NullInput[null]
-  Op -->|scope| Scope[Scope Entity]
-  Op -->|modification| Modification
+  Edit -->|owns| Operation["Operation (StrongEntity, uuidv7)"]
+  Operation -->|"owns (when input has args)"| Input["<Operation>Input implements Input (WeakEntity, hash)"]
+  Operation -->|"input: null (when no args)"| NullInput[null]
+  Operation -->|scope| Scope[Scope Entity]
+  Operation -->|modification| Modification
   Input -.->|references| Refs["Position / Attribute / Piece / ..."]
 ```
 
 ## Out of scope (intentionally not in this plan)
 
 - No regeneration of resolvers, codegen, or downstream TS/Rust/Python types — this is a schema-only design pass.
-- Per-`<Op>Input` `Edge`/`Connection` types are deliberately omitted.
+- Per-`<Operation>Input` `Edge`/`Connection` types are deliberately omitted.
 - The non-target [compose/graphql/schema.graphql](compose/graphql/schema.graphql) is left untouched; once the target shape is approved we can sync it in a follow-up.

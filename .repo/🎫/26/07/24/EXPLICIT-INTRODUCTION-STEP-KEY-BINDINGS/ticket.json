@@ -1,9 +1,9 @@
 {
-  "title": "Complete Aggregator Introduction Tour Steps",
+  "title": "Explicit Introduction Step Key Bindings",
   "emoji": "🎓",
   "status": "closed",
   "description": "Complete the Aggregator (Entwerfen mit Bestand) introduction: add steps for Verbindungspunkte (vortex show window options), suggestion via context menu, and other core missing tour beats so the walkthrough is no longer adhoc/incomplete. Wire introduce/show element ids to real chrome (measures, utilities, windows) with German copy. Update brand.ts and keep puzzle3d reference intro coherent; extend brand assertion tests.",
-  "summary": "Fill step no longer drills into the inactive activate-toggle tree or auto-celebrates: Tool category is revealed for pick, user activates Füllen; info box placed top so it does not cover the panel.",
+  "summary": "Made every Aggregator introduction step name the exact mouse/key action. Viewport now teaches Mausrad zoom, Mittelklick pan, and Alt + Rechtsklick orbit; later steps spell out Linksklick / Rechtsklick / Drag-and-Drop where needed. Brand assertion test updated and passing.",
   "github": {
     "issue": "https://github.com/usalu/semio/issues/2299"
   },
@@ -16,6 +16,7 @@
     "⚪cff24e10f7984d1bac3e47438e7fc715",
     "⚪2e30f673b6ec4132abd8dcd5fda23a11",
     "⚪619873341c164dc0b7c319f892b3b79e",
-    "⚪4863391b84a545d79009955ec2a27813"
+    "⚪4863391b84a545d79009955ec2a27813",
+    "⚪d6874ce5fcc34025a52b2d433ccce96f"
   ]
 }

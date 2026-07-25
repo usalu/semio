@@ -1,7 +1,7 @@
 //! 🖨️ Human-readable output: precedence-aware infix `Display` and a LaTeX emitter, both walking the
 //! same canonical tree (so output is deterministic and stable across runs).
 
-use crate::expr::{Constant, Expr, Kind, RelOp};
+use crate::expr::{Constant, Expr, Kind, RelationalOperator};
 use crate::fnkind::FnKind;
 use std::ops::Neg;
 
@@ -62,23 +62,23 @@ fn write_expr(e: &Expr, out: &mut String) {
             }
             out.push(')');
         }
-        Kind::Rel(op, a, b) => {
+        Kind::Rel(operation, a, b) => {
             write_expr(a, out);
-            out.push_str(rel_symbol(*op));
+            out.push_str(rel_symbol(*operation));
             write_expr(b, out);
         }
         Kind::Wild(id, _) => out.push_str(&format!("_w{id}")),
     }
 }
 
-fn rel_symbol(op: RelOp) -> &'static str {
-    match op {
-        RelOp::Eq => " == ",
-        RelOp::Ne => " != ",
-        RelOp::Lt => " < ",
-        RelOp::Le => " <= ",
-        RelOp::Gt => " > ",
-        RelOp::Ge => " >= ",
+fn rel_symbol(operator: RelationalOperator) -> &'static str {
+    match operation {
+        RelationalOperator::Eq => " == ",
+        RelationalOperator::Ne => " != ",
+        RelationalOperator::Lt => " < ",
+        RelationalOperator::Le => " <= ",
+        RelationalOperator::Gt => " > ",
+        RelationalOperator::Ge => " >= ",
     }
 }
 
@@ -305,9 +305,9 @@ fn write_latex(e: &Expr, out: &mut String) {
             }
             out.push_str("\\end{cases}");
         }
-        Kind::Rel(op, a, b) => {
+        Kind::Rel(operation, a, b) => {
             write_latex(a, out);
-            out.push_str(latex_rel(*op));
+            out.push_str(latex_rel(*operation));
             write_latex(b, out);
         }
         Kind::Wild(id, _) => out.push_str(&format!("w_{{{id}}}")),
@@ -327,14 +327,14 @@ fn latex_constant(c: &Constant) -> &'static str {
     }
 }
 
-fn latex_rel(op: RelOp) -> &'static str {
-    match op {
-        RelOp::Eq => " = ",
-        RelOp::Ne => " \\neq ",
-        RelOp::Lt => " < ",
-        RelOp::Le => " \\leq ",
-        RelOp::Gt => " > ",
-        RelOp::Ge => " \\geq ",
+fn latex_rel(operator: RelationalOperator) -> &'static str {
+    match operation {
+        RelationalOperator::Eq => " = ",
+        RelationalOperator::Ne => " \\neq ",
+        RelationalOperator::Lt => " < ",
+        RelationalOperator::Le => " \\leq ",
+        RelationalOperator::Gt => " > ",
+        RelationalOperator::Ge => " \\geq ",
     }
 }
 // #endregion 🔖Latex

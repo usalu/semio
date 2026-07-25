@@ -1545,9 +1545,9 @@ def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
     design = body.design
     dg = body.designId
     lang = body.language
-    op = body.operation
+    operation = body.operation
     bridge_payload: dict[str, typing.Any] = {
-        "op": op,
+        "operation": operation,
         "kit": kit,
         "design": design,
         "designId": dg,
@@ -1555,14 +1555,14 @@ def _dispatch_native_algorithm(body: NativeAlgorithmExecuteBody) -> typing.Any:
         "connectionIds": list(body.connectionIds),
     }
     if lang == "python":
-        if op == "flatten":
+        if operation == "flatten":
             return flattenDesignReportDict(kit, dg)
         return deletePiecesAndConnectionsInDesignDict(kit, design, list(body.pieceIds), list(body.connectionIds))
     if lang == "go":
         return _go_native_bridge(bridge_payload)
     if lang == "rust":
         bridge_in = dict(bridge_payload)
-        if op != "delete":
+        if operation != "delete":
             bridge_in["design"] = None
         return _rust_native_bridge(bridge_in)
     if lang == "csharp":
@@ -5714,7 +5714,7 @@ class TestRemoteStore:
                 assert "designs/" in call_args[0][0]
 
     def test_initialize_noop(self, tmp_path):
-        """🔖RemoteStore.initialize is a no-op (server-side initialization)."""
+        """🔖RemoteStore.initialize is a no-operation (server-side initialization)."""
         auth_file = str(tmp_path / "auth.json")
         with patch.object(engine, "AUTH_FILE", auth_file):
             store = engine.RemoteStore("https://server.com/api/kits/my-kit", "https://server.com", "my-kit")

@@ -359,6 +359,12 @@ impl GraphHost {
         self.dag.pick_targets_at_screen_json(sx, sy)
     }
 
+    /// @emoji 🎯 Screen-space geometry for a live entity (`domain`/`id` in the pick-target grammar) —
+    /// see `DagHost::entity_screen_json`. Powers introduction-demonstration semantic targeting.
+    pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+        self.dag.entity_screen_json(domain, id)
+    }
+
     pub fn set_hover(&mut self, node_id: Option<&str>) {
         self.dag.set_hover(node_id);
     }
@@ -578,6 +584,11 @@ mod wasm_session {
         #[wasm_bindgen(js_name = pickTargetsAtScreenJson)]
         pub fn pick_targets_at_screen_json(&self, sx: f64, sy: f64) -> String {
             self.state.borrow().host.dag.pick_targets_at_screen_json(sx, sy)
+        }
+
+        #[wasm_bindgen(js_name = entityScreenJson)]
+        pub fn entity_screen_json(&self, domain: &str, id: &str) -> String {
+            self.state.borrow().host.dag.entity_screen_json(domain, id)
         }
 
         #[wasm_bindgen(js_name = setHover)]

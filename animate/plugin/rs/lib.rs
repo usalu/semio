@@ -2,7 +2,7 @@
 
 use animate_present::{
     build_tile_morph_prompt, clamp_tile_crop, compile_scene_to_assets, default_present_deck, export_video_from_scene, parse_grid_engagement, populate_tile_drafts_from_grid, FigureTileDraft, FigureTileDraftPatch, FigureTileFrame,
-    FigureTileGridSeedSpec, FigureTileSource, PresentDeck, PresentOp, PresentScene, PRESENT_DECK_SCHEMA,
+    FigureTileGridSeedSpec, FigureTileSource, PresentDeck, PresentOperation, PresentScene, PRESENT_DECK_SCHEMA,
 };
 use semio_framework_plugin::{
     build_canvas_2d_scene, create_default_layout, ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption,
@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use vcs::CollectionOp;
+use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const ANIMATE_PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -414,7 +414,7 @@ fn build_catalogue_tree(deck: &PresentDeck, labels: &AnimatePresentLabels) -> Ui
                         value: deck.source.src.clone(),
                         placeholder: None,
                         commit: None,
-                        on_change: animate_present_action("noop", None),
+                        on_change: animate_present_action("noOperation", None),
                         min: None,
                         max: None,
                         step: None,
@@ -447,7 +447,7 @@ struct AnimatePresentPlayApp {
 
 impl DocumentApp for AnimatePresentPlayApp {
     type Projection = PresentDeck;
-    type Op = PresentOp;
+    type Operation = PresentOperation;
 
     fn app_id(&self) -> &str {
         ANIMATE_PRESENT_PLAY_APP_ID
@@ -461,7 +461,7 @@ impl DocumentApp for AnimatePresentPlayApp {
         default_present_deck()
     }
 
-    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOp> {
+    fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
         let deck = doc.projection;
         match action {
             "setSelectedIds" => {
@@ -473,14 +473,14 @@ impl DocumentApp for AnimatePresentPlayApp {
                 let columns = args.and_then(|v| v.get("columns")).and_then(|v| v.as_u64()).unwrap_or(5) as u32;
                 let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
                 self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
+                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }])
             }
             "addTile" => {
                 let id = new_tile_id("tile");
                 let crop = args.and_then(|v| v.get("crop")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or(FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 });
                 let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop };
                 self.runtime.selected_ids = vec![id];
-                ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
+                ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })])
             }
             "deleteTile" => {
                 let target = args.and_then(|v| v.get("id")).and_then(|v| v.as_str()).map(|id| vec![id.to_string()]).unwrap_or_else(|| self.runtime.selected_ids.clone());
@@ -489,7 +489,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     return ActionEmit::default();
                 }
                 self.runtime.selected_ids.retain(|id| !target.contains(id));
-                ActionEmit::ops(target.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Remove { id })).collect())
+                ActionEmit::operations(target.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect())
             }
             "deleteSelection" => {
                 let target = valid_tile_ids(deck, self.runtime.selected_ids.clone());
@@ -497,7 +497,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     return ActionEmit::default();
                 }
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(target.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Remove { id })).collect())
+                ActionEmit::operations(target.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Remove { id })).collect())
             }
             "renameTile" | "renameTiles" => {
                 let ids: Vec<String> = args.and_then(|v| v.get("ids")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
@@ -508,7 +508,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                         if valid.is_empty() {
                             return ActionEmit::default();
                         }
-                        ActionEmit::ops(valid.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
+                        ActionEmit::operations(valid.into_iter().map(|id| PresentOperation::Tiles(CollectionOperation::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
                     }
                     None => ActionEmit::default(),
                 }
@@ -520,7 +520,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                 match value {
                     Some(value) if !field.is_empty() => {
                         let targets: HashSet<&str> = ids.iter().map(String::as_str).collect();
-                        let ops: Vec<PresentOp> = deck
+                        let operations: Vec<PresentOperation> = deck
                             .tiles
                             .iter()
                             .filter(|tile| targets.contains(tile.id.as_str()))
@@ -533,13 +533,13 @@ impl DocumentApp for AnimatePresentPlayApp {
                                     "height" => crop.height = value,
                                     _ => {}
                                 }
-                                PresentOp::Tiles(CollectionOp::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
+                                PresentOperation::Tiles(CollectionOperation::Patch { id: tile.id.clone(), patch: FigureTileDraftPatch { name: None, crop: Some(clamp_tile_crop(crop)) } })
                             })
                             .collect();
-                        if ops.is_empty() {
+                        if operations.is_empty() {
                             ActionEmit::default()
                         } else {
-                            ActionEmit::ops(ops)
+                            ActionEmit::operations(operations)
                         }
                     }
                     _ => ActionEmit::default(),
@@ -565,12 +565,12 @@ impl DocumentApp for AnimatePresentPlayApp {
                         }
                     }
                     let replaced = partial.src != deck.source.src;
-                    let mut ops = vec![PresentOp::SetSource { source: partial }];
+                    let mut operations = vec![PresentOperation::SetSource { source: partial }];
                     if replaced {
-                        ops.push(PresentOp::SetTiles { tiles: Vec::new() });
+                        operations.push(PresentOperation::SetTiles { tiles: Vec::new() });
                         self.runtime.selected_ids.clear();
                     }
-                    return ActionEmit::ops(ops);
+                    return ActionEmit::operations(operations);
                 }
                 ActionEmit::default()
             }
@@ -579,7 +579,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     if let Ok(frame) = serde_json::from_value::<FigureTileFrame>(frame_value.clone()) {
                         let mut source = deck.source.clone();
                         source.frame = frame;
-                        return ActionEmit::ops(vec![PresentOp::SetSource { source }]);
+                        return ActionEmit::operations(vec![PresentOperation::SetSource { source }]);
                     }
                 }
                 ActionEmit::default()
@@ -588,13 +588,13 @@ impl DocumentApp for AnimatePresentPlayApp {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("demo");
                 if example_id == "demo" || example_id.is_empty() {
                     self.runtime.selected_ids.clear();
-                    return ActionEmit::ops(vec![PresentOp::SetDeck { deck: default_present_deck() }]);
+                    return ActionEmit::operations(vec![PresentOperation::SetDeck { deck: default_present_deck() }]);
                 }
                 ActionEmit::default()
             }
             "clearTiles" => {
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(vec![PresentOp::SetTiles { tiles: Vec::new() }])
+                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles: Vec::new() }])
             }
             "copyPrompt" => ActionEmit::effect(tile_morph_prompt_effect(deck)),
             "exportVideoFromDeck" => {
@@ -623,7 +623,7 @@ impl DocumentApp for AnimatePresentPlayApp {
                     let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows, columns, gap: 0.0, key_prefix: "tile" });
                     self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
                     self.runtime.engagement_input.clear();
-                    return ActionEmit::ops(vec![PresentOp::SetTiles { tiles }]);
+                    return ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }]);
                 }
                 match trimmed.to_lowercase().as_str() {
                     "add" => {
@@ -631,12 +631,12 @@ impl DocumentApp for AnimatePresentPlayApp {
                         let tile = FigureTileDraft { id: id.clone(), name: id.clone(), crop: FigureTileFrame { x: 0.1, y: 0.1, width: 0.2, height: 0.2 } };
                         self.runtime.selected_ids = vec![id];
                         self.runtime.engagement_input.clear();
-                        ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
+                        ActionEmit::operations(vec![PresentOperation::Tiles(CollectionOperation::Add { index: deck.tiles.len(), item: tile })])
                     }
                     "clear" => {
                         self.runtime.selected_ids.clear();
                         self.runtime.engagement_input.clear();
-                        ActionEmit::ops(vec![PresentOp::SetTiles { tiles: Vec::new() }])
+                        ActionEmit::operations(vec![PresentOperation::SetTiles { tiles: Vec::new() }])
                     }
                     "copy" | "copy prompt" => {
                         self.runtime.engagement_input.clear();
@@ -664,13 +664,13 @@ impl DocumentApp for AnimatePresentPlayApp {
     /// break those buttons, since `UiButtonNode` only carries actions). "Reset to Default Grid" has no
     /// existing UI wiring: it's reachable only from the footer command panel / palette, demonstrating a
     /// command that emits a real VCS-tracked operation.
-    fn handle_command(&mut self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOp> {
+    fn handle_command(&mut self, command: &str, _args: Option<&Value>, doc: &DocumentView<'_, PresentDeck>, _view_state: &ViewState) -> ActionEmit<PresentOperation> {
         let deck = doc.projection;
         match command {
             "animate.resetGrid" => {
                 let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 3, columns: 5, gap: 0.0, key_prefix: "tile" });
                 self.runtime.selected_ids = tiles.first().map(|tile| vec![tile.id.clone()]).unwrap_or_default();
-                ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
+                ActionEmit::operations(vec![PresentOperation::SetTiles { tiles }])
             }
             _ => ActionEmit::default(),
         }
@@ -756,7 +756,7 @@ fn create_animate_present_app() -> App {
             .view_action("setSelectedIds", "Set Selected Ids")
             .view_action("engagementInput", "Engagement Input")
             .view_action("canvasPointerDown", "Canvas Pointer Down")
-            .view_action("noop", "No Op")
+            .view_action("noOperation", "No Operation")
             // 🎛️ Declared arg schemas for palette-parametric actions (materialized before dispatch).
             .action_args("seedGrid", vec![
                 ActionArgDef::number("rows", "Rows").required().default_value(2),
@@ -821,7 +821,7 @@ mod tests {
         VcsDocumentApp::new(AnimatePresentPlayApp::default())
     }
 
-    /// 🧬 A wrapper carrying the real registry so kind discipline (Shell/View-emits-ops rejection) and
+    /// 🧬 A wrapper carrying the real registry so kind discipline (Shell/View-emits-operations rejection) and
     /// declared-arg materialization run exactly as in production.
     fn new_app_with_registry() -> VcsDocumentApp<AnimatePresentPlayApp> {
         let definition = create_animate_present_app().definition;
@@ -833,7 +833,7 @@ mod tests {
         let mut app = new_app_with_registry();
         app.handle_action("seedGrid", Some(&json!({ "rows": 1, "columns": 2 })), &ViewState::default(), &meta("local")).expect("seed grid");
         let result = app.handle_action("copyPrompt", None, &ViewState::default(), &meta("local")).expect("copy prompt");
-        assert!(result.operations.is_empty(), "copyPrompt is a host effect, not a document op");
+        assert!(result.operations.is_empty(), "copyPrompt is a host effect, not a document operation");
         assert!(matches!(result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { mime_type, .. }] if mime_type == "text/markdown"), "copyPrompt emits exactly one media-export host effect carrying the morph prompt",);
         let definition = create_animate_present_app().definition;
         assert!(definition.actions.iter().any(|action| action.id == "copyPrompt" && matches!(action.kind, ActionKind::Shell)), "copyPrompt is declared Shell-kind (host side-effect), never View",);
@@ -898,7 +898,7 @@ mod tests {
     }
 
     #[test]
-    fn add_delete_and_rename_tile_round_trip_through_ops() {
+    fn add_delete_and_rename_tile_round_trip_through_operations() {
         let mut app = new_app();
         app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
         let tile_id = app.projection().expect("projection").tiles[0].id.clone();
@@ -988,7 +988,7 @@ mod tests {
     }
 
     /// 🧪 Two independent instances start empty, apply DISJOINT edits (A adds a tile, B sets the
-    /// source), and exchanging ops over a `MemoryBackbone` converges both sides to contain BOTH edits —
+    /// source), and exchanging operations over a `MemoryBackbone` converges both sides to contain BOTH edits —
     /// impossible with whole-document snapshots, which would clobber one another.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {

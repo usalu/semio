@@ -2067,7 +2067,7 @@ func (d *DevKit) ImportTransport(t *TransportKit) error {
 // 📤ExportTransport exports the Kit as a TransportKit.
 func (d *DevKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(d.kit) }
 
-// 🔒Close is a no-op for DevKit.
+// 🔒Close is a no-operation for DevKit.
 func (d *DevKit) Close() {}
 
 // 📂LocalKit is a synchronized folder with .compose/kit.db SQLite database.
@@ -2103,7 +2103,7 @@ func (l *LocalKit) ImportTransport(t *TransportKit) error {
 // 📤ExportTransport exports the Kit as a TransportKit.
 func (l *LocalKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(l.kit) }
 
-// 🔒Close is a no-op for LocalKit.
+// 🔒Close is a no-operation for LocalKit.
 func (l *LocalKit) Close() {}
 
 // 🌐RemoteKit is a synchronized websocket connection to compose/hub.
@@ -2139,7 +2139,7 @@ func (r *RemoteKit) ImportTransport(t *TransportKit) error {
 // 📤ExportTransport exports the Kit as a TransportKit.
 func (r *RemoteKit) ExportTransport() (*TransportKit, error) { return TransportKitFromKit(r.kit) }
 
-// 🔒Close is a no-op for RemoteKit.
+// 🔒Close is a no-operation for RemoteKit.
 func (r *RemoteKit) Close() {}
 
 // #endregion 🧳Kit Kind Types
@@ -10074,7 +10074,7 @@ func validateIdCollectionDiffGo(ctx *kitDiffValidateCtx, path, idKey string, bas
 			orig := baseBy[rg]
 			add := addBy[rg]
 			if orig != nil && add != nil && kitdiffDeepEqualJSON(orig, add) {
-				kitdiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
+				kitdiffPush(ctx, "warnings", "kitdiff.cycle.no-operation-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
 				if ctx.heal {
 					if hRem != nil {
 						nr := hRem[:0]

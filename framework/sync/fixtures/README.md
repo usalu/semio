@@ -11,7 +11,7 @@ by two harnesses to keep the Rust actor and its TypeScript twin (WS-E `backbone-
 
 ```jsonc
 {
- "name": "basic-remote-ops",
+ "name": "basic-remote-operations",
  "schema": "demo/v1",
  "documentId": "fixture-basic",
  "inbound": [
@@ -33,12 +33,12 @@ tolerated (skipped) while matching the expected tag.
 ### `FixtureInbound` variants (`kind`)
 
 - `externalEdits { edits: Edit[] }` — append these `Edit` JSON objects to the stored envelope's
-  `vcs.edits` out-of-band (append-only → `remoteOps`).
+  `vcs.edits` out-of-band (append-only → `remoteOperations`).
 - `replaceEnvelope { envelope: DocumentVcsEnvelope }` — rewrite the whole stored envelope (divergent
-  history → `snapshotReplaced`, or `conflict` when local ops are pending).
+  history → `snapshotReplaced`, or `conflict` when local operations are pending).
 - `hubFrame { frame: HubServerFrame }` — a raw hub server frame. Driven by the TS twin; the folder-only
   Rust harness rejects these, so keep them out of Rust-replayed fixtures for now.
 
 ### `DocumentEvent` tags
 
-`remoteOps` · `snapshotReplaced` · `status` · `presence` · `conflict`
+`remoteOperations` · `snapshotReplaced` · `status` · `presence` · `conflict`

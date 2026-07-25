@@ -677,13 +677,45 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "puzzle3d",
-  registryPluginId: "puzzle",
-  defaultAppId: "puzzle3d-play",
-  studioMode: false,
-  host: undefined,
+  variant: "s",
+  registryPluginId: "s",
+  defaultAppId: undefined,
+  studioMode: true,
+  host: { landingAppId: "home", hostAppId: "studio" },
   plugins: [
-    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] }
+    { pluginId: "animate", moduleUrl: "/plugin-modules/animate/animate_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "architect", moduleUrl: "/plugin-modules/architect/architect_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "cad", moduleUrl: "/plugin-modules/cad/cad_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "dag", moduleUrl: "/plugin-modules/dag/dag_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "draw", moduleUrl: "/plugin-modules/draw/draw_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "fem", moduleUrl: "/plugin-modules/fem/fem_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "flow", moduleUrl: "/plugin-modules/flow/flow_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "forms", moduleUrl: "/plugin-modules/forms/forms_plugin.js", contributes: [], consumes: ["forms.questionKind"] },
+    { pluginId: "gis", moduleUrl: "/plugin-modules/gis/gis_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "imperative", moduleUrl: "/plugin-modules/imperative/imperative_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "layout", moduleUrl: "/plugin-modules/layout/layout_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "lowpoly", moduleUrl: "/plugin-modules/lowpoly/lowpoly_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "mathematical", moduleUrl: "/plugin-modules/mathematical/mathematical_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "norm", moduleUrl: "/plugin-modules/norm/norm_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "note", moduleUrl: "/plugin-modules/note/note_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "procedural", moduleUrl: "/plugin-modules/procedural/procedural_plugin.js", contributes: [], consumes: ["forms.questionKind"] },
+    { pluginId: "process", moduleUrl: "/plugin-modules/process/process_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "protocol", moduleUrl: "/plugin-modules/protocol/protocol_plugin.js", contributes: [], consumes: ["protocol.blockKind"] },
+    { pluginId: "protocol-module-procedural", moduleUrl: "/plugin-modules/protocol-module-procedural/protocol_module_procedural.js", contributes: ["protocol.blockKind"], consumes: [] },
+    { pluginId: "puzzle", moduleUrl: "/plugin-modules/puzzle/puzzle_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "raster", moduleUrl: "/plugin-modules/raster/raster_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "reasoning-mindmap", moduleUrl: "/plugin-modules/reasoning-mindmap/reasoning_mindmap_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "remodel", moduleUrl: "/plugin-modules/remodel/remodel_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "s", moduleUrl: "/plugin-modules/s/s_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sequence", moduleUrl: "/plugin-modules/sequence/sequence_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "shooting", moduleUrl: "/plugin-modules/shooting/shooting_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing", moduleUrl: "/plugin-modules/sourcing/sourcing_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-beams", moduleUrl: "/plugin-modules/sourcing-module-beams/sourcing_module_beams.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-slabs", moduleUrl: "/plugin-modules/sourcing-module-slabs/sourcing_module_slabs.js", contributes: [], consumes: [] },
+    { pluginId: "sourcing-module-windows", moduleUrl: "/plugin-modules/sourcing-module-windows/sourcing_module_windows.js", contributes: [], consumes: [] },
+    { pluginId: "trinity", moduleUrl: "/plugin-modules/trinity/trinity_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "vcs", moduleUrl: "/plugin-modules/vcs/vcs_plugin.js", contributes: [], consumes: [] },
+    { pluginId: "writer", moduleUrl: "/plugin-modules/writer/writer_plugin.js", contributes: [], consumes: [] }
   ]
 };
 

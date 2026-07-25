@@ -1,0 +1,397 @@
+=== Files defining *Op enums/structs/types ===
+forms/plugin/rs/lib.rs:1609:    type Op = FormOp;
+fem/2d/rs/lib.rs:377:pub enum Fem2dOp {
+trinity/ram/rs/lib.rs:550:pub enum TrinityGraphOp {
+fem/plugin/rs/lib.rs:570:    type Op = fem_2d::Fem2dOp;
+fem/plugin/rs/lib.rs:1186:    type Op = fem_3d::Fem3dOp;
+puzzle/2d/rs/lib.rs:590:pub enum Puzzle2dOp {
+flow/plugin/rs/lib.rs:1003:    type Op = FlowOp;
+trinity/plugin/rs/lib.rs:746:        type Op = TrinityGraphOp;
+trinity/plugin/rs/lib.rs:2562:        type Op = RewriteRuleOp;
+puzzle/3d/rs/lib.rs:2436:pub enum Puzzle3dOp {
+puzzle/5d/rs/lib.rs:107:pub enum Puzzle5dOp {
+framework/sync/rs/lib.rs:1223:    enum DemoOp {
+imperative/plugin/rs/lib.rs:226:    type Op = ImperativeOp;
+fem/3d/rs/lib.rs:426:pub enum Fem3dOp {
+puzzle/plugin/rs/lib.rs:1615:        type Op = Puzzle2dOp;
+puzzle/plugin/rs/lib.rs:6370:        type Op = Puzzle3dOp;
+puzzle/plugin/rs/lib.rs:11457:        type Op = Puzzle5dOp;
+trinity/rewrite/engine/rs/lib.rs:314:pub enum RewriteRuleOp {
+mathematical/plugin/rs/lib.rs:143:enum MathOp {
+mathematical/plugin/rs/lib.rs:363:    type Op = MathOp;
+imperative/core/rs/lib.rs:41:pub struct ImperativeOp {
+architect/program/rs/lib.rs:1495:    pub enum ProgramOp {
+s/rs/lib.rs:89:pub enum StudioOp {
+architect/plugin/rs/lib.rs:1416:    type Op = ProgramOp;
+s/plugin/rs/lib.rs:117:    pub enum SHomeOp {
+s/plugin/rs/lib.rs:416:        type Op = SHomeOp;
+s/plugin/rs/lib.rs:2118:        type Op = OsOp;
+animate/plugin/rs/lib.rs:450:    type Op = PresentOp;
+flow/module/brep/rs/lib.rs:753:struct ShellOp;
+vcs/rs/lib.rs:247:pub enum CollectionOp<TId, TItem, TPatch> {
+vcs/rs/lib.rs:2210:pub enum StudioHistoryOp {
+vcs/rs/lib.rs:2631:    enum DemoOp {
+vcs/rs/lib.rs:3661:    enum TimestampedOp {
+vcs/plugin/rs/lib.rs:40:enum VcsDemoOp {
+vcs/plugin/rs/lib.rs:646:    type Op = VcsDemoOp;
+protocol/rs/lib.rs:240:pub enum ProtocolOp {
+protocol/rs/lib.rs:631:    pub enum GenerationOp {
+protocol/plugin/rs/lib.rs:123:    type Op = ProtocolOp;
+framework/product/os/hub/rs/bin.rs:49:struct AppendedOp {
+protocol/module/procedural/rs/lib.rs:85:enum ModulePayloadOp {
+protocol/module/procedural/rs/lib.rs:508:    type Op = ModulePayloadOp;
+flow/core/rs/lib.rs:4114:pub enum FlowOp {
+writer/rs/lib.rs:62:    pub enum WriterOp {
+writer/plugin/rs/lib.rs:1053:    type Op = WriterOp;
+framework/product/os/core/rs/lib.rs:441:    pub enum OsOp {
+process/plugin/rs/lib.rs:1207:    type Op = Process3dOp;
+lowpoly/plugin/rs/lib.rs:1648:    type Op = LowpolyOp;
+process/3d/rs/lib.rs:179:pub enum Process3dOp {
+animate/present/rs/lib.rs:604:pub enum PresentOp {
+shooting/rs/lib.rs:399:pub enum ShootingOp {
+shooting/plugin/rs/lib.rs:960:    type Op = ShootingOp;
+animate/present/core/js/index.ts:2006:export type PresentationEditOp =
+procedural/2d/rs/lib.rs:148:pub enum Procedural2dOp {
+procedural/plugin/rs/lib.rs:768:        type Op = Procedural2dOp;
+procedural/plugin/rs/lib.rs:2419:        type Op = Procedural3dOp;
+framework/plugin/rs/lib.rs:1972:    enum DummyOp {
+framework/plugin/rs/lib.rs:1995:        type Op = DummyOp;
+framework/plugin/rs/lib.rs:2868:    type Op: Operation<Self::Projection> + PartialEq + Send;
+framework/plugin/rs/lib.rs:4352:    enum TestOp {
+framework/plugin/rs/lib.rs:4384:        type Op = TestOp;
+lowpoly/core/rs/lib.rs:231:pub enum LowpolyOp {
+note/plugin/rs/lib.rs:255:enum NoteOp {
+note/plugin/rs/lib.rs:1698:    type Op = NoteOp;
+procedural/3d/rs/lib.rs:148:pub enum Procedural3dOp {
+cad/rs/lib.rs:412:pub enum CadOp {
+cad/plugin/rs/lib.rs:5004:    type Op = CadOp;
+compose/client/lib/rs/lib.rs:19210:        enum KitOp {
+kernel/2d/js/index.ts:104:export type DrawBooleanOp = (typeof DRAW_BOOLEAN_OPS)[number];
+framework/renderer/wgpu/rs/lib.rs:9602:enum DiffLineOp {
+mathematical/cas/rs/src/assume.rs:100:pub enum RelOp {
+mathematical/cas/rs/src/expr.rs:90:pub enum RelOp {
+gis/plugin/rs/lib.rs:137:    pub enum GisMapOp {
+gis/plugin/rs/lib.rs:360:    pub enum Gis3dTerrainOp {
+gis/plugin/rs/lib.rs:1159:        type Op = GisMapOp;
+gis/plugin/rs/lib.rs:1900:        type Op = Gis3dTerrainOp;
+compose/client/lib/query/rs/lib.rs:149:    pub enum BinOp {
+sourcing/curate/rs/lib.rs:277:pub enum SourcingOp {
+sourcing/plugin/rs/lib.rs:318:    type Op = SourcingOp;
+sequence/plugin/rs/lib.rs:375:    type Op = SequenceOp;
+sequence/core/rs/lib.rs:1231:pub enum SequenceOp {
+raster/plugin/rs/lib.rs:429:    pub enum RasterOp {
+raster/plugin/rs/lib.rs:1287:    type Op = RasterOp;
+draw/rs/lib.rs:1167:pub enum DrawOp {
+draw/plugin/rs/lib.rs:1601:    type Op = DrawOp;
+infinite/board/port/directed/dag/rs/lib.rs:6889:pub enum DagOp {
+infinite/board/port/directed/dag/plugin/rs/lib.rs:702:    type Op = DagOp;
+norm/vdi/3805/rs/lib.rs:10:pub type Op = SetDocumentOp<Document>;
+norm/vdi/3805/rs/lib.rs:2615:    type Op = Op;
+norm/en/1996/rs/lib.rs:384:pub type Op = SetDocumentOp<Document>;
+norm/en/1996/rs/lib.rs:395:    type Op = Op;
+norm/en/1991/rs/lib.rs:610:pub type Op = SetDocumentOp<Document>;
+norm/en/1991/rs/lib.rs:621:    type Op = Op;
+norm/en/1998/rs/lib.rs:740:pub type Op = SetDocumentOp<Document>;
+norm/en/1998/rs/lib.rs:831:    type Op = Op;
+norm/en/1999/rs/lib.rs:430:pub type Op = SetDocumentOp<Document>;
+norm/en/1999/rs/lib.rs:475:    type Op = Op;
+norm/en/1990/rs/lib.rs:435:pub type Op = SetDocumentOp<Document>;
+norm/en/1990/rs/lib.rs:468:    type Op = Op;
+norm/en/1997/rs/lib.rs:334:pub type Op = SetDocumentOp<Document>;
+norm/en/1997/rs/lib.rs:377:    type Op = Op;
+norm/en/1992/rs/lib.rs:509:pub type Op = SetDocumentOp<Document>;
+norm/en/1992/rs/lib.rs:552:    type Op = Op;
+norm/en/1995/rs/lib.rs:374:pub type Op = SetDocumentOp<Document>;
+norm/en/1995/rs/lib.rs:424:    type Op = Op;
+norm/en/1994/rs/lib.rs:321:pub type Op = SetDocumentOp<Document>;
+norm/en/1994/rs/lib.rs:355:    type Op = Op;
+norm/en/1993/rs/lib.rs:1028:pub type Op = SetDocumentOp<Document>;
+norm/en/1993/rs/lib.rs:1039:    type Op = Op;
+norm/din/v/18599/rs/lib.rs:527:pub type Op = SetDocumentOp<Document>;
+norm/din/v/18599/rs/lib.rs:548:    type Op = Op;
+norm/din/en/16798/rs/lib.rs:988:pub type Op = SetDocumentOp<Document>;
+norm/din/en/16798/rs/lib.rs:1057:    type Op = Op;
+norm/din/4108/rs/lib.rs:777:pub type Op = SetDocumentOp<Document>;
+norm/din/4108/rs/lib.rs:822:    type Op = Op;
+norm/plugin/rs/lib.rs:41:            type Op = family_crate::Op;
+norm/plugin/rs/lib.rs:56:                type Op = Op;
+norm/iso/16757/rs/lib.rs:572:    pub enum BooleanOp {
+norm/iso/16757/rs/lib.rs:1420:pub type Op = SetDocumentOp<Document>;
+norm/iso/16757/rs/lib.rs:1666:    type Op = Op;
+norm/core/rs/lib.rs:458:    type Op: Operation<Self::Document> + Clone + PartialEq + Send;
+norm/core/rs/lib.rs:487:pub enum SetDocumentOp<D> {
+norm/core/rs/lib.rs:582:        type Op = SetDocumentOp<DemoDocument>;
+reasoning/mindmap/rs/lib.rs:179:pub enum MindmapWiresOp {
+reasoning/mindmap/plugin/rs/lib.rs:512:    type Op = MindmapWiresOp;
+layout/rs/lib.rs:1205:    pub enum LayoutOp {
+layout/plugin/rs/lib.rs:1239:    type Op = LayoutOp;
+remodel/rs/lib.rs:706:pub enum RemodelOp {
+remodel/plugin/rs/lib.rs:1410:    type Op = RemodelOp;
+
+=== Bare identifier op/ops counts by file (top) ===
+procedural/plugin/rs/lib.rs:95
+framework/renderer/wgpu/rs/lib.rs:95
+fem/plugin/rs/lib.rs:82
+cad/core/js/index.ts:73
+framework/plugin/rs/lib.rs:71
+s/plugin/rs/lib.rs:70
+remodel/rs/lib.rs:66
+compose/client/lib/rs/lib.rs:66
+cad/asset/modelDefinition/spatial.shape/interaction/box.json:63
+framework/renderer/react/index.tsx:57
+draw/plugin/rs/lib.rs:56
+puzzle/plugin/rs/lib.rs:55
+note/plugin/rs/lib.rs:49
+vcs/rs/lib.rs:45
+remodel/plugin/rs/lib.rs:45
+puzzle/3d/rs/lib.rs:41
+cad/plugin/rs/lib.rs:41
+architect/program/rs/lib.rs:41
+flow/plugin/rs/lib.rs:40
+architect/plugin/rs/lib.rs:40
+animate/present/core/js/index.ts:39
+trinity/plugin/rs/lib.rs:38
+gis/plugin/rs/lib.rs:36
+puzzle/2d/rs/lib.rs:32
+lowpoly/plugin/rs/lib.rs:32
+framework/product/os/hub/rs/bin.rs:31
+flow/core/rs/lib.rs:31
+compose/client/lib/query/rs/lib.rs:31
+sequence/plugin/rs/lib.rs:30
+process/plugin/rs/lib.rs:30
+forms/plugin/rs/lib.rs:30
+raster/plugin/rs/lib.rs:29
+framework/product/os/core/rs/lib.rs:28
+cad/schema/json/interaction.json:28
+framework/sync/rs/lib.rs:27
+procedural/2d/rs/lib.rs:25
+lowpoly/core/rs/lib.rs:25
+shooting/rs/lib.rs:24
+shooting/plugin/rs/lib.rs:24
+layout/rs/lib.rs:24
+trinity/jack/core/rs/lib.rs:23
+procedural/3d/rs/lib.rs:23
+infinite/board/port/directed/dag/plugin/rs/lib.rs:23
+sequence/core/rs/lib.rs:22
+puzzle/5d/rs/lib.rs:22
+trinity/rewrite/engine/rs/lib.rs:21
+animate/plugin/rs/lib.rs:21
+kernel/2d/rs/lib.rs:20
+imperative/core/rs/lib.rs:20
+framework/renderer/react/index.test.ts:19
+sourcing/plugin/rs/lib.rs:18
+protocol/rs/lib.rs:18
+cad/asset/modelDefinition/spatial.shape/interaction/move.json:18
+cad/asset/modelDefinition/spatial.shape/interaction/copy.json:18
+mathematical/geometry/rs/lib.rs:17
+mathematical/plugin/rs/lib.rs:16
+compose/client/lib/net/Compose/cs/Compose.cs:16
+cad/asset/modelDefinition/spatial.shape/interaction/constructSurface.json:16
+ui/wgpu/rs/lib.rs:15
+framework/core/rs/lib.rs:15
+compose/client/lib/js/index.ts:15
+cad/asset/modelDefinition/spatial.shape/interaction/extrudeCrv.json:15
+cad/asset/modelDefinition/aec.building.structure.fem.surface/interaction/constructSurfaceElement.json:15
+cad/asset/modelDefinition/aec.building.structure.fem.solid/interaction/constructSolidElement.json:15
+cad/asset/modelDefinition/aec.building.structure.fem.line/interaction/constructLineElement.json:15
+cad/asset/modelDefinition/aec.building.structure.classic/interaction/constructReinforcedConcreteInternalWall.json:15
+cad/asset/modelDefinition/aec.building.structure.classic/interaction/constructReinforcedConcreteExternalWall.json:15
+cad/asset/modelDefinition/aec.building.structure.classic/interaction/constructReinforcedConcreteColumn.json:15
+cad/asset/modelDefinition/aec.building.structure.classic/interaction/constructOneWayReinforcedConcreteSlab.json:15
+cad/asset/modelDefinition/aec.building.energy/interaction/constructWindows.json:15
+cad/asset/modelDefinition/aec.building.energy/interaction/constructRoof.json:15
+cad/asset/modelDefinition/aec.building.energy/interaction/constructHull.json:15
+cad/asset/modelDefinition/aec.building.energy/interaction/constructExternalWall.json:15
+energy/engine/rs/lib.rs:14
+compose/server/hub/rs/bin.rs:14
+compose/client/lib/js/kit-store.worker.ts:14
+writer/plugin/rs/lib.rs:13
+trinity/ram/rs/lib.rs:13
+layout/plugin/rs/lib.rs:13
+kernel/2d/js/index.ts:13
+
+=== BinOp / RelOp / MathOp / noop context ===
+script.ts:962:    console.log("[purge.neo4j] connectivity ok; noop.");
+note/plugin/rs/lib.rs:2716:        assert!(commit.operations.is_empty(), "a no-op commit must not create an edit");
+flow/plugin/rs/lib.rs:1647:        assert!(ignored.operations.is_empty(), "disabled extension action must be a no-op");
+trinity/plugin/rs/lib.rs:1574:    /// 📤 Emits a `SetState` op iff `next` differs from `current` (mirrors the store's LWW no-op guard),
+animate/plugin/rs/lib.rs:417:                        on_change: animate_present_action("noop", None),
+animate/plugin/rs/lib.rs:759:            .view_action("noop", "No Op")
+puzzle/2d/rs/lib.rs:561:    /// @emoji 🎨 Presents one frame when a GPU surface is attached; otherwise no-op `Ok`.
+mathematical/algebra/rs/lib.rs:890:        // an actual entry before inverting, which is a no-op for ordinary fields like `Rational`.
+imperative/plugin/rs/lib.rs:329:/// guard the op arms share so a stale id never emits a no-op edit into history.
+ui/styling/js/ui.css:2059:   Slots default to none/center/500ms so this is a no-op for icons that don't set them. */
+protocol/module/procedural/rs/lib.rs:710:        app.handle_action("noSuchAction", None, &ViewState::default(), &meta()).expect("noop");
+lowpoly/plugin/rs/lib.rs:2763:        // No history entry — an undo right after is a no-op leaving the projection untouched.
+puzzle/plugin/rs/lib.rs:2399:        /// the *next* action, duplicating every edge once per action forever. Repeated no-op actions
+puzzle/plugin/rs/lib.rs:2426:            app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
+puzzle/plugin/rs/lib.rs:2499:        /// 🐢 Perf round 3: an empty `applyBoardEvents` batch (no-op) must declare `None` — nothing for
+puzzle/plugin/rs/lib.rs:2505:            let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": "[]" })), &ViewState::default(), &testkit::meta("local")).expect("no-op");
+puzzle/plugin/rs/lib.rs:3982:    /// 🧊 Scales the unit box fallback (`mesh_from_kind` extent 1.0) past `BRUSH_COLLISION_MESH_MIN_EXTENT` (2.0) in `puzzle_3d`'s collision engine, otherwise its registration is a silent no-op and brush candidates never populate before a real GLB arrives.
+mathematical/polynomial/rs/src/algebraic.rs:126:    /// 🎯 Refines until the interval no longer straddles zero (a no-op for the exact rational `0`,
+ui/wgpu/rs/lib.rs:12791:/// `activate`/`selected` affordance) is a no-op — it's pure layout; this just recurses into its
+ui/wgpu/rs/lib.rs:13365:        // Second call must be a no-op w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
+ui/wgpu/rs/lib.rs:14068:    /// both `DIRTY_PAINT` (a focus ring likely needs repainting) via `UiTree::mark_dirty`. A no-op
+ui/wgpu/rs/lib.rs:14808:    /// and clipboard shortcuts for the focused node's `EditState`. A no-op if nothing is focused or
+ui/wgpu/rs/lib.rs:16346:    /// no-op unless the root carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY`) followed — only if that or the
+puzzle/3d/rs/lib.rs:2052:    /// freezing the UI. A resync with byte-identical scene JSON must be a no-op.
+puzzle/3d/rs/lib.rs:2315:    /// different (e.g. fallback-box) body for the same url, but a no-op re-registration must not matter
+mathematical/random/rs/lib.rs:295:/// ➕ Running sum of `weights`, normalized so the last entry is `1.0` (a no-op on an all-zero or
+ui/js/react/index.tsx:7008: * no-op returning the exact same {@link PanelDock} reference. Visibility is never touched here — the shell unfolds
+ui/js/react/index.tsx:33829:      // Own-subtree guard: dropping `branch` as a child of itself, or inserting it under its own path, is a no-op (same reference).
+compose/client/lib/go/main.go:2070:// 🔒Close is a no-op for DevKit.
+compose/client/lib/go/main.go:2106:// 🔒Close is a no-op for LocalKit.
+compose/client/lib/go/main.go:2142:// 🔒Close is a no-op for RemoteKit.
+compose/client/lib/go/main.go:10077:				kitdiffPush(ctx, "warnings", "kitdiff.cycle.noop-restore", path+": removed and re-added "+idKey+" "+rg+" are deeply equal (no effective change)")
+ui/tui/rs/lib.rs:1167:    /// 🧮 Recomputes rects for the whole tree from `viewport` down (no-op-safe to call every frame).
+compose/client/lib/query/rs/lib.rs:142:        BinOp { op: BinOp, left: Box<Expr>, right: Box<Expr> },
+compose/client/lib/query/rs/lib.rs:149:    pub enum BinOp {
+compose/client/lib/query/rs/lib.rs:251:            cur = Expr::BinOp { op: if op == '*' { BinOp::Mul } else { BinOp::Div }, left: Box::new(cur), right: Box::new(rhs) };
+compose/client/lib/query/rs/lib.rs:261:            cur = Expr::BinOp { op: if op == '+' { BinOp::Add } else { BinOp::Sub }, left: Box::new(cur), right: Box::new(rhs) };
+compose/client/lib/query/rs/lib.rs:271:                "==" | "=" => BinOp::Eq,
+compose/client/lib/query/rs/lib.rs:272:                "!=" => BinOp::Ne,
+compose/client/lib/query/rs/lib.rs:273:                "<=" => BinOp::Le,
+compose/client/lib/query/rs/lib.rs:274:                ">=" => BinOp::Ge,
+compose/client/lib/query/rs/lib.rs:275:                "<" => BinOp::Lt,
+compose/client/lib/query/rs/lib.rs:276:                ">" => BinOp::Gt,
+compose/client/lib/query/rs/lib.rs:277:                _ => BinOp::Eq,
+compose/client/lib/query/rs/lib.rs:279:            return Ok((rest, Expr::BinOp { op: bop, left: Box::new(left), right: Box::new(right) }));
+compose/client/lib/query/rs/lib.rs:1015:            conjuncts.push(Expr::BinOp { op: BinOp::Eq, left: Box::new(lhs), right: Box::new(rhs) });
+compose/client/lib/query/rs/lib.rs:1499:            Expr::BinOp { op, left, right } => {
+compose/client/lib/query/rs/lib.rs:1503:                    BinOp::Eq => Value::Bool(json_eq(&l, &r)),
+compose/client/lib/query/rs/lib.rs:1504:                    BinOp::Ne => Value::Bool(!json_eq(&l, &r)),
+compose/client/lib/query/rs/lib.rs:1505:                    BinOp::Lt => Value::Bool(json_as_f64(&l)? < json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1506:                    BinOp::Le => Value::Bool(json_as_f64(&l)? <= json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1507:                    BinOp::Gt => Value::Bool(json_as_f64(&l)? > json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1508:                    BinOp::Ge => Value::Bool(json_as_f64(&l)? >= json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1509:                    BinOp::Add => json_num(json_as_f64(&l)? + json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1510:                    BinOp::Sub => json_num(json_as_f64(&l)? - json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1511:                    BinOp::Mul => json_num(json_as_f64(&l)? * json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1512:                    BinOp::Div => json_num(json_as_f64(&l)? / json_as_f64(&r)?),
+compose/client/lib/query/rs/lib.rs:1598:            Expr::BinOp { op, left, right } => json!({
+compose/client/lib/rs/lib.rs:18693:    /// 🛰️ Boot the parent runtime inside the current (parent) web worker — no-op host hook until iframe wiring lands.
+compose/client/lib/sketchpad/js/pw-loader.mjs:71:    return { ...result, format: "css-noop", shortCircuit: true };
+
+=== serde tag op / JSON key op ===
+note/plugin/rs/lib.rs:254:#[serde(tag = "op", rename_all = "camelCase")]
+note/plugin/rs/lib.rs:321:#[serde(tag = "op")]
+note/plugin/rs/lib.rs:2676:            { "op": "addBlock", "block": block.clone(), "parentId": null, "index": null }
+note/plugin/rs/lib.rs:2694:                { "op": "updateBlock", "blockId": new_id, "block": moved }
+flow/plugin/rs/lib.rs:346:        "args": { "ops": [{ "op": "deleteSelection" }] },
+trinity/ram/rs/lib.rs:549:#[serde(tag = "op", rename_all = "camelCase")]
+puzzle/2d/rs/lib.rs:589:#[serde(tag = "op", rename_all = "camelCase")]
+sequence/plugin/rs/lib.rs:336:            context_menu_json: Some(r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into()),
+sequence/core/rs/lib.rs:1230:#[serde(tag = "op", rename_all = "camelCase")]
+animate/present/rs/lib.rs:603:#[serde(tag = "op", rename_all = "camelCase")]
+trinity/plugin/rs/lib.rs:680:                    r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#.into(),
+trinity/plugin/rs/lib.rs:1358:                .handle_action("nodeGraphEdit", Some(&json!({ "ops": [{ "op": "deleteSelection" }] })), &ViewState::default(), &meta("local"))
+trinity/plugin/rs/lib.rs:2440:        r#"[{"id":"delete-selection","label":"Delete selection","icon":"trash","action":"nodeGraphEdit","args":{"ops":[{"op":"deleteSelection"}]},"destructive":true}]"#;
+trinity/plugin/rs/lib.rs:3030:            let result = dispatch(&mut app, "nodeGraphEdit", Some(&json!({ "surfaceId": TRINITY_REWRITE_PLAY_SURFACE_RHS, "ops": [{ "op": "deleteSelection" }] })));
+raster/plugin/rs/lib.rs:428:    #[serde(tag = "op", rename_all = "camelCase")]
+trinity/rewrite/engine/rs/lib.rs:313:#[serde(tag = "op", rename_all = "camelCase")]
+puzzle/5d/rs/lib.rs:106:#[serde(tag = "op", rename_all = "camelCase")]
+shooting/rs/lib.rs:394:#[serde(tag = "op", rename_all = "camelCase")]
+procedural/2d/rs/lib.rs:147:#[serde(tag = "op", rename_all = "camelCase")]
+architect/program/rs/lib.rs:1490:    #[serde(tag = "op", rename_all = "camelCase")]
+procedural/plugin/rs/lib.rs:621:            "args": { "ops": [{ "op": "deleteSelection" }] },
+procedural/plugin/rs/lib.rs:2743:                        "args": { "ops": [{ "op": "deleteSelection" }] },
+puzzle/3d/rs/lib.rs:2435:#[serde(tag = "op", rename_all = "camelCase")]
+procedural/3d/rs/lib.rs:147:#[serde(tag = "op", rename_all = "camelCase")]
+vcs/rs/lib.rs:2209:#[serde(tag = "op", rename_all = "camelCase")]
+vcs/rs/lib.rs:2630:    #[serde(tag = "op")]
+vcs/rs/lib.rs:3660:    #[serde(tag = "op")]
+vcs/plugin/rs/lib.rs:39:#[serde(tag = "op", rename_all = "camelCase")]
+framework/sync/fixtures/basic-remote-ops.json:12:          "forwards": [{ "op": "SetN", "n": 5 }],
+framework/sync/fixtures/basic-remote-ops.json:13:          "backwards": [{ "op": "SetN", "n": 0 }],
+framework/sync/fixtures/remote-ops-backlog.json:12:          "forwards": [{ "op": "SetN", "n": 2 }],
+framework/sync/fixtures/remote-ops-backlog.json:13:          "backwards": [{ "op": "SetN", "n": 0 }],
+framework/sync/fixtures/remote-ops-backlog.json:20:          "forwards": [{ "op": "SetN", "n": 3 }],
+framework/sync/fixtures/remote-ops-backlog.json:21:          "backwards": [{ "op": "SetN", "n": 2 }],
+writer/rs/lib.rs:61:    #[serde(tag = "op", rename_all = "camelCase")]
+framework/sync/fixtures/snapshot-replaced.json:12:          "forwards": [{ "op": "SetN", "n": 3 }],
+framework/sync/fixtures/snapshot-replaced.json:13:          "backwards": [{ "op": "SetN", "n": 0 }],
+framework/sync/fixtures/snapshot-replaced.json:30:              "forwards": [{ "op": "SetN", "n": 8 }],
+framework/sync/fixtures/snapshot-replaced.json:31:              "backwards": [{ "op": "SetN", "n": 0 }],
+framework/sync/rs/lib.rs:1222:    #[serde(tag = "op")]
+
+=== ActionEmit::ops / type Op = ===
+note/plugin/rs/lib.rs:1698:    type Op = NoteOp;
+note/plugin/rs/lib.rs:1725:                        return ActionEmit::ops(vec![NoteOp::SetCamera { camera: parsed }]);
+note/plugin/rs/lib.rs:1735:                    return ActionEmit::ops(vec![NoteOp::SetCamera { camera }]);
+note/plugin/rs/lib.rs:1751:                ActionEmit::ops(vec![NoteOp::SetGridVisible { visible: Some(visible) }])
+note/plugin/rs/lib.rs:1754:                Some(spacing) => ActionEmit::ops(vec![NoteOp::SetGridSpacing { spacing: Some(spacing.max(4.0)) }]),
+note/plugin/rs/lib.rs:1759:                    ActionEmit::ops(vec![NoteOp::SetGridSubdivisions { value: Some(subdivisions.round().clamp(1.0, 16.0)) }])
+note/plugin/rs/lib.rs:1764:                Some(opacity) => ActionEmit::ops(vec![NoteOp::SetGridOpacity { opacity: Some(opacity.clamp(0.05, 1.0)) }]),
+note/plugin/rs/lib.rs:1773:                ActionEmit::ops(vec![NoteOp::SetSnapEnabled { enabled: Some(enabled) }])
+note/plugin/rs/lib.rs:1776:                Some(spacing) => ActionEmit::ops(vec![NoteOp::SetSnapGridSpacing { spacing: Some(spacing.max(1.0)) }]),
+note/plugin/rs/lib.rs:1780:                Some(width) => ActionEmit::ops(vec![NoteOp::SetPencilWidth { width: Some(width.clamp(1.0, 24.0)) }]),
+note/plugin/rs/lib.rs:1784:                Some(radius) => ActionEmit::ops(vec![NoteOp::SetEraserRadius { radius: Some(radius.clamp(4.0, 48.0)) }]),
+note/plugin/rs/lib.rs:1798:                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+note/plugin/rs/lib.rs:1840:                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+note/plugin/rs/lib.rs:1847:                    return ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }]);
+note/plugin/rs/lib.rs:1855:                    return ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }]);
+note/plugin/rs/lib.rs:1887:                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+note/plugin/rs/lib.rs:1908:                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks: next.blocks }])
+note/plugin/rs/lib.rs:1990:                ActionEmit::ops(vec![NoteOp::SetBlocks { blocks }])
+note/plugin/rs/lib.rs:2009:                    ActionEmit::ops(vec![NoteOp::SetBlocks { blocks: next.blocks }])
+note/plugin/rs/lib.rs:2028:                ActionEmit::ops(vec![NoteOp::SetDocument { document }])
+note/plugin/rs/lib.rs:2049:                ActionEmit::ops(vec![NoteOp::SetDocument { document }])
+flow/plugin/rs/lib.rs:1003:    type Op = FlowOp;
+flow/plugin/rs/lib.rs:1177:                ActionEmit::ops(ops)
+flow/plugin/rs/lib.rs:1188:                ActionEmit::ops(ops)
+flow/plugin/rs/lib.rs:1199:                ActionEmit::ops(ops)
+flow/plugin/rs/lib.rs:1206:                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.disconnect(&synapse_id).is_ok()))
+flow/plugin/rs/lib.rs:1216:                ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.connect_ports(&from, &from_port, &to, &to_port).is_ok()))
+flow/plugin/rs/lib.rs:1234:            "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+flow/plugin/rs/lib.rs:1256:                ActionEmit::ops(flow_fixture_ops(fixture, &next))
+flow/plugin/rs/lib.rs:1301:                ActionEmit::ops(ops)
+flow/plugin/rs/lib.rs:1316:                    "reorganize" => ActionEmit::ops(host_ops(fixture, &self.runtime, |host| host.reorganize(r#"{"orientation":"leftRight"}"#).is_ok())),
+s/plugin/rs/lib.rs:416:        type Op = SHomeOp;
+s/plugin/rs/lib.rs:438:            let bump = |value: u64| ActionEmit::ops(vec![SHomeOp::SetCatalogGeneration { value }]);
+s/plugin/rs/lib.rs:2118:        type Op = OsOp;
+writer/plugin/rs/lib.rs:1053:    type Op = WriterOp;
+writer/plugin/rs/lib.rs:1091:                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
+writer/plugin/rs/lib.rs:1099:                        return ActionEmit::ops(vec![WriterOp::SetDocument { document: parsed }]);
+writer/plugin/rs/lib.rs:1111:                ActionEmit::ops(vec![WriterOp::SetDocument { document }])
+writer/plugin/rs/lib.rs:1126:                    return ActionEmit::ops(vec![WriterOp::SetText { text: formatted }]);
+writer/plugin/rs/lib.rs:1150:                    return ActionEmit::ops(vec![WriterOp::SetText { text }]);
+writer/plugin/rs/lib.rs:1156:                        return ActionEmit::ops(vec![WriterOp::SetText { text }]);
+writer/plugin/rs/lib.rs:1271:                    Some(text) => ActionEmit::ops(vec![WriterOp::SetText { text }]),
+reasoning/mindmap/plugin/rs/lib.rs:512:    type Op = MindmapWiresOp;
+reasoning/mindmap/plugin/rs/lib.rs:566:                ActionEmit::ops(vec![MindmapWiresOp::ReplaceDocument {
+reasoning/mindmap/plugin/rs/lib.rs:585:                ActionEmit::ops(vec![MindmapWiresOp::AddNode { node }])
+reasoning/mindmap/plugin/rs/lib.rs:603:                ActionEmit::ops(vec![MindmapWiresOp::AddRelationship { edge, relationship }])
+reasoning/mindmap/plugin/rs/lib.rs:620:                ActionEmit::ops(ops)
+reasoning/mindmap/plugin/rs/lib.rs:640:                ActionEmit::ops(ops)
+animate/plugin/rs/lib.rs:450:    type Op = PresentOp;
+animate/plugin/rs/lib.rs:476:                ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
+animate/plugin/rs/lib.rs:483:                ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
+animate/plugin/rs/lib.rs:492:                ActionEmit::ops(target.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Remove { id })).collect())
+animate/plugin/rs/lib.rs:500:                ActionEmit::ops(target.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Remove { id })).collect())
+animate/plugin/rs/lib.rs:511:                        ActionEmit::ops(valid.into_iter().map(|id| PresentOp::Tiles(CollectionOp::Patch { id, patch: FigureTileDraftPatch { name: Some(name.into()), crop: None } })).collect())
+animate/plugin/rs/lib.rs:542:                            ActionEmit::ops(ops)
+animate/plugin/rs/lib.rs:573:                    return ActionEmit::ops(ops);
+animate/plugin/rs/lib.rs:582:                        return ActionEmit::ops(vec![PresentOp::SetSource { source }]);
+animate/plugin/rs/lib.rs:591:                    return ActionEmit::ops(vec![PresentOp::SetDeck { deck: default_present_deck() }]);
+animate/plugin/rs/lib.rs:597:                ActionEmit::ops(vec![PresentOp::SetTiles { tiles: Vec::new() }])
+animate/plugin/rs/lib.rs:626:                    return ActionEmit::ops(vec![PresentOp::SetTiles { tiles }]);
+animate/plugin/rs/lib.rs:634:                        ActionEmit::ops(vec![PresentOp::Tiles(CollectionOp::Add { index: deck.tiles.len(), item: tile })])
+animate/plugin/rs/lib.rs:639:                        ActionEmit::ops(vec![PresentOp::SetTiles { tiles: Vec::new() }])
+animate/plugin/rs/lib.rs:673:                ActionEmit::ops(vec![PresentOp::SetTiles { tiles }])
+forms/plugin/rs/lib.rs:1609:    type Op = FormOp;
+forms/plugin/rs/lib.rs:1714:                ActionEmit::ops(vec![FormOp::AddStep { step, index: None }])
+forms/plugin/rs/lib.rs:1747:                ActionEmit::ops(vec![FormOp::RemoveStep { step_id: step_id.into() }])
+forms/plugin/rs/lib.rs:1756:                ActionEmit::ops(vec![FormOp::MoveStep { step_id: step_id.into(), index }])
+forms/plugin/rs/lib.rs:1778:                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index: None }])
+forms/plugin/rs/lib.rs:1790:                ActionEmit::ops(vec![FormOp::RemoveBlock {
+forms/plugin/rs/lib.rs:1860:                    Some(op) => ActionEmit::ops(vec![op]),
+forms/plugin/rs/lib.rs:1871:                    Some(op) => ActionEmit::ops(vec![op]),
+forms/plugin/rs/lib.rs:1896:                    Some(op) => ActionEmit::ops(vec![op]),
+forms/plugin/rs/lib.rs:1904:                    Some(op) => ActionEmit::ops(vec![op]),
+forms/plugin/rs/lib.rs:1929:                ActionEmit::ops(vec![FormOp::MoveBlock {
+forms/plugin/rs/lib.rs:1953:                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index }])
+forms/plugin/rs/lib.rs:1965:                ActionEmit::ops(replace_spec_ops(spec, &next))
+forms/plugin/rs/lib.rs:1970:                    "" => return ActionEmit::ops(replace_spec_ops(spec, &empty_forms_projection())),
+forms/plugin/rs/lib.rs:1981:                ActionEmit::ops(replace_spec_ops(spec, &next))
+protocol/plugin/rs/lib.rs:123:    type Op = ProtocolOp;
+protocol/plugin/rs/lib.rs:154:                ActionEmit::ops(vec![add_step_op(spec, step_id)])

@@ -27,7 +27,7 @@ todos:
    content: Wire Mod+P/Mod+F/history/panel-toggle keybindings and palette arrow/enter/escape routing in lib.rs/input.rs
    status: completed
  - id: context-menu-items
-   content: Replace context menu no-ops with real scene-contributed items (node-graph first)
+   content: Replace context menu no-operations with real scene-contributed items (node-graph first)
    status: completed
  - id: verify-e2e
    content: Extend verify-wgpu-playgrounds-e2e.ts with palette/find/rail assertions; cargo test; rebuild wasm; run full 25-plugin suites both renderers; screenshot s and draw
@@ -124,7 +124,7 @@ For the active window kind's `measures: Vec<WindowMeasure>`:
 
 ### 9. Context menu real items — `shell.rs` `render_context_menu` / `scenes.rs`
 
-Replace the generic Copy/Paste no-ops with scene-contributed items (starting with `node-graph`: delete node, disconnect port, etc.), matching what React scene hosts contribute today.
+Replace the generic Copy/Paste no-operations with scene-contributed items (starting with `node-graph`: delete node, disconnect port, etc.), matching what React scene hosts contribute today.
 
 ## Verification
 

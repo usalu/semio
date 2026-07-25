@@ -1,0 +1,54 @@
+=== bare op/ops in first-party source ===
+framework/core/rs/lib.rs:4173:impl<T> std::ops::Index<usize> for NonEmptyVec<T> {
+puzzle/3d/rs/lib.rs:44:impl std::ops::Add for Vec3d {
+puzzle/3d/rs/lib.rs:51:impl std::ops::Mul<f32> for Vec3d {
+puzzle/3d/rs/lib.rs:88:impl std::ops::Sub for Point3d {
+flow/module/math/rs/lib.rs:275:impl std::ops::Add for Vec3 {
+flow/module/math/rs/lib.rs:283:impl std::ops::Sub for Vec3 {
+mathematical/cas/rs/src/assume.rs:83:impl std::ops::BitOr for AssumeSet {
+mathematical/cas/rs/src/expr.rs:404:impl std::ops::Add for Expr {
+mathematical/cas/rs/src/expr.rs:410:impl std::ops::Add<&Expr> for &Expr {
+mathematical/cas/rs/src/expr.rs:416:impl std::ops::Sub for Expr {
+mathematical/cas/rs/src/expr.rs:422:impl std::ops::Sub<&Expr> for &Expr {
+mathematical/cas/rs/src/expr.rs:428:impl std::ops::Mul for Expr {
+mathematical/cas/rs/src/expr.rs:434:impl std::ops::Mul<&Expr> for &Expr {
+mathematical/cas/rs/src/expr.rs:440:impl std::ops::Div for Expr {
+mathematical/cas/rs/src/expr.rs:446:impl std::ops::Div<&Expr> for &Expr {
+mathematical/cas/rs/src/expr.rs:452:impl std::ops::Neg for Expr {
+mathematical/cas/rs/src/expr.rs:458:impl std::ops::Neg for &Expr {
+mathematical/cas/rs/src/fmt.rs:6:use std::ops::Neg;
+mathematical/geometry/rs/lib.rs:97:impl std::ops::Add<Vec2> for Point {
+mathematical/geometry/rs/lib.rs:104:impl std::ops::Sub<Vec2> for Point {
+mathematical/geometry/rs/lib.rs:111:impl std::ops::Sub for Point {
+mathematical/geometry/rs/lib.rs:118:impl std::ops::Deref for Point {
+mathematical/geometry/rs/lib.rs:128:impl std::ops::Deref for Vec2 {
+mathematical/geometry/rs/lib.rs:164:impl std::ops::Add for Vec2 {
+mathematical/geometry/rs/lib.rs:171:impl std::ops::AddAssign for Vec2 {
+mathematical/geometry/rs/lib.rs:177:impl std::ops::Sub for Vec2 {
+mathematical/geometry/rs/lib.rs:184:impl std::ops::SubAssign for Vec2 {
+mathematical/geometry/rs/lib.rs:190:impl std::ops::Div<f64> for Vec2 {
+mathematical/geometry/rs/lib.rs:197:impl std::ops::Mul<f64> for Vec2 {
+mathematical/geometry/rs/lib.rs:204:impl std::ops::Mul<Vec2> for f64 {
+mathematical/geometry/rs/lib.rs:211:impl std::ops::MulAssign<f64> for Vec2 {
+mathematical/geometry/rs/lib.rs:217:impl std::ops::Neg for Vec2 {
+mathematical/geometry/rs/lib.rs:252:impl std::ops::Mul for Affine {
+mathematical/geometry/rs/lib.rs:259:impl std::ops::Mul<Point> for Affine {
+mathematical/geometry/rs/lib.rs:371:impl std::ops::Deref for CubicBez {
+mathematical/entropy/rs/src/fft.rs:6:use std::ops::{Add, Mul, Sub};
+infinite/board/port/directed/dag/rs/lib.rs:994:fn computation_io_side_row_divider_indices(side_rows: usize, grid_rows: usize) -> std::ops::Range<usize> {
+
+=== *Op Pascal in first-party ===
+
+=== camel *Op ===
+
+=== serde/json op keys ===
+
+=== BooleanOps (geo, expected) ===
+kernel/2d/rs/lib.rs:8:    use geo::{BooleanOps, Coord, LineString, MultiPolygon, Polygon};
+
+=== blend_ops/shell_op (brepkit, expected) ===
+kernel/3d/brep/rs/lib.rs:20:use brepkit_operations::blend_ops::fillet_v2;
+kernel/3d/brep/rs/lib.rs:42:use brepkit_operations::shell_op::shell;
+
+=== std::ops (std, expected) ===
+37

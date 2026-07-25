@@ -16437,7 +16437,7 @@ func TestConfigureCommandDoesNotGenerateConfigFiles(t *testing.T) {
 	}
 	output := out.String()
 	if !strings.Contains(output, "config generation is disabled") {
-		t.Fatalf("expected no-op message, got %q", output)
+		t.Fatalf("expected no-operation message, got %q", output)
 	}
 	if !strings.Contains(output, "git hooks removed") {
 		t.Fatalf("expected git hook removal message, got %q", output)
@@ -17622,7 +17622,7 @@ func TestLogRepoOperationHookMCPTool(t *testing.T) {
 			}
 		}
 		if len(after) != len(before)+1 || !hasSessionJSON {
-			t.Fatalf("expected session.json to be created for derived repo op event")
+			t.Fatalf("expected session.json to be created for derived repo operation event")
 		}
 		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
 		var meta SessionMeta
@@ -17728,7 +17728,7 @@ func TestLogRepoOperationHookCLI(t *testing.T) {
 			}
 		}
 		if len(after) != len(before)+1 || !hasSessionJSON {
-			t.Fatalf("expected session.json creation for CLI repo op event")
+			t.Fatalf("expected session.json creation for CLI repo operation event")
 		}
 		data, _ := os.ReadFile(filepath.Join(logDir, "session.json"))
 		var meta SessionMeta
@@ -17810,7 +17810,7 @@ func TestRunHookAgentToolStartingDerivedRepoEvents(t *testing.T) {
 	var meta SessionMeta
 	json.Unmarshal(data, &meta)
 	if len(meta.Events) != 2 {
-		t.Fatalf("expected 2 session events (agent + derived repo op), got %d", len(meta.Events))
+		t.Fatalf("expected 2 session events (agent + derived repo operation), got %d", len(meta.Events))
 	}
 	found := false
 	for _, entry := range meta.Events {

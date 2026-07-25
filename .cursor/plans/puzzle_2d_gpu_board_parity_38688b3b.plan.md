@@ -73,7 +73,7 @@ Puzzle 2D renders 3 panes (Overview/Detail/Selection) from one fixture. Only Ove
 - `render_canvas` (line 937): emit `build_puzzle2d_board_scene(...)` instead of `build_canvas_2d_scene`; drop `canvas_layers_json` (line 808, now dead).
 - Delete `sync_host_render_frame` (928) and `puzzle2d_pointer_pane_is_interactive` (922) and the 4 `canvasPointerDown/Move/Up/Wheel` match arms (1851-1921) — interaction moves client-side.
 - Refactor `apply_host_events(host: &mut BoardHost, envelope)` (384-478) into `apply_board_events_from_json(events_json: &str, envelope: &mut Puzzle2dPlayEnvelope)`: the per-event match arms (394-465) are untouched (they only read `payload`, not `host`); drop the trailing `host.selection`/`host.camera` re-sync (467-477) since browser-drained events already self-describe every change (`camera`, `select` arms already exist).
-- Add one new command arm: `"applyBoardEvents" => { apply_board_events_from_json(events_json, &mut envelope); vec![set_document_op(&envelope)] }`.
+- Add one new command arm: `"applyBoardEvents" => { apply_board_events_from_json(events_json, &mut envelope); vec![set_document_operation(&envelope)] }`.
 - Keep `sync_host_from_envelope`/`self.host`/`puzzle2d_engagement` untouched — still used for engagement-panel LOD/status text and default camera framing, unrelated to per-frame rendering.
 - Update the two Rust tests currently exercising `canvasPointerDown`/`canvasPointerUp` (~~2221-2224) and the `canvas_layers_json` unit test (~~2181) to instead exercise `applyBoardEvents` and assert `"puzzle2d-board"` appears in the rendered scene JSON (replacing the `"canvas-2d"` assertion at line 2040).
 

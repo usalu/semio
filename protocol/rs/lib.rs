@@ -11,14 +11,14 @@ use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 pub const PROTOCOL_DOCUMENT_SCHEMA: &str = "protocol.program";
 
 pub use builder_kit::{
-    add_block_op, add_step_op, build_palette, build_protocol_list_scene, move_block_op, move_step_op, protocol_builder_action, remove_block_op, remove_step_op, render_protocol_builder, update_protocol_title_op, ProtocolBuilderConfig,
+    add_block_operation, add_step_operation, build_palette, build_protocol_list_scene, move_block_operation, move_step_operation, protocol_builder_action, remove_block_operation, remove_step_operation, render_protocol_builder, update_protocol_title_operation, ProtocolBuilderConfig,
     ProtocolBuilderLabels, PROTOCOL_BUILDER_LABELS_EN,
 };
 /// 🧬 Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
 /// `protocol::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
-    add_generation, apply_generation_op, generation_ops, handle_generation_action, initial_generation_values, invert_generation_op, remove_generation, rename_generation, render_generation_form_body, render_generation_preview_text,
-    render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOp, GenerationPlayState,
+    add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body, render_generation_preview_text,
+    render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
 };
 
 //#region 🔖Domain
@@ -127,8 +127,8 @@ pub struct ProtocolSpec {
     pub steps: Vec<ProtocolStep>,
 }
 
-pub type ProtocolEnvelope = DocumentVcsEnvelope<ProtocolSpec, ProtocolOp>;
-pub type ProtocolStore = DocumentVcsStore<ProtocolSpec, ProtocolOp>;
+pub type ProtocolEnvelope = DocumentVcsEnvelope<ProtocolSpec, ProtocolOperation>;
+pub type ProtocolStore = DocumentVcsStore<ProtocolSpec, ProtocolOperation>;
 
 pub fn empty_protocol_projection() -> ProtocolSpec {
     ProtocolSpec { schema: PROTOCOL_DOCUMENT_SCHEMA.into(), id: "protocol".into(), version: "1".into(), title: None, steps: vec![ProtocolStep { id: "s".into(), title: "Steps".into(), description: None, blocks: Vec::new() }] }
@@ -234,10 +234,10 @@ pub fn initial_values(spec: &ProtocolSpec, overrides: &serde_json::Map<String, s
 }
 //#endregion 🔖Runtime
 
-//#region 🔖Ops
+//#region 🔖Operations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum ProtocolOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum ProtocolOperation {
     AddStep {
         step: ProtocolStep,
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -327,19 +327,19 @@ pub enum ProtocolDiff {
 
 impl OperationDiff<ProtocolSpec> for ProtocolDiff {
     fn apply(&self, projection: &ProtocolSpec) -> ProtocolSpec {
-        let op = match self {
+        let operation = match self {
             ProtocolDiff::Empty => return projection.clone(),
-            ProtocolDiff::AddStep { step, index } => ProtocolOp::AddStep { step: step.clone(), index: *index },
-            ProtocolDiff::RemoveStep { step_id } => ProtocolOp::RemoveStep { step_id: step_id.clone() },
-            ProtocolDiff::MoveStep { step_id, index } => ProtocolOp::MoveStep { step_id: step_id.clone(), index: *index },
-            ProtocolDiff::AddBlock { step_id, block, index } => ProtocolOp::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            ProtocolDiff::RemoveBlock { step_id, block_id } => ProtocolOp::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            ProtocolDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolOp::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            ProtocolDiff::UpdateBlock { step_id, block } => ProtocolOp::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            ProtocolDiff::UpdateStep { step } => ProtocolOp::UpdateStep { step: step.clone() },
-            ProtocolDiff::UpdateProtocol { title } => ProtocolOp::UpdateProtocol { title: title.clone() },
+            ProtocolDiff::AddStep { step, index } => ProtocolOperation::AddStep { step: step.clone(), index: *index },
+            ProtocolDiff::RemoveStep { step_id } => ProtocolOperation::RemoveStep { step_id: step_id.clone() },
+            ProtocolDiff::MoveStep { step_id, index } => ProtocolOperation::MoveStep { step_id: step_id.clone(), index: *index },
+            ProtocolDiff::AddBlock { step_id, block, index } => ProtocolOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            ProtocolDiff::RemoveBlock { step_id, block_id } => ProtocolOperation::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            ProtocolDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolOperation::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            ProtocolDiff::UpdateBlock { step_id, block } => ProtocolOperation::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            ProtocolDiff::UpdateStep { step } => ProtocolOperation::UpdateStep { step: step.clone() },
+            ProtocolDiff::UpdateProtocol { title } => ProtocolOperation::UpdateProtocol { title: title.clone() },
         };
-        apply_protocol_edit_op(projection, &op)
+        apply_protocol_edit_operation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
@@ -349,77 +349,77 @@ impl OperationDiff<ProtocolSpec> for ProtocolDiff {
     }
 }
 
-impl Operation<ProtocolSpec> for ProtocolOp {
+impl Operation<ProtocolSpec> for ProtocolOperation {
     type Diff = ProtocolDiff;
 
     fn diff(&self, _projection: &ProtocolSpec) -> ProtocolDiff {
         match self {
-            ProtocolOp::AddStep { step, index } => ProtocolDiff::AddStep { step: step.clone(), index: *index },
-            ProtocolOp::RemoveStep { step_id } => ProtocolDiff::RemoveStep { step_id: step_id.clone() },
-            ProtocolOp::MoveStep { step_id, index } => ProtocolDiff::MoveStep { step_id: step_id.clone(), index: *index },
-            ProtocolOp::AddBlock { step_id, block, index } => ProtocolDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            ProtocolOp::RemoveBlock { step_id, block_id } => ProtocolDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            ProtocolOp::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            ProtocolOp::UpdateBlock { step_id, block } => ProtocolDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            ProtocolOp::UpdateStep { step } => ProtocolDiff::UpdateStep { step: step.clone() },
-            ProtocolOp::UpdateProtocol { title } => ProtocolDiff::UpdateProtocol { title: title.clone() },
+            ProtocolOperation::AddStep { step, index } => ProtocolDiff::AddStep { step: step.clone(), index: *index },
+            ProtocolOperation::RemoveStep { step_id } => ProtocolDiff::RemoveStep { step_id: step_id.clone() },
+            ProtocolOperation::MoveStep { step_id, index } => ProtocolDiff::MoveStep { step_id: step_id.clone(), index: *index },
+            ProtocolOperation::AddBlock { step_id, block, index } => ProtocolDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            ProtocolOperation::RemoveBlock { step_id, block_id } => ProtocolDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            ProtocolOperation::UpdateBlock { step_id, block } => ProtocolDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            ProtocolOperation::UpdateStep { step } => ProtocolDiff::UpdateStep { step: step.clone() },
+            ProtocolOperation::UpdateProtocol { title } => ProtocolDiff::UpdateProtocol { title: title.clone() },
         }
     }
 
     fn backwards(&self, projection: &ProtocolSpec) -> Vec<Self> {
         match self {
-            ProtocolOp::AddStep { step, .. } => vec![ProtocolOp::RemoveStep { step_id: step.id.clone() }],
-            ProtocolOp::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![ProtocolOp::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
-            ProtocolOp::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![ProtocolOp::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
-            ProtocolOp::AddBlock { step_id, block, index: _ } => vec![ProtocolOp::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
-            ProtocolOp::RemoveBlock { step_id, block_id } => {
+            ProtocolOperation::AddStep { step, .. } => vec![ProtocolOperation::RemoveStep { step_id: step.id.clone() }],
+            ProtocolOperation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![ProtocolOperation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
+            ProtocolOperation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![ProtocolOperation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
+            ProtocolOperation::AddBlock { step_id, block, index: _ } => vec![ProtocolOperation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
+            ProtocolOperation::RemoveBlock { step_id, block_id } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(block) = step.blocks.iter().find(|b| b.id == *block_id) {
-                            return vec![ProtocolOp::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
+                            return vec![ProtocolOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
                         }
                     }
                 }
                 Vec::new()
             }
-            ProtocolOp::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+            ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
                 for step in &projection.steps {
                     if step.id == *from_step_id {
                         if let Some(pos) = step.blocks.iter().position(|b| b.id == *block_id) {
-                            return vec![ProtocolOp::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
+                            return vec![ProtocolOperation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
                         }
                     }
                 }
                 let _ = index;
                 Vec::new()
             }
-            ProtocolOp::UpdateBlock { step_id, block } => {
+            ProtocolOperation::UpdateBlock { step_id, block } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(prev) = step.blocks.iter().find(|b| b.id == block.id) {
-                            return vec![ProtocolOp::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
+                            return vec![ProtocolOperation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
                         }
                     }
                 }
                 Vec::new()
             }
-            ProtocolOp::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![ProtocolOp::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
-            ProtocolOp::UpdateProtocol { .. } => vec![ProtocolOp::UpdateProtocol { title: projection.title.clone() }],
+            ProtocolOperation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![ProtocolOperation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
+            ProtocolOperation::UpdateProtocol { .. } => vec![ProtocolOperation::UpdateProtocol { title: projection.title.clone() }],
         }
     }
 }
 
-pub fn apply_protocol_edit_op(spec: &ProtocolSpec, op: &ProtocolOp) -> ProtocolSpec {
+pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOperation) -> ProtocolSpec {
     let mut next = spec.clone();
-    match op {
-        ProtocolOp::AddStep { step, index } => {
+    match operation {
+        ProtocolOperation::AddStep { step, index } => {
             let at = index.unwrap_or(next.steps.len());
             next.steps.insert(at.min(next.steps.len()), step.clone());
         }
-        ProtocolOp::RemoveStep { step_id } => {
+        ProtocolOperation::RemoveStep { step_id } => {
             next.steps.retain(|step| step.id != *step_id);
         }
-        ProtocolOp::MoveStep { step_id, index } => {
+        ProtocolOperation::MoveStep { step_id, index } => {
             let from = next.steps.iter().position(|step| step.id == *step_id);
             if let Some(from) = from {
                 let step = next.steps.remove(from);
@@ -427,7 +427,7 @@ pub fn apply_protocol_edit_op(spec: &ProtocolSpec, op: &ProtocolOp) -> ProtocolS
                 next.steps.insert(at, step);
             }
         }
-        ProtocolOp::AddBlock { step_id, block, index } => {
+        ProtocolOperation::AddBlock { step_id, block, index } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     let at = index.unwrap_or(step.blocks.len());
@@ -435,14 +435,14 @@ pub fn apply_protocol_edit_op(spec: &ProtocolSpec, op: &ProtocolOp) -> ProtocolS
                 }
             }
         }
-        ProtocolOp::RemoveBlock { step_id, block_id } => {
+        ProtocolOperation::RemoveBlock { step_id, block_id } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     step.blocks.retain(|block| block.id != *block_id);
                 }
             }
         }
-        ProtocolOp::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+        ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
             let mut moving: Option<ProtocolBlock> = None;
             for step in &mut next.steps {
                 if step.id == *from_step_id {
@@ -460,7 +460,7 @@ pub fn apply_protocol_edit_op(spec: &ProtocolSpec, op: &ProtocolOp) -> ProtocolS
                 }
             }
         }
-        ProtocolOp::UpdateBlock { step_id, block } => {
+        ProtocolOperation::UpdateBlock { step_id, block } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     for entry in &mut step.blocks {
@@ -471,20 +471,20 @@ pub fn apply_protocol_edit_op(spec: &ProtocolSpec, op: &ProtocolOp) -> ProtocolS
                 }
             }
         }
-        ProtocolOp::UpdateStep { step } => {
+        ProtocolOperation::UpdateStep { step } => {
             for entry in &mut next.steps {
                 if entry.id == step.id {
                     *entry = step.clone();
                 }
             }
         }
-        ProtocolOp::UpdateProtocol { title } => {
+        ProtocolOperation::UpdateProtocol { title } => {
             next.title = title.clone();
         }
     }
     next
 }
-//#endregion 🔖Ops
+//#endregion 🔖Operations
 
 //#region 🔖GenerationForms
 pub mod generation_forms {
@@ -622,13 +622,13 @@ pub mod generation_forms {
     }
     //#endregion 🔖Crud
 
-    //#region 🔖Ops
+    //#region 🔖Operations
     /// @emoji 🧬 Typed, invertible Generate-mode operation vocabulary. WS-F embeds this as a variant in
-    /// `forms/module/procedural`'s own `Op` enum so generation edits flow through the document store with
+    /// `forms/module/procedural`'s own `Operation` enum so generation edits flow through the document store with
     /// true inverses (replacing the in-place-mutating CRUD helpers as the document mutation surface).
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     #[serde(tag = "kind", rename_all = "camelCase")]
-    pub enum GenerationOp {
+    pub enum GenerationOperation {
         Add { generation: FormGeneration },
         Remove { id: String },
         Rename { id: String, name: String },
@@ -637,55 +637,55 @@ pub mod generation_forms {
 
     /// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
-    /// nothing; the caller applies the returned ops through its store.
-    pub fn generation_ops(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &ProtocolSpec) -> Option<Vec<GenerationOp>> {
+    /// nothing; the caller applies the returned operations through its store.
+    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &ProtocolSpec) -> Option<Vec<GenerationOperation>> {
         let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
-            "addGeneration" => Some(vec![GenerationOp::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
-            "removeGeneration" => arg_str("id").map(|id| vec![GenerationOp::Remove { id }]),
+            "addGeneration" => Some(vec![GenerationOperation::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
+            "removeGeneration" => arg_str("id").map(|id| vec![GenerationOperation::Remove { id }]),
             "renameGeneration" => {
                 let id = arg_str("id")?;
                 let name = arg_str("name")?;
-                Some(vec![GenerationOp::Rename { id, name }])
+                Some(vec![GenerationOperation::Rename { id, name }])
             }
             "updateGenerationValues" => {
                 let id = arg_str("generationId").or_else(|| state.selected_generation_id.clone())?;
                 let question_id = arg_str("questionId")?;
                 let value = args.and_then(|value| value.get("value")).cloned()?;
-                Some(vec![GenerationOp::UpdateValues { id, question_id, value }])
+                Some(vec![GenerationOperation::UpdateValues { id, question_id, value }])
             }
             _ => None,
         }
     }
 
-    /// @emoji ▶️ Applies a {@link GenerationOp} to `state` in place.
-    pub fn apply_generation_op(state: &mut GenerationPlayState, op: &GenerationOp) {
-        match op {
-            GenerationOp::Add { generation } => {
+    /// @emoji ▶️ Applies a {@link GenerationOperation} to `state` in place.
+    pub fn apply_generation_operation(state: &mut GenerationPlayState, operation: &GenerationOperation) {
+        match operation {
+            GenerationOperation::Add { generation } => {
                 state.generations.push(generation.clone());
                 state.selected_generation_id = Some(generation.id.clone());
             }
-            GenerationOp::Remove { id } => remove_generation(state, id),
-            GenerationOp::Rename { id, name } => rename_generation(state, id, name),
-            GenerationOp::UpdateValues { id, question_id, value } => update_generation_values(state, id, question_id, value.clone()),
+            GenerationOperation::Remove { id } => remove_generation(state, id),
+            GenerationOperation::Rename { id, name } => rename_generation(state, id, name),
+            GenerationOperation::UpdateValues { id, question_id, value } => update_generation_values(state, id, question_id, value.clone()),
         }
     }
 
-    /// @emoji ↩️ Computes the inverse of a {@link GenerationOp} from the pre-state `state`.
-    pub fn invert_generation_op(state: &GenerationPlayState, op: &GenerationOp) -> Vec<GenerationOp> {
-        match op {
-            GenerationOp::Add { generation } => vec![GenerationOp::Remove { id: generation.id.clone() }],
-            GenerationOp::Remove { id } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOp::Add { generation: entry.clone() }]).unwrap_or_default(),
-            GenerationOp::Rename { id, .. } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOp::Rename { id: id.clone(), name: entry.name.clone() }]).unwrap_or_default(),
-            GenerationOp::UpdateValues { id, question_id, .. } => state
+    /// @emoji ↩️ Computes the inverse of a {@link GenerationOperation} from the pre-state `state`.
+    pub fn invert_generation_operation(state: &GenerationPlayState, operation: &GenerationOperation) -> Vec<GenerationOperation> {
+        match operation {
+            GenerationOperation::Add { generation } => vec![GenerationOperation::Remove { id: generation.id.clone() }],
+            GenerationOperation::Remove { id } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOperation::Add { generation: entry.clone() }]).unwrap_or_default(),
+            GenerationOperation::Rename { id, .. } => state.generations.iter().find(|entry| entry.id == *id).map(|entry| vec![GenerationOperation::Rename { id: id.clone(), name: entry.name.clone() }]).unwrap_or_default(),
+            GenerationOperation::UpdateValues { id, question_id, .. } => state
                 .generations
                 .iter()
                 .find(|entry| entry.id == *id)
-                .map(|entry| vec![GenerationOp::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(Value::Null) }])
+                .map(|entry| vec![GenerationOperation::UpdateValues { id: id.clone(), question_id: question_id.clone(), value: entry.values.get(question_id).cloned().unwrap_or(Value::Null) }])
                 .unwrap_or_default(),
         }
     }
-    //#endregion 🔖Ops
+    //#endregion 🔖Operations
 
     //#region 🔖Render
     fn generation_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -993,12 +993,12 @@ pub mod generation_forms {
 
 //#region 🔖BuilderKit
 pub mod builder_kit {
-    //! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD op-builders and
+    //! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD operation-builders and
     //! [`BlockListScene`] rendering, reused by `protocol-plugin` (standalone) and `forms-plugin`
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
     //! here (from `semio-framework-plugin`) since it is entirely protocol-domain code.
 
-    use super::{ProtocolBlock, ProtocolOp, ProtocolSpec, ProtocolStep};
+    use super::{ProtocolBlock, ProtocolOperation, ProtocolSpec, ProtocolStep};
     use serde_json::Value;
     use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
@@ -1025,32 +1025,32 @@ pub mod builder_kit {
     //#endregion 🔖Config
 
     //#region 🔖OpBuilders
-    pub fn add_step_op(spec: &ProtocolSpec, step_id: String) -> ProtocolOp {
-        ProtocolOp::AddStep { step: ProtocolStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
+    pub fn add_step_operation(spec: &ProtocolSpec, step_id: String) -> ProtocolOperation {
+        ProtocolOperation::AddStep { step: ProtocolStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
     }
 
-    pub fn remove_step_op(step_id: &str) -> ProtocolOp {
-        ProtocolOp::RemoveStep { step_id: step_id.into() }
+    pub fn remove_step_operation(step_id: &str) -> ProtocolOperation {
+        ProtocolOperation::RemoveStep { step_id: step_id.into() }
     }
 
-    pub fn move_step_op(step_id: &str, index: usize) -> ProtocolOp {
-        ProtocolOp::MoveStep { step_id: step_id.into(), index }
+    pub fn move_step_operation(step_id: &str, index: usize) -> ProtocolOperation {
+        ProtocolOperation::MoveStep { step_id: step_id.into(), index }
     }
 
-    pub fn add_block_op(step_id: &str, block: ProtocolBlock, index: Option<usize>) -> ProtocolOp {
-        ProtocolOp::AddBlock { step_id: step_id.into(), block, index }
+    pub fn add_block_operation(step_id: &str, block: ProtocolBlock, index: Option<usize>) -> ProtocolOperation {
+        ProtocolOperation::AddBlock { step_id: step_id.into(), block, index }
     }
 
-    pub fn remove_block_op(step_id: &str, block_id: &str) -> ProtocolOp {
-        ProtocolOp::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
+    pub fn remove_block_operation(step_id: &str, block_id: &str) -> ProtocolOperation {
+        ProtocolOperation::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
     }
 
-    pub fn move_block_op(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> ProtocolOp {
-        ProtocolOp::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
+    pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> ProtocolOperation {
+        ProtocolOperation::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
     }
 
-    pub fn update_protocol_title_op(title: Option<String>) -> ProtocolOp {
-        ProtocolOp::UpdateProtocol { title }
+    pub fn update_protocol_title_operation(title: Option<String>) -> ProtocolOperation {
+        ProtocolOperation::UpdateProtocol { title }
     }
     //#endregion 🔖OpBuilders
 
@@ -1112,8 +1112,8 @@ pub mod builder_kit {
         #[test]
         fn add_step_op_names_step_by_position() {
             let spec = empty_protocol_projection();
-            let op = add_step_op(&spec, "step-2".into());
-            assert_eq!(op, ProtocolOp::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
+            let operation = add_step_operation(&spec, "step-2".into());
+            assert_eq!(operation, ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
         }
 
         #[test]
@@ -1195,14 +1195,14 @@ mod tests {
     #[test]
     fn update_protocol_op_sets_and_reverts_title() {
         let spec = empty_protocol_projection();
-        let op = ProtocolOp::UpdateProtocol { title: Some("Renamed".into()) };
-        let next = apply_protocol_edit_op(&spec, &op);
+        let operation = ProtocolOperation::UpdateProtocol { title: Some("Renamed".into()) };
+        let next = apply_protocol_edit_operation(&spec, &operation);
         assert_eq!(next.title.as_deref(), Some("Renamed"));
-        let inverse = op.backwards(&spec);
-        assert_eq!(inverse, vec![ProtocolOp::UpdateProtocol { title: spec.title.clone() }]);
-        let reverted = inverse.iter().fold(next.clone(), |current, op| apply_protocol_edit_op(&current, op));
+        let inverse = operation.backwards(&spec);
+        assert_eq!(inverse, vec![ProtocolOperation::UpdateProtocol { title: spec.title.clone() }]);
+        let reverted = inverse.iter().fold(next.clone(), |current, operation| apply_protocol_edit_operation(&current, operation));
         assert_eq!(reverted.title, spec.title);
-        assert_eq!(op.diff(&spec).apply(&spec).title.as_deref(), Some("Renamed"));
+        assert_eq!(operation.diff(&spec).apply(&spec).title.as_deref(), Some("Renamed"));
     }
 
     #[test]
@@ -1210,7 +1210,7 @@ mod tests {
         let mut store = ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None));
         let step = ProtocolStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
         let backwards = store.projection().expect("projection");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOp::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 2);
         let _ = backwards;
     }

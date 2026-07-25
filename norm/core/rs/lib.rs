@@ -452,10 +452,10 @@ impl NormFamilyId {
     }
 }
 
-/// 🧩 Headless norm family contract: typed document, undoable ops, and compliance evaluation.
+/// 🧩 Headless norm family contract: typed document, undoable operations, and compliance evaluation.
 pub trait NormFamily: Send + Sync + 'static {
     type Document: Clone + Default + PartialEq + Serialize + DeserializeOwned + Send;
-    type Op: Operation<Self::Document> + Clone + PartialEq + Send;
+    type Operation: vcs::Operation<Self::Document> + Clone + PartialEq + Send;
 
     fn family_id() -> NormFamilyId;
     fn evaluate(document: &Self::Document) -> CheckReport;
@@ -483,12 +483,12 @@ impl<D: Clone + Default + Serialize + DeserializeOwned> OperationDiff<D> for Doc
 
 /// 📤 Whole-document replacement operation shared by norm family sessions.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum SetDocumentOp<D> {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum SetDocumentOperation<D> {
     SetDocument { document: D },
 }
 
-impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D> for SetDocumentOp<D> {
+impl<D: Clone + Default + PartialEq + Serialize + DeserializeOwned> Operation<D> for SetDocumentOperation<D> {
     type Diff = DocumentDiff<D>;
 
     fn diff(&self, _projection: &D) -> DocumentDiff<D> {
@@ -530,8 +530,8 @@ impl<F: NormFamily> NormHost<F> {
         &self.report
     }
 
-    pub fn apply(&mut self, op: &F::Op) {
-        self.document = vcs::apply_operation(&self.document, op);
+    pub fn apply(&mut self, operation: &F::Operation) {
+        self.document = vcs::apply_operation(&self.document, operation);
         self.report = F::evaluate(&self.document);
     }
 
@@ -579,7 +579,7 @@ mod tests {
 
     impl NormFamily for DemoFamily {
         type Document = DemoDocument;
-        type Op = SetDocumentOp<DemoDocument>;
+        type Operation = SetDocumentOperation<DemoDocument>;
 
         fn family_id() -> NormFamilyId {
             NormFamilyId::En1990
@@ -596,7 +596,7 @@ mod tests {
     fn norm_host_recomputes_report_after_apply() {
         let mut host = NormHost::<DemoFamily>::default();
         assert!(host.report().checks[0].utilization < 1.0);
-        host.apply(&SetDocumentOp::SetDocument { document: DemoDocument { value: 2.0 } });
+        host.apply(&SetDocumentOperation::SetDocument { document: DemoDocument { value: 2.0 } });
         assert!(host.report().checks[0].utilization > 1.0);
     }
 }

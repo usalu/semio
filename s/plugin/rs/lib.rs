@@ -109,44 +109,44 @@ pub mod app_home {
         catalog_generation: u64,
     }
 
-    /// @emoji 🔢 The Home launcher's only document op: pins the catalog-generation counter that forces a
+    /// @emoji 🔢 The Home launcher's only document operation: pins the catalog-generation counter that forces a
     /// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
     /// It is its own {@link vcs::OperationDiff} (idempotent set), so forward/backward are symmetric.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    pub enum SHomeOp {
-        /// 🫙 The identity op — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    pub enum SHomeOperation {
+        /// 🫙 The identity operation — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
         #[default]
-        Noop,
+        NoOperation,
         SetCatalogGeneration { value: u64 },
     }
 
-    impl vcs::OperationDiff<SHomeDocument> for SHomeOp {
+    impl vcs::OperationDiff<SHomeDocument> for SHomeOperation {
         fn apply(&self, projection: &SHomeDocument) -> SHomeDocument {
             match self {
-                SHomeOp::Noop => projection.clone(),
-                SHomeOp::SetCatalogGeneration { value } => {
+                SHomeOperation::NoOperation => projection.clone(),
+                SHomeOperation::SetCatalogGeneration { value } => {
                     SHomeDocument { catalog_generation: *value, ..projection.clone() }
                 }
             }
         }
 
         fn absorb(&mut self, other: Self) {
-            if !matches!(other, SHomeOp::Noop) {
+            if !matches!(other, SHomeOperation::NoOperation) {
                 *self = other;
             }
         }
     }
 
-    impl vcs::Operation<SHomeDocument> for SHomeOp {
-        type Diff = SHomeOp;
+    impl vcs::Operation<SHomeDocument> for SHomeOperation {
+        type Diff = SHomeOperation;
 
-        fn diff(&self, _projection: &SHomeDocument) -> SHomeOp {
+        fn diff(&self, _projection: &SHomeDocument) -> SHomeOperation {
             self.clone()
         }
 
         fn backwards(&self, projection: &SHomeDocument) -> Vec<Self> {
-            vec![SHomeOp::SetCatalogGeneration { value: projection.catalog_generation }]
+            vec![SHomeOperation::SetCatalogGeneration { value: projection.catalog_generation }]
         }
     }
     //#endregion 🔖Types
@@ -271,11 +271,11 @@ pub mod app_home {
         entries
     }
 
-    /// @emoji 🧭 Builds the typed emit for a freshly-created studio: bump the catalog counter (op) and
+    /// @emoji 🧭 Builds the typed emit for a freshly-created studio: bump the catalog counter (operation) and
     /// navigate the shell to the new studio route (host effect).
-    fn created_studio_emit(catalog_generation: u64, studio_id: &str) -> ActionEmit<SHomeOp> {
+    fn created_studio_emit(catalog_generation: u64, studio_id: &str) -> ActionEmit<SHomeOperation> {
         ActionEmit {
-            ops: vec![SHomeOp::SetCatalogGeneration { value: catalog_generation + 1 }],
+            operations: vec![SHomeOperation::SetCatalogGeneration { value: catalog_generation + 1 }],
             effects: vec![HostEffect::Navigate { uri: format!("/studios/{studio_id}") }],
             ..Default::default()
         }
@@ -413,7 +413,7 @@ pub mod app_home {
 
     impl DocumentApp for HomeApp {
         type Projection = SHomeDocument;
-        type Op = SHomeOp;
+        type Operation = SHomeOperation;
 
         fn app_id(&self) -> &str {
             S_HOME_APP_ID
@@ -433,9 +433,9 @@ pub mod app_home {
             args: Option<&Value>,
             doc: &DocumentView<'_, SHomeDocument>,
             _view_state: &ViewState,
-        ) -> ActionEmit<SHomeOp> {
+        ) -> ActionEmit<SHomeOperation> {
             let generation = doc.projection.catalog_generation;
-            let bump = |value: u64| ActionEmit::ops(vec![SHomeOp::SetCatalogGeneration { value }]);
+            let bump = |value: u64| ActionEmit::operations(vec![SHomeOperation::SetCatalogGeneration { value }]);
             let port = catalog_port();
             match action {
                 "createStudio" => {
@@ -776,7 +776,7 @@ pub mod app_studio {
         os_app_registration, os_media_graph_to_flow_fixture, os_media_graph_to_node_graph_payload,
         os_media_graph_vfs_schema, os_parameter_types_compatible, os_parameter_value, parameter_id_from_port_id,
         patch_os_parameter, MediaGraphPosition, OsAppInstance, OsDocumentRef, OsMediaGraphCamera,
-        OsMediaGraphVfsNodeRecord, OsMediaPort, OsOp, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
+        OsMediaGraphVfsNodeRecord, OsMediaPort, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
         OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
     };
     use semio_framework_plugin::{
@@ -928,16 +928,16 @@ pub mod app_studio {
         }
     }
 
-    /// @emoji ✨ Builds the `SpawnAppInstance` op (minting a deterministic instance id + app-document id
-    /// embedded in the op, so replay never re-mints) plus the new instance id for the caller to focus.
-    /// The store-free op-builder the plugin uses in place of os-core's `OsStore::spawn_app_instance`
+    /// @emoji ✨ Builds the `SpawnAppInstance` operation (minting a deterministic instance id + app-document id
+    /// embedded in the operation, so replay never re-mints) plus the new instance id for the caller to focus.
+    /// The store-free operation-builder the plugin uses in place of os-core's `OsStore::spawn_app_instance`
     /// (a `DocumentApp` owns no store — its wrapper does).
-    fn spawn_app_instance_op(
+    fn spawn_app_instance_operation(
         program_id: &str,
         app_id: &str,
         label: Option<&str>,
         position: MediaGraphPosition,
-    ) -> Option<(OsOp, String)> {
+    ) -> Option<(OsOperation, String)> {
         let registration = os_app_registration(program_id, app_id)?;
         let instance_id = create_os_id("app");
         let instance = OsAppInstance {
@@ -951,24 +951,24 @@ pub mod app_studio {
                 schema: registration.source_format.clone(),
             },
         };
-        Some((OsOp::SpawnAppInstance { instance, position }, instance_id))
+        Some((OsOperation::SpawnAppInstance { instance, position }, instance_id))
     }
 
-    /// @emoji ➕ Builds an `AddParameter` op with a fresh default parameter of the requested type.
-    fn add_parameter_op(parameter_type: &OsParameterType, name: &str) -> OsOp {
-        OsOp::AddParameter {
+    /// @emoji ➕ Builds an `AddParameter` operation with a fresh default parameter of the requested type.
+    fn add_parameter_operation(parameter_type: &OsParameterType, name: &str) -> OsOperation {
+        OsOperation::AddParameter {
             parameter: create_default_os_parameter(parameter_type, name, None),
         }
     }
 
-    /// @emoji 🩹 Builds a `PatchParameter` op by folding `patch` (a `{field: value}` object) into the
-    /// current parameter — the store-free op-builder used in place of os-core's `OsStore::patch_parameter`.
-    fn patch_parameter_op(projection: &OsProjection, parameter_id: &str, patch: &Value) -> Option<OsOp> {
+    /// @emoji 🩹 Builds a `PatchParameter` operation by folding `patch` (a `{field: value}` object) into the
+    /// current parameter — the store-free operation-builder used in place of os-core's `OsStore::patch_parameter`.
+    fn patch_parameter_operation(projection: &OsProjection, parameter_id: &str, patch: &Value) -> Option<OsOperation> {
         let current = projection
             .parameters
             .iter()
             .find(|parameter| parameter_entity_id(parameter) == parameter_id)?;
-        Some(OsOp::PatchParameter {
+        Some(OsOperation::PatchParameter {
             parameter_id: parameter_id.into(),
             parameter: patch_os_parameter(current, patch),
         })
@@ -1007,7 +1007,7 @@ pub mod app_studio {
 
     /// @emoji 🤝 Resolves the source/target `OsMediaPort`s for a proposed connect from the live projection
     /// and negotiates their wire contract — shared by both connect entry points (`"connectMediaPorts"` and
-    /// the `nodeGraphEdit`/`"connect"` fixture edit) so neither can push an `OsOp::ConnectMediaPorts` for an
+    /// the `nodeGraphEdit`/`"connect"` fixture edit) so neither can push an `OsOperation::ConnectMediaPorts` for an
     /// incompatible or unresolved pair of ports.
     fn negotiate_media_connect(projection: &OsProjection, source_node_id: &str, source_port_id: &str, target_node_id: &str, target_port_id: &str) -> Result<semio_framework_os::MediaContract, String> {
         let source_port: &OsMediaPort = projection
@@ -1769,7 +1769,7 @@ pub mod app_studio {
                         value: media_node_ids[0].clone(),
                         placeholder: None,
                         commit: None,
-                        on_change: s_play_action("noop", None),
+                        on_change: s_play_action("noOperation", None),
                         min: None,
                         max: None,
                         step: None,
@@ -2115,7 +2115,7 @@ pub mod app_studio {
 
     impl DocumentApp for StudioApp {
         type Projection = OsProjection;
-        type Op = OsOp;
+        type Operation = OsOperation;
 
         fn app_id(&self) -> &str {
             S_PLAY_APP_ID
@@ -2135,9 +2135,9 @@ pub mod app_studio {
             args: Option<&Value>,
             doc: &DocumentView<'_, OsProjection>,
             view_state: &ViewState,
-        ) -> ActionEmit<OsOp> {
+        ) -> ActionEmit<OsOperation> {
             let projection = doc.projection;
-            let mut ops: Vec<OsOp> = Vec::new();
+            let mut operations: Vec<OsOperation> = Vec::new();
             let mut effects: Vec<HostEffect> = Vec::new();
             let mut coalesce_key: Option<String> = None;
             let mut ui_scope = semio_framework_core::kernel::UiDirtyScope::Full;
@@ -2214,8 +2214,8 @@ pub mod app_studio {
                             value.map(|value| json!({ field: value }))
                         };
                         if let Some(patch) = patch {
-                            if let Some(op) = patch_parameter_op(projection, parameter_id, &patch) {
-                                ops.push(op);
+                            if let Some(operation) = patch_parameter_operation(projection, parameter_id, &patch) {
+                                operations.push(operation);
                             }
                         }
                     }
@@ -2234,14 +2234,14 @@ pub mod app_studio {
                         .and_then(|value| value.get("name"))
                         .and_then(|value| value.as_str())
                         .unwrap_or("Parameter");
-                    ops.push(add_parameter_op(&parameter_type, name));
+                    operations.push(add_parameter_operation(&parameter_type, name));
                 }
                 "removeParameter" => {
                     if let Some(parameter_id) = args
                         .and_then(|value| value.get("parameterId"))
                         .and_then(|value| value.as_str())
                     {
-                        ops.push(OsOp::RemoveParameter {
+                        operations.push(OsOperation::RemoveParameter {
                             parameter_id: parameter_id.into(),
                         });
                     }
@@ -2270,9 +2270,9 @@ pub mod app_studio {
                                     .unwrap_or(80.0),
                             })
                             .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
-                        if let Some((op, instance_id)) = spawn_app_instance_op(program_id, app_id, None, position) {
+                        if let Some((operation, instance_id)) = spawn_app_instance_operation(program_id, app_id, None, position) {
                             self.runtime.active_instance_id = Some(instance_id);
-                            ops.push(op);
+                            operations.push(operation);
                         }
                     }
                 }
@@ -2283,7 +2283,7 @@ pub mod app_studio {
                         args.and_then(|value| value.get("y")).and_then(|value| value.as_f64()),
                     ) {
                         coalesce_key = Some(format!("moveMediaNode:{node_id}"));
-                        ops.push(OsOp::MoveMediaNode {
+                        operations.push(OsOperation::MoveMediaNode {
                             node_id: node_id.into(),
                             x,
                             y,
@@ -2307,7 +2307,7 @@ pub mod app_studio {
                             .and_then(|value| value.as_str()),
                     ) {
                         match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                            Ok(contract) => ops.push(OsOp::ConnectMediaPorts {
+                            Ok(contract) => operations.push(OsOperation::ConnectMediaPorts {
                                 edge: semio_framework_os::OsMediaGraphEdge {
                                     id: create_os_id("edge"),
                                     source_node_id: source_node_id.into(),
@@ -2326,7 +2326,7 @@ pub mod app_studio {
                         .and_then(|value| value.get("edgeId"))
                         .and_then(|value| value.as_str())
                     {
-                        ops.push(OsOp::DisconnectMediaEdge {
+                        operations.push(OsOperation::DisconnectMediaEdge {
                             edge_id: edge_id.into(),
                         });
                     }
@@ -2338,7 +2338,7 @@ pub mod app_studio {
                         .map(str::to_string)
                         .or_else(|| primary_selected_instance_id(&self.runtime, projection));
                     if let Some(instance_id) = instance_id {
-                        ops.push(OsOp::RemoveAppInstance {
+                        operations.push(OsOperation::RemoveAppInstance {
                             instance_id: instance_id.clone(),
                         });
                         if self.runtime.active_instance_id.as_deref() == Some(instance_id.as_str()) {
@@ -2352,7 +2352,7 @@ pub mod app_studio {
                 "deleteSelection" => {
                     let instance_ids = selected_instance_ids(&self.runtime, projection);
                     for instance_id in instance_ids {
-                        ops.push(OsOp::RemoveAppInstance {
+                        operations.push(OsOperation::RemoveAppInstance {
                             instance_id: instance_id.clone(),
                         });
                     }
@@ -2389,14 +2389,14 @@ pub mod app_studio {
                             })
                             .unwrap_or(MediaGraphPosition { x: 80.0, y: 80.0 });
                         let label = format!("{} Copy", instance.label);
-                        if let Some((op, new_id)) = spawn_app_instance_op(
+                        if let Some((operation, new_id)) = spawn_app_instance_operation(
                             &instance.program_id,
                             &instance.app_id,
                             Some(&label),
                             position,
                         ) {
                             self.runtime.active_instance_id = Some(new_id);
-                            ops.push(op);
+                            operations.push(operation);
                         }
                     }
                 }
@@ -2414,7 +2414,7 @@ pub mod app_studio {
                                     .map(|instance| format!("{} (renamed)", instance.label))
                             });
                         if let Some(label) = next_label {
-                            ops.push(OsOp::PatchAppInstance {
+                            operations.push(OsOperation::PatchAppInstance {
                                 instance_id,
                                 label: Some(label),
                             });
@@ -2501,8 +2501,8 @@ pub mod app_studio {
                                 if let Some(instance) = projection.app_instances.iter().find(|row| row.id == instance_id) {
                                     // 📥 Decoding/validation happens here; the decoded content is applied
                                     // to the instance's own `OsDocumentRef` document by the host (a
-                                    // cross-document op the shell can't author from its own store), so
-                                    // this arm emits no studio op.
+                                    // cross-document operation the shell can't author from its own store), so
+                                    // this arm emits no studio operation.
                                     let _ = semio_framework_os::import_os_app_instance_media(instance, &bytes, format);
                                 }
                             }
@@ -2569,7 +2569,7 @@ pub mod app_studio {
                     for (index, node_id) in node_ids.iter().enumerate() {
                         let col = (index % 4) as f64;
                         let row = (index / 4) as f64;
-                        ops.push(OsOp::MoveMediaNode {
+                        operations.push(OsOperation::MoveMediaNode {
                             node_id: node_id.clone(),
                             x: 80.0 + col * 220.0,
                             y: 80.0 + row * 160.0,
@@ -2602,13 +2602,13 @@ pub mod app_studio {
                     }
                 }
                 "nodeGraphEdit" => {
-                    let edit_ops = args
-                        .and_then(|value| value.get("ops"))
+                    let edit_operations = args
+                        .and_then(|value| value.get("operations"))
                         .and_then(|value| value.as_array())
                         .cloned()
                         .unwrap_or_default();
-                    for edit in &edit_ops {
-                        match edit.get("op").and_then(|value| value.as_str()).unwrap_or("") {
+                    for edit in &edit_operations {
+                        match edit.get("operation").and_then(|value| value.as_str()).unwrap_or("") {
                             "setFixture" => {
                                 if let Some(fixture_json) = edit.get("fixtureJson").and_then(|value| value.as_str()) {
                                     if let Some(camera) = serde_json::from_str::<Value>(fixture_json)
@@ -2618,7 +2618,7 @@ pub mod app_studio {
                                     {
                                         self.runtime.media_graph_camera = Some(camera);
                                     }
-                                    ops.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
+                                    operations.extend(apply_flow_fixture_to_os_media_graph(&projection.media_graph, fixture_json));
                                 }
                             }
                             "move" => {
@@ -2627,7 +2627,7 @@ pub mod app_studio {
                                     edit.get("x").and_then(|value| value.as_f64()),
                                     edit.get("y").and_then(|value| value.as_f64()),
                                 ) {
-                                    ops.push(OsOp::MoveMediaNode { node_id: node_id.into(), x, y });
+                                    operations.push(OsOperation::MoveMediaNode { node_id: node_id.into(), x, y });
                                 }
                             }
                             "connect" => {
@@ -2638,7 +2638,7 @@ pub mod app_studio {
                                     edit.get("targetPortId").and_then(|value| value.as_str()),
                                 ) {
                                     match negotiate_media_connect(projection, source_node_id, source_port_id, target_node_id, target_port_id) {
-                                        Ok(contract) => ops.push(OsOp::ConnectMediaPorts {
+                                        Ok(contract) => operations.push(OsOperation::ConnectMediaPorts {
                                             edge: semio_framework_os::OsMediaGraphEdge {
                                                 id: create_os_id("edge"),
                                                 source_node_id: source_node_id.into(),
@@ -2655,7 +2655,7 @@ pub mod app_studio {
                             "deleteSelection" => {
                                 for node_id in &self.runtime.selected_media_node_ids {
                                     if let Some(node) = projection.media_graph.nodes.iter().find(|node| node.id == *node_id) {
-                                        ops.push(OsOp::RemoveAppInstance { instance_id: node.instance_id.clone() });
+                                        operations.push(OsOperation::RemoveAppInstance { instance_id: node.instance_id.clone() });
                                     }
                                 }
                             }
@@ -2736,7 +2736,7 @@ pub mod app_studio {
                                 } else {
                                     node.y
                                 };
-                                ops.push(OsOp::MoveMediaNode {
+                                operations.push(OsOperation::MoveMediaNode {
                                     node_id,
                                     x,
                                     y,
@@ -2762,7 +2762,7 @@ pub mod app_studio {
                     if field == Some("label") {
                         for instance_id in instance_ids {
                             if let Some(label) = value {
-                                ops.push(OsOp::PatchAppInstance {
+                                operations.push(OsOperation::PatchAppInstance {
                                     instance_id,
                                     label: Some(label.into()),
                                 });
@@ -2785,12 +2785,12 @@ pub mod app_studio {
                         .unwrap_or("");
                     if !instance_id.is_empty() && !field_path.is_empty() {
                         if parameter_id.is_empty() || parameter_id == "__direct__" {
-                            ops.push(OsOp::UnbindParameterField {
+                            operations.push(OsOperation::UnbindParameterField {
                                 instance_id: instance_id.into(),
                                 field_path: field_path.into(),
                             });
                         } else {
-                            ops.push(OsOp::BindParameterField {
+                            operations.push(OsOperation::BindParameterField {
                                 binding: OsParameterFieldBinding {
                                     parameter_id: parameter_id.into(),
                                     instance_id: instance_id.into(),
@@ -2810,7 +2810,7 @@ pub mod app_studio {
                         .and_then(|value| value.as_str())
                         .unwrap_or("");
                     if !instance_id.is_empty() && !field_path.is_empty() {
-                        ops.push(OsOp::UnbindParameterField {
+                        operations.push(OsOperation::UnbindParameterField {
                             instance_id: instance_id.into(),
                             field_path: field_path.into(),
                         });
@@ -2908,14 +2908,14 @@ pub mod app_studio {
                         .unwrap_or_else(|| self.runtime.media_graph_engagement_input.clone());
                     let mut parts = raw.split_whitespace();
                     if let (Some(program_id), Some(app_id)) = (parts.next(), parts.next()) {
-                        if let Some((op, instance_id)) = spawn_app_instance_op(
+                        if let Some((operation, instance_id)) = spawn_app_instance_operation(
                             program_id,
                             app_id,
                             None,
                             MediaGraphPosition { x: 80.0, y: 80.0 },
                         ) {
                             self.runtime.active_instance_id = Some(instance_id);
-                            ops.push(op);
+                            operations.push(operation);
                         }
                     }
                 }
@@ -2936,7 +2936,7 @@ pub mod app_studio {
                 publish_presence(&self.runtime);
             }
             ActionEmit {
-                ops,
+                operations,
                 coalesce_key,
                 effects,
                 ui_scope,
@@ -3227,15 +3227,15 @@ pub mod app_studio {
         }
 
         /// 🎛️ Drives the typed `StudioApp::handle_action` against a projection snapshot, returning its emit.
-        fn studio_emit(app: &mut StudioApp, projection: &OsProjection, action: &str, args: Value) -> ActionEmit<OsOp> {
+        fn studio_emit(app: &mut StudioApp, projection: &OsProjection, action: &str, args: Value) -> ActionEmit<OsOperation> {
             let history = empty_history();
             let doc = DocumentView { projection, history: &history };
             app.handle_action(action, Some(&args), &doc, &ViewState::default())
         }
 
-        /// 📽️ Folds studio ops onto a projection the way the store would (minus history), for op-application asserts.
-        fn apply_ops(projection: &OsProjection, ops: &[OsOp]) -> OsProjection {
-            ops.iter().fold(projection.clone(), |current, op| apply_os_operation(&current, op))
+        /// 📽️ Folds studio operations onto a projection the way the store would (minus history), for operation-application asserts.
+        fn apply_operations(projection: &OsProjection, operations: &[OsOperation]) -> OsProjection {
+            operations.iter().fold(projection.clone(), |current, operation| apply_os_operation(&current, operation))
         }
         //#endregion 🔧Harness
 
@@ -3394,10 +3394,10 @@ pub mod app_studio {
             let graph = resolve(S_PLAY_WINDOW_MEDIA_GRAPH);
             let vfs = resolve(S_PLAY_WINDOW_MEDIA_VFS);
             let dag = resolve(S_PLAY_WINDOW_COMPILED_DAG);
-            for graph_op in ["spawnApp", "connectMediaPorts", "removeAppInstance", "exportMedia", "addParameter"] {
-                assert!(graph.contains(&graph_op.to_string()), "Media Graph must expose {graph_op}");
-                assert!(!vfs.contains(&graph_op.to_string()), "Media VFS must NOT expose {graph_op}");
-                assert!(!dag.contains(&graph_op.to_string()), "Compiled DAG must NOT expose {graph_op}");
+            for graph_operation in ["spawnApp", "connectMediaPorts", "removeAppInstance", "exportMedia", "addParameter"] {
+                assert!(graph.contains(&graph_operation.to_string()), "Media Graph must expose {graph_operation}");
+                assert!(!vfs.contains(&graph_operation.to_string()), "Media VFS must NOT expose {graph_operation}");
+                assert!(!dag.contains(&graph_operation.to_string()), "Compiled DAG must NOT expose {graph_operation}");
             }
             assert!(vfs.contains(&"navigateVirtualFileSystemNode".to_string()));
             assert!(!graph.contains(&"navigateVirtualFileSystemNode".to_string()));
@@ -3427,13 +3427,13 @@ pub mod app_studio {
         }
 
         #[test]
-        fn move_media_node_emits_coalesced_move_op() {
+        fn move_media_node_emits_coalesced_move_operation() {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
             let node_id = projection.media_graph.nodes.first().expect("node").id.clone();
             let emit = studio_emit(&mut app, &projection, "moveMediaNode", json!({ "nodeId": node_id, "x": 120.0, "y": 160.0 }));
             assert_eq!(emit.coalesce_key.as_deref(), Some(format!("moveMediaNode:{node_id}").as_str()));
-            let node = apply_ops(&projection, &emit.ops)
+            let node = apply_operations(&projection, &emit.operations)
                 .media_graph
                 .nodes
                 .into_iter()
@@ -3498,7 +3498,7 @@ pub mod app_studio {
                 "connectMediaPorts",
                 json!({ "sourceNodeId": "contract-src", "sourcePortId": "contract-src:out", "targetNodeId": "contract-dst", "targetPortId": "contract-dst:in" }),
             );
-            assert!(emit.ops.is_empty(), "an incompatible connect must not push OsOp::ConnectMediaPorts");
+            assert!(emit.operations.is_empty(), "an incompatible connect must not push OsOperation::ConnectMediaPorts");
             assert!(matches!(emit.effects.first(), Some(HostEffect::Notify { .. })), "an incompatible connect must surface a Notify effect instead");
         }
 
@@ -3557,17 +3557,17 @@ pub mod app_studio {
                 json!({ "sourceNodeId": "contract-src-2", "sourcePortId": "contract-src-2:out", "targetNodeId": "contract-dst-2", "targetPortId": "contract-dst-2:in" }),
             );
             let edge = emit
-                .ops
+                .operations
                 .iter()
-                .find_map(|op| match op {
-                    OsOp::ConnectMediaPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
+                .find_map(|operation| match operation {
+                    OsOperation::ConnectMediaPorts { edge } if edge.source_node_id == "contract-src-2" => Some(edge.clone()),
                     _ => None,
                 })
-                .expect("a compatible connect must push OsOp::ConnectMediaPorts with a negotiated contract");
+                .expect("a compatible connect must push OsOperation::ConnectMediaPorts with a negotiated contract");
             assert_eq!(edge.contract.kind_id, "test.contract.doc-b");
             assert_eq!(edge.contract.wire, MediaWireFormat::Document { schema: "test.contract.doc.schema".into() });
             assert!(edge.contract.conversion.is_none());
-            let next = apply_ops(&projection, &emit.ops);
+            let next = apply_operations(&projection, &emit.operations);
             assert!(validate_media_graph(&next.media_graph).ok, "a freshly negotiated edge must pass validate_media_graph's contract-consistency check");
         }
         //#endregion 🔖MediaContractConnect
@@ -3578,8 +3578,8 @@ pub mod app_studio {
             let mut app = StudioApp::new();
             let projection = demo_studio_projection();
             let emit = studio_emit(&mut app, &projection, "spawnApp", json!({ "programId": "draw", "appId": "draw" }));
-            assert!(!emit.ops.is_empty());
-            let next = apply_ops(&projection, &emit.ops);
+            assert!(!emit.operations.is_empty());
+            let next = apply_operations(&projection, &emit.operations);
             assert_eq!(next.app_instances.len(), projection.app_instances.len() + 1);
             assert_eq!(app.runtime.active_instance_id, next.app_instances.last().map(|i| i.id.clone()));
         }
@@ -3596,7 +3596,7 @@ pub mod app_studio {
                 "spawnApp",
                 json!({ "programId": "draw", "appId": "draw", "position": { "x": 321.0, "y": 654.0 } }),
             );
-            let next = apply_ops(&projection, &emit.ops);
+            let next = apply_operations(&projection, &emit.operations);
             let instance = next
                 .app_instances
                 .iter()
@@ -3619,7 +3619,7 @@ pub mod app_studio {
             let projection = demo_studio_projection();
             let instance = projection.app_instances.iter().find(|i| i.program_id == "draw").expect("draw instance").clone();
             let emit = studio_emit(&mut app, &projection, "openInstance", json!({ "instanceId": instance.id }));
-            assert!(emit.ops.is_empty(), "opening an instance is a host effect, not a document op");
+            assert!(emit.operations.is_empty(), "opening an instance is a host effect, not a document operation");
             let opened = emit
                 .effects
                 .iter()
@@ -3674,9 +3674,9 @@ pub mod app_studio {
             )));
 
             // Decoding is exercised here; the decoded content is applied to the instance's own
-            // `OsDocumentRef` document by the host, so this arm emits no studio op.
+            // `OsDocumentRef` document by the host, so this arm emits no studio operation.
             let payload = studio_emit(&mut app, &projection, "importMediaPayload", json!({ "payload": format!("data:image/vnd.dwg;base64,{data}") }));
-            assert!(payload.ops.is_empty());
+            assert!(payload.operations.is_empty());
         }
 
         #[test]
@@ -3691,8 +3691,8 @@ pub mod app_studio {
         #[test]
         fn patch_parameter_op_updates_numeric_value() {
             let projection = demo_studio_projection();
-            let op = patch_parameter_op(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("op");
-            let next = apply_os_operation(&projection, &op);
+            let operation = patch_parameter_operation(&projection, "param-brush-size", &json!({ "value": 48.0 })).expect("operation");
+            let next = apply_os_operation(&projection, &operation);
             match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
                 OsParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
                 _ => panic!("expected numeric"),
@@ -3709,8 +3709,8 @@ pub mod app_studio {
                 "patchParameter",
                 json!({ "parameterId": "param-brush-size", "field": "value", "value": 48.0 }),
             );
-            assert_eq!(emit.ops.len(), 1);
-            let next = apply_ops(&projection, &emit.ops);
+            assert_eq!(emit.operations.len(), 1);
+            let next = apply_operations(&projection, &emit.operations);
             match next.parameters.iter().find(|entry| entry.id() == "param-brush-size").expect("parameter") {
                 OsParameter::Numeric { value, .. } => assert_eq!(*value, 48.0),
                 _ => panic!("expected numeric"),
@@ -3775,7 +3775,7 @@ pub mod app_studio {
                 "patchAppInstances",
                 json!({ "instanceIds": ids, "field": "label", "value": "Batch Label" }),
             );
-            let next = apply_ops(&projection, &emit.ops);
+            let next = apply_operations(&projection, &emit.operations);
             let labels: Vec<String> = next
                 .app_instances
                 .iter()
@@ -3931,14 +3931,14 @@ pub mod app_studio {
                 "spawnApp",
                 json!({ "programId": "puzzle.5d", "appId": "puzzle5d", "position": { "x": 200, "y": 100 } }),
             );
-            projection = apply_ops(&projection, &emit.ops);
+            projection = apply_operations(&projection, &emit.operations);
             let emit = studio_emit(
                 &mut app,
                 &projection,
                 "spawnApp",
                 json!({ "programId": "shooting", "appId": "shooting", "position": { "x": 300, "y": 100 } }),
             );
-            projection = apply_ops(&projection, &emit.ops);
+            projection = apply_operations(&projection, &emit.operations);
             let puzzle_instance = projection.app_instances.iter().rev().nth(1).expect("puzzle");
             let shooting_instance = projection.app_instances.last().expect("shooting");
             let puzzle_node = projection
@@ -3969,7 +3969,7 @@ pub mod app_studio {
                 "bindParameterField",
                 json!({ "instanceId": instance.id, "fieldPath": "label", "parameterId": parameter_id }),
             );
-            projection = apply_ops(&projection, &emit.ops);
+            projection = apply_operations(&projection, &emit.operations);
             assert!(projection
                 .parameter_bindings
                 .iter()
@@ -3980,7 +3980,7 @@ pub mod app_studio {
                 "unbindParameterField",
                 json!({ "instanceId": instance.id, "fieldPath": "label" }),
             );
-            projection = apply_ops(&projection, &emit.ops);
+            projection = apply_operations(&projection, &emit.operations);
             assert!(!projection
                 .parameter_bindings
                 .iter()
@@ -4010,7 +4010,7 @@ pub mod app_studio {
 
         /// 🧪 The definitional proof: two independent instances start from the same deterministic demo
         /// projection, apply DISJOINT edits (A spawns a new draw instance, B renames an existing
-        /// instance), and exchanging ops over a backbone converges both sides onto the same
+        /// instance), and exchanging operations over a backbone converges both sides onto the same
         /// projection — impossible under whole-document `setDocument` snapshots, where one side's write
         /// would clobber the other's. Driven through the shared testkit convergence harness instead of
         /// a hand-rolled `MemoryBackbone::pair` + manual drain/ingest.
@@ -4067,9 +4067,9 @@ pub mod app_studio {
                 &mut app,
                 &projection,
                 "nodeGraphEdit",
-                json!({ "ops": [{ "op": "setFixture", "fixtureJson": fixture.to_string() }] }),
+                json!({ "operations": [{ "operation": "setFixture", "fixtureJson": fixture.to_string() }] }),
             );
-            let moved = apply_ops(&projection, &emit.ops)
+            let moved = apply_operations(&projection, &emit.operations)
                 .media_graph
                 .nodes
                 .into_iter()

@@ -18,7 +18,7 @@ todos:
    content: "Rewrite wgpu render_world_3d with World3dState: orbit, hover, pick, marquee, async GLB loading"
    status: completed
  - id: export
-   content: Handle downloadMediaExport op in wgpu shell (Blob download)
+   content: Handle downloadMediaExport operation in wgpu shell (Blob download)
    status: completed
  - id: plugins
    content: "Update lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins: real meshes, selection commands, obj/glb export handlers"
@@ -39,7 +39,7 @@ isProject: false
 - [framework/renderer/wgpu/rs/scenes.rs](framework/renderer/wgpu/rs/scenes.rs) `render_world_3d` draws a fake 2D cube; `WORLD3D_SHADER` in [ui/wgpu/rs/shaders.rs](ui/wgpu/rs/shaders.rs) is compiled but never used; all pipelines have `depth_stencil: None`; input has no wheel/drag/modifiers; `scene_hit_target` is dead code.
 - Protocol `World3dScene { camera_json, instances_json }` in [framework/core/rs/ui.rs](framework/core/rs/ui.rs) only carries box instances — no meshes, no selection. Emitted by lowpoly, procedural3d, puzzle3d, puzzle5d, cad, shooting plugins.
 - React `World3dHost` ([framework/renderer/react/components/world-3d-host.tsx](framework/renderer/react/components/world-3d-host.tsx)) renders unit boxes only; rich picking/lasso lives in domain packages (cad renderer, puzzle3d core) — design/type apps (compose sketchpad) need GLB mesh URLs.
-- Export: Rust-side `OsMediaExportFormat { Svg, Png, Obj, Glb }` + handler registry exist in [framework/product/os/core/rs/media_graph.rs](framework/product/os/core/rs/media_graph.rs); the s plugin emits a `downloadMediaExport` op which the React shell downloads, but the wgpu shell's `apply_ops` ignores it. No 3d export handlers are registered in the Rust plugin path.
+- Export: Rust-side `OsMediaExportFormat { Svg, Png, Obj, Glb }` + handler registry exist in [framework/product/os/core/rs/media_graph.rs](framework/product/os/core/rs/media_graph.rs); the s plugin emits a `downloadMediaExport` operation which the React shell downloads, but the wgpu shell's `apply_operations` ignores it. No 3d export handlers are registered in the Rust plugin path.
 
 ## Architecture
 
@@ -106,7 +106,7 @@ New `scene3d.rs` module plus targeted extensions to existing files:
   - left click: pick nearest instance, dispatch `worldSelect` (shift/ctrl merge modes).
   - left drag: marquee per `selection_json.method` — rectangle or lasso; on release project instances and test coverage, dispatch `worldSelect` with the id set.
   - right drag orbit, middle or shift+right drag pan, wheel zoom — all renderer-local (no plugin round trip).
-- **Export** ([shell.rs](framework/renderer/wgpu/rs/shell.rs)): handle the `downloadMediaExport` op in `apply_ops` — trigger a browser download via `web_sys` Blob + anchor click (parity with `os-shell.tsx`).
+- **Export** ([shell.rs](framework/renderer/wgpu/rs/shell.rs)): handle the `downloadMediaExport` operation in `apply_operations` — trigger a browser download via `web_sys` Blob + anchor click (parity with `os-shell.tsx`).
 
 ## 5. Plugin updates (all world-3d emitters, all at once)
 

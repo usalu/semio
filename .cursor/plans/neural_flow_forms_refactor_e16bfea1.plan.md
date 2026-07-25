@@ -109,7 +109,7 @@ In [forms/play/index.ts](forms/play/index.ts) + [framework/product/playground/re
 
 ### Cross-cutting
 
-- Non-destructive by default: all edit ops and evaluations operate on copies (already the pattern in `applyGenerationValuesToFixture` and the flow3d preview); enforce uniformly.
+- Non-destructive by default: all edit operations and evaluations operate on copies (already the pattern in `applyGenerationValuesToFixture` and the flow3d preview); enforce uniformly.
 - No `flow.fixture/v1` references remain anywhere (flow, procedural, forms, play, framework).
 - Validation per layer: extend Rust `#region Tests`, in-file vitest in each TS package, a `runtime-check.mjs` in the ticket folder, and browser runtime verification with `[DEBUG]`-prefixed logs before claiming success.
 - Repo MCP: read `repo://goals`, then reopen `26/06/30/FORMS-TECHNOLOGY-AND-GENERATE-MODE` (or open a new ticket) before implementing.

@@ -24,7 +24,7 @@ isProject: false
 
 - **Vitest (`elements/client/lib/board`)** almost exclusively constructs `BoardRenderer` with **`renderMode: "headless-test"`** (see `index.ts` Vitest region). That path **never** runs `initGpuSurfaceOnce` / `attach_canvas` / `syncGpuFrame` / the real WebGPU present loop.
 - **`initSync` WASM** in Vitest loads the wasm bytes from disk; it does **not** reproduce Chromium’s WebGPU adapter, `ResizeObserver` + flex layout from `@elements/ui` windows, multi-pane focus, or `device.poll` re-entry.
-- **Playwright GPU specs** often **skip** on bundled Chromium without a WebGPU adapter (`board-play-gpu.spec.ts`); unless CI runs **`BOARD_PLAYWRIGHT_CHANNEL=chrome`**, the “GPU” tests are frequently no-ops.
+- **Playwright GPU specs** often **skip** on bundled Chromium without a WebGPU adapter (`board-play-gpu.spec.ts`); unless CI runs **`BOARD_PLAYWRIGHT_CHANNEL=chrome`**, the “GPU” tests are frequently no-operations.
 - **Conclusion:** Passing Vitest proves **headless WASM + scene graph invariants**, not **board play triptych + WebGPU + DOM layout**. Treat Vitest green as **necessary, not sufficient**.
 
 ## 1 Problem

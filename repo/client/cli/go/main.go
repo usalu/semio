@@ -12232,7 +12232,7 @@ func (p *GitHubManagementProvider) GetCurrentUser() string {
 	return ghGetCurrentUser()
 }
 
-// 💻NullManagementProvider is a no-op implementation of ManagementProvider.
+// 💻NullManagementProvider is a no-operation implementation of ManagementProvider.
 type NullManagementProvider struct{}
 
 func (p *NullManagementProvider) Kind() string { return "none" }
@@ -39053,7 +39053,7 @@ func serverRequest(method, path string, body interface{}) (*http.Response, error
 	return client.Do(req)
 }
 
-// ⚙️syncTicketToServer sends ticket state to the server. No-op if server is not configured.
+// ⚙️syncTicketToServer sends ticket state to the server. No-operation if server is not configured.
 func syncTicketToServer(ticket *Ticket, action string) {
 	addr := getServerAddr()
 	if addr == "" {
@@ -44413,12 +44413,12 @@ func deriveRepoOpFromMCPTool(tool string) string {
 	if !strings.HasPrefix(tool, prefix) {
 		return ""
 	}
-	op := strings.TrimPrefix(tool, prefix)
-	op = strings.TrimSpace(op)
-	if op == "" {
+	operation := strings.TrimPrefix(tool, prefix)
+	operation = strings.TrimSpace(operation)
+	if operation == "" {
 		return ""
 	}
-	return strings.ReplaceAll(op, "_", ".")
+	return strings.ReplaceAll(operation, "_", ".")
 }
 
 // 🔻deriveRepoOpFromCLICommand derives repo operation from CLI command.
@@ -44495,11 +44495,11 @@ func logRepoOperationHook(hctx HookContext, result interface{}, operation string
 	}
 	resultToolName, resultCommand := extractHookResultToolInfo(result)
 	toolName := firstNonEmpty(resultToolName, hctx.ToolName, extractToolNameFromStdin(hctx.Input))
-	repoOp := deriveRepoOpFromMCPTool(toolName)
-	if repoOp == "" {
-		repoOp = deriveRepoOpFromCLICommand(firstNonEmpty(resultCommand, hctx.ToolArgs, extractCommandFromStdin(hctx.Input)))
+	repoOperation := deriveRepoOpFromMCPTool(toolName)
+	if repoOperation == "" {
+		repoOperation = deriveRepoOpFromCLICommand(firstNonEmpty(resultCommand, hctx.ToolArgs, extractCommandFromStdin(hctx.Input)))
 	}
-	if repoOp == "" {
+	if repoOperation == "" {
 		return
 	}
 	phase := "starting"
@@ -44516,7 +44516,7 @@ func logRepoOperationHook(hctx HookContext, result interface{}, operation string
 	second := firstNonEmpty(findNestedStringValue(inputMap, "second"), hctx.Second, t.UTC().Format(time.RFC3339))
 	checkpoint := resolveEventCheckpointID(extractCheckpointSHAFromInput(hctx.Input))
 	eventJSON, _ := json.Marshal(map[string]interface{}{
-		"kind":        "agent." + repoOp + "." + phase,
+		"kind":        "agent." + repoOperation + "." + phase,
 		"client":      hctx.Client,
 		"session":     resolveEventSessionID(sessionID),
 		"second":      resolveEventSecondID(second),

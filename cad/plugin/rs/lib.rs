@@ -1077,7 +1077,7 @@ mod interaction {
     ///
     /// The remaining `box.*` rubber-band helpers and selection-driven actions (used only by box's
     /// advanced cube/3-point/center sub-modes and by selection-based utilities) are a documented
-    /// follow-up; they no-op here rather than error.
+    /// follow-up; they no-operation here rather than error.
     fn run_named_action_effect(
         context: &mut HashMap<String, Value>,
         payload: Option<&Value>,
@@ -2330,7 +2330,7 @@ use cad_document::{
     cad_all_objects, cad_find_object_pane, cad_pane_from_model_definition_id, cad_pane_geometry, cad_pane_objects,
     cad_pane_camera,
     CadCamera, CadGeometry, CadNode, CadObject,
-    CadObjectPatch, CadOp, CadPaneId, CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene,
+    CadObjectPatch, CadOperation, CadPaneId, CadPrimitiveSlot, CadReference, CadReferencePatch, CadScene,
     CAD_DOCUMENT_SCHEMA, CAD_PLAY_DOCUMENT_SCHEMA,
 };
 use geometry_import::{
@@ -3046,7 +3046,7 @@ fn ensure_object_solid_handle(kernel: &mut dyn BrepKernel, object: &mut CadObjec
 /// @emoji 🔁 Derives the target-pane objects for transformation `qid` and returns the operations
 /// that both replace the target pane and refocus onto the target model definition — dispatched by
 /// the caller through the store (no direct mutation).
-fn apply_transformation_ops(document: &CadScene, qid: &str) -> Vec<CadOp> {
+fn apply_transformation_operations(document: &CadScene, qid: &str) -> Vec<CadOperation> {
     let Some((model_definition_id, transformation_id)) = qid.rsplit_once('.') else {
         return Vec::new();
     };
@@ -3091,11 +3091,11 @@ fn apply_transformation_ops(document: &CadScene, qid: &str) -> Vec<CadOp> {
         }
     };
     vec![
-        CadOp::SetPaneObjects {
+        CadOperation::SetPaneObjects {
             pane: target_pane,
             objects,
         },
-        CadOp::SetActiveModelDefinition {
+        CadOperation::SetActiveModelDefinition {
             model_definition_id: spec.target_model_definition_id.into(),
         },
     ]
@@ -4821,17 +4821,17 @@ fn quat_normalize(q: [f64; 4]) -> [f64; 4] {
 /// fields (label/typology/hidden/locked) use the same patch for every object; `origin.<axis>`/`scale.<axis>`/
 /// `orientation.<axis>` read each object's own current component so `value` (absolute) or `delta` (relative)
 /// applies per-object, preserving each object's other axes and any offset across a multi-select.
-fn patch_objects_ops(
+fn patch_objects_operations(
     document: &CadScene,
     object_ids: &[String],
     field: &str,
     value: Option<&Value>,
     delta: Option<&Value>,
-) -> Vec<CadOp> {
+) -> Vec<CadOperation> {
     if let Some(patch) = object_patch_from_field(field, value) {
         return object_ids
             .iter()
-            .filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadOp::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() }))
+            .filter_map(|object_id| cad_find_object_pane(document, object_id).map(|pane| CadOperation::PatchObject { pane, object_id: object_id.clone(), patch: patch.clone() }))
             .collect();
     }
     let mut operations = Vec::new();
@@ -4857,7 +4857,7 @@ fn patch_objects_ops(
         } else {
             continue;
         };
-        operations.push(CadOp::PatchObject { pane, object_id: object_id.clone(), patch });
+        operations.push(CadOperation::PatchObject { pane, object_id: object_id.clone(), patch });
     }
     operations
 }
@@ -4896,11 +4896,11 @@ fn make_object_for_typology(typology: &str, label_count: usize, pane: CadPaneId)
 }
 
 /// Commits `session` if it satisfies `can_commit`, returning the `AddObject` operation and clearing
-/// the session runtime state. Returns the ops (empty when no commit happened) — used by both the
-/// direct-event and keyed-transition REPL paths in `engagement_submit_ops` (a state reached via
+/// the session runtime state. Returns the operations (empty when no commit happened) — used by both the
+/// direct-event and keyed-transition REPL paths in `engagement_submit_operations` (a state reached via
 /// either path can be commit-ready, e.g. box's explicit `confirm` step reachable via a keyed
 /// transition).
-fn try_commit_session_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementSession) -> Vec<CadOp> {
+fn try_commit_session_operations(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId, session: &CadEngagementSession) -> Vec<CadOperation> {
     if !can_commit(session) {
         return Vec::new();
     }
@@ -4919,12 +4919,12 @@ fn try_commit_session_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pan
     runtime.last_finalized_interaction_id = Some(interaction_id);
     runtime.engagement_session = None;
     runtime.engagement_step = "Idle".into();
-    vec![CadOp::AddObject { pane, object }]
+    vec![CadOperation::AddObject { pane, object }]
 }
 
 /// @emoji ⌨️ Advances the engagement REPL for the current `engagement_input`, mutating runtime
 /// session state and returning any commit operations produced.
-fn engagement_submit_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadOp> {
+fn engagement_submit_operations(document: &CadScene, runtime: &mut CadPlayRuntime, pane: CadPaneId) -> Vec<CadOperation> {
     let input = runtime.engagement_input.trim().to_string();
     if input.is_empty() {
         runtime.engagement_step = "Idle".into();
@@ -4941,7 +4941,7 @@ fn engagement_submit_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane
             if apply_event(session, &event_kind, payload.as_ref()) {
                 runtime.engagement_step = session.state.clone();
                 let session_snapshot = session.clone();
-                return try_commit_session_ops(document, runtime, pane, &session_snapshot);
+                return try_commit_session_operations(document, runtime, pane, &session_snapshot);
             }
             for transition in keyed_transitions(session) {
                 if transition.key.eq_ignore_ascii_case(&input) || transition.event_kind.eq_ignore_ascii_case(&input) {
@@ -4949,7 +4949,7 @@ fn engagement_submit_ops(document: &CadScene, runtime: &mut CadPlayRuntime, pane
                         runtime.engagement_step = session.state.clone();
                         runtime.engagement_input.clear();
                         let session_snapshot = session.clone();
-                        return try_commit_session_ops(document, runtime, pane, &session_snapshot);
+                        return try_commit_session_operations(document, runtime, pane, &session_snapshot);
                     }
                 }
             }
@@ -4991,7 +4991,7 @@ fn start_interaction_session(runtime: &mut CadPlayRuntime, pane: CadPaneId, inte
 
 //#region 🔖CadPlayApp
 /// @emoji 📐 The CAD play app. Document content lives in the wrapping `VcsDocumentApp`'s
-/// `DocumentVcsStore<CadScene, CadOp>`; only ephemeral view-state (selection, hover, engagement
+/// `DocumentVcsStore<CadScene, CadOperation>`; only ephemeral view-state (selection, hover, engagement
 /// session, transform utility, sun) lives here on `runtime`. History (undo/redo/checkpoint) is
 /// intercepted and dispatched by the wrapper — no manual arms or keybindings.
 #[derive(Default)]
@@ -5001,7 +5001,7 @@ struct CadPlayApp {
 
 impl DocumentApp for CadPlayApp {
     type Projection = CadScene;
-    type Op = CadOp;
+    type Operation = CadOperation;
 
     fn app_id(&self) -> &str {
         CAD_PLAY_APP_ID
@@ -5021,7 +5021,7 @@ impl DocumentApp for CadPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, CadScene>,
         _view_state: &ViewState,
-    ) -> ActionEmit<CadOp> {
+    ) -> ActionEmit<CadOperation> {
         let document = doc.projection;
         match action {
             "setActiveExample" => {
@@ -5043,7 +5043,7 @@ impl DocumentApp for CadPlayApp {
                     return ActionEmit::default();
                 };
                 self.runtime = runtime;
-                ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }])
+                ActionEmit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }])
             }
             SET_ACTIVE_UTILITY_ACTION_ID => {
                 // 🧰 Switching the host-owned active utility (`ViewState::active_utility_id`) is a pure
@@ -5087,7 +5087,7 @@ impl DocumentApp for CadPlayApp {
                             .map(cad_pane_id_from_surface_id)
                             .unwrap_or(CadPaneId::Shape);
                         return ActionEmit {
-                            ops: vec![CadOp::SetCamera { pane, camera: parsed }],
+                            operations: vec![CadOperation::SetCamera { pane, camera: parsed }],
                             coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
                             ..Default::default()
                         };
@@ -5111,7 +5111,7 @@ impl DocumentApp for CadPlayApp {
                 }
                 cad_camera_set_projection_config(&mut camera, &config);
                 ActionEmit {
-                    ops: vec![CadOp::SetCamera { pane, camera }],
+                    operations: vec![CadOperation::SetCamera { pane, camera }],
                     coalesce_key: Some(format!("camera:{}", pane.model_definition_id())),
                     ..Default::default()
                 }
@@ -5124,7 +5124,7 @@ impl DocumentApp for CadPlayApp {
                 let dx = args.and_then(|value| value.get("dx")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dy = args.and_then(|value| value.get("dy")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let dz = args.and_then(|value| value.get("dz")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit::amend(vec![CadOp::TranslateObjects { object_ids: ids, dx, dy, dz }], "gumball.translate")
+                ActionEmit::amend(vec![CadOperation::TranslateObjects { object_ids: ids, dx, dy, dz }], "gumball.translate")
             }
             "rotateSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
@@ -5135,7 +5135,7 @@ impl DocumentApp for CadPlayApp {
                 let ay = args.and_then(|value| value.get("ay")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let az = args.and_then(|value| value.get("az")).and_then(|value| value.as_f64()).unwrap_or(0.0);
                 let angle = args.and_then(|value| value.get("angle")).and_then(|value| value.as_f64()).unwrap_or(0.0);
-                ActionEmit::amend(vec![CadOp::RotateObjects { object_ids: ids, ax, ay, az, angle }], "gumball.rotate")
+                ActionEmit::amend(vec![CadOperation::RotateObjects { object_ids: ids, ax, ay, az, angle }], "gumball.rotate")
             }
             "scaleSelection" => {
                 let ids = mesh_selection_ids(args, &self.runtime.selected_object_ids);
@@ -5145,7 +5145,7 @@ impl DocumentApp for CadPlayApp {
                 let sx = args.and_then(|value| value.get("sx")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sy = args.and_then(|value| value.get("sy")).and_then(|value| value.as_f64()).unwrap_or(1.0);
                 let sz = args.and_then(|value| value.get("sz")).and_then(|value| value.as_f64()).unwrap_or(1.0);
-                ActionEmit::amend(vec![CadOp::ScaleObjects { object_ids: ids, sx, sy, sz }], "gumball.scale")
+                ActionEmit::amend(vec![CadOperation::ScaleObjects { object_ids: ids, sx, sy, sz }], "gumball.scale")
             }
             "addObject" => {
                 let typology = args
@@ -5156,7 +5156,7 @@ impl DocumentApp for CadPlayApp {
                     .unwrap_or(CadPaneId::Shape);
                 let object = make_object_for_typology(typology, cad_pane_objects(document, pane).len(), pane);
                 self.runtime.selected_object_ids = vec![object.id.clone()];
-                ActionEmit::ops(vec![CadOp::AddObject { pane, object }])
+                ActionEmit::operations(vec![CadOperation::AddObject { pane, object }])
             }
             "patchObject" | "patchSelection" => {
                 let object_ids: Vec<String> = if action == "patchSelection" {
@@ -5175,7 +5175,7 @@ impl DocumentApp for CadPlayApp {
                     .unwrap_or("");
                 let value = args.and_then(|value| value.get("value"));
                 let delta = args.and_then(|value| value.get("delta"));
-                ActionEmit::ops(patch_objects_ops(document, &object_ids, field, value, delta))
+                ActionEmit::operations(patch_objects_operations(document, &object_ids, field, value, delta))
             }
             "deleteObject" => {
                 let object_id = args
@@ -5184,7 +5184,7 @@ impl DocumentApp for CadPlayApp {
                     .unwrap_or("");
                 if let Some(pane) = cad_find_object_pane(document, object_id) {
                     self.runtime.selected_object_ids.retain(|id| id != object_id);
-                    return ActionEmit::ops(vec![CadOp::RemoveObject { pane, object_id: object_id.into() }]);
+                    return ActionEmit::operations(vec![CadOperation::RemoveObject { pane, object_id: object_id.into() }]);
                 }
                 ActionEmit::default()
             }
@@ -5200,7 +5200,7 @@ impl DocumentApp for CadPlayApp {
                     duplicate.id = next_cad_id("object");
                     duplicate.label = format!("{} copy", duplicate.label);
                     self.runtime.selected_object_ids = vec![duplicate.id.clone()];
-                    return ActionEmit::ops(vec![CadOp::AddObject { pane, object: duplicate }]);
+                    return ActionEmit::operations(vec![CadOperation::AddObject { pane, object: duplicate }]);
                 }
                 ActionEmit::default()
             }
@@ -5210,7 +5210,7 @@ impl DocumentApp for CadPlayApp {
                 let label = format!("Node {}", document.nodes.len() + 1);
                 let node = CadNode { id: id.clone(), label, kind: kind.into() };
                 self.runtime.selected_node_ids = vec![id];
-                ActionEmit::ops(vec![CadOp::AddNode { node }])
+                ActionEmit::operations(vec![CadOperation::AddNode { node }])
             }
             "renameNode" => {
                 let node_id = args.and_then(|value| value.get("nodeId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -5218,7 +5218,7 @@ impl DocumentApp for CadPlayApp {
                 if node_id.is_empty() || label.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::ops(vec![CadOp::RenameNode { node_id: node_id.into(), label: label.into() }])
+                ActionEmit::operations(vec![CadOperation::RenameNode { node_id: node_id.into(), label: label.into() }])
             }
             "worldSelect" => {
                 let merge = args.and_then(|value| value.get("merge")).and_then(|value| value.as_str()).unwrap_or("replace");
@@ -5400,7 +5400,7 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|value| value.get("modelDefinitionId"))
                     .and_then(|value| value.as_str())
                 {
-                    return ActionEmit::ops(vec![CadOp::SetActiveModelDefinition {
+                    return ActionEmit::operations(vec![CadOperation::SetActiveModelDefinition {
                         model_definition_id: model_definition_id.into(),
                     }]);
                 }
@@ -5411,7 +5411,7 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|value| value.get("qid"))
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
-                ActionEmit::ops(apply_transformation_ops(document, qid))
+                ActionEmit::operations(apply_transformation_operations(document, qid))
             }
             "saveSelected" => {
                 let view = CadPlayView { document: document.clone(), runtime: self.runtime.clone() };
@@ -5462,7 +5462,7 @@ impl DocumentApp for CadPlayApp {
                 let Some(payload) = payload else { return ActionEmit::default() };
                 if let Some(object) = import_cad_object_by_extension(&name, &payload) {
                     self.runtime.selected_object_ids = vec![object.id.clone()];
-                    return ActionEmit::ops(vec![CadOp::AddObject { pane: CadPaneId::Shape, object }]);
+                    return ActionEmit::operations(vec![CadOperation::AddObject { pane: CadPaneId::Shape, object }]);
                 }
                 let payload = match payload {
                     Value::String(text) => serde_json::from_str::<Value>(&text).unwrap_or(Value::String(text)),
@@ -5474,7 +5474,7 @@ impl DocumentApp for CadPlayApp {
                 if let Some(scene) = scene {
                     self.runtime.selected_object_ids.clear();
                     self.runtime.engagement_session = None;
-                    return ActionEmit::ops(vec![CadOp::SetScene { scene: Box::new(scene) }]);
+                    return ActionEmit::operations(vec![CadOperation::SetScene { scene: Box::new(scene) }]);
                 }
                 ActionEmit::default()
             }
@@ -5556,7 +5556,7 @@ impl DocumentApp for CadPlayApp {
                     }),
                 };
                 match patch {
-                    Some(patch) => ActionEmit::ops(vec![CadOp::PatchReference {
+                    Some(patch) => ActionEmit::operations(vec![CadOperation::PatchReference {
                         model_definition_id: model_definition_id.into(),
                         reference_id: reference_id.into(),
                         patch,
@@ -5582,7 +5582,7 @@ impl DocumentApp for CadPlayApp {
                     .and_then(|value| value.as_str())
                     .map(cad_pane_id_from_suffix)
                     .unwrap_or(CadPaneId::Shape);
-                ActionEmit::ops(engagement_submit_ops(document, &mut self.runtime, pane))
+                ActionEmit::operations(engagement_submit_operations(document, &mut self.runtime, pane))
             }
             "engagementPossibleSelect" => {
                 let pane = args
@@ -5642,7 +5642,7 @@ impl DocumentApp for CadPlayApp {
                     if apply_event(session, "pointer.down", point) {
                         self.runtime.engagement_step = session.state.clone();
                         let snapshot = session.clone();
-                        return ActionEmit::ops(try_commit_session_ops(document, &mut self.runtime, pane, &snapshot));
+                        return ActionEmit::operations(try_commit_session_operations(document, &mut self.runtime, pane, &snapshot));
                     }
                 }
                 ActionEmit::default()
@@ -6028,18 +6028,18 @@ mod tests {
 
     /// 🕹️ Drives one action against a bare `CadPlayApp` (unwrapped) so tests can inspect ephemeral
     /// runtime view-state and the emitted operations directly.
-    fn drive(app: &mut CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOp> {
+    fn drive(app: &mut CadPlayApp, scene: &CadScene, action: &str, args: Option<Value>) -> ActionEmit<CadOperation> {
         let history = empty_history();
         let doc = DocumentView { projection: scene, history: &history };
         app.handle_action(action, args.as_ref(), &doc, &ViewState::default())
     }
 
-    /// 🧮 Folds a list of `CadOp`s onto a scene via the core `Operation`/`OperationDiff` impls —
-    /// mirrors what the wrapping `VcsDocumentApp` store does when it dispatches the emitted ops.
-    fn apply_ops(scene: &CadScene, ops: &[CadOp]) -> CadScene {
+    /// 🧮 Folds a list of `CadOperation`s onto a scene via the core `Operation`/`OperationDiff` impls —
+    /// mirrors what the wrapping `VcsDocumentApp` store does when it dispatches the emitted operations.
+    fn apply_operations(scene: &CadScene, operations: &[CadOperation]) -> CadScene {
         let mut next = scene.clone();
-        for op in ops {
-            next = op.diff(&next).apply(&next);
+        for operation in operations {
+            next = operation.diff(&next).apply(&next);
         }
         next
     }
@@ -6688,8 +6688,8 @@ mod tests {
         let mut app = CadPlayApp::default();
         let scene = default_document();
         let emit = drive(&mut app, &scene, "addObject", Some(json!({ "typology": "building.building.column" })));
-        assert_eq!(emit.ops.len(), 1);
-        let next = apply_ops(&scene, &emit.ops);
+        assert_eq!(emit.operations.len(), 1);
+        let next = apply_operations(&scene, &emit.operations);
         assert!(
             next.objects.iter().any(|object| object.typology == "building.building.column")
                 || next.building_objects.iter().any(|object| object.typology == "building.building.column")
@@ -6707,7 +6707,7 @@ mod tests {
     }
 
     #[test]
-    fn focus_model_definition_emits_document_op() {
+    fn focus_model_definition_emits_document_operation() {
         let mut app = new_app();
         app.handle_action("focusModelDefinition", Some(&json!({ "modelDefinitionId": "aec.building" })), &ViewState::default(), &meta("local"))
             .expect("focus model definition");
@@ -6720,8 +6720,8 @@ mod tests {
         let mut scene = default_document();
         scene.objects = vec![make_object_for_typology("spatial.shape.primitive.box", 0, CadPaneId::Shape)];
         let emit = drive(&mut app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        assert!(!emit.ops.is_empty());
-        let next = apply_ops(&scene, &emit.ops);
+        assert!(!emit.operations.is_empty());
+        let next = apply_operations(&scene, &emit.operations);
         assert!(!next.energy_objects.is_empty());
         assert!(next.energy_objects.iter().any(|object| object.typology.starts_with("energy.energy.")));
         assert_eq!(next.active_model_definition_id, "aec.building.energy");
@@ -6738,7 +6738,7 @@ mod tests {
         scene.objects[0].typology = "spatial.shape.primitive.box".into();
         scene.objects[0].label = "live-shape-only".into();
         let emit = drive(&mut app, &scene, "applyTransformation", Some(json!({ "qid": "spatial.shape.from_geometry" })));
-        let next = apply_ops(&scene, &emit.ops);
+        let next = apply_operations(&scene, &emit.operations);
         assert!(!next.energy_objects.is_empty());
         assert!(
             next.energy_objects.iter().all(|object| !fixture_energy_ids.contains(&object.id)),
@@ -6752,7 +6752,7 @@ mod tests {
         let scene = default_document();
         app.runtime.selected_object_ids = vec!["object-box-1".into()];
         let emit = drive(&mut app, &scene, "saveSelected", None);
-        assert!(emit.ops.is_empty(), "export must not mutate the document");
+        assert!(emit.operations.is_empty(), "export must not mutate the document");
         assert_eq!(emit.effects.len(), 1);
         match &emit.effects[0] {
             HostEffect::DownloadMediaExport { filename, data, .. } => {
@@ -6788,14 +6788,14 @@ mod tests {
     }
 
     #[test]
-    fn world_pointer_move_updates_live_preview_without_committing_or_emitting_ops() {
+    fn world_pointer_move_updates_live_preview_without_committing_or_emitting_operations() {
         let mut app = CadPlayApp::default();
         let scene = default_document();
         app.runtime.engagement_input = "b".into();
         drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
 
         let emit = drive(&mut app, &scene, "worldPointerMove", Some(json!({ "pane": "shape", "position": [3.0, 4.0, 0.0] })));
-        assert!(emit.ops.is_empty(), "a pointer move must not emit any document operation");
+        assert!(emit.operations.is_empty(), "a pointer move must not emit any document operation");
         let session = app.runtime.engagement_session.as_ref().expect("session still active");
         assert_eq!(session.state, "first_corner", "pointer.move must not change state");
         assert_eq!(session.context.get("cursor"), Some(&json!([3.0, 4.0, 0.0])));
@@ -6816,7 +6816,7 @@ mod tests {
 
         for position in [json!([0.0, 0.0, 0.0]), json!([2.0, 3.0, 0.0])] {
             let emit = drive(&mut app, &scene, "worldPointerDown", Some(json!({ "pane": "shape", "position": position })));
-            scene = apply_ops(&scene, &emit.ops);
+            scene = apply_operations(&scene, &emit.operations);
         }
 
         app.runtime.engagement_input = "SetHeight2.5".into();
@@ -6826,7 +6826,7 @@ mod tests {
         // explicit `confirm` (Enter) is needed to reach `ready`, box's commit.fromStates.
         app.runtime.engagement_input = "Confirm".into();
         let emit = drive(&mut app, &scene, "engagementSubmit", Some(json!({ "pane": "shape" })));
-        scene = apply_ops(&scene, &emit.ops);
+        scene = apply_operations(&scene, &emit.operations);
         assert!(app.runtime.engagement_session.is_none(), "box should have committed");
         assert_eq!(app.runtime.last_finalized_interaction_id.as_deref(), Some("primitive.box"));
 
@@ -6890,8 +6890,8 @@ mod tests {
             "importCadFile",
             Some(json!({ "payload": file_text, "name": "cad.spatial.json" })),
         );
-        assert!(!emit.ops.is_empty(), "importCadFile must emit a SetScene op for a spatial JSON string payload");
-        let next = apply_ops(&scene, &emit.ops);
+        assert!(!emit.operations.is_empty(), "importCadFile must emit a SetScene operation for a spatial JSON string payload");
+        let next = apply_operations(&scene, &emit.operations);
         assert_eq!(next.objects.len(), 1);
         assert_eq!(next.objects[0].id, "object-loaded");
     }
@@ -6911,8 +6911,8 @@ mod tests {
             "importCadFile",
             Some(json!({ "payload": obj_data_url, "name": "triangle.obj" })),
         );
-        assert!(!emit.ops.is_empty(), "importCadFile must emit an AddObject op for an OBJ payload");
-        let next = apply_ops(&scene, &emit.ops);
+        assert!(!emit.operations.is_empty(), "importCadFile must emit an AddObject operation for an OBJ payload");
+        let next = apply_operations(&scene, &emit.operations);
         assert_eq!(next.objects.len(), scene.objects.len() + 1);
         assert!(next.objects.last().unwrap().solid_handle.is_some());
     }
@@ -6994,7 +6994,7 @@ mod tests {
 
     //#region 🔖Convergence
     /// 🧪 The definitional merge proof: two instances start from the SAME base projection, apply
-    /// DISJOINT edits (A translates object A, B patches object B's label), and after exchanging ops
+    /// DISJOINT edits (A translates object A, B patches object B's label), and after exchanging operations
     /// over a `MemoryBackbone` both converge to contain BOTH edits — impossible under whole-document
     /// `setDocument` snapshots.
     #[test]
@@ -7007,7 +7007,7 @@ mod tests {
         ];
         let object_a = base.objects[0].id.clone();
         let object_b = base.objects[1].id.clone();
-        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<CadScene, CadOp>(
+        let base_envelope = serde_json::to_string(&vcs::create_document_vcs_envelope::<CadScene, CadOperation>(
             CAD_DOCUMENT_SCHEMA,
             "cad-play",
             base,
@@ -7043,7 +7043,7 @@ mod tests {
             )
             .expect("b renames object b");
 
-        // A neutral history command always pumps inbound ops before doing its own work.
+        // A neutral history command always pumps inbound operations before doing its own work.
         instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-a")).expect("pump a");
         instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &meta("actor-b")).expect("pump b");
 
@@ -7072,11 +7072,11 @@ mod tests {
 
         let mut envelopes = Vec::new();
         for message in far.receive().expect("receive") {
-            if let BackboneMessage::Ops { envelopes: ops } = message {
-                envelopes.extend(ops);
+            if let BackboneMessage::Operations { envelopes: operations } = message {
+                envelopes.extend(operations);
             }
         }
-        assert!(!envelopes.is_empty(), "expected the applied op to flow onto the channel");
+        assert!(!envelopes.is_empty(), "expected the applied operation to flow onto the channel");
         let operations_json = serde_json::to_string(&envelopes).expect("serialize envelopes");
 
         let mut receiver = new_app();
@@ -7086,7 +7086,7 @@ mod tests {
         assert_eq!(
             receiver.projection().expect("projection").nodes.len(),
             nodes_before + 1,
-            "feeding the same op twice must not double-apply"
+            "feeding the same operation twice must not double-apply"
         );
     }
     //#endregion 🔖Convergence

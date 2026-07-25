@@ -12,6 +12,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
+gltf = { version = "1.4.1", default-features = false, features = ["utils"] }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 thiserror = "2.0.12"

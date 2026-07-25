@@ -226,7 +226,7 @@ pub fn instantiate(template: &Expr, bindings: &Bindings) -> Expr {
         Kind::Pow(base, exp) => Expr::pow(instantiate(base, bindings), instantiate(exp, bindings)),
         Kind::Fn(kind, args) => Expr::func(kind.clone(), args.iter().map(|a| instantiate(a, bindings)).collect()),
         Kind::Piecewise(cases) => Expr::from_kind_unchecked(Kind::Piecewise(cases.iter().map(|(v, c)| (instantiate(v, bindings), instantiate(c, bindings))).collect())),
-        Kind::Rel(op, a, b) => Expr::from_kind_unchecked(Kind::Rel(*op, instantiate(a, bindings), instantiate(b, bindings))),
+        Kind::Rel(operation, a, b) => Expr::from_kind_unchecked(Kind::Rel(*operation, instantiate(a, bindings), instantiate(b, bindings))),
         _ => template.clone(),
     }
 }

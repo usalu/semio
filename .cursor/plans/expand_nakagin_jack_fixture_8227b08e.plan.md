@@ -38,7 +38,7 @@ The nakagin graph is the shared default for **Jack play** and **Trinity Rewrite*
 | CREATE                       | `CREATE (n:Piece)` or `CREATE (a:Piece)-[:Connection]->(b:Piece)`                        |
 | SET                          | `SET a.label = '...'`, `a.name`, `a.x`, `a.y`                                            |
 | DELETE                       | `MATCH (n:Piece) WHERE n.name = '...' DELETE n`                                          |
-| MERGE                        | `MERGE (a:Piece)-[:Connection]->(b:Piece)` (no-op when edge exists; creates when absent) |
+| MERGE                        | `MERGE (a:Piece)-[:Connection]->(b:Piece)` (no-operation when edge exists; creates when absent) |
 
 Out of scope: `WITH`, `ORDER BY`, `LIMIT`, kindless patterns, edge filters in WHERE.
 
@@ -130,6 +130,6 @@ Extend existing test files only:
 
 ## Risk notes
 
-- **MERGE** matches structurally — example must use a pattern that is absent in the initial graph (spare→orphan edge) to show create behavior; when present, it is a no-op
+- **MERGE** matches structurally — example must use a pattern that is absent in the initial graph (spare→orphan edge) to show create behavior; when present, it is a no-operation
 - **DELETE** mutates the fixture in Jack play session — example targets `jack_prune` only
 - Do not rename/remove `b` or existing edge topology — rewrite LHS `a.name = 'b'` depends on it

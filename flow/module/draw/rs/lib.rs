@@ -147,7 +147,7 @@ fn module_registry() -> Registry {
 }
 // #endregion 🔖Helpers
 
-// #region 🔖ShapeOps
+// #region 🔖ShapeOperations
 struct ShapeRect;
 impl Operation for ShapeRect {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -213,9 +213,9 @@ impl Operation for ShapePolygon {
         })
     }
 }
-// #endregion 🔖ShapeOps
+// #endregion 🔖ShapeOperations
 
-// #region 🔖PathOps
+// #region 🔖PathOperations
 struct PathPolyline;
 impl Operation for PathPolyline {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -240,9 +240,9 @@ impl Operation for PathRect {
         })
     }
 }
-// #endregion 🔖PathOps
+// #endregion 🔖PathOperations
 
-// #region 🔖StyleOps
+// #region 🔖StyleOperations
 struct StyleFill;
 impl Operation for StyleFill {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -268,9 +268,9 @@ impl Operation for StyleStroke {
         })
     }
 }
-// #endregion 🔖StyleOps
+// #endregion 🔖StyleOperations
 
-// #region 🔖XformOps
+// #region 🔖XformOperations
 struct XformTranslate;
 impl Operation for XformTranslate {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -308,9 +308,9 @@ impl Operation for XformScale {
         })
     }
 }
-// #endregion 🔖XformOps
+// #endregion 🔖XformOperations
 
-// #region 🔖GroupOps
+// #region 🔖GroupOperations
 struct GroupMerge;
 impl Operation for GroupMerge {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -322,9 +322,9 @@ impl Operation for GroupMerge {
         })
     }
 }
-// #endregion 🔖GroupOps
+// #endregion 🔖GroupOperations
 
-// #region 🔖BoolOps
+// #region 🔖BoolOperations
 struct BoolUnion;
 impl Operation for BoolUnion {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -360,9 +360,9 @@ impl Operation for BoolIntersection {
         })
     }
 }
-// #endregion 🔖BoolOps
+// #endregion 🔖BoolOperations
 
-// #region 🔖TextOps
+// #region 🔖TextOperations
 struct DrawText;
 impl Operation for DrawText {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -376,9 +376,9 @@ impl Operation for DrawText {
         })
     }
 }
-// #endregion 🔖TextOps
+// #endregion 🔖TextOperations
 
-// #region 🔖GradientOps
+// #region 🔖GradientOperations
 struct GradientLinear;
 impl Operation for GradientLinear {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -394,9 +394,9 @@ impl Operation for GradientLinear {
         })
     }
 }
-// #endregion 🔖GradientOps
+// #endregion 🔖GradientOperations
 
-// #region 🔖ClipOps
+// #region 🔖ClipOperations
 struct ClipApply;
 impl Operation for ClipApply {
     fn evaluate(&self, input: &Dictionary) -> Result<Dictionary, EvalError> {
@@ -408,7 +408,7 @@ impl Operation for ClipApply {
         })
     }
 }
-// #endregion 🔖ClipOps
+// #endregion 🔖ClipOperations
 
 /// 📦 Registers all draw operators.
 pub fn register(registry: &mut Registry) {
@@ -766,7 +766,7 @@ pub fn trace_bitmap_json(width: u32, height: u32, mask: &[u8], threshold: f64, s
 }
 
 /// 🔀 Boolean-combines two path segment arrays.
-pub fn boolean_segments_json(a_json: &str, b_json: &str, op: &str) -> String {
+pub fn boolean_segments_json(a_json: &str, b_json: &str, operation: &str) -> String {
     let parse = |json: &str| -> Result<Vec<kernel_2d_engine::PathSegment>, DrawModuleError> {
         let parsed: serde_json::Value = serde_json::from_str(json)?;
         if let Some(error) = parsed.get("error").and_then(|v| v.as_str()) {
@@ -779,7 +779,7 @@ pub fn boolean_segments_json(a_json: &str, b_json: &str, op: &str) -> String {
         .lock()
         .ok()
         .map(|store| match (parse(a_json), parse(b_json)) {
-            (Ok(a), Ok(b)) => match block_on(store.boolean_segments(&a, &b, op)) {
+            (Ok(a), Ok(b)) => match block_on(store.boolean_segments(&a, &b, operation)) {
                 Ok(segments) => serde_json::json!({ "segments": segments }).to_string(),
                 Err(error) => serde_json::json!({ "error": error.to_string() }).to_string(),
             },

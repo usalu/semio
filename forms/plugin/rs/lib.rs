@@ -2,7 +2,7 @@
 
 use forms::{
     can_advance, default_value_for_question, empty_forms_projection, initial_try_values, is_extension_question_kind,
-    visible_questions, FormOp, FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField,
+    visible_questions, FormOperation, FormQuestion, FormQuestionOption, FormSpec, FormStep, FormVectorField,
     FORM_BUILTIN_KINDS, FORMS_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{SurfaceKind,
@@ -190,23 +190,23 @@ fn reset_try_runtime(runtime: &mut FormsPlayRuntime) {
     runtime.current_step_index = 0;
 }
 
-/// ✏️ Emits the ops that replace the current form spec's title + steps with those of `next` — a
+/// ✏️ Emits the operations that replace the current form spec's title + steps with those of `next` — a
 /// legitimate whole-document swap for import/example-switch, expressed granularly through the
-/// existing `FormOp` vocabulary (remove every current step, retitle, re-add the new steps) so it
+/// existing `FormOperation` vocabulary (remove every current step, retitle, re-add the new steps) so it
 /// still records a true inverse.
-fn replace_spec_ops(current: &FormSpec, next: &FormSpec) -> Vec<FormOp> {
-    let mut ops: Vec<FormOp> = current
+fn replace_spec_operations(current: &FormSpec, next: &FormSpec) -> Vec<FormOperation> {
+    let mut operations: Vec<FormOperation> = current
         .steps
         .iter()
-        .map(|step| FormOp::RemoveStep { step_id: step.id.clone() })
+        .map(|step| FormOperation::RemoveStep { step_id: step.id.clone() })
         .collect();
     if next.title != current.title {
-        ops.push(FormOp::UpdateProtocol { title: next.title.clone() });
+        operations.push(FormOperation::UpdateProtocol { title: next.title.clone() });
     }
     for step in &next.steps {
-        ops.push(FormOp::AddStep { step: step.clone(), index: None });
+        operations.push(FormOperation::AddStep { step: step.clone(), index: None });
     }
-    ops
+    operations
 }
 
 struct QuestionLocation {
@@ -511,18 +511,18 @@ fn resolve_question_insert_index(spec: &FormSpec, step_id: &str, target_id: &str
     })
 }
 
-/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock` op
+/// ✏️ Locates `question_id` in `spec`, applies `mutate` to a clone, and returns the `UpdateBlock` operation
 /// that records the edit — the single seam every inspector patch flows through. Returns `None` if the
 /// question no longer exists.
-fn update_block_op(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormOp> {
+fn update_block_operation(spec: &FormSpec, question_id: &str, mutate: impl FnOnce(&mut FormQuestion)) -> Option<FormOperation> {
     let location = find_question_location(spec, question_id)?;
     let mut question = location.question;
     mutate(&mut question);
-    Some(FormOp::UpdateBlock { step_id: location.step_id, block: question })
+    Some(FormOperation::UpdateBlock { step_id: location.step_id, block: question })
 }
 
-fn patch_question_field(spec: &FormSpec, question_id: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| match field {
+fn patch_question_field(spec: &FormSpec, question_id: &str, field: &str, raw_value: &Value) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| match field {
         "label" => question.label = raw_value.as_str().unwrap_or("").to_string(),
         "kind" => question.kind = raw_value.as_str().unwrap_or("text").to_string(),
         "description" => question.description = raw_value.as_str().map(str::to_string),
@@ -542,8 +542,8 @@ fn patch_question_field(spec: &FormSpec, question_id: &str, field: &str, raw_val
     })
 }
 
-fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| {
+fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str, field: &str, raw_value: &Value) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         if let Some(option) = options.iter_mut().find(|entry| entry.value == option_value) {
             if field == "label" {
@@ -554,25 +554,25 @@ fn patch_question_option(spec: &FormSpec, question_id: &str, option_value: &str,
     })
 }
 
-fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormOp> {
+fn add_question_option(spec: &FormSpec, question_id: &str, label: &str) -> Option<FormOperation> {
     let value = create_form_id("opt");
-    update_block_op(spec, question_id, |question| {
+    update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.push(FormQuestionOption { value, label: label.into() });
         question.options = Some(options);
     })
 }
 
-fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| {
+fn remove_question_option(spec: &FormSpec, question_id: &str, option_value: &str) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| {
         let mut options = question.options.take().unwrap_or_default();
         options.retain(|entry| entry.value != option_value);
         question.options = Some(options);
     })
 }
 
-fn patch_vector_field(spec: &FormSpec, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| {
+fn patch_vector_field(spec: &FormSpec, question_id: &str, field_key: &str, field: &str, raw_value: &Value) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| {
         let mut fields = question.fields.take().unwrap_or_default();
         if let Some(entry) = fields.iter_mut().find(|item| item.key == field_key) {
             match field {
@@ -585,28 +585,28 @@ fn patch_vector_field(spec: &FormSpec, question_id: &str, field_key: &str, field
     })
 }
 
-fn add_vector_field(spec: &FormSpec, question_id: &str, key: &str) -> Option<FormOp> {
+fn add_vector_field(spec: &FormSpec, question_id: &str, key: &str) -> Option<FormOperation> {
     let location = find_question_location(spec, question_id)?;
     if location.question.fields.iter().flatten().any(|entry| entry.key == key) {
         return None;
     }
-    update_block_op(spec, question_id, |question| {
+    update_block_operation(spec, question_id, |question| {
         let mut fields = question.fields.take().unwrap_or_default();
         fields.push(FormVectorField { key: key.into(), label: Some(key.into()), value: Some(0.0) });
         question.fields = Some(fields);
     })
 }
 
-fn remove_vector_field(spec: &FormSpec, question_id: &str, field_key: &str) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| {
+fn remove_vector_field(spec: &FormSpec, question_id: &str, field_key: &str) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| {
         let mut fields = question.fields.take().unwrap_or_default();
         fields.retain(|entry| entry.key != field_key);
         question.fields = Some(fields);
     })
 }
 
-fn patch_building_component_param(spec: &FormSpec, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormOp> {
-    update_block_op(spec, question_id, |question| {
+fn patch_building_component_param(spec: &FormSpec, question_id: &str, param_key: &str, raw_value: &Value) -> Option<FormOperation> {
+    update_block_operation(spec, question_id, |question| {
         let mut params = question.params.take().unwrap_or_else(|| json!({}));
         if let Some(map) = params.as_object_mut() {
             map.insert(param_key.into(), raw_value.clone());
@@ -1606,7 +1606,7 @@ struct FormsPlayApp {
 
 impl DocumentApp for FormsPlayApp {
     type Projection = FormSpec;
-    type Op = FormOp;
+    type Operation = FormOperation;
 
     fn app_id(&self) -> &str {
         FORMS_PLAY_APP_ID
@@ -1626,10 +1626,10 @@ impl DocumentApp for FormsPlayApp {
         args: Option<&Value>,
         doc: &DocumentView<'_, FormSpec>,
         _view_state: &ViewState,
-    ) -> ActionEmit<FormOp> {
+    ) -> ActionEmit<FormOperation> {
         let spec = doc.projection;
         match action {
-            // 👁️ View actions — mutate ephemeral runtime, emit no ops.
+            // 👁️ View actions — mutate ephemeral runtime, emit no operations.
             "setSelection" => {
                 self.runtime.selected_ids = selection_ids(args);
                 ActionEmit::default()
@@ -1702,7 +1702,7 @@ impl DocumentApp for FormsPlayApp {
                 ActionEmit::default()
             }
             "submit" => ActionEmit::default(),
-            // ✏️ Operations — read the current spec, emit typed ops with a true inverse.
+            // ✏️ Operations — read the current spec, emit typed operations with a true inverse.
             "addStep" => {
                 let step = FormStep {
                     id: create_form_id("step"),
@@ -1711,7 +1711,7 @@ impl DocumentApp for FormsPlayApp {
                     blocks: Vec::new(),
                 };
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::AddStep { step, index: None }])
+                ActionEmit::operations(vec![FormOperation::AddStep { step, index: None }])
             }
             "patchStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1729,7 +1729,7 @@ impl DocumentApp for FormsPlayApp {
                     _ => return ActionEmit::default(),
                 };
                 self.runtime.try_values.clear();
-                ActionEmit::amend(vec![FormOp::UpdateStep { step }], format!("patch-step:{step_id}:{field}"))
+                ActionEmit::amend(vec![FormOperation::UpdateStep { step }], format!("patch-step:{step_id}:{field}"))
             }
             "removeStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1744,7 +1744,7 @@ impl DocumentApp for FormsPlayApp {
                     .collect();
                 self.runtime.selected_ids.retain(|id| !removed_ids.contains(id));
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::RemoveStep { step_id: step_id.into() }])
+                ActionEmit::operations(vec![FormOperation::RemoveStep { step_id: step_id.into() }])
             }
             "moveStep" => {
                 let step_id = args.and_then(|value| value.get("stepId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1753,12 +1753,12 @@ impl DocumentApp for FormsPlayApp {
                     return ActionEmit::default();
                 }
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::MoveStep { step_id: step_id.into(), index }])
+                ActionEmit::operations(vec![FormOperation::MoveStep { step_id: step_id.into(), index }])
             }
             "updateForm" | "updateProtocol" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 ActionEmit::amend(
-                    vec![FormOp::UpdateProtocol { title: Some(title.to_string()).filter(|title| !title.is_empty()) }],
+                    vec![FormOperation::UpdateProtocol { title: Some(title.to_string()).filter(|title| !title.is_empty()) }],
                     "update-protocol",
                 )
             }
@@ -1775,7 +1775,7 @@ impl DocumentApp for FormsPlayApp {
                 let question = default_question_for_kind(kind, create_form_id("q"));
                 self.runtime.selected_ids = vec![question.id.clone()];
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index: None }])
+                ActionEmit::operations(vec![FormOperation::AddBlock { step_id, block: question, index: None }])
             }
             "removeQuestion" | "removeBlock" => {
                 let question_id = args
@@ -1787,7 +1787,7 @@ impl DocumentApp for FormsPlayApp {
                 };
                 self.runtime.selected_ids.retain(|id| id != question_id);
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::RemoveBlock {
+                ActionEmit::operations(vec![FormOperation::RemoveBlock {
                     step_id: location.step_id,
                     block_id: question_id.into(),
                 }])
@@ -1807,7 +1807,7 @@ impl DocumentApp for FormsPlayApp {
                 if question_ids.is_empty() || field.is_empty() {
                     return ActionEmit::default();
                 }
-                let ops: Vec<FormOp> = if field == "param" {
+                let operations: Vec<FormOperation> = if field == "param" {
                     let param_key = args
                         .and_then(|value| value.get("paramKey"))
                         .and_then(|value| value.as_str())
@@ -1823,10 +1823,10 @@ impl DocumentApp for FormsPlayApp {
                         .collect()
                 };
                 self.runtime.try_values.clear();
-                if ops.is_empty() {
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::amend(ops, format!("patch:{field}:{}", question_ids.join(",")))
+                ActionEmit::amend(operations, format!("patch:{field}:{}", question_ids.join(",")))
             }
             "patchQuestionOptions" => {
                 let question_ids: Vec<String> = args
@@ -1840,15 +1840,15 @@ impl DocumentApp for FormsPlayApp {
                     .unwrap_or("");
                 let field = args.and_then(|value| value.get("field")).and_then(|value| value.as_str()).unwrap_or("");
                 let raw_value = args.and_then(|value| value.get("value")).cloned().unwrap_or(Value::Null);
-                let ops: Vec<FormOp> = question_ids
+                let operations: Vec<FormOperation> = question_ids
                     .iter()
                     .filter_map(|question_id| patch_question_option(spec, question_id, option_value, field, &raw_value))
                     .collect();
                 self.runtime.try_values.clear();
-                if ops.is_empty() {
+                if operations.is_empty() {
                     return ActionEmit::default();
                 }
-                ActionEmit::amend(ops, format!("patch-option:{option_value}:{field}"))
+                ActionEmit::amend(operations, format!("patch-option:{option_value}:{field}"))
             }
             "addQuestionOption" => {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1857,7 +1857,7 @@ impl DocumentApp for FormsPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("New option");
                 match add_question_option(spec, question_id, label) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1868,7 +1868,7 @@ impl DocumentApp for FormsPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("");
                 match remove_question_option(spec, question_id, option_value) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1882,7 +1882,7 @@ impl DocumentApp for FormsPlayApp {
                     .cloned()
                     .unwrap_or(Value::Null);
                 match patch_vector_field(spec, question_id, field_key, field, &raw_value) {
-                    Some(op) => ActionEmit::amend(vec![op], format!("patch-vector:{question_id}:{field_key}:{field}")),
+                    Some(operation) => ActionEmit::amend(vec![operation], format!("patch-vector:{question_id}:{field_key}:{field}")),
                     None => ActionEmit::default(),
                 }
             }
@@ -1893,7 +1893,7 @@ impl DocumentApp for FormsPlayApp {
                     .and_then(|value| value.as_str())
                     .unwrap_or("field");
                 match add_vector_field(spec, question_id, field_key) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1901,7 +1901,7 @@ impl DocumentApp for FormsPlayApp {
                 let question_id = args.and_then(|value| value.get("questionId")).and_then(|value| value.as_str()).unwrap_or("");
                 let field_key = args.and_then(|value| value.get("fieldKey")).and_then(|value| value.as_str()).unwrap_or("");
                 match remove_vector_field(spec, question_id, field_key) {
-                    Some(op) => ActionEmit::ops(vec![op]),
+                    Some(operation) => ActionEmit::operations(vec![operation]),
                     None => ActionEmit::default(),
                 }
             }
@@ -1926,7 +1926,7 @@ impl DocumentApp for FormsPlayApp {
                 let index = explicit_index
                     .unwrap_or_else(|| resolve_question_insert_index(spec, to_step_id, target_id, position).unwrap_or(0));
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::MoveBlock {
+                ActionEmit::operations(vec![FormOperation::MoveBlock {
                     block_id: question_id.into(),
                     from_step_id: source.step_id,
                     to_step_id: to_step_id.into(),
@@ -1950,7 +1950,7 @@ impl DocumentApp for FormsPlayApp {
                 let question = default_question_for_kind(kind, create_form_id("q"));
                 self.runtime.selected_ids = vec![question.id.clone()];
                 self.runtime.try_values.clear();
-                ActionEmit::ops(vec![FormOp::AddBlock { step_id, block: question, index }])
+                ActionEmit::operations(vec![FormOperation::AddBlock { step_id, block: question, index }])
             }
             "setSpecJson" => {
                 let Some(next) = args
@@ -1962,12 +1962,12 @@ impl DocumentApp for FormsPlayApp {
                 };
                 reset_try_runtime(&mut self.runtime);
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(replace_spec_ops(spec, &next))
+                ActionEmit::operations(replace_spec_operations(spec, &next))
             }
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let json_text = match example_id {
-                    "" => return ActionEmit::ops(replace_spec_ops(spec, &empty_forms_projection())),
+                    "" => return ActionEmit::operations(replace_spec_operations(spec, &empty_forms_projection())),
                     "building-component" => BUILDING_COMPONENT_EXAMPLE_JSON,
                     "default" => DEFAULT_EXAMPLE_JSON,
                     "onboarding" => ONBOARDING_EXAMPLE_JSON,
@@ -1978,7 +1978,7 @@ impl DocumentApp for FormsPlayApp {
                 };
                 reset_try_runtime(&mut self.runtime);
                 self.runtime.selected_ids.clear();
-                ActionEmit::ops(replace_spec_ops(spec, &next))
+                ActionEmit::operations(replace_spec_operations(spec, &next))
             }
             // 🐚 Shell action — download the current form spec as JSON.
             "exportFixture" => {
@@ -2130,7 +2130,7 @@ semio_framework_plugin::semio_plugin! {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use forms::apply_form_edit_op;
+    use forms::apply_form_edit_operation;
     use semio_framework_plugin::{testkit, PluginApp, VcsDocumentApp};
 
     fn new_app() -> VcsDocumentApp<FormsPlayApp> {
@@ -2460,7 +2460,7 @@ mod tests {
             description: None,
             blocks: Vec::new(),
         };
-        let next = apply_form_edit_op(&spec, &FormOp::AddStep { step, index: None });
+        let next = apply_form_edit_operation(&spec, &FormOperation::AddStep { step, index: None });
         assert_eq!(next.steps.len(), 2);
     }
 
@@ -2535,7 +2535,7 @@ mod tests {
     }
 
     /// 🧪 The definitional proof: two independent instances start from the same seeded document, apply
-    /// DISJOINT edits (A adds a question to the first step, B adds a whole new step), and exchanging ops
+    /// DISJOINT edits (A adds a question to the first step, B adds a whole new step), and exchanging operations
     /// over a backbone converges both sides onto the same projection — impossible under whole-document
     /// snapshots, where one side's write would clobber the other's.
     #[test]

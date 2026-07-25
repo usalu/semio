@@ -74,7 +74,7 @@ impl Rational {
         Self { numer: self.numer.abs_integer(), denom: self.denom.clone() }
     }
 
-    // #region 🔖FieldOps
+    // #region 🔖FieldOperations
     pub fn add(&self, rhs: &Self) -> Self {
         let numer = self.numer.mul(&Integer::from_natural(rhs.denom.clone())).add(&rhs.numer.mul(&Integer::from_natural(self.denom.clone())));
         let denom = self.denom.mul(&rhs.denom);
@@ -115,7 +115,7 @@ impl Rational {
             self.inv().map(|inv| Self::normalize(inv.numer.pow((-exp) as u64), inv.denom.pow((-exp) as u64)))
         }
     }
-    // #endregion 🔖FieldOps
+    // #endregion 🔖FieldOperations
 
     // #region 🔖Rounding
     pub fn floor(&self) -> Integer {

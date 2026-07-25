@@ -112,5 +112,5 @@ No `.tex` document changes are required: default behavior becomes "show everythi
 ## Verification
 
 1. Rebuild `mit-bestand/bericht/zwischenbericht` (`bun ./script.ts build` in `mit-bestand/bericht`) and confirm the Table-window TOC lists every section/subsection/subsubsection/paragraph/nested-`SemioNest`-paragraph with no entries missing.
-2. Run `bun print/script.ts test` (or the equivalent build for `report.content.tex` / `forschungsbericht.content.tex`) to confirm `\chapter` entries now appear in those templates' TOCs and nothing regresses/breaks the build (particularly the guarded `\chapter` wrap on `scrartcl`-based documents, which must remain a no-op there).
+2. Run `bun print/script.ts test` (or the equivalent build for `report.content.tex` / `forschungsbericht.content.tex`) to confirm `\chapter` entries now appear in those templates' TOCs and nothing regresses/breaks the build (particularly the guarded `\chapter` wrap on `scrartcl`-based documents, which must remain a no-operation there).
 3. Spot-check the configurable-depth path by temporarily calling `\maketableofcontents[2]` in one test build and confirming subsubsection/paragraph entries are correctly omitted, then revert.

@@ -90,14 +90,14 @@ impl std::ops::BitOr for AssumeSet {
 
 // #region 🔖Assumptions
 /// 📋 Extra facts beyond a symbol's own flags (e.g. `x > 2`), consulted by `solve_with`/`refine`-style
-/// entry points. First-pass scope: direct `symbol <op> rational` bounds only.
+/// entry points. First-pass scope: direct `symbol <operation> rational` bounds only.
 #[derive(Clone, Debug, Default)]
 pub struct Assumptions {
-    facts: Vec<(String, RelOp, mathematical_number::Rational)>,
+    facts: Vec<(String, RelationalOperator, mathematical_number::Rational)>,
 }
 
 #[derive(Clone, Copy, PartialEq, Eq, Debug)]
-pub enum RelOp {
+pub enum RelationalOperator {
     Lt,
     Le,
     Gt,
@@ -111,22 +111,22 @@ impl Assumptions {
         Self::default()
     }
 
-    pub fn assume_bound(&mut self, symbol: &str, op: RelOp, bound: mathematical_number::Rational) {
-        self.facts.push((symbol.to_string(), op, bound));
+    pub fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: mathematical_number::Rational) {
+        self.facts.push((symbol.to_string(), operation, bound));
     }
 
     fn bound_for(&self, symbol: &str) -> Option<bool> {
-        for (name, op, bound) in &self.facts {
+        for (name, operation, bound) in &self.facts {
             if name != symbol {
                 continue;
             }
             use mathematical_number::Rational;
             let zero = Rational::zero();
-            let is_positive = match op {
-                RelOp::Gt if *bound >= zero => Some(true),
-                RelOp::Ge if *bound > zero => Some(true),
-                RelOp::Lt if *bound <= zero => Some(false),
-                RelOp::Le if *bound < zero => Some(false),
+            let is_positive = match operation {
+                RelationalOperator::Gt if *bound >= zero => Some(true),
+                RelationalOperator::Ge if *bound > zero => Some(true),
+                RelationalOperator::Lt if *bound <= zero => Some(false),
+                RelationalOperator::Le if *bound < zero => Some(false),
                 _ => None,
             };
             if is_positive.is_some() {
@@ -361,7 +361,7 @@ mod tests {
     fn bound_for_deduces_sign_from_assumption_store() {
         use mathematical_number::Rational;
         let mut assumptions = Assumptions::new();
-        assumptions.assume_bound("x", RelOp::Gt, Rational::from_i64(2, 1).unwrap());
+        assumptions.assume_bound("x", RelationalOperator::Gt, Rational::from_i64(2, 1).unwrap());
         assert_eq!(assumptions.bound_for("x"), Some(true));
         assert_eq!(assumptions.bound_for("y"), None);
     }

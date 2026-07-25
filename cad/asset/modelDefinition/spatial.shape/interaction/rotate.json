@@ -39,7 +39,7 @@
                 "label": "Start",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -55,7 +55,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -71,7 +71,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -109,7 +109,7 @@
                 "label": "Select",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addSelection",
                     "params": {
                       "field": {
@@ -164,7 +164,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -196,7 +196,7 @@
                 "target": "angle_or_first_reference_point",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -235,7 +235,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -267,7 +267,7 @@
                 "target": "second_reference_point",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {
@@ -303,7 +303,7 @@
                 "label": "Apply Number",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -340,7 +340,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -372,7 +372,7 @@
                 "target": "committed",
                 "effects": [
                   {
-                    "op": "action",
+                    "operation": "action",
                     "action": "command.addPoint",
                     "params": {
                       "field": {

@@ -1,6 +1,6 @@
 ---
 name: Schema Inconsistency Cleanup
-overview: "Fix a coherent batch of inconsistencies in `compose/graphql/target.schema.graphql`: wrong `implements` clauses, missing required `Artifact` fields, missing `Edge`/`Connection` for `Clump` and `TheKit`, ghost/duplicate/wrong-direction tokens in owner unions, narrowed per-type owner/owns unions, missing field tags, per-`<Op>Edge`/`<Op>Connection` for every concrete Operation, and a uniform `# Banner` rule attributing every field to the interface that introduces it."
+overview: "Fix a coherent batch of inconsistencies in `compose/graphql/target.schema.graphql`: wrong `implements` clauses, missing required `Artifact` fields, missing `Edge`/`Connection` for `Clump` and `TheKit`, ghost/duplicate/wrong-direction tokens in owner unions, narrowed per-type owner/owns unions, missing field tags, per-`<Operation>Edge`/`<Operation>Connection` for every concrete Operation, and a uniform `# Banner` rule attributing every field to the interface that introduces it."
 todos:
  - id: ghost_tokens
    content: Strip ghost names, dupe `AlternativeModification`, and wrong-direction `Edit` from every `owner`/`owns` union comment
@@ -15,7 +15,7 @@ todos:
    content: Add `ClumpEdge`/`ClumpConnection`, `TheKitEdge`/`TheKitConnection`; delete `ModificationAttributesConnection` and replace usages with `AttributeConnection`; annotate `BlueprintEdge` polymorphism
    status: completed
  - id: per_op_edges
-   content: Generate `<Op>Edge` and `<Op>Connection` for every concrete `type X implements Operation` (~85 types) via a helper script in the existing ticket folder
+   content: Generate `<Operation>Edge` and `<Operation>Connection` for every concrete `type X implements Operation` (~85 types) via a helper script in the existing ticket folder
    status: completed
  - id: narrow_unions
    content: Replace giant copy-pasted `owner` unions on every `XModification`/`XModifications` with narrow per-type unions; clear `XModification.owns` to bare `# reference`; fix drift on `TagModifications`/`PositionModifications`/`LocationModifications`/`PlaceModifications` `owns`
@@ -55,7 +55,7 @@ Every field on a `type` MUST sit under the `# <InterfaceName>` banner that intro
 | `# Modification`                  | `before`, `diff`, `after`                                                                        |
 | `# Modifications`                 | `removed`, `modifications`, `added`                                                              |
 | `# Operation`                     | `scope`, `input`, `modification`                                                                 |
-| `# Operation Output`              | per-op output fields (`piece`, `pieces`, `quality`, `tag`, ...)                                  |
+| `# Operation Output`              | per-operation output fields (`piece`, `pieces`, `quality`, `tag`, ...)                                  |
 | `# <ConcreteName>`                | type-specific fields not covered above                                                           |
 | `# EntityEdge`                    | `cursor`                                                                                         |
 | `# <X>Edge`                       | `node`                                                                                           |
@@ -257,7 +257,7 @@ Polymorphic Edge already documented and intentional (no fix needed): `BlueprintE
 
 `ModificationAttributesConnection` (1215) reuses `AttributeEdge` and is functionally a duplicate of `AttributeConnection`. Replace its single use site with `AttributeConnection` and delete the type. (Verify the use site by grepping the schema; if it has none, just delete.)
 
-## 4. Per-`<Op>Edge` / `<Op>Connection` for every concrete Operation
+## 4. Per-`<Operation>Edge` / `<Operation>Connection` for every concrete Operation
 
 For every concrete `type X implements Operation` (~85 types: `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, ..., `RenamedKit`, `ChangedDescription`), append immediately after the type:
 
@@ -305,18 +305,18 @@ Replace the copy-pasted operation union on every concrete `XModification.owner` 
 - `AttributeModification.owner` <- every `AddedAttributeTo*`, `AddedAttributesTo*`, `RemovedAttributeFrom*`, `RemovedAttributesFrom*`, plus the corresponding `XModifications` containers
 - `QualityModification.owner` <- `CreatedQuality`, `CreatedQualities`, `RenamedQuality`, `UpdatedQualityDescription`, `UpdatedQualityIcon`, `DeletedQuality`, `DeletedQualities`, `KitModifications`
 - `TagModification.owner` <- `CreatedTag`, `CreatedTags`, `RenamedTag`, `UpdatedTagDescription`, `UpdatedTagIcon`, `DeletedTag`, `DeletedTags`, `KitModifications`
-- `ConceptModification.owner` <- analogous Concept ops + `KitModifications`
-- `PortModification.owner` <- Port ops + `TypeModifications`
-- `ConnectorModification.owner` <- Connector ops + `TypeModifications`
-- `TypeModification.owner` <- Type ops + `KitModifications`
-- `PieceModification.owner` <- piece ops (`CreatedFixedPiece`, `Dragged*`, `Moved*`, `Renamed*`, `UpdatedPieceDescription`, `Fixed*`, `ChangedPieceTo*`, `Added*WithParentConnection*`, `Deleted*`) + `DesignModifications`
+- `ConceptModification.owner` <- analogous Concept operations + `KitModifications`
+- `PortModification.owner` <- Port operations + `TypeModifications`
+- `ConnectorModification.owner` <- Connector operations + `TypeModifications`
+- `TypeModification.owner` <- Type operations + `KitModifications`
+- `PieceModification.owner` <- piece operations (`CreatedFixedPiece`, `Dragged*`, `Moved*`, `Renamed*`, `UpdatedPieceDescription`, `Fixed*`, `ChangedPieceTo*`, `Added*WithParentConnection*`, `Deleted*`) + `DesignModifications`
 - `ConnectionModification.owner` <- `Added*WithParentConnection*`, `DeletedPiecesAndConnections` + `DesignModifications`
 - `DesignModification.owner` <- `CreatedDesign`, `CreatedDesigns`, `DeletedDesign`, `DeletedDesigns`, `FlattenedDesign`, `RenamedKit`, `ChangedDescription` + `KitModifications`
 - `KitModification.owner` <- `RenamedKit`, `ChangedDescription`
-- `LayerModification.owner` <- `DesignModifications` (placeholder until layer ops exist)
-- `GroupModification.owner` <- `DesignModifications` (placeholder until group ops exist)
-- `RepresentationModification.owner` <- `TypeModifications` (placeholder until representation ops exist)
-- `StatModification.owner` <- (placeholder until stat ops exist)
+- `LayerModification.owner` <- `DesignModifications` (placeholder until layer operations exist)
+- `GroupModification.owner` <- `DesignModifications` (placeholder until group operations exist)
+- `RepresentationModification.owner` <- `TypeModifications` (placeholder until representation operations exist)
+- `StatModification.owner` <- (placeholder until stat operations exist)
 - `BenchmarkModification.owner`, `PropModification.owner`, `AuthorModification.owner`, `FamilyModification.owner`, `FolderModification.owner`, `FileModification.owner`, `PlaceModification.owner` <- their containing `XModifications`
 - `SideModification.owner` <- `ConnectionModifications`
 - Geometry primitives (`VectorModification`, `PointModification`, `CoordinateModification`, `OffsetModification`, `PlaneModification`, `LocationModification`) <- their immediate parent `XModifications`
@@ -440,7 +440,7 @@ flowchart TB
 3. `interface Operation implements StrongEntity`; normalize `XModifications -> implements WeakEntity`.
 4. Add missing `changes` field and retag `File`/`Type`/`Design` provenance fields.
 5. Add `ClumpEdge`/`ClumpConnection`, `TheKitEdge`/`TheKitConnection`; delete `ModificationAttributesConnection`; comment `BlueprintEdge`.
-6. Generate per-Op `<Op>Edge`/`<Op>Connection` via script.
+6. Generate per-Operation `<Operation>Edge`/`<Operation>Connection` via script.
 7. Narrow per-type `owner` unions; clear `XModification.owns` unions; fix the four `XModifications.owns` drifts; narrow `before`/`diff`/`after`/`scope` reference comments.
 8. Add the six field-tag fixes; retag `Modifications` aggregate.
 9. Run `normalize-banners.py` to insert correct `# <InterfaceName>` banners before every group of inherited fields on EVERY type.
@@ -451,4 +451,4 @@ flowchart TB
 - Regenerating resolvers / Rust / TS / Python types.
 - Touching [compose/graphql/schema.graphql](compose/graphql/schema.graphql) (current schema, not target).
 - Defining the missing modification kinds (`AlternativeModification`, etc.) — they are removed, not added.
-- Adding actual ops for `Layer`/`Group`/`Stat`/`Representation`/`Benchmark` (only their `owner` placeholders are noted).
+- Adding actual operations for `Layer`/`Group`/`Stat`/`Representation`/`Benchmark` (only their `owner` placeholders are noted).

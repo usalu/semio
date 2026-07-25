@@ -80,7 +80,7 @@ Fix: give edges a real (thickened) raycastable proxy and dispatch `worldPick` wi
 
 ### 4. Mesh-edit operations have no undo
 
-Old lowpoly registered `createLowpolyAppVcsHandler()` (`internal.ts:423-432`, wired at `index.ts:1152`) giving document-level undo for edit-mode mesh ops (extrude/bevel/inset/etc). The new Rust plugin has no VCS registration for edit mode at all — only paint has an (ad hoc) undo stack. Fix: add an edit-mode undo/redo history in `lowpoly/plugin/rs/lib.rs` (snapshot `doc`/fixture state before each mutating mesh command) and expose `undo`/`redo` the same way paint does, or register the existing app-level VCS handler if the framework now exposes one for other ported plugins (check `writer/rs/document_vcs.rs` for the current idiom to mirror).
+Old lowpoly registered `createLowpolyAppVcsHandler()` (`internal.ts:423-432`, wired at `index.ts:1152`) giving document-level undo for edit-mode mesh operations (extrude/bevel/inset/etc). The new Rust plugin has no VCS registration for edit mode at all — only paint has an (ad hoc) undo stack. Fix: add an edit-mode undo/redo history in `lowpoly/plugin/rs/lib.rs` (snapshot `doc`/fixture state before each mutating mesh command) and expose `undo`/`redo` the same way paint does, or register the existing app-level VCS handler if the framework now exposes one for other ported plugins (check `writer/rs/document_vcs.rs` for the current idiom to mirror).
 
 ### 5. Paint undo pushes on every paint sample instead of per stroke
 

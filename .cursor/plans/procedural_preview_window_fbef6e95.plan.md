@@ -66,7 +66,7 @@ The engine already tracks `engine.selection` and `engine.hover` (`mathematical/g
 Widget ids equal DAG node ids (see `sync_from_dag`, line ~891).
 
 - Add a persistent `preview: bool` (default `true`) to the `Neuron` widget variant so preview-off survives reload (serde default).
-- `FlowHost` pass-throughs (after pointer ops which already call `sync_from_dag`): `selected_widget_ids_json()`, `hovered_widget_id()`, `set_selection_json(&str)`, `set_hover(Option<&str>)`, `toggle_preview(&str)` / `set_preview_off_json(&str)` (updates widget `preview` + forwards dimmed set to `self.dag.set_dimmed(...)`).
+- `FlowHost` pass-throughs (after pointer operations which already call `sync_from_dag`): `selected_widget_ids_json()`, `hovered_widget_id()`, `set_selection_json(&str)`, `set_hover(Option<&str>)`, `toggle_preview(&str)` / `set_preview_off_json(&str)` (updates widget `preview` + forwards dimmed set to `self.dag.set_dimmed(...)`).
 - WASM `#[wasm_bindgen]` `FlowSession` methods (near `previewText`, line ~1158): `selectedWidgetIds()`, `hoveredWidgetId()`, `setSelection(json)`, `setHover(id)`, `setPreviewOff(json)`, `togglePreview(id)`.
 
 ## 3. Flow react — [flow/react/index.tsx](flow/react/index.tsx)

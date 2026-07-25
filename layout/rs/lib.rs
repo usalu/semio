@@ -989,14 +989,14 @@ mod export {
     // #endregion export
 }
 
-mod ops {
-    // #region ops
-    //! 🧾 Typed VCS operation vocabulary for the layout document — the ops the layout plugin emits
-    //! (page/story/link collections, per-page frame add/remove/patch, and camera). Each op computes a
+mod operations {
+    // #region operations
+    //! 🧾 Typed VCS operation vocabulary for the layout document — the operations the layout plugin emits
+    //! (page/story/link collections, per-page frame add/remove/patch, and camera). Each operation computes a
     //! true pre-state inverse so undo/redo round-trips exactly. See {@link vcs::Operation}.
 
     use serde::{Deserialize, Serialize};
-    use vcs::{apply_collection_op, invert_collection_op, CollectionOp, Identified, Operation, OperationDiff, Patchable};
+    use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, Identified, Operation, OperationDiff, Patchable};
 
     use crate::document::{Frame, ImageLink, LayoutCamera, LayoutDocument, Page, TextStory};
 
@@ -1197,27 +1197,27 @@ mod ops {
     }
     //#endregion 🔖Patches
 
-    //#region 🔖Op
+    //#region 🔖Operation
     /// 🧺 The typed layout document operation. Pages/stories/links are flat id-keyed collections; frames
-    /// are nested per-page so they get bespoke add/remove/patch variants; camera is a coalesced view op.
+    /// are nested per-page so they get bespoke add/remove/patch variants; camera is a coalesced view operation.
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    pub enum LayoutOp {
-        Pages(CollectionOp<String, Page, PagePatch>),
-        Stories(CollectionOp<String, TextStory, TextStoryPatch>),
-        Links(CollectionOp<String, ImageLink, ImageLinkPatch>),
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    pub enum LayoutOperation {
+        Pages(CollectionOperation<String, Page, PagePatch>),
+        Stories(CollectionOperation<String, TextStory, TextStoryPatch>),
+        Links(CollectionOperation<String, ImageLink, ImageLinkPatch>),
         AddFrame { page_id: String, index: usize, frame: Frame, layer_id: Option<String> },
         RemoveFrame { page_id: String, frame_id: String },
         PatchFrame { page_id: String, frame_id: String, patch: FramePatch },
         SetCamera { blueprint: bool, camera: LayoutCamera },
     }
 
-    fn apply_layout_op(doc: &mut LayoutDocument, op: &LayoutOp) {
-        match op {
-            LayoutOp::Pages(cop) => apply_collection_op(&mut doc.pages, cop),
-            LayoutOp::Stories(cop) => apply_collection_op(&mut doc.stories, cop),
-            LayoutOp::Links(cop) => apply_collection_op(&mut doc.links, cop),
-            LayoutOp::AddFrame { page_id, index, frame, layer_id } => {
+    fn apply_layout_operation(doc: &mut LayoutDocument, operation: &LayoutOperation) {
+        match operation {
+            LayoutOperation::Pages(cop) => apply_collection_operation(&mut doc.pages, cop),
+            LayoutOperation::Stories(cop) => apply_collection_operation(&mut doc.stories, cop),
+            LayoutOperation::Links(cop) => apply_collection_operation(&mut doc.links, cop),
+            LayoutOperation::AddFrame { page_id, index, frame, layer_id } => {
                 if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
                     let at = (*index).min(page.frames.len());
                     page.frames.insert(at, frame.clone());
@@ -1228,7 +1228,7 @@ mod ops {
                     }
                 }
             }
-            LayoutOp::RemoveFrame { page_id, frame_id } => {
+            LayoutOperation::RemoveFrame { page_id, frame_id } => {
                 if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
                     page.frames.retain(|frame| frame.id() != frame_id);
                     for layer in &mut page.layers {
@@ -1236,14 +1236,14 @@ mod ops {
                     }
                 }
             }
-            LayoutOp::PatchFrame { page_id, frame_id, patch } => {
+            LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
                 if let Some(page) = doc.pages.iter_mut().find(|page| page.id == *page_id) {
                     if let Some(frame) = page.frames.iter_mut().find(|frame| frame.id() == frame_id) {
                         apply_frame_patch(frame, patch);
                     }
                 }
             }
-            LayoutOp::SetCamera { blueprint, camera } => {
+            LayoutOperation::SetCamera { blueprint, camera } => {
                 if *blueprint {
                     doc.camera = camera.clone();
                 } else {
@@ -1253,71 +1253,71 @@ mod ops {
         }
     }
 
-    fn backwards_layout_op(doc: &LayoutDocument, op: &LayoutOp) -> Vec<LayoutOp> {
-        match op {
-            LayoutOp::Pages(cop) => vec![LayoutOp::Pages(invert_collection_op(&doc.pages, cop))],
-            LayoutOp::Stories(cop) => vec![LayoutOp::Stories(invert_collection_op(&doc.stories, cop))],
-            LayoutOp::Links(cop) => vec![LayoutOp::Links(invert_collection_op(&doc.links, cop))],
-            LayoutOp::AddFrame { page_id, frame, .. } => {
-                vec![LayoutOp::RemoveFrame { page_id: page_id.clone(), frame_id: frame.id().to_string() }]
+    fn backwards_layout_operation(doc: &LayoutDocument, operation: &LayoutOperation) -> Vec<LayoutOperation> {
+        match operation {
+            LayoutOperation::Pages(cop) => vec![LayoutOperation::Pages(invert_collection_operation(&doc.pages, cop))],
+            LayoutOperation::Stories(cop) => vec![LayoutOperation::Stories(invert_collection_operation(&doc.stories, cop))],
+            LayoutOperation::Links(cop) => vec![LayoutOperation::Links(invert_collection_operation(&doc.links, cop))],
+            LayoutOperation::AddFrame { page_id, frame, .. } => {
+                vec![LayoutOperation::RemoveFrame { page_id: page_id.clone(), frame_id: frame.id().to_string() }]
             }
-            LayoutOp::RemoveFrame { page_id, frame_id } => {
+            LayoutOperation::RemoveFrame { page_id, frame_id } => {
                 if let Some(page) = doc.pages.iter().find(|page| page.id == *page_id) {
                     if let Some(index) = page.frames.iter().position(|frame| frame.id() == frame_id) {
                         let frame = page.frames[index].clone();
                         let layer_id = page.layers.iter().find(|layer| layer.object_ids.iter().any(|id| id == frame_id)).map(|layer| layer.id.clone());
-                        return vec![LayoutOp::AddFrame { page_id: page_id.clone(), index, frame, layer_id }];
+                        return vec![LayoutOperation::AddFrame { page_id: page_id.clone(), index, frame, layer_id }];
                     }
                 }
                 Vec::new()
             }
-            LayoutOp::PatchFrame { page_id, frame_id, patch } => {
+            LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
                 if let Some(page) = doc.pages.iter().find(|page| page.id == *page_id) {
                     if let Some(frame) = page.frames.iter().find(|frame| frame.id() == frame_id) {
                         let mut clone = frame.clone();
                         let inverse = apply_frame_patch(&mut clone, patch);
-                        return vec![LayoutOp::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: inverse }];
+                        return vec![LayoutOperation::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: inverse }];
                     }
                 }
                 Vec::new()
             }
-            LayoutOp::SetCamera { blueprint, .. } => vec![LayoutOp::SetCamera { blueprint: *blueprint, camera: if *blueprint { doc.camera.clone() } else { doc.preview_camera.clone() } }],
+            LayoutOperation::SetCamera { blueprint, .. } => vec![LayoutOperation::SetCamera { blueprint: *blueprint, camera: if *blueprint { doc.camera.clone() } else { doc.preview_camera.clone() } }],
         }
     }
 
-    /// 📦 Op-list diff: layout ops fold sequentially over a cloned projection. `absorb` concatenates —
+    /// 📦 Operation-list diff: layout operations fold sequentially over a cloned projection. `absorb` concatenates —
     /// coalesced camera drags stay one edit whose forwards replay to last-wins.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     pub struct LayoutDiff {
-        pub ops: Vec<LayoutOp>,
+        pub operations: Vec<LayoutOperation>,
     }
 
     impl OperationDiff<LayoutDocument> for LayoutDiff {
         fn apply(&self, projection: &LayoutDocument) -> LayoutDocument {
             let mut next = projection.clone();
-            for op in &self.ops {
-                apply_layout_op(&mut next, op);
+            for operation in &self.operations {
+                apply_layout_operation(&mut next, operation);
             }
             next
         }
 
         fn absorb(&mut self, other: Self) {
-            self.ops.extend(other.ops);
+            self.operations.extend(other.operations);
         }
     }
 
-    impl Operation<LayoutDocument> for LayoutOp {
+    impl Operation<LayoutDocument> for LayoutOperation {
         type Diff = LayoutDiff;
 
         fn diff(&self, _projection: &LayoutDocument) -> LayoutDiff {
-            LayoutDiff { ops: vec![self.clone()] }
+            LayoutDiff { operations: vec![self.clone()] }
         }
 
         fn backwards(&self, projection: &LayoutDocument) -> Vec<Self> {
-            backwards_layout_op(projection, self)
+            backwards_layout_operation(projection, self)
         }
     }
-    //#endregion 🔖Op
+    //#endregion 🔖Operation
 
     #[cfg(test)]
     mod tests {
@@ -1334,14 +1334,14 @@ mod ops {
             Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, fill: Some([0.1, 0.2, 0.3, 1.0]), stroke: None }
         }
 
-        fn round_trip(doc: &LayoutDocument, op: &LayoutOp) -> LayoutDocument {
-            let forward = vcs::apply_operation(doc, op);
-            let backs = op.backwards(doc);
+        fn round_trip(doc: &LayoutDocument, operation: &LayoutOperation) -> LayoutDocument {
+            let forward = vcs::apply_operation(doc, operation);
+            let backs = operation.backwards(doc);
             let mut restored = forward.clone();
             for back in &backs {
                 restored = vcs::apply_operation(&restored, back);
             }
-            assert_eq!(&restored, doc, "backwards must restore the pre-op document");
+            assert_eq!(&restored, doc, "backwards must restore the pre-operation document");
             forward
         }
 
@@ -1350,11 +1350,11 @@ mod ops {
             let doc = sample_doc();
             let mut page_2 = doc.pages[0].clone();
             page_2.id = "page-2".into();
-            let add = LayoutOp::Pages(CollectionOp::Add { index: 1, item: page_2 });
+            let add = LayoutOperation::Pages(CollectionOperation::Add { index: 1, item: page_2 });
             let with_page = round_trip(&doc, &add);
             assert_eq!(with_page.pages.len(), 2);
 
-            let patch = LayoutOp::Pages(CollectionOp::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } });
+            let patch = LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: PagePatch { name: Some("Renamed".into()), width: Some(300.0), columns_count: Some(3), ..Default::default() } });
             let patched = round_trip(&doc, &patch);
             let page = patched.pages.iter().find(|page| page.id == "page-1").unwrap();
             assert_eq!(page.name, "Renamed");
@@ -1365,16 +1365,16 @@ mod ops {
         #[test]
         fn frame_add_remove_patch_round_trip() {
             let doc = sample_doc();
-            let add = LayoutOp::AddFrame { page_id: "page-1".into(), index: 1, frame: new_rect("frame-2"), layer_id: Some("layer-1".into()) };
+            let add = LayoutOperation::AddFrame { page_id: "page-1".into(), index: 1, frame: new_rect("frame-2"), layer_id: Some("layer-1".into()) };
             let added = round_trip(&doc, &add);
             assert_eq!(added.pages[0].frames.len(), 2);
             assert!(added.pages[0].layers[0].object_ids.iter().any(|id| id == "frame-2"));
 
-            let remove = LayoutOp::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into() };
+            let remove = LayoutOperation::RemoveFrame { page_id: "page-1".into(), frame_id: "frame-1".into() };
             let removed = round_trip(&doc, &remove);
             assert!(removed.pages[0].frames.iter().all(|frame| frame.id() != "frame-1"));
 
-            let patch = LayoutOp::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: FramePatch { x: Some(99.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() } };
+            let patch = LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: FramePatch { x: Some(99.0), fill: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() } };
             let patched = round_trip(&doc, &patch);
             let frame = patched.pages[0].frames.iter().find(|frame| frame.id() == "frame-1").unwrap();
             assert_eq!(frame.bounds().x, 99.0);
@@ -1385,11 +1385,11 @@ mod ops {
         #[test]
         fn story_and_link_patch_round_trip() {
             let doc = sample_doc();
-            let story = LayoutOp::Stories(CollectionOp::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } });
+            let story = LayoutOperation::Stories(CollectionOperation::Patch { id: "story-1".into(), patch: TextStoryPatch { content: Some("Edited".into()) } });
             let edited = round_trip(&doc, &story);
             assert_eq!(edited.stories[0].content, "Edited");
 
-            let link = LayoutOp::Links(CollectionOp::Patch { id: "link-1".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } });
+            let link = LayoutOperation::Links(CollectionOperation::Patch { id: "link-1".into(), patch: ImageLinkPatch { path: Some("b.png".into()) } });
             let relinked = round_trip(&doc, &link);
             assert_eq!(relinked.links[0].path, "b.png");
         }
@@ -1397,20 +1397,20 @@ mod ops {
         #[test]
         fn set_camera_round_trips_per_surface() {
             let doc = sample_doc();
-            let op = LayoutOp::SetCamera { blueprint: true, camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 2.0 } };
-            let moved = round_trip(&doc, &op);
+            let operation = LayoutOperation::SetCamera { blueprint: true, camera: LayoutCamera { x: 5.0, y: 6.0, zoom: 2.0 } };
+            let moved = round_trip(&doc, &operation);
             assert_eq!(moved.camera.x, 5.0);
             assert_eq!(moved.preview_camera.x, 0.0);
         }
     }
-    // #endregion ops
+    // #endregion operations
 }
 
 pub use display::*;
 pub use document::*;
 pub use engine::*;
 pub use export::*;
-pub use ops::*;
+pub use operations::*;
 
 #[cfg(target_arch = "wasm32")]
 mod wasm_session {

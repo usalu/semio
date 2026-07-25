@@ -33,7 +33,7 @@ impl UndirectedGraph {
 }
 // #endregion 🔖Construction
 
-// #region 🔖NodeOps
+// #region 🔖NodeOperations
 impl UndirectedGraph {
     /// ➕ Allocates a fresh node with no attributes.
     pub fn add_node(&mut self) -> NodeId {
@@ -87,9 +87,9 @@ impl UndirectedGraph {
         self.0.nodes()
     }
 }
-// #endregion 🔖NodeOps
+// #endregion 🔖NodeOperations
 
-// #region 🔖EdgeOps
+// #region 🔖EdgeOperations
 impl UndirectedGraph {
     /// ➕ Adds (or, if the pair is already connected, upserts) an edge with no attributes.
     pub fn add_edge(&mut self, u: NodeId, v: NodeId) -> EdgeId {
@@ -179,7 +179,7 @@ impl UndirectedGraph {
         }
     }
 }
-// #endregion 🔖EdgeOps
+// #endregion 🔖EdgeOperations
 
 // #region 🔖Queries
 impl UndirectedGraph {

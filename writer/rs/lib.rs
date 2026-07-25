@@ -58,8 +58,8 @@ mod document_vcs {
     }
 
     #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
-    #[serde(tag = "op", rename_all = "camelCase")]
-    pub enum WriterOp {
+    #[serde(tag = "operation", rename_all = "camelCase")]
+    pub enum WriterOperation {
         SetText { text: String },
         SetCamera { camera: WriterCamera },
         SetDocument { document: WriterProjection },
@@ -95,28 +95,28 @@ mod document_vcs {
         }
     }
 
-    impl Operation<WriterProjection> for WriterOp {
+    impl Operation<WriterProjection> for WriterOperation {
         type Diff = WriterDiff;
 
         fn diff(&self, _projection: &WriterProjection) -> WriterDiff {
             match self {
-                WriterOp::SetText { text } => WriterDiff { text: Some(text.clone()), ..Default::default() },
-                WriterOp::SetCamera { camera } => WriterDiff { camera: Some(camera.clone()), ..Default::default() },
-                WriterOp::SetDocument { document } => WriterDiff { document: Some(document.clone()), ..Default::default() },
+                WriterOperation::SetText { text } => WriterDiff { text: Some(text.clone()), ..Default::default() },
+                WriterOperation::SetCamera { camera } => WriterDiff { camera: Some(camera.clone()), ..Default::default() },
+                WriterOperation::SetDocument { document } => WriterDiff { document: Some(document.clone()), ..Default::default() },
             }
         }
 
         fn backwards(&self, projection: &WriterProjection) -> Vec<Self> {
             match self {
-                WriterOp::SetText { .. } => vec![WriterOp::SetText { text: projection.text.clone() }],
-                WriterOp::SetCamera { .. } => vec![WriterOp::SetCamera { camera: projection.camera.clone() }],
-                WriterOp::SetDocument { .. } => vec![WriterOp::SetDocument { document: projection.clone() }],
+                WriterOperation::SetText { .. } => vec![WriterOperation::SetText { text: projection.text.clone() }],
+                WriterOperation::SetCamera { .. } => vec![WriterOperation::SetCamera { camera: projection.camera.clone() }],
+                WriterOperation::SetDocument { .. } => vec![WriterOperation::SetDocument { document: projection.clone() }],
             }
         }
     }
 
-    pub type WriterEnvelope = DocumentVcsEnvelope<WriterProjection, WriterOp>;
-    pub type WriterStore = DocumentVcsStore<WriterProjection, WriterOp>;
+    pub type WriterEnvelope = DocumentVcsEnvelope<WriterProjection, WriterOperation>;
+    pub type WriterStore = DocumentVcsStore<WriterProjection, WriterOperation>;
 
     pub fn empty_writer_projection() -> WriterProjection {
         WriterProjection { schema: "writer.document".into(), id: "empty".into(), language_id: "plaintext".into(), uri: "writer://empty".into(), text: String::new(), camera: default_camera() }
@@ -168,31 +168,31 @@ mod document_vcs {
         }
 
         #[test]
-        fn writer_document_vcs_replays_text_ops() {
+        fn writer_document_vcs_replays_text_operations() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOp::SetText { text: "hello".into() }], description: None }).expect("apply");
+            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
             assert_eq!(store.projection().expect("projection").text, "hello");
         }
 
         #[test]
-        fn writer_document_vcs_replays_camera_and_document_ops() {
+        fn writer_document_vcs_replays_camera_and_document_operations() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOp::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }], description: None }).expect("apply camera");
+            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetCamera { camera: WriterCamera { x: 4.0, y: 5.0, zoom: 2.0 } }], description: None }).expect("apply camera");
             let projection = store.projection().expect("projection");
             assert_eq!(projection.camera.x, 4.0);
             assert_eq!(projection.camera.zoom, 2.0);
 
             let replacement = WriterProjection { schema: "writer.document".into(), id: "jack".into(), language_id: "jack".into(), uri: "writer://jack".into(), text: "MATCH (a) RETURN a".into(), camera: default_camera() };
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOp::SetDocument { document: replacement }], description: None }).expect("apply document");
+            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetDocument { document: replacement }], description: None }).expect("apply document");
             let projection = store.projection().expect("projection");
             assert_eq!(projection.id, "jack");
             assert_eq!(projection.text, "MATCH (a) RETURN a");
         }
 
         #[test]
-        fn writer_document_vcs_undoes_text_op() {
+        fn writer_document_vcs_undoes_text_operation() {
             let mut store = seeded_store();
-            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOp::SetText { text: "hello".into() }], description: None }).expect("apply");
+            store.dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetText { text: "hello".into() }], description: None }).expect("apply");
             store.dispatch(DocumentVcsCommand::Undo).expect("undo");
             assert_eq!(store.projection().expect("projection").text, "");
         }

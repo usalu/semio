@@ -13,7 +13,7 @@ Refactor `spatial` actions so action definitions are JSON data only. The TypeScr
   - `ActionSpec` parser/catalog loader.
   - `DeclarativeActionRuntime`.
   - Data-only execution steps: `let`, `setContext`, `deleteContext`, `kernel.call`, `return`, `guard`.
-- Keep interactions unchanged at the call site: existing `commit.operation.action` and transition `op: "action"` still reference action IDs.
+- Keep interactions unchanged at the call site: existing `commit.operation.action` and transition `operation: "action"` still reference action IDs.
 - Extend `SpatialKernel`/`SpatialPreviewKernel` contracts so every currently code-backed geometry behavior is available as a named kernel capability, including box helpers, transforms, curve creation, measurement, anchor placement, selection operations, and command finalization.
 - Move geometry/model-diff construction logic out of action definitions and into kernel capability implementations in `@spatial/js-kernel-brepjs` or existing kernel-facing helpers.
 - Preserve existing user edits in `spatial/js/core/index.ts`; do not restore removed tests or unrelated code.
@@ -35,8 +35,8 @@ Each action JSON document will use this contract:
  },
  "variables": [{ "name": "constrainedTo", "value": { "kind": "kernel.call", "function": "constrainMovePoint", "args": {} } }],
  "steps": [
-  { "op": "kernel.call", "function": "transformMoveDiff", "args": {}, "assignTo": "diff" },
-  { "op": "return", "diff": { "kind": "var", "name": "diff" } }
+  { "operation": "kernel.call", "function": "transformMoveDiff", "args": {}, "assignTo": "diff" },
+  { "operation": "return", "diff": { "kind": "var", "name": "diff" } }
  ]
 }
 ```
@@ -46,7 +46,7 @@ Expressions remain declarative JSON. Add a `kernel.call` expression form only fo
 ## Test Plan
 
 - Extend existing `spatial/js/core/index.ts` tests only.
-- Add schema/parser tests that reject action documents containing legacy executable fields such as `run`, `code`, `function`, or unknown step ops.
+- Add schema/parser tests that reject action documents containing legacy executable fields such as `run`, `code`, `function`, or unknown step operations.
 - Add catalog tests proving every built-in action ID resolves from JSON assets and `ActionRegistry.withBuiltins()` contains no code-backed built-ins.
 - Keep existing interaction e2e coverage: `primitive.box`, transforms, curves, measures, selection, anchor creation, and command interactions must still commit successfully.
 - Run with `bun nx run @spatial/js-core:test` and `bun nx run @spatial/js-kernel-brepjs:test`.

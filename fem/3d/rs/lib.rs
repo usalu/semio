@@ -347,7 +347,7 @@ fn apply_combinations_diff(combinations: &mut Vec<FemCombination>, diff: &Combin
 }
 // #endregion 🔖Collections
 
-// #region 🔖Ops
+// #region 🔖Operations
 /// 🩹 Sparse fem-3d diff over every document collection plus the scalar camera field.
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -422,8 +422,8 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
 /// 🧮 Fem-3d operation: id-keyed collection edits over nodes/elements/materials/sections/supports/load
 /// cases, plus the scalar camera, each with a true inverse via `backwards`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "op", rename_all = "camelCase")]
-pub enum Fem3dOp {
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum Fem3dOperation {
     SetNode { index: usize, node: FemNode },
     RemoveNode { id: String },
     SetElement { index: usize, element: FemElement },
@@ -478,87 +478,87 @@ fn combination_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
     doc.combinations.iter().position(|entry| entry.id == id)
 }
 
-impl Operation<Fem3dDocument> for Fem3dOp {
+impl Operation<Fem3dDocument> for Fem3dOperation {
     type Diff = Fem3dDiff;
 
     fn diff(&self, _projection: &Fem3dDocument) -> Fem3dDiff {
         let mut diff = Fem3dDiff::default();
         match self {
-            Fem3dOp::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
-            Fem3dOp::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
-            Fem3dOp::SetElement { index, element } => diff.elements.set.push((*index, element.clone())),
-            Fem3dOp::RemoveElement { id } => diff.elements.removed.push(id.clone()),
-            Fem3dOp::SetMaterial { index, material } => diff.materials.set.push((*index, material.clone())),
-            Fem3dOp::RemoveMaterial { id } => diff.materials.removed.push(id.clone()),
-            Fem3dOp::SetSection { index, section } => diff.sections.set.push((*index, section.clone())),
-            Fem3dOp::RemoveSection { id } => diff.sections.removed.push(id.clone()),
-            Fem3dOp::SetSolid { index, solid } => diff.solids.set.push((*index, solid.clone())),
-            Fem3dOp::RemoveSolid { id } => diff.solids.removed.push(id.clone()),
-            Fem3dOp::SetSupport { index, support } => diff.supports.set.push((*index, support.clone())),
-            Fem3dOp::RemoveSupport { id } => diff.supports.removed.push(id.clone()),
-            Fem3dOp::SetLoadCase { index, load_case } => diff.load_cases.set.push((*index, load_case.clone())),
-            Fem3dOp::RemoveLoadCase { id } => diff.load_cases.removed.push(id.clone()),
-            Fem3dOp::SetCombination { index, combination } => diff.combinations.set.push((*index, combination.clone())),
-            Fem3dOp::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
-            Fem3dOp::SetCamera { camera } => diff.camera = Some(camera.clone()),
-            Fem3dOp::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
-            Fem3dOp::SetDocument { document } => diff.document = Some(document.clone()),
+            Fem3dOperation::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
+            Fem3dOperation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
+            Fem3dOperation::SetElement { index, element } => diff.elements.set.push((*index, element.clone())),
+            Fem3dOperation::RemoveElement { id } => diff.elements.removed.push(id.clone()),
+            Fem3dOperation::SetMaterial { index, material } => diff.materials.set.push((*index, material.clone())),
+            Fem3dOperation::RemoveMaterial { id } => diff.materials.removed.push(id.clone()),
+            Fem3dOperation::SetSection { index, section } => diff.sections.set.push((*index, section.clone())),
+            Fem3dOperation::RemoveSection { id } => diff.sections.removed.push(id.clone()),
+            Fem3dOperation::SetSolid { index, solid } => diff.solids.set.push((*index, solid.clone())),
+            Fem3dOperation::RemoveSolid { id } => diff.solids.removed.push(id.clone()),
+            Fem3dOperation::SetSupport { index, support } => diff.supports.set.push((*index, support.clone())),
+            Fem3dOperation::RemoveSupport { id } => diff.supports.removed.push(id.clone()),
+            Fem3dOperation::SetLoadCase { index, load_case } => diff.load_cases.set.push((*index, load_case.clone())),
+            Fem3dOperation::RemoveLoadCase { id } => diff.load_cases.removed.push(id.clone()),
+            Fem3dOperation::SetCombination { index, combination } => diff.combinations.set.push((*index, combination.clone())),
+            Fem3dOperation::RemoveCombination { id } => diff.combinations.removed.push(id.clone()),
+            Fem3dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
+            Fem3dOperation::SetAnalysisSettings { settings } => diff.analysis = Some(settings.clone()),
+            Fem3dOperation::SetDocument { document } => diff.document = Some(document.clone()),
         }
         diff
     }
 
     fn backwards(&self, projection: &Fem3dDocument) -> Vec<Self> {
         match self {
-            Fem3dOp::SetNode { node, .. } => match node_index(projection, &node.id) {
-                Some(index) => vec![Fem3dOp::SetNode { index, node: projection.nodes[index].clone() }],
-                None => vec![Fem3dOp::RemoveNode { id: node.id.clone() }],
+            Fem3dOperation::SetNode { node, .. } => match node_index(projection, &node.id) {
+                Some(index) => vec![Fem3dOperation::SetNode { index, node: projection.nodes[index].clone() }],
+                None => vec![Fem3dOperation::RemoveNode { id: node.id.clone() }],
             },
-            Fem3dOp::RemoveNode { id } => node_index(projection, id).map(|index| vec![Fem3dOp::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetElement { element, .. } => match element_index(projection, element_id(element)) {
-                Some(index) => vec![Fem3dOp::SetElement { index, element: projection.elements[index].clone() }],
-                None => vec![Fem3dOp::RemoveElement { id: element_id(element).to_string() }],
+            Fem3dOperation::RemoveNode { id } => node_index(projection, id).map(|index| vec![Fem3dOperation::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetElement { element, .. } => match element_index(projection, element_id(element)) {
+                Some(index) => vec![Fem3dOperation::SetElement { index, element: projection.elements[index].clone() }],
+                None => vec![Fem3dOperation::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem3dOp::RemoveElement { id } => element_index(projection, id).map(|index| vec![Fem3dOp::SetElement { index, element: projection.elements[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetMaterial { material, .. } => match material_index(projection, &material.id) {
-                Some(index) => vec![Fem3dOp::SetMaterial { index, material: projection.materials[index].clone() }],
-                None => vec![Fem3dOp::RemoveMaterial { id: material.id.clone() }],
+            Fem3dOperation::RemoveElement { id } => element_index(projection, id).map(|index| vec![Fem3dOperation::SetElement { index, element: projection.elements[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetMaterial { material, .. } => match material_index(projection, &material.id) {
+                Some(index) => vec![Fem3dOperation::SetMaterial { index, material: projection.materials[index].clone() }],
+                None => vec![Fem3dOperation::RemoveMaterial { id: material.id.clone() }],
             },
-            Fem3dOp::RemoveMaterial { id } => material_index(projection, id).map(|index| vec![Fem3dOp::SetMaterial { index, material: projection.materials[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetSection { section, .. } => match section_index(projection, &section.id) {
-                Some(index) => vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }],
-                None => vec![Fem3dOp::RemoveSection { id: section.id.clone() }],
+            Fem3dOperation::RemoveMaterial { id } => material_index(projection, id).map(|index| vec![Fem3dOperation::SetMaterial { index, material: projection.materials[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetSection { section, .. } => match section_index(projection, &section.id) {
+                Some(index) => vec![Fem3dOperation::SetSection { index, section: projection.sections[index].clone() }],
+                None => vec![Fem3dOperation::RemoveSection { id: section.id.clone() }],
             },
-            Fem3dOp::RemoveSection { id } => section_index(projection, id).map(|index| vec![Fem3dOp::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetSolid { solid, .. } => match solid_index(projection, &solid.id) {
-                Some(index) => vec![Fem3dOp::SetSolid { index, solid: projection.solids[index].clone() }],
-                None => vec![Fem3dOp::RemoveSolid { id: solid.id.clone() }],
+            Fem3dOperation::RemoveSection { id } => section_index(projection, id).map(|index| vec![Fem3dOperation::SetSection { index, section: projection.sections[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetSolid { solid, .. } => match solid_index(projection, &solid.id) {
+                Some(index) => vec![Fem3dOperation::SetSolid { index, solid: projection.solids[index].clone() }],
+                None => vec![Fem3dOperation::RemoveSolid { id: solid.id.clone() }],
             },
-            Fem3dOp::RemoveSolid { id } => solid_index(projection, id).map(|index| vec![Fem3dOp::SetSolid { index, solid: projection.solids[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetSupport { support, .. } => match support_index(projection, &support.id) {
-                Some(index) => vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }],
-                None => vec![Fem3dOp::RemoveSupport { id: support.id.clone() }],
+            Fem3dOperation::RemoveSolid { id } => solid_index(projection, id).map(|index| vec![Fem3dOperation::SetSolid { index, solid: projection.solids[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetSupport { support, .. } => match support_index(projection, &support.id) {
+                Some(index) => vec![Fem3dOperation::SetSupport { index, support: projection.supports[index].clone() }],
+                None => vec![Fem3dOperation::RemoveSupport { id: support.id.clone() }],
             },
-            Fem3dOp::RemoveSupport { id } => support_index(projection, id).map(|index| vec![Fem3dOp::SetSupport { index, support: projection.supports[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetLoadCase { load_case, .. } => match load_case_index(projection, &load_case.id) {
-                Some(index) => vec![Fem3dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }],
-                None => vec![Fem3dOp::RemoveLoadCase { id: load_case.id.clone() }],
+            Fem3dOperation::RemoveSupport { id } => support_index(projection, id).map(|index| vec![Fem3dOperation::SetSupport { index, support: projection.supports[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetLoadCase { load_case, .. } => match load_case_index(projection, &load_case.id) {
+                Some(index) => vec![Fem3dOperation::SetLoadCase { index, load_case: projection.load_cases[index].clone() }],
+                None => vec![Fem3dOperation::RemoveLoadCase { id: load_case.id.clone() }],
             },
-            Fem3dOp::RemoveLoadCase { id } => load_case_index(projection, id).map(|index| vec![Fem3dOp::SetLoadCase { index, load_case: projection.load_cases[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetCombination { combination, .. } => match combination_index(projection, &combination.id) {
-                Some(index) => vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }],
-                None => vec![Fem3dOp::RemoveCombination { id: combination.id.clone() }],
+            Fem3dOperation::RemoveLoadCase { id } => load_case_index(projection, id).map(|index| vec![Fem3dOperation::SetLoadCase { index, load_case: projection.load_cases[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetCombination { combination, .. } => match combination_index(projection, &combination.id) {
+                Some(index) => vec![Fem3dOperation::SetCombination { index, combination: projection.combinations[index].clone() }],
+                None => vec![Fem3dOperation::RemoveCombination { id: combination.id.clone() }],
             },
-            Fem3dOp::RemoveCombination { id } => combination_index(projection, id).map(|index| vec![Fem3dOp::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
-            Fem3dOp::SetCamera { .. } => vec![Fem3dOp::SetCamera { camera: projection.camera.clone() }],
-            Fem3dOp::SetAnalysisSettings { .. } => vec![Fem3dOp::SetAnalysisSettings { settings: projection.analysis.clone() }],
-            Fem3dOp::SetDocument { .. } => vec![Fem3dOp::SetDocument { document: projection.clone() }],
+            Fem3dOperation::RemoveCombination { id } => combination_index(projection, id).map(|index| vec![Fem3dOperation::SetCombination { index, combination: projection.combinations[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::SetCamera { .. } => vec![Fem3dOperation::SetCamera { camera: projection.camera.clone() }],
+            Fem3dOperation::SetAnalysisSettings { .. } => vec![Fem3dOperation::SetAnalysisSettings { settings: projection.analysis.clone() }],
+            Fem3dOperation::SetDocument { .. } => vec![Fem3dOperation::SetDocument { document: projection.clone() }],
         }
     }
 }
-// #endregion 🔖Ops
+// #endregion 🔖Operations
 
-pub type Fem3dEnvelope = DocumentVcsEnvelope<Fem3dDocument, Fem3dOp>;
-pub type Fem3dStore = DocumentVcsStore<Fem3dDocument, Fem3dOp>;
+pub type Fem3dEnvelope = DocumentVcsEnvelope<Fem3dDocument, Fem3dOperation>;
+pub type Fem3dStore = DocumentVcsStore<Fem3dDocument, Fem3dOperation>;
 
 pub fn empty_fem3d_projection() -> Fem3dDocument {
     Fem3dDocument::default()
@@ -1004,13 +1004,13 @@ mod tests {
     // #endregion 🔖Fixtures
 
     // #region 🔖OpRoundTrip
-    fn round_trip(projection: &Fem3dDocument, op: &Fem3dOp) -> Fem3dDocument {
-        let forward = apply_operation(projection, op);
+    fn round_trip(projection: &Fem3dDocument, operation: &Fem3dOperation) -> Fem3dDocument {
+        let forward = apply_operation(projection, operation);
         let mut restored = forward.clone();
-        for back in op.backwards(projection) {
+        for back in operation.backwards(projection) {
             restored = apply_operation(&restored, &back);
         }
-        assert_eq!(&restored, projection, "backwards() must restore the pre-op document");
+        assert_eq!(&restored, projection, "backwards() must restore the pre-operation document");
         forward
     }
 
@@ -1018,77 +1018,77 @@ mod tests {
     fn node_set_and_remove_round_trip() {
         let base = empty_fem3d_projection();
         let node = FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 };
-        let after_set = round_trip(&base, &Fem3dOp::SetNode { index: 0, node: node.clone() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetNode { index: 0, node: node.clone() });
         assert_eq!(after_set.nodes, vec![node.clone()]);
-        round_trip(&after_set, &Fem3dOp::RemoveNode { id: node.id });
+        round_trip(&after_set, &Fem3dOperation::RemoveNode { id: node.id });
     }
 
     #[test]
     fn element_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let updated = FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 };
-        let after_set = round_trip(&base, &Fem3dOp::SetElement { index: 0, element: updated });
-        round_trip(&after_set, &Fem3dOp::RemoveElement { id: "e1".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetElement { index: 0, element: updated });
+        round_trip(&after_set, &Fem3dOperation::RemoveElement { id: "e1".into() });
     }
 
     #[test]
     fn material_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let material = FemMaterial { id: "steel".into(), name: "Steel Updated".into(), e: 200e9, g: 79e9, nu: 0.3, rho: 7900.0 };
-        let after_set = round_trip(&base, &Fem3dOp::SetMaterial { index: 0, material });
-        round_trip(&after_set, &Fem3dOp::RemoveMaterial { id: "steel".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetMaterial { index: 0, material });
+        round_trip(&after_set, &Fem3dOperation::RemoveMaterial { id: "steel".into() });
     }
 
     #[test]
     fn section_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let section = FemSection { id: "hea200".into(), name: "HEA200 Updated".into(), area: 0.006, iy: 4e-5, iz: 1.5e-5, j: 7e-7 };
-        let after_set = round_trip(&base, &Fem3dOp::SetSection { index: 0, section });
-        round_trip(&after_set, &Fem3dOp::RemoveSection { id: "hea200".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetSection { index: 0, section });
+        round_trip(&after_set, &Fem3dOperation::RemoveSection { id: "hea200".into() });
     }
 
     #[test]
     fn support_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let support = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] };
-        let after_set = round_trip(&base, &Fem3dOp::SetSupport { index: 0, support });
-        round_trip(&after_set, &Fem3dOp::RemoveSupport { id: "s1".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetSupport { index: 0, support });
+        round_trip(&after_set, &Fem3dOperation::RemoveSupport { id: "s1".into() });
     }
 
     #[test]
     fn load_case_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }], self_weight: false };
-        let after_set = round_trip(&base, &Fem3dOp::SetLoadCase { index: 0, load_case });
-        round_trip(&after_set, &Fem3dOp::RemoveLoadCase { id: "point".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetLoadCase { index: 0, load_case });
+        round_trip(&after_set, &Fem3dOperation::RemoveLoadCase { id: "point".into() });
     }
 
     #[test]
     fn combination_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let combination = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35)] };
-        let after_set = round_trip(&base, &Fem3dOp::SetCombination { index: 0, combination });
-        round_trip(&after_set, &Fem3dOp::RemoveCombination { id: "uls".into() });
+        let after_set = round_trip(&base, &Fem3dOperation::SetCombination { index: 0, combination });
+        round_trip(&after_set, &Fem3dOperation::RemoveCombination { id: "uls".into() });
     }
 
     #[test]
     fn camera_set_round_trips() {
         let base = empty_fem3d_projection();
-        round_trip(&base, &Fem3dOp::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
+        round_trip(&base, &Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
     }
 
     #[test]
     fn analysis_settings_set_round_trips() {
         let base = empty_fem3d_projection();
         let settings = FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 25.0 };
-        round_trip(&base, &Fem3dOp::SetAnalysisSettings { settings });
+        round_trip(&base, &Fem3dOperation::SetAnalysisSettings { settings });
     }
 
     #[test]
     fn document_op_round_trips() {
         let (base, ..) = cantilever_fixture();
         let replacement = solid_slab_doc();
-        let after = round_trip(&base, &Fem3dOp::SetDocument { document: replacement.clone() });
+        let after = round_trip(&base, &Fem3dOperation::SetDocument { document: replacement.clone() });
         assert_eq!(after, replacement);
     }
 
@@ -1096,8 +1096,8 @@ mod tests {
     fn document_diff_absorb_wins_over_granular_changes() {
         let (base, ..) = cantilever_fixture();
         let replacement = solid_slab_doc();
-        let mut diff = Fem3dOp::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } }.diff(&base);
-        diff.absorb(Fem3dOp::SetDocument { document: replacement.clone() }.diff(&base));
+        let mut diff = Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } }.diff(&base);
+        diff.absorb(Fem3dOperation::SetDocument { document: replacement.clone() }.diff(&base));
         assert_eq!(diff.apply(&base), replacement);
     }
     // #endregion 🔖OpRoundTrip
@@ -1285,9 +1285,9 @@ mod tests {
     fn solid_op_round_trips() {
         let base = solid_slab_doc();
         let updated = FemSolid { id: "sol1".into(), name: "Slab Updated".into(), outline: base.solids[0].outline.clone(), holes: vec![], base_z: 0.0, height: 0.8, layers: 2, mesh_size: 0.5, material_id: "concrete".into() };
-        let after_set = round_trip(&base, &Fem3dOp::SetSolid { index: 0, solid: updated });
+        let after_set = round_trip(&base, &Fem3dOperation::SetSolid { index: 0, solid: updated });
         assert_eq!(after_set.solids[0].height, 0.8);
-        round_trip(&after_set, &Fem3dOp::RemoveSolid { id: "sol1".into() });
+        round_trip(&after_set, &Fem3dOperation::RemoveSolid { id: "sol1".into() });
     }
 
     #[test]

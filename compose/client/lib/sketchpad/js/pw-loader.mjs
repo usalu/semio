@@ -68,7 +68,7 @@ export async function resolve(specifier, context, nextResolve) {
     throw e;
   }
   if (result.url.endsWith(".css")) {
-    return { ...result, format: "css-noop", shortCircuit: true };
+    return { ...result, format: "css-no-operation", shortCircuit: true };
   }
   return result;
 }
@@ -126,7 +126,7 @@ function transformTypeScript(url, source) {
 }
 
 export async function load(url, context, nextLoad) {
-  if (url.endsWith(".css") || context.format === "css-noop") {
+  if (url.endsWith(".css") || context.format === "css-no-operation") {
     return { format: "module", shortCircuit: true, source: "export default {}" };
   }
   if (url.endsWith(".json") && !context.importAttributes?.type) {

@@ -17525,31 +17525,31 @@ import type { OsProgramContribution } from "@semio-tech/framework-platform-core"
 
 /** @emoji 🏘️ S app VCS handler for compose design documents. */
 export function createComposeDesignAppVcsHandler() {
-  return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+  return createTypedAppVcsHandler<{ readonly id: string }, { readonly operation: "setId"; readonly id: string }>(
     "compose.design",
     "compose.design",
     () => ({ id: "design" }),
-    (doc, op) => ({ id: op.id }),
+    (doc, operator) => ({ id: operation.id }),
   );
 }
 
 /** @emoji 🏷️ S app VCS handler for compose type documents. */
 export function createComposeTypeAppVcsHandler() {
-  return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+  return createTypedAppVcsHandler<{ readonly id: string }, { readonly operation: "setId"; readonly id: string }>(
     "compose.type",
     "compose.type",
     () => ({ id: "type" }),
-    (doc, op) => ({ id: op.id }),
+    (doc, operator) => ({ id: operation.id }),
   );
 }
 
 /** @emoji 📦 S app VCS handler for compose kit documents. */
 export function createComposeKitAppVcsHandler() {
-  return createTypedAppVcsHandler<{ readonly id: string }, { readonly op: "setId"; readonly id: string }>(
+  return createTypedAppVcsHandler<{ readonly id: string }, { readonly operation: "setId"; readonly id: string }>(
     "compose.kit",
     "compose.kit",
     () => ({ id: "kit" }),
-    (doc, op) => ({ id: op.id }),
+    (doc, operator) => ({ id: operation.id }),
   );
 }
 

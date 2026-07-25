@@ -124,7 +124,7 @@ async computeSurfaceViews(topo: TopologyGraph): Promise<SurfaceView[]> {
 
 In `#region 🪡SelfMergeDiff`:
 
-- Quantize positions by `derivedModelScale(topo) * 1e-5` (same tolerance used elsewhere) and hash to a stable base36 key. Vertex/edge/face ids embed this key so reruns of `decomposeCells` on the same input produce the same ids and `applyTopologyDiff` is a no-op.
+- Quantize positions by `derivedModelScale(topo) * 1e-5` (same tolerance used elsewhere) and hash to a stable base36 key. Vertex/edge/face ids embed this key so reruns of `decomposeCells` on the same input produce the same ids and `applyTopologyDiff` is a no-operation.
 
 ### 7. Ticket bookkeeping
 

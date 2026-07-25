@@ -2210,7 +2210,7 @@ mod tests {
         let before = dock.root.clone();
         let payload = stack_payload("a", vec![0], 0);
         let zone = DockDropZone::Tab { stack_path: vec![0], index: 0 };
-        assert!(!dock.apply_drop(&payload, &zone), "dropping a stack back onto itself is a no-op");
+        assert!(!dock.apply_drop(&payload, &zone), "dropping a stack back onto itself is a no-operation");
         assert_eq!(dock.root, before);
     }
 
@@ -2616,7 +2616,7 @@ mod tests {
                     text: None,
                     on_change: ActionDescriptor {
                         controller_id: "test".into(),
-                        action: "noop".into(),
+                        action: "noOperation".into(),
                         args: None,
                     },
                 }],
@@ -5723,7 +5723,7 @@ fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wg
  * index into `layers` and is rebased accordingly, kept correct for whatever a future `SceneHost` might
  * push (today's `paint::paint_component_scene` placeholder — no `SceneHost` is registered, see the
  * `ComponentScene`/`Image` shadow-paint note below — doesn't populate `scene_passes`, so this is
- * presently a no-op copy of an empty `Vec`, kept for correctness rather than left a silent gap). */
+ * presently a no-operation copy of an empty `Vec`, kept for correctness rather than left a silent gap). */
 fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
     let glass_base = target.glass_regions.len();
     for region in &retained.glass_regions {
@@ -6728,6 +6728,459 @@ mod render_plan_validator_tests {
     //#endregion UiImageLoadingTests
 }
 //#endregion RenderPlanValidatorTests
+
+//#region 🔬Introspection
+/** 🔬 Structural + frame-stats dump for the wgpu↔React UI-parity headless test harness (see
+ * `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`): walks the SAME `UI_ENGINE` retained façade
+ * `render_ui_node` (above) already drives, so every dump reflects exactly what was last laid
+ * out/painted — never a second, independent measurement pass. Deliberately scoped to ONE window's
+ * content tree: shell chrome/navbar/footer/dock are rendered by this crate's own immediate-mode
+ * widgets code directly into the composited canvas frame, never through `UI_ENGINE` at all, so
+ * they're structurally unreachable from here — out of scope by construction, not by filtering.
+ * Exported to JS the same way `semioRendererBoot`/`uploadIconAtlas` already are (bare
+ * `#[wasm_bindgen(js_name = "...")]` free functions) — no new loading path invented for these two;
+ * see the `🔬IntrospectionExports` sub-region below for exactly how they end up reachable. */
+
+//#region 🔬IntrospectionTypes
+#[derive(serde::Serialize)]
+struct DumpViewport {
+    w: f32,
+    h: f32,
+    dpr: f32,
+}
+
+#[derive(serde::Serialize)]
+struct DumpNodeState {
+    hovered: bool,
+    disabled: bool,
+    selected: bool,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpNode {
+    path: String,
+    kind: &'static str,
+    rect: [f32; 4],
+    text: Option<String>,
+    color: Option<[f32; 4]>,
+    bg: Option<[f32; 4]>,
+    font_size: Option<f32>,
+    font_weight: Option<u32>,
+    visible: bool,
+    state: DumpNodeState,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpStructure {
+    viewport: DumpViewport,
+    focus_path: Option<String>,
+    nodes: Vec<DumpNode>,
+}
+
+#[derive(serde::Serialize)]
+#[serde(rename_all = "camelCase")]
+struct DumpFrameStats {
+    window_id: Option<String>,
+    draw_calls: usize,
+    quad_count: usize,
+    glyph_count: usize,
+}
+//#endregion 🔬IntrospectionTypes
+
+//#region 🔬IntrospectionPathGrammar
+/// 🏷️ The wire-format `type` tag for `node` — MUST byte-match `UiNode`'s own `#[serde(tag =
+/// "type", rename_all = "camelCase")]` so a path segment built from this is comparable to the
+/// React side's `data-ui-path` (built from the same serialized `UiNode` tree — see this ticket's
+/// own path-grammar spec, shared verbatim between both sides). Exhaustive match: a new `UiNode`
+/// variant fails to compile here until wired, same discipline as `UiNode::presence`'s own match.
+fn ui_node_kind_tag(node: &UiNode) -> &'static str {
+    match node {
+        UiNode::Stack(_) => "stack",
+        UiNode::Text(_) => "text",
+        UiNode::Button(_) => "button",
+        UiNode::Separator(_) => "separator",
+        UiNode::Input(_) => "input",
+        UiNode::Select(_) => "select",
+        UiNode::Toggle(_) => "toggle",
+        UiNode::KeyValue(_) => "keyValue",
+        UiNode::Slider(_) => "slider",
+        UiNode::NumberStepper(_) => "numberStepper",
+        UiNode::Ring(_) => "ring",
+        UiNode::IconSelect(_) => "iconSelect",
+        UiNode::Field(_) => "field",
+        UiNode::Section(_) => "section",
+        UiNode::Group(_) => "group",
+        UiNode::Tree(_) => "tree",
+        UiNode::Image(_) => "image",
+        UiNode::ComponentScene(_) => "componentScene",
+        UiNode::ExternalSlot(_) => "externalSlot",
+    }
+}
+
+/// 🔑 `node`'s own declared identity field, if it has one — mirrors `ui_wgpu`'s private
+/// `reconcile::explicit_id` (same variant→field mapping, the one `NodeKey::Explicit` itself keys
+/// retained children by, so this names the exact same identity the retained tree already
+/// reconciles against) since that function isn't part of `ui_wgpu`'s public surface.
+fn ui_node_declared_id(node: &UiNode) -> Option<&str> {
+    match node {
+        UiNode::Stack(n) => n.id.as_deref(),
+        UiNode::Button(n) => n.id.as_deref(),
+        UiNode::Input(n) => Some(n.id.as_str()),
+        UiNode::Select(n) => Some(n.id.as_str()),
+        UiNode::Toggle(n) => Some(n.id.as_str()),
+        UiNode::Slider(n) => Some(n.id.as_str()),
+        UiNode::NumberStepper(n) => Some(n.id.as_str()),
+        UiNode::Ring(n) => Some(n.id.as_str()),
+        UiNode::IconSelect(n) => Some(n.id.as_str()),
+        UiNode::Field(n) => Some(n.id.as_str()),
+        UiNode::Section(n) => Some(n.id.as_str()),
+        UiNode::Group(n) => Some(n.id.as_str()),
+        UiNode::Image(n) => Some(n.id.as_str()),
+        UiNode::ComponentScene(n) => Some(n.surface_id.as_str()),
+        UiNode::ExternalSlot(n) => Some(n.body_key.as_str()),
+        UiNode::Text(_) | UiNode::Separator(_) | UiNode::KeyValue(_) | UiNode::Tree(_) => None,
+    }
+}
+
+/// 🧭 One path segment: `${kind}[${i}]` or `${kind}[${i}]#${id}` when `node` carries a non-empty
+/// declared id — the exact grammar the React side's `data-ui-path` mirrors.
+fn ui_node_path_segment(node: &UiNode, sibling_index: usize) -> String {
+    let kind = ui_node_kind_tag(node);
+    match ui_node_declared_id(node) {
+        Some(id) if !id.is_empty() => format!("{kind}[{sibling_index}]#{id}"),
+        _ => format!("{kind}[{sibling_index}]"),
+    }
+}
+//#endregion 🔬IntrospectionPathGrammar
+
+//#region 🔬IntrospectionVisualFields
+fn rgba_array(color: ui_wgpu::Rgba) -> [f32; 4] {
+    [color.r, color.g, color.b, color.a]
+}
+
+fn dim(color: ui_wgpu::Rgba, disabled: bool) -> ui_wgpu::Rgba {
+    if disabled { color.with_alpha(color.a * 0.5) } else { color }
+}
+
+/// 🎨 Best-effort `(text, color, bg, fontSize)` per `UiNode` kind, read straight off `theme`'s
+/// already-`pub` fields (or the re-exported `ui_wgpu::item_bg`/`item_text` helpers
+/// `paint::paint_button`/`paint_toggle` themselves call) rather than duplicating `paint`'s private
+/// per-widget geometry — `null` wherever a kind genuinely carries no single rendered text/color
+/// (e.g. `KeyValue`'s multiple entries, `Slider`'s numeric value, any purely-visual kind). Colors
+/// are `Theme`'s own LINEAR-space floats (see `Rgba::from_srgb8`), NOT sRGB 0..255 — a caller
+/// comparing these against the DOM's `rgb()` CSS colors must gamma-correct first; a known,
+/// documented unit mismatch, not a bug. `fontWeight` is always `None`: this renderer's `Theme`/
+/// `paint` layer has no font-weight concept at all (only `UiTextNode.emphasize`, which changes
+/// size+color, never weight) — a genuine gap, not a guess.
+fn dump_visual_fields(node: &UiNode, theme: &Theme, hovered: bool) -> (Option<String>, Option<[f32; 4]>, Option<[f32; 4]>, Option<f32>) {
+    match node {
+        UiNode::Stack(stack) => {
+            if stack.activate.is_some() {
+                let bg = if hovered { theme.button_hover } else { theme.panel };
+                (None, None, Some(rgba_array(bg)), None)
+            } else {
+                (None, None, None, None)
+            }
+        }
+        UiNode::Text(text) => {
+            let emphasize = text.emphasize.unwrap_or(false);
+            let color = if emphasize { theme.text } else { theme.text_muted };
+            let size = if emphasize { theme.font_size_emphasized } else { theme.font_size_body };
+            (Some(text.value.clone()), Some(rgba_array(color)), None, Some(size))
+        }
+        UiNode::Button(button) => {
+            let disabled = button.presence.state == UiState::Disabled;
+            let color = dim(ui_wgpu::item_text(theme, false, hovered), disabled);
+            let bg = dim(ui_wgpu::item_bg(theme, false, hovered), disabled);
+            (Some(button.label.clone()), Some(rgba_array(color)), Some(rgba_array(bg)), Some(theme.font_size_body))
+        }
+        UiNode::Separator(_) => (None, Some(rgba_array(theme.separator)), None, None),
+        UiNode::Input(input) => {
+            let color = if input.value.is_empty() { theme.text_muted } else { theme.text };
+            (Some(input.value.clone()), Some(rgba_array(color)), Some(rgba_array(theme.input_bg)), Some(theme.font_size_body))
+        }
+        UiNode::Select(select) => {
+            let label = select
+                .items
+                .iter()
+                .find(|item| item.value == select.value)
+                .map(|item| item.label.clone())
+                .or_else(|| select.placeholder.clone());
+            let bg = if hovered { theme.button_hover } else { theme.input_bg };
+            (label, Some(rgba_array(theme.text)), Some(rgba_array(bg)), Some(theme.font_size_body))
+        }
+        UiNode::Toggle(toggle) => {
+            let pressed = toggle.presence.selected;
+            let color = ui_wgpu::item_text(theme, pressed, hovered);
+            let bg = ui_wgpu::item_bg(theme, pressed, hovered);
+            let font_size = toggle.text.is_some().then_some(theme.font_size_body);
+            (toggle.text.clone(), Some(rgba_array(color)), Some(rgba_array(bg)), font_size)
+        }
+        UiNode::KeyValue(_) => (None, None, None, None),
+        UiNode::Slider(_) => (None, None, None, None),
+        UiNode::NumberStepper(stepper) => {
+            let (text, color) = if stepper.uniform {
+                (format!("{:.3}", stepper.value), theme.text)
+            } else {
+                (ui_wgpu::UI_INSPECTOR_MIXED_PLACEHOLDER.to_string(), theme.text_muted)
+            };
+            (Some(text), Some(rgba_array(color)), Some(rgba_array(theme.input_bg)), Some(theme.font_size_body))
+        }
+        UiNode::Ring(_) => (None, None, None, None),
+        UiNode::IconSelect(select) => (Some(select.value.clone()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
+        UiNode::Field(field) => (Some(field.label.clone()), Some(rgba_array(theme.text_muted)), None, Some(theme.font_size_small)),
+        UiNode::Section(section) => match &section.label {
+            Some(label) => (Some(label.clone()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
+            None => (None, None, None, None),
+        },
+        UiNode::Group(group) => (Some(group.label.clone()), Some(rgba_array(theme.text)), None, Some(theme.font_size_body)),
+        UiNode::Tree(_) => (None, None, None, None),
+        UiNode::Image(image) => (image.alt.clone(), None, None, None),
+        UiNode::ComponentScene(_) => (None, None, None, None),
+        UiNode::ExternalSlot(_) => (None, None, None, None),
+    }
+}
+//#endregion 🔬IntrospectionVisualFields
+
+//#region 🔬IntrospectionWalk
+/// 🖱️ Same authored-hover-folds-into-live-hover rule `paint::paint_node` applies (private to
+/// `ui_wgpu::paint`, so re-derived here from the same two already-`pub` inputs it reads):
+/// `presence.hover` counts as hovered too, unless the node is disabled.
+fn effective_hovered(node: &ui_wgpu::Node, presence_hover: bool, disabled: bool) -> bool {
+    let live = node.flags.contains(ui_wgpu::NodeFlags::HOVERED);
+    if disabled { live } else { live || presence_hover }
+}
+
+/// 🚶 Depth-first walk mirroring `paint::paint_node`'s own recursion exactly (same `tree.children`
+/// order, same parent-relative-`LayoutBucket`-offset accumulation into absolute `(origin_x +
+/// node.layout.x, origin_y + node.layout.y)`), building one `DumpNode` per visited node and
+/// recording the first node found with `NodeFlags::FOCUSED` set as `focus_path`.
+#[allow(clippy::too_many_arguments, reason = "one arg per walk-state accumulator; mirrors paint_node's own equally-wide signature")]
+fn walk_dump(
+    tree: &ui_wgpu::UiTree,
+    id: ui_wgpu::NodeId,
+    origin_x: f32,
+    origin_y: f32,
+    parent_path: &str,
+    sibling_index: usize,
+    theme: &Theme,
+    focus_path: &mut Option<String>,
+    nodes: &mut Vec<DumpNode>,
+) {
+    let Some(node) = tree.node(id) else { return };
+    let ui_node = &node.spec.0;
+    let presence = ui_node.presence();
+    let segment = ui_node_path_segment(ui_node, sibling_index);
+    let path = if parent_path.is_empty() { segment } else { format!("{parent_path}/{segment}") };
+
+    let abs_x = origin_x + node.layout.x;
+    let abs_y = origin_y + node.layout.y;
+    let disabled = presence.state == UiState::Disabled;
+    let hovered = effective_hovered(node, presence.hover, disabled);
+    if focus_path.is_none() && node.flags.contains(ui_wgpu::NodeFlags::FOCUSED) {
+        *focus_path = Some(path.clone());
+    }
+
+    let (text, color, bg, font_size) = dump_visual_fields(ui_node, theme, hovered);
+    nodes.push(DumpNode {
+        path: path.clone(),
+        kind: ui_node_kind_tag(ui_node),
+        rect: [abs_x, abs_y, node.layout.width, node.layout.height],
+        text,
+        color,
+        bg,
+        font_size,
+        font_weight: None,
+        visible: presence.visible(),
+        state: DumpNodeState { hovered, disabled, selected: presence.selected },
+    });
+
+    for (index, child) in tree.children(id).enumerate() {
+        walk_dump(tree, child, abs_x, abs_y, &path, index, theme, focus_path, nodes);
+    }
+}
+//#endregion 🔬IntrospectionWalk
+
+//#region 🔬IntrospectionWindowSelection
+/// 🪟 KNOWN GAP: `UI_ENGINE` may track more than one window at once (a docked window body plus one
+/// or two floating side-panel tabs, each keyed by its own `window_id` — see `RetainedEngineCutover`'s
+/// doc comment for where each `window_id` comes from: `active_tab_id` for a floating panel, a
+/// dock-assigned window-kind id or `"spawned"` for the main docked content). There is no single
+/// caller-supplied "the" window id reaching this pass (`dumpStructure`/`dumpFrameStats` are zero-arg
+/// per this ticket's own spec), so this picks the window with the largest last-known viewport area
+/// as the most likely "main content" window — correct for every current playground fixture (a
+/// single docked window, no floating panels open), wrong in general once a test opens a floating
+/// panel too. Noted rather than guessed further; a real fix needs these two exports to grow an
+/// optional `windowId` JS argument, which this pass doesn't have sanction to add unasked.
+fn primary_window_id(engine: &ui_wgpu::Ui) -> Option<String> {
+    engine
+        .window_ids()
+        .filter_map(|id| engine.viewport(id).map(|(w, h)| (id.to_string(), w * h)))
+        .max_by(|a, b| a.1.total_cmp(&b.1))
+        .map(|(id, _)| id)
+}
+//#endregion 🔬IntrospectionWindowSelection
+
+//#region 🔬IntrospectionBuilders
+fn build_structure_dump(engine: &ui_wgpu::Ui, dpr: f32) -> DumpStructure {
+    let Some(window_id) = primary_window_id(engine) else {
+        return DumpStructure { viewport: DumpViewport { w: 0.0, h: 0.0, dpr }, focus_path: None, nodes: Vec::new() };
+    };
+    let (w, h) = engine.viewport(&window_id).unwrap_or((0.0, 0.0));
+    let theme = engine.theme();
+    let mut nodes = Vec::new();
+    let mut focus_path = None;
+    if let Some(tree) = engine.tree(&window_id) {
+        if let Some(root) = tree.root {
+            walk_dump(tree, root, 0.0, 0.0, "", 0, &theme, &mut focus_path, &mut nodes);
+        }
+    }
+    DumpStructure { viewport: DumpViewport { w, h, dpr }, focus_path, nodes }
+}
+
+/// 🖼️ `drawCalls` = number of non-empty `DrawLayer`s (a reasonable, documented proxy — the
+/// retained `DrawList` doesn't itself count submitted GPU draw calls anywhere, and each non-empty
+/// layer submits as very few real draw calls). `quadCount` = every `UiInstance` across every layer
+/// (glyphs included — a glyph is itself one `UiInstance`, see `draw::KIND_GLYPH`); `glyphCount` is
+/// the `KIND_GLYPH` subset, for boot-triage (a booted-but-blank canvas has 0 of everything; text
+/// that silently failed to shape has quads but 0 glyphs).
+fn layer_is_nonempty(layer: &ui_wgpu::draw::DrawLayer) -> bool {
+    !layer.ui_instances.is_empty()
+        || !layer.raster_instances.is_empty()
+        || !layer.vector_vertices.is_empty()
+        || !layer.overlay_ui_instances.is_empty()
+        || !layer.overlay_vector_vertices.is_empty()
+}
+
+fn is_glyph_instance(instance: &ui_wgpu::draw::UiInstance) -> bool {
+    instance.params[2] == ui_wgpu::draw::KIND_GLYPH
+}
+
+fn build_frame_stats(engine: &ui_wgpu::Ui) -> DumpFrameStats {
+    let Some(window_id) = primary_window_id(engine) else {
+        return DumpFrameStats { window_id: None, draw_calls: 0, quad_count: 0, glyph_count: 0 };
+    };
+    let Some(draw) = engine.draw_list(&window_id) else {
+        return DumpFrameStats { window_id: Some(window_id), draw_calls: 0, quad_count: 0, glyph_count: 0 };
+    };
+    let draw_calls = draw.layers.iter().filter(|layer| layer_is_nonempty(layer)).count();
+    let all_instances = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter().chain(layer.overlay_ui_instances.iter()));
+    let mut quad_count = 0usize;
+    let mut glyph_count = 0usize;
+    for instance in all_instances {
+        quad_count += 1;
+        if is_glyph_instance(instance) {
+            glyph_count += 1;
+        }
+    }
+    DumpFrameStats { window_id: Some(window_id), draw_calls, quad_count, glyph_count }
+}
+//#endregion 🔬IntrospectionBuilders
+
+//#region 🔬IntrospectionExports
+/// 📤 `dumpStructure()`/`dumpFrameStats()` — reachable exactly like `semioRendererBoot`/
+/// `uploadIconAtlas` already are: Trunk's dev-server boot glue (`framework/renderer/wgpu/js/
+/// boot.ts`) waits for `window.wasmBindings` then calls exports straight off it, so these land at
+/// `window.wasmBindings.dumpStructure()`/`window.wasmBindings.dumpFrameStats()` there; the library
+/// boot path (`framework/renderer/wgpu/index.ts`'s `bootFrameworkOsWgpu`) instead calls them on its
+/// own dynamically-imported module object. No new loading path invented for either.
+#[cfg(target_arch = "wasm32")]
+use wasm_bindgen::prelude::wasm_bindgen;
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = "dumpStructure")]
+pub fn dump_structure() -> String {
+    let dpr = web_sys::window().map(|window| window.device_pixel_ratio() as f32).unwrap_or(1.0);
+    let dump = UI_ENGINE.with(|cell| build_structure_dump(&cell.borrow(), dpr));
+    serde_json::to_string(&dump).unwrap_or_else(|_| "{}".to_string())
+}
+
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = "dumpFrameStats")]
+pub fn dump_frame_stats() -> String {
+    let stats = UI_ENGINE.with(|cell| build_frame_stats(&cell.borrow()));
+    serde_json::to_string(&stats).unwrap_or_else(|_| "{}".to_string())
+}
+//#endregion 🔬IntrospectionExports
+
+#[cfg(test)]
+mod introspection_tests {
+    use super::*;
+    use ui_wgpu::{LayoutBucket, Node, NodeFlags, NodeKey, Theme, UiPresence, UiStackNode, UiTextNode, WidgetSpec};
+
+    fn text_node(value: &str) -> UiNode {
+        UiNode::Text(UiTextNode { value: value.into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })
+    }
+
+    fn stack_node(id: Option<&str>, children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: id.map(String::from),
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+            children,
+        })
+    }
+
+    #[test]
+    fn path_segments_use_kind_index_and_declared_id() {
+        let root = stack_node(Some("root"), vec![text_node("a"), stack_node(None, vec![])]);
+        assert_eq!(ui_node_path_segment(&root, 0), "stack[0]#root");
+        let UiNode::Stack(stack) = &root else { unreachable!() };
+        assert_eq!(ui_node_path_segment(&stack.children[0], 0), "text[0]");
+        assert_eq!(ui_node_path_segment(&stack.children[1], 1), "stack[1]");
+    }
+
+    #[test]
+    fn walk_dump_accumulates_absolute_rects_and_builds_full_paths() {
+        let mut tree = ui_wgpu::UiTree::new();
+        let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
+        let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
+        tree.node_mut(root_id).unwrap().layout = LayoutBucket { x: 10.0, y: 20.0, width: 200.0, height: 100.0, ..Default::default() };
+        tree.node_mut(child_id).unwrap().layout = LayoutBucket { x: 5.0, y: 6.0, width: 50.0, height: 12.0, ..Default::default() };
+
+        let theme = Theme::default();
+        let mut nodes = Vec::new();
+        let mut focus_path = None;
+        walk_dump(&tree, root_id, 0.0, 0.0, "", 0, &theme, &mut focus_path, &mut nodes);
+
+        assert_eq!(nodes.len(), 2);
+        assert_eq!(nodes[0].path, "stack[0]#root");
+        assert_eq!(nodes[0].rect, [10.0, 20.0, 200.0, 100.0]);
+        assert_eq!(nodes[1].path, "stack[0]#root/text[0]");
+        assert_eq!(nodes[1].rect, [15.0, 26.0, 50.0, 12.0], "child rect must be the root's absolute origin plus its own parent-relative offset");
+    }
+
+    #[test]
+    fn focus_path_is_recorded_for_the_focused_node() {
+        let mut tree = ui_wgpu::UiTree::new();
+        let root_id = tree.insert_child(None, Node::new(NodeKey::Explicit("root".into()), WidgetSpec(stack_node(Some("root"), vec![]))));
+        let child_id = tree.insert_child(Some(root_id), Node::new(NodeKey::Positional(1, 0), WidgetSpec(text_node("hi"))));
+        tree.node_mut(child_id).unwrap().flags.set(NodeFlags::FOCUSED, true);
+
+        let theme = Theme::default();
+        let mut nodes = Vec::new();
+        let mut focus_path = None;
+        walk_dump(&tree, root_id, 0.0, 0.0, "", 0, &theme, &mut focus_path, &mut nodes);
+
+        assert_eq!(focus_path, Some("stack[0]#root/text[0]".to_string()));
+    }
+
+    #[test]
+    fn kind_tags_match_the_ui_node_wire_format_tag() {
+        // 🔒 Guards path-grammar drift against `UiNode`'s own `#[serde(tag = "type")]` wire format.
+        let node = text_node("x");
+        let json = serde_json::to_value(&node).unwrap();
+        assert_eq!(json.get("type").and_then(|v| v.as_str()), Some(ui_node_kind_tag(&node)));
+    }
+}
+//#endregion 🔬Introspection
 // #endregion interpreter
 }
 
@@ -6857,6 +7310,20 @@ impl PluginBridgeEntry {
             PluginBridgeBackend::Js(handle) => handle_action_js(handle, instance_id, action_json, view_state).await,
             #[cfg(not(target_arch = "wasm32"))]
             PluginBridgeBackend::Wasm(runtime) => runtime.handle_action(instance_id, action_json, view_state).map_err(|error| error.to_string()),
+        }
+    }
+
+    pub fn load_app_document(&self, instance_id: u32, document_json: &str) -> Result<(), String> {
+        match &self.backend {
+            #[cfg(target_arch = "wasm32")]
+            PluginBridgeBackend::Js(handle) => {
+                let load = get_fn(handle.as_ref(), "loadAppDocument")?;
+                load.call2(&JsValue::NULL, &JsValue::from_f64(instance_id as f64), &JsValue::from_str(document_json))
+                    .map(|_| ())
+                    .map_err(|_| "load_app_document failed".into())
+            }
+            #[cfg(not(target_arch = "wasm32"))]
+            PluginBridgeBackend::Wasm(runtime) => runtime.load_app_document(instance_id, document_json).map_err(|error| error.to_string()),
         }
     }
 
@@ -6990,15 +7457,15 @@ async fn handle_action_js(
         if let Ok(parsed) = serde_json::from_str::<semio_framework_core::kernel::InvocationResult>(&text) {
             return Ok(parsed);
         }
-        if let Ok(ops) = serde_json::from_str::<Vec<String>>(&text) {
+        if let Ok(operations) = serde_json::from_str::<Vec<String>>(&text) {
             let descriptor: ui_wgpu::ActionDescriptor =
                 serde_json::from_str(action_json).unwrap_or(ui_wgpu::ActionDescriptor {
                     controller_id: String::new(),
                     action: String::new(),
                     args: None,
                 });
-            return Ok(semio_framework_plugin::action_result_from_patch_ops(
-                ops,
+            return Ok(semio_framework_plugin::action_result_from_patch_operations(
+                operations,
                 &descriptor.action,
                 instance_id,
                 0,
@@ -7006,7 +7473,7 @@ async fn handle_action_js(
             ));
         }
     }
-    Ok(semio_framework_plugin::action_result_from_patch_ops(
+    Ok(semio_framework_plugin::action_result_from_patch_operations(
         Vec::new(),
         "",
         instance_id,
@@ -7719,7 +8186,7 @@ pub fn handle_scene_pointer_move(
                     for (id, (ox, oy)) in origins.iter() {
                         if let Some(block) = find_ink_item(&doc.blocks, id) {
                             let updated = ink_item_with_position(block, ox + dx, oy + dy);
-                            events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                            events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
                             new_overrides.push((id.clone(), updated));
                         }
                     }
@@ -7747,7 +8214,7 @@ pub fn handle_scene_pointer_move(
                     for id in selected_ids {
                         if let Some(block) = find_ink_item(&doc.blocks, id) {
                             let updated = scale_ink_item(block, *from, to);
-                            events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                            events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
                             new_overrides.push((id.clone(), updated));
                         }
                     }
@@ -7788,7 +8255,7 @@ pub fn handle_scene_pointer_move(
                         });
                         actions.push(ink_apply_events_action(
                             scene,
-                            &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })],
+                            &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })],
                             "live",
                             None,
                         ));
@@ -9599,7 +10066,7 @@ mod block_list_tests {
 
 //#region DiffView
 #[derive(Clone, Copy, PartialEq, Debug)]
-enum DiffLineOp {
+enum DiffLineOperation {
     Equal,
     Removed,
     Added,
@@ -9607,7 +10074,7 @@ enum DiffLineOp {
 
 #[derive(Clone, Copy, Debug)]
 struct DiffLine<'a> {
-    op: DiffLineOp,
+    operation: DiffLineOperation,
     text: &'a str,
 }
 
@@ -9625,13 +10092,13 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
         let mut out = Vec::with_capacity(n + m);
         for i in 0..n.max(m) {
             match (before.get(i).copied(), after.get(i).copied()) {
-                (Some(b), Some(a)) if b == a => out.push(DiffLine { op: DiffLineOp::Equal, text: b }),
+                (Some(b), Some(a)) if b == a => out.push(DiffLine { operation: DiffLineOperation::Equal, text: b }),
                 (Some(b), Some(a)) => {
-                    out.push(DiffLine { op: DiffLineOp::Removed, text: b });
-                    out.push(DiffLine { op: DiffLineOp::Added, text: a });
+                    out.push(DiffLine { operation: DiffLineOperation::Removed, text: b });
+                    out.push(DiffLine { operation: DiffLineOperation::Added, text: a });
                 }
-                (Some(b), None) => out.push(DiffLine { op: DiffLineOp::Removed, text: b }),
-                (None, Some(a)) => out.push(DiffLine { op: DiffLineOp::Added, text: a }),
+                (Some(b), None) => out.push(DiffLine { operation: DiffLineOperation::Removed, text: b }),
+                (None, Some(a)) => out.push(DiffLine { operation: DiffLineOperation::Added, text: a }),
                 (None, None) => {}
             }
         }
@@ -9648,23 +10115,23 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
     let (mut i, mut j) = (0, 0);
     while i < n && j < m {
         if before[i] == after[j] {
-            out.push(DiffLine { op: DiffLineOp::Equal, text: before[i] });
+            out.push(DiffLine { operation: DiffLineOperation::Equal, text: before[i] });
             i += 1;
             j += 1;
         } else if table[i + 1][j] >= table[i][j + 1] {
-            out.push(DiffLine { op: DiffLineOp::Removed, text: before[i] });
+            out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i] });
             i += 1;
         } else {
-            out.push(DiffLine { op: DiffLineOp::Added, text: after[j] });
+            out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j] });
             j += 1;
         }
     }
     while i < n {
-        out.push(DiffLine { op: DiffLineOp::Removed, text: before[i] });
+        out.push(DiffLine { operation: DiffLineOperation::Removed, text: before[i] });
         i += 1;
     }
     while j < m {
-        out.push(DiffLine { op: DiffLineOp::Added, text: after[j] });
+        out.push(DiffLine { operation: DiffLineOperation::Added, text: after[j] });
         j += 1;
     }
     out
@@ -9682,7 +10149,7 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     };
     let before_lines: Vec<&str> = diff.before.split('\n').collect();
     let after_lines: Vec<&str> = diff.after.split('\n').collect();
-    let ops = diff_lines(&before_lines, &after_lines);
+    let operations = diff_lines(&before_lines, &after_lines);
     let inner = bounds;
     let pad = theme.padding_standard;
     let row_h = theme.font_size_small + pad * 0.5;
@@ -9698,7 +10165,7 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         drag_data: None,
     });
     ctx.draw.push_scissor(inner);
-    if ops.is_empty() {
+    if operations.is_empty() {
         draw_text(ctx, "—", inner.x + pad, inner.y + row_h * 0.65, theme.font_size_small, theme.text_muted);
         ctx.draw.pop_scissor();
         return;
@@ -9706,32 +10173,32 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
 
     let col_w = if split { (inner.w * 0.5).max(1.0) } else { inner.w };
     let right_x = inner.x + col_w;
-    for (row_index, line) in ops.iter().enumerate() {
+    for (row_index, line) in operations.iter().enumerate() {
         let y = inner.y + row_index as f32 * row_h - scroll;
         if y + row_h < inner.y || y > inner.y + inner.h {
             continue;
         }
         if split {
-            match line.op {
-                DiffLineOp::Removed => {
+            match line.operation {
+                DiffLineOperation::Removed => {
                     ctx.draw.push_solid([inner.x, y, col_w, row_h], theme.error.with_alpha(0.16));
                     draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
                 }
-                DiffLineOp::Added => {
+                DiffLineOperation::Added => {
                     ctx.draw.push_solid([right_x, y, col_w, row_h], theme.accent.with_alpha(0.16));
                     draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
                 }
-                DiffLineOp::Equal => {
+                DiffLineOperation::Equal => {
                     draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
                     draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
                 }
             }
             ctx.draw.push_line(right_x, y, right_x, y + row_h, theme.separator, theme.stroke_hairline);
         } else {
-            let (bg, marker, color) = match line.op {
-                DiffLineOp::Added => (Some(theme.accent.with_alpha(0.16)), '+', theme.text),
-                DiffLineOp::Removed => (Some(theme.error.with_alpha(0.16)), '-', theme.text),
-                DiffLineOp::Equal => (None, ' ', theme.text_muted),
+            let (bg, marker, color) = match line.operation {
+                DiffLineOperation::Added => (Some(theme.accent.with_alpha(0.16)), '+', theme.text),
+                DiffLineOperation::Removed => (Some(theme.error.with_alpha(0.16)), '-', theme.text),
+                DiffLineOperation::Equal => (None, ' ', theme.text_muted),
             };
             if let Some(bg) = bg {
                 ctx.draw.push_solid([inner.x, y, inner.w, row_h], bg);
@@ -9749,46 +10216,46 @@ mod diff_view_tests {
     use super::*;
 
     #[test]
-    fn identical_inputs_produce_only_equal_ops() {
+    fn identical_inputs_produce_only_equal_operations() {
         let before = vec!["a", "b", "c"];
         let after = vec!["a", "b", "c"];
-        let ops = diff_lines(&before, &after);
-        assert_eq!(ops.len(), 3);
-        assert!(ops.iter().all(|line| line.op == DiffLineOp::Equal));
+        let operations = diff_lines(&before, &after);
+        assert_eq!(operations.len(), 3);
+        assert!(operations.iter().all(|line| line.operation == DiffLineOperation::Equal));
     }
 
     #[test]
     fn pure_addition_is_all_added_after_the_shared_prefix() {
         let before = vec!["a"];
         let after = vec!["a", "b", "c"];
-        let ops = diff_lines(&before, &after);
-        assert_eq!(ops[0].op, DiffLineOp::Equal);
-        assert_eq!(ops[1].op, DiffLineOp::Added);
-        assert_eq!(ops[2].op, DiffLineOp::Added);
+        let operations = diff_lines(&before, &after);
+        assert_eq!(operations[0].operation, DiffLineOperation::Equal);
+        assert_eq!(operations[1].operation, DiffLineOperation::Added);
+        assert_eq!(operations[2].operation, DiffLineOperation::Added);
     }
 
     #[test]
     fn pure_removal_is_all_removed_after_the_shared_prefix() {
         let before = vec!["a", "b", "c"];
         let after = vec!["a"];
-        let ops = diff_lines(&before, &after);
-        assert_eq!(ops[0].op, DiffLineOp::Equal);
-        assert_eq!(ops[1].op, DiffLineOp::Removed);
-        assert_eq!(ops[2].op, DiffLineOp::Removed);
+        let operations = diff_lines(&before, &after);
+        assert_eq!(operations[0].operation, DiffLineOperation::Equal);
+        assert_eq!(operations[1].operation, DiffLineOperation::Removed);
+        assert_eq!(operations[2].operation, DiffLineOperation::Removed);
     }
 
     #[test]
     fn changed_line_shows_as_a_remove_add_pair() {
         let before = vec!["a", "old", "c"];
         let after = vec!["a", "new", "c"];
-        let ops = diff_lines(&before, &after);
-        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Removed).count(), 1);
-        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Added).count(), 1);
-        assert_eq!(ops.iter().filter(|line| line.op == DiffLineOp::Equal).count(), 2);
+        let operations = diff_lines(&before, &after);
+        assert_eq!(operations.iter().filter(|line| line.operation == DiffLineOperation::Removed).count(), 1);
+        assert_eq!(operations.iter().filter(|line| line.operation == DiffLineOperation::Added).count(), 1);
+        assert_eq!(operations.iter().filter(|line| line.operation == DiffLineOperation::Equal).count(), 2);
     }
 
     #[test]
-    fn empty_inputs_produce_no_ops() {
+    fn empty_inputs_produce_no_operations() {
         assert!(diff_lines(&[], &[]).is_empty());
     }
 
@@ -9796,9 +10263,9 @@ mod diff_view_tests {
     fn oversized_inputs_use_the_positional_fallback_without_panicking() {
         let before: Vec<&str> = vec!["x"; 2000];
         let after: Vec<&str> = vec!["x"; 2000];
-        let ops = diff_lines(&before, &after);
-        assert_eq!(ops.len(), 2000);
-        assert!(ops.iter().all(|line| line.op == DiffLineOp::Equal));
+        let operations = diff_lines(&before, &after);
+        assert_eq!(operations.len(), 2000);
+        assert!(operations.iter().all(|line| line.operation == DiffLineOperation::Equal));
     }
 }
 //#endregion DiffViewTests
@@ -11499,7 +11966,7 @@ fn erase_ink_stroke_events(blocks: &[Value], x: f64, y: f64, threshold: f64) -> 
     flatten_ink_items(blocks)
         .into_iter()
         .filter(|block| ink_item_kind(block) == "stroke" && ink_hits_point(block, x, y, threshold))
-        .map(|block| json!({ "op": "removeBlock", "blockId": ink_item_id(block) }))
+        .map(|block| json!({ "operation": "removeBlock", "blockId": ink_item_id(block) }))
         .collect()
 }
 
@@ -11563,9 +12030,9 @@ fn erase_ink_stroke_points_events(blocks: &[Value], x: f64, y: f64, radius: f64)
         if fragments.len() == 1 && fragments[0] == *block {
             continue;
         }
-        events.push(json!({ "op": "removeBlock", "blockId": ink_item_id(block) }));
+        events.push(json!({ "operation": "removeBlock", "blockId": ink_item_id(block) }));
         for fragment in fragments {
-            events.push(json!({ "op": "addBlock", "block": fragment }));
+            events.push(json!({ "operation": "addBlock", "block": fragment }));
         }
     }
     events
@@ -11758,7 +12225,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
             s.ink_overrides.insert(block_id.clone(), block.clone());
             s.drag = Some(SceneDrag { mode: SceneDragMode::InkStroke { block_id: block_id.clone() }, button });
         });
-        actions.push(ink_apply_events_action(scene, &[json!({ "op": "addBlock", "block": block })], "begin", Some(&[block_id])));
+        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], "begin", Some(&[block_id])));
         return actions;
     }
 
@@ -11766,7 +12233,7 @@ fn ink_pointer_down(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32, b
         let (px, py) = ink_maybe_snap(&doc, world_x, world_y);
         let block = create_ink_item(&utility, px, py);
         let block_id = ink_item_id(&block).to_string();
-        actions.push(ink_apply_events_action(scene, &[json!({ "op": "addBlock", "block": block })], "atomic", Some(&[block_id])));
+        actions.push(ink_apply_events_action(scene, &[json!({ "operation": "addBlock", "block": block })], "atomic", Some(&[block_id])));
         return actions;
     }
 
@@ -11832,7 +12299,7 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
                     } else {
                         block
                     };
-                    events.push(json!({ "op": "updateBlock", "blockId": id, "block": updated }));
+                    events.push(json!({ "operation": "updateBlock", "blockId": id, "block": updated }));
                 }
             }
             actions.push(ink_apply_events_action(scene, &events, "commit", None));
@@ -11841,14 +12308,14 @@ fn ink_pointer_up(scene: &UiComponentSceneNode, inner: Rect, x: f32, y: f32) -> 
             let mut events = Vec::new();
             for id in selected_ids {
                 if let Some(block) = state.ink_overrides.get(id).cloned() {
-                    events.push(json!({ "op": "updateBlock", "blockId": id, "block": block }));
+                    events.push(json!({ "operation": "updateBlock", "blockId": id, "block": block }));
                 }
             }
             actions.push(ink_apply_events_action(scene, &events, "commit", None));
         }
         SceneDragMode::InkStroke { block_id } => {
             if let Some(block) = state.ink_overrides.get(block_id).cloned() {
-                actions.push(ink_apply_events_action(scene, &[json!({ "op": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
+                actions.push(ink_apply_events_action(scene, &[json!({ "operation": "updateBlock", "blockId": block_id, "block": block })], "commit", None));
             } else {
                 actions.push(ink_apply_events_action(scene, &[], "commit", None));
             }
@@ -13965,8 +14432,8 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
 /// already reaches `EditorHost` via that generic path today. That single-click/drag code was removed here
 /// to avoid double-dispatching `textSelect`/`textEdit` every frame; what remains below (double-click
 /// word-select, right-click context menu, completions, rename) is *not* covered by the generic path and
-/// stays. One asymmetry worth noting: `EditorHost::pointer_down_screen` no-ops unless `button == 0`, so
-/// the generic path's raw-button-passthrough call is a no-op for right-clicks — this region's own
+/// stays. One asymmetry worth noting: `EditorHost::pointer_down_screen` no-operations unless `button == 0`, so
+/// the generic path's raw-button-passthrough call is a no-operation for right-clicks — this region's own
 /// button-forced-to-0 `pointer_down`/`pointer_up` pair for opening the context menu is therefore not
 /// redundant with it.
 #[derive(Clone, Debug, Default)]
@@ -14341,8 +14808,8 @@ fn render_text_editor(
             if ctx.input.pointer_button == 2 && hovered {
                 // 🖱️➡️ Reposition the caret first (button forced to 0, matching `WasmEditorSurface.onContextMenu`'s
                 // `pointerDownScreen(sx, sy, 0)`), then open the menu at the click point. Not redundant with
-                // the generic path: `EditorHost::pointer_down_screen` no-ops unless `button == 0`, so the
-                // generic path's own raw-button-2 call for this same press is already a no-op.
+                // the generic path: `EditorHost::pointer_down_screen` no-operations unless `button == 0`, so the
+                // generic path's own raw-button-2 call for this same press is already a no-operation.
                 let mut actions = engine_canvas::text_editor_pointer_down(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0);
                 actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y));
                 for action in actions {
@@ -14883,7 +15350,7 @@ mod text_editor_tests {
     #[test]
     fn run_menu_action_select_all_reuses_the_ctrl_a_key_path_without_a_registered_engine_surface() {
         // 🛡️ No GPU / `ENGINE_SURFACES` entry exists for this surface_id in a unit test, so this only
-        // asserts the dispatch doesn't panic and gracefully no-ops (see `engine_canvas::text_editor_apply_key`).
+        // asserts the dispatch doesn't panic and gracefully no-operations (see `engine_canvas::text_editor_apply_key`).
         let scene = text_editor_scene("editor.action.select-all", "hello", None, None);
         let editor = scene.text_editor.as_ref().unwrap().clone();
         let inner = Rect::new(0.0, 0.0, 200.0, 200.0);
@@ -15178,7 +15645,7 @@ pub struct ShellState {
     pub measures_resize_window_id: Option<String>,
     pub deferred_actions: Vec<ActionDescriptor>,
     pub active_utilities: Vec<UtilityNode>,
-    /// @emoji 🧰 Host-owned active utility per window kind (never a document field, never a VCS op).
+    /// @emoji 🧰 Host-owned active utility per window kind (never a document field, never a VCS operation).
     /// Replaces the deleted `active_utility_id`/`find_active_utility_id` "first pressed toggle" heuristic.
     pub active_utility_by_window: HashMap<String, String>,
     /// @emoji 📇 Per-window Actions-rail fold state (absent = folded, the default).
@@ -16036,7 +16503,7 @@ impl ShellState {
                     label: format!("{} ({})", layout.label, layout.origin),
                     action: ActionDescriptor {
                         controller_id: session.app.controller_id.clone(),
-                        action: "noop".into(),
+                        action: "noOperation".into(),
                         args: None,
                     },
                     style: None,
@@ -16478,7 +16945,7 @@ impl ShellState {
     }
 
     /// @emoji ✂️ Tears down the active document channel: detaches the plugin's backbone, deregisters
-    /// the host channel end, and stops the actor (flushing pending outbound ops). Step 7 of the
+    /// the host channel end, and stops the actor (flushing pending outbound operations). Step 7 of the
     /// `host_runtime` canonical sequence.
     #[cfg(not(target_arch = "wasm32"))]
     fn detach_sync_backbone_internal(&mut self) {
@@ -16501,7 +16968,7 @@ impl ShellState {
     /// @emoji 📬 Drains the active document actor's event stream into the plugin store and the sync
     /// badge. Called once per native frame — the render loop already redraws continuously (winit
     /// `ControlFlow::Poll`), so a `try_recv` poll suffices and no `EventLoopProxy` wake is needed.
-    /// `RemoteOps` are force-applied via `apply_operations` (idempotent by op id), which also covers
+    /// `RemoteOperations` are force-applied via `apply_operations` (idempotent by operation id), which also covers
     /// idle frames where the sandboxed store never pumps its `ChannelBackbone` on its own. Returns
     /// whether anything changed (and a re-render was issued).
     #[cfg(not(target_arch = "wasm32"))]
@@ -16532,7 +16999,7 @@ impl ShellState {
         let mut changed = false;
         for event in events {
             match event {
-                DocumentEvent::RemoteOps { envelopes } => {
+                DocumentEvent::RemoteOperations { envelopes } => {
                     if let (Some(runtime), Ok(json)) = (runtime.as_ref(), serde_json::to_string(&envelopes)) {
                         match runtime.apply_operations(instance_id, &json) {
                             Ok(()) => changed = true,
@@ -16582,8 +17049,8 @@ impl ShellState {
             RemoteState::Detached => "offline".to_string(),
         };
         let persisted = if status.persisted { "saved" } else { "unsaved" };
-        let pending = if status.pending_ops > 0 {
-            format!(" · {} pending", status.pending_ops)
+        let pending = if status.pendingOperations > 0 {
+            format!(" · {} pending", status.pendingOperations)
         } else {
             String::new()
         };
@@ -16626,7 +17093,7 @@ impl ShellState {
                 .attach_backbone(session.instance_id, &actor_uri)
                 .map_err(|error| format!("plugin attach backbone: {error}"))?;
             let cmd_tx = channels.cmd_tx.clone();
-            let _ = cmd_tx.send(DocumentActorMsg::LocalOps { envelopes: Vec::new() });
+            let _ = cmd_tx.send(DocumentActorMsg::LocalOperations { envelopes: Vec::new() });
             self.sync_channel = Some(ShellSyncChannel {
                 document_id,
                 actor_uri,
@@ -16849,11 +17316,8 @@ impl ShellState {
                 semio_framework_core::kernel::HostEffect::LoadDocument { document_json } => {
                     if let Some(session) = self.session.clone() {
                         if let Some(plugin) = self.plugins.iter().find(|entry| entry.plugin_id == session.plugin_id) {
-                            if let Some(runtime) = plugin.wasm_runtime() {
-                                match runtime.load_app_document(session.instance_id, document_json) {
-                                    Ok(()) => {}
-                                    Err(error) => eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}"),
-                                }
+                            if let Err(error) = plugin.load_app_document(session.instance_id, document_json) {
+                                eprintln!("[DEBUG] wgpu shell loadDocument effect failed: {error}");
                             }
                         }
                     }
@@ -16908,71 +17372,71 @@ impl ShellState {
                 _ => {}
             }
         }
-        let ops: Vec<String> = result
+        let operations: Vec<String> = result
             .operations
             .iter()
             .filter_map(|operation| serde_json::to_string(&operation.diff.payload).ok())
             .collect();
-        self.apply_ops(&ops).await
+        self.apply_operations(&operations).await
     }
 
-    pub async fn apply_ops(&mut self, ops: &[String]) -> Result<(), String> {
-        self.apply_ops_inner(ops, true).await
+    pub async fn apply_operations(&mut self, operations: &[String]) -> Result<(), String> {
+        self.apply_ops_inner(operations, true).await
     }
 
-    async fn apply_ops_inner(&mut self, ops: &[String], allow_navigate: bool) -> Result<(), String> {
-        let mut pending: Vec<String> = ops.to_vec();
+    async fn apply_ops_inner(&mut self, operations: &[String], allow_navigate: bool) -> Result<(), String> {
+        let mut pending: Vec<String> = operations.to_vec();
         let mut view_state = self.session.as_ref().map(|s| s.view_state.clone());
         let mut document_changed = false;
         let mut navigate_uri: Option<String> = None;
         while !pending.is_empty() {
             let batch = std::mem::take(&mut pending);
-            let mut follow_up_ops: Vec<String> = Vec::new();
-            for op_json in batch {
-            let op: serde_json::Value = serde_json::from_str(&op_json).unwrap_or(serde_json::Value::Null);
-            if op.get("op").and_then(|v| v.as_str()) == Some("setDocument") {
+            let mut follow_up_operations: Vec<String> = Vec::new();
+            for operation_json in batch {
+            let operation: serde_json::Value = serde_json::from_str(&operation_json).unwrap_or(serde_json::Value::Null);
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("setDocument") {
                 // 🔗 Document sync now flows through the `framework/sync` `DocumentHost` actor + the
                 // plugin store's `ChannelBackbone` (see `attach_sync_backbone`), not a CRUD envelope
                 // write on every `setDocument` — the old `shell_backbone_write` mirror is deleted.
                 document_changed = true;
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("setPanel") {
-                if let Some(panel) = op.get("panel") {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("setPanel") {
+                if let Some(panel) = operation.get("panel") {
                     if let Some(mut vs) = view_state.take() {
                         vs.panel_json = Some(panel.to_string());
                         view_state = Some(vs);
                     }
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("downloadMediaExport") {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("downloadMediaExport") {
                 if let (Some(filename), Some(mime_type), Some(data)) = (
-                    op.get("filename").and_then(|v| v.as_str()),
-                    op.get("mimeType").and_then(|v| v.as_str()),
-                    op.get("data").and_then(|v| v.as_str()),
+                    operation.get("filename").and_then(|v| v.as_str()),
+                    operation.get("mimeType").and_then(|v| v.as_str()),
+                    operation.get("data").and_then(|v| v.as_str()),
                 ) {
-                    let encoding = op.get("encoding").and_then(|v| v.as_str());
+                    let encoding = operation.get("encoding").and_then(|v| v.as_str());
                     download_media_export(filename, mime_type, data, encoding);
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("requestFileOpen") {
-                if let Some(import_action) = op.get("importAction").and_then(|v| v.as_str()) {
-                    let accept = op
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileOpen") {
+                if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
+                    let accept = operation
                         .get("accept")
                         .and_then(|v| v.as_str())
                         .unwrap_or(".json");
-                    let read_as = op.get("readAs").and_then(|v| v.as_str());
+                    let read_as = operation.get("readAs").and_then(|v| v.as_str());
                     // 📤 D3: `multiple` opens a multi-select native dialog (`rfd::FileDialog::pick_files`);
                     // single-file behavior (one dialog call, one `handleAction` with `{json, payload}`) is
                     // byte-for-byte unchanged when absent/false since `request_file_open` then returns at
                     // most one entry and this loop runs exactly once with the same args shape as before.
-                    let multiple = op.get("multiple").and_then(|v| v.as_bool()).unwrap_or(false);
+                    let multiple = operation.get("multiple").and_then(|v| v.as_bool()).unwrap_or(false);
                     if let Some(session) = self.session.clone() {
                         let opened = request_file_open(accept, read_as, multiple);
                         let total = opened.len();
                         for (index, contents) in opened.into_iter().enumerate() {
                             let payload = serde_json::from_str::<serde_json::Value>(&contents)
                                 .unwrap_or_else(|_| serde_json::Value::String(contents.clone()));
-                            let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                            let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
                             if let Some(obj) = args.as_object_mut() {
                                 obj.insert("json".into(), serde_json::Value::String(contents));
                                 obj.insert("payload".into(), payload);
@@ -16992,7 +17456,7 @@ impl ShellState {
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(patch_ops_from_action_result(&import_result));
+                                        follow_up_operations.extend(patch_ops_from_action_result(&import_result));
                                     }
                                 }
                             }
@@ -17000,12 +17464,12 @@ impl ShellState {
                     }
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("requestFileSave") {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFileSave") {
                 #[cfg(not(target_arch = "wasm32"))]
                 if let (Some(filename), Some(data), Some(studio_id)) = (
-                    op.get("filename").and_then(|v| v.as_str()),
-                    op.get("data").and_then(|v| v.as_str()),
-                    op.get("studioId").and_then(|v| v.as_str()),
+                    operation.get("filename").and_then(|v| v.as_str()),
+                    operation.get("data").and_then(|v| v.as_str()),
+                    operation.get("studioId").and_then(|v| v.as_str()),
                 ) {
                     if let Some(path) = request_file_save(filename) {
                         let _ = std::fs::write(&path, data.as_bytes());
@@ -17024,7 +17488,7 @@ impl ShellState {
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(patch_ops_from_action_result(&bind_result));
+                                        follow_up_operations.extend(patch_ops_from_action_result(&bind_result));
                                     }
                                 }
                             }
@@ -17032,11 +17496,11 @@ impl ShellState {
                     }
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("requestFolderPick") {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("requestFolderPick") {
                 #[cfg(not(target_arch = "wasm32"))]
-                if let Some(import_action) = op.get("importAction").and_then(|v| v.as_str()) {
+                if let Some(import_action) = operation.get("importAction").and_then(|v| v.as_str()) {
                     if let Some(folder_path) = pick_folder() {
-                        let mut args = op.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
+                        let mut args = operation.get("args").cloned().unwrap_or_else(|| serde_json::json!({}));
                         if let Some(obj) = args.as_object_mut() {
                             obj.insert("folderPath".into(), serde_json::json!(folder_path));
                         }
@@ -17052,7 +17516,7 @@ impl ShellState {
                                         .handle_action(session.instance_id, &action_json, &session.view_state)
                                         .await
                                     {
-                                        follow_up_ops.extend(patch_ops_from_action_result(&folder_result));
+                                        follow_up_operations.extend(patch_ops_from_action_result(&folder_result));
                                     }
                                 }
                             }
@@ -17060,19 +17524,19 @@ impl ShellState {
                     }
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("spawnProgram") {
-                if let (Some(program_id), Some(session)) = (op.get("programId").and_then(|v| v.as_str()), &self.session) {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("spawnProgram") {
+                if let (Some(program_id), Some(session)) = (operation.get("programId").and_then(|v| v.as_str()), &self.session) {
                     self.spawn_program(program_id, session.view_state.clone()).await?;
                 }
             }
-            if op.get("op").and_then(|v| v.as_str()) == Some("navigate") {
-                if let Some(uri) = op.get("uri").and_then(|v| v.as_str()) {
+            if operation.get("operation").and_then(|v| v.as_str()) == Some("navigate") {
+                if let Some(uri) = operation.get("uri").and_then(|v| v.as_str()) {
                     navigate_uri = Some(uri.to_string());
                 }
             }
             }
-            if !follow_up_ops.is_empty() {
-                pending.extend(follow_up_ops);
+            if !follow_up_operations.is_empty() {
+                pending.extend(follow_up_operations);
                 document_changed = true;
             }
         }
@@ -17207,11 +17671,7 @@ impl ShellState {
             .await?;
         for effect in &result.requested_effects {
             if let semio_framework_core::kernel::HostEffect::LoadDocument { document_json } = effect {
-                if let Some(runtime) = plugin.wasm_runtime() {
-                    runtime
-                        .load_app_document(session.instance_id, document_json)
-                        .map_err(|error| error.to_string())?;
-                }
+                plugin.load_app_document(session.instance_id, document_json)?;
             }
         }
         self.sync_session_chrome();
@@ -20262,7 +20722,7 @@ impl ShellState {
 
     /// 🚀 Executes a staged action once (P2): validates required args, dispatches exactly one
     /// `ActionDescriptor` with the merged effective args, and keeps the staged values for tweak-and-
-    /// repeat. No-ops when the active utility gates actions or a required arg is still unset.
+    /// repeat. No-operations when the active utility gates actions or a required arg is still unset.
     async fn execute_staged_action(&mut self, window_id: &str, action_id: &str) -> Result<(), String> {
         let Some(session) = self.session.clone() else {
             return Ok(());
@@ -21204,7 +21664,7 @@ fn chrome_advance_introduction(step_count: usize) {
     });
 }
 
-/// 🎓 Decrements the tour's step index (Back button / keyboard) — a no-op at step 0 or when no tour is active.
+/// 🎓 Decrements the tour's step index (Back button / keyboard) — a no-operation at step 0 or when no tour is active.
 fn chrome_back_introduction() {
     CHROME_TOUR_STATE.with(|cell| {
         if let Some(tour) = cell.borrow_mut().as_mut() {
@@ -23180,7 +23640,7 @@ impl ShellState {
     /// 🎓 Advance-by-doing (Part B) — called from the single funnel points a user/plugin action can take
     /// (`dispatch_action`'s successful plugin forward, `apply_set_active_utility`'s activation branch) so
     /// a step's matching `Action`/`Utility` interaction completes the instant the described behavior
-    /// actually happens, mirroring the React shell's own advance-by-doing wiring. No-ops when no tour is
+    /// actually happens, mirroring the React shell's own advance-by-doing wiring. No-operations when no tour is
     /// active or nothing in the active step's `interactions` matches what was performed.
     fn chrome_tour_note_action_performed(&self, action_id: &str) {
         let Some(step) = self.chrome_tour_active_step() else {
@@ -25804,7 +26264,7 @@ mod ui_prefs_themes_i18n_tests {
     }
 
     /// 🧪 `persist_ui_prefs_if_changed`'s dirty-check: a second call with no field changes since the
-    /// last sync must be a cheap no-op (mirrors the combined-dependency-array `useEffect` at
+    /// last sync must be a cheap no-operation (mirrors the combined-dependency-array `useEffect` at
     /// `os-shell.tsx:3477-3491`, which only re-runs when one of its deps actually changed).
     #[test]
     fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
@@ -26058,7 +26518,7 @@ mod chrome_overlays_tour_tests {
         chrome_open_dialog(ChromeDialogRequest {
             id: "blocker".into(), title: "Blocking".into(), body: String::new(),
             confirm_label: "OK".into(),
-            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None },
+            confirm_action: ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None },
             cancel_label: "Cancel".into(),
         });
         assert!(chrome_dialog_open());
@@ -26091,7 +26551,7 @@ mod chrome_overlays_tour_tests {
     }
 
     #[test]
-    fn tour_advance_on_empty_state_is_a_no_op() {
+    fn tour_advance_on_empty_state_is_a_no_operation() {
         reset_chrome_overlay_state();
         chrome_advance_introduction(5);
         assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
@@ -26112,7 +26572,7 @@ mod chrome_overlays_tour_tests {
     }
 
     #[test]
-    fn tour_back_on_empty_state_is_a_no_op() {
+    fn tour_back_on_empty_state_is_a_no_operation() {
         reset_chrome_overlay_state();
         chrome_back_introduction();
         assert!(CHROME_TOUR_STATE.with(|cell| cell.borrow().is_none()));
@@ -26131,7 +26591,7 @@ mod chrome_overlays_tour_tests {
     }
 
     /// 🧪 Ordered interactions gate out-of-order completions (the not-yet-reached one is ignored, no
-    /// dedup entry added) and a repeated already-completed gesture is a no-op — both fall out of
+    /// dedup entry added) and a repeated already-completed gesture is a no-operation — both fall out of
     /// `chrome_tour_complete_interaction`'s `!completed.contains(i)` + `index != completed.len()` checks.
     #[test]
     fn chrome_tour_complete_interaction_respects_order_and_dedups() {
@@ -26149,7 +26609,7 @@ mod chrome_overlays_tour_tests {
         assert_eq!(completed_indices(), Vec::<usize>::new());
         shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
         assert_eq!(completed_indices(), vec![0]);
-        // Repeating zoom after it's already completed is a no-op.
+        // Repeating zoom after it's already completed is a no-operation.
         shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Zoom(id) if id == "main"));
         assert_eq!(completed_indices(), vec![0]);
         shell.chrome_tour_complete_interaction(&step, |kind| matches!(kind, semio_framework_core::IntroductionInteractionKind::Pan(id) if id == "main"));
@@ -26204,7 +26664,7 @@ mod chrome_overlays_tour_tests {
     }
 
     #[test]
-    fn veil_bands_clamp_out_of_viewport_cutouts_to_a_no_op() {
+    fn veil_bands_clamp_out_of_viewport_cutouts_to_a_no_operation() {
         let bands = introduction_veil_bands(800.0, 600.0, &[Rect::new(-100.0, -100.0, 10.0, 10.0)]);
         assert_eq!(bands, vec![Rect::new(0.0, 0.0, 800.0, 600.0)]);
     }
@@ -26295,14 +26755,14 @@ mod chrome_overlays_tour_tests {
     //#region RibbonActivePath
     #[test]
     fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
-        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
         let nodes = vec![ui_wgpu::utility_toggle("a", "icon", "A", true, action)];
         assert!(utility_subtree_has_active_path(&nodes));
     }
 
     #[test]
     fn utility_subtree_has_active_path_recurses_into_nested_collections() {
-        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
         let inner = vec![ui_wgpu::utility_toggle("b", "icon", "B", true, action.clone())];
         let nested = ui_wgpu::utility_collection(
             "group-2",
@@ -26315,7 +26775,7 @@ mod chrome_overlays_tour_tests {
 
     #[test]
     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
-        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
         let nodes = vec![
             ui_wgpu::utility_toggle("a", "icon", "A", false, action.clone()),
             ui_wgpu::utility_collection("group", "icon", "Group", vec![ui_wgpu::utility_toggle("b", "icon", "B", false, action)]),
@@ -26329,7 +26789,7 @@ mod chrome_overlays_tour_tests {
     /// expanding both levels here must reach it.
     #[test]
     fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
-        let action = ActionDescriptor { controller_id: "test".into(), action: "noop".into(), args: None };
+        let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
         let leaf_toggle = ui_wgpu::utility_toggle("leaf", "icon", "Leaf", false, action.clone());
         let inner_collection = ui_wgpu::utility_collection("inner", "icon", "Inner", vec![leaf_toggle]);
         let outer_collection = ui_wgpu::utility_collection("outer", "icon", "Outer", vec![inner_collection]);
@@ -28191,4 +28651,3 @@ pub fn upload_icon_atlas(width: u32, height: u32, pixels: &[u8], entries_json: &
 thread_local! {
     static ICON_ATLAS_RUNTIME: RefCell<Option<IconAtlas>> = RefCell::new(None);
 }
-

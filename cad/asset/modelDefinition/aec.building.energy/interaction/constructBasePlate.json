@@ -44,7 +44,7 @@
                 "label": "Surface",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -60,7 +60,7 @@
                     }
                   },
                   {
-                    "op": "interaction.call",
+                    "operation": "interaction.call",
                     "interaction": "surface.construct",
                     "outputs": [
                       {
@@ -228,7 +228,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -260,7 +260,7 @@
                 "target": "two_points_second",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -297,7 +297,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -329,7 +329,7 @@
                 "target": "two_points_height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -351,7 +351,7 @@
                     }
                   },
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -382,7 +382,7 @@
                 "transient": true,
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -432,12 +432,12 @@
                       ],
                       "in": {
                         "kind": "binop",
-                        "op": "+",
+                        "operation": "+",
                         "left": {
                           "kind": "abs",
                           "arg": {
                             "kind": "binop",
-                            "op": "-",
+                            "operation": "-",
                             "left": {
                               "kind": "var",
                               "name": "z1"
@@ -468,7 +468,7 @@
                 "label": "Height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -510,7 +510,7 @@
                 "target": "curve_height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [
@@ -557,7 +557,7 @@
                 "label": "Height",
                 "effects": [
                   {
-                    "op": "assign",
+                    "operation": "assign",
                     "target": {
                       "root": "context",
                       "segments": [

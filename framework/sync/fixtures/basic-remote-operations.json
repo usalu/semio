@@ -1,5 +1,5 @@
 {
-  "name": "basic-remote-ops",
+  "name": "basic-remote-operations",
   "schema": "demo/v1",
   "documentId": "fixture-basic",
   "inbound": [
@@ -9,14 +9,14 @@
         {
           "id": "basic-1",
           "actor": "peer",
-          "forwards": [{ "op": "SetN", "n": 5 }],
-          "backwards": [{ "op": "SetN", "n": 0 }],
+          "forwards": [{ "operation": "SetN", "n": 5 }],
+          "backwards": [{ "operation": "SetN", "n": 0 }],
           "sequenceNumber": 1,
           "startedAt": "0"
         }
       ]
     }
   ],
-  "expectedEvents": ["remoteOps"],
+  "expectedEvents": ["remoteOperations"],
   "expectedEditIds": ["basic-1"]
 }

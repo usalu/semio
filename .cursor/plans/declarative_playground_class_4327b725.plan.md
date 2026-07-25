@@ -69,7 +69,7 @@ flowchart TB
   - `abstract readonly id: string`
   - `abstract createRuntime(): ProductRuntime`
   - `abstract registerBodies(): void` (registers window + side-panel bodies)
-  - `registerSurfaceHosts(): void` (default no-op; subclasses call the library register fn)
+  - `registerSurfaceHosts(): void` (default no-operation; subclasses call the library register fn)
   - `readonly initialPanelVisibility?`, `readonly keybindings?: { key, controllerId, command }[]`
   - lazily memoized `get runtime()`.
 

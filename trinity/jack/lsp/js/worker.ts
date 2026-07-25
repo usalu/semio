@@ -45,14 +45,14 @@ const server: LanguageServer = {
   },
 };
 
-self.addEventListener("message", (event: MessageEvent<LspMessage | { op?: string; fixtureJson?: string }>) => {
+self.addEventListener("message", (event: MessageEvent<LspMessage | { operation?: string; fixtureJson?: string }>) => {
   const data = event.data;
   if (!data || typeof data !== "object") return;
-  if ("op" in data) {
-    if (data.op !== "init") return;
+  if ("operation" in data) {
+    if (data.operation !== "init") return;
     if (data.fixtureJson) fixtureJson = data.fixtureJson;
     void ensureSession().then(() => {
-      self.postMessage({ op: "ready" });
+      self.postMessage({ operator: "ready" });
     });
     return;
   }

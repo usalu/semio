@@ -1,7 +1,7 @@
 // #region Header
 // 2026 Ueli Saluz <ueli@semio-tech.de>
 // Specs: Vite single-file MCP App bundle for coda (@semio-tech/ui-react + ext-apps).
-// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @semio-tech/ui-react and meshopt noop.
+// Summary: Mirrors compose/engine/vite.mcp-app.config.ts with @semio-tech/ui-react and meshopt no_operation.
 // #endregion Header
 
 // #region 🔌Adapters
@@ -31,13 +31,13 @@ function zodJitlessPlugin(): Plugin {
 
 function meshoptNoopPlugin(): Plugin {
   const MESHOPT_STUB = `
-const noop = () => {};
-const MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: noop, decodeGltfBuffer: noop };
+const no_operation = () => {};
+const MeshoptDecoder = { supported: false, ready: Promise.resolve(), decode: no_operation, decodeGltfBuffer: no_operation };
 export { MeshoptDecoder };
 export default MeshoptDecoder;
 `;
   return {
-    name: "meshopt-noop",
+    name: "meshopt-no-operation",
     enforce: "pre",
     load(id) {
       if ((id.includes("MeshoptDecoder") || id.includes("meshopt_decoder")) && !id.includes("node_modules/.cache")) {
@@ -71,7 +71,7 @@ function stubHeavyDepsPlugin(): Plugin {
     },
     load(id) {
       if (id.startsWith("\0stub-json:")) return "export default {};\n";
-      if (id.startsWith("\0stub:")) return "const noop = () => noop; noop.prototype = {}; export default new Proxy(noop, { get: (_, p) => (p === '__esModule' ? true : p === 'default' ? noop : noop) });\n";
+      if (id.startsWith("\0stub:")) return "const no_operation = () => no_operation; no_operation.prototype = {}; export default new Proxy(no_operation, { get: (_, p) => (p === '__esModule' ? true : p === 'default' ? no_operation : no_operation) });\n";
       return null;
     },
   };
