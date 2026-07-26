@@ -7216,6 +7216,58 @@ mod tests {
     fn json_rejects_trailing_garbage() {
         assert!(parse_json("1 2", 8).is_err());
     }
+
+    #[test]
+    fn json_rejects_malformed_literals_strings_and_numbers() {
+        assert!(parse_json("", 8).is_err());
+        assert!(parse_json("nul", 8).is_err());
+        assert!(parse_json("truX", 8).is_err());
+        assert!(parse_json("falsy", 8).is_err());
+        assert!(parse_json("?", 8).is_err());
+        assert!(parse_json("\"unterminated", 8).is_err());
+        assert!(parse_json("\"bad\\x\"", 8).is_err());
+        assert!(parse_json("\"\\", 8).is_err());
+        assert!(parse_json("\"\\u12\"", 8).is_err());
+        assert!(parse_json("--1", 8).is_err());
+    }
+
+    #[test]
+    fn json_rejects_malformed_arrays_and_objects() {
+        assert!(parse_json("[1 2]", 8).is_err());
+        assert!(parse_json("[1,]", 8).is_err());
+        assert!(parse_json("{1:2}", 8).is_err());
+        assert!(parse_json("{\"a\" 1}", 8).is_err());
+        assert!(parse_json("{\"a\":1 \"b\":2}", 8).is_err());
+        assert!(parse_json("[", 8).is_err());
+        assert!(parse_json("{", 8).is_err());
+    }
+
+    #[test]
+    fn json_parses_empty_array_and_object_and_unicode_escape() {
+        assert_eq!(parse_json("[]", 8).unwrap(), JsonValue::Array(Vec::new()));
+        assert_eq!(parse_json("{}", 8).unwrap(), JsonValue::Object(Vec::new()));
+        let value = parse_json("\"\\u0041\"", 8).unwrap();
+        assert_eq!(value, JsonValue::Str("A".to_string()));
+    }
+
+    #[test]
+    fn json_value_accessors_return_none_for_mismatched_variants() {
+        let value = JsonValue::Str("x".to_string());
+        assert_eq!(value.as_f64(), None);
+        assert_eq!(value.as_bool(), None);
+        assert_eq!(value.as_array(), None);
+        assert_eq!(value.get("k"), None);
+        assert_eq!(JsonValue::Bool(true).as_str(), None);
+    }
+
+    #[test]
+    fn write_json_escapes_control_characters_and_formats_non_integral_numbers() {
+        let value = JsonValue::Object(vec![("s".to_string(), JsonValue::Str("a\u{1}b".to_string())), ("n".to_string(), JsonValue::Num(1.5))]);
+        let written = write_json(&value);
+        assert!(written.contains("\\u0001"));
+        assert!(written.contains("1.5"));
+        assert_eq!(write_json(&JsonValue::Num(3.0)), "3");
+    }
     // #endregion 🔖JsonTests
 
     // #region 🔖Utf8Tests
@@ -8969,6 +9021,65 @@ mod tests {
         let (allowed2, _) = cache.get_or_compute(&dfa, after_a, &adapter);
         assert!(allowed2.get(TokenId::new(1)));
     }
+
+    #[test]
+    fn dfa_supports_plus_optional_and_negated_class_quantifiers() {
+        let limits = SamplingLimits::default();
+        let matches = |pattern: &str, s: &str| {
+            let dfa = Dfa::from_pattern(pattern, &limits).unwrap();
+            let mut state = dfa.start();
+            for &byte in s.as_bytes() {
+                state = dfa.step(state, byte);
+                if dfa.is_dead(state) {
+                    return false;
+                }
+            }
+            dfa.is_accept(state)
+        };
+        assert!(matches("a+", "aaa"));
+        assert!(!matches("a+", ""));
+        assert!(matches("ab?c", "ac"));
+        assert!(matches("ab?c", "abc"));
+        assert!(matches("[^a-c]", "d"));
+        assert!(!matches("[^a-c]", "b"));
+    }
+
+    #[test]
+    fn dfa_handles_escaped_bytes_and_unbounded_repeat() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern(r"a\n{1,}", &limits).unwrap();
+        let mut state = dfa.start();
+        for &byte in b"a\n\n\n" {
+            state = dfa.step(state, byte);
+        }
+        assert!(dfa.is_accept(state));
+    }
+
+    #[test]
+    fn regex_parse_errors_on_unclosed_class_and_dangling_escapes() {
+        let limits = SamplingLimits::default();
+        assert!(Dfa::from_pattern("[abc", &limits).is_err());
+        assert!(Dfa::from_pattern("a\\", &limits).is_err());
+        assert!(Dfa::from_pattern("[a\\", &limits).is_err());
+        assert!(Dfa::from_pattern("a{2", &limits).is_err());
+        assert!(Dfa::from_pattern("a)", &limits).is_err());
+    }
+
+    #[test]
+    fn dfa_token_cache_evicts_all_entries_once_max_entries_is_reached() {
+        let limits = SamplingLimits::default();
+        let dfa = Dfa::from_pattern("a*b", &limits).unwrap();
+        let tokens: Vec<&[u8]> = vec![b"a", b"b"];
+        let adapter = SliceTextAdapter::new(&tokens);
+        let mut cache = DfaTokenCache::new(1);
+        let start = dfa.start();
+        cache.get_or_compute(&dfa, start, &adapter);
+        let after_a = dfa.step(start, b'a');
+        // 🤖 Filling a second, distinct state must evict the first since max_entries is 1.
+        cache.get_or_compute(&dfa, after_a, &adapter);
+        assert_eq!(cache.entries.len(), 1);
+        assert!(cache.entries.contains_key(&after_a));
+    }
     // #endregion 🔖AutomataTests
 
     // #region 🔖ConstraintsTests
@@ -9140,6 +9251,58 @@ mod tests {
         let logits = [10.0f32, 1.0, 1.0];
         let result = sample_step(&config, &mut state, &mut ws, &vocab, Some(&adapter), &logits, &mut observer).unwrap();
         assert_ne!(result.token, TokenId::new(0));
+    }
+
+    #[test]
+    fn validates_json_schema_checks_integer_string_and_array_bounds() {
+        let int_schema = parse_json(r#"{"type":"integer"}"#, 16).unwrap();
+        assert!(validates_json_schema(&JsonValue::Num(3.0), &int_schema));
+        assert!(!validates_json_schema(&JsonValue::Num(3.5), &int_schema));
+
+        let str_schema = parse_json(r#"{"minLength":2,"maxLength":4}"#, 16).unwrap();
+        assert!(validates_json_schema(&JsonValue::Str("abc".into()), &str_schema));
+        assert!(!validates_json_schema(&JsonValue::Str("a".into()), &str_schema));
+        assert!(!validates_json_schema(&JsonValue::Str("abcde".into()), &str_schema));
+
+        let arr_schema = parse_json(r#"{"minItems":1,"maxItems":2,"items":{"type":"number"}}"#, 16).unwrap();
+        assert!(validates_json_schema(&JsonValue::Array(vec![JsonValue::Num(1.0)]), &arr_schema));
+        assert!(!validates_json_schema(&JsonValue::Array(Vec::new()), &arr_schema));
+        assert!(!validates_json_schema(&JsonValue::Array(vec![JsonValue::Num(1.0), JsonValue::Num(2.0), JsonValue::Num(3.0)]), &arr_schema));
+        assert!(!validates_json_schema(&JsonValue::Array(vec![JsonValue::Str("x".into())]), &arr_schema));
+    }
+
+    #[test]
+    fn validates_json_schema_checks_object_required_properties_and_enum() {
+        let schema = parse_json(r#"{"type":"object","required":["a"],"properties":{"a":{"type":"number"}}}"#, 16).unwrap();
+        let ok = JsonValue::Object(vec![("a".to_string(), JsonValue::Num(1.0))]);
+        assert!(validates_json_schema(&ok, &schema));
+        let missing = JsonValue::Object(Vec::new());
+        assert!(!validates_json_schema(&missing, &schema));
+        let wrong_type = JsonValue::Object(vec![("a".to_string(), JsonValue::Str("x".into()))]);
+        assert!(!validates_json_schema(&wrong_type, &schema));
+
+        let enum_schema = parse_json(r#"{"enum":[1,2]}"#, 16).unwrap();
+        assert!(!validates_json_schema(&JsonValue::Num(3.0), &enum_schema));
+    }
+
+    #[test]
+    fn must_include_constraint_is_trivially_satisfied_with_no_alternatives_and_supports_rollback() {
+        let vocab = Vocabulary::new(3);
+        let view = step_view(&vocab, &[], &[]);
+        let mut empty = MustIncludeConstraint::new(Vec::new());
+        assert!(empty.is_satisfied());
+        assert!(!empty.is_finished());
+
+        let mut constraint = MustIncludeConstraint::new(vec![vec![TokenId::new(1)]]);
+        let mark = constraint.save();
+        constraint.accept(&view, TokenId::new(1)).unwrap();
+        assert!(constraint.is_satisfied());
+        constraint.rollback_to(mark);
+        assert!(!constraint.is_satisfied());
+        constraint.reset();
+        assert!(!constraint.is_satisfied());
+        let forked = constraint.fork();
+        assert!(!forked.is_satisfied());
     }
     // #endregion 🔖ConstraintsTests
 

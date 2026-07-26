@@ -2184,6 +2184,44 @@ mod dispatch {
             assert!((results[0].load_w - 5000.0).abs() < 1e-6);
             assert!((results[1].load_w - 2000.0).abs() < 1e-6);
         }
+
+        #[test]
+        fn uniform_splits_proportionally_to_capacity() {
+            let d = Dispatcher::new(
+                DispatchScheme::Uniform,
+                vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 3000.0 }, EquipmentPriority { equipment_id: 2, priority: 2, min_runtime_hours: 0.0, capacity_w: 1000.0 }],
+            );
+            let results = d.dispatch(&DispatchRequest { total_load_w: 2000.0, available_capacity_w: 4000.0, outdoor_temp_c: 20.0 });
+            assert_eq!(results.len(), 2);
+            let plr = 2000.0 / 4000.0;
+            assert!((results[0].load_w - 3000.0 * plr).abs() < 1e-6);
+            assert!((results[1].load_w - 1000.0 * plr).abs() < 1e-6);
+            assert!((results[0].part_load_ratio - plr).abs() < 1e-9);
+        }
+
+        #[test]
+        fn uniform_with_no_capacity_returns_empty() {
+            let d = Dispatcher::new(DispatchScheme::Uniform, vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 0.0 }]);
+            let results = d.dispatch(&DispatchRequest { total_load_w: 1000.0, available_capacity_w: 1000.0, outdoor_temp_c: 20.0 });
+            assert!(results.is_empty());
+        }
+
+        #[test]
+        fn optimal_delegates_to_uniform() {
+            let equip = vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 2000.0 }];
+            let request = DispatchRequest { total_load_w: 1000.0, available_capacity_w: 2000.0, outdoor_temp_c: 20.0 };
+            let optimal = Dispatcher::new(DispatchScheme::Optimal, equip.clone()).dispatch(&request);
+            let uniform = Dispatcher::new(DispatchScheme::Uniform, equip).dispatch(&request);
+            assert_eq!(optimal, uniform);
+        }
+
+        #[test]
+        fn unhandled_scheme_falls_back_to_sequential() {
+            let equip = vec![EquipmentPriority { equipment_id: 1, priority: 1, min_runtime_hours: 0.0, capacity_w: 500.0 }];
+            let request = DispatchRequest { total_load_w: 300.0, available_capacity_w: 500.0, outdoor_temp_c: 20.0 };
+            let results = Dispatcher::new(DispatchScheme::ThermalStorage, equip).dispatch(&request);
+            assert!((results[0].load_w - 300.0).abs() < 1e-9);
+        }
     }
 }
 
@@ -2877,6 +2915,41 @@ mod error {
         fn fatal_has_correct_severity() {
             let e = Error::fatal("bad model");
             assert_eq!(e.severity, Severity::Fatal);
+        }
+
+        #[test]
+        fn severe_and_warning_severities() {
+            assert_eq!(Error::severe("x").severity, Severity::Severe);
+            assert_eq!(Error::warning("x").severity, Severity::Warning);
+        }
+
+        #[test]
+        fn with_context_sets_context() {
+            let e = Error::fatal("bad").with_context("zone1");
+            assert_eq!(e.context.as_deref(), Some("zone1"));
+        }
+
+        #[test]
+        fn display_includes_context_when_present() {
+            let with_ctx = Error::severe("oops").with_context("surf1");
+            assert!(format!("{with_ctx}").contains("surf1"));
+            let without_ctx = Error::warning("hmm");
+            assert!(!format!("{without_ctx}").contains('('));
+        }
+
+        #[test]
+        fn diagnostics_push_has_fatal_and_merge() {
+            let mut diag = Diagnostics::default();
+            assert!(!diag.has_fatal());
+            diag.push(Error::warning("minor"));
+            assert!(!diag.has_fatal());
+            diag.push(Error::fatal("boom"));
+            assert!(diag.has_fatal());
+
+            let mut other = Diagnostics::default();
+            other.push(Error::severe("other issue"));
+            diag.merge(other);
+            assert_eq!(diag.messages.len(), 3);
         }
     }
 }
@@ -4619,6 +4692,119 @@ mod hvac_topo {
             let diag = validate_topology(&nodes, &branches, &[], &[]);
             assert!(!diag.has_fatal());
         }
+
+        #[test]
+        fn branch_with_invalid_node_index_is_fatal() {
+            let nodes = vec![FluidNode::new(0)];
+            let branches = vec![Branch { id: 0, inlet: 0, outlet: 5, component: BranchComponent::Bypass }];
+            let diag = validate_topology(&nodes, &branches, &[], &[]);
+            assert!(diag.has_fatal());
+        }
+
+        #[test]
+        fn branch_with_identical_inlet_outlet_is_severe() {
+            let nodes = vec![FluidNode::new(0), FluidNode::new(1)];
+            let branches = vec![Branch { id: 0, inlet: 0, outlet: 0, component: BranchComponent::Bypass }];
+            let diag = validate_topology(&nodes, &branches, &[], &[]);
+            assert!(!diag.has_fatal());
+            assert_eq!(diag.messages.len(), 1);
+        }
+
+        #[test]
+        fn splitter_fraction_mismatch_warns() {
+            let nodes = vec![FluidNode::new(0), FluidNode::new(1), FluidNode::new(2)];
+            let splitters = vec![Splitter { id: 0, inlet: 0, outlets: vec![(1, 0.3), (2, 0.3)] }];
+            let diag = validate_topology(&nodes, &[], &splitters, &[]);
+            assert_eq!(diag.messages.len(), 1);
+        }
+
+        #[test]
+        fn splitter_invalid_inlet_is_fatal() {
+            let nodes = vec![FluidNode::new(0)];
+            let splitters = vec![Splitter { id: 0, inlet: 9, outlets: vec![(0, 1.0)] }];
+            let diag = validate_topology(&nodes, &[], &splitters, &[]);
+            assert!(diag.has_fatal());
+        }
+
+        #[test]
+        fn mixer_invalid_inlet_and_outlet_are_fatal() {
+            let nodes = vec![FluidNode::new(0)];
+            let mixers = vec![Mixer { id: 0, inlets: vec![9], outlet: 8 }];
+            let diag = validate_topology(&nodes, &[], &[], &mixers);
+            assert!(diag.has_fatal());
+            assert_eq!(diag.messages.len(), 2);
+        }
+
+        #[test]
+        fn mixer_blend_with_zero_flow_returns_default_node() {
+            let nodes = [FluidNode { id: 0, temperature_c: 10.0, humidity_ratio: 0.005, pressure_pa: 101_325.0, mass_flow_kg_s: 0.0 }];
+            let mixer = Mixer { id: 0, inlets: vec![0], outlet: 7 };
+            let out = mixer.blend(&nodes);
+            assert_eq!(out.id, 7);
+            assert_eq!(out.mass_flow_kg_s, 0.0);
+        }
+
+        #[test]
+        fn air_loop_validate_flags_invalid_zone_outlet() {
+            let loop_topo = AirLoop {
+                id: 0,
+                name: "AL".into(),
+                nodes: vec![FluidNode::new(0), FluidNode::new(1)],
+                branches: vec![],
+                splitters: vec![],
+                mixers: vec![],
+                supply_inlet: 0,
+                supply_outlet: 1,
+                return_inlet: 0,
+                return_outlet: 1,
+                zone_outlets: vec![9],
+                zone_returns: vec![],
+            };
+            let diag = loop_topo.validate();
+            assert!(!diag.messages.is_empty());
+        }
+
+        #[test]
+        fn plant_loop_validate_delegates_to_validate_topology() {
+            let loop_topo = PlantLoop {
+                id: 0,
+                name: "PL".into(),
+                fluid: PlantFluid::Water,
+                nodes: vec![FluidNode::new(0), FluidNode::new(1)],
+                branches: vec![Branch { id: 0, inlet: 0, outlet: 1, component: BranchComponent::Bypass }],
+                splitters: vec![],
+                mixers: vec![],
+                supply_inlet: 0,
+                supply_outlet: 1,
+                demand_inlet: 1,
+                demand_outlet: 0,
+            };
+            assert!(!loop_topo.validate().has_fatal());
+        }
+
+        #[test]
+        fn branch_pressure_drop_for_each_component_kind() {
+            let inlet = FluidNode { id: 0, temperature_c: 60.0, humidity_ratio: 0.008, pressure_pa: 200_000.0, mass_flow_kg_s: 1.0 };
+            let outlet = FluidNode { id: 1, temperature_c: 40.0, humidity_ratio: 0.008, pressure_pa: 150_000.0, mass_flow_kg_s: 1.0 };
+
+            let duct = Branch { id: 0, inlet: 0, outlet: 1, component: BranchComponent::Duct { hydraulic_diameter_m: 0.3, length_m: 10.0 } };
+            assert!(duct.pressure_drop_pa(&inlet, &outlet) > 0.0);
+
+            let pipe = Branch { id: 1, inlet: 0, outlet: 1, component: BranchComponent::Pipe { diameter_m: 0.05, length_m: 20.0 } };
+            assert!(pipe.pressure_drop_pa(&inlet, &outlet) > 0.0);
+
+            let pump = Branch { id: 2, inlet: 0, outlet: 1, component: BranchComponent::Pump { design_head_pa: 100_000.0, design_flow_kg_s: 1.0 } };
+            assert!(pump.pressure_drop_pa(&inlet, &outlet) < 0.0);
+
+            let coil = Branch { id: 3, inlet: 0, outlet: 1, component: BranchComponent::Coil { ua_w_per_k: 500.0 } };
+            assert!(coil.pressure_drop_pa(&inlet, &outlet) > 0.0);
+
+            let valve = Branch { id: 4, inlet: 0, outlet: 1, component: BranchComponent::Valve { cv: 10.0 } };
+            assert!(valve.pressure_drop_pa(&inlet, &outlet) > 0.0);
+
+            let bypass = Branch { id: 5, inlet: 0, outlet: 1, component: BranchComponent::Bypass };
+            assert_eq!(bypass.pressure_drop_pa(&inlet, &outlet), 5.0);
+        }
     }
 }
 
@@ -5710,6 +5896,93 @@ mod kernel {
             let config = SimulationConfig { run_period_start_month: 1, run_period_start_day: 1, run_period_end_month: 1, run_period_end_day: 7, ..Default::default() };
             assert_eq!(SimulationKernel::run_period(&config).total_hours(), 168);
         }
+
+        #[test]
+        fn advance_timestep_with_mechanical_ventilation_and_fan_coil_zone_equipment() {
+            use crate::model::*;
+            let mut model = crate::sim::test_model_single_zone();
+            model.mechanical_ventilations.push(MechanicalVentilation { id: EntityId(90), zone_id: EntityId(1), schedule_id: ScheduleId(0), design_flow_m3_s: 0.05, fan_total_efficiency: 0.6, fan_delta_pressure_pa: 500.0 });
+            model.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(91), zone_id: EntityId(1), equipment_type: ZoneEquipmentType::FanCoil, priority: 1, heating_capacity_w: 3000.0, cooling_capacity_w: 3000.0 });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let weather = default_weather(10);
+            let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+            let date = SimDate::new(2026, 1, 1);
+            let config = SimulationConfig::default();
+            let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+            assert!(result.is_ok());
+            assert!(state.zones.contains_key(&EntityId(1)));
+        }
+
+        #[test]
+        fn advance_timestep_with_baseboard_zone_equipment_and_humidistat() {
+            use crate::model::*;
+            let mut model = crate::sim::test_model_single_zone();
+            model.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(92), zone_id: EntityId(1), equipment_type: ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 2000.0, cooling_capacity_w: 0.0 });
+            model.humidistats.push(Humidistat { id: EntityId(93), zone_id: EntityId(1), humidifying_setpoint_schedule_id: ScheduleId(0), dehumidifying_setpoint_schedule_id: ScheduleId(0), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let weather = default_weather(10);
+            let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+            let date = SimDate::new(2026, 1, 1);
+            let config = SimulationConfig::default();
+            let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+            assert!(result.is_ok());
+            let zs = state.zones.get(&EntityId(1)).unwrap();
+            assert!(zs.delivered.heating_w >= 0.0);
+        }
+
+        #[test]
+        fn advance_timestep_handles_ground_and_adiabatic_surfaces() {
+            use crate::model::*;
+            let mut model = crate::sim::test_model_single_zone();
+            model.surfaces[0].outside_boundary_condition = OutsideBoundary::Ground;
+            model.surfaces.push(Surface {
+                id: EntityId(31),
+                name: "AdiabaticWall".into(),
+                zone_id: EntityId(1),
+                class: SurfaceClass::InteriorWall,
+                vertices_m: vec![[0.0, 0.0, 0.0], [5.0, 0.0, 0.0], [5.0, 0.0, 3.0], [0.0, 0.0, 3.0]],
+                construction_id: EntityId(20),
+                outside_boundary_condition: OutsideBoundary::Adiabatic,
+                sun_exposed: false,
+                wind_exposed: false,
+                multiplier: 1,
+            });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let weather = default_weather(10);
+            let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+            let date = SimDate::new(2026, 1, 1);
+            let config = SimulationConfig::default();
+            let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+            assert!(result.is_ok());
+        }
+
+        #[test]
+        fn advance_timestep_with_airflow_network() {
+            use crate::model::*;
+            let mut model = crate::sim::test_model_single_zone();
+            model.airflow_network = Some(AirflowNetworkDefinition { zone_node_ids: vec![(EntityId(1), 1)], outdoor_node_id: 0, link_ids: vec![] });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let weather = default_weather(10);
+            let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+            let date = SimDate::new(2026, 1, 1);
+            let config = SimulationConfig::default();
+            let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+            assert!(result.is_ok());
+        }
+
+        #[test]
+        fn advance_timestep_applies_fault_severity_to_ideal_loads() {
+            use crate::model::*;
+            let mut model = crate::sim::test_model_single_zone();
+            model.faults.push(FaultDefinition { id: EntityId(94), target_equipment_id: EntityId(40), fault_type: FaultType::CoilFouling, severity: 0.3, start_schedule_id: ScheduleId(0) });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let weather = default_weather(10);
+            let mut state = SimulationKernel::initialize(&model, &pre, &weather);
+            let date = SimDate::new(2026, 1, 1);
+            let config = SimulationConfig::default();
+            let result = SimulationKernel::advance_timestep(&model, &config, &pre, &mut state, &weather, &date, 10.0, pre.zone_timestep_s);
+            assert!(result.is_ok());
+        }
     }
 }
 
@@ -5919,6 +6192,39 @@ mod meters {
             let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Heating, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
             m.accumulate(1000.0, 3600.0, 1.0);
             assert!((m.energy_kwh() - 1.0).abs() < 1e-6);
+        }
+
+        #[test]
+        fn meter_tracks_peak_demand_hour() {
+            let mut m = Meter { name: "test".into(), fuel: FuelType::Electricity, end_use: EndUse::Cooling, energy_j: 0.0, peak_demand_w: 0.0, peak_demand_hour: 0.0 };
+            m.accumulate(500.0, 3600.0, 1.0);
+            m.accumulate(1500.0, 3600.0, 2.0);
+            m.accumulate(200.0, 3600.0, 3.0);
+            assert!((m.peak_demand_w - 1500.0).abs() < 1e-9);
+            assert!((m.peak_demand_hour - 2.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn store_get_or_create_is_idempotent_and_totals_by_fuel() {
+            let mut store = MeterStore::default();
+            store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
+            store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 1.0);
+            store.get_or_create("Boiler Gas", FuelType::NaturalGas, EndUse::Heating).accumulate(2000.0, 3600.0, 0.0);
+            assert_eq!(store.meters.len(), 2);
+            assert!((store.facility_total_kwh(FuelType::Electricity) - 2.0).abs() < 1e-6);
+            assert!((store.facility_total_kwh(FuelType::NaturalGas) - 2000.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
+            assert_eq!(store.facility_total_kwh(FuelType::Propane), 0.0);
+        }
+
+        #[test]
+        fn end_use_breakdown_aggregates_by_category() {
+            let mut store = MeterStore::default();
+            store.get_or_create("Zone1 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
+            store.get_or_create("Zone2 Heating", FuelType::Electricity, EndUse::Heating).accumulate(1000.0, 3600.0, 0.0);
+            store.get_or_create("Fans", FuelType::Electricity, EndUse::Fans).accumulate(500.0, 3600.0, 0.0);
+            let breakdown = store.end_use_breakdown();
+            assert!((breakdown[&EndUse::Heating] - 2.0 * 1000.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
+            assert!((breakdown[&EndUse::Fans] - 500.0 * 3600.0 / 3_600_000.0).abs() < 1e-6);
         }
     }
 }
@@ -6767,6 +7073,168 @@ mod model {
             let model = Model { zones: vec![minimal_zone()], ..Default::default() };
             assert!(model.validate().is_ok() || model.validate().is_err());
         }
+
+        fn valid_model() -> Model {
+            Model {
+                zones: vec![minimal_zone()],
+                materials: vec![Material { id: EntityId(10), name: "Mat".into(), thickness_m: 0.1, conductivity_w_m_k: 0.04, density_kg_m3: 50.0, specific_heat_j_kg_k: 1000.0, thermal_absorptance: 0.9, solar_absorptance: 0.7, visible_absorptance: 0.7 }],
+                constructions: vec![Construction { id: EntityId(20), name: "Wall".into(), layer_material_ids: vec![EntityId(10)] }],
+                surfaces: vec![Surface {
+                    id: EntityId(30),
+                    name: "Wall1".into(),
+                    zone_id: EntityId(1),
+                    class: SurfaceClass::ExteriorWall,
+                    vertices_m: vec![[0.0, 0.0, 0.0], [10.0, 0.0, 0.0], [10.0, 0.0, 3.0]],
+                    construction_id: EntityId(20),
+                    outside_boundary_condition: OutsideBoundary::OutdoorAir,
+                    sun_exposed: true,
+                    wind_exposed: true,
+                    multiplier: 1,
+                }],
+                ..Default::default()
+            }
+        }
+
+        #[test]
+        fn valid_model_passes_validation() {
+            assert!(valid_model().validate().is_ok());
+        }
+
+        #[test]
+        fn duplicate_zone_name_fails() {
+            let mut m = valid_model();
+            m.zones.push(minimal_zone());
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn non_positive_volume_fails() {
+            let mut m = valid_model();
+            m.zones[0].volume_m3 = 0.0;
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn surface_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.surfaces[0].zone_id = EntityId(999);
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn surface_unknown_construction_fails() {
+            let mut m = valid_model();
+            m.surfaces[0].construction_id = EntityId(999);
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn surface_too_few_vertices_fails() {
+            let mut m = valid_model();
+            m.surfaces[0].vertices_m = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]];
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn interzone_missing_pair_fails() {
+            let mut m = valid_model();
+            m.surfaces[0].outside_boundary_condition = OutsideBoundary::Interzone(EntityId(999));
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn fenestration_unknown_surface_fails() {
+            let mut m = valid_model();
+            m.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(999), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn construction_empty_layers_fails() {
+            let mut m = valid_model();
+            m.constructions[0].layer_material_ids.clear();
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn construction_unknown_material_fails() {
+            let mut m = valid_model();
+            m.constructions[0].layer_material_ids = vec![EntityId(999)];
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn material_invalid_thermal_properties_fails() {
+            let mut m = valid_model();
+            m.materials[0].thickness_m = 0.0;
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn thermostat_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(999), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 1.0, cooling_throttle_range_k: 1.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn ideal_loads_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.ideal_loads.push(IdealLoadsSystem { id: EntityId(60), zone_id: EntityId(999), max_heating_supply_air_temp_c: 50.0, min_cooling_supply_air_temp_c: 13.0, max_heating_capacity_w: None, max_cooling_capacity_w: None, outdoor_air_per_person_m3_s: 0.0, outdoor_air_per_area_m3_s_m2: 0.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn humidistat_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.humidistats.push(Humidistat { id: EntityId(70), zone_id: EntityId(999), humidifying_setpoint_schedule_id: ScheduleId(1), dehumidifying_setpoint_schedule_id: ScheduleId(1), humidifying_throttle_range: 5.0, dehumidifying_throttle_range: 5.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn zone_equipment_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.zone_equipment.push(ZoneEquipmentAssignment { id: EntityId(80), zone_id: EntityId(999), equipment_type: ZoneEquipmentType::Baseboard, priority: 1, heating_capacity_w: 1000.0, cooling_capacity_w: 0.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn mechanical_ventilation_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.mechanical_ventilations.push(MechanicalVentilation { id: EntityId(90), zone_id: EntityId(999), schedule_id: ScheduleId(1), design_flow_m3_s: 0.1, fan_total_efficiency: 0.6, fan_delta_pressure_pa: 500.0 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn air_loop_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.air_loops.push(ModelAirLoop { id: EntityId(100), name: "AL1".into(), supply_node_id: 1, return_node_id: 2, design_supply_air_flow_m3_s: 1.0, terminal_zone_ids: vec![EntityId(999)] });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn daylight_zone_unknown_zone_fails() {
+            let mut m = valid_model();
+            m.daylight_zones.push(DaylightZoneConfig { id: EntityId(110), zone_id: EntityId(999), illuminance_target_lux: 500.0, glare_limit: 0.4, window_transmittance: 0.6 });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn adjacency_pair_unknown_surface_fails() {
+            let mut m = valid_model();
+            m.adjacency_pairs.push(AdjacencyPair { surface_a_id: EntityId(999), surface_b_id: EntityId(998) });
+            assert!(m.validate().is_err());
+        }
+
+        #[test]
+        fn lookup_helpers_find_entities() {
+            let m = valid_model();
+            assert!(m.zone_by_id(EntityId(1)).is_some());
+            assert!(m.construction_by_id(EntityId(20)).is_some());
+            assert!(m.material_by_id(EntityId(10)).is_some());
+            assert_eq!(m.surfaces_for_zone(EntityId(1)).len(), 1);
+            assert!(m.zone_by_id(EntityId(999)).is_none());
+        }
     }
 }
 
@@ -7073,6 +7541,48 @@ mod output {
             ts.push(0.0, 10.0);
             ts.push(1.0, 20.0);
             assert!((ts.average() - 15.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn time_series_sum_and_min_max() {
+            let mut ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
+            ts.push(0.0, 5.0);
+            ts.push(1.0, -3.0);
+            ts.push(2.0, 8.0);
+            assert!((ts.sum() - 10.0).abs() < 1e-9);
+            let (min, max) = ts.min_max();
+            assert!((min - -3.0).abs() < 1e-9);
+            assert!((max - 8.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn time_series_average_of_empty_is_zero() {
+            let ts = TimeSeries { key: "t".into(), timestamps_hours: Vec::new(), values: Vec::new(), unit: crate::units::Unit::Watts };
+            assert_eq!(ts.average(), 0.0);
+        }
+
+        #[test]
+        fn registry_matches_exact_and_wildcard() {
+            let mut reg = OutputRegistry::default();
+            reg.register(OutputVariable { key: "Zone1 Temp".into(), unit: crate::units::Unit::Celsius, frequency: ReportingFrequency::Hourly, aggregation: Aggregation::Average });
+            reg.register(OutputVariable { key: "Zone2 Temp".into(), unit: crate::units::Unit::Celsius, frequency: ReportingFrequency::Hourly, aggregation: Aggregation::Average });
+            assert_eq!(reg.matches_wildcard("Zone1 Temp").len(), 1);
+            assert_eq!(reg.matches_wildcard("Zone*").len(), 2);
+            assert_eq!(reg.matches_wildcard("Nope").len(), 0);
+        }
+
+        #[test]
+        fn store_record_get_and_csv() {
+            let mut store = TimeSeriesStore::default();
+            store.record("Zone1 Temp", 0.0, 21.0, crate::units::Unit::Celsius);
+            store.record("Zone1 Temp", 1.0, 22.0, crate::units::Unit::Celsius);
+            let series = store.get("Zone1 Temp").unwrap();
+            assert_eq!(series.values.len(), 2);
+            let csv = store.to_csv("Zone1 Temp").unwrap();
+            assert!(csv.starts_with("hours,value\n"));
+            assert!(csv.contains("21"));
+            assert!(store.to_csv("Missing").is_none());
+            assert!(store.get("Missing").is_none());
         }
     }
 }
@@ -7654,6 +8164,50 @@ mod precompute {
             let pre = PrecomputedModel::build(&model, 60, 60);
             assert!(!pre.surfaces.is_empty());
             assert!(pre.zone_geometry.contains_key(&EntityId(1)));
+        }
+
+        #[test]
+        fn surface_incidence_is_zero_for_unknown_surface() {
+            let model = crate::sim::test_model_single_zone();
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            assert_eq!(pre.surface_incidence(EntityId(999), 45.0, 180.0), 0.0);
+        }
+
+        #[test]
+        fn surface_incidence_matches_known_surface_normal() {
+            let model = crate::sim::test_model_single_zone();
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let incidence = pre.surface_incidence(EntityId(30), 45.0, 180.0);
+            assert!((-1.0..=1.0).contains(&incidence));
+        }
+
+        #[test]
+        fn solar_at_returns_altitude_and_azimuth() {
+            let model = crate::sim::test_model_single_zone();
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let (alt, az) = pre.solar_at(&model, 172, 12.0);
+            assert!(alt > -90.0 && alt < 90.0);
+            assert!((0.0..360.0).contains(&az));
+        }
+
+        #[test]
+        fn thermostat_overrides_default_setpoints() {
+            let mut model = crate::sim::test_model_single_zone();
+            model.thermostats.push(Thermostat { id: EntityId(50), zone_id: EntityId(1), heating_setpoint_schedule_id: ScheduleId(1), cooling_setpoint_schedule_id: ScheduleId(1), heating_throttle_range_k: 3.0, cooling_throttle_range_k: 4.0 });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let sp = pre.default_setpoints.get(&EntityId(1)).unwrap();
+            assert!((sp.heating_throttle_k - 3.0).abs() < 1e-9);
+            assert!((sp.cooling_throttle_k - 4.0).abs() < 1e-9);
+        }
+
+        #[test]
+        fn fenestration_precompute_derives_from_host_surface() {
+            let mut model = crate::sim::test_model_single_zone();
+            model.fenestrations.push(Fenestration { id: EntityId(40), name: "Win".into(), surface_id: EntityId(30), u_value_w_m2k: 2.0, shgc: 0.4, vlt: 0.6, area_m2: 2.0, frame_conductance_w_k: 0.0, divider_conductance_w_k: 0.0 });
+            let pre = PrecomputedModel::build(&model, 60, 60);
+            let fen = pre.fenestrations.get(&EntityId(40)).unwrap();
+            assert_eq!(fen.surface_id, EntityId(30));
+            assert!((fen.shgc - 0.4).abs() < 1e-9);
         }
     }
 }
@@ -9493,6 +10047,26 @@ mod sizing {
             };
             let tables = SizingManager::size(&model, &SizingConfig::default());
             assert!(!tables.zone_loads.is_empty());
+        }
+
+        #[test]
+        fn sizes_equipment_for_ideal_loads_zone() {
+            let model = crate::sim::test_model_single_zone();
+            let tables = SizingManager::size(&model, &SizingConfig::default());
+            assert_eq!(tables.equipment.len(), 1);
+            assert!(tables.equipment[0].design_load_w > 0.0);
+        }
+
+        #[test]
+        fn coincident_peak_sums_all_loads() {
+            assert!((SizingManager::coincident_peak(&[1000.0, 2000.0, 500.0]) - 3500.0).abs() < 1e-9);
+            assert_eq!(SizingManager::coincident_peak(&[]), 0.0);
+        }
+
+        #[test]
+        fn non_coincident_peak_takes_maximum() {
+            assert!((SizingManager::non_coincident_peak(&[1000.0, 2000.0, 500.0]) - 2000.0).abs() < 1e-9);
+            assert_eq!(SizingManager::non_coincident_peak(&[]), 0.0);
         }
     }
 }

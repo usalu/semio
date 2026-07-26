@@ -1213,4 +1213,450 @@ mod tests {
         let rebased = floating_origin_rebase(Vec3::new(10.0, 20.0, 30.0), Vec3::new(1.0, 2.0, 3.0));
         assert_eq!(rebased, Vec3::new(9.0, 18.0, 27.0));
     }
+
+    #[test]
+    fn mesh_has_vertex_colors_requires_matching_length() {
+        let mut mesh = test_box_mesh();
+        assert!(!mesh.has_vertex_colors());
+        mesh.colors = vec![1.0; mesh.positions.len()];
+        assert!(mesh.has_vertex_colors());
+    }
+
+    #[test]
+    fn instance_model_from_trs_translates_and_scales_point() {
+        let model = Instance3d::model_from_trs([1.0, 2.0, 3.0], [0.0, 0.0, 0.0, 1.0], [2.0, 2.0, 2.0]);
+        let point = model.transform_point(Vec3::new(1.0, 0.0, 0.0));
+        assert!((point.x - 3.0).abs() < 1e-5, "x={}", point.x);
+        assert!((point.y - 2.0).abs() < 1e-5, "y={}", point.y);
+        assert!((point.z - 3.0).abs() < 1e-5, "z={}", point.z);
+    }
+
+    #[test]
+    fn orbit_controller_orbit_clamps_pitch() {
+        let mut orbit = OrbitController::default();
+        orbit.pitch = 1.49;
+        orbit.orbit(0.0, 1000.0);
+        assert!((orbit.pitch - 1.5).abs() < 1e-5, "pitch={}", orbit.pitch);
+        orbit.pitch = -1.49;
+        orbit.orbit(0.0, -1000.0);
+        assert!((orbit.pitch + 1.5).abs() < 1e-5, "pitch={}", orbit.pitch);
+    }
+
+    #[test]
+    fn orbit_controller_pan_moves_target_away_from_origin() {
+        let mut orbit = OrbitController::default();
+        let start = orbit.target;
+        orbit.pan(50.0, 0.0);
+        assert!(orbit.target.sub(start).length() > 0.0);
+    }
+
+    #[test]
+    fn orbit_controller_zoom_clamps_distance_bounds() {
+        let mut orbit = OrbitController::default();
+        orbit.distance = 1.0;
+        orbit.zoom(100_000.0);
+        assert!((orbit.distance - 0.5).abs() < 1e-4, "distance={}", orbit.distance);
+        orbit.distance = 400.0;
+        orbit.zoom(-100_000.0);
+        assert!((orbit.distance - 500.0).abs() < 1e-4, "distance={}", orbit.distance);
+    }
+
+    #[test]
+    fn ray_pick_mesh_detail_returns_triangle_index_and_barycentrics() {
+        let mesh = test_box_mesh();
+        let instance = Instance3d { id: "box".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+        let hit = ray_pick_mesh_detail(Vec3::new(0.0, -0.5, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance).expect("hit");
+        assert_eq!(hit.triangle_index, 0);
+        assert!(hit.bary_u >= 0.0 && hit.bary_v >= 0.0 && hit.bary_u + hit.bary_v <= 1.0);
+    }
+
+    #[test]
+    fn ray_pick_mesh_detail_misses_when_aabb_not_hit() {
+        let mesh = test_box_mesh();
+        let instance = Instance3d { id: "box".into(), model: Mat4::translation(Vec3::new(50.0, 0.0, 0.0)), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false };
+        assert!(ray_pick_mesh_detail(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), &mesh, &instance).is_none());
+    }
+
+    #[test]
+    fn interpolate_mesh_uv_none_when_uvs_missing() {
+        let mesh = test_box_mesh();
+        assert!(interpolate_mesh_uv(&mesh, 0, 0.25, 0.25).is_none());
+    }
+
+    #[test]
+    fn interpolate_mesh_uv_blends_triangle_corners() {
+        let mut mesh = test_box_mesh();
+        mesh.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        let (u, v) = interpolate_mesh_uv(&mesh, 0, 0.0, 0.0).expect("uv");
+        assert!((u - 0.0).abs() < 1e-6 && (v - 0.0).abs() < 1e-6);
+        let (u, v) = interpolate_mesh_uv(&mesh, 0, 1.0, 0.0).expect("uv");
+        assert!((u - 1.0).abs() < 1e-6 && (v - 0.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn interpolate_mesh_uv_none_when_triangle_out_of_range() {
+        let mut mesh = test_box_mesh();
+        mesh.uvs = vec![0.0, 0.0, 1.0, 0.0, 0.0, 1.0];
+        assert!(interpolate_mesh_uv(&mesh, 5, 0.0, 0.0).is_none());
+    }
+
+    #[test]
+    fn marquee_is_crossing_from_path_window_mode_uses_endpoints() {
+        let path = [[100.0, 100.0], [50.0, 100.0]];
+        assert!(marquee_is_crossing_from_path(&path, false));
+        let path = [[50.0, 100.0], [100.0, 100.0]];
+        assert!(!marquee_is_crossing_from_path(&path, false));
+    }
+
+    #[test]
+    fn marquee_is_crossing_from_path_empty_defaults_to_false() {
+        let path: [[f32; 2]; 0] = [];
+        assert!(!marquee_is_crossing_from_path(&path, true));
+    }
+
+    #[test]
+    fn segments_intersect_detects_proper_crossing() {
+        assert!(segments_intersect([0.0, 0.0], [10.0, 10.0], [0.0, 10.0], [10.0, 0.0]));
+        assert!(!segments_intersect([0.0, 0.0], [10.0, 0.0], [0.0, 5.0], [10.0, 5.0]));
+    }
+
+    #[test]
+    fn segments_intersect_detects_collinear_touch() {
+        assert!(segments_intersect([0.0, 0.0], [10.0, 0.0], [5.0, 0.0], [20.0, 0.0]));
+    }
+
+    #[test]
+    fn point_on_segment_checks_bounding_box() {
+        assert!(point_on_segment([5.0, 0.0], [0.0, 0.0], [10.0, 0.0]));
+        assert!(!point_on_segment([20.0, 0.0], [0.0, 0.0], [10.0, 0.0]));
+    }
+
+    #[test]
+    fn segment_intersects_rect_detects_boundary_crossing() {
+        let rect = [0.0, 0.0, 10.0, 10.0];
+        assert!(segment_intersects_rect([-5.0, 5.0], [5.0, 5.0], rect));
+        assert!(!segment_intersects_rect([-5.0, 20.0], [-1.0, 20.0], rect));
+    }
+
+    #[test]
+    fn segment_intersects_polygon_true_when_endpoint_inside() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        assert!(segment_intersects_polygon([5.0, 5.0], [50.0, 50.0], &square));
+        assert!(!segment_intersects_polygon([50.0, 50.0], [60.0, 60.0], &square));
+    }
+
+    #[test]
+    fn marquee_contains_point_rectangle_vs_polygon_modes() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let bounds = marquee_rect_bounds(&square);
+        assert!(marquee_contains_point([5.0, 5.0], &square, true, bounds));
+        assert!(!marquee_contains_point([5.0, 5.0], &square, true, None));
+        assert!(marquee_contains_point([5.0, 5.0], &square, false, bounds));
+    }
+
+    #[test]
+    fn marquee_segment_selected_window_mode_requires_both_endpoints_inside() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let bounds = marquee_rect_bounds(&square);
+        assert!(marquee_segment_selected([2.0, 2.0], [8.0, 8.0], &square, true, bounds, false));
+        assert!(!marquee_segment_selected([2.0, 2.0], [20.0, 20.0], &square, true, bounds, false));
+    }
+
+    #[test]
+    fn marquee_segment_selected_crossing_mode_detects_rect_edge_crossing() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let bounds = marquee_rect_bounds(&square);
+        assert!(marquee_segment_selected([-5.0, 5.0], [15.0, 5.0], &square, true, bounds, true));
+        assert!(!marquee_segment_selected([-5.0, 20.0], [-1.0, 20.0], &square, true, bounds, true));
+    }
+
+    #[test]
+    fn marquee_triangle_selected_window_mode_requires_all_points_inside() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let bounds = marquee_rect_bounds(&square);
+        let inside = [[1.0, 1.0], [2.0, 2.0], [3.0, 1.0]];
+        let partial = [[1.0, 1.0], [2.0, 2.0], [30.0, 30.0]];
+        assert!(marquee_triangle_selected(&inside, &square, true, bounds, false));
+        assert!(!marquee_triangle_selected(&partial, &square, true, bounds, false));
+    }
+
+    #[test]
+    fn marquee_triangle_selected_crossing_mode_true_on_partial_overlap() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        let bounds = marquee_rect_bounds(&square);
+        let straddling = [[5.0, 5.0], [20.0, 20.0], [20.0, 5.0]];
+        assert!(marquee_triangle_selected(&straddling, &square, true, bounds, true));
+    }
+
+    #[test]
+    fn aabb_overlaps_marquee_polygon_mode_detects_corner_containment() {
+        let square = [[0.0, 0.0], [10.0, 0.0], [10.0, 10.0], [0.0, 10.0]];
+        assert!(aabb_overlaps_marquee([2.0, 2.0, 8.0, 8.0], &square, false));
+        assert!(!aabb_overlaps_marquee([100.0, 100.0, 110.0, 110.0], &square, false));
+    }
+
+    #[test]
+    fn aabb_overlaps_marquee_rectangle_mode_returns_false_without_bounds() {
+        let empty: [[f32; 2]; 0] = [];
+        assert!(!aabb_overlaps_marquee([0.0, 0.0, 5.0, 5.0], &empty, true));
+    }
+
+    #[test]
+    fn screen_select_components_face_granularity_selects_visible_triangle() {
+        let mut mesh = test_box_mesh();
+        mesh.face_ids = vec![42];
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
+        assert_eq!(selected, vec!["42".to_string()]);
+    }
+
+    #[test]
+    fn screen_select_components_vertex_granularity_selects_ids() {
+        let mut mesh = test_box_mesh();
+        mesh.vertex_ids = vec![10, 11, 12];
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let mut selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "vertex", None, false);
+        selected.sort();
+        assert_eq!(selected, vec!["10".to_string(), "11".to_string(), "12".to_string()]);
+    }
+
+    #[test]
+    fn screen_select_components_edge_granularity_selects_ids() {
+        let mut mesh = test_box_mesh();
+        mesh.edge_positions = vec![-1.0, -1.0, 0.0, 1.0, -1.0, 0.0];
+        mesh.edge_ids = vec![99];
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "box".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "edge", None, false);
+        assert_eq!(selected, vec!["99".to_string()]);
+    }
+
+    #[test]
+    fn screen_select_components_default_granularity_selects_whole_instance() {
+        let mesh = test_box_mesh();
+        let draws = vec![SceneDraw3d { mesh_key: "box".into(), mesh_version: 0, instances: vec![Instance3d { id: "whole".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false }] }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", None, false);
+        assert_eq!(selected, vec!["whole".to_string()]);
+    }
+
+    #[test]
+    fn screen_select_components_filters_by_active_instance_id() {
+        let mesh = test_box_mesh();
+        let draws = vec![SceneDraw3d {
+            mesh_key: "box".into(),
+            mesh_version: 0,
+            instances: vec![
+                Instance3d { id: "keep".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false },
+                Instance3d { id: "skip".into(), model: Mat4::identity(), color: [1.0, 1.0, 1.0, 1.0], selected: false, hovered: false },
+            ],
+        }];
+        let mut lookup = std::collections::HashMap::new();
+        lookup.insert("box".into(), mesh);
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "unknown", Some("keep"), false);
+        assert_eq!(selected, vec!["keep".to_string()]);
+    }
+
+    #[test]
+    fn screen_select_components_skips_missing_mesh_lookup() {
+        let draws = vec![SceneDraw3d { mesh_key: "missing".into(), mesh_version: 0, instances: vec![] }];
+        let lookup = std::collections::HashMap::new();
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let full_screen = [[0.0, 0.0], [800.0, 0.0], [800.0, 600.0], [0.0, 600.0]];
+        let selected = screen_select_components(&lookup, &draws, view_proj, 800.0, 600.0, &full_screen, true, "face", None, false);
+        assert!(selected.is_empty());
+    }
+
+    #[test]
+    fn screen_segment_distance_projects_point_onto_segment() {
+        let dist = screen_segment_distance(5.0, 5.0, 0.0, 0.0, 10.0, 0.0);
+        assert!((dist - 5.0).abs() < 1e-4, "dist={dist}");
+        let dist_beyond_end = screen_segment_distance(20.0, 0.0, 0.0, 0.0, 10.0, 0.0);
+        assert!((dist_beyond_end - 10.0).abs() < 1e-4, "dist={dist_beyond_end}");
+    }
+
+    #[test]
+    fn screen_segment_distance_degenerate_segment_falls_back_to_point_distance() {
+        let dist = screen_segment_distance(3.0, 4.0, 0.0, 0.0, 0.0, 0.0);
+        assert!((dist - 5.0).abs() < 1e-4, "dist={dist}");
+    }
+
+    #[test]
+    fn project_point_rejects_points_outside_near_far_clip() {
+        let camera = Camera3d::default();
+        let view_proj = camera.view_proj(1.0);
+        let far_behind = camera.position.add(camera.position.sub(camera.target).normalize().scale(2.0));
+        assert!(project_point(view_proj, far_behind, 800.0, 600.0).is_none());
+        assert!(project_point(view_proj, camera.target, 800.0, 600.0).is_some());
+    }
+
+    #[test]
+    fn ray_aabb_slab_axis_parallel_ray_outside_bounds_misses() {
+        let origin = Vec3::new(5.0, 0.0, 0.0);
+        let dir = Vec3::new(0.0, 0.0, 1.0);
+        assert!(ray_aabb_slab(origin, dir, [-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]).is_none());
+    }
+
+    #[test]
+    fn ray_aabb_slab_returns_none_when_box_entirely_behind_origin() {
+        let origin = Vec3::new(0.0, 0.0, -10.0);
+        let dir = Vec3::new(0.0, 0.0, -1.0);
+        assert!(ray_aabb_slab(origin, dir, [-1.0, -1.0, -1.0], [1.0, 1.0, 1.0]).is_none());
+    }
+
+    #[test]
+    fn vec3_from_f64_converts_components() {
+        let v = vec3_from_f64([1.5, -2.5, 3.5]);
+        assert_eq!(v, Vec3::new(1.5, -2.5, 3.5));
+    }
+
+    #[test]
+    fn gumball_extent_clamps_to_bounds() {
+        assert!((gumball_extent(0.0) - 0.25).abs() < 1e-6);
+        assert!((gumball_extent(1000.0) - 2.5).abs() < 1e-6);
+        assert!((gumball_extent(10.0) - 1.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn gumball_eye_points_from_pivot_to_camera() {
+        let camera = Camera3d { position: Vec3::new(0.0, 0.0, 10.0), target: Vec3::ZERO, up: Vec3::new(0.0, 1.0, 0.0), fov_y: 45.0_f32.to_radians(), near: 0.1, far: 100.0 };
+        let eye = gumball_eye(&camera, Vec3::ZERO);
+        assert!((eye.length() - 1.0).abs() < 1e-5);
+        assert!(eye.z > 0.99);
+    }
+
+    #[test]
+    fn ray_plane_point_hits_plane_ahead_and_misses_parallel() {
+        let hit = ray_plane_point(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), Vec3::ZERO, Vec3::new(0.0, 0.0, 1.0)).expect("hit");
+        assert!((hit.z - 0.0).abs() < 1e-5, "z={}", hit.z);
+        assert!(ray_plane_point(Vec3::new(0.0, 0.0, -5.0), Vec3::new(1.0, 0.0, 0.0), Vec3::ZERO, Vec3::new(0.0, 0.0, 1.0)).is_none());
+    }
+
+    #[test]
+    fn ray_plane_point_rejects_intersection_behind_origin() {
+        assert!(ray_plane_point(Vec3::new(0.0, 0.0, -5.0), Vec3::new(0.0, 0.0, -1.0), Vec3::ZERO, Vec3::new(0.0, 0.0, 1.0)).is_none());
+    }
+
+    #[test]
+    fn gumball_axis_drag_plane_normal_is_perpendicular_to_axis() {
+        let axis = Vec3::new(1.0, 0.0, 0.0);
+        let eye = Vec3::new(0.0, 0.0, 1.0);
+        let normal = gumball_axis_drag_plane_normal(axis, eye);
+        assert!(normal.dot(axis).abs() < 1e-5, "dot={}", normal.dot(axis));
+    }
+
+    #[test]
+    fn gumball_axis_drag_plane_normal_handles_axis_aligned_with_eye() {
+        let axis = Vec3::new(0.0, 0.0, 1.0);
+        let eye = Vec3::new(0.0, 0.0, 1.0);
+        let normal = gumball_axis_drag_plane_normal(axis, eye);
+        assert!(normal.dot(axis).abs() < 1e-5, "dot={}", normal.dot(axis));
+        assert!((normal.length() - 1.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn gumball_project_ray_onto_axis_measures_signed_offset() {
+        let pivot = Vec3::ZERO;
+        let axis = Vec3::new(1.0, 0.0, 0.0);
+        let eye = Vec3::new(0.0, 0.0, 1.0);
+        let offset = gumball_project_ray_onto_axis(Vec3::new(3.0, 0.0, -5.0), Vec3::new(0.0, 0.0, 1.0), pivot, axis, eye).expect("offset");
+        assert!((offset - 3.0).abs() < 1e-4, "offset={offset}");
+    }
+
+    #[test]
+    fn ray_segment_distance_measures_perpendicular_gap() {
+        let dist = ray_segment_distance(Vec3::new(0.0, 5.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(2.0, 0.0, 0.0), Vec3::new(2.0, 10.0, 0.0)).expect("distance");
+        assert!((dist - 2.0).abs() < 1e-4, "dist={dist}");
+    }
+
+    #[test]
+    fn ray_segment_distance_none_for_degenerate_segment() {
+        assert!(ray_segment_distance(Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0), Vec3::new(5.0, 5.0, 5.0), Vec3::new(5.0, 5.0, 5.0)).is_none());
+    }
+
+    #[test]
+    fn quat_from_basis_identity_axes_yields_identity_quaternion() {
+        let q = quat_from_basis(Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 1.0, 0.0), Vec3::new(0.0, 0.0, 1.0));
+        assert!((q[0]).abs() < 1e-5 && (q[1]).abs() < 1e-5 && (q[2]).abs() < 1e-5, "q={q:?}");
+        assert!((q[3] - 1.0).abs() < 1e-5, "q={q:?}");
+    }
+
+    #[test]
+    fn quat_from_basis_round_trips_through_mat4_from_quat() {
+        let q = quat_from_basis(Vec3::new(0.0, 1.0, 0.0), Vec3::new(-1.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0));
+        let m = Mat4::from_quat(q[0], q[1], q[2], q[3]);
+        let rotated = m.transform_point(Vec3::new(1.0, 0.0, 0.0));
+        assert!((rotated.x - 0.0).abs() < 1e-4 && (rotated.y - 1.0).abs() < 1e-4, "rotated={rotated:?}");
+    }
+
+    #[test]
+    fn rotate_vector_by_90_degrees_around_z_axis() {
+        let rotated = rotate_vector(Vec3::new(1.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2);
+        assert!((rotated.x - 0.0).abs() < 1e-4, "x={}", rotated.x);
+        assert!((rotated.y - 1.0).abs() < 1e-4, "y={}", rotated.y);
+    }
+
+    #[test]
+    fn axis_rotate_angle_measures_signed_rotation() {
+        let axis = Vec3::new(0.0, 0.0, 1.0);
+        let start = Vec3::new(1.0, 0.0, 0.0);
+        let current = Vec3::new(0.0, 1.0, 0.0);
+        let angle = axis_rotate_angle(start, current, axis);
+        assert!((angle - std::f32::consts::FRAC_PI_2).abs() < 1e-3, "angle={angle}");
+        let angle_reverse = axis_rotate_angle(start, Vec3::new(0.0, -1.0, 0.0), axis);
+        assert!((angle_reverse + std::f32::consts::FRAC_PI_2).abs() < 1e-3, "angle={angle_reverse}");
+    }
+
+    #[test]
+    fn pick_closest_mesh_url_returns_fallback_when_no_entries() {
+        let entries: [(f64, &str); 0] = [];
+        assert_eq!(pick_closest_mesh_url(&entries, 5.0, Some("fallback.glb")), Some("fallback.glb"));
+    }
+
+    #[test]
+    fn pick_closest_mesh_url_selects_nearest_lod_entry() {
+        let entries = [(1.0, "hi.glb"), (10.0, "mid.glb"), (100.0, "lo.glb")];
+        assert_eq!(pick_closest_mesh_url(&entries, 8.0, None), Some("mid.glb"));
+    }
+
+    #[test]
+    fn pick_closest_mesh_url_filters_out_non_finite_and_negative_lods() {
+        let entries = [(-1.0, "bad.glb"), (f64::NAN, "nan.glb"), (5.0, "good.glb")];
+        assert_eq!(pick_closest_mesh_url(&entries, 3.0, None), Some("good.glb"));
+    }
+
+    #[test]
+    fn lod_grid_step_world_returns_finest_active_band() {
+        assert_eq!(lod_grid_step_world(5000.0, 10.0), None);
+        let step = lod_grid_step_world(1.0, 10.0).expect("step");
+        assert!((step - 1.0).abs() < 1e-9, "step={step}");
+    }
+
+    #[test]
+    fn grid_placement_anchor_uses_orbit_xy_and_datum_z() {
+        let anchor = grid_placement_anchor(Vec3::new(3.0, 4.0, 999.0), [0.0, 0.0, 12.5]);
+        assert_eq!(anchor, Vec3::new(3.0, 4.0, 12.5));
+    }
 }

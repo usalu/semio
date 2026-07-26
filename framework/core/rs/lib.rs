@@ -73,6 +73,20 @@ mod tests {
         let operations = bus.dispatch("app", "ping", None);
         assert_eq!(operations, vec!["ping:ok"]);
     }
+
+    #[test]
+    fn dispatch_to_unknown_controller_returns_empty() {
+        let mut bus = ActionBus::new();
+        assert!(bus.dispatch("missing", "ping", None).is_empty());
+    }
+
+    #[test]
+    fn unregister_removes_handler_so_dispatch_becomes_noop() {
+        let mut bus = ActionBus::new();
+        bus.register(Box::new(EchoHandler { id: "app".into() }));
+        bus.unregister("app");
+        assert!(bus.dispatch("app", "ping", None).is_empty());
+    }
 }
 // #endregion action_bus
 }
@@ -2798,6 +2812,158 @@ mod tests {
         let decoded = dwg_from_bytes(&bytes).expect("reader should tolerate the unknown object type");
         assert_eq!(decoded.entities.len(), 1);
     }
+
+    #[test]
+    fn mesh_from_obj_rejects_malformed_v_and_vn_lines() {
+        assert_eq!(mesh_from_obj("v 1.0 2.0\n").unwrap_err(), "obj: malformed v line");
+        assert_eq!(mesh_from_obj("v 0 0 0\nvn 1.0\n").unwrap_err(), "obj: malformed vn line");
+    }
+
+    #[test]
+    fn mesh_from_obj_rejects_malformed_face_index() {
+        let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf notanumber 2 3\n";
+        assert_eq!(mesh_from_obj(text).unwrap_err(), "obj: malformed face index");
+    }
+
+    #[test]
+    fn mesh_from_obj_zero_and_out_of_range_negative_indices_error() {
+        let text_zero = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf 0 1 2\n";
+        assert_eq!(mesh_from_obj(text_zero).unwrap_err(), "obj: zero vertex index");
+        let text_negative = "v 0 0 0\nf -5 1 1\n";
+        assert_eq!(mesh_from_obj(text_negative).unwrap_err(), "obj: negative vertex index out of range");
+    }
+
+    #[test]
+    fn mesh_from_obj_resolves_negative_relative_face_indices() {
+        let text = "v 0 0 0\nv 1 0 0\nv 0 1 0\nf -3 -2 -1\n";
+        let mesh = mesh_from_obj(text).expect("negative indices resolve relative to the current vertex count");
+        assert_eq!(mesh.indices, vec![0, 1, 2]);
+    }
+
+    #[test]
+    fn mesh_from_obj_triangulates_ngon_faces_and_skips_degenerate_faces() {
+        let text = "v 0 0 0\nv 1 0 0\nv 1 1 0\nv 0 1 0\nf 1 2 3 4\nf 1 2\n";
+        let mesh = mesh_from_obj(text).expect("decode");
+        assert_eq!(mesh.triangle_count(), 2, "quad fan-triangulates into 2 triangles; the 2-vertex face is skipped");
+    }
+
+    #[test]
+    fn mesh_from_stl_rejects_truncated_header_and_truncated_triangle_data() {
+        assert_eq!(mesh_from_stl(&[0u8; 10]).unwrap_err(), "stl: truncated header");
+        let mut bytes = vec![0u8; 84];
+        bytes[80..84].copy_from_slice(&1u32.to_le_bytes());
+        assert_eq!(mesh_from_stl(&bytes).unwrap_err(), "stl: truncated triangle data");
+    }
+
+    #[test]
+    fn mesh_from_glb_rejects_bytes_without_valid_glb_container() {
+        assert!(mesh_from_glb(b"not a glb file").is_err());
+    }
+
+    #[test]
+    fn mesh_from_kind_maps_known_kinds_and_falls_back_to_box() {
+        assert_eq!(mesh_from_kind("plane").triangle_count(), mesh_plane(1.0, 1.0).triangle_count());
+        assert_eq!(mesh_from_kind("cylinder").triangle_count(), mesh_cylinder(0.5, 1.0, 16).triangle_count());
+        assert_eq!(mesh_from_kind("cone").triangle_count(), mesh_cone(0.5, 1.0, 16).triangle_count());
+        assert_eq!(mesh_from_kind("torus").triangle_count(), mesh_torus(0.5, 0.15, 16, 12).triangle_count());
+        assert_eq!(mesh_from_kind("vortex-marker").triangle_count(), mesh_ico_sphere(0.12, 1).triangle_count());
+        assert_eq!(mesh_from_kind("totally-unknown-kind").triangle_count(), mesh_box(1.0, 1.0, 1.0).triangle_count());
+    }
+
+    #[test]
+    fn mesh_data_aabb_and_merge() {
+        let mut mesh = mesh_box(2.0, 4.0, 6.0);
+        let (min, max) = mesh.aabb();
+        assert!((min[0] - -1.0).abs() < 1e-5 && (max[0] - 1.0).abs() < 1e-5);
+        assert!((min[1] - -2.0).abs() < 1e-5 && (max[1] - 2.0).abs() < 1e-5);
+
+        let base_vertex_count = mesh.vertex_count();
+        let extra = mesh_plane(1.0, 1.0);
+        mesh.merge(&extra);
+        assert_eq!(mesh.vertex_count(), base_vertex_count + extra.vertex_count());
+        assert_eq!(*mesh.indices.last().unwrap(), (base_vertex_count + extra.vertex_count() - 1) as u32, "merged indices are offset by the base vertex count");
+    }
+
+    #[test]
+    fn media_types_compatible_covers_direct_any_convert_and_reject() {
+        let brep = MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep };
+        let mesh_form = MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh };
+        let any_3d = MediaType { class: MediaClass::ThreeD, form: MediaForm::Any };
+        let vector = MediaType { class: MediaClass::TwoD, form: MediaForm::Vector };
+        let raster = MediaType { class: MediaClass::TwoD, form: MediaForm::Raster };
+        let text = MediaType { class: MediaClass::Text, form: MediaForm::Document };
+
+        assert_eq!(media_types_compatible(&brep, &brep), MediaCompat::Direct);
+        assert_eq!(media_types_compatible(&brep, &any_3d), MediaCompat::Direct, "Any on the accepting side takes anything within the class");
+        assert!(matches!(media_types_compatible(&brep, &mesh_form), MediaCompat::Convert { from: MediaForm::Brep, to: MediaForm::Mesh }));
+        assert!(matches!(media_types_compatible(&vector, &raster), MediaCompat::Convert { from: MediaForm::Vector, to: MediaForm::Raster }));
+        assert_eq!(media_types_compatible(&mesh_form, &brep), MediaCompat::Reject, "mesh->brep has no registered conversion");
+        assert_eq!(media_types_compatible(&brep, &text), MediaCompat::Reject, "class mismatch always rejects");
+    }
+
+    #[test]
+    fn media_fingerprint_structured_hashes_json_binary_reuses_blob_hash() {
+        let structured = Media {
+            media_type: MediaType { class: MediaClass::Data, form: MediaForm::Value },
+            payload: MediaPayload::Structured { schema: "s".into(), json: "{}".into() },
+        };
+        let fingerprint = MediaFingerprint::of(&structured);
+        assert_eq!(fingerprint, MediaFingerprint::of(&structured), "fingerprint is deterministic");
+
+        let mut changed = structured.clone();
+        if let MediaPayload::Structured { json, .. } = &mut changed.payload {
+            *json = "{\"a\":1}".into();
+        }
+        assert_ne!(MediaFingerprint::of(&changed), fingerprint, "different json content hashes differently");
+
+        let binary = Media {
+            media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+            payload: MediaPayload::Binary { format: OsMediaFormat::Glb, blob_hash: "abc123".into() },
+        };
+        assert_eq!(MediaFingerprint::of(&binary), MediaFingerprint("abc123".into()), "binary payload reuses its blob hash verbatim");
+    }
+
+    #[test]
+    fn os_media_format_str_mime_binary_and_parse_round_trip_all_variants() {
+        let all = [
+            OsMediaFormat::Svg, OsMediaFormat::Png, OsMediaFormat::Obj, OsMediaFormat::Glb,
+            OsMediaFormat::Stl, OsMediaFormat::Step, OsMediaFormat::Dwg, OsMediaFormat::Ply, OsMediaFormat::Las,
+        ];
+        for format in all {
+            assert_eq!(OsMediaFormat::parse(format.as_str()), Some(format));
+            assert!(!format.mime_type().is_empty());
+        }
+        assert!(OsMediaFormat::Glb.is_binary());
+        assert!(OsMediaFormat::Png.is_binary());
+        assert!(!OsMediaFormat::Obj.is_binary());
+        assert!(!OsMediaFormat::Ply.is_binary(), "Ply defaults to the ASCII/text wire encoding");
+        assert!(OsMediaFormat::Las.is_binary());
+        assert_eq!(OsMediaFormat::parse("bogus"), None);
+    }
+
+    #[test]
+    fn media_error_messages_are_human_readable() {
+        assert_eq!(MediaError::UnknownPort("in".into()).to_string(), "unknown media port `in`");
+        let incompatible = MediaError::Incompatible {
+            port: "out".into(),
+            produced: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+            accepted: MediaType { class: MediaClass::ThreeD, form: MediaForm::Mesh },
+        };
+        assert!(incompatible.to_string().starts_with("port `out` produced"));
+        assert_eq!(MediaError::Payload("p".into(), "bad".into()).to_string(), "media payload error on port `p`: bad");
+        assert_eq!(MediaError::NotImplemented.to_string(), "media ports are not implemented for this app");
+    }
+
+    #[test]
+    fn dwg_ensure_layer_reuses_existing_index_and_appends_new_ones() {
+        let mut drawing = DwgDrawing::default();
+        let outline = drawing.ensure_layer("outline");
+        let outline_again = drawing.ensure_layer("outline");
+        let solids = drawing.ensure_layer("solids");
+        assert_eq!(outline, outline_again);
+        assert_ne!(outline, solids);
+        assert_eq!(drawing.layers.len(), 2);
+    }
 }
 // #endregion mesh
 }
@@ -2951,6 +3117,94 @@ mod tests {
             resource_kinds: Vec::new(),
         });
         assert_eq!(platform.active_app_id, "draw-play");
+    }
+
+    fn minimal_app(id: &str) -> AppDefinition {
+        AppDefinition {
+            id: id.into(),
+            label: id.into(),
+            document: vec!["semio".into(), id.into()],
+            icon_id: None,
+            controller_id: id.into(),
+            modes: crate::ui::Modes::one(ModeDefinition {
+                id: "edit".into(),
+                label: "Edit".into(),
+                tools: Vec::new(),
+                layout_id: None,
+                commands: Vec::new(),
+            }),
+            default_mode_id: "edit".into(),
+            window_kinds: crate::ui::WindowKinds::one(WindowKindDefinition {
+                id: "main".into(),
+                label: "Main".into(),
+                body_key: "main".into(),
+                surface_kind: ui_wgpu::SurfaceKind::Canvas2d,
+                icon_id: "pen-tool".into(),
+                options: ui_wgpu::WindowOptions::default(),
+                actions: Vec::new(),
+                utilities: Vec::new(),
+                params_schema: None,
+                document_projection_schema: None,
+                input_event_schema: None,
+                output_schema: None,
+                capabilities: Vec::new(),
+            }),
+            panel_tabs: vec![],
+            keybindings: vec![],
+            actions: vec![],
+            utilities: vec![],
+            tools: vec![],
+            commands: vec![],
+            named_layouts: Vec::new(),
+            default_layout: None,
+            terminologies: Vec::new(),
+            terminology_documents: std::collections::HashMap::new(),
+            introduction: None,
+            dialogs: Vec::new(),
+            media_inputs: Vec::new(),
+            media_outputs: Vec::new(),
+            resource_kinds: Vec::new(),
+        }
+    }
+
+    #[test]
+    fn set_active_app_id_is_noop_when_unchanged() {
+        let mut platform = Platform::new(None);
+        platform.add_app(minimal_app("draw"));
+        let generation_before = platform.chrome_generation;
+        platform.set_active_app_id("draw".into());
+        assert_eq!(platform.chrome_generation, generation_before, "same id must not bump chrome_generation");
+        platform.set_active_app_id("other".into());
+        assert_eq!(platform.chrome_generation, generation_before + 1);
+        assert_eq!(platform.active_app_id, "other");
+    }
+
+    #[test]
+    fn get_active_app_falls_back_to_first_when_active_id_unknown() {
+        let mut platform = Platform::new(None);
+        platform.add_app(minimal_app("draw"));
+        platform.active_app_id = "missing".into();
+        assert_eq!(platform.get_active_app().unwrap().id, "draw");
+    }
+
+    #[test]
+    fn set_panel_visibility_is_noop_when_unchanged_else_bumps_chrome_generation() {
+        let mut platform = Platform::new(None);
+        let generation_before = platform.chrome_generation;
+        platform.set_panel_visibility(PanelVisibility::default());
+        assert_eq!(platform.chrome_generation, generation_before, "same visibility must not bump generation");
+        platform.set_panel_visibility(PanelVisibility { left_side_panel: true, right_side_panel: false });
+        assert_eq!(platform.chrome_generation, generation_before + 1);
+    }
+
+    #[test]
+    fn notify_and_notify_chrome_increment_independently() {
+        let mut platform = Platform::new(None);
+        platform.notify();
+        platform.notify();
+        platform.notify_chrome();
+        assert_eq!(platform.generation, 2);
+        assert_eq!(platform.chrome_generation, 1);
     }
 }
 // #endregion platform
@@ -5531,6 +5785,32 @@ mod op_dag_tests {
         assert_eq!(drained.len(), 1);
         assert_eq!(drained[0].id.0, "operation-3");
     }
+
+    #[test]
+    fn insert_duplicate_pending_operation_id_errors() {
+        let mut dag = OpDag::new();
+        dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap();
+        let err = dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap_err();
+        assert_eq!(err, OpDagError::Duplicate("operation-2".to_string()));
+    }
+
+    #[test]
+    fn insert_already_applied_operation_returns_already_applied_without_erroring() {
+        let mut dag = OpDag::new();
+        dag.insert(sample_envelope("operation-1", vec![])).unwrap();
+        let result = dag.insert(sample_envelope("operation-1", vec![])).unwrap();
+        assert_eq!(result, InsertResult::AlreadyApplied);
+    }
+
+    #[test]
+    fn seed_applied_unblocks_pending_envelopes_that_reference_out_of_band_deps() {
+        let mut dag = OpDag::new();
+        assert_eq!(dag.insert(sample_envelope("operation-2", vec!["operation-1"])).unwrap(), InsertResult::Pending);
+        assert!(dag.ready().is_empty(), "dependency is not yet known to this dag");
+        dag.seed_applied(vec!["operation-1".to_string()]);
+        let ready_ids: Vec<String> = dag.ready().iter().map(|envelope| envelope.id.0.clone()).collect();
+        assert_eq!(ready_ids, vec!["operation-2".to_string()]);
+    }
 }
 //#endregion 🔖Sync
 
@@ -5685,12 +5965,13 @@ mod app_document_tests {
 
     //#region 🔖ActionArgsAndUtilitiesTests
     use crate::ui::{
-        child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args, resolve_mode_tools,
+        app_window_document_label, child_element_id, effective_action_args, element_id_segment, is_element_id, missing_required_args,
+        resolve_app_document, resolve_layout_for_mode, resolve_mode_tools,
         resolve_window_actions, ActionArgControl, ActionArgDef,
         ActionArgOption, ActionDefinition, ActionKind, ActionRef, AppDefinition, CommandDefinition, CommandRef,
         CommandScope, DialogDefinition, IntroductionCursor, IntroductionDemonstration, IntroductionGesture,
         IntroductionInteraction, IntroductionInteractionKind, IntroductionKeyModifier, IntroductionPoint, IntroductionPointerButton, IntroductionStepDefinition,
-        Modes, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
+        Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
     };
@@ -5901,6 +6182,111 @@ mod app_document_tests {
         );
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
+    }
+
+    #[test]
+    fn resolve_layout_for_mode_prefers_named_then_default_then_none() {
+        fn stack_layout(active: &str) -> ui_wgpu::WindowLayout {
+            ui_wgpu::WindowLayout {
+                root: ui_wgpu::WindowLayoutRoot::Stack(ui_wgpu::WindowLayoutStackNode {
+                    kind: "stack".into(),
+                    size: None,
+                    active_window_kind_id: Some(active.into()),
+                    children: vec![],
+                }),
+            }
+        }
+        let mut app = app_with(vec![], vec![]);
+        app.modes.first_mut().layout_id = Some("named".into());
+        app.named_layouts.push(ui_wgpu::NamedLayout {
+            id: "named".into(),
+            label: "Named".into(),
+            icon_id: None,
+            layout: stack_layout("main"),
+            origin: "app".into(),
+            group_path: None,
+        });
+        app.default_layout = Some(stack_layout("fallback"));
+
+        assert_eq!(resolve_layout_for_mode(&app, "edit"), Some(stack_layout("main")), "named layout referenced by the mode wins");
+
+        app.modes.first_mut().layout_id = Some("missing".into());
+        assert_eq!(
+            resolve_layout_for_mode(&app, "edit"),
+            Some(stack_layout("fallback")),
+            "unresolved named layout id falls back to default_layout"
+        );
+
+        app.default_layout = None;
+        assert_eq!(resolve_layout_for_mode(&app, "edit"), None, "no named layout and no default_layout ⇒ none");
+        assert_eq!(resolve_layout_for_mode(&app, "nonexistent"), None, "unknown mode id ⇒ none");
+    }
+
+    #[test]
+    fn resolve_app_document_uses_terminology_override_else_falls_back_to_native_document() {
+        let mut app = app_with(vec![], vec![]);
+        app.terminology_documents.insert("de".into(), vec!["semio".into(), "a-de".into()]);
+        assert_eq!(resolve_app_document(&app, "de"), ["semio".to_string(), "a-de".to_string()]);
+        assert_eq!(resolve_app_document(&app, "native"), app.document.as_slice());
+        assert_eq!(resolve_app_document(&app, "unregistered"), app.document.as_slice());
+    }
+
+    #[test]
+    fn app_window_document_label_skips_empty_app_named_and_duplicate_trailing_window_labels() {
+        let mut app = app_with(vec![], vec![]);
+        app.label = "Draw".into(); // document (from `app_with`) already ends in "a"
+        assert_eq!(app_window_document_label(&app, "native", "Layers"), "semio · a · layers");
+        assert_eq!(app_window_document_label(&app, "native", ""), "semio · a", "empty window label appends nothing");
+        assert_eq!(app_window_document_label(&app, "native", "Draw"), "semio · a", "window label equal to the app label appends nothing");
+        assert_eq!(
+            app_window_document_label(&app, "native", "A"),
+            "semio · a",
+            "window label equal to the document's trailing segment appends nothing"
+        );
+    }
+
+    #[test]
+    fn non_empty_vec_index_iter_first_mut_and_try_from() {
+        let mut list = NonEmptyVec::new(1i32, vec![2, 3]);
+        assert_eq!(list.len(), 3);
+        assert_eq!(list[0], 1);
+        assert_eq!(list[2], 3);
+        assert_eq!(list.iter().copied().collect::<Vec<_>>(), vec![1, 2, 3]);
+        *list.first_mut() = 10;
+        assert_eq!(list[0], 10);
+
+        let from_vec = NonEmptyVec::try_from(vec![9, 8]).unwrap();
+        assert_eq!(*from_vec.first(), 9);
+        let round_tripped: Vec<i32> = from_vec.into();
+        assert_eq!(round_tripped, vec![9, 8]);
+
+        let err = NonEmptyVec::<i32>::try_from(Vec::new()).unwrap_err();
+        assert!(err.contains("non-empty"));
+    }
+
+    #[test]
+    fn panel_group_anchor_and_as_str_cover_all_variants() {
+        assert_eq!(PanelGroup::Workbench.anchor(), "top-left");
+        assert_eq!(PanelGroup::Details.anchor(), "top-right");
+        assert_eq!(PanelGroup::Display.anchor(), "bottom-left");
+        assert_eq!(PanelGroup::Settings.anchor(), "bottom-right");
+        assert_eq!(PanelGroup::Workbench.as_str(), "workbench");
+        assert_eq!(PanelGroup::Settings.as_str(), "settings");
+    }
+
+    #[test]
+    fn panel_tab_kind_id_str_covers_framework_and_app_variants() {
+        assert_eq!(PanelTabKind::WorkbenchCategory.id_str(), "framework.category.workbench");
+        assert_eq!(PanelTabKind::DisplayWindows.id_str(), "framework.display.windows");
+        assert_eq!(PanelTabKind::App("puzzle.catalogue".into()).id_str(), "puzzle.catalogue");
+        let tab = PanelTabDefinition {
+            kind: PanelTabKind::App("puzzle.catalogue".into()),
+            label: "Catalogue".into(),
+            group: PanelGroup::Workbench,
+            body_key: Some("puzzle.catalogue".into()),
+            children: Vec::new(),
+        };
+        assert_eq!(tab.id(), "puzzle.catalogue");
     }
 
     #[test]

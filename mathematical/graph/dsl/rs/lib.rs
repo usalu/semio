@@ -650,6 +650,59 @@ pub mod wire {
             let text = wire_literal_from_dag(&nodes, &[]);
             assert!(text.contains("{value: 3"));
         }
+
+        #[test]
+        fn wire_literal_nested_object_and_array_properties() {
+            let mut inner = PropertyBag::new();
+            inner.insert("y".into(), PropertyValue::Bool(true));
+            let mut props = PropertyBag::new();
+            props.insert("obj".into(), PropertyValue::Object(inner));
+            props.insert("arr".into(), PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Null]));
+            let nodes = vec![WireNode { id: "n".into(), kind: "slider".into(), port: None, properties: props }];
+            let text = wire_literal_from_dag(&nodes, &[]);
+            assert!(text.contains("obj: {y: true}"));
+            assert!(text.contains("arr: [1, null]"));
+        }
+
+        #[test]
+        fn wire_literal_from_dag_unknown_node_kind_defaults_to_node() {
+            let edges = vec![WireEdge { from: "missing".into(), from_port: "out".into(), to: "also-missing".into(), to_port: "in".into(), directed: true, properties: PropertyBag::new() }];
+            let text = wire_literal_from_dag(&[], &edges);
+            assert_eq!(text, "missing:node@out->also-missing:node@in");
+        }
+
+        #[test]
+        fn dag_from_wire_literal_rejects_unterminated_string() {
+            let err = dag_from_wire_literal("n:kind{prop: 'unterminated").unwrap_err();
+            assert!(matches!(err, GraphDslError::UnterminatedString));
+        }
+
+        #[test]
+        fn dag_from_wire_literal_rejects_unexpected_char() {
+            let err = dag_from_wire_literal("n:kind#bad").unwrap_err();
+            assert!(matches!(err, GraphDslError::UnexpectedChar('#')));
+        }
+
+        #[test]
+        fn dag_from_wire_literal_rejects_edge_missing_target_port() {
+            let err = dag_from_wire_literal("a:kind@out->b:kind").unwrap_err();
+            assert!(matches!(err, GraphDslError::EdgeTargetMissingPort));
+        }
+
+        #[test]
+        fn dag_from_wire_literal_parses_bool_and_null_properties() {
+            let (nodes, _) = dag_from_wire_literal("n:kind{on: true, off: false, empty: null}").unwrap();
+            let props = &nodes[0].properties;
+            assert_eq!(props.get("on"), Some(&PropertyValue::Bool(true)));
+            assert_eq!(props.get("off"), Some(&PropertyValue::Bool(false)));
+            assert_eq!(props.get("empty"), Some(&PropertyValue::Null));
+        }
+
+        #[test]
+        fn dag_from_wire_literal_rejects_malformed_properties() {
+            let err = dag_from_wire_literal("n:kind{prop 1}").unwrap_err();
+            assert!(matches!(err, GraphDslError::UnexpectedToken { .. }));
+        }
     }
     // #endregion 🔖Tests
     // #endregion wire
@@ -902,7 +955,9 @@ fn lex_spanned(input: &str, forgiving: bool) -> Result<Vec<SpannedToken>, GraphD
                 push_spanned(&mut tokens, Token::Arrow, start, start + 2);
                 i += 2;
             }
-            b'0'..=b'9' | b'-' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() => {
+            // 🩹 the guard only needs to disambiguate a leading `-` (negative number vs. dash token);
+            // plain digits must always start a number, even a lone single-digit literal like `1`.
+            b'0'..=b'9' | b'-' if c != b'-' || (i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit()) => {
                 let num_start = i;
                 if bytes[i] == b'-' {
                     i += 1;
@@ -1034,7 +1089,9 @@ fn after_colon_kind_context(source: &str, cursor: usize) -> Option<bool> {
     let before = &source[..cursor];
     let colon = before.rfind(':')?;
     let after = &before[colon + 1..];
-    if after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',')) {
+    // 🩹 an `@` after the kind name means the cursor moved into the port segment (`kind@port`);
+    // bail so `after_at_port_context` can offer port completions instead of kind completions.
+    if after.chars().any(|c| c.is_whitespace() || matches!(c, '(' | ')' | '[' | ']' | ',' | '@')) {
         return None;
     }
     let left = &before[..colon];
@@ -2194,6 +2251,435 @@ mod tests {
         let result = run_query(&graph, "MATCH (n:computation@out)-[:wire]->(m:slider) RETURN n.name, m.name");
         assert!(result.is_ok());
     }
+
+    // #region 🔖Fixtures
+    /// 🧵 Small hand-built graph exercising every `split_endpoint` branch: exact handle match,
+    /// mapped/unmapped `@` and `:` splits, and the plain-id fallback.
+    fn split_endpoint_fixture() -> &'static str {
+        r#"{
+  "manifestId": "flow-dag",
+  "nodes": [
+    { "id": "a", "nodeKind": "computation", "text": "A", "userData": { "score": 1 }, "handles": [{ "id": "a-out" }] },
+    { "id": "b", "nodeKind": "slider", "text": "B" },
+    { "id": "c", "nodeKind": "slider", "text": "C" }
+  ],
+  "edges": [
+    { "id": "e1", "edgeKind": "wire", "source": "a-out", "target": "b@in" },
+    { "id": "e2", "edgeKind": "wire", "source": "a:out2", "target": "c.in2" },
+    { "id": "e3", "edgeKind": "wire", "source": "a-out@x", "target": "a-out:y" },
+    { "id": "e4", "edgeKind": "wire", "source": "z", "target": "c" }
+  ]
+}"#
+    }
+
+    fn find_edge<'a>(edges: &'a [QueryableEdge], id: &str) -> &'a QueryableEdge {
+        edges.iter().find(|e| e.id == id).unwrap_or_else(|| panic!("missing edge {id}"))
+    }
+    // #endregion 🔖Fixtures
+
+    // #region 🔖QueryableGraphTests
+    #[test]
+    fn split_endpoint_resolves_exact_handle_and_unmapped_at() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let edges = graph.edges();
+        let e1 = find_edge(&edges, "e1");
+        assert_eq!(e1.source_node_id, "a");
+        assert_eq!(e1.source_port, None);
+        assert_eq!(e1.target_node_id, "b");
+        assert_eq!(e1.target_port.as_deref(), Some("in"));
+    }
+
+    #[test]
+    fn split_endpoint_resolves_unmapped_colon_and_dot() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let edges = graph.edges();
+        let e2 = find_edge(&edges, "e2");
+        assert_eq!(e2.source_node_id, "a");
+        assert_eq!(e2.source_port.as_deref(), Some("out2"));
+        assert_eq!(e2.target_node_id, "c");
+        assert_eq!(e2.target_port.as_deref(), Some("in2"));
+    }
+
+    #[test]
+    fn split_endpoint_resolves_handle_mapped_at_and_colon() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let edges = graph.edges();
+        let e3 = find_edge(&edges, "e3");
+        assert_eq!(e3.source_node_id, "a");
+        assert_eq!(e3.source_port.as_deref(), Some("x"));
+        assert_eq!(e3.target_node_id, "a");
+        assert_eq!(e3.target_port.as_deref(), Some("y"));
+    }
+
+    #[test]
+    fn split_endpoint_falls_back_to_plain_id() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let edges = graph.edges();
+        let e4 = find_edge(&edges, "e4");
+        assert_eq!(e4.source_node_id, "z");
+        assert_eq!(e4.source_port, None);
+        assert_eq!(e4.target_node_id, "c");
+        assert_eq!(e4.target_port, None);
+    }
+
+    #[test]
+    fn board_graph_node_property_id_kind_all_and_missing() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        assert_eq!(graph.node_property("a", "id"), Some(PropertyValue::String("a".into())));
+        assert_eq!(graph.node_property("a", "kind"), Some(PropertyValue::String("computation".into())));
+        let all = graph.node_property("a", "__all").unwrap();
+        assert!(matches!(all, PropertyValue::Object(ref map) if map.get("score") == Some(&PropertyValue::Number(1.0))));
+        assert_eq!(graph.node_property("a", "score"), Some(PropertyValue::Number(1.0)));
+        assert_eq!(graph.node_property("a", "nonexistent"), None);
+        assert_eq!(graph.node_property("missing-node", "id"), None);
+    }
+
+    #[test]
+    fn manifest_helpers_merge_graph_and_manifest_kinds() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("flow-dag"));
+        let node_kinds = manifest_node_kinds(&graph);
+        assert!(node_kinds.iter().any(|k| k == "computation"));
+        assert!(node_kinds.iter().any(|k| k == "select"), "manifest-only kind should be included");
+        let edge_kinds = manifest_edge_kinds(&graph);
+        assert!(edge_kinds.iter().any(|k| k == "wire"));
+        let port_kinds = manifest_port_kinds(&graph);
+        assert!(port_kinds.iter().any(|k| k == "in"));
+        let props = manifest_property_names(&graph);
+        for expected in ["id", "name", "kind", "label", "text", "score"] {
+            assert!(props.iter().any(|p| p == expected), "missing property {expected}");
+        }
+    }
+
+    #[test]
+    fn subgraph_fixture_json_filters_to_requested_ids() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let node_ids = BTreeSet::from(["a".to_string(), "b".to_string()]);
+        let edge_ids = BTreeSet::from(["e1".to_string()]);
+        let json = graph.subgraph_fixture_json(&node_ids, &edge_ids).unwrap();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(value["nodes"].as_array().unwrap().len(), 2);
+        assert_eq!(value["edges"].as_array().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn from_fixture_json_rejects_invalid_json() {
+        let Err(err) = BoardQueryableGraph::from_fixture_json("not json", None) else { panic!("expected error") };
+        assert!(matches!(err, GraphDslError::Json(_)));
+    }
+
+    #[test]
+    fn from_puzzle3d_fixture_json_converts_objects_array() {
+        let fixture = r#"{"objects": [{"id": "o1", "objectKind": "Cube", "name": "Box"}]}"#;
+        let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
+        assert_eq!(graph.node_kind("o1").as_deref(), Some("Cube"));
+        assert_eq!(graph.node_name("o1").as_deref(), Some("Box"));
+        assert_eq!(graph.manifest().map(|m| m.id.as_str()), Some("puzzle3d-default"));
+    }
+
+    #[test]
+    fn from_puzzle3d_fixture_json_passes_through_existing_nodes() {
+        let fixture = r#"{"nodes": [{"id": "n1", "nodeKind": "Widget", "text": "N1"}]}"#;
+        let graph = BoardQueryableGraph::from_puzzle3d_fixture_json(fixture).unwrap();
+        assert_eq!(graph.node_kind("n1").as_deref(), Some("Widget"));
+    }
+
+    #[test]
+    fn from_puzzle2d_and_puzzle5d_fixture_json_resolve_manifests() {
+        let fixture = r#"{"nodes": [], "edges": []}"#;
+        let g2 = BoardQueryableGraph::from_puzzle2d_fixture_json(fixture).unwrap();
+        assert_eq!(g2.manifest().map(|m| m.id.as_str()), Some("puzzle2d-default"));
+        let g5 = BoardQueryableGraph::from_puzzle5d_fixture_json(fixture).unwrap();
+        assert_eq!(g5.manifest().map(|m| m.id.as_str()), Some("puzzle5d-default"));
+    }
+    // #endregion 🔖QueryableGraphTests
+
+    // #region 🔖ErrorTests
+    #[test]
+    fn graph_dsl_error_display_messages() {
+        assert_eq!(GraphDslError::UnterminatedString.to_string(), "unterminated string literal");
+        assert_eq!(GraphDslError::UnexpectedChar('$').to_string(), "unexpected character '$'");
+        assert_eq!(GraphDslError::EdgeTargetMissingPort.to_string(), "edge target requires @port");
+        assert_eq!(GraphDslError::EmptyPattern.to_string(), "empty pattern");
+        assert_eq!(GraphDslError::UnsupportedMutation.to_string(), "mutating jack clauses are not supported on this graph domain");
+        let unexpected = GraphDslError::UnexpectedToken { expected: "ident".into(), found: "Eof".into() };
+        assert_eq!(unexpected.to_string(), "expected ident, got Eof");
+    }
+
+    #[test]
+    fn parse_error_on_unexpected_char() {
+        let err = parse("MATCH (a:x) # WHERE").unwrap_err();
+        assert!(matches!(err, GraphDslError::UnexpectedChar('#')));
+    }
+
+    #[test]
+    fn parse_error_on_unterminated_string() {
+        let err = parse("MATCH (a:x) WHERE a.name = 'oops").unwrap_err();
+        assert!(matches!(err, GraphDslError::UnterminatedString));
+    }
+    // #endregion 🔖ErrorTests
+
+    // #region 🔖LexerAndLanguageServiceTests
+    #[test]
+    fn tokenize_classifies_clause_and_operator_tokens() {
+        let spans = tokenize("MATCH (a:x)-[:wire]->(b:y) WHERE a.p = 1 AND b.q != 'v' RETURN a.p");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Keyword));
+        assert!(spans.iter().any(|s| s.class == TokenClass::Ident));
+        assert!(spans.iter().any(|s| s.class == TokenClass::Number));
+        assert!(spans.iter().any(|s| s.class == TokenClass::String));
+        assert!(spans.iter().any(|s| s.class == TokenClass::Operator));
+        assert!(spans.iter().any(|s| s.class == TokenClass::Punctuation));
+    }
+
+    #[test]
+    fn tokenize_marks_unterminated_string_as_error_class() {
+        let spans = tokenize("MATCH (a:x) WHERE a.p = 'unterminated");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Error));
+    }
+
+    #[test]
+    fn tokenize_never_panics_on_stray_symbols() {
+        let spans = tokenize("MATCH (a:x) # ~ ^ RETURN a");
+        assert!(spans.iter().any(|s| s.class == TokenClass::Ident && s.end - s.start == 1));
+    }
+
+    #[test]
+    fn format_query_is_idempotent_and_normalizes_whitespace() {
+        let once = format("match(a:x)-[:wire]->(b:y) where a.p=1 and b.q!='v' return a.p,b.q").unwrap();
+        assert!(once.contains("MATCH"));
+        assert!(once.contains(" AND "));
+        assert!(once.contains(" = "));
+        let twice = format(&once).unwrap();
+        assert_eq!(once, twice);
+    }
+
+    #[test]
+    fn format_rejects_unterminated_string() {
+        let err = format("MATCH (a:x) WHERE a.p = 'oops").unwrap_err();
+        assert!(matches!(err, GraphDslError::UnterminatedString));
+    }
+
+    #[test]
+    fn complete_after_colon_suggests_node_then_edge_kinds() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let node_source = "MATCH (a:c";
+        let node_completions = complete(&graph, node_source, node_source.len());
+        assert!(node_completions.iter().any(|c| c.label == "computation"));
+        let edge_source = "MATCH (a:computation)-[:w";
+        let edge_completions = complete(&graph, edge_source, edge_source.len());
+        assert!(edge_completions.iter().any(|c| c.label == "wire"));
+    }
+
+    #[test]
+    fn complete_after_at_suggests_port_kinds() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "MATCH (a:computation@i";
+        let completions = complete(&graph, source, source.len());
+        assert!(completions.iter().any(|c| c.label == "in"));
+    }
+
+    #[test]
+    fn complete_after_dot_suggests_property_names() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "MATCH (a:computation) RETURN a.sc";
+        let completions = complete(&graph, source, source.len());
+        assert!(completions.iter().any(|c| c.label == "score"));
+    }
+
+    #[test]
+    fn complete_suggests_bound_variable_when_prefix_does_not_match_logic_keywords() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "MATCH (abc:computation) WHERE ab";
+        let completions = complete(&graph, source, source.len());
+        assert!(completions.iter().any(|c| c.label == "abc" && c.kind == "variable"));
+    }
+
+    #[test]
+    fn complete_in_where_clause_suggests_logic_keywords() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "MATCH (a:computation) WHERE a.score = 1 AN";
+        let completions = complete(&graph, source, source.len());
+        assert!(completions.iter().any(|c| c.label == "AND"));
+    }
+
+    #[test]
+    fn complete_at_start_suggests_clause_keywords() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let completions = complete(&graph, "MA", 2);
+        assert!(completions.iter().any(|c| c.label == "MATCH"));
+    }
+
+    #[test]
+    fn hover_reports_keyword_and_bound_variable() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "MATCH (a:computation) WHERE a.score = 1 RETURN a";
+        let match_pos = source.find("MATCH").unwrap();
+        assert!(hover(&graph, source, match_pos + 1).unwrap().contents.contains("keyword"));
+        // 🩹 `hover_word_at` folds `:`/`.` into the word span, so a bound variable only resolves
+        // in isolation when nothing follows it — the trailing standalone `a` in `RETURN a`.
+        let var_pos = source.rfind('a').unwrap();
+        assert!(hover(&graph, source, var_pos + 1).unwrap().contents.contains("Bound variable"));
+    }
+
+    #[test]
+    fn hover_matches_bare_node_kind_edge_kind_and_property_words() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let source = "computation wire score";
+        assert!(hover(&graph, source, 3).unwrap().contents.contains("Node kind"));
+        let edge_pos = source.find("wire").unwrap();
+        assert!(hover(&graph, source, edge_pos + 1).unwrap().contents.contains("Edge kind"));
+        let prop_pos = source.find("score").unwrap();
+        assert!(hover(&graph, source, prop_pos + 1).unwrap().contents.contains("Property"));
+    }
+
+    #[test]
+    fn hover_returns_none_for_whitespace() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        assert!(hover(&graph, "MATCH (a:x)   RETURN a", 12).is_none());
+    }
+
+    #[test]
+    fn lint_flags_unknown_node_kind() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let diags = lint(&graph, "MATCH (a:nonexistentKind) RETURN a");
+        assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unknown-node-kind")));
+    }
+
+    #[test]
+    fn lint_flags_unbound_variable() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let diags = lint(&graph, "MATCH (a:computation) RETURN b");
+        assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/unbound-variable")));
+    }
+
+    #[test]
+    fn lint_reports_parse_errors() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let diags = lint(&graph, "MATCH (a:computation");
+        assert!(diags.iter().any(|d| d.code.as_deref() == Some("jack/parse-error")));
+    }
+
+    #[test]
+    fn lint_clean_query_has_no_diagnostics() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let diags = lint(&graph, "MATCH (a:computation) RETURN a.name");
+        assert!(diags.is_empty());
+    }
+
+    #[test]
+    fn semantic_tokens_mirror_tokenize_classes() {
+        let tokens = semantic_tokens("MATCH (a:x) RETURN a");
+        assert!(tokens.iter().any(|t| t.class == "keyword"));
+        assert!(tokens.iter().any(|t| t.class == "ident"));
+    }
+    // #endregion 🔖LexerAndLanguageServiceTests
+
+    // #region 🔖ParserAndExecutorTests
+    #[test]
+    fn parse_delete_set_merge_clauses() {
+        let q = parse("MATCH (a:x) DELETE a").unwrap();
+        assert!(matches!(q.clauses[1], Clause::Delete(ref vars) if vars == &vec!["a".to_string()]));
+        let q = parse("MATCH (a:x) SET a.name = 'v'").unwrap();
+        assert!(matches!(q.clauses[1], Clause::Set(ref items) if items.len() == 1 && items[0].prop == "name"));
+        let q = parse("MERGE (a:x)").unwrap();
+        assert!(matches!(q.clauses[0], Clause::Merge(_)));
+    }
+
+    #[test]
+    fn parse_where_and_or_precedence() {
+        let q = parse("MATCH (a:x) WHERE a.p = 1 AND a.q = 2 OR a.r != 3").unwrap();
+        let Clause::Where(expr) = &q.clauses[1] else { panic!("expected where") };
+        assert!(matches!(expr, Expr::Or(_, _)));
+    }
+
+    #[test]
+    fn parse_unexpected_token_error_has_expected_and_found() {
+        let err = parse("MATCH a:x)").unwrap_err();
+        let GraphDslError::UnexpectedToken { expected, found } = err else { panic!("expected UnexpectedToken") };
+        assert_eq!(expected, "LParen");
+        assert!(found.contains("Ident"));
+    }
+
+    #[test]
+    fn execute_where_clause_filters_bindings() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let result = run_query(&graph, "MATCH (a:slider) WHERE a.name = 'B' RETURN a.name").unwrap();
+        assert_eq!(result.rows, vec![vec![PropertyValue::String("B".into())]]);
+    }
+
+    #[test]
+    fn execute_and_or_expressions() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let and_result = run_query(&graph, "MATCH (a:slider) WHERE a.name = 'B' AND a.kind = 'slider' RETURN a.name").unwrap();
+        assert_eq!(and_result.rows.len(), 1);
+        let or_result = run_query(&graph, "MATCH (a:slider) WHERE a.name = 'B' OR a.name = 'C' RETURN a.name").unwrap();
+        assert_eq!(or_result.rows.len(), 2);
+    }
+
+    #[test]
+    fn execute_rejects_mutating_clauses() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        for query in ["CREATE (a:x)", "MATCH (a:x) DELETE a", "MATCH (a:x) SET a.p = 1", "MERGE (a:x)"] {
+            let err = run_query(&graph, query).unwrap_err();
+            assert!(matches!(err, GraphDslError::UnsupportedMutation), "query {query} should reject mutation");
+        }
+    }
+
+    #[test]
+    fn execute_undirected_edge_matches_both_directions() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let forward = run_query(&graph, "MATCH (a:computation)-[:wire](b:slider) RETURN a.name, b.name").unwrap();
+        let reverse = run_query(&graph, "MATCH (b:slider)-[:wire](a:computation) RETURN a.name, b.name").unwrap();
+        assert!(!forward.rows.is_empty());
+        assert!(!reverse.rows.is_empty());
+    }
+
+    #[test]
+    fn execute_multiple_match_patterns_join_bindings() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let result = run_query(&graph, "MATCH (a:computation), (b:slider) RETURN a.name, b.name").unwrap();
+        assert_eq!(result.rows.len(), 2);
+    }
+
+    #[test]
+    fn execute_returns_graph_kind_when_returning_bound_entities() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let result = run_query(&graph, "MATCH (a:computation)-[e:wire](b:slider) RETURN a, e, b").unwrap();
+        assert_eq!(result.kind, QueryResultKind::Graph);
+        assert!(result.graph_fixture_json.is_some());
+    }
+
+    #[test]
+    fn execute_returns_table_kind_for_property_projection() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let result = run_query(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
+        assert_eq!(result.kind, QueryResultKind::Table);
+    }
+
+    #[test]
+    fn execute_with_no_return_clause_yields_empty_table() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let result = run_query(&graph, "MATCH (a:computation)").unwrap();
+        assert!(result.columns.is_empty());
+        assert!(result.rows.is_empty());
+    }
+
+    #[test]
+    fn run_query_json_serializes_result() {
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let json = run_query_json(&graph, "MATCH (a:computation) RETURN a.name").unwrap();
+        let value: serde_json::Value = serde_json::from_str(&json).unwrap();
+        assert_eq!(value["columns"][0], "a.name");
+    }
+
+    #[test]
+    fn empty_pattern_error_is_reachable_via_pattern_construction() {
+        let pattern = Pattern { nodes: vec![], edge: None };
+        let graph = BoardQueryableGraph::from_fixture_json(split_endpoint_fixture(), None).unwrap();
+        let err = match_patterns(&graph, std::slice::from_ref(&pattern)).unwrap_err();
+        assert!(matches!(err, GraphDslError::EmptyPattern));
+    }
+    // #endregion 🔖ParserAndExecutorTests
 }
 // #endregion 🔖Tests
 // #endregion jack_impl

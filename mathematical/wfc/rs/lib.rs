@@ -25,6 +25,8 @@ pub(crate) mod topology;
 pub(crate) mod propagate;
 #[path = "src/prop_ac3.rs"]
 pub(crate) mod prop_ac3;
+#[path = "src/prop_ac4.rs"]
+pub(crate) mod prop_ac4;
 #[path = "src/heuristics.rs"]
 pub mod heuristics;
 #[path = "src/sample.rs"]
@@ -39,6 +41,18 @@ pub mod outcome;
 pub mod diag;
 #[path = "src/solver_graph.rs"]
 pub mod solver_graph;
+#[path = "src/grid2d.rs"]
+pub mod grid2d;
+#[path = "src/solver_grid2d.rs"]
+pub mod solver_grid2d;
+#[path = "src/symmetry.rs"]
+pub mod symmetry;
+#[path = "src/extract.rs"]
+pub mod extract;
+#[path = "src/grid3d.rs"]
+pub mod grid3d;
+#[path = "src/solver_grid3d.rs"]
+pub mod solver_grid3d;
 // #endregion 🔖Modules
 
 // #region 🔖Exports
@@ -46,6 +60,9 @@ pub use bitset::PatternSet;
 pub use diag::{DiagLevel, Event, EventSink, Metrics};
 pub use domain::{Domain, DomainStore, RestrictResult};
 pub use error::{ConstraintError, ModelError, SolveError, TopologyError};
+pub use extract::{Extract2dConfig, ExtractedModel2d, PatternDecoder2d, Sample2d, extract_2d};
+pub use grid2d::{Boundary, Grid2dTopology, Stencil2d, declare_stencil_relations, declare_stencil_relations_tiled};
+pub use grid3d::{Grid3dTopology, Stencil3d, declare_stencil_relations_3d, declare_stencil_relations_3d_tiled};
 pub use heuristics::ObserveHeuristic;
 pub use ids::{ConstraintId, DecisionId, NodeId, PatternId, PortId, RegionId, RelationId, TileId};
 pub use model::{CompiledModel, LintFinding, ModelBuilder, ModelStats, PatternInfo, RelationInfo};
@@ -53,7 +70,10 @@ pub use oracle::{ArcSpec, OracleResult, Violation, check_assignment, enumerate};
 pub use outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
 pub use sample::ValueSampler;
 pub use search::{Budget, CancelToken, RestartSchedule, SearchConfig, SearchMode};
+pub use solver_grid2d::{Grid2dSolver, Grid2dSolverBuilder};
+pub use solver_grid3d::{Grid3dSolver, Grid3dSolverBuilder};
 pub use solver_graph::{GraphSolver, GraphSolverBuilder};
+pub use symmetry::{SymmetryGroup2d, SymmetryGroup3d, Transform2d, Transform3d, cube_rotations_24, cube_symmetries_48};
 pub use tiled::TiledModelBuilder;
 pub use topology::{GraphTopology, GraphTopologyBuilder, from_graph_view};
 pub use trail::Checkpoint;

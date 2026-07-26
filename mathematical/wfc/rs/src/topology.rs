@@ -12,21 +12,22 @@ use crate::ids::{NodeId, RegionId, RelationId};
 /// 🗺️ What the kernel needs from any topology: how many variables, how they connect, and where
 /// each one's incoming arcs live in a dense per-arc-slot indexing scheme (used by AC-4's support
 /// counters). Implementors are always monomorphized into the kernel — never called through `dyn`.
-#[allow(dead_code)] // arc_count/region_of/for_each_in_arc/in_arc_slot/max_in_degree are consumed
-// starting with the AC-4 propagator (P6) and region-scoped constraints (P7); the trait's full
-// shape is fixed now so those phases never need to touch this sealed boundary.
+#[allow(dead_code)] // arc_count/region_of/for_each_in_arc/max_in_degree are consumed starting
+// with the AC-4 propagator (P6) and region-scoped constraints (P7); the trait's full shape is
+// fixed now so those phases never need to touch this sealed boundary.
 pub(crate) trait Topology {
     fn node_count(&self) -> usize;
     fn arc_count(&self) -> usize;
     fn region_of(&self, n: NodeId) -> RegionId;
     /// 🗺️ Calls `f(target, relation)` once per outgoing arc of `n`, in a stable order.
     fn for_each_out_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId));
-    /// 🗺️ Calls `f(source, relation)` once per incoming arc of `n`, in a stable order — the same
-    /// order [`Topology::in_arc_slot`] indexes into.
-    fn for_each_in_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId));
-    /// 🗺️ The dense global slot for the `ordinal`-th incoming arc of `target` (0-based, in the
-    /// same order `for_each_in_arc` visits them) — AC-4 keys its support counters by this slot.
-    fn in_arc_slot(&self, target: NodeId, ordinal: usize) -> usize;
+    /// 🗺️ Calls `f(source, relation, slot)` once per incoming arc of `n`. `slot` is a dense id
+    /// unique to this specific incoming arc, always `< node_count() * max_in_degree()` — AC-4
+    /// keys its support counters by it. Bundling the slot into the same callback (rather than a
+    /// separate `in_arc_slot(target, ordinal)` lookup) is deliberate: it is the only way to
+    /// guarantee the slot a caller records for an arc is the same slot the topology itself means,
+    /// since "ordinal" has no meaning independent of how a specific implementor enumerates arcs.
+    fn for_each_in_arc(&self, n: NodeId, f: impl FnMut(NodeId, RelationId, usize));
     /// 🗺️ Upper bound on any single node's incoming-arc count, for sizing dense counter tables.
     fn max_in_degree(&self) -> usize;
 }
@@ -95,17 +96,12 @@ impl Topology for GraphTopology {
     }
 
     #[inline]
-    fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId)) {
+    fn for_each_in_arc(&self, n: NodeId, mut f: impl FnMut(NodeId, RelationId, usize)) {
         let start = self.in_starts[n.index()] as usize;
         let end = self.in_starts[n.index() + 1] as usize;
         for i in start..end {
-            f(NodeId(self.in_sources[i]), RelationId(self.in_relations[i]));
+            f(NodeId(self.in_sources[i]), RelationId(self.in_relations[i]), i);
         }
-    }
-
-    #[inline]
-    fn in_arc_slot(&self, target: NodeId, ordinal: usize) -> usize {
-        self.in_starts[target.index()] as usize + ordinal
     }
 
     fn max_in_degree(&self) -> usize {
@@ -231,7 +227,7 @@ mod tests {
         assert_eq!(out0, vec![(NodeId(1), RelationId(0)), (NodeId(2), RelationId(1))]);
 
         let mut in2 = Vec::new();
-        topo.for_each_in_arc(NodeId(2), |m, r| in2.push((m, r)));
+        topo.for_each_in_arc(NodeId(2), |m, r, _slot| in2.push((m, r)));
         assert_eq!(in2, vec![(NodeId(0), RelationId(1)), (NodeId(1), RelationId(0))]);
     }
 
@@ -259,15 +255,19 @@ mod tests {
     }
 
     #[test]
-    fn in_arc_slot_is_dense_and_unique_per_node() {
+    fn in_arc_slots_are_dense_and_unique_per_node() {
         let mut b = GraphTopologyBuilder::new(3);
         b.arc(NodeId(0), NodeId(2), RelationId(0));
         b.arc(NodeId(1), NodeId(2), RelationId(0));
         let topo = b.build().unwrap();
         assert_eq!(topo.in_degree(NodeId(2)), 2);
-        let slot0 = topo.in_arc_slot(NodeId(2), 0);
-        let slot1 = topo.in_arc_slot(NodeId(2), 1);
-        assert_ne!(slot0, slot1);
+        let mut slots = Vec::new();
+        topo.for_each_in_arc(NodeId(2), |_, _, slot| slots.push(slot));
+        assert_eq!(slots.len(), 2);
+        assert_ne!(slots[0], slots[1]);
+        for &slot in &slots {
+            assert!(slot < topo.node_count() * topo.max_in_degree());
+        }
         assert_eq!(topo.max_in_degree(), 2);
     }
 

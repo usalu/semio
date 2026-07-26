@@ -2300,5 +2300,467 @@ mod tests {
         assert!(mesh.position.len() > 36);
         assert!(mesh.index.len() > 12);
     }
+
+    // #region Validation error paths
+    #[test]
+    fn convex_hull_rejects_fewer_than_four_points() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.convex_hull_sync(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn line_curve_rejects_coincident_endpoints() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.line_curve_sync([1.0, 2.0, 3.0], [1.0, 2.0, 3.0]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn polyline_wire_rejects_fewer_than_two_points() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.polyline_wire_sync(&[[0.0, 0.0, 0.0]]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn regular_polygon_wire_rejects_fewer_than_three_sides() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.regular_polygon_wire_sync(1.0, 2).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn interpolate_curve_rejects_fewer_than_two_points() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.interpolate_curve_sync(&[[0.0, 0.0, 0.0]], 3).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn planar_face_from_points_rejects_fewer_than_three_points() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.planar_face_from_points_sync(&[[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn coons_patch_rejects_fewer_than_four_curves() {
+        let mut kernel = BrepkitKernel::new();
+        let err = kernel.coons_patch_sync(&[vec![[0.0, 0.0, 0.0]]]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn extrude_wire_rejects_zero_length_vector() {
+        let mut kernel = BrepkitKernel::new();
+        let wire = kernel.rectangle_wire_sync(1.0, 1.0).unwrap();
+        let err = kernel.extrude_wire_sync(&wire, [0.0, 0.0, 0.0]).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn rotate_rejects_zero_length_axis() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let err = kernel.rotate_sync(&solid, [0.0, 0.0, 0.0], 1.0).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn missing_handle_returns_missing_handle_error() {
+        let kernel = BrepkitKernel::new();
+        let bogus = GeometryHandle::new(GeometryKind::Solid, 999);
+        let err = kernel.volume_sync(&bogus).unwrap_err();
+        assert!(matches!(err, BrepError::MissingHandle(_)));
+    }
+
+    #[test]
+    fn wrong_entity_type_errors_are_invalid_input() {
+        let mut kernel = BrepkitKernel::new();
+        let curve = kernel.line_curve_sync([0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).unwrap();
+        let err = kernel.fillet_sync(&curve, 0.1).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+        let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let err = kernel.offset_face_sync(&solid, 0.1).unwrap_err();
+        assert!(matches!(err, BrepError::InvalidInput(_)));
+    }
+    // #endregion Validation error paths
+
+    // #region Curve evaluation branches
+    #[test]
+    fn arc_curve_domain_point_tangent_and_curvature() {
+        let mut kernel = BrepkitKernel::new();
+        let arc = kernel.arc_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 2.0, 0.0, std::f64::consts::PI).unwrap();
+        let domain = kernel.curve_domain_sync(&arc).unwrap();
+        assert!((domain.min - 0.0).abs() < 1e-9);
+        assert!((domain.max - std::f64::consts::PI).abs() < 1e-9);
+        let point = kernel.curve_point_sync(&arc, 0.0).unwrap();
+        let dist = (point[0] * point[0] + point[1] * point[1] + point[2] * point[2]).sqrt();
+        assert!((dist - 2.0).abs() < 1e-6, "arc point should sit at radius 2 from center, got dist={dist}");
+        let tangent = kernel.curve_tangent_sync(&arc, 0.0).unwrap();
+        let tangent_len = (tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]).sqrt();
+        assert!((tangent_len - 1.0).abs() < 1e-6, "arc tangent should be unit length, got {tangent_len}");
+        let curvature = kernel.curve_curvature_sync(&arc, 0.5).unwrap();
+        assert!((curvature - 0.5).abs() < 1e-9, "circular arc curvature should be 1/radius, got {curvature}");
+    }
+
+    #[test]
+    fn ellipse_curve_domain_point_and_curvature() {
+        let mut kernel = BrepkitKernel::new();
+        let ellipse = kernel.ellipse_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 3.0, 1.0).unwrap();
+        let domain = kernel.curve_domain_sync(&ellipse).unwrap();
+        assert!((domain.max - std::f64::consts::TAU).abs() < 1e-9);
+        let point = kernel.curve_point_sync(&ellipse, 0.0).unwrap();
+        let dist = (point[0] * point[0] + point[1] * point[1] + point[2] * point[2]).sqrt();
+        assert!(dist >= 1.0 - 1e-6 && dist <= 3.0 + 1e-6, "ellipse point distance from center should be within [minor, major], got {dist}");
+        for t in [0.0, 1e-6, 0.3, 1.0, std::f64::consts::PI, 6.0] {
+            let curvature = kernel.curve_curvature_sync(&ellipse, t).unwrap();
+            eprintln!("[DEBUG] ellipse curvature at t={t} -> {curvature}");
+        }
+    }
+
+    #[test]
+    fn approximate_curve_builds_a_fitted_nurbs_curve() {
+        let mut kernel = BrepkitKernel::new();
+        let points = vec![[0.0, 0.0, 0.0], [1.0, 1.0, 0.0], [2.0, 0.0, 0.0], [3.0, 1.0, 0.0], [4.0, 0.0, 0.0]];
+        let curve = kernel.approximate_curve_sync(&points, 3, 4).unwrap();
+        let domain = kernel.curve_domain_sync(&curve).unwrap();
+        let start = kernel.curve_point_sync(&curve, domain.min).unwrap();
+        let end = kernel.curve_point_sync(&curve, domain.max).unwrap();
+        assert!((start[0] - 0.0).abs() < 0.5, "fitted curve should start near the first point, got {start:?}");
+        assert!((end[0] - 4.0).abs() < 0.5, "fitted curve should end near the last point, got {end:?}");
+        let curvature = kernel.curve_curvature_sync(&curve, (domain.min + domain.max) / 2.0).unwrap();
+        assert!(curvature.is_finite());
+    }
+
+    #[test]
+    fn box_edge_curve_queries_use_line_branch() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        let edge = &topo.edges[0];
+        let domain = kernel.curve_domain_sync(edge).unwrap();
+        assert!(domain.max > domain.min);
+        let start = kernel.curve_point_sync(edge, domain.min).unwrap();
+        let end = kernel.curve_point_sync(edge, domain.max).unwrap();
+        let length = ((end[0] - start[0]).powi(2) + (end[1] - start[1]).powi(2) + (end[2] - start[2]).powi(2)).sqrt();
+        assert!((length - domain.max).abs() < 1e-6, "a line edge parameter should be arc length");
+        let tangent = kernel.curve_tangent_sync(edge, domain.min).unwrap();
+        let tangent_len = (tangent[0] * tangent[0] + tangent[1] * tangent[1] + tangent[2] * tangent[2]).sqrt();
+        assert!((tangent_len - 1.0).abs() < 1e-6);
+        let curvature = kernel.curve_curvature_sync(edge, domain.min).unwrap();
+        assert_eq!(curvature, 0.0, "a straight edge has zero curvature");
+    }
+
+    #[test]
+    fn curve_curve_intersect_finds_crossing_point() {
+        let mut kernel = BrepkitKernel::new();
+        let a = kernel.line_curve_sync([-5.0, 0.0, 0.0], [5.0, 0.0, 0.0]).unwrap();
+        let b = kernel.line_curve_sync([0.0, -5.0, 0.0], [0.0, 5.0, 0.0]).unwrap();
+        let hits = kernel.curve_curve_intersect_sync(&a, &b, 1e-4).unwrap();
+        assert_eq!(hits.len(), 1, "two perpendicular crossing lines should meet exactly once");
+        assert!(hits[0][0].abs() < 1e-3 && hits[0][1].abs() < 1e-3, "crossing should be at the origin, got {:?}", hits[0]);
+    }
+
+    #[test]
+    fn curve_surface_intersect_pierces_a_flat_nurbs_patch() {
+        let mut kernel = BrepkitKernel::new();
+        let grid = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
+        let surface = kernel.nurbs_surface_from_grid_sync(&grid, 1, 1).unwrap();
+        let line = kernel.line_curve_sync([0.5, 0.5, -5.0], [0.5, 0.5, 5.0]).unwrap();
+        let hits = kernel.curve_surface_intersect_sync(&line, &surface, 1e-4).unwrap();
+        assert!(!hits.is_empty(), "a vertical line through the patch interior should hit the surface");
+        assert!(hits[0][2].abs() < 0.1, "hit point should be near z=0, got {:?}", hits[0]);
+    }
+
+    #[test]
+    fn surface_surface_intersect_of_two_flat_nurbs_patches_returns_a_curve() {
+        let mut kernel = BrepkitKernel::new();
+        let grid_a = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
+        let grid_b = vec![vec![[0.0, 0.0, -0.5], [1.0, 0.0, 0.5]], vec![[0.0, 1.0, -0.5], [1.0, 1.0, 0.5]]];
+        let surface_a = kernel.nurbs_surface_from_grid_sync(&grid_a, 1, 1).unwrap();
+        let surface_b = kernel.nurbs_surface_from_grid_sync(&grid_b, 1, 1).unwrap();
+        let curves = kernel.surface_surface_intersect_sync(&surface_a, &surface_b, 1e-4).unwrap();
+        assert!(!curves.is_empty(), "two transversally crossing patches should yield at least one intersection curve");
+        for c in &curves {
+            assert_eq!(kernel.kind_sync(c).unwrap(), GeometryKind::Curve);
+        }
+    }
+    // #endregion Curve evaluation branches
+
+    // #region Surface evaluation branches
+    #[test]
+    fn plane_surface_point_and_normal_match_frame() {
+        let mut kernel = BrepkitKernel::new();
+        let plane = kernel.plane_surface_sync([0.0, 0.0, 5.0], [0.0, 0.0, 1.0]).unwrap();
+        let point = kernel.surface_point_sync(&plane, 0.0, 0.0).unwrap();
+        assert!((point[2] - 5.0).abs() < 1e-9);
+        let normal = kernel.surface_normal_sync(&plane, 0.0, 0.0).unwrap();
+        assert!((normal[2] - 1.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn nurbs_surface_from_grid_point_and_normal() {
+        let mut kernel = BrepkitKernel::new();
+        let grid = vec![vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0]], vec![[0.0, 1.0, 0.0], [1.0, 1.0, 0.0]]];
+        let surface = kernel.nurbs_surface_from_grid_sync(&grid, 1, 1).unwrap();
+        let point = kernel.surface_point_sync(&surface, 0.5, 0.5).unwrap();
+        assert!(point[0] >= 0.0 && point[0] <= 1.0);
+        let normal = kernel.surface_normal_sync(&surface, 0.5, 0.5).unwrap();
+        let len = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+        assert!(len > 0.5, "normal should be roughly unit length, got {len}");
+    }
+
+    #[test]
+    fn face_surfaces_of_curved_primitives_evaluate_without_error() {
+        let mut kernel = BrepkitKernel::new();
+        let cylinder = kernel.cylinder_prim_sync(1.0, 2.0).unwrap();
+        let cone = kernel.cone_prim_sync(1.0, 2.0).unwrap();
+        let sphere = kernel.sphere_prim_sync(1.0).unwrap();
+        let torus = kernel.torus_prim_sync(2.0, 0.5).unwrap();
+        for solid in [cylinder, cone, sphere, torus] {
+            let topo = kernel.deconstruct_sync(&solid).unwrap();
+            assert!(!topo.faces.is_empty());
+            for face in &topo.faces {
+                let point = kernel.surface_point_sync(face, 0.25, 0.25).unwrap();
+                assert!(point.iter().all(|c| c.is_finite()));
+                let normal = kernel.surface_normal_sync(face, 0.25, 0.25).unwrap();
+                let len = (normal[0] * normal[0] + normal[1] * normal[1] + normal[2] * normal[2]).sqrt();
+                assert!(len > 1e-6, "surface normal should be non-degenerate");
+            }
+        }
+    }
+    // #endregion Surface evaluation branches
+
+    // #region Transform, pattern, and measurement branches
+    #[test]
+    fn distance_closest_point_and_classify_point() {
+        let mut kernel = BrepkitKernel::new();
+        let a = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let b = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        kernel.translate_sync(&b, [5.0, 0.0, 0.0]).unwrap();
+        let distance = kernel.distance_sync(&a, &b).unwrap();
+        assert!((distance - 4.0).abs() < 0.1, "distance between box faces should be ~4, got {distance}");
+
+        let closest = kernel.closest_point_sync(&a, [10.0, 0.0, 0.0]).unwrap();
+        assert!(closest.distance > 0.0);
+
+        let inside = kernel.classify_point_sync(&a, [0.5, 0.5, 0.5]).unwrap();
+        assert_eq!(inside, PointClassification::Inside);
+        let outside = kernel.classify_point_sync(&a, [10.0, 10.0, 10.0]).unwrap();
+        assert_eq!(outside, PointClassification::Outside);
+    }
+
+    #[test]
+    fn mirror_and_copy_preserve_volume() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let original_volume = kernel.volume_sync(&solid).unwrap();
+        let mirrored = kernel.mirror_sync(&solid, [0.0, 0.0, 0.0], [1.0, 0.0, 0.0]).unwrap();
+        assert!((kernel.volume_sync(&mirrored).unwrap() - original_volume).abs() < 1e-6);
+        let copied = kernel.copy_shape_sync(&solid).unwrap();
+        assert_ne!(copied.as_str(), solid.as_str());
+        assert!((kernel.volume_sync(&copied).unwrap() - original_volume).abs() < 1e-6);
+    }
+
+    #[test]
+    fn scale_sync_scales_about_a_center() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let scaled = kernel.scale_sync(&solid, 2.0, [1.0, 1.0, 1.0]).unwrap();
+        let volume = kernel.volume_sync(&scaled).unwrap();
+        assert!((volume - 64.0).abs() < 1e-3, "scaling a 2^3 box by factor 2 about its center should give volume 64, got {volume}");
+    }
+
+    #[test]
+    fn linear_circular_and_grid_patterns_build_compounds() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let linear = kernel.linear_pattern_sync(&solid, [2.0, 0.0, 0.0], 2.0, 3).unwrap();
+        assert_eq!(kernel.kind_sync(&linear).unwrap(), GeometryKind::Compound);
+        let linear_volume = kernel.volume_sync(&linear).unwrap();
+        assert!((linear_volume - 3.0).abs() < 1e-6, "3 unit boxes should total volume 3, got {linear_volume}");
+
+        let solid2 = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let circular = kernel.circular_pattern_sync(&solid2, [0.0, 0.0, 1.0], 4).unwrap();
+        let circular_area = kernel.area_sync(&circular).unwrap();
+        assert!((circular_area - 24.0).abs() < 1e-3, "4 unit boxes should total surface area 24, got {circular_area}");
+
+        let solid3 = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let grid = kernel.grid_pattern_sync(&solid3, [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], 2.0, 2.0, 2, 2).unwrap();
+        let grid_volume = kernel.volume_sync(&grid).unwrap();
+        assert!((grid_volume - 4.0).abs() < 1e-6, "2x2 grid of unit boxes should total volume 4, got {grid_volume}");
+    }
+
+    #[test]
+    fn compound_cut_removes_multiple_tools_from_a_target() {
+        let mut kernel = BrepkitKernel::new();
+        let target = kernel.box_prim_sync(4.0, 4.0, 4.0).unwrap();
+        let tool_a = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let tool_b = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        kernel.translate_sync(&tool_b, [2.0, 2.0, 2.0]).unwrap();
+        let result = kernel.compound_cut_sync(&target, &[tool_a, tool_b]).unwrap();
+        let volume = kernel.volume_sync(&result).unwrap();
+        assert!((volume - 62.0).abs() < 0.5, "cutting two disjoint unit boxes from a 4^3 box should leave ~62, got {volume}");
+    }
+
+    #[test]
+    fn bounding_box_of_a_compound_covers_every_member_solid() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        let compound = kernel.linear_pattern_sync(&solid, [1.0, 0.0, 0.0], 5.0, 2).unwrap();
+        let bbox = kernel.bounding_box_sync(&compound).unwrap();
+        let volume = kernel.volume_sync(&bbox).unwrap();
+        assert!((volume - 6.0).abs() < 1e-3, "a bbox spanning x in [0,6] with unit y/z should have volume 6, got {volume}");
+    }
+
+    #[test]
+    fn validate_reports_valid_for_a_clean_box() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(kernel.validate_sync(&solid).unwrap(), "valid");
+    }
+
+    #[test]
+    fn deconstruct_box_returns_topology_counts() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        assert_eq!(topo.vertices.len(), 8);
+        assert_eq!(topo.edges.len(), 12);
+        assert_eq!(topo.faces.len(), 6);
+    }
+    // #endregion Transform, pattern, and measurement branches
+
+    // #region Feature operations
+    #[test]
+    fn fillet_variable_and_chamfer_asymmetric_produce_valid_solids() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let filleted = kernel.fillet_variable_sync(&solid, 0.1, 0.3).unwrap();
+        assert!(kernel.volume_sync(&filleted).unwrap() > 0.0);
+
+        let solid2 = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let chamfered = kernel.chamfer_asymmetric_sync(&solid2, 0.2, 0.3).unwrap();
+        let volume = kernel.volume_sync(&chamfered).unwrap();
+        assert!(volume > 0.0 && volume < 8.0, "asymmetric chamfer should remove material, got {volume}");
+    }
+
+    #[test]
+    fn fillet_edges_and_chamfer_edges_target_a_single_edge() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        let filleted = kernel.fillet_edges_sync(&solid, std::slice::from_ref(&topo.edges[0]), 0.1).unwrap();
+        let filleted_volume = kernel.volume_sync(&filleted).unwrap();
+        eprintln!("[DEBUG] filleted_volume={filleted_volume}");
+
+        let solid2 = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo2 = kernel.deconstruct_sync(&solid2).unwrap();
+        let chamfered = kernel.chamfer_edges_sync(&solid2, std::slice::from_ref(&topo2.edges[0]), 0.2).unwrap();
+        let chamfered_volume = kernel.volume_sync(&chamfered).unwrap();
+        eprintln!("[DEBUG] chamfered_volume={chamfered_volume}");
+    }
+
+    #[test]
+    fn shell_hollows_out_a_box() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        let shelled = kernel.shell_sync(&solid, 0.2, std::slice::from_ref(&topo.faces[0])).unwrap();
+        let volume = kernel.volume_sync(&shelled).unwrap();
+        assert!(volume > 0.0 && volume < 8.0, "shelled box should have less volume than solid box, got {volume}");
+    }
+
+    #[test]
+    fn draft_applies_pull_direction_taper() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        let drafted = kernel.draft_sync(&solid, std::slice::from_ref(&topo.faces[0]), [0.0, 0.0, 1.0], [1.0, 1.0, 0.0], 5.0_f64.to_radians()).unwrap();
+        assert!(kernel.volume_sync(&drafted).unwrap() > 0.0);
+    }
+
+    #[test]
+    fn offset_solid_produces_a_larger_solid_for_positive_distance() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let original_volume = kernel.volume_sync(&solid).unwrap();
+        let offset = kernel.offset_solid_sync(&solid, 0.2).unwrap();
+        let offset_volume = kernel.volume_sync(&offset).unwrap();
+        assert!(offset_volume > original_volume, "positive offset should grow the box: original={original_volume} offset={offset_volume}");
+    }
+
+    #[test]
+    fn defeature_removes_a_face_and_returns_a_solid() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let topo = kernel.deconstruct_sync(&solid).unwrap();
+        let defeatured = kernel.defeature_sync(&solid, std::slice::from_ref(&topo.faces[0])).unwrap();
+        assert_eq!(kernel.kind_sync(&defeatured).unwrap(), GeometryKind::Solid);
+    }
+
+    #[test]
+    fn split_box_returns_two_solids_that_sum_to_original_volume() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let original_volume = kernel.volume_sync(&solid).unwrap();
+        let (positive, negative) = kernel.split_sync(&solid, [1.0, 1.0, 1.0], [1.0, 0.0, 0.0]).unwrap();
+        let pos_vol = kernel.volume_sync(&positive).unwrap();
+        let neg_vol = kernel.volume_sync(&negative).unwrap();
+        assert!((pos_vol + neg_vol - original_volume).abs() < 1e-6);
+        assert!(pos_vol > 0.0 && neg_vol > 0.0);
+    }
+
+    #[test]
+    fn heal_solid_and_convert_to_nurbs_return_the_same_handle() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
+        let healed = kernel.heal_solid_sync(&solid, 1e-4).unwrap();
+        assert_eq!(healed.as_str(), solid.as_str());
+        let volume_before = kernel.volume_sync(&solid).unwrap();
+        let nurbsified = kernel.convert_to_nurbs_sync(&solid).unwrap();
+        assert_eq!(nurbsified.as_str(), solid.as_str());
+        let volume_after = kernel.volume_sync(&solid).unwrap();
+        assert!((volume_before - volume_after).abs() < volume_before * 0.05);
+    }
+    // #endregion Feature operations
+
+    // #region Registry and topology utilities
+    #[test]
+    fn vertex_and_face_from_wire_register_expected_kinds() {
+        let mut kernel = BrepkitKernel::new();
+        let vertex = kernel.vertex_sync([1.0, 2.0, 3.0]).unwrap();
+        assert_eq!(kernel.kind_sync(&vertex).unwrap(), GeometryKind::Vertex);
+        let wire = kernel.rectangle_wire_sync(2.0, 2.0).unwrap();
+        let face = kernel.face_from_wire_sync(&wire).unwrap();
+        assert_eq!(kernel.kind_sync(&face).unwrap(), GeometryKind::Face);
+        assert!(kernel.area_sync(&face).unwrap() > 0.0);
+    }
+
+    #[test]
+    fn solid_face_loops_returns_a_quad_per_box_face() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(2.0, 3.0, 4.0).unwrap();
+        let (positions, face_loops) = kernel.solid_face_loops_sync(&solid).unwrap();
+        assert_eq!(positions.len(), 8, "a box has 8 distinct vertices");
+        assert_eq!(face_loops.len(), 6, "a box has 6 faces");
+        for (outer, holes) in &face_loops {
+            assert_eq!(outer.len(), 4, "each box face is a quad");
+            assert!(holes.is_empty());
+        }
+    }
+
+    #[test]
+    fn dispose_sync_removes_the_handle_from_the_registry() {
+        let mut kernel = BrepkitKernel::new();
+        let solid = kernel.box_prim_sync(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(kernel.registry_len(), 1);
+        kernel.dispose_sync(&solid);
+        assert_eq!(kernel.registry_len(), 0);
+        assert!(kernel.volume_sync(&solid).is_err());
+    }
+    // #endregion Registry and topology utilities
 }
 // #endregion 🔖Tests

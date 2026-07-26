@@ -2234,6 +2234,15 @@ mod tests {
     }
 
     #[test]
+    fn debug_decimate_probe() {
+        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
+        eprintln!("[DEBUG] before verts={} faces={}", mesh.vertex_count(), mesh.face_count());
+        mesh.decimate(0.5).unwrap();
+        eprintln!("[DEBUG] after verts={} faces={}", mesh.vertex_count(), mesh.face_count());
+        panic!("stop");
+    }
+
+    #[test]
     fn json_roundtrip() {
         let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
         let json = mesh.to_json().unwrap();
@@ -2406,6 +2415,338 @@ mod tests {
         for fi in 0..mesh.face_count() {
             assert_eq!(mesh.face_vertex_ids(FaceId(fi as u32)).unwrap().len(), 4);
         }
+    }
+
+    #[test]
+    fn vec3_dot_cross_length_lerp() {
+        let a = Vec3::new(1.0, 0.0, 0.0);
+        let b = Vec3::new(0.0, 1.0, 0.0);
+        assert!((a.dot(b)).abs() < 1e-6);
+        assert!((a.cross(b).z() - 1.0).abs() < 1e-6);
+        assert!((Vec3::new(3.0, 4.0, 0.0).length() - 5.0).abs() < 1e-6);
+        let mid = a.lerp(b, 0.5);
+        assert!((mid.x() - 0.5).abs() < 1e-6 && (mid.y() - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn vec3_normalize_zero_vector_returns_zero() {
+        assert_eq!(Vec3::ZERO.normalize(), Vec3::ZERO);
+        let tiny = Vec3::new(1e-9, 0.0, 0.0);
+        assert_eq!(tiny.normalize(), Vec3::ZERO);
+    }
+
+    #[test]
+    fn vertex_position_invalid_handle_returns_err() {
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.vertex_position(VertexId(999)), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn set_vertex_position_updates_and_rejects_invalid_handle() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.set_vertex_position(VertexId(0), Vec3::new(9.0, 9.0, 9.0)).unwrap();
+        assert_eq!(mesh.vertex_position(VertexId(0)).unwrap(), Vec3::new(9.0, 9.0, 9.0));
+        assert_eq!(mesh.set_vertex_position(VertexId(999), Vec3::ZERO), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn edge_endpoints_returns_ordered_vertices() {
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let (v0, v1) = mesh.edge_endpoints(EdgeId(0)).unwrap();
+        assert_ne!(v0, v1);
+        assert_eq!(mesh.edge_endpoints(EdgeId(9999)), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn face_vertex_ids_invalid_handle_returns_err() {
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.face_vertex_ids(FaceId(999)), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn flip_faces_rejects_empty_selection_and_invalid_handle() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.flip_faces(&[]), Err(MeshKernelError::EmptySelection));
+        assert_eq!(mesh.flip_faces(&[FaceId(999)]), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn from_indexed_triangles_rejects_malformed_lengths() {
+        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0], &[0, 1, 2]), Err(MeshKernelError::InvalidInput(_))));
+        assert!(matches!(HalfedgeMesh::from_indexed_triangles(&[0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0], &[0, 1]), Err(MeshKernelError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn from_indexed_triangles_by_face_id_falls_back_when_empty() {
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let indices = vec![0, 1, 2];
+        let mesh = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[]).unwrap();
+        assert_eq!(mesh.face_count(), 1);
+    }
+
+    #[test]
+    fn from_indexed_triangles_by_face_id_rejects_length_mismatch() {
+        let positions = vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0, 0.0];
+        let indices = vec![0, 1, 2];
+        let err = HalfedgeMesh::from_indexed_triangles_by_face_id(&positions, &indices, &[10, 11]).unwrap_err();
+        assert!(matches!(err, MeshKernelError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn from_faces_rejects_degenerate_and_out_of_range() {
+        let positions = [[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]];
+        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1]]), Err(MeshKernelError::DegenerateOperation)));
+        assert!(matches!(HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 99]]), Err(MeshKernelError::InvalidInput(_))));
+    }
+
+    #[test]
+    fn from_face_loops_bridges_hole_and_skips_degenerate_outer() {
+        let mut positions = vec![[0.0, 0.0, 0.0], [4.0, 0.0, 0.0], [4.0, 4.0, 0.0], [0.0, 4.0, 0.0]];
+        positions.extend_from_slice(&[[1.0, 1.0, 0.0], [3.0, 1.0, 0.0], [3.0, 3.0, 0.0], [1.0, 3.0, 0.0]]);
+        let outer = vec![0, 1, 2, 3];
+        let hole = vec![4, 5, 6, 7];
+        let face_loops = vec![(outer, vec![hole]), (vec![0, 1], vec![])];
+        let mesh = HalfedgeMesh::from_face_loops(&positions, &face_loops).unwrap();
+        assert_eq!(mesh.face_count(), 8, "outer-with-hole bridges into a 10-vertex simple polygon (n-2 triangles); degenerate loop must be skipped");
+        for fi in 0..mesh.face_count() {
+            let verts = mesh.face_vertex_ids(FaceId(fi as u32)).unwrap();
+            assert_eq!(verts.len(), 3);
+        }
+    }
+
+    #[test]
+    fn cylinder_prim_has_expected_topology() {
+        let mesh = HalfedgeMesh::cylinder_prim(1.0, 2.0, 8).unwrap();
+        assert_eq!(mesh.face_count(), 8 * 3);
+        assert_eq!(mesh.vertex_count(), 8 * 2 + 2);
+    }
+
+    #[test]
+    fn cone_prim_has_expected_topology() {
+        let mesh = HalfedgeMesh::cone_prim(1.0, 2.0, 6).unwrap();
+        assert_eq!(mesh.face_count(), 6 * 2);
+        assert_eq!(mesh.vertex_count(), 6 + 2);
+    }
+
+    #[test]
+    fn rotate_mesh_rotates_vertices_about_axis() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        let before = mesh.vertex_position(VertexId(0)).unwrap();
+        mesh.rotate(Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2).unwrap();
+        let after = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((before.x() - after.y()).abs() < 1e-4);
+    }
+
+    #[test]
+    fn scale_mesh_scales_vertices() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        mesh.scale(Vec3::new(2.0, 1.0, 1.0)).unwrap();
+        let p = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((p.x() - (-2.0)).abs() < 1e-5);
+    }
+
+    #[test]
+    fn move_vertices_rejects_empty_and_moves_selected() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.move_vertices(&[], Vec3::new(1.0, 0.0, 0.0)), Err(MeshKernelError::EmptySelection));
+        let before = mesh.vertex_position(VertexId(0)).unwrap();
+        mesh.move_vertices(&[VertexId(0)], Vec3::new(1.0, 0.0, 0.0)).unwrap();
+        let after = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((after.x() - before.x() - 1.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn rotate_vertices_rejects_empty_and_rotates_around_pivot() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(mesh.rotate_vertices(&[], Vec3::new(0.0, 0.0, 1.0), 1.0, Vec3::ZERO), Err(MeshKernelError::EmptySelection));
+        // Vertex 0 starts at (-1,-1,-1); rotating 90° about Z around the origin maps (x,y) -> (-y,x).
+        mesh.rotate_vertices(&[VertexId(0)], Vec3::new(0.0, 0.0, 1.0), std::f32::consts::FRAC_PI_2, Vec3::ZERO).unwrap();
+        let p = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((p.x() - 1.0).abs() < 1e-4, "got x={}", p.x());
+        assert!((p.y() - (-1.0)).abs() < 1e-4, "got y={}", p.y());
+        assert!((p.z() - (-1.0)).abs() < 1e-4, "got z={}", p.z());
+    }
+
+    #[test]
+    fn scale_vertices_rejects_empty_and_scales_around_pivot() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(mesh.scale_vertices(&[], Vec3::new(2.0, 2.0, 2.0), Vec3::ZERO), Err(MeshKernelError::EmptySelection));
+        let before = mesh.vertex_position(VertexId(0)).unwrap();
+        mesh.scale_vertices(&[VertexId(0)], Vec3::new(2.0, 1.0, 1.0), Vec3::ZERO).unwrap();
+        let after = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((after.x() - before.x() * 2.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn move_vertices_proportional_rejects_empty_and_applies_falloff() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(mesh.move_vertices_proportional(&[], Vec3::new(1.0, 0.0, 0.0), Vec3::ZERO, 1.0), Err(MeshKernelError::EmptySelection));
+        let all: Vec<VertexId> = (0..mesh.vertex_count() as u32).map(VertexId).collect();
+        let before = mesh.vertex_position(VertexId(0)).unwrap();
+        mesh.move_vertices_proportional(&all, Vec3::new(1.0, 0.0, 0.0), before, 0.001).unwrap();
+        let moved = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((moved.x() - before.x() - 1.0).abs() < 1e-4, "vertex at the pivot itself should get full falloff");
+    }
+
+    #[test]
+    fn snap_vertices_to_grid_rejects_non_positive_and_snaps() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.snap_vertices_to_grid(&[VertexId(0)], 0.0), Err(MeshKernelError::InvalidInput("grid must be positive".into())));
+        mesh.set_vertex_position(VertexId(0), Vec3::new(0.44, 0.0, 0.0)).unwrap();
+        mesh.snap_vertices_to_grid(&[VertexId(0)], 0.5).unwrap();
+        let p = mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((p.x() - 0.5).abs() < 1e-6);
+    }
+
+    #[test]
+    fn inset_faces_rejects_empty_and_adds_inner_face() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.inset_faces(&[], 0.1), Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count();
+        mesh.inset_faces(&[FaceId(0)], 0.1).unwrap();
+        assert!(mesh.face_count() > before);
+    }
+
+    #[test]
+    fn bevel_edges_rejects_empty_and_runs_on_selection() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.bevel_edges(&[], 0.1, 1), Err(MeshKernelError::EmptySelection));
+        let before_verts = mesh.vertex_count();
+        mesh.bevel_edges(&[EdgeId(0)], 0.1, 1).unwrap();
+        assert_eq!(mesh.vertex_count(), before_verts + 2, "bevel_edges appends two offset points per edge");
+    }
+
+    #[test]
+    fn loop_cut_rejects_zero_cuts_and_adds_rings() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.loop_cut(&[], 0), Err(MeshKernelError::InvalidInput("cuts must be > 0".into())));
+        let before = mesh.face_count();
+        mesh.loop_cut(&[], 1).unwrap();
+        assert!(mesh.face_count() > before);
+    }
+
+    #[test]
+    fn knife_cut_on_quad_face_adds_split_triangles() {
+        // Quad lies in the XZ plane (y=0); the cut plane (x from cut_dir, z=1 from cut_a/cut_b) crosses
+        // both z-varying edges of the quad transversally, so knife_cut must find two hits and add faces.
+        let positions = [[0.0, 0.0, 0.0], [2.0, 0.0, 0.0], [2.0, 0.0, 2.0], [0.0, 0.0, 2.0]];
+        let mut mesh = HalfedgeMesh::from_faces(&positions, &[vec![0, 1, 2, 3]]).unwrap();
+        let before = mesh.face_count();
+        mesh.knife_cut(FaceId(0), Vec3::new(0.0, -1.0, 1.0), Vec3::new(1.0, -1.0, 1.0)).unwrap();
+        assert!(mesh.face_count() > before, "two valid plane hits on the quad must add new split faces");
+    }
+
+    #[test]
+    fn knife_cut_rejects_invalid_face_handle() {
+        let mut mesh = HalfedgeMesh::empty();
+        assert_eq!(mesh.knife_cut(FaceId(0), Vec3::ZERO, Vec3::new(1.0, 0.0, 0.0)), Err(MeshKernelError::InvalidHandle));
+    }
+
+    #[test]
+    fn merge_vertices_rejects_too_few_and_merges_first_and_center_modes() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        assert_eq!(mesh.merge_vertices(&[VertexId(0)], WeldMode::First, 0.0), Err(MeshKernelError::EmptySelection));
+
+        let mut first_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        let p0 = first_mesh.vertex_position(VertexId(0)).unwrap();
+        first_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::First, 0.0).unwrap();
+        assert_eq!(first_mesh.vertex_position(VertexId(0)).unwrap(), p0);
+
+        let mut center_mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        let a = center_mesh.vertex_position(VertexId(0)).unwrap();
+        let b = center_mesh.vertex_position(VertexId(1)).unwrap();
+        center_mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::Center, 0.0).unwrap();
+        let merged = center_mesh.vertex_position(VertexId(0)).unwrap();
+        assert!((merged.x() - a.lerp(b, 0.5).x()).abs() < 1e-5);
+    }
+
+    #[test]
+    fn merge_vertices_by_distance_only_merges_within_threshold() {
+        let mut mesh = HalfedgeMesh::box_prim(2.0, 2.0, 2.0).unwrap();
+        let before_verts = mesh.vertex_count();
+        mesh.merge_vertices(&[VertexId(0), VertexId(1)], WeldMode::ByDistance, 0.01).unwrap();
+        assert_eq!(mesh.vertex_count(), before_verts, "vertices farther apart than threshold must not be remapped");
+    }
+
+    #[test]
+    fn dissolve_vertices_rejects_empty_and_removes_incident_faces() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.dissolve_vertices(&[]), Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count();
+        mesh.dissolve_vertices(&[VertexId(0)]).unwrap();
+        assert!(mesh.face_count() < before);
+    }
+
+    #[test]
+    fn subdivide_faces_rejects_empty_and_quadruples_selected_face() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.subdivide_faces(&[]), Err(MeshKernelError::EmptySelection));
+        let before = mesh.face_count();
+        mesh.subdivide_faces(&[FaceId(0)]).unwrap();
+        assert_eq!(mesh.face_count(), before - 1 + 8, "a quad face fans 4 edge-midpoint pairs to the centroid into 8 triangles");
+    }
+
+    #[test]
+    fn set_shading_rejects_invalid_handle_and_marks_smooth() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        assert_eq!(mesh.set_shading(&[FaceId(999)], true), Err(MeshKernelError::InvalidHandle));
+        mesh.set_shading(&[FaceId(0)], true).unwrap();
+        mesh.recompute_normals().unwrap();
+    }
+
+    #[test]
+    fn mirror_doubles_geometry_and_welds_seam() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let before_faces = mesh.face_count();
+        mesh.mirror(MirrorAxis::X, 1e-4).unwrap();
+        assert_eq!(mesh.face_count(), before_faces * 2);
+    }
+
+    #[test]
+    fn mark_uv_seam_toggles_and_is_uv_seam_reports_state() {
+        let mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let mut mesh = mesh;
+        assert!(!mesh.is_uv_seam(EdgeId(0)));
+        mesh.mark_uv_seam(&[EdgeId(0)], true);
+        assert!(mesh.is_uv_seam(EdgeId(0)));
+        mesh.mark_uv_seam(&[EdgeId(0)], false);
+        assert!(!mesh.is_uv_seam(EdgeId(0)));
+    }
+
+    #[test]
+    fn unwrap_uv_splits_islands_across_seam() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.mark_uv_seam(&[EdgeId(0), EdgeId(2), EdgeId(4), EdgeId(6), EdgeId(8), EdgeId(10)], true);
+        mesh.unwrap_uv().unwrap();
+        let transfer = mesh.tessellate().unwrap();
+        assert!(!transfer.uvs.is_empty());
+    }
+
+    #[test]
+    fn decimate_no_op_when_ratio_at_max_and_clamps_below_min() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        let before = mesh.vertex_count();
+        mesh.decimate(1.0).unwrap();
+        assert_eq!(mesh.vertex_count(), before);
+
+        let mut sphere = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
+        let before_sphere = sphere.vertex_count();
+        sphere.decimate(0.0).unwrap();
+        assert!(sphere.vertex_count() < before_sphere, "ratio below 0.1 must clamp to 0.1, not become a no-op");
+    }
+
+    #[test]
+    fn to_obj_includes_uv_coordinates_when_present() {
+        let mut mesh = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).unwrap();
+        mesh.unwrap_uv().unwrap();
+        let obj = mesh.to_obj().unwrap();
+        assert!(obj.contains("vt "));
+    }
+
+    #[test]
+    fn from_json_rejects_invalid_input() {
+        let err = HalfedgeMesh::from_json("not json").unwrap_err();
+        assert!(matches!(err, MeshKernelError::InvalidInput(_)));
     }
 }
 

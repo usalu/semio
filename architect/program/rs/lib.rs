@@ -1826,7 +1826,7 @@ mod operations {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::kernel::EntityHeader;
+        use crate::kernel::*;
         use crate::program::{empty_program, sample_program};
 
         #[test]
@@ -1886,6 +1886,842 @@ mod operations {
             let sample = sample_program();
             apply_program_operation(&mut program, &ProgramOperation::SetProgram { program: Box::new(sample.clone()) });
             assert_eq!(program.elements.len(), sample.elements.len());
+        }
+
+        #[test]
+        fn update_project_round_trips_undo() {
+            let mut program = empty_program();
+            let operation = ProgramOperation::UpdateProject { patch: ProjectDefinitionPatch { code: Some("CLN-002".into()), ..Default::default() } };
+            let inverse = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.project.code, "CLN-002");
+            apply_program_operation(&mut program, &inverse);
+            assert_ne!(program.project.code, "CLN-002");
+        }
+
+        #[test]
+        fn update_governance_round_trips_undo() {
+            let mut program = empty_program();
+            let operation = ProgramOperation::UpdateGovernance { patch: GovernancePatch { framework: Some("RACI".into()), ..Default::default() } };
+            let inverse = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.governance.framework, "RACI");
+            apply_program_operation(&mut program, &inverse);
+            assert_ne!(program.governance.framework, "RACI");
+        }
+
+        #[test]
+        fn set_and_clear_adjacency_round_trips_undo() {
+            let mut program = sample_program();
+            let before = program.adjacencies.clone();
+            let mut new_adjacency = before[0].clone();
+            new_adjacency.header.id = EntityId::new_serial("adjacency");
+            new_adjacency.weight = 5.0;
+            let set_op = ProgramOperation::SetAdjacency { adjacency: new_adjacency.clone() };
+            apply_program_operation(&mut program, &set_op);
+            assert!(program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
+            let set_undo = invert_program_operation(&program, &set_op);
+            assert!(matches!(set_undo, ProgramOperation::ClearAdjacency { .. }));
+            apply_program_operation(&mut program, &set_undo);
+            assert!(!program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
+
+            let clear_op = ProgramOperation::ClearAdjacency { id: before[0].header.id.clone() };
+            let clear_undo = invert_program_operation(&program, &clear_op);
+            assert!(matches!(clear_undo, ProgramOperation::SetAdjacency { .. }));
+            apply_program_operation(&mut program, &clear_op);
+            assert!(!program.adjacencies.iter().any(|a| a.header.id == before[0].header.id));
+        }
+
+        #[test]
+        fn dispatches_traces_add_and_invert() {
+            let mut program = empty_program();
+            let link = TraceLink::new(EntityId::new_serial("tfrom"), EntityId::new_serial("tto"), TraceKind::RequirementToDecision);
+            let operation = ProgramOperation::Traces(CollectionOperation::Add { index: 0, item: link });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.traces.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.traces.is_empty());
+        }
+
+        #[test]
+        fn dispatches_access_rules_add_and_invert() {
+            let mut program = empty_program();
+            let item = AccessRule { header: EntityHeader::new(EntityId::new_serial("accessrule0"), "AccessRule 0"), subject_ids: Vec::new(), resource_ids: Vec::new(), access_level: AccessLevel::Public, access_mode: AccessMode::Unrestricted, authentication: Vec::new(), authorization: Vec::new(), time_restrictions: Vec::new(), escort_policy: None, visitor_policy: None, emergency_override: false, audit_required: false, badge_required: false, biometric_required: false, zone_ids: Vec::new(), exceptions: Vec::new(), regulatory_basis: Vec::new(), enforcement_method: None, revocation_policy: None, training_required: false, owner_id: None, };
+            let operation = ProgramOperation::AccessRules(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.access_rules.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.access_rules.is_empty());
+        }
+
+        #[test]
+        fn dispatches_accessibility_add_and_invert() {
+            let mut program = empty_program();
+            let item = AccessibilityRequirement { header: EntityHeader::new(EntityId::new_serial("accessibilityrequirement1"), "AccessibilityRequirement 1"), standard: String::new(), level: None, user_profile_ids: Vec::new(), element_ids: Vec::new(), route_ids: Vec::new(), clear_width_m: None, clear_height_m: None, turning_circle_m: None, ramp_slope: None, lift_required: false, tactile_guidance: false, hearing_loop: false, visual_contrast: false, signage_requirements: Vec::new(), controls_height: None, emergency_evacuation: Vec::new(), service_animal_policy: None, companion_seating: false, verification_plan: None, exceptions: Vec::new(), wcag_conformance: None, universal_design_principles: Vec::new(), };
+            let operation = ProgramOperation::Accessibility(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.accessibility.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.accessibility.is_empty());
+        }
+
+        #[test]
+        fn dispatches_activities_add_and_invert() {
+            let mut program = empty_program();
+            let item = Activity { header: EntityHeader::new(EntityId::new_serial("activity2"), "Activity 2"), code: String::new(), category: String::new(), frequency: None, duration: None, intensity: None, participants: QuantitySpec::default(), equipment_ids: Vec::new(), space_requirements: Vec::new(), environmental_needs: Vec::new(), privacy_needs: Vec::new(), accessibility_needs: Vec::new(), adjacent_activities: Vec::new(), sequencing: Vec::new(), peak_periods: Vec::new(), workflow_steps: Vec::new(), inputs: Vec::new(), outputs: Vec::new(), user_profile_ids: Vec::new(), function_ids: Vec::new(), performance_indicators: Vec::new(), activity_type: String::new(), location_context: None, temporal_pattern: None, supervision_level: None, };
+            let operation = ProgramOperation::Activities(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.activities.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.activities.is_empty());
+        }
+
+        #[test]
+        fn dispatches_adjacencies_add_and_invert() {
+            let mut program = empty_program();
+            let item = Adjacency { header: EntityHeader::new(EntityId::new_serial("adjacency3"), "Adjacency 3"), element_a_id: EntityId::new_serial("base3"), element_b_id: EntityId::new_serial("base3"), kind: AdjacencyKind::Required, connection: ConnectionKind::Direct, separations: Vec::new(), weight: 0.0, rationale: None, distance_max_m: None, distance_min_m: None, level_constraint: None, access_path: None, shared_wall: false, shared_entry: false, traffic_isolation: false, circulation_overlap: false, conflict_ids: Vec::new(), normalized: false, verification_status: ValidationStatus::Pending, source_relationship_id: None, internal_external_access: None, };
+            let operation = ProgramOperation::Adjacencies(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.adjacencies.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.adjacencies.is_empty());
+        }
+
+        #[test]
+        fn dispatches_analyses_add_and_invert() {
+            let mut program = empty_program();
+            let item = AnalysisRecord { header: EntityHeader::new(EntityId::new_serial("analysisrecord4"), "AnalysisRecord 4"), kind: AnalysisKind::Gap, title: String::new(), parameters: Vec::new(), input_entity_ids: Vec::new(), output_summary: TextField::default(), findings: Vec::new(), metrics: Vec::new(), charts: Vec::new(), run_by: None, run_at: None, duration_ms: None, tool_version: None, scenario_id: None, report_id: None, confidence: None, limitations: Vec::new(), recommendations: Vec::new(), raw_result_ref: None, };
+            let operation = ProgramOperation::Analyses(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.analyses.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.analyses.is_empty());
+        }
+
+        #[test]
+        fn dispatches_approvals_add_and_invert() {
+            let mut program = empty_program();
+            let item = ApprovalRecord { header: EntityHeader::new(EntityId::new_serial("approvalrecord5"), "ApprovalRecord 5"), approval_type: String::new(), subject_id: EntityId::new_serial("base5"), approver_ids: Vec::new(), approval_date: None, conditions: Vec::new(), approval_status: LifecycleStatus::Draft, expiry_date: None, delegation_chain: Vec::new(), evidence_refs: Vec::new(), related_decision_id: None, related_change_id: None, authority_basis: Vec::new(), signature_method: None, rejection_reason: None, resubmission_date: None, notification_list: Vec::new(), workflow_step: None, version: None, audit_trail_ref: None, };
+            let operation = ProgramOperation::Approvals(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.approvals.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.approvals.is_empty());
+        }
+
+        #[test]
+        fn dispatches_assumptions_add_and_invert() {
+            let mut program = empty_program();
+            let item = Assumption { header: EntityHeader::new(EntityId::new_serial("assumption6"), "Assumption 6"), statement: TextField::default(), basis: None, confidence_level: None, impact_if_false: None, related_entity_ids: Vec::new(), validation_status: ValidationStatus::Pending, validated_by: None, validation_date: None, owner_id: None, review_cycle: None, source: None, category: None, dependencies: Vec::new(), mitigation: Vec::new(), linked_requirement_ids: Vec::new(), linked_risk_ids: Vec::new(), expiration_date: None, status_notes: Vec::new(), document_refs: Vec::new(), };
+            let operation = ProgramOperation::Assumptions(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.assumptions.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.assumptions.is_empty());
+        }
+
+        #[test]
+        fn dispatches_audit_events_add_and_invert() {
+            let mut program = empty_program();
+            let item = AuditEvent { header: EntityHeader::new(EntityId::new_serial("auditevent7"), "AuditEvent 7"), action: AuditAction::Created, actor_id: None, subject_id: EntityId::new_serial("base7"), subject_kind: String::new(), timestamp: String::new(), details: TextField::default(), before_state: None, after_state: None, ip_address: None, client: None, session_id: None, change_record_id: None, trace_link: None, success: false, error_message: None, correlation_id: None, compliance_tags: Vec::new(), retention_until: None, };
+            let operation = ProgramOperation::AuditEvents(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.audit_events.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.audit_events.is_empty());
+        }
+
+        #[test]
+        fn dispatches_benchmarks_add_and_invert() {
+            let mut program = empty_program();
+            let item = BenchmarkRecord { header: EntityHeader::new(EntityId::new_serial("benchmarkrecord8"), "BenchmarkRecord 8"), benchmark_name: String::new(), sector: String::new(), metric: String::new(), value: 0.0, unit: String::new(), sample_size: None, source: None, collection_year: None, geography: None, building_type: None, confidence: None, methodology: None, applicable_element_kinds: Vec::new(), related_requirement_ids: Vec::new(), comparison_notes: Vec::new(), limitations: Vec::new(), license: None, knowledge_id: None, last_verified: None, };
+            let operation = ProgramOperation::Benchmarks(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.benchmarks.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.benchmarks.is_empty());
+        }
+
+        #[test]
+        fn dispatches_changes_add_and_invert() {
+            let mut program = empty_program();
+            let item = ChangeRecord { header: EntityHeader::new(EntityId::new_serial("changerecord9"), "ChangeRecord 9"), change_type: String::new(), summary: TextField::default(), reason: TextField::default(), requested_by: None, approved_by: None, change_date: None, effective_date: None, impacted_entity_ids: Vec::new(), before_snapshot: None, after_snapshot: None, cost_impact: None, schedule_impact: None, risk_impact: Vec::new(), approval_status: ValidationStatus::Pending, rollback_plan: Vec::new(), communication_plan: Vec::new(), version_from: None, version_to: None, audit_event_ids: Vec::new(), };
+            let operation = ProgramOperation::Changes(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.changes.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.changes.is_empty());
+        }
+
+        #[test]
+        fn dispatches_collaboration_add_and_invert() {
+            let mut program = empty_program();
+            let item = CollaborationRecord { header: EntityHeader::new(EntityId::new_serial("collaborationrecord10"), "CollaborationRecord 10"), session_type: String::new(), title: String::new(), participants: Vec::new(), facilitator_id: None, start_time: None, end_time: None, location: None, agenda: Vec::new(), outcomes: Vec::new(), action_items: Vec::new(), decision_ids: Vec::new(), issue_ids: Vec::new(), document_ids: Vec::new(), recording_ref: None, feedback: Vec::new(), follow_up_date: None, workshop_id: None, survey_id: None, };
+            let operation = ProgramOperation::Collaboration(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.collaboration.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.collaboration.is_empty());
+        }
+
+        #[test]
+        fn dispatches_communication_add_and_invert() {
+            let mut program = empty_program();
+            let item = CommunicationRequirement { header: EntityHeader::new(EntityId::new_serial("communicationrequirement11"), "CommunicationRequirement 11"), channel: String::new(), audience_ids: Vec::new(), message_types: Vec::new(), frequency: None, medium: Vec::new(), language: Vec::new(), accessibility: Vec::new(), emergency_use: false, two_way: false, recording_policy: None, signage_locations: Vec::new(), technology: Vec::new(), escalation_path: Vec::new(), feedback_loop: false, privacy_controls: Vec::new(), element_ids: Vec::new(), standards: Vec::new(), owner_id: None, templates: Vec::new(), };
+            let operation = ProgramOperation::Communication(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.communication.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.communication.is_empty());
+        }
+
+        #[test]
+        fn dispatches_compliance_records_add_and_invert() {
+            let mut program = empty_program();
+            let item = ComplianceRecord { header: EntityHeader::new(EntityId::new_serial("compliancerecord12"), "ComplianceRecord 12"), standard_ref: String::new(), obligation: TextField::default(), compliance_status: ValidationStatus::Pending, evidence_refs: Vec::new(), auditor_id: None, audit_date: None, next_review: None, affected_entity_ids: Vec::new(), gap_analysis: Vec::new(), remediation_plan: Vec::new(), owner_id: None, severity: RiskLevel::Negligible, regulatory_body: None, certification_target: None, waiver_status: None, related_requirement_ids: Vec::new(), monitoring_method: None, reporting_frequency: None, penalties: Vec::new(), corrective_actions: Vec::new(), document_refs: Vec::new(), };
+            let operation = ProgramOperation::ComplianceRecords(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.compliance_records.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.compliance_records.is_empty());
+        }
+
+        #[test]
+        fn dispatches_conflicts_add_and_invert() {
+            let mut program = empty_program();
+            let item = Conflict { header: EntityHeader::new(EntityId::new_serial("conflict13"), "Conflict 13"), kind: ConflictKind::Adjacency, summary: TextField::default(), entity_a_id: EntityId::new_serial("base13"), entity_b_id: EntityId::new_serial("base13"), severity: IssueSeverity::Cosmetic, detected_by: None, detection_date: None, trade_off_options: Vec::new(), recommended_resolution: None, decision_id: None, stakeholder_ids: Vec::new(), requirement_ids: Vec::new(), cost_impact: None, schedule_impact: None, quality_impact: Vec::new(), resolution_status: ValidationStatus::Pending, owner_id: None, escalation_level: None, related_risk_ids: Vec::new(), };
+            let operation = ProgramOperation::Conflicts(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.conflicts.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.conflicts.is_empty());
+        }
+
+        #[test]
+        fn dispatches_constraints_add_and_invert() {
+            let mut program = empty_program();
+            let item = ConstraintRecord { header: EntityHeader::new(EntityId::new_serial("constraintrecord14"), "ConstraintRecord 14"), constraint_type: String::new(), summary: TextField::default(), severity: RiskLevel::Negligible, affected_entity_ids: Vec::new(), source: None, regulatory_basis: Vec::new(), mitigation_options: Vec::new(), owner_id: None, effective_date: None, expiry_date: None, waiver_status: None, waiver_approver: None, impact_assessment: None, resolution_plan: Vec::new(), related_requirement_ids: Vec::new(), related_decision_ids: Vec::new(), monitoring_frequency: None, compliance_status: ValidationStatus::Pending, exceptions: Vec::new(), trace_links: Vec::new(), escalation_contact_id: None, };
+            let operation = ProgramOperation::Constraints(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.constraints.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.constraints.is_empty());
+        }
+
+        #[test]
+        fn dispatches_costs_add_and_invert() {
+            let mut program = empty_program();
+            let item = CostRequirement { header: EntityHeader::new(EntityId::new_serial("costrequirement15"), "CostRequirement 15"), cost_item: String::new(), basis: CostBasis::Capital, amount: None, currency: String::new(), quantity_basis: None, unit_cost: None, contingency_percent: None, escalation_rate: None, funding_source: None, element_ids: Vec::new(), requirement_ids: Vec::new(), phase: None, cash_flow_profile: Vec::new(), value_engineering_notes: Vec::new(), benchmark_ref: None, approval_status: ValidationStatus::Pending, owner_id: None, assumptions: Vec::new(), sensitivity_factors: Vec::new(), };
+            let operation = ProgramOperation::Costs(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.costs.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.costs.is_empty());
+        }
+
+        #[test]
+        fn dispatches_decisions_add_and_invert() {
+            let mut program = empty_program();
+            let item = Decision { header: EntityHeader::new(EntityId::new_serial("decision16"), "Decision 16"), decision_statement: TextField::default(), context: TextField::default(), options_considered: Vec::new(), selected_option_id: None, rationale: TextField::default(), decision_maker_ids: Vec::new(), consulted_ids: Vec::new(), informed_ids: Vec::new(), decision_date: None, effective_date: None, reversal_conditions: Vec::new(), impacted_requirement_ids: Vec::new(), impacted_element_ids: Vec::new(), cost_impact: None, schedule_impact: None, risk_impact: Vec::new(), approval_status: ValidationStatus::Pending, meeting_ref: None, document_refs: Vec::new(), };
+            let operation = ProgramOperation::Decisions(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.decisions.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.decisions.is_empty());
+        }
+
+        #[test]
+        fn dispatches_delivery_add_and_invert() {
+            let mut program = empty_program();
+            let item = DeliveryConstraint { header: EntityHeader::new(EntityId::new_serial("deliveryconstraint17"), "DeliveryConstraint 17"), constraint_type: String::new(), constraint_details: TextField::default(), phase: DeliveryPhase::Concept, hard_deadline: None, soft_deadline: None, impacted_element_ids: Vec::new(), impacted_requirement_ids: Vec::new(), work_hours: None, noise_restrictions: Vec::new(), access_restrictions: Vec::new(), site_logistics: Vec::new(), procurement_lead_time: None, approval_gates: Vec::new(), occupancy_constraints: Vec::new(), weather_windows: Vec::new(), penalty_clauses: Vec::new(), mitigation_options: Vec::new(), owner_id: None, risk_ids: Vec::new(), constraint_status: LifecycleStatus::Draft, };
+            let operation = ProgramOperation::Delivery(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.delivery.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.delivery.is_empty());
+        }
+
+        #[test]
+        fn dispatches_documents_add_and_invert() {
+            let mut program = empty_program();
+            let item = DocumentRecord { header: EntityHeader::new(EntityId::new_serial("documentrecord18"), "DocumentRecord 18"), document_type: String::new(), title: String::new(), version: String::new(), file_ref: None, format: None, author_ids: Vec::new(), reviewer_ids: Vec::new(), approver_ids: Vec::new(), issue_date: None, revision_date: None, distribution_list: Vec::new(), related_entity_ids: Vec::new(), classification: None, retention_period: None, access_controls: Vec::new(), supersedes: None, document_status: LifecycleStatus::Draft, checksum: None, source_system: None, };
+            let operation = ProgramOperation::Documents(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.documents.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.documents.is_empty());
+        }
+
+        #[test]
+        fn dispatches_elements_add_and_invert() {
+            let mut program = empty_program();
+            let item = ProgramElement { header: EntityHeader::new(EntityId::new_serial("programelement19"), "ProgramElement 19"), code: String::new(), kind: ProgramElementKind::Building, parent_id: None, level: None, area: QuantitySpec::default(), volume: QuantitySpec::default(), height: QuantitySpec::default(), occupancy: QuantitySpec::default(), function_ids: Vec::new(), activity_ids: Vec::new(), user_profile_ids: Vec::new(), adjacency_ids: Vec::new(), quantity_ids: Vec::new(), requirement_ids: Vec::new(), location_hint: None, orientation: None, daylight_requirement: None, acoustic_class: None, security_zone: None, flexibility_notes: Vec::new(), growth_allocation: None, circulation_role: None, visibility_level: None, adjacency_preferences: Vec::new(), environmental_zone: None, };
+            let operation = ProgramOperation::Elements(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.elements.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.elements.is_empty());
+        }
+
+        #[test]
+        fn dispatches_environmental_add_and_invert() {
+            let mut program = empty_program();
+            let item = EnvironmentalRequirement { header: EntityHeader::new(EntityId::new_serial("environmentalrequirement20"), "EnvironmentalRequirement 20"), parameter_kind: EnvironmentalParameter::Temperature, parameter: String::new(), target_value: None, unit: None, min_value: None, max_value: None, comfort_band: None, measurement_method: None, monitoring_frequency: None, element_ids: Vec::new(), occupancy_basis: None, seasonal_variation: Vec::new(), energy_implications: Vec::new(), standards: Vec::new(), certification_targets: Vec::new(), outdoor_conditions: Vec::new(), ventilation_strategy: None, daylight_target: None, acoustic_target: None, iaq_target: None, verification_plan: None, };
+            let operation = ProgramOperation::Environmental(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.environmental.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.environmental.is_empty());
+        }
+
+        #[test]
+        fn dispatches_equipment_add_and_invert() {
+            let mut program = empty_program();
+            let item = Equipment { header: EntityHeader::new(EntityId::new_serial("equipment21"), "Equipment 21"), code: String::new(), category: String::new(), manufacturer: None, model: None, quantity: QuantitySpec::default(), dimensions: None, weight_kg: None, power_kw: None, utility_connections: Vec::new(), ventilation: None, noise_level_db: None, clearance: None, mounting: None, element_ids: Vec::new(), activity_ids: Vec::new(), maintenance_access: Vec::new(), lifecycle_years: None, replacement_cost: None, standards: Vec::new(), supplier: None, activity_link_ids: Vec::new(), installation_requirements: Vec::new(), commissioning_notes: Vec::new(), spare_parts: Vec::new(), };
+            let operation = ProgramOperation::Equipment(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.equipment.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.equipment.is_empty());
+        }
+
+        #[test]
+        fn dispatches_flexibility_add_and_invert() {
+            let mut program = empty_program();
+            let item = FlexibilityRequirement { header: EntityHeader::new(EntityId::new_serial("flexibilityrequirement22"), "FlexibilityRequirement 22"), flexibility_type: String::new(), element_ids: Vec::new(), adaptation_scenarios: Vec::new(), modularity_level: None, reconfiguration_time: None, cost_of_change: None, technology_readiness: None, future_function_ids: Vec::new(), demountable_partitions: false, raised_floor: false, overhead_services: false, expansion_direction: Vec::new(), contraction_scenario: Vec::new(), multi_use_potential: Vec::new(), furniture_strategy: Vec::new(), infrastructure_spare_capacity: Vec::new(), lease_implications: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Flexibility(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.flexibility.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.flexibility.is_empty());
+        }
+
+        #[test]
+        fn dispatches_flows_add_and_invert() {
+            let mut program = empty_program();
+            let item = FlowRequirement { header: EntityHeader::new(EntityId::new_serial("flowrequirement23"), "FlowRequirement 23"), from_element_id: EntityId::new_serial("base23"), to_element_id: EntityId::new_serial("base23"), kind: FlowKind::People, flow_type: String::new(), direction: FlowDirection::OneWay, volume: QuantitySpec::default(), peak_rate: None, clear_width_m: None, clear_height_m: None, separation_requirements: Vec::new(), access_level: AccessLevel::Public, time_windows: Vec::new(), equipment_clearance: None, signage_required: false, escort_required: false, emergency_route: false, barrier_free: false, monitoring_required: false, process_id: None, conflict_ids: Vec::new(), verification_method: None, };
+            let operation = ProgramOperation::Flows(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.flows.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.flows.is_empty());
+        }
+
+        #[test]
+        fn dispatches_functions_add_and_invert() {
+            let mut program = empty_program();
+            let item = Function { header: EntityHeader::new(EntityId::new_serial("function24"), "Function 24"), code: String::new(), kind: FunctionKind::Primary, purpose: TextField::default(), criticality: Priority::Mandatory, performance_targets: Vec::new(), service_level: None, operating_hours: None, staffing: QuantitySpec::default(), equipment_ids: Vec::new(), resource_ids: Vec::new(), activity_ids: Vec::new(), element_ids: Vec::new(), dependencies: Vec::new(), interfaces: Vec::new(), constraints: Vec::new(), quality_criteria: Vec::new(), regulatory_refs: Vec::new(), future_changes: Vec::new(), owner_stakeholder_id: None, success_metrics: Vec::new(), hierarchy_parent_id: None, conflict_ids: Vec::new(), };
+            let operation = ProgramOperation::Functions(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.functions.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.functions.is_empty());
+        }
+
+        #[test]
+        fn dispatches_growth_add_and_invert() {
+            let mut program = empty_program();
+            let item = GrowthPlan { header: EntityHeader::new(EntityId::new_serial("growthplan25"), "GrowthPlan 25"), horizon_years: 0, growth_rate: None, headcount_growth: QuantitySpec::default(), area_growth: QuantitySpec::default(), phases: Vec::new(), trigger_events: Vec::new(), expansion_element_ids: Vec::new(), reserve_areas: Vec::new(), infrastructure_headroom: Vec::new(), budget_envelope: None, funding_sources: Vec::new(), risk_factors: Vec::new(), decision_points: Vec::new(), scenario_ids: Vec::new(), decommission_plan: Vec::new(), relocation_strategy: Vec::new(), stakeholder_impact: Vec::new(), regulatory_considerations: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Growth(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.growth.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.growth.is_empty());
+        }
+
+        #[test]
+        fn dispatches_human_factors_add_and_invert() {
+            let mut program = empty_program();
+            let item = HumanFactorRequirement { header: EntityHeader::new(EntityId::new_serial("humanfactorrequirement26"), "HumanFactorRequirement 26"), aspect: HumanFactorAspect::Ergonomics, factor: String::new(), user_profile_ids: Vec::new(), activity_ids: Vec::new(), ergonomic_criteria: Vec::new(), cognitive_load: None, visual_demands: Vec::new(), auditory_demands: Vec::new(), posture_requirements: Vec::new(), reach_envelope: None, lighting_for_tasks: Vec::new(), thermal_comfort: Vec::new(), privacy_needs: Vec::new(), social_interaction: Vec::new(), stress_factors: Vec::new(), mitigation_measures: Vec::new(), training_needs: Vec::new(), standards: Vec::new(), research_basis: Vec::new(), element_ids: Vec::new(), verification_method: None, };
+            let operation = ProgramOperation::HumanFactors(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.human_factors.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.human_factors.is_empty());
+        }
+
+        #[test]
+        fn dispatches_information_add_and_invert() {
+            let mut program = empty_program();
+            let item = InformationRequirement { header: EntityHeader::new(EntityId::new_serial("informationrequirement27"), "InformationRequirement 27"), information_type: String::new(), format: None, source_system: None, destination_systems: Vec::new(), update_frequency: None, retention_period: None, access_controls: Vec::new(), classification: None, quality_criteria: Vec::new(), metadata_requirements: Vec::new(), integration_points: Vec::new(), backup_requirements: Vec::new(), disaster_recovery: Vec::new(), privacy_controls: Vec::new(), audit_trail: false, element_ids: Vec::new(), stakeholder_ids: Vec::new(), standards: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Information(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.information.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.information.is_empty());
+        }
+
+        #[test]
+        fn dispatches_infrastructure_add_and_invert() {
+            let mut program = empty_program();
+            let item = InfrastructureRequirement { header: EntityHeader::new(EntityId::new_serial("infrastructurerequirement28"), "InfrastructureRequirement 28"), system: String::new(), category: String::new(), capacity: QuantitySpec::default(), redundancy: None, distribution: Vec::new(), entry_points: Vec::new(), utility_source: None, standby_power: false, monitoring: Vec::new(), maintenance_access: Vec::new(), standards: Vec::new(), element_ids: Vec::new(), peak_demand: None, diversity_factor: None, future_expansion: Vec::new(), interface_requirements: Vec::new(), commissioning: Vec::new(), lifecycle_cost: None, owner_id: None, };
+            let operation = ProgramOperation::Infrastructure(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.infrastructure.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.infrastructure.is_empty());
+        }
+
+        #[test]
+        fn dispatches_issues_add_and_invert() {
+            let mut program = empty_program();
+            let item = Issue { header: EntityHeader::new(EntityId::new_serial("issue29"), "Issue 29"), issue_type: String::new(), summary: TextField::default(), issue_description: TextField::default(), severity: IssueSeverity::Cosmetic, issue_priority: Priority::Mandatory, reporter_id: None, assignee_id: None, affected_entity_ids: Vec::new(), root_cause: None, resolution: None, workaround: None, due_date: None, resolved_date: None, related_conflict_ids: Vec::new(), related_risk_ids: Vec::new(), decision_id: None, comments: Vec::new(), attachments: Vec::new(), escalation_level: None, };
+            let operation = ProgramOperation::Issues(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.issues.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.issues.is_empty());
+        }
+
+        #[test]
+        fn dispatches_knowledge_add_and_invert() {
+            let mut program = empty_program();
+            let item = KnowledgeRecord { header: EntityHeader::new(EntityId::new_serial("knowledgerecord30"), "KnowledgeRecord 30"), topic: String::new(), category: String::new(), summary: TextField::default(), content: TextField::default(), sources: Vec::new(), references: Vec::new(), lessons_learned: Vec::new(), best_practices: Vec::new(), applicable_sectors: Vec::new(), related_entity_kinds: Vec::new(), author_ids: Vec::new(), expertise_level: None, validation_status: ValidationStatus::Pending, last_reviewed: None, keywords: Vec::new(), attachments: Vec::new(), citations: Vec::new(), usage_count: 0, };
+            let operation = ProgramOperation::Knowledge(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.knowledge.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.knowledge.is_empty());
+        }
+
+        #[test]
+        fn dispatches_meetings_add_and_invert() {
+            let mut program = empty_program();
+            let item = MeetingRecord { header: EntityHeader::new(EntityId::new_serial("meetingrecord31"), "MeetingRecord 31"), meeting_type: String::new(), scheduled_date: None, duration: None, location: None, chair_id: None, attendee_ids: Vec::new(), agenda_items: Vec::new(), minutes: None, action_items: Vec::new(), decisions_made: Vec::new(), document_refs: Vec::new(), follow_up_date: None, recording_ref: None, quorum_met: false, meeting_status: LifecycleStatus::Draft, workshop_id: None, stakeholder_ids: Vec::new(), requirement_ids: Vec::new(), issue_ids: Vec::new(), approval_ids: Vec::new(), };
+            let operation = ProgramOperation::Meetings(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.meetings.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.meetings.is_empty());
+        }
+
+        #[test]
+        fn dispatches_operations_add_and_invert() {
+            let mut program = empty_program();
+            let item = OperationalRequirement { header: EntityHeader::new(EntityId::new_serial("operationalrequirement32"), "OperationalRequirement 32"), operation: String::new(), service_level: None, operating_hours: None, staffing: QuantitySpec::default(), maintenance_interval: None, cleaning_regime: None, turnaround_time: None, redundancy: None, uptime_target: None, response_time: None, equipment_ids: Vec::new(), element_ids: Vec::new(), process_ids: Vec::new(), utilities: Vec::new(), waste_streams: Vec::new(), contingency_plan: Vec::new(), training_requirements: Vec::new(), sop_references: Vec::new(), kpi_targets: Vec::new(), owner_id: None, service_category: None, shift_pattern: None, sla_target: None, escalation_contact_id: None, };
+            let operation = ProgramOperation::Operations(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.operations.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.operations.is_empty());
+        }
+
+        #[test]
+        fn dispatches_options_add_and_invert() {
+            let mut program = empty_program();
+            let item = OptionEvaluation { header: EntityHeader::new(EntityId::new_serial("optionevaluation33"), "OptionEvaluation 33"), option_name: String::new(), option_description: TextField::default(), scenario_id: None, criteria_ids: Vec::new(), scores: Vec::new(), weighted_score: None, cost_estimate: None, schedule_estimate: None, risk_summary: Vec::new(), benefits: Vec::new(), drawbacks: Vec::new(), assumptions: Vec::new(), dependencies: Vec::new(), stakeholder_feedback: Vec::new(), recommendation: None, decision_id: None, evaluation_status: ValidationStatus::Pending, evaluator_ids: Vec::new(), evaluation_date: None, };
+            let operation = ProgramOperation::Options(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.options.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.options.is_empty());
+        }
+
+        #[test]
+        fn dispatches_organizational_add_and_invert() {
+            let mut program = empty_program();
+            let item = OrganizationalRequirement { header: EntityHeader::new(EntityId::new_serial("organizationalrequirement34"), "OrganizationalRequirement 34"), department: String::new(), reporting_line: None, headcount: QuantitySpec::default(), growth_plan_id: None, work_patterns: Vec::new(), collaboration_model: None, hierarchy_levels: Vec::new(), decision_making: Vec::new(), culture_notes: Vec::new(), change_readiness: None, union_considerations: Vec::new(), training_needs: Vec::new(), element_ids: Vec::new(), stakeholder_ids: Vec::new(), service_requirement_ids: Vec::new(), branding_requirements: Vec::new(), wellness_programs: Vec::new(), diversity_goals: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Organizational(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.organizational.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.organizational.is_empty());
+        }
+
+        #[test]
+        fn dispatches_performance_add_and_invert() {
+            let mut program = empty_program();
+            let item = PerformanceCriterion { header: EntityHeader::new(EntityId::new_serial("performancecriterion35"), "PerformanceCriterion 35"), criterion: String::new(), metric: String::new(), target: None, unit: None, minimum: None, maximum: None, measurement_method: None, frequency: None, requirement_ids: Vec::new(), element_ids: Vec::new(), baseline: None, benchmark_ref: None, weight: None, data_source: None, reporting_cadence: None, owner_id: None, verification_plan: None, penalty_threshold: None, incentive_threshold: None, };
+            let operation = ProgramOperation::Performance(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.performance.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.performance.is_empty());
+        }
+
+        #[test]
+        fn dispatches_priorities_add_and_invert() {
+            let mut program = empty_program();
+            let item = PriorityRecord { header: EntityHeader::new(EntityId::new_serial("priorityrecord36"), "PriorityRecord 36"), subject_id: EntityId::new_serial("base36"), subject_kind: String::new(), ranked_priority: Priority::Mandatory, rank: None, weight: None, rationale: None, decision_id: None, stakeholder_ids: Vec::new(), effective_from: None, effective_until: None, review_cycle: None, dependencies: Vec::new(), conflicts: Vec::new(), scoring_method: None, score: None, criteria: Vec::new(), approved_by: None, approval_date: None, ranking_notes: Vec::new(), };
+            let operation = ProgramOperation::Priorities(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.priorities.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.priorities.is_empty());
+        }
+
+        #[test]
+        fn dispatches_privacy_add_and_invert() {
+            let mut program = empty_program();
+            let item = PrivacyRequirement { header: EntityHeader::new(EntityId::new_serial("privacyrequirement37"), "PrivacyRequirement 37"), privacy_kind: PrivacyKind::Public, privacy_type: String::new(), level: None, subject_ids: Vec::new(), element_ids: Vec::new(), visual_privacy: Vec::new(), acoustic_privacy: Vec::new(), data_privacy: Vec::new(), screening_required: false, enclosure_required: false, access_restrictions: Vec::new(), observation_risk: None, regulatory_basis: Vec::new(), cultural_considerations: Vec::new(), technology_controls: Vec::new(), signage: Vec::new(), monitoring_restrictions: Vec::new(), retention_policy: None, breach_response: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Privacy(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.privacy.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.privacy.is_empty());
+        }
+
+        #[test]
+        fn dispatches_processes_add_and_invert() {
+            let mut program = empty_program();
+            let item = Process { header: EntityHeader::new(EntityId::new_serial("process38"), "Process 38"), code: String::new(), category: String::new(), trigger: None, inputs: Vec::new(), outputs: Vec::new(), steps: Vec::new(), actors: Vec::new(), equipment_ids: Vec::new(), element_ids: Vec::new(), duration: None, frequency: None, critical_path: false, bottlenecks: Vec::new(), dependencies: Vec::new(), kpis: Vec::new(), automation_level: None, failure_modes: Vec::new(), improvement_opportunities: Vec::new(), regulatory_refs: Vec::new(), owner_id: None, workflow_type: None, handoff_points: Vec::new(), quality_gates: Vec::new(), };
+            let operation = ProgramOperation::Processes(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.processes.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.processes.is_empty());
+        }
+
+        #[test]
+        fn dispatches_quality_add_and_invert() {
+            let mut program = empty_program();
+            let item = QualityRecord { header: EntityHeader::new(EntityId::new_serial("qualityrecord39"), "QualityRecord 39"), quality_topic: String::new(), standard: None, target_level: None, inspection_points: Vec::new(), acceptance_criteria: Vec::new(), testing_requirements: Vec::new(), sample_rate: None, defect_categories: Vec::new(), corrective_action_process: Vec::new(), element_ids: Vec::new(), requirement_ids: Vec::new(), supplier_requirements: Vec::new(), documentation_requirements: Vec::new(), training_requirements: Vec::new(), audit_schedule: None, kpis: Vec::new(), owner_id: None, certification_targets: Vec::new(), continuous_improvement: Vec::new(), };
+            let operation = ProgramOperation::Quality(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.quality.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.quality.is_empty());
+        }
+
+        #[test]
+        fn dispatches_quantities_add_and_invert() {
+            let mut program = empty_program();
+            let item = QuantityRequirement { header: EntityHeader::new(EntityId::new_serial("quantityrequirement40"), "QuantityRequirement 40"), target_element_id: EntityId::new_serial("base40"), metric: String::new(), quantity: QuantitySpec::default(), basis: None, calculation_method: None, source: None, benchmark_ref: None, tolerance_percent: None, peak_factor: None, growth_factor: None, unit_cost: None, currency: None, verification_method: None, related_requirement_ids: Vec::new(), assumptions: Vec::new(), constraints: Vec::new(), schedule_phase: None, responsible_party: None, last_verified: None, variance_notes: Vec::new(), };
+            let operation = ProgramOperation::Quantities(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.quantities.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.quantities.is_empty());
+        }
+
+        #[test]
+        fn dispatches_regulatory_add_and_invert() {
+            let mut program = empty_program();
+            let item = RegulatoryRequirement { header: EntityHeader::new(EntityId::new_serial("regulatoryrequirement41"), "RegulatoryRequirement 41"), jurisdiction: String::new(), code: String::new(), clause: None, title: String::new(), requirement_text: TextField::default(), applicability: Vec::new(), element_ids: Vec::new(), compliance_method: None, evidence_required: Vec::new(), authority: None, effective_date: None, expiry_date: None, penalties: Vec::new(), exemptions: Vec::new(), related_requirement_ids: Vec::new(), interpretation_notes: Vec::new(), verification_status: ValidationStatus::Pending, consultant_refs: Vec::new(), update_source: None, };
+            let operation = ProgramOperation::Regulatory(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.regulatory.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.regulatory.is_empty());
+        }
+
+        #[test]
+        fn dispatches_relationships_add_and_invert() {
+            let mut program = empty_program();
+            let item = Relationship { header: EntityHeader::new(EntityId::new_serial("relationship42"), "Relationship 42"), source_id: EntityId::new_serial("base42"), target_id: EntityId::new_serial("base42"), kind: RelationshipKind::Contains, strength: None, directional: false, rationale: None, constraints: Vec::new(), conditions: Vec::new(), relationship_priority: Priority::Mandatory, valid_from: None, valid_until: None, evidence: Vec::new(), conflict_ids: Vec::new(), trace_links: Vec::new(), bidirectional: false, distance_constraint_m: None, capacity_constraint: None, regulatory_basis: Vec::new(), review_cycle: None, owner_id: None, proximity_requirement: None, compatibility_requirement: None, incompatibility_requirement: None, separation_requirements: Vec::new(), };
+            let operation = ProgramOperation::Relationships(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.relationships.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.relationships.is_empty());
+        }
+
+        #[test]
+        fn dispatches_reports_add_and_invert() {
+            let mut program = empty_program();
+            let item = ReportRecord { header: EntityHeader::new(EntityId::new_serial("reportrecord43"), "ReportRecord 43"), kind: ReportKind::ExecutiveSummary, title: String::new(), audience: Vec::new(), sections: Vec::new(), generated_at: None, generated_by: None, analysis_ids: Vec::new(), format: None, file_ref: None, distribution_list: Vec::new(), approval_status: ValidationStatus::Pending, approver_id: None, version: String::new(), template_id: None, parameters: Vec::new(), confidentiality: None, expiry_date: None, related_decision_ids: Vec::new(), };
+            let operation = ProgramOperation::Reports(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.reports.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.reports.is_empty());
+        }
+
+        #[test]
+        fn dispatches_requirements_add_and_invert() {
+            let mut program = empty_program();
+            let item = Requirement { header: EntityHeader::new(EntityId::new_serial("requirement44"), "Requirement 44"), code: String::new(), kind: RequirementKind::Functional, statement: TextField::default(), rationale: None, source: None, stakeholder_ids: Vec::new(), element_ids: Vec::new(), function_ids: Vec::new(), parent_requirement_id: None, child_requirement_ids: Vec::new(), acceptance_criteria: Vec::new(), verification_method: None, validation_status: ValidationStatus::Pending, conflict_ids: Vec::new(), risk_ids: Vec::new(), cost_estimate: None, schedule_constraint: None, regulatory_refs: Vec::new(), trace_links: Vec::new(), superseded_by: None, };
+            let operation = ProgramOperation::Requirements(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.requirements.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.requirements.is_empty());
+        }
+
+        #[test]
+        fn dispatches_resilience_add_and_invert() {
+            let mut program = empty_program();
+            let item = ResilienceRequirement { header: EntityHeader::new(EntityId::new_serial("resiliencerequirement45"), "ResilienceRequirement 45"), hazard: String::new(), risk_level: RiskLevel::Negligible, scenario: None, recovery_time: None, recovery_point: None, redundancy: Vec::new(), hardening_measures: Vec::new(), backup_systems: Vec::new(), alternate_sites: Vec::new(), supply_chain: Vec::new(), communication_plan: Vec::new(), drill_requirements: Vec::new(), element_ids: Vec::new(), infrastructure_ids: Vec::new(), standards: Vec::new(), insurance_implications: Vec::new(), climate_adaptation: Vec::new(), owner_id: None, verification_plan: None, };
+            let operation = ProgramOperation::Resilience(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.resilience.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.resilience.is_empty());
+        }
+
+        #[test]
+        fn dispatches_resources_add_and_invert() {
+            let mut program = empty_program();
+            let item = Resource { header: EntityHeader::new(EntityId::new_serial("resource46"), "Resource 46"), code: String::new(), category: String::new(), resource_type: String::new(), quantity: QuantitySpec::default(), mobility: None, sharing_model: None, allocation: None, element_ids: Vec::new(), activity_ids: Vec::new(), user_profile_ids: Vec::new(), storage_requirement_id: None, durability: None, cleaning_requirements: Vec::new(), replacement_cycle: None, cost_per_unit: None, supplier: None, standards: Vec::new(), ergonomic_notes: Vec::new(), customization: Vec::new(), disposal_notes: Vec::new(), furniture_class: None, ergonomics_rating: None, sharing_ratio: None, };
+            let operation = ProgramOperation::Resources(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.resources.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.resources.is_empty());
+        }
+
+        #[test]
+        fn dispatches_risks_add_and_invert() {
+            let mut program = empty_program();
+            let item = Risk { header: EntityHeader::new(EntityId::new_serial("risk47"), "Risk 47"), risk_statement: TextField::default(), category: String::new(), probability: RiskLevel::Negligible, impact: RiskLevel::Negligible, risk_score: None, causes: Vec::new(), effects: Vec::new(), affected_element_ids: Vec::new(), affected_requirement_ids: Vec::new(), mitigation: Vec::new(), contingency: Vec::new(), owner_id: None, review_date: None, trigger_indicators: Vec::new(), residual_probability: None, residual_impact: None, related_conflict_ids: Vec::new(), escalation_path: Vec::new(), monitoring_plan: None, };
+            let operation = ProgramOperation::Risks(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.risks.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.risks.is_empty());
+        }
+
+        #[test]
+        fn dispatches_safety_add_and_invert() {
+            let mut program = empty_program();
+            let item = SafetyRequirement { header: EntityHeader::new(EntityId::new_serial("safetyrequirement48"), "SafetyRequirement 48"), safety_domain: SafetyDomain::LifeSafety, hazard: String::new(), risk_level: RiskLevel::Negligible, affected_element_ids: Vec::new(), affected_user_ids: Vec::new(), mitigation_measures: Vec::new(), ppe_requirements: Vec::new(), emergency_procedures: Vec::new(), evacuation_requirements: Vec::new(), fire_protection: Vec::new(), structural_safety: Vec::new(), slip_trip_fall: Vec::new(), chemical_safety: Vec::new(), electrical_safety: Vec::new(), machinery_safety: Vec::new(), standards: Vec::new(), inspection_frequency: None, training_requirements: Vec::new(), incident_reporting: Vec::new(), residual_risk: None, };
+            let operation = ProgramOperation::Safety(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.safety.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.safety.is_empty());
+        }
+
+        #[test]
+        fn dispatches_scenarios_add_and_invert() {
+            let mut program = empty_program();
+            let item = Scenario { header: EntityHeader::new(EntityId::new_serial("scenario49"), "Scenario 49"), code: String::new(), hypothesis: TextField::default(), assumptions: Vec::new(), variables: Vec::new(), element_ids: Vec::new(), requirement_ids: Vec::new(), growth_plan_id: None, probability: None, impact_summary: None, cost_delta: None, area_delta: None, headcount_delta: None, schedule_delta: None, risk_ids: Vec::new(), option_ids: Vec::new(), baseline: false, preferred: false, analysis_ids: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Scenarios(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.scenarios.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.scenarios.is_empty());
+        }
+
+        #[test]
+        fn dispatches_schedules_add_and_invert() {
+            let mut program = empty_program();
+            let item = ScheduleRequirement { header: EntityHeader::new(EntityId::new_serial("schedulerequirement50"), "ScheduleRequirement 50"), milestone: String::new(), phase: DeliveryPhase::Concept, start_date: None, end_date: None, duration: None, dependencies: Vec::new(), predecessors: Vec::new(), successors: Vec::new(), critical: false, float_days: None, resource_requirements: Vec::new(), occupancy_impact: Vec::new(), phasing_strategy: None, decant_requirements: Vec::new(), commissioning_window: None, stakeholder_ids: Vec::new(), risk_ids: Vec::new(), contingency_days: None, reporting_cadence: None, owner_id: None, };
+            let operation = ProgramOperation::Schedules(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.schedules.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.schedules.is_empty());
+        }
+
+        #[test]
+        fn dispatches_search_filters_add_and_invert() {
+            let mut program = empty_program();
+            let item = SearchFilter { header: EntityHeader::new(EntityId::new_serial("searchfilter51"), "SearchFilter 51"), filter_name: String::new(), filter_description: None, keywords: Vec::new(), categories: Vec::new(), owner_ids: Vec::new(), statuses: Vec::new(), priorities: Vec::new(), sources: Vec::new(), date_from: None, date_to: None, entity_kinds: Vec::new(), tag_filters: Vec::new(), sort_field: None, sort_direction: None, is_public: false, created_by: None, last_used: None, use_count: 0, pinned: false, };
+            let operation = ProgramOperation::SearchFilters(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.search_filters.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.search_filters.is_empty());
+        }
+
+        #[test]
+        fn dispatches_security_add_and_invert() {
+            let mut program = empty_program();
+            let item = SecurityRequirement { header: EntityHeader::new(EntityId::new_serial("securityrequirement52"), "SecurityRequirement 52"), control_kind: SecurityControlKind::AccessControl, threat: String::new(), risk_level: RiskLevel::Negligible, asset_ids: Vec::new(), zone_ids: Vec::new(), access_level: AccessLevel::Public, perimeter_controls: Vec::new(), surveillance: Vec::new(), intrusion_detection: Vec::new(), cybersecurity: Vec::new(), screening: Vec::new(), visitor_management: Vec::new(), key_management: Vec::new(), standards: Vec::new(), response_procedures: Vec::new(), drill_frequency: None, liaison_contacts: Vec::new(), classified_level: None, redundancy: Vec::new(), audit_requirements: Vec::new(), };
+            let operation = ProgramOperation::Security(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.security.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.security.is_empty());
+        }
+
+        #[test]
+        fn dispatches_services_add_and_invert() {
+            let mut program = empty_program();
+            let item = ServiceRequirement { header: EntityHeader::new(EntityId::new_serial("servicerequirement53"), "ServiceRequirement 53"), service_name: String::new(), service_type: String::new(), provider: None, service_level: None, operating_hours: None, capacity: QuantitySpec::default(), response_time: None, queue_management: Vec::new(), customer_profiles: Vec::new(), element_ids: Vec::new(), equipment_ids: Vec::new(), staffing: QuantitySpec::default(), quality_metrics: Vec::new(), cost_model: None, contract_refs: Vec::new(), dependencies: Vec::new(), failure_impact: None, backup_service: Vec::new(), feedback_channels: Vec::new(), };
+            let operation = ProgramOperation::Services(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.services.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.services.is_empty());
+        }
+
+        #[test]
+        fn dispatches_site_context_add_and_invert() {
+            let mut program = empty_program();
+            let item = SiteContext { header: EntityHeader::new(EntityId::new_serial("sitecontext54"), "SiteContext 54"), site_name: String::new(), address: None, latitude: None, longitude: None, elevation_m: None, climate_zone: None, seismic_zone: None, flood_risk: None, soil_conditions: Vec::new(), utilities_available: Vec::new(), access_roads: Vec::new(), public_transit: Vec::new(), neighbors: Vec::new(), views: Vec::new(), noise_sources: Vec::new(), environmental_constraints: Vec::new(), heritage_constraints: Vec::new(), zoning: None, max_height_m: None, max_coverage: None, };
+            let operation = ProgramOperation::SiteContext(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.site_context.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.site_context.is_empty());
+        }
+
+        #[test]
+        fn dispatches_stakeholders_add_and_invert() {
+            let mut program = empty_program();
+            let item = Stakeholder { header: EntityHeader::new(EntityId::new_serial("stakeholder55"), "Stakeholder 55"), role: String::new(), organization: String::new(), department: None, contact_email: None, contact_phone: None, influence: InfluenceLevel::Low, interest: InfluenceLevel::Low, engagement: EngagementLevel::Unaware, expectations: Vec::new(), concerns: Vec::new(), requirement_ids: Vec::new(), decision_authority: false, communication_preferences: Vec::new(), reporting_frequency: None, involvement_phases: Vec::new(), availability: None, representative_of: None, delegated_to: None, relationship_to_client: None, power_interest_notes: Vec::new(), stakeholder_type: String::new(), influence_strategy: None, communication_channels: Vec::new(), success_metrics: Vec::new(), };
+            let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.stakeholders.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.stakeholders.is_empty());
+        }
+
+        #[test]
+        fn dispatches_status_records_add_and_invert() {
+            let mut program = empty_program();
+            let item = StatusRecord { header: EntityHeader::new(EntityId::new_serial("statusrecord56"), "StatusRecord 56"), subject_id: EntityId::new_serial("base56"), subject_kind: String::new(), record_status: LifecycleStatus::Draft, previous_status: None, changed_by: None, changed_at: None, reason: None, blockers: Vec::new(), next_actions: Vec::new(), due_date: None, progress_percent: None, health: None, escalation_level: None, related_issue_ids: Vec::new(), related_risk_ids: Vec::new(), milestone_id: None, reporting_period: None, status_notes: Vec::new(), };
+            let operation = ProgramOperation::StatusRecords(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.status_records.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.status_records.is_empty());
+        }
+
+        #[test]
+        fn dispatches_storage_add_and_invert() {
+            let mut program = empty_program();
+            let item = StorageRequirement { header: EntityHeader::new(EntityId::new_serial("storagerequirement57"), "StorageRequirement 57"), stored_item: String::new(), storage_class: StorageClass::General, quantity: QuantitySpec::default(), volume_m3: None, weight_kg: None, temperature_range: None, humidity_range: None, security_level: AccessLevel::Public, hazard_class: None, retention_period: None, access_frequency: None, element_ids: Vec::new(), equipment_ids: Vec::new(), handling_equipment: Vec::new(), fire_protection: Vec::new(), ventilation: None, organization_system: None, growth_allowance: None, regulatory_refs: Vec::new(), owner_id: None, };
+            let operation = ProgramOperation::Storage(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.storage.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.storage.is_empty());
+        }
+
+        #[test]
+        fn dispatches_surveys_add_and_invert() {
+            let mut program = empty_program();
+            let item = Survey { header: EntityHeader::new(EntityId::new_serial("survey58"), "Survey 58"), survey_type: String::new(), title: String::new(), objectives: Vec::new(), questions: Vec::new(), target_audience: Vec::new(), distribution_channels: Vec::new(), launch_date: None, close_date: None, response_count: 0, response_rate: None, findings: Vec::new(), themes: Vec::new(), recommendations: Vec::new(), confidentiality: None, consent_process: Vec::new(), analysis_id: None, workshop_id: None, owner_id: None, survey_status: LifecycleStatus::Draft, };
+            let operation = ProgramOperation::Surveys(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.surveys.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.surveys.is_empty());
+        }
+
+        #[test]
+        fn dispatches_sustainability_add_and_invert() {
+            let mut program = empty_program();
+            let item = SustainabilityRequirement { header: EntityHeader::new(EntityId::new_serial("sustainabilityrequirement59"), "SustainabilityRequirement 59"), topic: String::new(), target: None, metric: None, baseline: None, target_value: None, unit: None, certification: Vec::new(), standards: Vec::new(), element_ids: Vec::new(), strategies: Vec::new(), materials_preferences: Vec::new(), energy_strategy: Vec::new(), water_strategy: Vec::new(), waste_strategy: Vec::new(), biodiversity: Vec::new(), embodied_carbon: None, operational_carbon: None, reporting_requirements: Vec::new(), verification_plan: None, owner_id: None, };
+            let operation = ProgramOperation::Sustainability(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.sustainability.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.sustainability.is_empty());
+        }
+
+        #[test]
+        fn dispatches_templates_add_and_invert() {
+            let mut program = empty_program();
+            let item = TemplateRecord { header: EntityHeader::new(EntityId::new_serial("templaterecord60"), "TemplateRecord 60"), template_type: String::new(), sector: None, project_type: None, version: String::new(), content_ref: None, entity_kinds: Vec::new(), default_fields: Vec::new(), checklists: Vec::new(), standards: Vec::new(), applicability: Vec::new(), author_id: None, approval_status: ValidationStatus::Pending, usage_count: 0, last_applied: None, customization_notes: Vec::new(), related_knowledge_ids: Vec::new(), benchmark_ids: Vec::new(), license: None, source_organization: None, };
+            let operation = ProgramOperation::Templates(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.templates.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.templates.is_empty());
+        }
+
+        #[test]
+        fn dispatches_users_add_and_invert() {
+            let mut program = empty_program();
+            let item = UserProfile { header: EntityHeader::new(EntityId::new_serial("userprofile61"), "UserProfile 61"), category: UserCategory::Primary, demographic: None, age_range: None, abilities: Vec::new(), disabilities: Vec::new(), occupation: None, role_title: None, department: None, mobility_profile: Vec::new(), sensory_profile: Vec::new(), cognitive_profile: Vec::new(), behavioral_patterns: Vec::new(), usage_frequency: None, usage_duration: None, peak_usage_times: Vec::new(), technology_proficiency: None, preferences: Vec::new(), pain_points: Vec::new(), goals: Vec::new(), activity_ids: Vec::new(), research_method: None, persona_archetype: None, validated: false, stakeholder_ids: Vec::new(), };
+            let operation = ProgramOperation::Users(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.users.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.users.is_empty());
+        }
+
+        #[test]
+        fn dispatches_validations_add_and_invert() {
+            let mut program = empty_program();
+            let item = ValidationRecord { header: EntityHeader::new(EntityId::new_serial("validationrecord62"), "ValidationRecord 62"), subject_id: EntityId::new_serial("base62"), subject_kind: String::new(), validation_type: String::new(), method: None, criteria: Vec::new(), result: ValidationStatus::Pending, evidence: Vec::new(), validator_ids: Vec::new(), validation_date: None, next_review_date: None, findings: Vec::new(), non_conformities: Vec::new(), corrective_actions: Vec::new(), waivers: Vec::new(), standards: Vec::new(), trace_links: Vec::new(), report_id: None, confidence_level: None, validation_notes: Vec::new(), };
+            let operation = ProgramOperation::Validations(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.validations.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.validations.is_empty());
+        }
+
+        #[test]
+        fn dispatches_wayfinding_add_and_invert() {
+            let mut program = empty_program();
+            let item = WayfindingRequirement { header: EntityHeader::new(EntityId::new_serial("wayfindingrequirement63"), "WayfindingRequirement 63"), user_profile_ids: Vec::new(), element_ids: Vec::new(), destination_types: Vec::new(), signage_types: Vec::new(), languages: Vec::new(), tactile_required: false, audio_required: false, digital_wayfinding: false, landmark_strategy: Vec::new(), color_coding: Vec::new(), symbol_standards: Vec::new(), decision_points: Vec::new(), maximum_signage_distance_m: None, lighting_requirements: Vec::new(), maintenance_plan: None, emergency_egress: Vec::new(), visitor_journey: Vec::new(), staff_journey: Vec::new(), brand_integration: Vec::new(), };
+            let operation = ProgramOperation::Wayfinding(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.wayfinding.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.wayfinding.is_empty());
+        }
+
+        #[test]
+        fn dispatches_workshops_add_and_invert() {
+            let mut program = empty_program();
+            let item = Workshop { header: EntityHeader::new(EntityId::new_serial("workshop64"), "Workshop 64"), workshop_type: String::new(), objectives: Vec::new(), agenda: Vec::new(), facilitator_id: None, participants: Vec::new(), scheduled_start: None, scheduled_end: None, location: None, materials: Vec::new(), methods: Vec::new(), outputs: Vec::new(), decisions: Vec::new(), issues: Vec::new(), follow_up_actions: Vec::new(), feedback: Vec::new(), recording_ref: None, budget: None, workshop_status: LifecycleStatus::Draft, survey_ids: Vec::new(), };
+            let operation = ProgramOperation::Workshops(CollectionOperation::Add { index: 0, item });
+            apply_program_operation(&mut program, &operation);
+            assert_eq!(program.workshops.len(), 1);
+            let undo = invert_program_operation(&program, &operation);
+            apply_program_operation(&mut program, &undo);
+            assert!(program.workshops.is_empty());
         }
     }
 }
@@ -9668,6 +10504,4173 @@ mod registers {
         }
     );
     // #endregion
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        #[test]
+        fn stakeholder_patch_round_trips() {
+            let mut item = Stakeholder {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("stakeholder"), "Base Stakeholder") },
+                role: String::new(),
+                organization: String::new(),
+                department: Some(String::new()),
+                contact_email: Some(String::new()),
+                contact_phone: Some(String::new()),
+                influence: InfluenceLevel::Low,
+                interest: InfluenceLevel::Low,
+                engagement: EngagementLevel::Unaware,
+                expectations: Vec::new(),
+                concerns: Vec::new(),
+                requirement_ids: Vec::new(),
+                decision_authority: false,
+                communication_preferences: Vec::new(),
+                reporting_frequency: Some(String::new()),
+                involvement_phases: Vec::new(),
+                availability: Some(String::new()),
+                representative_of: Some(EntityId::new_serial("base0")),
+                delegated_to: Some(EntityId::new_serial("base0")),
+                relationship_to_client: Some(String::new()),
+                power_interest_notes: Vec::new(),
+                stakeholder_type: String::new(),
+                influence_strategy: Some(String::new()),
+                communication_channels: Vec::new(),
+                success_metrics: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = StakeholderPatch {
+                name: Some("Patched Stakeholder".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                role: Some("patched-0".to_string()),
+                organization: Some("patched-0".to_string()),
+                department: Some("patched-0".to_string()),
+                contact_email: Some("patched-0".to_string()),
+                contact_phone: Some("patched-0".to_string()),
+                influence: Some(InfluenceLevel::Medium),
+                interest: Some(InfluenceLevel::Medium),
+                engagement: Some(EngagementLevel::Resistant),
+                expectations: Some(vec!["patched-0".to_string()]),
+                concerns: Some(vec!["patched-0".to_string()]),
+                requirement_ids: Some(vec![EntityId::new_serial("new0")]),
+                decision_authority: Some(true),
+                communication_preferences: Some(vec!["patched-0".to_string()]),
+                reporting_frequency: Some("patched-0".to_string()),
+                involvement_phases: Some(vec!["patched-0".to_string()]),
+                availability: Some("patched-0".to_string()),
+                representative_of: Some(EntityId::new_serial("new0")),
+                delegated_to: Some(EntityId::new_serial("new0")),
+                relationship_to_client: Some("patched-0".to_string()),
+                power_interest_notes: Some(vec![TaggedNote { tag: "new0".into(), text: "new-note0".into() }]),
+                stakeholder_type: Some("patched-0".to_string()),
+                influence_strategy: Some("patched-0".to_string()),
+                communication_channels: Some(vec!["patched-0".to_string()]),
+                success_metrics: Some(vec!["patched-0".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Stakeholder");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn user_profile_patch_round_trips() {
+            let mut item = UserProfile {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("userprofile"), "Base UserProfile") },
+                category: UserCategory::Primary,
+                demographic: Some(String::new()),
+                age_range: Some(String::new()),
+                abilities: Vec::new(),
+                disabilities: Vec::new(),
+                occupation: Some(String::new()),
+                role_title: Some(String::new()),
+                department: Some(String::new()),
+                mobility_profile: Vec::new(),
+                sensory_profile: Vec::new(),
+                cognitive_profile: Vec::new(),
+                behavioral_patterns: Vec::new(),
+                usage_frequency: Some(String::new()),
+                usage_duration: Some(String::new()),
+                peak_usage_times: Vec::new(),
+                technology_proficiency: Some(String::new()),
+                preferences: Vec::new(),
+                pain_points: Vec::new(),
+                goals: Vec::new(),
+                activity_ids: Vec::new(),
+                research_method: Some(String::new()),
+                persona_archetype: Some(String::new()),
+                validated: false,
+                stakeholder_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = UserProfilePatch {
+                name: Some("Patched UserProfile".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                category: Some(UserCategory::Secondary),
+                demographic: Some("patched-1".to_string()),
+                age_range: Some("patched-1".to_string()),
+                abilities: Some(vec!["patched-1".to_string()]),
+                disabilities: Some(vec!["patched-1".to_string()]),
+                occupation: Some("patched-1".to_string()),
+                role_title: Some("patched-1".to_string()),
+                department: Some("patched-1".to_string()),
+                mobility_profile: Some(vec!["patched-1".to_string()]),
+                sensory_profile: Some(vec!["patched-1".to_string()]),
+                cognitive_profile: Some(vec!["patched-1".to_string()]),
+                behavioral_patterns: Some(vec!["patched-1".to_string()]),
+                usage_frequency: Some("patched-1".to_string()),
+                usage_duration: Some("patched-1".to_string()),
+                peak_usage_times: Some(vec!["patched-1".to_string()]),
+                technology_proficiency: Some("patched-1".to_string()),
+                preferences: Some(vec!["patched-1".to_string()]),
+                pain_points: Some(vec!["patched-1".to_string()]),
+                goals: Some(vec!["patched-1".to_string()]),
+                activity_ids: Some(vec![EntityId::new_serial("new1")]),
+                research_method: Some("patched-1".to_string()),
+                persona_archetype: Some("patched-1".to_string()),
+                validated: Some(true),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new1")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched UserProfile");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn activity_patch_round_trips() {
+            let mut item = Activity {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("activity"), "Base Activity") },
+                code: String::new(),
+                category: String::new(),
+                frequency: Some(String::new()),
+                duration: Some(String::new()),
+                intensity: Some(String::new()),
+                participants: QuantitySpec::default(),
+                equipment_ids: Vec::new(),
+                space_requirements: Vec::new(),
+                environmental_needs: Vec::new(),
+                privacy_needs: Vec::new(),
+                accessibility_needs: Vec::new(),
+                adjacent_activities: Vec::new(),
+                sequencing: Vec::new(),
+                peak_periods: Vec::new(),
+                workflow_steps: Vec::new(),
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+                user_profile_ids: Vec::new(),
+                function_ids: Vec::new(),
+                performance_indicators: Vec::new(),
+                activity_type: String::new(),
+                location_context: Some(String::new()),
+                temporal_pattern: Some(String::new()),
+                supervision_level: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = ActivityPatch {
+                name: Some("Patched Activity".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-2".to_string()),
+                category: Some("patched-2".to_string()),
+                frequency: Some("patched-2".to_string()),
+                duration: Some("patched-2".to_string()),
+                intensity: Some("patched-2".to_string()),
+                participants: Some(QuantitySpec::target_unit(42.0, "m2")),
+                equipment_ids: Some(vec![EntityId::new_serial("new2")]),
+                space_requirements: Some(vec!["patched-2".to_string()]),
+                environmental_needs: Some(vec!["patched-2".to_string()]),
+                privacy_needs: Some(vec!["patched-2".to_string()]),
+                accessibility_needs: Some(vec!["patched-2".to_string()]),
+                adjacent_activities: Some(vec![EntityId::new_serial("new2")]),
+                sequencing: Some(vec!["patched-2".to_string()]),
+                peak_periods: Some(vec!["patched-2".to_string()]),
+                workflow_steps: Some(vec!["patched-2".to_string()]),
+                inputs: Some(vec!["patched-2".to_string()]),
+                outputs: Some(vec!["patched-2".to_string()]),
+                user_profile_ids: Some(vec![EntityId::new_serial("new2")]),
+                function_ids: Some(vec![EntityId::new_serial("new2")]),
+                performance_indicators: Some(vec!["patched-2".to_string()]),
+                activity_type: Some("patched-2".to_string()),
+                location_context: Some("patched-2".to_string()),
+                temporal_pattern: Some("patched-2".to_string()),
+                supervision_level: Some("patched-2".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Activity");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn function_patch_round_trips() {
+            let mut item = Function {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("function"), "Base Function") },
+                code: String::new(),
+                kind: FunctionKind::Primary,
+                purpose: TextField::default(),
+                criticality: Priority::Mandatory,
+                performance_targets: Vec::new(),
+                service_level: Some(String::new()),
+                operating_hours: Some(String::new()),
+                staffing: QuantitySpec::default(),
+                equipment_ids: Vec::new(),
+                resource_ids: Vec::new(),
+                activity_ids: Vec::new(),
+                element_ids: Vec::new(),
+                dependencies: Vec::new(),
+                interfaces: Vec::new(),
+                constraints: Vec::new(),
+                quality_criteria: Vec::new(),
+                regulatory_refs: Vec::new(),
+                future_changes: Vec::new(),
+                owner_stakeholder_id: Some(EntityId::new_serial("base3")),
+                success_metrics: Vec::new(),
+                hierarchy_parent_id: Some(EntityId::new_serial("base3")),
+                conflict_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = FunctionPatch {
+                name: Some("Patched Function".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-3".to_string()),
+                kind: Some(FunctionKind::Secondary),
+                purpose: Some(TextField::plain("patched-3")),
+                criticality: Some(Priority::Essential),
+                performance_targets: Some(vec!["patched-3".to_string()]),
+                service_level: Some("patched-3".to_string()),
+                operating_hours: Some("patched-3".to_string()),
+                staffing: Some(QuantitySpec::target_unit(42.0, "m2")),
+                equipment_ids: Some(vec![EntityId::new_serial("new3")]),
+                resource_ids: Some(vec![EntityId::new_serial("new3")]),
+                activity_ids: Some(vec![EntityId::new_serial("new3")]),
+                element_ids: Some(vec![EntityId::new_serial("new3")]),
+                dependencies: Some(vec![EntityId::new_serial("new3")]),
+                interfaces: Some(vec!["patched-3".to_string()]),
+                constraints: Some(vec!["patched-3".to_string()]),
+                quality_criteria: Some(vec!["patched-3".to_string()]),
+                regulatory_refs: Some(vec!["patched-3".to_string()]),
+                future_changes: Some(vec!["patched-3".to_string()]),
+                owner_stakeholder_id: Some(EntityId::new_serial("new3")),
+                success_metrics: Some(vec!["patched-3".to_string()]),
+                hierarchy_parent_id: Some(EntityId::new_serial("new3")),
+                conflict_ids: Some(vec![EntityId::new_serial("new3")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Function");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn program_element_patch_round_trips() {
+            let mut item = ProgramElement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("programelement"), "Base ProgramElement") },
+                code: String::new(),
+                kind: ProgramElementKind::Building,
+                parent_id: Some(EntityId::new_serial("base4")),
+                level: Some(String::new()),
+                area: QuantitySpec::default(),
+                volume: QuantitySpec::default(),
+                height: QuantitySpec::default(),
+                occupancy: QuantitySpec::default(),
+                function_ids: Vec::new(),
+                activity_ids: Vec::new(),
+                user_profile_ids: Vec::new(),
+                adjacency_ids: Vec::new(),
+                quantity_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                location_hint: Some(String::new()),
+                orientation: Some(String::new()),
+                daylight_requirement: Some(String::new()),
+                acoustic_class: Some(String::new()),
+                security_zone: Some(String::new()),
+                flexibility_notes: Vec::new(),
+                growth_allocation: Some(String::new()),
+                circulation_role: Some(String::new()),
+                visibility_level: Some(String::new()),
+                adjacency_preferences: Vec::new(),
+                environmental_zone: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = ProgramElementPatch {
+                name: Some("Patched ProgramElement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-4".to_string()),
+                kind: Some(ProgramElementKind::Campus),
+                parent_id: Some(EntityId::new_serial("new4")),
+                level: Some("patched-4".to_string()),
+                area: Some(QuantitySpec::target_unit(42.0, "m2")),
+                volume: Some(QuantitySpec::target_unit(42.0, "m2")),
+                height: Some(QuantitySpec::target_unit(42.0, "m2")),
+                occupancy: Some(QuantitySpec::target_unit(42.0, "m2")),
+                function_ids: Some(vec![EntityId::new_serial("new4")]),
+                activity_ids: Some(vec![EntityId::new_serial("new4")]),
+                user_profile_ids: Some(vec![EntityId::new_serial("new4")]),
+                adjacency_ids: Some(vec![EntityId::new_serial("new4")]),
+                quantity_ids: Some(vec![EntityId::new_serial("new4")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new4")]),
+                location_hint: Some("patched-4".to_string()),
+                orientation: Some("patched-4".to_string()),
+                daylight_requirement: Some("patched-4".to_string()),
+                acoustic_class: Some("patched-4".to_string()),
+                security_zone: Some("patched-4".to_string()),
+                flexibility_notes: Some(vec!["patched-4".to_string()]),
+                growth_allocation: Some("patched-4".to_string()),
+                circulation_role: Some("patched-4".to_string()),
+                visibility_level: Some("patched-4".to_string()),
+                adjacency_preferences: Some(vec![EntityId::new_serial("new4")]),
+                environmental_zone: Some("patched-4".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ProgramElement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn quantity_requirement_patch_round_trips() {
+            let mut item = QuantityRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("quantityrequirement"), "Base QuantityRequirement") },
+                target_element_id: EntityId::new_serial("base5"),
+                metric: String::new(),
+                quantity: QuantitySpec::default(),
+                basis: Some(String::new()),
+                calculation_method: Some(String::new()),
+                source: Some(String::new()),
+                benchmark_ref: Some(EntityId::new_serial("base5")),
+                tolerance_percent: Some(0.0),
+                peak_factor: Some(0.0),
+                growth_factor: Some(0.0),
+                unit_cost: Some(0.0),
+                currency: Some(String::new()),
+                verification_method: Some(String::new()),
+                related_requirement_ids: Vec::new(),
+                assumptions: Vec::new(),
+                constraints: Vec::new(),
+                schedule_phase: Some(String::new()),
+                responsible_party: Some(EntityId::new_serial("base5")),
+                last_verified: Some(String::new()),
+                variance_notes: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = QuantityRequirementPatch {
+                name: Some("Patched QuantityRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                target_element_id: Some(EntityId::new_serial("new5")),
+                metric: Some("patched-5".to_string()),
+                quantity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                basis: Some("patched-5".to_string()),
+                calculation_method: Some("patched-5".to_string()),
+                source: Some("patched-5".to_string()),
+                benchmark_ref: Some(EntityId::new_serial("new5")),
+                tolerance_percent: Some(42.0),
+                peak_factor: Some(42.0),
+                growth_factor: Some(42.0),
+                unit_cost: Some(42.0),
+                currency: Some("patched-5".to_string()),
+                verification_method: Some("patched-5".to_string()),
+                related_requirement_ids: Some(vec![EntityId::new_serial("new5")]),
+                assumptions: Some(vec!["patched-5".to_string()]),
+                constraints: Some(vec!["patched-5".to_string()]),
+                schedule_phase: Some("patched-5".to_string()),
+                responsible_party: Some(EntityId::new_serial("new5")),
+                last_verified: Some("patched-5".to_string()),
+                variance_notes: Some(vec![TaggedNote { tag: "new5".into(), text: "new-note5".into() }]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched QuantityRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn relationship_patch_round_trips() {
+            let mut item = Relationship {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("relationship"), "Base Relationship") },
+                source_id: EntityId::new_serial("base6"),
+                target_id: EntityId::new_serial("base6"),
+                kind: RelationshipKind::Contains,
+                strength: Some(0.0),
+                directional: false,
+                rationale: Some(TextField::default()),
+                constraints: Vec::new(),
+                conditions: Vec::new(),
+                relationship_priority: Priority::Mandatory,
+                valid_from: Some(String::new()),
+                valid_until: Some(String::new()),
+                evidence: Vec::new(),
+                conflict_ids: Vec::new(),
+                trace_links: Vec::new(),
+                bidirectional: false,
+                distance_constraint_m: Some(0.0),
+                capacity_constraint: Some(String::new()),
+                regulatory_basis: Vec::new(),
+                review_cycle: Some(String::new()),
+                owner_id: Some(EntityId::new_serial("base6")),
+                proximity_requirement: Some(TextField::default()),
+                compatibility_requirement: Some(TextField::default()),
+                incompatibility_requirement: Some(TextField::default()),
+                separation_requirements: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = RelationshipPatch {
+                name: Some("Patched Relationship".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                source_id: Some(EntityId::new_serial("new6")),
+                target_id: Some(EntityId::new_serial("new6")),
+                kind: Some(RelationshipKind::Serves),
+                strength: Some(42.0),
+                directional: Some(true),
+                rationale: Some(TextField::plain("patched-6")),
+                constraints: Some(vec!["patched-6".to_string()]),
+                conditions: Some(vec!["patched-6".to_string()]),
+                relationship_priority: Some(Priority::Essential),
+                valid_from: Some("patched-6".to_string()),
+                valid_until: Some("patched-6".to_string()),
+                evidence: Some(vec!["patched-6".to_string()]),
+                conflict_ids: Some(vec![EntityId::new_serial("new6")]),
+                trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom6n"), EntityId::new_serial("tto6n"), TraceKind::FullAuditTrail)]),
+                bidirectional: Some(true),
+                distance_constraint_m: Some(42.0),
+                capacity_constraint: Some("patched-6".to_string()),
+                regulatory_basis: Some(vec!["patched-6".to_string()]),
+                review_cycle: Some("patched-6".to_string()),
+                owner_id: Some(EntityId::new_serial("new6")),
+                proximity_requirement: Some(TextField::plain("patched-6")),
+                compatibility_requirement: Some(TextField::plain("patched-6")),
+                incompatibility_requirement: Some(TextField::plain("patched-6")),
+                separation_requirements: Some(vec![SeparationKind::Visual]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Relationship");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn adjacency_patch_round_trips() {
+            let mut item = Adjacency {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("adjacency"), "Base Adjacency") },
+                element_a_id: EntityId::new_serial("base7"),
+                element_b_id: EntityId::new_serial("base7"),
+                kind: AdjacencyKind::Required,
+                connection: ConnectionKind::Direct,
+                separations: Vec::new(),
+                weight: 0.0,
+                rationale: Some(TextField::default()),
+                distance_max_m: Some(0.0),
+                distance_min_m: Some(0.0),
+                level_constraint: Some(String::new()),
+                access_path: Some(String::new()),
+                shared_wall: false,
+                shared_entry: false,
+                traffic_isolation: false,
+                circulation_overlap: false,
+                conflict_ids: Vec::new(),
+                normalized: false,
+                verification_status: ValidationStatus::Pending,
+                source_relationship_id: Some(EntityId::new_serial("base7")),
+                internal_external_access: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = AdjacencyPatch {
+                name: Some("Patched Adjacency".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                element_a_id: Some(EntityId::new_serial("new7")),
+                element_b_id: Some(EntityId::new_serial("new7")),
+                kind: Some(AdjacencyKind::Preferred),
+                connection: Some(ConnectionKind::Indirect),
+                separations: Some(vec![SeparationKind::Visual]),
+                weight: Some(42.0),
+                rationale: Some(TextField::plain("patched-7")),
+                distance_max_m: Some(42.0),
+                distance_min_m: Some(42.0),
+                level_constraint: Some("patched-7".to_string()),
+                access_path: Some("patched-7".to_string()),
+                shared_wall: Some(true),
+                shared_entry: Some(true),
+                traffic_isolation: Some(true),
+                circulation_overlap: Some(true),
+                conflict_ids: Some(vec![EntityId::new_serial("new7")]),
+                normalized: Some(true),
+                verification_status: Some(ValidationStatus::Passed),
+                source_relationship_id: Some(EntityId::new_serial("new7")),
+                internal_external_access: Some("patched-7".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Adjacency");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn process_patch_round_trips() {
+            let mut item = Process {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("process"), "Base Process") },
+                code: String::new(),
+                category: String::new(),
+                trigger: Some(String::new()),
+                inputs: Vec::new(),
+                outputs: Vec::new(),
+                steps: Vec::new(),
+                actors: Vec::new(),
+                equipment_ids: Vec::new(),
+                element_ids: Vec::new(),
+                duration: Some(String::new()),
+                frequency: Some(String::new()),
+                critical_path: false,
+                bottlenecks: Vec::new(),
+                dependencies: Vec::new(),
+                kpis: Vec::new(),
+                automation_level: Some(String::new()),
+                failure_modes: Vec::new(),
+                improvement_opportunities: Vec::new(),
+                regulatory_refs: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base8")),
+                workflow_type: Some(String::new()),
+                handoff_points: Vec::new(),
+                quality_gates: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ProcessPatch {
+                name: Some("Patched Process".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-8".to_string()),
+                category: Some("patched-8".to_string()),
+                trigger: Some("patched-8".to_string()),
+                inputs: Some(vec!["patched-8".to_string()]),
+                outputs: Some(vec!["patched-8".to_string()]),
+                steps: Some(vec!["patched-8".to_string()]),
+                actors: Some(vec![EntityId::new_serial("new8")]),
+                equipment_ids: Some(vec![EntityId::new_serial("new8")]),
+                element_ids: Some(vec![EntityId::new_serial("new8")]),
+                duration: Some("patched-8".to_string()),
+                frequency: Some("patched-8".to_string()),
+                critical_path: Some(true),
+                bottlenecks: Some(vec!["patched-8".to_string()]),
+                dependencies: Some(vec![EntityId::new_serial("new8")]),
+                kpis: Some(vec!["patched-8".to_string()]),
+                automation_level: Some("patched-8".to_string()),
+                failure_modes: Some(vec!["patched-8".to_string()]),
+                improvement_opportunities: Some(vec!["patched-8".to_string()]),
+                regulatory_refs: Some(vec!["patched-8".to_string()]),
+                owner_id: Some(EntityId::new_serial("new8")),
+                workflow_type: Some("patched-8".to_string()),
+                handoff_points: Some(vec!["patched-8".to_string()]),
+                quality_gates: Some(vec!["patched-8".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Process");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn flow_requirement_patch_round_trips() {
+            let mut item = FlowRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flowrequirement"), "Base FlowRequirement") },
+                from_element_id: EntityId::new_serial("base9"),
+                to_element_id: EntityId::new_serial("base9"),
+                kind: FlowKind::People,
+                flow_type: String::new(),
+                direction: FlowDirection::OneWay,
+                volume: QuantitySpec::default(),
+                peak_rate: Some(0.0),
+                clear_width_m: Some(0.0),
+                clear_height_m: Some(0.0),
+                separation_requirements: Vec::new(),
+                access_level: AccessLevel::Public,
+                time_windows: Vec::new(),
+                equipment_clearance: Some(String::new()),
+                signage_required: false,
+                escort_required: false,
+                emergency_route: false,
+                barrier_free: false,
+                monitoring_required: false,
+                process_id: Some(EntityId::new_serial("base9")),
+                conflict_ids: Vec::new(),
+                verification_method: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = FlowRequirementPatch {
+                name: Some("Patched FlowRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                from_element_id: Some(EntityId::new_serial("new9")),
+                to_element_id: Some(EntityId::new_serial("new9")),
+                kind: Some(FlowKind::Material),
+                flow_type: Some("patched-9".to_string()),
+                direction: Some(FlowDirection::TwoWay),
+                volume: Some(QuantitySpec::target_unit(42.0, "m2")),
+                peak_rate: Some(42.0),
+                clear_width_m: Some(42.0),
+                clear_height_m: Some(42.0),
+                separation_requirements: Some(vec![SeparationKind::Visual]),
+                access_level: Some(AccessLevel::Restricted),
+                time_windows: Some(vec!["patched-9".to_string()]),
+                equipment_clearance: Some("patched-9".to_string()),
+                signage_required: Some(true),
+                escort_required: Some(true),
+                emergency_route: Some(true),
+                barrier_free: Some(true),
+                monitoring_required: Some(true),
+                process_id: Some(EntityId::new_serial("new9")),
+                conflict_ids: Some(vec![EntityId::new_serial("new9")]),
+                verification_method: Some("patched-9".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched FlowRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn access_rule_patch_round_trips() {
+            let mut item = AccessRule {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessrule"), "Base AccessRule") },
+                subject_ids: Vec::new(),
+                resource_ids: Vec::new(),
+                access_level: AccessLevel::Public,
+                access_mode: AccessMode::Unrestricted,
+                authentication: Vec::new(),
+                authorization: Vec::new(),
+                time_restrictions: Vec::new(),
+                escort_policy: Some(String::new()),
+                visitor_policy: Some(String::new()),
+                emergency_override: false,
+                audit_required: false,
+                badge_required: false,
+                biometric_required: false,
+                zone_ids: Vec::new(),
+                exceptions: Vec::new(),
+                regulatory_basis: Vec::new(),
+                enforcement_method: Some(String::new()),
+                revocation_policy: Some(String::new()),
+                training_required: false,
+                owner_id: Some(EntityId::new_serial("base10")),
+            };
+            let original = item.clone();
+            let patch = AccessRulePatch {
+                name: Some("Patched AccessRule".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                subject_ids: Some(vec![EntityId::new_serial("new10")]),
+                resource_ids: Some(vec![EntityId::new_serial("new10")]),
+                access_level: Some(AccessLevel::Restricted),
+                access_mode: Some(AccessMode::CardControlled),
+                authentication: Some(vec!["patched-10".to_string()]),
+                authorization: Some(vec!["patched-10".to_string()]),
+                time_restrictions: Some(vec!["patched-10".to_string()]),
+                escort_policy: Some("patched-10".to_string()),
+                visitor_policy: Some("patched-10".to_string()),
+                emergency_override: Some(true),
+                audit_required: Some(true),
+                badge_required: Some(true),
+                biometric_required: Some(true),
+                zone_ids: Some(vec![EntityId::new_serial("new10")]),
+                exceptions: Some(vec!["patched-10".to_string()]),
+                regulatory_basis: Some(vec!["patched-10".to_string()]),
+                enforcement_method: Some("patched-10".to_string()),
+                revocation_policy: Some("patched-10".to_string()),
+                training_required: Some(true),
+                owner_id: Some(EntityId::new_serial("new10")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched AccessRule");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn operational_requirement_patch_round_trips() {
+            let mut item = OperationalRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("operationalrequirement"), "Base OperationalRequirement") },
+                operation: String::new(),
+                service_level: Some(String::new()),
+                operating_hours: Some(String::new()),
+                staffing: QuantitySpec::default(),
+                maintenance_interval: Some(String::new()),
+                cleaning_regime: Some(String::new()),
+                turnaround_time: Some(String::new()),
+                redundancy: Some(String::new()),
+                uptime_target: Some(0.0),
+                response_time: Some(String::new()),
+                equipment_ids: Vec::new(),
+                element_ids: Vec::new(),
+                process_ids: Vec::new(),
+                utilities: Vec::new(),
+                waste_streams: Vec::new(),
+                contingency_plan: Vec::new(),
+                training_requirements: Vec::new(),
+                sop_references: Vec::new(),
+                kpi_targets: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base11")),
+                service_category: Some(String::new()),
+                shift_pattern: Some(String::new()),
+                sla_target: Some(String::new()),
+                escalation_contact_id: Some(EntityId::new_serial("base11")),
+            };
+            let original = item.clone();
+            let patch = OperationalRequirementPatch {
+                name: Some("Patched OperationalRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                operation: Some("patched-11".to_string()),
+                service_level: Some("patched-11".to_string()),
+                operating_hours: Some("patched-11".to_string()),
+                staffing: Some(QuantitySpec::target_unit(42.0, "m2")),
+                maintenance_interval: Some("patched-11".to_string()),
+                cleaning_regime: Some("patched-11".to_string()),
+                turnaround_time: Some("patched-11".to_string()),
+                redundancy: Some("patched-11".to_string()),
+                uptime_target: Some(42.0),
+                response_time: Some("patched-11".to_string()),
+                equipment_ids: Some(vec![EntityId::new_serial("new11")]),
+                element_ids: Some(vec![EntityId::new_serial("new11")]),
+                process_ids: Some(vec![EntityId::new_serial("new11")]),
+                utilities: Some(vec!["patched-11".to_string()]),
+                waste_streams: Some(vec!["patched-11".to_string()]),
+                contingency_plan: Some(vec!["patched-11".to_string()]),
+                training_requirements: Some(vec!["patched-11".to_string()]),
+                sop_references: Some(vec!["patched-11".to_string()]),
+                kpi_targets: Some(vec!["patched-11".to_string()]),
+                owner_id: Some(EntityId::new_serial("new11")),
+                service_category: Some("patched-11".to_string()),
+                shift_pattern: Some("patched-11".to_string()),
+                sla_target: Some("patched-11".to_string()),
+                escalation_contact_id: Some(EntityId::new_serial("new11")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched OperationalRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn equipment_patch_round_trips() {
+            let mut item = Equipment {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("equipment"), "Base Equipment") },
+                code: String::new(),
+                category: String::new(),
+                manufacturer: Some(String::new()),
+                model: Some(String::new()),
+                quantity: QuantitySpec::default(),
+                dimensions: Some(String::new()),
+                weight_kg: Some(0.0),
+                power_kw: Some(0.0),
+                utility_connections: Vec::new(),
+                ventilation: Some(String::new()),
+                noise_level_db: Some(0.0),
+                clearance: Some(String::new()),
+                mounting: Some(String::new()),
+                element_ids: Vec::new(),
+                activity_ids: Vec::new(),
+                maintenance_access: Vec::new(),
+                lifecycle_years: Some(0),
+                replacement_cost: Some(0.0),
+                standards: Vec::new(),
+                supplier: Some(String::new()),
+                activity_link_ids: Vec::new(),
+                installation_requirements: Vec::new(),
+                commissioning_notes: Vec::new(),
+                spare_parts: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = EquipmentPatch {
+                name: Some("Patched Equipment".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-12".to_string()),
+                category: Some("patched-12".to_string()),
+                manufacturer: Some("patched-12".to_string()),
+                model: Some("patched-12".to_string()),
+                quantity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                dimensions: Some("patched-12".to_string()),
+                weight_kg: Some(42.0),
+                power_kw: Some(42.0),
+                utility_connections: Some(vec!["patched-12".to_string()]),
+                ventilation: Some("patched-12".to_string()),
+                noise_level_db: Some(42.0),
+                clearance: Some("patched-12".to_string()),
+                mounting: Some("patched-12".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new12")]),
+                activity_ids: Some(vec![EntityId::new_serial("new12")]),
+                maintenance_access: Some(vec!["patched-12".to_string()]),
+                lifecycle_years: Some(7),
+                replacement_cost: Some(42.0),
+                standards: Some(vec!["patched-12".to_string()]),
+                supplier: Some("patched-12".to_string()),
+                activity_link_ids: Some(vec![EntityId::new_serial("new12")]),
+                installation_requirements: Some(vec!["patched-12".to_string()]),
+                commissioning_notes: Some(vec!["patched-12".to_string()]),
+                spare_parts: Some(vec!["patched-12".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Equipment");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn resource_patch_round_trips() {
+            let mut item = Resource {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resource"), "Base Resource") },
+                code: String::new(),
+                category: String::new(),
+                resource_type: String::new(),
+                quantity: QuantitySpec::default(),
+                mobility: Some(String::new()),
+                sharing_model: Some(String::new()),
+                allocation: Some(String::new()),
+                element_ids: Vec::new(),
+                activity_ids: Vec::new(),
+                user_profile_ids: Vec::new(),
+                storage_requirement_id: Some(EntityId::new_serial("base13")),
+                durability: Some(String::new()),
+                cleaning_requirements: Vec::new(),
+                replacement_cycle: Some(String::new()),
+                cost_per_unit: Some(0.0),
+                supplier: Some(String::new()),
+                standards: Vec::new(),
+                ergonomic_notes: Vec::new(),
+                customization: Vec::new(),
+                disposal_notes: Vec::new(),
+                furniture_class: Some(String::new()),
+                ergonomics_rating: Some(String::new()),
+                sharing_ratio: Some(0.0),
+            };
+            let original = item.clone();
+            let patch = ResourcePatch {
+                name: Some("Patched Resource".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-13".to_string()),
+                category: Some("patched-13".to_string()),
+                resource_type: Some("patched-13".to_string()),
+                quantity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                mobility: Some("patched-13".to_string()),
+                sharing_model: Some("patched-13".to_string()),
+                allocation: Some("patched-13".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new13")]),
+                activity_ids: Some(vec![EntityId::new_serial("new13")]),
+                user_profile_ids: Some(vec![EntityId::new_serial("new13")]),
+                storage_requirement_id: Some(EntityId::new_serial("new13")),
+                durability: Some("patched-13".to_string()),
+                cleaning_requirements: Some(vec!["patched-13".to_string()]),
+                replacement_cycle: Some("patched-13".to_string()),
+                cost_per_unit: Some(42.0),
+                supplier: Some("patched-13".to_string()),
+                standards: Some(vec!["patched-13".to_string()]),
+                ergonomic_notes: Some(vec!["patched-13".to_string()]),
+                customization: Some(vec!["patched-13".to_string()]),
+                disposal_notes: Some(vec!["patched-13".to_string()]),
+                furniture_class: Some("patched-13".to_string()),
+                ergonomics_rating: Some("patched-13".to_string()),
+                sharing_ratio: Some(42.0),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Resource");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn storage_requirement_patch_round_trips() {
+            let mut item = StorageRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("storagerequirement"), "Base StorageRequirement") },
+                stored_item: String::new(),
+                storage_class: StorageClass::General,
+                quantity: QuantitySpec::default(),
+                volume_m3: Some(0.0),
+                weight_kg: Some(0.0),
+                temperature_range: Some(String::new()),
+                humidity_range: Some(String::new()),
+                security_level: AccessLevel::Public,
+                hazard_class: Some(String::new()),
+                retention_period: Some(String::new()),
+                access_frequency: Some(String::new()),
+                element_ids: Vec::new(),
+                equipment_ids: Vec::new(),
+                handling_equipment: Vec::new(),
+                fire_protection: Vec::new(),
+                ventilation: Some(String::new()),
+                organization_system: Some(String::new()),
+                growth_allowance: Some(0.0),
+                regulatory_refs: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base14")),
+            };
+            let original = item.clone();
+            let patch = StorageRequirementPatch {
+                name: Some("Patched StorageRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                stored_item: Some("patched-14".to_string()),
+                storage_class: Some(StorageClass::Secure),
+                quantity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                volume_m3: Some(42.0),
+                weight_kg: Some(42.0),
+                temperature_range: Some("patched-14".to_string()),
+                humidity_range: Some("patched-14".to_string()),
+                security_level: Some(AccessLevel::Restricted),
+                hazard_class: Some("patched-14".to_string()),
+                retention_period: Some("patched-14".to_string()),
+                access_frequency: Some("patched-14".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new14")]),
+                equipment_ids: Some(vec![EntityId::new_serial("new14")]),
+                handling_equipment: Some(vec!["patched-14".to_string()]),
+                fire_protection: Some(vec!["patched-14".to_string()]),
+                ventilation: Some("patched-14".to_string()),
+                organization_system: Some("patched-14".to_string()),
+                growth_allowance: Some(42.0),
+                regulatory_refs: Some(vec!["patched-14".to_string()]),
+                owner_id: Some(EntityId::new_serial("new14")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched StorageRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn environmental_requirement_patch_round_trips() {
+            let mut item = EnvironmentalRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("environmentalrequirement"), "Base EnvironmentalRequirement") },
+                parameter_kind: EnvironmentalParameter::Temperature,
+                parameter: String::new(),
+                target_value: Some(0.0),
+                unit: Some(String::new()),
+                min_value: Some(0.0),
+                max_value: Some(0.0),
+                comfort_band: Some(String::new()),
+                measurement_method: Some(String::new()),
+                monitoring_frequency: Some(String::new()),
+                element_ids: Vec::new(),
+                occupancy_basis: Some(String::new()),
+                seasonal_variation: Vec::new(),
+                energy_implications: Vec::new(),
+                standards: Vec::new(),
+                certification_targets: Vec::new(),
+                outdoor_conditions: Vec::new(),
+                ventilation_strategy: Some(String::new()),
+                daylight_target: Some(String::new()),
+                acoustic_target: Some(String::new()),
+                iaq_target: Some(String::new()),
+                verification_plan: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = EnvironmentalRequirementPatch {
+                name: Some("Patched EnvironmentalRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                parameter_kind: Some(EnvironmentalParameter::Humidity),
+                parameter: Some("patched-15".to_string()),
+                target_value: Some(42.0),
+                unit: Some("patched-15".to_string()),
+                min_value: Some(42.0),
+                max_value: Some(42.0),
+                comfort_band: Some("patched-15".to_string()),
+                measurement_method: Some("patched-15".to_string()),
+                monitoring_frequency: Some("patched-15".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new15")]),
+                occupancy_basis: Some("patched-15".to_string()),
+                seasonal_variation: Some(vec!["patched-15".to_string()]),
+                energy_implications: Some(vec!["patched-15".to_string()]),
+                standards: Some(vec!["patched-15".to_string()]),
+                certification_targets: Some(vec!["patched-15".to_string()]),
+                outdoor_conditions: Some(vec!["patched-15".to_string()]),
+                ventilation_strategy: Some("patched-15".to_string()),
+                daylight_target: Some("patched-15".to_string()),
+                acoustic_target: Some("patched-15".to_string()),
+                iaq_target: Some("patched-15".to_string()),
+                verification_plan: Some("patched-15".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched EnvironmentalRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn human_factor_requirement_patch_round_trips() {
+            let mut item = HumanFactorRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("humanfactorrequirement"), "Base HumanFactorRequirement") },
+                aspect: HumanFactorAspect::Ergonomics,
+                factor: String::new(),
+                user_profile_ids: Vec::new(),
+                activity_ids: Vec::new(),
+                ergonomic_criteria: Vec::new(),
+                cognitive_load: Some(String::new()),
+                visual_demands: Vec::new(),
+                auditory_demands: Vec::new(),
+                posture_requirements: Vec::new(),
+                reach_envelope: Some(String::new()),
+                lighting_for_tasks: Vec::new(),
+                thermal_comfort: Vec::new(),
+                privacy_needs: Vec::new(),
+                social_interaction: Vec::new(),
+                stress_factors: Vec::new(),
+                mitigation_measures: Vec::new(),
+                training_needs: Vec::new(),
+                standards: Vec::new(),
+                research_basis: Vec::new(),
+                element_ids: Vec::new(),
+                verification_method: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = HumanFactorRequirementPatch {
+                name: Some("Patched HumanFactorRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                aspect: Some(HumanFactorAspect::Cognition),
+                factor: Some("patched-16".to_string()),
+                user_profile_ids: Some(vec![EntityId::new_serial("new16")]),
+                activity_ids: Some(vec![EntityId::new_serial("new16")]),
+                ergonomic_criteria: Some(vec!["patched-16".to_string()]),
+                cognitive_load: Some("patched-16".to_string()),
+                visual_demands: Some(vec!["patched-16".to_string()]),
+                auditory_demands: Some(vec!["patched-16".to_string()]),
+                posture_requirements: Some(vec!["patched-16".to_string()]),
+                reach_envelope: Some("patched-16".to_string()),
+                lighting_for_tasks: Some(vec!["patched-16".to_string()]),
+                thermal_comfort: Some(vec!["patched-16".to_string()]),
+                privacy_needs: Some(vec!["patched-16".to_string()]),
+                social_interaction: Some(vec!["patched-16".to_string()]),
+                stress_factors: Some(vec!["patched-16".to_string()]),
+                mitigation_measures: Some(vec!["patched-16".to_string()]),
+                training_needs: Some(vec!["patched-16".to_string()]),
+                standards: Some(vec!["patched-16".to_string()]),
+                research_basis: Some(vec!["patched-16".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new16")]),
+                verification_method: Some("patched-16".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched HumanFactorRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn accessibility_requirement_patch_round_trips() {
+            let mut item = AccessibilityRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("accessibilityrequirement"), "Base AccessibilityRequirement") },
+                standard: String::new(),
+                level: Some(String::new()),
+                user_profile_ids: Vec::new(),
+                element_ids: Vec::new(),
+                route_ids: Vec::new(),
+                clear_width_m: Some(0.0),
+                clear_height_m: Some(0.0),
+                turning_circle_m: Some(0.0),
+                ramp_slope: Some(0.0),
+                lift_required: false,
+                tactile_guidance: false,
+                hearing_loop: false,
+                visual_contrast: false,
+                signage_requirements: Vec::new(),
+                controls_height: Some(String::new()),
+                emergency_evacuation: Vec::new(),
+                service_animal_policy: Some(String::new()),
+                companion_seating: false,
+                verification_plan: Some(String::new()),
+                exceptions: Vec::new(),
+                wcag_conformance: Some(String::new()),
+                universal_design_principles: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = AccessibilityRequirementPatch {
+                name: Some("Patched AccessibilityRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                standard: Some("patched-17".to_string()),
+                level: Some("patched-17".to_string()),
+                user_profile_ids: Some(vec![EntityId::new_serial("new17")]),
+                element_ids: Some(vec![EntityId::new_serial("new17")]),
+                route_ids: Some(vec![EntityId::new_serial("new17")]),
+                clear_width_m: Some(42.0),
+                clear_height_m: Some(42.0),
+                turning_circle_m: Some(42.0),
+                ramp_slope: Some(42.0),
+                lift_required: Some(true),
+                tactile_guidance: Some(true),
+                hearing_loop: Some(true),
+                visual_contrast: Some(true),
+                signage_requirements: Some(vec!["patched-17".to_string()]),
+                controls_height: Some("patched-17".to_string()),
+                emergency_evacuation: Some(vec!["patched-17".to_string()]),
+                service_animal_policy: Some("patched-17".to_string()),
+                companion_seating: Some(true),
+                verification_plan: Some("patched-17".to_string()),
+                exceptions: Some(vec!["patched-17".to_string()]),
+                wcag_conformance: Some("patched-17".to_string()),
+                universal_design_principles: Some(vec!["patched-17".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched AccessibilityRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn privacy_requirement_patch_round_trips() {
+            let mut item = PrivacyRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("privacyrequirement"), "Base PrivacyRequirement") },
+                privacy_kind: PrivacyKind::Public,
+                privacy_type: String::new(),
+                level: Some(String::new()),
+                subject_ids: Vec::new(),
+                element_ids: Vec::new(),
+                visual_privacy: Vec::new(),
+                acoustic_privacy: Vec::new(),
+                data_privacy: Vec::new(),
+                screening_required: false,
+                enclosure_required: false,
+                access_restrictions: Vec::new(),
+                observation_risk: Some(String::new()),
+                regulatory_basis: Vec::new(),
+                cultural_considerations: Vec::new(),
+                technology_controls: Vec::new(),
+                signage: Vec::new(),
+                monitoring_restrictions: Vec::new(),
+                retention_policy: Some(String::new()),
+                breach_response: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base18")),
+            };
+            let original = item.clone();
+            let patch = PrivacyRequirementPatch {
+                name: Some("Patched PrivacyRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                privacy_kind: Some(PrivacyKind::SemiPublic),
+                privacy_type: Some("patched-18".to_string()),
+                level: Some("patched-18".to_string()),
+                subject_ids: Some(vec![EntityId::new_serial("new18")]),
+                element_ids: Some(vec![EntityId::new_serial("new18")]),
+                visual_privacy: Some(vec!["patched-18".to_string()]),
+                acoustic_privacy: Some(vec!["patched-18".to_string()]),
+                data_privacy: Some(vec!["patched-18".to_string()]),
+                screening_required: Some(true),
+                enclosure_required: Some(true),
+                access_restrictions: Some(vec!["patched-18".to_string()]),
+                observation_risk: Some("patched-18".to_string()),
+                regulatory_basis: Some(vec!["patched-18".to_string()]),
+                cultural_considerations: Some(vec!["patched-18".to_string()]),
+                technology_controls: Some(vec!["patched-18".to_string()]),
+                signage: Some(vec!["patched-18".to_string()]),
+                monitoring_restrictions: Some(vec!["patched-18".to_string()]),
+                retention_policy: Some("patched-18".to_string()),
+                breach_response: Some(vec!["patched-18".to_string()]),
+                owner_id: Some(EntityId::new_serial("new18")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched PrivacyRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn safety_requirement_patch_round_trips() {
+            let mut item = SafetyRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("safetyrequirement"), "Base SafetyRequirement") },
+                safety_domain: SafetyDomain::LifeSafety,
+                hazard: String::new(),
+                risk_level: RiskLevel::Negligible,
+                affected_element_ids: Vec::new(),
+                affected_user_ids: Vec::new(),
+                mitigation_measures: Vec::new(),
+                ppe_requirements: Vec::new(),
+                emergency_procedures: Vec::new(),
+                evacuation_requirements: Vec::new(),
+                fire_protection: Vec::new(),
+                structural_safety: Vec::new(),
+                slip_trip_fall: Vec::new(),
+                chemical_safety: Vec::new(),
+                electrical_safety: Vec::new(),
+                machinery_safety: Vec::new(),
+                standards: Vec::new(),
+                inspection_frequency: Some(String::new()),
+                training_requirements: Vec::new(),
+                incident_reporting: Vec::new(),
+                residual_risk: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = SafetyRequirementPatch {
+                name: Some("Patched SafetyRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                safety_domain: Some(SafetyDomain::OccupationalHealth),
+                hazard: Some("patched-19".to_string()),
+                risk_level: Some(RiskLevel::Low),
+                affected_element_ids: Some(vec![EntityId::new_serial("new19")]),
+                affected_user_ids: Some(vec![EntityId::new_serial("new19")]),
+                mitigation_measures: Some(vec!["patched-19".to_string()]),
+                ppe_requirements: Some(vec!["patched-19".to_string()]),
+                emergency_procedures: Some(vec!["patched-19".to_string()]),
+                evacuation_requirements: Some(vec!["patched-19".to_string()]),
+                fire_protection: Some(vec!["patched-19".to_string()]),
+                structural_safety: Some(vec!["patched-19".to_string()]),
+                slip_trip_fall: Some(vec!["patched-19".to_string()]),
+                chemical_safety: Some(vec!["patched-19".to_string()]),
+                electrical_safety: Some(vec!["patched-19".to_string()]),
+                machinery_safety: Some(vec!["patched-19".to_string()]),
+                standards: Some(vec!["patched-19".to_string()]),
+                inspection_frequency: Some("patched-19".to_string()),
+                training_requirements: Some(vec!["patched-19".to_string()]),
+                incident_reporting: Some(vec!["patched-19".to_string()]),
+                residual_risk: Some("patched-19".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched SafetyRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn security_requirement_patch_round_trips() {
+            let mut item = SecurityRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("securityrequirement"), "Base SecurityRequirement") },
+                control_kind: SecurityControlKind::AccessControl,
+                threat: String::new(),
+                risk_level: RiskLevel::Negligible,
+                asset_ids: Vec::new(),
+                zone_ids: Vec::new(),
+                access_level: AccessLevel::Public,
+                perimeter_controls: Vec::new(),
+                surveillance: Vec::new(),
+                intrusion_detection: Vec::new(),
+                cybersecurity: Vec::new(),
+                screening: Vec::new(),
+                visitor_management: Vec::new(),
+                key_management: Vec::new(),
+                standards: Vec::new(),
+                response_procedures: Vec::new(),
+                drill_frequency: Some(String::new()),
+                liaison_contacts: Vec::new(),
+                classified_level: Some(String::new()),
+                redundancy: Vec::new(),
+                audit_requirements: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = SecurityRequirementPatch {
+                name: Some("Patched SecurityRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                control_kind: Some(SecurityControlKind::Surveillance),
+                threat: Some("patched-20".to_string()),
+                risk_level: Some(RiskLevel::Low),
+                asset_ids: Some(vec![EntityId::new_serial("new20")]),
+                zone_ids: Some(vec![EntityId::new_serial("new20")]),
+                access_level: Some(AccessLevel::Restricted),
+                perimeter_controls: Some(vec!["patched-20".to_string()]),
+                surveillance: Some(vec!["patched-20".to_string()]),
+                intrusion_detection: Some(vec!["patched-20".to_string()]),
+                cybersecurity: Some(vec!["patched-20".to_string()]),
+                screening: Some(vec!["patched-20".to_string()]),
+                visitor_management: Some(vec!["patched-20".to_string()]),
+                key_management: Some(vec!["patched-20".to_string()]),
+                standards: Some(vec!["patched-20".to_string()]),
+                response_procedures: Some(vec!["patched-20".to_string()]),
+                drill_frequency: Some("patched-20".to_string()),
+                liaison_contacts: Some(vec!["patched-20".to_string()]),
+                classified_level: Some("patched-20".to_string()),
+                redundancy: Some(vec!["patched-20".to_string()]),
+                audit_requirements: Some(vec!["patched-20".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched SecurityRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn regulatory_requirement_patch_round_trips() {
+            let mut item = RegulatoryRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("regulatoryrequirement"), "Base RegulatoryRequirement") },
+                jurisdiction: String::new(),
+                code: String::new(),
+                clause: Some(String::new()),
+                title: String::new(),
+                requirement_text: TextField::default(),
+                applicability: Vec::new(),
+                element_ids: Vec::new(),
+                compliance_method: Some(String::new()),
+                evidence_required: Vec::new(),
+                authority: Some(String::new()),
+                effective_date: Some(String::new()),
+                expiry_date: Some(String::new()),
+                penalties: Vec::new(),
+                exemptions: Vec::new(),
+                related_requirement_ids: Vec::new(),
+                interpretation_notes: Vec::new(),
+                verification_status: ValidationStatus::Pending,
+                consultant_refs: Vec::new(),
+                update_source: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = RegulatoryRequirementPatch {
+                name: Some("Patched RegulatoryRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                jurisdiction: Some("patched-21".to_string()),
+                code: Some("patched-21".to_string()),
+                clause: Some("patched-21".to_string()),
+                title: Some("patched-21".to_string()),
+                requirement_text: Some(TextField::plain("patched-21")),
+                applicability: Some(vec!["patched-21".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new21")]),
+                compliance_method: Some("patched-21".to_string()),
+                evidence_required: Some(vec!["patched-21".to_string()]),
+                authority: Some("patched-21".to_string()),
+                effective_date: Some("patched-21".to_string()),
+                expiry_date: Some("patched-21".to_string()),
+                penalties: Some(vec!["patched-21".to_string()]),
+                exemptions: Some(vec!["patched-21".to_string()]),
+                related_requirement_ids: Some(vec![EntityId::new_serial("new21")]),
+                interpretation_notes: Some(vec![TaggedNote { tag: "new21".into(), text: "new-note21".into() }]),
+                verification_status: Some(ValidationStatus::Passed),
+                consultant_refs: Some(vec![EntityId::new_serial("new21")]),
+                update_source: Some("patched-21".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched RegulatoryRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn site_context_patch_round_trips() {
+            let mut item = SiteContext {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sitecontext"), "Base SiteContext") },
+                site_name: String::new(),
+                address: Some(String::new()),
+                latitude: Some(0.0),
+                longitude: Some(0.0),
+                elevation_m: Some(0.0),
+                climate_zone: Some(String::new()),
+                seismic_zone: Some(String::new()),
+                flood_risk: Some(String::new()),
+                soil_conditions: Vec::new(),
+                utilities_available: Vec::new(),
+                access_roads: Vec::new(),
+                public_transit: Vec::new(),
+                neighbors: Vec::new(),
+                views: Vec::new(),
+                noise_sources: Vec::new(),
+                environmental_constraints: Vec::new(),
+                heritage_constraints: Vec::new(),
+                zoning: Some(String::new()),
+                max_height_m: Some(0.0),
+                max_coverage: Some(0.0),
+            };
+            let original = item.clone();
+            let patch = SiteContextPatch {
+                name: Some("Patched SiteContext".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                site_name: Some("patched-22".to_string()),
+                address: Some("patched-22".to_string()),
+                latitude: Some(42.0),
+                longitude: Some(42.0),
+                elevation_m: Some(42.0),
+                climate_zone: Some("patched-22".to_string()),
+                seismic_zone: Some("patched-22".to_string()),
+                flood_risk: Some("patched-22".to_string()),
+                soil_conditions: Some(vec!["patched-22".to_string()]),
+                utilities_available: Some(vec!["patched-22".to_string()]),
+                access_roads: Some(vec!["patched-22".to_string()]),
+                public_transit: Some(vec!["patched-22".to_string()]),
+                neighbors: Some(vec!["patched-22".to_string()]),
+                views: Some(vec!["patched-22".to_string()]),
+                noise_sources: Some(vec!["patched-22".to_string()]),
+                environmental_constraints: Some(vec!["patched-22".to_string()]),
+                heritage_constraints: Some(vec!["patched-22".to_string()]),
+                zoning: Some("patched-22".to_string()),
+                max_height_m: Some(42.0),
+                max_coverage: Some(42.0),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched SiteContext");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn organizational_requirement_patch_round_trips() {
+            let mut item = OrganizationalRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("organizationalrequirement"), "Base OrganizationalRequirement") },
+                department: String::new(),
+                reporting_line: Some(String::new()),
+                headcount: QuantitySpec::default(),
+                growth_plan_id: Some(EntityId::new_serial("base23")),
+                work_patterns: Vec::new(),
+                collaboration_model: Some(String::new()),
+                hierarchy_levels: Vec::new(),
+                decision_making: Vec::new(),
+                culture_notes: Vec::new(),
+                change_readiness: Some(String::new()),
+                union_considerations: Vec::new(),
+                training_needs: Vec::new(),
+                element_ids: Vec::new(),
+                stakeholder_ids: Vec::new(),
+                service_requirement_ids: Vec::new(),
+                branding_requirements: Vec::new(),
+                wellness_programs: Vec::new(),
+                diversity_goals: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base23")),
+            };
+            let original = item.clone();
+            let patch = OrganizationalRequirementPatch {
+                name: Some("Patched OrganizationalRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                department: Some("patched-23".to_string()),
+                reporting_line: Some("patched-23".to_string()),
+                headcount: Some(QuantitySpec::target_unit(42.0, "m2")),
+                growth_plan_id: Some(EntityId::new_serial("new23")),
+                work_patterns: Some(vec!["patched-23".to_string()]),
+                collaboration_model: Some("patched-23".to_string()),
+                hierarchy_levels: Some(vec!["patched-23".to_string()]),
+                decision_making: Some(vec!["patched-23".to_string()]),
+                culture_notes: Some(vec!["patched-23".to_string()]),
+                change_readiness: Some("patched-23".to_string()),
+                union_considerations: Some(vec!["patched-23".to_string()]),
+                training_needs: Some(vec!["patched-23".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new23")]),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new23")]),
+                service_requirement_ids: Some(vec![EntityId::new_serial("new23")]),
+                branding_requirements: Some(vec!["patched-23".to_string()]),
+                wellness_programs: Some(vec!["patched-23".to_string()]),
+                diversity_goals: Some(vec!["patched-23".to_string()]),
+                owner_id: Some(EntityId::new_serial("new23")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched OrganizationalRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn service_requirement_patch_round_trips() {
+            let mut item = ServiceRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("servicerequirement"), "Base ServiceRequirement") },
+                service_name: String::new(),
+                service_type: String::new(),
+                provider: Some(String::new()),
+                service_level: Some(String::new()),
+                operating_hours: Some(String::new()),
+                capacity: QuantitySpec::default(),
+                response_time: Some(String::new()),
+                queue_management: Vec::new(),
+                customer_profiles: Vec::new(),
+                element_ids: Vec::new(),
+                equipment_ids: Vec::new(),
+                staffing: QuantitySpec::default(),
+                quality_metrics: Vec::new(),
+                cost_model: Some(String::new()),
+                contract_refs: Vec::new(),
+                dependencies: Vec::new(),
+                failure_impact: Some(String::new()),
+                backup_service: Vec::new(),
+                feedback_channels: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ServiceRequirementPatch {
+                name: Some("Patched ServiceRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                service_name: Some("patched-24".to_string()),
+                service_type: Some("patched-24".to_string()),
+                provider: Some("patched-24".to_string()),
+                service_level: Some("patched-24".to_string()),
+                operating_hours: Some("patched-24".to_string()),
+                capacity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                response_time: Some("patched-24".to_string()),
+                queue_management: Some(vec!["patched-24".to_string()]),
+                customer_profiles: Some(vec![EntityId::new_serial("new24")]),
+                element_ids: Some(vec![EntityId::new_serial("new24")]),
+                equipment_ids: Some(vec![EntityId::new_serial("new24")]),
+                staffing: Some(QuantitySpec::target_unit(42.0, "m2")),
+                quality_metrics: Some(vec!["patched-24".to_string()]),
+                cost_model: Some("patched-24".to_string()),
+                contract_refs: Some(vec!["patched-24".to_string()]),
+                dependencies: Some(vec![EntityId::new_serial("new24")]),
+                failure_impact: Some("patched-24".to_string()),
+                backup_service: Some(vec!["patched-24".to_string()]),
+                feedback_channels: Some(vec!["patched-24".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ServiceRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn infrastructure_requirement_patch_round_trips() {
+            let mut item = InfrastructureRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("infrastructurerequirement"), "Base InfrastructureRequirement") },
+                system: String::new(),
+                category: String::new(),
+                capacity: QuantitySpec::default(),
+                redundancy: Some(String::new()),
+                distribution: Vec::new(),
+                entry_points: Vec::new(),
+                utility_source: Some(String::new()),
+                standby_power: false,
+                monitoring: Vec::new(),
+                maintenance_access: Vec::new(),
+                standards: Vec::new(),
+                element_ids: Vec::new(),
+                peak_demand: Some(0.0),
+                diversity_factor: Some(0.0),
+                future_expansion: Vec::new(),
+                interface_requirements: Vec::new(),
+                commissioning: Vec::new(),
+                lifecycle_cost: Some(0.0),
+                owner_id: Some(EntityId::new_serial("base25")),
+            };
+            let original = item.clone();
+            let patch = InfrastructureRequirementPatch {
+                name: Some("Patched InfrastructureRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                system: Some("patched-25".to_string()),
+                category: Some("patched-25".to_string()),
+                capacity: Some(QuantitySpec::target_unit(42.0, "m2")),
+                redundancy: Some("patched-25".to_string()),
+                distribution: Some(vec!["patched-25".to_string()]),
+                entry_points: Some(vec!["patched-25".to_string()]),
+                utility_source: Some("patched-25".to_string()),
+                standby_power: Some(true),
+                monitoring: Some(vec!["patched-25".to_string()]),
+                maintenance_access: Some(vec!["patched-25".to_string()]),
+                standards: Some(vec!["patched-25".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new25")]),
+                peak_demand: Some(42.0),
+                diversity_factor: Some(42.0),
+                future_expansion: Some(vec!["patched-25".to_string()]),
+                interface_requirements: Some(vec!["patched-25".to_string()]),
+                commissioning: Some(vec!["patched-25".to_string()]),
+                lifecycle_cost: Some(42.0),
+                owner_id: Some(EntityId::new_serial("new25")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched InfrastructureRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn information_requirement_patch_round_trips() {
+            let mut item = InformationRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("informationrequirement"), "Base InformationRequirement") },
+                information_type: String::new(),
+                format: Some(String::new()),
+                source_system: Some(String::new()),
+                destination_systems: Vec::new(),
+                update_frequency: Some(String::new()),
+                retention_period: Some(String::new()),
+                access_controls: Vec::new(),
+                classification: Some(String::new()),
+                quality_criteria: Vec::new(),
+                metadata_requirements: Vec::new(),
+                integration_points: Vec::new(),
+                backup_requirements: Vec::new(),
+                disaster_recovery: Vec::new(),
+                privacy_controls: Vec::new(),
+                audit_trail: false,
+                element_ids: Vec::new(),
+                stakeholder_ids: Vec::new(),
+                standards: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base26")),
+            };
+            let original = item.clone();
+            let patch = InformationRequirementPatch {
+                name: Some("Patched InformationRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                information_type: Some("patched-26".to_string()),
+                format: Some("patched-26".to_string()),
+                source_system: Some("patched-26".to_string()),
+                destination_systems: Some(vec!["patched-26".to_string()]),
+                update_frequency: Some("patched-26".to_string()),
+                retention_period: Some("patched-26".to_string()),
+                access_controls: Some(vec!["patched-26".to_string()]),
+                classification: Some("patched-26".to_string()),
+                quality_criteria: Some(vec!["patched-26".to_string()]),
+                metadata_requirements: Some(vec!["patched-26".to_string()]),
+                integration_points: Some(vec!["patched-26".to_string()]),
+                backup_requirements: Some(vec!["patched-26".to_string()]),
+                disaster_recovery: Some(vec!["patched-26".to_string()]),
+                privacy_controls: Some(vec!["patched-26".to_string()]),
+                audit_trail: Some(true),
+                element_ids: Some(vec![EntityId::new_serial("new26")]),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new26")]),
+                standards: Some(vec!["patched-26".to_string()]),
+                owner_id: Some(EntityId::new_serial("new26")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched InformationRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn communication_requirement_patch_round_trips() {
+            let mut item = CommunicationRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("communicationrequirement"), "Base CommunicationRequirement") },
+                channel: String::new(),
+                audience_ids: Vec::new(),
+                message_types: Vec::new(),
+                frequency: Some(String::new()),
+                medium: Vec::new(),
+                language: Vec::new(),
+                accessibility: Vec::new(),
+                emergency_use: false,
+                two_way: false,
+                recording_policy: Some(String::new()),
+                signage_locations: Vec::new(),
+                technology: Vec::new(),
+                escalation_path: Vec::new(),
+                feedback_loop: false,
+                privacy_controls: Vec::new(),
+                element_ids: Vec::new(),
+                standards: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base27")),
+                templates: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = CommunicationRequirementPatch {
+                name: Some("Patched CommunicationRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                channel: Some("patched-27".to_string()),
+                audience_ids: Some(vec![EntityId::new_serial("new27")]),
+                message_types: Some(vec!["patched-27".to_string()]),
+                frequency: Some("patched-27".to_string()),
+                medium: Some(vec!["patched-27".to_string()]),
+                language: Some(vec!["patched-27".to_string()]),
+                accessibility: Some(vec!["patched-27".to_string()]),
+                emergency_use: Some(true),
+                two_way: Some(true),
+                recording_policy: Some("patched-27".to_string()),
+                signage_locations: Some(vec!["patched-27".to_string()]),
+                technology: Some(vec!["patched-27".to_string()]),
+                escalation_path: Some(vec!["patched-27".to_string()]),
+                feedback_loop: Some(true),
+                privacy_controls: Some(vec!["patched-27".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new27")]),
+                standards: Some(vec!["patched-27".to_string()]),
+                owner_id: Some(EntityId::new_serial("new27")),
+                templates: Some(vec![EntityId::new_serial("new27")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched CommunicationRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn wayfinding_requirement_patch_round_trips() {
+            let mut item = WayfindingRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("wayfindingrequirement"), "Base WayfindingRequirement") },
+                user_profile_ids: Vec::new(),
+                element_ids: Vec::new(),
+                destination_types: Vec::new(),
+                signage_types: Vec::new(),
+                languages: Vec::new(),
+                tactile_required: false,
+                audio_required: false,
+                digital_wayfinding: false,
+                landmark_strategy: Vec::new(),
+                color_coding: Vec::new(),
+                symbol_standards: Vec::new(),
+                decision_points: Vec::new(),
+                maximum_signage_distance_m: Some(0.0),
+                lighting_requirements: Vec::new(),
+                maintenance_plan: Some(String::new()),
+                emergency_egress: Vec::new(),
+                visitor_journey: Vec::new(),
+                staff_journey: Vec::new(),
+                brand_integration: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = WayfindingRequirementPatch {
+                name: Some("Patched WayfindingRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                user_profile_ids: Some(vec![EntityId::new_serial("new28")]),
+                element_ids: Some(vec![EntityId::new_serial("new28")]),
+                destination_types: Some(vec!["patched-28".to_string()]),
+                signage_types: Some(vec!["patched-28".to_string()]),
+                languages: Some(vec!["patched-28".to_string()]),
+                tactile_required: Some(true),
+                audio_required: Some(true),
+                digital_wayfinding: Some(true),
+                landmark_strategy: Some(vec!["patched-28".to_string()]),
+                color_coding: Some(vec!["patched-28".to_string()]),
+                symbol_standards: Some(vec!["patched-28".to_string()]),
+                decision_points: Some(vec!["patched-28".to_string()]),
+                maximum_signage_distance_m: Some(42.0),
+                lighting_requirements: Some(vec!["patched-28".to_string()]),
+                maintenance_plan: Some("patched-28".to_string()),
+                emergency_egress: Some(vec!["patched-28".to_string()]),
+                visitor_journey: Some(vec!["patched-28".to_string()]),
+                staff_journey: Some(vec!["patched-28".to_string()]),
+                brand_integration: Some(vec!["patched-28".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched WayfindingRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn schedule_requirement_patch_round_trips() {
+            let mut item = ScheduleRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("schedulerequirement"), "Base ScheduleRequirement") },
+                milestone: String::new(),
+                phase: DeliveryPhase::Concept,
+                start_date: Some(String::new()),
+                end_date: Some(String::new()),
+                duration: Some(String::new()),
+                dependencies: Vec::new(),
+                predecessors: Vec::new(),
+                successors: Vec::new(),
+                critical: false,
+                float_days: Some(0),
+                resource_requirements: Vec::new(),
+                occupancy_impact: Vec::new(),
+                phasing_strategy: Some(String::new()),
+                decant_requirements: Vec::new(),
+                commissioning_window: Some(String::new()),
+                stakeholder_ids: Vec::new(),
+                risk_ids: Vec::new(),
+                contingency_days: Some(0),
+                reporting_cadence: Some(String::new()),
+                owner_id: Some(EntityId::new_serial("base29")),
+            };
+            let original = item.clone();
+            let patch = ScheduleRequirementPatch {
+                name: Some("Patched ScheduleRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                milestone: Some("patched-29".to_string()),
+                phase: Some(DeliveryPhase::Schematic),
+                start_date: Some("patched-29".to_string()),
+                end_date: Some("patched-29".to_string()),
+                duration: Some("patched-29".to_string()),
+                dependencies: Some(vec![EntityId::new_serial("new29")]),
+                predecessors: Some(vec![EntityId::new_serial("new29")]),
+                successors: Some(vec![EntityId::new_serial("new29")]),
+                critical: Some(true),
+                float_days: Some(7),
+                resource_requirements: Some(vec!["patched-29".to_string()]),
+                occupancy_impact: Some(vec!["patched-29".to_string()]),
+                phasing_strategy: Some("patched-29".to_string()),
+                decant_requirements: Some(vec!["patched-29".to_string()]),
+                commissioning_window: Some("patched-29".to_string()),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new29")]),
+                risk_ids: Some(vec![EntityId::new_serial("new29")]),
+                contingency_days: Some(7),
+                reporting_cadence: Some("patched-29".to_string()),
+                owner_id: Some(EntityId::new_serial("new29")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ScheduleRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn flexibility_requirement_patch_round_trips() {
+            let mut item = FlexibilityRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("flexibilityrequirement"), "Base FlexibilityRequirement") },
+                flexibility_type: String::new(),
+                element_ids: Vec::new(),
+                adaptation_scenarios: Vec::new(),
+                modularity_level: Some(String::new()),
+                reconfiguration_time: Some(String::new()),
+                cost_of_change: Some(0.0),
+                technology_readiness: Some(String::new()),
+                future_function_ids: Vec::new(),
+                demountable_partitions: false,
+                raised_floor: false,
+                overhead_services: false,
+                expansion_direction: Vec::new(),
+                contraction_scenario: Vec::new(),
+                multi_use_potential: Vec::new(),
+                furniture_strategy: Vec::new(),
+                infrastructure_spare_capacity: Vec::new(),
+                lease_implications: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base30")),
+            };
+            let original = item.clone();
+            let patch = FlexibilityRequirementPatch {
+                name: Some("Patched FlexibilityRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                flexibility_type: Some("patched-30".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new30")]),
+                adaptation_scenarios: Some(vec!["patched-30".to_string()]),
+                modularity_level: Some("patched-30".to_string()),
+                reconfiguration_time: Some("patched-30".to_string()),
+                cost_of_change: Some(42.0),
+                technology_readiness: Some("patched-30".to_string()),
+                future_function_ids: Some(vec![EntityId::new_serial("new30")]),
+                demountable_partitions: Some(true),
+                raised_floor: Some(true),
+                overhead_services: Some(true),
+                expansion_direction: Some(vec!["patched-30".to_string()]),
+                contraction_scenario: Some(vec!["patched-30".to_string()]),
+                multi_use_potential: Some(vec!["patched-30".to_string()]),
+                furniture_strategy: Some(vec!["patched-30".to_string()]),
+                infrastructure_spare_capacity: Some(vec!["patched-30".to_string()]),
+                lease_implications: Some(vec!["patched-30".to_string()]),
+                owner_id: Some(EntityId::new_serial("new30")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched FlexibilityRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn growth_plan_patch_round_trips() {
+            let mut item = GrowthPlan {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("growthplan"), "Base GrowthPlan") },
+                horizon_years: 0,
+                growth_rate: Some(0.0),
+                headcount_growth: QuantitySpec::default(),
+                area_growth: QuantitySpec::default(),
+                phases: Vec::new(),
+                trigger_events: Vec::new(),
+                expansion_element_ids: Vec::new(),
+                reserve_areas: Vec::new(),
+                infrastructure_headroom: Vec::new(),
+                budget_envelope: Some(0.0),
+                funding_sources: Vec::new(),
+                risk_factors: Vec::new(),
+                decision_points: Vec::new(),
+                scenario_ids: Vec::new(),
+                decommission_plan: Vec::new(),
+                relocation_strategy: Vec::new(),
+                stakeholder_impact: Vec::new(),
+                regulatory_considerations: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base31")),
+            };
+            let original = item.clone();
+            let patch = GrowthPlanPatch {
+                name: Some("Patched GrowthPlan".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                horizon_years: Some(7),
+                growth_rate: Some(42.0),
+                headcount_growth: Some(QuantitySpec::target_unit(42.0, "m2")),
+                area_growth: Some(QuantitySpec::target_unit(42.0, "m2")),
+                phases: Some(vec!["patched-31".to_string()]),
+                trigger_events: Some(vec!["patched-31".to_string()]),
+                expansion_element_ids: Some(vec![EntityId::new_serial("new31")]),
+                reserve_areas: Some(vec!["patched-31".to_string()]),
+                infrastructure_headroom: Some(vec!["patched-31".to_string()]),
+                budget_envelope: Some(42.0),
+                funding_sources: Some(vec!["patched-31".to_string()]),
+                risk_factors: Some(vec![EntityId::new_serial("new31")]),
+                decision_points: Some(vec![EntityId::new_serial("new31")]),
+                scenario_ids: Some(vec![EntityId::new_serial("new31")]),
+                decommission_plan: Some(vec!["patched-31".to_string()]),
+                relocation_strategy: Some(vec!["patched-31".to_string()]),
+                stakeholder_impact: Some(vec!["patched-31".to_string()]),
+                regulatory_considerations: Some(vec!["patched-31".to_string()]),
+                owner_id: Some(EntityId::new_serial("new31")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched GrowthPlan");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn sustainability_requirement_patch_round_trips() {
+            let mut item = SustainabilityRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("sustainabilityrequirement"), "Base SustainabilityRequirement") },
+                topic: String::new(),
+                target: Some(String::new()),
+                metric: Some(String::new()),
+                baseline: Some(0.0),
+                target_value: Some(0.0),
+                unit: Some(String::new()),
+                certification: Vec::new(),
+                standards: Vec::new(),
+                element_ids: Vec::new(),
+                strategies: Vec::new(),
+                materials_preferences: Vec::new(),
+                energy_strategy: Vec::new(),
+                water_strategy: Vec::new(),
+                waste_strategy: Vec::new(),
+                biodiversity: Vec::new(),
+                embodied_carbon: Some(0.0),
+                operational_carbon: Some(0.0),
+                reporting_requirements: Vec::new(),
+                verification_plan: Some(String::new()),
+                owner_id: Some(EntityId::new_serial("base32")),
+            };
+            let original = item.clone();
+            let patch = SustainabilityRequirementPatch {
+                name: Some("Patched SustainabilityRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                topic: Some("patched-32".to_string()),
+                target: Some("patched-32".to_string()),
+                metric: Some("patched-32".to_string()),
+                baseline: Some(42.0),
+                target_value: Some(42.0),
+                unit: Some("patched-32".to_string()),
+                certification: Some(vec!["patched-32".to_string()]),
+                standards: Some(vec!["patched-32".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new32")]),
+                strategies: Some(vec!["patched-32".to_string()]),
+                materials_preferences: Some(vec!["patched-32".to_string()]),
+                energy_strategy: Some(vec!["patched-32".to_string()]),
+                water_strategy: Some(vec!["patched-32".to_string()]),
+                waste_strategy: Some(vec!["patched-32".to_string()]),
+                biodiversity: Some(vec!["patched-32".to_string()]),
+                embodied_carbon: Some(42.0),
+                operational_carbon: Some(42.0),
+                reporting_requirements: Some(vec!["patched-32".to_string()]),
+                verification_plan: Some("patched-32".to_string()),
+                owner_id: Some(EntityId::new_serial("new32")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched SustainabilityRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn resilience_requirement_patch_round_trips() {
+            let mut item = ResilienceRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("resiliencerequirement"), "Base ResilienceRequirement") },
+                hazard: String::new(),
+                risk_level: RiskLevel::Negligible,
+                scenario: Some(String::new()),
+                recovery_time: Some(String::new()),
+                recovery_point: Some(String::new()),
+                redundancy: Vec::new(),
+                hardening_measures: Vec::new(),
+                backup_systems: Vec::new(),
+                alternate_sites: Vec::new(),
+                supply_chain: Vec::new(),
+                communication_plan: Vec::new(),
+                drill_requirements: Vec::new(),
+                element_ids: Vec::new(),
+                infrastructure_ids: Vec::new(),
+                standards: Vec::new(),
+                insurance_implications: Vec::new(),
+                climate_adaptation: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base33")),
+                verification_plan: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = ResilienceRequirementPatch {
+                name: Some("Patched ResilienceRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                hazard: Some("patched-33".to_string()),
+                risk_level: Some(RiskLevel::Low),
+                scenario: Some("patched-33".to_string()),
+                recovery_time: Some("patched-33".to_string()),
+                recovery_point: Some("patched-33".to_string()),
+                redundancy: Some(vec!["patched-33".to_string()]),
+                hardening_measures: Some(vec!["patched-33".to_string()]),
+                backup_systems: Some(vec!["patched-33".to_string()]),
+                alternate_sites: Some(vec!["patched-33".to_string()]),
+                supply_chain: Some(vec!["patched-33".to_string()]),
+                communication_plan: Some(vec!["patched-33".to_string()]),
+                drill_requirements: Some(vec!["patched-33".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new33")]),
+                infrastructure_ids: Some(vec![EntityId::new_serial("new33")]),
+                standards: Some(vec!["patched-33".to_string()]),
+                insurance_implications: Some(vec!["patched-33".to_string()]),
+                climate_adaptation: Some(vec!["patched-33".to_string()]),
+                owner_id: Some(EntityId::new_serial("new33")),
+                verification_plan: Some("patched-33".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ResilienceRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn cost_requirement_patch_round_trips() {
+            let mut item = CostRequirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("costrequirement"), "Base CostRequirement") },
+                cost_item: String::new(),
+                basis: CostBasis::Capital,
+                amount: Some(0.0),
+                currency: String::new(),
+                quantity_basis: Some(String::new()),
+                unit_cost: Some(0.0),
+                contingency_percent: Some(0.0),
+                escalation_rate: Some(0.0),
+                funding_source: Some(String::new()),
+                element_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                phase: Some(DeliveryPhase::Concept),
+                cash_flow_profile: Vec::new(),
+                value_engineering_notes: Vec::new(),
+                benchmark_ref: Some(EntityId::new_serial("base34")),
+                approval_status: ValidationStatus::Pending,
+                owner_id: Some(EntityId::new_serial("base34")),
+                assumptions: Vec::new(),
+                sensitivity_factors: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = CostRequirementPatch {
+                name: Some("Patched CostRequirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                cost_item: Some("patched-34".to_string()),
+                basis: Some(CostBasis::Operational),
+                amount: Some(42.0),
+                currency: Some("patched-34".to_string()),
+                quantity_basis: Some("patched-34".to_string()),
+                unit_cost: Some(42.0),
+                contingency_percent: Some(42.0),
+                escalation_rate: Some(42.0),
+                funding_source: Some("patched-34".to_string()),
+                element_ids: Some(vec![EntityId::new_serial("new34")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new34")]),
+                phase: Some(DeliveryPhase::Schematic),
+                cash_flow_profile: Some(vec!["patched-34".to_string()]),
+                value_engineering_notes: Some(vec!["patched-34".to_string()]),
+                benchmark_ref: Some(EntityId::new_serial("new34")),
+                approval_status: Some(ValidationStatus::Passed),
+                owner_id: Some(EntityId::new_serial("new34")),
+                assumptions: Some(vec!["patched-34".to_string()]),
+                sensitivity_factors: Some(vec!["patched-34".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched CostRequirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn delivery_constraint_patch_round_trips() {
+            let mut item = DeliveryConstraint {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("deliveryconstraint"), "Base DeliveryConstraint") },
+                constraint_type: String::new(),
+                constraint_details: TextField::default(),
+                phase: DeliveryPhase::Concept,
+                hard_deadline: Some(String::new()),
+                soft_deadline: Some(String::new()),
+                impacted_element_ids: Vec::new(),
+                impacted_requirement_ids: Vec::new(),
+                work_hours: Some(String::new()),
+                noise_restrictions: Vec::new(),
+                access_restrictions: Vec::new(),
+                site_logistics: Vec::new(),
+                procurement_lead_time: Some(String::new()),
+                approval_gates: Vec::new(),
+                occupancy_constraints: Vec::new(),
+                weather_windows: Vec::new(),
+                penalty_clauses: Vec::new(),
+                mitigation_options: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base35")),
+                risk_ids: Vec::new(),
+                constraint_status: LifecycleStatus::Draft,
+            };
+            let original = item.clone();
+            let patch = DeliveryConstraintPatch {
+                name: Some("Patched DeliveryConstraint".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                constraint_type: Some("patched-35".to_string()),
+                constraint_details: Some(TextField::plain("patched-35")),
+                phase: Some(DeliveryPhase::Schematic),
+                hard_deadline: Some("patched-35".to_string()),
+                soft_deadline: Some("patched-35".to_string()),
+                impacted_element_ids: Some(vec![EntityId::new_serial("new35")]),
+                impacted_requirement_ids: Some(vec![EntityId::new_serial("new35")]),
+                work_hours: Some("patched-35".to_string()),
+                noise_restrictions: Some(vec!["patched-35".to_string()]),
+                access_restrictions: Some(vec!["patched-35".to_string()]),
+                site_logistics: Some(vec!["patched-35".to_string()]),
+                procurement_lead_time: Some("patched-35".to_string()),
+                approval_gates: Some(vec!["patched-35".to_string()]),
+                occupancy_constraints: Some(vec!["patched-35".to_string()]),
+                weather_windows: Some(vec!["patched-35".to_string()]),
+                penalty_clauses: Some(vec!["patched-35".to_string()]),
+                mitigation_options: Some(vec!["patched-35".to_string()]),
+                owner_id: Some(EntityId::new_serial("new35")),
+                risk_ids: Some(vec![EntityId::new_serial("new35")]),
+                constraint_status: Some(LifecycleStatus::Proposed),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched DeliveryConstraint");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn risk_patch_round_trips() {
+            let mut item = Risk {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("risk"), "Base Risk") },
+                risk_statement: TextField::default(),
+                category: String::new(),
+                probability: RiskLevel::Negligible,
+                impact: RiskLevel::Negligible,
+                risk_score: Some(0.0),
+                causes: Vec::new(),
+                effects: Vec::new(),
+                affected_element_ids: Vec::new(),
+                affected_requirement_ids: Vec::new(),
+                mitigation: Vec::new(),
+                contingency: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base36")),
+                review_date: Some(String::new()),
+                trigger_indicators: Vec::new(),
+                residual_probability: Some(RiskLevel::Negligible),
+                residual_impact: Some(RiskLevel::Negligible),
+                related_conflict_ids: Vec::new(),
+                escalation_path: Vec::new(),
+                monitoring_plan: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = RiskPatch {
+                name: Some("Patched Risk".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                risk_statement: Some(TextField::plain("patched-36")),
+                category: Some("patched-36".to_string()),
+                probability: Some(RiskLevel::Low),
+                impact: Some(RiskLevel::Low),
+                risk_score: Some(42.0),
+                causes: Some(vec!["patched-36".to_string()]),
+                effects: Some(vec!["patched-36".to_string()]),
+                affected_element_ids: Some(vec![EntityId::new_serial("new36")]),
+                affected_requirement_ids: Some(vec![EntityId::new_serial("new36")]),
+                mitigation: Some(vec!["patched-36".to_string()]),
+                contingency: Some(vec!["patched-36".to_string()]),
+                owner_id: Some(EntityId::new_serial("new36")),
+                review_date: Some("patched-36".to_string()),
+                trigger_indicators: Some(vec!["patched-36".to_string()]),
+                residual_probability: Some(RiskLevel::Low),
+                residual_impact: Some(RiskLevel::Low),
+                related_conflict_ids: Some(vec![EntityId::new_serial("new36")]),
+                escalation_path: Some(vec!["patched-36".to_string()]),
+                monitoring_plan: Some("patched-36".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Risk");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn conflict_patch_round_trips() {
+            let mut item = Conflict {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("conflict"), "Base Conflict") },
+                kind: ConflictKind::Adjacency,
+                summary: TextField::default(),
+                entity_a_id: EntityId::new_serial("base37"),
+                entity_b_id: EntityId::new_serial("base37"),
+                severity: IssueSeverity::Cosmetic,
+                detected_by: Some(String::new()),
+                detection_date: Some(String::new()),
+                trade_off_options: Vec::new(),
+                recommended_resolution: Some(TextField::default()),
+                decision_id: Some(EntityId::new_serial("base37")),
+                stakeholder_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                cost_impact: Some(0.0),
+                schedule_impact: Some(String::new()),
+                quality_impact: Vec::new(),
+                resolution_status: ValidationStatus::Pending,
+                owner_id: Some(EntityId::new_serial("base37")),
+                escalation_level: Some(String::new()),
+                related_risk_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ConflictPatch {
+                name: Some("Patched Conflict".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                kind: Some(ConflictKind::Capacity),
+                summary: Some(TextField::plain("patched-37")),
+                entity_a_id: Some(EntityId::new_serial("new37")),
+                entity_b_id: Some(EntityId::new_serial("new37")),
+                severity: Some(IssueSeverity::Minor),
+                detected_by: Some("patched-37".to_string()),
+                detection_date: Some("patched-37".to_string()),
+                trade_off_options: Some(vec!["patched-37".to_string()]),
+                recommended_resolution: Some(TextField::plain("patched-37")),
+                decision_id: Some(EntityId::new_serial("new37")),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new37")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new37")]),
+                cost_impact: Some(42.0),
+                schedule_impact: Some("patched-37".to_string()),
+                quality_impact: Some(vec!["patched-37".to_string()]),
+                resolution_status: Some(ValidationStatus::Passed),
+                owner_id: Some(EntityId::new_serial("new37")),
+                escalation_level: Some("patched-37".to_string()),
+                related_risk_ids: Some(vec![EntityId::new_serial("new37")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Conflict");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn requirement_patch_round_trips() {
+            let mut item = Requirement {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("requirement"), "Base Requirement") },
+                code: String::new(),
+                kind: RequirementKind::Functional,
+                statement: TextField::default(),
+                rationale: Some(TextField::default()),
+                source: Some(String::new()),
+                stakeholder_ids: Vec::new(),
+                element_ids: Vec::new(),
+                function_ids: Vec::new(),
+                parent_requirement_id: Some(EntityId::new_serial("base38")),
+                child_requirement_ids: Vec::new(),
+                acceptance_criteria: Vec::new(),
+                verification_method: Some(String::new()),
+                validation_status: ValidationStatus::Pending,
+                conflict_ids: Vec::new(),
+                risk_ids: Vec::new(),
+                cost_estimate: Some(0.0),
+                schedule_constraint: Some(String::new()),
+                regulatory_refs: Vec::new(),
+                trace_links: Vec::new(),
+                superseded_by: Some(EntityId::new_serial("base38")),
+            };
+            let original = item.clone();
+            let patch = RequirementPatch {
+                name: Some("Patched Requirement".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-38".to_string()),
+                kind: Some(RequirementKind::Spatial),
+                statement: Some(TextField::plain("patched-38")),
+                rationale: Some(TextField::plain("patched-38")),
+                source: Some("patched-38".to_string()),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new38")]),
+                element_ids: Some(vec![EntityId::new_serial("new38")]),
+                function_ids: Some(vec![EntityId::new_serial("new38")]),
+                parent_requirement_id: Some(EntityId::new_serial("new38")),
+                child_requirement_ids: Some(vec![EntityId::new_serial("new38")]),
+                acceptance_criteria: Some(vec!["patched-38".to_string()]),
+                verification_method: Some("patched-38".to_string()),
+                validation_status: Some(ValidationStatus::Passed),
+                conflict_ids: Some(vec![EntityId::new_serial("new38")]),
+                risk_ids: Some(vec![EntityId::new_serial("new38")]),
+                cost_estimate: Some(42.0),
+                schedule_constraint: Some("patched-38".to_string()),
+                regulatory_refs: Some(vec!["patched-38".to_string()]),
+                trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom38n"), EntityId::new_serial("tto38n"), TraceKind::FullAuditTrail)]),
+                superseded_by: Some(EntityId::new_serial("new38")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Requirement");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn priority_record_patch_round_trips() {
+            let mut item = PriorityRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("priorityrecord"), "Base PriorityRecord") },
+                subject_id: EntityId::new_serial("base39"),
+                subject_kind: String::new(),
+                ranked_priority: Priority::Mandatory,
+                rank: Some(0),
+                weight: Some(0.0),
+                rationale: Some(TextField::default()),
+                decision_id: Some(EntityId::new_serial("base39")),
+                stakeholder_ids: Vec::new(),
+                effective_from: Some(String::new()),
+                effective_until: Some(String::new()),
+                review_cycle: Some(String::new()),
+                dependencies: Vec::new(),
+                conflicts: Vec::new(),
+                scoring_method: Some(String::new()),
+                score: Some(0.0),
+                criteria: Vec::new(),
+                approved_by: Some(EntityId::new_serial("base39")),
+                approval_date: Some(String::new()),
+                ranking_notes: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = PriorityRecordPatch {
+                name: Some("Patched PriorityRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                subject_id: Some(EntityId::new_serial("new39")),
+                subject_kind: Some("patched-39".to_string()),
+                ranked_priority: Some(Priority::Essential),
+                rank: Some(7),
+                weight: Some(42.0),
+                rationale: Some(TextField::plain("patched-39")),
+                decision_id: Some(EntityId::new_serial("new39")),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new39")]),
+                effective_from: Some("patched-39".to_string()),
+                effective_until: Some("patched-39".to_string()),
+                review_cycle: Some("patched-39".to_string()),
+                dependencies: Some(vec![EntityId::new_serial("new39")]),
+                conflicts: Some(vec![EntityId::new_serial("new39")]),
+                scoring_method: Some("patched-39".to_string()),
+                score: Some(42.0),
+                criteria: Some(vec!["patched-39".to_string()]),
+                approved_by: Some(EntityId::new_serial("new39")),
+                approval_date: Some("patched-39".to_string()),
+                ranking_notes: Some(vec![TaggedNote { tag: "new39".into(), text: "new-note39".into() }]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched PriorityRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn scenario_patch_round_trips() {
+            let mut item = Scenario {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("scenario"), "Base Scenario") },
+                code: String::new(),
+                hypothesis: TextField::default(),
+                assumptions: Vec::new(),
+                variables: Vec::new(),
+                element_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                growth_plan_id: Some(EntityId::new_serial("base40")),
+                probability: Some(0.0),
+                impact_summary: Some(TextField::default()),
+                cost_delta: Some(0.0),
+                area_delta: Some(0.0),
+                headcount_delta: Some(0.0),
+                schedule_delta: Some(String::new()),
+                risk_ids: Vec::new(),
+                option_ids: Vec::new(),
+                baseline: false,
+                preferred: false,
+                analysis_ids: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base40")),
+            };
+            let original = item.clone();
+            let patch = ScenarioPatch {
+                name: Some("Patched Scenario".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                code: Some("patched-40".to_string()),
+                hypothesis: Some(TextField::plain("patched-40")),
+                assumptions: Some(vec!["patched-40".to_string()]),
+                variables: Some(vec!["patched-40".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new40")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new40")]),
+                growth_plan_id: Some(EntityId::new_serial("new40")),
+                probability: Some(42.0),
+                impact_summary: Some(TextField::plain("patched-40")),
+                cost_delta: Some(42.0),
+                area_delta: Some(42.0),
+                headcount_delta: Some(42.0),
+                schedule_delta: Some("patched-40".to_string()),
+                risk_ids: Some(vec![EntityId::new_serial("new40")]),
+                option_ids: Some(vec![EntityId::new_serial("new40")]),
+                baseline: Some(true),
+                preferred: Some(true),
+                analysis_ids: Some(vec![EntityId::new_serial("new40")]),
+                owner_id: Some(EntityId::new_serial("new40")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Scenario");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn option_evaluation_patch_round_trips() {
+            let mut item = OptionEvaluation {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("optionevaluation"), "Base OptionEvaluation") },
+                option_name: String::new(),
+                option_description: TextField::default(),
+                scenario_id: Some(EntityId::new_serial("base41")),
+                criteria_ids: Vec::new(),
+                scores: Vec::new(),
+                weighted_score: Some(0.0),
+                cost_estimate: Some(0.0),
+                schedule_estimate: Some(String::new()),
+                risk_summary: Vec::new(),
+                benefits: Vec::new(),
+                drawbacks: Vec::new(),
+                assumptions: Vec::new(),
+                dependencies: Vec::new(),
+                stakeholder_feedback: Vec::new(),
+                recommendation: Some(String::new()),
+                decision_id: Some(EntityId::new_serial("base41")),
+                evaluation_status: ValidationStatus::Pending,
+                evaluator_ids: Vec::new(),
+                evaluation_date: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = OptionEvaluationPatch {
+                name: Some("Patched OptionEvaluation".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                option_name: Some("patched-41".to_string()),
+                option_description: Some(TextField::plain("patched-41")),
+                scenario_id: Some(EntityId::new_serial("new41")),
+                criteria_ids: Some(vec![EntityId::new_serial("new41")]),
+                scores: Some(vec![42.0]),
+                weighted_score: Some(42.0),
+                cost_estimate: Some(42.0),
+                schedule_estimate: Some("patched-41".to_string()),
+                risk_summary: Some(vec!["patched-41".to_string()]),
+                benefits: Some(vec!["patched-41".to_string()]),
+                drawbacks: Some(vec!["patched-41".to_string()]),
+                assumptions: Some(vec!["patched-41".to_string()]),
+                dependencies: Some(vec![EntityId::new_serial("new41")]),
+                stakeholder_feedback: Some(vec![TaggedNote { tag: "new41".into(), text: "new-note41".into() }]),
+                recommendation: Some("patched-41".to_string()),
+                decision_id: Some(EntityId::new_serial("new41")),
+                evaluation_status: Some(ValidationStatus::Passed),
+                evaluator_ids: Some(vec![EntityId::new_serial("new41")]),
+                evaluation_date: Some("patched-41".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched OptionEvaluation");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn decision_patch_round_trips() {
+            let mut item = Decision {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("decision"), "Base Decision") },
+                decision_statement: TextField::default(),
+                context: TextField::default(),
+                options_considered: Vec::new(),
+                selected_option_id: Some(EntityId::new_serial("base42")),
+                rationale: TextField::default(),
+                decision_maker_ids: Vec::new(),
+                consulted_ids: Vec::new(),
+                informed_ids: Vec::new(),
+                decision_date: Some(String::new()),
+                effective_date: Some(String::new()),
+                reversal_conditions: Vec::new(),
+                impacted_requirement_ids: Vec::new(),
+                impacted_element_ids: Vec::new(),
+                cost_impact: Some(0.0),
+                schedule_impact: Some(String::new()),
+                risk_impact: Vec::new(),
+                approval_status: ValidationStatus::Pending,
+                meeting_ref: Some(EntityId::new_serial("base42")),
+                document_refs: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = DecisionPatch {
+                name: Some("Patched Decision".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                decision_statement: Some(TextField::plain("patched-42")),
+                context: Some(TextField::plain("patched-42")),
+                options_considered: Some(vec![EntityId::new_serial("new42")]),
+                selected_option_id: Some(EntityId::new_serial("new42")),
+                rationale: Some(TextField::plain("patched-42")),
+                decision_maker_ids: Some(vec![EntityId::new_serial("new42")]),
+                consulted_ids: Some(vec![EntityId::new_serial("new42")]),
+                informed_ids: Some(vec![EntityId::new_serial("new42")]),
+                decision_date: Some("patched-42".to_string()),
+                effective_date: Some("patched-42".to_string()),
+                reversal_conditions: Some(vec!["patched-42".to_string()]),
+                impacted_requirement_ids: Some(vec![EntityId::new_serial("new42")]),
+                impacted_element_ids: Some(vec![EntityId::new_serial("new42")]),
+                cost_impact: Some(42.0),
+                schedule_impact: Some("patched-42".to_string()),
+                risk_impact: Some(vec!["patched-42".to_string()]),
+                approval_status: Some(ValidationStatus::Passed),
+                meeting_ref: Some(EntityId::new_serial("new42")),
+                document_refs: Some(vec![EntityId::new_serial("new42")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Decision");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn validation_record_patch_round_trips() {
+            let mut item = ValidationRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("validationrecord"), "Base ValidationRecord") },
+                subject_id: EntityId::new_serial("base43"),
+                subject_kind: String::new(),
+                validation_type: String::new(),
+                method: Some(String::new()),
+                criteria: Vec::new(),
+                result: ValidationStatus::Pending,
+                evidence: Vec::new(),
+                validator_ids: Vec::new(),
+                validation_date: Some(String::new()),
+                next_review_date: Some(String::new()),
+                findings: Vec::new(),
+                non_conformities: Vec::new(),
+                corrective_actions: Vec::new(),
+                waivers: Vec::new(),
+                standards: Vec::new(),
+                trace_links: Vec::new(),
+                report_id: Some(EntityId::new_serial("base43")),
+                confidence_level: Some(String::new()),
+                validation_notes: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ValidationRecordPatch {
+                name: Some("Patched ValidationRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                subject_id: Some(EntityId::new_serial("new43")),
+                subject_kind: Some("patched-43".to_string()),
+                validation_type: Some("patched-43".to_string()),
+                method: Some("patched-43".to_string()),
+                criteria: Some(vec!["patched-43".to_string()]),
+                result: Some(ValidationStatus::Passed),
+                evidence: Some(vec!["patched-43".to_string()]),
+                validator_ids: Some(vec![EntityId::new_serial("new43")]),
+                validation_date: Some("patched-43".to_string()),
+                next_review_date: Some("patched-43".to_string()),
+                findings: Some(vec!["patched-43".to_string()]),
+                non_conformities: Some(vec!["patched-43".to_string()]),
+                corrective_actions: Some(vec!["patched-43".to_string()]),
+                waivers: Some(vec!["patched-43".to_string()]),
+                standards: Some(vec!["patched-43".to_string()]),
+                trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom43n"), EntityId::new_serial("tto43n"), TraceKind::FullAuditTrail)]),
+                report_id: Some(EntityId::new_serial("new43")),
+                confidence_level: Some("patched-43".to_string()),
+                validation_notes: Some(vec![TaggedNote { tag: "new43".into(), text: "new-note43".into() }]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ValidationRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn performance_criterion_patch_round_trips() {
+            let mut item = PerformanceCriterion {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("performancecriterion"), "Base PerformanceCriterion") },
+                criterion: String::new(),
+                metric: String::new(),
+                target: Some(0.0),
+                unit: Some(String::new()),
+                minimum: Some(0.0),
+                maximum: Some(0.0),
+                measurement_method: Some(String::new()),
+                frequency: Some(String::new()),
+                requirement_ids: Vec::new(),
+                element_ids: Vec::new(),
+                baseline: Some(0.0),
+                benchmark_ref: Some(EntityId::new_serial("base44")),
+                weight: Some(0.0),
+                data_source: Some(String::new()),
+                reporting_cadence: Some(String::new()),
+                owner_id: Some(EntityId::new_serial("base44")),
+                verification_plan: Some(String::new()),
+                penalty_threshold: Some(0.0),
+                incentive_threshold: Some(0.0),
+            };
+            let original = item.clone();
+            let patch = PerformanceCriterionPatch {
+                name: Some("Patched PerformanceCriterion".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                criterion: Some("patched-44".to_string()),
+                metric: Some("patched-44".to_string()),
+                target: Some(42.0),
+                unit: Some("patched-44".to_string()),
+                minimum: Some(42.0),
+                maximum: Some(42.0),
+                measurement_method: Some("patched-44".to_string()),
+                frequency: Some("patched-44".to_string()),
+                requirement_ids: Some(vec![EntityId::new_serial("new44")]),
+                element_ids: Some(vec![EntityId::new_serial("new44")]),
+                baseline: Some(42.0),
+                benchmark_ref: Some(EntityId::new_serial("new44")),
+                weight: Some(42.0),
+                data_source: Some("patched-44".to_string()),
+                reporting_cadence: Some("patched-44".to_string()),
+                owner_id: Some(EntityId::new_serial("new44")),
+                verification_plan: Some("patched-44".to_string()),
+                penalty_threshold: Some(42.0),
+                incentive_threshold: Some(42.0),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched PerformanceCriterion");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn quality_record_patch_round_trips() {
+            let mut item = QualityRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("qualityrecord"), "Base QualityRecord") },
+                quality_topic: String::new(),
+                standard: Some(String::new()),
+                target_level: Some(String::new()),
+                inspection_points: Vec::new(),
+                acceptance_criteria: Vec::new(),
+                testing_requirements: Vec::new(),
+                sample_rate: Some(String::new()),
+                defect_categories: Vec::new(),
+                corrective_action_process: Vec::new(),
+                element_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                supplier_requirements: Vec::new(),
+                documentation_requirements: Vec::new(),
+                training_requirements: Vec::new(),
+                audit_schedule: Some(String::new()),
+                kpis: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base45")),
+                certification_targets: Vec::new(),
+                continuous_improvement: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = QualityRecordPatch {
+                name: Some("Patched QualityRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                quality_topic: Some("patched-45".to_string()),
+                standard: Some("patched-45".to_string()),
+                target_level: Some("patched-45".to_string()),
+                inspection_points: Some(vec!["patched-45".to_string()]),
+                acceptance_criteria: Some(vec!["patched-45".to_string()]),
+                testing_requirements: Some(vec!["patched-45".to_string()]),
+                sample_rate: Some("patched-45".to_string()),
+                defect_categories: Some(vec!["patched-45".to_string()]),
+                corrective_action_process: Some(vec!["patched-45".to_string()]),
+                element_ids: Some(vec![EntityId::new_serial("new45")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new45")]),
+                supplier_requirements: Some(vec!["patched-45".to_string()]),
+                documentation_requirements: Some(vec!["patched-45".to_string()]),
+                training_requirements: Some(vec!["patched-45".to_string()]),
+                audit_schedule: Some("patched-45".to_string()),
+                kpis: Some(vec!["patched-45".to_string()]),
+                owner_id: Some(EntityId::new_serial("new45")),
+                certification_targets: Some(vec!["patched-45".to_string()]),
+                continuous_improvement: Some(vec!["patched-45".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched QualityRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn document_record_patch_round_trips() {
+            let mut item = DocumentRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("documentrecord"), "Base DocumentRecord") },
+                document_type: String::new(),
+                title: String::new(),
+                version: String::new(),
+                file_ref: Some(String::new()),
+                format: Some(String::new()),
+                author_ids: Vec::new(),
+                reviewer_ids: Vec::new(),
+                approver_ids: Vec::new(),
+                issue_date: Some(String::new()),
+                revision_date: Some(String::new()),
+                distribution_list: Vec::new(),
+                related_entity_ids: Vec::new(),
+                classification: Some(String::new()),
+                retention_period: Some(String::new()),
+                access_controls: Vec::new(),
+                supersedes: Some(EntityId::new_serial("base46")),
+                document_status: LifecycleStatus::Draft,
+                checksum: Some(String::new()),
+                source_system: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = DocumentRecordPatch {
+                name: Some("Patched DocumentRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                document_type: Some("patched-46".to_string()),
+                title: Some("patched-46".to_string()),
+                version: Some("patched-46".to_string()),
+                file_ref: Some("patched-46".to_string()),
+                format: Some("patched-46".to_string()),
+                author_ids: Some(vec![EntityId::new_serial("new46")]),
+                reviewer_ids: Some(vec![EntityId::new_serial("new46")]),
+                approver_ids: Some(vec![EntityId::new_serial("new46")]),
+                issue_date: Some("patched-46".to_string()),
+                revision_date: Some("patched-46".to_string()),
+                distribution_list: Some(vec![EntityId::new_serial("new46")]),
+                related_entity_ids: Some(vec![EntityId::new_serial("new46")]),
+                classification: Some("patched-46".to_string()),
+                retention_period: Some("patched-46".to_string()),
+                access_controls: Some(vec!["patched-46".to_string()]),
+                supersedes: Some(EntityId::new_serial("new46")),
+                document_status: Some(LifecycleStatus::Proposed),
+                checksum: Some("patched-46".to_string()),
+                source_system: Some("patched-46".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched DocumentRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn change_record_patch_round_trips() {
+            let mut item = ChangeRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("changerecord"), "Base ChangeRecord") },
+                change_type: String::new(),
+                summary: TextField::default(),
+                reason: TextField::default(),
+                requested_by: Some(EntityId::new_serial("base47")),
+                approved_by: Some(EntityId::new_serial("base47")),
+                change_date: Some(String::new()),
+                effective_date: Some(String::new()),
+                impacted_entity_ids: Vec::new(),
+                before_snapshot: Some(String::new()),
+                after_snapshot: Some(String::new()),
+                cost_impact: Some(0.0),
+                schedule_impact: Some(String::new()),
+                risk_impact: Vec::new(),
+                approval_status: ValidationStatus::Pending,
+                rollback_plan: Vec::new(),
+                communication_plan: Vec::new(),
+                version_from: Some(String::new()),
+                version_to: Some(String::new()),
+                audit_event_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ChangeRecordPatch {
+                name: Some("Patched ChangeRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                change_type: Some("patched-47".to_string()),
+                summary: Some(TextField::plain("patched-47")),
+                reason: Some(TextField::plain("patched-47")),
+                requested_by: Some(EntityId::new_serial("new47")),
+                approved_by: Some(EntityId::new_serial("new47")),
+                change_date: Some("patched-47".to_string()),
+                effective_date: Some("patched-47".to_string()),
+                impacted_entity_ids: Some(vec![EntityId::new_serial("new47")]),
+                before_snapshot: Some("patched-47".to_string()),
+                after_snapshot: Some("patched-47".to_string()),
+                cost_impact: Some(42.0),
+                schedule_impact: Some("patched-47".to_string()),
+                risk_impact: Some(vec!["patched-47".to_string()]),
+                approval_status: Some(ValidationStatus::Passed),
+                rollback_plan: Some(vec!["patched-47".to_string()]),
+                communication_plan: Some(vec!["patched-47".to_string()]),
+                version_from: Some("patched-47".to_string()),
+                version_to: Some("patched-47".to_string()),
+                audit_event_ids: Some(vec![EntityId::new_serial("new47")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ChangeRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn collaboration_record_patch_round_trips() {
+            let mut item = CollaborationRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("collaborationrecord"), "Base CollaborationRecord") },
+                session_type: String::new(),
+                title: String::new(),
+                participants: Vec::new(),
+                facilitator_id: Some(EntityId::new_serial("base48")),
+                start_time: Some(String::new()),
+                end_time: Some(String::new()),
+                location: Some(String::new()),
+                agenda: Vec::new(),
+                outcomes: Vec::new(),
+                action_items: Vec::new(),
+                decision_ids: Vec::new(),
+                issue_ids: Vec::new(),
+                document_ids: Vec::new(),
+                recording_ref: Some(String::new()),
+                feedback: Vec::new(),
+                follow_up_date: Some(String::new()),
+                workshop_id: Some(EntityId::new_serial("base48")),
+                survey_id: Some(EntityId::new_serial("base48")),
+            };
+            let original = item.clone();
+            let patch = CollaborationRecordPatch {
+                name: Some("Patched CollaborationRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                session_type: Some("patched-48".to_string()),
+                title: Some("patched-48".to_string()),
+                participants: Some(vec![EntityId::new_serial("new48")]),
+                facilitator_id: Some(EntityId::new_serial("new48")),
+                start_time: Some("patched-48".to_string()),
+                end_time: Some("patched-48".to_string()),
+                location: Some("patched-48".to_string()),
+                agenda: Some(vec!["patched-48".to_string()]),
+                outcomes: Some(vec!["patched-48".to_string()]),
+                action_items: Some(vec!["patched-48".to_string()]),
+                decision_ids: Some(vec![EntityId::new_serial("new48")]),
+                issue_ids: Some(vec![EntityId::new_serial("new48")]),
+                document_ids: Some(vec![EntityId::new_serial("new48")]),
+                recording_ref: Some("patched-48".to_string()),
+                feedback: Some(vec![TaggedNote { tag: "new48".into(), text: "new-note48".into() }]),
+                follow_up_date: Some("patched-48".to_string()),
+                workshop_id: Some(EntityId::new_serial("new48")),
+                survey_id: Some(EntityId::new_serial("new48")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched CollaborationRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn analysis_record_patch_round_trips() {
+            let mut item = AnalysisRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("analysisrecord"), "Base AnalysisRecord") },
+                kind: AnalysisKind::Gap,
+                title: String::new(),
+                parameters: Vec::new(),
+                input_entity_ids: Vec::new(),
+                output_summary: TextField::default(),
+                findings: Vec::new(),
+                metrics: Vec::new(),
+                charts: Vec::new(),
+                run_by: Some(EntityId::new_serial("base49")),
+                run_at: Some(String::new()),
+                duration_ms: Some(0),
+                tool_version: Some(String::new()),
+                scenario_id: Some(EntityId::new_serial("base49")),
+                report_id: Some(EntityId::new_serial("base49")),
+                confidence: Some(String::new()),
+                limitations: Vec::new(),
+                recommendations: Vec::new(),
+                raw_result_ref: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = AnalysisRecordPatch {
+                name: Some("Patched AnalysisRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                kind: Some(AnalysisKind::Conflict),
+                title: Some("patched-49".to_string()),
+                parameters: Some(vec!["patched-49".to_string()]),
+                input_entity_ids: Some(vec![EntityId::new_serial("new49")]),
+                output_summary: Some(TextField::plain("patched-49")),
+                findings: Some(vec!["patched-49".to_string()]),
+                metrics: Some(vec!["patched-49".to_string()]),
+                charts: Some(vec!["patched-49".to_string()]),
+                run_by: Some(EntityId::new_serial("new49")),
+                run_at: Some("patched-49".to_string()),
+                duration_ms: Some(7),
+                tool_version: Some("patched-49".to_string()),
+                scenario_id: Some(EntityId::new_serial("new49")),
+                report_id: Some(EntityId::new_serial("new49")),
+                confidence: Some("patched-49".to_string()),
+                limitations: Some(vec!["patched-49".to_string()]),
+                recommendations: Some(vec!["patched-49".to_string()]),
+                raw_result_ref: Some("patched-49".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched AnalysisRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn report_record_patch_round_trips() {
+            let mut item = ReportRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("reportrecord"), "Base ReportRecord") },
+                kind: ReportKind::ExecutiveSummary,
+                title: String::new(),
+                audience: Vec::new(),
+                sections: Vec::new(),
+                generated_at: Some(String::new()),
+                generated_by: Some(EntityId::new_serial("base50")),
+                analysis_ids: Vec::new(),
+                format: Some(String::new()),
+                file_ref: Some(String::new()),
+                distribution_list: Vec::new(),
+                approval_status: ValidationStatus::Pending,
+                approver_id: Some(EntityId::new_serial("base50")),
+                version: String::new(),
+                template_id: Some(EntityId::new_serial("base50")),
+                parameters: Vec::new(),
+                confidentiality: Some(String::new()),
+                expiry_date: Some(String::new()),
+                related_decision_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ReportRecordPatch {
+                name: Some("Patched ReportRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                kind: Some(ReportKind::ProgramOverview),
+                title: Some("patched-50".to_string()),
+                audience: Some(vec!["patched-50".to_string()]),
+                sections: Some(vec!["patched-50".to_string()]),
+                generated_at: Some("patched-50".to_string()),
+                generated_by: Some(EntityId::new_serial("new50")),
+                analysis_ids: Some(vec![EntityId::new_serial("new50")]),
+                format: Some("patched-50".to_string()),
+                file_ref: Some("patched-50".to_string()),
+                distribution_list: Some(vec![EntityId::new_serial("new50")]),
+                approval_status: Some(ValidationStatus::Passed),
+                approver_id: Some(EntityId::new_serial("new50")),
+                version: Some("patched-50".to_string()),
+                template_id: Some(EntityId::new_serial("new50")),
+                parameters: Some(vec!["patched-50".to_string()]),
+                confidentiality: Some("patched-50".to_string()),
+                expiry_date: Some("patched-50".to_string()),
+                related_decision_ids: Some(vec![EntityId::new_serial("new50")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ReportRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn search_filter_patch_round_trips() {
+            let mut item = SearchFilter {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("searchfilter"), "Base SearchFilter") },
+                filter_name: String::new(),
+                filter_description: Some(TextField::default()),
+                keywords: Vec::new(),
+                categories: Vec::new(),
+                owner_ids: Vec::new(),
+                statuses: Vec::new(),
+                priorities: Vec::new(),
+                sources: Vec::new(),
+                date_from: Some(String::new()),
+                date_to: Some(String::new()),
+                entity_kinds: Vec::new(),
+                tag_filters: Vec::new(),
+                sort_field: Some(String::new()),
+                sort_direction: Some(String::new()),
+                is_public: false,
+                created_by: Some(EntityId::new_serial("base51")),
+                last_used: Some(String::new()),
+                use_count: 0,
+                pinned: false,
+            };
+            let original = item.clone();
+            let patch = SearchFilterPatch {
+                name: Some("Patched SearchFilter".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                filter_name: Some("patched-51".to_string()),
+                filter_description: Some(TextField::plain("patched-51")),
+                keywords: Some(vec!["patched-51".to_string()]),
+                categories: Some(vec!["patched-51".to_string()]),
+                owner_ids: Some(vec![EntityId::new_serial("new51")]),
+                statuses: Some(vec![LifecycleStatus::Proposed]),
+                priorities: Some(vec![Priority::Essential]),
+                sources: Some(vec!["patched-51".to_string()]),
+                date_from: Some("patched-51".to_string()),
+                date_to: Some("patched-51".to_string()),
+                entity_kinds: Some(vec!["patched-51".to_string()]),
+                tag_filters: Some(vec!["patched-51".to_string()]),
+                sort_field: Some("patched-51".to_string()),
+                sort_direction: Some("patched-51".to_string()),
+                is_public: Some(true),
+                created_by: Some(EntityId::new_serial("new51")),
+                last_used: Some("patched-51".to_string()),
+                use_count: Some(7),
+                pinned: Some(true),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched SearchFilter");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn status_record_patch_round_trips() {
+            let mut item = StatusRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("statusrecord"), "Base StatusRecord") },
+                subject_id: EntityId::new_serial("base52"),
+                subject_kind: String::new(),
+                record_status: LifecycleStatus::Draft,
+                previous_status: Some(LifecycleStatus::Draft),
+                changed_by: Some(EntityId::new_serial("base52")),
+                changed_at: Some(String::new()),
+                reason: Some(TextField::default()),
+                blockers: Vec::new(),
+                next_actions: Vec::new(),
+                due_date: Some(String::new()),
+                progress_percent: Some(0.0),
+                health: Some(String::new()),
+                escalation_level: Some(String::new()),
+                related_issue_ids: Vec::new(),
+                related_risk_ids: Vec::new(),
+                milestone_id: Some(EntityId::new_serial("base52")),
+                reporting_period: Some(String::new()),
+                status_notes: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = StatusRecordPatch {
+                name: Some("Patched StatusRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                subject_id: Some(EntityId::new_serial("new52")),
+                subject_kind: Some("patched-52".to_string()),
+                record_status: Some(LifecycleStatus::Proposed),
+                previous_status: Some(LifecycleStatus::Proposed),
+                changed_by: Some(EntityId::new_serial("new52")),
+                changed_at: Some("patched-52".to_string()),
+                reason: Some(TextField::plain("patched-52")),
+                blockers: Some(vec!["patched-52".to_string()]),
+                next_actions: Some(vec!["patched-52".to_string()]),
+                due_date: Some("patched-52".to_string()),
+                progress_percent: Some(42.0),
+                health: Some("patched-52".to_string()),
+                escalation_level: Some("patched-52".to_string()),
+                related_issue_ids: Some(vec![EntityId::new_serial("new52")]),
+                related_risk_ids: Some(vec![EntityId::new_serial("new52")]),
+                milestone_id: Some(EntityId::new_serial("new52")),
+                reporting_period: Some("patched-52".to_string()),
+                status_notes: Some(vec![TaggedNote { tag: "new52".into(), text: "new-note52".into() }]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched StatusRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn workshop_patch_round_trips() {
+            let mut item = Workshop {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("workshop"), "Base Workshop") },
+                workshop_type: String::new(),
+                objectives: Vec::new(),
+                agenda: Vec::new(),
+                facilitator_id: Some(EntityId::new_serial("base53")),
+                participants: Vec::new(),
+                scheduled_start: Some(String::new()),
+                scheduled_end: Some(String::new()),
+                location: Some(String::new()),
+                materials: Vec::new(),
+                methods: Vec::new(),
+                outputs: Vec::new(),
+                decisions: Vec::new(),
+                issues: Vec::new(),
+                follow_up_actions: Vec::new(),
+                feedback: Vec::new(),
+                recording_ref: Some(String::new()),
+                budget: Some(0.0),
+                workshop_status: LifecycleStatus::Draft,
+                survey_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = WorkshopPatch {
+                name: Some("Patched Workshop".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                workshop_type: Some("patched-53".to_string()),
+                objectives: Some(vec!["patched-53".to_string()]),
+                agenda: Some(vec!["patched-53".to_string()]),
+                facilitator_id: Some(EntityId::new_serial("new53")),
+                participants: Some(vec![EntityId::new_serial("new53")]),
+                scheduled_start: Some("patched-53".to_string()),
+                scheduled_end: Some("patched-53".to_string()),
+                location: Some("patched-53".to_string()),
+                materials: Some(vec!["patched-53".to_string()]),
+                methods: Some(vec!["patched-53".to_string()]),
+                outputs: Some(vec!["patched-53".to_string()]),
+                decisions: Some(vec![EntityId::new_serial("new53")]),
+                issues: Some(vec![EntityId::new_serial("new53")]),
+                follow_up_actions: Some(vec!["patched-53".to_string()]),
+                feedback: Some(vec![TaggedNote { tag: "new53".into(), text: "new-note53".into() }]),
+                recording_ref: Some("patched-53".to_string()),
+                budget: Some(42.0),
+                workshop_status: Some(LifecycleStatus::Proposed),
+                survey_ids: Some(vec![EntityId::new_serial("new53")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Workshop");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn survey_patch_round_trips() {
+            let mut item = Survey {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("survey"), "Base Survey") },
+                survey_type: String::new(),
+                title: String::new(),
+                objectives: Vec::new(),
+                questions: Vec::new(),
+                target_audience: Vec::new(),
+                distribution_channels: Vec::new(),
+                launch_date: Some(String::new()),
+                close_date: Some(String::new()),
+                response_count: 0,
+                response_rate: Some(0.0),
+                findings: Vec::new(),
+                themes: Vec::new(),
+                recommendations: Vec::new(),
+                confidentiality: Some(String::new()),
+                consent_process: Vec::new(),
+                analysis_id: Some(EntityId::new_serial("base54")),
+                workshop_id: Some(EntityId::new_serial("base54")),
+                owner_id: Some(EntityId::new_serial("base54")),
+                survey_status: LifecycleStatus::Draft,
+            };
+            let original = item.clone();
+            let patch = SurveyPatch {
+                name: Some("Patched Survey".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                survey_type: Some("patched-54".to_string()),
+                title: Some("patched-54".to_string()),
+                objectives: Some(vec!["patched-54".to_string()]),
+                questions: Some(vec!["patched-54".to_string()]),
+                target_audience: Some(vec![EntityId::new_serial("new54")]),
+                distribution_channels: Some(vec!["patched-54".to_string()]),
+                launch_date: Some("patched-54".to_string()),
+                close_date: Some("patched-54".to_string()),
+                response_count: Some(7),
+                response_rate: Some(42.0),
+                findings: Some(vec!["patched-54".to_string()]),
+                themes: Some(vec!["patched-54".to_string()]),
+                recommendations: Some(vec!["patched-54".to_string()]),
+                confidentiality: Some("patched-54".to_string()),
+                consent_process: Some(vec!["patched-54".to_string()]),
+                analysis_id: Some(EntityId::new_serial("new54")),
+                workshop_id: Some(EntityId::new_serial("new54")),
+                owner_id: Some(EntityId::new_serial("new54")),
+                survey_status: Some(LifecycleStatus::Proposed),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Survey");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn issue_patch_round_trips() {
+            let mut item = Issue {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("issue"), "Base Issue") },
+                issue_type: String::new(),
+                summary: TextField::default(),
+                issue_description: TextField::default(),
+                severity: IssueSeverity::Cosmetic,
+                issue_priority: Priority::Mandatory,
+                reporter_id: Some(EntityId::new_serial("base55")),
+                assignee_id: Some(EntityId::new_serial("base55")),
+                affected_entity_ids: Vec::new(),
+                root_cause: Some(TextField::default()),
+                resolution: Some(TextField::default()),
+                workaround: Some(TextField::default()),
+                due_date: Some(String::new()),
+                resolved_date: Some(String::new()),
+                related_conflict_ids: Vec::new(),
+                related_risk_ids: Vec::new(),
+                decision_id: Some(EntityId::new_serial("base55")),
+                comments: Vec::new(),
+                attachments: Vec::new(),
+                escalation_level: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = IssuePatch {
+                name: Some("Patched Issue".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                issue_type: Some("patched-55".to_string()),
+                summary: Some(TextField::plain("patched-55")),
+                issue_description: Some(TextField::plain("patched-55")),
+                severity: Some(IssueSeverity::Minor),
+                issue_priority: Some(Priority::Essential),
+                reporter_id: Some(EntityId::new_serial("new55")),
+                assignee_id: Some(EntityId::new_serial("new55")),
+                affected_entity_ids: Some(vec![EntityId::new_serial("new55")]),
+                root_cause: Some(TextField::plain("patched-55")),
+                resolution: Some(TextField::plain("patched-55")),
+                workaround: Some(TextField::plain("patched-55")),
+                due_date: Some("patched-55".to_string()),
+                resolved_date: Some("patched-55".to_string()),
+                related_conflict_ids: Some(vec![EntityId::new_serial("new55")]),
+                related_risk_ids: Some(vec![EntityId::new_serial("new55")]),
+                decision_id: Some(EntityId::new_serial("new55")),
+                comments: Some(vec![TaggedNote { tag: "new55".into(), text: "new-note55".into() }]),
+                attachments: Some(vec![EntityId::new_serial("new55")]),
+                escalation_level: Some("patched-55".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Issue");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn audit_event_patch_round_trips() {
+            let mut item = AuditEvent {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("auditevent"), "Base AuditEvent") },
+                action: AuditAction::Created,
+                actor_id: Some(EntityId::new_serial("base56")),
+                subject_id: EntityId::new_serial("base56"),
+                subject_kind: String::new(),
+                timestamp: String::new(),
+                details: TextField::default(),
+                before_state: Some(String::new()),
+                after_state: Some(String::new()),
+                ip_address: Some(String::new()),
+                client: Some(String::new()),
+                session_id: Some(String::new()),
+                change_record_id: Some(EntityId::new_serial("base56")),
+                trace_link: Some(TraceLink::new(EntityId::new_serial("tfrom56"), EntityId::new_serial("tto56"), TraceKind::FullAuditTrail)),
+                success: false,
+                error_message: Some(String::new()),
+                correlation_id: Some(String::new()),
+                compliance_tags: Vec::new(),
+                retention_until: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = AuditEventPatch {
+                name: Some("Patched AuditEvent".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                action: Some(AuditAction::Updated),
+                actor_id: Some(EntityId::new_serial("new56")),
+                subject_id: Some(EntityId::new_serial("new56")),
+                subject_kind: Some("patched-56".to_string()),
+                timestamp: Some("patched-56".to_string()),
+                details: Some(TextField::plain("patched-56")),
+                before_state: Some("patched-56".to_string()),
+                after_state: Some("patched-56".to_string()),
+                ip_address: Some("patched-56".to_string()),
+                client: Some("patched-56".to_string()),
+                session_id: Some("patched-56".to_string()),
+                change_record_id: Some(EntityId::new_serial("new56")),
+                trace_link: Some(TraceLink::new(EntityId::new_serial("tfrom56n"), EntityId::new_serial("tto56n"), TraceKind::FullAuditTrail)),
+                success: Some(true),
+                error_message: Some("patched-56".to_string()),
+                correlation_id: Some("patched-56".to_string()),
+                compliance_tags: Some(vec!["patched-56".to_string()]),
+                retention_until: Some("patched-56".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched AuditEvent");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn template_record_patch_round_trips() {
+            let mut item = TemplateRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("templaterecord"), "Base TemplateRecord") },
+                template_type: String::new(),
+                sector: Some(String::new()),
+                project_type: Some(String::new()),
+                version: String::new(),
+                content_ref: Some(String::new()),
+                entity_kinds: Vec::new(),
+                default_fields: Vec::new(),
+                checklists: Vec::new(),
+                standards: Vec::new(),
+                applicability: Vec::new(),
+                author_id: Some(EntityId::new_serial("base57")),
+                approval_status: ValidationStatus::Pending,
+                usage_count: 0,
+                last_applied: Some(String::new()),
+                customization_notes: Vec::new(),
+                related_knowledge_ids: Vec::new(),
+                benchmark_ids: Vec::new(),
+                license: Some(String::new()),
+                source_organization: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = TemplateRecordPatch {
+                name: Some("Patched TemplateRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                template_type: Some("patched-57".to_string()),
+                sector: Some("patched-57".to_string()),
+                project_type: Some("patched-57".to_string()),
+                version: Some("patched-57".to_string()),
+                content_ref: Some("patched-57".to_string()),
+                entity_kinds: Some(vec!["patched-57".to_string()]),
+                default_fields: Some(vec!["patched-57".to_string()]),
+                checklists: Some(vec!["patched-57".to_string()]),
+                standards: Some(vec!["patched-57".to_string()]),
+                applicability: Some(vec!["patched-57".to_string()]),
+                author_id: Some(EntityId::new_serial("new57")),
+                approval_status: Some(ValidationStatus::Passed),
+                usage_count: Some(7),
+                last_applied: Some("patched-57".to_string()),
+                customization_notes: Some(vec!["patched-57".to_string()]),
+                related_knowledge_ids: Some(vec![EntityId::new_serial("new57")]),
+                benchmark_ids: Some(vec![EntityId::new_serial("new57")]),
+                license: Some("patched-57".to_string()),
+                source_organization: Some("patched-57".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched TemplateRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn knowledge_record_patch_round_trips() {
+            let mut item = KnowledgeRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("knowledgerecord"), "Base KnowledgeRecord") },
+                topic: String::new(),
+                category: String::new(),
+                summary: TextField::default(),
+                content: TextField::default(),
+                sources: Vec::new(),
+                references: Vec::new(),
+                lessons_learned: Vec::new(),
+                best_practices: Vec::new(),
+                applicable_sectors: Vec::new(),
+                related_entity_kinds: Vec::new(),
+                author_ids: Vec::new(),
+                expertise_level: Some(String::new()),
+                validation_status: ValidationStatus::Pending,
+                last_reviewed: Some(String::new()),
+                keywords: Vec::new(),
+                attachments: Vec::new(),
+                citations: Vec::new(),
+                usage_count: 0,
+            };
+            let original = item.clone();
+            let patch = KnowledgeRecordPatch {
+                name: Some("Patched KnowledgeRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                topic: Some("patched-58".to_string()),
+                category: Some("patched-58".to_string()),
+                summary: Some(TextField::plain("patched-58")),
+                content: Some(TextField::plain("patched-58")),
+                sources: Some(vec!["patched-58".to_string()]),
+                references: Some(vec!["patched-58".to_string()]),
+                lessons_learned: Some(vec!["patched-58".to_string()]),
+                best_practices: Some(vec!["patched-58".to_string()]),
+                applicable_sectors: Some(vec!["patched-58".to_string()]),
+                related_entity_kinds: Some(vec!["patched-58".to_string()]),
+                author_ids: Some(vec![EntityId::new_serial("new58")]),
+                expertise_level: Some("patched-58".to_string()),
+                validation_status: Some(ValidationStatus::Passed),
+                last_reviewed: Some("patched-58".to_string()),
+                keywords: Some(vec!["patched-58".to_string()]),
+                attachments: Some(vec![EntityId::new_serial("new58")]),
+                citations: Some(vec!["patched-58".to_string()]),
+                usage_count: Some(7),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched KnowledgeRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn benchmark_record_patch_round_trips() {
+            let mut item = BenchmarkRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("benchmarkrecord"), "Base BenchmarkRecord") },
+                benchmark_name: String::new(),
+                sector: String::new(),
+                metric: String::new(),
+                value: 0.0,
+                unit: String::new(),
+                sample_size: Some(0),
+                source: Some(String::new()),
+                collection_year: Some(0),
+                geography: Some(String::new()),
+                building_type: Some(String::new()),
+                confidence: Some(String::new()),
+                methodology: Some(String::new()),
+                applicable_element_kinds: Vec::new(),
+                related_requirement_ids: Vec::new(),
+                comparison_notes: Vec::new(),
+                limitations: Vec::new(),
+                license: Some(String::new()),
+                knowledge_id: Some(EntityId::new_serial("base59")),
+                last_verified: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = BenchmarkRecordPatch {
+                name: Some("Patched BenchmarkRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                benchmark_name: Some("patched-59".to_string()),
+                sector: Some("patched-59".to_string()),
+                metric: Some("patched-59".to_string()),
+                value: Some(42.0),
+                unit: Some("patched-59".to_string()),
+                sample_size: Some(7),
+                source: Some("patched-59".to_string()),
+                collection_year: Some(7),
+                geography: Some("patched-59".to_string()),
+                building_type: Some("patched-59".to_string()),
+                confidence: Some("patched-59".to_string()),
+                methodology: Some("patched-59".to_string()),
+                applicable_element_kinds: Some(vec!["patched-59".to_string()]),
+                related_requirement_ids: Some(vec![EntityId::new_serial("new59")]),
+                comparison_notes: Some(vec!["patched-59".to_string()]),
+                limitations: Some(vec!["patched-59".to_string()]),
+                license: Some("patched-59".to_string()),
+                knowledge_id: Some(EntityId::new_serial("new59")),
+                last_verified: Some("patched-59".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched BenchmarkRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn assumption_patch_round_trips() {
+            let mut item = Assumption {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("assumption"), "Base Assumption") },
+                statement: TextField::default(),
+                basis: Some(TextField::default()),
+                confidence_level: Some(String::new()),
+                impact_if_false: Some(TextField::default()),
+                related_entity_ids: Vec::new(),
+                validation_status: ValidationStatus::Pending,
+                validated_by: Some(EntityId::new_serial("base60")),
+                validation_date: Some(String::new()),
+                owner_id: Some(EntityId::new_serial("base60")),
+                review_cycle: Some(String::new()),
+                source: Some(String::new()),
+                category: Some(String::new()),
+                dependencies: Vec::new(),
+                mitigation: Vec::new(),
+                linked_requirement_ids: Vec::new(),
+                linked_risk_ids: Vec::new(),
+                expiration_date: Some(String::new()),
+                status_notes: Vec::new(),
+                document_refs: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = AssumptionPatch {
+                name: Some("Patched Assumption".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                statement: Some(TextField::plain("patched-60")),
+                basis: Some(TextField::plain("patched-60")),
+                confidence_level: Some("patched-60".to_string()),
+                impact_if_false: Some(TextField::plain("patched-60")),
+                related_entity_ids: Some(vec![EntityId::new_serial("new60")]),
+                validation_status: Some(ValidationStatus::Passed),
+                validated_by: Some(EntityId::new_serial("new60")),
+                validation_date: Some("patched-60".to_string()),
+                owner_id: Some(EntityId::new_serial("new60")),
+                review_cycle: Some("patched-60".to_string()),
+                source: Some("patched-60".to_string()),
+                category: Some("patched-60".to_string()),
+                dependencies: Some(vec!["patched-60".to_string()]),
+                mitigation: Some(vec!["patched-60".to_string()]),
+                linked_requirement_ids: Some(vec![EntityId::new_serial("new60")]),
+                linked_risk_ids: Some(vec![EntityId::new_serial("new60")]),
+                expiration_date: Some("patched-60".to_string()),
+                status_notes: Some(vec![TaggedNote { tag: "new60".into(), text: "new-note60".into() }]),
+                document_refs: Some(vec!["patched-60".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched Assumption");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn constraint_record_patch_round_trips() {
+            let mut item = ConstraintRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("constraintrecord"), "Base ConstraintRecord") },
+                constraint_type: String::new(),
+                summary: TextField::default(),
+                severity: RiskLevel::Negligible,
+                affected_entity_ids: Vec::new(),
+                source: Some(String::new()),
+                regulatory_basis: Vec::new(),
+                mitigation_options: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base61")),
+                effective_date: Some(String::new()),
+                expiry_date: Some(String::new()),
+                waiver_status: Some(String::new()),
+                waiver_approver: Some(EntityId::new_serial("base61")),
+                impact_assessment: Some(TextField::default()),
+                resolution_plan: Vec::new(),
+                related_requirement_ids: Vec::new(),
+                related_decision_ids: Vec::new(),
+                monitoring_frequency: Some(String::new()),
+                compliance_status: ValidationStatus::Pending,
+                exceptions: Vec::new(),
+                trace_links: Vec::new(),
+                escalation_contact_id: Some(EntityId::new_serial("base61")),
+            };
+            let original = item.clone();
+            let patch = ConstraintRecordPatch {
+                name: Some("Patched ConstraintRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                constraint_type: Some("patched-61".to_string()),
+                summary: Some(TextField::plain("patched-61")),
+                severity: Some(RiskLevel::Low),
+                affected_entity_ids: Some(vec![EntityId::new_serial("new61")]),
+                source: Some("patched-61".to_string()),
+                regulatory_basis: Some(vec!["patched-61".to_string()]),
+                mitigation_options: Some(vec!["patched-61".to_string()]),
+                owner_id: Some(EntityId::new_serial("new61")),
+                effective_date: Some("patched-61".to_string()),
+                expiry_date: Some("patched-61".to_string()),
+                waiver_status: Some("patched-61".to_string()),
+                waiver_approver: Some(EntityId::new_serial("new61")),
+                impact_assessment: Some(TextField::plain("patched-61")),
+                resolution_plan: Some(vec!["patched-61".to_string()]),
+                related_requirement_ids: Some(vec![EntityId::new_serial("new61")]),
+                related_decision_ids: Some(vec![EntityId::new_serial("new61")]),
+                monitoring_frequency: Some("patched-61".to_string()),
+                compliance_status: Some(ValidationStatus::Passed),
+                exceptions: Some(vec!["patched-61".to_string()]),
+                trace_links: Some(vec![TraceLink::new(EntityId::new_serial("tfrom61n"), EntityId::new_serial("tto61n"), TraceKind::FullAuditTrail)]),
+                escalation_contact_id: Some(EntityId::new_serial("new61")),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ConstraintRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn compliance_record_patch_round_trips() {
+            let mut item = ComplianceRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("compliancerecord"), "Base ComplianceRecord") },
+                standard_ref: String::new(),
+                obligation: TextField::default(),
+                compliance_status: ValidationStatus::Pending,
+                evidence_refs: Vec::new(),
+                auditor_id: Some(EntityId::new_serial("base62")),
+                audit_date: Some(String::new()),
+                next_review: Some(String::new()),
+                affected_entity_ids: Vec::new(),
+                gap_analysis: Vec::new(),
+                remediation_plan: Vec::new(),
+                owner_id: Some(EntityId::new_serial("base62")),
+                severity: RiskLevel::Negligible,
+                regulatory_body: Some(String::new()),
+                certification_target: Some(String::new()),
+                waiver_status: Some(String::new()),
+                related_requirement_ids: Vec::new(),
+                monitoring_method: Some(String::new()),
+                reporting_frequency: Some(String::new()),
+                penalties: Vec::new(),
+                corrective_actions: Vec::new(),
+                document_refs: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = ComplianceRecordPatch {
+                name: Some("Patched ComplianceRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                standard_ref: Some("patched-62".to_string()),
+                obligation: Some(TextField::plain("patched-62")),
+                compliance_status: Some(ValidationStatus::Passed),
+                evidence_refs: Some(vec!["patched-62".to_string()]),
+                auditor_id: Some(EntityId::new_serial("new62")),
+                audit_date: Some("patched-62".to_string()),
+                next_review: Some("patched-62".to_string()),
+                affected_entity_ids: Some(vec![EntityId::new_serial("new62")]),
+                gap_analysis: Some(vec!["patched-62".to_string()]),
+                remediation_plan: Some(vec!["patched-62".to_string()]),
+                owner_id: Some(EntityId::new_serial("new62")),
+                severity: Some(RiskLevel::Low),
+                regulatory_body: Some("patched-62".to_string()),
+                certification_target: Some("patched-62".to_string()),
+                waiver_status: Some("patched-62".to_string()),
+                related_requirement_ids: Some(vec![EntityId::new_serial("new62")]),
+                monitoring_method: Some("patched-62".to_string()),
+                reporting_frequency: Some("patched-62".to_string()),
+                penalties: Some(vec!["patched-62".to_string()]),
+                corrective_actions: Some(vec!["patched-62".to_string()]),
+                document_refs: Some(vec!["patched-62".to_string()]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ComplianceRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn approval_record_patch_round_trips() {
+            let mut item = ApprovalRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("approvalrecord"), "Base ApprovalRecord") },
+                approval_type: String::new(),
+                subject_id: EntityId::new_serial("base63"),
+                approver_ids: Vec::new(),
+                approval_date: Some(String::new()),
+                conditions: Vec::new(),
+                approval_status: LifecycleStatus::Draft,
+                expiry_date: Some(String::new()),
+                delegation_chain: Vec::new(),
+                evidence_refs: Vec::new(),
+                related_decision_id: Some(EntityId::new_serial("base63")),
+                related_change_id: Some(EntityId::new_serial("base63")),
+                authority_basis: Vec::new(),
+                signature_method: Some(String::new()),
+                rejection_reason: Some(TextField::default()),
+                resubmission_date: Some(String::new()),
+                notification_list: Vec::new(),
+                workflow_step: Some(String::new()),
+                version: Some(String::new()),
+                audit_trail_ref: Some(String::new()),
+            };
+            let original = item.clone();
+            let patch = ApprovalRecordPatch {
+                name: Some("Patched ApprovalRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                approval_type: Some("patched-63".to_string()),
+                subject_id: Some(EntityId::new_serial("new63")),
+                approver_ids: Some(vec![EntityId::new_serial("new63")]),
+                approval_date: Some("patched-63".to_string()),
+                conditions: Some(vec!["patched-63".to_string()]),
+                approval_status: Some(LifecycleStatus::Proposed),
+                expiry_date: Some("patched-63".to_string()),
+                delegation_chain: Some(vec![EntityId::new_serial("new63")]),
+                evidence_refs: Some(vec!["patched-63".to_string()]),
+                related_decision_id: Some(EntityId::new_serial("new63")),
+                related_change_id: Some(EntityId::new_serial("new63")),
+                authority_basis: Some(vec!["patched-63".to_string()]),
+                signature_method: Some("patched-63".to_string()),
+                rejection_reason: Some(TextField::plain("patched-63")),
+                resubmission_date: Some("patched-63".to_string()),
+                notification_list: Some(vec![EntityId::new_serial("new63")]),
+                workflow_step: Some("patched-63".to_string()),
+                version: Some("patched-63".to_string()),
+                audit_trail_ref: Some("patched-63".to_string()),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched ApprovalRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+        #[test]
+        fn meeting_record_patch_round_trips() {
+            let mut item = MeetingRecord {
+                header: EntityHeader { description: Some(TextField::plain("base-desc")), ..EntityHeader::new(EntityId::new_serial("meetingrecord"), "Base MeetingRecord") },
+                meeting_type: String::new(),
+                scheduled_date: Some(String::new()),
+                duration: Some(String::new()),
+                location: Some(String::new()),
+                chair_id: Some(EntityId::new_serial("base64")),
+                attendee_ids: Vec::new(),
+                agenda_items: Vec::new(),
+                minutes: Some(TextField::default()),
+                action_items: Vec::new(),
+                decisions_made: Vec::new(),
+                document_refs: Vec::new(),
+                follow_up_date: Some(String::new()),
+                recording_ref: Some(String::new()),
+                quorum_met: false,
+                meeting_status: LifecycleStatus::Draft,
+                workshop_id: Some(EntityId::new_serial("base64")),
+                stakeholder_ids: Vec::new(),
+                requirement_ids: Vec::new(),
+                issue_ids: Vec::new(),
+                approval_ids: Vec::new(),
+            };
+            let original = item.clone();
+            let patch = MeetingRecordPatch {
+                name: Some("Patched MeetingRecord".to_string()),
+                description: Some(TextField::plain("desc")),
+                status: Some(LifecycleStatus::Approved),
+                priority: Some(Priority::Mandatory),
+                ownership: Some(Ownership { owner_id: Some(EntityId::new_serial("owner")), authority_id: None, consultant_ids: Vec::new(), participant_ids: Vec::new() }),
+                tags: Some(vec!["tag".to_string()]),
+                notes: Some(vec![TaggedNote { tag: "t".into(), text: "n".into() }]),
+                timestamps: Some(TimestampMeta { created: "2020-01-01T00:00:00Z".into(), updated: "2020-01-02T00:00:00Z".into(), created_by: None, updated_by: None }),
+                meeting_type: Some("patched-64".to_string()),
+                scheduled_date: Some("patched-64".to_string()),
+                duration: Some("patched-64".to_string()),
+                location: Some("patched-64".to_string()),
+                chair_id: Some(EntityId::new_serial("new64")),
+                attendee_ids: Some(vec![EntityId::new_serial("new64")]),
+                agenda_items: Some(vec!["patched-64".to_string()]),
+                minutes: Some(TextField::plain("patched-64")),
+                action_items: Some(vec!["patched-64".to_string()]),
+                decisions_made: Some(vec![EntityId::new_serial("new64")]),
+                document_refs: Some(vec!["patched-64".to_string()]),
+                follow_up_date: Some("patched-64".to_string()),
+                recording_ref: Some("patched-64".to_string()),
+                quorum_met: Some(true),
+                meeting_status: Some(LifecycleStatus::Proposed),
+                workshop_id: Some(EntityId::new_serial("new64")),
+                stakeholder_ids: Some(vec![EntityId::new_serial("new64")]),
+                requirement_ids: Some(vec![EntityId::new_serial("new64")]),
+                issue_ids: Some(vec![EntityId::new_serial("new64")]),
+                approval_ids: Some(vec![EntityId::new_serial("new64")]),
+                ..Default::default()
+            };
+            let inverse = item.apply_patch(&patch);
+            assert_ne!(item, original);
+            assert_eq!(item.header.name, "Patched MeetingRecord");
+            item.apply_patch(&inverse);
+            assert_eq!(item, original);
+        }
+
+    }
 }
 
 mod report {

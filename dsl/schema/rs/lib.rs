@@ -6,7 +6,7 @@
 //! line, and both re-parse to the same value.
 
 use dsl_core::{format_f64, lex, parse_f64, Limits, SpannedToken, TextError, TextSpan, TokenClass, TokenKind};
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 //#region 🔖Shape
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
@@ -39,8 +39,12 @@ pub enum Shape {
     Record(Box<RecordSpec>),
     /// Wraps the inner shape in `{ ... }`.
     Block(Box<Shape>),
-    /// Keyword-dispatched, order-preserving repeated records: `(keyword, spec)` per variant.
-    Statements(Vec<(String, RecordSpec)>),
+    /// Keyword-dispatched, order-preserving repeated records: `(keyword, spec_fn)` per variant.
+    /// `spec_fn` is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec` — a genuinely
+    /// self-referential grammar (a recursive block tree whose own variant table contains itself)
+    /// would otherwise recurse infinitely just building the table. Calling `spec_fn()` one level at
+    /// a time bottoms out naturally at real documents' finite depth instead.
+    Statements(Vec<(String, fn() -> RecordSpec)>),
     /// `{ key=value ... }` block, keys sorted on canonical print.
     Map(Box<Shape>),
     /// Dynamic JSON-equivalent literal.
@@ -410,10 +414,10 @@ fn parse_shape(cursor: &mut Cursor<'_>, shape: &Shape, depth: usize) -> Result<F
         Shape::Statements(variants) => {
             let mut out = Vec::new();
             while let Some(keyword) = current_keyword(cursor) {
-                let Some((_, spec)) = variants.iter().find(|(kw, _)| kw == &keyword) else { break };
+                let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == &keyword) else { break };
                 // `parse_record_body` consumes the keyword itself (see its own check below); we
                 // only peek here to decide whether this token starts a known variant at all.
-                let record = parse_record_body(cursor, spec, depth + 1)?;
+                let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
                 out.push((keyword, record));
                 cursor.limits.check_nodes(out.len(), cursor.span())?;
                 if cursor.peek().kind == TokenKind::RBrace || cursor.peek().kind == TokenKind::Eof {
@@ -937,8 +941,8 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
         (FieldValue::Statements(items), Shape::Statements(variants)) => {
             for (keyword, record) in items {
                 writer.new_record();
-                if let Some((_, spec)) = variants.iter().find(|(kw, _)| kw == keyword) {
-                    print_record(record, spec, writer);
+                if let Some((_, spec_fn)) = variants.iter().find(|(kw, _)| kw == keyword) {
+                    print_record(record, &spec_fn(), writer);
                 }
             }
         }
@@ -1085,9 +1089,9 @@ impl<'g> LanguageService<'g> {
         Self { spec }
     }
 
-    fn keywords(&self) -> Vec<&str> {
+    fn keywords(&self) -> Vec<String> {
         let mut out = Vec::new();
-        collect_keywords(self.spec, &mut out);
+        collect_keywords(self.spec, &mut out, &mut HashSet::new());
         out
     }
 
@@ -1095,7 +1099,8 @@ impl<'g> LanguageService<'g> {
         let limits = Limits::default();
         let tokens = lex(text, &limits, true).unwrap_or_default();
         let keywords = self.keywords();
-        dsl_core::token_classes(&tokens, &keywords)
+        let keyword_refs: Vec<&str> = keywords.iter().map(String::as_str).collect();
+        dsl_core::token_classes(&tokens, &keyword_refs)
     }
 
     pub fn diagnostics(&self, text: &str) -> Vec<TextError> {
@@ -1117,32 +1122,38 @@ impl<'g> LanguageService<'g> {
             .map(|f| CompletionItem { label: f.key.clone(), detail: Some(format!("{:?}", f.shape)) })
             .collect();
         for keyword in self.keywords() {
-            items.push(CompletionItem { label: keyword.to_string(), detail: None });
+            items.push(CompletionItem { label: keyword, detail: None });
         }
         items
     }
 }
 
-fn collect_keywords<'a>(spec: &'a RecordSpec, out: &mut Vec<&'a str>) {
+fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet<String>) {
     if let Some(kw) = &spec.keyword {
-        out.push(kw);
+        out.push(kw.clone());
     }
     for field in &spec.fields {
-        collect_shape_keywords(&field.shape, out);
+        collect_shape_keywords(&field.shape, out, seen);
     }
 }
 
-fn collect_shape_keywords<'a>(shape: &'a Shape, out: &mut Vec<&'a str>) {
+/// @emoji 🔁 `seen` guards against a genuinely self-referential `Statements` table (a recursive
+/// block tree whose own variant list contains itself): each `spec_fn()` call is only expanded the
+/// first time its keyword is reached, so the keyword set — which is always finite, even when the
+/// grammar's real nesting isn't — is collected exactly once instead of infinitely.
+fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashSet<String>) {
     match shape {
-        Shape::Record(spec) => collect_keywords(spec, out),
-        Shape::Block(inner) => collect_shape_keywords(inner, out),
+        Shape::Record(spec) => collect_keywords(spec, out, seen),
+        Shape::Block(inner) => collect_shape_keywords(inner, out, seen),
         Shape::Statements(variants) => {
-            for (kw, spec) in variants {
-                out.push(kw);
-                collect_keywords(spec, out);
+            for (kw, spec_fn) in variants {
+                out.push(kw.clone());
+                if seen.insert(kw.clone()) {
+                    collect_keywords(&spec_fn(), out, seen);
+                }
             }
         }
-        Shape::List(inner) | Shape::Tuple(inner, _) | Shape::Map(inner) => collect_shape_keywords(inner, out),
+        Shape::List(inner) | Shape::Tuple(inner, _) | Shape::Map(inner) => collect_shape_keywords(inner, out, seen),
         _ => {}
     }
 }
@@ -1212,7 +1223,7 @@ mod tests {
         RecordSpec::new(
             None,
             RecordLayout::Inline,
-            vec![FieldSpec::new(0, "schema", Shape::Ident), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec())]))],
+            vec![FieldSpec::new(0, "schema", Shape::Ident), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))],
         )
     }
 
@@ -1227,13 +1238,17 @@ mod tests {
     }
 
     // --- primitive 4: recursive sub-blocks ---
+    /// @emoji 🌳 Genuinely self-referential: `children`'s own variant table names `group_spec`
+    /// itself. Lazy `fn() -> RecordSpec` entries make this sound — `group_spec()` doesn't recurse
+    /// just to build the table, only `parse`/`print` calling the stored fn pointer one level at a
+    /// time (as deep as real input actually nests) ever evaluates it again.
     fn group_spec() -> RecordSpec {
         RecordSpec::new(
             Some("group"),
             RecordLayout::Inline,
             vec![
                 FieldSpec::new(0, "id", Shape::Ident).positional(0),
-                FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Ident).positional(0)]))])))).optional(),
+                FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional(),
             ],
         )
     }
@@ -1371,29 +1386,13 @@ mod tests {
 
     // --- limits enforced, not panicking ---
 
-    /// @emoji 🪆 Builds a genuinely self-nesting `group` spec `levels` deep (each level a distinct
-    /// `RecordSpec` value referencing the next — `Shape`/`RecordSpec` are owned, not `'static`, so
-    /// true self-reference isn't representable, but a deep pre-unrolled chain exercises the same
-    /// depth-limit code path identically).
-    fn nested_group_spec(levels: usize) -> RecordSpec {
-        let mut inner = RecordSpec::new(Some("group"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Ident).positional(0)]);
-        for _ in 0..levels {
-            inner = RecordSpec::new(
-                Some("group"),
-                RecordLayout::Inline,
-                vec![
-                    FieldSpec::new(0, "id", Shape::Ident).positional(0),
-                    FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), inner)])))).optional(),
-                ],
-            );
-        }
-        inner
-    }
-
     #[test]
     fn deeply_nested_blocks_hit_the_depth_limit_as_a_diagnostic() {
+        // `group_spec()` (primitive 4, above) is already genuinely self-referential, so it needs no
+        // pre-unrolling to exercise real depth this many levels deep — `parse` only ever expands one
+        // level of its lazy `Statements` fn pointer at a time, following the actual input text.
         let levels = 20;
-        let spec = nested_group_spec(levels);
+        let spec = group_spec();
         let mut nested = String::from("group root");
         for _ in 0..levels {
             nested.push_str(" children { group a");

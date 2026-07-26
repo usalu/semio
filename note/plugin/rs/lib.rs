@@ -43,8 +43,9 @@ static NOTE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "camera")]
 struct NoteCamera {
     #[serde(default)]
     x: f64,
@@ -58,10 +59,11 @@ fn default_zoom() -> f64 {
     1.0
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 enum NoteBlockNode {
     #[serde(rename = "text", rename_all = "camelCase")]
+    #[dsl(key = "text")]
     Text {
         id: String,
         name: String,
@@ -81,6 +83,7 @@ enum NoteBlockNode {
         align: String,
     },
     #[serde(rename = "image", rename_all = "camelCase")]
+    #[dsl(key = "image")]
     Image {
         id: String,
         name: String,
@@ -97,6 +100,7 @@ enum NoteBlockNode {
         image_key: String,
     },
     #[serde(rename = "table", rename_all = "camelCase")]
+    #[dsl(key = "table")]
     Table {
         id: String,
         name: String,
@@ -114,6 +118,7 @@ enum NoteBlockNode {
         rows: Vec<Vec<NoteTableCell>>,
     },
     #[serde(rename = "math", rename_all = "camelCase")]
+    #[dsl(key = "math")]
     Math {
         id: String,
         name: String,
@@ -131,6 +136,7 @@ enum NoteBlockNode {
         display_mode: bool,
     },
     #[serde(rename = "stroke", rename_all = "camelCase")]
+    #[dsl(key = "stroke")]
     Ink {
         id: String,
         name: String,
@@ -149,6 +155,7 @@ enum NoteBlockNode {
         color: [f64; 4],
     },
     #[serde(rename = "group", rename_all = "camelCase")]
+    #[dsl(key = "group")]
     Group {
         id: String,
         name: String,
@@ -162,13 +169,16 @@ enum NoteBlockNode {
         visible: bool,
         #[serde(default)]
         locked: bool,
+        #[dsl(statements, block)]
         children: Vec<NoteBlockNode>,
     },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "r")]
 struct NoteTextRun {
+    #[dsl(positional)]
     text: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     bold: Option<bool>,
@@ -180,8 +190,9 @@ struct NoteTextRun {
     link: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "p")]
 struct NoteTextParagraph {
     runs: Vec<NoteTextRun>,
 }
@@ -190,12 +201,13 @@ fn default_true() -> bool {
     true
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 struct NoteTableCell {
+    #[dsl(positional)]
     content: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 struct NoteImageAsset {
     mime: String,
@@ -206,16 +218,19 @@ struct NoteImageAsset {
     height: Option<f64>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "note", layout = "lines")]
 struct NoteDocument {
     schema: String,
     id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     title: Option<String>,
     #[serde(default = "default_camera")]
+    #[dsl(block)]
     camera: NoteCamera,
     #[serde(default)]
+    #[dsl(statements, block)]
     blocks: Vec<NoteBlockNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
     grid_visible: Option<bool>,
@@ -252,21 +267,46 @@ fn default_camera() -> NoteCamera {
 /// full-document loads have dedicated variants.
 ///
 /// See {@link vcs::Operation} and {@link https://../../../vcs/plugin/rs/lib.rs VcsDemoOperation}.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum NoteOperation {
-    SetCamera { camera: NoteCamera },
+    #[dsl(key = "setCamera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: NoteCamera,
+    },
+    #[dsl(key = "setGridVisible")]
     SetGridVisible { visible: Option<bool> },
+    #[dsl(key = "setGridSpacing")]
     SetGridSpacing { spacing: Option<f64> },
+    #[dsl(key = "setGridSubdivisions")]
     SetGridSubdivisions { value: Option<f64> },
+    #[dsl(key = "setGridOpacity")]
     SetGridOpacity { opacity: Option<f64> },
+    #[dsl(key = "setSnapEnabled")]
     SetSnapEnabled { enabled: Option<bool> },
+    #[dsl(key = "setSnapGridSpacing")]
     SetSnapGridSpacing { spacing: Option<f64> },
+    #[dsl(key = "setPencilWidth")]
     SetPencilWidth { width: Option<f64> },
+    #[dsl(key = "setEraserRadius")]
     SetEraserRadius { radius: Option<f64> },
-    SetBlocks { blocks: Vec<NoteBlockNode> },
-    PutAsset { key: String, asset: NoteImageAsset },
-    SetDocument { document: NoteDocument },
+    #[dsl(key = "setBlocks")]
+    SetBlocks {
+        #[dsl(statements, block)]
+        blocks: Vec<NoteBlockNode>,
+    },
+    #[dsl(key = "putAsset")]
+    PutAsset {
+        key: String,
+        #[dsl(block)]
+        asset: NoteImageAsset,
+    },
+    #[dsl(key = "setDocument")]
+    SetDocument {
+        #[dsl(block)]
+        document: NoteDocument,
+    },
 }
 
 /// 🧩 Snapshot diff wrapping the forward `NoteOperation` — `apply` replays it, `absorb` keeps the latest
@@ -342,940 +382,13 @@ enum NoteCanvasEvent {
 //#endregion 🔖Types
 
 //#region 🔖Dsl
-/// 📜 Hand-rolled lexer, parser and printer shared by `NoteDocument`'s `.note` DSL and by
-/// `NoteOperation`'s compact single-line op encoding (`SetBlocks`/`SetDocument` reprint the same block
-/// and document grammar on one line). Whitespace (including newlines) is never significant to the
-/// parser — `print_dsl` inserts newlines/indentation purely for readability, `print_op` renders the
-/// identical grammar with spaces only. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod note_text {
-    use super::{NoteBlockNode, NoteCamera, NoteDocument, NoteImageAsset, NoteTableCell, NoteTextParagraph, NoteTextRun};
-    use std::collections::{BTreeMap, HashMap};
-
-    //#region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
-    }
-
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: vcs::TextSpan,
-    }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` and `,`
-    /// are ordinary word characters — `key=value` collapses into one token (split later by
-    /// {@link Parser::parse_kv_map}), and only a quoted value forces a token boundary right after `key=`.
-    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
-        Ok(out)
-    }
-    //#endregion Lexer
-
-    //#region Parser
-    #[derive(Clone, Debug)]
-    enum FieldValue {
-        Str(String),
-        Word(String),
-    }
-
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
-    }
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> vcs::TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_lbrace(&self) -> bool {
-            matches!(self.peek(), Tok::LBrace)
-        }
-
-        fn at_rbrace(&self) -> bool {
-            matches!(self.peek(), Tok::RBrace)
-        }
-
-        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            if word != keyword {
-                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-            }
-            Ok(())
-        }
-
-        fn expect_lbrace(&mut self) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::LBrace => Ok(()),
-                other => Err(vcs::TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-            }
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-
-        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
-        /// generic header-field reader every construct (document/camera/grid/block/run/asset) is built on.
-        fn parse_kv_map(&mut self) -> Result<HashMap<String, (FieldValue, vcs::TextSpan)>, vcs::TextError> {
-            let mut map = HashMap::new();
-            loop {
-                let word = match self.peek() {
-                    Tok::Word(w) if w.contains('=') => w.clone(),
-                    _ => break,
-                };
-                let span = self.span();
-                self.bump();
-                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-                let value = if rest.is_empty() {
-                    FieldValue::Str(self.expect_str()?)
-                } else {
-                    FieldValue::Word(rest.to_string())
-                };
-                map.insert(key.to_string(), (value, span));
-            }
-            Ok(map)
-        }
-
-        /// 📚 Greedily reads quoted strings — the list grammar for table `columns`/`row` cells.
-        fn greedy_str_list(&mut self) -> Vec<String> {
-            let mut out = Vec::new();
-            while let Tok::Str(_) = self.peek() {
-                if let Tok::Str(s) = self.bump() {
-                    out.push(s);
-                }
-            }
-            out
-        }
-
-        /// ✒️ Consumes the current token only if it is an `x,y` coordinate pair — the terminator for a
-        /// stroke's `points` list is simply the first token that doesn't match.
-        fn try_point(&mut self) -> Option<[f64; 2]> {
-            if let Tok::Word(w) = self.peek() {
-                if let Some((a, b)) = w.split_once(',') {
-                    if let (Ok(x), Ok(y)) = (a.parse::<f64>(), b.parse::<f64>()) {
-                        self.bump();
-                        return Some([x, y]);
-                    }
-                }
-            }
-            None
-        }
-    }
-
-    type FieldMap = HashMap<String, (FieldValue, vcs::TextSpan)>;
-
-    fn kv_str(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Ok(s.clone()),
-            Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
-            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_opt_str(map: &FieldMap, key: &str) -> Option<String> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Some(s.clone()),
-            _ => None,
-        }
-    }
-
-    fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
-            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
-            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
-        let word = kv_word(map, key, span)?;
-        word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
-    }
-
-    fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => w.parse::<f64>().ok(),
-            _ => None,
-        }
-    }
-
-    fn kv_bool(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<bool, vcs::TextError> {
-        match kv_word(map, key, span)?.as_str() {
-            "true" => Ok(true),
-            "false" => Ok(false),
-            _ => Err(vcs::TextError::expected(format!("field '{key}' must be 'true' or 'false'"), span, "true|false")),
-        }
-    }
-
-    fn kv_opt_bool(map: &FieldMap, key: &str) -> Option<bool> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) if w == "true" => Some(true),
-            Some((FieldValue::Word(w), _)) if w == "false" => Some(false),
-            _ => None,
-        }
-    }
-
-    fn parse_color(word: &str, span: vcs::TextSpan) -> Result<[f64; 4], vcs::TextError> {
-        let parts: Vec<&str> = word.split(',').collect();
-        if parts.len() != 4 {
-            return Err(vcs::TextError::expected("color must have 4 comma-separated components", span, "r,g,b,a"));
-        }
-        let mut out = [0.0; 4];
-        for (index, part) in parts.iter().enumerate() {
-            out[index] = part.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("invalid color component '{part}'"), span, "number"))?;
-        }
-        Ok(out)
-    }
-
-    fn parse_block(p: &mut Parser) -> Result<NoteBlockNode, vcs::TextError> {
-        let span = p.span();
-        let kind = p.expect_word()?;
-        let map = p.parse_kv_map()?;
-        let id = kv_str(&map, "id", span)?;
-        let name = kv_str(&map, "name", span)?;
-        let x = kv_num(&map, "x", span)?;
-        let y = kv_num(&map, "y", span)?;
-        let width = kv_num(&map, "width", span)?;
-        let height = kv_num(&map, "height", span)?;
-        let rotation = kv_num(&map, "rotation", span)?;
-        let visible = kv_bool(&map, "visible", span)?;
-        let locked = kv_bool(&map, "locked", span)?;
-        match kind.as_str() {
-            "text" => {
-                let font_size = kv_num(&map, "size", span)?;
-                let font_weight = kv_str(&map, "weight", span)?;
-                let align = kv_str(&map, "align", span)?;
-                let paragraphs = if p.at_lbrace() {
-                    p.bump();
-                    let mut paragraphs = Vec::new();
-                    while !p.at_rbrace() {
-                        paragraphs.push(parse_paragraph(p)?);
-                    }
-                    p.expect_rbrace()?;
-                    paragraphs
-                } else {
-                    Vec::new()
-                };
-                Ok(NoteBlockNode::Text { id, name, x, y, width, height, rotation, visible, locked, paragraphs, font_size, font_weight, align })
-            }
-            "image" => {
-                let image_key = kv_str(&map, "key", span)?;
-                Ok(NoteBlockNode::Image { id, name, x, y, width, height, rotation, visible, locked, image_key })
-            }
-            "table" => {
-                let (columns, rows) = if p.at_lbrace() {
-                    p.bump();
-                    let mut columns = Vec::new();
-                    let mut rows = Vec::new();
-                    while !p.at_rbrace() {
-                        let row_span = p.span();
-                        match p.expect_word()?.as_str() {
-                            "columns" => columns = p.greedy_str_list(),
-                            "row" => rows.push(p.greedy_str_list().into_iter().map(|content| NoteTableCell { content }).collect()),
-                            other => return Err(vcs::TextError::expected(format!("expected 'columns' or 'row', found '{other}'"), row_span, "columns|row")),
-                        }
-                    }
-                    p.expect_rbrace()?;
-                    (columns, rows)
-                } else {
-                    (Vec::new(), Vec::new())
-                };
-                Ok(NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, columns, rows })
-            }
-            "math" => {
-                let display_mode = kv_bool(&map, "display", span)?;
-                let tex = kv_str(&map, "tex", span)?;
-                Ok(NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, tex, display_mode })
-            }
-            "stroke" => {
-                let stroke_width = kv_num(&map, "strokeWidth", span)?;
-                let color = parse_color(&kv_word(&map, "color", span)?, span)?;
-                let points = if p.at_lbrace() {
-                    p.bump();
-                    let mut points = Vec::new();
-                    if !p.at_rbrace() {
-                        p.expect_keyword("points")?;
-                        while let Some(point) = p.try_point() {
-                            points.push(point);
-                        }
-                    }
-                    p.expect_rbrace()?;
-                    points
-                } else {
-                    Vec::new()
-                };
-                Ok(NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, points, stroke_width, color })
-            }
-            "group" => {
-                let children = if p.at_lbrace() {
-                    p.bump();
-                    let mut children = Vec::new();
-                    while !p.at_rbrace() {
-                        children.push(parse_block(p)?);
-                    }
-                    p.expect_rbrace()?;
-                    children
-                } else {
-                    Vec::new()
-                };
-                Ok(NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, children })
-            }
-            other => Err(vcs::TextError::expected(format!("unknown block kind '{other}'"), span, "text|image|table|math|stroke|group")),
-        }
-    }
-
-    fn parse_paragraph(p: &mut Parser) -> Result<NoteTextParagraph, vcs::TextError> {
-        p.expect_keyword("p")?;
-        p.expect_lbrace()?;
-        let mut runs = Vec::new();
-        while !p.at_rbrace() {
-            runs.push(parse_run(p)?);
-        }
-        p.expect_rbrace()?;
-        Ok(NoteTextParagraph { runs })
-    }
-
-    fn parse_run(p: &mut Parser) -> Result<NoteTextRun, vcs::TextError> {
-        p.expect_keyword("r")?;
-        let map = p.parse_kv_map()?;
-        let bold = kv_opt_bool(&map, "bold");
-        let italic = kv_opt_bool(&map, "italic");
-        let underline = kv_opt_bool(&map, "underline");
-        let link = kv_opt_str(&map, "link");
-        let text = p.expect_str()?;
-        Ok(NoteTextRun { text, bold, italic, underline, link })
-    }
-
-    fn parse_opt_bool(p: &mut Parser) -> Result<Option<bool>, vcs::TextError> {
-        let span = p.span();
-        match p.expect_word()?.as_str() {
-            "-" => Ok(None),
-            "true" => Ok(Some(true)),
-            "false" => Ok(Some(false)),
-            other => Err(vcs::TextError::expected(format!("expected 'true', 'false' or '-', found '{other}'"), span, "true|false|-")),
-        }
-    }
-
-    fn parse_opt_num(p: &mut Parser) -> Result<Option<f64>, vcs::TextError> {
-        let span = p.span();
-        let word = p.expect_word()?;
-        if word == "-" {
-            return Ok(None);
-        }
-        word.parse::<f64>().map(Some).map_err(|_| vcs::TextError::expected(format!("expected a number or '-', found '{word}'"), span, "number|-"))
-    }
-
-    /// 📥 Parses a full `.note` document: `note`/`camera` (required, any order-independent fields), then
-    /// `grid`/`snap`/`pencil`/`eraser`/`assets`/`blocks` (each optional, in any order).
-    pub(super) fn parse_document(text: &str) -> Result<NoteDocument, vcs::TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-
-        let note_span = p.span();
-        p.expect_keyword("note")?;
-        let note_map = p.parse_kv_map()?;
-        let id = kv_str(&note_map, "id", note_span)?;
-        let schema = kv_str(&note_map, "schema", note_span)?;
-        let title = kv_opt_str(&note_map, "title");
-
-        let camera_span = p.span();
-        p.expect_keyword("camera")?;
-        let camera_map = p.parse_kv_map()?;
-        let camera = NoteCamera {
-            x: kv_num(&camera_map, "x", camera_span)?,
-            y: kv_num(&camera_map, "y", camera_span)?,
-            zoom: kv_num(&camera_map, "zoom", camera_span)?,
-        };
-
-        let mut grid_visible = None;
-        let mut grid_spacing = None;
-        let mut grid_subdivisions = None;
-        let mut grid_opacity = None;
-        let mut snap_enabled = None;
-        let mut snap_grid_spacing = None;
-        let mut pencil_width = None;
-        let mut eraser_radius = None;
-        let mut assets = BTreeMap::new();
-        let mut blocks = Vec::new();
-
-        loop {
-            let keyword = match p.peek() {
-                Tok::Word(w) => w.clone(),
-                _ => break,
-            };
-            match keyword.as_str() {
-                "grid" => {
-                    p.bump();
-                    let map = p.parse_kv_map()?;
-                    grid_visible = kv_opt_bool(&map, "visible");
-                    grid_spacing = kv_opt_num(&map, "spacing");
-                    grid_subdivisions = kv_opt_num(&map, "subdivisions");
-                    grid_opacity = kv_opt_num(&map, "opacity");
-                }
-                "snap" => {
-                    p.bump();
-                    let map = p.parse_kv_map()?;
-                    snap_enabled = kv_opt_bool(&map, "enabled");
-                    snap_grid_spacing = kv_opt_num(&map, "spacing");
-                }
-                "pencil" => {
-                    p.bump();
-                    let map = p.parse_kv_map()?;
-                    pencil_width = kv_opt_num(&map, "width");
-                }
-                "eraser" => {
-                    p.bump();
-                    let map = p.parse_kv_map()?;
-                    eraser_radius = kv_opt_num(&map, "radius");
-                }
-                "assets" => {
-                    p.bump();
-                    p.expect_lbrace()?;
-                    while !p.at_rbrace() {
-                        let key = p.expect_word()?;
-                        p.expect_lbrace()?;
-                        let entry_span = p.span();
-                        let map = p.parse_kv_map()?;
-                        p.expect_rbrace()?;
-                        assets.insert(
-                            key,
-                            NoteImageAsset {
-                                mime: kv_str(&map, "mime", entry_span)?,
-                                data: kv_str(&map, "data", entry_span)?,
-                                width: kv_opt_num(&map, "width"),
-                                height: kv_opt_num(&map, "height"),
-                            },
-                        );
-                    }
-                    p.expect_rbrace()?;
-                }
-                "blocks" => {
-                    p.bump();
-                    p.expect_lbrace()?;
-                    while !p.at_rbrace() {
-                        blocks.push(parse_block(&mut p)?);
-                    }
-                    p.expect_rbrace()?;
-                }
-                other => return Err(vcs::TextError::expected(format!("unknown document section '{other}'"), p.span(), "grid|snap|pencil|eraser|assets|blocks")),
-            }
-        }
-
-        Ok(NoteDocument {
-            schema,
-            id,
-            title,
-            camera,
-            blocks,
-            grid_visible,
-            grid_spacing,
-            grid_subdivisions,
-            grid_opacity,
-            snap_enabled,
-            snap_grid_spacing,
-            pencil_width,
-            eraser_radius,
-            assets,
-        })
-    }
-
-    /// ⚡ Parses one op-log line. Every variant but `document ...` (which embeds a whole compact
-    /// document — handled as a direct string slice before tokenizing, since it is itself a nested
-    /// instance of this same grammar) shares the `Parser` used by {@link parse_document}.
-    pub(super) fn parse_operation(line: &str) -> Result<super::NoteOperation, vcs::TextError> {
-        use super::NoteOperation;
-        let trimmed = line.trim_start();
-        if let Some(rest) = trimmed.strip_prefix("document ") {
-            return Ok(NoteOperation::SetDocument { document: parse_document(rest)? });
-        }
-
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        let keyword = p.expect_word()?;
-        match keyword.as_str() {
-            "camera" => {
-                let map = p.parse_kv_map()?;
-                Ok(NoteOperation::SetCamera {
-                    camera: NoteCamera {
-                        x: kv_num(&map, "x", span)?,
-                        y: kv_num(&map, "y", span)?,
-                        zoom: kv_num(&map, "zoom", span)?,
-                    },
-                })
-            }
-            "grid-visible" => Ok(NoteOperation::SetGridVisible { visible: parse_opt_bool(&mut p)? }),
-            "grid-spacing" => Ok(NoteOperation::SetGridSpacing { spacing: parse_opt_num(&mut p)? }),
-            "grid-subdivisions" => Ok(NoteOperation::SetGridSubdivisions { value: parse_opt_num(&mut p)? }),
-            "grid-opacity" => Ok(NoteOperation::SetGridOpacity { opacity: parse_opt_num(&mut p)? }),
-            "snap-enabled" => Ok(NoteOperation::SetSnapEnabled { enabled: parse_opt_bool(&mut p)? }),
-            "snap-spacing" => Ok(NoteOperation::SetSnapGridSpacing { spacing: parse_opt_num(&mut p)? }),
-            "pencil-width" => Ok(NoteOperation::SetPencilWidth { width: parse_opt_num(&mut p)? }),
-            "eraser-radius" => Ok(NoteOperation::SetEraserRadius { radius: parse_opt_num(&mut p)? }),
-            "blocks" => {
-                p.expect_lbrace()?;
-                let mut blocks = Vec::new();
-                while !p.at_rbrace() {
-                    blocks.push(parse_block(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(NoteOperation::SetBlocks { blocks })
-            }
-            "put-asset" => {
-                let map = p.parse_kv_map()?;
-                let key = kv_str(&map, "key", span)?;
-                p.expect_lbrace()?;
-                let asset_span = p.span();
-                let asset_map = p.parse_kv_map()?;
-                p.expect_rbrace()?;
-                Ok(NoteOperation::PutAsset {
-                    key,
-                    asset: NoteImageAsset {
-                        mime: kv_str(&asset_map, "mime", asset_span)?,
-                        data: kv_str(&asset_map, "data", asset_span)?,
-                        width: kv_opt_num(&asset_map, "width"),
-                        height: kv_opt_num(&asset_map, "height"),
-                    },
-                })
-            }
-            other => Err(vcs::TextError::expected(format!("unknown operation '{other}'"), span, "operation keyword")),
-        }
-    }
-    //#endregion Parser
-
-    //#region Printer
-    fn quote(value: &str) -> String {
-        let mut out = String::with_capacity(value.len() + 2);
-        out.push('"');
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out.push('"');
-        out
-    }
-
-    fn fmt_num(value: f64) -> String {
-        value.to_string()
-    }
-
-    fn indent_str(depth: usize) -> String {
-        "  ".repeat(depth)
-    }
-
-    /// 🧱 Wraps `items` (each already rendered, without its own leading indentation) in `{ }`, one per
-    /// line indented at `depth + 1` when `pretty`, or space-joined on one line otherwise. The single
-    /// nesting primitive every braced construct (assets/blocks/paragraphs/runs/table rows/group
-    /// children) is built from, so pretty-printed indentation stays correct at arbitrary nesting depth.
-    fn wrap_body(items: &[String], depth: usize, pretty: bool) -> String {
-        if pretty {
-            let inner_pad = indent_str(depth + 1);
-            let outer_pad = indent_str(depth);
-            let body: String = items.iter().map(|item| format!("{inner_pad}{item}\n")).collect();
-            format!("{{\n{body}{outer_pad}}}")
-        } else {
-            format!("{{ {} }}", items.join(" "))
-        }
-    }
-
-    fn common_header(id: &str, name: &str, x: f64, y: f64, width: f64, height: f64, rotation: f64, visible: bool, locked: bool) -> String {
-        format!(
-            "id={} name={} x={} y={} width={} height={} rotation={} visible={visible} locked={locked}",
-            quote(id),
-            quote(name),
-            fmt_num(x),
-            fmt_num(y),
-            fmt_num(width),
-            fmt_num(height),
-            fmt_num(rotation),
-        )
-    }
-
-    fn print_run(run: &NoteTextRun) -> String {
-        let mut header = "r".to_string();
-        if let Some(bold) = run.bold {
-            header.push_str(&format!(" bold={bold}"));
-        }
-        if let Some(italic) = run.italic {
-            header.push_str(&format!(" italic={italic}"));
-        }
-        if let Some(underline) = run.underline {
-            header.push_str(&format!(" underline={underline}"));
-        }
-        if let Some(link) = &run.link {
-            header.push_str(&format!(" link={}", quote(link)));
-        }
-        format!("{header} {}", quote(&run.text))
-    }
-
-    fn print_paragraph(paragraph: &NoteTextParagraph, depth: usize, pretty: bool) -> String {
-        let items: Vec<String> = paragraph.runs.iter().map(print_run).collect();
-        format!("p {}", wrap_body(&items, depth, pretty))
-    }
-
-    /// ✒️ Renders a stroke's points as `points x,y x,y ...`, wrapping to a fresh (indented) line every
-    /// 8 points when `pretty` so a long stroke stays readable instead of producing one giant line.
-    fn print_points(points: &[[f64; 2]], depth: usize, pretty: bool) -> String {
-        let pad = indent_str(depth + 1);
-        let mut out = String::from("points");
-        for (index, point) in points.iter().enumerate() {
-            if pretty && index > 0 && index % 8 == 0 {
-                out.push('\n');
-                out.push_str(&pad);
-            } else {
-                out.push(' ');
-            }
-            out.push_str(&fmt_num(point[0]));
-            out.push(',');
-            out.push_str(&fmt_num(point[1]));
-        }
-        out
-    }
-
-    fn print_block(block: &NoteBlockNode, depth: usize, pretty: bool) -> String {
-        match block {
-            NoteBlockNode::Text { id, name, x, y, width, height, rotation, visible, locked, paragraphs, font_size, font_weight, align } => {
-                let header = format!(
-                    "text {} size={} weight={} align={}",
-                    common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked),
-                    fmt_num(*font_size),
-                    quote(font_weight),
-                    quote(align),
-                );
-                if paragraphs.is_empty() {
-                    header
-                } else {
-                    let items: Vec<String> = paragraphs.iter().map(|paragraph| print_paragraph(paragraph, depth + 1, pretty)).collect();
-                    format!("{header} {}", wrap_body(&items, depth, pretty))
-                }
-            }
-            NoteBlockNode::Image { id, name, x, y, width, height, rotation, visible, locked, image_key } => {
-                format!("image {} key={}", common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked), quote(image_key))
-            }
-            NoteBlockNode::Table { id, name, x, y, width, height, rotation, visible, locked, columns, rows } => {
-                let header = format!("table {}", common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked));
-                if columns.is_empty() && rows.is_empty() {
-                    header
-                } else {
-                    let mut items = Vec::new();
-                    if !columns.is_empty() {
-                        items.push(format!("columns {}", columns.iter().map(|column| quote(column)).collect::<Vec<_>>().join(" ")));
-                    }
-                    for row in rows {
-                        items.push(format!("row {}", row.iter().map(|cell| quote(&cell.content)).collect::<Vec<_>>().join(" ")));
-                    }
-                    format!("{header} {}", wrap_body(&items, depth, pretty))
-                }
-            }
-            NoteBlockNode::Math { id, name, x, y, width, height, rotation, visible, locked, tex, display_mode } => {
-                format!(
-                    "math {} display={display_mode} tex={}",
-                    common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked),
-                    quote(tex),
-                )
-            }
-            NoteBlockNode::Ink { id, name, x, y, width, height, rotation, visible, locked, points, stroke_width, color } => {
-                let header = format!(
-                    "stroke {} strokeWidth={} color={},{},{},{}",
-                    common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked),
-                    fmt_num(*stroke_width),
-                    fmt_num(color[0]),
-                    fmt_num(color[1]),
-                    fmt_num(color[2]),
-                    fmt_num(color[3]),
-                );
-                if points.is_empty() {
-                    header
-                } else {
-                    let items = vec![print_points(points, depth, pretty)];
-                    format!("{header} {}", wrap_body(&items, depth, pretty))
-                }
-            }
-            NoteBlockNode::Group { id, name, x, y, width, height, rotation, visible, locked, children } => {
-                let header = format!("group {}", common_header(id, name, *x, *y, *width, *height, *rotation, *visible, *locked));
-                if children.is_empty() {
-                    header
-                } else {
-                    let items: Vec<String> = children.iter().map(|child| print_block(child, depth + 1, pretty)).collect();
-                    format!("{header} {}", wrap_body(&items, depth, pretty))
-                }
-            }
-        }
-    }
-
-    fn print_blocks_section(blocks: &[NoteBlockNode], depth: usize, pretty: bool) -> String {
-        let items: Vec<String> = blocks.iter().map(|block| print_block(block, depth + 1, pretty)).collect();
-        format!("blocks {}", wrap_body(&items, depth, pretty))
-    }
-
-    fn print_assets_section(assets: &BTreeMap<String, NoteImageAsset>, depth: usize, pretty: bool) -> String {
-        let items: Vec<String> = assets
-            .iter()
-            .map(|(key, asset)| {
-                let mut entry = format!("{key} {{ mime={} data={}", quote(&asset.mime), quote(&asset.data));
-                if let Some(width) = asset.width {
-                    entry.push_str(&format!(" width={}", fmt_num(width)));
-                }
-                if let Some(height) = asset.height {
-                    entry.push_str(&format!(" height={}", fmt_num(height)));
-                }
-                entry.push_str(" }");
-                entry
-            })
-            .collect();
-        format!("assets {}", wrap_body(&items, depth, pretty))
-    }
-
-    /// 📤 Renders `document` as `note`/`camera` (always present) followed by every optional section
-    /// that has content, joined by newlines when `pretty` or single spaces otherwise (see
-    /// {@link parse_document} for the mirrored grammar).
-    pub(super) fn print_document(document: &NoteDocument, pretty: bool) -> String {
-        let mut parts = Vec::new();
-
-        let mut header = format!("note id={} schema={}", quote(&document.id), quote(&document.schema));
-        if let Some(title) = &document.title {
-            header.push_str(&format!(" title={}", quote(title)));
-        }
-        parts.push(header);
-
-        parts.push(format!(
-            "camera x={} y={} zoom={}",
-            fmt_num(document.camera.x),
-            fmt_num(document.camera.y),
-            fmt_num(document.camera.zoom)
-        ));
-
-        if document.grid_visible.is_some() || document.grid_spacing.is_some() || document.grid_subdivisions.is_some() || document.grid_opacity.is_some() {
-            let mut line = "grid".to_string();
-            if let Some(v) = document.grid_visible {
-                line.push_str(&format!(" visible={v}"));
-            }
-            if let Some(v) = document.grid_spacing {
-                line.push_str(&format!(" spacing={}", fmt_num(v)));
-            }
-            if let Some(v) = document.grid_subdivisions {
-                line.push_str(&format!(" subdivisions={}", fmt_num(v)));
-            }
-            if let Some(v) = document.grid_opacity {
-                line.push_str(&format!(" opacity={}", fmt_num(v)));
-            }
-            parts.push(line);
-        }
-        if document.snap_enabled.is_some() || document.snap_grid_spacing.is_some() {
-            let mut line = "snap".to_string();
-            if let Some(v) = document.snap_enabled {
-                line.push_str(&format!(" enabled={v}"));
-            }
-            if let Some(v) = document.snap_grid_spacing {
-                line.push_str(&format!(" spacing={}", fmt_num(v)));
-            }
-            parts.push(line);
-        }
-        if let Some(v) = document.pencil_width {
-            parts.push(format!("pencil width={}", fmt_num(v)));
-        }
-        if let Some(v) = document.eraser_radius {
-            parts.push(format!("eraser radius={}", fmt_num(v)));
-        }
-        if !document.assets.is_empty() {
-            parts.push(print_assets_section(&document.assets, 0, pretty));
-        }
-        if !document.blocks.is_empty() {
-            parts.push(print_blocks_section(&document.blocks, 0, pretty));
-        }
-
-        parts.join(if pretty { "\n" } else { " " })
-    }
-
-    fn print_opt_bool(value: Option<bool>) -> String {
-        value.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string())
-    }
-
-    fn print_opt_num(value: Option<f64>) -> String {
-        value.map(fmt_num).unwrap_or_else(|| "-".to_string())
-    }
-
-    /// ⚡ Renders one `NoteOperation` as a single line — `SetBlocks`/`SetDocument` reuse the compact
-    /// (space-joined) form of {@link print_block}/{@link print_document}.
-    pub(super) fn print_operation(operation: &super::NoteOperation) -> String {
-        use super::NoteOperation;
-        match operation {
-            NoteOperation::SetCamera { camera } => format!("camera x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
-            NoteOperation::SetGridVisible { visible } => format!("grid-visible {}", print_opt_bool(*visible)),
-            NoteOperation::SetGridSpacing { spacing } => format!("grid-spacing {}", print_opt_num(*spacing)),
-            NoteOperation::SetGridSubdivisions { value } => format!("grid-subdivisions {}", print_opt_num(*value)),
-            NoteOperation::SetGridOpacity { opacity } => format!("grid-opacity {}", print_opt_num(*opacity)),
-            NoteOperation::SetSnapEnabled { enabled } => format!("snap-enabled {}", print_opt_bool(*enabled)),
-            NoteOperation::SetSnapGridSpacing { spacing } => format!("snap-spacing {}", print_opt_num(*spacing)),
-            NoteOperation::SetPencilWidth { width } => format!("pencil-width {}", print_opt_num(*width)),
-            NoteOperation::SetEraserRadius { radius } => format!("eraser-radius {}", print_opt_num(*radius)),
-            NoteOperation::SetBlocks { blocks } => {
-                let items: Vec<String> = blocks.iter().map(|block| print_block(block, 0, false)).collect();
-                format!("blocks {}", wrap_body(&items, 0, false))
-            }
-            NoteOperation::PutAsset { key, asset } => {
-                let mut entry = format!("put-asset key={} {{ mime={} data={}", quote(key), quote(&asset.mime), quote(&asset.data));
-                if let Some(width) = asset.width {
-                    entry.push_str(&format!(" width={}", fmt_num(width)));
-                }
-                if let Some(height) = asset.height {
-                    entry.push_str(&format!(" height={}", fmt_num(height)));
-                }
-                entry.push_str(" }");
-                entry
-            }
-            NoteOperation::SetDocument { document } => format!("document {}", print_document(document, false)),
-        }
-    }
-    //#endregion Printer
-}
-
-impl vcs::DocumentDsl for NoteDocument {
-    const EXTENSION: &'static str = "note";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        note_text::parse_document(text)
-    }
-
-    fn print_dsl(&self) -> String {
-        note_text::print_document(self, true)
-    }
-}
+// `NoteDocument`'s `vcs::DocumentDsl` and `NoteOperation`'s `vcs::OpText` implementations are now
+// generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions
+// themselves (see `NoteDocument`/`NoteOperation` in the `🔖Types` region above), together with
+// `#[derive(dsl::DslRecord)]` on `NoteCamera`/`NoteTextRun`/`NoteTextParagraph`/`NoteTableCell`/
+// `NoteImageAsset` and `#[derive(dsl::DslEnum)]` on the recursive `NoteBlockNode` tree — the
+// engine's `dsl_schema` grammar replaces this crate's own hand-rolled lexer/parser/printer.
 //#endregion 🔖Dsl
-
-//#region 🔖OpText
-impl vcs::OpText for NoteOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        note_text::parse_operation(line)
-    }
-
-    fn print_op(&self) -> String {
-        note_text::print_operation(self)
-    }
-}
-//#endregion 🔖OpText
 
 //#region 🔖DocumentHelpers
 fn play_action(controller_id: &str, action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -3474,6 +2587,82 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{DwgColor, DwgEntity, DwgLayer, PluginApp};
     use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta, new_app, new_app_with_registry};
+
+    #[test]
+    fn __print_new_semio_fixture() {
+        let document = NoteDocument {
+            schema: NOTE_DOCUMENT_SCHEMA.into(),
+            id: "semio".into(),
+            title: Some("Semio Note".into()),
+            camera: NoteCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+            blocks: vec![
+                NoteBlockNode::Text {
+                    id: "welcome-text".into(),
+                    name: "Welcome".into(),
+                    x: 80.0,
+                    y: 80.0,
+                    width: 360.0,
+                    height: 120.0,
+                    rotation: 0.0,
+                    visible: true,
+                    locked: false,
+                    paragraphs: vec![NoteTextParagraph {
+                        runs: vec![NoteTextRun {
+                            text: "Welcome to Note — an infinite canvas for text, images, tables, math, and pencil ink.".into(),
+                            bold: None,
+                            italic: None,
+                            underline: None,
+                            link: None,
+                        }],
+                    }],
+                    font_size: 20.0,
+                    font_weight: "normal".into(),
+                    align: "left".into(),
+                },
+                NoteBlockNode::Math {
+                    id: "welcome-math".into(),
+                    name: "Equation".into(),
+                    x: 80.0,
+                    y: 240.0,
+                    width: 240.0,
+                    height: 80.0,
+                    rotation: 0.0,
+                    visible: true,
+                    locked: false,
+                    tex: "E = mc^2".into(),
+                    display_mode: true,
+                },
+                NoteBlockNode::Table {
+                    id: "welcome-table".into(),
+                    name: "Blocks".into(),
+                    x: 80.0,
+                    y: 360.0,
+                    width: 360.0,
+                    height: 140.0,
+                    rotation: 0.0,
+                    visible: true,
+                    locked: false,
+                    columns: vec!["Block".into(), "Description".into()],
+                    rows: vec![
+                        vec![NoteTableCell { content: "Text".into() }, NoteTableCell { content: "Rich text blocks".into() }],
+                        vec![NoteTableCell { content: "Math".into() }, NoteTableCell { content: "TeX equations".into() }],
+                        vec![NoteTableCell { content: "Ink".into() }, NoteTableCell { content: "Freehand pencil strokes".into() }],
+                    ],
+                },
+            ],
+            grid_visible: Some(true),
+            grid_spacing: None,
+            grid_subdivisions: None,
+            grid_opacity: None,
+            snap_enabled: Some(false),
+            snap_grid_spacing: None,
+            pencil_width: Some(3.0),
+            eraser_radius: Some(12.0),
+            assets: BTreeMap::new(),
+        };
+        let printed = <NoteDocument as vcs::DocumentDsl>::print_dsl(&document);
+        panic!("PRINTED_FIXTURE_START\n{printed}PRINTED_FIXTURE_END");
+    }
 
     #[test]
     fn renders_composite_canvas() {

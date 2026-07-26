@@ -1,3 +1,65 @@
+# Session conclusion: Phase A closed as "best achievable", Phase C wave 1 launched
+
+**Decision: stopped chasing a 100% clean full-repo run after run 20 (of 20 attempts).** The last new failure
+(`dsl_derive` proc-macro hitting `E0004: non-exhaustive patterns` on `FieldKind::VecBlockStatements`/
+`MapField`, which did not exist in earlier runs) is from another concurrent Claude Code session actively
+adding enum variants *right now* — this repo is under continuous live multi-session development, so a
+zero-diff clean run is a moving target, not a fixed problem. Runs 1–20 fixed a long tail of real, dead
+(non-moving) pre-existing bugs; see below and the historical section for the full list. Best snapshot: **138
+coverage files (112 Rust, 5 Go, 21 JS), 53.90% partial repo-wide** (`aggregate-now.ts` output) — up from the
+45.94%/98-file snapshot two sessions ago in this same ticket.
+
+**Bugs fixed in this final push (beyond the ones already logged below):**
+- `compose/client/lib/query/rs/lib.rs`: 7 more `operation`/`operator` rename-fallout sites (same bug class as
+  everywhere else, 4th–5th files found) — `compose_query` now 4/4 tests passing.
+- `ui/wgpu/rs/lib.rs`: 6 separate `pub mod` blocks (`paint`, `reconcile`, `events`, `shell`, `engine`,
+  `widgets`) each independently missing `use crate::IconName;` — Rust modules don't inherit sibling imports,
+  and this was invisible to a bare `cargo check` since most of these are `#[cfg(feature = "engine")]`-gated.
+  Plus 3 further type-mismatch bugs the missing imports had been masking. `cargo test -p ui_wgpu --tests
+  --features engine` now 164/164 passing. (Note: `framework/renderer/wgpu/rs`, a DIFFERENT/larger crate that
+  depends on `ui_wgpu`, still has its own 20 separate errors — own follow-up task, not fixed.)
+- `draw/rs/lib.rs`: `DocumentDsl` imported twice (once privately, once via an intentional `pub use` with its
+  own doc comment explaining why) — `E0252` duplicate definition. Removed from the private-use list.
+- `process/3d/rs/lib.rs`, `writer/rs/lib.rs`: same "trait impl'd but not imported at the call site" pattern as
+  the `ui_wgpu` fix — `use vcs::DocumentDsl;` missing at two more call sites. Both now passing (26/26 and 7/7).
+- `norm/core/script.ts`, `norm/plugin/script.ts` (too many `../`) and all 10 `norm/en/199X/script.ts` files
+  (too few `../`) had wrong relative-depth imports to `repo/lib/js/index.ts` — a **pre-existing, real, silent
+  breakage**: every `norm/*` project's test command was failing with "Cannot find module" before this fix,
+  for reasons entirely unrelated to coverage. This alone likely blocked norm-* testing for a long time.
+- Three `go.mod` files (`repo/lib/go`, `compose/client/lib/go`, `repo/server/coordinator/go`) were pinned to
+  `go 1.25.0` while `go.work` and every other module already moved to `go 1.25.5` — caused a
+  `"compile: version go1.25.5 does not match go tool version go1.25.0"` failure. Bumped all three to match.
+- A stale local Go build cache (`go clean -cache`) was independently contributing to the same symptom for
+  `repo-go-lib` in earlier attempts — real, but a machine-state issue, not a code bug (documented for
+  awareness, not something to "fix" in the repo).
+
+**Final exclusion list** (all have real, spawned follow-up tasks — see task chips): `math-polynomial`,
+`math-cas` (performance + correctness), `puzzle-2d-rs`, `repo-cli-rs` (own test-logic bugs, not chased down
+this session, see run 9's important.md notes below), `os-hub`, `compose-py` (fixture data), `framework-
+renderer-wgpu` (the *other*, larger wgpu crate), `compose-rs`/`compose-hub` (same fixture data issue as
+compose-py, plus `KitSnapshot`/`ComposeWireOperation` Serialize/Deserialize trait-bound errors that were
+intermittently reproducible — worth re-checking, may itself be a moving-target symptom), `repo-lib` (one
+genuine failing assertion on a hostname config value, needs domain knowledge to fix correctly).
+
+**Phase C wave 1 launched** (Workflow `wf_b0832394-0fe`, "coverage-phase-c-wave-1"): 15 agents writing tests
+for the highest-value real, cleanly-resolved under-covered Rust crates from the worklist (`architect_program`
+1386 uncovered lines, `ui_wgpu` 1295, `energy_engine` 1273, `remodel_video` 1217, `mathematical_sampling`
+1203, `kernel_3d_brepkit` 990, `mathematical_graph_dsl` 648, `ui_tui` 605, `draw` 602, `semio-framework-core`
+556, `kernel_3d_mesh` 543, `mathematical_fuzzy` 476, `puzzle_3d` 431, `framework_editor` 389, `kernel_3d_scene`
+376). Each agent extends the existing in-source `#[cfg(test)] mod tests` block only, verifies locally, then a
+separate verify-stage agent independently re-measures. Check `/workflows` or this ticket's transcript dir for
+progress; results were not yet in when this note was written.
+
+**Worklist note**: `build-worklist.ts` v2 walks raw per-tool coverage output with provenance (not the flat
+merged summary, which can't disambiguate same-named files across bundles) — `worklist.json` in this folder is
+the live, re-runnable artifact for picking the next wave. It currently shows 5 "unresolved" groups (files it
+couldn't map to an owning `script.ts` bundle) and a few duplicate-slug artifacts from multi-package cargo
+invocations (e.g. `animate_core` appears 3× under different combined slugs, 2 of which show a spurious 0% —
+likely because that particular multi-package test invocation's `animate_core`-specific tests didn't actually
+run) — worth a closer look before trusting those specific rows, everything else is solid.
+
+---
+
 # Follow-up resolved: framework-core/wgpu icon-refactor breakage (2026-07-26, later session)
 
 The "framework-core/wgpu likely mid-refactor breakage" follow-up mentioned below is now resolved — the

@@ -3529,5 +3529,696 @@ mod tests {
         vcs::test_support::assert_live_equals_replay(&store);
     }
     //#endregion 🔖DslTests
+
+    //#region 🔖CoverageTests
+    #[test]
+    fn layer_id_base_and_kind_label_cover_all_seven_variants() {
+        let shape = create_draw_shape_layer_rect("Shape");
+        let path = create_draw_path_layer("Path", Vec::new());
+        let text = create_draw_text_layer("Text");
+        let image = create_draw_image_layer("Image", "key");
+        let group = create_draw_group_layer("Group");
+        let boolean = create_draw_boolean_layer("Boolean", "union", Vec::new());
+        let trace = create_draw_trace_layer("Trace", "src");
+        for (layer, expected_kind) in [(&shape, "shape:rect"), (&path, "path"), (&text, "text"), (&image, "image"), (&group, "group"), (&boolean, "boolean"), (&trace, "trace")] {
+            assert_eq!(layer_kind_label(layer), expected_kind);
+            assert_eq!(layer_id(layer), layer_base(layer).id.as_str());
+        }
+    }
+
+    #[test]
+    fn find_draw_layer_locates_nested_child_and_returns_none_for_missing() {
+        let child = create_draw_shape_layer_rect("Child");
+        let child_id = layer_id(&child).to_string();
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child);
+        }
+        let mut doc = default_draw_document("nested", None);
+        doc.layers = vec![group];
+        assert!(find_draw_layer(&doc, &child_id).is_some());
+        assert!(find_draw_layer(&doc, "missing-id").is_none());
+    }
+
+    #[test]
+    fn flatten_draw_layers_includes_nested_group_children() {
+        let child_a = create_draw_shape_layer_rect("A");
+        let child_b = create_draw_text_layer("B");
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child_a);
+            body.children.push(child_b);
+        }
+        let flat = flatten_draw_layers(std::slice::from_ref(&group));
+        assert_eq!(flat.len(), 3);
+    }
+
+    #[test]
+    fn draw_matrix_to_transform_round_trips_and_handles_zero_scale_x() {
+        let transform = DrawTransform { x: 1.0, y: 2.0, scale_x: 2.0, scale_y: 3.0, rotation: std::f64::consts::FRAC_PI_6 };
+        let matrix = draw_transform_to_matrix(&transform);
+        let back = draw_matrix_to_transform(matrix);
+        assert!((back.x - transform.x).abs() < 1e-9);
+        assert!((back.y - transform.y).abs() < 1e-9);
+        assert!((back.scale_x - transform.scale_x).abs() < 1e-9);
+        assert!((back.scale_y - transform.scale_y).abs() < 1e-9);
+        assert!((back.rotation - transform.rotation).abs() < 1e-9);
+
+        let degenerate = draw_matrix_to_transform([0.0, 0.0, 5.0, 5.0, 1.0, 2.0]);
+        assert_eq!(degenerate.scale_x, 0.0);
+        assert_eq!(degenerate.scale_y, 0.0);
+    }
+
+    #[test]
+    fn draw_play_layers_tree_row_id_formats_and_parses_back() {
+        let shape = create_draw_shape_layer_rect("Shape");
+        let id = layer_id(&shape).to_string();
+        let row_id = draw_play_layers_tree_row_id(&shape);
+        assert_eq!(row_id, format!("draw-play-layers.shape.{id}"));
+        assert_eq!(draw_play_layer_id_from_tree_row_id(&row_id), Some(id));
+
+        let child_row = draw_play_boolean_child_row_id("bool-1", "child-1");
+        assert_eq!(child_row, "draw-play-layers.boolean.bool-1.child.child-1");
+        assert_eq!(draw_play_layer_id_from_tree_row_id(&child_row), Some("child-1".to_string()));
+
+        assert_eq!(draw_play_layer_id_from_tree_row_id("not-a-row-id"), None);
+        assert_eq!(draw_play_layer_id_from_tree_row_id("draw-play-layers."), None);
+    }
+
+    #[test]
+    fn layer_to_path_segments_covers_every_shape_kind_and_empty_polygon_and_unknown_kind() {
+        let rect = create_draw_shape_layer_rect("Rect");
+        assert!(!layer_to_path_segments(&rect).is_empty());
+
+        let line = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Line"), shape_kind: "line".into(), rect: None, ellipse: None, circle: None, line: Some(DrawLine { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0 }), polygon: None });
+        assert_eq!(layer_to_path_segments(&line).len(), 2);
+
+        let empty_polygon = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: Vec::new() }) });
+        assert!(layer_to_path_segments(&empty_polygon).is_empty());
+
+        let polygon = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Poly"), shape_kind: "polygon".into(), rect: None, ellipse: None, circle: None, line: None, polygon: Some(DrawPolygon { points: vec![[0.0, 0.0], [1.0, 0.0], [0.5, 1.0]] }) });
+        assert_eq!(layer_to_path_segments(&polygon).len(), 4);
+
+        let ellipse = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Ellipse"), shape_kind: "ellipse".into(), rect: None, ellipse: Some(DrawEllipse { cx: 0.0, cy: 0.0, rx: 1.0, ry: 1.0 }), circle: None, line: None, polygon: None });
+        assert_eq!(layer_to_path_segments(&ellipse).len(), 6);
+
+        let circle = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Circle"), shape_kind: "circle".into(), rect: None, ellipse: None, circle: Some(DrawCircle { cx: 0.0, cy: 0.0, r: 1.0 }), line: None, polygon: None });
+        assert_eq!(layer_to_path_segments(&circle).len(), 6);
+
+        let unknown_kind = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("Unknown"), shape_kind: "star".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None });
+        assert!(layer_to_path_segments(&unknown_kind).is_empty());
+
+        let rect_missing_data = DrawLayerNode::Shape(DrawShapeBody { base: default_layer_base("RectNoData"), shape_kind: "rect".into(), rect: None, ellipse: None, circle: None, line: None, polygon: None });
+        assert!(layer_to_path_segments(&rect_missing_data).is_empty());
+
+        let group = create_draw_group_layer("Group");
+        assert!(layer_to_path_segments(&group).is_empty());
+    }
+
+    #[test]
+    fn draw_layer_world_bounds_covers_text_image_default_and_none_branches() {
+        let text = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "hi".into(), size: 10.0 });
+        let (tx, ty, tw, th) = draw_layer_world_bounds(&text).expect("text bounds");
+        assert_eq!((tx, ty), (0.0, 0.0));
+        assert!(tw > 0.0 && th > 0.0);
+
+        let image = create_draw_image_layer("Img", "key");
+        let (_, _, iw, ih) = draw_layer_world_bounds(&image).expect("image bounds");
+        assert_eq!((iw, ih), (256.0, 256.0));
+
+        let empty_path = create_draw_path_layer("Empty", Vec::new());
+        let bounds = draw_layer_world_bounds(&empty_path).expect("default bbox");
+        assert_eq!(bounds, (-64.0, -64.0, 128.0, 128.0));
+
+        let close_only = create_draw_path_layer("CloseOnly", vec![PathSegment::Close]);
+        assert!(draw_layer_world_bounds(&close_only).is_none());
+    }
+
+    #[test]
+    fn canvas_layer_records_excludes_groups_and_includes_bounds() {
+        let child = create_draw_shape_layer_rect("Child");
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child);
+        }
+        let mut doc = default_draw_document("records", None);
+        doc.layers = vec![group];
+        let records = canvas_layer_records(&doc);
+        assert_eq!(records.len(), 1);
+        assert_eq!(records[0].kind, "shape:rect");
+        assert!(records[0].width.is_some());
+    }
+
+    #[test]
+    fn clone_draw_layer_node_assigns_new_ids_recursively_and_appends_suffix_only_at_top() {
+        let shape = create_draw_shape_layer_rect("Rect");
+        let clone = clone_draw_layer_node(&shape, " copy");
+        assert_ne!(layer_id(&shape), layer_id(&clone));
+        assert_eq!(layer_base(&clone).name, "Rect copy");
+
+        let child = create_draw_shape_layer_rect("Child");
+        let child_id = layer_id(&child).to_string();
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child);
+        }
+        let group_clone = clone_draw_layer_node(&group, " copy");
+        let DrawLayerNode::Group(cloned_body) = &group_clone else { panic!("expected group") };
+        assert_eq!(cloned_body.base.name, "Group copy");
+        assert_ne!(layer_id(&cloned_body.children[0]), child_id);
+        assert_eq!(layer_base(&cloned_body.children[0]).name, "Child");
+    }
+
+    #[test]
+    fn transform_path_segments_transforms_every_segment_kind() {
+        let segments = vec![
+            PathSegment::Move { to: [1.0, 0.0] },
+            PathSegment::Line { to: [1.0, 0.0] },
+            PathSegment::Quad { ctrl: [1.0, 0.0], to: [1.0, 0.0] },
+            PathSegment::Cubic { ctrl1: [1.0, 0.0], ctrl2: [1.0, 0.0], to: [1.0, 0.0] },
+            PathSegment::Arc { rx: 1.0, ry: 1.0, rotation: 0.0, large_arc: false, sweep: true, to: [1.0, 0.0] },
+            PathSegment::Close,
+        ];
+        let transform = DrawTransform { x: 10.0, y: 20.0, scale_x: 2.0, scale_y: 2.0, rotation: 0.0 };
+        let transformed = transform_path_segments(&segments, &transform);
+        match &transformed[0] {
+            PathSegment::Move { to } => assert_eq!(*to, [12.0, 20.0]),
+            other => panic!("expected move, got {other:?}"),
+        }
+        match &transformed[4] {
+            PathSegment::Arc { to, rx, .. } => {
+                assert_eq!(*to, [12.0, 20.0]);
+                assert_eq!(*rx, 1.0);
+            }
+            other => panic!("expected arc, got {other:?}"),
+        }
+        assert!(matches!(transformed[5], PathSegment::Close));
+    }
+
+    #[test]
+    fn scale_path_segments_returns_untouched_clone_for_identity_scale_and_scales_otherwise() {
+        let segments = vec![PathSegment::Move { to: [1.0, 2.0] }, PathSegment::Line { to: [3.0, 4.0] }];
+        assert_eq!(scale_path_segments(&segments, 1.0, 1.0), segments);
+        let scaled = scale_path_segments(&segments, 2.0, 3.0);
+        match &scaled[1] {
+            PathSegment::Line { to } => assert_eq!(*to, [6.0, 12.0]),
+            other => panic!("expected line, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn split_path_segments_by_contour_splits_on_move_and_handles_empty_input() {
+        let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 0.0] }, PathSegment::Move { to: [5.0, 5.0] }, PathSegment::Line { to: [6.0, 5.0] }, PathSegment::Close];
+        let contours = split_path_segments_by_contour(&segments);
+        assert_eq!(contours.len(), 2);
+        assert_eq!(contours[1].len(), 3);
+
+        let empty_contours = split_path_segments_by_contour(&[]);
+        assert_eq!(empty_contours, vec![Vec::<PathSegment>::new()]);
+    }
+
+    #[test]
+    fn path_segments_bounds_is_none_when_no_segment_carries_an_endpoint() {
+        assert!(path_segments_bounds(&[PathSegment::Close]).is_none());
+        let bounds = path_segments_bounds(&[PathSegment::Move { to: [1.0, 1.0] }, PathSegment::Line { to: [4.0, 5.0] }]).expect("bounds");
+        assert_eq!(bounds, (1.0, 1.0, 3.0, 4.0));
+    }
+
+    #[test]
+    fn filter_path_segments_by_contour_area_keeps_all_for_non_positive_min_area_and_drops_small_contours() {
+        let small = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }, PathSegment::Close];
+        let big = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [10.0, 0.0] }, PathSegment::Line { to: [10.0, 10.0] }, PathSegment::Close];
+        let mut combined = small.clone();
+        combined.extend(big.clone());
+
+        assert_eq!(filter_path_segments_by_contour_area(&combined, 0.0), combined);
+
+        let filtered = filter_path_segments_by_contour_area(&combined, 4.0);
+        assert_eq!(filtered, big);
+    }
+
+    #[test]
+    fn flatten_curve_segments_falls_back_to_line_for_degenerate_arc_and_passes_other_kinds_through() {
+        let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Arc { rx: 0.0, ry: 0.0, rotation: 0.0, large_arc: false, sweep: true, to: [5.0, 5.0] }, PathSegment::Quad { ctrl: [1.0, 1.0], to: [2.0, 2.0] }, PathSegment::Close];
+        let flattened = flatten_curve_segments(&segments);
+        assert!(matches!(flattened[1], PathSegment::Line { to } if to == [5.0, 5.0]));
+        assert!(matches!(flattened[2], PathSegment::Quad { .. }));
+        assert!(matches!(flattened[3], PathSegment::Close));
+    }
+
+    #[test]
+    fn flatten_segments_to_lines_samples_quad_and_cubic_into_lines() {
+        let segments = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Quad { ctrl: [1.0, 1.0], to: [2.0, 0.0] }, PathSegment::Cubic { ctrl1: [2.0, 1.0], ctrl2: [3.0, 1.0], to: [4.0, 0.0] }];
+        let flattened = flatten_segments_to_lines(&segments);
+        assert!(flattened.iter().all(|segment| matches!(segment, PathSegment::Move { .. } | PathSegment::Line { .. })));
+        assert_eq!(flattened.len(), 1 + CURVE_LINE_SAMPLE_STEPS * 2);
+        match flattened.last().unwrap() {
+            PathSegment::Line { to } => assert!((to[0] - 4.0).abs() < 1e-9 && (to[1] - 0.0).abs() < 1e-9),
+            other => panic!("expected line, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn draw_layer_descendant_leaf_ids_flattens_nested_groups_to_leaves() {
+        let leaf_a = create_draw_shape_layer_rect("A");
+        let leaf_a_id = layer_id(&leaf_a).to_string();
+        let leaf_b = create_draw_trace_layer("B", "src");
+        let leaf_b_id = layer_id(&leaf_b).to_string();
+        let mut inner_group = create_draw_group_layer("Inner");
+        if let DrawLayerNode::Group(body) = &mut inner_group {
+            body.children.push(leaf_a);
+            body.children.push(leaf_b);
+        }
+        let leaf_c = create_draw_text_layer("C");
+        let leaf_c_id = layer_id(&leaf_c).to_string();
+        let mut outer_group = create_draw_group_layer("Outer");
+        if let DrawLayerNode::Group(body) = &mut outer_group {
+            body.children.push(inner_group);
+            body.children.push(leaf_c);
+        }
+        assert_eq!(draw_layer_descendant_leaf_ids(&outer_group), vec![leaf_a_id, leaf_b_id, leaf_c_id]);
+
+        let leaf = create_draw_shape_layer_rect("Solo");
+        let leaf_id_value = layer_id(&leaf).to_string();
+        assert_eq!(draw_layer_descendant_leaf_ids(&leaf), vec![leaf_id_value]);
+    }
+
+    #[test]
+    fn resolve_boolean_layer_segments_returns_empty_for_missing_children_and_invalid_operation() {
+        let mut doc = default_draw_document("bool-empty", None);
+        doc.layers.clear();
+        let boolean_missing = DrawBooleanBody { base: default_layer_base("B"), operation: "union".into(), children: vec!["missing".into()] };
+        assert!(resolve_boolean_layer_segments(&doc, &boolean_missing).is_empty());
+
+        let mut rect_a = create_draw_shape_layer_rect("A");
+        if let DrawLayerNode::Shape(shape) = &mut rect_a {
+            shape.rect = Some(DrawRect { x: 0.0, y: 0.0, width: 10.0, height: 10.0 });
+        }
+        let id_a = layer_id(&rect_a).to_string();
+        let mut rect_b = create_draw_shape_layer_rect("B");
+        if let DrawLayerNode::Shape(shape) = &mut rect_b {
+            shape.rect = Some(DrawRect { x: 2.0, y: 2.0, width: 5.0, height: 5.0 });
+        }
+        let id_b = layer_id(&rect_b).to_string();
+        doc.layers.push(rect_a);
+        doc.layers.push(rect_b);
+        let boolean_invalid = DrawBooleanBody { base: default_layer_base("B"), operation: "not-a-real-op".into(), children: vec![id_a, id_b] };
+        assert!(resolve_boolean_layer_segments(&doc, &boolean_invalid).is_empty());
+    }
+
+    #[test]
+    fn decode_draw_image_asset_luma_handles_data_uri_prefix_resize_and_invalid_inputs() {
+        let mut image_buffer = image::RgbaImage::new(4, 4);
+        for pixel in image_buffer.pixels_mut() {
+            *pixel = image::Rgba([255, 255, 255, 255]);
+        }
+        let mut bytes = Vec::new();
+        image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
+        let encoded = BASE64.encode(&bytes);
+
+        let data_uri_asset = DrawImageAsset { mime: "image/png".into(), data: format!("data:image/png;base64,{encoded}"), width: None, height: None };
+        let (w, h, luma) = decode_draw_image_asset_luma(&data_uri_asset).expect("decode data uri");
+        assert_eq!((w, h), (4, 4));
+        assert_eq!(luma.len(), 16);
+        assert!(luma.iter().all(|&v| v == 255));
+
+        let resized_asset = DrawImageAsset { mime: "image/png".into(), data: encoded.clone(), width: Some(8), height: Some(8) };
+        let (rw, rh, rluma) = decode_draw_image_asset_luma(&resized_asset).expect("decode resized");
+        assert_eq!((rw, rh), (8, 8));
+        assert_eq!(rluma.len(), 64);
+
+        let invalid_base64 = DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None };
+        assert!(decode_draw_image_asset_luma(&invalid_base64).is_none());
+
+        let invalid_image = DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(b"not a png"), width: None, height: None };
+        assert!(decode_draw_image_asset_luma(&invalid_image).is_none());
+    }
+
+    #[test]
+    fn resolve_draw_artboard_falls_back_to_layer_bounds_and_returns_none_when_no_bounds() {
+        let mut doc = default_draw_document("artboard-fallback", None);
+        doc.artboard = Some(DrawArtboard { width: 0.0, height: 0.0 });
+        doc.layers.clear();
+        let mut rect = create_draw_shape_layer_rect("R");
+        if let DrawLayerNode::Shape(shape) = &mut rect {
+            shape.rect = Some(DrawRect { x: 0.0, y: 0.0, width: 15.0, height: 25.0 });
+        }
+        doc.layers.push(rect);
+        let artboard = resolve_draw_artboard(&doc).expect("fallback bounds");
+        assert_eq!((artboard.width, artboard.height), (15.0, 25.0));
+
+        doc.artboard = None;
+        doc.layers.clear();
+        doc.layers.push(create_draw_group_layer("EmptyGroup"));
+        assert!(resolve_draw_artboard(&doc).is_none());
+    }
+
+    #[test]
+    fn resolve_trace_layer_segments_returns_empty_without_assets_or_source_or_valid_decode() {
+        let mut doc = default_draw_document("trace-empty", None);
+        doc.layers.clear();
+        doc.assets = None;
+        let trace_no_assets = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
+        assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
+
+        let mut assets = std::collections::HashMap::new();
+        assets.insert("present".to_string(), DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None });
+        doc.assets = Some(assets);
+        let trace_missing_key = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
+        assert!(resolve_trace_layer_segments(&doc, &trace_missing_key).is_empty());
+
+        let trace_bad_decode = DrawTraceBody { base: default_layer_base("T"), source_key: "present".into(), params: default_draw_trace_params() };
+        assert!(resolve_trace_layer_segments(&doc, &trace_bad_decode).is_empty());
+    }
+
+    #[test]
+    fn create_layer_by_kind_covers_all_known_kinds_and_fallbacks() {
+        assert_eq!(layer_kind_label(&create_layer_by_kind("shape:rect")), "shape:rect");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("shape:ellipse")), "shape:ellipse");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("shape:line")), "shape:line");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("shape:polygon")), "shape:polygon");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("shape:unknown")), "shape:rect");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("path")), "path");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("text")), "text");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("image")), "image");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("group")), "group");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("boolean")), "boolean");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("trace")), "trace");
+        assert_eq!(layer_kind_label(&create_layer_by_kind("nonsense")), "path");
+    }
+
+    #[test]
+    fn hex_to_rgba_handles_short_and_long_hex_and_invalid_digits() {
+        assert_eq!(hex_to_rgba("#fff", 1.0), [1.0, 1.0, 1.0, 1.0]);
+        assert_eq!(hex_to_rgba("#ff0000", 0.5), [1.0, 0.0, 0.0, 0.5]);
+        assert_eq!(hex_to_rgba("#zzzzzz", 1.0), [0.0, 0.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn rgba_to_hex_round_trips_and_clamps_out_of_range_channels() {
+        assert_eq!(rgba_to_hex([1.0, 0.0, 0.0, 1.0]), "#ff0000");
+        assert_eq!(rgba_to_hex([-1.0, 2.0, 0.5, 1.0]), "#00ff80");
+    }
+
+    #[test]
+    fn draw_op_for_layer_field_maps_every_known_field_and_rejects_unknown_field_or_missing_layer() {
+        let rect = create_draw_shape_layer_rect("Rect");
+        let rect_id = layer_id(&rect).to_string();
+        let boolean = create_draw_boolean_layer("Bool", "union", Vec::new());
+        let boolean_id = layer_id(&boolean).to_string();
+        let trace = create_draw_trace_layer("Trace", "src");
+        let trace_id = layer_id(&trace).to_string();
+        let mut doc = default_draw_document("field-ops", None);
+        doc.layers = vec![rect, boolean, trace];
+
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "name", &serde_json::json!("New")), Some(DrawOperation::SetLayerName { name, .. }) if name == "New"));
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "opacity", &serde_json::json!(0.4)), Some(DrawOperation::SetLayerOpacity { opacity, .. }) if (opacity - 0.4).abs() < 1e-9));
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "visible", &serde_json::json!(false)), Some(DrawOperation::SetLayerVisible { visible, .. }) if !visible));
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "locked", &serde_json::json!(true)), Some(DrawOperation::SetLayerLocked { locked, .. }) if locked));
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "blendMode", &serde_json::json!("multiply")), Some(DrawOperation::SetLayerBlendMode { blend_mode, .. }) if blend_mode == "multiply"));
+        assert!(matches!(draw_op_for_layer_field(&doc, &boolean_id, "booleanOperation", &serde_json::json!("xor")), Some(DrawOperation::SetBooleanOperation { boolean_operation, .. }) if boolean_operation == "xor"));
+
+        for field in ["transformX", "transformY", "transformScaleX", "transformScaleY", "transformRotation"] {
+            assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, field, &serde_json::json!(5.0)), Some(DrawOperation::SetLayerTransform { .. })));
+        }
+
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "fillColor", &serde_json::json!("#00ff00")), Some(DrawOperation::SetFill { fill: Some(FillStyle::Solid { color }), .. }) if color == [0.0, 1.0, 0.0, 1.0]));
+
+        doc = mutate_draw_layer(&doc, &rect_id, |layer| {
+            layer_base_mut(layer).attributes.fill = Some(FillStyle::Solid { color: [0.0, 0.0, 0.0, 0.25] });
+        });
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "fillColor", &serde_json::json!("#00ff00")), Some(DrawOperation::SetFill { fill: Some(FillStyle::Solid { color }), .. }) if color[3] == 0.25));
+
+        doc = mutate_draw_layer(&doc, &rect_id, |layer| {
+            layer_base_mut(layer).attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: Vec::new() });
+        });
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "fillColor", &serde_json::json!("#00ff00")), Some(DrawOperation::SetFill { fill: Some(FillStyle::Solid { color }), .. }) if color[3] == 1.0));
+
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "strokeWidth", &serde_json::json!(3.0)), Some(DrawOperation::SetStroke { stroke: Some(stroke), .. }) if stroke.width == 3.0 && stroke.cap == "butt"));
+        doc = mutate_draw_layer(&doc, &rect_id, |layer| {
+            layer_base_mut(layer).attributes.stroke = Some(StrokeStyle { color: [1.0, 1.0, 1.0, 1.0], width: 1.0, cap: "round".into(), join: "round".into(), dash: None });
+        });
+        assert!(matches!(draw_op_for_layer_field(&doc, &rect_id, "strokeWidth", &serde_json::json!(9.0)), Some(DrawOperation::SetStroke { stroke: Some(stroke), .. }) if stroke.width == 9.0 && stroke.cap == "round"));
+
+        assert!(draw_op_for_layer_field(&doc, &rect_id, "traceThreshold", &serde_json::json!(0.7)).is_none());
+        assert!(matches!(draw_op_for_layer_field(&doc, &trace_id, "traceThreshold", &serde_json::json!(0.7)), Some(DrawOperation::SetTraceParams { params, .. }) if params.threshold == 0.7));
+        assert!(matches!(draw_op_for_layer_field(&doc, &trace_id, "traceSimplify", &serde_json::json!(2.5)), Some(DrawOperation::SetTraceParams { params, .. }) if params.simplify_epsilon == 2.5));
+
+        assert!(draw_op_for_layer_field(&doc, &rect_id, "unknownField", &serde_json::json!(1)).is_none());
+        assert!(draw_op_for_layer_field(&doc, "missing-layer", "name", &serde_json::json!("x")).is_none());
+    }
+
+    #[test]
+    fn patch_layer_field_applies_mapped_field_and_returns_clone_for_unmapped_field_or_missing_layer() {
+        let rect = create_draw_shape_layer_rect("Rect");
+        let rect_id = layer_id(&rect).to_string();
+        let mut doc = default_draw_document("patch-field", None);
+        doc.layers = vec![rect];
+
+        let patched = patch_layer_field(&doc, &rect_id, "opacity", &serde_json::json!(0.2));
+        assert_eq!(find_draw_layer(&patched, &rect_id).map(|layer| layer_base(layer).opacity), Some(0.2));
+
+        let unchanged = patch_layer_field(&doc, &rect_id, "unmapped", &serde_json::json!(1));
+        assert_eq!(unchanged, doc);
+
+        let unchanged_missing = patch_layer_field(&doc, "missing", "opacity", &serde_json::json!(0.1));
+        assert_eq!(unchanged_missing, doc);
+    }
+
+    #[test]
+    fn apply_draw_edit_operation_covers_remaining_variants() {
+        let child = create_draw_shape_layer_rect("Child");
+        let child_id = layer_id(&child).to_string();
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child);
+        }
+        let group_id = layer_id(&group).to_string();
+        let mut doc = default_draw_document("apply-ops", None);
+        doc.layers = vec![group];
+
+        let with_camera = apply_draw_edit_operation(&doc, &DrawOperation::SetCamera { camera: DrawCamera { x: 5.0, y: 6.0, zoom: 2.0 } });
+        assert_eq!(with_camera.camera, DrawCamera { x: 5.0, y: 6.0, zoom: 2.0 });
+
+        let with_lock = apply_draw_edit_operation(&doc, &DrawOperation::SetLayerLocked { layer_id: child_id.clone(), locked: true });
+        assert!(find_draw_layer(&with_lock, &child_id).map(|layer| layer_base(layer).locked).unwrap());
+
+        let with_blend = apply_draw_edit_operation(&doc, &DrawOperation::SetLayerBlendMode { layer_id: child_id.clone(), blend_mode: "screen".into() });
+        assert_eq!(find_draw_layer(&with_blend, &child_id).map(|layer| layer_base(layer).blend_mode.clone()), Some("screen".to_string()));
+
+        let new_transform = DrawTransform { x: 1.0, y: 2.0, scale_x: 1.0, scale_y: 1.0, rotation: 0.0 };
+        let with_transform = apply_draw_edit_operation(&doc, &DrawOperation::SetLayerTransform { layer_id: child_id.clone(), transform: new_transform.clone() });
+        assert_eq!(find_draw_layer(&with_transform, &child_id).map(|layer| layer_base(layer).transform.clone()), Some(new_transform));
+
+        let with_fill = apply_draw_edit_operation(&doc, &DrawOperation::SetFill { layer_id: child_id.clone(), fill: Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }) });
+        assert!(find_draw_layer(&with_fill, &child_id).map(|layer| layer_base(layer).attributes.fill.is_some()).unwrap());
+
+        let boolean = create_draw_boolean_layer("Bool", "union", Vec::new());
+        let boolean_id = layer_id(&boolean).to_string();
+        doc.layers.push(boolean);
+        let with_bool_op = apply_draw_edit_operation(&doc, &DrawOperation::SetBooleanOperation { layer_id: boolean_id.clone(), boolean_operation: "xor".into() });
+        let DrawLayerNode::Boolean(bool_body) = find_draw_layer(&with_bool_op, &boolean_id).unwrap() else { panic!("expected boolean") };
+        assert_eq!(bool_body.operation, "xor");
+        let no_op_bool = apply_draw_edit_operation(&doc, &DrawOperation::SetBooleanOperation { layer_id: child_id.clone(), boolean_operation: "xor".into() });
+        assert_eq!(no_op_bool, doc);
+
+        let trace = create_draw_trace_layer("Trace", "src");
+        let trace_id = layer_id(&trace).to_string();
+        doc.layers.push(trace);
+        let new_params = DrawTraceParams { threshold: 0.9, simplify_epsilon: 3.3 };
+        let with_trace_params = apply_draw_edit_operation(&doc, &DrawOperation::SetTraceParams { layer_id: trace_id.clone(), params: new_params.clone() });
+        let DrawLayerNode::Trace(trace_body) = find_draw_layer(&with_trace_params, &trace_id).unwrap() else { panic!("expected trace") };
+        assert_eq!(trace_body.params, new_params);
+
+        let added_layer = create_draw_shape_layer_rect("Added");
+        let added_id = layer_id(&added_layer).to_string();
+        let with_add = apply_draw_edit_operation(&doc, &DrawOperation::AddLayer { parent_id: Some(group_id.clone()), index: Some(0), layer: Box::new(added_layer) });
+        assert!(find_draw_layer(&with_add, &added_id).is_some());
+        let DrawLayerNode::Group(added_group) = find_draw_layer(&with_add, &group_id).unwrap() else { panic!("expected group") };
+        assert_eq!(added_group.children.len(), 2);
+
+        let dup_missing = apply_draw_edit_operation(&doc, &DrawOperation::DuplicateLayer { layer_id: "missing".into() });
+        assert_eq!(dup_missing, doc);
+
+        let with_dup = apply_draw_edit_operation(&doc, &DrawOperation::DuplicateLayer { layer_id: child_id.clone() });
+        let DrawLayerNode::Group(dup_group) = find_draw_layer(&with_dup, &group_id).unwrap() else { panic!("expected group") };
+        assert_eq!(dup_group.children.len(), 2);
+        assert_ne!(layer_id(&dup_group.children[1]), child_id);
+
+        let with_remove = apply_draw_edit_operation(&doc, &DrawOperation::RemoveLayer { layer_id: child_id.clone() });
+        let DrawLayerNode::Group(remaining_group) = find_draw_layer(&with_remove, &group_id).unwrap() else { panic!("expected group") };
+        assert!(remaining_group.children.is_empty());
+
+        let with_reorder = apply_draw_edit_operation(&doc, &DrawOperation::ReorderLayer { layer_id: boolean_id.clone(), parent_id: Some(group_id.clone()), index: 0 });
+        let DrawLayerNode::Group(reordered_group) = find_draw_layer(&with_reorder, &group_id).unwrap() else { panic!("expected group") };
+        assert!(reordered_group.children.iter().any(|child| layer_id(child) == boolean_id));
+
+        let reorder_missing = apply_draw_edit_operation(&doc, &DrawOperation::ReorderLayer { layer_id: "missing".into(), parent_id: None, index: 0 });
+        assert_eq!(reorder_missing, doc);
+    }
+
+    #[test]
+    fn find_draw_layer_location_reports_parent_and_index_or_none_when_missing() {
+        let child = create_draw_shape_layer_rect("Child");
+        let child_id = layer_id(&child).to_string();
+        let mut group = create_draw_group_layer("Group");
+        if let DrawLayerNode::Group(body) = &mut group {
+            body.children.push(child);
+        }
+        let group_id = layer_id(&group).to_string();
+        let top_level = create_draw_text_layer("Top");
+        let top_id = layer_id(&top_level).to_string();
+        let mut doc = default_draw_document("locate", None);
+        doc.layers = vec![group, top_level];
+
+        let child_location = find_draw_layer_location(&doc, &child_id).expect("child location");
+        assert_eq!(child_location.parent_id.as_deref(), Some(group_id.as_str()));
+        assert_eq!(child_location.index, 0);
+
+        let top_location = find_draw_layer_location(&doc, &top_id).expect("top location");
+        assert_eq!(top_location.parent_id, None);
+        assert_eq!(top_location.index, 1);
+
+        assert!(find_draw_layer_location(&doc, "missing").is_none());
+    }
+
+    #[test]
+    fn draw_operation_diff_apply_absorb_and_backwards_round_trip() {
+        let rect = create_draw_shape_layer_rect("Rect");
+        let rect_id = layer_id(&rect).to_string();
+        let mut doc = default_draw_document("diff-test", None);
+        doc.layers = vec![rect];
+
+        let add_op = DrawOperation::AddLayer { parent_id: None, index: None, layer: Box::new(create_draw_shape_layer_rect("New")) };
+        let add_diff = add_op.diff(&doc);
+        let after_add = add_diff.apply(&doc);
+        assert_eq!(after_add.layers.len(), 2);
+
+        let camera_op = DrawOperation::SetCamera { camera: DrawCamera { x: 3.0, y: 4.0, zoom: 1.5 } };
+        let camera_diff = camera_op.diff(&doc);
+        assert_eq!(camera_diff.apply(&doc).camera, DrawCamera { x: 3.0, y: 4.0, zoom: 1.5 });
+
+        let remove_op = DrawOperation::RemoveLayer { layer_id: rect_id.clone() };
+        let remove_diff = remove_op.diff(&doc);
+        assert!(remove_diff.apply(&doc).layers.is_empty());
+
+        let visible_op = DrawOperation::SetLayerVisible { layer_id: rect_id.clone(), visible: false };
+        let visible_diff = visible_op.diff(&doc);
+        let after_visible = visible_diff.apply(&doc);
+        assert!(!find_draw_layer(&after_visible, &rect_id).map(|layer| layer_base(layer).visible).unwrap());
+
+        let fill_op = DrawOperation::SetFill { layer_id: rect_id.clone(), fill: Some(FillStyle::Solid { color: [1.0, 1.0, 1.0, 1.0] }) };
+        let fill_diff = fill_op.diff(&doc);
+        assert_eq!(fill_diff.document, Some(apply_draw_edit_operation(&doc, &fill_op)));
+
+        let backwards = fill_op.backwards(&doc);
+        assert_eq!(backwards.len(), 1);
+        assert!(matches!(&backwards[0], DrawOperation::SetDocument { document } if *document == doc));
+
+        let mut absorb_target = DrawDiff {
+            camera: Some(DrawCamera { x: 1.0, y: 1.0, zoom: 1.0 }),
+            layer_patches: vec![DrawLayerTreePatch { layer_id: rect_id.clone(), base: DrawLayerBasePatch { visible: Some(false), ..Default::default() } }],
+            ..Default::default()
+        };
+        let more_patches = DrawDiff { layer_patches: vec![DrawLayerTreePatch { layer_id: "other".into(), base: DrawLayerBasePatch { locked: Some(true), ..Default::default() } }], ..Default::default() };
+        absorb_target.absorb(more_patches);
+        assert_eq!(absorb_target.layer_patches.len(), 2);
+        assert_eq!(absorb_target.camera, Some(DrawCamera { x: 1.0, y: 1.0, zoom: 1.0 }));
+
+        let document_override = DrawDiff { document: Some(doc.clone()), ..Default::default() };
+        absorb_target.absorb(document_override);
+        assert_eq!(absorb_target.document, Some(doc.clone()));
+        assert_eq!(absorb_target.camera, None);
+    }
+
+    #[test]
+    fn draw_document_to_svg_renders_shape_text_image_and_gradient_nodes() {
+        let mut rect = create_draw_shape_layer_rect("Rect");
+        if let DrawLayerNode::Shape(shape) = &mut rect {
+            shape.base.attributes.fill = Some(FillStyle::Solid { color: [1.0, 0.0, 0.0, 0.5] });
+            shape.base.attributes.stroke = Some(StrokeStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.0, cap: "round".into(), join: "round".into(), dash: None });
+        }
+        let mut gradient_rect = create_draw_shape_layer_rect("Gradient");
+        if let DrawLayerNode::Shape(shape) = &mut gradient_rect {
+            shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: Vec::new() });
+        }
+        let text = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
+        let mut assets = std::collections::HashMap::new();
+        assets.insert("img".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(4), height: Some(4) });
+        let image = create_draw_image_layer("Image", "img");
+
+        let mut doc = default_draw_document("svg-test", None);
+        doc.layers = vec![rect, gradient_rect, text, image];
+        doc.assets = Some(assets);
+        doc.artboard = None;
+
+        let (svg, width, height) = draw_document_to_svg(&doc);
+        assert!(width >= 1 && height >= 1);
+        assert!(svg.contains("rgba(255,0,0,0.500)"));
+        assert!(svg.contains("fill=\"none\""));
+        assert!(svg.contains("&lt;a &amp; b&gt;"));
+        assert!(svg.contains("data:image/png;base64,aGVsbG8="));
+
+        let json_error = draw_document_json_to_svg(&serde_json::json!({"bad": true}));
+        assert!(json_error.is_err());
+    }
+
+    #[test]
+    fn draw_document_json_to_dwg_bytes_errors_on_invalid_json_and_skips_invisible_layers() {
+        let bad_json = serde_json::json!({"not": "a document"});
+        assert!(draw_document_json_to_dwg_bytes(&bad_json).is_err());
+
+        let mut hidden = create_draw_shape_layer_rect("Hidden");
+        layer_base_mut(&mut hidden).visible = false;
+        let mut doc = default_draw_document("hidden-only", None);
+        doc.layers = vec![hidden];
+        let value = serde_json::to_value(&doc).unwrap();
+        let bytes = draw_document_json_to_dwg_bytes(&value).expect("export empty dwg");
+        let drawing = semio_framework_core::dwg_from_bytes(&bytes).expect("decode dwg");
+        assert!(drawing.entities.is_empty());
+    }
+
+    #[test]
+    fn draw_document_json_from_dwg_falls_back_to_single_empty_layer_when_no_entities() {
+        let drawing = semio_framework_core::DwgDrawing::default();
+        let value = draw_document_json_from_dwg(&drawing).expect("import empty dwg");
+        let doc: DrawDocument = serde_json::from_value(value).expect("valid document");
+        assert_eq!(doc.layers.len(), 1);
+        assert!(matches!(&doc.layers[0], DrawLayerNode::Path(body) if body.segments.is_empty()));
+        assert_eq!(doc.artboard, Some(DrawArtboard { width: 1.0, height: 1.0 }));
+    }
+
+    #[test]
+    fn lex_draw_dsl_reports_errors_for_unterminated_string_invalid_number_and_unexpected_character() {
+        assert!(lex_draw_dsl("\"unterminated").unwrap_err().message.contains("unterminated string"));
+        assert!(lex_draw_dsl("-.").unwrap_err().message.contains("invalid number"));
+        assert!(lex_draw_dsl("#").unwrap_err().message.contains("unexpected character"));
+    }
+
+    #[test]
+    fn lex_draw_dsl_handles_escaped_and_literal_characters_inside_strings() {
+        let toks = lex_draw_dsl("\"a\\qb\\nc\"").expect("lex");
+        assert!(matches!(&toks[0].tok, DrawTok::Str(value) if value == "aqb\nc"));
+
+        let toks_with_newline = lex_draw_dsl("\"line1\nline2\"").expect("lex");
+        assert!(matches!(&toks_with_newline[0].tok, DrawTok::Str(value) if value == "line1\nline2"));
+    }
+
+    #[test]
+    fn draw_document_parse_dsl_reports_errors_for_missing_camera_and_unknown_layer_kind() {
+        let missing_camera = DrawDocument::parse_dsl("doc test schema=draw.document\nbogus");
+        assert!(missing_camera.is_err());
+
+        let unknown_layer = DrawDocument::parse_dsl("doc test schema=draw.document\ncamera x=0 y=0 zoom=1\nweird layer-1 \"Weird\"");
+        let err = unknown_layer.unwrap_err();
+        assert!(err.message.contains("unknown layer kind"));
+    }
+
+    #[test]
+    fn draw_operation_parse_op_reports_error_for_unknown_operation_name() {
+        let err = DrawOperation::parse_op("bogusOperation layerId=layer-1").unwrap_err();
+        assert!(err.message.contains("unknown draw operation"));
+    }
+    //#endregion 🔖CoverageTests
 }
 //#endregion 🧪Tests

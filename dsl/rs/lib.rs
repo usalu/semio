@@ -14,7 +14,7 @@
 extern crate self as dsl;
 
 pub use dsl_core::*;
-pub use dsl_derive::{DslDocument, DslOps, DslRecord, DslScalar};
+pub use dsl_derive::{DslDocument, DslEnum, DslOps, DslRecord, DslScalar};
 pub use dsl_schema::*;
 
 //#region 🔖Field
@@ -122,6 +122,44 @@ impl DslField for String {
         }
     }
 }
+/// @emoji 📚 General recursion seam: `#[derive(DslRecord)]`/`#[derive(DslScalar)]` fields classify
+/// `Vec<T>`/`[T; N]` directly (so their own printed shape stays field-specific), but a NESTED
+/// collection — `Vec<Vec<T>>`, a fixed-size array field, ... — needs its inner element type to
+/// satisfy `DslField` itself. These two blanket impls close that gap generically instead of adding
+/// a special-cased `FieldKind` for every depth of nesting.
+impl<T: DslField> DslField for Vec<T> {
+    fn shape() -> Shape {
+        Shape::List(Box::new(T::shape()))
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::List(self.iter().map(DslField::to_value).collect())
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::List(items) => items.iter().map(T::from_value).collect(),
+            other => Err(format!("expected List, found {other:?}")),
+        }
+    }
+}
+
+/// @emoji 📐 Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
+impl<T: DslField, const N: usize> DslField for [T; N] {
+    fn shape() -> Shape {
+        Shape::Tuple(Box::new(T::shape()), Some(N))
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::Tuple(self.iter().map(DslField::to_value).collect())
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::Tuple(items) if items.len() == N => {
+                let converted: Vec<T> = items.iter().map(T::from_value).collect::<Result<_, _>>()?;
+                converted.try_into().map_err(|_| format!("expected {N} items, got a length mismatch"))
+            }
+            other => Err(format!("expected a {N}-item Tuple, found {other:?}")),
+        }
+    }
+}
 //#endregion 🔖Field
 
 //#region 🔖Variants
@@ -129,7 +167,10 @@ impl DslField for String {
 /// bound for `#[dsl(statements)] Vec<T>` collection fields and for `#[derive(DslOps)]` operation
 /// enums. `#[derive(DslEnum)]`-with-struct-variants and `#[derive(DslOps)]` both implement this.
 pub trait DslVariants: Sized {
-    fn variants() -> Vec<(String, RecordSpec)>;
+    /// @emoji 🐌 Lazy: each entry is a zero-capture `fn` pointer, not an eagerly-built `RecordSpec`
+    /// — a self-referential grammar's own `variants()` would otherwise need to recurse infinitely
+    /// just to construct this list. See [`Shape::Statements`]'s doc comment for the full rationale.
+    fn variants() -> Vec<(String, fn() -> RecordSpec)>;
     fn to_named_record(&self) -> (String, RecordValue);
     /// @emoji ⚠️ Returns `TextError` (not `String`, unlike [`DslField::from_value`]) so
     /// generated bodies can `?`-propagate it directly — this is the same error type
@@ -288,6 +329,59 @@ mod tests {
     #[test]
     fn derived_op_satisfies_vcs_test_support_helpers() {
         vcs::test_support::assert_op_line_round_trip(&DerivedOperation::SetCategory { category: "wall".to_string() });
+    }
+
+    // --- end-to-end derive test: `#[derive(DslEnum)]` recursive block tree (the `note`/`draw`
+    // pilots' hard case), `Vec<Vec<T>>`, `[T; N]`, and `BTreeMap<String, V>` fields ---
+
+    #[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+    enum SceneNode {
+        #[dsl(key = "point")]
+        Point { pos: [f64; 3] },
+        #[dsl(key = "grid")]
+        Grid { rows: Vec<Vec<i32>> },
+        #[dsl(key = "group")]
+        Group {
+            #[dsl(positional)]
+            id: String,
+            #[dsl(statements, block)]
+            children: Vec<SceneNode>,
+        },
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    #[dsl(keyword = "camera")]
+    struct SceneCamera {
+        x: f64,
+        y: f64,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "scenedoc")]
+    struct SceneDocument {
+        // `#[dsl(block)]` alone (no `statements`) wraps a plain nested-record scalar field so it
+        // prints as a bare `camera { x=.. y=.. }` line instead of a `camera=...` attribute.
+        #[dsl(block)]
+        camera: SceneCamera,
+        #[dsl(statements, block)]
+        nodes: Vec<SceneNode>,
+        tags: std::collections::BTreeMap<String, String>,
+    }
+
+    #[test]
+    fn derived_enum_recursive_block_tree_and_map_and_nested_collections_round_trip() {
+        let doc = SceneDocument {
+            camera: SceneCamera { x: 1.0, y: 2.0 },
+            nodes: vec![
+                SceneNode::Point { pos: [1.0, 2.0, 3.0] },
+                SceneNode::Grid { rows: vec![vec![1, 2], vec![3, 4, 5]] },
+                SceneNode::Group { id: "g1".to_string(), children: vec![SceneNode::Point { pos: [0.0, 0.0, 0.0] }] },
+            ],
+            tags: std::collections::BTreeMap::from([("author".to_string(), "semio".to_string()), ("version".to_string(), "1".to_string())]),
+        };
+        let printed = <SceneDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        let parsed = <SceneDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
     }
 }
 //#endregion 🧪Tests

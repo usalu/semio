@@ -1,0 +1,18 @@
+P5 scope note (2026-07-26)
+
+Implemented: D4 symmetry group (symmetry.rs — Transform2d, SymmetryGroup2d, group-closure
+tested), 2D overlapping-pattern extraction (extract.rs — extract_2d, PatternDecoder2d,
+periodic/non-periodic sampling, multi-sample frequency merge, symmetry expansion), validated by
+the canonical "periodic sample reproduces itself as a solution on a same-size wrapped grid" test.
+
+Deferred (not part of this phase, tracked for a later pass):
+- Explicit socket/connector system in tiled.rs (SocketLabel/SocketRule/wildcards). Current
+  allow/deny/allow_where already lets callers express socket-equivalent compatibility by
+  predicate; a dedicated socket API is sugar over that, not new capability.
+- learn_graph_model (learning allowed relation pairs from exemplar labeled graphs) — graph-side
+  pattern learning, analogous to extract_2d but for arbitrary topologies.
+- Negative-sample subtraction and wildcard tiles in extraction (extract_2d supports positive
+  frequency-weighted extraction only so far).
+- 3D extraction (extract_3d) lands with Grid3dSolver in phase 8.
+
+None of these block phases 6-12; they are additive and can land independently later.

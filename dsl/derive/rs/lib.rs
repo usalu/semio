@@ -23,6 +23,7 @@ struct FieldAttrs {
     list: bool,
     tuple: bool,
     statements: bool,
+    block: bool,
     base64: bool,
     flatten: bool,
     raw_lines_count_field: Option<String>,
@@ -71,6 +72,8 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
                 out.tuple = true;
             } else if meta.path.is_ident("statements") {
                 out.statements = true;
+            } else if meta.path.is_ident("block") {
+                out.block = true;
             } else if meta.path.is_ident("base64") {
                 out.base64 = true;
             } else if meta.path.is_ident("flatten") {
@@ -93,6 +96,11 @@ enum FieldKind {
     VecList(Box<Type>),
     VecTuple(Box<Type>),
     VecStatements(Box<Type>),
+    /// `#[dsl(statements, block)]` — same tagged-variant collection as `VecStatements`, but wrapped
+    /// in `{ ... }` so it can sit anywhere in field order (not just as an unbounded trailing field).
+    VecBlockStatements(Box<Type>),
+    /// `BTreeMap<String, V>` — `V` must itself implement `DslField`; keys print sorted.
+    MapField(Box<Type>),
     Bytes64,
     IdentString,
 }
@@ -114,6 +122,28 @@ fn is_vec_u8(ty: &Type) -> bool {
     inner_of(ty, "Vec").is_some_and(|inner| matches!(&inner, Type::Path(p) if p.path.is_ident("u8")))
 }
 
+/// @emoji 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
+/// `BTreeMap` keyed by something other than `String` (the engine's `Shape::Map` is string-keyed
+/// only, matching every hand-rolled `{ key=value }` grammar it replaces).
+fn btreemap_string_value(ty: &Type) -> Option<Type> {
+    let Type::Path(path) = ty else { return None };
+    let segment = path.path.segments.last()?;
+    if segment.ident != "BTreeMap" {
+        return None;
+    }
+    let syn::PathArguments::AngleBracketed(args) = &segment.arguments else { return None };
+    let types: Vec<&Type> = args
+        .args
+        .iter()
+        .filter_map(|arg| match arg {
+            syn::GenericArgument::Type(t) => Some(t),
+            _ => None,
+        })
+        .collect();
+    let [key, value] = types.as_slice() else { return None };
+    matches!(key, Type::Path(p) if p.path.is_ident("String")).then(|| (*value).clone())
+}
+
 fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
     if let Some(inner) = inner_of(ty, "Option") {
         return (FieldKind::OptionScalar(Box::new(inner.clone())), inner);
@@ -121,9 +151,13 @@ fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
     if attrs.base64 && is_vec_u8(ty) {
         return (FieldKind::Bytes64, ty.clone());
     }
+    if let Some(value_ty) = btreemap_string_value(ty) {
+        return (FieldKind::MapField(Box::new(value_ty.clone())), value_ty);
+    }
     if let Some(inner) = inner_of(ty, "Vec") {
         if attrs.statements {
-            return (FieldKind::VecStatements(Box::new(inner.clone())), inner);
+            let kind = if attrs.block { FieldKind::VecBlockStatements(Box::new(inner.clone())) } else { FieldKind::VecStatements(Box::new(inner.clone())) };
+            return (kind, inner);
         }
         if attrs.tuple {
             return (FieldKind::VecTuple(Box::new(inner.clone())), inner);
@@ -146,6 +180,11 @@ struct FieldPlan {
     optional: bool,
     kind: FieldKind,
     elem_ty: Type,
+    /// `#[dsl(block)]` on a field whose `FieldKind` doesn't already imply its own `{ }` wrapping
+    /// (`VecBlockStatements` handles that itself) — wraps whatever shape that kind would otherwise
+    /// produce in `Shape::Block`, e.g. a single nested `#[derive(DslRecord)]` field printed as a
+    /// bare `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
+    block: bool,
 }
 
 fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
@@ -164,7 +203,8 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         } else {
             None
         };
-        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty });
+        let block = attrs.block && !matches!(kind, FieldKind::VecBlockStatements(_));
+        out.push(FieldPlan { ident, id: index as u16, key, positional, optional, kind, elem_ty, block });
     }
     out
 }
@@ -180,7 +220,7 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
     let mut field_idents = Vec::new();
 
     for plan in &plans {
-        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty } = plan;
+        let FieldPlan { ident, id, key, positional, optional, kind, elem_ty, block } = plan;
         field_idents.push(ident.clone());
         let pos_expr = match positional {
             Some(p) => quote! { .positional(#p as u8) },
@@ -262,6 +302,54 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     }
                 },
             ),
+            FieldKind::VecBlockStatements(inner) => (
+                quote! { ::dsl::Shape::Block(Box::new(::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()))) },
+                quote! { ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(self.#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()))) },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::Block(inner_value) => match inner_value.as_ref() {
+                            ::dsl::FieldValue::Statements(items) => items
+                                .iter()
+                                .map(|(keyword, record)| <#inner as ::dsl::DslVariants>::from_named_record(keyword, record))
+                                .collect::<Result<Vec<_>, ::dsl::TextError>>()?,
+                            other => return Err(::dsl::__rt::field_error(format!("expected Statements inside Block, found {other:?}"))),
+                        },
+                        other => return Err(::dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
+                    }
+                },
+            ),
+            FieldKind::MapField(inner) => (
+                quote! { ::dsl::Shape::Map(Box::new(<#inner as ::dsl::DslField>::shape())) },
+                quote! { ::dsl::FieldValue::Map(self.#ident.iter().map(|(k, v)| (k.clone(), ::dsl::DslField::to_value(v))).collect()) },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::Map(entries) => entries
+                            .iter()
+                            .map(|(k, v)| Ok((k.clone(), <#inner as ::dsl::DslField>::from_value(v).map_err(::dsl::__rt::field_error)?)))
+                            .collect::<Result<::std::collections::BTreeMap<String, _>, ::dsl::TextError>>()?,
+                        other => return Err(::dsl::__rt::field_error(format!("expected Map, found {other:?}"))),
+                    }
+                },
+            ),
+        };
+
+        // `#[dsl(block)]` on a field whose own `FieldKind` doesn't already imply `{ }` wrapping
+        // (`VecBlockStatements` does that itself) — generically wraps whatever shape the match
+        // above produced, e.g. turning a nested `#[derive(DslRecord)]` scalar field into a bare
+        // `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
+        let (shape_expr, to_value_expr, from_value_expr) = if *block {
+            (
+                quote! { ::dsl::Shape::Block(Box::new(#shape_expr)) },
+                quote! { ::dsl::FieldValue::Block(Box::new(#to_value_expr)) },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::Block(inner) => { let value = inner.as_ref(); #from_value_expr },
+                        other => return Err(::dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
+                    }
+                },
+            )
+        } else {
+            (shape_expr, to_value_expr, from_value_expr)
         };
 
         spec_exprs.push(quote! {
@@ -378,6 +466,23 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
                 ::dsl::__rt::print_document_record(&self.__dsl_to_record(), &Self::__dsl_spec())
             }
         }
+
+        // A document type can also be nested as an ordinary field (e.g. a "whole document
+        // snapshot" operation variant), so it needs `DslField` too, not just `vcs::DocumentDsl`.
+        impl ::dsl::DslField for #name {
+            fn shape() -> ::dsl::Shape {
+                ::dsl::Shape::Record(Box::new(Self::__dsl_spec()))
+            }
+            fn to_value(&self) -> ::dsl::FieldValue {
+                ::dsl::FieldValue::Record(self.__dsl_to_record())
+            }
+            fn from_value(value: &::dsl::FieldValue) -> Result<Self, String> {
+                match value {
+                    ::dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
+                    other => Err(format!("expected Record, found {other:?}")),
+                }
+            }
+        }
     };
     expanded.into()
 }
@@ -431,14 +536,10 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
 //#endregion 🔖DslScalar
 
 //#region 🔖DslOps
-#[proc_macro_derive(DslOps, attributes(dsl))]
-pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
-    let input = parse_macro_input!(input as DeriveInput);
-    let name = input.ident.clone();
-    let Data::Enum(data) = &input.data else {
-        return syn::Error::new_spanned(&input, "DslOps only supports enums").to_compile_error().into();
-    };
-
+/// @emoji 🌿 Builds the `impl ::dsl::DslVariants for #name` block shared by `DslEnum` (data-only
+/// tagged enums, e.g. a recursive block tree) and `DslOps` (operation enums, which additionally get
+/// `vcs::OpText` on top of this same `DslVariants` foundation).
+fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2::TokenStream {
     let mut variants_exprs = Vec::new();
     let mut to_named_arms = Vec::new();
     let mut from_named_arms = Vec::new();
@@ -451,7 +552,7 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
         let (spec_exprs, _to_value_stmts, from_value_stmts, field_idents) = record_codegen(fields);
 
         variants_exprs.push(quote! {
-            (#keyword.to_string(), ::dsl::RecordSpec::new_owned(Some(#keyword.to_string()), ::dsl::RecordLayout::Inline, vec![ #(#spec_exprs),* ]))
+            (#keyword.to_string(), (|| ::dsl::RecordSpec::new_owned(Some(#keyword.to_string()), ::dsl::RecordLayout::Inline, vec![ #(#spec_exprs),* ])) as fn() -> ::dsl::RecordSpec)
         });
 
         // Build a per-variant to-record conversion using the field bindings from a `match` on
@@ -478,9 +579,9 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
         });
     }
 
-    let expanded = quote! {
+    quote! {
         impl ::dsl::DslVariants for #name {
-            fn variants() -> Vec<(String, ::dsl::RecordSpec)> {
+            fn variants() -> Vec<(String, fn() -> ::dsl::RecordSpec)> {
                 vec![ #(#variants_exprs),* ]
             }
             fn to_named_record(&self) -> (String, ::dsl::RecordValue) {
@@ -489,18 +590,32 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
             fn from_named_record(keyword: &str, record: &::dsl::RecordValue) -> Result<Self, ::dsl::TextError> {
                 match keyword {
                     #(#from_named_arms,)*
-                    other => Err(::dsl::__rt::field_error(format!("unknown operation keyword '{other}'"))),
+                    other => Err(::dsl::__rt::field_error(format!("unknown keyword '{other}'"))),
                 }
             }
         }
+    }
+}
+
+#[proc_macro_derive(DslOps, attributes(dsl))]
+pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident.clone();
+    let Data::Enum(data) = &input.data else {
+        return syn::Error::new_spanned(&input, "DslOps only supports enums").to_compile_error().into();
+    };
+    let variants_impl = dsl_variants_codegen(&name, data);
+
+    let expanded = quote! {
+        #variants_impl
 
         impl ::vcs::OpText for #name {
             fn parse_op(line: &str) -> Result<Self, ::vcs::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
-                for (keyword, spec) in &variants {
+                for (keyword, spec_fn) in &variants {
                     let probe = format!("{} ", keyword);
                     if line == keyword.as_str() || line.starts_with(&probe) {
-                        let record = ::dsl::__rt::parse_inline_record(line, spec)?;
+                        let record = ::dsl::__rt::parse_inline_record(line, &spec_fn())?;
                         return <Self as ::dsl::DslVariants>::from_named_record(keyword, &record);
                     }
                 }
@@ -509,14 +624,32 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
             fn print_op(&self) -> String {
                 let (keyword, record) = <Self as ::dsl::DslVariants>::to_named_record(self);
                 let variants = <Self as ::dsl::DslVariants>::variants();
-                let spec = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| s.clone()).expect("variant spec must exist for its own keyword");
-                ::dsl::__rt::print_inline_record(&record, &spec)
+                let spec_fn = variants.iter().find(|(k, _)| k == &keyword).map(|(_, s)| *s).expect("variant spec must exist for its own keyword");
+                ::dsl::__rt::print_inline_record(&record, &spec_fn())
             }
         }
     };
     expanded.into()
 }
+//#endregion 🔖DslOps
 
+//#region 🔖DslEnum
+/// @emoji 🌳 Tagged-record enum whose variants are plain data (a recursive block tree, a wire
+/// node kind, ...) rather than an `Operation` — implements `::dsl::DslVariants` only, so it can be
+/// used inside `#[dsl(statements)]`/`#[dsl(statements, block)]` collection fields without also
+/// gaining (and having to satisfy the bounds of) `vcs::OpText`.
+#[proc_macro_derive(DslEnum, attributes(dsl))]
+pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
+    let input = parse_macro_input!(input as DeriveInput);
+    let name = input.ident.clone();
+    let Data::Enum(data) = &input.data else {
+        return syn::Error::new_spanned(&input, "DslEnum only supports enums").to_compile_error().into();
+    };
+    dsl_variants_codegen(&name, data).into()
+}
+//#endregion 🔖DslEnum
+
+//#region 🔖VariantHelpers
 /// @emoji 🔡 Falls back to the variant's own Rust identifier as the keyword when no
 /// `#[dsl(key = "...")]` override is given (kept literal, no case conversion, so the printed
 /// keyword matches exactly what a reader would expect from the enum's own naming).
@@ -532,7 +665,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
     plans
         .iter()
         .map(|plan| {
-            let FieldPlan { ident, id, kind, .. } = plan;
+            let FieldPlan { ident, id, kind, block, .. } = plan;
             let to_value_expr: proc_macro2::TokenStream = match kind {
                 FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident) },
                 FieldKind::IdentString => quote! { ::dsl::FieldValue::Ident(#ident.clone()) },
@@ -546,9 +679,12 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                 FieldKind::VecList(_) => quote! { ::dsl::FieldValue::List(#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
                 FieldKind::VecTuple(_) => quote! { ::dsl::FieldValue::Tuple(#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
                 FieldKind::VecStatements(_) => quote! { ::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()) },
+                FieldKind::VecBlockStatements(_) => quote! { ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()))) },
+                FieldKind::MapField(_) => quote! { ::dsl::FieldValue::Map(#ident.iter().map(|(k, v)| (k.clone(), ::dsl::DslField::to_value(v))).collect()) },
             };
+            let to_value_expr = if *block { quote! { ::dsl::FieldValue::Block(Box::new(#to_value_expr)) } } else { to_value_expr };
             quote! { record.fields.insert(#id, #to_value_expr); }
         })
         .collect()
 }
-//#endregion 🔖DslOps
+//#endregion 🔖VariantHelpers

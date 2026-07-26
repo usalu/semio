@@ -6436,6 +6436,7 @@ dependencies = [
 name = "note-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",

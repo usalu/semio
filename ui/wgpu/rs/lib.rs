@@ -16485,8 +16485,10 @@ mod tests {
     use crate::geometry::Rect;
     use crate::input::InputState;
     use crate::widgets::{
-        render_widget, ControlNode, KeyValueEntry, SelectItem, TreeItem, TreeItemAction,
-        TreeSection, WidgetContext, WidgetNode,
+        draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget,
+        wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta,
+        StepperMeta, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps,
+        WidgetNode,
     };
     use std::collections::HashMap as StdHashMap;
 
@@ -17049,6 +17051,388 @@ mod tests {
         assert_eq!(ui.theme().text.a, Theme::default().text.a);
     }
     //#endregion 🔬IntrospectionTests
+
+    //#region 🧩WidgetsInternalsTests
+    /// 🧰 Owns every piece `widgets::WidgetContext<'_, ActionDescriptor>` borrows, so each test can
+    /// build one without fighting lifetimes; `ctx()` re-borrows fresh each call (a `WidgetContext`
+    /// isn't `Clone`/reusable once passed to `render_widget`, which can mutate through it).
+    struct WidgetHarness {
+        draw: DrawList,
+        atlas: FontAtlas,
+        theme: Theme,
+        input: InputState<ActionDescriptor>,
+        scroll_offsets: StdHashMap<String, f32>,
+        collapsed_sections: StdHashMap<String, bool>,
+        open_selects: StdHashMap<String, bool>,
+        maps: WidgetInteractionMaps<ActionDescriptor>,
+    }
+
+    impl WidgetHarness {
+        fn new() -> Self {
+            Self {
+                draw: DrawList::default(),
+                atlas: FontAtlas::builtin(),
+                theme: Theme::default(),
+                input: InputState::default(),
+                scroll_offsets: StdHashMap::new(),
+                collapsed_sections: StdHashMap::new(),
+                open_selects: StdHashMap::new(),
+                maps: WidgetInteractionMaps::default(),
+            }
+        }
+
+        fn ctx(&mut self) -> WidgetContext<'_, ActionDescriptor> {
+            WidgetContext {
+                draw: &mut self.draw,
+                overlay: None,
+                atlas: &mut self.atlas,
+                icons: None,
+                input: &mut self.input,
+                theme: &self.theme,
+                scroll_offsets: &mut self.scroll_offsets,
+                collapsed_sections: &mut self.collapsed_sections,
+                open_selects: &mut self.open_selects,
+                interaction_maps: Some(&mut self.maps),
+                pick_clip: None,
+            }
+        }
+    }
+
+    #[test]
+    fn wrap_text_wraps_long_text_across_multiple_lines() {
+        let mut atlas = FontAtlas::builtin();
+        let long = "word ".repeat(40);
+        let lines = wrap_text(&mut atlas, &long, 100.0, 16.0);
+        assert!(lines.len() > 1, "text far wider than max_width must wrap into multiple lines");
+        for line in &lines {
+            assert!(!line.is_empty());
+        }
+    }
+
+    #[test]
+    fn wrap_text_of_empty_string_yields_one_empty_line() {
+        let mut atlas = FontAtlas::builtin();
+        let lines = wrap_text(&mut atlas, "", 200.0, 16.0);
+        assert_eq!(lines, vec![String::new()], "an empty input must still produce a single (empty) line, never zero lines");
+    }
+
+    #[test]
+    fn measure_widget_stack_vertical_sums_child_heights_and_maxes_width() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let node = WidgetNode::<ActionDescriptor>::Stack {
+            direction: "vertical".into(),
+            gap: Some("none".into()),
+            padding: Some("none".into()),
+            children: vec![WidgetNode::Separator, WidgetNode::Separator],
+        };
+        let (_, h) = measure_widget(&mut atlas, &theme, &node);
+        let (_, single_h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Separator);
+        assert!((h - single_h * 2.0).abs() < 0.001, "two stacked separators with no gap/padding must measure to exactly twice one separator's height, got {h} vs {single_h}");
+    }
+
+    #[test]
+    fn measure_widget_stack_horizontal_sums_child_widths() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let button = || WidgetNode::<ActionDescriptor>::Button { id: Some("b".into()), icon_id: None, label: "Go".into(), event: None };
+        let node = WidgetNode::Stack { direction: "horizontal".into(), gap: Some("none".into()), padding: Some("none".into()), children: vec![button(), button()] };
+        let (w, _) = measure_widget(&mut atlas, &theme, &node);
+        assert!((w - theme.control_height * 2.0).abs() < 0.001, "two gap-less horizontal buttons must measure to exactly twice one control's width");
+    }
+
+    #[test]
+    fn measure_widget_separator_uses_theme_control_height_floor() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let (w, h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Separator);
+        assert_eq!(w, theme.control_height.max(1.0));
+        assert_eq!(h, 1.0 + theme.gap_standard);
+    }
+
+    #[test]
+    fn measure_widget_key_value_grows_with_entry_count() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let one = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: "A".into(), value: "1".into() }] };
+        let two = WidgetNode::<ActionDescriptor>::KeyValue { entries: vec![KeyValueEntry { label: "A".into(), value: "1".into() }, KeyValueEntry { label: "B".into(), value: "2".into() }] };
+        let (_, h1) = measure_widget(&mut atlas, &theme, &one);
+        let (_, h2) = measure_widget(&mut atlas, &theme, &two);
+        assert!((h2 - h1 * 2.0).abs() < 0.001, "KeyValue height must scale linearly with entry count");
+    }
+
+    #[test]
+    fn measure_widget_ring_is_fixed_size() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let (w, h) = measure_widget(&mut atlas, &theme, &WidgetNode::<ActionDescriptor>::Ring { id: "r".into(), t: 0.5, disabled: false, on_change: None });
+        assert_eq!((w, h), (80.0, 80.0));
+    }
+
+    #[test]
+    fn measure_widget_field_combines_label_and_child_height() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let node = WidgetNode::<ActionDescriptor>::Field {
+            id: "f".into(),
+            label: "Label".into(),
+            child: ControlNode::Slider { id: "s".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.1, ready: None, disabled: false, on_change: None },
+        };
+        let (_, h) = measure_widget(&mut atlas, &theme, &node);
+        assert!(h > theme.control_height, "a Field's total height must be its label plus its child control, so it must exceed the control's own height alone");
+    }
+
+    #[test]
+    fn measure_widget_section_sums_header_and_children_plus_gap() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let empty = WidgetNode::<ActionDescriptor>::Section { id: "s".into(), label: None, default_open: true, children: vec![] };
+        let with_child = WidgetNode::<ActionDescriptor>::Section { id: "s".into(), label: None, default_open: true, children: vec![WidgetNode::Separator] };
+        let (_, empty_h) = measure_widget(&mut atlas, &theme, &empty);
+        let (_, child_h) = measure_widget(&mut atlas, &theme, &with_child);
+        assert!(child_h > empty_h, "adding a child must grow a Section's measured height beyond its bare header height");
+    }
+
+    #[test]
+    fn measure_widget_tree_skips_dimmed_items_in_height() {
+        let mut atlas = FontAtlas::builtin();
+        let theme = Theme::default();
+        let item = |id: &str, dimmed: bool| TreeItem {
+            id: id.into(), label: id.into(), description: None, icon_id: None, selected: false, highlighted: false,
+            default_open: false, dimmed, event: None, hover_event: None, unhover_event: None, actions: vec![],
+            draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
+        };
+        let visible = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", false)] }],
+            selected_ids: vec![], highlighted_ids: vec![], selection_change: None,
+        };
+        let dimmed = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "sec".into(), label: None, default_open: true, items: vec![item("a", true)] }],
+            selected_ids: vec![], highlighted_ids: vec![], selection_change: None,
+        };
+        let (_, visible_h) = measure_widget(&mut atlas, &theme, &visible);
+        let (_, dimmed_h) = measure_widget(&mut atlas, &theme, &dimmed);
+        assert!(dimmed_h < visible_h, "a dimmed tree item must contribute zero height, so the dimmed tree must measure shorter than the visible one");
+    }
+
+    #[test]
+    fn widget_interaction_maps_clear_frame_empties_every_map() {
+        let mut maps = WidgetInteractionMaps::<ActionDescriptor>::default();
+        maps.input_metas.insert("i".into(), InputMeta { on_change: action(), commit: None, value: "v".into() });
+        maps.select_metas.insert("s".into(), action());
+        maps.toggle_metas.insert("t".into(), (true, action()));
+        maps.slider_metas.insert("sl".into(), SliderMeta { on_change: action(), min: 0.0, max: 1.0, step: 0.1, value: 0.5, bounds_x: 0.0, bounds_w: 10.0 });
+        maps.stepper_metas.insert("st".into(), StepperMeta { on_absolute: action(), on_delta: action(), step: 1.0, value: 1.0 });
+        maps.ring_metas.insert("r".into(), RingMeta { on_change: action(), disabled: false, center_x: 0.0, center_y: 0.0, radius: 10.0 });
+        maps.slider_live_values.insert("sl".into(), 0.5);
+        maps.ring_live_values.insert("r".into(), 0.5);
+        maps.tree_hover_commands.insert("h".into(), action());
+        maps.tree_unhover_commands.insert("u".into(), action());
+        maps.tree_selection_change = Some(action());
+
+        maps.clear_frame();
+
+        assert!(maps.input_metas.is_empty());
+        assert!(maps.select_metas.is_empty());
+        assert!(maps.toggle_metas.is_empty());
+        assert!(maps.slider_metas.is_empty());
+        assert!(maps.stepper_metas.is_empty());
+        assert!(maps.ring_metas.is_empty());
+        assert!(maps.slider_live_values.is_empty());
+        assert!(maps.ring_live_values.is_empty());
+        assert!(maps.tree_hover_commands.is_empty());
+        assert!(maps.tree_unhover_commands.is_empty());
+        assert!(maps.tree_selection_change.is_none());
+    }
+
+    #[test]
+    fn render_widget_input_registers_interaction_meta_when_maps_present() {
+        let mut h = WidgetHarness::new();
+        let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: Some("blur".into()), on_change: Some(action()) };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        let meta = h.maps.input_metas.get("in").expect("register_input_meta must populate the map when interaction_maps is Some and on_change is Some");
+        assert_eq!(meta.value, "hello");
+        assert_eq!(meta.commit.as_deref(), Some("blur"));
+    }
+
+    #[test]
+    fn render_widget_input_with_no_on_change_does_not_register_meta() {
+        let mut h = WidgetHarness::new();
+        let node = WidgetNode::Input { id: "in".into(), input_kind: "text".into(), value: "hello".into(), placeholder: None, commit: None, on_change: None };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.input_metas.is_empty(), "no on_change means nothing should be wired for the host to fire");
+    }
+
+    #[test]
+    fn render_widget_select_and_toggle_register_interaction_metas() {
+        let mut h = WidgetHarness::new();
+        let select = WidgetNode::Select { id: "sel".into(), value: "a".into(), items: vec![SelectItem { value: "a".into(), label: "Alpha".into() }], placeholder: None, on_change: Some(action()) };
+        render_widget(&select, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.select_metas.contains_key("sel"));
+
+        let toggle = WidgetNode::Toggle { id: "tog".into(), icon_id: IconName::CircleDot, pressed: true, text: Some("On".into()), on_change: Some(action()) };
+        render_widget(&toggle, VIEWPORT, &mut h.ctx());
+        let (pressed, _) = h.maps.toggle_metas.get("tog").expect("toggle meta must be registered");
+        assert!(*pressed);
+    }
+
+    #[test]
+    fn render_widget_slider_registers_meta_and_live_value_unless_disabled() {
+        let mut h = WidgetHarness::new();
+        let enabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: false, on_change: Some(action()) };
+        render_widget(&enabled, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.slider_metas.contains_key("sl"));
+        assert!(h.maps.slider_live_values.contains_key("sl"));
+
+        let mut h2 = WidgetHarness::new();
+        let disabled = WidgetNode::Slider { id: "sl".into(), value: 0.5, min: 0.0, max: 1.0, step: 0.01, ready: None, disabled: true, on_change: Some(action()) };
+        render_widget(&disabled, VIEWPORT, &mut h2.ctx());
+        assert!(h2.maps.slider_metas.is_empty(), "a disabled slider must not register interaction metadata");
+        assert!(h2.maps.slider_live_values.is_empty());
+    }
+
+    #[test]
+    fn render_widget_number_stepper_registers_stepper_meta() {
+        let mut h = WidgetHarness::new();
+        let node = WidgetNode::NumberStepper { id: "ns".into(), value: 3.0, step: 1.0, uniform: false, on_absolute: Some(action()), on_delta: Some(action()) };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        let meta = h.maps.stepper_metas.get("ns").expect("stepper meta must be registered when both on_absolute and on_delta are Some");
+        assert_eq!(meta.value, 3.0);
+        assert!(h.maps.input_metas.contains_key("ns.input"), "the stepper's embedded value segment renders through render_input and must also register an input meta");
+    }
+
+    #[test]
+    fn render_widget_ring_registers_meta_and_live_value() {
+        let mut h = WidgetHarness::new();
+        let node = WidgetNode::Ring { id: "r".into(), t: 0.25, disabled: false, on_change: Some(action()) };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.ring_metas.contains_key("r"));
+        assert_eq!(h.maps.ring_live_values.get("r"), Some(&0.25));
+    }
+
+    #[test]
+    fn render_widget_field_draws_label_and_delegates_to_control() {
+        let mut h = WidgetHarness::new();
+        let node = WidgetNode::Field { id: "f".into(), label: "Name".into(), child: ControlNode::Input { id: "in".into(), input_kind: "text".into(), value: "x".into(), placeholder: None, commit: None, on_change: Some(action()) } };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.input_metas.contains_key("in"), "Field must render its child control (an Input here), which registers its own interaction meta");
+        let total: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
+        assert!(total > 0, "Field must paint its label plus its child control");
+    }
+
+    #[test]
+    fn render_widget_section_toggles_collapsed_state_from_default_open() {
+        let child = || WidgetNode::<ActionDescriptor>::Text { value: "child text".into(), emphasize: false };
+        let mut h = WidgetHarness::new();
+        let closed = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some("Sec".into()), default_open: false, children: vec![child()] };
+        render_widget(&closed, VIEWPORT, &mut h.ctx());
+        assert_eq!(h.collapsed_sections.get("section.sec"), Some(&true), "a Section with default_open: false must seed its collapsed_sections entry as collapsed");
+
+        let mut h2 = WidgetHarness::new();
+        let open = WidgetNode::<ActionDescriptor>::Section { id: "sec".into(), label: Some("Sec".into()), default_open: true, children: vec![child()] };
+        render_widget(&open, VIEWPORT, &mut h2.ctx());
+        assert_eq!(h2.collapsed_sections.get("section.sec"), Some(&false));
+        let closed_instances: usize = h.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
+        let open_instances: usize = h2.draw.layers.iter().map(|l| l.ui_instances.len()).sum();
+        assert!(open_instances > closed_instances, "an open section must also paint its (visible) child's glyphs, a collapsed one must not");
+    }
+
+    #[test]
+    fn render_widget_tree_populates_hover_and_unhover_commands() {
+        let mut h = WidgetHarness::new();
+        let item = TreeItem {
+            id: "i1".into(), label: "Item".into(), description: None, icon_id: None, selected: false, highlighted: false,
+            default_open: false, dimmed: false, event: None, hover_event: Some(action()), unhover_event: Some(action()),
+            actions: vec![], draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
+        };
+        let node = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "s".into(), label: Some("Section".into()), default_open: true, items: vec![item] }],
+            selected_ids: vec![], highlighted_ids: vec![], selection_change: Some(action()),
+        };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        assert!(h.maps.tree_hover_commands.contains_key("i1"));
+        assert!(h.maps.tree_unhover_commands.contains_key("i1"));
+        assert_eq!(h.maps.tree_selection_change, Some(action()));
+    }
+
+    #[test]
+    fn render_widget_tree_hides_reveal_on_hover_actions_when_not_hovered() {
+        let mut h = WidgetHarness::new();
+        let item = TreeItem {
+            id: "i1".into(), label: "Item".into(), description: None, icon_id: None, selected: false, highlighted: false,
+            default_open: false, dimmed: false, event: None, hover_event: None, unhover_event: None,
+            actions: vec![TreeItemAction { icon_id: IconName::CircleDot, label: Some("Del".into()), event: action(), reveal_on_hover: true }],
+            draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
+        };
+        let node = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }],
+            selected_ids: vec![], highlighted_ids: vec![], selection_change: None,
+        };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        let action_hits = h.input.hit_targets.iter().filter(|t| t.control_id.as_deref() == Some("tree.action.i1.0")).count();
+        assert_eq!(action_hits, 0, "a reveal_on_hover action must not register a hit target while its row is unhovered");
+    }
+
+    #[test]
+    fn render_widget_tree_marks_selected_and_highlighted_ids_via_ids_list() {
+        let mut h = WidgetHarness::new();
+        let item = TreeItem {
+            id: "i1".into(), label: "Item".into(), description: None, icon_id: None, selected: false, highlighted: false,
+            default_open: false, dimmed: false, event: Some(action()), hover_event: None, unhover_event: None,
+            actions: vec![], draggable: false, drag_data: StdHashMap::new(), control: None, children: vec![],
+        };
+        let node = WidgetNode::<ActionDescriptor>::Tree {
+            sections: vec![TreeSection { id: "s".into(), label: None, default_open: true, items: vec![item] }],
+            selected_ids: vec!["i1".into()], highlighted_ids: vec![], selection_change: None,
+        };
+        render_widget(&node, VIEWPORT, &mut h.ctx());
+        let hit = h.input.hit_targets.iter().find(|t| t.control_id.as_deref() == Some("tree.label.i1")).expect("tree item label must register a hit target");
+        assert_eq!(hit.event, Some(action()));
+    }
+
+    #[test]
+    fn render_scroll_region_clamps_stale_offset_to_new_max_scroll() {
+        let mut h = WidgetHarness::new();
+        h.scroll_offsets.insert("scroll".into(), 500.0);
+        let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
+        {
+            let mut ctx = h.ctx();
+            render_scroll_region("scroll", bounds, 150.0, &mut ctx, |_content, _ctx| {});
+        }
+        assert_eq!(h.scroll_offsets.get("scroll"), Some(&50.0), "offset must clamp to max_scroll (content_height - bounds.h) even if a stale value was larger");
+    }
+
+    #[test]
+    fn render_scroll_region_registers_a_scroll_region_hit_target() {
+        let mut h = WidgetHarness::new();
+        let bounds = Rect::new(0.0, 0.0, 100.0, 100.0);
+        {
+            let mut ctx = h.ctx();
+            render_scroll_region("myscroll", bounds, 400.0, &mut ctx, |_content, _ctx| {});
+        }
+        assert!(h.input.hit_targets.iter().any(|t| t.control_id.as_deref() == Some("myscroll")));
+    }
+
+    #[test]
+    fn draw_text_on_emits_one_glyph_instance_per_character() {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        draw_text_on(&mut draw, &mut atlas, "abc", 0.0, 0.0, 16.0, Theme::default().text);
+        let total: usize = draw.layers.iter().map(|l| l.ui_instances.len()).sum();
+        assert_eq!(total, 3);
+    }
+
+    #[test]
+    fn draw_text_overlay_on_writes_to_the_overlay_channel_not_the_main_one() {
+        let mut draw = DrawList::default();
+        let mut atlas = FontAtlas::builtin();
+        draw_text_overlay_on(&mut draw, &mut atlas, "hi", 0.0, 0.0, 16.0, Theme::default().text);
+        let main: usize = draw.layers.iter().map(|l| l.ui_instances.len()).sum();
+        let overlay: usize = draw.layers.iter().map(|l| l.overlay_ui_instances.len()).sum();
+        assert_eq!(main, 0, "overlay glyphs must not land in the main ui_instances channel");
+        assert_eq!(overlay, 2, "one overlay glyph instance per character");
+    }
+    //#endregion 🧩WidgetsInternalsTests
 }
 // #endregion engine
 }
