@@ -905,6 +905,668 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 
 // #endregion 🔖GraphOperations
 
+//#region 🔖Dsl
+use vcs::{DocumentDsl, OpText, TextError, TextSpan};
+
+//#region 🔖DslLexer
+/// 🔤 One token of the hand-rolled `.trinity` DSL / op-text lexer, shared by `🔖Dsl` and `🔖OpText`.
+#[derive(Clone, Debug, PartialEq)]
+enum DslTok {
+    Ident(String),
+    Number(f64),
+    Str(String),
+    Colon,
+    At,
+    Arrow,
+    Comma,
+    LBrace,
+    RBrace,
+    LBracket,
+    RBracket,
+    Eof,
+}
+
+/// 🔎 Tokenizes one line. UUID-shaped ids embed `-` (e.g. `7dc5b737-3b6b-...`), so `-` only starts a
+/// number (next char a digit) or the `->` arrow (next char `>`) at a token boundary; inside an already-
+/// started identifier it is folded in as long as it is not immediately followed by `>`.
+fn dsl_lex(line: &str, line_no: u32) -> Result<Vec<DslTok>, TextError> {
+    let bytes = line.as_bytes();
+    let mut out = Vec::new();
+    let mut i = 0usize;
+    while i < bytes.len() {
+        let c = bytes[i];
+        if c.is_ascii_whitespace() {
+            i += 1;
+            continue;
+        }
+        match c {
+            b':' => {
+                out.push(DslTok::Colon);
+                i += 1;
+            }
+            b'@' => {
+                out.push(DslTok::At);
+                i += 1;
+            }
+            b',' => {
+                out.push(DslTok::Comma);
+                i += 1;
+            }
+            b'{' => {
+                out.push(DslTok::LBrace);
+                i += 1;
+            }
+            b'}' => {
+                out.push(DslTok::RBrace);
+                i += 1;
+            }
+            b'[' => {
+                out.push(DslTok::LBracket);
+                i += 1;
+            }
+            b']' => {
+                out.push(DslTok::RBracket);
+                i += 1;
+            }
+            b'-' if i + 1 < bytes.len() && bytes[i + 1] == b'>' => {
+                out.push(DslTok::Arrow);
+                i += 2;
+            }
+            b'-' if i + 1 < bytes.len() && bytes[i + 1].is_ascii_digit() => {
+                let start = i;
+                i += 1;
+                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
+                    i += 1;
+                }
+                let text = std::str::from_utf8(&bytes[start..i]).expect("ascii digits");
+                let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
+                out.push(DslTok::Number(n));
+            }
+            b'\'' | b'"' => {
+                let quote = c;
+                i += 1;
+                let mut text = String::new();
+                loop {
+                    if i >= bytes.len() {
+                        return Err(TextError::new("unterminated string", TextSpan::at(line_no, i as u32 + 1)));
+                    }
+                    if bytes[i] == b'\\' && i + 1 < bytes.len() {
+                        match bytes[i + 1] {
+                            b'n' => text.push('\n'),
+                            b'\\' => text.push('\\'),
+                            other if other == quote => text.push(quote as char),
+                            other => {
+                                text.push('\\');
+                                text.push(other as char);
+                            }
+                        }
+                        i += 2;
+                        continue;
+                    }
+                    if bytes[i] == quote {
+                        i += 1;
+                        break;
+                    }
+                    let rest = std::str::from_utf8(&bytes[i..]).unwrap_or("");
+                    let ch = rest.chars().next().unwrap_or('\u{FFFD}');
+                    text.push(ch);
+                    i += ch.len_utf8();
+                }
+                out.push(DslTok::Str(text));
+            }
+            b'0'..=b'9' => {
+                let start = i;
+                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
+                    i += 1;
+                }
+                let text = std::str::from_utf8(&bytes[start..i]).expect("ascii digits");
+                let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
+                out.push(DslTok::Number(n));
+            }
+            _ => {
+                let start = i;
+                loop {
+                    if i >= bytes.len() {
+                        break;
+                    }
+                    let ch = bytes[i];
+                    if ch.is_ascii_alphanumeric() || ch == b'_' || ch == b'.' {
+                        i += 1;
+                        continue;
+                    }
+                    if ch == b'-' && i + 1 < bytes.len() && bytes[i + 1] != b'>' && (bytes[i + 1].is_ascii_alphanumeric() || bytes[i + 1] == b'_') {
+                        i += 1;
+                        continue;
+                    }
+                    break;
+                }
+                if i == start {
+                    return Err(TextError::new(format!("unexpected character '{}'", c as char), TextSpan::at(line_no, start as u32 + 1)));
+                }
+                let text = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii ident chars").to_string();
+                out.push(DslTok::Ident(text));
+            }
+        }
+    }
+    out.push(DslTok::Eof);
+    Ok(out)
+}
+
+/// 🧭 Cursor over a lexed line's tokens for the hand-rolled recursive-descent DSL/op-text parsers.
+struct DslParser {
+    tokens: Vec<DslTok>,
+    pos: usize,
+    line_no: u32,
+}
+
+impl DslParser {
+    fn new(tokens: Vec<DslTok>, line_no: u32) -> Self {
+        Self { tokens, pos: 0, line_no }
+    }
+
+    fn peek(&self) -> &DslTok {
+        self.tokens.get(self.pos).unwrap_or(&DslTok::Eof)
+    }
+
+    fn bump(&mut self) -> DslTok {
+        let tok = self.peek().clone();
+        if !matches!(tok, DslTok::Eof) {
+            self.pos += 1;
+        }
+        tok
+    }
+
+    fn err(&self, message: impl Into<String>) -> TextError {
+        TextError::new(message.into(), TextSpan::at(self.line_no, self.pos as u32 + 1))
+    }
+
+    fn expect_tok(&mut self, expected: DslTok, label: &str) -> Result<(), TextError> {
+        let got = self.bump();
+        if std::mem::discriminant(&got) == std::mem::discriminant(&expected) {
+            Ok(())
+        } else {
+            Err(self.err(format!("expected {label}, got {got:?}")))
+        }
+    }
+
+    fn expect_ident(&mut self) -> Result<String, TextError> {
+        match self.bump() {
+            DslTok::Ident(s) => Ok(s),
+            other => Err(self.err(format!("expected identifier, got {other:?}"))),
+        }
+    }
+
+    fn expect_str(&mut self) -> Result<String, TextError> {
+        match self.bump() {
+            DslTok::Str(s) => Ok(s),
+            other => Err(self.err(format!("expected string, got {other:?}"))),
+        }
+    }
+
+    fn expect_number(&mut self) -> Result<f64, TextError> {
+        match self.bump() {
+            DslTok::Number(n) => Ok(n),
+            other => Err(self.err(format!("expected number, got {other:?}"))),
+        }
+    }
+
+    fn expect_eof(&mut self) -> Result<(), TextError> {
+        if matches!(self.peek(), DslTok::Eof) {
+            Ok(())
+        } else {
+            Err(self.err(format!("unexpected trailing token {:?}", self.peek())))
+        }
+    }
+}
+//#endregion 🔖DslLexer
+
+//#region 🔖DslValue
+/// 📝 Prints a property value using `mathematical_graph_dsl::wire`'s literal style (`'str'`, bare
+/// number/bool/null, `{k: v}`, `[v, v]`). Exposed `pub` so `trinity_rewrite`'s own `RewriteRuleState`
+/// DSL can reuse it for `parameter_bindings` values instead of hand-rolling a second copy.
+pub fn print_property_value(value: &PropertyValue) -> String {
+    match value {
+        PropertyValue::Null => "null".into(),
+        PropertyValue::Bool(b) => b.to_string(),
+        PropertyValue::Number(n) => n.to_string(),
+        PropertyValue::String(s) => format!("'{}'", escape_quoted(s, '\'')),
+        PropertyValue::Object(map) => {
+            let inner = map.iter().map(|(k, v)| format!("{k}: {}", print_property_value(v))).collect::<Vec<_>>().join(", ");
+            format!("{{{inner}}}")
+        }
+        PropertyValue::Array(items) => {
+            let inner = items.iter().map(print_property_value).collect::<Vec<_>>().join(", ");
+            format!("[{inner}]")
+        }
+    }
+}
+
+/// 🔍 Parses one property-value expression, recursing into nested `{...}`/`[...]` — unlike
+/// `mathematical_graph_dsl::wire::dag_from_wire_literal`'s `parse_value`, which only reads scalars,
+/// this is required here: trinity fixtures carry nested object properties (`position: {x, y, z}`).
+fn parse_property_value(p: &mut DslParser) -> Result<PropertyValue, TextError> {
+    match p.bump() {
+        DslTok::Str(s) => Ok(PropertyValue::String(s)),
+        DslTok::Number(n) => Ok(PropertyValue::Number(n)),
+        DslTok::Ident(s) if s == "true" => Ok(PropertyValue::Bool(true)),
+        DslTok::Ident(s) if s == "false" => Ok(PropertyValue::Bool(false)),
+        DslTok::Ident(s) if s == "null" => Ok(PropertyValue::Null),
+        DslTok::LBrace => {
+            let mut map = BTreeMap::new();
+            while !matches!(p.peek(), DslTok::RBrace) {
+                let key = p.expect_ident()?;
+                p.expect_tok(DslTok::Colon, "':'")?;
+                let value = parse_property_value(p)?;
+                map.insert(key, value);
+                if matches!(p.peek(), DslTok::Comma) {
+                    p.bump();
+                }
+            }
+            p.bump();
+            Ok(PropertyValue::Object(map))
+        }
+        DslTok::LBracket => {
+            let mut items = Vec::new();
+            while !matches!(p.peek(), DslTok::RBracket) {
+                items.push(parse_property_value(p)?);
+                if matches!(p.peek(), DslTok::Comma) {
+                    p.bump();
+                }
+            }
+            p.bump();
+            Ok(PropertyValue::Array(items))
+        }
+        other => Err(p.err(format!("expected a property value, got {other:?}"))),
+    }
+}
+
+/// 🔍 Parses a single standalone property-value expression from a whole string. `pub` so
+/// `trinity_rewrite` can decode its `RewriteRuleState.parameter_bindings` values without depending on
+/// this module's private lexer/parser types.
+pub fn parse_property_value_line(text: &str) -> Result<PropertyValue, TextError> {
+    let tokens = dsl_lex(text, 1)?;
+    let mut p = DslParser::new(tokens, 1);
+    let value = parse_property_value(&mut p)?;
+    p.expect_eof()?;
+    Ok(value)
+}
+
+fn print_property_bag(bag: &PropertyBag) -> String {
+    if bag.is_empty() {
+        return String::new();
+    }
+    let inner = bag.iter().map(|(k, v)| format!("{k}: {}", print_property_value(v))).collect::<Vec<_>>().join(", ");
+    format!("{{{inner}}}")
+}
+
+fn parse_property_bag(p: &mut DslParser) -> Result<PropertyBag, TextError> {
+    let mut bag = PropertyBag::new();
+    if !matches!(p.peek(), DslTok::LBrace) {
+        return Ok(bag);
+    }
+    p.bump();
+    while !matches!(p.peek(), DslTok::RBrace) {
+        let key = p.expect_ident()?;
+        p.expect_tok(DslTok::Colon, "':'")?;
+        let value = parse_property_value(p)?;
+        bag.insert(key, value);
+        if matches!(p.peek(), DslTok::Comma) {
+            p.bump();
+        }
+    }
+    p.bump();
+    Ok(bag)
+}
+
+fn escape_quoted(value: &str, quote: char) -> String {
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '\n' => out.push_str("\\n"),
+            c if c == quote => {
+                out.push('\\');
+                out.push(c);
+            }
+            _ => out.push(ch),
+        }
+    }
+    out
+}
+
+fn quote_text(value: &str) -> String {
+    format!("\"{}\"", escape_quoted(value, '"'))
+}
+//#endregion 🔖DslValue
+
+//#region 🔖DslEntities
+fn print_port_direction(direction: PortDirection) -> &'static str {
+    match direction {
+        PortDirection::In => "in",
+        PortDirection::Out => "out",
+    }
+}
+
+fn parse_port_direction(p: &mut DslParser) -> Result<PortDirection, TextError> {
+    match p.expect_ident()?.as_str() {
+        "in" => Ok(PortDirection::In),
+        "out" => Ok(PortDirection::Out),
+        other => Err(p.err(format!("expected port direction 'in'/'out', got '{other}'"))),
+    }
+}
+
+fn print_port(port: &Port) -> String {
+    let mut out = format!("{}:{}:{}", port.id, port.kind, print_port_direction(port.direction));
+    let props = print_property_bag(&port.properties);
+    if !props.is_empty() {
+        out.push_str(&props);
+    }
+    out
+}
+
+fn parse_port(p: &mut DslParser) -> Result<Port, TextError> {
+    let id = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let kind = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let direction = parse_port_direction(p)?;
+    let properties = parse_property_bag(p)?;
+    Ok(Port { id, kind, direction, properties })
+}
+
+fn print_ports_list(ports: &[Port]) -> String {
+    format!("[{}]", ports.iter().map(print_port).collect::<Vec<_>>().join(", "))
+}
+
+fn parse_ports_list(p: &mut DslParser) -> Result<Vec<Port>, TextError> {
+    let mut ports = Vec::new();
+    if !matches!(p.peek(), DslTok::LBracket) {
+        return Ok(ports);
+    }
+    p.bump();
+    while !matches!(p.peek(), DslTok::RBracket) {
+        ports.push(parse_port(p)?);
+        if matches!(p.peek(), DslTok::Comma) {
+            p.bump();
+        }
+    }
+    p.bump();
+    Ok(ports)
+}
+
+/// 📝 Prints one `node` line: `node id:Kind "name" x y w h {props} [ports]` — geometry/name/multi-port
+/// fields a bare `mathematical_graph_dsl::wire::WireNode` (id/kind/one optional port) cannot carry, so
+/// this is a from-scratch grammar in the same lexical style rather than a call into `wire`.
+fn print_node_line(node: &Node) -> String {
+    let mut out = format!("node {}:{} {} {} {} {} {}", node.id, node.kind, quote_text(&node.name), node.x, node.y, node.width, node.height);
+    let props = print_property_bag(&node.properties);
+    if !props.is_empty() {
+        out.push(' ');
+        out.push_str(&props);
+    }
+    if !node.ports.is_empty() {
+        out.push(' ');
+        out.push_str(&print_ports_list(&node.ports));
+    }
+    out
+}
+
+fn parse_node_fields(p: &mut DslParser) -> Result<Node, TextError> {
+    let id = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let kind = p.expect_ident()?;
+    let name = p.expect_str()?;
+    let x = p.expect_number()?;
+    let y = p.expect_number()?;
+    let width = p.expect_number()?;
+    let height = p.expect_number()?;
+    let properties = parse_property_bag(p)?;
+    let ports = parse_ports_list(p)?;
+    Ok(Node { id, kind, name, x, y, width, height, properties, ports })
+}
+
+/// 📝 Prints one `edge` line reusing `mathematical_graph_dsl::wire`'s connector notation verbatim:
+/// `edge id:Kind from:FromKind@fromPort->to:ToKind@toPort {props}` (node kinds are looked up for
+/// readability only, exactly as `wire_literal_from_dag` does — they are dropped again on parse).
+fn print_edge_line(edge: &Edge, nodes: &[Node]) -> String {
+    let src_node = port_node_id(&edge.source).unwrap_or("node");
+    let src_port = port_port_id(&edge.source).unwrap_or("");
+    let tgt_node = port_node_id(&edge.target).unwrap_or("node");
+    let tgt_port = port_port_id(&edge.target).unwrap_or("");
+    let src_kind = nodes.iter().find(|n| n.id == src_node).map(|n| n.kind.as_str()).unwrap_or("node");
+    let tgt_kind = nodes.iter().find(|n| n.id == tgt_node).map(|n| n.kind.as_str()).unwrap_or("node");
+    let mut out = format!("edge {}:{} {}:{}@{}->{}:{}@{}", edge.id, edge.kind, src_node, src_kind, src_port, tgt_node, tgt_kind, tgt_port);
+    let props = print_property_bag(&edge.properties);
+    if !props.is_empty() {
+        out.push(' ');
+        out.push_str(&props);
+    }
+    out
+}
+
+fn parse_port_ref(p: &mut DslParser) -> Result<(String, String), TextError> {
+    let id = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let _kind = p.expect_ident()?;
+    p.expect_tok(DslTok::At, "'@'")?;
+    let port = p.expect_ident()?;
+    Ok((id, port))
+}
+
+fn parse_edge_fields(p: &mut DslParser) -> Result<Edge, TextError> {
+    let id = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let kind = p.expect_ident()?;
+    let (src_node, src_port) = parse_port_ref(p)?;
+    p.expect_tok(DslTok::Arrow, "'->'")?;
+    let (tgt_node, tgt_port) = parse_port_ref(p)?;
+    let properties = parse_property_bag(p)?;
+    Ok(Edge { id, kind, source: port_key(&src_node, &src_port), target: port_key(&tgt_node, &tgt_port), properties })
+}
+
+fn parse_plain_port_ref(p: &mut DslParser) -> Result<String, TextError> {
+    let id = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let port = p.expect_ident()?;
+    Ok(port_key(&id, &port))
+}
+
+fn entity_kind_and_id(entity: &EntityRef) -> (&'static str, &str) {
+    match entity {
+        EntityRef::Node(id) => ("node", id.as_str()),
+        EntityRef::Edge(id) => ("edge", id.as_str()),
+    }
+}
+
+fn parse_entity_and_key(p: &mut DslParser) -> Result<(EntityRef, String), TextError> {
+    let kind = p.expect_ident()?;
+    p.expect_tok(DslTok::Colon, "':'")?;
+    let id = p.expect_ident()?;
+    let key = p.expect_ident()?;
+    let entity = match kind.as_str() {
+        "node" => EntityRef::Node(id),
+        "edge" => EntityRef::Edge(id),
+        other => return Err(p.err(format!("unknown entity kind '{other}'"))),
+    };
+    Ok((entity, key))
+}
+//#endregion 🔖DslEntities
+
+//#region 🔖DslDocument
+/// 📜 Handcrafted `.trinity` textual notation for a whole [`GraphFixture`] (`vcs::DocumentDsl`):
+/// `manifest`/`name`/`camera`/`root` header lines, then one `node`/`edge` line per entity. Adapts
+/// `mathematical_graph_dsl::wire`'s `id:Kind@port` connector style for edges; nodes need their own
+/// grammar (see {@link print_node_line}) since `WireNode` cannot express geometry/name/multiple ports.
+impl DocumentDsl for GraphFixture {
+    const EXTENSION: &'static str = "trinity";
+
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let mut manifest_id: Option<String> = None;
+        let mut name = String::new();
+        let mut camera = Camera::default();
+        let mut root_node_id: Option<String> = None;
+        let mut nodes = Vec::new();
+        let mut edges = Vec::new();
+
+        for (index, raw_line) in text.lines().enumerate() {
+            let line_no = index as u32 + 1;
+            let line = raw_line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let tokens = dsl_lex(line, line_no)?;
+            let mut p = DslParser::new(tokens, line_no);
+            let keyword = p.expect_ident()?;
+            match keyword.as_str() {
+                "manifest" => {
+                    let value = p.expect_ident()?;
+                    manifest_id = if value == "-" { None } else { Some(value) };
+                }
+                "name" => name = p.expect_str()?,
+                "camera" => camera = Camera { x: p.expect_number()?, y: p.expect_number()?, zoom: p.expect_number()? },
+                "root" => root_node_id = Some(p.expect_ident()?),
+                "node" => nodes.push(parse_node_fields(&mut p)?),
+                "edge" => edges.push(parse_edge_fields(&mut p)?),
+                other => return Err(TextError::new(format!("unknown dsl line keyword '{other}'"), TextSpan::at(line_no, 1))),
+            }
+            p.expect_eof()?;
+        }
+
+        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.to_string(), name, manifest_id, manifest: Manifest::default(), camera, nodes, edges, root_node_id };
+        fixture.resolve_manifest().map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+        Ok(fixture)
+    }
+
+    fn print_dsl(&self) -> String {
+        let mut lines = Vec::new();
+        lines.push(format!("manifest {}", self.manifest_id.as_deref().unwrap_or("-")));
+        lines.push(format!("name {}", quote_text(&self.name)));
+        lines.push(format!("camera {} {} {}", self.camera.x, self.camera.y, self.camera.zoom));
+        if let Some(root) = &self.root_node_id {
+            lines.push(format!("root {root}"));
+        }
+        for node in &self.nodes {
+            lines.push(print_node_line(node));
+        }
+        for edge in &self.edges {
+            lines.push(print_edge_line(edge, &self.nodes));
+        }
+        lines.join("\n")
+    }
+}
+//#endregion 🔖DslDocument
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+/// ⚡ Handcrafted one-line textual notation for [`TrinityGraphOperation`] (`vcs::OpText`) — one keyword
+/// per variant followed by its fields in the same lexical style as `🔖Dsl`; `SetFixture` embeds a whole
+/// `print_dsl()` document inline via an escaped quoted field (escaping turns its newlines into `\n`, so
+/// the printed op line itself never contains one, satisfying `OpText::print_op`'s one-line law).
+impl OpText for TrinityGraphOperation {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let tokens = dsl_lex(line, 1)?;
+        let mut p = DslParser::new(tokens, 1);
+        let keyword = p.expect_ident()?;
+        let operation = match keyword.as_str() {
+            "createNode" => {
+                let id = p.expect_ident()?;
+                p.expect_tok(DslTok::Colon, "':'")?;
+                let kind = p.expect_ident()?;
+                let x = p.expect_number()?;
+                let y = p.expect_number()?;
+                let width = p.expect_number()?;
+                let height = p.expect_number()?;
+                let ports = parse_ports_list(&mut p)?;
+                let name = p.expect_str()?;
+                TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports }
+            }
+            "deleteNode" => TrinityGraphOperation::DeleteNode { id: p.expect_ident()? },
+            "createEdge" => {
+                let id = p.expect_ident()?;
+                p.expect_tok(DslTok::Colon, "':'")?;
+                let kind = p.expect_ident()?;
+                let source = parse_plain_port_ref(&mut p)?;
+                p.expect_tok(DslTok::Arrow, "'->'")?;
+                let target = parse_plain_port_ref(&mut p)?;
+                let properties = parse_property_bag(&mut p)?;
+                TrinityGraphOperation::CreateEdge { id, kind, source, target, properties }
+            }
+            "deleteEdge" => TrinityGraphOperation::DeleteEdge { id: p.expect_ident()? },
+            "rename" => {
+                let id = p.expect_ident()?;
+                let name = p.expect_str()?;
+                TrinityGraphOperation::Rename { id, name }
+            }
+            "reposition" => {
+                let id = p.expect_ident()?;
+                let x = p.expect_number()?;
+                let y = p.expect_number()?;
+                TrinityGraphOperation::Reposition { id, x, y }
+            }
+            "setDataProperty" => {
+                let (entity, key) = parse_entity_and_key(&mut p)?;
+                let value = parse_property_value(&mut p)?;
+                TrinityGraphOperation::SetDataProperty { entity, key, value }
+            }
+            "clearDataProperty" => {
+                let (entity, key) = parse_entity_and_key(&mut p)?;
+                TrinityGraphOperation::ClearDataProperty { entity, key }
+            }
+            "setCamera" => {
+                let camera = Camera { x: p.expect_number()?, y: p.expect_number()?, zoom: p.expect_number()? };
+                TrinityGraphOperation::SetCamera { camera }
+            }
+            "setFixture" => {
+                let text = p.expect_str()?;
+                let fixture = GraphFixture::parse_dsl(&text)?;
+                TrinityGraphOperation::SetFixture { fixture }
+            }
+            other => return Err(TextError::new(format!("unknown op keyword '{other}'"), TextSpan::at(1, 1))),
+        };
+        p.expect_eof()?;
+        Ok(operation)
+    }
+
+    fn print_op(&self) -> String {
+        match self {
+            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports } => {
+                let mut out = format!("createNode {id}:{kind} {x} {y} {width} {height}");
+                if !ports.is_empty() {
+                    out.push(' ');
+                    out.push_str(&print_ports_list(ports));
+                }
+                out.push(' ');
+                out.push_str(&quote_text(name));
+                out
+            }
+            TrinityGraphOperation::DeleteNode { id } => format!("deleteNode {id}"),
+            TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => {
+                let mut out = format!("createEdge {id}:{kind} {source}->{target}");
+                let props = print_property_bag(properties);
+                if !props.is_empty() {
+                    out.push(' ');
+                    out.push_str(&props);
+                }
+                out
+            }
+            TrinityGraphOperation::DeleteEdge { id } => format!("deleteEdge {id}"),
+            TrinityGraphOperation::Rename { id, name } => format!("rename {id} {}", quote_text(name)),
+            TrinityGraphOperation::Reposition { id, x, y } => format!("reposition {id} {x} {y}"),
+            TrinityGraphOperation::SetDataProperty { entity, key, value } => {
+                let (kind, id) = entity_kind_and_id(entity);
+                format!("setDataProperty {kind}:{id} {key} {}", print_property_value(value))
+            }
+            TrinityGraphOperation::ClearDataProperty { entity, key } => {
+                let (kind, id) = entity_kind_and_id(entity);
+                format!("clearDataProperty {kind}:{id} {key}")
+            }
+            TrinityGraphOperation::SetCamera { camera } => format!("setCamera {} {} {}", camera.x, camera.y, camera.zoom),
+            TrinityGraphOperation::SetFixture { fixture } => format!("setFixture {}", quote_text(&fixture.print_dsl())),
+        }
+    }
+}
+//#endregion 🔖OpText
+
 pub fn empty_trinity_graph_fixture() -> GraphFixture {
     GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "trinity".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: Vec::new(), edges: Vec::new(), root_node_id: None }
 }

@@ -3,7 +3,7 @@
 import { execFileSync, execSync } from "node:child_process";
 import { copyFileSync, cpSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 const yakWin8 = "C:\\Program Files\\Rhino 8\\System\\Yak.exe";
 const yakWin7 = "C:\\Program Files\\Rhino 7\\System\\Yak.exe";
@@ -80,7 +80,7 @@ class TestScript extends BundleScript {
     }
     const { level, rest } = resolveTestLevel(segments);
     const fx = process.platform === "win32" ? "net48" : "net8.0";
-    await runTestBudgeted("dotnet", ["test", join(this.root, "Compose.Grasshopper.Tests", "Compose.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx, ...dotnetLevelArgs(level), ...rest], {
+    await runTestBudgeted("dotnet", ["test", join(this.root, "Compose.Grasshopper.Tests", "Compose.Grasshopper.Tests.csproj"), "-c", "UnitTest", "-f", fx, ...dotnetLevelArgs(level), ...dotnetCoverageArgs(this.repoRoot, this.root), ...rest], {
       cwd: this.root,
     });
   }

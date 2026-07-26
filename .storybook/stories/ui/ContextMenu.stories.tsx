@@ -66,7 +66,14 @@ const controllerItems: ContextMenuItem[] = [
   { id: "focus", label: "Focus", shortcut: "F" },
   { id: "select", label: "Select", checked: false },
   { id: "sep", label: "", separator: true },
-  { id: "delete", label: "Delete", destructive: true },
+  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫" },
+];
+
+const numberedPreviewItems: ContextMenuItem[] = [
+  { id: "suggestion-0", label: "Capsule · port", icon: "box", shortcut: "1", checked: true },
+  { id: "suggestion-1", label: "Box · port", icon: "box", shortcut: "2", checked: false },
+  { id: "sep", label: "", separator: true },
+  { id: "delete", label: "Delete", destructive: true, shortcut: "⌫" },
 ];
 
 /** @emoji 🎯 Controlled fixed-position menu — mirrors how puzzle 2d canvas surfaces open a right-click menu at pointer coordinates. */
@@ -100,6 +107,35 @@ export const Controlled: ControllerStory = {
     onOpenChange: () => {},
   },
   render: () => <ControlledContextMenuDemo />,
+};
+
+/** @emoji 🔢 Numbered suggestion rows — press `1`/`2` to preview, Enter to accept the highlighted row. */
+const NumberedPreviewContextMenuDemo = () => {
+  const [open, setOpen] = useState(true);
+  const [checkedId, setCheckedId] = useState("suggestion-0");
+  const items = numberedPreviewItems.map((item) => ({
+    ...item,
+    checked: item.id === checkedId ? true : item.checked === undefined ? undefined : false,
+    onHover: item.shortcut === "1" || item.shortcut === "2" ? () => setCheckedId(item.id) : undefined,
+    onSelect: item.id.startsWith("suggestion-") ? () => setOpen(false) : undefined,
+  }));
+  return (
+    <div className="relative flex size-40 items-center justify-center border text-sm text-muted-foreground">
+      <Button id="context-menu-numbered-story-open" text="Open numbered menu" onClick={() => setOpen(true)} />
+      <ContextMenuController open={open} closeOnSelect={false} position={{ x: 120, y: 120 }} items={items} onOpenChange={setOpen} title="Suggest" />
+    </div>
+  );
+};
+
+export const NumberedPreview: ControllerStory = {
+  name: "Numbered Preview (Digit + Enter)",
+  args: {
+    open: true,
+    position: { x: 120, y: 120 },
+    items: numberedPreviewItems,
+    onOpenChange: () => {},
+  },
+  render: () => <NumberedPreviewContextMenuDemo />,
 };
 
 // #endregion 🎯ContextMenuController

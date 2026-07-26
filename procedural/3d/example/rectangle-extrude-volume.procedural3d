@@ -1,0 +1,22 @@
+document schema="flow.fixture" camera.x=140 camera.y=-60 camera.zoom=2.2 {
+  widget kind=inputSlider id="width" value=2 min=0.1 max=10 step=0.1
+  widget kind=inputSlider id="height" value=2 min=0.1 max=10 step=0.1
+  widget kind=inputSlider id="distance" value=3 min=0.1 max=10 step=0.1
+  widget kind=neuron id="rect" neuronKind=brep.curve.rectangle preview=false inputPorts="[\"width\",\"height\"]" outputPorts="[]" params="{}"
+  widget kind=neuron id="vector" neuronKind=math.vector preview=false inputPorts="[\"x\",\"y\",\"z\"]" outputPorts="[]" params="{}"
+  widget kind=neuron id="extrude" neuronKind=brep.solid.extrude preview=true inputPorts="[\"wire\",\"vector\"]" outputPorts="[]" params="{}"
+  widget kind=neuron id="volume" neuronKind=brep.measure.volume preview=false inputPorts="[\"geometry\"]" outputPorts="[]" params="{}"
+  synapse id="e1" from="width" to="rect" fromPort="number" toPort="width"
+  synapse id="e2" from="height" to="rect" fromPort="number" toPort="height"
+  synapse id="e3" from="rect" to="extrude" fromPort="wire" toPort="wire"
+  synapse id="e4" from="distance" to="vector" fromPort="number" toPort="z"
+  synapse id="e5" from="vector" to="extrude" fromPort="vector" toPort="vector"
+  synapse id="e6" from="extrude" to="volume" fromPort="solid" toPort="geometry"
+  layout id="rect" x=120 y=-40
+  layout id="vector" x=200 y=20
+  layout id="extrude" x=280 y=-40
+  layout id="volume" x=360 y=-40
+  layout id="width" x=40 y=-60
+  layout id="height" x=40 y=-20
+  layout id="distance" x=120 y=20
+}

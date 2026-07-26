@@ -1,0 +1,16 @@
+stock
+  kind id=beam-glulam-gl24h module=beams availability=24 typology=beams/solid-timber/glulam geometry=box:0.2,0.4,6 "Glulam GL24h 200×400"
+  kind id=beam-kvh-c24 module=beams availability=60 typology=beams/solid-timber/kvh geometry=box:0.1,0.2,4 "KVH C24 100×200"
+  kind id=beam-steel-ipe200 module=beams availability=12 typology=beams/steel/ipe geometry=box:0.1,0.2,5 "Steel IPE 200"
+  kind id=beam-steel-hea160 module=beams availability=8 typology=beams/steel/hea geometry=box:0.16,0.152,5 "Steel HEA 160"
+  kind id=window-casement-100x120 module=windows availability=18 typology=windows/casement geometry=frame:1,1.2,0.08,0.08 "Casement Window 100×120"
+  kind id=window-fixed-150x150 module=windows availability=10 typology=windows/fixed geometry=frame:1.5,1.5,0.06,0.06 "Fixed Window 150×150"
+  kind id=window-tilt-turn-120x140 module=windows availability=14 typology=windows/tilt-turn geometry=frame:1.2,1.4,0.09,0.09 "Tilt & Turn Window 120×140"
+  kind id=slab-concrete-240 module=slabs availability=30 typology=slabs/concrete geometry=slab:2.4,1.2,0.24 "Concrete Slab 240mm"
+  kind id=slab-clt-160 module=slabs availability=20 typology=slabs/clt geometry=slab:2.95,1.25,0.16 "CLT Slab 160mm"
+  kind id=slab-hollow-core-265 module=slabs availability=16 typology=slabs/hollow-core geometry=slab:1.2,6,0.265 "Hollow Core Slab 265mm"
+filters modules=- typology=- minAvailability=0 sort=- ""
+curated
+  pick beam-glulam-gl24h 3
+  pick window-casement-100x120 2
+runtime selected=-

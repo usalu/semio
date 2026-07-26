@@ -14,5 +14,6 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     passWithNoTests: true,
+    coverage: { include: ["app/**/*.ts", "app/**/*.tsx"] },
   },
 });

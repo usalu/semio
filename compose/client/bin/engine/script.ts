@@ -3,7 +3,7 @@
 import { execSync, spawn } from "node:child_process";
 import { existsSync, readFileSync, rmSync, copyFileSync, cpSync } from "node:fs";
 import { join } from "node:path";
-import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, pytestLevelArgs } from "../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, runTestBudgeted, resolveTestLevel, pytestLevelArgs, pytestCoverageArgs } from "../../../../repo/lib/js/index.ts";
 
 class DevMcpScript extends BundleScript {
   run(): void {
@@ -126,7 +126,7 @@ class TestScript extends BundleScript {
     assertSchema(Boolean(openapiSchema.paths?.["/api/graphql"]?.post), "semio OpenAPI schema MUST expose the GraphQL store endpoint");
     assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreRequest), "semio OpenAPI schema MUST define GraphqlStoreRequest");
     assertSchema(Boolean(openapiSchema.components?.schemas?.GraphqlStoreResponse), "semio OpenAPI schema MUST define GraphqlStoreResponse");
-    await runTestBudgeted(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html", ...pytestLevelArgs(level), ...rest], { cwd: this.root, env });
+    await runTestBudgeted(pythonCommand, ["-m", "pytest", "--cov", "--cov-config=pyproject.toml", "--cov-report", "html", ...pytestLevelArgs(level), ...pytestCoverageArgs(this.repoRoot, this.root), ...rest], { cwd: this.root, env });
     console.log("✅ Tests complete");
   }
 }

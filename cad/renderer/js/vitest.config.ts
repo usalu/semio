@@ -46,6 +46,7 @@ export default defineConfig({
     mode: "test",
     environment: "jsdom",
     include: ["index.tsx", "play/index.tsx", "play/fixture-slugs.ts"],
+    coverage: { include: ["index.tsx", "play/index.tsx", "play/fixture-slugs.ts"] },
     server: {
       deps: {
         inline: [/@semio-tech\/.*/, /cad\/.*/],

@@ -2211,7 +2211,7 @@ pub mod d2 {
                     export_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                     import_formats: vec![OsMediaFormat::Svg, OsMediaFormat::Png],
                 })
-                .icon_id("puzzle2d")
+                .icon_id("puzzle")
                 .terminology("reuse")
                 .terminology_document("reuse", ["Entwerfen mit Bestand", "puzzle", "2d"])
                 .mode("edit", "Edit")
@@ -2276,11 +2276,11 @@ pub mod d2 {
                 ])
                 // 🧰 Canvas utilities — one exclusive set, active utility host-owned (never a document operation). The
                 // select/brush switcher is rendered by the framework utility bar for the interactive pane.
-                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "cursor", UtilityCategory::Selection))
-                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "brush", UtilityCategory::Utilities))
+                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_SELECT, "Select", "mouse-pointer", UtilityCategory::Selection))
+                .utility(puzzle2d_utility(PUZZLE2D_UTILITY_BRUSH, "Brush", "paintbrush", UtilityCategory::Utilities))
                 .window_kind_utilities(PUZZLE2D_PANE_OVERVIEW, vec![PUZZLE2D_UTILITY_SELECT.into(), PUZZLE2D_UTILITY_BRUSH.into()])
                 // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility.
-                .tool_simple(PUZZLE2D_UTILITY_FILL, "Fill", "fill")
+                .tool_simple(PUZZLE2D_UTILITY_FILL, "Fill", "paint-bucket")
                 .mode_tools("edit", vec![ToolRef::new(PUZZLE2D_UTILITY_FILL)])
                 .default_layout(create_default_layout(&[PUZZLE2D_PANE_OVERVIEW.into(), PUZZLE2D_PANE_DETAIL.into(), PUZZLE2D_PANE_SELECTION.into()], "row", Some(&[50.0, 25.0, 25.0]), Some(&["Overview".into(), "Detail".into(), "Selection".into()]))),
         );
@@ -5426,7 +5426,7 @@ pub mod d3 {
     fn inspector_header_and_delete(count: usize, noun: &str, labels: &Puzzle3dLabels) -> Vec<UiNode> {
         vec![
             ui_text(format!("{count} {noun} {}", labels.selected_count)),
-            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash".into(), label: labels.delete.into(), action: puzzle3d_action("deleteSelection", None), style: None, presence: UiPresence::default() }),
+            UiNode::Button(semio_framework_plugin::UiButtonNode { id: Some("puzzle3d-play-inspector.delete".into()), icon_id: "trash-2".into(), label: labels.delete.into(), action: puzzle3d_action("deleteSelection", None), style: None, presence: UiPresence::default() }),
         ]
     }
 
@@ -5907,10 +5907,10 @@ pub mod d3 {
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some(labels.rectangle.into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some(labels.lasso.into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-default"), icon_id: "cursor".into(), label: Some(labels.selective.into()), pressed: runtime.selection_mode_default == "default", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-default"), icon_id: "mouse-pointer".into(), label: Some(labels.selective.into()), pressed: runtime.selection_mode_default == "default", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-additive"), icon_id: "plus".into(), label: Some(labels.additive.into()), pressed: runtime.selection_mode_default == "additive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-subtractive"), icon_id: "minus".into(), label: Some(labels.subtractive.into()), pressed: runtime.selection_mode_default == "subtractive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "subtractive" }))) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-invertive"), icon_id: "refresh-cw".into(), label: Some(labels.invertive.into()), pressed: runtime.selection_mode_default == "invertive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-invertive"), icon_id: "rotate-ccw".into(), label: Some(labels.invertive.into()), pressed: runtime.selection_mode_default == "invertive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "invertive" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-objects"), icon_id: "box".into(), label: Some(labels.objects.into()), pressed: runtime.selectable_kinds.objects, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "objects" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-vortices"), icon_id: "circle-dot".into(), label: Some(labels.vortices.into()), pressed: runtime.selectable_kinds.vortices, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "vortices" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-attractions"), icon_id: "link".into(), label: Some(labels.attractions.into()), pressed: runtime.selectable_kinds.attractions, text: None, on_change: puzzle3d_action("setSelectableKind", Some(json!({ "kind": "attractions" }))) },
@@ -7707,13 +7707,13 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 ])
                 // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together via Move/Rotate flags.
                 .utility(UtilityDefinition::new("transform", "Transform", "move-3d"))
-                .utility(UtilityDefinition::new("brush", "Brush", "brush"))
+                .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
                 .utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "box"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
                 .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "volumeBrush".into(), "worldRelocate".into()])
                 // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
                 // its viewport interaction via `ViewState.active_tool_id` (see `puzzle3d_scene_active_utility`).
-                .tool_simple("fill", "Fill", "fill")
+                .tool_simple("fill", "Fill", "paint-bucket")
                 .mode_tools("edit", vec![ToolRef::new("fill")])
                 // 🎓 Reference introduction (proof of the framework's Introduction mechanism, see
                 // `IntroductionDefinition` in `framework/core/rs/lib.rs`): a short first-run walkthrough
@@ -12314,12 +12314,12 @@ pub mod d5 {
                     ActionArgDef::select("partKind", "Kind", vec![ActionArgOption::new("Part", "Part")]).default_value("Part"),
                 ])
                 // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); `select` is the default.
-                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+                .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("move", "Move", "move") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("rotate", "Rotate", "rotate-cw") })
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
-                .utility(UtilityDefinition::new("brush", "Brush", "brush"))
-                .utility(UtilityDefinition::new("fill", "Fill", "fill"))
+                .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
+                .utility(UtilityDefinition::new("fill", "Fill", "paint-bucket"))
                 .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])

@@ -27,5 +27,6 @@ export default defineConfig({
     name: "@semio-tech/compose-sketchpad",
     environment: "node",
     include: ["index.ts"],
+    coverage: { include: ["index.ts"] },
   },
 });

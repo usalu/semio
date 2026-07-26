@@ -34,7 +34,16 @@ test = [
 [tool.pytest.ini_options]
 python_files = ["**/engine/main.py", "**/py/main.py", "test_*.py", "*_test.py", "*.test.py"]
 testpaths = ["compose/py", "compose/engine"]
-addopts = "--import-mode=importlib"
+addopts = "--import-mode=importlib --strict-markers"
+markers = [
+    "quick: fast test, included from the quick level upward",
+    "long: slower test, included from the long level upward",
+    "exhaustive: slowest test, only run at the exhaustive level",
+]
+
+[tool.coverage.run]
+relative_files = true
+branch = true
 
 [tool.ruff.lint.per-file-ignores]
 "conftest.py" = ["E402", "F401"]

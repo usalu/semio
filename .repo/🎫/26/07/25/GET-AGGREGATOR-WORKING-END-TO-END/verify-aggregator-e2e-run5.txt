@@ -1,0 +1,11 @@
+19 |   "/@fs/Users/ueli/Documents/semio/ui/js/react/index.tsx",
+20 |   "/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx",
+21 |   "/plugin-modules/puzzle/puzzle_plugin.js",
+22 |   "/mesh/hexagonal-cut-concrete-forest-left.glb",
+23 | ]) {
+24 |   const status = await warm(new URL(path, URL).href);
+                                 ^
+TypeError: "http://127.0.0.1:6023/" is not a constructor (evaluating 'new URL(path, URL)')
+      at /Users/ueli/Documents/semio/.repo/🎫/26/07/25/FIX-PUZZLE-3D-OBJECTS-NOT-RENDERING/verify-aggregator-e2e.mjs:24:29
+
+Bun v1.3.14 (macOS arm64)

@@ -1,0 +1,3 @@
+@writer schema=writer.document id=dag-jack language=jack uri=writer://dag-jack x=0 y=0 zoom=1 lines=2
+MATCH (n:computation) RETURN n.name, n.kind
+MATCH (n:slider) RETURN n.name

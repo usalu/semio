@@ -11,6 +11,7 @@ use sequence_core::{default_fixture, sequence_fixture_operations, SequenceFixtur
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const SEQUENCE_PLAY_APP_ID: &str = "sequence-play";
@@ -619,6 +620,16 @@ fn selection_ids(args: Option<&Value>) -> Vec<String> {
 //#endregion 🔖SequencePlayApp
 
 //#region 🔖Manifest
+/// 📄 JSON re-serialization of `default_fixture()`, round-tripped through its own `.sequence` DSL first
+/// (see `sequence_core`'s `🔖Dsl` region) to prove the fixture is fully expressible in text — for the
+/// framework-generic call site that contractually requires JSON (`App::example`'s manifest
+/// `document_json` is loaded via `serde_json::from_str` by `DocumentApp::load_document`'s default impl)
+/// — out of scope to change, since both are defined in `framework/plugin`.
+fn sequence_example_json() -> String {
+    let fixture = <SequenceFixture as DocumentDsl>::parse_dsl(&default_fixture().print_dsl()).expect("default_fixture round-trips through its own DSL");
+    serde_json::to_string(&fixture).expect("default_fixture is a static, hand-built value with no non-finite floats or non-UTF8 keys")
+}
+
 fn create_sequence_app() -> App {
     App::from_builder(
         App::builder(SEQUENCE_PLAY_APP_ID, "Sequence").document(["semio", "sequence"])
@@ -710,7 +721,7 @@ fn create_sequence_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_fixture()).expect("default_fixture is a static, hand-built value with no non-finite floats or non-UTF8 keys"))
+    .example("demo", "Demo", sequence_example_json())
     .program("sequence", "Sequence", "graph")
 }
 

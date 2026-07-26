@@ -1860,7 +1860,10 @@ pub struct DagFixtureEdge {
 
 impl Default for DagFixture {
     fn default() -> Self {
-        serde_json::from_str(include_str!("../example/demo.dag.json")).unwrap_or_else(|_| Self { schema: "dag.fixture".into(), camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] })
+        // 📜 the demo board is handcrafted `.dag` DSL text (see `//#region 🔖Dsl`), not JSON — it is
+        // compiled into the binary, so a parse failure here is a bug in the bundled fixture itself.
+        let document = <DagDocument as vcs::DocumentDsl>::parse_dsl(include_str!("../example/demo.dag")).expect("bundled example/demo.dag is valid DagDocument DSL text");
+        Self { schema: document.schema, camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: document.nodes, edges: document.edges }
     }
 }
 
@@ -6905,7 +6908,7 @@ pub fn empty_dag_document() -> DagDocument {
     DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes: Vec::new(), edges: Vec::new() }
 }
 
-/// 🌱 The demo document seed (nodes/edges from `demo.dag.json`), sharing the fixture's example.
+/// 🌱 The demo document seed (nodes/edges from `demo.dag`), sharing the fixture's example.
 pub fn default_dag_document() -> DagDocument {
     dag_document_from_fixture(&DagFixture::default())
 }
@@ -7126,6 +7129,744 @@ impl Operation<DagDocument> for DagOperation {
 pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOperation>;
 pub type DagStore = DocumentVcsStore<DagDocument, DagOperation>;
 
+//#region 🔖Dsl
+//! 📜 Handcrafted `.dag` textual DSL + one-line op-text, built on top of `mathematical_graph_dsl`'s
+//! wire-literal notation (`id:kind@port->id2:kind2@port2{props}`) rather than a competing grammar. The
+//! wire grammar only understands id/kind/port/{@link PropertyValue} property bags, so every field a
+//! {@link DagNodeSpec}/{@link DagFixtureEdge} carries beyond that (layout, kind-specific payload, the
+//! node's own free-form `properties`) is folded into the wire node/edge's property bag — exactly the
+//! extension point `mathematical_graph_dsl::wire` documents itself for.
+use mathematical_graph_dsl::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
+use mathematical_graph_manifest::PropertyValue;
+
+//#region 🔖DslEscaping
+/// 🔐 Percent-encodes every char matched by `needs_escape` (UTF-8 byte-wise), so the wire-literal
+/// grammar's escape-free `'...'` string lexer and this crate's own whitespace-tokenized op-text lines
+/// never see a byte that would break their (very simple, hand-rolled) framing.
+fn percent_encode(value: &str, needs_escape: impl Fn(char) -> bool) -> String {
+    let mut out = String::with_capacity(value.len());
+    for ch in value.chars() {
+        if needs_escape(ch) {
+            let mut buf = [0u8; 4];
+            for byte in ch.encode_utf8(&mut buf).as_bytes() {
+                out.push('%');
+                out.push_str(&format!("{byte:02X}"));
+            }
+        } else {
+            out.push(ch);
+        }
+    }
+    out
+}
+
+/// 🔓 Generic percent-decoder: any `%XX` hex pair is restored to its raw byte, regardless of which
+/// escaper produced it — safe because {@link percent_encode} always emits well-formed pairs.
+fn percent_decode(value: &str) -> String {
+    let bytes = value.as_bytes();
+    let mut out = Vec::with_capacity(bytes.len());
+    let mut i = 0;
+    while i < bytes.len() {
+        if bytes[i] == b'%' && i + 2 < bytes.len() {
+            if let Ok(byte) = u8::from_str_radix(std::str::from_utf8(&bytes[i + 1..i + 3]).unwrap_or_default(), 16) {
+                out.push(byte);
+                i += 3;
+                continue;
+            }
+        }
+        out.push(bytes[i]);
+        i += 1;
+    }
+    String::from_utf8_lossy(&out).into_owned()
+}
+
+/// 🧵 Escapes a string leaf for embedding as a wire-literal `PropertyValue::String` — the wire lexer
+/// has no escape mechanism at all, so `'`/`%` (which would desync its raw quote scan) and `\n`/`\r`
+/// (which would split a `.dag` op-log line) are the only bytes that ever need hiding.
+fn wire_safe_string(value: &str) -> String {
+    percent_encode(value, |ch| matches!(ch, '%' | '\'' | '\n' | '\r'))
+}
+
+fn wire_unsafe_string(value: &str) -> String {
+    percent_decode(value)
+}
+
+/// 🧵 Escapes a string so it is safe as one whitespace-split `key=value` op-text token (used for the
+/// op-line envelope around an embedded wire-literal payload, never by the wire grammar itself).
+fn token_safe(value: &str) -> String {
+    percent_encode(value, |ch| matches!(ch, '%' | ' ' | '\t' | '\n' | '\r'))
+}
+
+fn token_unsafe(value: &str) -> String {
+    percent_decode(value)
+}
+
+/// 🕳️ Encodes an `Option<&str>` as one op-text token: a `1`/`0` presence prefix so `None` never
+/// collides with a `Some` value that happens to look like a sentinel (e.g. an empty or `-` string).
+fn encode_opt(value: Option<&str>) -> String {
+    match value {
+        Some(v) => format!("1{}", token_safe(v)),
+        None => "0".to_string(),
+    }
+}
+
+fn decode_opt(value: &str) -> Option<String> {
+    value.strip_prefix('1').map(token_unsafe)
+}
+//#endregion 🔖DslEscaping
+
+//#region 🔖DslPropertyTree
+/// 🌳 Recursively re-escapes every `PropertyValue::String` leaf of a bag that is itself already
+/// `PropertyValue`-shaped (the node's own free-form `properties`), so it nests safely inside the
+/// synthetic wire-literal property bag this module builds around it.
+fn escape_property_tree(value: &PropertyValue) -> PropertyValue {
+    match value {
+        PropertyValue::String(s) => PropertyValue::String(wire_safe_string(s)),
+        PropertyValue::Array(items) => PropertyValue::Array(items.iter().map(escape_property_tree).collect()),
+        PropertyValue::Object(map) => PropertyValue::Object(map.iter().map(|(k, v)| (k.clone(), escape_property_tree(v))).collect()),
+        other => other.clone(),
+    }
+}
+
+fn unescape_property_tree(value: &PropertyValue) -> PropertyValue {
+    match value {
+        PropertyValue::String(s) => PropertyValue::String(wire_unsafe_string(s)),
+        PropertyValue::Array(items) => PropertyValue::Array(items.iter().map(unescape_property_tree).collect()),
+        PropertyValue::Object(map) => PropertyValue::Object(map.iter().map(|(k, v)| (k.clone(), unescape_property_tree(v))).collect()),
+        other => other.clone(),
+    }
+}
+
+fn escape_property_bag(bag: &PropertyBag) -> PropertyBag {
+    bag.iter().map(|(k, v)| (k.clone(), escape_property_tree(v))).collect()
+}
+
+fn unescape_property_bag(bag: &PropertyBag) -> PropertyBag {
+    bag.iter().map(|(k, v)| (k.clone(), unescape_property_tree(v))).collect()
+}
+
+/// 🌉 Converts genuinely untyped JSON (an `IoPortSpec` default/value, a `DagPreviewContent::Tree`
+/// payload) into the wire grammar's `PropertyValue` tree. NOTE: `serde_json::Number` tags integers vs
+/// floats separately while `PropertyValue::Number` is always `f64`, so a JSON integer round trips back
+/// as a float-tagged `serde_json::Number` — harmless for every current fixture (none stores raw JSON
+/// literals in these leaves) but worth knowing if one starts to.
+fn json_to_property(value: &serde_json::Value) -> PropertyValue {
+    match value {
+        serde_json::Value::Null => PropertyValue::Null,
+        serde_json::Value::Bool(b) => PropertyValue::Bool(*b),
+        serde_json::Value::Number(n) => PropertyValue::Number(n.as_f64().unwrap_or(0.0)),
+        serde_json::Value::String(s) => PropertyValue::String(wire_safe_string(s)),
+        serde_json::Value::Array(items) => PropertyValue::Array(items.iter().map(json_to_property).collect()),
+        serde_json::Value::Object(map) => PropertyValue::Object(map.iter().map(|(k, v)| (k.clone(), json_to_property(v))).collect()),
+    }
+}
+
+fn property_to_json(value: &PropertyValue) -> serde_json::Value {
+    match value {
+        PropertyValue::Null => serde_json::Value::Null,
+        PropertyValue::Bool(b) => serde_json::Value::Bool(*b),
+        PropertyValue::Number(n) => serde_json::Number::from_f64(*n).map(serde_json::Value::Number).unwrap_or(serde_json::Value::Null),
+        PropertyValue::String(s) => serde_json::Value::String(wire_unsafe_string(s)),
+        PropertyValue::Array(items) => serde_json::Value::Array(items.iter().map(property_to_json).collect()),
+        PropertyValue::Object(map) => serde_json::Value::Object(map.iter().map(|(k, v)| (k.clone(), property_to_json(v))).collect()),
+    }
+}
+
+fn prop_string(bag: &PropertyBag, key: &str) -> String {
+    match bag.get(key) {
+        Some(PropertyValue::String(s)) => wire_unsafe_string(s),
+        _ => String::new(),
+    }
+}
+
+fn prop_opt_string(bag: &PropertyBag, key: &str) -> Option<String> {
+    match bag.get(key) {
+        Some(PropertyValue::String(s)) => Some(wire_unsafe_string(s)),
+        _ => None,
+    }
+}
+
+fn prop_f64(bag: &PropertyBag, key: &str) -> f64 {
+    bag.get(key).and_then(PropertyValue::as_f64).unwrap_or(0.0)
+}
+
+fn prop_bool(bag: &PropertyBag, key: &str) -> bool {
+    matches!(bag.get(key), Some(PropertyValue::Bool(true)))
+}
+
+fn prop_usize(bag: &PropertyBag, key: &str) -> usize {
+    prop_f64(bag, key).round().max(0.0) as usize
+}
+//#endregion 🔖DslPropertyTree
+
+//#region 🔖DslPorts
+fn port_shape_tag(shape: PortShape) -> &'static str {
+    match shape {
+        PortShape::Semicircle => "semicircle",
+        PortShape::Triangle => "triangle",
+    }
+}
+
+fn port_shape_from_tag(tag: &str) -> PortShape {
+    match tag {
+        "triangle" => PortShape::Triangle,
+        _ => PortShape::Semicircle,
+    }
+}
+
+fn io_port_to_property(port: &IoPortSpec) -> PropertyValue {
+    let mut bag = PropertyBag::new();
+    bag.insert("id".into(), PropertyValue::String(wire_safe_string(&port.id)));
+    bag.insert("label".into(), PropertyValue::String(wire_safe_string(&port.label)));
+    bag.insert("code".into(), PropertyValue::String(wire_safe_string(&port.code)));
+    bag.insert("abbreviation".into(), PropertyValue::String(wire_safe_string(&port.abbreviation)));
+    bag.insert("fullName".into(), PropertyValue::String(wire_safe_string(&port.full_name)));
+    if let Some(value_type) = &port.value_type {
+        bag.insert("type".into(), PropertyValue::String(wire_safe_string(value_type)));
+    }
+    if let Some(default) = &port.default {
+        bag.insert("default".into(), json_to_property(default));
+    }
+    if let Some(value) = &port.value {
+        bag.insert("value".into(), json_to_property(value));
+    }
+    if let Some(connected) = port.connected {
+        bag.insert("connected".into(), PropertyValue::Bool(connected));
+    }
+    if let Some(resource_kind) = &port.resource_kind {
+        bag.insert("resourceKind".into(), PropertyValue::String(wire_safe_string(resource_kind)));
+    }
+    bag.insert("cardinality".into(), PropertyValue::String(wire_safe_string(&port.cardinality)));
+    bag.insert("shape".into(), PropertyValue::String(port_shape_tag(port.shape).into()));
+    bag.insert("visible".into(), PropertyValue::Bool(port.visible));
+    PropertyValue::Object(bag)
+}
+
+fn io_port_from_property(value: &PropertyValue) -> IoPortSpec {
+    let empty = PropertyBag::new();
+    let bag = match value {
+        PropertyValue::Object(map) => map,
+        _ => &empty,
+    };
+    IoPortSpec {
+        id: prop_string(bag, "id"),
+        label: prop_string(bag, "label"),
+        code: prop_string(bag, "code"),
+        abbreviation: prop_string(bag, "abbreviation"),
+        full_name: prop_string(bag, "fullName"),
+        value_type: prop_opt_string(bag, "type"),
+        default: bag.get("default").map(property_to_json),
+        value: bag.get("value").map(property_to_json),
+        connected: match bag.get("connected") {
+            Some(PropertyValue::Bool(b)) => Some(*b),
+            _ => None,
+        },
+        resource_kind: prop_opt_string(bag, "resourceKind"),
+        // 🎯 "cardinality" is always written by `io_port_to_property`, so the key is always present here —
+        // no default-fallback needed (and none wanted: it would silently rewrite an explicit "" to "!").
+        cardinality: prop_string(bag, "cardinality"),
+        shape: port_shape_from_tag(&prop_string(bag, "shape")),
+        visible: match bag.get("visible") {
+            Some(PropertyValue::Bool(b)) => *b,
+            _ => true,
+        },
+    }
+}
+
+fn ports_to_property(ports: &[IoPortSpec]) -> PropertyValue {
+    PropertyValue::Array(ports.iter().map(io_port_to_property).collect())
+}
+
+fn ports_from_property(value: Option<&PropertyValue>) -> Vec<IoPortSpec> {
+    match value {
+        Some(PropertyValue::Array(items)) => items.iter().map(io_port_from_property).collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn string_list_to_property(items: &[String]) -> PropertyValue {
+    PropertyValue::Array(items.iter().map(|s| PropertyValue::String(wire_safe_string(s))).collect())
+}
+
+fn string_list_from_property(value: Option<&PropertyValue>) -> Vec<String> {
+    match value {
+        Some(PropertyValue::Array(items)) => items
+            .iter()
+            .filter_map(|v| match v {
+                PropertyValue::String(s) => Some(wire_unsafe_string(s)),
+                _ => None,
+            })
+            .collect(),
+        _ => Vec::new(),
+    }
+}
+
+fn string_set_to_property(set: &BTreeSet<String>) -> PropertyValue {
+    PropertyValue::Array(set.iter().map(|s| PropertyValue::String(wire_safe_string(s))).collect())
+}
+
+fn string_set_from_property(value: Option<&PropertyValue>) -> BTreeSet<String> {
+    match value {
+        Some(PropertyValue::Array(items)) => items
+            .iter()
+            .filter_map(|v| match v {
+                PropertyValue::String(s) => Some(wire_unsafe_string(s)),
+                _ => None,
+            })
+            .collect(),
+        _ => BTreeSet::new(),
+    }
+}
+
+fn media_kind_tag(kind: DagMediaKind) -> &'static str {
+    match kind {
+        DagMediaKind::Image => "image",
+        DagMediaKind::Svg => "svg",
+        DagMediaKind::Pdf => "pdf",
+        DagMediaKind::Video => "video",
+    }
+}
+
+fn media_kind_from_tag(tag: &str) -> DagMediaKind {
+    match tag {
+        "svg" => DagMediaKind::Svg,
+        "pdf" => DagMediaKind::Pdf,
+        "video" => DagMediaKind::Video,
+        _ => DagMediaKind::Image,
+    }
+}
+
+fn media_to_property(media: &DagMedia) -> PropertyValue {
+    let mut bag = PropertyBag::new();
+    bag.insert("kind".into(), PropertyValue::String(media_kind_tag(media.kind).into()));
+    bag.insert("src".into(), PropertyValue::String(wire_safe_string(&media.src)));
+    PropertyValue::Object(bag)
+}
+
+fn media_from_property(value: &PropertyValue) -> DagMedia {
+    let empty = PropertyBag::new();
+    let bag = match value {
+        PropertyValue::Object(map) => map,
+        _ => &empty,
+    };
+    DagMedia { kind: media_kind_from_tag(&prop_string(bag, "kind")), src: prop_string(bag, "src") }
+}
+
+fn preview_content_to_property(content: &DagPreviewContent) -> PropertyValue {
+    let mut bag = PropertyBag::new();
+    match content {
+        DagPreviewContent::Empty => {
+            bag.insert("variant".into(), PropertyValue::String("empty".into()));
+        }
+        DagPreviewContent::Scalar { text } => {
+            bag.insert("variant".into(), PropertyValue::String("scalar".into()));
+            bag.insert("text".into(), PropertyValue::String(wire_safe_string(text)));
+        }
+        DagPreviewContent::Image { src } => {
+            bag.insert("variant".into(), PropertyValue::String("image".into()));
+            bag.insert("src".into(), PropertyValue::String(wire_safe_string(src)));
+        }
+        DagPreviewContent::Tree { json } => {
+            bag.insert("variant".into(), PropertyValue::String("tree".into()));
+            bag.insert("json".into(), json_to_property(json));
+        }
+    }
+    PropertyValue::Object(bag)
+}
+
+fn preview_content_from_property(value: &PropertyValue) -> DagPreviewContent {
+    let empty = PropertyBag::new();
+    let bag = match value {
+        PropertyValue::Object(map) => map,
+        _ => &empty,
+    };
+    match prop_string(bag, "variant").as_str() {
+        "scalar" => DagPreviewContent::Scalar { text: prop_string(bag, "text") },
+        "image" => DagPreviewContent::Image { src: prop_string(bag, "src") },
+        "tree" => DagPreviewContent::Tree { json: bag.get("json").map(property_to_json).unwrap_or(serde_json::Value::Null) },
+        _ => DagPreviewContent::Empty,
+    }
+}
+//#endregion 🔖DslPorts
+
+//#region 🔖DslNodeKind
+/// 📤 Folds a `DagNodeKind`'s kind-specific payload into a property bag (plus its own `kind` tag),
+/// reused both for a full node's wire-literal properties and (wrapped in a throwaway `_`-id node) for
+/// a `DagNodePatch.kind` replacement embedded on one op-text line.
+fn node_kind_to_properties(kind: &DagNodeKind) -> PropertyBag {
+    let mut bag = PropertyBag::new();
+    bag.insert("kind".into(), PropertyValue::String(dag_node_kind_tag(kind).into()));
+    match kind {
+        DagNodeKind::Computation { inputs, outputs, variadic_inputs, variadic_outputs } => {
+            bag.insert("inputs".into(), ports_to_property(inputs));
+            bag.insert("outputs".into(), ports_to_property(outputs));
+            bag.insert("variadicInputs".into(), PropertyValue::Bool(*variadic_inputs));
+            bag.insert("variadicOutputs".into(), PropertyValue::Bool(*variadic_outputs));
+        }
+        DagNodeKind::Slider { min, max, step, value, output } => {
+            bag.insert("min".into(), PropertyValue::Number(*min));
+            bag.insert("max".into(), PropertyValue::Number(*max));
+            bag.insert("step".into(), PropertyValue::Number(*step));
+            bag.insert("value".into(), PropertyValue::Number(*value));
+            bag.insert("output".into(), io_port_to_property(output));
+        }
+        DagNodeKind::Select { options, selected, output } => {
+            bag.insert("options".into(), string_list_to_property(options));
+            bag.insert("selected".into(), PropertyValue::Number(*selected as f64));
+            bag.insert("output".into(), io_port_to_property(output));
+        }
+        DagNodeKind::Screen { media, input } => {
+            if let Some(media) = media {
+                bag.insert("media".into(), media_to_property(media));
+            }
+            bag.insert("input".into(), io_port_to_property(input));
+        }
+        DagNodeKind::Note { text, output } => {
+            bag.insert("text".into(), PropertyValue::String(wire_safe_string(text)));
+            bag.insert("output".into(), io_port_to_property(output));
+        }
+        DagNodeKind::Image { src, output } => {
+            bag.insert("src".into(), PropertyValue::String(wire_safe_string(src)));
+            bag.insert("output".into(), io_port_to_property(output));
+        }
+        DagNodeKind::Preview { content, expanded, input } => {
+            bag.insert("content".into(), preview_content_to_property(content));
+            bag.insert("expanded".into(), string_set_to_property(expanded));
+            bag.insert("input".into(), io_port_to_property(input));
+        }
+        DagNodeKind::Action { label, input } => {
+            bag.insert("label".into(), PropertyValue::String(wire_safe_string(label)));
+            bag.insert("input".into(), io_port_to_property(input));
+        }
+        DagNodeKind::Export { label, format, input } => {
+            bag.insert("label".into(), PropertyValue::String(wire_safe_string(label)));
+            bag.insert("format".into(), PropertyValue::String(wire_safe_string(format)));
+            bag.insert("input".into(), io_port_to_property(input));
+        }
+        DagNodeKind::Cluster { inputs, outputs } => {
+            bag.insert("inputs".into(), ports_to_property(inputs));
+            bag.insert("outputs".into(), ports_to_property(outputs));
+        }
+        DagNodeKind::AppInstance { instance_id, program_id, app_id, icon, inputs, outputs } => {
+            bag.insert("instanceId".into(), PropertyValue::String(wire_safe_string(instance_id)));
+            bag.insert("programId".into(), PropertyValue::String(wire_safe_string(program_id)));
+            bag.insert("appId".into(), PropertyValue::String(wire_safe_string(app_id)));
+            // 🏷️ namespaced `appIcon` avoids colliding with the node-level `icon` key this bag is merged with
+            bag.insert("appIcon".into(), PropertyValue::String(wire_safe_string(icon)));
+            bag.insert("inputs".into(), ports_to_property(inputs));
+            bag.insert("outputs".into(), ports_to_property(outputs));
+        }
+    }
+    bag
+}
+
+fn node_kind_from_properties(bag: &PropertyBag) -> Result<DagNodeKind, vcs::TextError> {
+    let tag = prop_string(bag, "kind");
+    Ok(match tag.as_str() {
+        "computation" => DagNodeKind::Computation {
+            inputs: ports_from_property(bag.get("inputs")),
+            outputs: ports_from_property(bag.get("outputs")),
+            variadic_inputs: prop_bool(bag, "variadicInputs"),
+            variadic_outputs: prop_bool(bag, "variadicOutputs"),
+        },
+        "slider" => DagNodeKind::Slider {
+            min: prop_f64(bag, "min"),
+            max: prop_f64(bag, "max"),
+            step: prop_f64(bag, "step"),
+            value: prop_f64(bag, "value"),
+            output: bag.get("output").map(io_port_from_property).unwrap_or_default(),
+        },
+        "select" => DagNodeKind::Select {
+            options: string_list_from_property(bag.get("options")),
+            selected: prop_usize(bag, "selected"),
+            output: bag.get("output").map(io_port_from_property).unwrap_or_default(),
+        },
+        "screen" => DagNodeKind::Screen { media: bag.get("media").map(media_from_property), input: bag.get("input").map(io_port_from_property).unwrap_or_default() },
+        "note" => DagNodeKind::Note { text: prop_string(bag, "text"), output: bag.get("output").map(io_port_from_property).unwrap_or_default() },
+        "image" => DagNodeKind::Image { src: prop_string(bag, "src"), output: bag.get("output").map(io_port_from_property).unwrap_or_default() },
+        "preview" => DagNodeKind::Preview {
+            content: bag.get("content").map(preview_content_from_property).unwrap_or_default(),
+            expanded: string_set_from_property(bag.get("expanded")),
+            input: bag.get("input").map(io_port_from_property).unwrap_or_default(),
+        },
+        "action" => DagNodeKind::Action { label: prop_string(bag, "label"), input: bag.get("input").map(io_port_from_property).unwrap_or_default() },
+        "export" => DagNodeKind::Export { label: prop_string(bag, "label"), format: prop_string(bag, "format"), input: bag.get("input").map(io_port_from_property).unwrap_or_default() },
+        "cluster" => DagNodeKind::Cluster { inputs: ports_from_property(bag.get("inputs")), outputs: ports_from_property(bag.get("outputs")) },
+        "appInstance" => DagNodeKind::AppInstance {
+            instance_id: prop_string(bag, "instanceId"),
+            program_id: prop_string(bag, "programId"),
+            app_id: prop_string(bag, "appId"),
+            icon: prop_string(bag, "appIcon"),
+            inputs: ports_from_property(bag.get("inputs")),
+            outputs: ports_from_property(bag.get("outputs")),
+        },
+        other => return Err(vcs::TextError::expected(format!("unknown dag node kind '{other}'"), vcs::TextSpan::at(1, 1), "known DagNodeKind tag")),
+    })
+}
+
+/// 📤 Renders a `DagNodeKind` alone as a one-line synthetic wire node (`_`-id, no layout fields) —
+/// used to embed a `DagNodePatch.kind` replacement inline on an op-text line.
+fn kind_to_token(kind: &DagNodeKind) -> String {
+    let synthetic = WireNode { id: "_".into(), kind: dag_node_kind_tag(kind).to_string(), port: None, properties: node_kind_to_properties(kind) };
+    wire_literal_from_dag(&[synthetic], &[])
+}
+
+fn kind_from_token(token: &str) -> Result<DagNodeKind, vcs::TextError> {
+    let (nodes, _edges) = dag_from_wire_literal(token).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+    let node = nodes.first().ok_or_else(|| vcs::TextError::new("expected an embedded node-kind payload".to_string(), vcs::TextSpan::at(1, 1)))?;
+    node_kind_from_properties(&node.properties)
+}
+//#endregion 🔖DslNodeKind
+
+//#region 🔖DslNodeEdge
+/// 📤 Projects a full `DagNodeSpec` onto a wire-literal node: `id:kindTag` plus every other field
+/// (layout, kind payload, the node's own free-form `properties`) folded into the property bag.
+fn dag_node_to_wire_node(node: &DagNodeSpec) -> WireNode {
+    let mut bag = node_kind_to_properties(&node.kind);
+    bag.insert("name".into(), PropertyValue::String(wire_safe_string(&node.name)));
+    bag.insert("abbreviation".into(), PropertyValue::String(wire_safe_string(&node.abbreviation)));
+    bag.insert("icon".into(), PropertyValue::String(wire_safe_string(&node.icon)));
+    bag.insert("x".into(), PropertyValue::Number(node.x));
+    bag.insert("y".into(), PropertyValue::Number(node.y));
+    bag.insert("width".into(), PropertyValue::Number(node.width));
+    bag.insert("height".into(), PropertyValue::Number(node.height));
+    if let Some(operator_kind) = &node.operator_kind {
+        bag.insert("operatorKind".into(), PropertyValue::String(wire_safe_string(operator_kind)));
+    }
+    if !node.properties.is_empty() {
+        bag.insert("properties".into(), PropertyValue::Object(escape_property_bag(&node.properties)));
+    }
+    WireNode { id: node.id.clone(), kind: dag_node_kind_tag(&node.kind).to_string(), port: None, properties: bag }
+}
+
+fn wire_node_to_dag_node(wire: &WireNode) -> Result<DagNodeSpec, vcs::TextError> {
+    let bag = &wire.properties;
+    let properties = match bag.get("properties") {
+        Some(PropertyValue::Object(map)) => unescape_property_bag(map),
+        _ => PropertyBag::new(),
+    };
+    Ok(DagNodeSpec {
+        id: wire.id.clone(),
+        name: prop_string(bag, "name"),
+        abbreviation: prop_string(bag, "abbreviation"),
+        icon: prop_string(bag, "icon"),
+        x: prop_f64(bag, "x"),
+        y: prop_f64(bag, "y"),
+        width: prop_f64(bag, "width"),
+        height: prop_f64(bag, "height"),
+        operator_kind: prop_opt_string(bag, "operatorKind"),
+        properties,
+        kind: node_kind_from_properties(bag)?,
+    })
+}
+
+fn join_dag_endpoint(node: &str, port: &str) -> String {
+    format!("{node}:{port}")
+}
+
+/// 📤 Projects a `DagFixtureEdge` onto a wire-literal edge: `id` and a non-default `routeStyle` ride
+/// in the property bag alongside the edge's own free-form `properties` (endpoints round trip through
+/// `from`/`from_port`/`to`/`to_port`, always canonicalized as `node:port` — see {@link join_dag_endpoint}).
+fn dag_edge_to_wire_edge(edge: &DagFixtureEdge) -> WireEdge {
+    let (from, from_port) = split_dag_endpoint(&edge.source);
+    let (to, to_port) = split_dag_endpoint(&edge.target);
+    let mut properties = escape_property_bag(&edge.properties);
+    properties.insert("id".into(), PropertyValue::String(wire_safe_string(&edge.id)));
+    if !matches!(edge.route_style, EdgeRouteStyle::Bezier) {
+        properties.insert("routeStyle".into(), PropertyValue::String("sharpSz".into()));
+    }
+    WireEdge { from, from_port, to, to_port, directed: true, properties }
+}
+
+fn wire_edge_to_dag_edge(wire: &WireEdge) -> Result<DagFixtureEdge, vcs::TextError> {
+    let mut properties = wire.properties.clone();
+    let id = match properties.remove("id") {
+        Some(PropertyValue::String(s)) => wire_unsafe_string(&s),
+        _ => return Err(vcs::TextError::new("dag edge is missing its 'id' property".to_string(), vcs::TextSpan::at(1, 1))),
+    };
+    let route_style = match properties.remove("routeStyle") {
+        Some(PropertyValue::String(s)) if s == "sharpSz" => EdgeRouteStyle::SharpSz,
+        _ => EdgeRouteStyle::Bezier,
+    };
+    Ok(DagFixtureEdge { id, source: join_dag_endpoint(&wire.from, &wire.from_port), target: join_dag_endpoint(&wire.to, &wire.to_port), route_style, properties: unescape_property_bag(&properties) })
+}
+//#endregion 🔖DslNodeEdge
+
+//#region 🔖DslDocument
+fn print_doc_header(schema: &str) -> String {
+    format!("doc schema=\"{}\"", wire_safe_string(schema))
+}
+
+fn parse_doc_header(line: &str) -> Result<String, vcs::TextError> {
+    let trimmed = line.trim();
+    let prefix = "doc schema=\"";
+    if !trimmed.starts_with(prefix) || !trimmed.ends_with('"') || trimmed.len() < prefix.len() + 1 {
+        return Err(vcs::TextError::expected("malformed dag document header".to_string(), vcs::TextSpan::at(1, 1), "doc schema=\"...\""));
+    }
+    Ok(wire_unsafe_string(&trimmed[prefix.len()..trimmed.len() - 1]))
+}
+
+impl vcs::DocumentDsl for DagDocument {
+    const EXTENSION: &'static str = "dag";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let mut lines = text.lines();
+        let schema = parse_doc_header(lines.next().unwrap_or_default())?;
+        let body = lines.collect::<Vec<_>>().join("\n");
+        let (wire_nodes, wire_edges) = dag_from_wire_literal(&body).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(2, 1)))?;
+        let nodes = wire_nodes.iter().map(wire_node_to_dag_node).collect::<Result<Vec<_>, _>>()?;
+        let edges = wire_edges.iter().map(wire_edge_to_dag_edge).collect::<Result<Vec<_>, _>>()?;
+        Ok(DagDocument { schema, nodes, edges })
+    }
+
+    fn print_dsl(&self) -> String {
+        let wire_nodes: Vec<WireNode> = self.nodes.iter().map(dag_node_to_wire_node).collect();
+        let wire_edges: Vec<WireEdge> = self.edges.iter().map(dag_edge_to_wire_edge).collect();
+        let body = wire_literal_from_dag(&wire_nodes, &wire_edges);
+        let header = print_doc_header(&self.schema);
+        if body.is_empty() {
+            header
+        } else {
+            format!("{header}\n{body}")
+        }
+    }
+}
+//#endregion 🔖DslDocument
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+//! ⚡ One-line op-text for every `DagOperation` variant. The outer envelope is always plain
+//! whitespace-split `key=value` tokens (see {@link token_safe}/{@link parse_op_tokens}); any value that
+//! itself needs internal structure (an embedded wire-literal node/edge/document, or free text) is
+//! percent-encoded into a single token first, so the outer grammar never has to understand nesting.
+fn parse_op_tokens(rest: &str) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for token in rest.split_whitespace() {
+        if let Some((key, value)) = token.split_once('=') {
+            map.insert(key.to_string(), token_unsafe(value));
+        }
+    }
+    map
+}
+
+fn op_field<'a>(tokens: &'a HashMap<String, String>, key: &str) -> Result<&'a str, vcs::TextError> {
+    tokens.get(key).map(String::as_str).ok_or_else(|| vcs::TextError::new(format!("missing op field '{key}'"), vcs::TextSpan::at(1, 1)))
+}
+
+fn parse_usize_field(tokens: &HashMap<String, String>, key: &str) -> Result<usize, vcs::TextError> {
+    op_field(tokens, key)?.parse::<usize>().map_err(|_| vcs::TextError::new(format!("field '{key}' is not a valid index"), vcs::TextSpan::at(1, 1)))
+}
+
+impl vcs::OpText for DagOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        let trimmed = line.trim();
+        let (op_name, rest) = trimmed.split_once(' ').unwrap_or((trimmed, ""));
+        let tokens = parse_op_tokens(rest);
+        Ok(match op_name {
+            "nodesAdd" => {
+                let index = parse_usize_field(&tokens, "index")?;
+                let item_line = op_field(&tokens, "item")?;
+                let (wire_nodes, _wire_edges) = dag_from_wire_literal(item_line).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+                let wire_node = wire_nodes.first().ok_or_else(|| vcs::TextError::new("nodesAdd item did not contain a node".to_string(), vcs::TextSpan::at(1, 1)))?;
+                DagOperation::Nodes(CollectionOperation::Add { index, item: wire_node_to_dag_node(wire_node)? })
+            }
+            "nodesRemove" => DagOperation::Nodes(CollectionOperation::Remove { id: op_field(&tokens, "id")?.to_string() }),
+            "nodesMove" => DagOperation::Nodes(CollectionOperation::Move { id: op_field(&tokens, "id")?.to_string(), to_index: parse_usize_field(&tokens, "toIndex")? }),
+            "nodesPatch" => {
+                let id = op_field(&tokens, "id")?.to_string();
+                let patch = DagNodePatch {
+                    name: decode_opt(op_field(&tokens, "name")?),
+                    x: decode_opt(op_field(&tokens, "x")?).map(|s| s.parse().unwrap_or(0.0)),
+                    y: decode_opt(op_field(&tokens, "y")?).map(|s| s.parse().unwrap_or(0.0)),
+                    width: decode_opt(op_field(&tokens, "width")?).map(|s| s.parse().unwrap_or(0.0)),
+                    height: decode_opt(op_field(&tokens, "height")?).map(|s| s.parse().unwrap_or(0.0)),
+                    kind: match decode_opt(op_field(&tokens, "kind")?) {
+                        Some(token) => Some(kind_from_token(&token)?),
+                        None => None,
+                    },
+                };
+                DagOperation::Nodes(CollectionOperation::Patch { id, patch })
+            }
+            "edgesAdd" => {
+                let index = parse_usize_field(&tokens, "index")?;
+                let item_line = op_field(&tokens, "item")?;
+                let (_wire_nodes, wire_edges) = dag_from_wire_literal(item_line).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+                let wire_edge = wire_edges.first().ok_or_else(|| vcs::TextError::new("edgesAdd item did not contain an edge".to_string(), vcs::TextSpan::at(1, 1)))?;
+                DagOperation::Edges(CollectionOperation::Add { index, item: wire_edge_to_dag_edge(wire_edge)? })
+            }
+            "edgesRemove" => DagOperation::Edges(CollectionOperation::Remove { id: op_field(&tokens, "id")?.to_string() }),
+            "edgesMove" => DagOperation::Edges(CollectionOperation::Move { id: op_field(&tokens, "id")?.to_string(), to_index: parse_usize_field(&tokens, "toIndex")? }),
+            "edgesPatch" => {
+                let id = op_field(&tokens, "id")?.to_string();
+                let patch = DagEdgePatch { source: decode_opt(op_field(&tokens, "source")?), target: decode_opt(op_field(&tokens, "target")?) };
+                DagOperation::Edges(CollectionOperation::Patch { id, patch })
+            }
+            "setNodes" => {
+                let body = op_field(&tokens, "nodes")?;
+                let (wire_nodes, _wire_edges) = dag_from_wire_literal(body).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+                DagOperation::SetNodes { nodes: wire_nodes.iter().map(wire_node_to_dag_node).collect::<Result<Vec<_>, _>>()? }
+            }
+            "setEdges" => {
+                let body = op_field(&tokens, "edges")?;
+                let (_wire_nodes, wire_edges) = dag_from_wire_literal(body).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+                DagOperation::SetEdges { edges: wire_edges.iter().map(wire_edge_to_dag_edge).collect::<Result<Vec<_>, _>>()? }
+            }
+            "setDocument" => {
+                let schema = op_field(&tokens, "schema")?.to_string();
+                let body = op_field(&tokens, "body")?;
+                let (wire_nodes, wire_edges) = dag_from_wire_literal(body).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))?;
+                let nodes = wire_nodes.iter().map(wire_node_to_dag_node).collect::<Result<Vec<_>, _>>()?;
+                let edges = wire_edges.iter().map(wire_edge_to_dag_edge).collect::<Result<Vec<_>, _>>()?;
+                DagOperation::SetDocument { document: DagDocument { schema, nodes, edges } }
+            }
+            other => return Err(vcs::TextError::expected(format!("unknown dag operation '{other}'"), vcs::TextSpan::at(1, 1), "known DagOperation variant")),
+        })
+    }
+
+    fn print_op(&self) -> String {
+        match self {
+            DagOperation::Nodes(CollectionOperation::Add { index, item }) => {
+                let line = wire_literal_from_dag(&[dag_node_to_wire_node(item)], &[]);
+                format!("nodesAdd index={index} item={}", token_safe(&line))
+            }
+            DagOperation::Nodes(CollectionOperation::Remove { id }) => format!("nodesRemove id={}", token_safe(id)),
+            DagOperation::Nodes(CollectionOperation::Move { id, to_index }) => format!("nodesMove id={} toIndex={to_index}", token_safe(id)),
+            DagOperation::Nodes(CollectionOperation::Patch { id, patch }) => format!(
+                "nodesPatch id={} name={} x={} y={} width={} height={} kind={}",
+                token_safe(id),
+                encode_opt(patch.name.as_deref()),
+                encode_opt(patch.x.map(|v| v.to_string()).as_deref()),
+                encode_opt(patch.y.map(|v| v.to_string()).as_deref()),
+                encode_opt(patch.width.map(|v| v.to_string()).as_deref()),
+                encode_opt(patch.height.map(|v| v.to_string()).as_deref()),
+                encode_opt(patch.kind.as_ref().map(kind_to_token).as_deref()),
+            ),
+            DagOperation::Edges(CollectionOperation::Add { index, item }) => {
+                let line = wire_literal_from_dag(&[], &[dag_edge_to_wire_edge(item)]);
+                format!("edgesAdd index={index} item={}", token_safe(&line))
+            }
+            DagOperation::Edges(CollectionOperation::Remove { id }) => format!("edgesRemove id={}", token_safe(id)),
+            DagOperation::Edges(CollectionOperation::Move { id, to_index }) => format!("edgesMove id={} toIndex={to_index}", token_safe(id)),
+            DagOperation::Edges(CollectionOperation::Patch { id, patch }) => {
+                format!("edgesPatch id={} source={} target={}", token_safe(id), encode_opt(patch.source.as_deref()), encode_opt(patch.target.as_deref()))
+            }
+            DagOperation::SetNodes { nodes } => {
+                let wire_nodes: Vec<WireNode> = nodes.iter().map(dag_node_to_wire_node).collect();
+                format!("setNodes nodes={}", token_safe(&wire_literal_from_dag(&wire_nodes, &[])))
+            }
+            DagOperation::SetEdges { edges } => {
+                let wire_edges: Vec<WireEdge> = edges.iter().map(dag_edge_to_wire_edge).collect();
+                format!("setEdges edges={}", token_safe(&wire_literal_from_dag(&[], &wire_edges)))
+            }
+            DagOperation::SetDocument { document } => {
+                let wire_nodes: Vec<WireNode> = document.nodes.iter().map(dag_node_to_wire_node).collect();
+                let wire_edges: Vec<WireEdge> = document.edges.iter().map(dag_edge_to_wire_edge).collect();
+                format!("setDocument schema={} body={}", token_safe(&document.schema), token_safe(&wire_literal_from_dag(&wire_nodes, &wire_edges)))
+            }
+        }
+    }
+}
+//#endregion 🔖OpText
+
 //#region 🔖WasmBridge
 #[cfg(target_arch = "wasm32")]
 mod wasm_bridge {
@@ -7221,6 +7962,160 @@ mod dag_vcs_tests {
         assert_eq!(added.edges.len(), 1);
         let removed = round_trip(&added, &DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
         assert!(removed.edges.is_empty());
+    }
+
+    //#region 🔖DslTests
+    /// 🧩 One node per `DagNodeKind` tag (safe field values only — no raw JSON literals in
+    /// `default`/`value`/`Tree.json`, see {@link json_to_property}'s docstring), so the DSL round trip
+    /// exercises every kind-specific payload shape the wire-literal property bag needs to carry.
+    fn kitchen_sink_document() -> DagDocument {
+        let port = |id: &str, label: &str| IoPortSpec::simple(id, label);
+        let nodes = vec![
+            DagNodeSpec { id: "comp".into(), name: "Comp".into(), abbreviation: "Cmp".into(), icon: "emoji:🧮".into(), x: -120.0, y: -40.0, width: 104.0, height: 14.0, kind: DagNodeKind::Computation { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")], variadic_inputs: true, variadic_outputs: false }, ..Default::default() },
+            DagNodeSpec { id: "slider".into(), name: "Amount".into(), x: -400.0, y: -40.0, width: 70.0, height: 14.0, kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 5.0, output: port("out", "value") }, ..Default::default() },
+            DagNodeSpec { id: "mode".into(), name: "Mode".into(), x: -400.0, y: 80.0, width: 56.0, height: 28.0, kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into()], selected: 1, output: port("out", "mode") }, ..Default::default() },
+            DagNodeSpec { id: "screen".into(), name: "Preview".into(), x: 400.0, y: 0.0, width: 200.0, height: 140.0, kind: DagNodeKind::Screen { media: Some(DagMedia { kind: DagMediaKind::Svg, src: "data:image/svg+xml,%3Csvg viewBox='0 0 1 1'%3E%3C/svg%3E".into() }), input: port("in", "result") }, ..Default::default() },
+            DagNodeSpec { id: "note".into(), name: "Note".into(), x: 0.0, y: 200.0, kind: DagNodeKind::Note { text: "line one\nline two — with a ' quote and a % sign".into(), output: port("out", "text") }, ..Default::default() },
+            DagNodeSpec { id: "image".into(), name: "Image".into(), x: 0.0, y: 260.0, kind: DagNodeKind::Image { src: "data:image/png;base64,AAA=".into(), output: port("out", "img") }, ..Default::default() },
+            DagNodeSpec { id: "preview".into(), name: "Preview2".into(), x: 0.0, y: 320.0, kind: DagNodeKind::Preview { content: DagPreviewContent::Scalar { text: "42".into() }, expanded: BTreeSet::from(["a.b".to_string()]), input: port("in", "value") }, ..Default::default() },
+            DagNodeSpec { id: "action".into(), name: "Action".into(), x: 0.0, y: 380.0, kind: DagNodeKind::Action { label: "Run".into(), input: port("in", "trigger") }, ..Default::default() },
+            DagNodeSpec { id: "export".into(), name: "Export".into(), x: 0.0, y: 440.0, kind: DagNodeKind::Export { label: "Save".into(), format: "png".into(), input: port("in", "value") }, ..Default::default() },
+            DagNodeSpec { id: "cluster".into(), name: "Cluster".into(), x: 0.0, y: 500.0, kind: DagNodeKind::Cluster { inputs: vec![port("in", "In")], outputs: vec![port("out", "Out")] }, ..Default::default() },
+            DagNodeSpec { id: "app".into(), name: "App".into(), x: 0.0, y: 560.0, kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), program_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦".into(), inputs: vec![], outputs: vec![port("out", "Out")] }, ..Default::default() },
+        ];
+        let edges = vec![
+            DagFixtureEdge { id: "e1".into(), source: "slider:out".into(), target: "comp:in".into(), ..Default::default() },
+            DagFixtureEdge { id: "e2".into(), source: "comp:out".into(), target: "screen:in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
+        ];
+        DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes, edges }
+    }
+
+    #[test]
+    fn dag_document_dsl_round_trips_the_demo_fixture() {
+        vcs::test_support::assert_dsl_round_trip(&default_dag_document());
+    }
+
+    #[test]
+    fn dag_document_dsl_round_trips_every_node_kind() {
+        vcs::test_support::assert_dsl_round_trip(&kitchen_sink_document());
+    }
+
+    #[test]
+    fn dag_document_dsl_round_trips_the_empty_document() {
+        vcs::test_support::assert_dsl_round_trip(&empty_dag_document());
+    }
+
+    #[test]
+    fn op_text_round_trips_nodes_add() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("n1") }));
+    }
+
+    #[test]
+    fn op_text_round_trips_nodes_remove() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Remove { id: "n1".into() }));
+    }
+
+    #[test]
+    fn op_text_round_trips_nodes_move() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Move { id: "n1".into(), to_index: 2 }));
+    }
+
+    #[test]
+    fn op_text_round_trips_nodes_patch() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Nodes(CollectionOperation::Patch {
+            id: "n1".into(),
+            patch: DagNodePatch { name: Some("Renamed".into()), x: Some(42.0), y: None, width: None, height: Some(10.0), kind: Some(DagNodeKind::Slider { min: 0.0, max: 1.0, step: 0.1, value: 0.5, output: IoPortSpec::simple("out", "value") }) },
+        }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_add() {
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_remove() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_move() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Move { id: "e1".into(), to_index: 3 }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_patch() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a:out".into()), target: None } }));
+    }
+
+    #[test]
+    fn op_text_round_trips_set_nodes() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetNodes { nodes: vec![sample_node("n1"), sample_node("n2")] });
+    }
+
+    #[test]
+    fn op_text_round_trips_set_edges() {
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetEdges { edges: vec![edge] });
+    }
+
+    #[test]
+    fn op_text_round_trips_set_document() {
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::SetDocument { document: kitchen_sink_document() });
+    }
+
+    #[test]
+    fn document_text_round_trips_a_store_with_an_applied_operation() {
+        let mut store = DagStore::new(create_document_vcs_envelope(DAG_DOCUMENT_SCHEMA, "dag", kitchen_sink_document(), None));
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("extra") })], description: None })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslTests
+
+    // 🚧[DEBUG] temporary generator, removed after use — prints the handcrafted demo.dag text derived
+    // from the old demo.dag.json fixture data, so it can be pasted verbatim into example/demo.dag.
+    #[test]
+    fn zz_generate_demo_dag_dsl() {
+        use vcs::DocumentDsl;
+        let port = |id: &str, label: &str| IoPortSpec { id: id.into(), label: label.into(), ..Default::default() };
+        let nodes = vec![
+            DagNodeSpec { id: "slider".into(), name: "Amount".into(), abbreviation: "Amount".into(), icon: "emoji:🎚️".into(), x: -400.0, y: -40.0, width: 70.0, height: 14.0, kind: DagNodeKind::Slider { min: 0.0, max: 10.0, step: 0.5, value: 5.0, output: port("out", "value") }, ..Default::default() },
+            DagNodeSpec { id: "mode".into(), name: "Mode".into(), abbreviation: "Mode".into(), icon: "emoji:📋".into(), x: -400.0, y: 80.0, width: 56.0, height: 28.0, kind: DagNodeKind::Select { options: vec!["Add".into(), "Multiply".into(), "Max".into()], selected: 0, output: port("out", "mode") }, ..Default::default() },
+            DagNodeSpec { id: "scale".into(), name: "Scale".into(), abbreviation: "Scale".into(), icon: "emoji:📐".into(), x: -120.0, y: -40.0, width: 104.0, height: 14.0, kind: DagNodeKind::Computation { inputs: vec![port("in", "value")], outputs: vec![port("out", "scaled")], variadic_inputs: false, variadic_outputs: false }, ..Default::default() },
+            DagNodeSpec { id: "combine".into(), name: "Combine".into(), abbreviation: "Combine".into(), icon: "emoji:🔀".into(), x: 120.0, y: 0.0, width: 104.0, height: 28.0, kind: DagNodeKind::Computation { inputs: vec![port("a", "a"), port("b", "b")], outputs: vec![port("out", "merged")], variadic_inputs: false, variadic_outputs: false }, ..Default::default() },
+            DagNodeSpec {
+                id: "screen".into(),
+                name: "Preview".into(),
+                abbreviation: "Preview".into(),
+                icon: "emoji:🖥️".into(),
+                x: 400.0,
+                y: 0.0,
+                width: 200.0,
+                height: 140.0,
+                kind: DagNodeKind::Screen {
+                    media: Some(DagMedia {
+                        kind: DagMediaKind::Svg,
+                        src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E".into(),
+                    }),
+                    input: port("in", "result"),
+                },
+                ..Default::default()
+            },
+        ];
+        let edges = vec![
+            DagFixtureEdge { id: "e1".into(), source: "slider:out".into(), target: "scale:in".into(), ..Default::default() },
+            DagFixtureEdge { id: "e2".into(), source: "scale:out".into(), target: "combine:a".into(), ..Default::default() },
+            DagFixtureEdge { id: "e3".into(), source: "mode:out".into(), target: "combine:b".into(), ..Default::default() },
+            DagFixtureEdge { id: "e4".into(), source: "combine:out".into(), target: "screen:in".into(), ..Default::default() },
+        ];
+        let document = DagDocument { schema: "dag.fixture".into(), nodes, edges };
+        let printed = document.print_dsl();
+        std::fs::write("/private/tmp/claude-501/-Users-ueli-Documents-semio/3e9a7c3b-f831-48d4-975c-418268eaae32/scratchpad/demo.dag.generated", &printed).expect("write generated demo.dag");
+        let reparsed = DagDocument::parse_dsl(&printed).expect("generated demo.dag reparses");
+        assert_eq!(reparsed, document, "generated demo.dag must round trip");
     }
 }
 // #endregion 🔖DocumentVcs

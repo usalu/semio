@@ -31,6 +31,7 @@ export default defineConfig({
     globals: true,
     testTimeout: 30000,
     include: ["index.ts"],
+    coverage: { include: ["index.ts"] },
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],
     env: { COMPOSE_WASM_BG_PATH: composeWasmBg },
   },

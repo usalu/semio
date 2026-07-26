@@ -27,7 +27,41 @@ const ACTION_IMPORT_SOLID: &str = "importSolidGeometry";
 const SOLID_MEDIA_FORMATS: [&str; 4] = ["step", "obj", "stl", "glb"];
 const SOLID_EXPORT_DEFLECTION: f64 = 0.1;
 const SOLID_IMPORT_TOLERANCE: f64 = 0.1;
-const HEX_COLUMN_FIXTURE_JSON: &str = include_str!("../../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
+// 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
+// handcrafted DSL (`vcs::DocumentDsl`) that this module (which parses the content as a raw
+// `FlowFixture`, not a `Procedural3dDocument`) doesn't read — inlined the same flow-fixture JSON
+// this module actually needs, decoupled from procedural's document format.
+const HEX_COLUMN_FIXTURE_JSON: &str = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
+  "widgets": [
+    { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },
+    { "kind": "inputSlider", "id": "radius", "label": "Profile Radius", "value": 0.5, "min": 0.1, "max": 2.0, "step": 0.05, "unit": "m" },
+    { "kind": "inputSlider", "id": "sides", "label": "Side Count", "value": 6.0, "min": 3.0, "max": 12.0, "step": 1.0 },
+    { "kind": "neuron", "id": "profile", "neuronKind": "brep.curve.polygon", "params": {}, "input_ports": ["radius", "sides"], "preview": false },
+    { "kind": "neuron", "id": "extrusion-axis", "neuronKind": "math.vector", "params": {}, "input_ports": ["x", "y", "z"], "preview": false },
+    { "kind": "neuron", "id": "extrude", "neuronKind": "brep.solid.extrude", "params": {}, "input_ports": ["wire", "vector"], "preview": true },
+    { "kind": "outputPreview", "id": "column-preview", "preview": {}, "expanded": [] }
+  ],
+  "synapses": [
+    { "id": "e1", "from": "height", "to": "extrusion-axis", "fromPort": "number", "toPort": "z" },
+    { "id": "e2", "from": "radius", "to": "profile", "fromPort": "number", "toPort": "radius" },
+    { "id": "e3", "from": "sides", "to": "profile", "fromPort": "number", "toPort": "sides" },
+    { "id": "e4", "from": "profile", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
+    { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e6", "from": "extrude", "to": "column-preview", "fromPort": "solid", "toPort": "" }
+  ],
+  "layout": {
+    "height": { "x": -197.1913555449187, "y": -102.70789997839545 },
+    "radius": { "x": -156.03796288966, "y": -177.3373596163105 },
+    "sides": { "x": -156.43467044109153, "y": -155.28679730672846 },
+    "profile": { "x": -64.49671116929301, "y": -163.40310309861746 },
+    "extrusion-axis": { "x": -65.26327021036892, "y": -116.45687403531778 },
+    "extrude": { "x": 34.842068675720895, "y": -154.18083645790136 },
+    "column-preview": { "x": 237.4197774877085, "y": -103.14518978933415 }
+  }
+}
+"#;
 //#endregion 🔖Constants
 
 //#region 🔖Terminology

@@ -1390,6 +1390,710 @@ mod ops_tests {
             .expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 3);
     }
+
+    // #region 🔖DslAndOpText
+    #[test]
+    fn dsl_round_trips_default_fixture() {
+        vcs::test_support::assert_dsl_round_trip(&default_fixture());
+    }
+
+    #[test]
+    fn dsl_round_trips_fixture_with_slots_and_nested_params() {
+        let mut fixture = default_fixture();
+        fixture.steps.push(SequenceStep {
+            id: "step-3".into(),
+            kind: "control.if".into(),
+            params: Dictionary::new().insert("flag", Value::Atom(Atom::Boolean(true))),
+            x: 560.0,
+            y: 0.0,
+            slot: None,
+            collapsed: true,
+        });
+        fixture.steps.push(SequenceStep {
+            id: "step-4".into(),
+            kind: "log.print".into(),
+            params: Dictionary::new().insert("message", Value::Atom(Atom::String("nested \"quote\" and \\ backslash".into()))).insert(
+                "meta",
+                Value::Dictionary(Dictionary::new().insert("count", Value::Atom(Atom::Integer(-3))).insert("ratio", Value::Atom(Atom::Decimal(2.5)))),
+            ),
+            x: 560.0,
+            y: 160.0,
+            slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
+            collapsed: false,
+        });
+        vcs::test_support::assert_dsl_round_trip(&fixture);
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_add() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Add {
+            index: 2,
+            item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
+        }));
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_add_with_slot() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Add {
+            index: 0,
+            item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
+        }));
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_remove() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Remove { id: "step-99".into() }));
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_move() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Move { id: "step-99".into(), to_index: 3 }));
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_patch() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Patch {
+            id: "step-99".into(),
+            patch: SequenceStepPatch {
+                params: Some(Dictionary::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
+                x: Some(120.0),
+                y: None,
+                collapsed: Some(true),
+            },
+        }));
+    }
+
+    #[test]
+    fn op_text_round_trips_steps_patch_with_no_fields() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Patch { id: "step-99".into(), patch: SequenceStepPatch::default() }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_add() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Add { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_remove() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Remove { id: "edge-1".into() }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_move() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Move { id: "edge-1".into(), to_index: 0 }));
+    }
+
+    #[test]
+    fn op_text_round_trips_edges_patch() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Patch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } }));
+    }
+
+    #[test]
+    fn op_text_round_trips_set_camera() {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: DagCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
+    }
+
+    #[test]
+    fn document_text_round_trips_store_with_applied_operation() {
+        let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } })],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    // #endregion 🔖DslAndOpText
 }
 // #endregion 🧪OpsTests
 // #endregion 🔖DocumentVcs
+
+// #region 🔖Dsl
+/// 📜 Hand-rolled lexer, parser and printer shared by `SequenceFixture`'s `.sequence` DSL and by
+/// `SequenceOperation`'s compact single-line op encoding (`steps.*`/`edges.*`/`camera.set` reprint the
+/// same step/edge/camera grammar on one line). Whitespace (including newlines) is never significant to
+/// the parser — `print_dsl` inserts newlines purely for readability, `print_op` renders the identical
+/// grammar space-joined on one line. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+mod sequence_text {
+    use super::{Atom, DagCamera, Dictionary, SequenceEdge, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch, SlotRef, Value};
+    use std::collections::HashMap;
+
+    // #region Lexer
+    #[derive(Clone, Debug, PartialEq)]
+    enum Tok {
+        Word(String),
+        Str(String),
+        LBrace,
+        RBrace,
+        Eof,
+    }
+
+    #[derive(Clone, Debug)]
+    struct Lexed {
+        tok: Tok,
+        span: vcs::TextSpan,
+    }
+
+    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` is an
+    /// ordinary word character — `key=value` collapses into one token (split later by
+    /// {@link Parser::parse_kv_map}), and only a quoted value or a nested `{` forces a token boundary
+    /// right after `key=`.
+    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
+        let chars: Vec<char> = input.chars().collect();
+        let mut out = Vec::new();
+        let mut i = 0usize;
+        let mut line = 1u32;
+        let mut col = 1u32;
+        while i < chars.len() {
+            match chars[i] {
+                ' ' | '\t' | '\r' => {
+                    i += 1;
+                    col += 1;
+                }
+                '\n' => {
+                    i += 1;
+                    line += 1;
+                    col = 1;
+                }
+                '{' => {
+                    out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
+                    i += 1;
+                    col += 1;
+                }
+                '}' => {
+                    out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
+                    i += 1;
+                    col += 1;
+                }
+                '"' => {
+                    let (start_line, start_col) = (line, col);
+                    i += 1;
+                    col += 1;
+                    let mut s = String::new();
+                    let mut closed = false;
+                    while i < chars.len() {
+                        let ch = chars[i];
+                        if ch == '\\' && i + 1 < chars.len() {
+                            match chars[i + 1] {
+                                'n' => s.push('\n'),
+                                '"' => s.push('"'),
+                                '\\' => s.push('\\'),
+                                other => {
+                                    s.push('\\');
+                                    s.push(other);
+                                }
+                            }
+                            i += 2;
+                            col += 2;
+                        } else if ch == '"' {
+                            i += 1;
+                            col += 1;
+                            closed = true;
+                            break;
+                        } else if ch == '\n' {
+                            s.push(ch);
+                            i += 1;
+                            line += 1;
+                            col = 1;
+                        } else {
+                            s.push(ch);
+                            i += 1;
+                            col += 1;
+                        }
+                    }
+                    if !closed {
+                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
+                    }
+                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+                _ => {
+                    let (start_line, start_col, start) = (line, col, i);
+                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
+                        i += 1;
+                        col += 1;
+                    }
+                    let word: String = chars[start..i].iter().collect();
+                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+            }
+        }
+        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
+        Ok(out)
+    }
+    // #endregion Lexer
+
+    // #region Parser
+    #[derive(Clone, Debug)]
+    enum FieldValue {
+        Str(String),
+        Word(String),
+    }
+
+    type FieldMap = HashMap<String, (FieldValue, vcs::TextSpan)>;
+
+    struct Parser {
+        toks: Vec<Lexed>,
+        pos: usize,
+    }
+
+    impl Parser {
+        fn peek(&self) -> &Tok {
+            &self.toks[self.pos].tok
+        }
+
+        fn span(&self) -> vcs::TextSpan {
+            self.toks[self.pos].span
+        }
+
+        fn bump(&mut self) -> Tok {
+            let tok = self.toks[self.pos].tok.clone();
+            if self.pos + 1 < self.toks.len() {
+                self.pos += 1;
+            }
+            tok
+        }
+
+        fn at_lbrace(&self) -> bool {
+            matches!(self.peek(), Tok::LBrace)
+        }
+
+        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Word(w) => Ok(w),
+                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
+            }
+        }
+
+        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            let word = self.expect_word()?;
+            if word != keyword {
+                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
+            }
+            Ok(())
+        }
+
+        fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::RBrace => Ok(()),
+                other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
+            }
+        }
+
+        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Str(s) => Ok(s),
+                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
+            }
+        }
+
+        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
+        /// generic header-field reader every construct (document/camera/step/edge/patch) is built on.
+        fn parse_kv_map(&mut self) -> Result<FieldMap, vcs::TextError> {
+            let mut map = HashMap::new();
+            loop {
+                let word = match self.peek() {
+                    Tok::Word(w) if w.contains('=') => w.clone(),
+                    _ => break,
+                };
+                let span = self.span();
+                self.bump();
+                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
+                let value = if rest.is_empty() { FieldValue::Str(self.expect_str()?) } else { FieldValue::Word(rest.to_string()) };
+                map.insert(key.to_string(), (value, span));
+            }
+            Ok(map)
+        }
+    }
+
+    fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
+            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    fn kv_opt_word(map: &FieldMap, key: &str) -> Option<String> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) => Some(w.clone()),
+            _ => None,
+        }
+    }
+
+    fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
+        let word = kv_word(map, key, span)?;
+        word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
+    }
+
+    fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
+        kv_opt_word(map, key).and_then(|w| w.parse::<f64>().ok())
+    }
+
+    fn kv_opt_bool(map: &FieldMap, key: &str) -> Option<bool> {
+        match kv_opt_word(map, key)?.as_str() {
+            "true" => Some(true),
+            "false" => Some(false),
+            _ => None,
+        }
+    }
+    // #endregion Parser
+
+    // #region Values
+    /// 🔤 Minimal backslash-escape for quoted `Atom::String` values — mirrors {@link vcs}'s private
+    /// `escape_text_field` (not exported across the crate boundary, so reimplemented here).
+    fn escape_string(value: &str) -> String {
+        let mut out = String::with_capacity(value.len());
+        for ch in value.chars() {
+            match ch {
+                '\\' => out.push_str("\\\\"),
+                '"' => out.push_str("\\\""),
+                '\n' => out.push_str("\\n"),
+                _ => out.push(ch),
+            }
+        }
+        out
+    }
+
+    fn parse_atom_word(word: &str, span: vcs::TextSpan) -> Result<Atom, vcs::TextError> {
+        match word {
+            "null" => Ok(Atom::Null),
+            "true" => Ok(Atom::Boolean(true)),
+            "false" => Ok(Atom::Boolean(false)),
+            _ => {
+                if !word.contains('.') && !word.contains('e') && !word.contains('E') {
+                    if let Ok(value) = word.parse::<i64>() {
+                        return Ok(Atom::Integer(value));
+                    }
+                }
+                word.parse::<f64>().map(Atom::Decimal).map_err(|_| vcs::TextError::expected(format!("invalid value literal '{word}'"), span, "null|true|false|number|\"string\""))
+            }
+        }
+    }
+
+    fn print_atom(atom: &Atom) -> String {
+        match atom {
+            Atom::Null => "null".to_string(),
+            Atom::Boolean(value) => value.to_string(),
+            Atom::Integer(value) => value.to_string(),
+            Atom::Decimal(value) => {
+                let mut printed = value.to_string();
+                if !printed.contains('.') && !printed.contains('e') && !printed.contains('E') {
+                    printed.push_str(".0");
+                }
+                printed
+            }
+            Atom::String(value) => format!("\"{}\"", escape_string(value)),
+        }
+    }
+
+    /// 🌲 Reads `key=value` dictionary entries until a non-`key=`-shaped token (the block's closing
+    /// `}`), recursing into a nested `Dictionary` whenever a value is `{...}` instead of an atom —
+    /// `neural_engine::Value` is `Atom | Dictionary`, so this is the only recursive grammar in the DSL.
+    fn parse_dict_entries(p: &mut Parser) -> Result<Dictionary, vcs::TextError> {
+        let mut dict = Dictionary::new();
+        loop {
+            let word = match p.peek() {
+                Tok::Word(w) if w.contains('=') => w.clone(),
+                _ => break,
+            };
+            let span = p.span();
+            p.bump();
+            let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
+            let value = if !rest.is_empty() {
+                Value::Atom(parse_atom_word(rest, span)?)
+            } else if p.at_lbrace() {
+                p.bump();
+                let nested = parse_dict_entries(p)?;
+                p.expect_rbrace()?;
+                Value::Dictionary(nested)
+            } else {
+                Value::Atom(Atom::String(p.expect_str()?))
+            };
+            dict = dict.insert(key.to_string(), value);
+        }
+        Ok(dict)
+    }
+
+    fn print_value(value: &Value) -> String {
+        match value {
+            Value::Atom(atom) => print_atom(atom),
+            Value::Dictionary(dict) => format!("{{ {} }}", print_dict_entries(dict)),
+        }
+    }
+
+    fn print_dict_entries(dict: &Dictionary) -> String {
+        dict.keys().map(|key| format!("{key}={}", print_value(dict.get(key).expect("key from dict.keys() always resolves via dict.get")))).collect::<Vec<_>>().join(" ")
+    }
+    // #endregion Values
+
+    // #region Fields
+    fn fmt_num(value: f64) -> String {
+        value.to_string()
+    }
+
+    /// 🧱 Reads a step's `id=/kind=/x=/y=/collapsed=/slotOwner=/slotName=` fields (already collected into
+    /// `map`) plus its optional trailing `{ params }` block — shared by a top-level `step ...` line and
+    /// by `steps.add`'s inline item (which prepends its own `index=` field to the same flat `map`).
+    fn build_step_from_map(map: &FieldMap, span: vcs::TextSpan, p: &mut Parser) -> Result<SequenceStep, vcs::TextError> {
+        let id = kv_word(map, "id", span)?;
+        let kind = kv_word(map, "kind", span)?;
+        let x = kv_num(map, "x", span)?;
+        let y = kv_num(map, "y", span)?;
+        let collapsed = kv_opt_bool(map, "collapsed").unwrap_or(false);
+        let slot = match (kv_opt_word(map, "slotOwner"), kv_opt_word(map, "slotName")) {
+            (Some(owner), Some(name)) => Some(SlotRef { owner, name }),
+            _ => None,
+        };
+        let params = if p.at_lbrace() {
+            p.bump();
+            let dict = parse_dict_entries(p)?;
+            p.expect_rbrace()?;
+            dict
+        } else {
+            Dictionary::new()
+        };
+        Ok(SequenceStep { id, kind, params, x, y, slot, collapsed })
+    }
+
+    fn build_edge_from_map(map: &FieldMap, span: vcs::TextSpan) -> Result<SequenceEdge, vcs::TextError> {
+        Ok(SequenceEdge { id: kv_word(map, "id", span)?, from: kv_word(map, "from", span)?, to: kv_word(map, "to", span)? })
+    }
+
+    fn build_step_patch_from_map(map: &FieldMap, p: &mut Parser) -> Result<SequenceStepPatch, vcs::TextError> {
+        let params = if p.at_lbrace() {
+            p.bump();
+            let dict = parse_dict_entries(p)?;
+            p.expect_rbrace()?;
+            Some(dict)
+        } else {
+            None
+        };
+        Ok(SequenceStepPatch { params, x: kv_opt_num(map, "x"), y: kv_opt_num(map, "y"), collapsed: kv_opt_bool(map, "collapsed") })
+    }
+
+    fn build_edge_patch_from_map(map: &FieldMap) -> SequenceEdgePatch {
+        SequenceEdgePatch { from: kv_opt_word(map, "from"), to: kv_opt_word(map, "to") }
+    }
+
+    fn parse_step(p: &mut Parser) -> Result<SequenceStep, vcs::TextError> {
+        let span = p.span();
+        let map = p.parse_kv_map()?;
+        build_step_from_map(&map, span, p)
+    }
+
+    fn parse_edge(p: &mut Parser) -> Result<SequenceEdge, vcs::TextError> {
+        let span = p.span();
+        let map = p.parse_kv_map()?;
+        build_edge_from_map(&map, span)
+    }
+
+    fn print_step_fields(step: &SequenceStep) -> String {
+        let mut out = format!(" id={} kind={} x={} y={}", step.id, step.kind, fmt_num(step.x), fmt_num(step.y));
+        if step.collapsed {
+            out.push_str(" collapsed=true");
+        }
+        if let Some(slot) = &step.slot {
+            out.push_str(&format!(" slotOwner={} slotName={}", slot.owner, slot.name));
+        }
+        if !step.params.is_empty() {
+            out.push_str(" { ");
+            out.push_str(&print_dict_entries(&step.params));
+            out.push_str(" }");
+        }
+        out
+    }
+
+    fn print_edge_fields(edge: &SequenceEdge) -> String {
+        format!(" id={} from={} to={}", edge.id, edge.from, edge.to)
+    }
+
+    fn print_step_patch_fields(patch: &SequenceStepPatch) -> String {
+        let mut out = String::new();
+        if let Some(x) = patch.x {
+            out.push_str(&format!(" x={}", fmt_num(x)));
+        }
+        if let Some(y) = patch.y {
+            out.push_str(&format!(" y={}", fmt_num(y)));
+        }
+        if let Some(collapsed) = patch.collapsed {
+            out.push_str(&format!(" collapsed={collapsed}"));
+        }
+        if let Some(params) = &patch.params {
+            out.push_str(" { ");
+            out.push_str(&print_dict_entries(params));
+            out.push_str(" }");
+        }
+        out
+    }
+
+    fn print_edge_patch_fields(patch: &SequenceEdgePatch) -> String {
+        let mut out = String::new();
+        if let Some(from) = &patch.from {
+            out.push_str(&format!(" from={from}"));
+        }
+        if let Some(to) = &patch.to {
+            out.push_str(&format!(" to={to}"));
+        }
+        out
+    }
+    // #endregion Fields
+
+    // #region Document
+    pub(super) fn parse_fixture(text: &str) -> Result<SequenceFixture, vcs::TextError> {
+        let toks = lex(text)?;
+        let mut p = Parser { toks, pos: 0 };
+
+        let header_span = p.span();
+        p.expect_keyword("sequence")?;
+        let header_map = p.parse_kv_map()?;
+        let schema = kv_word(&header_map, "schema", header_span)?;
+
+        let camera_span = p.span();
+        p.expect_keyword("camera")?;
+        let camera_map = p.parse_kv_map()?;
+        let camera = DagCamera { x: kv_num(&camera_map, "x", camera_span)?, y: kv_num(&camera_map, "y", camera_span)?, zoom: kv_num(&camera_map, "zoom", camera_span)? };
+
+        let mut steps = Vec::new();
+        let mut edges = Vec::new();
+        loop {
+            match p.peek().clone() {
+                Tok::Eof => break,
+                Tok::Word(w) if w == "step" => {
+                    p.bump();
+                    steps.push(parse_step(&mut p)?);
+                }
+                Tok::Word(w) if w == "edge" => {
+                    p.bump();
+                    edges.push(parse_edge(&mut p)?);
+                }
+                other => return Err(vcs::TextError::expected(format!("expected 'step' or 'edge', found {other:?}"), p.span(), "step|edge")),
+            }
+        }
+        Ok(SequenceFixture { schema, camera, steps, edges })
+    }
+
+    pub(super) fn print_fixture(fixture: &SequenceFixture) -> String {
+        let mut parts = Vec::with_capacity(2 + fixture.steps.len() + fixture.edges.len());
+        parts.push(format!("sequence schema={}", fixture.schema));
+        parts.push(format!("camera x={} y={} zoom={}", fmt_num(fixture.camera.x), fmt_num(fixture.camera.y), fmt_num(fixture.camera.zoom)));
+        for step in &fixture.steps {
+            parts.push(format!("step{}", print_step_fields(step)));
+        }
+        for edge in &fixture.edges {
+            parts.push(format!("edge{}", print_edge_fields(edge)));
+        }
+        parts.join("\n")
+    }
+    // #endregion Document
+
+    // #region Operation
+    /// ⚡ Renders one `SequenceOperation` as a single line — `steps.add`/`edges.add` reuse the same
+    /// space-joined field grammar as {@link print_step_fields}/{@link print_edge_fields}.
+    pub(super) fn print_operation(operation: &super::SequenceOperation) -> String {
+        use super::SequenceOperation;
+        match operation {
+            SequenceOperation::Steps(op) => match op {
+                vcs::CollectionOperation::Add { index, item } => format!("steps.add index={}{}", index, print_step_fields(item)),
+                vcs::CollectionOperation::Remove { id } => format!("steps.remove id={id}"),
+                vcs::CollectionOperation::Move { id, to_index } => format!("steps.move id={id} to={to_index}"),
+                vcs::CollectionOperation::Patch { id, patch } => format!("steps.patch id={id}{}", print_step_patch_fields(patch)),
+            },
+            SequenceOperation::Edges(op) => match op {
+                vcs::CollectionOperation::Add { index, item } => format!("edges.add index={}{}", index, print_edge_fields(item)),
+                vcs::CollectionOperation::Remove { id } => format!("edges.remove id={id}"),
+                vcs::CollectionOperation::Move { id, to_index } => format!("edges.move id={id} to={to_index}"),
+                vcs::CollectionOperation::Patch { id, patch } => format!("edges.patch id={id}{}", print_edge_patch_fields(patch)),
+            },
+            SequenceOperation::SetCamera { camera } => format!("camera.set x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
+        }
+    }
+
+    pub(super) fn parse_operation(line: &str) -> Result<super::SequenceOperation, vcs::TextError> {
+        use super::SequenceOperation;
+        let toks = lex(line)?;
+        let mut p = Parser { toks, pos: 0 };
+        let span = p.span();
+        let keyword = p.expect_word()?;
+        match keyword.as_str() {
+            "steps.add" => {
+                let map = p.parse_kv_map()?;
+                let index = kv_num(&map, "index", span)? as usize;
+                let item = build_step_from_map(&map, span, &mut p)?;
+                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Add { index, item }))
+            }
+            "steps.remove" => {
+                let map = p.parse_kv_map()?;
+                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Remove { id: kv_word(&map, "id", span)? }))
+            }
+            "steps.move" => {
+                let map = p.parse_kv_map()?;
+                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Move { id: kv_word(&map, "id", span)?, to_index: kv_num(&map, "to", span)? as usize }))
+            }
+            "steps.patch" => {
+                let map = p.parse_kv_map()?;
+                let id = kv_word(&map, "id", span)?;
+                let patch = build_step_patch_from_map(&map, &mut p)?;
+                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Patch { id, patch }))
+            }
+            "edges.add" => {
+                let map = p.parse_kv_map()?;
+                let index = kv_num(&map, "index", span)? as usize;
+                let item = build_edge_from_map(&map, span)?;
+                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Add { index, item }))
+            }
+            "edges.remove" => {
+                let map = p.parse_kv_map()?;
+                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Remove { id: kv_word(&map, "id", span)? }))
+            }
+            "edges.move" => {
+                let map = p.parse_kv_map()?;
+                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Move { id: kv_word(&map, "id", span)?, to_index: kv_num(&map, "to", span)? as usize }))
+            }
+            "edges.patch" => {
+                let map = p.parse_kv_map()?;
+                let id = kv_word(&map, "id", span)?;
+                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Patch { id, patch: build_edge_patch_from_map(&map) }))
+            }
+            "camera.set" => {
+                let map = p.parse_kv_map()?;
+                Ok(SequenceOperation::SetCamera { camera: DagCamera { x: kv_num(&map, "x", span)?, y: kv_num(&map, "y", span)?, zoom: kv_num(&map, "zoom", span)? } })
+            }
+            other => Err(vcs::TextError::expected(
+                format!("unknown operation '{other}'"),
+                span,
+                "steps.add|steps.remove|steps.move|steps.patch|edges.add|edges.remove|edges.move|edges.patch|camera.set",
+            )),
+        }
+    }
+    // #endregion Operation
+}
+
+impl vcs::DocumentDsl for SequenceFixture {
+    const EXTENSION: &'static str = "sequence";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        sequence_text::parse_fixture(text)
+    }
+
+    fn print_dsl(&self) -> String {
+        sequence_text::print_fixture(self)
+    }
+}
+// #endregion 🔖Dsl
+
+// #region 🔖OpText
+impl vcs::OpText for SequenceOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        sequence_text::parse_operation(line)
+    }
+
+    fn print_op(&self) -> String {
+        sequence_text::print_operation(self)
+    }
+}
+// #endregion 🔖OpText

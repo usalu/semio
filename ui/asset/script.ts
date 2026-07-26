@@ -409,5 +409,17 @@ if (import.meta.vitest) {
       expect(iconIdToPascal("layout-grid")).toBe("LayoutGrid");
     });
   });
+  describe("iconIdToRustVariant", () => {
+    it("maps metabolism stems to Rust variants", () => {
+      expect(iconIdToRustVariant("capsule_J")).toBe("CapsuleJ");
+    });
+  });
+  describe("resolveCatalogIconSvgFromTheme", () => {
+    it("prefers theme variants over catalog defaults", async () => {
+      const { resolveCatalogIconSvgFromTheme } = await import("./js/icon_resolver.ts");
+      const svg = resolveCatalogIconSvgFromTheme("search", { variants: { search: "<svg data-variant></svg>" } });
+      expect(svg).toContain("data-variant");
+    });
+  });
 }
 //#endregion 🚀Commands

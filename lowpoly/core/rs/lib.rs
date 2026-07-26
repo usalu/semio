@@ -109,10 +109,13 @@ impl Default for LowpolyProjection {
     }
 }
 
-const DEFAULT_MESH_JSON: &str = include_str!("../../example/concrete-forest-left.mesh.json");
+/// @emoji 📜 The `Concrete Forest Left` example, handcrafted in the `.lowpoly` DSL (see `🔖Dsl`)
+/// instead of a raw mesh-only JSON fixture — every object, its full half-edge geometry and its paint
+/// layers are real textual DSL, not a JSON-shaped placeholder.
+const DEFAULT_PROJECTION_DSL: &str = include_str!("../../example/concrete-forest-left.lowpoly");
 
 pub fn default_projection() -> LowpolyProjection {
-    projection_from_mesh_json(DEFAULT_MESH_JSON, "obj-1", "Concrete Forest Left")
+    <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(DEFAULT_PROJECTION_DSL).expect("default projection DSL parses")
 }
 
 pub fn projection_from_mesh_json(mesh_json: &str, object_id: &str, object_name: &str) -> LowpolyProjection {
@@ -390,6 +393,866 @@ impl Operation<LowpolyProjection> for LowpolyOperation {
 pub type LowpolyEnvelope = vcs::DocumentVcsEnvelope<LowpolyProjection, LowpolyOperation>;
 pub type LowpolyStore = vcs::DocumentVcsStore<LowpolyProjection, LowpolyOperation>;
 //#endregion 🔖Operations
+
+//#region 🔖Dsl
+/// 📜 Hand-rolled lexer/parser/printer for the `.lowpoly` document DSL and for `LowpolyOperation`'s
+/// single-line op encoding (see `🔖OpText`) — replaces the JSON fixture format. `HalfedgeMesh`'s
+/// fields are private (only `from_json`/`to_json` cross the crate boundary), so a mesh's full
+/// half-edge topology — vertex positions/normals, every halfedge's vertex/twin/next/face/per-corner
+/// UV, every face's winding/smoothing, and UV seams — is textualized line-by-line (`vertex`/
+/// `halfedge`/`face`/`seams`) via a private `MeshJsonRecord` mirroring that JSON shape field-for-
+/// field, so geometry round-trips exactly through readable text instead of collapsing into an opaque
+/// JSON blob. Whitespace (including newlines) is never significant to the parser — matching `note`/
+/// `draw`'s DSL convention — so a full object or mesh fragment can be reprinted flattened onto one
+/// line for `LowpolyOperation`'s op-log encoding (`objects add ... item ...`, `objects patch ... mesh
+/// ...`, `setProjection ...`).
+mod lowpoly_text {
+    use super::{
+        LowpolyObject, LowpolyObjectPatch, LowpolyOperation, LowpolyPaintLayer, LowpolyPaintLayerPatch,
+        LowpolyProjection, LowpolyTransform, PixelRun, empty_paint_pixels,
+    };
+    use base64::Engine;
+    use serde::{Deserialize, Serialize};
+    use std::collections::HashMap;
+    use vcs::{CollectionOperation, TextError, TextSpan};
+
+    //#region MeshJsonRecord
+    /// 🪞 Mirrors `kernel_3d_mesh::HalfedgeMesh`'s private JSON shape field-for-field (verified against
+    /// its `vertices`/`halfedges`/`faces`/`uv_seams` keys) so this crate can decode/encode a
+    /// `mesh_json` string without reaching into `kernel_3d_mesh`'s private fields — `HalfedgeMesh::
+    /// from_json`/`to_json` only care about matching JSON keys/types, not which struct produced them.
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    struct MeshVertexRecord {
+        position: [f32; 3],
+        normal: Option<[f32; 3]>,
+        halfedge: Option<u32>,
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct MeshHalfedgeRecord {
+        vertex: u32,
+        twin: Option<u32>,
+        next: u32,
+        face: Option<u32>,
+        #[serde(default)]
+        uv: [f32; 2],
+    }
+
+    #[derive(Clone, Debug, Serialize, Deserialize)]
+    struct MeshFaceRecord {
+        halfedge: u32,
+        smooth: bool,
+        #[serde(default)]
+        flipped: bool,
+    }
+
+    #[derive(Clone, Debug, Default, Serialize, Deserialize)]
+    struct MeshJsonRecord {
+        vertices: Vec<MeshVertexRecord>,
+        halfedges: Vec<MeshHalfedgeRecord>,
+        faces: Vec<MeshFaceRecord>,
+        #[serde(default)]
+        uv_seams: Vec<u32>,
+    }
+    //#endregion MeshJsonRecord
+
+    //#region Lexer
+    /// 🔤 A lexed token: `Word` (a whitespace/quote-delimited bareword — `key=value`, a record keyword,
+    /// or a bare `-`) or `Str` (a `"..."` quoted value with `\\`/`\"`/`\n` escapes). Mirrors `note_text`'s
+    /// lexer minus braces, plus `#` line comments.
+    #[derive(Clone, Debug, PartialEq)]
+    enum Tok {
+        Word(String),
+        Str(String),
+        Eof,
+    }
+
+    struct LexedTok {
+        tok: Tok,
+        span: TextSpan,
+    }
+
+    fn lex(input: &str) -> Result<Vec<LexedTok>, TextError> {
+        let chars: Vec<char> = input.chars().collect();
+        let mut out = Vec::new();
+        let mut i = 0usize;
+        let mut line = 1u32;
+        let mut col = 1u32;
+        while i < chars.len() {
+            match chars[i] {
+                ' ' | '\t' | '\r' => {
+                    i += 1;
+                    col += 1;
+                }
+                '\n' => {
+                    i += 1;
+                    line += 1;
+                    col = 1;
+                }
+                '#' => {
+                    while i < chars.len() && chars[i] != '\n' {
+                        i += 1;
+                        col += 1;
+                    }
+                }
+                '"' => {
+                    let (start_line, start_col) = (line, col);
+                    i += 1;
+                    col += 1;
+                    let mut s = String::new();
+                    let mut closed = false;
+                    while i < chars.len() {
+                        let ch = chars[i];
+                        if ch == '\\' && i + 1 < chars.len() {
+                            match chars[i + 1] {
+                                'n' => s.push('\n'),
+                                '"' => s.push('"'),
+                                '\\' => s.push('\\'),
+                                other => {
+                                    s.push('\\');
+                                    s.push(other);
+                                }
+                            }
+                            i += 2;
+                            col += 2;
+                        } else if ch == '"' {
+                            i += 1;
+                            col += 1;
+                            closed = true;
+                            break;
+                        } else if ch == '\n' {
+                            s.push(ch);
+                            i += 1;
+                            line += 1;
+                            col = 1;
+                        } else {
+                            s.push(ch);
+                            i += 1;
+                            col += 1;
+                        }
+                    }
+                    if !closed {
+                        return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
+                    }
+                    out.push(LexedTok { tok: Tok::Str(s), span: TextSpan::at(start_line, start_col) });
+                }
+                _ => {
+                    let (start_line, start_col, start) = (line, col, i);
+                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '"' | '#') {
+                        i += 1;
+                        col += 1;
+                    }
+                    let word: String = chars[start..i].iter().collect();
+                    out.push(LexedTok { tok: Tok::Word(word), span: TextSpan::at(start_line, start_col) });
+                }
+            }
+        }
+        out.push(LexedTok { tok: Tok::Eof, span: TextSpan::at(line, col) });
+        Ok(out)
+    }
+
+    fn word_at(tokens: &[LexedTok], index: usize) -> Result<String, TextError> {
+        match tokens.get(index).map(|t| &t.tok) {
+            Some(Tok::Word(word)) => Ok(word.clone()),
+            _ => Err(TextError::new("expected a bareword token", tokens.get(index).map(|t| t.span).unwrap_or_else(|| TextSpan::at(1, 1)))),
+        }
+    }
+
+    fn expect_marker(tokens: &[LexedTok], index: usize, marker: &str) -> Result<(), TextError> {
+        let span = tokens.get(index).map(|t| t.span).unwrap_or_else(|| TextSpan::at(1, 1));
+        let word = word_at(tokens, index)?;
+        if word == marker {
+            Ok(())
+        } else {
+            Err(TextError::new(format!("expected '{marker}', got '{word}'"), span))
+        }
+    }
+
+    /// 🧺 Greedily consumes `key=value` tokens (a following `Str` token supplies the value when the
+    /// bareword ends right at `=`, e.g. `name="Concrete Forest Left"`) starting at `start`, stopping at
+    /// the first token that isn't a `key=value` word — a bare record keyword, a trailing marker
+    /// (`item`/`mesh`), or `Eof`. Shared by the document/object/mesh grammar and every op-line grammar.
+    fn collect_fields(tokens: &[LexedTok], start: usize) -> (HashMap<String, String>, usize) {
+        let mut fields = HashMap::new();
+        let mut i = start;
+        while i < tokens.len() {
+            match &tokens[i].tok {
+                Tok::Word(pair) if pair.contains('=') => {
+                    let (key, raw) = pair.split_once('=').expect("checked contains '='");
+                    if raw.is_empty() {
+                        match tokens.get(i + 1).map(|t| &t.tok) {
+                            Some(Tok::Str(value)) => {
+                                fields.insert(key.to_string(), value.clone());
+                                i += 2;
+                            }
+                            _ => break,
+                        }
+                    } else {
+                        fields.insert(key.to_string(), raw.to_string());
+                        i += 1;
+                    }
+                }
+                _ => break,
+            }
+        }
+        (fields, i)
+    }
+    //#endregion Lexer
+
+    //#region Record
+    /// 🧾 One parsed `kind key=value ...` record — a document-level `doc`/`object`/`transform`/
+    /// `vertex`/`halfedge`/`face`/`seams`/`layer` line, order-preserved by {@link parse_records}.
+    struct Record {
+        kind: String,
+        fields: HashMap<String, String>,
+        span: TextSpan,
+    }
+
+    const RECORD_KINDS: &[&str] = &["doc", "object", "transform", "vertex", "halfedge", "face", "seams", "layer"];
+
+    fn parse_records(tokens: &[LexedTok]) -> Result<Vec<Record>, TextError> {
+        let mut records = Vec::new();
+        let mut i = 0usize;
+        while i < tokens.len() {
+            match &tokens[i].tok {
+                Tok::Eof => break,
+                Tok::Word(word) if RECORD_KINDS.contains(&word.as_str()) => {
+                    let kind = word.clone();
+                    let span = tokens[i].span;
+                    let (fields, next_i) = collect_fields(tokens, i + 1);
+                    i = next_i;
+                    records.push(Record { kind, fields, span });
+                }
+                Tok::Word(other) => return Err(TextError::new(format!("unexpected token '{other}', expected a record keyword"), tokens[i].span)),
+                Tok::Str(_) => return Err(TextError::new("unexpected quoted string, expected a record keyword", tokens[i].span)),
+            }
+        }
+        Ok(records)
+    }
+
+    fn require_field<'a>(fields: &'a HashMap<String, String>, key: &str, span: TextSpan) -> Result<&'a str, TextError> {
+        fields.get(key).map(String::as_str).ok_or_else(|| TextError::new(format!("missing field '{key}'"), span))
+    }
+    //#endregion Record
+
+    //#region ValueCodecs
+    fn escape_str(value: &str) -> String {
+        let mut out = String::with_capacity(value.len());
+        for ch in value.chars() {
+            match ch {
+                '\\' => out.push_str("\\\\"),
+                '"' => out.push_str("\\\""),
+                '\n' => out.push_str("\\n"),
+                _ => out.push(ch),
+            }
+        }
+        out
+    }
+
+    fn quote(value: &str) -> String {
+        format!("\"{}\"", escape_str(value))
+    }
+
+    fn fmt_bool(value: bool) -> String {
+        if value { "true".into() } else { "false".into() }
+    }
+
+    fn parse_bool(raw: &str, span: TextSpan) -> Result<bool, TextError> {
+        match raw {
+            "true" => Ok(true),
+            "false" => Ok(false),
+            other => Err(TextError::new(format!("expected 'true'/'false', got '{other}'"), span)),
+        }
+    }
+
+    fn parse_f32(raw: &str, span: TextSpan) -> Result<f32, TextError> {
+        raw.parse::<f32>().map_err(|_| TextError::new(format!("invalid number '{raw}'"), span))
+    }
+
+    fn parse_u32(raw: &str, span: TextSpan) -> Result<u32, TextError> {
+        raw.parse::<u32>().map_err(|_| TextError::new(format!("invalid integer '{raw}'"), span))
+    }
+
+    fn fmt_opt_u32(value: Option<u32>) -> String {
+        value.map(|v| v.to_string()).unwrap_or_else(|| "-".into())
+    }
+
+    fn parse_opt_u32(raw: &str, span: TextSpan) -> Result<Option<u32>, TextError> {
+        if raw == "-" { Ok(None) } else { Ok(Some(parse_u32(raw, span)?)) }
+    }
+
+    fn fmt_f32_3(v: [f32; 3]) -> String {
+        format!("{},{},{}", v[0], v[1], v[2])
+    }
+
+    fn fmt_f32_2(v: [f32; 2]) -> String {
+        format!("{},{}", v[0], v[1])
+    }
+
+    fn parse_f32_triplet(raw: &str, span: TextSpan) -> Result<[f32; 3], TextError> {
+        let parts: Vec<&str> = raw.split(',').collect();
+        if parts.len() != 3 {
+            return Err(TextError::new(format!("expected 3 comma-separated numbers, got '{raw}'"), span));
+        }
+        Ok([parse_f32(parts[0], span)?, parse_f32(parts[1], span)?, parse_f32(parts[2], span)?])
+    }
+
+    fn parse_f32_pair(raw: &str, span: TextSpan) -> Result<[f32; 2], TextError> {
+        let parts: Vec<&str> = raw.split(',').collect();
+        if parts.len() != 2 {
+            return Err(TextError::new(format!("expected 2 comma-separated numbers, got '{raw}'"), span));
+        }
+        Ok([parse_f32(parts[0], span)?, parse_f32(parts[1], span)?])
+    }
+
+    fn fmt_opt_f32_3(v: Option<[f32; 3]>) -> String {
+        match v {
+            Some(v) => fmt_f32_3(v),
+            None => "-".into(),
+        }
+    }
+
+    fn parse_opt_f32_3(raw: &str, span: TextSpan) -> Result<Option<[f32; 3]>, TextError> {
+        if raw == "-" { Ok(None) } else { Ok(Some(parse_f32_triplet(raw, span)?)) }
+    }
+
+    fn fmt_u32_list(values: &[u32]) -> String {
+        if values.is_empty() { "-".into() } else { values.iter().map(u32::to_string).collect::<Vec<_>>().join(",") }
+    }
+
+    fn parse_u32_list(raw: &str, span: TextSpan) -> Result<Vec<u32>, TextError> {
+        if raw == "-" { Ok(Vec::new()) } else { raw.split(',').map(|token| parse_u32(token, span)).collect() }
+    }
+
+    fn fmt_opt_str(value: &Option<String>) -> String {
+        match value {
+            Some(v) => quote(v),
+            None => "-".into(),
+        }
+    }
+
+    fn opt_str_field(fields: &HashMap<String, String>, key: &str) -> Option<String> {
+        fields.get(key).filter(|value| value.as_str() != "-").cloned()
+    }
+
+    fn fmt_opt_bool(value: Option<bool>) -> String {
+        value.map(fmt_bool).unwrap_or_else(|| "-".into())
+    }
+
+    fn opt_bool_field(fields: &HashMap<String, String>, key: &str, span: TextSpan) -> Result<Option<bool>, TextError> {
+        match fields.get(key).map(String::as_str) {
+            None | Some("-") => Ok(None),
+            Some(other) => Ok(Some(parse_bool(other, span)?)),
+        }
+    }
+
+    fn fmt_opt_f32(value: Option<f32>) -> String {
+        value.map(|v| v.to_string()).unwrap_or_else(|| "-".into())
+    }
+
+    fn opt_f32_field(fields: &HashMap<String, String>, key: &str, span: TextSpan) -> Result<Option<f32>, TextError> {
+        match fields.get(key).map(String::as_str) {
+            None | Some("-") => Ok(None),
+            Some(other) => Ok(Some(parse_f32(other, span)?)),
+        }
+    }
+
+    fn fmt_opt_transform(value: &Option<LowpolyTransform>) -> String {
+        match value {
+            Some(t) => format!(
+                "{},{},{},{},{},{},{},{},{}",
+                t.position[0], t.position[1], t.position[2], t.rotation[0], t.rotation[1], t.rotation[2], t.scale[0], t.scale[1], t.scale[2]
+            ),
+            None => "-".into(),
+        }
+    }
+
+    fn opt_transform_field(fields: &HashMap<String, String>, key: &str, span: TextSpan) -> Result<Option<LowpolyTransform>, TextError> {
+        match fields.get(key).map(String::as_str) {
+            None | Some("-") => Ok(None),
+            Some(raw) => {
+                let parts: Vec<f32> = raw.split(',').map(|token| parse_f32(token, span)).collect::<Result<_, _>>()?;
+                if parts.len() != 9 {
+                    return Err(TextError::new(format!("expected 9 comma-separated numbers, got '{raw}'"), span));
+                }
+                Ok(Some(LowpolyTransform {
+                    position: [parts[0], parts[1], parts[2]],
+                    rotation: [parts[3], parts[4], parts[5]],
+                    scale: [parts[6], parts[7], parts[8]],
+                }))
+            }
+        }
+    }
+
+    /// 🎨 `blank` is a canonical shorthand for a still-untouched paint layer (`empty_paint_pixels()`'s
+    /// output — an opaque-white buffer synthesized fresh by `LowpolyPaintLayer::new`, never persisted
+    /// anywhere) so a freshly-added layer doesn't force a ~1.4 MB base64 dump into readable DSL text;
+    /// any layer that has actually been painted on always prints its full buffer as base64.
+    fn print_pixels(pixels: &[u8]) -> String {
+        if pixels == empty_paint_pixels().as_slice() { "blank".to_string() } else { base64::engine::general_purpose::STANDARD.encode(pixels) }
+    }
+
+    fn parse_pixels(raw: &str, span: TextSpan) -> Result<Vec<u8>, TextError> {
+        if raw == "blank" {
+            Ok(empty_paint_pixels())
+        } else {
+            base64::engine::general_purpose::STANDARD.decode(raw.as_bytes()).map_err(|error| TextError::new(format!("invalid base64 pixels: {error}"), span))
+        }
+    }
+
+    fn fmt_runs(runs: &[PixelRun]) -> String {
+        if runs.is_empty() {
+            return "-".to_string();
+        }
+        runs.iter()
+            .map(|run| format!("{}:{}", run.offset, base64::engine::general_purpose::STANDARD.encode(&run.bytes)))
+            .collect::<Vec<_>>()
+            .join(";")
+    }
+
+    fn parse_runs(raw: &str, span: TextSpan) -> Result<Vec<PixelRun>, TextError> {
+        if raw == "-" {
+            return Ok(Vec::new());
+        }
+        raw.split(';')
+            .map(|part| {
+                let (offset_raw, bytes_raw) = part.split_once(':').ok_or_else(|| TextError::new(format!("expected 'offset:base64', got '{part}'"), span))?;
+                let offset = parse_u32(offset_raw, span)?;
+                let bytes = base64::engine::general_purpose::STANDARD.decode(bytes_raw.as_bytes()).map_err(|error| TextError::new(format!("invalid base64 run bytes: {error}"), span))?;
+                Ok(PixelRun { offset, bytes })
+            })
+            .collect()
+    }
+    //#endregion ValueCodecs
+
+    //#region GeometryRecords
+    fn parse_vertex_record(record: &Record) -> Result<MeshVertexRecord, TextError> {
+        Ok(MeshVertexRecord {
+            position: parse_f32_triplet(require_field(&record.fields, "position", record.span)?, record.span)?,
+            normal: parse_opt_f32_3(require_field(&record.fields, "normal", record.span)?, record.span)?,
+            halfedge: parse_opt_u32(require_field(&record.fields, "halfedge", record.span)?, record.span)?,
+        })
+    }
+
+    fn parse_halfedge_record(record: &Record) -> Result<MeshHalfedgeRecord, TextError> {
+        Ok(MeshHalfedgeRecord {
+            vertex: parse_u32(require_field(&record.fields, "vertex", record.span)?, record.span)?,
+            twin: parse_opt_u32(require_field(&record.fields, "twin", record.span)?, record.span)?,
+            next: parse_u32(require_field(&record.fields, "next", record.span)?, record.span)?,
+            face: parse_opt_u32(require_field(&record.fields, "face", record.span)?, record.span)?,
+            uv: parse_f32_pair(require_field(&record.fields, "uv", record.span)?, record.span)?,
+        })
+    }
+
+    fn parse_face_record(record: &Record) -> Result<MeshFaceRecord, TextError> {
+        Ok(MeshFaceRecord {
+            halfedge: parse_u32(require_field(&record.fields, "halfedge", record.span)?, record.span)?,
+            smooth: parse_bool(require_field(&record.fields, "smooth", record.span)?, record.span)?,
+            flipped: parse_bool(require_field(&record.fields, "flipped", record.span)?, record.span)?,
+        })
+    }
+
+    fn parse_transform_record(record: &Record) -> Result<LowpolyTransform, TextError> {
+        Ok(LowpolyTransform {
+            position: parse_f32_triplet(require_field(&record.fields, "position", record.span)?, record.span)?,
+            rotation: parse_f32_triplet(require_field(&record.fields, "rotation", record.span)?, record.span)?,
+            scale: parse_f32_triplet(require_field(&record.fields, "scale", record.span)?, record.span)?,
+        })
+    }
+
+    fn parse_layer_record(record: &Record) -> Result<LowpolyPaintLayer, TextError> {
+        Ok(LowpolyPaintLayer {
+            name: require_field(&record.fields, "name", record.span)?.to_string(),
+            visible: parse_bool(require_field(&record.fields, "visible", record.span)?, record.span)?,
+            opacity: parse_f32(require_field(&record.fields, "opacity", record.span)?, record.span)?,
+            blend_mode: require_field(&record.fields, "blend", record.span)?.to_string(),
+            pixels: parse_pixels(require_field(&record.fields, "pixels", record.span)?, record.span)?,
+        })
+    }
+
+    /// 🧮 Applies a `vertex`/`halfedge`/`face`/`seams` record to an in-progress geometry accumulation;
+    /// returns `Ok(false)` for any other record kind so callers (object body vs. bare mesh fragment)
+    /// can decide what else is legal in their context.
+    fn apply_geometry_record(
+        vertices: &mut Vec<MeshVertexRecord>,
+        halfedges: &mut Vec<MeshHalfedgeRecord>,
+        faces: &mut Vec<MeshFaceRecord>,
+        seams: &mut Vec<u32>,
+        record: &Record,
+    ) -> Result<bool, TextError> {
+        match record.kind.as_str() {
+            "vertex" => {
+                vertices.push(parse_vertex_record(record)?);
+                Ok(true)
+            }
+            "halfedge" => {
+                halfedges.push(parse_halfedge_record(record)?);
+                Ok(true)
+            }
+            "face" => {
+                faces.push(parse_face_record(record)?);
+                Ok(true)
+            }
+            "seams" => {
+                *seams = parse_u32_list(require_field(&record.fields, "ids", record.span)?, record.span)?;
+                Ok(true)
+            }
+            _ => Ok(false),
+        }
+    }
+
+    fn build_mesh_json(vertices: Vec<MeshVertexRecord>, halfedges: Vec<MeshHalfedgeRecord>, faces: Vec<MeshFaceRecord>, seams: Vec<u32>) -> String {
+        serde_json::to_string(&MeshJsonRecord { vertices, halfedges, faces, uv_seams: seams }).expect("serialize mesh json")
+    }
+
+    fn records_to_mesh_json(records: &[Record]) -> Result<String, TextError> {
+        let mut vertices = Vec::new();
+        let mut halfedges = Vec::new();
+        let mut faces = Vec::new();
+        let mut seams = Vec::new();
+        for record in records {
+            if !apply_geometry_record(&mut vertices, &mut halfedges, &mut faces, &mut seams, record)? {
+                return Err(TextError::new(format!("unexpected record '{}' in mesh fragment", record.kind), record.span));
+            }
+        }
+        Ok(build_mesh_json(vertices, halfedges, faces, seams))
+    }
+
+    fn mesh_record_lines(mesh_json: &str) -> Vec<String> {
+        let record: MeshJsonRecord = serde_json::from_str(mesh_json).expect("mesh_json must be valid json");
+        let mut lines = Vec::with_capacity(record.vertices.len() + record.halfedges.len() + record.faces.len() + 1);
+        for vertex in &record.vertices {
+            lines.push(format!("vertex position={} normal={} halfedge={}", fmt_f32_3(vertex.position), fmt_opt_f32_3(vertex.normal), fmt_opt_u32(vertex.halfedge)));
+        }
+        for halfedge in &record.halfedges {
+            lines.push(format!(
+                "halfedge vertex={} twin={} next={} face={} uv={}",
+                halfedge.vertex,
+                fmt_opt_u32(halfedge.twin),
+                halfedge.next,
+                fmt_opt_u32(halfedge.face),
+                fmt_f32_2(halfedge.uv)
+            ));
+        }
+        for face in &record.faces {
+            lines.push(format!("face halfedge={} smooth={} flipped={}", face.halfedge, fmt_bool(face.smooth), fmt_bool(face.flipped)));
+        }
+        let mut seams = record.uv_seams.clone();
+        seams.sort_unstable();
+        seams.dedup();
+        lines.push(format!("seams ids={}", fmt_u32_list(&seams)));
+        lines
+    }
+    //#endregion GeometryRecords
+
+    //#region ObjectRecords
+    #[derive(Default)]
+    struct ObjectBuilder {
+        id: String,
+        name: String,
+        smooth_shading: bool,
+        transform: LowpolyTransform,
+        vertices: Vec<MeshVertexRecord>,
+        halfedges: Vec<MeshHalfedgeRecord>,
+        faces: Vec<MeshFaceRecord>,
+        seams: Vec<u32>,
+        layers: Vec<LowpolyPaintLayer>,
+    }
+
+    fn object_builder_from_record(record: &Record) -> Result<ObjectBuilder, TextError> {
+        Ok(ObjectBuilder {
+            id: require_field(&record.fields, "id", record.span)?.to_string(),
+            name: require_field(&record.fields, "name", record.span)?.to_string(),
+            smooth_shading: parse_bool(require_field(&record.fields, "smooth", record.span)?, record.span)?,
+            ..Default::default()
+        })
+    }
+
+    fn apply_record_to_builder(builder: &mut ObjectBuilder, record: &Record) -> Result<(), TextError> {
+        if apply_geometry_record(&mut builder.vertices, &mut builder.halfedges, &mut builder.faces, &mut builder.seams, record)? {
+            return Ok(());
+        }
+        match record.kind.as_str() {
+            "transform" => builder.transform = parse_transform_record(record)?,
+            "layer" => builder.layers.push(parse_layer_record(record)?),
+            other => return Err(TextError::new(format!("unexpected record '{other}' inside an object"), record.span)),
+        }
+        Ok(())
+    }
+
+    fn finish_object(builder: ObjectBuilder) -> LowpolyObject {
+        LowpolyObject {
+            id: builder.id,
+            name: builder.name,
+            transform: builder.transform,
+            smooth_shading: builder.smooth_shading,
+            mesh_json: build_mesh_json(builder.vertices, builder.halfedges, builder.faces, builder.seams),
+            paint_layers: builder.layers,
+        }
+    }
+
+    fn records_to_object(records: &[Record]) -> Result<LowpolyObject, TextError> {
+        let mut iter = records.iter();
+        let header = iter.next().ok_or_else(|| TextError::new("expected an 'object' record", TextSpan::at(1, 1)))?;
+        if header.kind != "object" {
+            return Err(TextError::new("expected an 'object' record first", header.span));
+        }
+        let mut builder = object_builder_from_record(header)?;
+        for record in iter {
+            apply_record_to_builder(&mut builder, record)?;
+        }
+        Ok(finish_object(builder))
+    }
+
+    fn object_record_lines(object: &LowpolyObject) -> Vec<String> {
+        let mut lines = vec![
+            format!("object id={} name={} smooth={}", object.id, quote(&object.name), fmt_bool(object.smooth_shading)),
+            format!(
+                "transform position={} rotation={} scale={}",
+                fmt_f32_3(object.transform.position),
+                fmt_f32_3(object.transform.rotation),
+                fmt_f32_3(object.transform.scale)
+            ),
+        ];
+        lines.extend(mesh_record_lines(&object.mesh_json));
+        for layer in &object.paint_layers {
+            lines.push(format!(
+                "layer name={} visible={} opacity={} blend={} pixels={}",
+                quote(&layer.name),
+                fmt_bool(layer.visible),
+                layer.opacity,
+                quote(&layer.blend_mode),
+                print_pixels(&layer.pixels)
+            ));
+        }
+        lines
+    }
+    //#endregion ObjectRecords
+
+    //#region ProjectionRecords
+    fn records_to_projection(records: &[Record]) -> Result<LowpolyProjection, TextError> {
+        let mut iter = records.iter();
+        let header = iter.next().ok_or_else(|| TextError::new("expected a 'doc schema=' record", TextSpan::at(1, 1)))?;
+        if header.kind != "doc" {
+            return Err(TextError::new("expected a 'doc schema=' record first", header.span));
+        }
+        let schema = require_field(&header.fields, "schema", header.span)?.to_string();
+        let mut objects = Vec::new();
+        let mut current: Option<ObjectBuilder> = None;
+        for record in iter {
+            if record.kind == "object" {
+                if let Some(builder) = current.take() {
+                    objects.push(finish_object(builder));
+                }
+                current = Some(object_builder_from_record(record)?);
+            } else {
+                let builder = current.as_mut().ok_or_else(|| TextError::new(format!("record '{}' outside any object", record.kind), record.span))?;
+                apply_record_to_builder(builder, record)?;
+            }
+        }
+        if let Some(builder) = current.take() {
+            objects.push(finish_object(builder));
+        }
+        Ok(LowpolyProjection { schema, objects })
+    }
+
+    fn projection_record_lines(projection: &LowpolyProjection) -> Vec<String> {
+        let mut lines = vec![format!("doc schema={}", projection.schema)];
+        for object in &projection.objects {
+            lines.extend(object_record_lines(object));
+        }
+        lines
+    }
+
+    pub(super) fn print_projection(projection: &LowpolyProjection) -> String {
+        let mut text = projection_record_lines(projection).join("\n");
+        text.push('\n');
+        text
+    }
+
+    pub(super) fn parse_projection(text: &str) -> Result<LowpolyProjection, TextError> {
+        let tokens = lex(text)?;
+        let records = parse_records(&tokens)?;
+        records_to_projection(&records)
+    }
+    //#endregion ProjectionRecords
+
+    //#region OpText
+    fn print_objects_op(operation: &CollectionOperation<String, LowpolyObject, LowpolyObjectPatch>) -> String {
+        match operation {
+            CollectionOperation::Add { index, item } => format!("objects add index={} item {}", index, object_record_lines(item).join(" ")),
+            CollectionOperation::Remove { id } => format!("objects remove id={id}"),
+            CollectionOperation::Move { id, to_index } => format!("objects move id={id} to={to_index}"),
+            CollectionOperation::Patch { id, patch } => {
+                let mesh_part = match &patch.mesh_json {
+                    Some(json) => mesh_record_lines(json).join(" "),
+                    None => "-".to_string(),
+                };
+                format!(
+                    "objects patch id={} name={} smooth={} transform={} mesh {}",
+                    id,
+                    fmt_opt_str(&patch.name),
+                    fmt_opt_bool(patch.smooth_shading),
+                    fmt_opt_transform(&patch.transform),
+                    mesh_part
+                )
+            }
+        }
+    }
+
+    fn parse_objects_op(tokens: &[LexedTok]) -> Result<LowpolyOperation, TextError> {
+        let span = tokens[0].span;
+        let sub = word_at(tokens, 1)?;
+        match sub.as_str() {
+            "add" => {
+                let (fields, stop) = collect_fields(tokens, 2);
+                let index: usize = require_field(&fields, "index", span)?.parse().map_err(|_| TextError::new("invalid index", span))?;
+                expect_marker(tokens, stop, "item")?;
+                let records = parse_records(&tokens[stop + 1..])?;
+                let item = records_to_object(&records)?;
+                Ok(LowpolyOperation::Objects(CollectionOperation::Add { index, item }))
+            }
+            "remove" => {
+                let (fields, _stop) = collect_fields(tokens, 2);
+                Ok(LowpolyOperation::Objects(CollectionOperation::Remove { id: require_field(&fields, "id", span)?.to_string() }))
+            }
+            "move" => {
+                let (fields, _stop) = collect_fields(tokens, 2);
+                Ok(LowpolyOperation::Objects(CollectionOperation::Move {
+                    id: require_field(&fields, "id", span)?.to_string(),
+                    to_index: require_field(&fields, "to", span)?.parse().map_err(|_| TextError::new("invalid to_index", span))?,
+                }))
+            }
+            "patch" => {
+                let (fields, stop) = collect_fields(tokens, 2);
+                let id = require_field(&fields, "id", span)?.to_string();
+                let name = opt_str_field(&fields, "name");
+                let smooth_shading = opt_bool_field(&fields, "smooth", span)?;
+                let transform = opt_transform_field(&fields, "transform", span)?;
+                expect_marker(tokens, stop, "mesh")?;
+                let mesh_json = match tokens.get(stop + 1).map(|t| &t.tok) {
+                    Some(Tok::Word(word)) if word == "-" => None,
+                    _ => {
+                        let records = parse_records(&tokens[stop + 1..])?;
+                        Some(records_to_mesh_json(&records)?)
+                    }
+                };
+                Ok(LowpolyOperation::Objects(CollectionOperation::Patch { id, patch: LowpolyObjectPatch { name, smooth_shading, transform, mesh_json } }))
+            }
+            other => Err(TextError::new(format!("unknown 'objects' sub-operation '{other}'"), span)),
+        }
+    }
+
+    pub(super) fn print_operation(operation: &LowpolyOperation) -> String {
+        match operation {
+            LowpolyOperation::Objects(collection_operation) => print_objects_op(collection_operation),
+            LowpolyOperation::AddPaintLayer { object_id, index, layer } => format!(
+                "addPaintLayer object={} index={} name={} visible={} opacity={} blend={} pixels={}",
+                object_id,
+                index,
+                quote(&layer.name),
+                fmt_bool(layer.visible),
+                layer.opacity,
+                quote(&layer.blend_mode),
+                print_pixels(&layer.pixels)
+            ),
+            LowpolyOperation::RemovePaintLayer { object_id, index } => format!("removePaintLayer object={object_id} index={index}"),
+            LowpolyOperation::PatchPaintLayer { object_id, index, patch } => format!(
+                "patchPaintLayer object={} index={} name={} visible={} opacity={} blend={}",
+                object_id,
+                index,
+                fmt_opt_str(&patch.name),
+                fmt_opt_bool(patch.visible),
+                fmt_opt_f32(patch.opacity),
+                fmt_opt_str(&patch.blend_mode)
+            ),
+            LowpolyOperation::PaintStroke { object_id, layer_index, runs } => format!("paintStroke object={object_id} layer={layer_index} runs={}", fmt_runs(runs)),
+            LowpolyOperation::SetProjection { projection } => format!("setProjection {}", projection_record_lines(projection).join(" ")),
+        }
+    }
+
+    pub(super) fn parse_operation(line: &str) -> Result<LowpolyOperation, TextError> {
+        let tokens = lex(line)?;
+        let kind = word_at(&tokens, 0)?;
+        let span = tokens[0].span;
+        match kind.as_str() {
+            "objects" => parse_objects_op(&tokens),
+            "addPaintLayer" => {
+                let (fields, _stop) = collect_fields(&tokens, 1);
+                Ok(LowpolyOperation::AddPaintLayer {
+                    object_id: require_field(&fields, "object", span)?.to_string(),
+                    index: require_field(&fields, "index", span)?.parse().map_err(|_| TextError::new("invalid index", span))?,
+                    layer: LowpolyPaintLayer {
+                        name: require_field(&fields, "name", span)?.to_string(),
+                        visible: parse_bool(require_field(&fields, "visible", span)?, span)?,
+                        opacity: parse_f32(require_field(&fields, "opacity", span)?, span)?,
+                        blend_mode: require_field(&fields, "blend", span)?.to_string(),
+                        pixels: parse_pixels(require_field(&fields, "pixels", span)?, span)?,
+                    },
+                })
+            }
+            "removePaintLayer" => {
+                let (fields, _stop) = collect_fields(&tokens, 1);
+                Ok(LowpolyOperation::RemovePaintLayer {
+                    object_id: require_field(&fields, "object", span)?.to_string(),
+                    index: require_field(&fields, "index", span)?.parse().map_err(|_| TextError::new("invalid index", span))?,
+                })
+            }
+            "patchPaintLayer" => {
+                let (fields, _stop) = collect_fields(&tokens, 1);
+                Ok(LowpolyOperation::PatchPaintLayer {
+                    object_id: require_field(&fields, "object", span)?.to_string(),
+                    index: require_field(&fields, "index", span)?.parse().map_err(|_| TextError::new("invalid index", span))?,
+                    patch: LowpolyPaintLayerPatch {
+                        name: opt_str_field(&fields, "name"),
+                        visible: opt_bool_field(&fields, "visible", span)?,
+                        opacity: opt_f32_field(&fields, "opacity", span)?,
+                        blend_mode: opt_str_field(&fields, "blend"),
+                    },
+                })
+            }
+            "paintStroke" => {
+                let (fields, _stop) = collect_fields(&tokens, 1);
+                Ok(LowpolyOperation::PaintStroke {
+                    object_id: require_field(&fields, "object", span)?.to_string(),
+                    layer_index: require_field(&fields, "layer", span)?.parse().map_err(|_| TextError::new("invalid layer index", span))?,
+                    runs: parse_runs(require_field(&fields, "runs", span)?, span)?,
+                })
+            }
+            "setProjection" => {
+                let records = parse_records(&tokens[1..])?;
+                Ok(LowpolyOperation::SetProjection { projection: records_to_projection(&records)? })
+            }
+            other => Err(TextError::new(format!("unknown operation '{other}'"), span)),
+        }
+    }
+    //#endregion OpText
+}
+
+impl vcs::DocumentDsl for LowpolyProjection {
+    const EXTENSION: &'static str = "lowpoly";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        lowpoly_text::parse_projection(text)
+    }
+
+    fn print_dsl(&self) -> String {
+        lowpoly_text::print_projection(self)
+    }
+}
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+impl vcs::OpText for LowpolyOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        lowpoly_text::parse_operation(line)
+    }
+
+    fn print_op(&self) -> String {
+        lowpoly_text::print_operation(self)
+    }
+}
+//#endregion 🔖OpText
 
 //#region ⚠️ Errors
 /// ⚠️ `LowpolyDocument` compute-session and mesh-operation failure.
@@ -854,7 +1717,8 @@ mod tests {
 
     #[test]
     fn default_concrete_forest_mesh_has_no_spanning_support_gap_faces() {
-        let mesh = HalfedgeMesh::from_json(DEFAULT_MESH_JSON).expect("default mesh");
+        let projection = default_projection();
+        let mesh = HalfedgeMesh::from_json(&projection.objects[0].mesh_json).expect("default mesh");
         assert!(
             (0..mesh.face_count()).any(|fi| mesh.face_vertex_ids(FaceId(fi as u32)).map(|v| v.len()).unwrap_or(0) >= 8),
             "expected coplanar-merged plate-side n-gon with >= 8 corners"
@@ -996,6 +1860,103 @@ mod tests {
         }
         assert_eq!(next, projection);
     }
+
+    //#region 🔖DslAndOpText
+    fn tiny_mesh_json() -> String {
+        HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
+    }
+
+    fn tiny_object(id: &str, name: &str) -> LowpolyObject {
+        LowpolyObject { id: id.into(), name: name.into(), transform: LowpolyTransform::default(), smooth_shading: false, mesh_json: tiny_mesh_json(), paint_layers: vec![LowpolyPaintLayer::new("Base")] }
+    }
+
+    #[test]
+    fn dsl_round_trips_the_default_concrete_forest_projection() {
+        vcs::test_support::assert_dsl_round_trip(&default_projection());
+    }
+
+    #[test]
+    fn dsl_round_trips_a_projection_with_a_painted_layer() {
+        let mut projection = default_projection();
+        projection.objects[0].paint_layers[0].pixels[0] = 7;
+        projection.objects[0].paint_layers[0].pixels[1] = 9;
+        vcs::test_support::assert_dsl_round_trip(&projection);
+    }
+
+    #[test]
+    fn op_text_round_trip_objects_add() {
+        let operation = LowpolyOperation::Objects(CollectionOperation::Add { index: 1, item: tiny_object("obj-100", "Box") });
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_objects_remove() {
+        let operation: LowpolyOperation = LowpolyOperation::Objects(CollectionOperation::Remove { id: "obj-1".into() });
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_objects_move() {
+        let operation = LowpolyOperation::Objects(CollectionOperation::Move { id: "obj-1".into(), to_index: 2 });
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_objects_patch_without_mesh() {
+        let operation = LowpolyOperation::Objects(CollectionOperation::Patch {
+            id: "obj-1".into(),
+            patch: LowpolyObjectPatch { name: Some("Renamed".into()), smooth_shading: Some(true), transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }), mesh_json: None },
+        });
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_objects_patch_with_mesh() {
+        let operation = LowpolyOperation::Objects(CollectionOperation::Patch { id: "obj-1".into(), patch: LowpolyObjectPatch { mesh_json: Some(tiny_mesh_json()), ..Default::default() } });
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_add_paint_layer() {
+        let operation = LowpolyOperation::AddPaintLayer { object_id: "obj-1".into(), index: 1, layer: LowpolyPaintLayer::new("Detail") };
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_remove_paint_layer() {
+        let operation = LowpolyOperation::RemovePaintLayer { object_id: "obj-1".into(), index: 0 };
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_patch_paint_layer() {
+        let operation = LowpolyOperation::PatchPaintLayer { object_id: "obj-1".into(), index: 0, patch: LowpolyPaintLayerPatch { name: Some("Top".into()), visible: Some(false), opacity: Some(0.5), blend_mode: Some("multiply".into()) } };
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_paint_stroke() {
+        let operation = LowpolyOperation::PaintStroke { object_id: "obj-1".into(), layer_index: 0, runs: vec![PixelRun { offset: 12, bytes: vec![255, 0, 0, 255] }, PixelRun { offset: 400, bytes: vec![0, 255, 0, 255, 0, 0, 0, 128] }] };
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn op_text_round_trip_set_projection() {
+        let operation = LowpolyOperation::SetProjection { projection: default_projection() };
+        vcs::test_support::assert_op_line_round_trip(&operation);
+    }
+
+    #[test]
+    fn document_text_round_trip_after_applying_an_operation() {
+        let projection = default_projection();
+        let object_id = projection.objects[0].id.clone();
+        let envelope: LowpolyEnvelope = vcs::create_document_vcs_envelope(LOWPOLY_DOCUMENT_SCHEMA, "test-doc", projection, None);
+        let mut store: LowpolyStore = vcs::DocumentVcsStore::new(envelope);
+        let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
+        store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None }).expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslAndOpText
 }
 //#endregion 🧪Tests
 

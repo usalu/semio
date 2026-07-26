@@ -1,41 +1,508 @@
 {
   "nodes": [
-    { "id": "n1", "x": 0.0, "y": 0.0, "z": 0.0 },
-    { "id": "n2", "x": 0.0, "y": 0.0, "z": 3.0 },
-    { "id": "n3", "x": 3.0, "y": 0.0, "z": 3.0 },
-    { "id": "sc0", "x": 5.0, "y": 0.0, "z": 0.0 },
-    { "id": "sc1", "x": 6.0, "y": 0.0, "z": 0.0 },
-    { "id": "sc2", "x": 6.0, "y": 1.0, "z": 0.0 },
-    { "id": "sc3", "x": 5.0, "y": 1.0, "z": 0.0 }
+    {
+      "id": "n00_g",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n00_l1",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 2.8
+    },
+    {
+      "id": "n00_l2",
+      "x": 0.0,
+      "y": 0.0,
+      "z": 5.6
+    },
+    {
+      "id": "n02_g",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 0.0
+    },
+    {
+      "id": "n02_l1",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 2.8
+    },
+    {
+      "id": "n02_l2",
+      "x": 0.0,
+      "y": 10.0,
+      "z": 5.6
+    },
+    {
+      "id": "n20_g",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "n20_l1",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 2.8
+    },
+    {
+      "id": "n20_l2",
+      "x": 8.0,
+      "y": 0.0,
+      "z": 5.6
+    },
+    {
+      "id": "n22_g",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 0.0
+    },
+    {
+      "id": "n22_l1",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 2.8
+    },
+    {
+      "id": "n22_l2",
+      "x": 8.0,
+      "y": 10.0,
+      "z": 5.6
+    },
+    {
+      "id": "n10_r",
+      "x": 4.0,
+      "y": 0.0,
+      "z": 7.6
+    },
+    {
+      "id": "n12_r",
+      "x": 4.0,
+      "y": 10.0,
+      "z": 7.6
+    },
+    {
+      "id": "sc0",
+      "x": 10.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc1",
+      "x": 12.0,
+      "y": 0.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc2",
+      "x": 12.0,
+      "y": 2.0,
+      "z": 0.0
+    },
+    {
+      "id": "sc3",
+      "x": 10.0,
+      "y": 2.0,
+      "z": 0.0
+    }
   ],
   "elements": [
-    { "kind": "frame", "id": "e1", "start": "n1", "end": "n2", "materialId": "steel", "sectionId": "shs100", "roll": 0.0 },
-    { "kind": "frame", "id": "e2", "start": "n2", "end": "n3", "materialId": "steel", "sectionId": "hea200", "roll": 0.0 }
+    {
+      "kind": "frame",
+      "id": "e1",
+      "start": "n00_g",
+      "end": "n00_l1",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_00_u",
+      "start": "n00_l1",
+      "end": "n00_l2",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_02_l",
+      "start": "n02_g",
+      "end": "n02_l1",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_02_u",
+      "start": "n02_l1",
+      "end": "n02_l2",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_20_l",
+      "start": "n20_g",
+      "end": "n20_l1",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_20_u",
+      "start": "n20_l1",
+      "end": "n20_l2",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_22_l",
+      "start": "n22_g",
+      "end": "n22_l1",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "col_22_u",
+      "start": "n22_l1",
+      "end": "n22_l2",
+      "materialId": "timber",
+      "sectionId": "post140",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_0",
+      "start": "n00_l1",
+      "end": "n20_l1",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_0",
+      "start": "n00_l2",
+      "end": "n20_l2",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_1",
+      "start": "n20_l1",
+      "end": "n22_l1",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_1",
+      "start": "n20_l2",
+      "end": "n22_l2",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_2",
+      "start": "n22_l1",
+      "end": "n02_l1",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_2",
+      "start": "n22_l2",
+      "end": "n02_l2",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb1_3",
+      "start": "n02_l1",
+      "end": "n00_l1",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "fb2_3",
+      "start": "n02_l2",
+      "end": "n00_l2",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "rb_0",
+      "start": "n10_r",
+      "end": "n12_r",
+      "materialId": "timber",
+      "sectionId": "floorbeam",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "rf_l_0",
+      "start": "n00_l2",
+      "end": "n10_r",
+      "materialId": "timber",
+      "sectionId": "rafter",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "rf_r_0",
+      "start": "n10_r",
+      "end": "n20_l2",
+      "materialId": "timber",
+      "sectionId": "rafter",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "rf_l_2",
+      "start": "n02_l2",
+      "end": "n12_r",
+      "materialId": "timber",
+      "sectionId": "rafter",
+      "roll": 0.0
+    },
+    {
+      "kind": "frame",
+      "id": "rf_r_2",
+      "start": "n12_r",
+      "end": "n22_l2",
+      "materialId": "timber",
+      "sectionId": "rafter",
+      "roll": 0.0
+    }
   ],
   "materials": [
-    { "id": "steel", "name": "Steel S235", "e": 210000000000.0, "g": 80770000000.0, "nu": 0.3, "rho": 7850.0 }
+    {
+      "id": "timber",
+      "name": "C24 Timber",
+      "e": 11000000000.0,
+      "g": 4230769230.0,
+      "nu": 0.3,
+      "rho": 450.0
+    },
+    {
+      "id": "concrete",
+      "name": "C30/37 Concrete",
+      "e": 33000000000.0,
+      "g": 13750000000.0,
+      "nu": 0.2,
+      "rho": 2400.0
+    }
   ],
   "sections": [
-    { "id": "hea200", "name": "HEA 200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 },
-    { "id": "shs100", "name": "SHS 100 Column", "area": 0.001, "iy": 0.000001, "iz": 0.000001, "j": 0.000002 }
+    {
+      "id": "post140",
+      "name": "Timber Post 140x140",
+      "area": 0.0196,
+      "iy": 3.2e-05,
+      "iz": 3.2e-05,
+      "j": 5e-05
+    },
+    {
+      "id": "floorbeam",
+      "name": "Timber Floor Beam 80x220",
+      "area": 0.0176,
+      "iy": 7.1e-05,
+      "iz": 1.07e-05,
+      "j": 4e-05
+    },
+    {
+      "id": "rafter",
+      "name": "Timber Rafter 80x180",
+      "area": 0.0144,
+      "iy": 3.9e-05,
+      "iz": 7.7e-06,
+      "j": 3e-05
+    }
   ],
   "solids": [
-    { "id": "sol1", "name": "Slab", "outline": [[5.0, 0.0], [6.0, 0.0], [6.0, 1.0], [5.0, 1.0]], "holes": [], "baseZ": 0.0, "height": 0.5, "layers": 1, "meshSize": 0.5, "materialId": "steel" }
+    {
+      "id": "sol1",
+      "name": "First Floor Slab",
+      "outline": [
+        [
+          10,
+          0
+        ],
+        [
+          12,
+          0
+        ],
+        [
+          12,
+          2
+        ],
+        [
+          10,
+          2
+        ]
+      ],
+      "holes": [],
+      "baseZ": 0.0,
+      "height": 0.2,
+      "layers": 1,
+      "meshSize": 0.5,
+      "materialId": "concrete"
+    }
   ],
   "supports": [
-    { "id": "s1", "nodeId": "n1", "fixed": ["Tx", "Ty", "Tz", "Rx", "Ry", "Rz"] },
-    { "id": "s2", "nodeId": "sc0", "fixed": ["Tx", "Ty", "Tz"] },
-    { "id": "s3", "nodeId": "sc1", "fixed": ["Tx", "Ty", "Tz"] },
-    { "id": "s4", "nodeId": "sc2", "fixed": ["Tx", "Ty", "Tz"] },
-    { "id": "s5", "nodeId": "sc3", "fixed": ["Tx", "Ty", "Tz"] }
+    {
+      "id": "s_00",
+      "nodeId": "n00_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_02",
+      "nodeId": "n02_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_20",
+      "nodeId": "n20_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "s_22",
+      "nodeId": "n22_g",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz",
+        "Rx",
+        "Ry",
+        "Rz"
+      ]
+    },
+    {
+      "id": "ss_0",
+      "nodeId": "sc0",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_1",
+      "nodeId": "sc1",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_2",
+      "nodeId": "sc2",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    },
+    {
+      "id": "ss_3",
+      "nodeId": "sc3",
+      "fixed": [
+        "Tx",
+        "Ty",
+        "Tz"
+      ]
+    }
   ],
   "loadCases": [
     {
       "id": "dead",
       "name": "Dead Load",
       "loads": [
-        { "kind": "memberUdl", "id": "l1", "elementId": "e2", "wx": 0.0, "wy": 0.0, "wz": -2000.0 },
-        { "kind": "area", "id": "l2", "solidId": "sol1", "pressure": 10000.0 }
+        {
+          "kind": "area",
+          "id": "l1",
+          "solidId": "sol1",
+          "pressure": 800.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ls_0",
+          "elementId": "rf_l_0",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -1500.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ls_1",
+          "elementId": "rf_r_0",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -1500.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ls_2",
+          "elementId": "rf_l_2",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -1500.0
+        },
+        {
+          "kind": "memberUdl",
+          "id": "ls_3",
+          "elementId": "rf_r_2",
+          "wx": 0.0,
+          "wy": 0.0,
+          "wz": -1500.0
+        }
       ],
       "selfWeight": true
     },
@@ -43,14 +510,45 @@
       "id": "live",
       "name": "Live Load",
       "loads": [
-        { "kind": "nodal", "id": "l3", "nodeId": "n3", "dof": "Tz", "value": -5000.0 }
+        {
+          "kind": "area",
+          "id": "l3",
+          "solidId": "sol1",
+          "pressure": 1500.0
+        },
+        {
+          "kind": "nodal",
+          "id": "l5",
+          "nodeId": "n20_l1",
+          "dof": "Tz",
+          "value": -5000.0
+        }
       ],
       "selfWeight": false
     }
   ],
   "combinations": [
-    { "id": "uls", "name": "ULS", "terms": [["dead", 1.35], ["live", 1.5]] }
+    {
+      "id": "uls",
+      "name": "ULS",
+      "terms": [
+        [
+          "dead",
+          1.35
+        ],
+        [
+          "live",
+          1.5
+        ]
+      ]
+    }
   ],
-  "analysis": { "modalCount": 3, "bucklingCount": 3, "deformationScale": 300.0 },
-  "camera": { "json": "{}" }
+  "analysis": {
+    "modalCount": 3,
+    "bucklingCount": 3,
+    "deformationScale": 300.0
+  },
+  "camera": {
+    "json": "{}"
+  }
 }

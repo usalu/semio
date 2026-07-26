@@ -483,6 +483,600 @@ pub fn empty_fem2d_projection() -> Fem2dDocument {
 }
 // #endregion 🔖Operations
 
+// #region 🔖Dsl
+/// 📜 Hand-rolled lexer/printer for `Fem2dDocument`'s `.fem2d` DSL (`🔖Dsl`) and `Fem2dOperation`'s
+/// one-line op text (`🔖OpText`) — every entity (node/element/material/section/support/region/load
+/// case/combination) has ONE `print_*_fields`/`parse_*` pair shared verbatim by both a document line
+/// (`@node ...`) and its matching operation line (`setNode index=.. ...`), so the two stay in lock-step
+/// by construction. Grammar mirrors `vcs`'s own structural-line grammar and `writer`'s `writer_dsl`
+/// module (`@marker key=value ... "trailing text"`), hand-rolled locally since `vcs`'s escaping helpers
+/// are private to that crate. ASSUMES ids never contain `,` `:` `;` `|` `-` (mirrors `vcs`'s own
+/// `split_ids`/`join_ids` precedent) — always true for this domain's short slug-like ids.
+mod fem2d_dsl {
+    use super::{Fem2dDocument, Fem2dOperation, FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemRegion, FemSection, FemSupport};
+    use fem_core::Dof;
+    use std::collections::HashMap;
+    use vcs::{TextError, TextSpan};
+
+    //#region Lexer
+    /// 🔐 Escapes `\`, `"` and newlines so arbitrary text (a name, or a whole nested `setDocument`
+    /// document) fits inside one quoted field.
+    fn escape_text(value: &str) -> String {
+        let mut out = String::with_capacity(value.len());
+        for ch in value.chars() {
+            match ch {
+                '\\' => out.push_str("\\\\"),
+                '"' => out.push_str("\\\""),
+                '\n' => out.push_str("\\n"),
+                _ => out.push(ch),
+            }
+        }
+        out
+    }
+
+    fn unescape_text(value: &str) -> String {
+        let mut out = String::with_capacity(value.len());
+        let mut chars = value.chars();
+        while let Some(ch) = chars.next() {
+            if ch == '\\' {
+                match chars.next() {
+                    Some('n') => out.push('\n'),
+                    Some('"') => out.push('"'),
+                    Some('\\') => out.push('\\'),
+                    Some(other) => {
+                        out.push('\\');
+                        out.push(other);
+                    }
+                    None => out.push('\\'),
+                }
+            } else {
+                out.push(ch);
+            }
+        }
+        out
+    }
+
+    /// 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, mirroring
+    /// `vcs`'s private `find_unescaped_trailing_quote` (kept in lock-step, see that doc comment).
+    fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
+        if chars.is_empty() || *chars.last().unwrap() != '"' {
+            return None;
+        }
+        let last = chars.len() - 1;
+        let mut i = last;
+        while i > 0 {
+            i -= 1;
+            if chars[i] == '"' {
+                let mut backslashes = 0;
+                let mut j = i;
+                while j > 0 && chars[j - 1] == '\\' {
+                    backslashes += 1;
+                    j -= 1;
+                }
+                if backslashes % 2 == 0 {
+                    return Some(i);
+                }
+            }
+        }
+        None
+    }
+
+    /// 🧾 One parsed `@marker key=value ...` line plus its optional trailing quoted text field.
+    struct KvLine {
+        marker: String,
+        fields: HashMap<String, String>,
+        text: Option<String>,
+    }
+
+    fn parse_kv_line(line: &str, line_no: u32) -> Result<KvLine, TextError> {
+        let chars: Vec<char> = line.chars().collect();
+        let (head, text) = match find_unescaped_trailing_quote(&chars) {
+            Some(open) => {
+                let content: String = chars[open + 1..chars.len() - 1].iter().collect();
+                let head: String = chars[..open].iter().collect();
+                (head.trim_end().to_string(), Some(unescape_text(&content)))
+            }
+            None => (line.to_string(), None),
+        };
+        let mut tokens = head.split_whitespace();
+        let marker = tokens
+            .next()
+            .ok_or_else(|| TextError::new("expected a marker or operation name", TextSpan::at(line_no, 1)))?
+            .to_string();
+        let mut fields = HashMap::new();
+        for token in tokens {
+            let (key, value) = token
+                .split_once('=')
+                .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(line_no, 1)))?;
+            fields.insert(key.to_string(), value.to_string());
+        }
+        Ok(KvLine { marker, fields, text })
+    }
+
+    fn field<'a>(fields: &'a HashMap<String, String>, key: &str, line_no: u32) -> Result<&'a str, TextError> {
+        fields
+            .get(key)
+            .map(|value| value.as_str())
+            .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(line_no, 1)))
+    }
+
+    fn parse_f64(value: &str, key: &str, line_no: u32) -> Result<f64, TextError> {
+        value.parse::<f64>().map_err(|_| TextError::new(format!("expected number for '{key}', got '{value}'"), TextSpan::at(line_no, 1)))
+    }
+
+    fn parse_usize(value: &str, key: &str, line_no: u32) -> Result<usize, TextError> {
+        value.parse::<usize>().map_err(|_| TextError::new(format!("expected integer for '{key}', got '{value}'"), TextSpan::at(line_no, 1)))
+    }
+
+    fn parse_bool(value: &str, key: &str, line_no: u32) -> Result<bool, TextError> {
+        match value {
+            "true" => Ok(true),
+            "false" => Ok(false),
+            other => Err(TextError::expected(format!("expected bool for '{key}', got '{other}'"), TextSpan::at(line_no, 1), "true|false")),
+        }
+    }
+
+    /// 🔢 Prints an `f64` via Rust's shortest round-trippable `Display` form (`"0"`, not `"0.0"`).
+    fn fmt_num(value: f64) -> String {
+        value.to_string()
+    }
+    //#endregion Lexer
+
+    //#region Composite
+    /// 📐 `x,y;x,y;...` polygon vertex list, or `-` for empty.
+    fn print_points(points: &[[f64; 2]]) -> String {
+        if points.is_empty() {
+            return "-".to_string();
+        }
+        points.iter().map(|p| format!("{},{}", fmt_num(p[0]), fmt_num(p[1]))).collect::<Vec<_>>().join(";")
+    }
+
+    fn parse_points(spec: &str, key: &str, line_no: u32) -> Result<Vec<[f64; 2]>, TextError> {
+        if spec == "-" {
+            return Ok(Vec::new());
+        }
+        spec.split(';')
+            .map(|pair| {
+                let (x, y) = pair.split_once(',').ok_or_else(|| TextError::new(format!("expected '{key}' point 'x,y', got '{pair}'"), TextSpan::at(line_no, 1)))?;
+                Ok([parse_f64(x, key, line_no)?, parse_f64(y, key, line_no)?])
+            })
+            .collect()
+    }
+
+    /// 🕳️ `points|points|...` hole list (each hole itself a `print_points` polygon), or `-` for none.
+    fn print_holes(holes: &[Vec<[f64; 2]>]) -> String {
+        if holes.is_empty() {
+            return "-".to_string();
+        }
+        holes.iter().map(|hole| print_points(hole)).collect::<Vec<_>>().join("|")
+    }
+
+    fn parse_holes(spec: &str, key: &str, line_no: u32) -> Result<Vec<Vec<[f64; 2]>>, TextError> {
+        if spec == "-" {
+            return Ok(Vec::new());
+        }
+        spec.split('|').map(|hole| parse_points(hole, key, line_no)).collect()
+    }
+
+    fn dof_name(dof: Dof) -> &'static str {
+        match dof {
+            Dof::Tx => "Tx",
+            Dof::Ty => "Ty",
+            Dof::Tz => "Tz",
+            Dof::Rx => "Rx",
+            Dof::Ry => "Ry",
+            Dof::Rz => "Rz",
+        }
+    }
+
+    fn parse_dof(token: &str, line_no: u32) -> Result<Dof, TextError> {
+        match token {
+            "Tx" => Ok(Dof::Tx),
+            "Ty" => Ok(Dof::Ty),
+            "Tz" => Ok(Dof::Tz),
+            "Rx" => Ok(Dof::Rx),
+            "Ry" => Ok(Dof::Ry),
+            "Rz" => Ok(Dof::Rz),
+            other => Err(TextError::expected(format!("unknown dof '{other}'"), TextSpan::at(line_no, 1), "Tx|Ty|Tz|Rx|Ry|Rz")),
+        }
+    }
+
+    fn print_dofs(dofs: &[Dof]) -> String {
+        if dofs.is_empty() {
+            return "-".to_string();
+        }
+        dofs.iter().map(|dof| dof_name(*dof)).collect::<Vec<_>>().join(",")
+    }
+
+    fn parse_dofs(spec: &str, line_no: u32) -> Result<Vec<Dof>, TextError> {
+        if spec == "-" {
+            return Ok(Vec::new());
+        }
+        spec.split(',').map(|token| parse_dof(token, line_no)).collect()
+    }
+
+    /// 🧮 `id:factor,id:factor,...` combination term list, or `-` for empty.
+    fn print_terms(terms: &[(String, f64)]) -> String {
+        if terms.is_empty() {
+            return "-".to_string();
+        }
+        terms.iter().map(|(id, factor)| format!("{id}:{}", fmt_num(*factor))).collect::<Vec<_>>().join(",")
+    }
+
+    fn parse_terms(spec: &str, line_no: u32) -> Result<Vec<(String, f64)>, TextError> {
+        if spec == "-" {
+            return Ok(Vec::new());
+        }
+        spec.split(',')
+            .map(|entry| {
+                let (id, factor) = entry.split_once(':').ok_or_else(|| TextError::new(format!("expected 'id:factor' term, got '{entry}'"), TextSpan::at(line_no, 1)))?;
+                Ok((id.to_string(), parse_f64(factor, "term.factor", line_no)?))
+            })
+            .collect()
+    }
+
+    fn next_part<'a>(parts: &mut impl Iterator<Item = &'a str>, what: &str, line_no: u32) -> Result<&'a str, TextError> {
+        parts.next().ok_or_else(|| TextError::new(format!("expected {what}"), TextSpan::at(line_no, 1)))
+    }
+
+    /// 🏋️ One `FemLoad` as `kind:id:...kind-specific fields...` — see `parse_load` for each kind's shape.
+    fn print_load(load: &FemLoad) -> String {
+        match load {
+            FemLoad::Nodal { id, node_id, dof, value } => format!("nodal:{id}:{node_id}:{}:{}", dof_name(*dof), fmt_num(*value)),
+            FemLoad::MemberUdl { id, element_id, wx, wy } => format!("memberUdl:{id}:{element_id}:{}:{}", fmt_num(*wx), fmt_num(*wy)),
+            FemLoad::Area { id, region_id, pressure } => format!("area:{id}:{region_id}:{}", fmt_num(*pressure)),
+        }
+    }
+
+    fn parse_load(token: &str, line_no: u32) -> Result<FemLoad, TextError> {
+        let mut parts = token.split(':');
+        let kind = next_part(&mut parts, "a load kind", line_no)?;
+        match kind {
+            "nodal" => {
+                let id = next_part(&mut parts, "load id", line_no)?.to_string();
+                let node_id = next_part(&mut parts, "load node id", line_no)?.to_string();
+                let dof = parse_dof(next_part(&mut parts, "load dof", line_no)?, line_no)?;
+                let value = parse_f64(next_part(&mut parts, "load value", line_no)?, "value", line_no)?;
+                Ok(FemLoad::Nodal { id, node_id, dof, value })
+            }
+            "memberUdl" => {
+                let id = next_part(&mut parts, "load id", line_no)?.to_string();
+                let element_id = next_part(&mut parts, "load element id", line_no)?.to_string();
+                let wx = parse_f64(next_part(&mut parts, "load wx", line_no)?, "wx", line_no)?;
+                let wy = parse_f64(next_part(&mut parts, "load wy", line_no)?, "wy", line_no)?;
+                Ok(FemLoad::MemberUdl { id, element_id, wx, wy })
+            }
+            "area" => {
+                let id = next_part(&mut parts, "load id", line_no)?.to_string();
+                let region_id = next_part(&mut parts, "load region id", line_no)?.to_string();
+                let pressure = parse_f64(next_part(&mut parts, "load pressure", line_no)?, "pressure", line_no)?;
+                Ok(FemLoad::Area { id, region_id, pressure })
+            }
+            other => Err(TextError::expected(format!("unknown load kind '{other}'"), TextSpan::at(line_no, 1), "nodal|memberUdl|area")),
+        }
+    }
+
+    /// 🏋️ `load|load|...` load list, or `-` for empty.
+    fn print_loads(loads: &[FemLoad]) -> String {
+        if loads.is_empty() {
+            return "-".to_string();
+        }
+        loads.iter().map(print_load).collect::<Vec<_>>().join("|")
+    }
+
+    fn parse_loads(spec: &str, line_no: u32) -> Result<Vec<FemLoad>, TextError> {
+        if spec == "-" {
+            return Ok(Vec::new());
+        }
+        spec.split('|').map(|token| parse_load(token, line_no)).collect()
+    }
+    //#endregion Composite
+
+    //#region Entities
+    fn print_node_fields(node: &FemNode) -> String {
+        format!("id={} x={} y={}", node.id, fmt_num(node.x), fmt_num(node.y))
+    }
+
+    fn parse_node(fields: &HashMap<String, String>, line_no: u32) -> Result<FemNode, TextError> {
+        Ok(FemNode { id: field(fields, "id", line_no)?.to_string(), x: parse_f64(field(fields, "x", line_no)?, "x", line_no)?, y: parse_f64(field(fields, "y", line_no)?, "y", line_no)? })
+    }
+
+    fn element_kind(element: &FemElement) -> &'static str {
+        match element {
+            FemElement::Bar { .. } => "bar",
+            FemElement::Beam { .. } => "beam",
+        }
+    }
+
+    fn print_element_fields(element: &FemElement) -> String {
+        let (id, start, end, material_id, section_id) = match element {
+            FemElement::Bar { id, start, end, material_id, section_id } | FemElement::Beam { id, start, end, material_id, section_id } => (id, start, end, material_id, section_id),
+        };
+        format!("id={id} start={start} end={end} material={material_id} section={section_id}")
+    }
+
+    fn parse_element(kind: &str, fields: &HashMap<String, String>, line_no: u32) -> Result<FemElement, TextError> {
+        let id = field(fields, "id", line_no)?.to_string();
+        let start = field(fields, "start", line_no)?.to_string();
+        let end = field(fields, "end", line_no)?.to_string();
+        let material_id = field(fields, "material", line_no)?.to_string();
+        let section_id = field(fields, "section", line_no)?.to_string();
+        match kind {
+            "bar" => Ok(FemElement::Bar { id, start, end, material_id, section_id }),
+            "beam" => Ok(FemElement::Beam { id, start, end, material_id, section_id }),
+            other => Err(TextError::expected(format!("unknown element kind '{other}'"), TextSpan::at(line_no, 1), "bar|beam")),
+        }
+    }
+
+    fn print_material_fields(material: &FemMaterial) -> String {
+        format!("id={} e={} nu={} rho={}", material.id, fmt_num(material.e), fmt_num(material.nu), fmt_num(material.rho))
+    }
+
+    fn parse_material(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemMaterial, TextError> {
+        Ok(FemMaterial {
+            id: field(fields, "id", line_no)?.to_string(),
+            name,
+            e: parse_f64(field(fields, "e", line_no)?, "e", line_no)?,
+            nu: parse_f64(field(fields, "nu", line_no)?, "nu", line_no)?,
+            rho: parse_f64(field(fields, "rho", line_no)?, "rho", line_no)?,
+        })
+    }
+
+    fn print_section_fields(section: &FemSection) -> String {
+        format!("id={} area={} iy={}", section.id, fmt_num(section.area), fmt_num(section.iy))
+    }
+
+    fn parse_section(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemSection, TextError> {
+        Ok(FemSection { id: field(fields, "id", line_no)?.to_string(), name, area: parse_f64(field(fields, "area", line_no)?, "area", line_no)?, iy: parse_f64(field(fields, "iy", line_no)?, "iy", line_no)? })
+    }
+
+    fn print_support_fields(support: &FemSupport) -> String {
+        format!("id={} node={} fixed={}", support.id, support.node_id, print_dofs(&support.fixed))
+    }
+
+    fn parse_support(fields: &HashMap<String, String>, line_no: u32) -> Result<FemSupport, TextError> {
+        Ok(FemSupport { id: field(fields, "id", line_no)?.to_string(), node_id: field(fields, "node", line_no)?.to_string(), fixed: parse_dofs(field(fields, "fixed", line_no)?, line_no)? })
+    }
+
+    fn print_region_fields(region: &FemRegion) -> String {
+        format!(
+            "id={} material={} thickness={} mesh={} outline={} holes={}",
+            region.id,
+            region.material_id,
+            fmt_num(region.thickness),
+            fmt_num(region.mesh_size),
+            print_points(&region.outline),
+            print_holes(&region.holes)
+        )
+    }
+
+    fn parse_region(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemRegion, TextError> {
+        Ok(FemRegion {
+            id: field(fields, "id", line_no)?.to_string(),
+            name,
+            outline: parse_points(field(fields, "outline", line_no)?, "outline", line_no)?,
+            holes: parse_holes(field(fields, "holes", line_no)?, "holes", line_no)?,
+            thickness: parse_f64(field(fields, "thickness", line_no)?, "thickness", line_no)?,
+            material_id: field(fields, "material", line_no)?.to_string(),
+            mesh_size: parse_f64(field(fields, "mesh", line_no)?, "mesh", line_no)?,
+        })
+    }
+
+    fn print_load_case_fields(load_case: &FemLoadCase) -> String {
+        format!("id={} selfweight={} loads={}", load_case.id, load_case.self_weight, print_loads(&load_case.loads))
+    }
+
+    fn parse_load_case(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemLoadCase, TextError> {
+        Ok(FemLoadCase {
+            id: field(fields, "id", line_no)?.to_string(),
+            name,
+            loads: parse_loads(field(fields, "loads", line_no)?, line_no)?,
+            self_weight: parse_bool(field(fields, "selfweight", line_no)?, "selfweight", line_no)?,
+        })
+    }
+
+    fn print_combination_fields(combination: &FemCombination) -> String {
+        format!("id={} terms={}", combination.id, print_terms(&combination.terms))
+    }
+
+    fn parse_combination(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemCombination, TextError> {
+        Ok(FemCombination { id: field(fields, "id", line_no)?.to_string(), name, terms: parse_terms(field(fields, "terms", line_no)?, line_no)? })
+    }
+    //#endregion Entities
+
+    //#region Document
+    /// 📤 Prints a full `.fem2d` document: nodes, elements (bar/beam, own line-kind per variant),
+    /// regions, materials, sections, supports, load cases, combinations, one `@analysis` line and one
+    /// `@camera` line — field order mirrors `Fem2dDocument`'s own struct field order.
+    pub fn print_document(doc: &Fem2dDocument) -> String {
+        let mut lines = Vec::new();
+        for node in &doc.nodes {
+            lines.push(format!("@node {}", print_node_fields(node)));
+        }
+        for element in &doc.elements {
+            lines.push(format!("@{} {}", element_kind(element), print_element_fields(element)));
+        }
+        for region in &doc.regions {
+            lines.push(format!("@region {} \"{}\"", print_region_fields(region), escape_text(&region.name)));
+        }
+        for material in &doc.materials {
+            lines.push(format!("@material {} \"{}\"", print_material_fields(material), escape_text(&material.name)));
+        }
+        for section in &doc.sections {
+            lines.push(format!("@section {} \"{}\"", print_section_fields(section), escape_text(&section.name)));
+        }
+        for support in &doc.supports {
+            lines.push(format!("@support {}", print_support_fields(support)));
+        }
+        for load_case in &doc.load_cases {
+            lines.push(format!("@loadcase {} \"{}\"", print_load_case_fields(load_case), escape_text(&load_case.name)));
+        }
+        for combination in &doc.combinations {
+            lines.push(format!("@combination {} \"{}\"", print_combination_fields(combination), escape_text(&combination.name)));
+        }
+        lines.push(format!("@analysis modal={} buckling={} scale={}", doc.analysis.modal_count, doc.analysis.buckling_count, fmt_num(doc.analysis.deformation_scale)));
+        lines.push(format!("@camera x={} y={} zoom={}", fmt_num(doc.camera.x), fmt_num(doc.camera.y), fmt_num(doc.camera.zoom)));
+        lines.join("\n")
+    }
+
+    /// 📥 Parses a full `.fem2d` document back into a `Fem2dDocument` (see `print_document`). Every
+    /// line kind is order-independent (dispatched purely by its `@marker`), so a hand-edited fixture may
+    /// interleave entity kinds freely.
+    pub fn parse_document(text: &str) -> Result<Fem2dDocument, TextError> {
+        let mut doc = Fem2dDocument::default();
+        for (index, raw_line) in text.lines().enumerate() {
+            let line_no = index as u32 + 1;
+            let line = raw_line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let parsed = parse_kv_line(line, line_no)?;
+            match parsed.marker.as_str() {
+                "@node" => doc.nodes.push(parse_node(&parsed.fields, line_no)?),
+                "@bar" | "@beam" => doc.elements.push(parse_element(&parsed.marker[1..], &parsed.fields, line_no)?),
+                "@region" => doc.regions.push(parse_region(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
+                "@material" => doc.materials.push(parse_material(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
+                "@section" => doc.sections.push(parse_section(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
+                "@support" => doc.supports.push(parse_support(&parsed.fields, line_no)?),
+                "@loadcase" => doc.load_cases.push(parse_load_case(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
+                "@combination" => doc.combinations.push(parse_combination(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
+                "@analysis" => {
+                    doc.analysis = FemAnalysisSettings {
+                        modal_count: parse_usize(field(&parsed.fields, "modal", line_no)?, "modal", line_no)?,
+                        buckling_count: parse_usize(field(&parsed.fields, "buckling", line_no)?, "buckling", line_no)?,
+                        deformation_scale: parse_f64(field(&parsed.fields, "scale", line_no)?, "scale", line_no)?,
+                    };
+                }
+                "@camera" => {
+                    doc.camera = FemCamera {
+                        x: parse_f64(field(&parsed.fields, "x", line_no)?, "x", line_no)?,
+                        y: parse_f64(field(&parsed.fields, "y", line_no)?, "y", line_no)?,
+                        zoom: parse_f64(field(&parsed.fields, "zoom", line_no)?, "zoom", line_no)?,
+                    };
+                }
+                other => return Err(TextError::expected(format!("unknown fem2d dsl marker '{other}'"), TextSpan::at(line_no, 1), "@node|@bar|@beam|@region|@material|@section|@support|@loadcase|@combination|@analysis|@camera")),
+            }
+        }
+        Ok(doc)
+    }
+    //#endregion Document
+
+    //#region Operation
+    /// 📤 Prints a single one-line `Fem2dOperation` — every `Set*` variant reuses the SAME
+    /// `print_*_fields` helper its matching `@marker` document line uses, plus an `index=` field; a
+    /// `setDocument` embeds `print_document`'s full multi-line output escaped into one quoted field.
+    pub fn print_operation(operation: &Fem2dOperation) -> String {
+        match operation {
+            Fem2dOperation::SetNode { index, node } => format!("setNode index={index} {}", print_node_fields(node)),
+            Fem2dOperation::RemoveNode { id } => format!("removeNode id={id}"),
+            Fem2dOperation::SetElement { index, element } => format!("setElement index={index} kind={} {}", element_kind(element), print_element_fields(element)),
+            Fem2dOperation::RemoveElement { id } => format!("removeElement id={id}"),
+            Fem2dOperation::SetMaterial { index, material } => format!("setMaterial index={index} {} \"{}\"", print_material_fields(material), escape_text(&material.name)),
+            Fem2dOperation::RemoveMaterial { id } => format!("removeMaterial id={id}"),
+            Fem2dOperation::SetSection { index, section } => format!("setSection index={index} {} \"{}\"", print_section_fields(section), escape_text(&section.name)),
+            Fem2dOperation::RemoveSection { id } => format!("removeSection id={id}"),
+            Fem2dOperation::SetSupport { index, support } => format!("setSupport index={index} {}", print_support_fields(support)),
+            Fem2dOperation::RemoveSupport { id } => format!("removeSupport id={id}"),
+            Fem2dOperation::SetLoadCase { index, load_case } => format!("setLoadCase index={index} {} \"{}\"", print_load_case_fields(load_case), escape_text(&load_case.name)),
+            Fem2dOperation::RemoveLoadCase { id } => format!("removeLoadCase id={id}"),
+            Fem2dOperation::SetRegion { index, region } => format!("setRegion index={index} {} \"{}\"", print_region_fields(region), escape_text(&region.name)),
+            Fem2dOperation::RemoveRegion { id } => format!("removeRegion id={id}"),
+            Fem2dOperation::SetCombination { index, combination } => format!("setCombination index={index} {} \"{}\"", print_combination_fields(combination), escape_text(&combination.name)),
+            Fem2dOperation::RemoveCombination { id } => format!("removeCombination id={id}"),
+            Fem2dOperation::SetAnalysisSettings { settings } => format!("setAnalysisSettings modal={} buckling={} scale={}", settings.modal_count, settings.buckling_count, fmt_num(settings.deformation_scale)),
+            Fem2dOperation::SetCamera { camera } => format!("setCamera x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
+            Fem2dOperation::SetDocument { document } => format!("setDocument \"{}\"", escape_text(&print_document(document))),
+        }
+    }
+
+    /// 📥 Parses a single one-line `Fem2dOperation` (see `print_operation`). Always parsed as "line 1" —
+    /// the caller (`vcs::parse_document_text`) remaps the error span onto the op log's real line number.
+    pub fn parse_operation(line: &str) -> Result<Fem2dOperation, TextError> {
+        let parsed = parse_kv_line(line, 1)?;
+        match parsed.marker.as_str() {
+            "setNode" => Ok(Fem2dOperation::SetNode { index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?, node: parse_node(&parsed.fields, 1)? }),
+            "removeNode" => Ok(Fem2dOperation::RemoveNode { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setElement" => Ok(Fem2dOperation::SetElement {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                element: parse_element(field(&parsed.fields, "kind", 1)?, &parsed.fields, 1)?,
+            }),
+            "removeElement" => Ok(Fem2dOperation::RemoveElement { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setMaterial" => Ok(Fem2dOperation::SetMaterial {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                material: parse_material(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
+            }),
+            "removeMaterial" => Ok(Fem2dOperation::RemoveMaterial { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setSection" => Ok(Fem2dOperation::SetSection {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                section: parse_section(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
+            }),
+            "removeSection" => Ok(Fem2dOperation::RemoveSection { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setSupport" => Ok(Fem2dOperation::SetSupport { index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?, support: parse_support(&parsed.fields, 1)? }),
+            "removeSupport" => Ok(Fem2dOperation::RemoveSupport { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setLoadCase" => Ok(Fem2dOperation::SetLoadCase {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                load_case: parse_load_case(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
+            }),
+            "removeLoadCase" => Ok(Fem2dOperation::RemoveLoadCase { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setRegion" => Ok(Fem2dOperation::SetRegion {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                region: parse_region(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
+            }),
+            "removeRegion" => Ok(Fem2dOperation::RemoveRegion { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setCombination" => Ok(Fem2dOperation::SetCombination {
+                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
+                combination: parse_combination(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
+            }),
+            "removeCombination" => Ok(Fem2dOperation::RemoveCombination { id: field(&parsed.fields, "id", 1)?.to_string() }),
+            "setAnalysisSettings" => Ok(Fem2dOperation::SetAnalysisSettings {
+                settings: FemAnalysisSettings {
+                    modal_count: parse_usize(field(&parsed.fields, "modal", 1)?, "modal", 1)?,
+                    buckling_count: parse_usize(field(&parsed.fields, "buckling", 1)?, "buckling", 1)?,
+                    deformation_scale: parse_f64(field(&parsed.fields, "scale", 1)?, "scale", 1)?,
+                },
+            }),
+            "setCamera" => Ok(Fem2dOperation::SetCamera {
+                camera: FemCamera { x: parse_f64(field(&parsed.fields, "x", 1)?, "x", 1)?, y: parse_f64(field(&parsed.fields, "y", 1)?, "y", 1)?, zoom: parse_f64(field(&parsed.fields, "zoom", 1)?, "zoom", 1)? },
+            }),
+            "setDocument" => {
+                let text = parsed.text.ok_or_else(|| TextError::new("setDocument requires a quoted document field", TextSpan::at(1, 1)))?;
+                Ok(Fem2dOperation::SetDocument { document: parse_document(&text)? })
+            }
+            other => Err(TextError::expected(
+                format!("unknown fem2d operation '{other}'"),
+                TextSpan::at(1, 1),
+                "setNode|removeNode|setElement|removeElement|setMaterial|removeMaterial|setSection|removeSection|setSupport|removeSupport|setLoadCase|removeLoadCase|setRegion|removeRegion|setCombination|removeCombination|setAnalysisSettings|setCamera|setDocument",
+            )),
+        }
+    }
+    //#endregion Operation
+}
+
+impl vcs::DocumentDsl for Fem2dDocument {
+    const EXTENSION: &'static str = "fem2d";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        fem2d_dsl::parse_document(text)
+    }
+
+    fn print_dsl(&self) -> String {
+        fem2d_dsl::print_document(self)
+    }
+}
+// #endregion 🔖Dsl
+
+// #region 🔖OpText
+impl vcs::OpText for Fem2dOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        fem2d_dsl::parse_operation(line)
+    }
+
+    fn print_op(&self) -> String {
+        fem2d_dsl::print_operation(self)
+    }
+}
+// #endregion 🔖OpText
+
 // #region 🔖Bridge
 
 // #region 🔖Errors
@@ -1404,8 +1998,8 @@ mod tests {
     fn example_fixture_parses_and_solves() {
         let json = include_str!("../example/default.fem2d.json");
         let doc: Fem2dDocument = serde_json::from_str(json).expect("example fixture parses");
-        assert_eq!(doc.nodes.len(), 8);
-        assert_eq!(doc.elements.len(), 3);
+        assert_eq!(doc.nodes.len(), 12);
+        assert_eq!(doc.elements.len(), 9);
         assert_eq!(doc.regions.len(), 1);
         assert_eq!(doc.combinations.len(), 1);
 

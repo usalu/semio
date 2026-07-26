@@ -1,8 +1,0 @@
-{
-  "schema": "writer.document",
-  "id": "jack",
-  "languageId": "jack",
-  "uri": "writer://jack",
-  "text": "MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name",
-  "camera": { "x": 0, "y": 0, "zoom": 1 }
-}

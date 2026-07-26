@@ -1,7 +1,7 @@
 #!/usr/bin/env bun
 /** 🧭 Compose.Rhino build/test router: `bun ./script.ts build|test`. */
 import { spawnSync } from "node:child_process";
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 class BuildScript extends BundleScript {
   run(): void {
@@ -19,7 +19,7 @@ class TestScript extends BundleScript {
     const { level, rest } = resolveTestLevel(segments);
     await runTestBudgeted(
       "dotnet",
-      ["test", "../Compose.Rhino.Tests/cs/Compose.Rhino.Tests.csproj", "-c", "UnitTest", ...dotnetLevelArgs(level), ...rest],
+      ["test", "../Compose.Rhino.Tests/cs/Compose.Rhino.Tests.csproj", "-c", "UnitTest", ...dotnetLevelArgs(level), ...dotnetCoverageArgs(this.repoRoot, this.root), ...rest],
       { cwd: this.root },
     );
   }

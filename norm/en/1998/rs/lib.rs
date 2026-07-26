@@ -840,6 +840,125 @@ impl NormFamily for En1998Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1998 seismic `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1998";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            seismic_zone: norm_core::dsl_kv::scalar(&fields, "seismic_zone")?,
+            ground_type: norm_core::dsl_kv::scalar(&fields, "ground_type")?,
+            importance_class: norm_core::dsl_kv::scalar(&fields, "importance_class")?,
+            structural_system: norm_core::dsl_kv::scalar(&fields, "structural_system")?,
+            t1_s: norm_core::dsl_kv::scalar(&fields, "t1_s")?,
+            mass_t: norm_core::dsl_kv::scalar(&fields, "mass_t")?,
+            v_rd_kn: norm_core::dsl_kv::scalar(&fields, "v_rd_kn")?,
+            drift_mm: norm_core::dsl_kv::scalar(&fields, "drift_mm")?,
+            height_m: norm_core::dsl_kv::scalar(&fields, "height_m")?,
+            multiple_resisting_systems: norm_core::dsl_kv::scalar(&fields, "multiple_resisting_systems")?,
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            en_a_gr: norm_core::dsl_kv::scalar(&fields, "en_a_gr")?,
+            en_ground_type: norm_core::dsl_kv::scalar(&fields, "en_ground_type")?,
+            en_spectrum_type: norm_core::dsl_kv::scalar(&fields, "en_spectrum_type")?,
+            period_ratio: norm_core::dsl_kv::scalar(&fields, "period_ratio")?,
+            bridge_v_rd_kn: norm_core::dsl_kv::scalar(&fields, "bridge_v_rd_kn")?,
+            bearing_d_ed_mm: norm_core::dsl_kv::scalar(&fields, "bearing_d_ed_mm")?,
+            bearing_d_rd_mm: norm_core::dsl_kv::scalar(&fields, "bearing_d_rd_mm")?,
+            retrofit_knowledge_level: norm_core::dsl_kv::scalar(&fields, "retrofit_knowledge_level")?,
+            retrofit_limit_state: norm_core::dsl_kv::scalar(&fields, "retrofit_limit_state")?,
+            retrofit_e_d_kn: norm_core::dsl_kv::scalar(&fields, "retrofit_e_d_kn")?,
+            retrofit_r_k_kn: norm_core::dsl_kv::scalar(&fields, "retrofit_r_k_kn")?,
+            retrofit_gamma_el: norm_core::dsl_kv::scalar(&fields, "retrofit_gamma_el")?,
+            silo_height_m: norm_core::dsl_kv::scalar(&fields, "silo_height_m")?,
+            silo_radius_m: norm_core::dsl_kv::scalar(&fields, "silo_radius_m")?,
+            silo_n_rd_kn: norm_core::dsl_kv::scalar(&fields, "silo_n_rd_kn")?,
+            silo_v_ed_kn: norm_core::dsl_kv::scalar(&fields, "silo_v_ed_kn")?,
+            silo_v_rd_kn: norm_core::dsl_kv::scalar(&fields, "silo_v_rd_kn")?,
+            silo_q_nominal: norm_core::dsl_kv::scalar(&fields, "silo_q_nominal")?,
+            tank_height_m: norm_core::dsl_kv::scalar(&fields, "tank_height_m")?,
+            tank_radius_m: norm_core::dsl_kv::scalar(&fields, "tank_radius_m")?,
+            tank_mass_t: norm_core::dsl_kv::scalar(&fields, "tank_mass_t")?,
+            tank_v_rd_kn: norm_core::dsl_kv::scalar(&fields, "tank_v_rd_kn")?,
+            tower_m_ed_knm: norm_core::dsl_kv::scalar(&fields, "tower_m_ed_knm")?,
+            tower_m_rd_knm: norm_core::dsl_kv::scalar(&fields, "tower_m_rd_knm")?,
+            tower_is_chimney: norm_core::dsl_kv::scalar(&fields, "tower_is_chimney")?,
+            tower_q_nominal: norm_core::dsl_kv::scalar(&fields, "tower_q_nominal")?,
+            tower_mass_t: norm_core::dsl_kv::scalar(&fields, "tower_mass_t")?,
+            foundation_area_m2: norm_core::dsl_kv::scalar(&fields, "foundation_area_m2")?,
+            foundation_p_rd_kpa: norm_core::dsl_kv::scalar(&fields, "foundation_p_rd_kpa")?,
+            foundation_h_ed_kn: norm_core::dsl_kv::scalar(&fields, "foundation_h_ed_kn")?,
+            foundation_h_rd_kn: norm_core::dsl_kv::scalar(&fields, "foundation_h_rd_kn")?,
+            k_foundation: norm_core::dsl_kv::scalar(&fields, "k_foundation")?,
+            k_soil: norm_core::dsl_kv::scalar(&fields, "k_soil")?,
+            wall_height_m: norm_core::dsl_kv::scalar(&fields, "wall_height_m")?,
+            wall_phi_deg: norm_core::dsl_kv::scalar(&fields, "wall_phi_deg")?,
+            wall_soil_gamma_kn_m3: norm_core::dsl_kv::scalar(&fields, "wall_soil_gamma_kn_m3")?,
+            wall_r: norm_core::dsl_kv::scalar(&fields, "wall_r")?,
+            wall_h_rd_kn: norm_core::dsl_kv::scalar(&fields, "wall_h_rd_kn")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("seismic_zone", &self.seismic_zone),
+            norm_core::dsl_kv::line("ground_type", &self.ground_type),
+            norm_core::dsl_kv::line("importance_class", &self.importance_class),
+            norm_core::dsl_kv::line("structural_system", &self.structural_system),
+            norm_core::dsl_kv::line("t1_s", &self.t1_s),
+            norm_core::dsl_kv::line("mass_t", &self.mass_t),
+            norm_core::dsl_kv::line("v_rd_kn", &self.v_rd_kn),
+            norm_core::dsl_kv::line("drift_mm", &self.drift_mm),
+            norm_core::dsl_kv::line("height_m", &self.height_m),
+            norm_core::dsl_kv::line("multiple_resisting_systems", &self.multiple_resisting_systems),
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("en_a_gr", &self.en_a_gr),
+            norm_core::dsl_kv::line("en_ground_type", &self.en_ground_type),
+            norm_core::dsl_kv::line("en_spectrum_type", &self.en_spectrum_type),
+            norm_core::dsl_kv::line("period_ratio", &self.period_ratio),
+            norm_core::dsl_kv::line("bridge_v_rd_kn", &self.bridge_v_rd_kn),
+            norm_core::dsl_kv::line("bearing_d_ed_mm", &self.bearing_d_ed_mm),
+            norm_core::dsl_kv::line("bearing_d_rd_mm", &self.bearing_d_rd_mm),
+            norm_core::dsl_kv::line("retrofit_knowledge_level", &self.retrofit_knowledge_level),
+            norm_core::dsl_kv::line("retrofit_limit_state", &self.retrofit_limit_state),
+            norm_core::dsl_kv::line("retrofit_e_d_kn", &self.retrofit_e_d_kn),
+            norm_core::dsl_kv::line("retrofit_r_k_kn", &self.retrofit_r_k_kn),
+            norm_core::dsl_kv::line("retrofit_gamma_el", &self.retrofit_gamma_el),
+            norm_core::dsl_kv::line("silo_height_m", &self.silo_height_m),
+            norm_core::dsl_kv::line("silo_radius_m", &self.silo_radius_m),
+            norm_core::dsl_kv::line("silo_n_rd_kn", &self.silo_n_rd_kn),
+            norm_core::dsl_kv::line("silo_v_ed_kn", &self.silo_v_ed_kn),
+            norm_core::dsl_kv::line("silo_v_rd_kn", &self.silo_v_rd_kn),
+            norm_core::dsl_kv::line("silo_q_nominal", &self.silo_q_nominal),
+            norm_core::dsl_kv::line("tank_height_m", &self.tank_height_m),
+            norm_core::dsl_kv::line("tank_radius_m", &self.tank_radius_m),
+            norm_core::dsl_kv::line("tank_mass_t", &self.tank_mass_t),
+            norm_core::dsl_kv::line("tank_v_rd_kn", &self.tank_v_rd_kn),
+            norm_core::dsl_kv::line("tower_m_ed_knm", &self.tower_m_ed_knm),
+            norm_core::dsl_kv::line("tower_m_rd_knm", &self.tower_m_rd_knm),
+            norm_core::dsl_kv::line("tower_is_chimney", &self.tower_is_chimney),
+            norm_core::dsl_kv::line("tower_q_nominal", &self.tower_q_nominal),
+            norm_core::dsl_kv::line("tower_mass_t", &self.tower_mass_t),
+            norm_core::dsl_kv::line("foundation_area_m2", &self.foundation_area_m2),
+            norm_core::dsl_kv::line("foundation_p_rd_kpa", &self.foundation_p_rd_kpa),
+            norm_core::dsl_kv::line("foundation_h_ed_kn", &self.foundation_h_ed_kn),
+            norm_core::dsl_kv::line("foundation_h_rd_kn", &self.foundation_h_rd_kn),
+            norm_core::dsl_kv::line("k_foundation", &self.k_foundation),
+            norm_core::dsl_kv::line("k_soil", &self.k_soil),
+            norm_core::dsl_kv::line("wall_height_m", &self.wall_height_m),
+            norm_core::dsl_kv::line("wall_phi_deg", &self.wall_phi_deg),
+            norm_core::dsl_kv::line("wall_soil_gamma_kn_m3", &self.wall_soil_gamma_kn_m3),
+            norm_core::dsl_kv::line("wall_r", &self.wall_r),
+            norm_core::dsl_kv::line("wall_h_rd_kn", &self.wall_h_rd_kn),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1007,5 +1126,28 @@ mod tests {
     fn tower_behaviour_factor_capped_by_type() {
         assert!((part_6::tower_behaviour_factor(3.0, true) - 1.5).abs() < 1e-9);
         assert!((part_6::tower_behaviour_factor(3.0, false) - 2.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1998/v1", "en1998", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

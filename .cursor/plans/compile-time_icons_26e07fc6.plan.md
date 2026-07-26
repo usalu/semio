@@ -7,19 +7,19 @@ todos:
     status: completed
   - id: theme-resolver
     content: Add UiTheme.icons overrides + resolveCatalogIconSvg / resolveMetabolismIconSvg; wire React, board lookup, wgpu atlas upsert
-    status: in_progress
+    status: completed
   - id: typed-apis
     content: Change all chrome iconId fields and builders to IconName; split Icon catalog/themed; remove in-ICONS fallbacks
-    status: pending
+    status: completed
   - id: migrate-fixtures
     content: Replace fake icon.* ids with real catalog names; update golden JSON and harnesses
-    status: pending
+    status: completed
   - id: codec-board
     content: Update encode/decode + board_resolve_icon_kind for typed catalog/themed + theme overlay
-    status: pending
+    status: completed
   - id: tests
     content: Extend existing vitest/rust tests for codegen, theme overrides, codec, and atlas
-    status: pending
+    status: completed
 isProject: false
 ---
 

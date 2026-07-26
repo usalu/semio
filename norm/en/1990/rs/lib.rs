@@ -477,6 +477,66 @@ impl NormFamily for En1990Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1990 design-basis `Document`: one line per
+/// scalar input, plus one `q_k <category> <value>` line per variable action (order-preserving) — the
+/// only collection field, so it is parsed/printed by hand instead of through `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1990";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let mut q_k = Vec::new();
+        let mut scalar_text = String::new();
+        for (index, raw_line) in text.lines().enumerate() {
+            let line_no = index as u32 + 1;
+            let trimmed = raw_line.trim();
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            if let Some(rest) = trimmed.strip_prefix("q_k ") {
+                let (category, value) = rest
+                    .rsplit_once(' ')
+                    .ok_or_else(|| vcs::TextError::new("expected 'q_k <category> <value>'", vcs::TextSpan::at(line_no, 1)))?;
+                let value: f64 = value
+                    .parse()
+                    .map_err(|_| vcs::TextError::new(format!("expected number, got '{value}'"), vcs::TextSpan::at(line_no, 1)))?;
+                q_k.push((category.to_string(), value));
+            } else {
+                scalar_text.push_str(raw_line);
+                scalar_text.push('\n');
+            }
+        }
+        let fields = norm_core::dsl_kv::parse_lines(&scalar_text)?;
+        Ok(Document {
+            g_k: norm_core::dsl_kv::scalar(&fields, "g_k")?,
+            q_k,
+            resistance_kn: norm_core::dsl_kv::scalar(&fields, "resistance_kn")?,
+            consequence_class: norm_core::dsl_kv::scalar(&fields, "consequence_class")?,
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            seismic_a_ed_kn: norm_core::dsl_kv::scalar(&fields, "seismic_a_ed_kn")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        let mut out = String::new();
+        out.push_str(&norm_core::dsl_kv::line("g_k", &self.g_k));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("resistance_kn", &self.resistance_kn));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("consequence_class", &self.consequence_class));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("annex", &self.annex));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("seismic_a_ed_kn", &self.seismic_a_ed_kn));
+        out.push('\n');
+        for (category, value) in &self.q_k {
+            out.push_str(&format!("q_k {category} {value}\n"));
+        }
+        out
+    }
+}
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -632,5 +692,30 @@ mod tests {
         assert!((de_ed - 165.0).abs() < 1e-9);
         assert!((en_ed - 155.0).abs() < 1e-9);
         assert!(de_ed > en_ed);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1990/v1", "en1990", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let mut next = Document::default();
+        next.g_k = 120.0;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: next }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

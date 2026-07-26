@@ -19,7 +19,7 @@ use std::collections::HashMap;
 use std::hash::{Hash, Hasher};
 use std::sync::atomic::{AtomicU32, Ordering};
 use std::sync::{Mutex, OnceLock};
-use vcs::CollectionOperation;
+use vcs::{CollectionOperation, DocumentDsl};
 
 //#region 🔖Constants
 const PROCESS_3D_PLAY_APP_ID: &str = "process3d-play";
@@ -35,8 +35,8 @@ const PROCESS3D_FALLBACK_MESH_KIND: &str = "box";
 const PROCESS3D_KERNEL_MEMO_CAP: usize = 128;
 const PROCESS3D_EXAMPLE_TIMBER: &str = "timber-beam-joinery";
 const PROCESS3D_EXAMPLE_PLATE: &str = "drilled-plate";
-const TIMBER_EXAMPLE_JSON: &str = include_str!("../../3d/example/timber-beam-joinery.process.json");
-const PLATE_EXAMPLE_JSON: &str = include_str!("../../3d/example/drilled-plate.process.json");
+const TIMBER_EXAMPLE_DSL: &str = include_str!("../../3d/example/timber-beam-joinery.process3d");
+const PLATE_EXAMPLE_DSL: &str = include_str!("../../3d/example/drilled-plate.process3d");
 
 static PROCESS3D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 
@@ -106,11 +106,11 @@ impl Default for Process3dRuntime {
 }
 
 fn default_document() -> process_3d::Process3dDocument {
-    serde_json::from_str(TIMBER_EXAMPLE_JSON).unwrap_or_default()
+    process_3d::Process3dDocument::parse_dsl(TIMBER_EXAMPLE_DSL).unwrap_or_default()
 }
 
 fn plate_document() -> process_3d::Process3dDocument {
-    serde_json::from_str(PLATE_EXAMPLE_JSON).unwrap_or_else(|_| default_document())
+    process_3d::Process3dDocument::parse_dsl(PLATE_EXAMPLE_DSL).unwrap_or_else(|_| default_document())
 }
 
 fn process3d_action(action: &str, args: Option<Value>) -> ActionDescriptor {

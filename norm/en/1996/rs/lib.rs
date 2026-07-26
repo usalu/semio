@@ -404,6 +404,140 @@ impl NormFamily for En1996Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1996 masonry `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv` plus three local enum `DslScalar` impls.
+/// 🧱 `class1`..`class5`.
+impl norm_core::dsl_kv::DslScalar for MasonryClass {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::Class1 => "class1".into(),
+            Self::Class2 => "class2".into(),
+            Self::Class3 => "class3".into(),
+            Self::Class4 => "class4".into(),
+            Self::Class5 => "class5".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "class1" => Ok(Self::Class1),
+            "class2" => Ok(Self::Class2),
+            "class3" => Ok(Self::Class3),
+            "class4" => Ok(Self::Class4),
+            "class5" => Ok(Self::Class5),
+            other => Err(format!("expected class1..class5, got '{other}'")),
+        }
+    }
+}
+
+/// 🌦️ `mx1`..`mx5`.
+impl norm_core::dsl_kv::DslScalar for part_2::ExposureClass {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::Mx1 => "mx1".into(),
+            Self::Mx2 => "mx2".into(),
+            Self::Mx3 => "mx3".into(),
+            Self::Mx4 => "mx4".into(),
+            Self::Mx5 => "mx5".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "mx1" => Ok(Self::Mx1),
+            "mx2" => Ok(Self::Mx2),
+            "mx3" => Ok(Self::Mx3),
+            "mx4" => Ok(Self::Mx4),
+            "mx5" => Ok(Self::Mx5),
+            other => Err(format!("expected mx1..mx5, got '{other}'")),
+        }
+    }
+}
+
+/// 🧪 `m1`/`m2_5`/`m5`/`m10`/`m20`.
+impl norm_core::dsl_kv::DslScalar for part_2::MortarClass {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::M1 => "m1".into(),
+            Self::M2_5 => "m2_5".into(),
+            Self::M5 => "m5".into(),
+            Self::M10 => "m10".into(),
+            Self::M20 => "m20".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "m1" => Ok(Self::M1),
+            "m2_5" => Ok(Self::M2_5),
+            "m5" => Ok(Self::M5),
+            "m10" => Ok(Self::M10),
+            "m20" => Ok(Self::M20),
+            other => Err(format!("expected m1/m2_5/m5/m10/m20, got '{other}'")),
+        }
+    }
+}
+
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1996";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
+            n_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_ed_kn")?,
+            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
+            h_ed_kn: norm_core::dsl_kv::scalar(&fields, "h_ed_kn")?,
+            z_mm3: norm_core::dsl_kv::scalar(&fields, "z_mm3")?,
+            area_mm2: norm_core::dsl_kv::scalar(&fields, "area_mm2")?,
+            shear_area_mm2: norm_core::dsl_kv::scalar(&fields, "shear_area_mm2")?,
+            f_k_mpa: norm_core::dsl_kv::scalar(&fields, "f_k_mpa")?,
+            f_vk_mpa: norm_core::dsl_kv::scalar(&fields, "f_vk_mpa")?,
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            masonry_class: norm_core::dsl_kv::scalar(&fields, "masonry_class")?,
+            design_situation: norm_core::dsl_kv::scalar(&fields, "design_situation")?,
+            mu: norm_core::dsl_kv::scalar(&fields, "mu")?,
+            wall_thickness_mm: norm_core::dsl_kv::scalar(&fields, "wall_thickness_mm")?,
+            fire_resistance_min: norm_core::dsl_kv::scalar(&fields, "fire_resistance_min")?,
+            unit: norm_core::dsl_kv::scalar(&fields, "unit")?,
+            exposure: norm_core::dsl_kv::scalar(&fields, "exposure")?,
+            mortar: norm_core::dsl_kv::scalar(&fields, "mortar")?,
+            bed_joint_thickness_mm: norm_core::dsl_kv::scalar(&fields, "bed_joint_thickness_mm")?,
+            storeys: norm_core::dsl_kv::scalar(&fields, "storeys")?,
+            h_ef_mm: norm_core::dsl_kv::scalar(&fields, "h_ef_mm")?,
+            t_ef_mm: norm_core::dsl_kv::scalar(&fields, "t_ef_mm")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
+            norm_core::dsl_kv::line("n_ed_kn", &self.n_ed_kn),
+            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
+            norm_core::dsl_kv::line("h_ed_kn", &self.h_ed_kn),
+            norm_core::dsl_kv::line("z_mm3", &self.z_mm3),
+            norm_core::dsl_kv::line("area_mm2", &self.area_mm2),
+            norm_core::dsl_kv::line("shear_area_mm2", &self.shear_area_mm2),
+            norm_core::dsl_kv::line("f_k_mpa", &self.f_k_mpa),
+            norm_core::dsl_kv::line("f_vk_mpa", &self.f_vk_mpa),
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("masonry_class", &self.masonry_class),
+            norm_core::dsl_kv::line("design_situation", &self.design_situation),
+            norm_core::dsl_kv::line("mu", &self.mu),
+            norm_core::dsl_kv::line("wall_thickness_mm", &self.wall_thickness_mm),
+            norm_core::dsl_kv::line("fire_resistance_min", &self.fire_resistance_min),
+            norm_core::dsl_kv::line("unit", &self.unit),
+            norm_core::dsl_kv::line("exposure", &self.exposure),
+            norm_core::dsl_kv::line("mortar", &self.mortar),
+            norm_core::dsl_kv::line("bed_joint_thickness_mm", &self.bed_joint_thickness_mm),
+            norm_core::dsl_kv::line("storeys", &self.storeys),
+            norm_core::dsl_kv::line("h_ef_mm", &self.h_ef_mm),
+            norm_core::dsl_kv::line("t_ef_mm", &self.t_ef_mm),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -496,5 +630,28 @@ mod tests {
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
         assert_eq!(report.checks.len(), 8);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1996/v1", "en1996", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

@@ -763,6 +763,12 @@ export function currentStylingAppearanceName(): StylingAppearanceName {
   return "light";
 }
 
+/** @emoji 🖼 Serializes active theme icon overrides for hosts that rasterize catalog icons at runtime. */
+export function serializeThemeIconOverridesJson(): string | undefined {
+  const icons = activeUiTheme().icons;
+  return icons ? JSON.stringify(icons) : undefined;
+}
+
 /** @emoji 🎨 Serializes the active theme's board palette paints for DAG/flow canvas WASM (`CanvasPalette` JSON). Falls back to the baked semio palette before a theme is set. */
 export function serializeCanvasThemeJson(appearanceName: StylingAppearanceName = currentStylingAppearanceName()): string {
   if (_activeUiTheme) {

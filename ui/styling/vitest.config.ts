@@ -21,6 +21,7 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: ["vite-elements-assets.ts"],
+    coverage: { include: ["vite-elements-assets.ts"] },
     includeSource: ["vite-elements-assets.ts"],
     passWithNoTests: false,
   },

@@ -18,6 +18,54 @@
         "forwardAllArgs": true
       }
     },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts test quick",
+        "forwardAllArgs": true
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts test long",
+        "forwardAllArgs": true
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "inputs": [
+        "{projectRoot}/Cargo.toml",
+        "{projectRoot}/lib.rs",
+        "{projectRoot}/script.ts",
+        "{workspaceRoot}/animate/core/rs/**",
+        "{workspaceRoot}/Cargo.toml",
+        "{workspaceRoot}/Cargo.lock"
+      ],
+      "options": {
+        "cwd": "animate/video/rs",
+        "command": "bun ./script.ts test exhaustive",
+        "forwardAllArgs": true
+      }
+    },
     "render": {
       "executor": "nx:run-commands",
       "inputs": [

@@ -364,6 +364,71 @@ impl NormFamily for En1994Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1994 composite `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1994";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
+            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
+            m_pla: norm_core::dsl_kv::scalar(&fields, "m_pla")?,
+            m_pl_rd: norm_core::dsl_kv::scalar(&fields, "m_pl_rd")?,
+            eta: norm_core::dsl_kv::scalar(&fields, "eta")?,
+            v_l_rd: norm_core::dsl_kv::scalar(&fields, "v_l_rd")?,
+            insulation_thickness_mm: norm_core::dsl_kv::scalar(&fields, "insulation_thickness_mm")?,
+            fire_rating: norm_core::dsl_kv::scalar(&fields, "fire_rating")?,
+            deck_type: norm_core::dsl_kv::scalar(&fields, "deck_type")?,
+            delta_sigma_mpa: norm_core::dsl_kv::scalar(&fields, "delta_sigma_mpa")?,
+            fatigue_detail: norm_core::dsl_kv::scalar(&fields, "fatigue_detail")?,
+            d_mm: norm_core::dsl_kv::scalar(&fields, "d_mm")?,
+            h_sc_mm: norm_core::dsl_kv::scalar(&fields, "h_sc_mm")?,
+            f_ck_mpa: norm_core::dsl_kv::scalar(&fields, "f_ck_mpa")?,
+            f_u_mpa: norm_core::dsl_kv::scalar(&fields, "f_u_mpa")?,
+            e_cm_mpa: norm_core::dsl_kv::scalar(&fields, "e_cm_mpa")?,
+            v_ed_per_stud_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_per_stud_kn")?,
+            span_m: norm_core::dsl_kv::scalar(&fields, "span_m")?,
+            f_y_mpa: norm_core::dsl_kv::scalar(&fields, "f_y_mpa")?,
+            n_cycles_stud: norm_core::dsl_kv::scalar(&fields, "n_cycles_stud")?,
+            delta_tau_stud_mpa: norm_core::dsl_kv::scalar(&fields, "delta_tau_stud_mpa")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
+            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
+            norm_core::dsl_kv::line("m_pla", &self.m_pla),
+            norm_core::dsl_kv::line("m_pl_rd", &self.m_pl_rd),
+            norm_core::dsl_kv::line("eta", &self.eta),
+            norm_core::dsl_kv::line("v_l_rd", &self.v_l_rd),
+            norm_core::dsl_kv::line("insulation_thickness_mm", &self.insulation_thickness_mm),
+            norm_core::dsl_kv::line("fire_rating", &self.fire_rating),
+            norm_core::dsl_kv::line("deck_type", &self.deck_type),
+            norm_core::dsl_kv::line("delta_sigma_mpa", &self.delta_sigma_mpa),
+            norm_core::dsl_kv::line("fatigue_detail", &self.fatigue_detail),
+            norm_core::dsl_kv::line("d_mm", &self.d_mm),
+            norm_core::dsl_kv::line("h_sc_mm", &self.h_sc_mm),
+            norm_core::dsl_kv::line("f_ck_mpa", &self.f_ck_mpa),
+            norm_core::dsl_kv::line("f_u_mpa", &self.f_u_mpa),
+            norm_core::dsl_kv::line("e_cm_mpa", &self.e_cm_mpa),
+            norm_core::dsl_kv::line("v_ed_per_stud_kn", &self.v_ed_per_stud_kn),
+            norm_core::dsl_kv::line("span_m", &self.span_m),
+            norm_core::dsl_kv::line("f_y_mpa", &self.f_y_mpa),
+            norm_core::dsl_kv::line("n_cycles_stud", &self.n_cycles_stud),
+            norm_core::dsl_kv::line("delta_tau_stud_mpa", &self.delta_tau_stud_mpa),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -472,5 +537,28 @@ mod tests {
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
         assert_eq!(report.checks.len(), 7);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1994/v1", "en1994", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

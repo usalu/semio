@@ -30,6 +30,7 @@ export default defineConfig({
     environment: "node",
     globals: true,
     include: ["index.ts"],
+    coverage: { include: ["index.ts"] },
     includeSource: ["index.ts"],
     passWithNoTests: false,
     exclude: ["**/node_modules/**", "**/dist/**", "**/.storybook/**"],

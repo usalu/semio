@@ -1,11 +1,11 @@
 #!/usr/bin/env bun
 /** 🧭Compose.Rhino.Tests test router: `bun ./script.ts test`. */
-import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
+import { BundleScript, ScriptRouter, runBundleScriptMain, resolveTestLevel, dotnetLevelArgs, dotnetCoverageArgs, runTestBudgeted } from "../../../../../repo/lib/js/index.ts";
 
 class TestScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const { level, rest } = resolveTestLevel(segments);
-    await runTestBudgeted("dotnet", ["test", "cs/Compose.Rhino.Tests.csproj", "-c", "UnitTest", ...dotnetLevelArgs(level), ...rest], { cwd: this.root });
+    await runTestBudgeted("dotnet", ["test", "cs/Compose.Rhino.Tests.csproj", "-c", "UnitTest", ...dotnetLevelArgs(level), ...dotnetCoverageArgs(this.repoRoot, this.root), ...rest], { cwd: this.root });
   }
 }
 

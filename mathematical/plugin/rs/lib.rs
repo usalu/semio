@@ -6,7 +6,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
-use vcs::{Operation, OperationDiff};
+use vcs::{DocumentDsl, Operation, OperationDiff};
 
 //#region 🔖Constants
 const MATH_APP_ID: &str = "mathematical-play";
@@ -163,6 +163,456 @@ impl Operation<MathProjection> for MathOperation {
     }
 }
 //#endregion 🔖Operation
+
+//#region 🔖Dsl
+/// 📜 Hand-rolled lexer, parser and printer for the `.mathematical` DSL and `MathOperation`'s single-line
+/// op-log encoding. `MathGraph`'s nodes/edges are a plain id/label/position + id/source/target shape (no
+/// port/kind/property bag), so it does not match `mathematical/graph/dsl`'s wire-literal notation
+/// (`id:kind@port -> id:kind@port {props}`) closely enough to reuse verbatim — this grammar instead
+/// mirrors that precedent in spirit (`source -> target` arrows for directed edges) plus this codebase's
+/// own `note` DSL conventions (`key=value` header tokens, comma-pair `x,y` point lists). Whitespace
+/// (including newlines) is never significant to the parser — `print_dsl` inserts newlines purely for
+/// readability, `print_op` renders the identical grammar space-joined on one line. See
+/// {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+mod math_text {
+    use super::{MathCamera, MathEdge, MathGeometry, MathGraph, MathNode, MathProjection};
+    use std::collections::HashMap;
+
+    //#region Lexer
+    #[derive(Clone, Debug, PartialEq)]
+    enum Tok {
+        Word(String),
+        Str(String),
+        Eof,
+    }
+
+    #[derive(Clone, Debug)]
+    struct Lexed {
+        tok: Tok,
+        span: vcs::TextSpan,
+    }
+
+    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`"`, so `key=value`,
+    /// `source->target`-free arrows (`->` is its own bareword token, space-delimited) and `x,y` point
+    /// pairs all collapse into single tokens handled downstream — only a quoted value forces a boundary.
+    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
+        let chars: Vec<char> = input.chars().collect();
+        let mut out = Vec::new();
+        let mut i = 0usize;
+        let mut line = 1u32;
+        let mut col = 1u32;
+        while i < chars.len() {
+            match chars[i] {
+                ' ' | '\t' | '\r' => {
+                    i += 1;
+                    col += 1;
+                }
+                '\n' => {
+                    i += 1;
+                    line += 1;
+                    col = 1;
+                }
+                '"' => {
+                    let (start_line, start_col) = (line, col);
+                    i += 1;
+                    col += 1;
+                    let mut s = String::new();
+                    let mut closed = false;
+                    while i < chars.len() {
+                        let ch = chars[i];
+                        if ch == '\\' && i + 1 < chars.len() {
+                            match chars[i + 1] {
+                                'n' => s.push('\n'),
+                                '"' => s.push('"'),
+                                '\\' => s.push('\\'),
+                                other => {
+                                    s.push('\\');
+                                    s.push(other);
+                                }
+                            }
+                            i += 2;
+                            col += 2;
+                        } else if ch == '"' {
+                            i += 1;
+                            col += 1;
+                            closed = true;
+                            break;
+                        } else if ch == '\n' {
+                            s.push(ch);
+                            i += 1;
+                            line += 1;
+                            col = 1;
+                        } else {
+                            s.push(ch);
+                            i += 1;
+                            col += 1;
+                        }
+                    }
+                    if !closed {
+                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
+                    }
+                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+                _ => {
+                    let (start_line, start_col, start) = (line, col, i);
+                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '"') {
+                        i += 1;
+                        col += 1;
+                    }
+                    let word: String = chars[start..i].iter().collect();
+                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+            }
+        }
+        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
+        Ok(out)
+    }
+    //#endregion Lexer
+
+    //#region Parser
+    #[derive(Clone, Debug)]
+    enum FieldValue {
+        Str(String),
+        Word(String),
+    }
+
+    struct Parser {
+        toks: Vec<Lexed>,
+        pos: usize,
+    }
+
+    impl Parser {
+        fn peek(&self) -> &Tok {
+            &self.toks[self.pos].tok
+        }
+
+        fn span(&self) -> vcs::TextSpan {
+            self.toks[self.pos].span
+        }
+
+        fn bump(&mut self) -> Tok {
+            let tok = self.toks[self.pos].tok.clone();
+            if self.pos + 1 < self.toks.len() {
+                self.pos += 1;
+            }
+            tok
+        }
+
+        fn at_eof(&self) -> bool {
+            matches!(self.peek(), Tok::Eof)
+        }
+
+        fn peek_word(&self) -> Option<&str> {
+            match self.peek() {
+                Tok::Word(w) => Some(w.as_str()),
+                _ => None,
+            }
+        }
+
+        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Word(w) => Ok(w),
+                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
+            }
+        }
+
+        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            let word = self.expect_word()?;
+            if word != keyword {
+                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
+            }
+            Ok(())
+        }
+
+        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Str(s) => Ok(s),
+                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
+            }
+        }
+
+        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — shared
+        /// by the `graph`/`camera`/`node` header lines.
+        fn parse_kv_map(&mut self) -> Result<HashMap<String, (FieldValue, vcs::TextSpan)>, vcs::TextError> {
+            let mut map = HashMap::new();
+            loop {
+                let word = match self.peek() {
+                    Tok::Word(w) if w.contains('=') => w.clone(),
+                    _ => break,
+                };
+                let span = self.span();
+                self.bump();
+                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
+                let value = if rest.is_empty() {
+                    FieldValue::Str(self.expect_str()?)
+                } else {
+                    FieldValue::Word(rest.to_string())
+                };
+                map.insert(key.to_string(), (value, span));
+            }
+            Ok(map)
+        }
+
+        /// ✒️ Consumes the current token only if it is an `x,y` coordinate pair — the terminator for the
+        /// geometry `points` list is simply the first token that doesn't match.
+        fn try_point(&mut self) -> Option<(f64, f64)> {
+            if let Tok::Word(w) = self.peek() {
+                if let Some((a, b)) = w.split_once(',') {
+                    if let (Ok(x), Ok(y)) = (a.parse::<f64>(), b.parse::<f64>()) {
+                        self.bump();
+                        return Some((x, y));
+                    }
+                }
+            }
+            None
+        }
+    }
+
+    type FieldMap = HashMap<String, (FieldValue, vcs::TextSpan)>;
+
+    fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
+            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    fn kv_str(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Str(s), _)) => Ok(s.clone()),
+            Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
+        let word = kv_word(map, key, span)?;
+        word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
+    }
+
+    fn kv_bool(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<bool, vcs::TextError> {
+        match kv_word(map, key, span)?.as_str() {
+            "true" => Ok(true),
+            "false" => Ok(false),
+            _ => Err(vcs::TextError::expected(format!("field '{key}' must be 'true' or 'false'"), span, "true|false")),
+        }
+    }
+
+    fn kv_opt_str(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<Option<String>, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Str(s), _)) => Ok(Some(s.clone())),
+            Some((FieldValue::Word(w), _)) if w == "-" => Ok(None),
+            Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string or '-'"), *field_span, "string|-")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    /// 🕸️ Parses the `graph directed=.. algorithm=.. seed=..` header plus any following `camera`/`node`/
+    /// `edge` lines (order-independent, each zero-or-more except `camera` which is required exactly
+    /// once) — shared by {@link parse_document} and {@link parse_operation}'s `SetGraph` case, since a
+    /// `SetGraph` op-line is precisely this same grammar on its own.
+    fn parse_graph(p: &mut Parser) -> Result<MathGraph, vcs::TextError> {
+        let span = p.span();
+        p.expect_keyword("graph")?;
+        let map = p.parse_kv_map()?;
+        let directed = kv_bool(&map, "directed", span)?;
+        let algorithm = kv_str(&map, "algorithm", span)?;
+        let algorithm_seed = kv_opt_str(&map, "seed", span)?;
+
+        let mut camera = None;
+        let mut nodes = Vec::new();
+        let mut edges = Vec::new();
+
+        loop {
+            let Some(keyword) = p.peek_word().map(|w| w.to_string()) else { break };
+            match keyword.as_str() {
+                "camera" => {
+                    let cam_span = p.span();
+                    p.bump();
+                    let cam_map = p.parse_kv_map()?;
+                    camera = Some(MathCamera {
+                        x: kv_num(&cam_map, "x", cam_span)?,
+                        y: kv_num(&cam_map, "y", cam_span)?,
+                        zoom: kv_num(&cam_map, "zoom", cam_span)?,
+                    });
+                }
+                "node" => {
+                    p.bump();
+                    let node_span = p.span();
+                    let id = p.expect_word()?;
+                    let label = p.expect_str()?;
+                    let node_map = p.parse_kv_map()?;
+                    nodes.push(MathNode {
+                        id,
+                        label,
+                        x: kv_num(&node_map, "x", node_span)?,
+                        y: kv_num(&node_map, "y", node_span)?,
+                    });
+                }
+                "edge" => {
+                    p.bump();
+                    let id = p.expect_word()?;
+                    let source = p.expect_word()?;
+                    p.expect_keyword("->")?;
+                    let target = p.expect_word()?;
+                    edges.push(MathEdge { id, source, target });
+                }
+                _ => break,
+            }
+        }
+
+        let camera = camera.ok_or_else(|| vcs::TextError::new("missing 'camera' line", span))?;
+        Ok(MathGraph { directed, nodes, edges, camera, algorithm, algorithm_seed })
+    }
+
+    /// 📐 Parses the `points x,y x,y ...` line (present or entirely omitted — an absent line means no
+    /// points, mirrored by {@link print_geometry} only emitting it when non-empty).
+    fn parse_geometry(p: &mut Parser) -> Result<MathGeometry, vcs::TextError> {
+        p.expect_keyword("points")?;
+        let mut points = Vec::new();
+        while let Some(point) = p.try_point() {
+            points.push(point);
+        }
+        Ok(MathGeometry { points })
+    }
+
+    /// 📥 Parses a full `.mathematical` document: the `graph` block (with its nested `camera`/`node`/
+    /// `edge` lines) followed by an optional `points` line for the geometry playground.
+    pub(super) fn parse_document(text: &str) -> Result<MathProjection, vcs::TextError> {
+        let toks = lex(text)?;
+        let mut p = Parser { toks, pos: 0 };
+        let graph = parse_graph(&mut p)?;
+        let geometry = if p.peek_word() == Some("points") { parse_geometry(&mut p)? } else { MathGeometry { points: Vec::new() } };
+        if !p.at_eof() {
+            return Err(vcs::TextError::new(format!("unexpected trailing input near {:?}", p.peek()), p.span()));
+        }
+        Ok(MathProjection { graph, geometry })
+    }
+
+    /// ⚡ Parses one op-log line — dispatches on its leading keyword, since `SetGraph`/`SetGeometry`
+    /// reprint exactly the `graph`/`points` grammar shared with {@link parse_document}.
+    pub(super) fn parse_operation(line: &str) -> Result<super::MathOperation, vcs::TextError> {
+        use super::MathOperation;
+        let toks = lex(line)?;
+        let mut p = Parser { toks, pos: 0 };
+        let operation = match p.peek_word() {
+            Some("graph") => MathOperation::SetGraph { graph: parse_graph(&mut p)? },
+            Some("points") => MathOperation::SetGeometry { geometry: parse_geometry(&mut p)? },
+            _ => return Err(vcs::TextError::expected("expected 'graph' or 'points'", p.span(), "graph|points")),
+        };
+        if !p.at_eof() {
+            return Err(vcs::TextError::new(format!("unexpected trailing input near {:?}", p.peek()), p.span()));
+        }
+        Ok(operation)
+    }
+    //#endregion Parser
+
+    //#region Printer
+    fn quote(value: &str) -> String {
+        let mut out = String::with_capacity(value.len() + 2);
+        out.push('"');
+        for ch in value.chars() {
+            match ch {
+                '\\' => out.push_str("\\\\"),
+                '"' => out.push_str("\\\""),
+                '\n' => out.push_str("\\n"),
+                _ => out.push(ch),
+            }
+        }
+        out.push('"');
+        out
+    }
+
+    fn fmt_num(value: f64) -> String {
+        value.to_string()
+    }
+
+    /// 🕸️ Renders `graph`'s header line, then its `camera` line, then one `node ...` line per node and
+    /// one `edge id source -> target` arrow line per edge (see module docs for why an arrow rather than
+    /// the wire-literal grammar) — newline-joined when `pretty`, space-joined on one line otherwise.
+    fn print_graph(graph: &MathGraph, pretty: bool) -> String {
+        let mut parts = Vec::new();
+        let seed = graph.algorithm_seed.as_deref().map(quote).unwrap_or_else(|| "-".to_string());
+        parts.push(format!("graph directed={} algorithm={} seed={seed}", graph.directed, quote(&graph.algorithm)));
+        parts.push(format!("camera x={} y={} zoom={}", fmt_num(graph.camera.x), fmt_num(graph.camera.y), fmt_num(graph.camera.zoom)));
+        for node in &graph.nodes {
+            parts.push(format!("node {} {} x={} y={}", node.id, quote(&node.label), fmt_num(node.x), fmt_num(node.y)));
+        }
+        for edge in &graph.edges {
+            parts.push(format!("edge {} {} -> {}", edge.id, edge.source, edge.target));
+        }
+        parts.join(if pretty { "\n" } else { " " })
+    }
+
+    /// 📐 Renders the geometry point cloud as `points x,y x,y ...`, wrapping to a fresh line every 8
+    /// points when `pretty` (mirrors `note`'s stroke `points` printer) — omitted by callers entirely
+    /// when there are no points.
+    fn print_geometry(geometry: &MathGeometry, pretty: bool) -> String {
+        if geometry.points.is_empty() {
+            return "points".to_string();
+        }
+        let mut out = String::from("points");
+        for (index, &(x, y)) in geometry.points.iter().enumerate() {
+            if pretty && index > 0 && index % 8 == 0 {
+                out.push('\n');
+            } else {
+                out.push(' ');
+            }
+            out.push_str(&format!("{},{}", fmt_num(x), fmt_num(y)));
+        }
+        out
+    }
+
+    /// 📤 Renders the full document: the `graph` block, then a `points` line only if the geometry
+    /// playground has any points (see {@link parse_document} for the mirrored grammar).
+    pub(super) fn print_document(projection: &MathProjection, pretty: bool) -> String {
+        let mut parts = vec![print_graph(&projection.graph, pretty)];
+        if !projection.geometry.points.is_empty() {
+            parts.push(print_geometry(&projection.geometry, pretty));
+        }
+        parts.join(if pretty { "\n" } else { " " })
+    }
+
+    /// ⚡ Renders one `MathOperation` as a single line, reusing the compact (space-joined) form of
+    /// {@link print_graph}/{@link print_geometry}.
+    pub(super) fn print_operation(operation: &super::MathOperation) -> String {
+        use super::MathOperation;
+        match operation {
+            MathOperation::SetGraph { graph } => print_graph(graph, false),
+            MathOperation::SetGeometry { geometry } => print_geometry(geometry, false),
+        }
+    }
+    //#endregion Printer
+}
+
+impl vcs::DocumentDsl for MathProjection {
+    const EXTENSION: &'static str = "mathematical";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        math_text::parse_document(text)
+    }
+
+    fn print_dsl(&self) -> String {
+        math_text::print_document(self, true)
+    }
+}
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+impl vcs::OpText for MathOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        math_text::parse_operation(line)
+    }
+
+    fn print_op(&self) -> String {
+        math_text::print_operation(self)
+    }
+}
+//#endregion 🔖OpText
 
 //#region 🔖GraphAlgorithms
 /// 🕸️ Runs the selected algorithm over the current graph and returns a per-node label suffix overlay.
@@ -508,7 +958,7 @@ fn create_mathematical_app() -> App {
                 ActionArgDef::toggle("directed", "Directed").default_value(true),
             ]),
     )
-    .example("demo", "Demo", serde_json::to_string(&MathProjection::default()).unwrap())
+    .example("demo", "Demo", MathProjection::default().print_dsl())
     .program("mathematical", "Mathematical", "graph")
 }
 
@@ -592,5 +1042,46 @@ mod tests {
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("canvas-2d"));
     }
+
+    //#region 🔖DslTests
+    #[test]
+    fn math_projection_dsl_round_trips_default() {
+        vcs::test_support::assert_dsl_round_trip(&MathProjection::default());
+    }
+
+    #[test]
+    fn math_projection_dsl_round_trips_with_seed_and_empty_collections() {
+        let mut graph = MathGraph::default();
+        graph.algorithm = "bfs".into();
+        graph.algorithm_seed = Some("a".into());
+        graph.nodes.clear();
+        graph.edges.clear();
+        let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };
+        vcs::test_support::assert_dsl_round_trip(&projection);
+    }
+
+    #[test]
+    fn math_set_graph_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&MathOperation::SetGraph { graph: MathGraph::default() });
+    }
+
+    #[test]
+    fn math_set_geometry_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&MathOperation::SetGeometry { geometry: MathGeometry::default() });
+    }
+
+    #[test]
+    fn math_document_text_round_trips_through_store() {
+        let initial = MathProjection::default();
+        let envelope = vcs::create_document_vcs_envelope("semio.mathematical/v1", "math-demo", initial, None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let mut graph = MathGraph::default();
+        graph.algorithm = "components".into();
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslTests
 }
 //#endregion 🧪Tests

@@ -1,0 +1,16 @@
+{
+  "title": "Get Aggregator Working End to End",
+  "emoji": "🐛",
+  "status": "closed",
+  "description": "Puzzle 3D shows only the grid. No object meshes are visible, including after dropping an object: the transform gumball appears for the selected object, but its mesh does not render. Trace the complete object-to-scene mesh path, fix the root cause, add regression coverage in existing tests, and verify runtime viewport behavior with console evidence.",
+  "summary": "Aggregator works end to end on React (http://127.0.0.1:6023/, Entwerfen mit Bestand brand, Abbau Aufbau). Root cause was revealIndex JSON null plus boot cutoff 0 hiding ordinary instance roots; plugin now omits revealIndex for untagged objects and the host uses nullish guards. Live Playwright verification: seeded instance visible with rootVisible true, GLB 86112B loaded into 57 meshes with scene/root visible, Perspective viewport screenshot shows the 3D object. Regressions: vitest isRevealCutoffHidden (2 passed), cargo seeded_objects_omit_reveal_index (1 passed).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2315"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪3d1de0109f2a49779abd9cf919c2eaf1",
+    "⚪9b8c7b198c21429fb2dfa3701f79557f",
+    "⚪dc485f7a4d3b4c44bd4b2ad79e58cddf"
+  ]
+}

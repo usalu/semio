@@ -1973,6 +1973,21 @@ export function isContextMenuPointerTarget(target: EventTarget | null): boolean 
   return Boolean(target instanceof Element && target.closest('[role="menu"]'));
 }
 
+/** @emoji ⌨️ Maps a keydown key to a context-menu digit shortcut (`1`–`9`), if any. */
+export function contextMenuDigitFromKey(key: string): string | undefined {
+  return key.length === 1 && key >= "1" && key <= "9" ? key : undefined;
+}
+
+/** @emoji ⌨️ Finds the first enabled top-level row whose shortcut matches `shortcut`. */
+export function findContextMenuItemByShortcut(items: readonly ContextMenuItem[], shortcut: string): ContextMenuItem | undefined {
+  return items.find((item) => !item.separator && !item.disabled && item.shortcut === shortcut);
+}
+
+/** @emoji ⌨️ Finds the first enabled top-level row marked `checked`. */
+export function findCheckedContextMenuItem(items: readonly ContextMenuItem[]): ContextMenuItem | undefined {
+  return items.find((item) => !item.separator && !item.disabled && item.checked);
+}
+
 /**
  * 🧩 Controlled right-click menu anchored at viewport coordinates (puzzle 2d canvas bridge). Portals to `document.body` for correct `fixed` placement under transformed UI; outside-dismiss uses `window` bubble listeners so they run after the puzzle 2d `eventSurface` bubble path and after `window` capture (441–442 used `document` capture and swallowed input).
  **/
@@ -1980,6 +1995,8 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
   const close = reactHostPort.useCallback(() => onOpenChange(false), [onOpenChange]);
   const flow = useFlow();
   const menuRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const itemsRef = reactHostPort.useRef(items);
+  itemsRef.current = items;
   reactHostPort.useEffect(() => {
     if (!open || !items.length || !position) {
       return undefined;
@@ -1998,6 +2015,32 @@ export const ContextMenuController: React.FC<ContextMenuControllerProps> = ({ op
     const handleKeyDown = (event: KeyboardEvent): void => {
       if (event.key === "Escape") {
         onOpenChange(false);
+        return;
+      }
+      const currentItems = itemsRef.current;
+      const digit = contextMenuDigitFromKey(event.key);
+      if (digit) {
+        const item = findContextMenuItemByShortcut(currentItems, digit);
+        if (!item) return;
+        event.preventDefault();
+        event.stopPropagation();
+        if (item.onHover) {
+          item.onHover();
+          return;
+        }
+        if (item.onSelect) {
+          item.onSelect(new Event("select"));
+          if (closeOnSelect) close();
+        }
+        return;
+      }
+      if (event.key === "Enter") {
+        const item = findCheckedContextMenuItem(currentItems);
+        if (!item?.onSelect) return;
+        event.preventDefault();
+        event.stopPropagation();
+        item.onSelect(new Event("select"));
+        if (closeOnSelect) close();
       }
     };
     const bindings = createDOMEventBinding();
@@ -4690,7 +4733,7 @@ export function useUiTranslation(): { readonly t: UiTranslateFn; readonly i18n: 
 // #endregion 🪁I18n Resources
 
 /**
- * React hook that resolves a localized label by i18n key and expertise level. Strict: `id` must be a
+ * React hook that resolves a localized label by i18n key and driver label tier. Strict: `id` must be a
  * real key from the domain-neutral chrome schema or a product's {@link registerUiTranslationBundles}
  * bundle — both are guaranteed complete for every {@link UiLocale}, so a defined `id` always yields a
  * `string`. For ids that may or may not be a registered key (e.g. resolved from an arbitrary DOM/control
@@ -4768,7 +4811,7 @@ export function useIdLabel(id: string | undefined): string | undefined {
 }
 
 /**
- * Resolves a localized string from a raw translation value and expertise level.
+ * Resolves a localized string from a raw translation value and driver label tier.
  * Pure function (non-hook) variant of useLabel for use outside React render context.
  * Handles: string, {label: string}, {label: {normal, beginner}}, {normal, beginner}.
  **/
@@ -9242,8 +9285,8 @@ export { Popover, PopoverAnchor, PopoverContent, PopoverTrigger };
 // #endregion 🌐Popover
 
 // #region 🎙️Tooltip
-// Tooltip components with expertise-level adaptive content.
-// Consumers MUST configure the expertise mode provider.
+// Tooltip components with driver-adaptive content (see UiDriverTooltips).
+// Consumers MUST supply a driver via UiDriverProvider or the stored default.
 
 /**
  * Configuration for enhanced tooltip with label, paths, and hotkey.
@@ -28579,21 +28622,26 @@ if (import.meta.vitest) {
   });
 
   describe("iconSvgMarkup", () => {
-    it("returns vendored svg markup for a known icon and undefined otherwise", () => {
+    it("returns vendored svg markup for a known icon", () => {
       expect(iconSvgMarkup("component")).toContain("<svg");
-      expect(iconSvgMarkup("definitely-not-a-vendored-icon")).toBeUndefined();
     });
   });
 
   describe("iconCodec", () => {
     it("round-trips canonical icon strings", () => {
-      const samples = ["url:https://example.com/icon.png", ":smile:", "data:image/png;base64,iVBORw0KGgo=", "emoji:☺", "typst:$x^2$", "text:Hi", "capsule_J"];
+      const samples = ["url:https://example.com/icon.png", ":smile:", "data:image/png;base64,iVBORw0KGgo=", "emoji:☺", "typst:$x^2$", "text:Hi", "pen-tool"];
       for (const sample of samples) {
         const icon = decodeIcon(sample);
         expect(icon).toBeTruthy();
         const encoded = encodeIcon(icon!);
         expect(decodeIcon(encoded)).toEqual(icon);
       }
+    });
+
+    it("decodes metabolism stems as themed and catalog ids as catalog", () => {
+      expect(decodeIcon("capsule_J")).toEqual({ kind: "themed", key: "capsule_J" });
+      expect(decodeIcon("pen-tool")).toEqual({ kind: "catalog", key: "pen-tool" });
+      expect(decodeIcon("definitely-not-a-known-icon-stem")).toBeUndefined();
     });
 
     it("classifies selector modes for all kinds", () => {
@@ -28603,6 +28651,16 @@ if (import.meta.vitest) {
       expect(shortcodeCatalogKey("plus")).toBe("plus");
       expect(classifyIconSelectorMode("text:Hi")).toBe("text");
       expect(classifyIconSelectorMode("capsule_J")).toBe("vector");
+    });
+
+    it("resolveCatalogIconSvg applies theme variants without changing icon id", () => {
+      const themed = parseUiTheme({
+        ...semioTheme(),
+        icons: { variants: { search: "<svg data-theme-variant></svg>" } },
+      });
+      setActiveUiTheme(themed);
+      expect(resolveCatalogIconSvg("search")).toContain("data-theme-variant");
+      setActiveUiTheme(semioTheme());
     });
   });
 
@@ -28753,7 +28811,7 @@ if (import.meta.vitest) {
       expect(renderToStaticMarkup(<Icon icon={{ kind: "url", url: "https://example.com/a.png" }} />)).toMatch(/data-icon-kind="image"/);
       expect(renderToStaticMarkup(<Icon icon={{ kind: "svg", svg: "<svg></svg>" }} />)).toMatch(/data-icon-kind="svg"/);
       expect(renderToStaticMarkup(<Icon icon={{ kind: "node", node: <span>x</span> }} />)).toMatch(/data-icon-kind="node"/);
-      expect(renderToStaticMarkup(<Icon icon={"definitely-not-a-vendored-icon" as IconName} />)).toMatch(/data-icon-kind="missing"/);
+      expect(renderToStaticMarkup(<Icon icon={"definitely-not-a-vendored-icon" as IconName} />)).toMatch(/data-icon-kind="text"/);
     });
   });
 
@@ -28910,6 +28968,31 @@ if (import.meta.vitest) {
       expect(onOpenChange).not.toHaveBeenCalled();
       fireEvent.pointerDown(document.body);
       expect(onOpenChange).toHaveBeenCalledWith(false);
+    });
+
+    it("previews numbered rows on digit keys and accepts the checked row on Enter", async () => {
+      const onHover = vi.fn();
+      const onSelect = vi.fn();
+      const onOpenChange = vi.fn();
+      render(
+        <ContextMenuController
+          open
+          closeOnSelect={false}
+          position={{ x: 8, y: 16 }}
+          items={[
+            { id: "suggestion-0", label: "Capsule · port", icon: "box", shortcut: "1", checked: true, onSelect, onHover },
+            { id: "suggestion-1", label: "Box · port", icon: "box", shortcut: "2", checked: false, onSelect, onHover },
+          ]}
+          onOpenChange={onOpenChange}
+        />,
+      );
+      await waitFor(() => screen.getByRole("menuitemcheckbox", { name: "Capsule · port" }));
+      fireEvent.keyDown(window, { key: "2" });
+      expect(onHover).toHaveBeenCalledTimes(1);
+      expect(onSelect).not.toHaveBeenCalled();
+      fireEvent.keyDown(window, { key: "Enter" });
+      expect(onSelect).toHaveBeenCalledTimes(1);
+      expect(onOpenChange).not.toHaveBeenCalled();
     });
 
     it("does not close on select when closeOnSelect is false", async () => {

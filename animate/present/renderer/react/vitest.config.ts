@@ -29,6 +29,7 @@ export default defineConfig({
     mode: "test",
     environment: "jsdom",
     include: ["index.tsx", "markdown.ts"],
+    coverage: { include: ["index.tsx", "markdown.ts"] },
     includeSource: ["index.tsx", "markdown.ts"],
     passWithNoTests: false,
     setupFiles: ["./vitest.setup.ts"],

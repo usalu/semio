@@ -1,0 +1,17 @@
+shooting schema="shooting.fixture" activeShot="overview-svg" activeAsset="base"
+camera position=420,-420,320 target=0,0,40 zoom=1 fov=50 up=- projection=-
+scene background="" emblemBase64=- {
+  sun enabled=false azimuth=45 elevation=35 intensity=2.4 color="#ffffff"
+  ambient intensity=1.15 color="#ffffff"
+  shadow enabled=true opacity=0.35 softness=1
+  material color="#9aa0ab" metalness=0 roughness=1 emissive="#000000" emissiveIntensity=0
+}
+assets {
+  asset id="base" name="Base" url="/mesh/base.glb" format="glb" origin=0,0,0 orientation=- scale=-
+}
+shots {
+  shot id="overview-svg" label="Overview Svg" width=256 height=256 format="svg" shape="rectangle" background=- cameraId=-
+  shot id="overview-png" label="Overview Png" width=512 height=512 format="png" shape="ellipse" background=- cameraId=-
+}
+savedCameras {
+}

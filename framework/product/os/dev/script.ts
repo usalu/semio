@@ -1756,6 +1756,21 @@ function parityPortsForShard(shardIndex: number): { readonly react: number; read
   return { react: base, wgpu: base + 1 };
 }
 
+const PARITY_PORT_POOL_SHARDS = 49; // (7398 - 7300) / 2
+
+/** 🔌`smoke`/`triage`/`verify` are meant to be run by multiple concurrent agents/sessions — hardcoding
+ * shard 0 meant every concurrent invocation collided on the same 7300/7301 pair, producing false
+ * `SERVER-FAIL`/`DUMP-EMPTY` results indistinguishable from real failures (found the hard way: several
+ * parallel boot-triage agents hit exactly this). Scans the shard pool for the first pair where BOTH
+ * ports are actually free right now — no coordination needed between callers. */
+function findFreeParityPortPair(): { readonly react: number; readonly wgpu: number } {
+  for (let shard = 0; shard < PARITY_PORT_POOL_SHARDS; shard++) {
+    const candidate = parityPortsForShard(shard);
+    if (!isDevPortInUse("127.0.0.1", candidate.react) && !isDevPortInUse("127.0.0.1", candidate.wgpu)) return candidate;
+  }
+  throw new Error(`no free parity port pair in the ${PARITY_PORT_POOL_SHARDS}-shard pool (${PARITY_PORT_BASE}-${PARITY_PORT_BASE + PARITY_PORT_POOL_SHARDS * 2})`);
+}
+
 function parityDevUrl(renderer: ParityRenderer, variant: string, port: number): string {
   return renderer === "wgpu" ? wgpuDevPlayUrl("127.0.0.1", port, variant) : devServerUrl("127.0.0.1", port);
 }
@@ -1873,7 +1888,7 @@ async function verifyParityVariant(variant: string, ports: { readonly react: num
 class ParitySmokeScript extends BundleScript {
   async run(): Promise<void> {
     const variant = process.env.SEMIO_PLUGIN || "s";
-    const report = await verifyParityVariant(variant, parityPortsForShard(0));
+    const report = await verifyParityVariant(variant, findFreeParityPortPair());
     console.log(JSON.stringify(report, null, 2));
     if (report.boot.react !== "PASS" || report.boot.wgpu !== "PASS") {
       throw new Error(`parity smoke FAILED: boot react=${report.boot.react} wgpu=${report.boot.wgpu}${report.boot.detail ? ` (${report.boot.detail})` : ""}`);
@@ -1885,7 +1900,7 @@ class ParitySmokeScript extends BundleScript {
 class ParityTriageScript extends BundleScript {
   async run(segments: string[]): Promise<void> {
     const variant = segments[0] || process.env.SEMIO_PLUGIN || "s";
-    const ports = parityPortsForShard(0);
+    const ports = findFreeParityPortPair();
     const { chromium } = await import("playwright");
     const browser = await chromium.launch({ headless: process.env.HEADED !== "1", args: ["--use-angle=swiftshader", "--enable-unsafe-swiftshader", "--enable-unsafe-webgpu"] });
     const reactServer = await startParityDevServer("react", variant, ports.react);
@@ -1910,9 +1925,10 @@ class ParityVerifyScript extends BundleScript {
     const variants = segments.filter((s) => !s.startsWith("--"));
     if (variants.length === 0) throw new Error("usage: parity verify <variant…>");
     const skipDev = process.env.SKIP_DEV === "1";
+    const ports = skipDev ? parityPortsForShard(0) : findFreeParityPortPair();
     const reports: ParityPlaygroundReport[] = [];
     for (const variant of variants) {
-      const report = await verifyParityVariant(variant, parityPortsForShard(0), { skipDev });
+      const report = await verifyParityVariant(variant, ports, { skipDev });
       reports.push(report);
       console.log(`[DEBUG] ${variant}: boot=${report.boot.react}/${report.boot.wgpu} structural=${report.structural?.status ?? "-"} pixel=${report.pixel?.status ?? "-"}`);
     }
@@ -1971,7 +1987,10 @@ const router = new ScriptRouter(import.meta.dir)
           await ensurePluginRegistry(segments[1] || process.env.SEMIO_PLUGIN || process.env.PLAYGROUND_APP_KIND);
           return;
         }
-        return new PluginBuildScript(this.root).run(segments.slice(1));
+        // 🐛`sub` here is the variant filter itself (e.g. `plugin cad`), not a subcommand to strip —
+        // slicing it off silently dropped the filter and fell back to building the entire 33-crate
+        // catalog for every `bun ./script.ts plugin <variant>` invocation.
+        return new PluginBuildScript(this.root).run(segments);
       }
     },
   );

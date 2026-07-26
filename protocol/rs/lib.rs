@@ -486,6 +486,754 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
 }
 //#endregion 🔖Operations
 
+//#region 🔖Dsl
+/// 📜 Hand-rolled lexer, parser and printer for `ProtocolSpec`'s `.protocol` DSL and for
+/// `ProtocolOperation`'s compact single-line op encoding (each op reprints the same `step`/`block`/
+/// expr grammar on one line). Whitespace (including newlines) is never significant to the parser —
+/// `print_dsl` inserts newlines/indentation purely for readability, `print_op` renders the identical
+/// grammar with spaces only. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+mod protocol_text {
+    use super::{ProtocolBlock, ProtocolBlockOption, ProtocolExpr, ProtocolSpec, ProtocolStep, ProtocolVectorField};
+    use serde_json::Value;
+
+    //#region Lexer
+    #[derive(Clone, Debug, PartialEq)]
+    enum Tok {
+        Word(String),
+        Str(String),
+        LBrace,
+        RBrace,
+        Eof,
+    }
+
+    #[derive(Clone, Debug)]
+    struct Lexed {
+        tok: Tok,
+        span: vcs::TextSpan,
+    }
+
+    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` is an
+    /// ordinary word character — `key=value` collapses into one token (split later by
+    /// {@link Parser::parse_kv_map}), and only a quoted value forces a token boundary right after `key=`.
+    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
+        let chars: Vec<char> = input.chars().collect();
+        let mut out = Vec::new();
+        let mut i = 0usize;
+        let mut line = 1u32;
+        let mut col = 1u32;
+        while i < chars.len() {
+            match chars[i] {
+                ' ' | '\t' | '\r' => {
+                    i += 1;
+                    col += 1;
+                }
+                '\n' => {
+                    i += 1;
+                    line += 1;
+                    col = 1;
+                }
+                '{' => {
+                    out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
+                    i += 1;
+                    col += 1;
+                }
+                '}' => {
+                    out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
+                    i += 1;
+                    col += 1;
+                }
+                '"' => {
+                    let (start_line, start_col) = (line, col);
+                    i += 1;
+                    col += 1;
+                    let mut s = String::new();
+                    let mut closed = false;
+                    while i < chars.len() {
+                        let ch = chars[i];
+                        if ch == '\\' && i + 1 < chars.len() {
+                            match chars[i + 1] {
+                                'n' => s.push('\n'),
+                                '"' => s.push('"'),
+                                '\\' => s.push('\\'),
+                                other => {
+                                    s.push('\\');
+                                    s.push(other);
+                                }
+                            }
+                            i += 2;
+                            col += 2;
+                        } else if ch == '"' {
+                            i += 1;
+                            col += 1;
+                            closed = true;
+                            break;
+                        } else if ch == '\n' {
+                            s.push(ch);
+                            i += 1;
+                            line += 1;
+                            col = 1;
+                        } else {
+                            s.push(ch);
+                            i += 1;
+                            col += 1;
+                        }
+                    }
+                    if !closed {
+                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
+                    }
+                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+                _ => {
+                    let (start_line, start_col, start) = (line, col, i);
+                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
+                        i += 1;
+                        col += 1;
+                    }
+                    let word: String = chars[start..i].iter().collect();
+                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
+                }
+            }
+        }
+        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
+        Ok(out)
+    }
+    //#endregion Lexer
+
+    //#region Parser
+    #[derive(Clone, Debug)]
+    enum FieldValue {
+        Str(String),
+        Word(String),
+    }
+
+    struct Parser {
+        toks: Vec<Lexed>,
+        pos: usize,
+    }
+
+    impl Parser {
+        fn peek(&self) -> &Tok {
+            &self.toks[self.pos].tok
+        }
+
+        fn span(&self) -> vcs::TextSpan {
+            self.toks[self.pos].span
+        }
+
+        fn bump(&mut self) -> Tok {
+            let tok = self.toks[self.pos].tok.clone();
+            if self.pos + 1 < self.toks.len() {
+                self.pos += 1;
+            }
+            tok
+        }
+
+        fn at_lbrace(&self) -> bool {
+            matches!(self.peek(), Tok::LBrace)
+        }
+
+        fn at_rbrace(&self) -> bool {
+            matches!(self.peek(), Tok::RBrace)
+        }
+
+        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Word(w) => Ok(w),
+                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
+            }
+        }
+
+        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            let word = self.expect_word()?;
+            if word != keyword {
+                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
+            }
+            Ok(())
+        }
+
+        fn expect_lbrace(&mut self) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::LBrace => Ok(()),
+                other => Err(vcs::TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
+            }
+        }
+
+        fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::RBrace => Ok(()),
+                other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
+            }
+        }
+
+        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
+        /// generic header-field reader every construct (document/step/block/option/field) is built on.
+        fn parse_kv_map(&mut self) -> Result<std::collections::HashMap<String, (FieldValue, vcs::TextSpan)>, vcs::TextError> {
+            let mut map = std::collections::HashMap::new();
+            loop {
+                let word = match self.peek() {
+                    Tok::Word(w) if w.contains('=') => w.clone(),
+                    _ => break,
+                };
+                let span = self.span();
+                self.bump();
+                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
+                let value = if rest.is_empty() {
+                    FieldValue::Str(self.expect_str()?)
+                } else {
+                    FieldValue::Word(rest.to_string())
+                };
+                map.insert(key.to_string(), (value, span));
+            }
+            Ok(map)
+        }
+
+        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
+            let span = self.span();
+            match self.bump() {
+                Tok::Str(s) => Ok(s),
+                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
+            }
+        }
+    }
+
+    type FieldMap = std::collections::HashMap<String, (FieldValue, vcs::TextSpan)>;
+
+    fn kv_str(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Str(s), _)) => Ok(s.clone()),
+            Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    fn kv_opt_str(map: &FieldMap, key: &str) -> Option<String> {
+        match map.get(key) {
+            Some((FieldValue::Str(s), _)) => Some(s.clone()),
+            _ => None,
+        }
+    }
+
+    fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
+            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
+            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+        }
+    }
+
+    fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) => w.parse::<f64>().ok(),
+            _ => None,
+        }
+    }
+
+    fn kv_opt_bool(map: &FieldMap, key: &str) -> Option<bool> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), _)) if w == "true" => Some(true),
+            Some((FieldValue::Word(w), _)) if w == "false" => Some(false),
+            _ => None,
+        }
+    }
+
+    fn kv_usize(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<usize, vcs::TextError> {
+        let word = kv_word(map, key, span)?;
+        word.parse::<usize>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a non-negative integer"), span, "usize"))
+    }
+
+    fn kv_opt_usize(map: &FieldMap, key: &str) -> Result<Option<usize>, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Word(w), field_span)) => w.parse::<usize>().map(Some).map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a non-negative integer"), *field_span, "usize")),
+            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "usize")),
+            None => Ok(None),
+        }
+    }
+
+    /// 🧬 Reads a required arbitrary-JSON field (`ProtocolBlock::default`/`params`, `ProtocolExpr::Const`'s
+    /// `value`): the field's quoted string content is itself compact JSON text, re-parsed with `serde_json`
+    /// (already a workspace dependency — only the surrounding `.protocol`/op-line grammar is hand-rolled).
+    fn kv_json(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<Value, vcs::TextError> {
+        let text = kv_str(map, key, span)?;
+        serde_json::from_str(&text).map_err(|error| vcs::TextError::expected(format!("field '{key}' must be valid JSON: {error}"), span, "json"))
+    }
+
+    fn kv_opt_json(map: &FieldMap, key: &str) -> Result<Option<Value>, vcs::TextError> {
+        match map.get(key) {
+            Some((FieldValue::Str(text), field_span)) => serde_json::from_str(text).map(Some).map_err(|error| vcs::TextError::expected(format!("field '{key}' must be valid JSON: {error}"), *field_span, "json")),
+            Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted JSON string"), *field_span, "json string")),
+            None => Ok(None),
+        }
+    }
+
+    fn parse_option(p: &mut Parser) -> Result<ProtocolBlockOption, vcs::TextError> {
+        let span = p.span();
+        p.expect_keyword("opt")?;
+        let map = p.parse_kv_map()?;
+        Ok(ProtocolBlockOption { value: kv_str(&map, "value", span)?, label: kv_str(&map, "label", span)? })
+    }
+
+    fn parse_vector_field(p: &mut Parser) -> Result<ProtocolVectorField, vcs::TextError> {
+        let span = p.span();
+        p.expect_keyword("field")?;
+        let map = p.parse_kv_map()?;
+        Ok(ProtocolVectorField { key: kv_str(&map, "key", span)?, label: kv_opt_str(&map, "label"), value: kv_opt_num(&map, "value") })
+    }
+
+    /// 🧮 Recursive-descent reader for one `ProtocolExpr` node: a keyword (`const`/`var`/`eq`/`and`/`or`/
+    /// `truthy`), optional `key=value` fields, then — for the compound kinds only — a `{ }` body holding
+    /// its nested expr(s) (positional for `eq`'s left/right and `truthy`'s inner expr, a list for `and`/`or`).
+    fn parse_expr(p: &mut Parser) -> Result<ProtocolExpr, vcs::TextError> {
+        let span = p.span();
+        let keyword = p.expect_word()?;
+        match keyword.as_str() {
+            "const" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolExpr::Const { value: kv_json(&map, "value", span)? })
+            }
+            "var" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolExpr::Var { name: kv_str(&map, "name", span)? })
+            }
+            "eq" => {
+                p.expect_lbrace()?;
+                let left = parse_expr(p)?;
+                let right = parse_expr(p)?;
+                p.expect_rbrace()?;
+                Ok(ProtocolExpr::Eq { left: Box::new(left), right: Box::new(right) })
+            }
+            "and" => {
+                p.expect_lbrace()?;
+                let mut items = Vec::new();
+                while !p.at_rbrace() {
+                    items.push(parse_expr(p)?);
+                }
+                p.expect_rbrace()?;
+                Ok(ProtocolExpr::And { items })
+            }
+            "or" => {
+                p.expect_lbrace()?;
+                let mut items = Vec::new();
+                while !p.at_rbrace() {
+                    items.push(parse_expr(p)?);
+                }
+                p.expect_rbrace()?;
+                Ok(ProtocolExpr::Or { items })
+            }
+            "truthy" => {
+                p.expect_lbrace()?;
+                let expr = parse_expr(p)?;
+                p.expect_rbrace()?;
+                Ok(ProtocolExpr::Truthy { expr: Box::new(expr) })
+            }
+            other => Err(vcs::TextError::expected(format!("unknown expr kind '{other}'"), span, "const|var|eq|and|or|truthy")),
+        }
+    }
+
+    /// 🧱 Reads one `block kind=... id=... label=... ...` header (every optional property as a
+    /// `key=value` field) followed by an optional `{ }` body holding whichever of `options`/`fields`/
+    /// `condition` are present (their presence in the body — not just an empty list — is what
+    /// distinguishes `Some(vec![])` from `None`).
+    fn parse_block(p: &mut Parser) -> Result<ProtocolBlock, vcs::TextError> {
+        let span = p.span();
+        p.expect_keyword("block")?;
+        let map = p.parse_kv_map()?;
+        let kind = kv_word(&map, "kind", span)?;
+        let id = kv_str(&map, "id", span)?;
+        let label = kv_str(&map, "label", span)?;
+        let description = kv_opt_str(&map, "description");
+        let required = kv_opt_bool(&map, "required");
+        let placeholder = kv_opt_str(&map, "placeholder");
+        let default = kv_opt_json(&map, "default")?;
+        let min = kv_opt_num(&map, "min");
+        let max = kv_opt_num(&map, "max");
+        let step = kv_opt_num(&map, "step");
+        let unit = kv_opt_str(&map, "unit");
+        let text = kv_opt_str(&map, "text");
+        let schema = kv_opt_str(&map, "schema");
+        let src = kv_opt_str(&map, "src");
+        let accept = kv_opt_str(&map, "accept");
+        let fixture_slug = kv_opt_str(&map, "fixtureSlug");
+        let params = kv_opt_json(&map, "params")?;
+
+        let mut options = None;
+        let mut fields = None;
+        let mut condition = None;
+        if p.at_lbrace() {
+            p.bump();
+            while !p.at_rbrace() {
+                let keyword = match p.peek() {
+                    Tok::Word(w) => w.clone(),
+                    _ => return Err(vcs::TextError::expected("expected 'options', 'fields' or 'condition'", p.span(), "options|fields|condition")),
+                };
+                match keyword.as_str() {
+                    "options" => {
+                        p.bump();
+                        p.expect_lbrace()?;
+                        let mut items = Vec::new();
+                        while !p.at_rbrace() {
+                            items.push(parse_option(p)?);
+                        }
+                        p.expect_rbrace()?;
+                        options = Some(items);
+                    }
+                    "fields" => {
+                        p.bump();
+                        p.expect_lbrace()?;
+                        let mut items = Vec::new();
+                        while !p.at_rbrace() {
+                            items.push(parse_vector_field(p)?);
+                        }
+                        p.expect_rbrace()?;
+                        fields = Some(items);
+                    }
+                    "condition" => {
+                        p.bump();
+                        condition = Some(parse_expr(p)?);
+                    }
+                    other => return Err(vcs::TextError::expected(format!("unknown block section '{other}'"), p.span(), "options|fields|condition")),
+                }
+            }
+            p.expect_rbrace()?;
+        }
+        Ok(ProtocolBlock { id, label, kind, description, required, placeholder, default, min, max, step, unit, text, options, fields, schema, src, accept, fixture_slug, params, condition })
+    }
+
+    fn parse_step(p: &mut Parser) -> Result<ProtocolStep, vcs::TextError> {
+        let span = p.span();
+        p.expect_keyword("step")?;
+        let map = p.parse_kv_map()?;
+        let id = kv_str(&map, "id", span)?;
+        let title = kv_str(&map, "title", span)?;
+        let description = kv_opt_str(&map, "description");
+        p.expect_lbrace()?;
+        let mut blocks = Vec::new();
+        while !p.at_rbrace() {
+            blocks.push(parse_block(p)?);
+        }
+        p.expect_rbrace()?;
+        Ok(ProtocolStep { id, title, description, blocks })
+    }
+
+    /// 📥 Parses a full `.protocol` document: `protocol id=/schema=/version=/title=` header, then a
+    /// mandatory `steps { step ... }` section (see {@link print_document} for the mirrored grammar).
+    pub(super) fn parse_document(text: &str) -> Result<ProtocolSpec, vcs::TextError> {
+        let toks = lex(text)?;
+        let mut p = Parser { toks, pos: 0 };
+        let span = p.span();
+        p.expect_keyword("protocol")?;
+        let map = p.parse_kv_map()?;
+        let id = kv_str(&map, "id", span)?;
+        let schema = kv_str(&map, "schema", span)?;
+        let version = kv_str(&map, "version", span)?;
+        let title = kv_opt_str(&map, "title");
+        p.expect_keyword("steps")?;
+        p.expect_lbrace()?;
+        let mut steps = Vec::new();
+        while !p.at_rbrace() {
+            steps.push(parse_step(&mut p)?);
+        }
+        p.expect_rbrace()?;
+        Ok(ProtocolSpec { schema, id, version, title, steps })
+    }
+
+    /// ⚡ Parses one op-log line: a keyword (`add-step`/`remove-step`/`move-step`/`add-block`/
+    /// `remove-block`/`move-block`/`update-block`/`update-step`/`update-protocol`), its own `key=value`
+    /// fields, then — for the four operations that carry a whole `step`/`block` — that nested construct.
+    pub(super) fn parse_operation(line: &str) -> Result<super::ProtocolOperation, vcs::TextError> {
+        use super::ProtocolOperation;
+        let toks = lex(line)?;
+        let mut p = Parser { toks, pos: 0 };
+        let span = p.span();
+        let keyword = p.expect_word()?;
+        match keyword.as_str() {
+            "add-step" => {
+                let map = p.parse_kv_map()?;
+                let index = kv_opt_usize(&map, "index")?;
+                let step = parse_step(&mut p)?;
+                Ok(ProtocolOperation::AddStep { step, index })
+            }
+            "remove-step" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolOperation::RemoveStep { step_id: kv_str(&map, "id", span)? })
+            }
+            "move-step" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolOperation::MoveStep { step_id: kv_str(&map, "id", span)?, index: kv_usize(&map, "index", span)? })
+            }
+            "add-block" => {
+                let map = p.parse_kv_map()?;
+                let step_id = kv_str(&map, "step", span)?;
+                let index = kv_opt_usize(&map, "index")?;
+                let block = parse_block(&mut p)?;
+                Ok(ProtocolOperation::AddBlock { step_id, block, index })
+            }
+            "remove-block" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolOperation::RemoveBlock { step_id: kv_str(&map, "step", span)?, block_id: kv_str(&map, "block", span)? })
+            }
+            "move-block" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolOperation::MoveBlock {
+                    block_id: kv_str(&map, "block", span)?,
+                    from_step_id: kv_str(&map, "from", span)?,
+                    to_step_id: kv_str(&map, "to", span)?,
+                    index: kv_usize(&map, "index", span)?,
+                })
+            }
+            "update-block" => {
+                let map = p.parse_kv_map()?;
+                let step_id = kv_str(&map, "step", span)?;
+                let block = parse_block(&mut p)?;
+                Ok(ProtocolOperation::UpdateBlock { step_id, block })
+            }
+            "update-step" => {
+                let step = parse_step(&mut p)?;
+                Ok(ProtocolOperation::UpdateStep { step })
+            }
+            "update-protocol" => {
+                let map = p.parse_kv_map()?;
+                Ok(ProtocolOperation::UpdateProtocol { title: kv_opt_str(&map, "title") })
+            }
+            other => Err(vcs::TextError::expected(format!("unknown operation '{other}'"), span, "add-step|remove-step|move-step|add-block|remove-block|move-block|update-block|update-step|update-protocol")),
+        }
+    }
+    //#endregion Parser
+
+    //#region Printer
+    fn quote(value: &str) -> String {
+        let mut out = String::with_capacity(value.len() + 2);
+        out.push('"');
+        for ch in value.chars() {
+            match ch {
+                '\\' => out.push_str("\\\\"),
+                '"' => out.push_str("\\\""),
+                '\n' => out.push_str("\\n"),
+                _ => out.push(ch),
+            }
+        }
+        out.push('"');
+        out
+    }
+
+    fn fmt_num(value: f64) -> String {
+        value.to_string()
+    }
+
+    fn quote_json(value: &Value) -> String {
+        quote(&serde_json::to_string(value).unwrap_or_else(|_| "null".into()))
+    }
+
+    fn indent_str(depth: usize) -> String {
+        "  ".repeat(depth)
+    }
+
+    /// 🧱 Wraps `items` (each already rendered, without its own leading indentation) in `{ }`, one per
+    /// line indented at `depth + 1` when `pretty`, or space-joined on one line otherwise. The single
+    /// nesting primitive every braced construct (steps/blocks/options/fields/expr bodies) is built
+    /// from, so pretty-printed indentation stays correct at arbitrary nesting depth.
+    fn wrap_body(items: &[String], depth: usize, pretty: bool) -> String {
+        if pretty {
+            let inner_pad = indent_str(depth + 1);
+            let outer_pad = indent_str(depth);
+            let body: String = items.iter().map(|item| format!("{inner_pad}{item}\n")).collect();
+            format!("{{\n{body}{outer_pad}}}")
+        } else {
+            format!("{{ {} }}", items.join(" "))
+        }
+    }
+
+    fn print_option(option: &ProtocolBlockOption) -> String {
+        format!("opt value={} label={}", quote(&option.value), quote(&option.label))
+    }
+
+    fn print_vector_field(field: &ProtocolVectorField) -> String {
+        let mut out = format!("field key={}", quote(&field.key));
+        if let Some(label) = &field.label {
+            out.push_str(&format!(" label={}", quote(label)));
+        }
+        if let Some(value) = field.value {
+            out.push_str(&format!(" value={}", fmt_num(value)));
+        }
+        out
+    }
+
+    fn print_expr(expr: &ProtocolExpr, depth: usize, pretty: bool) -> String {
+        match expr {
+            ProtocolExpr::Const { value } => format!("const value={}", quote_json(value)),
+            ProtocolExpr::Var { name } => format!("var name={}", quote(name)),
+            ProtocolExpr::Eq { left, right } => {
+                let items = vec![print_expr(left, depth + 1, pretty), print_expr(right, depth + 1, pretty)];
+                format!("eq {}", wrap_body(&items, depth, pretty))
+            }
+            ProtocolExpr::And { items } => {
+                let printed: Vec<String> = items.iter().map(|item| print_expr(item, depth + 1, pretty)).collect();
+                format!("and {}", wrap_body(&printed, depth, pretty))
+            }
+            ProtocolExpr::Or { items } => {
+                let printed: Vec<String> = items.iter().map(|item| print_expr(item, depth + 1, pretty)).collect();
+                format!("or {}", wrap_body(&printed, depth, pretty))
+            }
+            ProtocolExpr::Truthy { expr } => {
+                let items = vec![print_expr(expr, depth + 1, pretty)];
+                format!("truthy {}", wrap_body(&items, depth, pretty))
+            }
+        }
+    }
+
+    fn print_block(block: &ProtocolBlock, depth: usize, pretty: bool) -> String {
+        let mut header = format!("block kind={} id={} label={}", block.kind, quote(&block.id), quote(&block.label));
+        if let Some(description) = &block.description {
+            header.push_str(&format!(" description={}", quote(description)));
+        }
+        if let Some(required) = block.required {
+            header.push_str(&format!(" required={required}"));
+        }
+        if let Some(placeholder) = &block.placeholder {
+            header.push_str(&format!(" placeholder={}", quote(placeholder)));
+        }
+        if let Some(default) = &block.default {
+            header.push_str(&format!(" default={}", quote_json(default)));
+        }
+        if let Some(min) = block.min {
+            header.push_str(&format!(" min={}", fmt_num(min)));
+        }
+        if let Some(max) = block.max {
+            header.push_str(&format!(" max={}", fmt_num(max)));
+        }
+        if let Some(step) = block.step {
+            header.push_str(&format!(" step={}", fmt_num(step)));
+        }
+        if let Some(unit) = &block.unit {
+            header.push_str(&format!(" unit={}", quote(unit)));
+        }
+        if let Some(text) = &block.text {
+            header.push_str(&format!(" text={}", quote(text)));
+        }
+        if let Some(schema) = &block.schema {
+            header.push_str(&format!(" schema={}", quote(schema)));
+        }
+        if let Some(src) = &block.src {
+            header.push_str(&format!(" src={}", quote(src)));
+        }
+        if let Some(accept) = &block.accept {
+            header.push_str(&format!(" accept={}", quote(accept)));
+        }
+        if let Some(fixture_slug) = &block.fixture_slug {
+            header.push_str(&format!(" fixtureSlug={}", quote(fixture_slug)));
+        }
+        if let Some(params) = &block.params {
+            header.push_str(&format!(" params={}", quote_json(params)));
+        }
+
+        let mut items = Vec::new();
+        if let Some(options) = &block.options {
+            let opts: Vec<String> = options.iter().map(print_option).collect();
+            items.push(format!("options {}", wrap_body(&opts, depth + 1, pretty)));
+        }
+        if let Some(fields) = &block.fields {
+            let flds: Vec<String> = fields.iter().map(print_vector_field).collect();
+            items.push(format!("fields {}", wrap_body(&flds, depth + 1, pretty)));
+        }
+        if let Some(condition) = &block.condition {
+            items.push(format!("condition {}", print_expr(condition, depth + 1, pretty)));
+        }
+        if items.is_empty() {
+            header
+        } else {
+            format!("{header} {}", wrap_body(&items, depth, pretty))
+        }
+    }
+
+    fn print_step(step: &ProtocolStep, depth: usize, pretty: bool) -> String {
+        let mut header = format!("step id={} title={}", quote(&step.id), quote(&step.title));
+        if let Some(description) = &step.description {
+            header.push_str(&format!(" description={}", quote(description)));
+        }
+        let items: Vec<String> = step.blocks.iter().map(|block| print_block(block, depth + 1, pretty)).collect();
+        format!("{header} {}", wrap_body(&items, depth, pretty))
+    }
+
+    /// 📤 Renders `spec` as `protocol id=/schema=/version=/title=` followed by its `steps { }` section
+    /// (see {@link parse_document} for the mirrored grammar).
+    pub(super) fn print_document(spec: &ProtocolSpec, pretty: bool) -> String {
+        let mut header = format!("protocol id={} schema={} version={}", quote(&spec.id), quote(&spec.schema), quote(&spec.version));
+        if let Some(title) = &spec.title {
+            header.push_str(&format!(" title={}", quote(title)));
+        }
+        let steps: Vec<String> = spec.steps.iter().map(|step| print_step(step, 1, pretty)).collect();
+        let steps_section = format!("steps {}", wrap_body(&steps, 0, pretty));
+        if pretty {
+            format!("{header}\n{steps_section}\n")
+        } else {
+            format!("{header} {steps_section}")
+        }
+    }
+
+    /// ⚡ Renders one `ProtocolOperation` as a single line — the four operations carrying a whole
+    /// `step`/`block` reuse the compact (space-joined) form of {@link print_step}/{@link print_block}.
+    pub(super) fn print_operation(operation: &super::ProtocolOperation) -> String {
+        use super::ProtocolOperation;
+        match operation {
+            ProtocolOperation::AddStep { step, index } => {
+                let mut header = "add-step".to_string();
+                if let Some(index) = index {
+                    header.push_str(&format!(" index={index}"));
+                }
+                format!("{header} {}", print_step(step, 0, false))
+            }
+            ProtocolOperation::RemoveStep { step_id } => format!("remove-step id={}", quote(step_id)),
+            ProtocolOperation::MoveStep { step_id, index } => format!("move-step id={} index={index}", quote(step_id)),
+            ProtocolOperation::AddBlock { step_id, block, index } => {
+                let mut header = format!("add-block step={}", quote(step_id));
+                if let Some(index) = index {
+                    header.push_str(&format!(" index={index}"));
+                }
+                format!("{header} {}", print_block(block, 0, false))
+            }
+            ProtocolOperation::RemoveBlock { step_id, block_id } => format!("remove-block step={} block={}", quote(step_id), quote(block_id)),
+            ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+                format!("move-block block={} from={} to={} index={index}", quote(block_id), quote(from_step_id), quote(to_step_id))
+            }
+            ProtocolOperation::UpdateBlock { step_id, block } => format!("update-block step={} {}", quote(step_id), print_block(block, 0, false)),
+            ProtocolOperation::UpdateStep { step } => format!("update-step {}", print_step(step, 0, false)),
+            ProtocolOperation::UpdateProtocol { title } => match title {
+                Some(title) => format!("update-protocol title={}", quote(title)),
+                None => "update-protocol".to_string(),
+            },
+        }
+    }
+    //#endregion Printer
+}
+
+impl vcs::DocumentDsl for ProtocolSpec {
+    const EXTENSION: &'static str = "protocol";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        protocol_text::parse_document(text)
+    }
+
+    fn print_dsl(&self) -> String {
+        protocol_text::print_document(self, true)
+    }
+}
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+impl vcs::OpText for ProtocolOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        protocol_text::parse_operation(line)
+    }
+
+    fn print_op(&self) -> String {
+        protocol_text::print_operation(self)
+    }
+}
+//#endregion 🔖OpText
+
 //#region 🔖GenerationForms
 pub mod generation_forms {
     //! 🧬 Shared Generate-mode state, CRUD, and declarative UI helpers for answering a `ProtocolSpec` as
@@ -1293,5 +2041,152 @@ mod tests {
         values.insert("show".into(), serde_json::json!(true));
         assert_eq!(visible_blocks(&step, &values).len(), 2);
     }
+
+    //#region 🔖DslAndOpText
+    fn minimal_block(id: &str, kind: &str) -> ProtocolBlock {
+        ProtocolBlock {
+            id: id.into(),
+            label: format!("Label {id}"),
+            kind: kind.into(),
+            description: None,
+            required: None,
+            placeholder: None,
+            default: None,
+            min: None,
+            max: None,
+            step: None,
+            unit: None,
+            text: None,
+            options: None,
+            fields: None,
+            schema: None,
+            src: None,
+            accept: None,
+            fixture_slug: None,
+            params: None,
+            condition: None,
+        }
+    }
+
+    /// 🧱 A block with EVERY optional property populated (including nested `options`/`fields` and a
+    /// deeply nested `condition` exercising every `ProtocolExpr` variant) — the DSL round-trip fixture.
+    fn fully_populated_block() -> ProtocolBlock {
+        ProtocolBlock {
+            id: "b-full".into(),
+            label: "Team Size".into(),
+            kind: "slider".into(),
+            description: Some("How many people?".into()),
+            required: Some(true),
+            placeholder: Some("Enter a number".into()),
+            default: Some(serde_json::json!(5)),
+            min: Some(1.0),
+            max: Some(50.0),
+            step: Some(1.0),
+            unit: Some("people".into()),
+            text: Some("Some note text\nwith a newline".into()),
+            options: Some(vec![ProtocolBlockOption { value: "red".into(), label: "Red".into() }, ProtocolBlockOption { value: "blue".into(), label: "Blue".into() }]),
+            fields: Some(vec![ProtocolVectorField { key: "x".into(), label: Some("X".into()), value: Some(1.5) }, ProtocolVectorField { key: "y".into(), label: None, value: None }]),
+            schema: Some("solid.step".into()),
+            src: Some("https://example.com/img.png".into()),
+            accept: Some("image/*".into()),
+            fixture_slug: Some("hexagonal-mushroom-column".into()),
+            params: Some(serde_json::json!({ "height": 6.0, "nested": { "a": [1, 2, "three\"quoted"] } })),
+            condition: Some(ProtocolExpr::And {
+                items: vec![
+                    ProtocolExpr::Truthy { expr: Box::new(ProtocolExpr::Var { name: "show-team-size".into() }) },
+                    ProtocolExpr::Eq { left: Box::new(ProtocolExpr::Var { name: "mode".into() }), right: Box::new(ProtocolExpr::Const { value: serde_json::json!("advanced") }) },
+                    ProtocolExpr::Or { items: vec![ProtocolExpr::Var { name: "a".into() }, ProtocolExpr::Var { name: "b".into() }] },
+                ],
+            }),
+        }
+    }
+
+    fn sample_spec() -> ProtocolSpec {
+        ProtocolSpec {
+            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
+            id: "recipe".into(),
+            version: "1".into(),
+            title: Some("Recipe".into()),
+            steps: vec![
+                ProtocolStep { id: "s1".into(), title: "Basics".into(), description: Some("First step".into()), blocks: vec![minimal_block("b1", "text"), fully_populated_block()] },
+                ProtocolStep { id: "s2".into(), title: "Review".into(), description: None, blocks: Vec::new() },
+            ],
+        }
+    }
+
+    #[test]
+    fn empty_protocol_projection_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&empty_protocol_projection());
+    }
+
+    #[test]
+    fn sample_spec_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&sample_spec());
+    }
+
+    #[test]
+    fn add_step_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Review".into(), description: Some("desc".into()), blocks: vec![minimal_block("b1", "text")] }, index: Some(1) });
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddStep { step: ProtocolStep { id: "step-3".into(), title: "Final".into(), description: None, blocks: Vec::new() }, index: None });
+    }
+
+    #[test]
+    fn remove_step_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::RemoveStep { step_id: "s1".into() });
+    }
+
+    #[test]
+    fn move_step_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::MoveStep { step_id: "s1".into(), index: 2 });
+    }
+
+    #[test]
+    fn add_block_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddBlock { step_id: "s1".into(), block: fully_populated_block(), index: Some(0) });
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddBlock { step_id: "s1".into(), block: minimal_block("b2", "boolean"), index: None });
+    }
+
+    #[test]
+    fn remove_block_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::RemoveBlock { step_id: "s1".into(), block_id: "b1".into() });
+    }
+
+    #[test]
+    fn move_block_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::MoveBlock { block_id: "b1".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 3 });
+    }
+
+    #[test]
+    fn update_block_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateBlock { step_id: "s1".into(), block: fully_populated_block() });
+    }
+
+    #[test]
+    fn update_step_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateStep { step: ProtocolStep { id: "s1".into(), title: "Basics".into(), description: Some("d".into()), blocks: vec![fully_populated_block()] } });
+    }
+
+    #[test]
+    fn update_protocol_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateProtocol { title: Some("Renamed".into()) });
+        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateProtocol { title: None });
+    }
+
+    #[test]
+    fn document_text_round_trips_after_applied_operations() {
+        let mut store = ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None));
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }],
+                description: None,
+            })
+            .expect("add step");
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None })
+            .expect("add block");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::UpdateProtocol { title: Some("Recipe".into()) }], description: None }).expect("update title");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslAndOpText
 }
 //#endregion 🧪Tests

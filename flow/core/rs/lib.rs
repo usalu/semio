@@ -6120,7 +6120,68 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_port_labels_follow_draw_lod() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
+        // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
+        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
+        let json = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 140, "y": -60, "zoom": 2.2 },
+  "widgets": [
+    { "kind": "inputSlider", "id": "width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
+    {
+      "kind": "neuron",
+      "id": "rect",
+      "neuronKind": "brep.curve.rectangle",
+      "params": {},
+      "input_ports": ["width", "height"],
+      "preview": false
+    },
+    {
+      "kind": "neuron",
+      "id": "vector",
+      "neuronKind": "math.vector",
+      "params": {},
+      "input_ports": ["x", "y", "z"],
+      "preview": false
+    },
+    {
+      "kind": "neuron",
+      "id": "extrude",
+      "neuronKind": "brep.solid.extrude",
+      "params": {},
+      "input_ports": ["wire", "vector"],
+      "preview": true
+    },
+    {
+      "kind": "neuron",
+      "id": "volume",
+      "neuronKind": "brep.measure.volume",
+      "params": {},
+      "input_ports": ["geometry"],
+      "preview": false
+    }
+  ],
+  "synapses": [
+    { "id": "e1", "from": "width", "to": "rect", "fromPort": "number", "toPort": "width" },
+    { "id": "e2", "from": "height", "to": "rect", "fromPort": "number", "toPort": "height" },
+    { "id": "e3", "from": "rect", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
+    { "id": "e4", "from": "distance", "to": "vector", "fromPort": "number", "toPort": "z" },
+    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e6", "from": "extrude", "to": "volume", "fromPort": "solid", "toPort": "geometry" }
+  ],
+  "layout": {
+    "rect": { "x": 120, "y": -40 },
+    "vector": { "x": 200, "y": 20 },
+    "extrude": { "x": 280, "y": -40 },
+    "volume": { "x": 360, "y": -40 },
+    "width": { "x": 40, "y": -60 },
+    "height": { "x": 40, "y": -20 },
+    "distance": { "x": 120, "y": 20 }
+  }
+}
+"#;
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -6147,7 +6208,68 @@ mod tests {
     #[test]
     fn rectangle_extrude_fixture_evaluates_solid_output() {
         let _guard = RECTANGLE_EXTRUDE_FIXTURE_TEST_LOCK.get_or_init(|| Mutex::new(())).lock().unwrap_or_else(|error| error.into_inner());
-        let json = include_str!("../../../procedural/3d/example/rectangle-extrude-volume.procedural.json");
+        // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
+        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
+        let json = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 140, "y": -60, "zoom": 2.2 },
+  "widgets": [
+    { "kind": "inputSlider", "id": "width", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "height", "value": 2, "min": 0.1, "max": 10, "step": 0.1 },
+    { "kind": "inputSlider", "id": "distance", "value": 3, "min": 0.1, "max": 10, "step": 0.1 },
+    {
+      "kind": "neuron",
+      "id": "rect",
+      "neuronKind": "brep.curve.rectangle",
+      "params": {},
+      "input_ports": ["width", "height"],
+      "preview": false
+    },
+    {
+      "kind": "neuron",
+      "id": "vector",
+      "neuronKind": "math.vector",
+      "params": {},
+      "input_ports": ["x", "y", "z"],
+      "preview": false
+    },
+    {
+      "kind": "neuron",
+      "id": "extrude",
+      "neuronKind": "brep.solid.extrude",
+      "params": {},
+      "input_ports": ["wire", "vector"],
+      "preview": true
+    },
+    {
+      "kind": "neuron",
+      "id": "volume",
+      "neuronKind": "brep.measure.volume",
+      "params": {},
+      "input_ports": ["geometry"],
+      "preview": false
+    }
+  ],
+  "synapses": [
+    { "id": "e1", "from": "width", "to": "rect", "fromPort": "number", "toPort": "width" },
+    { "id": "e2", "from": "height", "to": "rect", "fromPort": "number", "toPort": "height" },
+    { "id": "e3", "from": "rect", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
+    { "id": "e4", "from": "distance", "to": "vector", "fromPort": "number", "toPort": "z" },
+    { "id": "e5", "from": "vector", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e6", "from": "extrude", "to": "volume", "fromPort": "solid", "toPort": "geometry" }
+  ],
+  "layout": {
+    "rect": { "x": 120, "y": -40 },
+    "vector": { "x": 200, "y": 20 },
+    "extrude": { "x": 280, "y": -40 },
+    "volume": { "x": 360, "y": -40 },
+    "width": { "x": 40, "y": -60 },
+    "height": { "x": 40, "y": -20 },
+    "distance": { "x": 120, "y": 20 }
+  }
+}
+"#;
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());
@@ -6160,7 +6282,40 @@ mod tests {
 
     #[test]
     fn hexagonal_mushroom_fixture_reports_extruded_solid_output() {
-        let json = include_str!("../../../procedural/3d/example/hexagonal-mushroom-column.procedural.json");
+        // 🩹 Was `include_str!` of procedural's example fixture; procedural migrated that fixture to a
+        // handcrafted DSL (`vcs::DocumentDsl`) — inlined the same flow-fixture JSON this test actually
+        // parses (`FlowHost::parse_fixture_json`), decoupled from procedural's document format.
+        let json = r#"{
+  "schema": "flow.fixture",
+  "camera": { "x": 94.75581571737445, "y": -97.50833134679668, "zoom": 1.7844325616011099 },
+  "widgets": [
+    { "kind": "inputSlider", "id": "height", "label": "Column Height", "value": 6.0, "min": 0.0, "max": 10.0, "step": 0.5, "unit": "m" },
+    { "kind": "inputSlider", "id": "radius", "label": "Profile Radius", "value": 0.5, "min": 0.1, "max": 2.0, "step": 0.05, "unit": "m" },
+    { "kind": "inputSlider", "id": "sides", "label": "Side Count", "value": 6.0, "min": 3.0, "max": 12.0, "step": 1.0 },
+    { "kind": "neuron", "id": "profile", "neuronKind": "brep.curve.polygon", "params": {}, "input_ports": ["radius", "sides"], "preview": false },
+    { "kind": "neuron", "id": "extrusion-axis", "neuronKind": "math.vector", "params": {}, "input_ports": ["x", "y", "z"], "preview": false },
+    { "kind": "neuron", "id": "extrude", "neuronKind": "brep.solid.extrude", "params": {}, "input_ports": ["wire", "vector"], "preview": true },
+    { "kind": "outputPreview", "id": "column-preview", "preview": {}, "expanded": [] }
+  ],
+  "synapses": [
+    { "id": "e1", "from": "height", "to": "extrusion-axis", "fromPort": "number", "toPort": "z" },
+    { "id": "e2", "from": "radius", "to": "profile", "fromPort": "number", "toPort": "radius" },
+    { "id": "e3", "from": "sides", "to": "profile", "fromPort": "number", "toPort": "sides" },
+    { "id": "e4", "from": "profile", "to": "extrude", "fromPort": "wire", "toPort": "wire" },
+    { "id": "e5", "from": "extrusion-axis", "to": "extrude", "fromPort": "vector", "toPort": "vector" },
+    { "id": "e6", "from": "extrude", "to": "column-preview", "fromPort": "solid", "toPort": "" }
+  ],
+  "layout": {
+    "height": { "x": -197.1913555449187, "y": -102.70789997839545 },
+    "radius": { "x": -156.03796288966, "y": -177.3373596163105 },
+    "sides": { "x": -156.43467044109153, "y": -155.28679730672846 },
+    "profile": { "x": -64.49671116929301, "y": -163.40310309861746 },
+    "extrusion-axis": { "x": -65.26327021036892, "y": -116.45687403531778 },
+    "extrude": { "x": 34.842068675720895, "y": -154.18083645790136 },
+    "column-preview": { "x": 237.4197774877085, "y": -103.14518978933415 }
+  }
+}
+"#;
         let fixture = FlowHost::parse_fixture_json(json).expect("fixture json");
         let mut host = FlowHost::from_fixture(fixture);
         host.set_neuron_kind_infos_json(&fixture_kind_infos_json());

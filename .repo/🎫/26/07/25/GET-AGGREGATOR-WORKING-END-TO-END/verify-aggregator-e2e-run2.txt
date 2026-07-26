@@ -1,0 +1,4 @@
+[console:error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[pageerror] TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx
+[console:error] Failed to load resource: the server responded with a status of 500 (Internal Server Error)
+[pageerror] TypeError: Failed to fetch dynamically imported module: http://127.0.0.1:6023/@fs/Users/ueli/Documents/semio/framework/renderer/react/index.tsx

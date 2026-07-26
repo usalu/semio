@@ -7705,6 +7705,7 @@ export function FrameworkOsShell({
           })()}
       </LevelProvider>
     </UIFindProvider>
+    </AppKeybindingsContext.Provider>
     </SetWindowTitleContext.Provider>
   );
 }
@@ -9182,7 +9183,7 @@ function buildSettingsGeneralTree(host: SettingsHostApi): TreePanelConfig {
       },
       {
         id: "framework.settings.driver.editor",
-        label: `${shellLabel("ui.settings.tab.driver")}${host.driverDirty ? ` (${shellLabel("ui.settings.driver.dirty")})` : ""}`,
+        label: `${shellLabel("ui.settings.tab.driver")}${host.driverDirty ? ` (${shellLabel("settings.driver.dirty")})` : ""}`,
         defaultOpen: false,
         items: [
           driverAxisSelectRow("labels", shellLabel("settings.driver.labels"), host.driver.labels, [
@@ -14170,6 +14171,16 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [contextMenu, dispatch, handleZoomToSelection, windowInstanceId],
   );
 
+  const mapWorldContextMenuSpecs = useMapContextMenuSpecs(handleWorldMenuDispatch);
+  const mapSuggestionContextMenuSpecs = useMapContextMenuSpecs((action, args) => {
+    if (action === "acceptSuggestion") {
+      setVortexPointerArm(null);
+      setConnectDragSource(null);
+      setConnectDragHoverPosition(null);
+    }
+    dispatch(action, args);
+  });
+
   const hoveredVortexFullIdRef = useRef<string | null>(null);
   useEffect(() => {
     hoveredVortexFullIdRef.current = interaction.hoveredVortexFullId ?? null;
@@ -14982,7 +14993,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
       <ContextMenuController
         open={contextMenu != null && contextMenuItems.length > 0 && !suggestionMenuOwnsThisWindow}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenuItems, handleWorldMenuDispatch)}
+        items={mapWorldContextMenuSpecs(contextMenuItems)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -14992,14 +15003,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
           open
           closeOnSelect={false}
           position={{ x: interaction.suggestionMenu!.x, y: interaction.suggestionMenu!.y }}
-          items={mapContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0), (action, args) => {
-            if (action === "acceptSuggestion") {
-              setVortexPointerArm(null);
-              setConnectDragSource(null);
-              setConnectDragHoverPosition(null);
-            }
-            dispatch(action, args);
-          })}
+          items={mapSuggestionContextMenuSpecs(suggestionMenuItems(interaction.suggestionMenu!, interaction.brushCandidateIndex ?? 0))}
           onOpenChange={(open) => {
             if (!open) handleSuggestionClose();
           }}
@@ -15510,6 +15514,8 @@ function WasmGraphSurface({
     [controllerId, onAction, surfaceId],
   );
 
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+
   const paintOverlays = useCallback(() => {
     const session = sessionRef.current;
     const labelCanvas = labelCanvasRef.current;
@@ -15763,7 +15769,7 @@ function WasmGraphSurface({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenuItems, dispatch)}
+        items={mapContextMenu(contextMenuItems)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -15809,6 +15815,8 @@ function DiagramGraphFallback({
     },
     [node.controllerId, node.surfaceId, onAction],
   );
+
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [contextMenu, setContextMenu] = useState<{ readonly x: number; readonly y: number } | null>(null);
@@ -15905,7 +15913,7 @@ function DiagramGraphFallback({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenuItems, dispatch)}
+        items={mapContextMenu(contextMenuItems)}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -16624,6 +16632,19 @@ export function FlowGraphCanvasHost({
     [controllerId, onAction, surfaceId],
   );
 
+  const handleFlowMenuDispatch = useCallback(
+    (action: string, args?: Record<string, unknown>) => {
+      if (action === "openSpotlight") {
+        const host = containerRef.current;
+        if (host) openSpotlightAtClient(contextMenu?.x ?? 0, contextMenu?.y ?? 0, host);
+        return;
+      }
+      dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args);
+    },
+    [contextMenu, dispatch, scene.fixtureJson],
+  );
+  const mapFlowContextMenu = useMapContextMenuSpecs(handleFlowMenuDispatch);
+
   // 🧵 Dispatches the mutated fixture to the plugin and returns immediately — evaluation happens
   // off the main thread in the plugin worker's `flowEvalTick` chain, never here. The next scene
   // resync applies its `evalJson`/`computingJson` back onto this session (`syncFlowSessionFromScene`).
@@ -17234,14 +17255,7 @@ export function FlowGraphCanvasHost({
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenu?.items ?? [], (action, args) => {
-          if (action === "openSpotlight") {
-            const host = containerRef.current;
-            if (host) openSpotlightAtClient(contextMenu?.x ?? 0, contextMenu?.y ?? 0, host);
-            return;
-          }
-          dispatch(action, action === "openInstance" ? { ...args, instanceId: resolveFixtureWidgetInstanceId(scene.fixtureJson, contextMenu?.widgetId) } : args);
-        })}
+        items={mapFlowContextMenu(contextMenu?.items ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}
@@ -20186,6 +20200,8 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
     [node.controllerId, node.surfaceId, onAction],
   );
 
+  const mapContextMenu = useMapContextMenuSpecs(dispatch);
+
   /** @emoji 🎞️ Coalesces renderFrame() to at most one per animation frame, no matter how many raw pointer/wheel events fire in between — mirrors the premigration `scheduleInputInvalidate()` pattern. */
   const scheduleRender = useCallback((): void => {
     if (renderScheduledRef.current) return;
@@ -20810,7 +20826,7 @@ export function Board2dHost({ node, onAction }: ComponentSceneHostProps) {
       <ContextMenuController
         open={contextMenu != null}
         position={contextMenu ?? { x: 0, y: 0 }}
-        items={mapContextMenuSpecs(contextMenu?.items ?? [], dispatch)}
+        items={mapContextMenu(contextMenu?.items ?? [])}
         onOpenChange={(open) => {
           if (!open) setContextMenu(null);
         }}

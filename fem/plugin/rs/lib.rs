@@ -1541,7 +1541,7 @@ fn create_fem2d_app() -> App {
             .view_action("setResultDisplay", "Set Result Display")
             .action_args("setResultDisplay", result_display_action_args()),
     )
-    .example("default", "Default", FEM2D_EXAMPLE_JSON)
+    .example("default", "Family House", FEM2D_EXAMPLE_JSON)
     .program("fem2d", "FEM 2D", "structure")
 }
 
@@ -1612,7 +1612,7 @@ fn create_fem3d_app() -> App {
             .view_action("setResultDisplay", "Set Result Display")
             .action_args("setResultDisplay", result_display_action_args()),
     )
-    .example("default", "Default", FEM3D_EXAMPLE_JSON)
+    .example("default", "Family House", FEM3D_EXAMPLE_JSON)
     .program("fem3d", "FEM 3D", "structure")
 }
 

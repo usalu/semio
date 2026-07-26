@@ -137,9 +137,37 @@ const WRITER_PANEL_TAB_DOCUMENT_OUTLINE_ID: &str = "framework.panel.document.out
 const WRITER_PLAY_WINDOW_KIND: &str = "writer-main";
 const WRITER_DOCUMENT_SCHEMA: &str = "writer.document";
 
-const JACK_EXAMPLE_JSON: &str = include_str!("../../example/jack.writer.json");
-const DAG_JACK_EXAMPLE_JSON: &str = include_str!("../../example/dag.jack.writer.json");
+/// 📄 The `jack` example document, handcrafted in the `.writer` DSL (see `vcs::DocumentDsl`) instead
+/// of JSON — {@link jack_example_document}/{@link jack_example_json} are the only ways it should be
+/// consumed.
+const JACK_EXAMPLE_TEXT: &str = include_str!("../../example/jack.writer");
+/// 📄 The `dag.jack` example document, handcrafted in the `.writer` DSL — see {@link JACK_EXAMPLE_TEXT}.
+const DAG_JACK_EXAMPLE_TEXT: &str = include_str!("../../example/dag.jack.writer");
 //#endregion 🔖Constants
+
+//#region 🔖Examples
+/// 📄 The `jack` example, parsed once from {@link JACK_EXAMPLE_TEXT} — the source of truth for every
+/// call site below (`setActiveExample`, `.example("jack", ...)`, tests); never re-embed the raw text.
+fn jack_example_document() -> WriterProjection {
+    <WriterProjection as vcs::DocumentDsl>::parse_dsl(JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+}
+
+/// 📄 JSON re-serialization of {@link jack_example_document}, for the framework-generic call sites
+/// (`.example(...)`, `render(...)`) that still take a document as a JSON string.
+fn jack_example_json() -> String {
+    serde_json::to_string(&jack_example_document()).expect("serialize jack example document")
+}
+
+/// 📄 The `dag.jack` example, parsed once from {@link DAG_JACK_EXAMPLE_TEXT} — see {@link jack_example_document}.
+fn dag_jack_example_document() -> WriterProjection {
+    <WriterProjection as vcs::DocumentDsl>::parse_dsl(DAG_JACK_EXAMPLE_TEXT).unwrap_or_else(|_| empty_writer_projection())
+}
+
+/// 📄 JSON re-serialization of {@link dag_jack_example_document} — see {@link jack_example_json}.
+fn dag_jack_example_json() -> String {
+    serde_json::to_string(&dag_jack_example_document()).expect("serialize dag.jack example document")
+}
+//#endregion 🔖Examples
 
 //#region 🔖Types
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1104,8 +1132,8 @@ impl DocumentApp for WriterPlayApp {
             "setActiveExample" => {
                 let example_id = str_arg("exampleId").unwrap_or("");
                 let document = match example_id {
-                    "jack" => serde_json::from_str::<WriterProjection>(JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
-                    "dag.jack" => serde_json::from_str::<WriterProjection>(DAG_JACK_EXAMPLE_JSON).unwrap_or_else(|_| empty_writer_projection()),
+                    "jack" => jack_example_document(),
+                    "dag.jack" => dag_jack_example_document(),
                     _ => empty_writer_projection(),
                 };
                 ActionEmit::operations(vec![WriterOperation::SetDocument { document }])
@@ -1493,8 +1521,8 @@ fn create_writer_app() -> App {
             .keybinding("mod+z", "undo")
             .keybinding("mod+shift+z", "redo"),
     )
-    .example("jack", "Jack", JACK_EXAMPLE_JSON)
-    .example("dag.jack", "Dag Jack", DAG_JACK_EXAMPLE_JSON)
+    .example("jack", "Jack", jack_example_json())
+    .example("dag.jack", "Dag Jack", dag_jack_example_json())
     .program("writer", "Writer", "text.document")
 }
 
@@ -1558,7 +1586,7 @@ mod tests {
     #[test]
     fn renders_document_tree_for_jack() {
         let mut app = new_app::<WriterPlayApp>();
-        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_DOCUMENT, Some(&jack_example_json()), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("\"type\":\"tree\""));
         assert!(json.contains("Query"));
@@ -1816,7 +1844,7 @@ mod tests {
     #[test]
     fn scene_emits_placeholders_selectable_spans_and_newline_gates_for_jack() {
         let mut app = new_app::<WriterPlayApp>();
-        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(JACK_EXAMPLE_JSON), &ViewState::default()).expect("render");
+        let node = app.render(WRITER_PLAY_BODY_MAIN, Some(&jack_example_json()), &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains("placeholdersJson"));
         assert!(json.contains("selectableSpansJson"));

@@ -1,0 +1,5 @@
+imperative schema="imperative.document"
+steps {
+  step id="step-1" kind=state.set params={ key="counter" value=0.0 }
+  step id="step-2" kind=log.print params={ message="hello imperative" }
+}

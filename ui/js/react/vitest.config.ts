@@ -16,6 +16,7 @@ export default defineConfig({
     name: "@semio-tech/ui-react",
     environment: "jsdom",
     includeSource: ["index.tsx"],
+    coverage: { include: ["index.tsx"] },
     passWithNoTests: true,
     setupFiles: [resolve(root, "vitest.setup.ts")],
   },

@@ -8,7 +8,8 @@ pub(crate) mod domain {
     //#region 🔖DocumentVcs
     use vcs::{
         collection_diff_from_operation, create_document_vcs_envelope, invert_collection_operation, CollectionDiff, CollectionOperation,
-        DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable,
+        DocumentDsl, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, OpText, Patchable,
+        TextError, TextSpan,
     };
     use serde::{Deserialize, Serialize};
     

@@ -20847,7 +20847,6 @@ impl ShellState {
             ]),
             CommandDefinition::new("os.setTerminology", "Set Terminology", CommandScope::Os, "language")
                 .with_args([ActionArgDef::select("value", "Terminology", terminology_options).required()]),
-            CommandDefinition::new("os.toggleCompact", "Toggle Compact Layout", CommandScope::Os, "layout"),
             CommandDefinition::new("os.resetDock", "Reset Dock Layout", CommandScope::Os, "layout"),
         ]
     }
@@ -20934,8 +20933,8 @@ impl ShellState {
     /// 🚀 Executes an os-level command by id (the wgpu mirror of `os-shell.tsx`'s `dispatchOsCommand`):
     /// `os.resetDock` clears the persisted layout override locally (no document round-trip, exactly like
     /// React's `RESET_DOCK` resetting `dockLayoutStore`/`dockUiStateStore`); every other command reuses the
-    /// existing `"framework"` controller `dispatch_action` switch (`setAppearance`/`setExpertise`/
-    /// `setLocale`/`setTerminology`/`setCompact`) that already backs the Settings panel's selects, so this
+    /// existing `"framework"` controller `dispatch_action` switch (`setAppearance`/`setDriver`/
+    /// `setLocale`/`setTerminology`) that already backs the Settings panel's selects, so this
     /// never invents a new mutation path.
     pub(crate) async fn apply_os_command(&mut self, command_id: &str, option_value: Option<&str>) -> Result<(), String> {
         match command_id {
@@ -20944,22 +20943,13 @@ impl ShellState {
                 self.sync_dock();
                 Ok(())
             }
-            "os.toggleCompact" => {
-                let next = !self.compact_mode;
-                self.dispatch_action(ActionDescriptor {
-                    controller_id: "framework".into(),
-                    action: "setCompact".into(),
-                    args: Some(serde_json::json!({ "value": next })),
-                })
-                .await
-            }
-            "os.setAppearance" | "os.setExpertise" | "os.setLocale" | "os.setTerminology" => {
+            "os.setAppearance" | "os.setDriver" | "os.setLocale" | "os.setTerminology" => {
                 let Some(value) = option_value else {
                     return Ok(());
                 };
                 let action = match command_id {
                     "os.setAppearance" => "setAppearance",
-                    "os.setExpertise" => "setExpertise",
+                    "os.setDriver" => "setDriver",
                     "os.setLocale" => "setLocale",
                     "os.setTerminology" => "setTerminology",
                     _ => unreachable!(),
@@ -20982,7 +20972,7 @@ impl ShellState {
     /// `PanelGroup`" per its own doc comment — and the `panel_ui` registration/drawing that would surface a
     /// brand-new tab live in `shell::ShellLifecycle`/`shell::ShellChrome`, outside this region's ownership
     /// this wave). Every row for a command whose id already has a `"framework"` `dispatch_action` arm
-    /// (appearance/expertise/locale/terminology/compact) is fully interactive the moment some future wave
+    /// (appearance/driver/locale/terminology) is fully interactive the moment some future wave
     /// wires this into `panel_ui`, exactly like `build_settings_general_ui`'s selects; `os.resetDock` has
     /// no such arm to attach a plain `ActionDescriptor` to (only the ⌘K search's `"os-command:"` string
     /// redirect can reach `apply_os_command` for it), so it renders as a pointer to command search instead
@@ -21029,23 +21019,23 @@ impl ShellState {
     }
 
     /// 🎛️ One `build_command_panel_ui` row: a `Select` for the four os commands whose single arg already
-    /// has a "framework" `dispatch_action` arm, a `Button` for the compact-layout toggle, else a plain
-    /// (non-interactive) label — see `build_command_panel_ui`'s doc comment for why `os.resetDock` and any
-    /// future arg-carrying Plugin/App/Mode command fall into that last case.
+    /// has a "framework" `dispatch_action` arm, else a plain (non-interactive) label — see
+    /// `build_command_panel_ui`'s doc comment for why `os.resetDock` and any future arg-carrying
+    /// Plugin/App/Mode command fall into that last case.
     fn build_command_panel_row(&self, entry: &ResolvedCommand) -> UiNode {
         let definition = &entry.definition;
         if let Some(arg) = definition.args.first() {
             if let semio_framework_core::ActionArgControl::Select { options } = &arg.control {
                 let value = match definition.id.as_str() {
                     "os.setAppearance" => self.appearance_id.clone(),
-                    "os.setExpertise" => self.expertise.clone(),
+                    "os.setDriver" => self.driver_id.clone(),
                     "os.setLocale" => self.locale_id.clone(),
                     "os.setTerminology" => self.terminology_id.clone(),
                     _ => options.first().map(|option| option.value.clone()).unwrap_or_default(),
                 };
                 let action = match definition.id.as_str() {
                     "os.setAppearance" => "setAppearance",
-                    "os.setExpertise" => "setExpertise",
+                    "os.setDriver" => "setDriver",
                     "os.setLocale" => "setLocale",
                     "os.setTerminology" => "setTerminology",
                     other => other,
@@ -21065,20 +21055,6 @@ impl ShellState {
                     },
                 });
             }
-        }
-        if definition.id == "os.toggleCompact" {
-            return UiNode::Button(UiButtonNode {
-                id: Some(format!("shell.commands.{}", definition.id)),
-                icon_id: "toggle-left".into(),
-                label: definition.label.clone(),
-                action: ActionDescriptor {
-                    controller_id: "framework".into(),
-                    action: "setCompact".into(),
-                    args: Some(serde_json::json!({ "value": !self.compact_mode })),
-                },
-                style: None,
-                presence: UiPresence::default(),
-});
         }
         UiNode::Text(UiTextNode { presence: UiPresence::default(),
             value: if definition.id == "os.resetDock" {
@@ -21302,10 +21278,9 @@ mod command_registry_tests {
             ids,
             vec![
                 "os.setAppearance",
-                "os.setExpertise",
+                "os.setDriver",
                 "os.setLocale",
                 "os.setTerminology",
-                "os.toggleCompact",
                 "os.resetDock",
             ]
         );
@@ -21454,13 +21429,13 @@ mod command_registry_tests {
     }
 
     #[test]
-    fn apply_os_command_toggle_compact_flips_current_value() {
+    fn apply_os_command_set_driver_updates_driver_id() {
         let mut shell = test_shell_state();
-        assert!(!shell.compact_mode);
-        pollster::block_on(shell.apply_os_command("os.toggleCompact", None)).expect("toggle compact never errors");
-        assert!(shell.compact_mode);
-        pollster::block_on(shell.apply_os_command("os.toggleCompact", None)).expect("toggle compact never errors");
-        assert!(!shell.compact_mode);
+        assert_eq!(shell.driver_id, "default");
+        pollster::block_on(shell.apply_os_command("os.setDriver", Some("compact"))).expect("set driver never errors");
+        assert_eq!(shell.driver_id, "compact");
+        pollster::block_on(shell.apply_os_command("os.setDriver", Some("default"))).expect("set driver never errors");
+        assert_eq!(shell.driver_id, "default");
     }
 
     #[test]
@@ -25568,10 +25543,10 @@ const UI_CHROME_APPEARANCE_STORAGE_KEY: &str = "ui.chrome.appearance";
 const UI_CHROME_LOCALE_STORAGE_KEY: &str = "ui.chrome.locale";
 /// 🔑 Byte-identical to `UI_CHROME_TERMINOLOGY_STORAGE_KEY` (`ui/js/react/index.tsx:2186`).
 const UI_CHROME_TERMINOLOGY_STORAGE_KEY: &str = "ui.chrome.terminology";
-/// 🔑 Byte-identical to `UI_CHROME_COMPACT_STORAGE_KEY` (`ui/js/react/index.tsx:2100`).
-const UI_CHROME_COMPACT_STORAGE_KEY: &str = "ui.chrome.compact";
-/// 🔑 Byte-identical to `UI_CHROME_EXPERTISE_STORAGE_KEY` (`ui/js/react/index.tsx:2115`).
-const UI_CHROME_EXPERTISE_STORAGE_KEY: &str = "ui.chrome.expertise";
+/// 🔑 Byte-identical to `UI_CHROME_DRIVER_STORAGE_KEY` (`ui/js/react/index.tsx`). Custom drivers
+/// (`ui.drivers.custom`) are a JS-only editor feature this wgpu mirror doesn't surface yet — only the
+/// active driver id round-trips here, same scope the old `compact`/`expertise` fields had.
+const UI_CHROME_DRIVER_STORAGE_KEY: &str = "ui.chrome.driver";
 /// 🔑 Byte-identical to `UI_CHROME_LAYOUT_STORAGE_KEY` (`ui/js/react/index.tsx:2152`).
 const UI_CHROME_LAYOUT_STORAGE_KEY: &str = "ui.chrome.layout";
 /// 🔑 Byte-identical to `UI_CHROME_THEME_ID_STORAGE_KEY` (`ui/js/react/index.tsx:2201`).
@@ -25710,7 +25685,7 @@ fn prefs_set(key: &str, value: &str) {
 //#region 🔒PrefLocks
 /// 🔒 `SEMIO_LOCKED_*` env-driven pref locks — mirrors `os-shell.tsx`'s `FrameworkOsLocks`
 /// (`:372-378`, read via `VITE_SEMIO_LOCKED_*` in `framework/product/os/dev/js/index.ts:19-23`):
-/// appearance/locale/terminology/themeId may be locked; compact/expertise/layout/customThemes
+/// appearance/locale/terminology/themeId may be locked; driver/layout/customThemes/customDrivers
 /// deliberately stay unlocked in React too. A locked pref skips its localStorage write. Native-only
 /// in practice (wasm32-unknown-unknown has no process env at runtime, so this is always empty
 /// there — kiosk/demo locking is a native `semio-wgpu-native` deployment concern).
@@ -26100,8 +26075,7 @@ struct UiPrefsSnapshot {
     appearance_id: String,
     locale_id: String,
     terminology_id: String,
-    compact_mode: bool,
-    expertise: String,
+    driver_id: String,
     theme_id: String,
     ui_layout: String,
     worker_count: u32,
@@ -26113,8 +26087,7 @@ impl UiPrefsSnapshot {
             appearance_id: state.appearance_id.clone(),
             locale_id: state.locale_id.clone(),
             terminology_id: state.terminology_id.clone(),
-            compact_mode: state.compact_mode,
-            expertise: state.expertise.clone(),
+            driver_id: state.driver_id.clone(),
             theme_id: active_theme_id(),
             ui_layout: active_ui_layout(),
             worker_count: active_worker_count(),
@@ -26162,10 +26135,7 @@ impl ShellState {
         self.terminology_id = locks.terminology.clone().unwrap_or_else(|| {
             prefs_get(UI_CHROME_TERMINOLOGY_STORAGE_KEY).unwrap_or_else(|| UI_TERMINOLOGY_NATIVE.to_string())
         });
-        self.compact_mode = prefs_get(UI_CHROME_COMPACT_STORAGE_KEY).as_deref() == Some("true");
-        self.expertise = prefs_get(UI_CHROME_EXPERTISE_STORAGE_KEY)
-            .filter(|value| value == "beginner" || value == "normal" || value == "expert")
-            .unwrap_or_else(|| "normal".to_string());
+        self.driver_id = prefs_get(UI_CHROME_DRIVER_STORAGE_KEY).unwrap_or_else(|| "default".to_string());
         with_chrome_prefs(|_| {}); // ensures CHROME_PREFS is initialized from storage before any lock override
         if let Some(locked_theme) = &locks.theme_id {
             set_active_theme_id(locked_theme);
@@ -26186,8 +26156,7 @@ impl ShellState {
         if locks.appearance.is_none() {
             prefs_set(UI_CHROME_APPEARANCE_STORAGE_KEY, &snapshot.appearance_id);
         }
-        prefs_set(UI_CHROME_COMPACT_STORAGE_KEY, if snapshot.compact_mode { "true" } else { "false" });
-        prefs_set(UI_CHROME_EXPERTISE_STORAGE_KEY, &snapshot.expertise);
+        prefs_set(UI_CHROME_DRIVER_STORAGE_KEY, &snapshot.driver_id);
         if locks.locale.is_none() {
             prefs_set(UI_CHROME_LOCALE_STORAGE_KEY, &snapshot.locale_id);
         }
@@ -26314,7 +26283,7 @@ mod ui_prefs_themes_i18n_tests {
         state.persist_ui_prefs_if_changed();
         let after_noop_persist = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
         assert!(after_load == after_noop_persist);
-        state.compact_mode = !state.compact_mode;
+        state.driver_id = "compact".to_string();
         state.persist_ui_prefs_if_changed();
         let after_change = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
         assert!(after_change != after_noop_persist);

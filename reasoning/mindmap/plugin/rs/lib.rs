@@ -1,10 +1,7 @@
 //! 🗺️ Mindmap plugin — WIRES app in a hot-swappable WASM component.
 //! 🧠 Mindmap Wires plugin — declarative WIRES play app bundled as a hot-swappable WASM component.
 
-use reasoning_mindmap::{
-    empty_board_fixture, empty_mindmap_wires_document, empty_wires_fixture, find_board_node, MindmapWiresDocument, MindmapWiresOperation,
-    MINDMAP_BOARD_SCHEMA,
-};
+use reasoning_mindmap::{empty_mindmap_wires_document, find_board_node, MindmapWiresDocument, MindmapWiresOperation};
 use reasoning_mindmap_wires::{DefaultWiresExtension, RelationshipKind};
 use semio_framework_plugin::{
     app_labels, build_canvas_2d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels,
@@ -15,6 +12,7 @@ use semio_framework_plugin::{
 };
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const WIRES_PLAY_APP_ID: &str = "reasoning-wires-play";
@@ -26,7 +24,10 @@ const WIRES_PLAY_BODY_CATALOGUE: &str = "reasoning.wires.catalogue";
 const WIRES_PLAY_BODY_PROPERTIES: &str = "reasoning.wires.properties";
 const WIRES_FIXTURE_SCHEMA: &str = "reasoning.wires.fixture";
 const WIRES_PLAY_EXAMPLE_METABOLISM_ID: &str = "metabolism";
-const METABOLISM_WIRES_EXAMPLE_JSON: &str = include_str!("../../wires/example/metabolism.wires.json");
+/// 📄 The `metabolism` example, handcrafted in the `.wires` DSL (see `reasoning_mindmap::mindmap_text`
+/// via {@link vcs::DocumentDsl}) instead of JSON — source of truth for every "metabolism" example call
+/// site (`setActiveExample`, `.example` manifest registration, tests).
+const METABOLISM_WIRES_EXAMPLE_TEXT: &str = include_str!("../../wires/example/metabolism.wires");
 
 const WIRES_PLAY_DOCUMENT_NAMESPACE: &str = "wires-play-document";
 const WIRES_DOCUMENT_IDENTITY_PREFIX: &str = "wires-play-document.identity.";
@@ -116,31 +117,10 @@ fn wires_relationships(wires: &Value) -> &[Value] {
         .unwrap_or(&[])
 }
 
-fn wires_fixture_board(wires: &Value) -> Value {
-    let mut board = wires.get("board").cloned().unwrap_or_else(empty_board_fixture);
-    if let Some(obj) = board.as_object_mut() {
-        obj.insert("schema".into(), json!(MINDMAP_BOARD_SCHEMA));
-        if !obj.contains_key("wires") {
-            obj.insert("wires".into(), json!([]));
-        }
-        if let Some(nodes) = obj.get_mut("nodes").and_then(|value| value.as_array_mut()) {
-            for node in nodes {
-                if let Some(node_obj) = node.as_object_mut() {
-                    if !node_obj.contains_key("handles") {
-                        node_obj.insert("handles".to_string(), json!([]));
-                    }
-                }
-            }
-        }
-    }
-    board
-}
-
-fn document_from_wires_fixture(wires: Value) -> MindmapWiresDocument {
-    MindmapWiresDocument {
-        board_fixture: wires_fixture_board(&wires),
-        wires_fixture: wires,
-    }
+/// 📄 The `metabolism` example, parsed once from {@link METABOLISM_WIRES_EXAMPLE_TEXT} — falls back to
+/// the empty document if the fixture ever fails to parse.
+fn metabolism_wires_example_document() -> MindmapWiresDocument {
+    MindmapWiresDocument::parse_dsl(METABOLISM_WIRES_EXAMPLE_TEXT).unwrap_or_else(|_| empty_mindmap_wires_document())
 }
 
 fn identity_label(wires: &Value, identity_id: u64) -> Option<String> {
@@ -555,9 +535,7 @@ impl DocumentApp for ReasoningWiresPlayApp {
             "setActiveExample" => {
                 let example_id = args.and_then(|value| value.get("exampleId")).and_then(|value| value.as_str()).unwrap_or("");
                 let next = if example_id == WIRES_PLAY_EXAMPLE_METABOLISM_ID {
-                    document_from_wires_fixture(
-                        serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap_or_else(|_| empty_wires_fixture()),
-                    )
+                    metabolism_wires_example_document()
                 } else {
                     empty_mindmap_wires_document()
                 };
@@ -735,10 +713,7 @@ pub fn create_wires_app() -> App {
     .example(
         WIRES_PLAY_EXAMPLE_METABOLISM_ID,
         "Metabolism",
-        serde_json::to_string(&document_from_wires_fixture(
-            serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap_or_else(|_| empty_wires_fixture()),
-        ))
-        .unwrap(),
+        serde_json::to_string(&metabolism_wires_example_document()).unwrap(),
     )
     .program("reasoning-wires", "Mindmap Wires", "graph")
 }
@@ -766,8 +741,7 @@ mod tests {
 
     fn metabolism_app() -> VcsDocumentApp<ReasoningWiresPlayApp> {
         let mut app = new_app();
-        let document =
-            document_from_wires_fixture(serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture"));
+        let document = metabolism_wires_example_document();
         app.load_document(
             &serde_json::to_string(&vcs::create_document_vcs_envelope::<MindmapWiresDocument, MindmapWiresOperation>(
                 WIRES_FIXTURE_SCHEMA,
@@ -821,7 +795,8 @@ mod tests {
 
     #[test]
     fn metabolism_fixture_hydrates_extension() {
-        let ext = DefaultWiresExtension::from_fixture_json(METABOLISM_WIRES_EXAMPLE_JSON).expect("metabolism fixture");
+        let document = metabolism_wires_example_document();
+        let ext = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
     }
@@ -881,11 +856,10 @@ mod tests {
     }
 
     #[test]
-    fn wires_fixture_board_uses_mindmap_schema() {
-        let wires: Value = serde_json::from_str(METABOLISM_WIRES_EXAMPLE_JSON).unwrap();
-        let board = wires_fixture_board(&wires);
-        assert_eq!(board.get("schema").and_then(|value| value.as_str()), Some(MINDMAP_BOARD_SCHEMA));
-        assert_eq!(fixture_nodes(&board).len(), 7);
+    fn metabolism_board_fixture_uses_mindmap_schema() {
+        let document = metabolism_wires_example_document();
+        assert_eq!(document.board_fixture.get("schema").and_then(|value| value.as_str()), Some(reasoning_mindmap::MINDMAP_BOARD_SCHEMA));
+        assert_eq!(fixture_nodes(&document.board_fixture).len(), 7);
     }
 
     #[test]

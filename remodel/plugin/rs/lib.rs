@@ -22,6 +22,7 @@ use semio_framework_plugin::{
 };
 use serde_json::{json, Value};
 use std::collections::VecDeque;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const REMODEL_PLAY_APP_ID: &str = "remodel-play";
@@ -1812,13 +1813,13 @@ fn remodel_layer_measures(layers: &RemodelLayerVisibility, labels: &RemodelLabel
             toggle("dense", "cloud", labels.layer_dense, layers.dense, "dense"),
             toggle("sparse", "sparkles", labels.layer_sparse, layers.sparse, "sparse"),
             toggle("cameras", "camera", labels.layer_cameras, layers.cameras, "cameras"),
-            toggle("gcps", "map-pin", labels.layer_gcps, layers.gcps, "gcps"),
+            toggle("gcps", "crosshair", labels.layer_gcps, layers.gcps, "gcps"),
         ],
     }
 }
 
 fn create_remodel_app() -> App {
-    let default_example = serde_json::to_string(&default_remodel_scene()).expect("remodel default example");
+    let default_example = default_remodel_scene().print_dsl();
     App::from_builder(
         App::builder(REMODEL_PLAY_APP_ID, "Remodel")
             .document(["semio", "remodel"])
@@ -1834,7 +1835,7 @@ fn create_remodel_app() -> App {
                 export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl, OsMediaFormat::Ply, OsMediaFormat::Las, OsMediaFormat::Png],
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
-            .icon_id("scan")
+            .icon_id("camera")
             .mode("capture", "Capture")
             .mode("model", "Model")
             .mode("analyze", "Analyze")
@@ -2033,9 +2034,9 @@ fn create_remodel_app() -> App {
             .action_with(ActionDefinition { in_palette: true, ..ActionDefinition::new("exportQcReport", "Export QC Report", ActionKind::Shell) })
             // 🧰 Utility groups — an exclusive per-window set (active utility is host-owned).
             .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer-2") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", "Sculpt", "brush") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", "Measure", "ruler") })
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", "Place GCP", "map-pin") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("sculpt", "Sculpt", "paintbrush") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("measure", "Measure", "scaling") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("gcpPlace", "Place GCP", "crosshair") })
             .window_kind_utilities(REMODEL_PLAY_WINDOW_MAIN, vec!["select".into(), "measure".into(), "sculpt".into()])
             .window_kind_utilities(REMODEL_PLAY_WINDOW_FRAMES, vec!["select".into(), "gcpPlace".into()]),
     )

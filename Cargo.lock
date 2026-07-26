@@ -6189,6 +6189,7 @@ version = "0.1.0"
 dependencies = [
  "norm_core",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6197,6 +6198,7 @@ version = "0.1.0"
 dependencies = [
  "norm_core",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6207,6 +6209,7 @@ dependencies = [
  "norm_din_4108",
  "norm_din_en_16798",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6216,6 +6219,7 @@ dependencies = [
  "mathematical_algebra",
  "norm_core",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6226,6 +6230,7 @@ dependencies = [
  "norm_core",
  "norm_en_1990",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6238,6 +6243,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6250,6 +6256,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6262,6 +6269,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6274,6 +6282,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6286,6 +6295,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6298,6 +6308,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6310,6 +6321,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -6322,6 +6334,7 @@ dependencies = [
  "norm_en_1990",
  "norm_en_1991",
  "serde",
+ "vcs",
 ]
 
 [[package]]
@@ -8021,6 +8034,7 @@ dependencies = [
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "vcs",
 ]
 
 [[package]]
@@ -9432,6 +9446,7 @@ dependencies = [
  "serde",
  "serde_json",
  "sourcing_curate",
+ "vcs",
  "wasm-bindgen",
 ]
 

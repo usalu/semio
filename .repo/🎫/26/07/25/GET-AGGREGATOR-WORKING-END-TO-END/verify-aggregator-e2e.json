@@ -1,0 +1,130 @@
+{
+  "ok": true,
+  "url": "http://127.0.0.1:6023/",
+  "at": "2026-07-25T23:46:12.354Z",
+  "shot": "/Users/ueli/Documents/semio/.repo/🎫/26/07/25/FIX-PUZZLE-3D-OBJECTS-NOT-RENDERING/aggregator-viewport.png",
+  "snapshot": {
+    "title": "Entwerfen mit Bestand · Aggregator",
+    "canvasCount": 2,
+    "scene": {
+      "instanceCount": 1,
+      "instances": [
+        {
+          "id": "seed-left-001",
+          "meshId": "mesh:hexagonal-cut-concrete-forest-left",
+          "position": [
+            0,
+            0,
+            0
+          ],
+          "revealIndex": "<omitted>",
+          "rawHasRevealIndex": false
+        }
+      ],
+      "meshes": [
+        {
+          "id": "box",
+          "hasData": true
+        },
+        {
+          "id": "vortex-marker",
+          "hasData": true
+        },
+        {
+          "id": "mesh:hexagonal-cut-concrete-forest-left",
+          "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+          "hasData": false
+        },
+        {
+          "id": "mesh:hexagonal-cut-concrete-forest-right",
+          "url": "/mesh/hexagonal-cut-concrete-forest-right.glb",
+          "hasData": false
+        }
+      ],
+      "revealCutoffs": {
+        "puzzle3d-fill": 0
+      }
+    },
+    "reveal": {
+      "cutoff": 0,
+      "instanceCount": 1,
+      "rows": [
+        {
+          "id": "seed-left-001",
+          "visible": true,
+          "rootVisible": true
+        }
+      ]
+    },
+    "glbDebug": [
+      {
+        "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+        "meshCount": 57,
+        "sceneVisible": true,
+        "rootVisible": true,
+        "at": 1785023165400
+      },
+      {
+        "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+        "meshCount": 57,
+        "sceneVisible": true,
+        "rootVisible": true,
+        "at": 1785023166032
+      }
+    ],
+    "glbProbe": {
+      "url": "/mesh/hexagonal-cut-concrete-forest-left.glb",
+      "ok": true,
+      "status": 200,
+      "bytes": 86112,
+      "contentType": "model/gltf-binary"
+    }
+  },
+  "debugLogs": [
+    {
+      "type": "log",
+      "text": "[DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] applyRevealCutoff {cutoff: 0, instanceCount: 1, rows: Array(1)}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] GlbInstanceMesh ready {url: /mesh/hexagonal-cut-concrete-forest-left.glb, meshCount: 57, sceneVisible: true, rootVisible: true}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] GlbInstanceMesh ready {url: /mesh/hexagonal-cut-concrete-forest-left.glb, meshCount: 57, sceneVisible: true, rootVisible: true}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}"
+    },
+    {
+      "type": "log",
+      "text": "[DEBUG] World3dHost scene payload {instanceCount: 1, instances: Array(1), meshes: Array(4), revealCutoffs: Object}"
+    }
+  ],
+  "errors": []
+}

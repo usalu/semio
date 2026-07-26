@@ -1,0 +1,48 @@
+TITLE Entwerfen mit Bestand · Aggregator
+CANVAS 2
+SCENE {
+  instanceCount: 1,
+  instances: [
+    {
+      id: "seed-left-001",
+      meshId: "mesh:hexagonal-cut-concrete-forest-left",
+      position: [ 0, 0, 0 ],
+      revealIndex: "<omitted>",
+      rawHasRevealIndex: false,
+    }
+  ],
+  meshes: [
+    {
+      id: "box",
+      url: undefined,
+      hasData: true,
+    }, {
+      id: "vortex-marker",
+      url: undefined,
+      hasData: true,
+    }, {
+      id: "mesh:hexagonal-cut-concrete-forest-right",
+      url: "/mesh/hexagonal-cut-concrete-forest-right.glb",
+      hasData: false,
+    }, {
+      id: "mesh:hexagonal-cut-concrete-forest-left",
+      url: "/mesh/hexagonal-cut-concrete-forest-left.glb",
+      hasData: false,
+    }
+  ],
+  revealCutoffs: {
+    "puzzle3d-fill": 0,
+  },
+}
+REVEAL {
+  cutoff: 0,
+  instanceCount: 1,
+  rows: [
+    {
+      id: "seed-left-001",
+      revealIndex: undefined,
+      visible: true,
+      rootVisible: true,
+    }
+  ],
+}

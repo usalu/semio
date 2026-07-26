@@ -19,6 +19,7 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     include: ["index.ts"],
+    coverage: { include: ["index.ts"] },
     includeSource: ["index.ts"],
     passWithNoTests: false,
   },

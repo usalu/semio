@@ -20,5 +20,6 @@ export default defineConfig({
   test: {
     name: "@semio-tech/framework-renderer-react",
     environment: "jsdom",
+    coverage: { include: ["index.tsx"] },
   },
 });

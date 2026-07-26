@@ -1,0 +1,13 @@
+{
+  "title": "DSL And Op Text Wave 2: Simple Single-App Technologies",
+  "emoji": "🧱",
+  "status": "open",
+  "description": "Wave 2 of the library/dsl/op/ui split refactor (plan: /Users/ueli/.claude/plans/all-technologies-should-be-groovy-wozniak.md). Implement DocumentDsl + OpText (from vcs crate, mechanism ticket TEXTUAL-DSL-OP-LOG-AND-STATEFUL-VCS-MECHANISM) for 8 single-app technologies: layout, lowpoly, raster, writer, sequence, sourcing, shooting, remodel. Each gets a handcrafted textual document format and single-line op syntax, replacing JSON fixtures, with round-trip tests, following the pattern established by the Wave 1 pilots (draw, note).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2329"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪3992fbbd703a4f89ae396fd7b30d8f08"
+  ]
+}

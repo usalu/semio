@@ -2,7 +2,7 @@
 /** @emoji 🖼 Theme-aware metabolism icon SVG resolution. */
 // #endregion 🧲Header
 
-import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../../metabolism/icon/generated/metabolism_icons.ts";
+import { METABOLISM_ICONS, isMetabolismIconName, type MetabolismIconName } from "../metabolism/icon/generated/metabolism_icons.ts";
 import type { UiThemeIcons } from "../../ui/styling/js/index.ts";
 
 /** @emoji 🖼 Resolves metabolism icon SVG markup with optional theme aliases and variants. */

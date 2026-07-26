@@ -6,6 +6,7 @@ pub mod app_2d {
     use flow_core::{dag::DagFixture, flow_backed_node_graph_extras, flow_neuron_kind_infos_json, forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec}, CameraJson, FlowEvalDriver, FlowFixture, FlowHost, Widget};
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_operations, Procedural2dDocument, Procedural2dOperation, PROCEDURAL_2D_SCHEMA};
+    use vcs::DocumentDsl;
     use protocol::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationPlayState,
@@ -42,7 +43,7 @@ pub mod app_2d {
     const PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW: &str = "procedural2d.play.generate-preview";
     const PROCEDURAL2D_PLAY_SURFACE_GENERATIONS: &str = "procedural2d.play.generations";
     const PROCEDURAL2D_PLAY_SURFACE_GENERATE_PREVIEW: &str = "procedural2d.play.generate-preview";
-    const DEFAULT_PROCEDURAL2D_FIXTURE_JSON: &str = include_str!("../../2d/example/default.procedural2d.json");
+    const DEFAULT_PROCEDURAL2D_DOCUMENT_DSL: &str = include_str!("../../2d/example/default.procedural2d");
     //#endregion 🔖Constants
 
     //#region 🔖Types
@@ -96,12 +97,8 @@ pub mod app_2d {
     //#endregion 🔖Types
 
     //#region 🔖DocumentHelpers
-    fn default_fixture() -> FlowFixture {
-        serde_json::from_str(DEFAULT_PROCEDURAL2D_FIXTURE_JSON).unwrap_or_default()
-    }
-
     fn default_projection() -> Procedural2dDocument {
-        Procedural2dDocument { fixture: default_fixture(), generation: GenerationPlayState::default() }
+        Procedural2dDocument::parse_dsl(DEFAULT_PROCEDURAL2D_DOCUMENT_DSL).unwrap_or_default()
     }
 
     fn procedural2d_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1310,6 +1307,7 @@ pub mod app_3d {
     };
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_operations, Procedural3dDocument, Procedural3dOperation, PROCEDURAL_3D_SCHEMA};
+    use vcs::DocumentDsl;
     use protocol::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState,
@@ -1359,9 +1357,9 @@ pub mod app_3d {
     const PROCEDURAL_EXAMPLE_RECT_EXTRUDE: &str = "rectangle-extrude-volume";
     const PROCEDURAL_EXAMPLE_SPHERE_TORUS: &str = "sphere-cut-with-torus";
 
-    const HEX_COLUMN_EXAMPLE_JSON: &str = include_str!("../../3d/example/hexagonal-mushroom-column.procedural.json");
-    const RECT_EXTRUDE_EXAMPLE_JSON: &str = include_str!("../../3d/example/rectangle-extrude-volume.procedural.json");
-    const SPHERE_TORUS_EXAMPLE_JSON: &str = include_str!("../../3d/example/sphere-cut-with-torus.procedural.json");
+    const HEX_COLUMN_EXAMPLE_DSL: &str = include_str!("../../3d/example/hexagonal-mushroom-column.procedural3d");
+    const RECT_EXTRUDE_EXAMPLE_DSL: &str = include_str!("../../3d/example/rectangle-extrude-volume.procedural3d");
+    const SPHERE_TORUS_EXAMPLE_DSL: &str = include_str!("../../3d/example/sphere-cut-with-torus.procedural3d");
 
     const WIDGET_CATALOG: &[(&str, &str)] = &[
         ("neuron", "cpu"),
@@ -1501,27 +1499,20 @@ pub mod app_3d {
     //#endregion 🔖Types
 
     //#region 🔖DocumentHelpers
-    fn default_fixture() -> FlowFixture {
-        serde_json::from_str::<FlowFixture>(HEX_COLUMN_EXAMPLE_JSON).unwrap_or_default()
-    }
-
     fn default_projection() -> Procedural3dDocument {
-        Procedural3dDocument { fixture: default_fixture(), generation: GenerationPlayState::default() }
+        Procedural3dDocument::parse_dsl(HEX_COLUMN_EXAMPLE_DSL).unwrap_or_default()
     }
 
     /// 🧾 Builds the initial projection for a named example (or the empty/default fixture).
     fn example_projection(example_id: &str) -> Procedural3dDocument {
-        let fixture_json = match example_id {
-            PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(HEX_COLUMN_EXAMPLE_JSON),
-            PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(RECT_EXTRUDE_EXAMPLE_JSON),
-            PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(SPHERE_TORUS_EXAMPLE_JSON),
+        let dsl = match example_id {
+            PROCEDURAL_EXAMPLE_HEX_COLUMN | "demo" => Some(HEX_COLUMN_EXAMPLE_DSL),
+            PROCEDURAL_EXAMPLE_RECT_EXTRUDE => Some(RECT_EXTRUDE_EXAMPLE_DSL),
+            PROCEDURAL_EXAMPLE_SPHERE_TORUS => Some(SPHERE_TORUS_EXAMPLE_DSL),
             "" => None,
             _ => None,
         };
-        let fixture = fixture_json
-            .and_then(|json| serde_json::from_str::<FlowFixture>(json).ok())
-            .unwrap_or_default();
-        Procedural3dDocument { fixture, generation: GenerationPlayState::default() }
+        dsl.and_then(|text| Procedural3dDocument::parse_dsl(text).ok()).unwrap_or_default()
     }
 
     /// 🧾 Serializes an example's bare projection for registration via `App::example`.
@@ -2183,7 +2174,7 @@ pub mod app_3d {
     /// 🌳 SDK's `tree_item_with_action` plus an icon id — this crate's document/catalogue trees carry
     /// icons per item, which the shared helper doesn't model directly.
     fn tree_item_with_icon(id: impl Into<String>, label: impl Into<String>, icon_id: Option<&str>, action: ActionDescriptor) -> UiTreeItemNode {
-        UiTreeItemNode { icon_id: icon_id.map(str::to_string), ..tree_item_with_action(id, label, None, action) }
+        UiTreeItemNode { icon_id: icon_id.map(Into::into), ..tree_item_with_action(id, label, None, action) }
     }
 
     fn build_document_tree(fixture: &FlowFixture, selected_node_ids: &[String], labels: &Procedural3dLabels) -> UiNode {

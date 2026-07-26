@@ -25,5 +25,6 @@ export default defineConfig({
     mode: "test",
     environment: "node",
     includeSource: ["index.ts"],
+    coverage: { include: ["index.ts"] },
   },
 });

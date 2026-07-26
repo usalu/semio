@@ -22,7 +22,7 @@ use shooting::{
     ShootingOperation, ShootingSavedCamera, ShootingScenePatch, ShootingShot, ShootingShotPatch,
     SHOOTING_FIXTURE_SCHEMA,
 };
-use vcs::CollectionOperation;
+use vcs::{CollectionOperation, DocumentDsl};
 use std::collections::{HashMap, HashSet};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
@@ -47,7 +47,9 @@ const SHOOTING_TRANSFORM_UTILITY_DEFAULT: &str = "move";
 
 const SHOOTING_FALLBACK_MESH_KIND: &str = "box";
 
-const DEFAULT_EXAMPLE_JSON: &str = include_str!("../../example/base-icon.shooting.json");
+/// 🗄️ The base-icon example fixture, handcrafted in `shooting`'s DSL (`vcs::DocumentDsl`) — see
+/// `default_fixture`/`default_fixture_json` for the two shapes downstream code needs.
+const SHOOTING_EXAMPLE_DSL: &str = include_str!("../../example/base-icon.shooting");
 
 static SHOOTING_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
@@ -87,8 +89,19 @@ fn default_selection_method() -> String {
 //#endregion 🔖Types
 
 //#region 🔖DocumentHelpers
+/// 📄 Parses the handcrafted DSL fixture once per call — used both for the in-plugin default document
+/// and to bridge into the framework's still-JSON-only `App::example` surface below, so
+/// `SHOOTING_EXAMPLE_DSL` stays the single source of truth for the fixture.
 fn default_fixture() -> ShootingFixture {
-    serde_json::from_str::<ShootingFixture>(DEFAULT_EXAMPLE_JSON).unwrap_or_else(|_| empty_shooting_fixture())
+    ShootingFixture::parse_dsl(SHOOTING_EXAMPLE_DSL).unwrap_or_else(|_| empty_shooting_fixture())
+}
+
+/// 🌉 JSON bridge for `semio_framework_plugin`'s `App::example` override, which hardcodes
+/// `serde_json::from_str` on its `document_json` parameter (shared framework machinery, out of scope
+/// for this DSL migration) — derives the JSON from the DSL fixture rather than keeping a second,
+/// redundant JSON copy of it on disk.
+fn default_fixture_json() -> String {
+    serde_json::to_string(&default_fixture()).unwrap_or_default()
 }
 
 fn next_shooting_id(prefix: &str) -> String {
@@ -1549,7 +1562,7 @@ fn create_shooting_app() -> App {
     .example(
         SHOOTING_EXAMPLE_DEFAULT_ID,
         "Default Base Icon",
-        DEFAULT_EXAMPLE_JSON,
+        default_fixture_json(),
     )
     .program("shooting", "Shooting", "icon")
 }

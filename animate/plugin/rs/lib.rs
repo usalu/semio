@@ -14,7 +14,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashSet;
 use std::sync::atomic::{AtomicU32, Ordering};
-use vcs::CollectionOperation;
+use vcs::{CollectionOperation, DocumentDsl};
 
 //#region 🔖Constants
 const ANIMATE_PRESENT_PLAY_APP_ID: &str = "animate-present-play";
@@ -771,7 +771,7 @@ fn create_animate_present_app() -> App {
             // 🎛️ App-scope command — see `handle_command` for why this isn't `seedGrid`/`clearTiles`.
             .app_command("animate.resetGrid", "Reset to Default Grid", "document"),
     )
-    .example("demo", "Demo", serde_json::to_string(&default_present_deck()).expect("default present deck serializes"))
+    .example("demo", "Demo", default_present_deck().print_dsl())
     .program("animate", "Animate", "deck")
 }
 

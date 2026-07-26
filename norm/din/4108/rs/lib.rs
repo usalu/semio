@@ -831,6 +831,105 @@ impl NormFamily for Din4108Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the DIN 4108 envelope `Document`: one line per scalar
+/// input, plus one `layer <thickness_m> <lambda_w_mk>` line per wall layer (order-preserving) — the
+/// only collection field, so it is parsed/printed by hand instead of through `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "din4108";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let mut layers = Vec::new();
+        let mut scalar_text = String::new();
+        for (index, raw_line) in text.lines().enumerate() {
+            let line_no = index as u32 + 1;
+            let trimmed = raw_line.trim();
+            if trimmed.is_empty() || trimmed.starts_with('#') {
+                continue;
+            }
+            if let Some(rest) = trimmed.strip_prefix("layer ") {
+                let mut parts = rest.split_whitespace();
+                let thickness_m: f64 = parts
+                    .next()
+                    .and_then(|value| value.parse().ok())
+                    .ok_or_else(|| vcs::TextError::new("expected 'layer <thickness_m> <lambda_w_mk>'", vcs::TextSpan::at(line_no, 1)))?;
+                let lambda_w_mk: f64 = parts
+                    .next()
+                    .and_then(|value| value.parse().ok())
+                    .ok_or_else(|| vcs::TextError::new("expected 'layer <thickness_m> <lambda_w_mk>'", vcs::TextSpan::at(line_no, 1)))?;
+                layers.push(LayerDocument { thickness_m, lambda_w_mk });
+            } else {
+                scalar_text.push_str(raw_line);
+                scalar_text.push('\n');
+            }
+        }
+        let fields = norm_core::dsl_kv::parse_lines(&scalar_text)?;
+        Ok(Document {
+            category: norm_core::dsl_kv::scalar(&fields, "category")?,
+            layers,
+            climate: norm_core::dsl_kv::scalar(&fields, "climate")?,
+            airtightness_n50: norm_core::dsl_kv::scalar(&fields, "airtightness_n50")?,
+            psi_times_l_sum: norm_core::dsl_kv::scalar(&fields, "psi_times_l_sum")?,
+            rh_int: norm_core::dsl_kv::scalar(&fields, "rh_int")?,
+            catalog_id: norm_core::dsl_kv::scalar(&fields, "catalog_id")?,
+            material_id: norm_core::dsl_kv::scalar(&fields, "material_id")?,
+            airtightness_class: norm_core::dsl_kv::scalar(&fields, "airtightness_class")?,
+            t_int_c: norm_core::dsl_kv::scalar(&fields, "t_int_c")?,
+            solar_absorptance: norm_core::dsl_kv::scalar(&fields, "solar_absorptance")?,
+            irradiance_w_m2: norm_core::dsl_kv::scalar(&fields, "irradiance_w_m2")?,
+            moisture_mu_exterior: norm_core::dsl_kv::scalar(&fields, "moisture_mu_exterior")?,
+            moisture_mu_interior: norm_core::dsl_kv::scalar(&fields, "moisture_mu_interior")?,
+            envelope_area_m2: norm_core::dsl_kv::scalar(&fields, "envelope_area_m2")?,
+            bb2_details_conform: norm_core::dsl_kv::scalar(&fields, "bb2_details_conform")?,
+            application_type: norm_core::dsl_kv::scalar(&fields, "application_type")?,
+            declared_application_class: norm_core::dsl_kv::scalar(&fields, "declared_application_class")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        let mut out = String::new();
+        out.push_str(&norm_core::dsl_kv::line("category", &self.category));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("climate", &self.climate));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("airtightness_n50", &self.airtightness_n50));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("psi_times_l_sum", &self.psi_times_l_sum));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("rh_int", &self.rh_int));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("catalog_id", &self.catalog_id));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("material_id", &self.material_id));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("airtightness_class", &self.airtightness_class));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("t_int_c", &self.t_int_c));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("solar_absorptance", &self.solar_absorptance));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("irradiance_w_m2", &self.irradiance_w_m2));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("moisture_mu_exterior", &self.moisture_mu_exterior));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("moisture_mu_interior", &self.moisture_mu_interior));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("envelope_area_m2", &self.envelope_area_m2));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("bb2_details_conform", &self.bb2_details_conform));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("application_type", &self.application_type));
+        out.push('\n');
+        out.push_str(&norm_core::dsl_kv::line("declared_application_class", &self.declared_application_class));
+        out.push('\n');
+        for layer in &self.layers {
+            out.push_str(&format!("layer {} {}\n", layer.thickness_m, layer.lambda_w_mk));
+        }
+        out
+    }
+}
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1003,5 +1102,30 @@ mod tests {
         assert_eq!(check.status, norm_core::CheckStatus::Pass);
         let over_flat_rate = bb_2::check_beiblatt_2_equivalence(45.0, area, false).unwrap();
         assert_eq!(over_flat_rate.status, norm_core::CheckStatus::Fail);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.din4108/v1", "din4108", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let mut next = Document::default();
+        next.airtightness_n50 = 1.2;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: next }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

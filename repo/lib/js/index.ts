@@ -909,6 +909,7 @@ export function resolveTestLevel(segments: string[]): { level: TestLevel; rest: 
   const [first, ...restIfLevel] = segments;
   const level = isTestLevel(first) ? first : activeTestLevel();
   process.env.SEMIO_TEST_LEVEL = level;
+  if (level === "exhaustive" && process.env.SEMIO_COVERAGE === undefined) process.env.SEMIO_COVERAGE = "1";
   return { level, rest: isTestLevel(first) ? restIfLevel : segments };
 }
 
@@ -1025,17 +1026,39 @@ export async function runTestBudgeted(cmd: string, args: string[], opts: { cwd?:
  */
 export async function runCargoTestBudgeted(packages: string[], cwd: string, extraArgs: string[] = [], env: NodeJS.ProcessEnv = process.env): Promise<void> {
   const packageArgs = packages.flatMap((pkg) => ["-p", pkg]);
+  const dashIdx = extraArgs.indexOf("--");
+  const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
+  const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
+  const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
+  const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
+
+  if (coverageEnabled()) {
+    // 🦀`cargo-llvm-cov` has no build/run split (unlike plain `cargo test --no-run`) — the combined budget
+    // below covers both the instrumented compile and the test run; report generation gets its own build-class
+    // budget since it only reads existing profraw data and is comparatively fast even for large crates.
+    const testBudgetMs = Number(env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
+    await runTestBudgeted("cargo", ["llvm-cov", "test", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
+      cwd,
+      env,
+      budgetMs: buildBudgetMs() + testBudgetMs,
+      onTimeoutHint: budgetTimeoutHint("cargo"),
+    });
+    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(cwd)}.lcov`);
+    await runTestBudgeted("cargo", ["llvm-cov", "report", "--lcov", ...packageArgs, "--output-path", lcovPath], {
+      cwd,
+      env,
+      budgetMs: buildBudgetMs(),
+      onTimeoutHint: budgetTimeoutHint("cargo"),
+    });
+    return;
+  }
+
   await runTestBudgeted("cargo", ["build", "--tests", ...packageArgs], {
     cwd,
     env,
     budgetMs: buildBudgetMs(),
     onTimeoutHint: budgetTimeoutHint("cargo"),
   });
-  const dashIdx = extraArgs.indexOf("--");
-  const cargoArgs = dashIdx === -1 ? extraArgs : extraArgs.slice(0, dashIdx);
-  const libtestArgs = dashIdx === -1 ? [] : extraArgs.slice(dashIdx + 1);
-  const level = isTestLevel(env.SEMIO_TEST_LEVEL) ? (env.SEMIO_TEST_LEVEL as TestLevel) : activeTestLevel();
-  const skipArgs = levelsAbove(level).flatMap((l) => ["--skip", `${l}::`]);
   await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
 }
 
@@ -1093,6 +1116,215 @@ export function tryRun(cmd: string, args: string[], opts: RunCmdOpts = {}): void
   }
 }
 //#endregion ⏱️Budget
+
+//#region 📊Coverage
+/** 📊Whether instrumented coverage collection is on — auto-set by [[resolveTestLevel]] at the `exhaustive` level; `SEMIO_COVERAGE=0` opts out. */
+export function coverageEnabled(): boolean {
+  return process.env.SEMIO_COVERAGE === "1";
+}
+
+export type CoverageKind = "js" | "rust" | "go" | "py" | "dotnet";
+
+/** 📊Per-toolchain lcov output directory under `.repo/coverage`, created on demand. */
+export function coverageDir(repoRoot: string, kind: CoverageKind): string {
+  const dir = join(repoRoot, ".repo", "coverage", kind);
+  mkdirSync(dir, { recursive: true });
+  return dir;
+}
+
+/** 📊Filesystem-safe unique slug for a project's coverage output filename (mirrors the path-slugging idiom used for nx cache keys). */
+export function coverageSlug(bundleRoot: string): string {
+  return bundleRoot.replace(/[^a-zA-Z0-9_-]+/g, "_");
+}
+
+/**
+ * 📊Central, authoritative exclusion list applied at repo-wide aggregation — generated code, vendored/emitted
+ * assets, and paths that are GPU-only or Electron-shell and thus unmeasurable by a headless line-coverage
+ * runner. Per-tool excludes (vitest `coverage.exclude`, coverage.py `omit`, …) may mirror this for speed, but
+ * this list is what decides what counts toward the repo-wide percentage. Every entry has a reason in
+ * [[COVERAGE_EXCLUDE_REASONS]] so exclusions stay auditable rather than a silent denominator shrink.
+ */
+export const COVERAGE_EXCLUDE_GLOBS: readonly string[] = [
+  "**/generated/**",
+  "asset/metabolism/icon/generated/**",
+  "**/pkg/**",
+  ".storybook/**",
+  "**/*.stories.*",
+  "**/*.spec.ts",
+  "**/*.test.ts",
+  "**/*.tex",
+  "**/*.wgsl",
+  "**/*.svg",
+  "elements/client/lib/geometry/topologic/**",
+  "framework/renderer/wgpu/**",
+  "ui/wgpu/**",
+  "**/dist/**",
+  "**/node_modules/**",
+  "**/target/**",
+];
+
+/** 📊One-line rationale per [[COVERAGE_EXCLUDE_GLOBS]] entry — printed alongside the coverage summary. */
+export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
+  "**/generated/**": "Emitted lookup tables/codegen output, not hand-authored logic.",
+  "asset/metabolism/icon/generated/**": "~22k LOC generated icon table.",
+  "**/pkg/**": "wasm-bindgen build output.",
+  ".storybook/**": "Covered by Playwright specs, not unit line coverage.",
+  "**/*.stories.*": "Storybook fixtures, exercised visually not via line coverage.",
+  "**/*.spec.ts": "Playwright specs — browser-process coverage is a separate mechanism.",
+  "**/*.test.ts": "Standalone test files measure themselves, not the source under test.",
+  "**/*.tex": "LaTeX templates — not executable.",
+  "**/*.wgsl": "GPU shader source — not measurable by CPU line coverage.",
+  "**/*.svg": "Vector assets — not executable.",
+  "elements/client/lib/geometry/topologic/**": "Vendored third-party C++.",
+  "framework/renderer/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
+  "ui/wgpu/**": "GPU rendering internals — smoke-testable only; a headless-GPU harness is out of scope here.",
+  "**/dist/**": "Build output.",
+  "**/node_modules/**": "Third-party dependency code.",
+  "**/target/**": "Cargo build output.",
+};
+
+function coverageGlobToRegExp(glob: string): RegExp {
+  const escaped = glob
+    .replace(/[.+^${}()|[\]\\]/g, "\\$&")
+    .replace(/\*\*/g, " ")
+    .replace(/\*/g, "[^/]*")
+    .replace(/ /g, ".*");
+  return new RegExp(`^${escaped}$`);
+}
+
+/** 📊Whether a repo-relative path (forward-slash, no leading `./`) matches any [[COVERAGE_EXCLUDE_GLOBS]] entry. */
+export function isCoverageExcluded(relPath: string): boolean {
+  const normalized = relPath.replace(/\\/g, "/").replace(/^\.\//, "");
+  return COVERAGE_EXCLUDE_GLOBS.some((glob) => coverageGlobToRegExp(glob).test(normalized));
+}
+
+/** 📊`go test` coverage args, appended alongside `goLevelTestArgs` when [[coverageEnabled]]; the text profile is converted to LCOV via [[goProfileToLcov]] at aggregation. */
+export function goCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
+  if (!coverageEnabled()) return [];
+  const file = join(coverageDir(repoRoot, "go"), `${coverageSlug(moduleLabel)}.cover`);
+  return ["-covermode=atomic", "-coverpkg=./...", `-coverprofile=${file}`];
+}
+
+/** 📊pytest coverage args, appended alongside `pytestLevelArgs` when [[coverageEnabled]]; `pytest-cov`'s `lcov` reporter writes LCOV directly, no conversion needed. */
+export function pytestCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
+  if (!coverageEnabled()) return [];
+  const file = join(coverageDir(repoRoot, "py"), `${coverageSlug(moduleLabel)}.lcov`);
+  return ["--cov", `--cov-report=lcov:${file}`];
+}
+
+/** 📊dotnet test coverage args (coverlet via `--collect`), appended when [[coverageEnabled]]; each project gets its own results-directory subfolder so concurrent projects don't clobber one another's report file. */
+export function dotnetCoverageArgs(repoRoot: string, moduleLabel: string): string[] {
+  if (!coverageEnabled()) return [];
+  const dir = join(coverageDir(repoRoot, "dotnet"), coverageSlug(moduleLabel));
+  mkdirSync(dir, { recursive: true });
+  return ["--collect", "XPlat Code Coverage;Format=lcov", "--results-directory", dir];
+}
+
+//#region 🗄️Lcov
+export type LcovFileRecord = { path: string; lines: Map<number, number> };
+
+/** 📊Parses one LCOV text blob into per-file line-hit maps (only `SF:`/`DA:`/`end_of_record` — the subset every toolchain here emits). */
+export function parseLcov(text: string): LcovFileRecord[] {
+  const records: LcovFileRecord[] = [];
+  let current: LcovFileRecord | undefined;
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (line.startsWith("SF:")) {
+      current = { path: line.slice(3), lines: new Map() };
+      records.push(current);
+    } else if (line.startsWith("DA:") && current) {
+      const [lineNoStr, hitsStr] = line.slice(3).split(",");
+      const lineNo = Number(lineNoStr);
+      const hits = Number(hitsStr);
+      current.lines.set(lineNo, (current.lines.get(lineNo) ?? 0) + hits);
+    } else if (line === "end_of_record") {
+      current = undefined;
+    }
+  }
+  return records;
+}
+
+/** 📊Merges LCOV records from multiple toolchain runs — line-hit counts sum, covered line numbers union. */
+export function mergeLcov(recordSets: LcovFileRecord[][]): Map<string, Map<number, number>> {
+  const merged = new Map<string, Map<number, number>>();
+  for (const records of recordSets) {
+    for (const record of records) {
+      const target = merged.get(record.path) ?? new Map<number, number>();
+      for (const [lineNo, hits] of record.lines) target.set(lineNo, (target.get(lineNo) ?? 0) + hits);
+      merged.set(record.path, target);
+    }
+  }
+  return merged;
+}
+
+/** 📊Renders a merged coverage map back to LCOV text (one `SF:`/`DA:`×N/`end_of_record` block per file, lines sorted ascending). */
+export function renderLcov(merged: Map<string, Map<number, number>>): string {
+  const chunks: string[] = [];
+  for (const [path, lines] of merged) {
+    chunks.push(`SF:${path}`);
+    for (const lineNo of [...lines.keys()].sort((a, b) => a - b)) chunks.push(`DA:${lineNo},${lines.get(lineNo)}`);
+    chunks.push("end_of_record", "");
+  }
+  return chunks.join("\n");
+}
+
+/** 📊Expands a `go test -coverprofile` text block (`mode: <mode>` header, then `file:startLine.startCol,endLine.endCol numStmt count` records) into per-line LCOV records — every line in a statement's range is marked hit iff `count > 0`. */
+export function goProfileToLcov(text: string): LcovFileRecord[] {
+  const byFile = new Map<string, Map<number, number>>();
+  for (const rawLine of text.split(/\r?\n/)) {
+    const line = rawLine.trim();
+    if (!line || line.startsWith("mode:")) continue;
+    const match = /^(.+):(\d+)\.\d+,(\d+)\.\d+ \d+ (\d+)$/.exec(line);
+    if (!match) continue;
+    const [, file, startStr, endStr, countStr] = match;
+    const start = Number(startStr);
+    const end = Number(endStr);
+    const hits = Number(countStr);
+    const lines = byFile.get(file) ?? new Map<number, number>();
+    for (let lineNo = start; lineNo <= end; lineNo++) lines.set(lineNo, (lines.get(lineNo) ?? 0) + hits);
+    byFile.set(file, lines);
+  }
+  return [...byFile.entries()].map(([path, lines]) => ({ path, lines }));
+}
+
+export type CoverageSummary = {
+  linesFound: number;
+  linesHit: number;
+  pct: number;
+  perFile: { path: string; linesFound: number; linesHit: number; pct: number }[];
+};
+
+/** 📊Reduces a merged coverage map to a repo-wide percentage plus a worst-offenders table, after dropping [[isCoverageExcluded]] paths. */
+export function summarizeCoverage(merged: Map<string, Map<number, number>>): CoverageSummary {
+  let linesFound = 0;
+  let linesHit = 0;
+  const perFile: CoverageSummary["perFile"] = [];
+  for (const [path, lines] of merged) {
+    if (isCoverageExcluded(path)) continue;
+    const found = lines.size;
+    const hit = [...lines.values()].filter((count) => count > 0).length;
+    linesFound += found;
+    linesHit += hit;
+    perFile.push({ path, linesFound: found, linesHit: hit, pct: found === 0 ? 100 : (hit / found) * 100 });
+  }
+  perFile.sort((a, b) => a.pct - b.pct || b.linesFound - a.linesFound);
+  return { linesFound, linesHit, pct: linesFound === 0 ? 0 : (linesHit / linesFound) * 100, perFile };
+}
+
+/** 📊Prints the worst-covered files and hard-fails (`process.exit(1)`) below `thresholdPct`. */
+export function enforceCoverageThreshold(summary: CoverageSummary, thresholdPct: number, worstCount = 25): void {
+  console.log(`[coverage] ${summary.linesHit}/${summary.linesFound} lines (${summary.pct.toFixed(2)}%), threshold ${thresholdPct}%.`);
+  if (summary.pct < thresholdPct) {
+    console.log(`[coverage] worst ${Math.min(worstCount, summary.perFile.length)} files:`);
+    for (const file of summary.perFile.slice(0, worstCount)) {
+      console.log(`  ${file.pct.toFixed(1)}% (${file.linesHit}/${file.linesFound})  ${file.path}`);
+    }
+    console.error(`[coverage] ${summary.pct.toFixed(2)}% < ${thresholdPct}% — exhaustive gate failed.`);
+    process.exit(1);
+  }
+}
+//#endregion 🗄️Lcov
+//#endregion 📊Coverage
 
 //#region 🧹CargoLint
 /**
@@ -1167,9 +1399,24 @@ export function runViteBuild(bundleRoot: string, segments: string[], config: str
   runBun(["run", "vite", "build", "--config", config, ...segments], bundleRoot, devToolingEnv());
 }
 
-/** ▶️Vitest run in bundle directory, under the [[runTestBudgeted]] wall-clock budget. */
+/**
+ * ▶️Vitest run in bundle directory, under the [[runTestBudgeted]] wall-clock budget. Appends v8 lcov coverage
+ * flags when [[coverageEnabled]]. Invokes the workspace's own `node_modules/vitest/vitest.mjs` directly rather
+ * than `bun x vitest` — `bunx` resolves its own globally cached vitest version, which can silently drift from
+ * the workspace's pinned version (observed: a cached 3.x core paired with a locally installed 4.x
+ * `@vitest/coverage-v8` crashes the coverage provider on an undefined `reportsDirectory`). Coverage runs use
+ * plain `node`, not bun, as the runtime — `@vitest/coverage-v8` drives V8 coverage via `node:inspector`'s
+ * `Profiler.startPreciseCoverage`, which Bun's `node:inspector` shim doesn't implement (observed: "Coverage
+ * APIs are not supported"); non-coverage runs keep using bun for its faster startup.
+ */
 export async function runVitest(bundleRoot: string, segments: string[], config = "vitest.config.ts"): Promise<void> {
-  await runTestBudgeted(process.execPath, ["x", "vitest", "run", "--config", config, "--passWithNoTests", ...segments], { cwd: bundleRoot, env: devToolingEnv() });
+  const collectingCoverage = coverageEnabled();
+  const coverageArgs = collectingCoverage
+    ? ["--coverage.enabled", "--coverage.provider=v8", "--coverage.reporter=lcovonly", `--coverage.reportsDirectory=${join(coverageDir(findRepoRoot(bundleRoot), "js"), coverageSlug(bundleRoot))}`]
+    : [];
+  const vitestBin = join(findRepoRoot(bundleRoot), "node_modules", "vitest", "vitest.mjs");
+  const runtime = collectingCoverage ? "node" : process.execPath;
+  await runTestBudgeted(runtime, [vitestBin, "run", "--config", config, "--passWithNoTests", ...coverageArgs, ...segments], { cwd: bundleRoot, env: devToolingEnv() });
 }
 
 //#region 🔌PlaygroundDevPorts

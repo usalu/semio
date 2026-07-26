@@ -17,6 +17,7 @@ export default defineConfig({
     mode: "test",
     environment: "jsdom",
     include: ["index.tsx"],
+    coverage: { include: ["index.tsx"] },
     includeSource: ["index.tsx"],
     passWithNoTests: true,
   },

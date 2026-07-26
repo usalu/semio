@@ -433,6 +433,67 @@ impl NormFamily for En1995Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1995 timber `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1995";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
+            n_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_ed_kn")?,
+            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
+            w_mm3: norm_core::dsl_kv::scalar(&fields, "w_mm3")?,
+            a_mm2: norm_core::dsl_kv::scalar(&fields, "a_mm2")?,
+            b_mm: norm_core::dsl_kv::scalar(&fields, "b_mm")?,
+            h_mm: norm_core::dsl_kv::scalar(&fields, "h_mm")?,
+            f_m_k: norm_core::dsl_kv::scalar(&fields, "f_m_k")?,
+            f_c_0_k: norm_core::dsl_kv::scalar(&fields, "f_c_0_k")?,
+            service_class: norm_core::dsl_kv::scalar(&fields, "service_class")?,
+            load_duration: norm_core::dsl_kv::scalar(&fields, "load_duration")?,
+            m_crit_knm: norm_core::dsl_kv::scalar(&fields, "m_crit_knm")?,
+            f_ed_kn: norm_core::dsl_kv::scalar(&fields, "f_ed_kn")?,
+            a_ef_mm2: norm_core::dsl_kv::scalar(&fields, "a_ef_mm2")?,
+            f_v_k: norm_core::dsl_kv::scalar(&fields, "f_v_k")?,
+            fire_duration_min: norm_core::dsl_kv::scalar(&fields, "fire_duration_min")?,
+            section_depth_mm: norm_core::dsl_kv::scalar(&fields, "section_depth_mm")?,
+            a_vert_m_s2: norm_core::dsl_kv::scalar(&fields, "a_vert_m_s2")?,
+            n_cycles_bridge: norm_core::dsl_kv::scalar(&fields, "n_cycles_bridge")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
+            norm_core::dsl_kv::line("n_ed_kn", &self.n_ed_kn),
+            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
+            norm_core::dsl_kv::line("w_mm3", &self.w_mm3),
+            norm_core::dsl_kv::line("a_mm2", &self.a_mm2),
+            norm_core::dsl_kv::line("b_mm", &self.b_mm),
+            norm_core::dsl_kv::line("h_mm", &self.h_mm),
+            norm_core::dsl_kv::line("f_m_k", &self.f_m_k),
+            norm_core::dsl_kv::line("f_c_0_k", &self.f_c_0_k),
+            norm_core::dsl_kv::line("service_class", &self.service_class),
+            norm_core::dsl_kv::line("load_duration", &self.load_duration),
+            norm_core::dsl_kv::line("m_crit_knm", &self.m_crit_knm),
+            norm_core::dsl_kv::line("f_ed_kn", &self.f_ed_kn),
+            norm_core::dsl_kv::line("a_ef_mm2", &self.a_ef_mm2),
+            norm_core::dsl_kv::line("f_v_k", &self.f_v_k),
+            norm_core::dsl_kv::line("fire_duration_min", &self.fire_duration_min),
+            norm_core::dsl_kv::line("section_depth_mm", &self.section_depth_mm),
+            norm_core::dsl_kv::line("a_vert_m_s2", &self.a_vert_m_s2),
+            norm_core::dsl_kv::line("n_cycles_bridge", &self.n_cycles_bridge),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -546,5 +607,28 @@ mod tests {
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
         assert_eq!(report.checks.len(), 8);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1995/v1", "en1995", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

@@ -8,6 +8,24 @@
       "options": {
         "command": "bun ./script.ts test repo-mcp copilot"
       }
+    },
+    "test-quick": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test quick repo-mcp copilot"
+      }
+    },
+    "test-long": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test long repo-mcp copilot"
+      }
+    },
+    "test-exhaustive": {
+      "executor": "nx:run-commands",
+      "options": {
+        "command": "bun ./script.ts test exhaustive repo-mcp copilot"
+      }
     }
   }
 }

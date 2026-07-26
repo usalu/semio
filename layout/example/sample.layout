@@ -1,0 +1,12 @@
+doc schema=layout.fixture name="Untitled"
+camera x=0 y=0 zoom=0.5
+previewCamera x=0 y=0 zoom=0.5
+grid baselineGrid=12 baselineOffset=0 snapToBaseline=true
+paragraphStyle id=paragraph.body name="Body" fontFamily="Layout Sans" fontSize=12 fontWeight=400 leading=14.4 tracking=0 alignment="left"
+story id=story-1 content="Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." styleRuns=[{start=0 end=120 paragraphStyleId=paragraph.body characterStyleId=none}]
+link id=link-missing path="assets/site-plan.png" hash="sha256:missing" width=1200 height=800 dpi=72 colorProfile="RGB" state="missing" proxyDataUrl=none
+parentPage id=parent-master name="Master" width=595 height=842 layerIds=[layer-parent-bg] { layer id=layer-parent-bg name="Background" visible=true locked=false objectIds=[frame-parent-header] rect id=frame-parent-header layerId=layer-parent-bg bounds=(36,24,523,48,0) locked=none visible=none fill=(0.12,0.14,0.18,1) stroke=none }
+spread id=spread-1 name="Spread 1" pageIds=[page-1,page-2]
+page id=page-1 name="Page 1" spreadId=spread-1 parentPageId=parent-master width=595 height=842 margins=(48,36,48,36) columns=(2,12) guides=[] layerIds=[layer-1] { layer id=layer-1 name="Content" visible=true locked=false objectIds=[frame-text-1,frame-text-2,frame-image-1] text id=frame-text-1 layerId=layer-1 bounds=(36,120,240,200,0) locked=none visible=none storyId=story-1 threadNext=frame-text-2 columns=1 inset=(4,4,232,192) wrapMode="box" text id=frame-text-2 layerId=layer-1 bounds=(288,120,240,120,0) locked=none visible=none storyId=story-1 threadNext=none columns=1 inset=(4,4,232,112) wrapMode="box" image id=frame-image-1 layerId=layer-1 bounds=(36,360,200,150,0) locked=none visible=none linkId=link-missing } overrides=[]
+page id=page-2 name="Page 2" spreadId=spread-1 parentPageId=none width=595 height=842 margins=(48,36,48,36) columns=(1,0) guides=[] layerIds=[layer-2] { layer id=layer-2 name="Content" visible=true locked=false objectIds=[frame-small-text] text id=frame-small-text layerId=layer-2 bounds=(400,700,120,40,0) locked=none visible=none storyId=story-1 threadNext=none columns=1 inset=(2,2,116,36) wrapMode="box" } overrides=[]
+printTarget="print"

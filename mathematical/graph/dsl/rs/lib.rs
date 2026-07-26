@@ -1986,7 +1986,97 @@ mod tests {
 
     #[test]
     fn run_dag_fixture_query() {
-        let fixture = include_str!("../../../../infinite/board/port/directed/dag/example/demo.dag.json");
+        // 🩹 Was `include_str!` of the dag technology's example fixture; that technology migrated its
+        // fixture to a handcrafted DSL (`vcs::DocumentDsl`) — inlined the same dag-fixture JSON this
+        // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
+        let fixture = r#"{
+  "schema": "dag.fixture",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "nodes": [
+    {
+      "id": "slider",
+      "name": "Amount",
+      "abbreviation": "Amount",
+      "icon": "emoji:🎚️",
+      "kind": "slider",
+      "x": -400,
+      "y": -40,
+      "width": 70,
+      "height": 14,
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "value": 5,
+      "output": { "id": "out", "label": "value", "cardinality": "!" }
+    },
+    {
+      "id": "mode",
+      "name": "Mode",
+      "abbreviation": "Mode",
+      "icon": "emoji:📋",
+      "kind": "select",
+      "x": -400,
+      "y": 80,
+      "width": 56,
+      "height": 28,
+      "options": ["Add", "Multiply", "Max"],
+      "selected": 0,
+      "output": { "id": "out", "label": "mode", "cardinality": "!" }
+    },
+    {
+      "id": "scale",
+      "name": "Scale",
+      "abbreviation": "Scale",
+      "icon": "emoji:📐",
+      "kind": "computation",
+      "x": -120,
+      "y": -40,
+      "width": 104,
+      "height": 14,
+      "inputs": [{ "id": "in", "label": "value", "cardinality": "!" }],
+      "outputs": [{ "id": "out", "label": "scaled", "cardinality": "!" }]
+    },
+    {
+      "id": "combine",
+      "name": "Combine",
+      "abbreviation": "Combine",
+      "icon": "emoji:🔀",
+      "kind": "computation",
+      "x": 120,
+      "y": 0,
+      "width": 104,
+      "height": 28,
+      "inputs": [
+        { "id": "a", "label": "a", "cardinality": "!" },
+        { "id": "b", "label": "b", "cardinality": "!" }
+      ],
+      "outputs": [{ "id": "out", "label": "merged", "cardinality": "!" }]
+    },
+    {
+      "id": "screen",
+      "name": "Preview",
+      "abbreviation": "Preview",
+      "icon": "emoji:🖥️",
+      "kind": "screen",
+      "x": 400,
+      "y": 0,
+      "width": 200,
+      "height": 140,
+      "media": {
+        "kind": "svg",
+        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E"
+      },
+      "input": { "id": "in", "label": "result", "cardinality": "!" }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "slider:out", "target": "scale:in" },
+    { "id": "e2", "source": "scale:out", "target": "combine:a" },
+    { "id": "e3", "source": "mode:out", "target": "combine:b" },
+    { "id": "e4", "source": "combine:out", "target": "screen:in" }
+  ]
+}
+"#;
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
         let result = run_query(&graph, "MATCH (n:computation) RETURN n.name").unwrap();
         assert!(!result.rows.is_empty());
@@ -2009,7 +2099,97 @@ mod tests {
 
     #[test]
     fn run_port_filtered_query() {
-        let fixture = include_str!("../../../../infinite/board/port/directed/dag/example/demo.dag.json");
+        // 🩹 Was `include_str!` of the dag technology's example fixture; that technology migrated its
+        // fixture to a handcrafted DSL (`vcs::DocumentDsl`) — inlined the same dag-fixture JSON this
+        // test actually parses (`from_dag_fixture_json`), decoupled from its document format.
+        let fixture = r#"{
+  "schema": "dag.fixture",
+  "camera": { "x": 0, "y": 0, "zoom": 1 },
+  "nodes": [
+    {
+      "id": "slider",
+      "name": "Amount",
+      "abbreviation": "Amount",
+      "icon": "emoji:🎚️",
+      "kind": "slider",
+      "x": -400,
+      "y": -40,
+      "width": 70,
+      "height": 14,
+      "min": 0,
+      "max": 10,
+      "step": 0.5,
+      "value": 5,
+      "output": { "id": "out", "label": "value", "cardinality": "!" }
+    },
+    {
+      "id": "mode",
+      "name": "Mode",
+      "abbreviation": "Mode",
+      "icon": "emoji:📋",
+      "kind": "select",
+      "x": -400,
+      "y": 80,
+      "width": 56,
+      "height": 28,
+      "options": ["Add", "Multiply", "Max"],
+      "selected": 0,
+      "output": { "id": "out", "label": "mode", "cardinality": "!" }
+    },
+    {
+      "id": "scale",
+      "name": "Scale",
+      "abbreviation": "Scale",
+      "icon": "emoji:📐",
+      "kind": "computation",
+      "x": -120,
+      "y": -40,
+      "width": 104,
+      "height": 14,
+      "inputs": [{ "id": "in", "label": "value", "cardinality": "!" }],
+      "outputs": [{ "id": "out", "label": "scaled", "cardinality": "!" }]
+    },
+    {
+      "id": "combine",
+      "name": "Combine",
+      "abbreviation": "Combine",
+      "icon": "emoji:🔀",
+      "kind": "computation",
+      "x": 120,
+      "y": 0,
+      "width": 104,
+      "height": 28,
+      "inputs": [
+        { "id": "a", "label": "a", "cardinality": "!" },
+        { "id": "b", "label": "b", "cardinality": "!" }
+      ],
+      "outputs": [{ "id": "out", "label": "merged", "cardinality": "!" }]
+    },
+    {
+      "id": "screen",
+      "name": "Preview",
+      "abbreviation": "Preview",
+      "icon": "emoji:🖥️",
+      "kind": "screen",
+      "x": 400,
+      "y": 0,
+      "width": 200,
+      "height": 140,
+      "media": {
+        "kind": "svg",
+        "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 60'%3E%3Crect fill='%233c78d8' width='100' height='60'/%3E%3Ctext x='50' y='35' text-anchor='middle' fill='white' font-size='12'%3EDAG%3C/text%3E%3C/svg%3E"
+      },
+      "input": { "id": "in", "label": "result", "cardinality": "!" }
+    }
+  ],
+  "edges": [
+    { "id": "e1", "source": "slider:out", "target": "scale:in" },
+    { "id": "e2", "source": "scale:out", "target": "combine:a" },
+    { "id": "e3", "source": "mode:out", "target": "combine:b" },
+    { "id": "e4", "source": "combine:out", "target": "screen:in" }
+  ]
+}
+"#;
         let graph = BoardQueryableGraph::from_dag_fixture_json(fixture).unwrap();
         let result = run_query(&graph, "MATCH (n:computation@out)-[:wire]->(m:slider) RETURN n.name, m.name");
         assert!(result.is_ok());

@@ -25,10 +25,10 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "forms", pluginId: "forms", cratePath: "forms/plugin/rs", aliases: [], ports: { react: 6058, wgpu: 6158 }, examples: ["building-component"], engines: [], assets: [] },
   { variant: "gis2d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis2d-play", aliases: ["gis 2d"], ports: { react: 6040, wgpu: 6140 }, examples: ["reuse"], engines: ["framework/surface/tiled-map/rs"], assets: [{ kind: "tile-proxy", route: "/osm", upstream: "https://tile.openstreetmap.org/{z}/{x}/{y}.png", cache: "osm-tiles" }, { kind: "tile-proxy", route: "/vt", upstream: "https://tiles.openfreemap.org/planet", cache: "openfreemap-vt" }] },
   { variant: "gis3d", pluginId: "gis", cratePath: "gis/plugin/rs", app: "gis3d-play", aliases: ["gis 3d"], ports: { react: 6083, wgpu: 6183 }, examples: ["reuse"], engines: ["framework/surface/terrain/rs"], assets: [{ kind: "tile-proxy", route: "/dem", upstream: "https://s3.amazonaws.com/elevation-tiles-prod/terrarium/{z}/{x}/{y}.png", cache: "terrarium-dem" }] },
-  { variant: "imperative", pluginId: "imperative", cratePath: "imperative/plugin/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: ["default"], engines: [], assets: [] },
+  { variant: "imperative", pluginId: "imperative", cratePath: "imperative/plugin/rs", aliases: [], ports: { react: 6076, wgpu: 6176 }, examples: [], engines: [], assets: [] },
   { variant: "iso16757", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-iso-16757-play", aliases: [], ports: { react: 6104, wgpu: 6204 }, examples: [], engines: [], assets: [] },
-  { variant: "layout", pluginId: "layout", cratePath: "layout/plugin/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: ["sample"], engines: [], assets: [] },
-  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["concrete-forest-left", "default"], engines: [], assets: [] },
+  { variant: "layout", pluginId: "layout", cratePath: "layout/plugin/rs", aliases: [], ports: { react: 6079, wgpu: 6179 }, examples: [], engines: [], assets: [] },
+  { variant: "lowpoly", pluginId: "lowpoly", cratePath: "lowpoly/plugin/rs", aliases: [], ports: { react: 6078, wgpu: 6178 }, examples: ["default"], engines: [], assets: [] },
   { variant: "mathematical", pluginId: "mathematical", cratePath: "mathematical/plugin/rs", app: "mathematical-play", aliases: ["mathematical", "math"], ports: { react: 6084, wgpu: 6184 }, examples: [], engines: [], assets: [] },
   { variant: "note", pluginId: "note", cratePath: "note/plugin/rs", aliases: [], ports: { react: 6080, wgpu: 6180 }, examples: [], engines: [], assets: [] },
   { variant: "procedural2d", pluginId: "procedural", cratePath: "procedural/plugin/rs", app: "procedural2d-play", aliases: ["procedural 2d"], ports: { react: 6021, wgpu: 6121 }, examples: ["default"], engines: [], assets: [] },
@@ -38,18 +38,18 @@ var PLAYGROUND_BUILD_TARGETS = [
   { variant: "puzzle2d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle2d-play", aliases: ["2d"], ports: { react: 6012, wgpu: 6112 }, examples: ["concrete-forest", "nakagin-capsule-tower"], engines: ["puzzle/2d/rs"], assets: [] },
   { variant: "puzzle3d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle3d-play", aliases: ["3d"], ports: { react: 6013, wgpu: 6113 }, examples: ["concrete-forest", "nakagin-capsule-tower"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }, { kind: "static-dir", route: "/infinite-fixture", root: "infinite/fixture" }] },
   { variant: "puzzle5d", pluginId: "puzzle", cratePath: "puzzle/plugin/rs", app: "puzzle5d-play", aliases: ["5d"], ports: { react: 6014, wgpu: 6114 }, examples: ["concrete-forest", "nakagin-capsule-tower"], engines: [], assets: [] },
-  { variant: "raster", pluginId: "raster", cratePath: "raster/plugin/rs", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: ["semio"], engines: ["framework/surface/paint/rs"], assets: [] },
+  { variant: "raster", pluginId: "raster", cratePath: "raster/plugin/rs", aliases: [], ports: { react: 6060, wgpu: 6160 }, examples: [], engines: ["framework/surface/paint/rs"], assets: [] },
   { variant: "reasoning-wires", pluginId: "reasoning-mindmap", cratePath: "reasoning/mindmap/plugin/rs", aliases: ["wires"], ports: { react: 6015, wgpu: 6115 }, examples: [], engines: [], assets: [] },
   { variant: "remodel", pluginId: "remodel", cratePath: "remodel/plugin/rs", aliases: [], ports: { react: 6063, wgpu: 6163 }, examples: [], engines: [], assets: [] },
   { variant: "s", pluginId: "s", cratePath: "s/plugin/rs", aliases: [], ports: { react: 6070, wgpu: 6066 }, examples: ["demo"], engines: [], assets: [] },
-  { variant: "sequence", pluginId: "sequence", cratePath: "sequence/plugin/rs", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: ["default"], engines: [], assets: [] },
-  { variant: "shooting", pluginId: "shooting", cratePath: "shooting/plugin/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: ["base-icon"], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }] },
+  { variant: "sequence", pluginId: "sequence", cratePath: "sequence/plugin/rs", aliases: [], ports: { react: 6077, wgpu: 6177 }, examples: [], engines: [], assets: [] },
+  { variant: "shooting", pluginId: "shooting", cratePath: "shooting/plugin/rs", aliases: [], ports: { react: 6019, wgpu: 6119 }, examples: [], engines: [], assets: [{ kind: "mesh-collection", route: "/mesh", roots: ["asset/metabolism/representation", "asset/abbau-aufbau"], placeholder: "asset/mesh/placeholder.glb", filterFromExamples: true }] },
   { variant: "sourcing", pluginId: "sourcing", cratePath: "sourcing/plugin/rs", app: "sourcing-curate", aliases: ["curate"], ports: { react: 6081, wgpu: 6181 }, examples: [], engines: [], assets: [] },
   { variant: "trinity-jack", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-jack-play", aliases: ["trinity jack"], ports: { react: 6054, wgpu: 6154 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "trinity-rewrite", pluginId: "trinity", cratePath: "trinity/plugin/rs", app: "trinity-rewrite-play", aliases: ["trinity rewrite"], ports: { react: 6056, wgpu: 6156 }, examples: ["branch-chain", "nakagin-capsule-tower"], engines: [], assets: [] },
   { variant: "vcs", pluginId: "vcs", cratePath: "vcs/plugin/rs", aliases: [], ports: { react: 6075, wgpu: 6175 }, examples: [], engines: [], assets: [] },
   { variant: "vdi3805", pluginId: "norm", cratePath: "norm/plugin/rs", app: "norm-vdi-3805-play", aliases: [], ports: { react: 6105, wgpu: 6205 }, examples: [], engines: [], assets: [] },
-  { variant: "writer", pluginId: "writer", cratePath: "writer/plugin/rs", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: ["dag", "jack"], engines: [], assets: [] }
+  { variant: "writer", pluginId: "writer", cratePath: "writer/plugin/rs", aliases: [], ports: { react: 6062, wgpu: 6162 }, examples: [], engines: [], assets: [] }
 ];
 
 // ../../plugin/registry/generated/plugins.ts
@@ -677,9 +677,9 @@ if (import.meta.vitest) {
 
 // ../../product/os/dev/generated/session.ts
 var PLAYGROUND_SESSION = {
-  variant: "din4108",
+  variant: "en1996",
   registryPluginId: "norm",
-  defaultAppId: "norm-din-4108-play",
+  defaultAppId: "norm-en-1996-play",
   studioMode: false,
   host: undefined,
   plugins: [

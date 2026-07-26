@@ -8,5 +8,6 @@ export default defineConfig({
   test: {
     name: "@semio-tech/framework-os-dev",
     environment: "jsdom",
+    coverage: { include: ["js/index.ts"] },
   },
 });

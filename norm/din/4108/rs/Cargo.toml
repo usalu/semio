@@ -13,4 +13,5 @@ path = "lib.rs"
 [dependencies]
 norm_core = { path = "../../../core/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
+vcs = { path = "../../../../vcs/rs" }
 

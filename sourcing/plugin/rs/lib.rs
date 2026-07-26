@@ -10,6 +10,7 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use sourcing_curate::{grid_placement, grid_scale, mesh_spec_for, sourcing_modules, typology_flatten, CurateDocument, ObjectKind, SortDirection, SourcingOperation, TableSort, TypologyNode, SOURCING_CURATE_SCHEMA};
 use std::collections::HashSet;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const SOURCING_CURATE_APP_ID: &str = "sourcing-curate";
@@ -30,8 +31,8 @@ const SOURCING_DRAG_MIME: &str = "application/x-semio-sourcing-object";
 const GRID_CELL: f64 = 2.0;
 const DEMO_STOCK_EXAMPLE_ID: &str = "demo-stock";
 const EMPTY_EXAMPLE_ID: &str = "empty-curation";
-const DEMO_STOCK_JSON: &str = include_str!("../../curate/example/demo-stock.curate.json");
-const EMPTY_CURATION_JSON: &str = include_str!("../../curate/example/empty-curation.curate.json");
+const DEMO_STOCK_TEXT: &str = include_str!("../../curate/example/demo-stock.curate");
+const EMPTY_CURATION_TEXT: &str = include_str!("../../curate/example/empty-curation.curate");
 //#endregion 🔖Constants
 
 //#region 🔖Contributions
@@ -86,11 +87,11 @@ fn available_modules(view_state: &ViewState) -> Vec<ModuleCatalogue> {
 
 //#region 🔖Document
 fn default_document() -> CurateDocument {
-    serde_json::from_str(DEMO_STOCK_JSON).unwrap_or_default()
+    CurateDocument::parse_dsl(DEMO_STOCK_TEXT).unwrap_or_default()
 }
 
 fn empty_document() -> CurateDocument {
-    serde_json::from_str(EMPTY_CURATION_JSON).unwrap_or_default()
+    CurateDocument::parse_dsl(EMPTY_CURATION_TEXT).unwrap_or_default()
 }
 
 fn sourcing_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -244,7 +245,7 @@ fn build_curated_table(document: &CurateDocument, labels: &SourcingLabels) -> Ui
                     ("count", TableCell::Stepper { value: item.count as f64, min: 0.0, max: kind.availability as f64, step: 1.0, action: sourcing_action("curateSetCount", Some(json!({ "objectId": kind.id }))) }),
                     (
                         "actions",
-                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None }] },
+                        TableCell::Buttons { buttons: vec![UiTreeItemAction { icon_id: "trash-2".into(), label: Some(labels.remove.into()), action: sourcing_action("curateRemove", Some(json!({ "objectId": kind.id }))), reveal_on_hover: None }] },
                     ),
                 ],
             ))
@@ -545,7 +546,7 @@ pub fn create_sourcing_curate_app() -> App {
                 export_formats: vec![],
                 import_formats: vec![],
             })
-            .icon_id("shopping-cart")
+            .icon_id("box")
             .mode("curate", "Curate")
             .default_mode_id("curate")
             .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table, "library")
@@ -580,8 +581,10 @@ pub fn create_sourcing_curate_app() -> App {
                 ]).default_value(DEMO_STOCK_EXAMPLE_ID),
             ]),
     )
-    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", DEMO_STOCK_JSON)
-    .example(EMPTY_EXAMPLE_ID, "Empty Curation", EMPTY_CURATION_JSON)
+    // 📄 `AppDefinition::example` still wants document JSON (the manifest-wide example wire format);
+    // the `.curate` text above is only the on-disk source of truth, re-serialized here once.
+    .example(DEMO_STOCK_EXAMPLE_ID, "Demo Stock", serde_json::to_string(&default_document()).unwrap_or_default())
+    .example(EMPTY_EXAMPLE_ID, "Empty Curation", serde_json::to_string(&empty_document()).unwrap_or_default())
 }
 
 fn sourcing_setup() {}
@@ -731,7 +734,7 @@ mod tests {
             app_id: SOURCING_CURATE_APP_ID.into(),
             module_id: module.module_id().into(),
             label: module.label().into(),
-            icon_id: "beam".into(),
+            icon_id: "hammer".into(),
             typology_json: serde_json::to_string(&module.typology()).unwrap(),
             kinds_json: serde_json::to_string(&module.demo_kinds()).unwrap(),
         };

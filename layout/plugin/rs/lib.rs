@@ -19,7 +19,7 @@ use semio_framework_plugin::{SurfaceKind,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
     FRAMEWORK_PANEL_TAB_INSPECTION_ID, FRAMEWORK_PANEL_TAB_INSPECTION_LABEL,
 };
-use vcs::CollectionOperation;
+use vcs::{CollectionOperation, DocumentDsl};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::collections::HashMap;
@@ -38,7 +38,7 @@ const LAYOUT_PLAY_WINDOW_BLUEPRINT: &str = "layout-blueprint";
 const LAYOUT_PLAY_WINDOW_PREVIEW: &str = "layout-preview";
 const LAYOUT_PLAY_PREFLIGHT_TAB_ID: &str = "layout.panel.preflight";
 
-const LAYOUT_SAMPLE_JSON: &str = include_str!("../../example/sample.layout.json");
+const LAYOUT_SAMPLE_TEXT: &str = include_str!("../../example/sample.layout");
 
 const LAYOUT_CATALOGUE_KINDS: &[(&str, &str)] = &[("rect", "square"), ("text", "type"), ("image", "image")];
 
@@ -104,7 +104,14 @@ struct PreflightIssue {
 
 //#region 🔖DocumentHelpers
 fn default_document() -> LayoutDocument {
-    parse_layout_document(LAYOUT_SAMPLE_JSON).expect("sample layout fixture")
+    LayoutDocument::parse_dsl(LAYOUT_SAMPLE_TEXT).expect("sample layout fixture")
+}
+
+/// 🌉 JSON bridge for `semio_framework_plugin`'s `App::example`, which hardcodes `serde_json::from_str`
+/// on its `document_json` parameter (shared framework machinery, out of scope for this DSL migration) —
+/// derives the JSON from the DSL fixture rather than keeping a second, redundant JSON copy of it on disk.
+fn layout_sample_document_json() -> String {
+    serde_json::to_string(&default_document()).unwrap_or_default()
 }
 
 fn layout_action(action: &str, args: Option<Value>) -> ActionDescriptor {
@@ -1802,7 +1809,7 @@ fn create_layout_app() -> App {
                 "addFrame".into(), "addPage".into(), "patchPage".into(), "patchFrame".into(),
             ]),
     )
-    .example("sample", "Sample", LAYOUT_SAMPLE_JSON)
+    .example("sample", "Sample", layout_sample_document_json())
     .program("layout", "Layout", "layout")
 }
 
@@ -2015,7 +2022,7 @@ mod tests {
 
     #[test]
     fn sample_fixture_parses() {
-        let doc = parse_layout_document(LAYOUT_SAMPLE_JSON).expect("sample fixture");
+        let doc = LayoutDocument::parse_dsl(LAYOUT_SAMPLE_TEXT).expect("sample fixture");
         assert_eq!(doc.schema, LAYOUT_FIXTURE_SCHEMA);
         assert!(!doc.pages.is_empty());
     }

@@ -43,6 +43,9 @@ import {
   coalesceBoard2dEvents,
   endPuzzle2dPeerGesture,
   mapContextMenuSpecs,
+  formatKeybindingShortcut,
+  buildKeysByActionId,
+  suggestionMenuItems,
   enrichNodeGraphContextMenuItems,
   notifyPuzzle2dPeersGestureEnded,
   parsePuzzle2dCatalogueDragPayload,
@@ -1701,6 +1704,50 @@ describe("framework renderer hosts", () => {
     expect(items[0]).toMatchObject({ id: "suggestion-0", icon: "box", checked: true });
     expect(items[0]).not.toHaveProperty("color", expect.anything());
     expect(items[0]?.color).toBeUndefined();
+  });
+
+  it("enriches context menu shortcuts from app keybindings", () => {
+    const keysByActionId = buildKeysByActionId([
+      { action: { action: "deleteSelection" }, keys: "delete,backspace" },
+      { action: { action: "duplicateSelection" }, keys: "mod+d" },
+    ]);
+    const items = mapContextMenuSpecs(
+      [
+        { id: "duplicate", label: "Duplicate", action: "duplicateSelection" },
+        { id: "delete", label: "Delete", action: "deleteSelection" },
+        { id: "custom", label: "Custom", action: "customAction", shortcut: "F2" },
+      ],
+      vi.fn(),
+      keysByActionId,
+    );
+    expect(items[0]?.shortcut).toMatch(/D$/);
+    expect(items[1]?.shortcut).toBe("⌦");
+    expect(items[2]?.shortcut).toBe("F2");
+  });
+
+  it("formats keybinding chords for menu shortcut labels", () => {
+    expect(formatKeybindingShortcut("backspace")).toBe("⌫");
+    expect(formatKeybindingShortcut("delete,backspace")).toBe("⌦");
+    expect(formatKeybindingShortcut("mod+d")).toMatch(/D$/);
+  });
+
+  it("numbers suggestion menu rows with digit shortcuts for the first nine candidates", () => {
+    const items = suggestionMenuItems(
+      {
+        open: true,
+        pending: false,
+        x: 0,
+        y: 0,
+        candidates: [
+          { index: 2, objectLabel: "Capsule", vortexLabel: "port-a", icon: "box" },
+          { index: 5, objectLabel: "Box", vortexLabel: "port-b", icon: "box" },
+        ],
+        vortexFullId: "obj:v0",
+      },
+      2,
+    );
+    expect(items[0]).toMatchObject({ shortcut: "1", checked: true });
+    expect(items[1]).toMatchObject({ shortcut: "2", checked: false });
   });
 
   it("enriches node-graph context menu rows for the effective right-click selection", () => {

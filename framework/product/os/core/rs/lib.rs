@@ -894,6 +894,758 @@ pub mod host {
     }
     //#endregion 🔖GraphReconcile
 
+    //#region 🔖Dsl
+    /// @emoji 📜 Hand-rolled lexer, keyword-driven parser and printer for `OsProjection`'s `.os` studio
+    /// DSL and `OsOperation`'s compact single-line op encoding. Whitespace (including newlines) is never
+    /// significant to the parser — `print_dsl` indents `in`/`out` port lines under their `node` purely
+    /// for readability (mirrors `vcs::print_document_text`'s own op-log indentation), `print_op` renders
+    /// the identical grammar space-joined on one line. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+    mod os_text {
+        use super::{OsAppInstance, OsDocumentRef, OsOperation, OsParameter, OsParameterFieldBinding, OsProjection};
+        use crate::media_graph::{MediaContract, MediaGraphPosition, OsMediaGraph, OsMediaGraphEdge, OsMediaGraphNode, OsMediaPort};
+        use semio_framework_core::{MediaClass, MediaForm, MediaType, MediaWireFormat, OsMediaFormat};
+
+        //#region Lexer
+        #[derive(Clone, Debug, PartialEq)]
+        enum Tok {
+            Word(String),
+            Str(String),
+            Eof,
+        }
+
+        #[derive(Clone, Debug)]
+        struct Lexed {
+            tok: Tok,
+            span: vcs::TextSpan,
+        }
+
+        /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`"`, so `key=value`
+        /// collapses into one token when the value itself has no whitespace (ids, numbers, enum words);
+        /// only a quoted value forces a token boundary right after `key=` (see {@link Parser::parse_kv_map}).
+        fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
+            let chars: Vec<char> = input.chars().collect();
+            let mut out = Vec::new();
+            let mut i = 0usize;
+            let mut line = 1u32;
+            let mut col = 1u32;
+            while i < chars.len() {
+                match chars[i] {
+                    ' ' | '\t' | '\r' => {
+                        i += 1;
+                        col += 1;
+                    }
+                    '\n' => {
+                        i += 1;
+                        line += 1;
+                        col = 1;
+                    }
+                    '"' => {
+                        let (start_line, start_col) = (line, col);
+                        i += 1;
+                        col += 1;
+                        let mut s = String::new();
+                        let mut closed = false;
+                        while i < chars.len() {
+                            let ch = chars[i];
+                            if ch == '\\' && i + 1 < chars.len() {
+                                match chars[i + 1] {
+                                    'n' => s.push('\n'),
+                                    '"' => s.push('"'),
+                                    '\\' => s.push('\\'),
+                                    other => {
+                                        s.push('\\');
+                                        s.push(other);
+                                    }
+                                }
+                                i += 2;
+                                col += 2;
+                            } else if ch == '"' {
+                                i += 1;
+                                col += 1;
+                                closed = true;
+                                break;
+                            } else if ch == '\n' {
+                                s.push(ch);
+                                i += 1;
+                                line += 1;
+                                col = 1;
+                            } else {
+                                s.push(ch);
+                                i += 1;
+                                col += 1;
+                            }
+                        }
+                        if !closed {
+                            return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
+                        }
+                        out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
+                    }
+                    _ => {
+                        let (start_line, start_col, start) = (line, col, i);
+                        while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '"') {
+                            i += 1;
+                            col += 1;
+                        }
+                        let word: String = chars[start..i].iter().collect();
+                        out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
+                    }
+                }
+            }
+            out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
+            Ok(out)
+        }
+
+        /// 🔤 Minimal backslash-escape for quoted string fields (label/name/text values/free-text ids) —
+        /// mirrors `vcs`'s private `escape_text_field` (not exported across the crate boundary).
+        fn escape_string(value: &str) -> String {
+            let mut out = String::with_capacity(value.len());
+            for ch in value.chars() {
+                match ch {
+                    '\\' => out.push_str("\\\\"),
+                    '"' => out.push_str("\\\""),
+                    '\n' => out.push_str("\\n"),
+                    _ => out.push(ch),
+                }
+            }
+            out
+        }
+
+        fn fmt_num(value: f64) -> String {
+            value.to_string()
+        }
+        //#endregion Lexer
+
+        //#region Parser
+        #[derive(Clone, Debug)]
+        enum FieldValue {
+            Str(String),
+            Word(String),
+        }
+
+        type FieldMap = std::collections::HashMap<String, (FieldValue, vcs::TextSpan)>;
+
+        struct Parser {
+            toks: Vec<Lexed>,
+            pos: usize,
+        }
+
+        impl Parser {
+            fn peek(&self) -> &Tok {
+                &self.toks[self.pos].tok
+            }
+
+            fn peek_word(&self) -> Option<&str> {
+                match self.peek() {
+                    Tok::Word(word) => Some(word.as_str()),
+                    _ => None,
+                }
+            }
+
+            fn span(&self) -> vcs::TextSpan {
+                self.toks[self.pos].span
+            }
+
+            fn bump(&mut self) -> Tok {
+                let tok = self.toks[self.pos].tok.clone();
+                if self.pos + 1 < self.toks.len() {
+                    self.pos += 1;
+                }
+                tok
+            }
+
+            fn error(&self, message: impl Into<String>) -> vcs::TextError {
+                vcs::TextError::new(message.into(), self.span())
+            }
+
+            fn expect_word(&mut self) -> Result<String, vcs::TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::Word(word) => Ok(word),
+                    other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
+                }
+            }
+
+            fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
+                let span = self.span();
+                let word = self.expect_word()?;
+                if word != keyword {
+                    return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
+                }
+                Ok(())
+            }
+
+            fn expect_eof(&mut self) -> Result<(), vcs::TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::Eof => Ok(()),
+                    other => Err(vcs::TextError::expected(format!("expected end of input, found {other:?}"), span, "eof")),
+                }
+            }
+
+            /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one —
+            /// the generic record-field reader every construct (studio/instance/node/port/edge/param/
+            /// binding/op) is built on. A quoted value is equally valid for a bareword field and vice
+            /// versa: quoting is purely the printer's choice for readability, never semantically required.
+            fn parse_kv_map(&mut self) -> Result<FieldMap, vcs::TextError> {
+                let mut map = FieldMap::new();
+                loop {
+                    let word = match self.peek() {
+                        Tok::Word(word) if word.contains('=') => word.clone(),
+                        _ => break,
+                    };
+                    let span = self.span();
+                    self.bump();
+                    let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
+                    let value = if rest.is_empty() {
+                        match self.peek().clone() {
+                            Tok::Str(text) => {
+                                self.bump();
+                                FieldValue::Str(text)
+                            }
+                            _ => return Err(self.error(format!("expected a quoted string value for '{key}'"))),
+                        }
+                    } else {
+                        FieldValue::Word(rest.to_string())
+                    };
+                    map.insert(key.to_string(), (value, span));
+                }
+                Ok(map)
+            }
+        }
+
+        fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
+            match map.get(key) {
+                Some((FieldValue::Word(word), _)) => Ok(word.clone()),
+                Some((FieldValue::Str(text), _)) => Ok(text.clone()),
+                None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
+            }
+        }
+
+        fn kv_opt_word(map: &FieldMap, key: &str) -> Option<String> {
+            match map.get(key) {
+                Some((FieldValue::Word(word), _)) => Some(word.clone()),
+                Some((FieldValue::Str(text), _)) => Some(text.clone()),
+                None => None,
+            }
+        }
+
+        fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
+            let word = kv_word(map, key, span)?;
+            word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
+        }
+
+        fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
+            kv_opt_word(map, key).and_then(|word| word.parse::<f64>().ok())
+        }
+
+        fn kv_bool(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<bool, vcs::TextError> {
+            match kv_word(map, key, span)?.as_str() {
+                "true" => Ok(true),
+                "false" => Ok(false),
+                other => Err(vcs::TextError::expected(format!("field '{key}' must be true|false, found '{other}'"), span, "true|false")),
+            }
+        }
+        //#endregion Parser
+
+        //#region Lists
+        /// 🔐 Minimal percent-escape for comma-joined list items (`programs`, categorical `options`) —
+        /// mirrors `vcs`'s private `escape_id_component`.
+        fn escape_list_item(value: &str) -> String {
+            value.replace('%', "%25").replace(',', "%2C")
+        }
+
+        fn unescape_list_item(value: &str) -> String {
+            value.replace("%2C", ",").replace("%25", "%")
+        }
+
+        /// 📜 Prints a `key="a,b,c"` field, always quoted (including the empty-list case `key=""`) so an
+        /// empty list is representable as a token at all — an empty bareword right after `=` isn't.
+        fn print_list_field(key: &str, items: &[String]) -> String {
+            format!(" {key}=\"{}\"", items.iter().map(|item| escape_list_item(item)).collect::<Vec<_>>().join(","))
+        }
+
+        fn split_list(value: &str) -> Vec<String> {
+            if value.is_empty() {
+                Vec::new()
+            } else {
+                value.split(',').map(unescape_list_item).collect()
+            }
+        }
+        //#endregion Lists
+
+        //#region MediaEnums
+        fn media_class_word(class: MediaClass) -> &'static str {
+            match class {
+                MediaClass::TwoD => "twoD",
+                MediaClass::ThreeD => "threeD",
+                MediaClass::Text => "text",
+                MediaClass::Data => "data",
+                MediaClass::Graph => "graph",
+                MediaClass::Kit => "kit",
+                MediaClass::Computation => "computation",
+                MediaClass::Presentation => "presentation",
+            }
+        }
+
+        fn parse_media_class(word: &str, span: vcs::TextSpan) -> Result<MediaClass, vcs::TextError> {
+            Ok(match word {
+                "twoD" => MediaClass::TwoD,
+                "threeD" => MediaClass::ThreeD,
+                "text" => MediaClass::Text,
+                "data" => MediaClass::Data,
+                "graph" => MediaClass::Graph,
+                "kit" => MediaClass::Kit,
+                "computation" => MediaClass::Computation,
+                "presentation" => MediaClass::Presentation,
+                other => return Err(vcs::TextError::expected(format!("unknown media class '{other}'"), span, "twoD|threeD|text|data|graph|kit|computation|presentation")),
+            })
+        }
+
+        fn media_form_word(form: MediaForm) -> &'static str {
+            match form {
+                MediaForm::Any => "any",
+                MediaForm::Vector => "vector",
+                MediaForm::Raster => "raster",
+                MediaForm::Brep => "brep",
+                MediaForm::Mesh => "mesh",
+                MediaForm::Document => "document",
+                MediaForm::Value => "value",
+                MediaForm::Dag => "dag",
+                MediaForm::Trinity => "trinity",
+                MediaForm::Type => "type",
+                MediaForm::Design => "design",
+                MediaForm::Kit => "kit",
+                MediaForm::Flow => "flow",
+                MediaForm::Sequence => "sequence",
+                MediaForm::Imperative => "imperative",
+                MediaForm::Deck => "deck",
+            }
+        }
+
+        fn parse_media_form(word: &str, span: vcs::TextSpan) -> Result<MediaForm, vcs::TextError> {
+            Ok(match word {
+                "any" => MediaForm::Any,
+                "vector" => MediaForm::Vector,
+                "raster" => MediaForm::Raster,
+                "brep" => MediaForm::Brep,
+                "mesh" => MediaForm::Mesh,
+                "document" => MediaForm::Document,
+                "value" => MediaForm::Value,
+                "dag" => MediaForm::Dag,
+                "trinity" => MediaForm::Trinity,
+                "type" => MediaForm::Type,
+                "design" => MediaForm::Design,
+                "kit" => MediaForm::Kit,
+                "flow" => MediaForm::Flow,
+                "sequence" => MediaForm::Sequence,
+                "imperative" => MediaForm::Imperative,
+                "deck" => MediaForm::Deck,
+                other => return Err(vcs::TextError::expected(format!("unknown media form '{other}'"), span, "media form")),
+            })
+        }
+
+        /// 🤝 `MediaContract` fields flattened onto whichever line hosts an edge (doc `edge` record or
+        /// the `connect-media-ports` op line) — shared by both printers/parsers.
+        fn print_contract_fields(contract: &MediaContract) -> String {
+            let mut out = format!(" kindId={} class={} form={}", contract.kind_id, media_class_word(contract.media_type.class), media_form_word(contract.media_type.form));
+            match &contract.wire {
+                MediaWireFormat::Binary { format } => out.push_str(&format!(" wireKind=binary wireFormat={}", format.as_str())),
+                MediaWireFormat::Document { schema } => out.push_str(&format!(" wireKind=document wireSchema=\"{}\"", escape_string(schema))),
+            }
+            if let Some((from, to)) = &contract.conversion {
+                out.push_str(&format!(" conversionFrom={} conversionTo={}", media_form_word(*from), media_form_word(*to)));
+            }
+            out
+        }
+
+        fn parse_contract_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<MediaContract, vcs::TextError> {
+            let kind_id = kv_word(map, "kindId", span)?;
+            let class = parse_media_class(&kv_word(map, "class", span)?, span)?;
+            let form = parse_media_form(&kv_word(map, "form", span)?, span)?;
+            let wire = match kv_word(map, "wireKind", span)?.as_str() {
+                "binary" => {
+                    let format_word = kv_word(map, "wireFormat", span)?;
+                    let format = OsMediaFormat::parse(&format_word).ok_or_else(|| vcs::TextError::expected(format!("unknown wire format '{format_word}'"), span, "svg|png|obj|glb|stl|step|dwg|ply|las"))?;
+                    MediaWireFormat::Binary { format }
+                }
+                "document" => MediaWireFormat::Document { schema: kv_word(map, "wireSchema", span)? },
+                other => return Err(vcs::TextError::expected(format!("unknown wire kind '{other}'"), span, "binary|document")),
+            };
+            let conversion = match (kv_opt_word(map, "conversionFrom"), kv_opt_word(map, "conversionTo")) {
+                (Some(from), Some(to)) => Some((parse_media_form(&from, span)?, parse_media_form(&to, span)?)),
+                _ => None,
+            };
+            Ok(MediaContract { kind_id, media_type: MediaType { class, form }, wire, conversion })
+        }
+        //#endregion MediaEnums
+
+        //#region Records
+        fn print_port_fields(port: &OsMediaPort) -> String {
+            format!(" id={} kind={} dir={}", port.id, port.resource_kind, port.direction)
+        }
+
+        fn parse_port_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<OsMediaPort, vcs::TextError> {
+            Ok(OsMediaPort { id: kv_word(map, "id", span)?, resource_kind: kv_word(map, "kind", span)?, direction: kv_word(map, "dir", span)? })
+        }
+
+        /// 🕸️ Prints a `node` record: its header fields on one line, then each port on its own
+        /// two-space-indented `in`/`out` line — purely cosmetic nesting, the parser below reads ports as
+        /// zero-or-more `in`/`out` keyword records immediately following the node header regardless of
+        /// indentation (whitespace is never significant).
+        fn print_node(node: &OsMediaGraphNode) -> String {
+            let mut lines = vec![format!("node id={} instance={} x={} y={} w={} h={}", node.id, node.instance_id, fmt_num(node.x), fmt_num(node.y), fmt_num(node.width), fmt_num(node.height))];
+            for port in &node.inputs {
+                lines.push(format!("  in{}", print_port_fields(port)));
+            }
+            for port in &node.outputs {
+                lines.push(format!("  out{}", print_port_fields(port)));
+            }
+            lines.join("\n")
+        }
+
+        fn parse_node(p: &mut Parser) -> Result<OsMediaGraphNode, vcs::TextError> {
+            let span = p.span();
+            let map = p.parse_kv_map()?;
+            let id = kv_word(&map, "id", span)?;
+            let instance_id = kv_word(&map, "instance", span)?;
+            let x = kv_num(&map, "x", span)?;
+            let y = kv_num(&map, "y", span)?;
+            let width = kv_num(&map, "w", span)?;
+            let height = kv_num(&map, "h", span)?;
+            let mut inputs = Vec::new();
+            let mut outputs = Vec::new();
+            loop {
+                match p.peek_word() {
+                    Some("in") => {
+                        p.bump();
+                        let port_span = p.span();
+                        let port_map = p.parse_kv_map()?;
+                        inputs.push(parse_port_fields(&port_map, port_span)?);
+                    }
+                    Some("out") => {
+                        p.bump();
+                        let port_span = p.span();
+                        let port_map = p.parse_kv_map()?;
+                        outputs.push(parse_port_fields(&port_map, port_span)?);
+                    }
+                    _ => break,
+                }
+            }
+            Ok(OsMediaGraphNode { id, instance_id, x, y, width, height, inputs, outputs })
+        }
+
+        fn print_edge_fields(edge: &OsMediaGraphEdge) -> String {
+            format!(" id={} sourceNode={} sourcePort={} targetNode={} targetPort={}{}", edge.id, edge.source_node_id, edge.source_port_id, edge.target_node_id, edge.target_port_id, print_contract_fields(&edge.contract))
+        }
+
+        fn parse_edge_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<OsMediaGraphEdge, vcs::TextError> {
+            Ok(OsMediaGraphEdge {
+                id: kv_word(map, "id", span)?,
+                source_node_id: kv_word(map, "sourceNode", span)?,
+                source_port_id: kv_word(map, "sourcePort", span)?,
+                target_node_id: kv_word(map, "targetNode", span)?,
+                target_port_id: kv_word(map, "targetPort", span)?,
+                contract: parse_contract_fields(map, span)?,
+            })
+        }
+
+        fn print_instance_fields(instance: &OsAppInstance) -> String {
+            format!(
+                " id={} program={} app={} label=\"{}\" yields={} documentId={} documentSchema={}",
+                instance.id,
+                instance.program_id,
+                instance.app_id,
+                escape_string(&instance.label),
+                instance.yields,
+                instance.document.document_id,
+                instance.document.schema
+            )
+        }
+
+        fn parse_instance_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<OsAppInstance, vcs::TextError> {
+            Ok(OsAppInstance {
+                id: kv_word(map, "id", span)?,
+                program_id: kv_word(map, "program", span)?,
+                app_id: kv_word(map, "app", span)?,
+                label: kv_word(map, "label", span)?,
+                yields: kv_word(map, "yields", span)?,
+                document: OsDocumentRef { document_id: kv_word(map, "documentId", span)?, schema: kv_word(map, "documentSchema", span)? },
+            })
+        }
+
+        /// 🎛️ `OsParameter` fields flattened onto whichever line hosts it (doc `param` record, or the
+        /// `add-parameter`/`patch-parameter` op lines) — a leading `type=` tag picks the variant.
+        fn print_parameter_fields(parameter: &OsParameter) -> String {
+            match parameter {
+                OsParameter::Numeric { id, name, value, min, max, step } => {
+                    let mut out = format!(" type=numeric id={id} name=\"{}\" value={}", escape_string(name), fmt_num(*value));
+                    if let Some(min) = min {
+                        out.push_str(&format!(" min={}", fmt_num(*min)));
+                    }
+                    if let Some(max) = max {
+                        out.push_str(&format!(" max={}", fmt_num(*max)));
+                    }
+                    if let Some(step) = step {
+                        out.push_str(&format!(" step={}", fmt_num(*step)));
+                    }
+                    out
+                }
+                OsParameter::Categorical { id, name, value, options } => {
+                    format!(" type=categorical id={id} name=\"{}\" value=\"{}\"{}", escape_string(name), escape_string(value), print_list_field("options", options))
+                }
+                OsParameter::Toggle { id, name, value } => format!(" type=toggle id={id} name=\"{}\" value={value}", escape_string(name)),
+                OsParameter::Text { id, name, value } => format!(" type=text id={id} name=\"{}\" value=\"{}\"", escape_string(name), escape_string(value)),
+            }
+        }
+
+        fn parse_parameter_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<OsParameter, vcs::TextError> {
+            let id = kv_word(map, "id", span)?;
+            let name = kv_word(map, "name", span)?;
+            match kv_word(map, "type", span)?.as_str() {
+                "numeric" => Ok(OsParameter::Numeric { id, name, value: kv_num(map, "value", span)?, min: kv_opt_num(map, "min"), max: kv_opt_num(map, "max"), step: kv_opt_num(map, "step") }),
+                "categorical" => Ok(OsParameter::Categorical { id, name, value: kv_word(map, "value", span)?, options: split_list(&kv_word(map, "options", span)?) }),
+                "toggle" => Ok(OsParameter::Toggle { id, name, value: kv_bool(map, "value", span)? }),
+                "text" => Ok(OsParameter::Text { id, name, value: kv_word(map, "value", span)? }),
+                other => Err(vcs::TextError::expected(format!("unknown parameter type '{other}'"), span, "numeric|categorical|toggle|text")),
+            }
+        }
+
+        fn print_binding_fields(binding: &OsParameterFieldBinding) -> String {
+            format!(" parameter={} instance={} field=\"{}\"", binding.parameter_id, binding.instance_id, escape_string(&binding.field_path))
+        }
+
+        fn parse_binding_fields(map: &FieldMap, span: vcs::TextSpan) -> Result<OsParameterFieldBinding, vcs::TextError> {
+            Ok(OsParameterFieldBinding { parameter_id: kv_word(map, "parameter", span)?, instance_id: kv_word(map, "instance", span)?, field_path: kv_word(map, "field", span)? })
+        }
+        //#endregion Records
+
+        //#region Document
+        pub(super) fn print_projection(projection: &OsProjection) -> String {
+            let mut header = format!("studio{} mediaGraphSchema={}", print_list_field("programs", &projection.programs), projection.media_graph.schema);
+            if let Some(active_program_id) = &projection.active_program_id {
+                header.push_str(&format!(" activeProgram={active_program_id}"));
+            }
+            if let Some(active_alternative_id) = &projection.active_alternative_id {
+                header.push_str(&format!(" activeAlternative={active_alternative_id}"));
+            }
+            let mut parts = vec![header];
+            for instance in &projection.app_instances {
+                parts.push(format!("instance{}", print_instance_fields(instance)));
+            }
+            for node in &projection.media_graph.nodes {
+                parts.push(print_node(node));
+            }
+            for edge in &projection.media_graph.edges {
+                parts.push(format!("edge{}", print_edge_fields(edge)));
+            }
+            for parameter in &projection.parameters {
+                parts.push(format!("param{}", print_parameter_fields(parameter)));
+            }
+            for binding in &projection.parameter_bindings {
+                parts.push(format!("binding{}", print_binding_fields(binding)));
+            }
+            parts.join("\n")
+        }
+
+        pub(super) fn parse_projection(text: &str) -> Result<OsProjection, vcs::TextError> {
+            let toks = lex(text)?;
+            let mut p = Parser { toks, pos: 0 };
+            p.expect_keyword("studio")?;
+            let header_span = p.span();
+            let header_map = p.parse_kv_map()?;
+            let programs = split_list(&kv_word(&header_map, "programs", header_span)?);
+            let media_graph_schema = kv_word(&header_map, "mediaGraphSchema", header_span)?;
+            let active_program_id = kv_opt_word(&header_map, "activeProgram");
+            let active_alternative_id = kv_opt_word(&header_map, "activeAlternative");
+
+            let mut app_instances = Vec::new();
+            let mut nodes = Vec::new();
+            let mut edges = Vec::new();
+            let mut parameters = Vec::new();
+            let mut parameter_bindings = Vec::new();
+            loop {
+                match p.peek().clone() {
+                    Tok::Eof => break,
+                    Tok::Word(word) if word == "instance" => {
+                        p.bump();
+                        let span = p.span();
+                        let map = p.parse_kv_map()?;
+                        app_instances.push(parse_instance_fields(&map, span)?);
+                    }
+                    Tok::Word(word) if word == "node" => {
+                        p.bump();
+                        nodes.push(parse_node(&mut p)?);
+                    }
+                    Tok::Word(word) if word == "edge" => {
+                        p.bump();
+                        let span = p.span();
+                        let map = p.parse_kv_map()?;
+                        edges.push(parse_edge_fields(&map, span)?);
+                    }
+                    Tok::Word(word) if word == "param" => {
+                        p.bump();
+                        let span = p.span();
+                        let map = p.parse_kv_map()?;
+                        parameters.push(parse_parameter_fields(&map, span)?);
+                    }
+                    Tok::Word(word) if word == "binding" => {
+                        p.bump();
+                        let span = p.span();
+                        let map = p.parse_kv_map()?;
+                        parameter_bindings.push(parse_binding_fields(&map, span)?);
+                    }
+                    other => return Err(vcs::TextError::expected(format!("expected 'instance'|'node'|'edge'|'param'|'binding', found {other:?}"), p.span(), "instance|node|edge|param|binding")),
+                }
+            }
+            p.expect_eof()?;
+
+            Ok(OsProjection {
+                programs,
+                active_program_id,
+                active_alternative_id,
+                app_instances,
+                media_graph: OsMediaGraph { schema: media_graph_schema, nodes, edges },
+                parameters,
+                parameter_bindings,
+            })
+        }
+        //#endregion Document
+
+        //#region Operation
+        /// ⚡ Renders one `OsOperation` as a single line — `spawn-app-instance`/`connect-media-ports`/
+        /// `add-parameter`/`patch-parameter` reuse the same field grammar as the doc-level `instance`/
+        /// `edge`/`param` records above.
+        pub(super) fn print_operation(operation: &OsOperation) -> String {
+            match operation {
+                OsOperation::SetActiveProgram { program_id } => match program_id {
+                    Some(id) => format!("set-active-program id={id}"),
+                    None => "set-active-program".to_string(),
+                },
+                OsOperation::SetActiveAlternative { alternative_id } => match alternative_id {
+                    Some(id) => format!("set-active-alternative id={id}"),
+                    None => "set-active-alternative".to_string(),
+                },
+                OsOperation::SpawnAppInstance { instance, position } => format!("spawn-app-instance{} x={} y={}", print_instance_fields(instance), fmt_num(position.x), fmt_num(position.y)),
+                OsOperation::RemoveAppInstance { instance_id } => format!("remove-app-instance id={instance_id}"),
+                OsOperation::ConnectMediaPorts { edge } => format!("connect-media-ports{}", print_edge_fields(edge)),
+                OsOperation::DisconnectMediaEdge { edge_id } => format!("disconnect-media-edge id={edge_id}"),
+                OsOperation::MoveMediaNode { node_id, x, y } => format!("move-media-node id={node_id} x={} y={}", fmt_num(*x), fmt_num(*y)),
+                OsOperation::PatchAppInstance { instance_id, label } => {
+                    let mut out = format!("patch-app-instance id={instance_id}");
+                    if let Some(label) = label {
+                        out.push_str(&format!(" label=\"{}\"", escape_string(label)));
+                    }
+                    out
+                }
+                OsOperation::AddParameter { parameter } => format!("add-parameter{}", print_parameter_fields(parameter)),
+                OsOperation::RemoveParameter { parameter_id } => format!("remove-parameter id={parameter_id}"),
+                OsOperation::PatchParameter { parameter_id, parameter } => format!("patch-parameter target={parameter_id}{}", print_parameter_fields(parameter)),
+                OsOperation::BindParameterField { binding } => format!("bind-parameter-field{}", print_binding_fields(binding)),
+                OsOperation::UnbindParameterField { instance_id, field_path } => format!("unbind-parameter-field instance={instance_id} field=\"{}\"", escape_string(field_path)),
+                OsOperation::SyncParameterPorts => "sync-parameter-ports".to_string(),
+            }
+        }
+
+        pub(super) fn parse_operation(line: &str) -> Result<OsOperation, vcs::TextError> {
+            let toks = lex(line)?;
+            let mut p = Parser { toks, pos: 0 };
+            let span = p.span();
+            let keyword = p.expect_word()?;
+            let operation = match keyword.as_str() {
+                "set-active-program" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::SetActiveProgram { program_id: kv_opt_word(&map, "id") }
+                }
+                "set-active-alternative" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::SetActiveAlternative { alternative_id: kv_opt_word(&map, "id") }
+                }
+                "spawn-app-instance" => {
+                    let map = p.parse_kv_map()?;
+                    let instance = parse_instance_fields(&map, span)?;
+                    let position = MediaGraphPosition { x: kv_num(&map, "x", span)?, y: kv_num(&map, "y", span)? };
+                    OsOperation::SpawnAppInstance { instance, position }
+                }
+                "remove-app-instance" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::RemoveAppInstance { instance_id: kv_word(&map, "id", span)? }
+                }
+                "connect-media-ports" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::ConnectMediaPorts { edge: parse_edge_fields(&map, span)? }
+                }
+                "disconnect-media-edge" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::DisconnectMediaEdge { edge_id: kv_word(&map, "id", span)? }
+                }
+                "move-media-node" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::MoveMediaNode { node_id: kv_word(&map, "id", span)?, x: kv_num(&map, "x", span)?, y: kv_num(&map, "y", span)? }
+                }
+                "patch-app-instance" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::PatchAppInstance { instance_id: kv_word(&map, "id", span)?, label: kv_opt_word(&map, "label") }
+                }
+                "add-parameter" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::AddParameter { parameter: parse_parameter_fields(&map, span)? }
+                }
+                "remove-parameter" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::RemoveParameter { parameter_id: kv_word(&map, "id", span)? }
+                }
+                "patch-parameter" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::PatchParameter { parameter_id: kv_word(&map, "target", span)?, parameter: parse_parameter_fields(&map, span)? }
+                }
+                "bind-parameter-field" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::BindParameterField { binding: parse_binding_fields(&map, span)? }
+                }
+                "unbind-parameter-field" => {
+                    let map = p.parse_kv_map()?;
+                    OsOperation::UnbindParameterField { instance_id: kv_word(&map, "instance", span)?, field_path: kv_word(&map, "field", span)? }
+                }
+                "sync-parameter-ports" => OsOperation::SyncParameterPorts,
+                other => {
+                    return Err(vcs::TextError::expected(
+                        format!("unknown operation '{other}'"),
+                        span,
+                        "set-active-program|set-active-alternative|spawn-app-instance|remove-app-instance|connect-media-ports|disconnect-media-edge|move-media-node|patch-app-instance|add-parameter|remove-parameter|patch-parameter|bind-parameter-field|unbind-parameter-field|sync-parameter-ports",
+                    ))
+                }
+            };
+            p.expect_eof()?;
+            Ok(operation)
+        }
+        //#endregion Operation
+    }
+
+    impl vcs::DocumentDsl for OsProjection {
+        const EXTENSION: &'static str = "os";
+
+        fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+            os_text::parse_projection(text)
+        }
+
+        fn print_dsl(&self) -> String {
+            os_text::print_projection(self)
+        }
+    }
+    //#endregion 🔖Dsl
+
+    //#region 🔖OpText
+    impl vcs::OpText for OsOperation {
+        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+            os_text::parse_operation(line)
+        }
+
+        fn print_op(&self) -> String {
+            os_text::print_operation(self)
+        }
+    }
+    //#endregion 🔖OpText
+
     pub fn materialize_os_projection(document: &OsDocument, applied_edit_ids: &[String]) -> Result<OsProjection, VcsError> {
         let envelope = OsEnvelope { schema: document.schema.clone(), id: document.id.clone(), vcs: document.vcs.clone(), backbone: document.backbone.clone(), active_alternative_id: document.vcs.initial_projection.active_alternative_id.clone() };
         materialize_document_projection(&envelope, applied_edit_ids)
@@ -1193,9 +1945,9 @@ pub mod host {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph};
+        use crate::media_graph::{empty_media_graph, placeholder_media_contract, validate_media_graph, MediaContract, OsMediaPort};
         use crate::registry::{merge_os_program_definition, os_baseline_resource, os_in_port, OsAppResourceSpec, OsPlatformAppInput, OsPlatformInput};
-        use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, ModeDefinition, PluginManifest, WindowKindDefinition};
+        use semio_framework_core::{ActionId, ActorId, AppInstanceId, InvocationId, MediaClass, MediaForm, MediaType, MediaWireFormat, ModeDefinition, OsMediaFormat, PluginManifest, WindowKindDefinition};
         use std::sync::Arc;
         use ui_wgpu::SurfaceKind;
         use vcs::{MemoryBackbone, MemoryBackbonePort};
@@ -1702,6 +2454,194 @@ pub mod host {
         // the hub's `PresencePeer`/`HubServerFrame::Presence` frames and `framework/sync`'s
         // `DocumentEvent::Presence` — see `framework/product/os/hub/rs/bin.rs` and
         // `framework/sync/rs/lib.rs` for that layer's own coverage.
+
+        // #region 🔖DslAndOpText
+        /// 🧵 A representative `OsProjection` exercising every collection: two app instances, two media
+        /// graph nodes (one with an input port, one with an output port) wired by one edge, one of each
+        /// `OsParameter` variant, and one parameter binding — so the DSL round trip actually covers the
+        /// media-graph encoding, not just an empty-projection fixpoint.
+        fn sample_os_projection() -> OsProjection {
+            let node_a = OsMediaGraphNode {
+                id: "node-1".into(),
+                instance_id: "app-1".into(),
+                x: 0.0,
+                y: 0.0,
+                width: 220.0,
+                height: 92.0,
+                inputs: Vec::new(),
+                outputs: vec![OsMediaPort { id: "app-1:puzzle.out:out".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "out".into() }],
+            };
+            let node_b = OsMediaGraphNode {
+                id: "node-2".into(),
+                instance_id: "app-2".into(),
+                x: 240.0,
+                y: 0.0,
+                width: 220.0,
+                height: 92.0,
+                inputs: vec![OsMediaPort { id: "app-2:draw.in:in".into(), resource_kind: "puzzle.2d.fixture".into(), direction: "in".into() }],
+                outputs: Vec::new(),
+            };
+            let edge = OsMediaGraphEdge {
+                id: "edge-1".into(),
+                source_node_id: "node-1".into(),
+                source_port_id: "app-1:puzzle.out:out".into(),
+                target_node_id: "node-2".into(),
+                target_port_id: "app-2:draw.in:in".into(),
+                contract: MediaContract { kind_id: "puzzle.2d.fixture".into(), media_type: MediaType { class: MediaClass::TwoD, form: MediaForm::Vector }, wire: MediaWireFormat::Document { schema: "puzzle.2d.fixture".into() }, conversion: None },
+            };
+            OsProjection {
+                programs: vec!["puzzle".into(), "draw".into()],
+                active_program_id: Some("puzzle".into()),
+                active_alternative_id: Some("alt-1".into()),
+                app_instances: vec![
+                    OsAppInstance {
+                        id: "app-1".into(),
+                        program_id: "puzzle".into(),
+                        app_id: "puzzle2d".into(),
+                        label: "Puzzle Board \"3D\"".into(),
+                        yields: "puzzle.2d.fixture".into(),
+                        document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
+                    },
+                    OsAppInstance {
+                        id: "app-2".into(),
+                        program_id: "draw".into(),
+                        app_id: "draw".into(),
+                        label: "Draw Sink".into(),
+                        yields: "draw.document".into(),
+                        document: OsDocumentRef { document_id: "doc-2".into(), schema: "draw.document".into() },
+                    },
+                ],
+                media_graph: OsMediaGraph { schema: OS_MEDIA_GRAPH_SCHEMA.into(), nodes: vec![node_a, node_b], edges: vec![edge] },
+                parameters: vec![
+                    OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) },
+                    OsParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B, with comma".into()] },
+                    OsParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: true },
+                    OsParameter::Text { id: "p4".into(), name: "Label".into(), value: "hello \"world\"\nnewline".into() },
+                ],
+                parameter_bindings: vec![OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "app-1".into(), field_path: "/zoom".into() }],
+            }
+        }
+
+        #[test]
+        fn dsl_round_trips_default_projection() {
+            vcs::test_support::assert_dsl_round_trip(&default_os_projection());
+        }
+
+        #[test]
+        fn dsl_round_trips_projection_with_media_graph_and_parameters() {
+            vcs::test_support::assert_dsl_round_trip(&sample_os_projection());
+        }
+
+        #[test]
+        fn op_text_round_trips_set_active_program() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveProgram { program_id: None });
+        }
+
+        #[test]
+        fn op_text_round_trips_set_active_alternative() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: Some("alt-1".into()) });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SetActiveAlternative { alternative_id: None });
+        }
+
+        #[test]
+        fn op_text_round_trips_spawn_app_instance() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SpawnAppInstance {
+                instance: OsAppInstance {
+                    id: "app-1".into(),
+                    program_id: "puzzle".into(),
+                    app_id: "puzzle2d".into(),
+                    label: "Puzzle Board".into(),
+                    yields: "puzzle.2d.fixture".into(),
+                    document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
+                },
+                position: MediaGraphPosition { x: 10.0, y: -20.5 },
+            });
+        }
+
+        #[test]
+        fn op_text_round_trips_remove_app_instance() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::RemoveAppInstance { instance_id: "app-1".into() });
+        }
+
+        #[test]
+        fn op_text_round_trips_connect_media_ports() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::ConnectMediaPorts {
+                edge: OsMediaGraphEdge {
+                    id: "edge-1".into(),
+                    source_node_id: "node-1".into(),
+                    source_port_id: "app-1:out:out".into(),
+                    target_node_id: "node-2".into(),
+                    target_port_id: "app-2:in:in".into(),
+                    contract: MediaContract {
+                        kind_id: "puzzle.2d.fixture".into(),
+                        media_type: MediaType { class: MediaClass::ThreeD, form: MediaForm::Brep },
+                        wire: MediaWireFormat::Binary { format: OsMediaFormat::Stl },
+                        conversion: Some((MediaForm::Brep, MediaForm::Mesh)),
+                    },
+                },
+            });
+        }
+
+        #[test]
+        fn op_text_round_trips_disconnect_media_edge() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::DisconnectMediaEdge { edge_id: "edge-1".into() });
+        }
+
+        #[test]
+        fn op_text_round_trips_move_media_node() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::MoveMediaNode { node_id: "node-1".into(), x: 5.5, y: -6.25 });
+        }
+
+        #[test]
+        fn op_text_round_trips_patch_app_instance() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: Some("Renamed \"Board\"".into()) });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchAppInstance { instance_id: "app-1".into(), label: None });
+        }
+
+        #[test]
+        fn op_text_round_trips_add_parameter() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 10.0, min: Some(0.0), max: Some(100.0), step: Some(1.0) } });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Categorical { id: "p2".into(), name: "Mode".into(), value: "Option A".into(), options: vec!["Option A".into(), "Option B".into()] } });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Toggle { id: "p3".into(), name: "Flag".into(), value: false } });
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::AddParameter { parameter: OsParameter::Text { id: "p4".into(), name: "Label".into(), value: "hi there".into() } });
+        }
+
+        #[test]
+        fn op_text_round_trips_remove_parameter() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::RemoveParameter { parameter_id: "p1".into() });
+        }
+
+        #[test]
+        fn op_text_round_trips_patch_parameter() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::PatchParameter { parameter_id: "p1".into(), parameter: OsParameter::Numeric { id: "p1".into(), name: "Zoom".into(), value: 20.0, min: None, max: None, step: None } });
+        }
+
+        #[test]
+        fn op_text_round_trips_bind_parameter_field() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::BindParameterField { binding: OsParameterFieldBinding { parameter_id: "p1".into(), instance_id: "app-1".into(), field_path: "/zoom".into() } });
+        }
+
+        #[test]
+        fn op_text_round_trips_unbind_parameter_field() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::UnbindParameterField { instance_id: "app-1".into(), field_path: "/zoom".into() });
+        }
+
+        #[test]
+        fn op_text_round_trips_sync_parameter_ports() {
+            vcs::test_support::assert_op_line_round_trip(&OsOperation::SyncParameterPorts);
+        }
+
+        #[test]
+        fn document_text_round_trips_store_with_applied_operation() {
+            let envelope = create_document_vcs_envelope(OS_STUDIO_SCHEMA, "studio-text-test", default_os_projection(), None);
+            let mut store = DocumentVcsStore::new(envelope);
+            store
+                .dispatch(DocumentVcsCommand::Apply { operations: vec![OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) }], description: None })
+                .expect("apply");
+            vcs::test_support::assert_document_text_round_trip(&store);
+        }
+        // #endregion 🔖DslAndOpText
     }
     // #endregion host
 }

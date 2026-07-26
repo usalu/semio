@@ -12,7 +12,14 @@
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from "node:fs";
 import { basename, join } from "node:path";
 import { BundleScript, ScriptRouter, runBundleScriptMain } from "../repo/lib/js/index.ts";
-import { iconIdToRustVariant } from "../ui/asset/script.ts";
+
+/** @emoji 🦀 PascalCase Rust enum variant from kebab/snake icon id. */
+function iconIdToRustVariant(id: string): string {
+  return id
+    .split(/[-_]/)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join("");
+}
 // #endregion 🔌Adapters
 
 //#region 📦Catalog

@@ -557,6 +557,94 @@ impl NormFamily for DinV18599Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+
+/// 🏢 `residential`/`office`/`school`.
+impl norm_core::dsl_kv::DslScalar for UseClass {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::Residential => "residential".into(),
+            Self::Office => "office".into(),
+            Self::School => "school".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "residential" => Ok(Self::Residential),
+            "office" => Ok(Self::Office),
+            "school" => Ok(Self::School),
+            other => Err(format!("expected residential/office/school, got '{other}'")),
+        }
+    }
+}
+
+fn format_twelve(values: &[f64; 12]) -> String {
+    values.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(",")
+}
+
+fn parse_twelve(text: &str, key: &str) -> Result<[f64; 12], vcs::TextError> {
+    let parsed: Vec<f64> = text
+        .split(',')
+        .map(|part| part.trim().parse::<f64>().map_err(|_| vcs::TextError::new(format!("field '{key}': expected 12 comma-separated numbers"), vcs::TextSpan::at(1, 1))))
+        .collect::<Result<_, _>>()?;
+    parsed
+        .try_into()
+        .map_err(|_| vcs::TextError::new(format!("field '{key}': expected exactly 12 comma-separated numbers"), vcs::TextSpan::at(1, 1)))
+}
+
+/// 📜 Handcrafted `key value`-per-line DSL for the DIN V 18599 annual-balancing `Document`
+/// (`BalancingInputs`): one line per scalar field, plus two `climate_theta_e_c`/`climate_g_h_w_m2`
+/// lines holding the nested `MonthlyClimate`'s 12 comma-separated monthly values each.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "din18599";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        let climate = MonthlyClimate {
+            theta_e_c: parse_twelve(norm_core::dsl_kv::field(&fields, "climate_theta_e_c")?, "climate_theta_e_c")?,
+            g_h_w_m2: parse_twelve(norm_core::dsl_kv::field(&fields, "climate_g_h_w_m2")?, "climate_g_h_w_m2")?,
+        };
+        Ok(Document {
+            use_class: norm_core::dsl_kv::scalar(&fields, "use_class")?,
+            heated_area_m2: norm_core::dsl_kv::scalar(&fields, "heated_area_m2")?,
+            occupants: norm_core::dsl_kv::scalar(&fields, "occupants")?,
+            h_t: norm_core::dsl_kv::scalar(&fields, "h_t")?,
+            h_v: norm_core::dsl_kv::scalar(&fields, "h_v")?,
+            climate,
+            internal_gains_w_m2: norm_core::dsl_kv::scalar(&fields, "internal_gains_w_m2")?,
+            solar_gains_kwh: norm_core::dsl_kv::scalar(&fields, "solar_gains_kwh")?,
+            system_losses_kwh: norm_core::dsl_kv::scalar(&fields, "system_losses_kwh")?,
+            renewable_kwh: norm_core::dsl_kv::scalar(&fields, "renewable_kwh")?,
+            annual_limit_kwh: norm_core::dsl_kv::scalar(&fields, "annual_limit_kwh")?,
+            energy_carrier: norm_core::dsl_kv::scalar(&fields, "energy_carrier")?,
+            reference_q_p_kwh: norm_core::dsl_kv::scalar(&fields, "reference_q_p_kwh")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("use_class", &self.use_class),
+            norm_core::dsl_kv::line("heated_area_m2", &self.heated_area_m2),
+            norm_core::dsl_kv::line("occupants", &self.occupants),
+            norm_core::dsl_kv::line("h_t", &self.h_t),
+            norm_core::dsl_kv::line("h_v", &self.h_v),
+            format!("climate_theta_e_c {}", format_twelve(&self.climate.theta_e_c)),
+            format!("climate_g_h_w_m2 {}", format_twelve(&self.climate.g_h_w_m2)),
+            norm_core::dsl_kv::line("internal_gains_w_m2", &self.internal_gains_w_m2),
+            norm_core::dsl_kv::line("solar_gains_kwh", &self.solar_gains_kwh),
+            norm_core::dsl_kv::line("system_losses_kwh", &self.system_losses_kwh),
+            norm_core::dsl_kv::line("renewable_kwh", &self.renewable_kwh),
+            norm_core::dsl_kv::line("annual_limit_kwh", &self.annual_limit_kwh),
+            norm_core::dsl_kv::line("energy_carrier", &self.energy_carrier),
+            norm_core::dsl_kv::line("reference_q_p_kwh", &self.reference_q_p_kwh),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -704,5 +792,28 @@ mod tests {
         let q_c = part_8::cooling_demand_kwh(&inputs);
         assert!((q_c - expected_q_c).abs() < 1e-6, "q_c = {q_c}, expected {expected_q_c}");
         assert!((q_c - 69.23).abs() < 1.0, "q_c = {q_c}, expected ~69.23 kWh");
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.din18599/v1", "din18599", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

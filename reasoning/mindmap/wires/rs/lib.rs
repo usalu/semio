@@ -174,8 +174,12 @@ mod tests {
 
     #[test]
     fn metabolism_fixture_hydrates_extension() {
-        let json = include_str!("../example/metabolism.wires.json");
-        let ext = DefaultWiresExtension::from_fixture_json(json).expect("metabolism fixture");
+        // 📜 The `.wires` fixture is handcrafted in mindmap's DSL (see `reasoning_mindmap::mindmap_text`
+        // via {@link vcs::DocumentDsl}) — parse it, then hydrate this crate's JSON-facing extension from
+        // its `wires_fixture` value, the same shape `from_fixture_json` has always expected.
+        let text = include_str!("../example/metabolism.wires");
+        let document = <mindmap::MindmapWiresDocument as vcs::DocumentDsl>::parse_dsl(text).expect("metabolism fixture dsl");
+        let ext = DefaultWiresExtension::from_fixture_json(&document.wires_fixture.to_string()).expect("metabolism fixture");
         assert_eq!(ext.mindmap.topics.len(), 7);
         assert_eq!(ext.relationships.len(), 9);
         assert_eq!(ext.relationship_kind_label(8), Some("is"));

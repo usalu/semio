@@ -7,18 +7,27 @@ import {
   Script,
   ScriptRouter,
   buildBudgetMs,
+  coverageDir,
+  coverageEnabled,
   devToolingEnv,
   dispatchPolicyArgv,
   dispatchSubcommand,
   defineLint,
+  enforceCoverageThreshold,
   frameworkOsPlaygroundDevEnv,
   getWorkspaceRoot,
+  goCoverageArgs,
   goLevelTestArgs,
+  goProfileToLcov,
   loadFrameworkOsPlaygroundCatalog,
+  mergeLcov,
+  parseLcov,
+  renderLcov,
   resolveFrameworkOsPlaygroundPlugin,
   resolveTestLevel,
   runCmd,
   runTestBudgeted,
+  summarizeCoverage,
   installMicroCommitGitHooks,
   runCommit,
   runMicroCommit,
@@ -27,6 +36,7 @@ import {
   TEST_LEVELS,
   tryRun,
   type BreachRecord,
+  type LcovFileRecord,
   type TestLevel,
 } from "./repo/lib/js/index.ts";
 import { existsSync, linkSync, mkdirSync, chmodSync, chownSync, copyFileSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from "node:fs";
@@ -239,6 +249,8 @@ export class SetupScript extends Script {
     tryRun("dotnet", ["restore", "Monorepo.sln"]);
     console.log("[setup] rustup wasm target…");
     tryRun("rustup", ["target", "add", "wasm32-unknown-unknown"]);
+    console.log("[setup] cargo-llvm-cov (exhaustive-level coverage)…");
+    tryRun("cargo", ["install", "cargo-llvm-cov", "--locked"]);
     console.log("[setup] sccache…");
     try {
       ensureSccache();
@@ -588,7 +600,42 @@ export class VerifyScript extends Script {
     runCmd("bun", ["nx", "run", "@semio-tech/framework-renderer-react:lint"], { cwd: this.root, budgetMs: null });
     runCmd("bun", ["nx", "run", "@semio-tech/framework-os-dev:plugin", "lint"], { cwd: this.root, budgetMs: null });
     runCmd("bun", ["nx", "run", "@semio-tech/ui-styling-tokens:check-no-px"], { cwd: this.root, budgetMs: null });
+    console.log("[verify] leveled test target coverage…");
+    this.checkLeveledTestTargets();
     console.log("[verify] gate passed.");
+  }
+
+  /** 📊Every `project.json` with a `test` target must also declare `test-quick`/`test-long`/`test-exhaustive` —
+   * otherwise `nx run-many -t test-exhaustive` silently skips that project and the exhaustive-level coverage
+   * gate under-counts it. Guards against the gap this ticket closed (26/07/26/NINETY-FIVE-PERCENT-EXHAUSTIVE-TEST-COVERAGE) reopening one project.json at a time. */
+  private checkLeveledTestTargets(): void {
+    const offenders: string[] = [];
+    const walk = (dir: string): void => {
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        if (entry.name === "node_modules" || entry.name === "target" || entry.name.startsWith(".")) continue;
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) {
+          walk(full);
+          continue;
+        }
+        if (entry.name !== "project.json") continue;
+        let targets: Record<string, unknown>;
+        try {
+          targets = (JSON.parse(readFileSync(full, "utf8")) as { targets?: Record<string, unknown> }).targets ?? {};
+        } catch {
+          continue;
+        }
+        if (!("test" in targets)) continue;
+        const missing = (["test-quick", "test-long", "test-exhaustive"] as const).filter((t) => !(t in targets));
+        if (missing.length) offenders.push(`${relative(this.root, full)} missing ${missing.join(", ")}`);
+      }
+    };
+    walk(this.root);
+    if (offenders.length) {
+      console.error(`[verify] ${offenders.length} project.json file(s) have a "test" target without leveled siblings:`);
+      for (const o of offenders) console.error(`  ${o}`);
+      process.exit(1);
+    }
   }
 }
 //#endregion 🔖VerifyScript
@@ -626,6 +673,13 @@ export class TestScript extends Script {
       await this.runRepoGoTest("./repo/client/cli/go", level, ["-run", "Mcp|MCP|mcp", ...rest.slice(1)]);
       return;
     }
+    const collectingCoverage = level === "exhaustive" && coverageEnabled();
+    if (collectingCoverage) {
+      // Stale reports from a previous run must never leak into this one's percentage — test-exhaustive is
+      // already nx `cache: false`, so this is the only place that needs to clear it.
+      for (const kind of ["js", "rust", "go", "py", "dotnet"] as const) rmSync(coverageDir(this.root, kind), { recursive: true, force: true });
+    }
+
     // nx orchestrators: exempt — leaves individually budgeted.
     runCmd("bun", ["nx", "run-many", "-t", "build", "-p", "@semio-tech/compose-js", "@semio-tech/compose-react"], { cwd: this.root, budgetMs: null });
     runCmd("bun", ["nx", "run", "compose/graphql:build"], { cwd: this.root, budgetMs: null });
@@ -633,6 +687,33 @@ export class TestScript extends Script {
     if (TEST_LEVELS.indexOf(level) >= TEST_LEVELS.indexOf("long")) {
       await this.runStorybookPlaywright();
     }
+
+    if (collectingCoverage) this.enforceCoverageGate();
+  }
+
+  /** 📊Walks every `*.lcov`/`lcov.info`/`coverage.info`/`*.cover` file under `.repo/coverage/`, merges them into one repo-wide LCOV, writes `summary.json`, and hard-fails below the 95% threshold — the exhaustive-level gate. */
+  private enforceCoverageGate(): void {
+    const walk = (dir: string, matches: (name: string) => boolean, found: string[] = []): string[] => {
+      if (!existsSync(dir)) return found;
+      for (const entry of readdirSync(dir, { withFileTypes: true })) {
+        const full = join(dir, entry.name);
+        if (entry.isDirectory()) walk(full, matches, found);
+        else if (matches(entry.name)) found.push(full);
+      }
+      return found;
+    };
+    const recordSets: LcovFileRecord[][] = [
+      ...walk(coverageDir(this.root, "rust"), (n) => n.endsWith(".lcov")).map((f) => parseLcov(readFileSync(f, "utf8"))),
+      ...walk(coverageDir(this.root, "js"), (n) => n === "lcov.info").map((f) => parseLcov(readFileSync(f, "utf8"))),
+      ...walk(coverageDir(this.root, "py"), (n) => n.endsWith(".lcov")).map((f) => parseLcov(readFileSync(f, "utf8"))),
+      ...walk(coverageDir(this.root, "dotnet"), (n) => n === "coverage.info").map((f) => parseLcov(readFileSync(f, "utf8"))),
+      ...walk(coverageDir(this.root, "go"), (n) => n.endsWith(".cover")).map((f) => goProfileToLcov(readFileSync(f, "utf8"))),
+    ];
+    const merged = mergeLcov(recordSets);
+    const summary = summarizeCoverage(merged);
+    writeFileSync(join(this.root, ".repo", "coverage", "lcov.info"), renderLcov(merged));
+    writeFileSync(join(this.root, ".repo", "coverage", "summary.json"), JSON.stringify(summary, null, 2));
+    enforceCoverageThreshold(summary, 95);
   }
 
   private async waitForUrl(url: string, timeoutMs: number): Promise<void> {
@@ -669,7 +750,7 @@ export class TestScript extends Script {
 
   /** ⏱️`goLevelTestArgs` keeps `-short` (skipping the `testing.Short()`-gated real-monorepo-scan tests in `repo/client/cli/go/main_test.go`) through `quick` and adds a cumulative `-skip` above the requested level. */
   private async runRepoGoTest(module: string, level: TestLevel, extraArgs: string[]): Promise<void> {
-    await runTestBudgeted("go", ["test", module, ...goLevelTestArgs(level), ...extraArgs], {
+    await runTestBudgeted("go", ["test", module, ...goLevelTestArgs(level), ...goCoverageArgs(this.root, module), ...extraArgs], {
       cwd: this.root,
       env: { ...process.env, GOWORK: join(this.root, "go.work") },
     });

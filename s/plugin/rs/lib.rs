@@ -16,8 +16,13 @@ const DEMO_STUDIO_JSON: &str = include_str!("../../example/demo.s.json");
 /// document that references them.
 fn ensure_studio_fixtures_registered() {
     static FIXTURES: LazyLock<()> = LazyLock::new(|| {
-        register_os_fixture_json("semio.draw.json", include_str!("../../../draw/example/semio.draw.json"));
-        register_os_fixture_json("jack.writer.json", include_str!("../../../writer/example/jack.writer.json"));
+        // 🩹 draw/writer migrated their fixtures from JSON to a handcrafted DSL (`vcs::DocumentDsl`);
+        // this registry is still JSON-shaped (framework/product/os hasn't migrated yet — tracked for
+        // the Wave 6 lock step), so `materialize_os_app_instance_document_json`'s `serde_json::from_str`
+        // will fall back to `json!({})` for these two slugs until then. Non-fatal: seed content is a
+        // convenience default, not required for correctness.
+        register_os_fixture_json("semio.draw.json", include_str!("../../../draw/example/semio.draw"));
+        register_os_fixture_json("jack.writer.json", include_str!("../../../writer/example/jack.writer"));
     });
     let _ = &*FIXTURES;
 }
@@ -150,6 +155,111 @@ pub mod app_home {
         }
     }
     //#endregion 🔖Types
+
+    //#region 🔖Dsl
+    // 📜 Handcrafted textual DSL for `SHomeDocument` (`vcs::DocumentDsl`, extension `.shome`) and
+    // one-line op-text for `SHomeOperation` (`vcs::OpText`, see `🔖OpText`) — mirrors `writer`'s
+    // `writer_dsl` module pattern; hand-rolled locally since `vcs`'s kv-line helpers are private to
+    // that crate.
+    mod home_dsl {
+        use super::{SHomeDocument, SHomeOperation};
+        use std::collections::HashMap;
+        use vcs::{TextError, TextSpan};
+
+        struct KvLine {
+            marker: String,
+            fields: HashMap<String, String>,
+        }
+
+        fn parse_kv_line(line: &str) -> Result<KvLine, TextError> {
+            let mut tokens = line.trim().split_whitespace();
+            let marker = tokens
+                .next()
+                .ok_or_else(|| TextError::new("expected a marker or operation name", TextSpan::at(1, 1)))?
+                .to_string();
+            let mut fields = HashMap::new();
+            for token in tokens {
+                let (key, value) = token
+                    .split_once('=')
+                    .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(1, 1)))?;
+                fields.insert(key.to_string(), value.to_string());
+            }
+            Ok(KvLine { marker, fields })
+        }
+
+        fn field<'a>(fields: &'a HashMap<String, String>, key: &str) -> Result<&'a str, TextError> {
+            fields
+                .get(key)
+                .map(|value| value.as_str())
+                .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(1, 1)))
+        }
+
+        fn parse_u64(value: &str, key: &str) -> Result<u64, TextError> {
+            value
+                .parse::<u64>()
+                .map_err(|_| TextError::new(format!("expected integer for '{key}', got '{value}'"), TextSpan::at(1, 1)))
+        }
+
+        /// 📥 Parses a full `.shome` document: a single `@home schema=.. gen=..` header line.
+        pub fn parse_document(source: &str) -> Result<SHomeDocument, TextError> {
+            let line = source.lines().find(|line| !line.trim().is_empty()).unwrap_or_default();
+            let parsed = parse_kv_line(line)?;
+            if parsed.marker != "@home" {
+                return Err(TextError::new(format!("expected a '@home' header line, got '{}'", parsed.marker), TextSpan::at(1, 1)));
+            }
+            let schema = field(&parsed.fields, "schema")?.to_string();
+            let catalog_generation = parse_u64(field(&parsed.fields, "gen")?, "gen")?;
+            Ok(SHomeDocument { schema, catalog_generation })
+        }
+
+        /// 📤 Prints an `SHomeDocument` back to its `.shome` DSL form (see {@link parse_document}).
+        pub fn print_document(document: &SHomeDocument) -> String {
+            format!("@home schema={} gen={}", document.schema, document.catalog_generation)
+        }
+
+        /// 📥 Parses a single one-line `SHomeOperation`: `noOperation` or `setCatalogGeneration value=..`.
+        pub fn parse_operation(line: &str) -> Result<SHomeOperation, TextError> {
+            let parsed = parse_kv_line(line)?;
+            match parsed.marker.as_str() {
+                "noOperation" => Ok(SHomeOperation::NoOperation),
+                "setCatalogGeneration" => Ok(SHomeOperation::SetCatalogGeneration { value: parse_u64(field(&parsed.fields, "value")?, "value")? }),
+                other => Err(TextError::expected(format!("unknown home operation '{other}'"), TextSpan::at(1, 1), "noOperation | setCatalogGeneration")),
+            }
+        }
+
+        /// 📤 Prints an `SHomeOperation` back to its one-line op text (see {@link parse_operation}).
+        pub fn print_operation(operation: &SHomeOperation) -> String {
+            match operation {
+                SHomeOperation::NoOperation => "noOperation".to_string(),
+                SHomeOperation::SetCatalogGeneration { value } => format!("setCatalogGeneration value={value}"),
+            }
+        }
+    }
+
+    impl vcs::DocumentDsl for SHomeDocument {
+        const EXTENSION: &'static str = "shome";
+
+        fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+            home_dsl::parse_document(text)
+        }
+
+        fn print_dsl(&self) -> String {
+            home_dsl::print_document(self)
+        }
+    }
+    //#endregion 🔖Dsl
+
+    //#region 🔖OpText
+    impl vcs::OpText for SHomeOperation {
+        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+            home_dsl::parse_operation(line)
+        }
+
+        fn print_op(&self) -> String {
+            home_dsl::print_operation(self)
+        }
+    }
+    //#endregion 🔖OpText
 
     //#region 🔖DocumentHelpers
     static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
@@ -758,6 +868,31 @@ pub mod app_home {
             let home_node = home.render(S_HOME_BODY, &home_view, &view_state);
             assert!(serde_json::to_string(&home_node).unwrap().contains("Noch keine Studios vorhanden"));
         }
+
+        //#region 🔖DslAndOpText
+        #[test]
+        fn home_dsl_round_trips_default_and_populated_documents() {
+            vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
+            vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
+        }
+
+        #[test]
+        fn home_op_text_round_trips_every_variant() {
+            vcs::test_support::assert_op_line_round_trip(&SHomeOperation::NoOperation);
+            vcs::test_support::assert_op_line_round_trip(&SHomeOperation::SetCatalogGeneration { value: 7 });
+        }
+
+        #[test]
+        fn home_document_text_round_trips_through_the_store() {
+            let projection = SHomeDocument { schema: "s.home".into(), catalog_generation: 0 };
+            let envelope = vcs::create_document_vcs_envelope::<SHomeDocument, SHomeOperation>("s.home", "home", projection, None);
+            let mut store: vcs::DocumentVcsStore<SHomeDocument, SHomeOperation> = vcs::DocumentVcsStore::new(envelope);
+            store
+                .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None })
+                .expect("apply");
+            vcs::test_support::assert_document_text_round_trip(&store);
+        }
+        //#endregion 🔖DslAndOpText
     }
     //#endregion 🧪Tests
 }

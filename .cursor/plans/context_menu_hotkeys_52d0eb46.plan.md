@@ -4,16 +4,16 @@ overview: Always show action hotkeys on the right of context-menu rows by enrich
 todos:
   - id: shortcut-format-enrich
     content: Add formatKeybindingShortcut + mapContextMenuSpecs enrichment from AppKeybindingsContext
-    status: in_progress
+    status: completed
   - id: number-suggestions
     content: Assign 1-9 shortcuts in suggestionMenuItems
-    status: pending
+    status: completed
   - id: controller-keys
     content: "ContextMenuController: digit preview / Enter select checked"
-    status: pending
+    status: completed
   - id: tests-stories
     content: Extend existing tests and ContextMenu story for numbered preview flow
-    status: pending
+    status: completed
 isProject: false
 ---
 

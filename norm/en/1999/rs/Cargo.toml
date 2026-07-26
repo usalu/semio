@@ -17,3 +17,4 @@ mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }
 fem_core = { path = "../../../../fem/core/rs" }
 norm_en_1990 = { path = "../../1990/rs" }
 norm_en_1991 = { path = "../../1991/rs" }
+vcs = { path = "../../../../vcs/rs" }

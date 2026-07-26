@@ -193,6 +193,7 @@
     "@storybook/react-vite": "^10.4.0",
     "@types/node": "^22.19.6",
     "@types/react": "^19.2.8",
+    "@vitest/coverage-v8": "^4.0.17",
     "chevrotain": "^11.0.3",
     "eslint": "^10.0.1",
     "eslint-plugin-react-hooks": "^7.1.1",

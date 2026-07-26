@@ -596,6 +596,137 @@ pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, 
 }
 // #endregion 🔖Fem
 
+// #region 🔖Dsl
+/// 🔥 `r30`/`r60`/`r90`/`r120`.
+impl norm_core::dsl_kv::DslScalar for part_1_2::FireRating {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::R30 => "r30".into(),
+            Self::R60 => "r60".into(),
+            Self::R90 => "r90".into(),
+            Self::R120 => "r120".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "r30" => Ok(Self::R30),
+            "r60" => Ok(Self::R60),
+            "r90" => Ok(Self::R90),
+            "r120" => Ok(Self::R120),
+            other => Err(format!("expected r30/r60/r90/r120, got '{other}'")),
+        }
+    }
+}
+
+/// 💧 `tc0`/`tc1`/`tc2`.
+impl norm_core::dsl_kv::DslScalar for part_3::TightnessClass {
+    fn print_scalar(&self) -> String {
+        match self {
+            Self::Tc0 => "tc0".into(),
+            Self::Tc1 => "tc1".into(),
+            Self::Tc2 => "tc2".into(),
+        }
+    }
+    fn parse_scalar(text: &str) -> Result<Self, String> {
+        match text {
+            "tc0" => Ok(Self::Tc0),
+            "tc1" => Ok(Self::Tc1),
+            "tc2" => Ok(Self::Tc2),
+            other => Err(format!("expected tc0/tc1/tc2, got '{other}'")),
+        }
+    }
+}
+
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1992 concrete `Document` — every field is a
+/// scalar, so this is a thin wrapper over `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1992";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
+            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
+            f_ck: norm_core::dsl_kv::scalar(&fields, "f_ck")?,
+            b_mm: norm_core::dsl_kv::scalar(&fields, "b_mm")?,
+            d_mm: norm_core::dsl_kv::scalar(&fields, "d_mm")?,
+            a_s_mm2: norm_core::dsl_kv::scalar(&fields, "a_s_mm2")?,
+            f_yk: norm_core::dsl_kv::scalar(&fields, "f_yk")?,
+            rho_l: norm_core::dsl_kv::scalar(&fields, "rho_l")?,
+            n_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_ed_kn")?,
+            p_kn: norm_core::dsl_kv::scalar(&fields, "p_kn")?,
+            a_c_mm2: norm_core::dsl_kv::scalar(&fields, "a_c_mm2")?,
+            use_fem: norm_core::dsl_kv::scalar(&fields, "use_fem")?,
+            span_m: norm_core::dsl_kv::scalar(&fields, "span_m")?,
+            udl_kn_m: norm_core::dsl_kv::scalar(&fields, "udl_kn_m")?,
+            fire_rating: norm_core::dsl_kv::scalar(&fields, "fire_rating")?,
+            provided_axis_distance_mm: norm_core::dsl_kv::scalar(&fields, "provided_axis_distance_mm")?,
+            bridge_sigma_c_mpa: norm_core::dsl_kv::scalar(&fields, "bridge_sigma_c_mpa")?,
+            bridge_delta_sigma_s_mpa: norm_core::dsl_kv::scalar(&fields, "bridge_delta_sigma_s_mpa")?,
+            tightness_class: norm_core::dsl_kv::scalar(&fields, "tightness_class")?,
+            hd_over_h: norm_core::dsl_kv::scalar(&fields, "hd_over_h")?,
+            liquid_sigma_s_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_sigma_s_mpa")?,
+            liquid_rho_p_eff: norm_core::dsl_kv::scalar(&fields, "liquid_rho_p_eff")?,
+            liquid_f_ct_eff_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_f_ct_eff_mpa")?,
+            liquid_e_s_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_e_s_mpa")?,
+            liquid_s_r_max_mm: norm_core::dsl_kv::scalar(&fields, "liquid_s_r_max_mm")?,
+            anchor_h_ef_mm: norm_core::dsl_kv::scalar(&fields, "anchor_h_ef_mm")?,
+            anchor_cracked: norm_core::dsl_kv::scalar(&fields, "anchor_cracked")?,
+            anchor_f_uk_mpa: norm_core::dsl_kv::scalar(&fields, "anchor_f_uk_mpa")?,
+            anchor_f_yk_mpa: norm_core::dsl_kv::scalar(&fields, "anchor_f_yk_mpa")?,
+            anchor_a_s_mm2: norm_core::dsl_kv::scalar(&fields, "anchor_a_s_mm2")?,
+            anchor_d_mm: norm_core::dsl_kv::scalar(&fields, "anchor_d_mm")?,
+            anchor_c1_mm: norm_core::dsl_kv::scalar(&fields, "anchor_c1_mm")?,
+            anchor_n_ed_kn: norm_core::dsl_kv::scalar(&fields, "anchor_n_ed_kn")?,
+            anchor_v_ed_kn: norm_core::dsl_kv::scalar(&fields, "anchor_v_ed_kn")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
+            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
+            norm_core::dsl_kv::line("f_ck", &self.f_ck),
+            norm_core::dsl_kv::line("b_mm", &self.b_mm),
+            norm_core::dsl_kv::line("d_mm", &self.d_mm),
+            norm_core::dsl_kv::line("a_s_mm2", &self.a_s_mm2),
+            norm_core::dsl_kv::line("f_yk", &self.f_yk),
+            norm_core::dsl_kv::line("rho_l", &self.rho_l),
+            norm_core::dsl_kv::line("n_ed_kn", &self.n_ed_kn),
+            norm_core::dsl_kv::line("p_kn", &self.p_kn),
+            norm_core::dsl_kv::line("a_c_mm2", &self.a_c_mm2),
+            norm_core::dsl_kv::line("use_fem", &self.use_fem),
+            norm_core::dsl_kv::line("span_m", &self.span_m),
+            norm_core::dsl_kv::line("udl_kn_m", &self.udl_kn_m),
+            norm_core::dsl_kv::line("fire_rating", &self.fire_rating),
+            norm_core::dsl_kv::line("provided_axis_distance_mm", &self.provided_axis_distance_mm),
+            norm_core::dsl_kv::line("bridge_sigma_c_mpa", &self.bridge_sigma_c_mpa),
+            norm_core::dsl_kv::line("bridge_delta_sigma_s_mpa", &self.bridge_delta_sigma_s_mpa),
+            norm_core::dsl_kv::line("tightness_class", &self.tightness_class),
+            norm_core::dsl_kv::line("hd_over_h", &self.hd_over_h),
+            norm_core::dsl_kv::line("liquid_sigma_s_mpa", &self.liquid_sigma_s_mpa),
+            norm_core::dsl_kv::line("liquid_rho_p_eff", &self.liquid_rho_p_eff),
+            norm_core::dsl_kv::line("liquid_f_ct_eff_mpa", &self.liquid_f_ct_eff_mpa),
+            norm_core::dsl_kv::line("liquid_e_s_mpa", &self.liquid_e_s_mpa),
+            norm_core::dsl_kv::line("liquid_s_r_max_mm", &self.liquid_s_r_max_mm),
+            norm_core::dsl_kv::line("anchor_h_ef_mm", &self.anchor_h_ef_mm),
+            norm_core::dsl_kv::line("anchor_cracked", &self.anchor_cracked),
+            norm_core::dsl_kv::line("anchor_f_uk_mpa", &self.anchor_f_uk_mpa),
+            norm_core::dsl_kv::line("anchor_f_yk_mpa", &self.anchor_f_yk_mpa),
+            norm_core::dsl_kv::line("anchor_a_s_mm2", &self.anchor_a_s_mm2),
+            norm_core::dsl_kv::line("anchor_d_mm", &self.anchor_d_mm),
+            norm_core::dsl_kv::line("anchor_c1_mm", &self.anchor_c1_mm),
+            norm_core::dsl_kv::line("anchor_n_ed_kn", &self.anchor_n_ed_kn),
+            norm_core::dsl_kv::line("anchor_v_ed_kn", &self.anchor_v_ed_kn),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -783,5 +914,30 @@ mod tests {
         assert!(v_rk_c > 0.0);
         let check = part_4::check_anchor_edge_shear(5_000.0, 12.0, 80.0, 30.0, 100.0);
         assert!(check.status != CheckStatus::Fail);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1992/v1", "en1992", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        let mut next = Document::default();
+        next.m_ed_knm = 200.0;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: next }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

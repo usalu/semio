@@ -386,6 +386,71 @@ impl NormFamily for En1997Family {
 }
 // #endregion 🔖Session
 
+// #region 🔖Dsl
+/// 📜 Handcrafted `key value`-per-line DSL for the EN 1997 geotechnical `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
+impl vcs::DocumentDsl for Document {
+    const EXTENSION: &'static str = "en1997";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let fields = norm_core::dsl_kv::parse_lines(text)?;
+        Ok(Document {
+            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
+            h_ed_kn: norm_core::dsl_kv::scalar(&fields, "h_ed_kn")?,
+            footing_area_m2: norm_core::dsl_kv::scalar(&fields, "footing_area_m2")?,
+            phi_deg: norm_core::dsl_kv::scalar(&fields, "phi_deg")?,
+            c_kpa: norm_core::dsl_kv::scalar(&fields, "c_kpa")?,
+            gamma_kn_m3: norm_core::dsl_kv::scalar(&fields, "gamma_kn_m3")?,
+            b_m: norm_core::dsl_kv::scalar(&fields, "b_m")?,
+            d_f_m: norm_core::dsl_kv::scalar(&fields, "d_f_m")?,
+            e_s_mpa: norm_core::dsl_kv::scalar(&fields, "e_s_mpa")?,
+            nu: norm_core::dsl_kv::scalar(&fields, "nu")?,
+            design_approach: norm_core::dsl_kv::scalar(&fields, "design_approach")?,
+            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
+            settlement_limit_mm: norm_core::dsl_kv::scalar(&fields, "settlement_limit_mm")?,
+            n_pile_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_pile_ed_kn")?,
+            alpha_s: norm_core::dsl_kv::scalar(&fields, "alpha_s")?,
+            pile_d_m: norm_core::dsl_kv::scalar(&fields, "pile_d_m")?,
+            q_s_kpa: norm_core::dsl_kv::scalar(&fields, "q_s_kpa")?,
+            pile_l_m: norm_core::dsl_kv::scalar(&fields, "pile_l_m")?,
+            q_b_kpa: norm_core::dsl_kv::scalar(&fields, "q_b_kpa")?,
+            pile_base_area_m2: norm_core::dsl_kv::scalar(&fields, "pile_base_area_m2")?,
+            pile_n_profiles: norm_core::dsl_kv::scalar(&fields, "pile_n_profiles")?,
+            z_investigated_m: norm_core::dsl_kv::scalar(&fields, "z_investigated_m")?,
+        })
+    }
+
+    fn print_dsl(&self) -> String {
+        [
+            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
+            norm_core::dsl_kv::line("h_ed_kn", &self.h_ed_kn),
+            norm_core::dsl_kv::line("footing_area_m2", &self.footing_area_m2),
+            norm_core::dsl_kv::line("phi_deg", &self.phi_deg),
+            norm_core::dsl_kv::line("c_kpa", &self.c_kpa),
+            norm_core::dsl_kv::line("gamma_kn_m3", &self.gamma_kn_m3),
+            norm_core::dsl_kv::line("b_m", &self.b_m),
+            norm_core::dsl_kv::line("d_f_m", &self.d_f_m),
+            norm_core::dsl_kv::line("e_s_mpa", &self.e_s_mpa),
+            norm_core::dsl_kv::line("nu", &self.nu),
+            norm_core::dsl_kv::line("design_approach", &self.design_approach),
+            norm_core::dsl_kv::line("annex", &self.annex),
+            norm_core::dsl_kv::line("settlement_limit_mm", &self.settlement_limit_mm),
+            norm_core::dsl_kv::line("n_pile_ed_kn", &self.n_pile_ed_kn),
+            norm_core::dsl_kv::line("alpha_s", &self.alpha_s),
+            norm_core::dsl_kv::line("pile_d_m", &self.pile_d_m),
+            norm_core::dsl_kv::line("q_s_kpa", &self.q_s_kpa),
+            norm_core::dsl_kv::line("pile_l_m", &self.pile_l_m),
+            norm_core::dsl_kv::line("q_b_kpa", &self.q_b_kpa),
+            norm_core::dsl_kv::line("pile_base_area_m2", &self.pile_base_area_m2),
+            norm_core::dsl_kv::line("pile_n_profiles", &self.pile_n_profiles),
+            norm_core::dsl_kv::line("z_investigated_m", &self.z_investigated_m),
+        ]
+        .join("\n")
+            + "\n"
+    }
+}
+
+// #endregion 🔖Dsl
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -483,5 +548,28 @@ mod tests {
     fn evaluate_runs_all_parts() {
         let report = evaluate(&Document::default());
         assert_eq!(report.checks.len(), 5);
+    }
+
+    #[test]
+    fn document_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn set_document_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::default() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_store() {
+        let envelope = vcs::create_document_vcs_envelope("norm.en1997/v1", "en1997", Document::default(), None);
+        let mut store = vcs::DocumentVcsStore::new(envelope);
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply {
+                operations: vec![Operation::SetDocument { document: Document::default() }],
+                description: None,
+            })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
     }
 }

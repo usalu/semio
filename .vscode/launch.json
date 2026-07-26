@@ -2748,6 +2748,20 @@
       }
     },
     {
+      "name": "🧪test📊coverage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun ./script.ts test exhaustive",
+      "cwd": "${workspaceFolder}",
+      "env": {
+        "SEMIO_COVERAGE": "1"
+      },
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.49
+      }
+    },
+    {
       "name": "🧪test🎬animate-video",
       "type": "node-terminal",
       "request": "launch",
