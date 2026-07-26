@@ -9,7 +9,7 @@ pub(crate) mod domain {
     use vcs::{
         collection_diff_from_operation, create_document_vcs_envelope, invert_collection_operation, CollectionDiff, CollectionOperation,
         DocumentDsl, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, OpText, Patchable,
-        TextError, TextSpan,
+        TextError,
     };
     use serde::{Deserialize, Serialize};
     
@@ -326,6 +326,489 @@ pub(crate) mod domain {
     }
     //#endregion 🔖DocumentVcs
 
+    //#region 🔖Dsl
+    /// 📜 Hand-rolled lexer, recursive-descent parser and printer for the `.gismap` DSL and
+    /// `GisMapOperation`'s single-line op-log encoding. `MapFeature::data` is an opaque `serde_json::Value`
+    /// (positions/routes/regions carry no fixed schema), so the grammar is `raster_text`/`mathematical_text`'s
+    /// established plugin-crate convention: barewords run until whitespace/`{`/`}`/`[`/`]`/`"`, so `key=value`
+    /// collapses into one token and only a quoted value or `{`/`[` forces a boundary right after `key=`. A
+    /// feature line is `<kind> "<id>" <value>` (`kind` one of `position`/`route`/`region`); `<value>` is the
+    /// generic literal (object/array/string/number/bool/null) that reconstructs any `serde_json::Value`
+    /// verbatim. Whitespace (including newlines) is never significant — `print_dsl` newline-joins one feature
+    /// per line for readability, `print_op` space-joins the identical grammar on one line. See
+    /// {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+    mod gis_map_text {
+        use super::{GisMapDocument, GisMapOperation, MapFeature, MapFeaturePatch};
+        use serde_json::Value;
+        use vcs::{CollectionOperation, TextError, TextSpan};
+
+        //#region Lexer
+        #[derive(Clone, Debug, PartialEq)]
+        enum Tok {
+            Word(String),
+            Str(String),
+            LBrace,
+            RBrace,
+            LBracket,
+            RBracket,
+            Eof,
+        }
+
+        #[derive(Clone, Debug)]
+        struct Lexed {
+            tok: Tok,
+            span: TextSpan,
+        }
+
+        /// 🔤 Scans `input` into tokens — see module docs for the `key=value` collapsing rule.
+        fn lex(input: &str) -> Result<Vec<Lexed>, TextError> {
+            let chars: Vec<char> = input.chars().collect();
+            let mut out = Vec::new();
+            let mut i = 0usize;
+            let mut line = 1u32;
+            let mut col = 1u32;
+            while i < chars.len() {
+                match chars[i] {
+                    ' ' | '\t' | '\r' => {
+                        i += 1;
+                        col += 1;
+                    }
+                    '\n' => {
+                        i += 1;
+                        line += 1;
+                        col = 1;
+                    }
+                    '{' => {
+                        out.push(Lexed { tok: Tok::LBrace, span: TextSpan::at(line, col) });
+                        i += 1;
+                        col += 1;
+                    }
+                    '}' => {
+                        out.push(Lexed { tok: Tok::RBrace, span: TextSpan::at(line, col) });
+                        i += 1;
+                        col += 1;
+                    }
+                    '[' => {
+                        out.push(Lexed { tok: Tok::LBracket, span: TextSpan::at(line, col) });
+                        i += 1;
+                        col += 1;
+                    }
+                    ']' => {
+                        out.push(Lexed { tok: Tok::RBracket, span: TextSpan::at(line, col) });
+                        i += 1;
+                        col += 1;
+                    }
+                    '"' => {
+                        let (start_line, start_col) = (line, col);
+                        i += 1;
+                        col += 1;
+                        let mut s = String::new();
+                        let mut closed = false;
+                        while i < chars.len() {
+                            let ch = chars[i];
+                            if ch == '\\' && i + 1 < chars.len() {
+                                match chars[i + 1] {
+                                    'n' => s.push('\n'),
+                                    '"' => s.push('"'),
+                                    '\\' => s.push('\\'),
+                                    other => {
+                                        s.push('\\');
+                                        s.push(other);
+                                    }
+                                }
+                                i += 2;
+                                col += 2;
+                            } else if ch == '"' {
+                                i += 1;
+                                col += 1;
+                                closed = true;
+                                break;
+                            } else if ch == '\n' {
+                                s.push(ch);
+                                i += 1;
+                                line += 1;
+                                col = 1;
+                            } else {
+                                s.push(ch);
+                                i += 1;
+                                col += 1;
+                            }
+                        }
+                        if !closed {
+                            return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
+                        }
+                        out.push(Lexed { tok: Tok::Str(s), span: TextSpan::at(start_line, start_col) });
+                    }
+                    _ => {
+                        let (start_line, start_col, start) = (line, col, i);
+                        while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '[' | ']' | '"') {
+                            i += 1;
+                            col += 1;
+                        }
+                        let word: String = chars[start..i].iter().collect();
+                        out.push(Lexed { tok: Tok::Word(word), span: TextSpan::at(start_line, start_col) });
+                    }
+                }
+            }
+            out.push(Lexed { tok: Tok::Eof, span: TextSpan::at(line, col) });
+            Ok(out)
+        }
+        //#endregion Lexer
+
+        //#region Parser
+        struct Parser {
+            toks: Vec<Lexed>,
+            pos: usize,
+        }
+
+        impl Parser {
+            fn peek(&self) -> &Tok {
+                &self.toks[self.pos].tok
+            }
+
+            fn span(&self) -> TextSpan {
+                self.toks[self.pos].span
+            }
+
+            fn bump(&mut self) -> Tok {
+                let tok = self.toks[self.pos].tok.clone();
+                if self.pos + 1 < self.toks.len() {
+                    self.pos += 1;
+                }
+                tok
+            }
+
+            fn at_word(&self, word: &str) -> bool {
+                matches!(self.peek(), Tok::Word(w) if w == word)
+            }
+
+            fn at_rbracket(&self) -> bool {
+                matches!(self.peek(), Tok::RBracket)
+            }
+
+            fn at_rbrace(&self) -> bool {
+                matches!(self.peek(), Tok::RBrace)
+            }
+
+            fn at_eof(&self) -> bool {
+                matches!(self.peek(), Tok::Eof)
+            }
+
+            fn expect_word(&mut self) -> Result<String, TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::Word(w) => Ok(w),
+                    other => Err(TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
+                }
+            }
+
+            fn expect_str(&mut self) -> Result<String, TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::Str(s) => Ok(s),
+                    other => Err(TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
+                }
+            }
+
+            fn expect_rbracket(&mut self) -> Result<(), TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::RBracket => Ok(()),
+                    other => Err(TextError::expected(format!("expected ']', found {other:?}"), span, "]")),
+                }
+            }
+
+            fn expect_rbrace(&mut self) -> Result<(), TextError> {
+                let span = self.span();
+                match self.bump() {
+                    Tok::RBrace => Ok(()),
+                    other => Err(TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
+                }
+            }
+
+            fn expect_eof(&mut self) -> Result<(), TextError> {
+                if self.at_eof() {
+                    Ok(())
+                } else {
+                    Err(TextError::new(format!("unexpected trailing input near {:?}", self.peek()), self.span()))
+                }
+            }
+
+            fn expect_usize(&mut self) -> Result<usize, TextError> {
+                let span = self.span();
+                self.expect_word()?.parse::<usize>().map_err(|_| TextError::expected("expected a non-negative integer", span, "usize"))
+            }
+        }
+
+        //#region Value
+        /// 🧬 Recursive value grammar reconstructing any `serde_json::Value` a `MapFeature::data` payload
+        /// ever needs — number/bool/null/string plus `[ ]` arrays and `{ key=value }` objects.
+        fn parse_scalar_word(word: &str, span: TextSpan) -> Result<Value, TextError> {
+            match word {
+                "true" => Ok(Value::Bool(true)),
+                "false" => Ok(Value::Bool(false)),
+                "null" => Ok(Value::Null),
+                _ => word
+                    .parse::<f64>()
+                    .map(Value::from)
+                    .map_err(|_| TextError::expected(format!("invalid value '{word}'"), span, "number|true|false|null")),
+            }
+        }
+
+        fn parse_kv_value(word: &str, entry_span: TextSpan, p: &mut Parser) -> Result<(String, Value), TextError> {
+            let Some((key, rest)) = word.split_once('=') else {
+                return Err(TextError::expected("expected 'key=value'", entry_span, "key=value"));
+            };
+            let value = if rest.is_empty() { parse_value(p)? } else { parse_scalar_word(rest, entry_span)? };
+            Ok((key.to_string(), value))
+        }
+
+        fn parse_value(p: &mut Parser) -> Result<Value, TextError> {
+            let span = p.span();
+            match p.peek().clone() {
+                Tok::Str(s) => {
+                    p.bump();
+                    Ok(Value::String(s))
+                }
+                Tok::LBracket => {
+                    p.bump();
+                    let mut items = Vec::new();
+                    while !p.at_rbracket() {
+                        items.push(parse_value(p)?);
+                    }
+                    p.expect_rbracket()?;
+                    Ok(Value::Array(items))
+                }
+                Tok::LBrace => {
+                    p.bump();
+                    let mut map = serde_json::Map::new();
+                    while !p.at_rbrace() {
+                        let entry_span = p.span();
+                        let word = p.expect_word()?;
+                        let (key, value) = parse_kv_value(&word, entry_span, p)?;
+                        map.insert(key, value);
+                    }
+                    p.expect_rbrace()?;
+                    Ok(Value::Object(map))
+                }
+                Tok::Word(w) => {
+                    p.bump();
+                    parse_scalar_word(&w, span)
+                }
+                other => Err(TextError::expected(format!("expected a value, found {other:?}"), span, "value")),
+            }
+        }
+
+        fn quote(value: &str) -> String {
+            let mut out = String::with_capacity(value.len() + 2);
+            out.push('"');
+            for ch in value.chars() {
+                match ch {
+                    '\\' => out.push_str("\\\\"),
+                    '"' => out.push_str("\\\""),
+                    '\n' => out.push_str("\\n"),
+                    _ => out.push(ch),
+                }
+            }
+            out.push('"');
+            out
+        }
+
+        fn print_value(value: &Value) -> String {
+            match value {
+                Value::Null => "null".to_string(),
+                Value::Bool(flag) => flag.to_string(),
+                Value::Number(number) => number.to_string(),
+                Value::String(text) => quote(text),
+                Value::Array(items) => format!("[{}]", items.iter().map(print_value).collect::<Vec<_>>().join(" ")),
+                Value::Object(map) => format!("{{ {} }}", map.iter().map(|(key, value)| format!("{key}={}", print_value(value))).collect::<Vec<_>>().join(" ")),
+            }
+        }
+        //#endregion Value
+
+        /// 🔍 Reads one `<kind> "<id>" <value>` feature line's id + payload — shared by the document body
+        /// reader and every `add-*`/`patch-*` op-line parser.
+        fn parse_feature(p: &mut Parser) -> Result<MapFeature, TextError> {
+            let id = p.expect_str()?;
+            let data = parse_value(p)?;
+            Ok(MapFeature { id, data })
+        }
+
+        fn print_feature(kind: &str, feature: &MapFeature) -> String {
+            format!("{kind} {} {}", quote(&feature.id), print_value(&feature.data))
+        }
+
+        /// 📥 Reads zero or more `position`/`route`/`region` feature lines until a token that isn't one of
+        /// those keywords — shared by {@link parse_document} and `SetDocument`'s op-line grammar (the same
+        /// feature listing embedded inline after `set-document`).
+        fn parse_document_body(p: &mut Parser) -> Result<GisMapDocument, TextError> {
+            let mut positions = Vec::new();
+            let mut routes = Vec::new();
+            let mut regions = Vec::new();
+            loop {
+                let keyword = match p.peek() {
+                    Tok::Word(w) => w.clone(),
+                    _ => break,
+                };
+                match keyword.as_str() {
+                    "position" => {
+                        p.bump();
+                        positions.push(parse_feature(p)?);
+                    }
+                    "route" => {
+                        p.bump();
+                        routes.push(parse_feature(p)?);
+                    }
+                    "region" => {
+                        p.bump();
+                        regions.push(parse_feature(p)?);
+                    }
+                    _ => break,
+                }
+            }
+            Ok(GisMapDocument { positions, routes, regions })
+        }
+
+        fn print_document_body(document: &GisMapDocument, pretty: bool) -> String {
+            let mut parts = Vec::new();
+            for feature in &document.positions {
+                parts.push(print_feature("position", feature));
+            }
+            for feature in &document.routes {
+                parts.push(print_feature("route", feature));
+            }
+            for feature in &document.regions {
+                parts.push(print_feature("region", feature));
+            }
+            parts.join(if pretty { "\n" } else { " " })
+        }
+
+        pub(super) fn parse_document(text: &str) -> Result<GisMapDocument, TextError> {
+            let toks = lex(text)?;
+            let mut p = Parser { toks, pos: 0 };
+            let document = parse_document_body(&mut p)?;
+            p.expect_eof()?;
+            Ok(document)
+        }
+
+        pub(super) fn print_document(document: &GisMapDocument) -> String {
+            print_document_body(document, true)
+        }
+
+        //#region CollectionOp
+        type MapCollectionOp = CollectionOperation<String, MapFeature, MapFeaturePatch>;
+
+        fn parse_add(p: &mut Parser) -> Result<MapCollectionOp, TextError> {
+            let index = p.expect_usize()?;
+            Ok(CollectionOperation::Add { index, item: parse_feature(p)? })
+        }
+
+        fn parse_remove(p: &mut Parser) -> Result<MapCollectionOp, TextError> {
+            Ok(CollectionOperation::Remove { id: p.expect_str()? })
+        }
+
+        fn parse_move(p: &mut Parser) -> Result<MapCollectionOp, TextError> {
+            let id = p.expect_str()?;
+            let to_index = p.expect_usize()?;
+            Ok(CollectionOperation::Move { id, to_index })
+        }
+
+        /// 🩹 A patch's `data` is either a full replacement value or the bare `-` sentinel for `None`
+        /// (mirrors {@link vcs}'s own `-` convention for absent optional fields).
+        fn parse_patch(p: &mut Parser) -> Result<MapCollectionOp, TextError> {
+            let id = p.expect_str()?;
+            let data = if p.at_word("-") {
+                p.bump();
+                None
+            } else {
+                Some(parse_value(p)?)
+            };
+            Ok(CollectionOperation::Patch { id, patch: MapFeaturePatch { data } })
+        }
+
+        fn print_collection_op(prefix: &str, op: &MapCollectionOp) -> String {
+            match op {
+                CollectionOperation::Add { index, item } => format!("add-{prefix} {index} {} {}", quote(&item.id), print_value(&item.data)),
+                CollectionOperation::Remove { id } => format!("remove-{prefix} {}", quote(id)),
+                CollectionOperation::Move { id, to_index } => format!("move-{prefix} {} {to_index}", quote(id)),
+                CollectionOperation::Patch { id, patch } => {
+                    let value = patch.data.as_ref().map(print_value).unwrap_or_else(|| "-".to_string());
+                    format!("patch-{prefix} {} {value}", quote(id))
+                }
+            }
+        }
+        //#endregion CollectionOp
+
+        //#region OpText
+        pub(super) fn parse_operation(line: &str) -> Result<GisMapOperation, TextError> {
+            let toks = lex(line)?;
+            let mut p = Parser { toks, pos: 0 };
+            let span = p.span();
+            let command = p.expect_word()?;
+            let operation = match command.as_str() {
+                "add-position" => GisMapOperation::Positions(parse_add(&mut p)?),
+                "remove-position" => GisMapOperation::Positions(parse_remove(&mut p)?),
+                "move-position" => GisMapOperation::Positions(parse_move(&mut p)?),
+                "patch-position" => GisMapOperation::Positions(parse_patch(&mut p)?),
+                "add-route" => GisMapOperation::Routes(parse_add(&mut p)?),
+                "remove-route" => GisMapOperation::Routes(parse_remove(&mut p)?),
+                "move-route" => GisMapOperation::Routes(parse_move(&mut p)?),
+                "patch-route" => GisMapOperation::Routes(parse_patch(&mut p)?),
+                "add-region" => GisMapOperation::Regions(parse_add(&mut p)?),
+                "remove-region" => GisMapOperation::Regions(parse_remove(&mut p)?),
+                "move-region" => GisMapOperation::Regions(parse_move(&mut p)?),
+                "patch-region" => GisMapOperation::Regions(parse_patch(&mut p)?),
+                "set-document" => GisMapOperation::SetDocument { document: parse_document_body(&mut p)? },
+                other => {
+                    return Err(TextError::expected(
+                        format!("unknown operation '{other}'"),
+                        span,
+                        "add-position|remove-position|move-position|patch-position|add-route|remove-route|move-route|patch-route|add-region|remove-region|move-region|patch-region|set-document",
+                    ))
+                }
+            };
+            p.expect_eof()?;
+            Ok(operation)
+        }
+
+        pub(super) fn print_operation(operation: &GisMapOperation) -> String {
+            match operation {
+                GisMapOperation::Positions(op) => print_collection_op("position", op),
+                GisMapOperation::Routes(op) => print_collection_op("route", op),
+                GisMapOperation::Regions(op) => print_collection_op("region", op),
+                GisMapOperation::SetDocument { document } => format!("set-document {}", print_document_body(document, false)),
+            }
+        }
+        //#endregion OpText
+    }
+
+    /// 📜 `.gismap` textual document: newline-joined `position "<id>" <value>` / `route ...` / `region ...`
+    /// lines, one per feature (see {@link gis_map_text}).
+    impl DocumentDsl for GisMapDocument {
+        const EXTENSION: &'static str = "gismap";
+
+        fn parse_dsl(text: &str) -> Result<Self, TextError> {
+            gis_map_text::parse_document(text)
+        }
+
+        fn print_dsl(&self) -> String {
+            gis_map_text::print_document(self)
+        }
+    }
+    //#endregion 🔖Dsl
+
+    //#region 🔖OpText
+    impl OpText for GisMapOperation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            gis_map_text::parse_operation(line)
+        }
+
+        fn print_op(&self) -> String {
+            gis_map_text::print_operation(self)
+        }
+    }
+    //#endregion 🔖OpText
+
     //#region 🔖DocumentVcs
     /// 🗄️ VCS-backed, undoable document for GIS 3D — deliberately minimal for the first pass: the
     /// only editable/undoable property is vertical exaggeration (a genuinely useful terrain control),
@@ -385,6 +868,81 @@ pub(crate) mod domain {
         Gis3dTerrainDocument { exaggeration: 1.0 }
     }
     //#endregion 🔖DocumentVcs
+
+    //#region 🔖Dsl
+    /// 📜 Hand-rolled reader/printer for the `.gisterrain` DSL and `Gis3dTerrainOperation`'s single-line
+    /// op-log encoding. `Gis3dTerrainDocument` is a single `exaggeration: f64` field, so unlike
+    /// `gis_map_text`'s full value grammar this only ever needs one `keyword exaggeration=<number>` header
+    /// line — `parse_document`/`parse_operation` read just that line and never error on any further
+    /// content, so the same text also works as the first line of `app_3d`'s richer terrain-fixture file
+    /// (`origin`/`position` scenery lines parsed separately by `app_3d::terrain_fixture_text`, since that
+    /// scenery data is read-only view state, never part of this VCS-tracked document). See
+    /// {@link vcs::DocumentDsl} and {@link vcs::OpText}.
+    mod gis_terrain_text {
+        use super::{Gis3dTerrainDocument, Gis3dTerrainOperation};
+        use vcs::{TextError, TextSpan};
+
+        /// 🔍 Reads the first non-empty line's `keyword exaggeration=<number>` header field.
+        fn parse_exaggeration_line(text: &str, keyword: &str) -> Result<f64, TextError> {
+            let header = text.lines().find(|line| !line.trim().is_empty()).unwrap_or("").trim();
+            let mut tokens = header.split_whitespace();
+            let head = tokens.next().unwrap_or("");
+            if head != keyword {
+                return Err(TextError::expected(format!("expected '{keyword} exaggeration=<number>', found '{header}'"), TextSpan::at(1, 1), keyword.to_string()));
+            }
+            let field = tokens
+                .next()
+                .ok_or_else(|| TextError::new(format!("expected 'exaggeration=<number>' after '{keyword}'"), TextSpan::at(1, 1)))?;
+            let value = field
+                .strip_prefix("exaggeration=")
+                .ok_or_else(|| TextError::expected(format!("expected 'exaggeration=<number>', found '{field}'"), TextSpan::at(1, 1), "exaggeration=<number>"))?;
+            value.parse::<f64>().map_err(|_| TextError::expected(format!("'{value}' is not a number"), TextSpan::at(1, 1), "number"))
+        }
+
+        pub(super) fn parse_document(text: &str) -> Result<Gis3dTerrainDocument, TextError> {
+            Ok(Gis3dTerrainDocument { exaggeration: parse_exaggeration_line(text, "gisterrain")? })
+        }
+
+        pub(super) fn print_document(document: &Gis3dTerrainDocument) -> String {
+            format!("gisterrain exaggeration={}\n", document.exaggeration)
+        }
+
+        pub(super) fn parse_operation(line: &str) -> Result<Gis3dTerrainOperation, TextError> {
+            Ok(Gis3dTerrainOperation::SetExaggeration { exaggeration: parse_exaggeration_line(line, "set-exaggeration")? })
+        }
+
+        pub(super) fn print_operation(operation: &Gis3dTerrainOperation) -> String {
+            match operation {
+                Gis3dTerrainOperation::SetExaggeration { exaggeration } => format!("set-exaggeration exaggeration={exaggeration}"),
+            }
+        }
+    }
+
+    /// 📜 `.gisterrain` textual document: one `gisterrain exaggeration=<number>` line (see {@link gis_terrain_text}).
+    impl DocumentDsl for Gis3dTerrainDocument {
+        const EXTENSION: &'static str = "gisterrain";
+
+        fn parse_dsl(text: &str) -> Result<Self, TextError> {
+            gis_terrain_text::parse_document(text)
+        }
+
+        fn print_dsl(&self) -> String {
+            gis_terrain_text::print_document(self)
+        }
+    }
+    //#endregion 🔖Dsl
+
+    //#region 🔖OpText
+    impl OpText for Gis3dTerrainOperation {
+        fn parse_op(line: &str) -> Result<Self, TextError> {
+            gis_terrain_text::parse_operation(line)
+        }
+
+        fn print_op(&self) -> String {
+            gis_terrain_text::print_operation(self)
+        }
+    }
+    //#endregion 🔖OpText
 }
 //#endregion 🔖Domain
 
@@ -420,7 +978,7 @@ pub mod app_2d {
     const GIS2D_PLAY_BODY_INSPECTION: &str = "gis2d.play.inspection";
     const GIS2D_PLAY_WINDOW_MAIN: &str = "gis2d-main";
 
-    const REUSE_MAP_EXAMPLE_JSON: &str = include_str!("../../2d/example/reuse.map.gis.json");
+    const REUSE_MAP_EXAMPLE_TEXT: &str = include_str!("../../2d/example/reuse.map.gismap");
 
     const GIS_MAP_LAYER_IDS: &[(&str, &str, &str)] = &[
         ("raster", "Raster", "map"),
@@ -521,9 +1079,10 @@ pub mod app_2d {
         GIS_MAP_LAYER_IDS.iter().map(|(id, _, _)| ((*id).into(), true)).collect()
     }
 
-    /// 🗺️ The default map document, seeded from the bundled reuse example.
+    /// 🗺️ The default map document, seeded from the bundled reuse example (see `domain::gis_map_text`'s
+    /// `.gismap` DSL).
     fn default_document() -> GisMapDocument {
-        gis_map_document_from_descriptor_json(REUSE_MAP_EXAMPLE_JSON)
+        <GisMapDocument as vcs::DocumentDsl>::parse_dsl(REUSE_MAP_EXAMPLE_TEXT).unwrap_or_else(|_| empty_gis_map_projection())
     }
 
     /// 🎛️ The default runtime — every layer visible, camera framed to the seed document's world extent.
@@ -1741,6 +2300,98 @@ pub mod app_2d {
                 },
             );
         }
+
+        //#region 🔖DslTests
+        #[test]
+        fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
+            vcs::test_support::assert_dsl_round_trip(&default_document());
+        }
+
+        #[test]
+        fn gis_map_document_dsl_round_trips_empty_document() {
+            vcs::test_support::assert_dsl_round_trip(&GisMapDocument::default());
+        }
+
+        /// 🧬 `MapFeature::data` is an opaque `serde_json::Value` — round-trips every shape (nested
+        /// object/array, bool, null, negative number) the generic value grammar has to reconstruct.
+        #[test]
+        fn gis_map_document_dsl_round_trips_synthetic_value_shapes() {
+            let document = GisMapDocument {
+                positions: vec![MapFeature {
+                    id: "p1".into(),
+                    data: json!({
+                        "id": "p1",
+                        "lon": -0.1427,
+                        "lat": 51.5142,
+                        "flag": true,
+                        "missing": null,
+                        "tags": ["a", "b"],
+                        "meta": { "nested": { "depth": 2 } },
+                    }),
+                }],
+                routes: vec![MapFeature { id: "r1".into(), data: json!({ "id": "r1", "points": [[1.0, 2.0], [3.0, 4.0]] }) }],
+                regions: vec![MapFeature { id: "g1".into(), data: json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] }) }],
+            };
+            vcs::test_support::assert_dsl_round_trip(&document);
+        }
+
+        fn sample_patch_feature() -> MapFeature {
+            MapFeature { id: "p1".into(), data: json!({ "id": "p1", "lon": 1.0, "lat": 2.0 }) }
+        }
+
+        #[test]
+        fn gis_map_positions_op_lines_round_trip() {
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Remove { id: "p1".into() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Move { id: "p1".into(), to_index: 3 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch {
+                id: "p1".into(),
+                patch: MapFeaturePatch { data: Some(json!({ "label": "Home" })) },
+            }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Positions(CollectionOperation::Patch { id: "p1".into(), patch: MapFeaturePatch { data: None } }));
+        }
+
+        #[test]
+        fn gis_map_routes_op_lines_round_trip() {
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Remove { id: "p1".into() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Move { id: "p1".into(), to_index: 1 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Routes(CollectionOperation::Patch {
+                id: "p1".into(),
+                patch: MapFeaturePatch { data: Some(json!({ "kind": "reuse" })) },
+            }));
+        }
+
+        #[test]
+        fn gis_map_regions_op_lines_round_trip() {
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Add { index: 0, item: sample_patch_feature() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Remove { id: "p1".into() }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Move { id: "p1".into(), to_index: 2 }));
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::Regions(CollectionOperation::Patch {
+                id: "p1".into(),
+                patch: MapFeaturePatch { data: Some(json!({ "kind": "boundary" })) },
+            }));
+        }
+
+        #[test]
+        fn gis_map_set_document_op_line_round_trips() {
+            vcs::test_support::assert_op_line_round_trip(&GisMapOperation::SetDocument { document: default_document() });
+        }
+
+        #[test]
+        fn gis_map_document_text_round_trips_through_store() {
+            let initial = empty_gis_map_projection();
+            let envelope = vcs::create_document_vcs_envelope(GIS_MAP_SCHEMA, "gis2d-demo", initial, None);
+            let mut store = vcs::DocumentVcsStore::new(envelope);
+            store
+                .dispatch(vcs::DocumentVcsCommand::Apply {
+                    operations: vec![GisMapOperation::Positions(CollectionOperation::Add { index: 0, item: sample_patch_feature() })],
+                    description: None,
+                })
+                .expect("apply");
+            vcs::test_support::assert_document_text_round_trip(&store);
+        }
+        //#endregion 🔖DslTests
     }
     //#endregion 🧪Tests
 }
@@ -1752,7 +2403,7 @@ pub mod app_3d {
     //! vertical exaggeration.
 
     use crate::domain::{Gis3dTerrainDocument, Gis3dTerrainOperation, GIS_3D_TERRAIN_SCHEMA};
-    use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson, TerrainProjectOrigin};
+    use framework_surface_terrain::{build_terrain_scene_json, projection, TerrainDescriptorJson};
     use semio_framework_plugin::{
         app_labels, build_world_3d_scene, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text,
         world3d_default_camera, world3d_scene_extended, world3d_selection_json,
@@ -1768,7 +2419,7 @@ pub mod app_3d {
     const GIS3D_PLAY_BODY_COMPOSITE: &str = "gis3d.play.composite";
     const GIS3D_PLAY_WINDOW_MAIN: &str = "gis3d-main";
 
-    const REUSE_TERRAIN_EXAMPLE_JSON: &str = include_str!("../../3d/example/reuse.terrain.gis.json");
+    const REUSE_TERRAIN_EXAMPLE_TEXT: &str = include_str!("../../3d/example/reuse.terrain.gisterrain");
     //#endregion 🔖Constants
 
     //#region 🔖Types
@@ -1778,7 +2429,7 @@ pub mod app_3d {
     #[serde(rename_all = "camelCase")]
     struct Gis3dPlayRuntime {
         #[serde(default)]
-        terrain_fixture_json: String,
+        terrain_fixture_text: String,
         #[serde(default = "world3d_default_camera")]
         camera_json: String,
         #[serde(default)]
@@ -1788,7 +2439,7 @@ pub mod app_3d {
     impl Default for Gis3dPlayRuntime {
         fn default() -> Self {
             Self {
-                terrain_fixture_json: REUSE_TERRAIN_EXAMPLE_JSON.into(),
+                terrain_fixture_text: REUSE_TERRAIN_EXAMPLE_TEXT.into(),
                 camera_json: initial_camera_json(),
                 selected_ids: Vec::new(),
             }
@@ -1797,17 +2448,117 @@ pub mod app_3d {
     //#endregion 🔖Types
 
     //#region 🔖DocumentHelpers
-    fn empty_terrain_descriptor() -> TerrainDescriptorJson {
-        TerrainDescriptorJson {
-            schema: GIS_3D_TERRAIN_SCHEMA.into(),
-            project_origin: TerrainProjectOrigin { lon: 0.0, lat: 0.0 },
-            positions: Vec::new(),
-            exaggeration: 1.0,
+    /// 📜 Hand-rolled reader for the `.gisterrain` fixture's `origin`/`position` scenery lines — the
+    /// read-only pins/project-origin data rendered alongside the document (see module docs); the
+    /// `gisterrain exaggeration=...` header line those same files start with is instead read by
+    /// `Gis3dTerrainDocument`'s own `DocumentDsl` (see `domain::gis_terrain_text`), since exaggeration is
+    /// the one piece of this fixture that IS undoable document state.
+    mod terrain_fixture_text {
+        use framework_surface_terrain::{TerrainDescriptorJson, TerrainPositionData, TerrainProjectOrigin};
+
+        /// 🔤 Splits one line into whitespace-separated tokens, treating a `"..."` quoted run (escapes
+        /// `\\`, `\"`, `\n`) as part of the token it's glued to — so `label="Institut de Botanique"`
+        /// lexes as one `label=Institut de Botanique` token even though the value contains spaces.
+        fn line_tokens(line: &str) -> Vec<String> {
+            let mut tokens = Vec::new();
+            let mut chars = line.chars().peekable();
+            while let Some(&c) = chars.peek() {
+                if c.is_whitespace() {
+                    chars.next();
+                    continue;
+                }
+                let mut token = String::new();
+                while let Some(&c) = chars.peek() {
+                    if c.is_whitespace() {
+                        break;
+                    }
+                    if c == '"' {
+                        chars.next();
+                        while let Some(c) = chars.next() {
+                            if c == '"' {
+                                break;
+                            }
+                            if c == '\\' {
+                                match chars.next() {
+                                    Some('n') => token.push('\n'),
+                                    Some('"') => token.push('"'),
+                                    Some('\\') => token.push('\\'),
+                                    Some(other) => {
+                                        token.push('\\');
+                                        token.push(other);
+                                    }
+                                    None => {}
+                                }
+                            } else {
+                                token.push(c);
+                            }
+                        }
+                    } else {
+                        token.push(c);
+                        chars.next();
+                    }
+                }
+                tokens.push(token);
+            }
+            tokens
+        }
+
+        fn kv_lookup<'a>(tokens: &'a [String], key: &str) -> Option<&'a str> {
+            tokens.iter().find_map(|token| token.strip_prefix(&format!("{key}=")))
+        }
+
+        fn parse_project_origin(tokens: &[String]) -> Option<TerrainProjectOrigin> {
+            Some(TerrainProjectOrigin { lon: kv_lookup(tokens, "lon")?.parse().ok()?, lat: kv_lookup(tokens, "lat")?.parse().ok()? })
+        }
+
+        fn parse_position(tokens: &[String]) -> Option<TerrainPositionData> {
+            Some(TerrainPositionData {
+                id: kv_lookup(tokens, "id")?.to_string(),
+                lon: kv_lookup(tokens, "lon")?.parse().ok()?,
+                lat: kv_lookup(tokens, "lat")?.parse().ok()?,
+                label: kv_lookup(tokens, "label").map(str::to_string),
+                icon: kv_lookup(tokens, "icon").map(str::to_string),
+            })
+        }
+
+        /// 📥 Parses every `origin`/`position` line of the fixture text (its `gisterrain exaggeration=...`
+        /// header is parsed separately, see module docs); malformed or missing lines simply contribute
+        /// nothing, so a truncated/empty fixture yields the world origin with no positions rather than an error.
+        pub(super) fn parse_descriptor(text: &str, schema: &str, exaggeration: f64) -> TerrainDescriptorJson {
+            let mut project_origin = TerrainProjectOrigin { lon: 0.0, lat: 0.0 };
+            let mut positions = Vec::new();
+            for line in text.lines() {
+                let tokens = line_tokens(line);
+                match tokens.first().map(String::as_str) {
+                    Some("origin") => {
+                        if let Some(origin) = parse_project_origin(&tokens) {
+                            project_origin = origin;
+                        }
+                    }
+                    Some("position") => {
+                        if let Some(position) = parse_position(&tokens) {
+                            positions.push(position);
+                        }
+                    }
+                    _ => {}
+                }
+            }
+            TerrainDescriptorJson { schema: schema.to_string(), project_origin, positions, exaggeration }
         }
     }
 
-    fn parse_descriptor(runtime: &Gis3dPlayRuntime) -> TerrainDescriptorJson {
-        serde_json::from_str(&runtime.terrain_fixture_json).unwrap_or_else(|_| empty_terrain_descriptor())
+    /// 🗺️ The default terrain document, seeded from the bundled reuse example's `gisterrain
+    /// exaggeration=...` header (see `domain::gis_terrain_text`'s `.gisterrain` DSL).
+    fn default_terrain_document() -> Gis3dTerrainDocument {
+        <Gis3dTerrainDocument as vcs::DocumentDsl>::parse_dsl(REUSE_TERRAIN_EXAMPLE_TEXT).unwrap_or_else(|_| crate::domain::empty_gis3d_terrain_projection())
+    }
+
+    /// 🏔️ The full rendering descriptor (project origin + pins + exaggeration) for the current runtime's
+    /// fixture text; `exaggeration` here always mirrors the LIVE document (see `render_canvas`'s override),
+    /// not this fixture text's own header, so the fixture's exaggeration line only ever seeds the document
+    /// once via {@link default_terrain_document}.
+    fn parse_descriptor(runtime: &Gis3dPlayRuntime, exaggeration: f64) -> TerrainDescriptorJson {
+        terrain_fixture_text::parse_descriptor(&runtime.terrain_fixture_text, GIS_3D_TERRAIN_SCHEMA, exaggeration)
     }
 
     /// 🎥 A default overview camera scaled for a real-world DEM tile patch (hundreds of meters to a
@@ -1866,8 +2617,7 @@ pub mod app_3d {
     }
 
     fn render_canvas(document: &Gis3dTerrainDocument, runtime: &Gis3dPlayRuntime) -> UiNode {
-        let mut descriptor = parse_descriptor(runtime);
-        descriptor.exaggeration = document.exaggeration;
+        let descriptor = parse_descriptor(runtime, document.exaggeration);
         let mut scene = world3d_scene_extended(
             runtime.camera_json.clone(),
             "[]".into(),
@@ -1909,7 +2659,7 @@ pub mod app_3d {
         }
 
         fn initial_projection(&self) -> Gis3dTerrainDocument {
-            Gis3dTerrainDocument { exaggeration: parse_descriptor(&Gis3dPlayRuntime::default()).exaggeration }
+            default_terrain_document()
         }
 
         fn handle_action(
@@ -1978,11 +2728,7 @@ pub mod app_3d {
                 .keybinding("mod+z", "undo")
                 .keybinding("mod+shift+z", "redo"),
         )
-        .example(
-            "reuse-terrain",
-            "Reuse Terrain",
-            serde_json::to_string(&Gis3dTerrainDocument { exaggeration: parse_descriptor(&Gis3dPlayRuntime::default()).exaggeration }).unwrap(),
-        )
+        .example("reuse-terrain", "Reuse Terrain", serde_json::to_string(&default_terrain_document()).unwrap())
         .program("gis3d", "GIS 3D", "terrain")
     }
     //#endregion 🔖Manifest
@@ -2028,6 +2774,50 @@ pub mod app_3d {
             app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
             assert_eq!(app.projection().expect("projection").exaggeration, 1.5, "one coalesced edit: undo restores the fixture exaggeration");
         }
+
+        //#region 🔖DslTests
+        #[test]
+        fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
+            vcs::test_support::assert_dsl_round_trip(&default_terrain_document());
+        }
+
+        #[test]
+        fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
+            vcs::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75 });
+        }
+
+        #[test]
+        fn gis3d_terrain_set_exaggeration_op_line_round_trips() {
+            vcs::test_support::assert_op_line_round_trip(&Gis3dTerrainOperation::SetExaggeration { exaggeration: 3.0 });
+        }
+
+        /// 📜 The `.gisterrain` fixture's `gisterrain exaggeration=...` header is parsed twice for two
+        /// different purposes (see `parse_descriptor`/`default_terrain_document`'s docs); this proves the
+        /// scenery-data reader (`terrain_fixture_text`) still recovers the bundled fixture's pins/origin
+        /// after the document-only conversion — i.e. converting the fixture to the DSL didn't lose data.
+        #[test]
+        fn terrain_fixture_text_recovers_bundled_scenery_data() {
+            let descriptor = parse_descriptor(&Gis3dPlayRuntime::default(), 1.5);
+            assert_eq!(descriptor.project_origin.lon, 5.5818);
+            assert_eq!(descriptor.project_origin.lat, 50.603);
+            assert_eq!(descriptor.positions.len(), 2);
+            assert_eq!(descriptor.positions[0].id, "p_institut_de_botanique_ulg_liege");
+        }
+
+        #[test]
+        fn gis3d_terrain_document_text_round_trips_through_store() {
+            let initial = Gis3dTerrainDocument { exaggeration: 1.0 };
+            let envelope = vcs::create_document_vcs_envelope(GIS_3D_TERRAIN_SCHEMA, "gis3d-demo", initial, None);
+            let mut store = vcs::DocumentVcsStore::new(envelope);
+            store
+                .dispatch(vcs::DocumentVcsCommand::Apply {
+                    operations: vec![Gis3dTerrainOperation::SetExaggeration { exaggeration: 2.0 }],
+                    description: None,
+                })
+                .expect("apply");
+            vcs::test_support::assert_document_text_round_trip(&store);
+        }
+        //#endregion 🔖DslTests
     }
     //#endregion 🧪Tests
 }

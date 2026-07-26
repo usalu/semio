@@ -9,6 +9,7 @@ use semio_framework_plugin::{
 };
 use serde_json::{json, Value};
 use std::collections::HashMap;
+use vcs::DocumentDsl;
 
 //#region 🔖Constants
 const FEM2D_APP_ID: &str = "fem2d-play";
@@ -23,10 +24,11 @@ const FEM3D_WINDOW_RESULTS: &str = "fem3d-results";
 const FEM3D_BODY_MODEL: &str = "fem3d.play.model";
 const FEM3D_BODY_RESULTS: &str = "fem3d.play.results";
 
-/// 📦 The `fem2d-play`/`fem3d-play` "default" examples, embedded at compile time — shared by the
-/// manifest's `.example(...)` registration, the `setActiveExample` handler, and every test fixture.
-const FEM2D_EXAMPLE_JSON: &str = include_str!("../../2d/example/default.fem2d.json");
-const FEM3D_EXAMPLE_JSON: &str = include_str!("../../3d/example/default.fem3d.json");
+/// 📦 The `fem2d-play`/`fem3d-play` "default" examples, embedded at compile time as handcrafted
+/// `.fem2d`/`.fem3d` DSL text (see `fem_2d`/`fem_3d`'s `🔖Dsl` regions) — shared by the manifest's
+/// `.example(...)` registration, the `setActiveExample` handler, and every test fixture.
+const FEM2D_EXAMPLE_DSL: &str = include_str!("../../2d/example/default.fem2d");
+const FEM3D_EXAMPLE_DSL: &str = include_str!("../../3d/example/default.fem3d");
 
 /// 📐 Model-meters -> screen-pixels scale for the 2D canvas (a 6m span shouldn't render as 6px wide).
 const SCALE_2D: f64 = 20.0;
@@ -758,7 +760,7 @@ impl DocumentApp for Fem2dPlayApp {
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(Value::as_str).unwrap_or("");
                 let document = if example_id == "default" {
-                    serde_json::from_str::<fem_2d::Fem2dDocument>(FEM2D_EXAMPLE_JSON).unwrap_or_else(|_| fem_2d::empty_fem2d_projection())
+                    fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap_or_else(|_| fem_2d::empty_fem2d_projection())
                 } else {
                     fem_2d::empty_fem2d_projection()
                 };
@@ -1393,7 +1395,7 @@ impl DocumentApp for Fem3dPlayApp {
             "setActiveExample" => {
                 let example_id = args.and_then(|v| v.get("exampleId")).and_then(Value::as_str).unwrap_or("");
                 let document = if example_id == "default" {
-                    serde_json::from_str::<fem_3d::Fem3dDocument>(FEM3D_EXAMPLE_JSON).unwrap_or_else(|_| fem_3d::empty_fem3d_projection())
+                    fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap_or_else(|_| fem_3d::empty_fem3d_projection())
                 } else {
                     fem_3d::empty_fem3d_projection()
                 };
@@ -1541,7 +1543,7 @@ fn create_fem2d_app() -> App {
             .view_action("setResultDisplay", "Set Result Display")
             .action_args("setResultDisplay", result_display_action_args()),
     )
-    .example("default", "Family House", FEM2D_EXAMPLE_JSON)
+    .example("default", "Family House", FEM2D_EXAMPLE_DSL)
     .program("fem2d", "FEM 2D", "structure")
 }
 
@@ -1612,7 +1614,7 @@ fn create_fem3d_app() -> App {
             .view_action("setResultDisplay", "Set Result Display")
             .action_args("setResultDisplay", result_display_action_args()),
     )
-    .example("default", "Family House", FEM3D_EXAMPLE_JSON)
+    .example("default", "Family House", FEM3D_EXAMPLE_DSL)
     .program("fem3d", "FEM 3D", "structure")
 }
 
@@ -1669,8 +1671,7 @@ mod tests {
     #[test]
     fn renders_fem2d_results_scene() {
         let app = Fem2dPlayApp::default();
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
@@ -1692,8 +1693,7 @@ mod tests {
     #[test]
     fn renders_fem3d_results_scene() {
         let app = Fem3dPlayApp::default();
-        let json_fixture = FEM3D_EXAMPLE_JSON;
-        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
@@ -1765,8 +1765,7 @@ mod tests {
     #[test]
     fn example_fixture_renders_2d() {
         let app = Fem2dPlayApp::default();
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let _ = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
@@ -1776,8 +1775,7 @@ mod tests {
     #[test]
     fn example_fixture_renders_3d() {
         let app = Fem3dPlayApp::default();
-        let json_fixture = FEM3D_EXAMPLE_JSON;
-        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let _ = app.render(FEM3D_BODY_MODEL, &doc, &ViewState::default());
@@ -1789,8 +1787,7 @@ mod tests {
     #[test]
     fn mesh_preview_renders_region_edges() {
         let app = Fem2dPlayApp::default();
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM2D_BODY_MODEL, &doc, &ViewState::default());
@@ -1803,8 +1800,7 @@ mod tests {
     #[test]
     fn set_result_display_is_a_view_action() {
         let mut app = Fem2dPlayApp::default();
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let args = json!({ "sourceId": "dead", "mode": "modal", "modeIndex": 0 });
@@ -1883,8 +1879,7 @@ mod tests {
     #[test]
     fn results_window_renders_contour_for_region() {
         let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
@@ -1900,8 +1895,7 @@ mod tests {
     #[test]
     fn results_window_renders_reaction_labels_2d() {
         let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
-        let json_fixture = FEM2D_EXAMPLE_JSON;
-        let projection: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default());
@@ -1914,8 +1908,7 @@ mod tests {
     #[test]
     fn results_window_renders_modal_mode_shape() {
         let app_2d = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
-        let json_fixture_2d = FEM2D_EXAMPLE_JSON;
-        let projection_2d: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture_2d).unwrap();
+                let projection_2d: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc_2d = DocumentView { projection: &projection_2d, history: &history };
         let node_2d = app_2d.render(FEM2D_BODY_RESULTS, &doc_2d, &ViewState::default());
@@ -1924,8 +1917,7 @@ mod tests {
         assert!(!json_2d.contains("Modal analysis error"), "unexpected modal error: {json_2d}");
 
         let app_3d = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
-        let json_fixture_3d = FEM3D_EXAMPLE_JSON;
-        let projection_3d: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture_3d).unwrap();
+                let projection_3d: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let doc_3d = DocumentView { projection: &projection_3d, history: &history };
         let node_3d = app_3d.render(FEM3D_BODY_RESULTS, &doc_3d, &ViewState::default());
         let json_3d = serde_json::to_string(&node_3d).unwrap();
@@ -1936,8 +1928,7 @@ mod tests {
     #[test]
     fn results_window_renders_buckling_mode_shape() {
         let app_2d = Fem2dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
-        let json_fixture_2d = FEM2D_EXAMPLE_JSON;
-        let projection_2d: fem_2d::Fem2dDocument = serde_json::from_str(json_fixture_2d).unwrap();
+                let projection_2d: fem_2d::Fem2dDocument = fem_2d::Fem2dDocument::parse_dsl(FEM2D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc_2d = DocumentView { projection: &projection_2d, history: &history };
         let node_2d = app_2d.render(FEM2D_BODY_RESULTS, &doc_2d, &ViewState::default());
@@ -1946,8 +1937,7 @@ mod tests {
         assert!(!json_2d.contains("Buckling analysis error"), "unexpected buckling error: {json_2d}");
 
         let app_3d = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Buckling(0) } };
-        let json_fixture_3d = FEM3D_EXAMPLE_JSON;
-        let projection_3d: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture_3d).unwrap();
+                let projection_3d: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let doc_3d = DocumentView { projection: &projection_3d, history: &history };
         let node_3d = app_3d.render(FEM3D_BODY_RESULTS, &doc_3d, &ViewState::default());
         let json_3d = serde_json::to_string(&node_3d).unwrap();
@@ -1960,8 +1950,7 @@ mod tests {
     #[test]
     fn model_scene_renders_solid_mesh_and_oriented_member_instances_3d() {
         let app = Fem3dPlayApp::default();
-        let json_fixture = FEM3D_EXAMPLE_JSON;
-        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM3D_BODY_MODEL, &doc, &ViewState::default());
@@ -1974,8 +1963,7 @@ mod tests {
     #[test]
     fn results_scene_includes_solid_vertex_colors_3d() {
         let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: Some("dead".into()), mode: DisplayMode::Static } };
-        let json_fixture = FEM3D_EXAMPLE_JSON;
-        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());
@@ -1988,8 +1976,7 @@ mod tests {
     #[test]
     fn results_scene_captions_name_mode_and_factor_3d() {
         let app_modal = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Modal(0) } };
-        let json_fixture = FEM3D_EXAMPLE_JSON;
-        let projection: fem_3d::Fem3dDocument = serde_json::from_str(json_fixture).unwrap();
+                let projection: fem_3d::Fem3dDocument = fem_3d::Fem3dDocument::parse_dsl(FEM3D_EXAMPLE_DSL).unwrap();
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };
         let node_modal = app_modal.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default());

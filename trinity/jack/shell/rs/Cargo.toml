@@ -14,4 +14,5 @@ workspace = true
 [dependencies]
 trinity_jack = { path = "../../core/rs" }
 trinity_ram = { path = "../../../ram/rs" }
+vcs = { path = "../../../../vcs/rs" }
 thiserror = "2.0.12"

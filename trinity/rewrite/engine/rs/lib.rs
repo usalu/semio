@@ -347,6 +347,160 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteR
 }
 // #endregion 🔖RuleVcs
 
+//#region 🔖Dsl
+use trinity_ram::{parse_property_value_line, print_property_value};
+use vcs::{DocumentDsl, OpText, TextError, TextSpan};
+
+//#region 🔖DslText
+/// 🔐 Backslash-escapes `\`, `"`, and newline so an arbitrary blob (typically JSON) can be embedded as
+/// one `"..."` quoted field on a single DSL/op-text line — same scheme as `vcs`'s own private
+/// `escape_text_field`, hand-rolled again here since that helper is not exported.
+fn quote_blob(value: &str) -> String {
+    let mut out = String::with_capacity(value.len() + 2);
+    out.push('"');
+    for ch in value.chars() {
+        match ch {
+            '\\' => out.push_str("\\\\"),
+            '"' => out.push_str("\\\""),
+            '\n' => out.push_str("\\n"),
+            _ => out.push(ch),
+        }
+    }
+    out.push('"');
+    out
+}
+
+/// 🔍 Reads one `"..."` quoted field from the start of `rest`, unescaping as it scans; errors if `rest`
+/// is not a single well-formed quoted field (no trailing content is tolerated — callers pass the whole
+/// remainder of the line).
+fn parse_quoted_blob(rest: &str, line_no: u32) -> Result<String, TextError> {
+    let mut chars = rest.chars();
+    if chars.next() != Some('"') {
+        return Err(TextError::new("expected opening '\"'", TextSpan::at(line_no, 1)));
+    }
+    let mut out = String::new();
+    loop {
+        match chars.next() {
+            Some('\\') => match chars.next() {
+                Some('n') => out.push('\n'),
+                Some('"') => out.push('"'),
+                Some('\\') => out.push('\\'),
+                Some(other) => {
+                    out.push('\\');
+                    out.push(other);
+                }
+                None => return Err(TextError::new("unterminated escape", TextSpan::at(line_no, 1))),
+            },
+            Some('"') => {
+                if chars.next().is_some() {
+                    return Err(TextError::new("unexpected trailing content after quoted field", TextSpan::at(line_no, 1)));
+                }
+                return Ok(out);
+            }
+            Some(ch) => out.push(ch),
+            None => return Err(TextError::new("unterminated string", TextSpan::at(line_no, 1))),
+        }
+    }
+}
+//#endregion 🔖DslText
+
+//#region 🔖DslDocument
+/// 📜 Handcrafted `.rewrite` textual notation for [`RewriteRuleState`] (`vcs::DocumentDsl`): `before`/
+/// `lhs`/`rhs` lines each hold one escaped JSON blob (the state's own `_json` fields are left as JSON —
+/// only this DSL's line framing is new), then one `binding <key> <value>` line per parameter binding and
+/// one `layout <key> <x> <y>` line per rule-graph layout override, reusing `trinity_ram`'s property-
+/// value literal grammar (`print_property_value`/`parse_property_value_line`) instead of a second copy.
+impl DocumentDsl for RewriteRuleState {
+    const EXTENSION: &'static str = "rewrite";
+
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        let mut before_fixture_json = String::new();
+        let mut lhs_json = String::new();
+        let mut rhs_json = String::new();
+        let mut parameter_bindings = HashMap::new();
+        let mut rule_layout = HashMap::new();
+
+        for (index, raw_line) in text.lines().enumerate() {
+            let line_no = index as u32 + 1;
+            let line = raw_line.trim();
+            if line.is_empty() {
+                continue;
+            }
+            let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+            match keyword {
+                "before" => before_fixture_json = parse_quoted_blob(rest, line_no)?,
+                "lhs" => lhs_json = parse_quoted_blob(rest, line_no)?,
+                "rhs" => rhs_json = parse_quoted_blob(rest, line_no)?,
+                "binding" => {
+                    let (key, value_text) = rest.split_once(' ').ok_or_else(|| TextError::new("expected 'binding <key> <value>'", TextSpan::at(line_no, 1)))?;
+                    parameter_bindings.insert(key.to_string(), parse_property_value_line(value_text.trim())?);
+                }
+                "layout" => {
+                    let mut parts = rest.split_whitespace();
+                    let key = parts.next().ok_or_else(|| TextError::new("expected 'layout <key> <x> <y>'", TextSpan::at(line_no, 1)))?;
+                    let x: f64 = parts
+                        .next()
+                        .and_then(|s| s.parse().ok())
+                        .ok_or_else(|| TextError::new("expected numeric x", TextSpan::at(line_no, 1)))?;
+                    let y: f64 = parts
+                        .next()
+                        .and_then(|s| s.parse().ok())
+                        .ok_or_else(|| TextError::new("expected numeric y", TextSpan::at(line_no, 1)))?;
+                    rule_layout.insert(key.to_string(), (x, y));
+                }
+                other => return Err(TextError::new(format!("unknown dsl line keyword '{other}'"), TextSpan::at(line_no, 1))),
+            }
+        }
+
+        Ok(RewriteRuleState { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout })
+    }
+
+    fn print_dsl(&self) -> String {
+        let mut lines = Vec::new();
+        lines.push(format!("before {}", quote_blob(&self.before_fixture_json)));
+        lines.push(format!("lhs {}", quote_blob(&self.lhs_json)));
+        lines.push(format!("rhs {}", quote_blob(&self.rhs_json)));
+        let mut binding_keys: Vec<&String> = self.parameter_bindings.keys().collect();
+        binding_keys.sort();
+        for key in binding_keys {
+            lines.push(format!("binding {key} {}", print_property_value(&self.parameter_bindings[key])));
+        }
+        let mut layout_keys: Vec<&String> = self.rule_layout.keys().collect();
+        layout_keys.sort();
+        for key in layout_keys {
+            let (x, y) = self.rule_layout[key];
+            lines.push(format!("layout {key} {x} {y}"));
+        }
+        lines.join("\n")
+    }
+}
+//#endregion 🔖DslDocument
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+/// ⚡ Handcrafted one-line notation for [`RewriteRuleOperation`] (`vcs::OpText`) — its one variant embeds
+/// a whole `RewriteRuleState::print_dsl()` document inline via `quote_blob`, whose escaping guarantees
+/// the printed line never contains a literal newline (`OpText::print_op`'s one-line law).
+impl OpText for RewriteRuleOperation {
+    fn parse_op(line: &str) -> Result<Self, TextError> {
+        let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
+        match keyword {
+            "setState" => {
+                let text = parse_quoted_blob(rest.trim(), 1)?;
+                Ok(RewriteRuleOperation::SetState { state: RewriteRuleState::parse_dsl(&text)? })
+            }
+            other => Err(TextError::new(format!("unknown op keyword '{other}'"), TextSpan::at(1, 1))),
+        }
+    }
+
+    fn print_op(&self) -> String {
+        match self {
+            RewriteRuleOperation::SetState { state } => format!("setState {}", quote_blob(&state.print_dsl())),
+        }
+    }
+}
+//#endregion 🔖OpText
+
 // #region 🔖Lod
 use cavas::lod::{Lod, LodScale};
 
@@ -1063,12 +1217,16 @@ mod wasm_session {
     impl TrinitySession {
         #[wasm_bindgen(constructor)]
         pub fn new() -> Self {
-            let fixture = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
-            let host = TrinityHost::load_fixture_json(fixture).unwrap_or_else(|_| {
-                let empty =
-                    GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
-                TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
-            });
+            let dsl = include_str!("../../../example/nakagin-capsule-tower.trinity");
+            let host = GraphFixture::parse_dsl(dsl)
+                .ok()
+                .and_then(|fixture| Graph::from_fixture(fixture).ok())
+                .map(TrinityHost::from_graph)
+                .unwrap_or_else(|| {
+                    let empty =
+                        GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "empty".into(), manifest_id: Some("nakagin".into()), manifest: Manifest::nakagin_default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+                    TrinityHost::from_graph(Graph::from_fixture(empty).expect("hardcoded empty fixture with a compile-time-valid manifest id is always graph-valid"))
+                });
             Self { state: Rc::new(RefCell::new(TrinitySessionInner { host, gpu: cavas::gpu_session::CanvasGpuSession::default(), width: 1, height: 1, dpr: 1.0 })) }
         }
 
@@ -1269,8 +1427,8 @@ mod tests {
     use super::*;
 
     fn nakagin_graph() -> Graph {
-        let json = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
-        let mut g = Graph::load_json(json).unwrap();
+        let dsl = include_str!("../../../example/nakagin-capsule-tower.trinity");
+        let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
         g.recompute_derived();
         g
     }
@@ -1344,8 +1502,8 @@ mod tests {
 
     #[test]
     fn rewrite_labeled_fixture_reloads() {
-        let json = include_str!("../../../example/nakagin-capsule-tower.trinity.json");
-        let mut g = Graph::load_json(json).unwrap();
+        let dsl = include_str!("../../../example/nakagin-capsule-tower.trinity");
+        let mut g = Graph::from_fixture(GraphFixture::parse_dsl(dsl).unwrap()).unwrap();
         let rule = Rule {
             name: "label-core".into(),
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
@@ -1402,6 +1560,44 @@ mod tests {
         host.undo().unwrap();
         assert_eq!(host.graph.nodes.len(), before);
     }
+
+    //#region 🔖DslTests
+    use vcs::test_support::{assert_dsl_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+
+    fn sample_rule_state() -> RewriteRuleState {
+        let mut parameter_bindings = HashMap::new();
+        parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
+        parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
+        let mut rule_layout = HashMap::new();
+        rule_layout.insert("a".to_string(), (10.5, -20.25));
+        RewriteRuleState {
+            before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
+            lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
+            rhs_json: r#"{"set":[{"var":"a","prop":"label","value":"$label"}]}"#.to_string(),
+            parameter_bindings,
+            rule_layout,
+        }
+    }
+
+    #[test]
+    fn dsl_round_trip_rewrite_rule_state() {
+        assert_dsl_round_trip(&sample_rule_state());
+    }
+
+    #[test]
+    fn op_text_round_trip_set_state() {
+        assert_op_line_round_trip(&RewriteRuleOperation::SetState { state: sample_rule_state() });
+    }
+
+    #[test]
+    fn document_text_round_trip_rewrite_rule_store() {
+        let mut store = RewriteRuleStore::new(create_rewrite_rule_envelope("test", sample_rule_state()));
+        let mut next = sample_rule_state();
+        next.lhs_json = "{}".into();
+        dispatch_rewrite_rule_state(&mut store, next).unwrap();
+        assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslTests
 }
 // #endregion 🔖Tests
 

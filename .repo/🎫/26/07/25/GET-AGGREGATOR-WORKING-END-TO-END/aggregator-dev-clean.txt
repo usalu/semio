@@ -81711,3 +81711,3479 @@ Caused by:
     4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101
 2026-07-26T00:03:25.665586Z  INFO 📦 starting build
     Blocking waiting for file lock on build directory
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: function `module_registry` is never used
+  --> flow/module/text/rs/lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/bim/rs/lib.rs:564:4
+    |
+564 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/dictionary/rs/lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_text` (lib) generated 1 warning
+warning: `flow_module_bim` (lib) generated 1 warning
+warning: `flow_module_dictionary` (lib) generated 1 warning
+warning: function `module_registry` is never used
+   --> flow/module/math/rs/lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+  --> flow/module/logic/rs/lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/list/rs/lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/core/rs/lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_math` (lib) generated 1 warning
+warning: `flow_module_logic` (lib) generated 1 warning
+warning: `flow_module_list` (lib) generated 1 warning
+warning: `flow_module_core` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:73
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:63
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:73
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:66
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:91
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:80
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:68
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: cavas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1088:6
+     |
+1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1354:17
+     |
+1354 |     pub camera: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: cavas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1355:19
+     |
+1355 |     pub viewport: cavas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: cavas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1382:17
+     |
+1382 |         origin: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: cavas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1501:24
+     |
+1501 |         let viewport = cavas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = cavas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2496:17
+     |
+2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2710:13
+     |
+2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2820:21
+     |
+2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2855:6
+     |
+2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2881:10
+     |
+2881 |     gpu: cavas::gpu_session::CanvasGpuSession,
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2881 -     gpu: cavas::gpu_session::CanvasGpuSession,
+2881 +     gpu: gpu_session::CanvasGpuSession,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2894:39
+     |
+2894 |         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2894 -         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+2894 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2909:89
+     |
+2909 | ...essionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2909 -         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+2909 +         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2930:51
+     |
+2930 | ...   let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).aw...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2930 -             let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+2930 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+warning: `framework_surface_tiled_map` (lib) generated 35 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 35 suggestions)
+error[E0433]: cannot find type `IconName` in this scope
+    --> ui/wgpu/rs/lib.rs:5174:18
+     |
+5174 |         icon_id: IconName::CircleDot,
+     |                  ^^^^^^^^ use of undeclared type `IconName`
+     |
+help: consider importing this enum through its public re-export
+     |
+5083 + use crate::IconName;
+     |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:12839:39
+      |
+12839 |     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
+      |                                       ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+12467 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15968:58
+      |
+15968 |     window_kind_icons: std::collections::HashMap<String, IconName>,
+      |                                                          ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15978:86
+      |
+15978 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16074:129
+      |
+16074 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16081:147
+      |
+16081 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16105:150
+      |
+16105 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16131:153
+      |
+16131 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16138:20
+      |
+16138 |         .unwrap_or(IconName::AppWindow);
+      |                    ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16337:86
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+16239 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17176:18
+      |
+17176 |     pub icon_id: IconName,
+      |                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17187:25
+      |
+17187 |     pub icon_id: Option<IconName>,
+      |                         ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17212:50
+      |
+17212 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17228:35
+      |
+17228 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17253:50
+      |
+17253 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17269:35
+      |
+17269 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17578:21
+      |
+17578 |     icon_id: Option<IconName>,
+      |                     ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17590:29
+      |
+17590 |         .filter(|id| *id != IconName::CircleDot)
+      |                             ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17591:14
+      |
+17591 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17753:14
+      |
+17753 |     icon_id: IconName,
+      |              ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:18183:14
+      |
+18183 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+warning: unnecessary qualification
+     --> ui/wgpu/rs/lib.rs:16337:52
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+16337 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+16337 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+warning: `ui_wgpu` (lib) generated 1 warning
+error: could not compile `ui_wgpu` (lib) due to 21 previous errors; 1 warning emitted
+2026-07-26T00:12:31.350573Z ERROR ❌ error
+error from build pipeline
+
+Caused by:
+    0: HTML build pipeline failed (1 errors), showing first
+    1: error from asset pipeline
+    2: running cargo build
+    3: error during cargo build execution
+    4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101
+2026-07-26T00:12:31.350733Z  INFO 📦 starting build
+    Blocking waiting for file lock on build directory
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: function `module_registry` is never used
+   --> flow/module/bim/rs/lib.rs:564:4
+    |
+564 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_bim` (lib) generated 1 warning
+warning: function `module_registry` is never used
+  --> flow/module/logic/rs/lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/list/rs/lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/math/rs/lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_logic` (lib) generated 1 warning
+warning: `flow_module_list` (lib) generated 1 warning
+warning: `flow_module_math` (lib) generated 1 warning
+warning: function `module_registry` is never used
+  --> flow/module/text/rs/lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/dictionary/rs/lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/core/rs/lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_text` (lib) generated 1 warning
+warning: `flow_module_dictionary` (lib) generated 1 warning
+warning: `flow_module_core` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:73
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:63
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:73
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:66
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:91
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:80
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:68
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: cavas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1088:6
+     |
+1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1354:17
+     |
+1354 |     pub camera: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: cavas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1355:19
+     |
+1355 |     pub viewport: cavas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: cavas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1382:17
+     |
+1382 |         origin: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: cavas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1501:24
+     |
+1501 |         let viewport = cavas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = cavas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2496:17
+     |
+2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2710:13
+     |
+2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2820:21
+     |
+2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2855:6
+     |
+2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2881:10
+     |
+2881 |     gpu: cavas::gpu_session::CanvasGpuSession,
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2881 -     gpu: cavas::gpu_session::CanvasGpuSession,
+2881 +     gpu: gpu_session::CanvasGpuSession,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2894:39
+     |
+2894 |         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2894 -         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+2894 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2909:89
+     |
+2909 | ...essionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2909 -         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+2909 +         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2930:51
+     |
+2930 | ...   let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).aw...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2930 -             let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+2930 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+warning: `framework_surface_tiled_map` (lib) generated 35 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 35 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+error[E0433]: cannot find type `IconName` in this scope
+    --> ui/wgpu/rs/lib.rs:5174:18
+     |
+5174 |         icon_id: IconName::CircleDot,
+     |                  ^^^^^^^^ use of undeclared type `IconName`
+     |
+help: consider importing this enum through its public re-export
+     |
+5083 + use crate::IconName;
+     |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:12839:39
+      |
+12839 |     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
+      |                                       ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+12467 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15968:58
+      |
+15968 |     window_kind_icons: std::collections::HashMap<String, IconName>,
+      |                                                          ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15978:86
+      |
+15978 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16074:129
+      |
+16074 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16081:147
+      |
+16081 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16105:150
+      |
+16105 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16131:153
+      |
+16131 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16138:20
+      |
+16138 |         .unwrap_or(IconName::AppWindow);
+      |                    ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16337:86
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+16239 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17176:18
+      |
+17176 |     pub icon_id: IconName,
+      |                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17187:25
+      |
+17187 |     pub icon_id: Option<IconName>,
+      |                         ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17212:50
+      |
+17212 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17228:35
+      |
+17228 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17253:50
+      |
+17253 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17269:35
+      |
+17269 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17578:21
+      |
+17578 |     icon_id: Option<IconName>,
+      |                     ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17590:29
+      |
+17590 |         .filter(|id| *id != IconName::CircleDot)
+      |                             ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17591:14
+      |
+17591 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17753:14
+      |
+17753 |     icon_id: IconName,
+      |              ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:18183:14
+      |
+18183 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+warning: unnecessary qualification
+     --> ui/wgpu/rs/lib.rs:16337:52
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+16337 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+16337 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+warning: `ui_wgpu` (lib) generated 1 warning
+error: could not compile `ui_wgpu` (lib) due to 21 previous errors; 1 warning emitted
+2026-07-26T00:13:38.814537Z ERROR ❌ error
+error from build pipeline
+
+Caused by:
+    0: HTML build pipeline failed (1 errors), showing first
+    1: error from asset pipeline
+    2: running cargo build
+    3: error during cargo build execution
+    4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101
+2026-07-26T00:32:45.234590Z  INFO 📦 starting build
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: function `module_registry` is never used
+  --> flow/module/text/rs/lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_text` (lib) generated 1 warning
+warning: function `module_registry` is never used
+   --> flow/module/dictionary/rs/lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+  --> flow/module/logic/rs/lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/math/rs/lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_dictionary` (lib) generated 1 warning
+warning: `flow_module_logic` (lib) generated 1 warning
+warning: `flow_module_math` (lib) generated 1 warning
+warning: function `module_registry` is never used
+   --> flow/module/list/rs/lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/bim/rs/lib.rs:564:4
+    |
+564 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/core/rs/lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_list` (lib) generated 1 warning
+warning: `flow_module_bim` (lib) generated 1 warning
+warning: `flow_module_core` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:73
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:63
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:73
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:66
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:91
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:80
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:68
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: cavas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1088:6
+     |
+1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1354:17
+     |
+1354 |     pub camera: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: cavas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1355:19
+     |
+1355 |     pub viewport: cavas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: cavas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1382:17
+     |
+1382 |         origin: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: cavas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1501:24
+     |
+1501 |         let viewport = cavas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = cavas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2496:17
+     |
+2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2710:13
+     |
+2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2820:21
+     |
+2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2855:6
+     |
+2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2881:10
+     |
+2881 |     gpu: cavas::gpu_session::CanvasGpuSession,
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2881 -     gpu: cavas::gpu_session::CanvasGpuSession,
+2881 +     gpu: gpu_session::CanvasGpuSession,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2894:39
+     |
+2894 |         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2894 -         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+2894 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2909:89
+     |
+2909 | ...essionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2909 -         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+2909 +         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2930:51
+     |
+2930 | ...   let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).aw...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2930 -             let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+2930 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+warning: `framework_surface_tiled_map` (lib) generated 35 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 35 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+error[E0433]: cannot find type `IconName` in this scope
+    --> ui/wgpu/rs/lib.rs:5174:18
+     |
+5174 |         icon_id: IconName::CircleDot,
+     |                  ^^^^^^^^ use of undeclared type `IconName`
+     |
+help: consider importing this enum through its public re-export
+     |
+5083 + use crate::IconName;
+     |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:12839:39
+      |
+12839 |     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
+      |                                       ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+12467 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15968:58
+      |
+15968 |     window_kind_icons: std::collections::HashMap<String, IconName>,
+      |                                                          ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15978:86
+      |
+15978 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16074:129
+      |
+16074 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16081:147
+      |
+16081 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16105:150
+      |
+16105 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16131:153
+      |
+16131 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16138:20
+      |
+16138 |         .unwrap_or(IconName::AppWindow);
+      |                    ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16337:86
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+16239 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17176:18
+      |
+17176 |     pub icon_id: IconName,
+      |                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17187:25
+      |
+17187 |     pub icon_id: Option<IconName>,
+      |                         ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17212:50
+      |
+17212 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17228:35
+      |
+17228 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17253:50
+      |
+17253 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17269:35
+      |
+17269 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17578:21
+      |
+17578 |     icon_id: Option<IconName>,
+      |                     ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17590:29
+      |
+17590 |         .filter(|id| *id != IconName::CircleDot)
+      |                             ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17591:14
+      |
+17591 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17753:14
+      |
+17753 |     icon_id: IconName,
+      |              ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:18183:14
+      |
+18183 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+warning: unnecessary qualification
+     --> ui/wgpu/rs/lib.rs:16337:52
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+16337 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+16337 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+warning: `ui_wgpu` (lib) generated 1 warning
+error: could not compile `ui_wgpu` (lib) due to 21 previous errors; 1 warning emitted
+2026-07-26T00:33:02.282954Z ERROR ❌ error
+error from build pipeline
+
+Caused by:
+    0: HTML build pipeline failed (1 errors), showing first
+    1: error from asset pipeline
+    2: running cargo build
+    3: error during cargo build execution
+    4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101
+2026-07-26T00:33:02.283144Z  INFO 📦 starting build
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: function `module_registry` is never used
+   --> flow/module/math/rs/lib.rs:503:4
+    |
+503 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+  --> flow/module/logic/rs/lib.rs:58:4
+   |
+58 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/list/rs/lib.rs:215:4
+    |
+215 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_math` (lib) generated 1 warning
+warning: `flow_module_logic` (lib) generated 1 warning
+warning: `flow_module_list` (lib) generated 1 warning
+warning: function `module_registry` is never used
+  --> flow/module/text/rs/lib.rs:45:4
+   |
+45 | fn module_registry() -> Registry {
+   |    ^^^^^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/dictionary/rs/lib.rs:178:4
+    |
+178 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/bim/rs/lib.rs:564:4
+    |
+564 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: function `module_registry` is never used
+   --> flow/module/core/rs/lib.rs:105:4
+    |
+105 | fn module_registry() -> Registry {
+    |    ^^^^^^^^^^^^^^^
+    |
+    = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `flow_module_text` (lib) generated 1 warning
+warning: `flow_module_dictionary` (lib) generated 1 warning
+warning: `flow_module_bim` (lib) generated 1 warning
+warning: `flow_module_core` (lib) generated 1 warning
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:39
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:103:73
+    |
+103 | fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+103 - fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> f64 {
+103 + fn viewport_lon_span_degrees(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:29
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                             ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:148:63
+    |
+148 | fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                               ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+148 - fn current_map_lod(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+148 + fn current_map_lod(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:39
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                       ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:153:73
+    |
+153 | fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+    |                                                                         ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+153 - fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> u32 {
+153 + fn ideal_tile_z_for_viewport(camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:32
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:166:66
+    |
+166 | fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |                                                                  ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+166 - fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+166 + fn pick_tile_z_target(camera: &cavas::camera::Camera, viewport: &camera::Viewport, forced_lod_id: Option<&str>) -> u32 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:57
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                         ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:184:91
+    |
+184 | fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+    |                                                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+184 - fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &cavas::camera::Viewport) -> &'static Lod {
+184 + fn active_map_lod(forced_lod_id: Option<&str>, camera: &cavas::camera::Camera, viewport: &camera::Viewport) -> &'static Lod {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:199:46
+    |
+199 |     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+    |                                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+199 -     gis_map_camera_limits_json_for_viewport(&cavas::camera::Viewport::default())
+199 +     gis_map_camera_limits_json_for_viewport(&camera::Viewport::default())
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:202:59
+    |
+202 | pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+    |                                                           ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+202 - pub fn gis_map_camera_limits_json_for_viewport(viewport: &cavas::camera::Viewport) -> String {
+202 + pub fn gis_map_camera_limits_json_for_viewport(viewport: &camera::Viewport) -> String {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:214:54
+    |
+214 | fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+    |                                                      ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+214 - fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &cavas::camera::Viewport) -> f64 {
+214 + fn clamp_map_zoom_for_viewport(zoom: f64, viewport: &camera::Viewport) -> f64 {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:46
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                              ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:219:80
+    |
+219 | fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+    |                                                                                ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+219 - fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport) {
+219 + fn clamp_camera_to_world_bounds(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:34
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                  ^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+   --> framework/surface/tiled-map/rs/lib.rs:243:68
+    |
+243 | fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |                                                                    ^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+243 - fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &cavas::camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+243 + fn map_wheel_screen(camera: &mut cavas::camera::Camera, viewport: &camera::Viewport, sx: f64, sy: f64, delta_y: f64) {
+    |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1081:25
+     |
+1081 | pub trait MapExtension: cavas::CanvasExtension {
+     |                         ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1081 - pub trait MapExtension: cavas::CanvasExtension {
+1081 + pub trait MapExtension: CanvasExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1088:6
+     |
+1088 | impl cavas::CanvasExtension for DefaultMapExtension {
+     |      ^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1088 - impl cavas::CanvasExtension for DefaultMapExtension {
+1088 + impl CanvasExtension for DefaultMapExtension {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1354:17
+     |
+1354 |     pub camera: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1354 -     pub camera: cavas::camera::Camera,
+1354 +     pub camera: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1355:19
+     |
+1355 |     pub viewport: cavas::camera::Viewport,
+     |                   ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1355 -     pub viewport: cavas::camera::Viewport,
+1355 +     pub viewport: camera::Viewport,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1359:53
+     |
+1359 |     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+     |                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1359 -     tile_images: std::collections::BTreeMap<String, std::sync::Arc<RasterImage>>,
+1359 +     tile_images: std::collections::BTreeMap<String, Arc<RasterImage>>,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1382:17
+     |
+1382 |         origin: cavas::camera::Camera,
+     |                 ^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1382 -         origin: cavas::camera::Camera,
+1382 +         origin: camera::Camera,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1501:24
+     |
+1501 |         let viewport = cavas::camera::Viewport::default();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1501 -         let viewport = cavas::camera::Viewport::default();
+1501 +         let viewport = camera::Viewport::default();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1541:32
+     |
+1541 |     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |                                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1541 -     fn for_viewport(viewport: &cavas::camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+1541 +     fn for_viewport(viewport: &camera::Viewport, cell_px: f64, max_count: usize) -> Self {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:1803:59
+     |
+1803 |         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+     |                                                           ^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1803 -         self.tile_images.insert(tiles::tile_key(z, x, y), std::sync::Arc::new(image));
+1803 +         self.tile_images.insert(tiles::tile_key(z, x, y), Arc::new(image));
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2496:17
+     |
+2496 |                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2496 -                 cavas::text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+2496 +                 text::append_label(scene, &candidate.label, candidate.screen, px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2695:43
+     |
+2695 |         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+     |                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2695 -         let mut draw: Vec<(u32, u32, u32, std::sync::Arc<RasterImage>)> = Vec::new();
+2695 +         let mut draw: Vec<(u32, u32, u32, Arc<RasterImage>)> = Vec::new();
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2710:13
+     |
+2710 |             cavas::raster::draw_image_arc(scene, &img, aff);
+     |             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2710 -             cavas::raster::draw_image_arc(scene, &img, aff);
+2710 +             raster::draw_image_arc(scene, &img, aff);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2820:21
+     |
+2820 |                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2820 -                     cavas::text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+2820 +                     text::append_label(scene, label, anchor, pos_label_px, label_fill, label_halo);
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2855:6
+     |
+2855 | impl cavas::canvas_content::CanvasContent for MapHost {
+     |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2855 - impl cavas::canvas_content::CanvasContent for MapHost {
+2855 + impl canvas_content::CanvasContent for MapHost {
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2881:10
+     |
+2881 |     gpu: cavas::gpu_session::CanvasGpuSession,
+     |          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2881 -     gpu: cavas::gpu_session::CanvasGpuSession,
+2881 +     gpu: gpu_session::CanvasGpuSession,
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2894:39
+     |
+2894 |         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+     |                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2894 -         self.gpu.render_frame(&scene, cavas::canvas_content::CanvasContent::clear_color(&self.host))
+2894 +         self.gpu.render_frame(&scene, canvas_content::CanvasContent::clear_color(&self.host))
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2909:89
+     |
+2909 | ...essionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2909 -         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: cavas::gpu_session::CanvasGpuSession::default() })) }
+2909 +         Self { state: Rc::new(RefCell::new(MapSessionInner { host: MapHost::new(), gpu: gpu_session::CanvasGpuSession::default() })) }
+     |
+
+warning: unnecessary qualification
+    --> framework/surface/tiled-map/rs/lib.rs:2930:51
+     |
+2930 | ...   let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).aw...
+     |                                             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2930 -             let (render_ctx, renderer, surface) = cavas::gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+2930 +             let (render_ctx, renderer, surface) = gpu_session::CanvasGpuSession::create_canvas_surface(canvas.clone(), pw, ph).await.map_err(|e| JsValue::from_str(&e))?;
+     |
+
+warning: `framework_surface_tiled_map` (lib) generated 35 warnings (run `cargo fix --lib -p framework_surface_tiled_map` to apply 35 suggestions)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+error[E0433]: cannot find type `IconName` in this scope
+    --> ui/wgpu/rs/lib.rs:5174:18
+     |
+5174 |         icon_id: IconName::CircleDot,
+     |                  ^^^^^^^^ use of undeclared type `IconName`
+     |
+help: consider importing this enum through its public re-export
+     |
+5083 + use crate::IconName;
+     |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:12839:39
+      |
+12839 |     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
+      |                                       ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+12467 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15968:58
+      |
+15968 |     window_kind_icons: std::collections::HashMap<String, IconName>,
+      |                                                          ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:15978:86
+      |
+15978 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16074:129
+      |
+16074 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16081:147
+      |
+16081 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16105:150
+      |
+16105 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16131:153
+      |
+16131 | ...kind_icons: &std::collections::HashMap<String, IconName>) {
+      |                                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16138:20
+      |
+16138 |         .unwrap_or(IconName::AppWindow);
+      |                    ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+15935 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:16337:86
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                                                      ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+16239 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17176:18
+      |
+17176 |     pub icon_id: IconName,
+      |                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17187:25
+      |
+17187 |     pub icon_id: Option<IconName>,
+      |                         ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17212:50
+      |
+17212 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17228:35
+      |
+17228 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17253:50
+      |
+17253 |     Button { id: Option<String>, icon_id: Option<IconName>, label: String, event: Option<E> },
+      |                                                  ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17269:35
+      |
+17269 |     Toggle { id: String, icon_id: IconName, pressed: bool, text: Option<String>, on_change: Option<E> },
+      |                                   ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17578:21
+      |
+17578 |     icon_id: Option<IconName>,
+      |                     ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17590:29
+      |
+17590 |         .filter(|id| *id != IconName::CircleDot)
+      |                             ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17591:14
+      |
+17591 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+error[E0425]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:17753:14
+      |
+17753 |     icon_id: IconName,
+      |              ^^^^^^^^ not found in this scope
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+error[E0433]: cannot find type `IconName` in this scope
+     --> ui/wgpu/rs/lib.rs:18183:14
+      |
+18183 |         .map(IconName::as_str)
+      |              ^^^^^^^^ use of undeclared type `IconName`
+      |
+help: consider importing this enum through its public re-export
+      |
+17056 + use crate::IconName;
+      |
+
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+warning: unnecessary qualification
+     --> ui/wgpu/rs/lib.rs:16337:52
+      |
+16337 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+16337 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+16337 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling infinite_board v0.1.0 (/Users/ueli/Documents/semio/infinite/board/rs)
+warning: unnecessary qualification
+  --> infinite/board/rs/lib.rs:99:44
+   |
+99 | pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+   |                                            ^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+99 - pub fn encode_board_stroke_scene(curves: &[cavas::CubicBez], stroke_width: f64) -> cavas::Scene {
+99 + pub fn encode_board_stroke_scene(curves: &[CubicBez], stroke_width: f64) -> cavas::Scene {
+   |
+
+warning: unnecessary qualification
+    --> infinite/board/rs/lib.rs:1523:22
+     |
+1523 |         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1523 -         let dragged: std::collections::BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+1523 +         let dragged: BTreeSet<NodeId> = dragged_ids.iter().copied().collect();
+     |
+
+   Compiling infinite_board_port v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/rs)
+   Compiling infinite_board_normal_undirected v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/undirected/rs)
+   Compiling infinite_board_normal_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/normal/directed/rs)
+warning: `infinite_board` (lib) generated 2 warnings (run `cargo fix --lib -p infinite_board` to apply 2 suggestions)
+warning: unnecessary qualification
+  --> infinite/board/port/rs/lib.rs:73:21
+   |
+73 |     pub properties: crate::PropertyBag,
+   |                     ^^^^^^^^^^^^^^^^^^
+   |
+   = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+   |
+73 -     pub properties: crate::PropertyBag,
+73 +     pub properties: PropertyBag,
+   |
+
+   Compiling infinite_board_port_directed v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/rs)
+warning: `infinite_board_port` (lib) generated 1 warning (run `cargo fix --lib -p infinite_board_port` to apply 1 suggestion)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+   Compiling infinite_board_port_directed_normal v0.1.0 (/Users/ueli/Documents/semio/infinite/board/port/directed/normal/rs)
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2835:41
+     |
+2835 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2835 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2835 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2861:41
+     |
+2861 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2861 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2861 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:2889:41
+     |
+2889 |         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+     |                                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2889 -         let gesture_owned = gesture.map(std::borrow::ToOwned::to_owned);
+2889 +         let gesture_owned = gesture.map(ToOwned::to_owned);
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:3010:24
+     |
+3010 |         let mut seen = std::collections::BTreeSet::new();
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3010 -         let mut seen = std::collections::BTreeSet::new();
+3010 +         let mut seen = BTreeSet::new();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4437:32
+     |
+4437 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4437 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4437 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: unnecessary qualification
+    --> infinite/board/port/directed/normal/rs/lib.rs:4505:32
+     |
+4505 | ...   let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_no...
+     |                              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4505 -         let link_compat_nodes: std::collections::BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+4505 +         let link_compat_nodes: BTreeSet<String> = link_source.as_ref().map(|s| self.link_drag_compatible_target_node_ids(s).into_iter().collect()).unwrap_or_default();
+     |
+
+warning: `infinite_board_port_directed_normal` (lib) generated 6 warnings (run `cargo fix --lib -p infinite_board_port_directed_normal` to apply 6 suggestions)
+Some errors have detailed explanations: E0425, E0433.
+For more information about an error, try `rustc --explain E0425`.
+warning: `ui_wgpu` (lib) generated 1 warning
+error: could not compile `ui_wgpu` (lib) due to 21 previous errors; 1 warning emitted
+2026-07-26T00:33:09.468126Z ERROR ❌ error
+error from build pipeline
+
+Caused by:
+    0: HTML build pipeline failed (1 errors), showing first
+    1: error from asset pipeline
+    2: running cargo build
+    3: error during cargo build execution
+    4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101

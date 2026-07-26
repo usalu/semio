@@ -1326,6 +1326,24 @@
     padding: var(--stroke-default);
   }
 
+  :is(
+    [data-slot="tree-section-content"],
+    [data-slot="tree-item-content"],
+    [data-slot="tree-property-content"],
+    [data-slot="control-tree-folder-content"],
+    [data-slot="window-measure-tree-content"]
+  ):has(
+    :is(
+      [data-slot="tree-item-row"],
+      [data-slot="tree-section-row"],
+      [data-slot="tree-property-item"],
+      [data-slot="control-tree-row"],
+      [data-slot="window-measure-tree-row"]
+    )[data-celebrated="true"]
+  ) {
+    animation: none;
+  }
+
   .window-silhouette-border-introduced,
   .window-silhouette-border-loading,
   .window-silhouette-border-waiting,
@@ -5800,6 +5818,26 @@
   transition: stroke 120ms ease;
 }
 
+/* 🪟 U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
+[data-slot="window-chrome-gap"],
+[data-slot="mode-dock-tab-gap"],
+[data-slot="window-chrome-footer-gap"],
+[data-slot="window-chrome-footer-gap-left"],
+[data-slot="window-chrome-footer-gap-right"] {
+  background: transparent !important;
+  background-color: transparent !important;
+  -webkit-backdrop-filter: none !important;
+  backdrop-filter: none !important;
+  box-shadow: none !important;
+}
+
+[data-slot="window-chrome-stack"],
+[data-slot="introduction-info-box"],
+[data-slot="context-menu-content"] {
+  background: transparent !important;
+  background-color: transparent !important;
+}
+
 [data-slot="introduction-info-box"],
 [data-slot="dialog-box"] {
   border-width: 0;
@@ -5829,7 +5867,9 @@
 
 /* #region 🎉CelebrateContent
  * Leaf controls stamped data-celebrated="true" paint their own chrome with the same spinning
- * three-brand conic as ::after — text via background-clip, stroke icons via destination-in blend.
+ * three-brand conic as ::after — text via background-clip, stroke icons via destination-in blend
+ * on SVG-owning [data-icon] nodes only (never wrapper slots like tree-icon/drag-handle).
+ * Tree guide/elbow/stem strokes and ancestor indentation lines use the conic as line ink.
  * Window/dock shells are omitted; nested body text stays unchanged when only the shell is stamped.
  */
 [data-celebrated="true"]:is(
@@ -5881,7 +5921,7 @@
   [data-slot="tree-row"],
   [data-slot="control-tree-row"],
   [data-slot="window-measure-tree-row"]
-) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"]) {
+) :is([data-icon], [data-icon-kind="catalog"], [data-icon-kind="svg"]) {
   isolation: isolate;
   position: relative;
   display: inline-flex;
@@ -5901,7 +5941,7 @@
   [data-slot="tree-row"],
   [data-slot="control-tree-row"],
   [data-slot="window-measure-tree-row"]
-) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"])::before {
+) :is([data-icon], [data-icon-kind="catalog"], [data-icon-kind="svg"])::before {
   content: "";
   position: absolute;
   inset: -100%;
@@ -5922,10 +5962,67 @@
   [data-slot="tree-row"],
   [data-slot="control-tree-row"],
   [data-slot="window-measure-tree-row"]
-) :is([data-icon], [data-icon-kind], [data-slot="tree-icon"], [data-slot="drag-handle"]) > svg {
+) :is([data-icon], [data-icon-kind="catalog"], [data-icon-kind="svg"]) > svg {
   position: relative;
   z-index: 1;
   mix-blend-mode: destination-in;
+}
+
+[data-celebrated="true"]:is(
+  [data-slot="tree-item-row"],
+  [data-slot="tree-section-row"],
+  [data-slot="tree-property-item"],
+  [data-slot="tree-row"],
+  [data-slot="control-tree-row"],
+  [data-slot="window-measure-tree-row"]
+) :is([data-tree-guide-line], [data-slot="tree-branch-elbow"], [data-slot="tree-branch-stem"]) {
+  background-color: transparent !important;
+  background-image: var(--celebrate-conic);
+}
+
+:is(
+  [data-slot="tree-section-content"],
+  [data-slot="tree-item-content"],
+  [data-slot="tree-property-content"],
+  [data-slot="control-tree-folder-content"],
+  [data-slot="window-measure-tree-content"]
+):has(
+  :is(
+    [data-slot="tree-item-row"],
+    [data-slot="tree-section-row"],
+    [data-slot="tree-property-item"],
+    [data-slot="control-tree-row"],
+    [data-slot="window-measure-tree-row"]
+  )[data-celebrated="true"]
+) {
+  --celebrate-border-angle: 0deg;
+  --celebrate-conic: conic-gradient(
+    from var(--celebrate-border-angle),
+    var(--celebrate-border-color-a, var(--color-primary)),
+    var(--celebrate-border-color-b, var(--color-secondary)),
+    var(--celebrate-border-color-c, var(--color-tertiary)),
+    var(--celebrate-border-color-a, var(--color-primary))
+  );
+  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
+}
+
+:is(
+  [data-slot="tree-section-content"],
+  [data-slot="tree-item-content"],
+  [data-slot="tree-property-content"],
+  [data-slot="control-tree-folder-content"],
+  [data-slot="window-measure-tree-content"]
+):has(
+  :is(
+    [data-slot="tree-item-row"],
+    [data-slot="tree-section-row"],
+    [data-slot="tree-property-item"],
+    [data-slot="control-tree-row"],
+    [data-slot="window-measure-tree-row"]
+  )[data-celebrated="true"]
+) > [data-slot="tree-guide"] [data-tree-guide-line] {
+  background-color: transparent !important;
+  background-image: var(--celebrate-conic);
 }
 
 [data-hover-scope]:hover

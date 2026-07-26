@@ -1126,10 +1126,6 @@ mod remodel_text {
             matches!(self.peek(), Tok::RBrace)
         }
 
-        fn at_eof(&self) -> bool {
-            matches!(self.peek(), Tok::Eof)
-        }
-
         /// 🔎 True when the next token is the bare `-` sentinel word (never a `key=value` pair) used
         /// throughout this grammar to mean "this optional construct is absent".
         fn at_dash(&self) -> bool {
@@ -1264,6 +1260,13 @@ mod remodel_text {
         }
         out.push('"');
         out
+    }
+
+    /// 🔗 Prints `-` for `None`, else `print`'s result — the dash-sentinel form of every optional
+    /// scalar token in this grammar (`map_or_else` rather than `map(..).unwrap_or_else(..)` per the
+    /// workspace's `map_unwrap_or` clippy lint).
+    fn dash_or<T>(value: Option<T>, print: impl FnOnce(T) -> String) -> String {
+        value.map_or_else(|| "-".to_string(), print)
     }
 
     fn csv<T: std::fmt::Display>(values: &[T]) -> String {
@@ -1610,7 +1613,7 @@ mod remodel_text {
             camera.cy,
             camera.skew,
             csv(&camera.distortion),
-            camera.rms_reprojection_px.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+            dash_or(camera.rms_reprojection_px, |v| v.to_string()),
             camera.locked
         )
     }
@@ -1882,9 +1885,9 @@ mod remodel_text {
         format!(
             "enabled={} originLon={} originLat={} originAlt={} gsd={} dsmCell={} dtmRadius={} orthoMax={}",
             params.enabled,
-            params.origin_lon.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
-            params.origin_lat.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
-            params.origin_alt.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+            dash_or(params.origin_lon, |v| v.to_string()),
+            dash_or(params.origin_lat, |v| v.to_string()),
+            dash_or(params.origin_alt, |v| v.to_string()),
             params.gsd_m,
             params.dsm_cell_m,
             params.dtm_filter_radius_m,
@@ -1964,8 +1967,8 @@ mod remodel_text {
             job.progress_0_1,
             job.cancel_requested,
             job.stage_cursor,
-            job.started_at_ms.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
-            job.error.as_deref().map(quote).unwrap_or_else(|| "-".to_string()),
+            dash_or(job.started_at_ms, |v| v.to_string()),
+            dash_or(job.error.as_deref(), quote),
             print_packed_f32(&job.sparse_point_cloud_preview)
         );
         for pose in &job.camera_poses_preview {
@@ -2011,9 +2014,9 @@ mod remodel_text {
             report.connected_components,
             report.consistently_oriented,
             report.euler_characteristic,
-            report.genus.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+            dash_or(report.genus, |v| v.to_string()),
             report.signed_volume,
-            report.self_intersection_pairs.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+            dash_or(report.self_intersection_pairs, |v| v.to_string()),
             report.closed_fallback_used,
             report.is_closed,
             report.is_two_manifold,
@@ -2113,7 +2116,7 @@ mod remodel_text {
         out.push(' ');
         out.push_str(&match &results.sparse {
             None => "sparse -".to_string(),
-            Some(sparse) => format!("sparse points={} colors={}", print_packed_f32(&sparse.points), sparse.colors.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string())),
+            Some(sparse) => format!("sparse points={} colors={}", print_packed_f32(&sparse.points), dash_or(sparse.colors.as_ref(), print_packed_u8)),
         });
         out.push(' ');
         out.push_str(&match &results.dense {
@@ -2121,9 +2124,9 @@ mod remodel_text {
             Some(dense) => format!(
                 "dense positions={} colors={} confidence={} classification={}",
                 print_packed_f32(&dense.positions),
-                dense.colors.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string()),
-                dense.confidence.as_ref().map(print_packed_f32).unwrap_or_else(|| "-".to_string()),
-                dense.classification.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string()),
+                dash_or(dense.colors.as_ref(), print_packed_u8),
+                dash_or(dense.confidence.as_ref(), print_packed_f32),
+                dash_or(dense.classification.as_ref(), print_packed_u8),
             ),
         });
         out.push(' ');
@@ -2163,7 +2166,7 @@ mod remodel_text {
                 let mut q = format!(
                     "qc reprojRms={} gcpRmse={} meanTrackLen={} registeredRatio={} denseCoverage={}",
                     qc.reprojection_rms_px,
-                    qc.gcp_checkpoint_rmse.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+                    dash_or(qc.gcp_checkpoint_rmse, |v| v.to_string()),
                     qc.mean_track_length,
                     qc.registered_frame_ratio,
                     qc.dense_coverage_ratio
@@ -2182,83 +2185,93 @@ mod remodel_text {
         out.push_str(" }");
         out
     }
+    /// 🔀 Shared "dash-or-fields" reader for every `Option<Struct>` results field — a bare `-` token
+    /// means `None`, otherwise the struct's own flat kv fields follow immediately. Used from both
+    /// `parse_results` (prefixed by its own keyword, e.g. `sparse ...`) and `parse_operation`'s matching
+    /// `Set*` op (prefixed by the verb instead, e.g. `setSparse ...`) since the grammar past that point
+    /// is identical.
+    fn parse_sparse(p: &mut Parser) -> Result<Option<SparseCloud>, TextError> {
+        if p.at_dash() {
+            p.bump();
+            return Ok(None);
+        }
+        let span = p.span();
+        let map = p.parse_kv_map()?;
+        Ok(Some(SparseCloud { points: parse_packed_f32(&kv_word(&map, "points", span)?), colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)) }))
+    }
+
+    fn parse_dense(p: &mut Parser) -> Result<Option<DenseCloud>, TextError> {
+        if p.at_dash() {
+            p.bump();
+            return Ok(None);
+        }
+        let span = p.span();
+        let map = p.parse_kv_map()?;
+        Ok(Some(DenseCloud {
+            positions: parse_packed_f32(&kv_word(&map, "positions", span)?),
+            colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)),
+            confidence: kv_opt_word(&map, "confidence").map(|w| parse_packed_f32(&w)),
+            classification: kv_opt_word(&map, "classification").map(|w| parse_packed_u8(&w)),
+        }))
+    }
+
+    fn parse_trajectory(p: &mut Parser) -> Result<Option<CameraTrajectory>, TextError> {
+        if p.at_dash() {
+            p.bump();
+            return Ok(None);
+        }
+        p.expect_lbrace()?;
+        let mut poses = Vec::new();
+        while !p.at_rbrace() {
+            p.expect_word()?;
+            poses.push(parse_pose(p)?);
+        }
+        p.expect_rbrace()?;
+        Ok(Some(CameraTrajectory { poses }))
+    }
+
+    fn parse_geo_products(p: &mut Parser) -> Result<Option<GeoProducts>, TextError> {
+        if p.at_dash() {
+            p.bump();
+            return Ok(None);
+        }
+        let map = p.parse_kv_map()?;
+        Ok(Some(GeoProducts { dsm_asset_id: kv_opt_word(&map, "dsm"), dtm_asset_id: kv_opt_word(&map, "dtm"), ortho_asset_id: kv_opt_word(&map, "ortho") }))
+    }
+
+    fn parse_qc(p: &mut Parser) -> Result<Option<QcReportSnapshot>, TextError> {
+        if p.at_dash() {
+            p.bump();
+            return Ok(None);
+        }
+        let span = p.span();
+        let map = p.parse_kv_map()?;
+        let warnings = p.greedy_str_list();
+        let watertight = if p.at_lbrace() { Some(parse_watertight(p)?) } else { None };
+        Ok(Some(QcReportSnapshot {
+            reprojection_rms_px: kv_num(&map, "reprojRms", span, "number")?,
+            gcp_checkpoint_rmse: kv_opt_num(&map, "gcpRmse"),
+            watertight,
+            mean_track_length: kv_num(&map, "meanTrackLen", span, "number")?,
+            registered_frame_ratio: kv_num(&map, "registeredRatio", span, "number")?,
+            dense_coverage_ratio: kv_num(&map, "denseCoverage", span, "number")?,
+            warnings,
+        }))
+    }
+
     fn parse_results(p: &mut Parser) -> Result<ReconstructionResults, TextError> {
         let span = p.span();
         p.expect_lbrace()?;
         let mut results = ReconstructionResults::default();
         while !p.at_rbrace() {
             match p.expect_word()?.as_str() {
-                "sparse" => {
-                    results.sparse = if p.at_dash() {
-                        p.bump();
-                        None
-                    } else {
-                        let inner_span = p.span();
-                        let map = p.parse_kv_map()?;
-                        Some(SparseCloud { points: parse_packed_f32(&kv_word(&map, "points", inner_span)?), colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)) })
-                    };
-                }
-                "dense" => {
-                    results.dense = if p.at_dash() {
-                        p.bump();
-                        None
-                    } else {
-                        let inner_span = p.span();
-                        let map = p.parse_kv_map()?;
-                        Some(DenseCloud {
-                            positions: parse_packed_f32(&kv_word(&map, "positions", inner_span)?),
-                            colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)),
-                            confidence: kv_opt_word(&map, "confidence").map(|w| parse_packed_f32(&w)),
-                            classification: kv_opt_word(&map, "classification").map(|w| parse_packed_u8(&w)),
-                        })
-                    };
-                }
+                "sparse" => results.sparse = parse_sparse(p)?,
+                "dense" => results.dense = parse_dense(p)?,
                 "mesh" => results.mesh = parse_mesh_body(p)?,
-                "trajectory" => {
-                    results.trajectory = if p.at_dash() {
-                        p.bump();
-                        None
-                    } else {
-                        p.expect_lbrace()?;
-                        let mut poses = Vec::new();
-                        while !p.at_rbrace() {
-                            p.expect_word()?;
-                            poses.push(parse_pose(p)?);
-                        }
-                        p.expect_rbrace()?;
-                        Some(CameraTrajectory { poses })
-                    };
-                }
+                "trajectory" => results.trajectory = parse_trajectory(p)?,
                 "track" => results.tracks.push(parse_track(p)?),
-                "geoProducts" => {
-                    results.geo = if p.at_dash() {
-                        p.bump();
-                        None
-                    } else {
-                        let map = p.parse_kv_map()?;
-                        Some(GeoProducts { dsm_asset_id: kv_opt_word(&map, "dsm"), dtm_asset_id: kv_opt_word(&map, "dtm"), ortho_asset_id: kv_opt_word(&map, "ortho") })
-                    };
-                }
-                "qc" => {
-                    results.qc = if p.at_dash() {
-                        p.bump();
-                        None
-                    } else {
-                        let inner_span = p.span();
-                        let map = p.parse_kv_map()?;
-                        let warnings = p.greedy_str_list();
-                        let watertight = if p.at_lbrace() { Some(parse_watertight(p)?) } else { None };
-                        Some(QcReportSnapshot {
-                            reprojection_rms_px: kv_num(&map, "reprojRms", inner_span, "number")?,
-                            gcp_checkpoint_rmse: kv_opt_num(&map, "gcpRmse"),
-                            watertight,
-                            mean_track_length: kv_num(&map, "meanTrackLen", inner_span, "number")?,
-                            registered_frame_ratio: kv_num(&map, "registeredRatio", inner_span, "number")?,
-                            dense_coverage_ratio: kv_num(&map, "denseCoverage", inner_span, "number")?,
-                            warnings,
-                        })
-                    };
-                }
+                "geoProducts" => results.geo = parse_geo_products(p)?,
+                "qc" => results.qc = parse_qc(p)?,
                 other => return Err(TextError::new(format!("unknown results child '{other}'"), span)),
             }
         }
@@ -2333,7 +2346,6 @@ mod remodel_text {
             }
         }
         p.expect_rbrace()?;
-        let _ = p.at_eof();
         Ok(RemodelScene { schema, id, streams, assets, calibration, params, gcps, job, results })
     }
     //#endregion Document
@@ -2375,16 +2387,16 @@ mod remodel_text {
             RemodelOperation::SetJob { job } => format!("setJob {}", print_job_fields(job)),
             RemodelOperation::SetSparse { sparse } => match sparse {
                 None => "setSparse -".to_string(),
-                Some(sparse) => format!("setSparse points={} colors={}", print_packed_f32(&sparse.points), sparse.colors.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string())),
+                Some(sparse) => format!("setSparse points={} colors={}", print_packed_f32(&sparse.points), dash_or(sparse.colors.as_ref(), print_packed_u8)),
             },
             RemodelOperation::SetDense { dense } => match dense {
                 None => "setDense -".to_string(),
                 Some(dense) => format!(
                     "setDense positions={} colors={} confidence={} classification={}",
                     print_packed_f32(&dense.positions),
-                    dense.colors.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string()),
-                    dense.confidence.as_ref().map(print_packed_f32).unwrap_or_else(|| "-".to_string()),
-                    dense.classification.as_ref().map(print_packed_u8).unwrap_or_else(|| "-".to_string()),
+                    dash_or(dense.colors.as_ref(), print_packed_u8),
+                    dash_or(dense.confidence.as_ref(), print_packed_f32),
+                    dash_or(dense.classification.as_ref(), print_packed_u8),
                 ),
             },
             RemodelOperation::SetMeshResult { mesh } => format!("setMeshResult {}", print_mesh_body(mesh)),
@@ -2424,7 +2436,7 @@ mod remodel_text {
                     let mut out = format!(
                         "setQc reprojRms={} gcpRmse={} meanTrackLen={} registeredRatio={} denseCoverage={}",
                         qc.reprojection_rms_px,
-                        qc.gcp_checkpoint_rmse.map(|v| v.to_string()).unwrap_or_else(|| "-".to_string()),
+                        dash_or(qc.gcp_checkpoint_rmse, |v| v.to_string()),
                         qc.mean_track_length,
                         qc.registered_frame_ratio,
                         qc.dense_coverage_ratio
@@ -2469,20 +2481,7 @@ mod remodel_text {
                 };
                 Ok(RemodelOperation::SetAsset { key, value })
             }
-            "setCalibration" => {
-                p.expect_lbrace()?;
-                let mut cameras = Vec::new();
-                let mut rig = Vec::new();
-                while !p.at_rbrace() {
-                    match p.expect_word()?.as_str() {
-                        "camera" => cameras.push(parse_camera(&mut p)?),
-                        "rig" => rig.push(parse_rig(&mut p)?),
-                        other => return Err(TextError::new(format!("unknown calibration child '{other}'"), p.span())),
-                    }
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetCalibration { calibration: CalibrationState { cameras, rig } })
-            }
+            "setCalibration" => Ok(RemodelOperation::SetCalibration { calibration: parse_calibration(&mut p)? }),
             "setGcps" => {
                 p.expect_lbrace()?;
                 let mut gcps = Vec::new();
@@ -2493,76 +2492,19 @@ mod remodel_text {
                 p.expect_rbrace()?;
                 Ok(RemodelOperation::SetGcps { gcps })
             }
-            "setIngestParams" => Ok(RemodelOperation::SetIngestParams { params: parse_ingest_fields(&mut p)? }),
-            "setFeatureParams" => Ok(RemodelOperation::SetFeatureParams { params: parse_feature_fields(&mut p)? }),
-            "setMatchParams" => Ok(RemodelOperation::SetMatchParams { params: parse_match_fields(&mut p)? }),
-            "setSfmParams" => Ok(RemodelOperation::SetSfmParams { params: parse_sfm_fields(&mut p)? }),
-            "setDenseParams" => Ok(RemodelOperation::SetDenseParams { params: parse_dense_params_fields(&mut p)? }),
-            "setMeshParams" => Ok(RemodelOperation::SetMeshParams { params: parse_mesh_params_fields(&mut p)? }),
-            "setMotionParams" => Ok(RemodelOperation::SetMotionParams { params: parse_motion_params_fields(&mut p)? }),
-            "setGeoParams" => Ok(RemodelOperation::SetGeoParams { params: parse_geo_params_fields(&mut p)? }),
-            "setJob" => {
-                let span = p.span();
-                let map = p.parse_kv_map()?;
-                let id = kv_word(&map, "id", span)?;
-                let stage = parse_reconstruction_stage(&kv_word(&map, "stage", span)?, span)?;
-                let progress_0_1 = kv_num(&map, "progress", span, "number")?;
-                let cancel_requested = kv_bool(&map, "cancel", span)?;
-                let stage_cursor = kv_num(&map, "cursor", span, "integer")?;
-                let started_at_ms = kv_opt_num(&map, "started");
-                let error = kv_opt_str(&map, "error");
-                let sparse_point_cloud_preview = parse_packed_f32(&kv_word(&map, "sparsePreview", span)?);
-                p.expect_lbrace()?;
-                let mut camera_poses_preview = Vec::new();
-                while !p.at_rbrace() {
-                    p.expect_word()?;
-                    camera_poses_preview.push(parse_pose(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetJob { job: ReconstructionJob { id, stage, progress_0_1, cancel_requested, stage_cursor, started_at_ms, error, camera_poses_preview, sparse_point_cloud_preview } })
-            }
-            "setSparse" => {
-                if p.at_dash() {
-                    p.bump();
-                    return Ok(RemodelOperation::SetSparse { sparse: None });
-                }
-                let span = p.span();
-                let map = p.parse_kv_map()?;
-                Ok(RemodelOperation::SetSparse {
-                    sparse: Some(SparseCloud { points: parse_packed_f32(&kv_word(&map, "points", span)?), colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)) }),
-                })
-            }
-            "setDense" => {
-                if p.at_dash() {
-                    p.bump();
-                    return Ok(RemodelOperation::SetDense { dense: None });
-                }
-                let span = p.span();
-                let map = p.parse_kv_map()?;
-                Ok(RemodelOperation::SetDense {
-                    dense: Some(DenseCloud {
-                        positions: parse_packed_f32(&kv_word(&map, "positions", span)?),
-                        colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)),
-                        confidence: kv_opt_word(&map, "confidence").map(|w| parse_packed_f32(&w)),
-                        classification: kv_opt_word(&map, "classification").map(|w| parse_packed_u8(&w)),
-                    }),
-                })
-            }
+            "setIngestParams" => Ok(RemodelOperation::SetIngestParams { params: parse_ingest(&mut p)? }),
+            "setFeatureParams" => Ok(RemodelOperation::SetFeatureParams { params: parse_feature(&mut p)? }),
+            "setMatchParams" => Ok(RemodelOperation::SetMatchParams { params: parse_match(&mut p)? }),
+            "setSfmParams" => Ok(RemodelOperation::SetSfmParams { params: parse_sfm(&mut p)? }),
+            "setDenseParams" => Ok(RemodelOperation::SetDenseParams { params: parse_dense_params(&mut p)? }),
+            "setMeshParams" => Ok(RemodelOperation::SetMeshParams { params: parse_mesh_params(&mut p)? }),
+            "setMotionParams" => Ok(RemodelOperation::SetMotionParams { params: parse_motion_params(&mut p)? }),
+            "setGeoParams" => Ok(RemodelOperation::SetGeoParams { params: parse_geo_params(&mut p)? }),
+            "setJob" => Ok(RemodelOperation::SetJob { job: parse_job(&mut p)? }),
+            "setSparse" => Ok(RemodelOperation::SetSparse { sparse: parse_sparse(&mut p)? }),
+            "setDense" => Ok(RemodelOperation::SetDense { dense: parse_dense(&mut p)? }),
             "setMeshResult" => Ok(RemodelOperation::SetMeshResult { mesh: Box::new(parse_mesh_body(&mut p)?) }),
-            "setTrajectory" => {
-                if p.at_dash() {
-                    p.bump();
-                    return Ok(RemodelOperation::SetTrajectory { trajectory: None });
-                }
-                p.expect_lbrace()?;
-                let mut poses = Vec::new();
-                while !p.at_rbrace() {
-                    p.expect_word()?;
-                    poses.push(parse_pose(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetTrajectory { trajectory: Some(CameraTrajectory { poses }) })
-            }
+            "setTrajectory" => Ok(RemodelOperation::SetTrajectory { trajectory: parse_trajectory(&mut p)? }),
             "setTracks" => {
                 p.expect_lbrace()?;
                 let mut tracks = Vec::new();
@@ -2573,136 +2515,12 @@ mod remodel_text {
                 p.expect_rbrace()?;
                 Ok(RemodelOperation::SetTracks { tracks })
             }
-            "setGeoProducts" => {
-                if p.at_dash() {
-                    p.bump();
-                    return Ok(RemodelOperation::SetGeoProducts { geo: None });
-                }
-                let map = p.parse_kv_map()?;
-                Ok(RemodelOperation::SetGeoProducts {
-                    geo: Some(GeoProducts { dsm_asset_id: kv_opt_word(&map, "dsm"), dtm_asset_id: kv_opt_word(&map, "dtm"), ortho_asset_id: kv_opt_word(&map, "ortho") }),
-                })
-            }
-            "setQc" => {
-                if p.at_dash() {
-                    p.bump();
-                    return Ok(RemodelOperation::SetQc { qc: None });
-                }
-                let span = p.span();
-                let map = p.parse_kv_map()?;
-                let warnings = p.greedy_str_list();
-                let watertight = if p.at_lbrace() { Some(parse_watertight(&mut p)?) } else { None };
-                Ok(RemodelOperation::SetQc {
-                    qc: Some(QcReportSnapshot {
-                        reprojection_rms_px: kv_num(&map, "reprojRms", span, "number")?,
-                        gcp_checkpoint_rmse: kv_opt_num(&map, "gcpRmse"),
-                        watertight,
-                        mean_track_length: kv_num(&map, "meanTrackLen", span, "number")?,
-                        registered_frame_ratio: kv_num(&map, "registeredRatio", span, "number")?,
-                        dense_coverage_ratio: kv_num(&map, "denseCoverage", span, "number")?,
-                        warnings,
-                    }),
-                })
-            }
+            "setGeoProducts" => Ok(RemodelOperation::SetGeoProducts { geo: parse_geo_products(&mut p)? }),
+            "setQc" => Ok(RemodelOperation::SetQc { qc: parse_qc(&mut p)? }),
             other => Err(TextError::new(format!("unknown operation '{other}'"), p.span())),
         }
     }
 
-    fn parse_ingest_fields(p: &mut Parser) -> Result<IngestParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(IngestParams {
-            frame_sample_stride: kv_num(&map, "stride", span, "integer")?,
-            max_frames: kv_num(&map, "maxFrames", span, "integer")?,
-            downscale_long_edge_px: kv_num(&map, "downscale", span, "integer")?,
-            min_sharpness: kv_num(&map, "minSharpness", span, "number")?,
-        })
-    }
-    fn parse_feature_fields(p: &mut Parser) -> Result<FeatureParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(FeatureParams {
-            detector: parse_feature_detector(&kv_word(&map, "detector", span)?, span)?,
-            target_count: kv_num(&map, "targetCount", span, "integer")?,
-            octaves: kv_num(&map, "octaves", span, "integer")?,
-            edge_threshold: kv_num(&map, "edgeThreshold", span, "number")?,
-        })
-    }
-    fn parse_match_fields(p: &mut Parser) -> Result<MatchParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MatchParams {
-            matcher: parse_matcher_kind(&kv_word(&map, "matcher", span)?, span)?,
-            ratio_test: kv_num(&map, "ratio", span, "number")?,
-            cross_check: kv_bool(&map, "crossCheck", span)?,
-            sequential_window: kv_num(&map, "seqWindow", span, "integer")?,
-            max_pairs_per_frame: kv_num(&map, "maxPairs", span, "integer")?,
-            loop_closure: kv_bool(&map, "loopClosure", span)?,
-        })
-    }
-    fn parse_sfm_fields(p: &mut Parser) -> Result<SfmParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(SfmParams {
-            ransac_iterations: kv_num(&map, "ransacIter", span, "integer")?,
-            ransac_threshold_px: kv_num(&map, "ransacThresh", span, "number")?,
-            min_track_length: kv_num(&map, "minTrackLen", span, "integer")?,
-            ba_max_iterations: kv_num(&map, "baIter", span, "integer")?,
-            robust_loss: parse_robust_loss(&kv_word(&map, "robustLoss", span)?, span)?,
-            huber_delta_px: kv_num(&map, "huberDelta", span, "number")?,
-        })
-    }
-    fn parse_dense_params_fields(p: &mut Parser) -> Result<DenseParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(DenseParams {
-            resolution: parse_dense_resolution(&kv_word(&map, "resolution", span)?, span)?,
-            window_radius_px: kv_num(&map, "windowRadius", span, "integer")?,
-            min_view_consistency: kv_num(&map, "minViewConsistency", span, "integer")?,
-            confidence_threshold: kv_num(&map, "confidence", span, "number")?,
-            max_points: kv_num(&map, "maxPoints", span, "integer")?,
-        })
-    }
-    fn parse_mesh_params_fields(p: &mut Parser) -> Result<MeshParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MeshParams {
-            tsdf_voxel_size_mm: kv_num(&map, "voxel", span, "number")?,
-            tsdf_truncation_mm: kv_num(&map, "truncation", span, "number")?,
-            decimate_target_triangles: kv_num(&map, "decimateTarget", span, "integer")?,
-            smoothing_iterations: kv_num(&map, "smoothing", span, "integer")?,
-            texture_enabled: kv_bool(&map, "texture", span)?,
-            texture_size: kv_num(&map, "textureSize", span, "integer")?,
-            guarantee_watertight: kv_bool(&map, "guaranteeWatertight", span)?,
-            hole_fill_max_boundary_verts: kv_num(&map, "holeFillMax", span, "integer")?,
-            self_intersection_check: kv_bool(&map, "selfIntersectionCheck", span)?,
-        })
-    }
-    fn parse_motion_params_fields(p: &mut Parser) -> Result<MotionParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MotionParams {
-            enabled: kv_bool(&map, "enabled", span)?,
-            max_tracks: kv_num(&map, "maxTracks", span, "integer")?,
-            track_window_px: kv_num(&map, "windowPx", span, "integer")?,
-            min_track_quality: kv_num(&map, "minQuality", span, "number")?,
-            min_track_length_frames: kv_num(&map, "minLenFrames", span, "integer")?,
-        })
-    }
-    fn parse_geo_params_fields(p: &mut Parser) -> Result<GeoParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(GeoParams {
-            enabled: kv_bool(&map, "enabled", span)?,
-            origin_lon: kv_opt_num(&map, "originLon"),
-            origin_lat: kv_opt_num(&map, "originLat"),
-            origin_alt: kv_opt_num(&map, "originAlt"),
-            gsd_m: kv_num(&map, "gsd", span, "number")?,
-            dsm_cell_m: kv_num(&map, "dsmCell", span, "number")?,
-            dtm_filter_radius_m: kv_num(&map, "dtmRadius", span, "number")?,
-            ortho_max_px: kv_num(&map, "orthoMax", span, "integer")?,
-        })
-    }
     //#endregion Ops
 }
 

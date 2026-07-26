@@ -926,9 +926,27 @@ enum DslTok {
     Eof,
 }
 
-/// 🔎 Tokenizes one line. UUID-shaped ids embed `-` (e.g. `7dc5b737-3b6b-...`), so `-` only starts a
-/// number (next char a digit) or the `->` arrow (next char `>`) at a token boundary; inside an already-
-/// started identifier it is folded in as long as it is not immediately followed by `>`.
+/// 🔢 A digit-led scanned token is a number only if it is ENTIRELY digits with at most one `.` —
+/// anything else (letters, `-`) means it was actually a UUID-shaped id like `7dc5b737-3b6b-...`.
+fn looks_like_number(text: &str) -> bool {
+    let mut seen_dot = false;
+    !text.is_empty()
+        && text.bytes().all(|b| {
+            if b == b'.' {
+                if seen_dot {
+                    return false;
+                }
+                seen_dot = true;
+                true
+            } else {
+                b.is_ascii_digit()
+            }
+        })
+}
+
+/// 🔎 Tokenizes one line. UUID-shaped ids embed `-` (e.g. `7dc5b737-3b6b-...`) and may start with a
+/// digit, so `-` only starts a number (next char a digit) or the `->` arrow (next char `>`) at a token
+/// boundary, and a digit-led scan is only treated as a number if `looks_like_number` confirms it.
 fn dsl_lex(line: &str, line_no: u32) -> Result<Vec<DslTok>, TextError> {
     let bytes = line.as_bytes();
     let mut out = Vec::new();
@@ -1014,16 +1032,10 @@ fn dsl_lex(line: &str, line_no: u32) -> Result<Vec<DslTok>, TextError> {
                 }
                 out.push(DslTok::Str(text));
             }
-            b'0'..=b'9' => {
-                let start = i;
-                while i < bytes.len() && (bytes[i].is_ascii_digit() || bytes[i] == b'.') {
-                    i += 1;
-                }
-                let text = std::str::from_utf8(&bytes[start..i]).expect("ascii digits");
-                let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
-                out.push(DslTok::Number(n));
-            }
-            _ => {
+            b'0'..=b'9' | b'a'..=b'z' | b'A'..=b'Z' | b'_' => {
+                // 🔀 Digit-led tokens are ambiguous: `96`/`1.2` are numbers, but UUID-shaped ids like
+                // `7dc5b737-3b6b-...` also start with a digit. Scan the maximal ident-or-number run
+                // first, then classify by content (`looks_like_number`) rather than by first char.
                 let start = i;
                 loop {
                     if i >= bytes.len() {
@@ -1040,11 +1052,16 @@ fn dsl_lex(line: &str, line_no: u32) -> Result<Vec<DslTok>, TextError> {
                     }
                     break;
                 }
-                if i == start {
-                    return Err(TextError::new(format!("unexpected character '{}'", c as char), TextSpan::at(line_no, start as u32 + 1)));
+                let text = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii ident/number chars").to_string();
+                if c.is_ascii_digit() && looks_like_number(&text) {
+                    let n: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(line_no, start as u32 + 1)))?;
+                    out.push(DslTok::Number(n));
+                } else {
+                    out.push(DslTok::Ident(text));
                 }
-                let text = std::str::from_utf8(&bytes[start..i]).expect("scanned bytes are ascii ident chars").to_string();
-                out.push(DslTok::Ident(text));
+            }
+            _ => {
+                return Err(TextError::new(format!("unexpected character '{}'", c as char), TextSpan::at(line_no, i as u32 + 1)));
             }
         }
     }
@@ -1882,5 +1899,97 @@ mod tests {
         let err = validate_trinity_graph_operation(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "flatPosition".into(), value: PropertyValue::Null }, &fixture).expect_err("derived");
         assert!(err.to_string().contains("derived"));
     }
+
+    //#region 🔖DslTests
+    use vcs::test_support::{assert_dsl_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+
+    #[test]
+    fn dsl_round_trip_mini_fixture() {
+        assert_dsl_round_trip(&mini_fixture());
+    }
+
+    #[test]
+    fn dsl_round_trip_nakagin_fixture() {
+        let fixture = GraphFixture::parse_dsl(include_str!("../../example/nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
+        assert_dsl_round_trip(&fixture);
+    }
+
+    #[test]
+    fn dsl_round_trip_branch_chain_fixture() {
+        let fixture = GraphFixture::parse_dsl(include_str!("../../example/branch-chain.trinity")).expect("branch-chain fixture parses");
+        assert_dsl_round_trip(&fixture);
+    }
+
+    #[test]
+    fn op_text_round_trip_create_node() {
+        assert_op_line_round_trip(&TrinityGraphOperation::CreateNode {
+            id: "new".into(),
+            kind: "Piece".into(),
+            name: "new-piece".into(),
+            x: 200.0,
+            y: 40.0,
+            width: 80.0,
+            height: 40.0,
+            ports: vec![Port { id: "p1".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }],
+        });
+    }
+
+    #[test]
+    fn op_text_round_trip_delete_node() {
+        assert_op_line_round_trip(&TrinityGraphOperation::DeleteNode { id: "root".into() });
+    }
+
+    #[test]
+    fn op_text_round_trip_create_edge() {
+        let mut properties = PropertyBag::new();
+        properties.insert("u".into(), PropertyValue::Number(1.2));
+        let mut nested = BTreeMap::new();
+        nested.insert("x".into(), PropertyValue::Number(0.0));
+        properties.insert("meta".into(), PropertyValue::Object(nested));
+        assert_op_line_round_trip(&TrinityGraphOperation::CreateEdge { id: "e2".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: port_key("child", "in-a"), properties });
+    }
+
+    #[test]
+    fn op_text_round_trip_delete_edge() {
+        assert_op_line_round_trip(&TrinityGraphOperation::DeleteEdge { id: "e1".into() });
+    }
+
+    #[test]
+    fn op_text_round_trip_rename() {
+        assert_op_line_round_trip(&TrinityGraphOperation::Rename { id: "root".into(), name: "renamed \"piece\"".into() });
+    }
+
+    #[test]
+    fn op_text_round_trip_reposition() {
+        assert_op_line_round_trip(&TrinityGraphOperation::Reposition { id: "root".into(), x: 10.0, y: -20.5 });
+    }
+
+    #[test]
+    fn op_text_round_trip_set_data_property() {
+        assert_op_line_round_trip(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("hi 'there'".into()) });
+    }
+
+    #[test]
+    fn op_text_round_trip_clear_data_property() {
+        assert_op_line_round_trip(&TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Edge("e1".into()), key: "u".into() });
+    }
+
+    #[test]
+    fn op_text_round_trip_set_camera() {
+        assert_op_line_round_trip(&TrinityGraphOperation::SetCamera { camera: Camera { x: 1.0, y: 2.0, zoom: 1.5 } });
+    }
+
+    #[test]
+    fn op_text_round_trip_set_fixture() {
+        assert_op_line_round_trip(&TrinityGraphOperation::SetFixture { fixture: mini_fixture() });
+    }
+
+    #[test]
+    fn document_text_round_trip_graph_store() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("apply");
+        assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslTests
 }
 // #endregion 🔖Tests

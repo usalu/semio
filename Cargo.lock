@@ -10399,6 +10399,7 @@ dependencies = [
  "thiserror 2.0.18",
  "trinity_jack",
  "trinity_ram",
+ "vcs",
 ]
 
 [[package]]

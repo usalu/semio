@@ -589,7 +589,7 @@ mod math_text {
     //#endregion Printer
 }
 
-impl vcs::DocumentDsl for MathProjection {
+impl DocumentDsl for MathProjection {
     const EXTENSION: &'static str = "mathematical";
 
     fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {

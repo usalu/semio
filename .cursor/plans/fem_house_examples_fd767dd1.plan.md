@@ -16,7 +16,7 @@ todos:
     status: completed
   - id: verify
     content: Run fem_2d/fem_3d/fem-plugin tests and close ticket with summary
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

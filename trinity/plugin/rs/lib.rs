@@ -20,6 +20,7 @@ pub mod app_jack {
     use std::collections::{BTreeMap, HashMap};
     use trinity_jack::{complete, execute, format as jack_format, lint, parse, semantic_tokens, QueryResult, QueryResultKind};
     use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TRINITY_GRAPH_SCHEMA};
+    use vcs::DocumentDsl;
 
     //#region 🔖Constants
     const TRINITY_JACK_PLAY_APP_ID: &str = "trinity-jack-play";
@@ -37,8 +38,8 @@ pub mod app_jack {
     const TRINITY_JACK_PLAY_WINDOW_EDITOR: &str = "trinity-jack-editor";
     const TRINITY_JACK_PLAY_WINDOW_RESULTS: &str = "trinity-jack-results";
 
-    const NAKAGIN_FIXTURE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.trinity.json");
-    const BRANCH_FIXTURE_JSON: &str = include_str!("../../example/branch-chain.trinity.json");
+    const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../example/nakagin-capsule-tower.trinity");
+    const BRANCH_FIXTURE_DSL: &str = include_str!("../../example/branch-chain.trinity");
 
     const TRINITY_JACK_DEFAULT_QUERY: &str =
         "MATCH (a:Piece)-[r:Connection]->(b:Piece) WHERE a.name = 'b' AND b.name != 'b' RETURN a.name, b.name, b.label";
@@ -108,7 +109,7 @@ pub mod app_jack {
     //#region 🔖DocumentHelpers
     /// 📦 The default trinity graph fixture (Nakagin capsule tower) — the initial document projection.
     fn default_fixture() -> GraphFixture {
-        GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap_or_else(|_| trinity_ram::empty_trinity_graph_fixture())
+        GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap_or_else(|_| trinity_ram::empty_trinity_graph_fixture())
     }
 
     /// 🌱 Seeds the runtime with the default query and its result table so the Results window is populated on load.
@@ -162,10 +163,10 @@ pub mod app_jack {
         Some(graph.to_fixture())
     }
 
-    fn fixture_json_for_preset(preset_id: &str) -> Option<&'static str> {
+    fn fixture_dsl_for_preset(preset_id: &str) -> Option<&'static str> {
         match preset_id {
-            "nakagin" | "nakagin-capsule-tower" => Some(NAKAGIN_FIXTURE_JSON),
-            "branch-chain" => Some(BRANCH_FIXTURE_JSON),
+            "nakagin" | "nakagin-capsule-tower" => Some(NAKAGIN_FIXTURE_DSL),
+            "branch-chain" => Some(BRANCH_FIXTURE_DSL),
             _ => None,
         }
     }
@@ -874,7 +875,7 @@ pub mod app_jack {
                 }
                 "setActiveExample" => {
                     let example_id = args.and_then(|v| v.get("exampleId")).and_then(|v| v.as_str()).unwrap_or("");
-                    if let Some(next) = fixture_json_for_preset(example_id).and_then(|json| GraphFixture::from_json(json).ok()) {
+                    if let Some(next) = fixture_dsl_for_preset(example_id).and_then(|dsl| GraphFixture::parse_dsl(dsl).ok()) {
                         self.runtime.active_fixture_id = example_id.into();
                         self.runtime.jack_query = preset_query(example_id).into();
                         let (result_json, _) = run_jack_query(&next, &self.runtime.jack_query);
@@ -1105,7 +1106,7 @@ pub mod app_jack {
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("mod+alt+s", "commitCheckpoint"),
         )
-        .example("nakagin", "Nakagin", NAKAGIN_FIXTURE_JSON)
+        .example("nakagin", "Nakagin", default_fixture().print_dsl())
         .program("trinity", "Trinity", "graph")
     }
     //#endregion 🔖Manifest
@@ -1438,6 +1439,7 @@ pub mod app_rewrite {
         AssignmentJson, Lhs, ParameterKind, ParameterSpec, Rhs, Rule,
         PatternJson, RewriteRuleOperation, RewriteRuleState, REWRITE_RULE_SCHEMA,
     };
+    use vcs::DocumentDsl;
 
     //#region 🔖Constants
     const TRINITY_REWRITE_PLAY_APP_ID: &str = "trinity-rewrite-play";
@@ -1464,7 +1466,7 @@ pub mod app_rewrite {
     const TRINITY_REWRITE_PLAY_WINDOW_PARAMETERS: &str = "trinity-rewrite-parameters";
     const TRINITY_REWRITE_PLAY_RULE_NAME: &str = "label-core";
 
-    const NAKAGIN_FIXTURE_JSON: &str = include_str!("../../example/nakagin-capsule-tower.trinity.json");
+    const NAKAGIN_FIXTURE_DSL: &str = include_str!("../../example/nakagin-capsule-tower.trinity");
 
     const DEFAULT_LHS_JSON: &str = r#"{
       "pattern": {
@@ -1537,9 +1539,16 @@ pub mod app_rewrite {
     //#endregion 🔖Types
 
     //#region 🔖DocumentHelpers
+    /// 📦 JSON text of the bundled Nakagin fixture — `RewriteRuleState`'s own `_json` fields keep their
+    /// JSON contract (see `patch_fixture_nodes`/`parse_fixture_json`), so the `.trinity` DSL source is
+    /// parsed once and re-serialized here rather than propagating DSL text into those fields.
+    fn nakagin_fixture_json() -> String {
+        GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).expect("bundled nakagin fixture parses").to_json().expect("fixture serializes")
+    }
+
     fn default_rule_state() -> RewriteRuleState {
         let mut state = RewriteRuleState {
-            before_fixture_json: NAKAGIN_FIXTURE_JSON.into(),
+            before_fixture_json: nakagin_fixture_json(),
             lhs_json: DEFAULT_LHS_JSON.into(),
             rhs_json: DEFAULT_RHS_JSON.into(),
             parameter_bindings: HashMap::new(),
@@ -2013,22 +2022,22 @@ pub mod app_rewrite {
 
     fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
         let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
-            return NAKAGIN_FIXTURE_JSON.into();
+            return nakagin_fixture_json();
         };
         Graph::from_fixture(lhs_semantic_graph_fixture(&lhs, rule_layout))
             .ok()
             .and_then(|graph| graph.fixture_json().ok())
-            .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
+            .unwrap_or_else(nakagin_fixture_json)
     }
 
     fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
         let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
-            return NAKAGIN_FIXTURE_JSON.into();
+            return nakagin_fixture_json();
         };
         Graph::from_fixture(rhs_semantic_graph_fixture(&rhs, rule_layout))
             .ok()
             .and_then(|graph| graph.fixture_json().ok())
-            .unwrap_or_else(|| NAKAGIN_FIXTURE_JSON.into())
+            .unwrap_or_else(nakagin_fixture_json)
     }
 
     fn node_id_for_var(fixture_json: &str, var: &str) -> Option<String> {
@@ -2486,7 +2495,7 @@ pub mod app_rewrite {
         hover_node_id: &str,
         editable: bool,
     ) -> UiNode {
-        let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::from_json(NAKAGIN_FIXTURE_JSON).unwrap());
+        let fixture = parse_fixture_json(fixture_json).unwrap_or_else(|| GraphFixture::parse_dsl(NAKAGIN_FIXTURE_DSL).unwrap());
         let (nodes_json, edges_json, viewport_json) = fixture_to_media_graph(&fixture);
         let hover_json = graph_hover_json(fixture_json, &runtime.active_hover_var, hover_node_id);
         let selection_json = graph_selection_json(fixture_json, &runtime.active_select_var, &runtime.selected_node_ids);
@@ -2943,7 +2952,7 @@ pub mod app_rewrite {
                 .keybinding("mod+shift+z", "redo")
                 .keybinding("mod+alt+s", "commitCheckpoint"),
         )
-        .example("label-core", "Label Core", serde_json::to_string(&default_rule_state()).unwrap())
+        .example("label-core", "Label Core", default_rule_state().print_dsl())
         .program("trinity-rewrite", "Trinity Rewrite", "graph")
     }
     //#endregion 🔖Manifest

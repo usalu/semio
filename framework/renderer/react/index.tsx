@@ -8874,7 +8874,7 @@ function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjection
 }
 
 function displayWindowKindIcon(iconId: IconName): ReactNode {
-  return <Icon icon={iconId} size="small" />;
+  return <Icon icon={iconId} size={12} className="size-tiny shrink-0" />;
 }
 
 function buildDisplayWindowsTree(host: DisplayHostApi): TreePanelConfig {

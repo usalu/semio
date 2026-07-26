@@ -1,0 +1,19 @@
+manifest nakagin
+name "Nakagin Capsule Tower"
+camera 0 0 1
+root 7dc5b737-3b6b-4068-b315-b7bacc91c2e1
+node 7dc5b737-3b6b-4068-b315-b7bacc91c2e1:Piece "b" 0 0 96 48 {label: 'tower-core', position: {x: 0, y: 0, z: 0}, tier: 0} [c5465220-19ba-4443-8f1d-617c832dd13c:Connector:out, d25a91ed-b124-4e5b-8e7e-af832541c953:Connector:out]
+node 5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:Piece "t_f0_b_c0" -140 80 88 40 {label: 'floor0-left', position: {x: -1.2, y: 1.2, z: 0}, tier: 0} [7be6cfda-db1b-47e4-bcea-cd011e516e2e:Connector:in, e0fb5d49-9286-4a6d-88b0-043f389c6898:Connector:out]
+node 17d5dec8-87b2-44a9-84ff-93b7e7419bdd:Piece "t_f0_b_c1" 140 80 88 40 {label: 'floor0-right', position: {x: 1.2, y: 1.2, z: 0}, tier: 0} [7be6cfda-db1b-47e4-bcea-cd011e516e2e:Connector:in, f1a2b3c4-d5e6-7890-abcd-ef1234567890:Connector:out]
+node 596f3f60-b634-467b-8acc-7d5b649ae0d1:Piece "t_f1_b_c0" -140 180 88 40 {label: 'floor1-shaft', position: {x: -1.2, y: 2.4, z: 0}, tier: 1} [7be6cfda-db1b-47e4-bcea-cd011e516e2e:Connector:in, e0fb5d49-9286-4a6d-88b0-043f389c6898:Connector:out]
+node f2edea5c-960e-46bd-932d-aae5ecad72d8:Piece "t_f8_b_c0" -140 280 88 40 {label: 'floor8-shaft', position: {x: -1.2, y: 9.6, z: 0}, tier: 8} [e0fb5d49-9286-4a6d-88b0-043f389c6898:Connector:in, c5465220-19ba-4443-8f1d-617c832dd13c:Connector:out]
+node 6947a41b-8c6d-4291-bdd8-96cd535c78fc:Piece "ci_t_f8_b_c0" -140 380 96 44 {label: 'capsule-instance', position: {x: -1.2, y: 11.2, z: 0}, tier: 8} [4ba51a88-2a7f-4b78-b119-0f02eacdb702:Connector:in]
+node a8f3e2d1-4b5c-6d7e-8f90-a1b2c3d4e5f6:Piece "jack_orphan" 300 200 88 40 {label: 'jack-orphan', tier: 0} [d4e5f6a7-b8c9-0123-def4-567890abcdef:Connector:in]
+node b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7:Piece "jack_prune" 300 80 88 40 {label: 'jack-prune', tier: 0} [e5f6a7b8-c9d0-1234-ef56-7890abcdef01:Connector:in]
+node caf5e4d3-6d7e-8f90-a1b2-c3d4e5f6a7b8:Piece "jack_spare" 300 300 88 40 {label: 'jack-spare', tier: 0} [f6a7b8c9-d0e1-2345-f678-90abcdef0123:Connector:out]
+edge cc0d14f5-11b2-4258-ac52-287d0d46b23b:Connection 7dc5b737-3b6b-4068-b315-b7bacc91c2e1:Piece@c5465220-19ba-4443-8f1d-617c832dd13c->5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:Piece@7be6cfda-db1b-47e4-bcea-cd011e516e2e {gap: 0, rise: 0, rotation: 270, shift: 0, tilt: 0, turn: 0, u: -1.2, v: 1.2}
+edge 8684b51c-94f5-4a50-be16-526ac8e0892a:Connection 7dc5b737-3b6b-4068-b315-b7bacc91c2e1:Piece@d25a91ed-b124-4e5b-8e7e-af832541c953->17d5dec8-87b2-44a9-84ff-93b7e7419bdd:Piece@7be6cfda-db1b-47e4-bcea-cd011e516e2e {gap: 0, rise: 0, rotation: 90, shift: 0, tilt: 0, turn: 0, u: 1.2, v: 1.2}
+edge e-shaft-1:Connection 5f0266bc-856b-4ef2-9eb0-16ef5e1fb952:Piece@e0fb5d49-9286-4a6d-88b0-043f389c6898->596f3f60-b634-467b-8acc-7d5b649ae0d1:Piece@7be6cfda-db1b-47e4-bcea-cd011e516e2e {gap: 0, rise: 0, rotation: 0, shift: 0, tilt: 0, turn: 0, u: 0, v: 1.2}
+edge e-shaft-8:Connection 596f3f60-b634-467b-8acc-7d5b649ae0d1:Piece@e0fb5d49-9286-4a6d-88b0-043f389c6898->f2edea5c-960e-46bd-932d-aae5ecad72d8:Piece@e0fb5d49-9286-4a6d-88b0-043f389c6898 {gap: 0, rise: 0, rotation: 0, shift: 0, tilt: 0, turn: 0, u: 0, v: 7.2}
+edge fdae9f64-398f-45ad-8496-453e72c31512:Connection f2edea5c-960e-46bd-932d-aae5ecad72d8:Piece@c5465220-19ba-4443-8f1d-617c832dd13c->6947a41b-8c6d-4291-bdd8-96cd535c78fc:Piece@4ba51a88-2a7f-4b78-b119-0f02eacdb702 {gap: 0, rise: 0, rotation: 90, shift: 0, tilt: 0, turn: 0, u: 0, v: 1.6}
+edge e-jack-prune:Connection 17d5dec8-87b2-44a9-84ff-93b7e7419bdd:Piece@f1a2b3c4-d5e6-7890-abcd-ef1234567890->b9f4e3d2-5c6d-7e8f-90a1-b2c3d4e5f6a7:Piece@e5f6a7b8-c9d0-1234-ef56-7890abcdef01 {gap: 0, rise: 0, rotation: 0, shift: 0, tilt: 0, turn: 0, u: 1.2, v: 0}

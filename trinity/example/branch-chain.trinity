@@ -1,0 +1,9 @@
+manifest nakagin
+name "Branch Chain"
+camera 0 0 1
+root branch-root
+node branch-root:Piece "root" -120 0 88 40 [out-a:Connector:out]
+node branch-mid:Piece "mid" 0 0 88 40 [in-a:Connector:in, out-b:Connector:out]
+node branch-leaf:Piece "leaf" 120 0 88 40 [in-b:Connector:in]
+edge e-root-mid:Connection branch-root:Piece@out-a->branch-mid:Piece@in-a
+edge e-mid-leaf:Connection branch-mid:Piece@out-b->branch-leaf:Piece@in-b

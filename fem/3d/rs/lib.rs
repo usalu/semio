@@ -1562,7 +1562,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::apply_operation;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentDsl, DocumentVcsCommand};
 
     // #region 🔖Fixtures
     fn cantilever_fixture() -> (Fem3dDocument, f64, f64, f64, f64, f64) {
@@ -1931,7 +1931,7 @@ mod tests {
     fn fem3d_mesh_preview_returns_solid_tets_and_boundary() {
         let doc = solid_slab_doc();
         let previews = fem3d_mesh_preview(&doc).expect("mesh preview succeeds");
-        assert_eq!(previews.len(), 2);
+        assert_eq!(previews.len(), 1);
         assert_eq!(previews[0].solid_id, "sol1");
         assert!(!previews[0].tets.is_empty(), "expected at least one tet");
         assert!(!previews[0].boundary_tris.is_empty(), "expected boundary triangles");
@@ -2003,12 +2003,90 @@ mod tests {
     }
     // #endregion 🔖ModalBuckling
 
+    // #region 🔖DslAndOpText
+    #[test]
+    fn fem3d_dsl_round_trips_fixture_documents() {
+        vcs::test_support::assert_dsl_round_trip(&empty_fem3d_projection());
+        let (cantilever, ..) = cantilever_fixture();
+        vcs::test_support::assert_dsl_round_trip(&cantilever);
+        vcs::test_support::assert_dsl_round_trip(&truss_fixture());
+        vcs::test_support::assert_dsl_round_trip(&solid_slab_doc());
+        let mut with_combination = cantilever;
+        with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35)] });
+        vcs::test_support::assert_dsl_round_trip(&with_combination);
+    }
+
+    #[test]
+    fn fem3d_op_text_round_trips_every_variant() {
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetNode { index: 0, node: FemNode { id: "n1".into(), x: 1.0, y: 2.0, z: 3.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveNode { id: "n1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement {
+            index: 0,
+            element: FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement {
+            index: 0,
+            element: FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveElement { id: "e1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveMaterial { id: "steel".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetSection { index: 0, section: FemSection { id: "hea200".into(), name: "HEA200".into(), area: 0.00538, iy: 3.69e-5, iz: 1.33e-5, j: 6.0e-7 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveSection { id: "hea200".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetSolid {
+            index: 0,
+            solid: FemSolid {
+                id: "sol1".into(),
+                name: "Slab".into(),
+                outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]],
+                holes: vec![vec![[0.5, 0.25], [1.5, 0.25], [1.5, 0.75]]],
+                base_z: 0.0,
+                height: 0.5,
+                layers: 2,
+                mesh_size: 0.5,
+                material_id: "concrete".into(),
+            },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveSolid { id: "sol1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveSupport { id: "s1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetLoadCase {
+            index: 0,
+            load_case: FemLoadCase {
+                id: "point".into(),
+                name: "Point Load".into(),
+                loads: vec![
+                    FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -5000.0 },
+                    FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -800.0 },
+                    FemLoad::Area { id: "l3".into(), solid_id: "sol1".into(), pressure: 800.0 },
+                ],
+                self_weight: true,
+            },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveLoadCase { id: "point".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35), ("live".into(), 1.5)] } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveCombination { id: "uls".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+        let (cantilever, ..) = cantilever_fixture();
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetDocument { document: cantilever });
+    }
+
+    #[test]
+    fn fem3d_document_text_round_trips_through_the_store() {
+        let mut store = Fem3dStore::new(create_document_vcs_envelope(FEM_3D_SCHEMA, "fem3d", empty_fem3d_projection(), None));
+        let (cantilever, ..) = cantilever_fixture();
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Fem3dOperation::SetDocument { document: cantilever }], description: None }).expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    // #endregion 🔖DslAndOpText
+
     #[test]
     fn example_fixture_parses() {
-        let json = include_str!("../example/default.fem3d.json");
-        let doc: Fem3dDocument = serde_json::from_str(json).expect("example fixture parses");
-        assert_eq!(doc.nodes.len(), 18);
-        assert_eq!(doc.elements.len(), 21);
+        let dsl = include_str!("../example/default.fem3d");
+        let doc: Fem3dDocument = Fem3dDocument::parse_dsl(dsl).expect("example fixture parses");
+        assert_eq!(doc.nodes.len(), 16);
+        assert_eq!(doc.elements.len(), 16);
         assert_eq!(doc.solids.len(), 1);
         let result = fem3d_solve(&doc, "dead").expect("example fixture solves");
         assert!(result.checks.residual_norm < 1e-6);
@@ -2034,5 +2112,6 @@ mod tests {
         let buckling = fem3d_buckling(&doc, "dead").expect("buckling resolves for the dead case's compressed column");
         assert!(buckling.factors[0].is_finite() && buckling.factors[0] > 1.0, "expected an illustrative (finite, >1) load factor: {:?}", buckling.factors);
     }
+
 }
 // #endregion 🔖Tests

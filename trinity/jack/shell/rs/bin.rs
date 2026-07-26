@@ -4,7 +4,8 @@ use std::env;
 use std::fs;
 use std::io::{self, BufRead, Write};
 use trinity_jack::{run, QueryResult};
-use trinity_ram::{Graph, PropertyValue};
+use trinity_ram::{Graph, GraphFixture, PropertyValue};
+use vcs::DocumentDsl;
 
 //#region ⚠️ Errors
 /// ⚠️ Trinity jack shell errors.
@@ -12,6 +13,8 @@ use trinity_ram::{Graph, PropertyValue};
 enum TrinityJackShellError {
     #[error("read {path}: {source}")]
     ReadFixture { path: String, source: std::io::Error },
+    #[error("parse {path}: {source}")]
+    Dsl { path: String, source: vcs::TextError },
     #[error(transparent)]
     Graph(#[from] trinity_ram::TrinityRamError),
     #[error("{0}")]
@@ -30,9 +33,10 @@ fn main() {
 
 fn run_main() -> Result<(), TrinityJackShellError> {
     let args: Vec<String> = env::args().collect();
-    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/nakagin-capsule-tower.trinity.json");
-    let json = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
-    let mut graph = Graph::load_json(&json)?;
+    let fixture_path = args.get(1).map(String::as_str).unwrap_or("trinity/example/nakagin-capsule-tower.trinity");
+    let text = fs::read_to_string(fixture_path).map_err(|source| TrinityJackShellError::ReadFixture { path: fixture_path.to_string(), source })?;
+    let fixture = GraphFixture::parse_dsl(&text).map_err(|source| TrinityJackShellError::Dsl { path: fixture_path.to_string(), source })?;
+    let mut graph = Graph::from_fixture(fixture)?;
     graph.recompute_derived();
     println!("[DEBUG] trinity jack shell loaded {} nodes, {} edges from {fixture_path}", graph.nodes.len(), graph.edges.len());
     if args.len() > 2 {

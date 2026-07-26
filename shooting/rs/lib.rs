@@ -1607,6 +1607,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use vcs::DocumentDsl;
 
     fn sample_asset(id: &str) -> ShootingAsset {
         ShootingAsset { id: id.into(), name: format!("Asset {id}"), url: format!("/mesh/{id}.glb"), format: "glb".into(), origin: [0.0, 0.0, 0.0], orientation: Some([0.0, 0.0, 0.0, 1.0]), scale: None }

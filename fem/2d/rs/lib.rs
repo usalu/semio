@@ -1381,6 +1381,9 @@ type BucklingInputs = (Vec<Node>, Vec<Box<dyn Element>>, Vec<Support>, fem_core:
 /// if `case_id` isn't in `doc.load_cases`.
 fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs, Fem2dError> {
     let (nodes, elements, regions) = build_nodes_and_elements(doc)?;
+    let member_node_ids: std::collections::HashSet<String> = doc.nodes.iter().map(|n| n.id.clone()).collect();
+    let nodes: Vec<Node> = nodes.into_iter().filter(|n| member_node_ids.contains(&n.id)).collect();
+    let elements: Vec<Box<dyn Element>> = elements.into_iter().take(doc.elements.len()).collect();
     let supports: Vec<Support> = doc.supports.iter().map(|s| Support { node_id: s.node_id.clone(), fixed: s.fixed.clone() }).collect();
     let load_case = doc.load_cases.iter().find(|lc| lc.id == case_id).ok_or_else(|| Fem2dError::LoadCaseNotFound(case_id.to_string()))?;
 
@@ -1390,10 +1393,7 @@ fn buckling_inputs(doc: &Fem2dDocument, case_id: &str) -> Result<BucklingInputs,
         match load {
             FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
             FemLoad::MemberUdl { element_id, wx, wy, .. } => member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: 0.0 })),
-            FemLoad::Area { region_id, pressure, .. } => {
-                let region = regions.iter().find(|r| &r.region_id == region_id).ok_or_else(|| Fem2dError::UnknownRegionId(region_id.clone()))?;
-                nodal_loads.extend(area_load_nodal_loads(region, *pressure));
-            }
+            FemLoad::Area { .. } => {}
         }
     }
     let case = fem_core::analyses::LoadCase { id: load_case.id.clone(), nodal_loads, member_loads, self_weight: load_case.self_weight };
@@ -1531,7 +1531,7 @@ mod wasm_bridge {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::apply_operation;
+    use vcs::{apply_operation, create_document_vcs_envelope, DocumentDsl, DocumentVcsCommand};
 
     // #region 🔖Fixtures
     fn simply_supported_beam_doc() -> Fem2dDocument {
@@ -1993,11 +1993,86 @@ mod tests {
     }
     // #endregion 🔖NodalVonMises
 
+    // #region 🔖DslAndOpText
+    #[test]
+    fn fem2d_dsl_round_trips_fixture_documents() {
+        vcs::test_support::assert_dsl_round_trip(&empty_fem2d_projection());
+        vcs::test_support::assert_dsl_round_trip(&simply_supported_beam_doc());
+        vcs::test_support::assert_dsl_round_trip(&truss_doc());
+        vcs::test_support::assert_dsl_round_trip(&rectangle_with_hole_region_doc());
+        let mut with_combination = simply_supported_beam_doc();
+        with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("dead".into(), 1.35), ("live".into(), 1.5)] });
+        vcs::test_support::assert_dsl_round_trip(&with_combination);
+    }
+
+    #[test]
+    fn fem2d_op_text_round_trips_every_variant() {
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetNode { index: 0, node: FemNode { id: "n1".into(), x: 1.0, y: 2.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveNode { id: "n1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement {
+            index: 0,
+            element: FemElement::Beam { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "ipe300".into() },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetElement {
+            index: 0,
+            element: FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveElement { id: "e1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel S235".into(), e: 210e9, nu: 0.3, rho: 7850.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveMaterial { id: "steel".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetSection { index: 0, section: FemSection { id: "ipe300".into(), name: "IPE 300".into(), area: 0.005381, iy: 8.356e-5 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveSection { id: "ipe300".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty] } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveSupport { id: "s1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetLoadCase {
+            index: 0,
+            load_case: FemLoadCase {
+                id: "dead".into(),
+                name: "Dead Load".into(),
+                loads: vec![
+                    FemLoad::Nodal { id: "l1".into(), node_id: "n1".into(), dof: Dof::Ty, value: -1000.0 },
+                    FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: -5000.0 },
+                    FemLoad::Area { id: "l3".into(), region_id: "r1".into(), pressure: 800.0 },
+                ],
+                self_weight: true,
+            },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveLoadCase { id: "dead".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetRegion {
+            index: 0,
+            region: FemRegion {
+                id: "r1".into(),
+                name: "Slab".into(),
+                outline: vec![[0.0, 0.0], [4.0, 0.0], [4.0, 2.0], [0.0, 2.0]],
+                holes: vec![vec![[1.0, 1.0], [2.0, 1.0], [2.0, 1.5]]],
+                thickness: 0.02,
+                material_id: "steel".into(),
+                mesh_size: 0.5,
+            },
+        });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveRegion { id: "r1".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("dead".into(), 1.35), ("live".into(), 1.5)] } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::RemoveCombination { id: "uls".into() });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetCamera { camera: FemCamera { x: 4.0, y: 5.0, zoom: 2.0 } });
+        vcs::test_support::assert_op_line_round_trip(&Fem2dOperation::SetDocument { document: simply_supported_beam_doc() });
+    }
+
+    #[test]
+    fn fem2d_document_text_round_trips_through_the_store() {
+        let mut store = Fem2dStore::new(create_document_vcs_envelope(FEM_2D_SCHEMA, "fem2d", empty_fem2d_projection(), None));
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![Fem2dOperation::SetDocument { document: simply_supported_beam_doc() }], description: None })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    // #endregion 🔖DslAndOpText
+
     // #region 🔖ExampleFixture
     #[test]
     fn example_fixture_parses_and_solves() {
-        let json = include_str!("../example/default.fem2d.json");
-        let doc: Fem2dDocument = serde_json::from_str(json).expect("example fixture parses");
+        let dsl = include_str!("../example/default.fem2d");
+        let doc: Fem2dDocument = Fem2dDocument::parse_dsl(dsl).expect("example fixture parses");
         assert_eq!(doc.nodes.len(), 12);
         assert_eq!(doc.elements.len(), 9);
         assert_eq!(doc.regions.len(), 1);
