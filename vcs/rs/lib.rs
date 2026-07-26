@@ -202,40 +202,10 @@ pub enum VcsError {
 //#endregion 🔖Errors
 
 //#region 🔖Text
-/// @emoji 📍 1-based line/column position inside DSL or op-log source text.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct TextSpan {
-    pub line: u32,
-    pub column: u32,
-    pub length: u32,
-}
-
-impl TextSpan {
-    pub fn at(line: u32, column: u32) -> Self {
-        Self { line, column, length: 0 }
-    }
-}
-
-/// @emoji 🚧 Span-carrying parse/print failure for DSL documents and op lines.
-#[derive(Clone, Debug, PartialEq, Error, Serialize, Deserialize)]
-#[error("{message} at {}:{}", span.line, span.column)]
-pub struct TextError {
-    pub message: String,
-    pub span: TextSpan,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub expected: Option<String>,
-}
-
-impl TextError {
-    pub fn new(message: impl Into<String>, span: TextSpan) -> Self {
-        Self { message: message.into(), span, expected: None }
-    }
-
-    pub fn expected(message: impl Into<String>, span: TextSpan, expected: impl Into<String>) -> Self {
-        Self { message: message.into(), span, expected: Some(expected.into()) }
-    }
-}
+/// @emoji 📍 1-based line/column position inside DSL or op-log source text. Lives in `dsl_core`
+/// (the token-native DSL engine's foundation crate, which sits below `vcs`); re-exported here so
+/// every existing `vcs::TextSpan`/`vcs::TextError` import across the workspace keeps compiling.
+pub use dsl_core::{TextError, TextSpan};
 
 /// @emoji 📜 Handcrafted textual representation of a document projection, implemented once per
 /// technology next to its `Projection` type. LAW: `P::parse_dsl(&projection.print_dsl())` recovers
@@ -683,39 +653,16 @@ pub struct ParsedDocumentText<P, Operation> {
     pub projection: P,
 }
 
+/// @emoji 🔐 Delegates to `dsl_core`'s one canonical escape scheme (a strict superset: also
+/// escapes `\r`/`\t`/control chars, which this grammar's old private copy passed through raw).
 fn escape_text_field(value: &str) -> String {
-    let mut out = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            _ => out.push(ch),
-        }
-    }
-    out
+    dsl_core::escape_text(value)
 }
 
+/// @emoji 🔓 Delegates to `dsl_core`'s unescape; forgiving (never fails) to match this function's
+/// prior behavior of passing unknown escapes through literally rather than erroring.
 fn unescape_text_field(value: &str) -> String {
-    let mut out = String::with_capacity(value.len());
-    let mut chars = value.chars();
-    while let Some(ch) = chars.next() {
-        if ch == '\\' {
-            match chars.next() {
-                Some('n') => out.push('\n'),
-                Some('"') => out.push('"'),
-                Some('\\') => out.push('\\'),
-                Some(other) => {
-                    out.push('\\');
-                    out.push(other);
-                }
-                None => out.push('\\'),
-            }
-        } else {
-            out.push(ch);
-        }
-    }
-    out
+    dsl_core::unescape_text(value, true).unwrap_or_else(|_| value.to_string())
 }
 
 /// @emoji 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, if `chars`

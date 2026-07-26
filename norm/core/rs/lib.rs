@@ -167,9 +167,11 @@ impl CheckReport {
 
 // #region 🔖Annex
 /// 🇪🇺 National annex selection for Eurocode / DIN EN families.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
 pub enum AnnexChoice {
+    #[dsl(key = "en")]
     En,
+    #[dsl(key = "de")]
     De,
 }
 

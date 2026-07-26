@@ -1,0 +1,11 @@
+{
+  "title": "Introduction Body Hover Emphasizes Content",
+  "emoji": "✨",
+  "status": "closed",
+  "description": "When the mouse is inside the body of the introduction step window, all content should be emphasized (text and icons), matching existing shell hover emphasis patterns. Keep celebrate paint intact.",
+  "summary": "Introduction step windows now emphasize all content (title chip, body copy/checklist/icons, step chip, close) while the pointer is inside the body via CSS :has(body:hover) + body :hover rules on the emphasized color token. Celebrate paint is excluded. Extended vitest for the CSS contract and markup slots.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪053e68ae89014ce08f66ddd590b036d4"
+  ]
+}

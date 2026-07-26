@@ -1,0 +1,13 @@
+{
+  "title": "Feature Complete Mathematical WFC Crate",
+  "emoji": "🌊",
+  "status": "open",
+  "description": "Build a new headless Rust crate `mathematical_wfc` (bundle `mathematical/wfc/`) implementing Wave Function Collapse as a finite-domain constraint solver with three public solvers sharing one kernel: GraphSolver (reference), Grid2dSolver, Grid3dSolver. Full spec including experimental tier: bitset domains with cached weighted-entropy, AC-3/AC-4/watched-support propagation engines, MRV/entropy/degree observation heuristics, weighted/uniform/temperature/Gumbel sampling, chronological backtracking + conflict-directed backjumping + exhaustive unsat proofs + nogood learning with 2-watched-literals + beam search, cardinality/connectivity/reachability/path/cycle/ordering/symmetry/tuple-table/flow constraints, D4 and cube-rotation symmetry groups, 2D/3D overlapping pattern extraction from samples, chunk streaming, hierarchical macro/micro generation, parallel multi-start, serde model/checkpoint schemas, strict-integer deterministic mode with golden replay diagnostics. Reuses mathematical_random (Rng, AliasTable) and mathematical_graph (GraphView, Csr, MappedHeap, Interner). Registered in workspace Cargo.toml and .vscode/launch.json. Exhaustive inline tests (fundamental/quick/long/exhaustive tiers) including a brute-force oracle, graph-vs-grid differential equivalence, and AC-3-vs-AC-4 fixed-point equivalence.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2333"
+  },
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [
+    "⚪c938da3adfbd4658be9266d9bcf04a16"
+  ]
+}

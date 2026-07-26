@@ -7130,12 +7130,12 @@ pub type DagEnvelope = DocumentVcsEnvelope<DagDocument, DagOperation>;
 pub type DagStore = DocumentVcsStore<DagDocument, DagOperation>;
 
 //#region 🔖Dsl
-//! 📜 Handcrafted `.dag` textual DSL + one-line op-text, built on top of `mathematical_graph_dsl`'s
-//! wire-literal notation (`id:kind@port->id2:kind2@port2{props}`) rather than a competing grammar. The
-//! wire grammar only understands id/kind/port/{@link PropertyValue} property bags, so every field a
-//! {@link DagNodeSpec}/{@link DagFixtureEdge} carries beyond that (layout, kind-specific payload, the
-//! node's own free-form `properties`) is folded into the wire node/edge's property bag — exactly the
-//! extension point `mathematical_graph_dsl::wire` documents itself for.
+// 📜 Handcrafted `.dag` textual DSL + one-line op-text, built on top of `mathematical_graph_dsl`'s
+// wire-literal notation (`id:kind@port->id2:kind2@port2{props}`) rather than a competing grammar. The
+// wire grammar only understands id/kind/port/{@link PropertyValue} property bags, so every field a
+// {@link DagNodeSpec}/{@link DagFixtureEdge} carries beyond that (layout, kind-specific payload, the
+// node's own free-form `properties`) is folded into the wire node/edge's property bag — exactly the
+// extension point `mathematical_graph_dsl::wire` documents itself for.
 use mathematical_graph_dsl::{dag_from_wire_literal, wire_literal_from_dag, WireEdge, WireNode};
 use mathematical_graph_manifest::PropertyValue;
 
@@ -7734,10 +7734,10 @@ impl vcs::DocumentDsl for DagDocument {
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-//! ⚡ One-line op-text for every `DagOperation` variant. The outer envelope is always plain
-//! whitespace-split `key=value` tokens (see {@link token_safe}/{@link parse_op_tokens}); any value that
-//! itself needs internal structure (an embedded wire-literal node/edge/document, or free text) is
-//! percent-encoded into a single token first, so the outer grammar never has to understand nesting.
+// ⚡ One-line op-text for every `DagOperation` variant. The outer envelope is always plain
+// whitespace-split `key=value` tokens (see {@link token_safe}/{@link parse_op_tokens}); any value that
+// itself needs internal structure (an embedded wire-literal node/edge/document, or free text) is
+// percent-encoded into a single token first, so the outer grammar never has to understand nesting.
 fn parse_op_tokens(rest: &str) -> HashMap<String, String> {
     let mut map = HashMap::new();
     for token in rest.split_whitespace() {

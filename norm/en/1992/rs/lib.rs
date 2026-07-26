@@ -164,11 +164,15 @@ pub mod part_1_2 {
     use super::*;
 
     /// 🏗️ Fire resistance rating.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum FireRating {
+        #[dsl(key = "r30")]
         R30,
+        #[dsl(key = "r60")]
         R60,
+        #[dsl(key = "r90")]
         R90,
+        #[dsl(key = "r120")]
         R120,
     }
 
@@ -300,10 +304,13 @@ pub mod part_3 {
     }
 
     /// 💧 Tightness class per EN 1992-3 Table 7.105: required degree of protection against leakage.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum TightnessClass {
+        #[dsl(key = "tc0")]
         Tc0,
+        #[dsl(key = "tc1")]
         Tc1,
+        #[dsl(key = "tc2")]
         Tc2,
     }
 
@@ -424,8 +431,9 @@ pub fn check_full_rc_beam(m_ed_knm: f64, v_ed_kn: f64, f_ck: f64, b_mm: f64, d_m
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "en1992", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
     pub m_ed_knm: f64,
@@ -597,134 +605,10 @@ pub fn check_rc_beam_from_fem(span_m: f64, udl_kn_m: f64, f_ck: f64, b_mm: f64, 
 // #endregion 🔖Fem
 
 // #region 🔖Dsl
-/// 🔥 `r30`/`r60`/`r90`/`r120`.
-impl norm_core::dsl_kv::DslScalar for part_1_2::FireRating {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::R30 => "r30".into(),
-            Self::R60 => "r60".into(),
-            Self::R90 => "r90".into(),
-            Self::R120 => "r120".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "r30" => Ok(Self::R30),
-            "r60" => Ok(Self::R60),
-            "r90" => Ok(Self::R90),
-            "r120" => Ok(Self::R120),
-            other => Err(format!("expected r30/r60/r90/r120, got '{other}'")),
-        }
-    }
-}
-
-/// 💧 `tc0`/`tc1`/`tc2`.
-impl norm_core::dsl_kv::DslScalar for part_3::TightnessClass {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Tc0 => "tc0".into(),
-            Self::Tc1 => "tc1".into(),
-            Self::Tc2 => "tc2".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "tc0" => Ok(Self::Tc0),
-            "tc1" => Ok(Self::Tc1),
-            "tc2" => Ok(Self::Tc2),
-            other => Err(format!("expected tc0/tc1/tc2, got '{other}'")),
-        }
-    }
-}
-
-/// 📜 Handcrafted `key value`-per-line DSL for the EN 1992 concrete `Document` — every field is a
-/// scalar, so this is a thin wrapper over `dsl_kv`.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "en1992";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let fields = norm_core::dsl_kv::parse_lines(text)?;
-        Ok(Document {
-            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
-            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
-            v_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_ed_kn")?,
-            f_ck: norm_core::dsl_kv::scalar(&fields, "f_ck")?,
-            b_mm: norm_core::dsl_kv::scalar(&fields, "b_mm")?,
-            d_mm: norm_core::dsl_kv::scalar(&fields, "d_mm")?,
-            a_s_mm2: norm_core::dsl_kv::scalar(&fields, "a_s_mm2")?,
-            f_yk: norm_core::dsl_kv::scalar(&fields, "f_yk")?,
-            rho_l: norm_core::dsl_kv::scalar(&fields, "rho_l")?,
-            n_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_ed_kn")?,
-            p_kn: norm_core::dsl_kv::scalar(&fields, "p_kn")?,
-            a_c_mm2: norm_core::dsl_kv::scalar(&fields, "a_c_mm2")?,
-            use_fem: norm_core::dsl_kv::scalar(&fields, "use_fem")?,
-            span_m: norm_core::dsl_kv::scalar(&fields, "span_m")?,
-            udl_kn_m: norm_core::dsl_kv::scalar(&fields, "udl_kn_m")?,
-            fire_rating: norm_core::dsl_kv::scalar(&fields, "fire_rating")?,
-            provided_axis_distance_mm: norm_core::dsl_kv::scalar(&fields, "provided_axis_distance_mm")?,
-            bridge_sigma_c_mpa: norm_core::dsl_kv::scalar(&fields, "bridge_sigma_c_mpa")?,
-            bridge_delta_sigma_s_mpa: norm_core::dsl_kv::scalar(&fields, "bridge_delta_sigma_s_mpa")?,
-            tightness_class: norm_core::dsl_kv::scalar(&fields, "tightness_class")?,
-            hd_over_h: norm_core::dsl_kv::scalar(&fields, "hd_over_h")?,
-            liquid_sigma_s_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_sigma_s_mpa")?,
-            liquid_rho_p_eff: norm_core::dsl_kv::scalar(&fields, "liquid_rho_p_eff")?,
-            liquid_f_ct_eff_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_f_ct_eff_mpa")?,
-            liquid_e_s_mpa: norm_core::dsl_kv::scalar(&fields, "liquid_e_s_mpa")?,
-            liquid_s_r_max_mm: norm_core::dsl_kv::scalar(&fields, "liquid_s_r_max_mm")?,
-            anchor_h_ef_mm: norm_core::dsl_kv::scalar(&fields, "anchor_h_ef_mm")?,
-            anchor_cracked: norm_core::dsl_kv::scalar(&fields, "anchor_cracked")?,
-            anchor_f_uk_mpa: norm_core::dsl_kv::scalar(&fields, "anchor_f_uk_mpa")?,
-            anchor_f_yk_mpa: norm_core::dsl_kv::scalar(&fields, "anchor_f_yk_mpa")?,
-            anchor_a_s_mm2: norm_core::dsl_kv::scalar(&fields, "anchor_a_s_mm2")?,
-            anchor_d_mm: norm_core::dsl_kv::scalar(&fields, "anchor_d_mm")?,
-            anchor_c1_mm: norm_core::dsl_kv::scalar(&fields, "anchor_c1_mm")?,
-            anchor_n_ed_kn: norm_core::dsl_kv::scalar(&fields, "anchor_n_ed_kn")?,
-            anchor_v_ed_kn: norm_core::dsl_kv::scalar(&fields, "anchor_v_ed_kn")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        [
-            norm_core::dsl_kv::line("annex", &self.annex),
-            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
-            norm_core::dsl_kv::line("v_ed_kn", &self.v_ed_kn),
-            norm_core::dsl_kv::line("f_ck", &self.f_ck),
-            norm_core::dsl_kv::line("b_mm", &self.b_mm),
-            norm_core::dsl_kv::line("d_mm", &self.d_mm),
-            norm_core::dsl_kv::line("a_s_mm2", &self.a_s_mm2),
-            norm_core::dsl_kv::line("f_yk", &self.f_yk),
-            norm_core::dsl_kv::line("rho_l", &self.rho_l),
-            norm_core::dsl_kv::line("n_ed_kn", &self.n_ed_kn),
-            norm_core::dsl_kv::line("p_kn", &self.p_kn),
-            norm_core::dsl_kv::line("a_c_mm2", &self.a_c_mm2),
-            norm_core::dsl_kv::line("use_fem", &self.use_fem),
-            norm_core::dsl_kv::line("span_m", &self.span_m),
-            norm_core::dsl_kv::line("udl_kn_m", &self.udl_kn_m),
-            norm_core::dsl_kv::line("fire_rating", &self.fire_rating),
-            norm_core::dsl_kv::line("provided_axis_distance_mm", &self.provided_axis_distance_mm),
-            norm_core::dsl_kv::line("bridge_sigma_c_mpa", &self.bridge_sigma_c_mpa),
-            norm_core::dsl_kv::line("bridge_delta_sigma_s_mpa", &self.bridge_delta_sigma_s_mpa),
-            norm_core::dsl_kv::line("tightness_class", &self.tightness_class),
-            norm_core::dsl_kv::line("hd_over_h", &self.hd_over_h),
-            norm_core::dsl_kv::line("liquid_sigma_s_mpa", &self.liquid_sigma_s_mpa),
-            norm_core::dsl_kv::line("liquid_rho_p_eff", &self.liquid_rho_p_eff),
-            norm_core::dsl_kv::line("liquid_f_ct_eff_mpa", &self.liquid_f_ct_eff_mpa),
-            norm_core::dsl_kv::line("liquid_e_s_mpa", &self.liquid_e_s_mpa),
-            norm_core::dsl_kv::line("liquid_s_r_max_mm", &self.liquid_s_r_max_mm),
-            norm_core::dsl_kv::line("anchor_h_ef_mm", &self.anchor_h_ef_mm),
-            norm_core::dsl_kv::line("anchor_cracked", &self.anchor_cracked),
-            norm_core::dsl_kv::line("anchor_f_uk_mpa", &self.anchor_f_uk_mpa),
-            norm_core::dsl_kv::line("anchor_f_yk_mpa", &self.anchor_f_yk_mpa),
-            norm_core::dsl_kv::line("anchor_a_s_mm2", &self.anchor_a_s_mm2),
-            norm_core::dsl_kv::line("anchor_d_mm", &self.anchor_d_mm),
-            norm_core::dsl_kv::line("anchor_c1_mm", &self.anchor_c1_mm),
-            norm_core::dsl_kv::line("anchor_n_ed_kn", &self.anchor_n_ed_kn),
-            norm_core::dsl_kv::line("anchor_v_ed_kn", &self.anchor_v_ed_kn),
-        ]
-        .join("\n")
-            + "\n"
-    }
-}
+// `Document`'s `vcs::DocumentDsl` impl and `FireRating`/`TightnessClass`'s scalar-tag mappings are
+// now generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslScalar)]` on the type
+// definitions themselves (see `part_1_2::FireRating`, `part_3::TightnessClass`, and `Document`
+// above) — the engine's `dsl_schema` grammar replaces this crate's own hand-rolled kv printer.
 // #endregion 🔖Dsl
 
 #[cfg(test)]
@@ -919,6 +803,19 @@ mod tests {
     #[test]
     fn document_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&Document::default());
+    }
+
+    #[test]
+    fn document_dsl_parse_error_reports_the_real_line_of_the_bad_field() {
+        // The engine's per-token spans are a concrete improvement over the old `dsl_kv` printer,
+        // whose errors always reported `TextSpan::at(1, 1)` regardless of which line actually
+        // failed. `fire_rating` is the 16th `key value` line in `print_dsl`'s fixed field order.
+        let printed = <Document as vcs::DocumentDsl>::print_dsl(&Document::default());
+        let bad = printed.replacen("fire_rating=r60", "fire_rating=not-a-rating", 1);
+        assert_ne!(bad, printed, "fire_rating's printed line must match the literal replaced above");
+        let bad_line = bad.lines().position(|l| l.contains("not-a-rating")).expect("bad line present") as u32 + 1;
+        let error = <Document as vcs::DocumentDsl>::parse_dsl(&bad).expect_err("an unknown fire_rating tag must fail to parse");
+        assert_eq!(error.span.line, bad_line, "error span must point at the actual malformed line, not (1, 1)");
     }
 
     #[test]

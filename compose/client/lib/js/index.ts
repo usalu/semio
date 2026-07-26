@@ -370,16 +370,16 @@ class WorkerStringTransport {
         reject(new Error("worker init timeout"));
       }, 30_000);
       const onMessage = (ev: MessageEvent<string>) => {
-        let m: { operation?: string; message?: string };
+        let m: { operator?: string; message?: string };
         try {
           m = JSON.parse(ev.data) as typeof m;
         } catch {
           return;
         }
-        if (m.operation === "ready") {
+        if (m.operator === "ready") {
           cleanup();
           resolve();
-        } else if (m.operation === "error") {
+        } else if (m.operator === "error") {
           cleanup();
           reject(new Error(`worker init error: ${m.message ?? "unknown"}`));
         }
@@ -395,7 +395,7 @@ class WorkerStringTransport {
       };
       this.worker.addEventListener("message", onMessage);
       this.worker.addEventListener("error", onError as globalThis.EventListener);
-      this.worker.postMessage(JSON.stringify({ operator: "init", uri }));
+      this.worker.postMessage(JSON.stringify({ operation: "init", uri }));
     });
   }
 
@@ -411,19 +411,19 @@ class WorkerStringTransport {
           return;
         }
         if (m.reqId !== reqId) return;
-        if (m.operation === "result" && typeof m.json === "string") result = m.json;
-        if (m.operation === "done") {
+        if (m.operator === "result" && typeof m.json === "string") result = m.json;
+        if (m.operator === "done") {
           this.worker.removeEventListener("message", w);
           if (result == null) reject(new Error("graphql: worker completed without result"));
           else resolve(result);
         }
-        if (m.operation === "error") {
+        if (m.operator === "error") {
           this.worker.removeEventListener("message", w);
           reject(new Error(m.message ?? "worker error"));
         }
       };
       this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ operator: "execute", reqId, body: requestJson }));
+      this.worker.postMessage(JSON.stringify({ operation: "execute", reqId, body: requestJson }));
     });
   }
 
@@ -438,18 +438,18 @@ class WorkerStringTransport {
           return;
         }
         if (m.reqId !== reqId) return;
-        if (m.operation === "event" && typeof m.json === "string") onEvent(m.json);
-        if (m.operation === "done") {
+        if (m.operator === "event" && typeof m.json === "string") onEvent(m.json);
+        if (m.operator === "done") {
           this.worker.removeEventListener("message", w);
           resolve();
         }
-        if (m.operation === "error") {
+        if (m.operator === "error") {
           this.worker.removeEventListener("message", w);
           reject(new Error(m.message ?? "worker error"));
         }
       };
       this.worker.addEventListener("message", w);
-      this.worker.postMessage(JSON.stringify({ operator: "subscribe", reqId, body: requestJson }));
+      this.worker.postMessage(JSON.stringify({ operation: "subscribe", reqId, body: requestJson }));
     });
   }
 

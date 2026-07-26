@@ -14,6 +14,7 @@ path = "lib.rs"
 serde = { version = "1.0.219", features = ["derive"] }
 thiserror = "2.0.12"
 vcs = { path = "../../../vcs/rs" }
+dsl = { path = "../../../dsl/rs" }
 
 [dev-dependencies]
 serde_json = "1.0.140"

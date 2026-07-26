@@ -1,0 +1,13 @@
+{
+  "title": "Token-Native Declarative DSL Engine (dsl/core, dsl/token, dsl/schema)",
+  "emoji": "🧬",
+  "status": "open",
+  "description": "Build the generic token-native declarative DSL engine per /Users/ueli/.claude/plans/all-technologies-should-be-groovy-wozniak.md Part 1/2 (phases E0-E5): new dsl/ crates (core, token, schema, derive, editor, codec, facade) so technologies declare grammar instead of hand-rolling parsers. This ticket covers E0+E1 (dsl_core: TextSpan/TextError moved from vcs, lexer, tokens, limits, diagnostics, numbers, escape, trust types).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2332"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪f2dfdada735c41c2b80e75f978bc8071"
+  ]
+}

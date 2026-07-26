@@ -1036,15 +1036,22 @@ export async function runCargoTestBudgeted(packages: string[], cwd: string, extr
     // 🦀`cargo-llvm-cov` has no build/run split (unlike plain `cargo test --no-run`) — the combined budget
     // below covers both the instrumented compile and the test run; report generation gets its own build-class
     // budget since it only reads existing profraw data and is comparatively fast even for large crates.
+    // `--release`: LLVM's source-based coverage (`-C instrument-coverage`) stays accurate under optimization
+    // (unlike legacy gcov-style coverage) — building unoptimized (`cargo-llvm-cov`'s default) makes CPU-heavy
+    // numeric algorithms (e.g. algebraic-number/root-isolation code) 10-100x slower than their normal
+    // `--release` runtime, which blew the test budget for real crates before this flag was added.
     const testBudgetMs = Number(env.SEMIO_TEST_BUDGET_MS ?? TEST_LEVEL_BUDGET_MS[level]);
-    await runTestBudgeted("cargo", ["llvm-cov", "test", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
+    await runTestBudgeted("cargo", ["llvm-cov", "test", "--release", "--no-report", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], {
       cwd,
       env,
       budgetMs: buildBudgetMs() + testBudgetMs,
       onTimeoutHint: budgetTimeoutHint("cargo"),
     });
-    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(cwd)}.lcov`);
-    await runTestBudgeted("cargo", ["llvm-cov", "report", "--lcov", ...packageArgs, "--output-path", lcovPath], {
+    // Slug by package name(s), not `cwd` — many crates' `script.ts` invoke cargo from `this.repoRoot` rather
+    // than their own bundle dir (workspace-root builds), which would otherwise collapse dozens of unrelated
+    // crates onto the same `coverageSlug(cwd)` filename and silently overwrite each other's coverage report.
+    const lcovPath = join(coverageDir(findRepoRoot(cwd), "rust"), `${coverageSlug(packages.join("_"))}.lcov`);
+    await runTestBudgeted("cargo", ["llvm-cov", "report", "--release", "--lcov", ...packageArgs, "--output-path", lcovPath], {
       cwd,
       env,
       budgetMs: buildBudgetMs(),

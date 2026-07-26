@@ -2691,7 +2691,7 @@ mod puzzle3d_vcs_tests {
         let before = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 1.0 }, "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0] }, { "id": "o2", "origin": [1.0, 0.0, 0.0] }], "attractions": [] });
         let after = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 2.0 }, "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0] }, { "id": "o3", "origin": [2.0, 0.0, 0.0] }], "attractions": [] });
         let operations = puzzle3d_document_delta_operations(&before, &after);
-        assert!(!operations.iter().any(|operation| matches!(operator, Puzzle3dOperation::ReplaceDocument { .. })));
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dOperation::ReplaceDocument { .. })));
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {

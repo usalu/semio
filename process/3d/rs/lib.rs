@@ -1,7 +1,7 @@
 //! 🪚 Process 3d document VCS on `vcs` — subtractive/additive processing steps on a stock solid.
 
 use serde::{Deserialize, Serialize};
-use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, OperationDiff, Patchable};
+use vcs::{apply_collection_operation, invert_collection_operation, CollectionOperation, DocumentDsl, DocumentVcsEnvelope, DocumentVcsStore, Identified, OperationDiff, Patchable};
 
 pub const PROCESS_3D_SCHEMA: &str = "process.3d";
 

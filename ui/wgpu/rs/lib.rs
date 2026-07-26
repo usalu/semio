@@ -5090,6 +5090,7 @@ use crate::component::ui::{
     UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
 };
 use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use crate::IconName;
 
 fn variant_discriminant(node: &UiNode) -> u32 {
     match node {
@@ -12473,6 +12474,7 @@ use crate::component::ui::{
     UiState, UiStatus, UiTextNode, UiToggleNode, UiTreeItemNode, UiTreeNode, UI_INSPECTOR_MIXED_PLACEHOLDER,
 };
 use crate::draw::{DrawList, IconAtlas};
+use crate::IconName;
 use crate::geometry::Rect;
 use crate::text::FontAtlas;
 use crate::theme::{GlassTier, Rgba, Theme};
@@ -13785,6 +13787,7 @@ use crate::component::layout::ActionDescriptor;
 use crate::component::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
 use crate::geometry::Rect;
 use crate::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
+use crate::IconName;
 
 //#region 🔖UiEvent
 /// 🖱️ Mouse button identity for `UiEvent::{PointerDown,PointerUp}`.
@@ -15940,6 +15943,7 @@ use crate::component::layout::{
 use crate::component::ui::{UiButtonNode, UiNode, UiPresence, UiStackNode};
 use crate::events::{hit_test, UiEvent};
 use crate::tree::{Node, NodeFlags, NodeKey, UiTree, WidgetSpec};
+use crate::IconName;
 
 const SHELL_AXIS: u32 = 200;
 const SHELL_STACK: u32 = 201;
@@ -16246,6 +16250,7 @@ use crate::flex::LayoutEngine;
 use crate::paint::paint_tree;
 use crate::scene_slots::{collect_scene_slots, SceneHost};
 use crate::shell::{Shell, ShellEvent};
+use crate::IconName;
 use crate::text::FontAtlas;
 use crate::theme::Theme;
 use crate::tree::{NodeFlags, UiTree};
@@ -16902,7 +16907,7 @@ mod tests {
 
     #[test]
     fn golden_icon_select() {
-        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles, uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
+        assert_equivalent("IconSelect", &leaf(UiNode::IconSelect(UiIconSelectNode { id: "ic".into(), value: IconName::Sparkles.to_string(), uniform: false, classifier_kind: "kind".into(), on_change: action(), presence: UiPresence::default() })));
     }
 
     #[test]
@@ -17060,6 +17065,7 @@ use crate::input::{DragAxis, HitKind, HitTarget, InputState};
 use crate::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::text::FontAtlas;
 use crate::theme::{GlassTier, Rgba, Theme};
+use crate::IconName;
 use std::collections::HashMap;
 
 #[derive(Clone, Debug)]
@@ -17431,7 +17437,7 @@ pub fn render_widget<E: Clone>(
         }
         WidgetNode::Toggle { id, icon_id, pressed, text, on_change } => {
             register_toggle_meta(ctx, id, *pressed, on_change.clone());
-            render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
+            render_toggle(id, *icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
         WidgetNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         WidgetNode::Slider { id, value, min, max, step, ready, disabled, on_change } => {
@@ -17526,7 +17532,7 @@ fn render_control<E: Clone>(control: &ControlNode<E>, bounds: Rect, ctx: &mut Wi
         }
         ControlNode::Toggle { id, icon_id, pressed, text, on_change } => {
             register_toggle_meta(ctx, id, *pressed, on_change.clone());
-            render_toggle(id, icon_id, *pressed, text.as_deref(), bounds, ctx);
+            render_toggle(id, *icon_id, *pressed, text.as_deref(), bounds, ctx);
         }
         ControlNode::KeyValue { entries } => render_key_value(entries, bounds, ctx),
         ControlNode::Slider { id, value, min, max, step, ready, disabled, on_change } => {

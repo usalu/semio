@@ -307,7 +307,7 @@ pub fn solve_inequality(e: &Expr, operator: RelationalOperator, x: &Expr) -> Sol
             0.0
         };
         let value = sample_at(sample);
-        let holds = match operation {
+        let holds = match operator {
             RelationalOperator::Gt => value > 0.0,
             RelationalOperator::Ge => value >= 0.0,
             RelationalOperator::Lt => value < 0.0,

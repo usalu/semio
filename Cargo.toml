@@ -1,5 +1,12 @@
 [workspace]
 members = [
+    "dsl/core/rs",
+    "dsl/token/rs",
+    "dsl/schema/rs",
+    "dsl/derive/rs",
+    "dsl/editor/rs",
+    "dsl/codec/rs",
+    "dsl/rs",
     "framework/core/rs",
     "framework/hash/rs",
     "framework/plugin/rs",
@@ -58,6 +65,7 @@ members = [
     "mathematical/fuzzy/rs",
     "mathematical/sampling/rs",
     "mathematical/entropy/rs",
+    "mathematical/wfc/rs",
     "mathematical/graph/traversal/rs",
     "mathematical/graph/components/rs",
     "mathematical/graph/dag/rs",

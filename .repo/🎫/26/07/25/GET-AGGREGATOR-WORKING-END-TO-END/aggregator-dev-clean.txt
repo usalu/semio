@@ -85187,3 +85187,21 @@ Caused by:
     2: running cargo build
     3: error during cargo build execution
     4: cargo call to executable 'cargo' with args: '["build", "--target=wasm32-unknown-unknown", "--manifest-path", "/Users/ueli/Documents/semio/framework/renderer/wgpu/rs/Cargo.toml"]' returned a bad status: exit status: 101
+error: script "nx" was terminated by signal SIGTERM (Polite quit request)
+1062 |     env,
+1063 |     budgetMs: buildBudgetMs(),
+1064 |     onTimeoutHint: budgetTimeoutHint("cargo"),
+1065 |   });
+1066 |   await runTestBudgeted("cargo", ["test", ...packageArgs, ...cargoArgs, "--", ...libtestArgs, ...skipArgs], { cwd, env });
+1067 | }
+                                      ^
+error: bun nx run @semio-tech/framework-os-dev:dev killed by signal SIGTERM
+      at runCmdInternal (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1067:32)
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1077:18)
+      at runFrameworkOsPlaygroundDev (/Users/ueli/Documents/semio/script.ts:52:3)
+      at run (/Users/ueli/Documents/semio/script.ts:329:7)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:1841:11
+
+Bun v1.3.14 (macOS arm64)

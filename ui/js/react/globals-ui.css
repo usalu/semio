@@ -158,10 +158,15 @@
 /* #endregion 👻PanelGhost */
 
 /* #region 🫥ChromeReveal */
-/* Bars fade in only while the cursor (or focus) is in their region — opacity-only so the canvas never reflows. */
-html[data-ui-chrome-reveal="hover"] [data-ui-reveal-region] {
+/* Chrome collapses to zero height until the cursor (or focus) reveals it — canvas and window body absorb the freed space. */
+html[data-ui-chrome-reveal="hover"] [data-ui-reveal-region]:not([data-ui-revealed="true"]):not(:focus-within) {
+  height: 0 !important;
+  min-height: 0 !important;
+  overflow: hidden;
   opacity: 0;
   pointer-events: none;
+  border-width: 0;
+  padding: 0;
   transition: opacity 150ms ease;
 }
 

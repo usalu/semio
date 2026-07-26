@@ -366,8 +366,8 @@ function encodeSegmentsForWasm(segments: readonly PathSegment[]): string {
 
 /** @emoji 🔀 Client-side boolean fallback when WASM is unavailable. */
 export function booleanPathsClient(a: readonly PathSegment[], b: readonly PathSegment[], operator: DrawBooleanOperation): PathSegment[] {
-  if (operation === "union") return [...a, ...b];
-  if (operation === "difference") return [...a];
+  if (operator === "union") return [...a, ...b];
+  if (operator === "difference") return [...a];
   return [...a];
 }
 
@@ -442,9 +442,9 @@ function traceBitmapViaWasm(module: DrawingWasmModule, width: number, height: nu
 
 function booleanPathsViaWasm(module: DrawingWasmModule, a: readonly PathSegment[], b: readonly PathSegment[], operator: DrawBooleanOperation): PathSegment[] {
   if (typeof module.boolean_drawing_segments !== "function") {
-    return booleanPathsClient(a, b, operation);
+    return booleanPathsClient(a, b, operator);
   }
-  const json = module.boolean_drawing_segments(encodeSegmentsForWasm(a), encodeSegmentsForWasm(b), operation);
+  const json = module.boolean_drawing_segments(encodeSegmentsForWasm(a), encodeSegmentsForWasm(b), operator);
   return parseSegmentsJson(json);
 }
 

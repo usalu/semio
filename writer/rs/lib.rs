@@ -431,7 +431,7 @@ mod document_vcs {
     #[cfg(test)]
     mod writer_vcs_tests {
         use super::*;
-        use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+        use vcs::{create_document_vcs_envelope, DocumentDsl, DocumentVcsCommand};
 
         fn seeded_store() -> WriterStore {
             WriterStore::new(create_document_vcs_envelope("writer.document", "writer", empty_writer_projection(), None))

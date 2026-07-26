@@ -4641,8 +4641,8 @@ mod force_graph_tests {
         // Move n2, add n3, remove n1, pan the camera — a disjoint mix of granular edits.
         let after = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n2", "x": 99.0 }, { "id": "n3", "x": 1.0 }], "edges": [] });
         let operations = puzzle2d_document_delta_operations(&before, &after);
-        assert!(operations.iter().any(|operation| matches!(operator, Puzzle2dOperation::UpsertItem { .. })));
-        assert!(!operations.iter().any(|operation| matches!(operator, Puzzle2dOperation::ReplaceDocument { .. })), "granular delta must not fall back to whole-document replace here");
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::UpsertItem { .. })));
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::ReplaceDocument { .. })), "granular delta must not fall back to whole-document replace here");
         // Forward replay reproduces `after`, and each operation's backwards restores `before`.
         let mut forward = before.clone();
         let mut inverses = Vec::new();

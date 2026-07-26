@@ -11007,6 +11007,12 @@ function useCelebratingWorldInstanceIds(): ReadonlySet<string> {
 /** 🎉 One spin period of the celebrate conic — matches `--celebrate-border-duration` (1.2s). */
 const CELEBRATE_CONIC_SPIN_SECONDS = 1.2;
 
+/** 🎉 Document-timeline celebrate spin angle — phase-locked to the CSS `:root` celebrate-border-spin clock. */
+function celebrateConicAngleRadians(): number {
+  const timeMs = typeof document !== "undefined" ? (document.timeline?.currentTime ?? performance.now()) : 0;
+  return (((timeMs / 1000) % CELEBRATE_CONIC_SPIN_SECONDS) / CELEBRATE_CONIC_SPIN_SECONDS) * Math.PI * 2;
+}
+
 const CELEBRATE_CONIC_VERTEX_SHADER = /* glsl */ `
 varying vec3 vObjectPosition;
 void main() {
@@ -11072,8 +11078,8 @@ function CelebratingConicMaterial({ opacity = 1 }: { readonly opacity?: number }
     [colors, opacity],
   );
   useEffect(() => () => material.dispose(), [material]);
-  useFrame((_, delta) => {
-    material.uniforms.uAngle.value = (material.uniforms.uAngle.value + (delta * Math.PI * 2) / CELEBRATE_CONIC_SPIN_SECONDS) % (Math.PI * 2);
+  useFrame(() => {
+    material.uniforms.uAngle.value = celebrateConicAngleRadians();
     invalidate();
   });
   return <primitive object={material} attach="material" />;
@@ -11505,7 +11511,7 @@ export function enrichNodeGraphContextMenuItems(
           ...spec,
           disabled: !hasSelection,
           action: spec.action ?? "nodeGraphEdit",
-          args: spec.args ?? { operations: [{ operator: "deleteSelection" }] },
+          args: spec.args ?? { operations: [{ operation: "deleteSelection" }] },
         };
       default:
         return spec;
@@ -11843,13 +11849,14 @@ function GlbInstanceMesh({
     applyGlbMeshEdgeBorders(cloned, borderColor);
     return cloned;
   }, [gltf.scene, material?.metalness, material?.roughness, shadowEnabled, color, emissive, emissiveIntensity, opacity, borderColor, revision, celebrating]);
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!celebrating) return;
+    const angle = celebrateConicAngleRadians();
     scene.traverse((child) => {
       if (!(child instanceof Mesh)) return;
       const mat = child.material;
       if (!(mat instanceof ShaderMaterial) || !mat.uniforms?.uAngle) return;
-      mat.uniforms.uAngle.value = (mat.uniforms.uAngle.value + (delta * Math.PI * 2) / CELEBRATE_CONIC_SPIN_SECONDS) % (Math.PI * 2);
+      mat.uniforms.uAngle.value = angle;
     });
     invalidate();
   });
@@ -15639,7 +15646,7 @@ function WasmGraphSurface({
     if (!session?.fixtureJson) return;
     try {
       const fixtureJson = session.fixtureJson();
-      dispatch(nodeGraphActions.edit, { operations: [{ operator: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
     }
@@ -15873,7 +15880,7 @@ function DiagramGraphFallback({
           editable
             ? (_event, draggedNode) => {
                 dispatch(nodeGraphActions.edit, {
-                  operations: [{ operator: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
+                  operations: [{ operation: "move", nodeId: draggedNode.id, x: draggedNode.position.x, y: draggedNode.position.y }],
                 });
               }
             : undefined
@@ -16654,7 +16661,7 @@ export function FlowGraphCanvasHost({
     try {
       const fixtureJson = session.fixtureJson();
       console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
-      dispatch(nodeGraphActions.edit, { operations: [{ operator: "setFixture", fixtureJson }] });
+      dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
     }
@@ -21234,7 +21241,7 @@ function inkHitsPoint(block: InkStrokeItem, x: number, y: number, threshold: num
 /** @emoji 🧹 Whole-stroke eraser: returns removeBlock events for every ink stroke under the point. */
 export function eraseInkStrokeEventsAtPoint(doc: InkDocument, x: number, y: number, threshold = 8): readonly InkCanvasEvent[] {
   const hits = flattenInkItems(doc.blocks).filter((block): block is InkStrokeItem => block.kind === "stroke" && inkHitsPoint(block, x, y, threshold));
-  return hits.map((block) => ({ operator: "removeBlock", blockId: block.id }));
+  return hits.map((block) => ({ operation: "removeBlock", blockId: block.id }));
 }
 
 /** @emoji ✂️ Splits an ink stroke into surviving point-runs after removing points within `radius` of (x, y). */
@@ -21267,8 +21274,8 @@ export function eraseInkStrokePointEventsNearPoint(doc: InkDocument, x: number, 
   for (const block of inkBlocks) {
     const fragments = eraseInkStrokePointsInItem(block, x, y, radius);
     if (fragments.length === 1 && fragments[0] === block) continue;
-    events.push({ operator: "removeBlock", blockId: block.id });
-    for (const fragment of fragments) events.push({ operator: "addBlock", block: fragment });
+    events.push({ operation: "removeBlock", blockId: block.id });
+    for (const fragment of fragments) events.push({ operation: "addBlock", block: fragment });
   }
   return events;
 }
@@ -21997,14 +22004,14 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       }
       if (utility === "pencil") {
         const block = createInkItemByKind("stroke", worldX, worldY);
-        beginGesture([{ operator: "addBlock", block }], [block.id]);
+        beginGesture([{ operation: "addBlock", block }], [block.id]);
         setDragState({ kind: "stroke", blockId: block.id });
         return;
       }
       if (utility === "text" || utility === "image" || utility === "table" || utility === "math") {
         const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
         const block = createInkItemByKind(utility, placeX, placeY);
-        atomicGesture([{ operator: "addBlock", block }], [block.id]);
+        atomicGesture([{ operation: "addBlock", block }], [block.id]);
         if (utility === "text") setTextEdit({ blockId: block.id, created: true });
         return;
       }
@@ -22074,7 +22081,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         for (const [blockId, origin] of Object.entries(dragState.origins)) {
           const block = findInkItem(doc, blockId);
           if (!block) continue;
-          events.push({ operator: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
+          events.push({ operation: "updateBlock", blockId, block: { ...block, x: origin.x + dx, y: origin.y + dy } });
         }
         if (events.length) liveGesture(events);
         return;
@@ -22088,7 +22095,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (!block || block.kind !== "stroke") return;
         const localX = worldX - block.x;
         const localY = worldY - block.y;
-        liveGesture([{ operator: "updateBlock", blockId: block.id, block: { ...block, points: [...block.points, [localX, localY]] } }]);
+        liveGesture([{ operation: "updateBlock", blockId: block.id, block: { ...block, points: [...block.points, [localX, localY]] } }]);
         return;
       }
       if (dragState.kind === "eraser") {
@@ -22104,7 +22111,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         for (const blockId of dragState.selectedIds) {
           const block = findInkItem(doc, blockId);
           if (!block) continue;
-          events.push({ operator: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
+          events.push({ operation: "updateBlock", blockId, block: inkScaleItemWithinGroup(block, dragState.fromBounds, toBounds) });
         }
         if (events.length) liveGesture(events);
       }
@@ -22126,21 +22133,21 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (doc.snapEnabled) {
           const spacing = doc.snapGridSpacing ?? 8;
           const [x, y] = inkSnapWorldPoint(block.x, block.y, spacing);
-          events.push({ operator: "updateBlock", blockId, block: { ...block, x, y } });
+          events.push({ operation: "updateBlock", blockId, block: { ...block, x, y } });
         } else {
-          events.push({ operator: "updateBlock", blockId, block });
+          events.push({ operation: "updateBlock", blockId, block });
         }
       }
       commitGesture(events);
     } else if (dragState?.kind === "stroke") {
       const block = findInkItem(doc, dragState.blockId);
-      if (block) commitGesture([{ operator: "updateBlock", blockId: block.id, block }]);
+      if (block) commitGesture([{ operation: "updateBlock", blockId: block.id, block }]);
       else commitGesture([]);
     } else if (dragState?.kind === "resize") {
       const events: InkCanvasEvent[] = [];
       for (const blockId of dragState.selectedIds) {
         const block = findInkItem(doc, blockId);
-        if (block) events.push({ operator: "updateBlock", blockId, block });
+        if (block) events.push({ operation: "updateBlock", blockId, block });
       }
       commitGesture(events);
     } else if (dragState?.kind === "eraser") {
@@ -22207,7 +22214,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (top) return;
       const [placeX, placeY] = inkMaybeSnapWorldPoint(doc, worldX, worldY);
       const block = createInkItemByKind("text", placeX, placeY);
-      atomicGesture([{ operator: "addBlock", block }], [block.id]);
+      atomicGesture([{ operation: "addBlock", block }], [block.id]);
       setTextEdit({ blockId: block.id, created: true });
     },
     [atomicGesture, dispatch, doc, interactive, isNavigator],
@@ -22226,10 +22233,10 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       }
       const plain = inkTextPlainText(paragraphs).trim();
       if (!plain && created) {
-        atomicGesture([{ operator: "removeBlock", blockId }]);
+        atomicGesture([{ operation: "removeBlock", blockId }]);
         dispatch(inkCanvasActions.setSelection, { ids: [] });
       } else {
-        atomicGesture([{ operator: "updateBlock", blockId, block: { ...block, paragraphs } }]);
+        atomicGesture([{ operation: "updateBlock", blockId, block: { ...block, paragraphs } }]);
       }
       setTextEdit(null);
     },
@@ -22248,7 +22255,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         return;
       }
       const rows = block.rows.map((entry, rowIndex) => (rowIndex === row ? entry.map((cell, colIndex) => (colIndex === col ? { content } : cell)) : entry));
-      atomicGesture([{ operator: "updateBlock", blockId, block: { ...block, rows } }]);
+      atomicGesture([{ operation: "updateBlock", blockId, block: { ...block, rows } }]);
       if (advance) {
         const nextCol = col + 1 < block.columns.length ? col + 1 : 0;
         const nextRow = col + 1 < block.columns.length ? row : row + 1;
@@ -22268,8 +22275,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (imageBlock.kind !== "image") return;
       atomicGesture(
         [
-          { operator: "putAsset", key: assetKey, asset: { mime, data: dataUrl } },
-          { operator: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+          { operation: "putAsset", key: assetKey, asset: { mime, data: dataUrl } },
+          { operation: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
         ],
         [imageBlock.id],
       );
@@ -22314,7 +22321,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (clipboardBlocks) {
         const clones = cloneInkItemsWithOffset(clipboardBlocks, worldX, worldY);
         atomicGesture(
-          clones.map((block) => ({ operator: "addBlock", block }) as const),
+          clones.map((block) => ({ operation: "addBlock", block }) as const),
           clones.map((block) => block.id),
         );
         return;
@@ -22325,8 +22332,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
         if (imageBlock.kind !== "image") return;
         atomicGesture(
           [
-            { operator: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } },
-            { operator: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
+            { operation: "putAsset", key: assetKey, asset: { mime: "image/svg+xml", data: text.trim() } },
+            { operation: "addBlock", block: { ...imageBlock, imageKey: assetKey } },
           ],
           [imageBlock.id],
         );
@@ -22335,7 +22342,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       if (text.trim()) {
         const block = createInkItemByKind("text", worldX, worldY);
         const seeded: InkTextItem = { ...(block as InkTextItem), paragraphs: inkTextParagraphsFromPlainText(text.trim()) };
-        atomicGesture([{ operator: "addBlock", block: seeded }], [seeded.id]);
+        atomicGesture([{ operation: "addBlock", block: seeded }], [seeded.id]);
       }
     },
     [atomicGesture, doc, pasteImageAsset, textEdit],
@@ -22386,7 +22393,7 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
           }}
           onCommit={(paragraphs) => commitTextEdit(editingTextBlock.id, paragraphs, textEdit.created)}
           onCancel={() => {
-            if (textEdit.created) atomicGesture([{ operator: "removeBlock", blockId: editingTextBlock.id }]);
+            if (textEdit.created) atomicGesture([{ operation: "removeBlock", blockId: editingTextBlock.id }]);
             setTextEdit(null);
           }}
         />

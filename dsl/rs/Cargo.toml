@@ -1,0 +1,21 @@
+[package]
+name = "dsl"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Facade for the token-native declarative DSL engine — re-exports dsl_core/dsl_token/dsl_schema, the DslField/DslVariants runtime traits generated code binds against, and derive macros"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+dsl_core = { path = "../core/rs" }
+dsl_schema = { path = "../schema/rs" }
+dsl_derive = { path = "../derive/rs" }
+
+[dev-dependencies]
+vcs = { path = "../../vcs/rs" }
+serde = { version = "1.0.219", features = ["derive"] }

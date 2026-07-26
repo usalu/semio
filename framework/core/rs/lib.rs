@@ -5748,7 +5748,7 @@ mod app_document_tests {
 
     #[test]
     fn utility_definition_and_utility_ref_construction() {
-        let utility = UtilityDefinition::new("brush", "Brush", "icon.brush");
+        let utility = UtilityDefinition::new("brush", "Brush", "paintbrush");
         assert_eq!(utility.id, "brush");
         assert!(!utility.allows_actions_while_active, "default gates actions while active");
         assert_eq!(UtilityRef::new("brush").as_str(), "brush");
@@ -5853,8 +5853,8 @@ mod app_document_tests {
                 commands: Vec::new(),
             }],
             vec![
-                crate::ui::ToolDefinition::new("brush", "Brush", "brush"),
-                crate::ui::ToolDefinition::new("fill", "Fill", "fill"),
+                crate::ui::ToolDefinition::new("brush", "Brush", "paintbrush"),
+                crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket"),
             ],
         );
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
@@ -5880,7 +5880,7 @@ mod app_document_tests {
                     commands: Vec::new(),
                 },
             ],
-            vec![crate::ui::ToolDefinition::new("fill", "Fill", "fill")],
+            vec![crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket")],
         );
         assert_eq!(resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect::<Vec<_>>(), vec!["fill"]);
         assert!(resolve_mode_tools(&app, "view").is_empty(), "tools are opt-in per mode, no orphan fallback");
@@ -5897,7 +5897,7 @@ mod app_document_tests {
                 layout_id: None,
                 commands: Vec::new(),
             }],
-            vec![crate::ui::ToolDefinition::new("fill", "Fill", "fill")],
+            vec![crate::ui::ToolDefinition::new("fill", "Fill", "paint-bucket")],
         );
         let resolved: Vec<&str> = resolve_mode_tools(&app, "edit").iter().map(|t| t.id.as_str()).collect();
         assert_eq!(resolved, vec!["fill"]);
@@ -5920,7 +5920,7 @@ mod app_document_tests {
     #[test]
     fn window_kind_deserializes_without_utilities_field() {
         let window: WindowKindDefinition = serde_json::from_str(
-            r#"{"id":"main","label":"Main","bodyKey":"a.main","surfaceKind":"canvas-2d"}"#,
+            r#"{"id":"main","label":"Main","bodyKey":"a.main","surfaceKind":"canvas-2d","iconId":"pen-tool"}"#,
         )
         .unwrap();
         assert!(window.utilities.is_empty());

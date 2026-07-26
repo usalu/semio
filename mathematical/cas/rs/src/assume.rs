@@ -112,7 +112,7 @@ impl Assumptions {
     }
 
     pub fn assume_bound(&mut self, symbol: &str, operator: RelationalOperator, bound: mathematical_number::Rational) {
-        self.facts.push((symbol.to_string(), operation, bound));
+        self.facts.push((symbol.to_string(), operator, bound));
     }
 
     fn bound_for(&self, symbol: &str) -> Option<bool> {

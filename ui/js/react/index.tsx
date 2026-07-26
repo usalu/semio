@@ -2223,6 +2223,10 @@ let chromeRevealBindings: ReturnType<typeof createDOMEventBinding> | null = null
 let chromeRevealFrame = 0;
 let chromeRevealLastPoint: { x: number; y: number } | null = null;
 
+function chromeRevealStackAncestor(region: HTMLElement): HTMLElement | null {
+  return region.closest<HTMLElement>('[data-slot="window-chrome-stack"], [data-slot="mode-dock-stack"]');
+}
+
 function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): boolean {
   const rect = region.getBoundingClientRect();
   if (x >= rect.left - CHROME_REVEAL_ACTIVATION_BAND_PX && x <= rect.right + CHROME_REVEAL_ACTIVATION_BAND_PX && y >= rect.top - CHROME_REVEAL_ACTIVATION_BAND_PX && y <= rect.bottom + CHROME_REVEAL_ACTIVATION_BAND_PX) {
@@ -2231,6 +2235,13 @@ function chromeRevealRegionRevealed(region: HTMLElement, x: number, y: number): 
   const regionName = region.dataset.uiRevealRegion;
   if (regionName === "navbar" && y <= CHROME_REVEAL_EDGE_BAND_PX) return true;
   if (regionName === "footer" && typeof window !== "undefined" && y >= window.innerHeight - CHROME_REVEAL_EDGE_BAND_PX) return true;
+  if (regionName === "window-cap") {
+    const stack = chromeRevealStackAncestor(region);
+    if (stack) {
+      const stackRect = stack.getBoundingClientRect();
+      if (x >= stackRect.left && x <= stackRect.right && y >= stackRect.top && y <= stackRect.top + CHROME_REVEAL_EDGE_BAND_PX) return true;
+    }
+  }
   return false;
 }
 
@@ -6282,11 +6293,13 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
  * for the current step; the box silhouette itself always uses the same introduced highlight + thickness
- * pulse as stamped targets). Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition`
- * contract. Every step plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared
- * `demonstration` if it has one, otherwise — for a purely informational step whose only way forward is
- * the Next/Done button — an automatic "click Next" demonstration (see
- * `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`), so authors never have to spell that one out per step. */
+ * pulse as stamped targets; body copy/checklist/icons emphasize while the pointer is inside the body —
+ * see `[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]:hover` in `ui.css`).
+ * Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step
+ * plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if
+ * it has one, otherwise — for a purely informational step whose only way forward is the Next/Done
+ * button — an automatic "click Next" demonstration (see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`),
+ * so authors never have to spell that one out per step. */
 export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, stepIndex, completedInteractionIndices, onStepIndexChange, onDismiss }) => {
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
@@ -8015,7 +8028,7 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
  * clip edge of `overflow: hidden` ancestors (resizable panels / mode body), so those sides vanish. */
 export const WINDOW_SILHOUETTE_PATH_INSET = 1;
 
-/** @emoji 🪟 Appends the bottom edge + inverted-U chip notches (right-to-left) onto an open top silhouette path. */
+/** @emoji 🪟 Appends the bottom edge wrapping outside each footer chip; gaps between chips stay open upward into the body (mirror of the top cap). */
 export function appendWindowSilhouetteBottomPath(
   path: string,
   chips: readonly WindowSilhouetteBottomChip[],
@@ -8030,11 +8043,20 @@ export function appendWindowSilhouetteBottomPath(
   let result = `${path} V${y1}`;
   for (let i = sorted.length - 1; i >= 0; i--) {
     const chip = sorted[i]!;
-    result += ` H${chip.right}`;
-    result += ` V${notchTop}`;
+    const isRightmost = i === sorted.length - 1;
+    if (isRightmost && chip.right < x1) {
+      result += ` V${notchTop}`;
+      result += ` H${chip.right}`;
+      result += ` V${y1}`;
+    }
     result += ` H${chip.left}`;
-    if (i > 0) result += ` V${y1}`;
-    else if (chip.left > x0) result += ` H${x0}`;
+    result += ` V${notchTop}`;
+    if (i > 0) {
+      result += ` H${sorted[i - 1]!.right}`;
+      result += ` V${y1}`;
+    } else {
+      result += ` H${x0}`;
+    }
   }
   return `${result} Z`;
 }
@@ -8077,7 +8099,7 @@ const WINDOW_CHROME_FOOTER_SELECTOR = '[data-slot="window-chrome-footer"]';
 const WINDOW_CHROME_FOOTER_GAP_SELECTOR =
   '[data-slot="window-chrome-footer-gap"], [data-slot="window-chrome-footer-gap-left"], [data-slot="window-chrome-footer-gap-right"]';
 const WINDOW_CHROME_FOOTER_LEFT_SELECTOR = '[data-slot="window-chrome-footer-left"]';
-const WINDOW_CHROME_FOOTER_CENTER_SELECTOR = '[data-slot="window-chrome-footer-center"]';
+const WINDOW_CHROME_FOOTER_CENTER_SELECTOR = '[data-slot="window-chrome-footer-center-chip"]';
 const WINDOW_CHROME_FOOTER_RIGHT_SELECTOR = '[data-slot="window-chrome-footer-right"]';
 
 /** @emoji 🪟 Reads live silhouette metrics from a mounted window-chrome stack (gap + controls). */
@@ -8097,24 +8119,16 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   const footer = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_SELECTOR);
   const footerLeft = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_LEFT_SELECTOR);
   const footerCenter = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_CENTER_SELECTOR);
-  const footerGap = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_GAP_SELECTOR);
   const footerRight = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_RIGHT_SELECTOR);
   if (footer && (footerLeft || footerCenter || footerRight)) {
     const footerLeftRect = footerLeft?.getBoundingClientRect();
     const footerCenterRect = footerCenter?.getBoundingClientRect();
     const footerRightRect = footerRight?.getBoundingClientRect();
-    const footerGapRect = footerGap?.getBoundingClientRect();
     const bottomChips: WindowSilhouetteBottomChip[] = [];
     if (footerLeftRect) bottomChips.push({ left: footerLeftRect.left - stackRect.left, right: footerLeftRect.right - stackRect.left });
     if (footerCenterRect) bottomChips.push({ left: footerCenterRect.left - stackRect.left, right: footerCenterRect.right - stackRect.left });
     if (footerRightRect) bottomChips.push({ left: footerRightRect.left - stackRect.left, right: footerRightRect.right - stackRect.left });
-    const bottomCapHeight = Math.max(
-      footerLeftRect?.height ?? 0,
-      footerCenterRect?.height ?? 0,
-      footerRightRect?.height ?? 0,
-      footer.getBoundingClientRect().height,
-      footerGapRect?.height ?? 0,
-    );
+    const bottomCapHeight = Math.max(footerLeftRect?.height ?? 0, footerCenterRect?.height ?? 0, footerRightRect?.height ?? 0);
     return { width, height, tabsWidth, controlsWidth, capHeight, bottomCapHeight, bottomChips };
   }
   return { width, height, tabsWidth, controlsWidth, capHeight };
@@ -8425,7 +8439,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     if (chipOnly) {
       return (
         <div ref={setStackRef} data-slot={stackSlot} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
-          <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+          <div data-slot="window-chrome-chip-cap" data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
         </div>
@@ -8436,7 +8450,8 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     const { className: footerGapClassName, ...footerGapRest } = footerGapProps ?? {};
     const hasFooter = Boolean(footerLeftChips || footerCenterChips || footerRightChips);
     const hasFooterGap = Boolean(footerLeftChips && footerRightChips && !footerCenterChips);
-    const footerGapClass = cn("pointer-events-none relative min-h-medium min-w-0 bg-transparent", windowGapFrameClass, footerGapClassName);
+    const footerGapClass = cn("pointer-events-none relative min-h-0 min-w-0 bg-transparent", windowGapFrameClass, footerGapClassName);
+    const footerChipClass = cn("relative flex min-h-medium min-w-0 shrink-0 items-stretch", chipSurfaceClass);
     return (
       <div
         ref={setStackRef}
@@ -8447,7 +8462,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {...stackDataAttrs}
       >
         <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} borderKind={borderKind} />
-        <div ref={capRef} data-slot="window-chrome-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+        <div ref={capRef} data-slot="window-chrome-cap" data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
           <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
@@ -8491,20 +8506,22 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         </div>
         {hasFooter ? (
           footerCenterChips ? (
-            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative z-[2] grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-stretch bg-transparent">
-              <div data-slot="window-chrome-footer-gap-left" aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex min-w-0 items-stretch justify-start")}>
+            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative z-[2] grid w-full min-w-0 shrink-0 grid-cols-[auto_1fr_auto] items-end bg-transparent">
+              <div data-slot="window-chrome-footer-gap-left" {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
                 {footerLeftChips ? (
-                  <div data-slot="window-chrome-footer-left" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                  <div data-slot="window-chrome-footer-left" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerLeftChips}
                   </div>
                 ) : null}
               </div>
-              <div data-slot="window-chrome-footer-center" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
-                {footerCenterChips}
+              <div data-slot="window-chrome-footer-center" className={cn(footerGapClass, "flex justify-center justify-self-center")}>
+                <div data-slot="window-chrome-footer-center-chip" className={cn("pointer-events-auto", footerChipClass)}>
+                  {footerCenterChips}
+                </div>
               </div>
-              <div data-slot="window-chrome-footer-gap-right" aria-hidden className={cn(footerGapClass, "flex min-w-0 items-stretch justify-end")}>
+              <div data-slot="window-chrome-footer-gap-right" aria-hidden={footerRightChips ? undefined : true} className={cn(footerGapClass, "justify-self-end")}>
                 {footerRightChips ? (
-                  <div data-slot="window-chrome-footer-right" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                  <div data-slot="window-chrome-footer-right" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerRightChips}
                   </div>
                 ) : null}
@@ -26215,7 +26232,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
       <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
-        <div ref={ref} data-slot="mode-dock-tabbar" className={cn("grid min-h-medium min-w-0 items-stretch", modeDockTabBarGlassClass, modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
+        <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("grid min-h-medium min-w-0 items-stretch", modeDockTabBarGlassClass, modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
               <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
@@ -26250,7 +26267,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", modeDockTabBarGlassClass)}>
+    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", modeDockTabBarGlassClass)}>
       <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
@@ -27299,9 +27316,10 @@ if (import.meta.vitest) {
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
       expect(css).toMatch(/@property --celebrate-border-angle[\s\S]*?inherits:\s*true/);
       expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?--celebrate-conic:/);
-      expect(css).toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
+      expect(css).not.toMatch(/\[data-celebrated="true"\][\s\S]*?animation:\s*celebrate-border-spin/);
       expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?background:\s*var\(--celebrate-conic\)/);
-      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:\s*celebrate-border-burst/);
+      expect(css).toMatch(/\[data-celebrated="true"\]::after[\s\S]*?padding:\s*var\(--celebrate-border-padding\)/);
+      expect(css).not.toMatch(/\[data-celebrated="true"\]::after[\s\S]*?animation:\s*celebrate-border-burst/);
       expect(css).toContain("#endregion 🎉CelebrateContent");
       expect(css).toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="button-group-item"\]/);
       expect(css).toMatch(/\[data-celebrated="true"\]\[data-slot="introduction-interaction-label"\][\s\S]*?background-clip:\s*text/);
@@ -27327,6 +27345,30 @@ if (import.meta.vitest) {
       expect(celebrateContent).toContain('> [data-slot="tree-guide"] [data-tree-guide-line]');
       expect(celebrateContent).toMatch(/:has\([\s\S]*?\[data-celebrated="true"\]\s*\)/);
       expect(celebrateContent).not.toContain('[data-slot="tree-row-content"]');
+    });
+
+    it("border effect phase clocks run on unlayered :root and consumers paint inherited vars only", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      const unlayeredRoot = css.match(/^:root \{[\s\S]*?\n\}/m)?.[0] ?? "";
+      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?loading-border-spin/);
+      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?waiting-border-spin/);
+      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?introduced-border-pulse/);
+      expect(unlayeredRoot).toMatch(/animation:[\s\S]*?celebrate-border-spin/);
+      expect(css).toMatch(/@property --loading-border-angle[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/@property --waiting-border-angle[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/@property --introduced-border-width[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/@property --celebrate-border-padding[\s\S]*?inherits:\s*true/);
+      expect(css).toMatch(/@utility border-loading[\s\S]*?opacity:\s*var\(--loading-border-pulse-opacity\)/);
+      expect(css).toMatch(/@utility border-waiting[\s\S]*?opacity:\s*var\(--waiting-border-pulse-opacity\)/);
+      expect(css).toMatch(/\[data-introduced="true"\][\s\S]*?box-shadow:\s*inset 0 0 0 var\(--introduced-border-width\)/);
+      expect(css).not.toMatch(/\[data-introduced="true"\][\s\S]*?animation:\s*introduced-border-pulse/);
+      expect(css).toMatch(/\.window-silhouette-border-introduced[\s\S]*?stroke-width:\s*var\(--introduced-border-width\)/);
+      expect(css).toMatch(/\.window-silhouette-border-loading[\s\S]*?stroke-dashoffset:\s*var\(--loading-border-dashoffset\)/);
+      expect(css).toMatch(/\.window-silhouette-border-celebrated-mask[\s\S]*?stroke-width:\s*var\(--celebrate-border-padding\)/);
+      expect(css).not.toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?animation:\s*celebrate-border-spin/);
     });
   });
 
@@ -27823,7 +27865,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(footer.getAttribute("data-introduced")).toBe("true");
       });
-      fireEvent.click(screen.getByRole("button", { name: /next/i }));
+      fireEvent.click(screen.getByRole("button", { name: /next|weiter/i }));
       await waitFor(() => {
         expect(footer.getAttribute("data-introduced")).toBeNull();
       });
@@ -27955,12 +27997,52 @@ if (import.meta.vitest) {
       expect(css).toContain(':not([data-active="true"]):hover');
       expect(css).toContain("stroke: var(--border-emphasized-color)");
       expect(css).toContain("window-silhouette-border-introduced");
-      expect(css).toContain("@keyframes window-silhouette-border-introduced-pulse");
+      expect(css).toContain("@keyframes introduced-border-pulse");
+      expect(css).not.toContain("@keyframes window-silhouette-border-introduced-pulse");
       expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:focus-within/);
       expect(css).not.toMatch(/\[data-slot="dialog-box"\]:focus-within/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-emphasized");
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
+    });
+
+    it("emphasizes all introduction body content while the pointer is inside the body", async () => {
+      const { readFileSync } = await import("node:fs");
+      const { fileURLToPath } = await import("node:url");
+      const { dirname, resolve } = await import("node:path");
+      const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
+      expect(css).toMatch(
+        /\[data-slot="introduction-info-box"\]:has\(\[data-slot="window-chrome-body"\]:hover\)/,
+      );
+      expect(css).toMatch(
+        /\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover\s*:is\(p,\s*li,\s*span,\s*\[data-icon\],\s*\[data-icon-kind\]\):not\(\[data-celebrated="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
+      );
+      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:focus-within/);
+      const steps: IntroductionStepDefinition[] = [
+        {
+          id: "body-hover",
+          title: "Body Hover",
+          body: "Muted copy becomes emphasized on body hover.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click footer" }],
+          ordered: true,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const box = container.querySelector('[data-slot="introduction-info-box"]');
+      const body = box?.querySelector('[data-slot="window-chrome-body"]');
+      expect(body).toBeTruthy();
+      expect(body?.querySelector("p")?.className).toContain("text-muted-foreground");
+      expect(body?.querySelector('[data-slot="introduction-interaction-label"]')).toBeTruthy();
+      expect(box?.querySelector('[data-slot="introduction-info-box-chip"]')).toBeTruthy();
+      expect(box?.querySelector('[data-slot="introduction-step-chip"]')).toBeTruthy();
+      expect(box?.querySelector('[data-slot="introduction-close"]')).toBeTruthy();
+      expect(body?.textContent).toContain("Muted copy becomes emphasized on body hover.");
+      expect(body?.textContent).toContain("Click footer");
     });
 
     it("renders step logos, wrapping only those with an href, and swaps light/dark srcs", () => {
@@ -28111,7 +28193,8 @@ if (import.meta.vitest) {
       ];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       expect(container.querySelector('[data-slot="introduction-interactions"]')).toBeNull();
-      expect(screen.getByRole("button", { name: /next|done/i })).toBeTruthy();
+      expect(screen.getByRole("button", { name: /next|done|weiter|fertig/i })).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
     });
 
     it("renders a header drag handle in the title chip and moves the info box", () => {
@@ -28149,12 +28232,14 @@ if (import.meta.vitest) {
       expect(Number.parseFloat(box.style.left)).toBe(window.innerWidth - box.offsetWidth);
     });
 
-    it("places Back, step progress, and Next in bottom footer chips with transparent side gaps", () => {
+    it("places pressable Back and Next controls outside the transparent side gaps' hit-testing and accessibility suppression", () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
         { id: "second", title: "Second", body: "Step two.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        { id: "third", title: "Third", body: "Step three.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
       ];
-      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const onStepIndexChange = vi.fn();
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={onStepIndexChange} onDismiss={vi.fn()} />);
       const footer = container.querySelector('[data-slot="window-chrome-footer"]');
       const footerGapLeft = container.querySelector('[data-slot="window-chrome-footer-gap-left"]');
       const footerGapRight = container.querySelector('[data-slot="window-chrome-footer-gap-right"]');
@@ -28167,9 +28252,19 @@ if (import.meta.vitest) {
       expect(footerCenter).toBeTruthy();
       expect(footerLeft).toBeTruthy();
       expect(footerRight).toBeTruthy();
-      expect(footerCenter?.querySelector('[data-slot="introduction-step-chip"]')?.textContent).toMatch(/2\s*\/\s*2/);
-      expect(footerLeft?.querySelector("#ui\\.introduction\\.back")).toBeTruthy();
-      expect(footerRight?.querySelector("#ui\\.introduction\\.next")).toBeTruthy();
+      expect(footerCenter?.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/2\s*\/\s*3/);
+      expect(footerGapLeft?.getAttribute("aria-hidden")).toBeNull();
+      expect(footerGapRight?.getAttribute("aria-hidden")).toBeNull();
+      expect(footerLeft?.classList.contains("pointer-events-auto")).toBe(true);
+      expect(footerRight?.classList.contains("pointer-events-auto")).toBe(true);
+      const backButton = screen.getByRole("button", { name: /back|zurück/i });
+      const nextButton = screen.getByRole("button", { name: /next|weiter/i });
+      expect(backButton.className).toContain("hover:bg-hover-interactive-fill");
+      expect(nextButton.className).toContain("hover:bg-hover-interactive-fill");
+      fireEvent.click(backButton);
+      fireEvent.click(nextButton);
+      expect(onStepIndexChange).toHaveBeenNthCalledWith(1, 0);
+      expect(onStepIndexChange).toHaveBeenNthCalledWith(2, 2);
       expect(container.querySelector('[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]')?.textContent).not.toMatch(/next|done|back|zurück|\d\s*\/\s*\d/i);
     });
 
@@ -28180,9 +28275,32 @@ if (import.meta.vitest) {
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       expect(container.querySelector('[data-slot="window-chrome-footer-gap-left"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer-gap-right"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-footer-center"]')?.textContent).toMatch(/1\s*\/\s*1/);
+      expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/1\s*\/\s*1/);
       expect(container.querySelector('[data-slot="window-chrome-footer-left"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
+    });
+
+    it("does not paint glass on the footer center rail when the next chip is absent", () => {
+      const steps: IntroductionStepDefinition[] = [
+        {
+          id: "interact",
+          title: "Interact",
+          body: "Complete the step.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click" }],
+          ordered: false,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const centerRail = container.querySelector('[data-slot="window-chrome-footer-center"]');
+      const centerChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]');
+      expect(centerRail?.className).not.toMatch(/ui-glass-panel/);
+      expect(centerChip?.className).toMatch(/ui-glass-panel/);
+      expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
     });
   });
 
@@ -30096,16 +30214,16 @@ if (import.meta.vitest) {
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H1 Z");
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 H200 V76 H140 V100 H50 V76 H0 Z",
+        "M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 V76 H0 Z",
       );
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 })).toBe(
-        "M1,1 H60 V24 H159 V1 H199 V99 H199 V75 H139 V99 H50 V75 H1 Z",
+        "M1,1 H60 V24 H159 V1 H199 V99 H139 V75 H50 V99 H1 V75 H1 Z",
       );
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 0, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 H200 V76 H140 H0 Z",
+        "M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z",
       );
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 0, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 H50 V76 H0 Z",
+        "M0,0 H60 V24 H160 V0 H200 V100 V76 H50 V100 H0 V76 H0 Z",
       );
       expect(
         windowSilhouettePath(
@@ -30124,7 +30242,24 @@ if (import.meta.vitest) {
           },
           0,
         ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H200 V76 H140 V100 H120 V76 H80 V100 H50 V76 H0 Z");
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H50 V100 H0 V76 H0 Z");
+      expect(
+        windowSilhouettePath(
+          {
+            width: 200,
+            height: 100,
+            tabsWidth: 60,
+            controlsWidth: 40,
+            capHeight: 24,
+            bottomCapHeight: 24,
+            bottomChips: [
+              { left: 0, right: 50 },
+              { left: 80, right: 120 },
+            ],
+          },
+          0,
+        ),
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 V76 H120 V100 H80 V76 H50 V100 H0 V76 H0 Z");
       // 🪟 Right/bottom centerlines stay ≥ half a hairline inside the box so overflow clip can't eat them.
       expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
     });
@@ -34516,6 +34651,64 @@ if (treeVitest) {
       expect(region.dataset.uiRevealed).toBeUndefined();
       applyChromeRevealAtPoint(50, 220);
       expect(region.dataset.uiRevealed).toBe("true");
+      document.body.removeChild(region);
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("reveals a footer hover-reveal region near the bottom screen edge", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+      const innerHeight = window.innerHeight;
+      Object.defineProperty(window, "innerHeight", { value: 800, configurable: true });
+      const region = document.createElement("footer");
+      region.dataset.uiRevealRegion = "footer";
+      region.getBoundingClientRect = () => ({ left: 0, right: 100, top: 760, bottom: 800, width: 100, height: 40 }) as DOMRect;
+      document.body.appendChild(region);
+      applyChromeRevealAtPoint(50, 795);
+      expect(region.dataset.uiRevealed).toBe("true");
+      applyChromeRevealAtPoint(50, 400);
+      expect(region.dataset.uiRevealed).toBeUndefined();
+      Object.defineProperty(window, "innerHeight", { value: innerHeight, configurable: true });
+      document.body.removeChild(region);
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("reveals a window-cap region when the pointer is near the stack top edge", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+      const stack = document.createElement("div");
+      stack.setAttribute("data-slot", "window-chrome-stack");
+      stack.getBoundingClientRect = () => ({ left: 100, right: 400, top: 50, bottom: 350, width: 300, height: 300 }) as DOMRect;
+      const cap = document.createElement("div");
+      cap.dataset.uiRevealRegion = "window-cap";
+      cap.getBoundingClientRect = () => ({ left: 100, right: 400, top: 50, bottom: 50, width: 300, height: 0 }) as DOMRect;
+      stack.appendChild(cap);
+      document.body.appendChild(stack);
+      applyChromeRevealAtPoint(250, 55);
+      expect(cap.dataset.uiRevealed).toBe("true");
+      applyChromeRevealAtPoint(250, 100);
+      expect(cap.dataset.uiRevealed).toBeUndefined();
+      applyChromeRevealAtPoint(250, 58);
+      expect(cap.dataset.uiRevealed).toBe("true");
+      document.body.removeChild(stack);
+      release();
+      resetElementsSurfaceChromeForTests();
+    });
+
+    it("reveals a hover-reveal region on focus and clears on blur", () => {
+      resetElementsSurfaceChromeForTests();
+      const release = applyElementsSurfaceChrome({ appearance: "light", device: "desktop", driver: COMPACT_UI_DRIVER });
+      const region = document.createElement("nav");
+      region.dataset.uiRevealRegion = "navbar";
+      const button = document.createElement("button");
+      region.appendChild(button);
+      document.body.appendChild(region);
+      button.dispatchEvent(new FocusEvent("focusin", { bubbles: true }));
+      expect(region.dataset.uiRevealed).toBe("true");
+      button.dispatchEvent(new FocusEvent("focusout", { bubbles: true, relatedTarget: null }));
+      expect(region.dataset.uiRevealed).toBeUndefined();
       document.body.removeChild(region);
       release();
       resetElementsSurfaceChromeForTests();

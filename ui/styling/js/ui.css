@@ -20,6 +20,31 @@
   --hover-interactive-fill: var(--border-normal-color);
   --scrollbar-thumb: var(--border-color);
   --scrollbar-thumb-hover: var(--muted-foreground);
+  animation:
+    loading-border-spin var(--loading-border-duration) linear infinite,
+    loading-border-pulse var(--loading-border-duration) ease-in-out infinite,
+    waiting-border-spin var(--waiting-border-duration) linear infinite,
+    waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite,
+    introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite,
+    celebrate-border-spin var(--celebrate-border-duration) linear infinite,
+    celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite,
+    window-silhouette-border-loading-dash var(--loading-border-duration) linear infinite,
+    window-silhouette-border-waiting-dash var(--waiting-border-duration) linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    animation: none;
+    --loading-border-angle: 0deg;
+    --waiting-border-angle: 0deg;
+    --celebrate-border-angle: 0deg;
+    --loading-border-pulse-opacity: 1;
+    --waiting-border-pulse-opacity: 1;
+    --introduced-border-width: var(--stroke-default);
+    --celebrate-border-padding: var(--stroke-default);
+    --loading-border-dashoffset: 0;
+    --waiting-border-dashoffset: 0;
+  }
 }
 
 #navbar,
@@ -107,6 +132,7 @@
     --loading-border-duration: 1.6s;
     --waiting-border-duration: 3.2s;
     --introduced-border-duration: 1.6s;
+    --celebrate-border-duration: 1.2s;
     --hover-interactive-fill: var(--border-normal-color);
     --plaster: var(--color-gray);
     --plaster-edge: var(--color-foreground);
@@ -930,8 +956,20 @@
 
 @property --loading-border-angle {
   syntax: "<angle>";
-  inherits: false;
+  inherits: true;
   initial-value: 0deg;
+}
+
+@property --loading-border-pulse-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.55;
+}
+
+@property --loading-border-dashoffset {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
 /* ⏱️ `@property`-registers the two `animation-duration` tokens below for the same reason the angle above
@@ -948,8 +986,20 @@
 
 @property --waiting-border-angle {
   syntax: "<angle>";
-  inherits: false;
+  inherits: true;
   initial-value: 0deg;
+}
+
+@property --waiting-border-pulse-opacity {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0.7;
+}
+
+@property --waiting-border-dashoffset {
+  syntax: "<number>";
+  inherits: true;
+  initial-value: 0;
 }
 
 @property --waiting-border-duration {
@@ -983,6 +1033,12 @@
   initial-value: 1.6s;
 }
 
+@property --introduced-border-width {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
+
 @property --celebrate-border-angle {
   syntax: "<angle>";
   inherits: true;
@@ -995,6 +1051,12 @@
   initial-value: 1.2s;
 }
 
+@property --celebrate-border-padding {
+  syntax: "<length>";
+  inherits: true;
+  initial-value: 1px;
+}
+
 @keyframes loading-border-spin {
   to {
     --loading-border-angle: 360deg;
@@ -1004,10 +1066,10 @@
 @keyframes loading-border-pulse {
   0%,
   100% {
-    opacity: 0.55;
+    --loading-border-pulse-opacity: 0.55;
   }
   50% {
-    opacity: 1;
+    --loading-border-pulse-opacity: 1;
   }
 }
 
@@ -1020,17 +1082,16 @@
 @keyframes waiting-border-pulse {
   0%,
   100% {
-    opacity: 0.7;
+    --waiting-border-pulse-opacity: 0.7;
   }
   50% {
-    opacity: 1;
+    --waiting-border-pulse-opacity: 1;
   }
 }
 
 /* Clockwise spinning + pulsing loading ring in the element's normal border color; recolor via --loading-border-color. */
 @utility border-loading {
   position: relative;
-  --loading-border-angle: 0deg;
   &::after {
     content: "";
     position: absolute;
@@ -1039,6 +1100,7 @@
     pointer-events: none;
     border-radius: inherit;
     padding: var(--stroke-hairline);
+    opacity: var(--loading-border-pulse-opacity);
     background:
       conic-gradient(from var(--loading-border-angle), transparent, var(--loading-border-color, var(--border-normal-color))), conic-gradient(color-mix(in oklab, var(--loading-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
     -webkit-mask:
@@ -1049,13 +1111,10 @@
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     mask-composite: exclude;
-    animation:
-      loading-border-spin var(--loading-border-duration) linear infinite,
-      loading-border-pulse var(--loading-border-duration) ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
     &::after {
-      animation: none;
+      opacity: 1;
     }
   }
 }
@@ -1073,7 +1132,6 @@
 /* Clockwise dashed, slow-spinning + gently pulsing waiting ring in the element's normal border color; recolor via --waiting-border-color. */
 @utility border-waiting {
   position: relative;
-  --waiting-border-angle: 0deg;
   &::after {
     content: "";
     position: absolute;
@@ -1082,6 +1140,7 @@
     pointer-events: none;
     border-radius: inherit;
     padding: var(--stroke-hairline);
+    opacity: var(--waiting-border-pulse-opacity);
     background:
       repeating-conic-gradient(from var(--waiting-border-angle), var(--waiting-border-color, var(--border-normal-color)) 0deg 18deg, transparent 18deg 30deg), conic-gradient(color-mix(in oklab, var(--waiting-border-color, var(--border-normal-color)) 20%, transparent) 0 360deg);
     -webkit-mask:
@@ -1092,13 +1151,10 @@
       linear-gradient(#000 0 0) content-box,
       linear-gradient(#000 0 0);
     mask-composite: exclude;
-    animation:
-      waiting-border-spin var(--waiting-border-duration) linear infinite,
-      waiting-border-pulse var(--waiting-border-duration) ease-in-out infinite;
   }
   @media (prefers-reduced-motion: reduce) {
     &::after {
-      animation: none;
+      opacity: 1;
     }
   }
 }
@@ -1122,10 +1178,10 @@
 @keyframes celebrate-border-burst {
   0%,
   100% {
-    padding: var(--stroke-hairline);
+    --celebrate-border-padding: var(--stroke-hairline);
   }
   50% {
-    padding: var(--stroke-focus);
+    --celebrate-border-padding: var(--stroke-focus);
   }
 }
 
@@ -1135,7 +1191,6 @@
    border-loading masked-ring template. Recolor via --celebrate-border-color-{a,b,c}. */
 [data-celebrated="true"] {
   position: relative;
-  --celebrate-border-angle: 0deg;
   --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
@@ -1143,7 +1198,6 @@
     var(--celebrate-border-color-c, var(--color-tertiary)),
     var(--celebrate-border-color-a, var(--color-primary))
   );
-  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
 [data-celebrated="true"]::after {
@@ -1153,7 +1207,7 @@
   z-index: 1;
   pointer-events: none;
   border-radius: inherit;
-  padding: var(--stroke-hairline);
+  padding: var(--celebrate-border-padding);
   background: var(--celebrate-conic);
   -webkit-mask:
     linear-gradient(#000 0 0) content-box,
@@ -1163,7 +1217,6 @@
     linear-gradient(#000 0 0) content-box,
     linear-gradient(#000 0 0);
   mask-composite: exclude;
-  animation: celebrate-border-burst var(--celebrate-border-duration) ease-in-out infinite;
 }
 
 /* 🪟 Docked windows: the silhouette SVG on [data-slot="mode-dock-stack"] owns the celebrate ring for
@@ -1177,10 +1230,10 @@
 @keyframes introduced-border-pulse {
   0%,
   100% {
-    box-shadow: inset 0 0 0 var(--stroke-hairline) var(--introduced-border-color, var(--color-secondary));
+    --introduced-border-width: var(--stroke-hairline);
   }
   50% {
-    box-shadow: inset 0 0 0 var(--stroke-focus) var(--introduced-border-color, var(--color-secondary));
+    --introduced-border-width: var(--stroke-focus);
   }
 }
 
@@ -1188,7 +1241,7 @@
    inset ring in the highlight color whose THICKNESS breathes — deliberately not the spinning border-loading
    conic ring. Inset so it stays inside an introduction cutout rather than sitting under the glass veil. */
 [data-introduced="true"] {
-  animation: introduced-border-pulse var(--introduced-border-duration) ease-in-out infinite;
+  box-shadow: inset 0 0 0 var(--introduced-border-width) var(--introduced-border-color, var(--color-secondary));
 }
 
 /* 🪟 Docked windows: rectangular body rings are wrong for *window-chrome* introduce targets — the
@@ -1198,7 +1251,6 @@
    (`framework.window.{segment}.action.*`) are nested targets and keep their pulse. */
 [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
 [data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
-  animation: none !important;
   box-shadow: none !important;
 }
 
@@ -1206,48 +1258,17 @@
 [data-slot="mode-dock-stack"] [data-slot="window"].border-waiting::after {
   content: none !important;
   display: none !important;
-  animation: none !important;
-}
-
-@keyframes window-silhouette-border-introduced-pulse {
-  0%,
-  100% {
-    stroke-width: var(--stroke-hairline);
-  }
-  50% {
-    stroke-width: var(--stroke-focus);
-  }
 }
 
 @keyframes window-silhouette-border-loading-dash {
   to {
-    stroke-dashoffset: -48;
-  }
-}
-
-@keyframes window-silhouette-border-loading-pulse {
-  0%,
-  100% {
-    opacity: 0.55;
-  }
-  50% {
-    opacity: 1;
+    --loading-border-dashoffset: -48;
   }
 }
 
 @keyframes window-silhouette-border-waiting-dash {
   to {
-    stroke-dashoffset: -48;
-  }
-}
-
-@keyframes window-silhouette-border-waiting-pulse {
-  0%,
-  100% {
-    opacity: 0.7;
-  }
-  50% {
-    opacity: 1;
+    --waiting-border-dashoffset: -48;
   }
 }
 
@@ -1256,26 +1277,23 @@
 }
 
 .window-silhouette-border-introduced {
-  stroke-width: var(--stroke-hairline);
-  animation: window-silhouette-border-introduced-pulse var(--introduced-border-duration) ease-in-out infinite;
+  stroke-width: var(--introduced-border-width);
 }
 
 .window-silhouette-border-loading {
   stroke-width: var(--stroke-hairline);
   stroke-dasharray: 28 20;
   stroke-linecap: butt;
-  animation:
-    window-silhouette-border-loading-dash var(--loading-border-duration) linear infinite,
-    window-silhouette-border-loading-pulse var(--loading-border-duration) ease-in-out infinite;
+  stroke-dashoffset: var(--loading-border-dashoffset);
+  opacity: var(--loading-border-pulse-opacity);
 }
 
 .window-silhouette-border-waiting {
   stroke-width: var(--stroke-hairline);
   stroke-dasharray: 10 14;
   stroke-linecap: butt;
-  animation:
-    window-silhouette-border-waiting-dash var(--waiting-border-duration) linear infinite,
-    window-silhouette-border-waiting-pulse var(--waiting-border-duration) ease-in-out infinite;
+  stroke-dashoffset: var(--waiting-border-dashoffset);
+  opacity: var(--waiting-border-pulse-opacity);
 }
 
 .window-silhouette-border-active {
@@ -1289,12 +1307,10 @@
 /* 🎉 Window silhouette celebrate: mask path pulses thickness while the foreignObject fill spins the
    same three-color conic as `[data-celebrated="true"]::after` — never a solid three-color stroke cycle. */
 .window-silhouette-border-celebrated-mask {
-  stroke-width: var(--stroke-hairline);
-  animation: window-silhouette-border-introduced-pulse var(--celebrate-border-duration) ease-in-out infinite;
+  stroke-width: var(--celebrate-border-padding);
 }
 
 .window-silhouette-border-celebrated-fill {
-  --celebrate-border-angle: 0deg;
   --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
@@ -1303,12 +1319,10 @@
     var(--celebrate-border-color-a, var(--color-primary))
   );
   background: var(--celebrate-conic);
-  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
 @media (prefers-reduced-motion: reduce) {
   [data-introduced="true"] {
-    animation: none;
     box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
   }
 
@@ -1317,31 +1331,8 @@
     box-shadow: none !important;
   }
 
-  [data-celebrated="true"] {
-    animation: none;
-  }
-
   [data-celebrated="true"]::after {
-    animation: none;
     padding: var(--stroke-default);
-  }
-
-  :is(
-    [data-slot="tree-section-content"],
-    [data-slot="tree-item-content"],
-    [data-slot="tree-property-content"],
-    [data-slot="control-tree-folder-content"],
-    [data-slot="window-measure-tree-content"]
-  ):has(
-    :is(
-      [data-slot="tree-item-row"],
-      [data-slot="tree-section-row"],
-      [data-slot="tree-property-item"],
-      [data-slot="control-tree-row"],
-      [data-slot="window-measure-tree-row"]
-    )[data-celebrated="true"]
-  ) {
-    animation: none;
   }
 
   .window-silhouette-border-introduced,
@@ -1349,7 +1340,6 @@
   .window-silhouette-border-waiting,
   .window-silhouette-border-celebrated-mask,
   .window-silhouette-border-celebrated-fill {
-    animation: none;
     opacity: 1;
   }
 
@@ -5818,6 +5808,31 @@
   transition: stroke 120ms ease;
 }
 
+/* 🎓 Introduction step body hover: emphasize all window content (title chip, body copy/checklist/
+ * icons, step chip, close) while the pointer is inside the body. Celebrate paint keeps
+ * `color: transparent` — leave `[data-celebrated="true"]` alone. Cap/footer still use their
+ * own hover when the pointer is on those chips instead of the body. */
+[data-slot="introduction-info-box"]:has([data-slot="window-chrome-body"]:hover)
+  :is(
+    [data-slot="introduction-info-box-chip"],
+    [data-slot="introduction-step-chip"],
+    [data-slot="window-chrome-controls"],
+    [data-slot="introduction-close"]
+  ),
+[data-slot="introduction-info-box"]:has([data-slot="window-chrome-body"]:hover)
+  :is(
+    [data-slot="introduction-info-box-chip"],
+    [data-slot="introduction-step-chip"],
+    [data-slot="window-chrome-controls"],
+    [data-slot="introduction-close"]
+  )
+  :is(span, [data-slot="drag-handle"], [data-icon], [data-icon-kind]),
+[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]:hover
+  :is(p, li, span, [data-icon], [data-icon-kind]):not([data-celebrated="true"]) {
+  color: var(--border-emphasized-color);
+  transition: color 120ms ease;
+}
+
 /* 🪟 U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
 [data-slot="window-chrome-gap"],
 [data-slot="mode-dock-tab-gap"],
@@ -5995,7 +6010,6 @@
     [data-slot="window-measure-tree-row"]
   )[data-celebrated="true"]
 ) {
-  --celebrate-border-angle: 0deg;
   --celebrate-conic: conic-gradient(
     from var(--celebrate-border-angle),
     var(--celebrate-border-color-a, var(--color-primary)),
@@ -6003,7 +6017,6 @@
     var(--celebrate-border-color-c, var(--color-tertiary)),
     var(--celebrate-border-color-a, var(--color-primary))
   );
-  animation: celebrate-border-spin var(--celebrate-border-duration) linear infinite;
 }
 
 :is(

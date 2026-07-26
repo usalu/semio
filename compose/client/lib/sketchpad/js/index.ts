@@ -17529,7 +17529,7 @@ export function createComposeDesignAppVcsHandler() {
     "compose.design",
     "compose.design",
     () => ({ id: "design" }),
-    (doc, operator) => ({ id: operation.id }),
+    (doc, operator) => ({ id: operator.id }),
   );
 }
 
@@ -17539,7 +17539,7 @@ export function createComposeTypeAppVcsHandler() {
     "compose.type",
     "compose.type",
     () => ({ id: "type" }),
-    (doc, operator) => ({ id: operation.id }),
+    (doc, operator) => ({ id: operator.id }),
   );
 }
 
@@ -17549,7 +17549,7 @@ export function createComposeKitAppVcsHandler() {
     "compose.kit",
     "compose.kit",
     () => ({ id: "kit" }),
-    (doc, operator) => ({ id: operation.id }),
+    (doc, operator) => ({ id: operator.id }),
   );
 }
 

@@ -248,7 +248,7 @@ mod parser {
         let (rest, tail) = many0(pair(ws(alt((char('*'), char('/')))), cut(unary_expr)))(rest)?;
         let mut cur = first;
         for (operator, rhs) in tail {
-            cur = Expr::BinaryOperator { operator: if operation == '*' { BinaryOperator::Mul } else { BinaryOperator::Div }, left: Box::new(cur), right: Box::new(rhs) };
+            cur = Expr::BinaryOperator { operator: if operator == '*' { BinaryOperator::Mul } else { BinaryOperator::Div }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
@@ -258,7 +258,7 @@ mod parser {
         let (rest, tail) = many0(pair(ws(alt((char('+'), char('-')))), cut(mul_expr)))(rest)?;
         let mut cur = first;
         for (operator, rhs) in tail {
-            cur = Expr::BinaryOperator { operator: if operation == '+' { BinaryOperator::Add } else { BinaryOperator::Sub }, left: Box::new(cur), right: Box::new(rhs) };
+            cur = Expr::BinaryOperator { operator: if operator == '+' { BinaryOperator::Add } else { BinaryOperator::Sub }, left: Box::new(cur), right: Box::new(rhs) };
         }
         Ok((rest, cur))
     }
@@ -1237,8 +1237,8 @@ mod executor {
     impl BindEnv {
         async fn apply(&mut self, step: &Step, transport: &dyn Transport) -> Result<(), ArchitectError> {
             match step {
-                Step::GraphQl { operation, document, variables, bind } => {
-                    let data = transport.execute(*operation, document, variables.clone()).await?;
+                Step::GraphQl { operator, document, variables, bind } => {
+                    let data = transport.execute(*operator, document, variables.clone()).await?;
                     let expanded = extract_rows(&data, bind)?;
                     if self.rows.is_empty() {
                         self.rows = expanded;
@@ -1298,11 +1298,11 @@ mod executor {
                 Step::Limit { n } => {
                     self.rows.truncate(*n);
                 }
-                Step::Call { operation, document, variables, yield_items } => {
-                    if *operation == OpKind::Subscription {
+                Step::Call { operator, document, variables, yield_items } => {
+                    if *operator == OpKind::Subscription {
                         return Ok(());
                     }
-                    let data = transport.execute(*operation, document, variables.clone()).await?;
+                    let data = transport.execute(*operator, document, variables.clone()).await?;
                     self.ingest_call_yield(&data, yield_items);
                 }
             }
@@ -1496,7 +1496,7 @@ mod executor {
                 let v = eval_expr(inner, row)?;
                 json_num(-json_as_f64(&v)?)
             }
-            Expr::BinaryOperator { operation, left, right } => {
+            Expr::BinaryOperator { operator, left, right } => {
                 let l = eval_expr(left, row)?;
                 let r = eval_expr(right, row)?;
                 match operator {
@@ -1780,7 +1780,7 @@ mod tests {
             match step {
                 planner::Step::GraphQl { document, operator, .. } | planner::Step::Call { document, operator, .. } => {
                     let payload = canned.get(idx).expect("canned step payload").clone();
-                    responses.insert(format!("{operation:?}:{document}"), payload.clone());
+                    responses.insert(format!("{operator:?}:{document}"), payload.clone());
                     responses.insert(document.clone(), payload);
                     idx += 1;
                 }

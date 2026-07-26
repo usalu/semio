@@ -72,7 +72,7 @@ fn write_expr(e: &Expr, out: &mut String) {
 }
 
 fn rel_symbol(operator: RelationalOperator) -> &'static str {
-    match operation {
+    match operator {
         RelationalOperator::Eq => " == ",
         RelationalOperator::Ne => " != ",
         RelationalOperator::Lt => " < ",
@@ -328,7 +328,7 @@ fn latex_constant(c: &Constant) -> &'static str {
 }
 
 fn latex_rel(operator: RelationalOperator) -> &'static str {
-    match operation {
+    match operator {
         RelationalOperator::Eq => " = ",
         RelationalOperator::Ne => " \\neq ",
         RelationalOperator::Lt => " < ",

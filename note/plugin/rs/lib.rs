@@ -296,7 +296,7 @@ impl Operation<NoteDocument> for NoteOperation {
     type Diff = NoteDiff;
 
     fn diff(&self, _projection: &NoteDocument) -> NoteDiff {
-        NoteDiff { operator: Some(self.clone()) }
+        NoteDiff { operation: Some(self.clone()) }
     }
 
     fn backwards(&self, projection: &NoteDocument) -> Vec<Self> {

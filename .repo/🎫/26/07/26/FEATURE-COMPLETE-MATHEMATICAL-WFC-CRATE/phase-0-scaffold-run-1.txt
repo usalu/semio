@@ -1,0 +1,35 @@
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_wfc v0.1.0 (/Users/ueli/Documents/semio/mathematical/wfc/rs)
+    Finished `test` profile [unoptimized] target(s) in 1.27s
+     Running unittests lib.rs (target/debug/deps/mathematical_wfc-101bd5f7024833bd)
+
+running 19 tests
+test bitset::tests::empty_and_full ... ok
+test bitset::tests::full_respects_boundary_bits ... ok
+test bitset::tests::first_set_and_iter_ones_skip_zero_words ... ok
+test bitset::tests::and_or_and_not ... ok
+test bitset::tests::restrict_no_change_returns_zero ... ok
+test bitset::tests::restrict_returning_removed_matches_naive ... ok
+test bitset::tests::set_get_roundtrip ... ok
+test error::tests::display_messages_are_human_readable ... ok
+test error::tests::errors_are_std_error ... ok
+test bitset::tests::subset_and_intersects ... ok
+test ids::tests::id_index_roundtrip ... ok
+test ids::tests::id_ordering_and_equality ... ok
+test weights::tests::integer_detection ... ok
+test ids::tests::id_serde_roundtrip ... ok
+test weights::tests::precomputes_terms ... ok
+test weights::tests::rejects_negative_and_nonfinite ... ok
+test weights::tests::sum_over_matches_manual ... ok
+test weights::tests::zero_weight_terms_are_zero_not_nan ... ok
+test bitset::tests::quick::random_and_or_matches_vec_bool_model ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+   Doc-tests mathematical_wfc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

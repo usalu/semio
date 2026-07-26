@@ -29,6 +29,7 @@ mit-bestand/bericht/**/*.panels
 mit-bestand/bericht/**/dist/
 #--------------------------------------REPO--------------------------------------
 .repo/cache
+.repo/coverage
 .repo-cache
 SPECS.md
 DOCS.md

@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 #[cfg(target_arch = "wasm32")]
 use vcs::create_document_vcs_envelope;
-use vcs::{DocumentDsl, DocumentVcsEnvelope, DocumentVcsStore, OpText, Operation, OperationDiff, TextError, TextSpan};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, OpText, Operation, OperationDiff, TextError, TextSpan};
 /// 🔁 Reexported so downstream crates (e.g. `draw-plugin`) can call `DrawDocument::parse_dsl`/
 /// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
 pub use vcs::DocumentDsl;

@@ -2905,6 +2905,17 @@
       }
     },
     {
+      "name": "🧪test🌊mathematical-wfc",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/math-wfc:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.8
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",
