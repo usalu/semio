@@ -17,6 +17,7 @@ path = "lib.rs"
 [dependencies]
 framework_editor = { path = "../../framework/editor/rs" }
 vcs = { path = "../../vcs/rs" }
+dsl = { path = "../../dsl/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 

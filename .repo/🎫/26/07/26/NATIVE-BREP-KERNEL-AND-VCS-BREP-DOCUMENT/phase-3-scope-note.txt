@@ -1,0 +1,91 @@
+P3 scope note (2026-07-26)
+
+Implemented:
+- kernel/3d/brep/rs (lib.rs, pub mod arena): Store<T,Id> generational arena (index+generation ids,
+  LIFO free-list reuse for deterministic slot reuse, index-ordered iteration), define_id! macro
+  stamping out VertexId/EdgeId/CoedgeId/LoopId/FaceId/ShellId/SolidId/Curve3Id/Curve2Id/SurfaceId
+  with "kind-index-generation" Display.
+- pub mod history: PersistentLabel (birth-assigned, never reused, survives arena compaction),
+  LabelSource, OpDelta{generated,modified,deleted}, OpRecorder (accumulates a delta as a checked
+  editor runs; generated-then-deleted cancels out, generated entities are never also reported
+  modified, duplicate reports are deduplicated).
+- pub mod topo: the B-Rep data model — Vertex/Edge/Coedge/Loop/Face/Shell/Solid entity structs +
+  Body (arenas of each, plus curves3/curves2/surfaces geometry pools referenced by id so split
+  edges can share one Curve3Id with disjoint ranges); traversal (loop_coedges, face_loops/coedges,
+  shell_faces, solid_shells/faces, coedge_endpoints respecting orientation, vertex_edges,
+  edge_coedges); deep_copy. Pcurves are modeled as first-class Option<Curve2Id> on every Coedge.
+- pub mod euler: the checked editors that are the *only* permitted way to mutate a Body —
+  make_vertex/make_edge/make_loop/add_face/add_shell/add_solid (each generated-entity op takes
+  &mut OpRecorder), plus split_edge — a real Euler-style editing operator that splits an edge at a
+  parameter, creating a new vertex and two child edges sharing the original curve, and splices
+  every affected coedge into two, correctly handling both the general ring-splice case and the
+  degenerate self-referential single-coedge loop (a full periodic edge, e.g. a closed circle).
+- pub mod validate: validate_body(&Body) -> Vec<ValidationIssue> running four independent checks
+  — loop ring integrity (next/prev symmetry + consecutive-coedge endpoint matching), edge valence
+  (>2 coedges flagged as non-manifold), tolerance containment (vertex<=edge<=face via the Phase-0
+  check_containment helper), and same-parameter (samples a coedge's pcurve against its 3D curve at
+  linearly-corresponding parameters, only active once pcurves exist — dormant until Phase 4+).
+- error.rs's ValidationIssue (added in Phase 0) is the type these checks report through.
+
+IMPORTANT — repo-environment discovery mid-phase: partway through this phase, an automated
+background process (not invoked by this session) inlined the crate's split `src/*.rs` files
+(added across Phases 0-2, plus this phase's new files) directly into `lib.rs` as `pub mod name { ... }`
+blocks and deleted the original `src/*.rs` files. Confirmed via `git status`/`git diff` that all
+content was preserved byte-for-byte, just relocated — nothing was lost. This matches the repo's
+own `AI-OPTIMIZED-REPO/SINGLE-FILE-REPO` goal (an explicit, in-progress repo policy). Recorded as
+a new memory (`feedback-automated-single-file-consolidation`) so future sessions don't mistake
+this for data loss. From this point forward, all new kernel modules are authored directly as
+inline `pub mod name { ... }` blocks in `lib.rs` rather than as separate `src/*.rs` files, since
+that is now the file's actual on-disk shape and fighting the consolidation tool would be wasted
+effort. The crate's registered module list is otherwise unaffected — `#[path]` was simply
+removed along with the files it pointed at.
+
+Validated by:
+- cargo test -p kernel_3d_brepkit --lib: 220 passed, 0 failed (up from 188 after Phase 2; 32 new
+  tests: 8 arena, 6 history, 7 topo, 5 euler, 5 validate — one topo test count differs slightly
+  from the raw new-test tally because a couple of topo assertions were folded into existing tests
+  during cleanup).
+- Flagship gate: euler::tests::tetrahedron_satisfies_euler_poincare_formula builds a complete unit
+  tetrahedron (4 vertices, 6 edges, 4 triangular faces, 1 shell, 1 solid) purely through the
+  checked editors and asserts V-E+F=2, the Euler-Poincaré invariant for a genus-0 closed solid;
+  tetrahedron_build_records_every_entity_as_generated confirms the OpRecorder captured exactly
+  16 generated entities (4+6+4+1+1) and zero deletions; each_face_loop_is_a_closed_ring_of_
+  three_coedges confirms every face's ring is well-formed.
+- split_edge is exercised on three configurations: a free edge (no coedges), an edge inside a real
+  loop ring (confirms ring gains exactly one coedge, stays a single non-repeating closed cycle),
+  and the self-referential single-coedge-loop case (a full circle edge whose one coedge is its own
+  next/prev) — confirmed to produce a valid 2-coedge ring afterward.
+- validate::tests exercises all four checks positively (a clean tetrahedron reports zero issues)
+  and negatively (a corrupted ring pointer, an inflated vertex tolerance, a manually-constructed
+  3-coedge non-manifold edge, and a deliberately-wrong pcurve each trigger their specific issue code).
+- cargo clippy -p kernel_3d_brepkit --lib --tests: 16 warnings, 15 duplicates (effectively 1 unique
+  finding across lib+test targets), 100% pre-existing in the old brepkit wrapper — verified none
+  overlap the arena/history/topo/euler/validate module line ranges. Two clippy findings introduced
+  by this phase's own code were fixed inline: a `Store<T,Id>` missing serde derives (needed once
+  Body itself required (de)serialization — added `#[derive(Serialize, Deserialize)]` with a
+  `#[serde(bound(...))]` restricting the bound to `T` only, since `Id` only appears inside a
+  zero-sized `PhantomData` marker) and two `unnecessary_qualification` instances on `Vec3::X`.
+- Also fixed during this phase (not clippy-flagged, found by the test suite/compiler): Curve3,
+  Curve2, NurbsCurve3, Surface, and KnotVector (all added in Phase 1-2) were missing
+  `serde::Serialize`/`Deserialize` derives entirely — a latent Phase 1/2 gap that only surfaced now
+  because Body (Phase 3) is the first thing that actually serializes them. Fixed by adding the
+  derives to all five types; topo.rs's serde_round_trips_a_whole_body test now exercises this
+  end-to-end. Also fixed several `body.new_label()`-called-inline-inside-`body.x.insert(..)`
+  double-mutable-borrow compile errors in test helpers by precomputing the label into a local
+  before the insert call (a real borrow-checker limitation, not a logic bug: the two &mut self
+  calls are nested, not sequential, so the checker can't see the fields are disjoint).
+- Full logs: phase-3-topology-core-run-1.txt (cargo test), phase-3-lint-run-1.txt (clippy).
+
+Deferred (not part of this phase, tracked for later phases per the plan):
+- Body::compact() (mark-and-sweep GC from solids down) — not needed until later phases start
+  producing enough garbage (booleans, healing) that arena bloat matters; deferred to whichever
+  phase first needs it rather than building it speculatively now.
+- Euler operators beyond make_*/add_*/split_edge (kill_edge_vertex, merge_edges, split_face,
+  merge_faces, kill_ring, etc.) — added incrementally as the phases that need them (imprint/
+  boolean/heal/defeature) are reached, per the plan's own phased Euler-operator rollout.
+- validate.rs's remaining plan-listed checks (shell closedness/orientability, solid inside/outside
+  unambiguity, hole containment, seam/singularity-aware checks) — deferred until Phase 4+ produces
+  shells/solids with enough real geometry (primitives, sewing) to make those checks meaningful;
+  the four checks landed here (ring integrity, valence, tolerance containment, same-parameter) are
+  exactly the ones expressible with only the topology/Euler-operator machinery this phase built.
+None of these block Phase 4.

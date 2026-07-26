@@ -5862,7 +5862,7 @@ pub mod d3 {
             on_change: None,
             children: vec![
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-auto"), icon_id: "zoom-in".into(), label: Some(labels.auto_zoom.into()), pressed: runtime.lod_automatic, text: None, on_change: puzzle3d_action("setLodAutomatic", None) },
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "layers".into(), label: Some(labels.depth_variable.into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-depth-variable"), icon_id: "lod-depth".into(), label: Some(labels.depth_variable.into()), pressed: runtime.lod_depth_variable, text: None, on_change: puzzle3d_action("setLodDepthVariable", None) },
                 WindowMeasure::Slider { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-lod-value"), label: Some(format!("{} {:.0}", labels.lod, runtime.lod_manual)), value: runtime.lod_manual, min: PUZZLE3D_LOD_SLIDER_MIN, max: PUZZLE3D_LOD_SLIDER_MAX, step: Some(1.0), ready: None, loading: None, waiting: None, disabled: None, reveal: None, on_change: puzzle3d_action("setLodManual", None) },
             ],
         }
@@ -5905,7 +5905,7 @@ pub mod d3 {
             waiting: None,
             on_change: None,
             children: vec![
-                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "square".into(), label: Some(labels.rectangle.into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
+                WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-rectangle"), icon_id: "rectangle-tool".into(), label: Some(labels.rectangle.into()), pressed: runtime.selection_method == "rectangle", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "rectangle" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-lasso"), icon_id: "lasso".into(), label: Some(labels.lasso.into()), pressed: runtime.selection_method == "lasso", text: None, on_change: puzzle3d_action("setSelectionMethod", Some(json!({ "method": "lasso" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-default"), icon_id: "mouse-pointer".into(), label: Some(labels.selective.into()), pressed: runtime.selection_mode_default == "default", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "default" }))) },
                 WindowMeasure::Toggle { id: format!("{PUZZLE3D_PLAY_CONTROLLER_ID}-select-mode-additive"), icon_id: "plus".into(), label: Some(labels.additive.into()), pressed: runtime.selection_mode_default == "additive", text: None, on_change: puzzle3d_action("setSelectionModeDefault", Some(json!({ "mode": "additive" }))) },
@@ -7706,10 +7706,10 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                     ActionArgDef::select("objectKind", "Kind", vec![ActionArgOption::new("Object", "Object")]).default_value("Object"),
                 ])
                 // 🧰 Flat per-window set of utilities (host-owned `view_state.active_utility_id`); no utility is active until the host presses one — the transform gumball exposes translate and rotate together via Move/Rotate flags.
-                .utility(UtilityDefinition::new("transform", "Transform", "move-3d"))
+                .utility(UtilityDefinition::new("transform", "Transform", "transform-3d"))
                 .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
-                .utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "box"))
-                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .utility(UtilityDefinition::new("volumeBrush", "Volume Brush", "volume-brush"))
+                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "relocate-3d"))
                 .window_kind_utilities(PUZZLE3D_PLAY_WINDOW_MAIN, vec!["transform".into(), "brush".into(), "volumeBrush".into(), "worldRelocate".into()])
                 // 🛠️ Fill is a mode-level tool (a whole-document generator), not a window utility — it keeps
                 // its viewport interaction via `ViewState.active_tool_id` (see `puzzle3d_scene_active_utility`).
@@ -12242,7 +12242,7 @@ pub mod d5 {
                 .mode("edit", "Edit")
                 .default_mode_id("edit")
                 .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_2D, "Puzzle 2D", PUZZLE5D_PLAY_BODY_2D, SurfaceKind::Board2d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_2D, manifest_labels), "layout-grid")
-                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "box")
+                .window_kind_with_engagement(PUZZLE5D_PLAY_WINDOW_3D, "Puzzle 3D", PUZZLE5D_PLAY_BODY_3D, SurfaceKind::World3d, puzzle5d_engagement(&envelope, PUZZLE5D_PLAY_WINDOW_3D, manifest_labels), "puzzle5d-3d")
                 .default_layout(create_default_layout(&[PUZZLE5D_PLAY_WINDOW_2D.into(), PUZZLE5D_PLAY_WINDOW_3D.into()], "row", Some(&[50.0, 50.0]), Some(&["Puzzle 2D".into(), "Puzzle 3D".into()])))
                 .panel_tab(FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_DOCUMENT)
                 .panel_tab(FRAMEWORK_PANEL_TAB_CATALOGUE_ID, FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, PanelGroup::Workbench, PUZZLE5D_PLAY_BODY_KINDS)
@@ -12320,7 +12320,7 @@ pub mod d5 {
                 .utility(UtilityDefinition { group: Some("transform".into()), ..UtilityDefinition::new("scale", "Scale", "maximize-2") })
                 .utility(UtilityDefinition::new("brush", "Brush", "paintbrush"))
                 .utility(UtilityDefinition::new("fill", "Fill", "paint-bucket"))
-                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "move-3d"))
+                .utility(UtilityDefinition::new("worldRelocate", "Relocate", "relocate-3d"))
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_2D, vec!["select".into(), "brush".into(), "fill".into()])
                 .window_kind_utilities(PUZZLE5D_PLAY_WINDOW_3D, vec!["move".into(), "rotate".into(), "scale".into(), "brush".into(), "fill".into(), "worldRelocate".into()])
                 // 📇 Per-window action scoping — the 3D window (World3d) owns the transform-gumball operations

@@ -179,6 +179,45 @@ impl<T: DslField, const N: usize> DslField for [T; N] {
         }
     }
 }
+
+/// @emoji 🌱 Schema-less escape hatch: a bare `serde_json::Value` field binds as `Shape::Value`
+/// (dynamic `DslValue` literal) via the engine's existing serde_json bridge — for technology
+/// fields that are genuinely untyped (arbitrary adjustment params, freeform scale/metadata) rather
+/// than a fixed record shape.
+impl DslField for serde_json::Value {
+    fn shape() -> Shape {
+        Shape::Value
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::Value(DslValue::from(self.clone()))
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::Value(dsl_value) => Ok(serde_json::Value::from(dsl_value.clone())),
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
+/// @emoji 🌱 Same escape hatch as `serde_json::Value`, for the `serde_json::Map` a `#[serde(tag =
+/// "kind")]` catch-all/adjustment-params field is typed as — bridges through a JSON object literal.
+impl DslField for serde_json::Map<String, serde_json::Value> {
+    fn shape() -> Shape {
+        Shape::Value
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::Value(DslValue::from(serde_json::Value::Object(self.clone())))
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::Value(dsl_value) => match serde_json::Value::from(dsl_value.clone()) {
+                serde_json::Value::Object(map) => Ok(map),
+                other => Err(format!("expected a JSON object, found {other:?}")),
+            },
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
 //#endregion 🔖Field
 
 //#region 🔖Variants
@@ -234,7 +273,7 @@ pub mod __rt {
     /// a `Result` (there is no sensible recoverable path for a grammar that's wrong at compile time).
     pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {
         match T::shape() {
-            Shape::Record(spec) => *spec,
+            Shape::Record(spec_fn) => spec_fn(),
             other => panic!("newtype variant's inner type must have Record shape, found {other:?}"),
         }
     }
@@ -298,6 +337,18 @@ mod tests {
         assert_eq!(bool::from_value(&true.to_value()), Ok(true));
         assert_eq!(f64::from_value(&1.5f64.to_value()), Ok(1.5));
         assert_eq!(String::from_value(&"hi".to_string().to_value()), Ok("hi".to_string()));
+    }
+
+    #[test]
+    fn serde_json_value_and_map_dsl_field_impls_round_trip_through_dsl_value() {
+        // `DslValue::Number` is a single `f64` variant (no int/float distinction, matching dsl_core's
+        // canonical number policy elsewhere) — literals here are already floats so the round trip is exact.
+        let value = serde_json::json!({ "a": 1.0, "b": [true, null, "x"] });
+        assert_eq!(serde_json::Value::from_value(&value.to_value()), Ok(value));
+
+        let mut map = serde_json::Map::new();
+        map.insert("curves".to_string(), serde_json::json!([[0.0, 0.0], [1.0, 1.0]]));
+        assert_eq!(<serde_json::Map<String, serde_json::Value>>::from_value(&map.to_value()), Ok(map));
     }
 
     // --- end-to-end derive tests: mirrors the norm-family "flat scalar document" worked example ---
@@ -564,6 +615,46 @@ mod tests {
         assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
         let parsed = <PaintOp as vcs::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
         assert_eq!(parsed, op, "boxed required-statements round trip diverged for {printed:?}");
+    }
+
+    // --- regression: a genuinely self-referential `#[derive(DslRecord)]` STRUCT (not an enum) —
+    // a field whose type recurses back to the struct itself, e.g. a dynamic-value type with a
+    // nested-dictionary-of-itself field (the `imperative` pilot's `ValueDsl` shape). Unlike
+    // `Shape::Statements` (already lazy), `Shape::Record` used to eagerly call `Self::__dsl_spec()`
+    // to build its own shape, which itself built its "dict" field's shape by calling
+    // `Self::__dsl_spec()` again — infinite recursion just constructing the spec, stack overflow
+    // before a single byte of real data was ever touched. Now lazy (a `fn() -> RecordSpec` pointer,
+    // mirroring `Statements`), so this must round trip a genuinely nested value correctly.
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    struct SelfRefValue {
+        #[dsl(key = "n")]
+        number: Option<i64>,
+        #[dsl(key = "dict")]
+        dictionary: Option<std::collections::BTreeMap<String, SelfRefValue>>,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "selfrefdoc")]
+    struct SelfRefDocument {
+        #[dsl(block)]
+        root: SelfRefValue,
+    }
+
+    #[test]
+    fn derived_self_referential_record_struct_round_trips_nested_values() {
+        let doc = SelfRefDocument {
+            root: SelfRefValue {
+                number: None,
+                dictionary: Some(std::collections::BTreeMap::from([(
+                    "a".to_string(),
+                    SelfRefValue { number: Some(1), dictionary: Some(std::collections::BTreeMap::from([("b".to_string(), SelfRefValue { number: Some(2), dictionary: None })])) },
+                )])),
+            },
+        };
+        let printed = <SelfRefDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        let parsed = <SelfRefDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, doc, "self-referential record round trip diverged;\nprinted:\n{printed}");
     }
 }
 //#endregion 🧪Tests

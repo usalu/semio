@@ -10,7 +10,7 @@
 
 import { Cursor, Icon, LoadingRow, Spinner } from "@semio-tech/ui-react";
 import { createIconComponent } from "@semio-tech/ui-react";
-import { ICON_NAMES, type IconName } from "@semio-tech/ui-asset";
+import { ICON_NAMES, ICON_CONCEPT_ASSIGNMENTS, type IconName } from "@semio-tech/ui-asset";
 import type { Meta, StoryObj } from "@storybook/react";
 
 // 🖼️#region 🛒Icons
@@ -85,6 +85,21 @@ export const IconAnimations: Story = {
   ),
 };
 // #endregion 🫨IconAnimations
+
+export const Concepts: Story = {
+  args: { color: "#000000" },
+  render: () => (
+    <div className="grid max-w-5xl grid-cols-2 gap-2 text-2xs">
+      {Object.entries(ICON_CONCEPT_ASSIGNMENTS).map(([concept, iconId]) => (
+        <div key={concept} className="flex items-center gap-2 rounded-sm border px-2 py-1">
+          <Icon icon={iconId} size="small" className="shrink-0" />
+          <span className="font-mono text-muted-foreground">{concept}</span>
+          <span className="ml-auto font-mono">{iconId}</span>
+        </div>
+      ))}
+    </div>
+  ),
+};
 
 // #endregion 🛒Icons
 

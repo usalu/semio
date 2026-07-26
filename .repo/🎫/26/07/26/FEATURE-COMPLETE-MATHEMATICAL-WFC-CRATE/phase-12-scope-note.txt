@@ -1,0 +1,93 @@
+P12 — flow, sparse3d/octree, motif, evolve + final polish — scope note
+========================================================================
+
+Implemented (270 tests passing, cargo clippy clean for mathematical_wfc itself):
+
+- flow.rs: `FlowConstraint` — a resource-flow global constraint fitting the existing `Constraint`
+  trait exactly like `constraints_card.rs`/`constraints_conn.rs`: requires at least `min_flow`
+  edge-disjoint paths (uniform capacity 1 per adjacency edge) from a source set to a sink set,
+  through nodes whose assigned pattern matches a selector. Computed exactly at completion via a
+  hand-rolled Edmonds-Karp (BFS augmenting-path) max-flow over a small adjacency-list network
+  with paired forward/reverse edges — no external graph/flow crate, matching this crate's
+  zero-dependency convention. `Exactness::Exact` (max-flow on a complete assignment is an exact
+  computation, not an approximation). Covered end to end: attached via a real
+  `GraphSolverBuilder::constraint(...)` through `.solve()`, forcing a unique all-floor solution
+  on a 4-node path (not just `FlowConstraint::validate_complete` exercised in isolation).
+- sparse3d.rs: `SparseVolume` — converts a set of occupied 3D integer coordinates (not a dense
+  bounding box) into a `GraphTopology`, emitting a face-adjacency arc between two occupied voxels
+  only when *both* are present. First-seen-order stable `NodeId` assignment; `to_graph_topology`
+  takes caller-supplied `(offset, RelationId)` pairs (from `declare_stencil_relations_3d`) so it
+  doesn't duplicate `grid3d.rs`'s relation-declaration logic. Verified to solve correctly through
+  the ordinary kernel (`search::solve`), not just structurally.
+- motif.rs: `refine_colors`/`canonicalize` — graph motif canonicalization via iterative color
+  refinement (1-dimensional Weisfeiler-Leman): each node's signature summarizes its rooted
+  neighborhood out to `rounds` hops (own color + sorted multiset of neighbor colors, hashed).
+  Verified to correctly distinguish structurally-different neighborhoods (a hub vs. a leaf) while
+  giving isomorphic neighborhoods (two disjoint triangles) identical signatures, and to be
+  deterministic.
+- evolve.rs: `evolve()`/`EvolveConfig`/`EvolveResult` — an evolutionary outer loop over seeds:
+  maintains a population across generations, scores each via a `SoftConstraint`, keeps the top
+  `elite_count` survivors, and refills the rest of the next generation with seeds derived from
+  those survivors (biasing later generations toward descendants of good seeds, unlike
+  `crate::soft::best_of_n`'s flat independent resampling). Verified to actually converge toward a
+  scorer's maximum across generations on a real solver (checkerboard(5)'s unique 3-black-node
+  optimum), not just to run without crashing. This function needs no `Topology` generic at all
+  (it only takes a `solve_one` closure), so — unlike `repair`/`parallel`/`chunk`/`hierarchy` —
+  it's exposed as genuinely public API (`pub fn evolve`, `pub use evolve::{...}`) rather than a
+  `pub(crate)` free function behind a per-solver wrapper.
+- Incidental fix while wiring evolve.rs: `crate::soft::Attempt` didn't derive `Clone` (blocking
+  evolve.rs's need to keep a copy of the current best while also pushing an owned copy into the
+  generation's scored list) — added `#[derive(Clone, Debug)]`, a purely additive change (every
+  field was already `Clone`-capable). Also fixed a misplaced doc comment in soft.rs: the
+  `best_of_n` function's doc comment had been attached to the `Attempt` struct definition above it
+  instead (a pre-existing, harmless copy-paste artifact from P7, noticed and corrected in passing).
+
+Deferred from the original plan's P12 scope (left for a later pass, not silently dropped):
+
+- **No true variable-resolution octree.** `sparse3d.rs` provides uniform-resolution
+  sparse-to-graph conversion (the primitive a real octree's leaves would still need), not a
+  multi-level cell structure with level-of-detail transition arcs between a coarse cell and
+  several finer neighbors. That hierarchical structure is a substantially bigger, genuinely
+  separate feature (variable-resolution neighbor-finding, LOD-transition compatibility rules) and
+  is explicitly out of scope until a concrete consumer needs actual multi-resolution volumes
+  rather than a large uniform sparse one.
+- **Motifs are not yet usable as higher-order model patterns.** `motif.rs` only provides the
+  canonicalization primitive (turning a rooted neighborhood into a stable signature); turning a
+  signature into a `PatternId` a solver could actually assign, and handling the automorphism/
+  port-permutation bookkeeping a *directed*, multi-relation graph's motifs would need (this
+  module's neighbor-color multiset deliberately ignores which relation each arc used), is
+  deferred pending a concrete consumer defining what a "motif pattern" should mean for their
+  model.
+- **`evolve.rs` evolves only the seed dimension.** Weight-field and tileset-parameter evolution
+  (part of the original design's "genotype") aren't implemented — neither has an established
+  encoding/mutation operator in this crate yet, unlike a seed (already a single `u64` with a
+  natural derive-a-neighbor bit-mixing operator). A caller wanting to evolve those too can layer
+  it on by making `solve_one` a function of an evolved parameter set, reusing this loop's
+  population/generation/elitism structure as-is.
+- **`FlowConstraint` capacity is uniform (1 per edge), not per-node/per-pattern-weighted.** The
+  original design's "capacity/balance" language suggested weighted per-node throughput; this
+  implementation only supports edge-disjoint-path counting. Extending to weighted node capacities
+  (the standard node-splitting max-flow trick) is a contained, low-risk follow-up once a concrete
+  consumer needs actual capacity values rather than path counts.
+
+Mid-phase incident (second occurrence this session — see
+[[feedback-automated-single-file-consolidation]], updated with this recurrence): the same
+concurrent single-file-consolidation process flattened `mathematical/wfc/rs/src/*.rs` into
+`lib.rs` again, mid-edit, while `evolve.rs` was being written (that one file survived since it
+hadn't been merged in yet). This time the flatten was found already committed to git history
+(a commit titled after unrelated crates — `mathematical/number`/`polynomial`/`cas`/
+`kernel_3d_brep` — whose actual diff also touched `mathematical/wfc`, confirming the auto-commit
+bundles multiple sessions'/tools' changes into one commit regardless of what its own message
+names). Recovered faster the second time: re-ran the same brace-matching split script, then used
+the flattened `lib.rs`'s own current `^pub mod`/`^pub use` lines directly as the authoritative
+up-to-the-minute module/export list (no need to round-trip through an older git commit and
+re-diff forward, since the flattened snapshot already reflected all P7-P12 work by construction).
+All 270 tests passing after restoration confirms nothing was lost either time.
+
+Overall status: every phase from the original plan (P0 through P12) has landed, each with test
+coverage and — where a phase's full scope was larger than warranted without a concrete consumer
+driving the requirements — an explicit, reasoned scope note documenting exactly what was
+deferred and why, following the same pattern in every phase from P7 onward. The crate is feature-
+complete relative to the approved plan's stable-and-experimental tiers, with the specific,
+itemized exceptions called out across the nine scope notes (P7, P9, P10, P11, P12) rather than
+any silent gaps.

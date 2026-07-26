@@ -2646,7 +2646,7 @@ mod tests {
                 on_change: None,
                 children: vec![WindowMeasure::Toggle {
                     id: "brush-size".into(),
-                    icon_id: "brush".into(),
+                    icon_id: "paintbrush".into(),
                     label: Some("Size".into()),
                     pressed: false,
                     text: None,
@@ -5227,12 +5227,12 @@ pub mod interpreter {
 //! 🧩 Maps framework UiNode trees to ui_wgpu widget nodes.
 
 use crate::scenes::{queue_canvas_image_upload, decode_canvas_image, render_component_scene, TiledMapSurface, NodeGraphSurface, Board2dSurface};
-use ui_wgpu::{ActionDescriptor, UiComponentSceneNode, UiControlNode, UiNode, UiPresence, UiState, UiTreeItemAction, UiTreeItemNode, UiTreeSectionNode};
+use ui_wgpu::{ActionDescriptor, DragPayload, NodeId, UiComponentSceneNode, UiNode, UiPresence, UiState};
 use serde_json::Value;
 use ui_wgpu::{
-    draw_text, gap_for_token, layout_horizontal, layout_vertical, padding_for_token, ControlNode, KeyValueEntry, Rect,
-    SelectItem, Theme, TreeItem, TreeItemAction, TreeSection, WidgetContext, WidgetInteractionMaps, WidgetNode,
-    measure_widget, render_widget,
+    draw_text, Rect,
+    SelectItem, Theme, WidgetContext, WidgetInteractionMaps, WidgetNode,
+    render_widget,
 };
 
 pub type FrameworkWidgetContext<'a> = WidgetContext<'a, ActionDescriptor>;
@@ -5623,28 +5623,261 @@ pub fn dispatch_ui_event(
     commands
 }
 
+/** 🧵 W3 clipboard/drag-drop wiring (`report-w3-clipboard-dnd.md`): every `ui_wgpu::UiCommand`
+ * variant now has an explicit arm — no more silently-dropped-by-omission commands.
+ *  - `App` → unchanged: queues `action` into the same `input.queue_event` pipeline every other
+ *    action already flows through.
+ *  - `ClipboardCopy`/`ClipboardCut` → `write_os_clipboard` (real OS clipboard via `ui_wgpu::host`,
+ *    mocked in this module's own tests — see `MOCK_CLIPBOARD_WRITES`).
+ *  - `ClipboardPasteRequested` → `apply_clipboard_paste_requested`, below (native/wasm split: native
+ *    reads synchronously and round-trips within this same call; wasm can't, see that fn's doc comment).
+ *  - `DropCommitted` → `apply_drop_committed`, below.
+ *  - `DropCancelled` → intentional no-op: mirrors `framework/renderer/react/index.tsx`'s
+ *    `UiStackHost.onDrop` (native HTML5 DnD), which has no "drag cancelled" callback on any
+ *    declarative node either — there is nothing to dispatch.
+ *  - `OverlayClosed` → intentional no-op: overlay open/close is fully internal
+ *    `events::EventRouter` bookkeeping the retained engine already repaints correctly on its own; no
+ *    `UiNode` variant carries an "on close"/`onOpenChange` callback today (confirmed by grep across
+ *    every `Ui*Node` struct in `ui_wgpu::component::ui`), so there is nothing for a host to fire.
+ *  - `FocusChanged` → intentional no-op HERE: the sibling `w3-shell-input-cutover` workstream's own
+ *    `note_content_focus_commands` (off-limits `shell::ShellInput` region, see that fn's doc comment)
+ *    already consumes the raw command list `dispatch_ui_event` returns to ITS OWN callers for this —
+ *    duplicating that bookkeeping in this fn would double-track the same state from two places.
+ *  - `Scene` → `apply_scene_ui_command`, below (`w4-scene-input`): a real per-event pointer/wheel hit
+ *    on a `ComponentScene` leaf, routed into the matching per-`SurfaceKind` handler in `scenes`
+ *    instead of that region's own once-per-render-frame `InputState` sample. */
 fn apply_ui_commands(commands: &[ui_wgpu::UiCommand], input: &mut ui_wgpu::InputState<ActionDescriptor>) {
     for command in commands {
-        if let ui_wgpu::UiCommand::App { action, .. } = command {
-            input.queue_event(action.clone());
+        match command {
+            ui_wgpu::UiCommand::App { action, .. } => input.queue_event(action.clone()),
+            ui_wgpu::UiCommand::ClipboardCopy { text, .. } | ui_wgpu::UiCommand::ClipboardCut { text, .. } => {
+                write_os_clipboard(text);
+            }
+            ui_wgpu::UiCommand::ClipboardPasteRequested { window_id } => {
+                apply_clipboard_paste_requested(window_id, input);
+            }
+            ui_wgpu::UiCommand::DropCommitted { window_id, target, payload, .. } => {
+                apply_drop_committed(window_id, *target, payload, input);
+            }
+            ui_wgpu::UiCommand::Scene { window_id, node, kind, rect, event, .. } => {
+                apply_scene_ui_command(window_id, *node, *kind, *rect, event, input);
+            }
+            ui_wgpu::UiCommand::DropCancelled { .. } | ui_wgpu::UiCommand::OverlayClosed { .. } | ui_wgpu::UiCommand::FocusChanged { .. } => {}
         }
-        // 🚧 FocusChanged/OverlayClosed/DropCommitted/DropCancelled/Clipboard* are host/EventRouter
-        // bookkeeping this ticket doesn't have a sanctioned place to react to yet (clipboard OS
-        // access in particular is a documented `host`-region gap per `report-w1d-events-overlay.md`)
-        // — left as a wiring request, not silently dropped without a trace: see ticket report.
     }
 }
 
-/// 🖱️ Best-effort Left/Right/Middle mapping for `InputState::pointer_button`'s raw `i16` code. This
-/// renderer has never had a single canonical enum for mouse buttons (widgets consume `pointer_down`
-/// as a boolean and ignore which button), so this assumes the common `0 = primary` convention; the
-/// `w3-shell-input-cutover` workstream owns the real winit `MouseButton` mapping and should correct
-/// this if its own convention differs.
+/** 🫳 Resolves `target`'s own `drop_action` (the only node kind `ui_wgpu`'s own
+ * `sync_interactive_state` currently flags `NodeFlags::DROP_TARGET` for is `UiNode::Stack` — a
+ * `UiTreeNode` also carries a `drop_action` field but nothing syncs `DROP_TARGET` for `Tree` nodes
+ * yet, a `ui_wgpu`-side gap this fn doesn't paper over), decodes `payload`'s first
+ * `application/x-semio-*` mime entry as JSON (mirrors `framework/renderer/react/index.tsx`'s
+ * `UiStackHost.onDrop`: `[...dataTransfer.types].filter(k => k.startsWith("application/x-semio-"))`),
+ * and queues the merged `ActionDescriptor` — `dispatchUiAction`'s own React-side merge order
+ * (`{...descriptor.args, ...patch}`, patch wins) reproduced by `merge_action_args`. A no-op if the
+ * target isn't (or no longer is, by the time this command is applied) a `Stack` with a `drop_action`,
+ * or the payload carries no decodable semio-mime entry. */
+fn apply_drop_committed(window_id: &str, target: NodeId, payload: &DragPayload, input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+    let Some(action) = drop_target_action(window_id, target) else { return };
+    let Some(patch) = decode_drop_payload(payload) else { return };
+    input.queue_event(ActionDescriptor {
+        controller_id: action.controller_id,
+        action: action.action,
+        args: Some(merge_action_args(action.args.as_ref(), patch)),
+    });
+}
+
+fn drop_target_action(window_id: &str, target: NodeId) -> Option<ActionDescriptor> {
+    UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let node = engine.tree(window_id)?.node(target)?;
+        match &node.spec.0 {
+            UiNode::Stack(stack) => stack.drop_action.clone(),
+            _ => None,
+        }
+    })
+}
+
+/// 🎯 The first `application/x-semio-*` payload entry with non-empty trimmed text, JSON-decoded as
+/// an object — `None` if no such entry exists or it doesn't decode to a JSON object, matching
+/// `UiStackHost.onDrop`'s own `try { JSON.parse(encoded) } catch { return; }` bail-out.
+fn decode_drop_payload(payload: &DragPayload) -> Option<serde_json::Map<String, Value>> {
+    let (_, encoded) = payload.iter().find(|(mime, value)| mime.starts_with("application/x-semio-") && !value.trim().is_empty())?;
+    match serde_json::from_str::<Value>(encoded).ok()? {
+        Value::Object(map) => Some(map),
+        _ => None,
+    }
+}
+
+/// 🔀 `{...existing, ...patch}` (patch wins on key collision) — mirrors
+/// `framework/renderer/react/index.tsx`'s `dispatchUiAction` merge order exactly.
+fn merge_action_args(existing: Option<&Value>, patch: serde_json::Map<String, Value>) -> Value {
+    let mut base = match existing {
+        Some(Value::Object(map)) => map.clone(),
+        _ => serde_json::Map::new(),
+    };
+    base.extend(patch);
+    Value::Object(base)
+}
+
+/// 📋 Writes to the OS clipboard via `ui_wgpu::host` — the one indirection this module's own tests
+/// swap for a mock (`MOCK_CLIPBOARD_WRITES`), so `cargo test` never touches a real display/clipboard.
+#[cfg(not(test))]
+fn write_os_clipboard(text: &str) {
+    ui_wgpu::clipboard_write_text(text);
+}
+
+#[cfg(test)]
+fn write_os_clipboard(text: &str) {
+    MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().push(text.to_string()));
+}
+
+/// 📋 Native-only OS clipboard read — see `read_os_clipboard`'s wasm non-existence note on
+/// `apply_clipboard_paste_requested` below for why there is no wasm counterpart of this fn itself.
+#[cfg(all(not(target_arch = "wasm32"), not(test)))]
+fn read_os_clipboard() -> Option<String> {
+    ui_wgpu::clipboard_read_text()
+}
+
+#[cfg(all(not(target_arch = "wasm32"), test))]
+fn read_os_clipboard() -> Option<String> {
+    MOCK_CLIPBOARD_READ.with(|cell| cell.borrow().clone())
+}
+
+#[cfg(test)]
+thread_local! {
+    static MOCK_CLIPBOARD_WRITES: std::cell::RefCell<Vec<String>> = std::cell::RefCell::new(Vec::new());
+    static MOCK_CLIPBOARD_READ: std::cell::RefCell<Option<String>> = std::cell::RefCell::new(None);
+}
+
+/** 📋 `ClipboardPasteRequested`'s native handling: `ui_wgpu::clipboard_read_text` is a blocking
+ * call, so this reads the OS clipboard and round-trips the result straight back into the SAME
+ * retained window (`UI_ENGINE.dispatch_event(window_id, UiEvent::Paste{text})`) within this one
+ * synchronous call — safe to re-enter `UI_ENGINE` here specifically because every caller of
+ * `apply_ui_commands` (`render_ui_node`, `dispatch_ui_event`) only calls it AFTER its own
+ * `UI_ENGINE.with(...)` borrow has already been dropped (see this region's top-of-file doc comment).
+ * Whatever `UiCommand`s that `Paste` produces (none today — inserting text doesn't itself fire an
+ * `on_change` action yet, a documented pre-existing gap, see `report-w1d-events-overlay.md`) are
+ * applied right back through `apply_ui_commands`, so this stays correct if that ever changes. */
+#[cfg(not(target_arch = "wasm32"))]
+fn apply_clipboard_paste_requested(window_id: &str, input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+    let Some(text) = read_os_clipboard() else { return };
+    let commands = UI_ENGINE.with(|cell| cell.borrow_mut().dispatch_event(window_id, ui_wgpu::UiEvent::Paste { text }));
+    apply_ui_commands(&commands, input);
+}
+
+/** 📋 `ClipboardPasteRequested`'s wasm handling: the browser's Clipboard API is Promise-based with
+ * no synchronous read (`ui_wgpu::clipboard_read_text` is `async` there — see that fn's doc comment),
+ * so this can't resolve within this synchronous call the way the native arm above does. Spawns a
+ * `wasm_bindgen_futures::spawn_local` task that re-enters `UI_ENGINE` once the browser grants/denies
+ * the read, on a later microtask (no `&mut InputState<ActionDescriptor>` borrow can survive that
+ * boundary — it's tied to this frame's call stack). Whatever `UiCommand`s that later `dispatch_event`
+ * call produces are still captured by `engine::Ui`'s own internal `pending_commands` queue (every
+ * `dispatch_event` call already does this unconditionally) and so remain retrievable via a future
+ * `Ui::drain_commands()` call — nothing currently drains that queue on this crate's side, itself a
+ * pre-existing gap this fn doesn't attempt to also close (see `Ui::drain_commands`'s own doc
+ * comment); moot today regardless, since `Paste` never fires an `App` command yet (see the native
+ * arm's own doc comment above). */
+#[cfg(target_arch = "wasm32")]
+fn apply_clipboard_paste_requested(window_id: &str, _input: &mut ui_wgpu::InputState<ActionDescriptor>) {
+    let window_id = window_id.to_string();
+    wasm_bindgen_futures::spawn_local(async move {
+        if let Some(text) = ui_wgpu::clipboard_read_text().await {
+            UI_ENGINE.with(|cell| {
+                cell.borrow_mut().dispatch_event(&window_id, ui_wgpu::UiEvent::Paste { text });
+            });
+        }
+    });
+}
+
+/// 🖱️ Best-effort Left/Right/Middle mapping for `InputState::pointer_button`'s raw `i16` code —
+/// the standard DOM `MouseEvent.button` convention (`0` primary/left, `1` middle, `2` secondary/
+/// right) `scenes::handle_scene_pointer_button`'s own `button == 1`/`button == 2` checks (pan,
+/// `TextEditor`'s right-click context menu, …) already assume. 🐛 W4 fix: this used to have `1`/`2`
+/// swapped (`1 => Secondary, 2 => Middle`) — invisible until `apply_scene_ui_command` (below) started
+/// round-tripping a synthesized `PointerButton` back through `pointer_button_code`'s inverse mapping
+/// into a real `i16` for those same `scenes` handlers; nothing previously read `UiEvent::PointerDown/
+/// Up`'s `button` field on this path (`events::EventRouter::dispatch` itself never branches on it), so
+/// the swap had no observable effect before this ticket.
 fn pointer_button_from_code(code: i16) -> ui_wgpu::PointerButton {
     match code {
-        1 => ui_wgpu::PointerButton::Secondary,
-        2 => ui_wgpu::PointerButton::Middle,
+        1 => ui_wgpu::PointerButton::Middle,
+        2 => ui_wgpu::PointerButton::Secondary,
         _ => ui_wgpu::PointerButton::Primary,
+    }
+}
+
+/// 🖱️ Inverse of `pointer_button_from_code` — the DOM-standard `i16` code `scenes`' own handlers
+/// expect, for `apply_scene_ui_command` to recover from a `UiCommand::Scene`'s `PointerButton`.
+fn pointer_button_code(button: ui_wgpu::PointerButton) -> i16 {
+    match button {
+        ui_wgpu::PointerButton::Primary => 0,
+        ui_wgpu::PointerButton::Middle => 1,
+        ui_wgpu::PointerButton::Secondary => 2,
+    }
+}
+
+/// 🎬 `UiCommand::Scene` handling (`w4-scene-input`): routes a real per-event pointer/wheel hit
+/// against a `ComponentScene` leaf — built by `ui_wgpu::events::EventRouter::dispatch`'s own hit-
+/// testing — into `scenes::handle_scene_pointer_button`/`handle_scene_pointer_move`/
+/// `handle_scene_wheel`. This is now the ONLY caller of those three: they used to also be driven once
+/// per render frame from `scenes::RenderEntry`'s own `apply_scene_wheel`/`apply_scene_pointer`,
+/// sampling the aggregate `InputState` with manual "was it down last frame" edge detection — both
+/// deleted (along with their tests) once every one of the 11 generic-fallback `SurfaceKind`s was
+/// proven reachable through this real per-event path instead (see this ticket's report). Re-borrows
+/// `UI_ENGINE` to look up `node`'s live `UiComponentSceneNode` (safe: every caller of
+/// `apply_ui_commands`, this fn's only caller, already runs after its own `UI_ENGINE.with` borrow —
+/// the one that produced `commands` — has dropped; see `apply_ui_commands`'s own doc comment). Skips
+/// `scenes::scene_has_bespoke_pointer_dispatch` kinds (world-3d/node-graph/tiled-map/board-2d): those
+/// already receive real OS-event-driven input through their own `dock`/`engine_canvas` host and must
+/// not be double-dispatched here.
+///
+/// 🕳️ Known gap: `UiEvent::PointerDown`/`PointerUp`/`Scroll` carry no modifier-key fields (only
+/// `KeyDown`/`KeyUp` do), so shift-extend/ctrl-zoom always see `false` through this path — the same
+/// limitation `events::UiEvent`'s public shape has everywhere else today, not something this fn can
+/// fix without a breaking `UiEvent` field addition across ~30 downstream plugins (see
+/// `dispatch_event`'s own `#[allow(clippy::needless_pass_by_value...)]` doc comment on that cost).
+fn apply_scene_ui_command(
+    window_id: &str,
+    node: NodeId,
+    kind: ui_wgpu::SurfaceKind,
+    rect: Rect,
+    event: &ui_wgpu::UiEvent,
+    input: &mut ui_wgpu::InputState<ActionDescriptor>,
+) {
+    if crate::scenes::scene_has_bespoke_pointer_dispatch(kind) {
+        return;
+    }
+    let actions = UI_ENGINE.with(|cell| {
+        let engine = cell.borrow();
+        let Some(tree) = engine.tree(window_id) else { return Vec::new() };
+        let Some(n) = tree.node(node) else { return Vec::new() };
+        let UiNode::ComponentScene(scene) = &n.spec.0 else { return Vec::new() };
+        match event {
+            ui_wgpu::UiEvent::PointerDown { x, y, button } => {
+                crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, true, pointer_button_code(*button), false)
+            }
+            ui_wgpu::UiEvent::PointerUp { x, y, button } => {
+                crate::scenes::handle_scene_pointer_button(scene, rect, *x, *y, false, pointer_button_code(*button), false)
+            }
+            ui_wgpu::UiEvent::PointerMove { x, y } => {
+                let (was_down, last_x, last_y) = crate::scenes::scene_pointer_edge_state(&scene.surface_id);
+                let actions = crate::scenes::handle_scene_pointer_move(scene, rect, *x, *y, was_down, 0, *x - last_x, *y - last_y);
+                crate::scenes::set_scene_last_pointer_pos(&scene.surface_id, *x, *y);
+                actions
+            }
+            ui_wgpu::UiEvent::Scroll { x, y, delta_y, .. } => {
+                if delta_y.abs() < 0.01 {
+                    Vec::new()
+                } else {
+                    crate::scenes::handle_scene_wheel(scene, rect, *x, *y, *delta_y, false)
+                }
+            }
+            _ => Vec::new(),
+        }
+    });
+    for action in actions {
+        input.queue_event(action);
     }
 }
 
@@ -5879,6 +6112,428 @@ pub fn render_ui_node(
         commands
     });
     apply_ui_commands(&commands, ctx.input);
+}
+
+#[cfg(all(test, not(target_arch = "wasm32")))]
+mod ui_command_wiring_tests {
+    use super::*;
+
+    fn action(name: &str, args: Option<Value>) -> ActionDescriptor {
+        ActionDescriptor { controller_id: "ctrl".into(), action: name.into(), args }
+    }
+
+    fn stack_with(id: &str, drop_action: Option<ActionDescriptor>, children: Vec<UiNode>) -> UiNode {
+        UiNode::Stack(ui_wgpu::UiStackNode {
+            direction: "vertical".into(),
+            gap: None,
+            padding: None,
+            id: Some(id.into()),
+            presence: ui_wgpu::UiPresence::default(),
+            activate: None,
+            drop_action,
+            drop_overlay: None,
+            children,
+        })
+    }
+
+    //#region 🔖DropCommittedTests
+    #[test]
+    fn decode_drop_payload_extracts_the_first_semio_mime_entry_as_a_json_object() {
+        let mut payload = DragPayload::new();
+        payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
+        let decoded = decode_drop_payload(&payload).expect("a well-formed semio-mime JSON object payload should decode");
+        assert_eq!(decoded.get("id").and_then(Value::as_str), Some("abc"));
+    }
+
+    #[test]
+    fn decode_drop_payload_ignores_non_semio_mimes_and_rejects_non_object_or_blank_json() {
+        let mut no_semio_mime = DragPayload::new();
+        no_semio_mime.insert("text/plain".into(), "\"abc\"".into());
+        assert!(decode_drop_payload(&no_semio_mime).is_none(), "no application/x-semio-* entry present");
+
+        let mut non_object = DragPayload::new();
+        non_object.insert("application/x-semio-catalogue-item".into(), "\"not-an-object\"".into());
+        assert!(decode_drop_payload(&non_object).is_none(), "a non-object JSON payload must not decode");
+
+        let mut blank = DragPayload::new();
+        blank.insert("application/x-semio-catalogue-item".into(), "   ".into());
+        assert!(decode_drop_payload(&blank).is_none(), "a blank payload value must not decode");
+    }
+
+    #[test]
+    fn merge_action_args_lets_the_patch_win_over_existing_args() {
+        let existing = serde_json::json!({"id": "abc", "kept": true});
+        let mut patch = serde_json::Map::new();
+        patch.insert("id".to_string(), Value::from("overridden"));
+        patch.insert("targetId".to_string(), Value::from("t1"));
+
+        let merged = merge_action_args(Some(&existing), patch);
+
+        assert_eq!(merged.get("id").and_then(Value::as_str), Some("overridden"));
+        assert_eq!(merged.get("kept").and_then(Value::as_bool), Some(true));
+        assert_eq!(merged.get("targetId").and_then(Value::as_str), Some("t1"));
+    }
+
+    #[test]
+    fn drop_target_action_reads_a_stacks_drop_action_from_the_retained_tree() {
+        let window_id = "apply-ui-commands-drop-target-test";
+        let expected = action("onDrop", None);
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", Some(expected.clone()), vec![])));
+        let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
+
+        assert_eq!(drop_target_action(window_id, target), Some(expected));
+    }
+
+    #[test]
+    fn drop_target_action_is_none_for_a_stack_without_a_drop_action() {
+        let window_id = "apply-ui-commands-drop-target-none-test";
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", None, vec![])));
+        let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
+
+        assert!(drop_target_action(window_id, target).is_none());
+    }
+
+    #[test]
+    fn apply_drop_committed_queues_the_merged_action_into_input() {
+        let window_id = "apply-ui-commands-drop-committed-test";
+        let drop_action = action("onDrop", Some(serde_json::json!({"kept": true})));
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", Some(drop_action), vec![])));
+        let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
+        let mut payload = DragPayload::new();
+        payload.insert("application/x-semio-catalogue-item".into(), "{\"id\":\"abc\"}".into());
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_drop_committed(window_id, target, &payload, &mut input);
+
+        let queued = input.drain_events();
+        assert_eq!(queued.len(), 1);
+        assert_eq!(queued[0].controller_id, "ctrl");
+        assert_eq!(queued[0].action, "onDrop");
+        let args = queued[0].args.as_ref().expect("merged args");
+        assert_eq!(args.get("id").and_then(Value::as_str), Some("abc"), "the decoded payload should flow through");
+        assert_eq!(args.get("kept").and_then(Value::as_bool), Some(true), "the drop_action's own existing args should survive");
+    }
+
+    #[test]
+    fn apply_drop_committed_is_a_no_op_without_a_decodable_semio_payload() {
+        let window_id = "apply-ui-commands-drop-committed-no-payload-test";
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("dz", Some(action("onDrop", None)), vec![])));
+        let target = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_drop_committed(window_id, target, &DragPayload::new(), &mut input);
+
+        assert!(input.drain_events().is_empty());
+    }
+    //#endregion 🔖DropCommittedTests
+
+    //#region 🔖ClipboardTests
+    #[test]
+    fn clipboard_copy_and_cut_commands_write_through_the_mocked_os_clipboard() {
+        MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow_mut().clear());
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[
+                ui_wgpu::UiCommand::ClipboardCopy { window_id: "w".into(), text: "hello".into() },
+                ui_wgpu::UiCommand::ClipboardCut { window_id: "w".into(), text: "world".into() },
+            ],
+            &mut input,
+        );
+
+        assert_eq!(MOCK_CLIPBOARD_WRITES.with(|cell| cell.borrow().clone()), vec!["hello".to_string(), "world".to_string()]);
+    }
+
+    #[test]
+    fn clipboard_paste_requested_reads_the_mocked_clipboard_and_inserts_it_at_the_focused_caret() {
+        let window_id = "apply-ui-commands-clipboard-paste-test";
+        let input_node = UiNode::Input(ui_wgpu::UiInputNode {
+            id: "name".into(),
+            input_kind: "text".into(),
+            value: String::new(),
+            placeholder: None,
+            commit: None,
+            min: None,
+            max: None,
+            step: None,
+            accept: None,
+            on_change: action("onChange", None),
+            presence: ui_wgpu::UiPresence::default(),
+        });
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![input_node])));
+        let focus_commands = UI_ENGINE.with(|cell| {
+            cell.borrow_mut().dispatch_event(window_id, ui_wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: ui_wgpu::EventModifiers::default() })
+        });
+        let focused = focus_commands
+            .iter()
+            .find_map(|cmd| match cmd {
+                ui_wgpu::UiCommand::FocusChanged { node: Some(id), .. } => Some(*id),
+                _ => None,
+            })
+            .expect("Tab should focus the only focusable node (the Input)");
+        MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = Some("pasted".to_string()));
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_clipboard_paste_requested(window_id, &mut input);
+
+        let text = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().node(focused).unwrap().state.edit.clone().unwrap().text);
+        assert_eq!(text, "pasted");
+    }
+
+    #[test]
+    fn clipboard_paste_requested_is_a_no_op_when_the_mocked_clipboard_is_empty() {
+        let window_id = "apply-ui-commands-clipboard-paste-empty-test";
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![])));
+        MOCK_CLIPBOARD_READ.with(|cell| *cell.borrow_mut() = None);
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_clipboard_paste_requested(window_id, &mut input);
+
+        assert!(input.drain_events().is_empty());
+    }
+    //#endregion 🔖ClipboardTests
+
+    //#region 🔖NoOpCommandTests
+    #[test]
+    fn drop_cancelled_overlay_closed_and_focus_changed_commands_are_explicit_no_ops() {
+        let window_id = "apply-ui-commands-noop-test";
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![])));
+        let node = UI_ENGINE.with(|cell| cell.borrow().tree(window_id).unwrap().root.unwrap());
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[
+                ui_wgpu::UiCommand::DropCancelled { window_id: window_id.into(), source: node },
+                ui_wgpu::UiCommand::OverlayClosed { window_id: window_id.into(), root: node, kind: ui_wgpu::OverlayKind::Tooltip },
+                ui_wgpu::UiCommand::FocusChanged { window_id: window_id.into(), node: Some(node) },
+            ],
+            &mut input,
+        );
+
+        assert!(input.drain_events().is_empty(), "none of these three commands should ever queue an ActionDescriptor");
+    }
+    //#endregion 🔖NoOpCommandTests
+
+    //#region 🔖SceneCommandTests
+    /// 🎬 A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
+    /// matching `ui_wgpu::events::tests::component_scene_ui`'s own fixture shape (that one is private
+    /// to the sibling `ui_wgpu` crate, so this is a separate copy for this crate's own tests).
+    fn component_scene_ui(surface_id: &str, kind: ui_wgpu::SurfaceKind) -> UiNode {
+        UiNode::ComponentScene(UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "ctrl".into(),
+            component_kind: kind,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+            diff_view: None,
+            event_feed: None,
+        })
+    }
+
+    /// 🌱 `apply_tree`s a single-child `Stack(scene_node)` into `window_id` and returns the scene
+    /// leaf's own `NodeId` — every scene-command test below needs a real, live tree node since
+    /// `apply_scene_ui_command` re-fetches it by `(window_id, node)` from `UI_ENGINE`.
+    fn seed_scene_window_with(window_id: &str, scene_node: UiNode) -> NodeId {
+        UI_ENGINE.with(|cell| cell.borrow_mut().apply_tree(window_id, &stack_with("root", None, vec![scene_node])));
+        UI_ENGINE.with(|cell| {
+            let engine = cell.borrow();
+            let tree = engine.tree(window_id).unwrap();
+            let child = tree.children(tree.root.unwrap()).next().expect("the ComponentScene child should be in the retained tree");
+            child
+        })
+    }
+
+    fn seed_scene_window(window_id: &str, surface_id: &str, kind: ui_wgpu::SurfaceKind) -> NodeId {
+        seed_scene_window_with(window_id, component_scene_ui(surface_id, kind))
+    }
+
+    #[test]
+    fn scene_command_dispatches_a_canvas2d_pointer_down_action() {
+        let window_id = "apply-ui-commands-scene-canvas2d-pointer-down";
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::Canvas2d);
+        let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[ui_wgpu::UiCommand::Scene {
+                window_id: window_id.into(),
+                node,
+                surface_id: "s1".into(),
+                kind: ui_wgpu::SurfaceKind::Canvas2d,
+                rect,
+                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
+            }],
+            &mut input,
+        );
+
+        let queued = input.drain_events();
+        assert!(
+            queued.iter().any(|action| action.action == "canvasPointerDown"),
+            "a real per-event PointerDown over a canvas-2d scene should reach the same handler apply_scene_pointer used to sample, got {queued:?}"
+        );
+    }
+
+    #[test]
+    fn scene_command_dispatches_an_ink_canvas_scroll_action() {
+        let window_id = "apply-ui-commands-scene-ink-canvas-scroll";
+        // 🎨 `ink_wheel` reads straight from the scene's own `ink_canvas` payload (unlike TextEditor,
+        // it needs no separate lazily-render-created host state) — mirrors `RenderEntry::ink_scene`'s
+        // own fixture (`apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface`).
+        let mut scene_node = component_scene_ui("s1", ui_wgpu::SurfaceKind::InkCanvas);
+        if let UiNode::ComponentScene(scene) = &mut scene_node {
+            scene.ink_canvas = Some(ui_wgpu::InkCanvasScene {
+                document_json: "{}".into(),
+                selection_json: "[]".into(),
+                hovered_id: None,
+                active_utility: String::new(),
+                view_mode: "canvas".into(),
+                interactive: true,
+            });
+        }
+        let node = seed_scene_window_with(window_id, scene_node);
+        let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[ui_wgpu::UiCommand::Scene {
+                window_id: window_id.into(),
+                node,
+                surface_id: "s1".into(),
+                kind: ui_wgpu::SurfaceKind::InkCanvas,
+                rect,
+                event: ui_wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: -1.0 },
+            }],
+            &mut input,
+        );
+
+        let queued = input.drain_events();
+        assert!(
+            queued.iter().any(|action| action.action == "setCamera"),
+            "a real per-event Scroll over an ink-canvas scene should reach handle_scene_wheel, got {queued:?}"
+        );
+    }
+
+    #[test]
+    fn scene_command_skips_bespoke_surface_kinds_to_avoid_double_dispatch() {
+        let window_id = "apply-ui-commands-scene-bespoke-skip";
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::NodeGraph);
+        let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[ui_wgpu::UiCommand::Scene {
+                window_id: window_id.into(),
+                node,
+                surface_id: "s1".into(),
+                kind: ui_wgpu::SurfaceKind::NodeGraph,
+                rect,
+                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
+            }],
+            &mut input,
+        );
+
+        assert!(
+            input.drain_events().is_empty(),
+            "node-graph already gets real input through its own bespoke dock/engine_canvas host and must not be double-dispatched via UiCommand::Scene"
+        );
+    }
+
+    #[test]
+    fn pointer_button_code_round_trips_through_pointer_button_from_code_for_every_dom_button_code() {
+        for code in [0i16, 1, 2] {
+            let button = pointer_button_from_code(code);
+            assert_eq!(pointer_button_code(button), code, "code {code} should round-trip through PointerButton unchanged (regression guard for the W4 1/2-swap fix)");
+        }
+    }
+
+    /// 🧭 Smoke-tests every one of the 11 non-bespoke `SurfaceKind`s through the real `UiCommand::Scene`
+    /// path (PointerDown, PointerMove, PointerUp, Scroll) — proving each one is actually reachable
+    /// through `apply_scene_ui_command` (no panics, no silently-skipped kind) before the per-frame
+    /// `apply_scene_wheel`/`apply_scene_pointer` sampling fallback they used to depend on is deleted.
+    #[test]
+    fn scene_command_reaches_every_generic_fallback_surface_kind_without_panicking() {
+        let kinds = [
+            ui_wgpu::SurfaceKind::Canvas2d,
+            ui_wgpu::SurfaceKind::Paint2d,
+            ui_wgpu::SurfaceKind::TextEditor,
+            ui_wgpu::SurfaceKind::InkCanvas,
+            ui_wgpu::SurfaceKind::GraphTimeline,
+            ui_wgpu::SurfaceKind::Table,
+            ui_wgpu::SurfaceKind::VirtualFileSystem,
+            ui_wgpu::SurfaceKind::IconRender,
+            ui_wgpu::SurfaceKind::BlockList,
+            ui_wgpu::SurfaceKind::DiffView,
+            ui_wgpu::SurfaceKind::EventFeed,
+        ];
+        for kind in kinds {
+            assert!(!crate::scenes::scene_has_bespoke_pointer_dispatch(kind), "{kind:?} must stay in the generic-fallback set for this smoke test to be meaningful");
+            let window_id = format!("apply-ui-commands-scene-smoke-{kind:?}");
+            let node = seed_scene_window(&window_id, "s1", kind);
+            let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+            let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+            let events = [
+                ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Primary },
+                ui_wgpu::UiEvent::PointerMove { x: 12.0, y: 12.0 },
+                ui_wgpu::UiEvent::PointerUp { x: 12.0, y: 12.0, button: ui_wgpu::PointerButton::Primary },
+                ui_wgpu::UiEvent::Scroll { x: 10.0, y: 10.0, delta_x: 0.0, delta_y: 4.0 },
+            ];
+            for event in events {
+                apply_ui_commands(
+                    &[ui_wgpu::UiCommand::Scene { window_id: window_id.clone(), node, surface_id: "s1".into(), kind, rect, event }],
+                    &mut input,
+                );
+            }
+        }
+    }
+
+    /// 🖱️➡️ W4 fix regression guard: a right-click (`button == 2`) `PointerDown` on a `TextEditor`
+    /// scene must route through `apply_scene_ui_command` -> `handle_scene_pointer_button` ->
+    /// `engine_canvas::text_editor_pointer_down` with the REAL button code — before this ticket's fix,
+    /// `pointer_button_from_code`'s 1/2 swap would have handed it `1`, not `2`. This test can't observe
+    /// `EditorHost`'s own caret state from here: `text_editor_pointer_down` only reaches a live
+    /// `EditorHost` once `engine_canvas::paint_text_editor` has lazily created one in `ENGINE_SURFACES`
+    /// (a real render pass this unit test intentionally doesn't run), so it correctly no-ops gracefully
+    /// here. `framework_editor::pointer_down_screen_repositions_caret_for_non_primary_button_but_does_
+    /// not_start_a_drag_selection` (that crate's own test) is the real assertion on `EditorHost`'s
+    /// behavior; `pointer_button_code_round_trips_through_pointer_button_from_code_for_every_dom_
+    /// button_code` (above) is the real assertion on the button-code plumbing. This test's only job is
+    /// proving the `UiCommand::Scene` route reaches that call site end-to-end without panicking.
+    #[test]
+    fn scene_command_right_click_on_text_editor_does_not_panic_and_stays_a_graceful_no_op_without_a_rendered_host() {
+        let window_id = "apply-ui-commands-scene-text-editor-right-click";
+        let node = seed_scene_window(window_id, "s1", ui_wgpu::SurfaceKind::TextEditor);
+        let rect = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+
+        apply_ui_commands(
+            &[ui_wgpu::UiCommand::Scene {
+                window_id: window_id.into(),
+                node,
+                surface_id: "s1".into(),
+                kind: ui_wgpu::SurfaceKind::TextEditor,
+                rect,
+                event: ui_wgpu::UiEvent::PointerDown { x: 10.0, y: 10.0, button: ui_wgpu::PointerButton::Secondary },
+            }],
+            &mut input,
+        );
+
+        assert!(input.drain_events().is_empty(), "no ENGINE_SURFACES entry exists without a real paint pass, so this should no-op rather than panic or queue a stale action");
+    }
+    //#endregion 🔖SceneCommandTests
 }
 //#endregion RetainedEngineCutover
 
@@ -7527,14 +8182,21 @@ fn mutate_scene_state(surface_id: &str, f: impl FnOnce(&mut SceneSurfaceState)) 
     });
 }
 
-/** @emoji 🖱️ Cheap per-frame read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone on every render pass. */
-fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
+/** @emoji 🖱️ Cheap read of a surface's pointer edge-detection fields, avoiding a full `SceneSurfaceState` clone. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler — the sole caller of `handle_scene_pointer_button`/`handle_scene_pointer_move` now, `RenderEntry`'s own once-per-render-frame `apply_scene_wheel`/`apply_scene_pointer` having been deleted once every generic-fallback surface was proven reachable through this path) can read `pointer_was_down`/`last_pointer_pos` to derive `handle_scene_pointer_move`'s `down`/drag-delta parameters. */
+pub(crate) fn scene_pointer_edge_state(surface_id: &str) -> (bool, f32, f32) {
     SCENE_STATE.with(|cell| {
         cell.borrow()
             .get(surface_id)
             .map(|state| (state.pointer_was_down, state.last_pointer_pos.0, state.last_pointer_pos.1))
             .unwrap_or((false, 0.0, 0.0))
     })
+}
+
+/** @emoji 🖱️ Records `surface_id`'s latest known pointer position — the write half of `scene_pointer_edge_state`, `pub(crate)` for the same reason (see that fn's own doc comment). */
+pub(crate) fn set_scene_last_pointer_pos(surface_id: &str, x: f32, y: f32) {
+    mutate_scene_state(surface_id, |state| {
+        state.last_pointer_pos = (x, y);
+    });
 }
 
 fn scene_action(scene: &UiComponentSceneNode, action: &str, args: Value) -> ActionDescriptor {
@@ -8225,151 +8887,29 @@ pub fn render_component_scene(
         // ticket's task 5 — `render_placeholder` itself is kept for other callers that still want an
         // explicit "unimplemented" chrome, e.g. an unresolved `ExternalSlot`).
     }
-    apply_scene_wheel(scene, bounds, ctx);
-    apply_scene_pointer(scene, bounds, ctx);
+    // 🐛➡️✅ W4 (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): this used to
+    // end with `apply_scene_wheel(scene, bounds, ctx); apply_scene_pointer(scene, bounds, ctx);` — a
+    // once-per-render-frame sample of the aggregate `InputState` with its own manual "was it down last
+    // frame" edge detection, which could drop fast clicks/double-clicks and had asymmetries (e.g. a
+    // right-click passthrough silently inert because `pointer_down_screen` no-op'd unless `button ==
+    // 0`). Real pointer/wheel input for these 11 surfaces now arrives per real event, hit-tested by
+    // `ui_wgpu::events::EventRouter::dispatch` and routed here via `UiCommand::Scene` ->
+    // `interpreter::apply_scene_ui_command`, which calls the SAME `handle_scene_wheel`/
+    // `handle_scene_pointer_button`/`handle_scene_pointer_move` below — so nothing is called from this
+    // render pass any longer.
 }
 
-/** @emoji 🧭 Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. */
-fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
+/** @emoji 🧭 Surface kinds that already receive pointer/wheel input through their own bespoke per-frame host state (`world3d_states`/`node_graph_states`/`tiled_map_states`/`board2d_states`, driven directly by the OS event loop) and must not be double-dispatched through the generic `handle_scene_*` handlers below. `pub(crate)` so `interpreter::apply_scene_ui_command` (the real per-event `UiCommand::Scene` handler, and now the ONLY caller of `handle_scene_wheel`/`handle_scene_pointer_button`/`handle_scene_pointer_move` — see that fn's own doc comment) applies this SAME exclusion list. */
+pub(crate) fn scene_has_bespoke_pointer_dispatch(kind: SurfaceKind) -> bool {
     matches!(
         kind,
         SurfaceKind::World3d | SurfaceKind::NodeGraph | SurfaceKind::TiledMap | SurfaceKind::Board2d
     )
 }
 
-/** @emoji 🎡 Routes live wheel input into `handle_scene_wheel` for surfaces without a bespoke host, dispatching any resulting actions through the widget action queue instead of dropping them. */
-fn apply_scene_wheel(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    if scene_has_bespoke_pointer_dispatch(scene.component_kind) {
-        return;
-    }
-    if ctx.input.wheel_delta.abs() < 0.01 || !bounds.contains(ctx.input.pointer_x, ctx.input.pointer_y) {
-        return;
-    }
-    for action in handle_scene_wheel(
-        scene,
-        bounds,
-        ctx.input.pointer_x,
-        ctx.input.pointer_y,
-        ctx.input.wheel_delta,
-        ctx.input.modifiers.ctrl,
-    ) {
-        ctx.input.queue_event(action);
-    }
-}
-
-/** @emoji 🖱️ Feeds live pointer button/move state into `handle_scene_pointer_button`/`handle_scene_pointer_move` for surfaces without a bespoke host, so kinds that previously received no interaction at all (canvas-2d, paint-2d, text-editor, ink-canvas, graph-timeline, table, virtualFileSystem) get real pointer handling. Edge-detects button transitions via `SceneSurfaceState::pointer_was_down` and only re-runs move handling when the pointer actually moved, so this stays correct even though (unlike the OS-driven bespoke hosts) it is sampled once per render frame rather than once per input event. */
-fn apply_scene_pointer(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
-    if scene_has_bespoke_pointer_dispatch(scene.component_kind) {
-        return;
-    }
-    let x = ctx.input.pointer_x;
-    let y = ctx.input.pointer_y;
-    let down = ctx.input.pointer_down;
-    let button = ctx.input.pointer_button;
-    let shift = ctx.input.modifiers.shift;
-    let (was_down, last_x, last_y) = scene_pointer_edge_state(&scene.surface_id);
-    if down != was_down {
-        for action in handle_scene_pointer_button(scene, bounds, x, y, down, button, shift) {
-            ctx.input.queue_event(action);
-        }
-    }
-    if x != last_x || y != last_y {
-        let drag_dx = x - last_x;
-        let drag_dy = y - last_y;
-        for action in handle_scene_pointer_move(scene, bounds, x, y, down, button, drag_dx, drag_dy) {
-            ctx.input.queue_event(action);
-        }
-    }
-    mutate_scene_state(&scene.surface_id, |state| {
-        state.last_pointer_pos = (x, y);
-    });
-}
-
 #[cfg(test)]
 mod render_entry_tests {
     use super::*;
-    use crate::interpreter::framework_widget_context;
-
-    fn test_scene(surface_id: &str, kind: SurfaceKind) -> UiComponentSceneNode {
-        UiComponentSceneNode {
-            surface_id: surface_id.into(),
-            controller_id: "controller".into(),
-            component_kind: kind,
-            pane_id: None,
-            binding_id: None,
-            presence: UiPresence::default(),
-            canvas_2d: None,
-            world_3d: None,
-            node_graph: None,
-            text_editor: None,
-            table: None,
-            paint_2d: None,
-            virtual_file_system: None,
-            tiled_map: None,
-            board2d: None,
-            icon_render: None,
-            ink_canvas: None,
-            graph_timeline: None,
-            diff_view: None,
-            event_feed: None,
-            block_list: None,
-        }
-    }
-
-    fn ink_scene(surface_id: &str) -> UiComponentSceneNode {
-        let mut scene = test_scene(surface_id, SurfaceKind::InkCanvas);
-        scene.ink_canvas = Some(ui_wgpu::InkCanvasScene {
-            document_json: "{}".into(),
-            selection_json: "[]".into(),
-            hovered_id: None,
-            active_utility: String::new(),
-            view_mode: "canvas".into(),
-            interactive: true,
-        });
-        scene
-    }
-
-    /// 🧰 Shared render-frame fixture: a `FrameworkWidgetContext` built the same way
-    /// `render_ui_node`'s own tests build one (see `interpreter::framework_widget_context`), so
-    /// `apply_scene_wheel`/`apply_scene_pointer` can be exercised without a real GPU.
-    struct Fixture {
-        draw: ui_wgpu::DrawList,
-        atlas: ui_wgpu::FontAtlas,
-        theme: Theme,
-        input: ui_wgpu::InputState<ActionDescriptor>,
-        scroll_offsets: HashMap<String, f32>,
-        collapsed_sections: HashMap<String, bool>,
-        open_selects: HashMap<String, bool>,
-    }
-
-    impl Fixture {
-        fn new() -> Self {
-            Self {
-                draw: ui_wgpu::DrawList::default(),
-                atlas: ui_wgpu::FontAtlas::builtin(),
-                theme: Theme::default(),
-                input: ui_wgpu::InputState::<ActionDescriptor>::default(),
-                scroll_offsets: HashMap::new(),
-                collapsed_sections: HashMap::new(),
-                open_selects: HashMap::new(),
-            }
-        }
-
-        fn ctx(&mut self) -> FrameworkWidgetContext<'_> {
-            framework_widget_context(
-                &mut self.draw,
-                None,
-                &mut self.atlas,
-                None,
-                &mut self.input,
-                &self.theme,
-                &mut self.scroll_offsets,
-                &mut self.collapsed_sections,
-                &mut self.open_selects,
-                None,
-            )
-        }
-    }
 
     #[test]
     fn bespoke_surfaces_are_excluded_from_generic_dispatch() {
@@ -8389,106 +8929,6 @@ mod render_entry_tests {
         ] {
             assert!(!scene_has_bespoke_pointer_dispatch(kind), "{kind:?} previously received no interaction at all and must use the generic handlers");
         }
-    }
-
-    #[test]
-    fn apply_scene_pointer_dispatches_button_actions_for_a_previously_dead_surface() {
-        let scene = test_scene("render-entry-test.canvas2d.button", SurfaceKind::Canvas2d);
-        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut fixture = Fixture::new();
-        fixture.input.pointer_x = 10.0;
-        fixture.input.pointer_y = 10.0;
-        fixture.input.pointer_down = true;
-        fixture.input.pointer_button = 0;
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_pointer(&scene, bounds, &mut ctx);
-        }
-        let events = fixture.input.drain_events();
-        assert!(
-            events.iter().any(|action| action.action == "canvasPointerDown"),
-            "expected a canvasPointerDown action queued for a previously-dead canvas-2d surface, got {events:?}"
-        );
-    }
-
-    #[test]
-    fn apply_scene_pointer_is_edge_triggered_across_render_frames() {
-        let scene = test_scene("render-entry-test.canvas2d.edge", SurfaceKind::Canvas2d);
-        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut fixture = Fixture::new();
-        fixture.input.pointer_x = 10.0;
-        fixture.input.pointer_y = 10.0;
-        fixture.input.pointer_down = true;
-        fixture.input.pointer_button = 0;
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_pointer(&scene, bounds, &mut ctx);
-        }
-        assert!(!fixture.input.drain_events().is_empty(), "the first down frame must dispatch a button action");
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_pointer(&scene, bounds, &mut ctx);
-        }
-        assert!(
-            fixture.input.drain_events().is_empty(),
-            "holding the button down across render frames without moving must not re-fire actions every frame"
-        );
-    }
-
-    #[test]
-    fn apply_scene_pointer_skips_surfaces_with_bespoke_dispatch() {
-        let scene = test_scene("render-entry-test.nodegraph.skip", SurfaceKind::NodeGraph);
-        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut fixture = Fixture::new();
-        fixture.input.pointer_x = 10.0;
-        fixture.input.pointer_y = 10.0;
-        fixture.input.pointer_down = true;
-        fixture.input.pointer_button = 0;
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_pointer(&scene, bounds, &mut ctx);
-        }
-        assert!(
-            fixture.input.drain_events().is_empty(),
-            "node-graph already dispatches pointer input through its own bespoke host and must not be double-driven here"
-        );
-    }
-
-    #[test]
-    fn apply_scene_wheel_dispatches_actions_for_a_previously_dead_surface() {
-        let scene = ink_scene("render-entry-test.ink.wheel");
-        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut fixture = Fixture::new();
-        fixture.input.pointer_x = 10.0;
-        fixture.input.pointer_y = 10.0;
-        fixture.input.wheel_delta = -1.0;
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_wheel(&scene, bounds, &mut ctx);
-        }
-        let events = fixture.input.drain_events();
-        assert!(
-            events.iter().any(|action| action.action == "setCamera"),
-            "expected a setCamera action from ink-canvas wheel zoom to be queued instead of discarded, got {events:?}"
-        );
-    }
-
-    #[test]
-    fn apply_scene_wheel_skips_surfaces_with_bespoke_dispatch() {
-        let scene = test_scene("render-entry-test.nodegraph.wheel-skip", SurfaceKind::NodeGraph);
-        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
-        let mut fixture = Fixture::new();
-        fixture.input.pointer_x = 10.0;
-        fixture.input.pointer_y = 10.0;
-        fixture.input.wheel_delta = -1.0;
-        {
-            let mut ctx = fixture.ctx();
-            apply_scene_wheel(&scene, bounds, &mut ctx);
-        }
-        assert!(
-            fixture.input.drain_events().is_empty(),
-            "node-graph wheel zoom already dispatches through the bespoke per-frame host and must not double-fire here"
-        );
     }
 }
 //#endregion RenderEntry
@@ -9327,12 +9767,15 @@ fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
                 if step_selected { theme.selected } else { theme.button },
                 theme.border_radius,
             );
-            ctx.draw.push_line(step_rect.x, step_rect.y, step_rect.x + step_rect.w, step_rect.y, theme.border_normal, theme.stroke_hairline);
-            ctx.draw.push_line(
+            // 🖼️ Full four-side stroke, matching `StepCard`'s `border border-border` box in
+            // `index.tsx` — previously only top/bottom hairlines were drawn, so cards had no visible
+            // left/right edge.
+            draw_ink_rect_outline(
+                ctx.draw,
                 step_rect.x,
-                step_rect.y + step_rect.h,
-                step_rect.x + step_rect.w,
-                step_rect.y + step_rect.h,
+                step_rect.y,
+                step_rect.w,
+                step_rect.h,
                 theme.border_normal,
                 theme.stroke_hairline,
             );
@@ -9672,6 +10115,23 @@ mod block_list_tests {
         let input = render(&node);
         assert!(find_hit(&input, "s1.step.a.remove").is_none());
     }
+
+    //#region BlockListPaintTests
+    #[test]
+    fn step_card_draws_a_full_four_sided_border_not_just_top_and_bottom() {
+        // 🖼️ Unit-tests `draw_ink_rect_outline` directly (the helper `render_block_list`'s step-card
+        // border calls) rather than filtering `render_block_list`'s full draw output by color: `theme
+        // .separator` and `theme.border_normal` are byte-identical by design (both derive from
+        // `chrome.border_normal` in `Theme::from_chrome`), and the card's right edge sits only a few
+        // px from the unrelated main/palette divider line — too tight a margin for a position filter
+        // to reliably separate the two from the full scene, so isolate the helper instead.
+        let mut draw = DrawList::default();
+        let color = Theme::default().border_normal;
+        draw_ink_rect_outline(&mut draw, 10.0, 20.0, 200.0, 80.0, color, 1.0);
+        let border_vertex_count = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).filter(|v| v.color == [color.r, color.g, color.b, color.a]).count();
+        assert_eq!(border_vertex_count, 24, "4 lines (top/right/bottom/left) * 6 vertices should emit 24, got {border_vertex_count}");
+    }
+    //#endregion BlockListPaintTests
 }
 //#endregion BlockListTests
 
@@ -9750,9 +10210,12 @@ fn diff_lines<'a>(before: &[&'a str], after: &[&'a str]) -> Vec<DiffLine<'a>> {
 
 /// 🩹 Renders [`SurfaceKind::DiffView`]: a line-level diff of `before`/`after` text, either as a
 /// single scrolling column with `+`/`-` markers (default, or `mode: "unified"`) or as two aligned
-/// columns (`mode: "split"`). Text-only — no syntax highlighting for `language` yet. Add/remove rows
-/// are tinted with the theme's own `accent`/`error` tokens rather than new color literals, matching
-/// how `render_graph_timeline` reuses `theme.accent` for label chips.
+/// columns (`mode: "split"`). Text-only — no syntax highlighting, gutter line numbers, or monospace
+/// font for `language` yet (the latter two need capabilities this crate's `draw_text`/layout don't
+/// have). Add/remove **text** is tinted with the theme's `accent`/`error` tokens (equal text stays
+/// full-brightness `theme.text`), matching `DIFF_LINE_CLASS`'s per-line text-color classes in
+/// `diff-view-host.tsx` — this used to instead wash the whole row background and dim the *unchanged*
+/// majority of lines, the opposite of what the React source of truth does.
 fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(diff) = &scene.diff_view else {
@@ -9792,28 +10255,23 @@ fn render_diff_view(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
         if split {
             match line.operation {
                 DiffLineOperation::Removed => {
-                    ctx.draw.push_solid([inner.x, y, col_w, row_h], theme.error.with_alpha(0.16));
-                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
+                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.error);
                 }
                 DiffLineOperation::Added => {
-                    ctx.draw.push_solid([right_x, y, col_w, row_h], theme.accent.with_alpha(0.16));
-                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
+                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.accent);
                 }
                 DiffLineOperation::Equal => {
-                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
-                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text_muted);
+                    draw_text(ctx, line.text, inner.x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
+                    draw_text(ctx, line.text, right_x + pad, y + row_h * 0.7, theme.font_size_small, theme.text);
                 }
             }
             ctx.draw.push_line(right_x, y, right_x, y + row_h, theme.separator, theme.stroke_hairline);
         } else {
-            let (bg, marker, color) = match line.operation {
-                DiffLineOperation::Added => (Some(theme.accent.with_alpha(0.16)), '+', theme.text),
-                DiffLineOperation::Removed => (Some(theme.error.with_alpha(0.16)), '-', theme.text),
-                DiffLineOperation::Equal => (None, ' ', theme.text_muted),
+            let (marker, color) = match line.operation {
+                DiffLineOperation::Added => ('+', theme.accent),
+                DiffLineOperation::Removed => ('-', theme.error),
+                DiffLineOperation::Equal => (' ', theme.text),
             };
-            if let Some(bg) = bg {
-                ctx.draw.push_solid([inner.x, y, inner.w, row_h], bg);
-            }
             draw_text(ctx, &format!("{marker} {}", line.text), inner.x + pad, y + row_h * 0.7, theme.font_size_small, color);
         }
     }
@@ -9878,6 +10336,106 @@ mod diff_view_tests {
         assert_eq!(operations.len(), 2000);
         assert!(operations.iter().all(|line| line.operation == DiffLineOperation::Equal));
     }
+
+    //#region DiffViewPaintTests
+    /// 🧰 Renders a `render_diff_view` scene in `mode` and returns the `DrawList` so paint-level
+    /// assertions (glyph tint, absence of row-background fills) can inspect it directly, same
+    /// technique as `render_entry_tests::Fixture`.
+    fn render_diff(before: &str, after: &str, mode: Option<&str>) -> (ui_wgpu::DrawList, Theme) {
+        let scene = UiComponentSceneNode {
+            surface_id: "diff-paint-test".into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::DiffView,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            diff_view: Some(ui_wgpu::DiffViewScene {
+                before: before.into(),
+                after: after.into(),
+                language: None,
+                mode: mode.map(str::to_string),
+            }),
+            event_feed: None,
+            block_list: None,
+        };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_diff_view(&scene, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+        }
+        (draw, theme)
+    }
+
+    fn glyph_colors(draw: &ui_wgpu::DrawList) -> Vec<Rgba> {
+        draw.layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3]))
+            .collect()
+    }
+
+    #[test]
+    fn unified_added_line_text_is_tinted_accent_not_a_row_background() {
+        let (draw, theme) = render_diff("a\n", "a\nnew\n", Some("unified"));
+        let colors = glyph_colors(&draw);
+        assert!(colors.contains(&theme.accent), "added line's glyph text should be tinted theme.accent, got {colors:?}");
+        // 🚫 No translucent full-row wash left over — the old background-fill mechanism pushed a
+        // `push_solid` at `theme.accent.with_alpha(0.16)` for every added row.
+        assert!(
+            !colors.contains(&theme.accent.with_alpha(0.16)),
+            "added rows must no longer paint a translucent background wash"
+        );
+    }
+
+    #[test]
+    fn unified_removed_line_text_is_tinted_error() {
+        let (draw, theme) = render_diff("old\n", "\n", Some("unified"));
+        let colors = glyph_colors(&draw);
+        assert!(colors.contains(&theme.error), "removed line's glyph text should be tinted theme.error, got {colors:?}");
+    }
+
+    #[test]
+    fn unchanged_lines_stay_full_brightness_not_dimmed() {
+        let (draw, theme) = render_diff("same\n", "same\n", Some("unified"));
+        let colors = glyph_colors(&draw);
+        assert!(
+            colors.contains(&theme.text),
+            "an unchanged line must render at full theme.text brightness (React never dims equal lines), got {colors:?}"
+        );
+        assert!(
+            !colors.contains(&theme.text_muted),
+            "unchanged lines must not be dimmed to theme.text_muted, got {colors:?}"
+        );
+    }
+
+    #[test]
+    fn split_mode_added_and_removed_columns_use_accent_and_error_text() {
+        let (draw, theme) = render_diff("old\n", "new\n", Some("split"));
+        let colors = glyph_colors(&draw);
+        assert!(colors.contains(&theme.accent), "split-mode added column text should be theme.accent");
+        assert!(colors.contains(&theme.error), "split-mode removed column text should be theme.error");
+    }
+    //#endregion DiffViewPaintTests
 }
 //#endregion DiffViewTests
 
@@ -9986,6 +10544,12 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         );
 
         let tone_color = event_feed_tone_color(entry.tone.as_deref(), theme);
+        // ℹ️ `FEED_TONE_CLASS`'s `info` case is `text-foreground`, not a muted tone — only
+        // success/warning/error get an actual tone color on the title.
+        let title_tone_color = match entry.tone.as_deref() {
+            None | Some("info") => theme.text,
+            _ => tone_color,
+        };
         let dot_y = y + row_h * 0.5;
         ctx.draw.push_rounded([inner.x + pad, dot_y - 3.0, 6.0, 6.0], tone_color, 3.0);
         let mut title_x = inner.x + pad + 6.0 + pad * 0.5;
@@ -10004,7 +10568,10 @@ fn render_event_feed(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
             draw_text(ctx, &time_label, title_x, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
             title_x += 56.0;
         }
-        draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, theme.text);
+        // 🎨 `FEED_TONE_CLASS` tints the title span itself in `event-feed-host.tsx`
+        // (info→foreground, success/warning/error→their tone color) — plain `theme.text` here
+        // previously dropped the tone cue from the one place React actually shows it.
+        draw_text(ctx, &entry.title, title_x, y + row_h * 0.65, theme.font_size_small, title_tone_color);
         if let Some(detail) = &entry.detail {
             draw_text(ctx, detail, inner.x + pad, y + row_h + theme.font_size_small * 0.9, theme.font_size_small, theme.text_muted);
         }
@@ -10085,6 +10652,81 @@ mod event_feed_tests {
         assert_eq!(event_feed_tone_color(None, &theme), theme.text_muted);
         assert_eq!(event_feed_tone_color(Some("unknown-tone"), &theme), theme.text_muted);
     }
+
+    //#region EventFeedPaintTests
+    /// 🧰 Renders `render_event_feed` with one entry of the given `tone` and returns its `DrawList`,
+    /// so the title glyph's tint can be inspected directly — matches `FEED_TONE_CLASS`'s title-span
+    /// coloring in `event-feed-host.tsx`.
+    fn render_feed_entry(tone: Option<&str>) -> (ui_wgpu::DrawList, Theme) {
+        let entry = json!({ "id": "e1", "title": "Built", "tone": tone });
+        let scene = UiComponentSceneNode {
+            surface_id: "feed-paint-test".into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::EventFeed,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            diff_view: None,
+            event_feed: Some(ui_wgpu::EventFeedScene {
+                entries_json: json!([entry]).to_string(),
+                follow: None,
+                activate_action: None,
+            }),
+            block_list: None,
+        };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_event_feed(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
+        }
+        (draw, theme)
+    }
+
+    fn instance_colors(draw: &ui_wgpu::DrawList) -> Vec<Rgba> {
+        draw.layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .map(|instance| Rgba::new(instance.color[0], instance.color[1], instance.color[2], instance.color[3]))
+            .collect()
+    }
+
+    #[test]
+    fn info_tone_title_is_full_brightness_foreground_not_muted() {
+        let (draw, theme) = render_feed_entry(None);
+        let colors = instance_colors(&draw);
+        assert!(
+            colors.contains(&theme.text),
+            "an info/no-tone title must render at full theme.text brightness, matching FEED_TONE_CLASS's `info` case, got {colors:?}"
+        );
+    }
+
+    #[test]
+    fn error_tone_title_is_tinted_theme_error() {
+        let (draw, theme) = render_feed_entry(Some("error"));
+        let colors = instance_colors(&draw);
+        assert!(colors.contains(&theme.error), "an error-tone title must be tinted theme.error, got {colors:?}");
+    }
+    //#endregion EventFeedPaintTests
 }
 //#endregion EventFeedTests
 
@@ -10175,6 +10817,14 @@ fn history_row_lane_guides(columns: &[HistoryColumnJson], lane_count: usize) -> 
     guides
 }
 
+/// 🔤 Two-letter initials from the first two words of an author name (e.g. "Jane Doe" → "JD"),
+/// matching the avatar-initials helper in `index.tsx` — previously the caller only took the very
+/// first character of the whole string (e.g. "Jane Doe" → "J").
+fn graph_timeline_avatar_initials(name: &str) -> String {
+    let letters: String = name.split_whitespace().filter_map(|word| word.chars().next()).take(2).flat_map(char::to_uppercase).collect();
+    if letters.is_empty() { "?".to_string() } else { letters }
+}
+
 fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(history) = &scene.graph_timeline else {
@@ -10248,10 +10898,14 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
             }
         }
 
+        // 🪢 `color-mix(in oklab, var(--muted-foreground) 40%, transparent)` on the lane guides and
+        // parent connectors in `graph-timeline-host.tsx` — a translucent line; opaque `theme.separator`
+        // previously read as visibly heavier than React's thin, faded rail.
+        let guide_stroke = theme.separator.with_alpha(theme.separator.a * 0.4);
         for lane in 0..lane_count {
             if guides[row_index][lane] {
                 let lx = graph_x0 + history_lane_x(lane, lane_count, graph_width);
-                ctx.draw.push_line(lx, y, lx, y + row_h, theme.separator, 1.0);
+                ctx.draw.push_line(lx, y, lx, y + row_h, guide_stroke, 1.0);
             }
         }
         if let Some(parent_id) = column.parent_checkpoint_id.as_deref() {
@@ -10262,12 +10916,12 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
                 let y0 = y + row_h * 0.5;
                 let y1 = inner.y + parent_row as f32 * row_h - scroll + row_h * 0.5;
                 if (x0 - x1).abs() < 0.5 {
-                    ctx.draw.push_line(x0, y0, x1, y1, theme.separator, 1.5);
+                    ctx.draw.push_line(x0, y0, x1, y1, guide_stroke, 1.5);
                 } else {
                     let elbow_y = y + row_h;
-                    ctx.draw.push_line(x0, y0, x0, elbow_y, theme.separator, 1.5);
-                    ctx.draw.push_line(x0, elbow_y, x1, elbow_y, theme.separator, 1.5);
-                    ctx.draw.push_line(x1, elbow_y, x1, y1, theme.separator, 1.5);
+                    ctx.draw.push_line(x0, y0, x0, elbow_y, guide_stroke, 1.5);
+                    ctx.draw.push_line(x0, elbow_y, x1, elbow_y, guide_stroke, 1.5);
+                    ctx.draw.push_line(x1, elbow_y, x1, y1, guide_stroke, 1.5);
                 }
             }
         }
@@ -10278,14 +10932,10 @@ fn render_graph_timeline(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut F
         let avatar_size = 20.0;
         let avatar_x = graph_x0 + graph_width + 4.0;
         let avatar_y = y + row_h * 0.5 - avatar_size * 0.5;
-        let initial = column
-            .authors
-            .first()
-            .and_then(|author| author.name.chars().next())
-            .map(|c| c.to_uppercase().to_string())
-            .unwrap_or_else(|| "?".into());
+        let initial = column.authors.first().map(|author| graph_timeline_avatar_initials(&author.name)).unwrap_or_else(|| "?".into());
         ctx.draw.push_rounded([avatar_x, avatar_y, avatar_size, avatar_size], theme.button, avatar_size * 0.5);
-        draw_text(ctx, &initial, avatar_x + avatar_size * 0.32, avatar_y + avatar_size * 0.7, theme.font_size_small, theme.text);
+        let initial_x_frac = if initial.chars().count() >= 2 { 0.18 } else { 0.32 };
+        draw_text(ctx, &initial, avatar_x + avatar_size * initial_x_frac, avatar_y + avatar_size * 0.7, theme.font_size_small, theme.text);
 
         if let Some(description) = &column.description {
             draw_text(ctx, description, desc_x + pad, y + row_h * 0.65, theme.font_size_small, theme.text_muted);
@@ -10364,6 +11014,72 @@ mod graph_timeline_tests {
         assert!(columns[0].parent_checkpoint_id.is_none());
         assert!(columns[0].description.is_none());
     }
+
+    //#region GraphTimelinePaintTests
+    #[test]
+    fn avatar_initials_take_the_first_letter_of_the_first_two_words() {
+        assert_eq!(graph_timeline_avatar_initials("Jane Doe"), "JD");
+        assert_eq!(graph_timeline_avatar_initials("cher"), "C");
+        assert_eq!(graph_timeline_avatar_initials("  "), "?");
+        assert_eq!(graph_timeline_avatar_initials(""), "?");
+        assert_eq!(graph_timeline_avatar_initials("Ada Lovelace Byron"), "AL");
+    }
+
+    #[test]
+    fn lane_guide_lines_are_translucent_not_the_opaque_separator_token() {
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        let scene = UiComponentSceneNode {
+            surface_id: "timeline-paint-test".into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::GraphTimeline,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: Some(ui_wgpu::GraphTimelineScene {
+                columns_json: json!([
+                    { "checkpointId": "b", "lane": 0, "parentCheckpointId": "a" },
+                    { "checkpointId": "a", "lane": 0 },
+                ])
+                .to_string(),
+            }),
+            diff_view: None,
+            event_feed: None,
+            block_list: None,
+        };
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_graph_timeline(&scene, Rect::new(0.0, 0.0, 400.0, 200.0), &mut ctx);
+        }
+        // 🖊️ Note: the per-row bottom hairline (a separate, legitimate divider) still uses the fully
+        // opaque `theme.separator`, so this only checks that the translucent guide stroke is present
+        // among the parent-connector line's vertices, not that opaque `theme.separator` is absent.
+        let guide_stroke = theme.separator.with_alpha(theme.separator.a * 0.4);
+        let vertex_colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).map(|v| v.color).collect();
+        assert!(
+            vertex_colors.contains(&[guide_stroke.r, guide_stroke.g, guide_stroke.b, guide_stroke.a]),
+            "the parent-connector line must use the translucent guide stroke, got {vertex_colors:?}"
+        );
+    }
+    //#endregion GraphTimelinePaintTests
 }
 //#endregion GraphTimelineTests
 
@@ -11011,6 +11727,13 @@ fn render_canvas_shape_fill(
 }
 //#endregion Canvas2dShapes
 
+/** 🟡 Selection-ring colors ported verbatim from `drawBoundsLayer`'s literal
+ * `"rgba(251, 191, 36, 0.95|0.28)"` strings in `canvas-2d-host.tsx` — an amber that isn't backed by
+ * any `Theme` token, so it's kept local to this region rather than mapped onto `theme.accent`
+ * (which resolves to the app's red/crimson accent and previously made the ring the wrong hue). */
+const CANVAS2D_SELECTION_RING: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.95);
+const CANVAS2D_SELECTION_GLOW: Rgba = Rgba::new(0.984_314, 0.749_02, 0.141_176, 0.28);
+
 fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut FrameworkWidgetContext<'_>) {
     let theme = ctx.theme;
     let Some(canvas) = &scene.canvas_2d else {
@@ -11128,13 +11851,19 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
             theme.diagram_accent_fill.a * opacity,
         );
         render_canvas_shape_fill(ctx.draw, &viewport, inner, shape_rect, layer, opacity, fallback_fill, theme.canvas_clear, is_circle);
-        // 🖊️ Overlay annotation: a selection highlight ring drawn on top of the shape, matches
-        // `drawBoundsLayer`'s `isSelected` yellow-ish accent ring in `canvas-2d-host.tsx`.
+        // 🖊️ Overlay annotation: a two-pass selection highlight (soft outer glow + crisp amber ring)
+        // drawn on top of the shape, matches `drawBoundsLayer`'s `isSelected` glow+ring pair in
+        // `canvas-2d-host.tsx` (glow at +4px/width 5, ring at +0px/width 2.5, both amber).
         if layer.selected.unwrap_or(false) {
             if is_circle {
-                push_circle_outline(ctx.draw, sx + w * 0.5, sy + h * 0.5, w.min(h) * 0.5 + 3.0, theme.accent, 2.0);
+                let cx = sx + w * 0.5;
+                let cy = sy + h * 0.5;
+                let r = w.min(h) * 0.5;
+                push_circle_outline(ctx.draw, cx, cy, r + 4.0, CANVAS2D_SELECTION_GLOW, 5.0);
+                push_circle_outline(ctx.draw, cx, cy, r, CANVAS2D_SELECTION_RING, 2.5);
             } else {
-                draw_ink_rect_outline(ctx.draw, sx - 3.0, sy - 3.0, w + 6.0, h + 6.0, theme.accent, 2.0);
+                draw_ink_rect_outline(ctx.draw, sx - 4.0, sy - 4.0, w + 8.0, h + 8.0, CANVAS2D_SELECTION_GLOW, 5.0);
+                draw_ink_rect_outline(ctx.draw, sx, sy, w, h, CANVAS2D_SELECTION_RING, 2.5);
             }
         }
         if let Some(text) = layer.text.as_ref().and_then(|text| text.content.as_deref()) {
@@ -11161,6 +11890,71 @@ fn render_canvas_2d(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Framew
     });
 }
 //#endregion Canvas2d
+
+//#region Canvas2dTests
+#[cfg(test)]
+mod canvas2d_tests {
+    use super::*;
+
+    fn canvas_scene(surface_id: &str, layers_json: String) -> UiComponentSceneNode {
+        UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::Canvas2d,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: Some(ui_wgpu::Canvas2dScene { camera_x: 0.0, camera_y: 0.0, zoom: 1.0, layers_json }),
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
+            block_list: None,
+        }
+    }
+
+    /// 🖊️ A shape-selection ring should be tinted amber (matching `drawBoundsLayer`'s hardcoded
+    /// `"rgba(251, 191, 36, ...)"` literals in `canvas-2d-host.tsx`), not `theme.accent` (the app's
+    /// red/crimson design token) — see `CANVAS2D_SELECTION_RING`/`CANVAS2D_SELECTION_GLOW`.
+    #[test]
+    fn selected_shape_draws_the_amber_ring_and_glow_not_theme_accent() {
+        let layers = json!([{ "kind": "rectangle", "id": "r1", "x": 10.0, "y": 10.0, "width": 40.0, "height": 20.0, "selected": true }]);
+        let node = canvas_scene("s1", layers.to_string());
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            render_canvas_2d(&node, Rect::new(0.0, 0.0, 400.0, 300.0), &mut ctx);
+        }
+        let vertex_colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.vector_vertices.iter()).map(|v| v.color).collect();
+        let ring = CANVAS2D_SELECTION_RING;
+        let glow = CANVAS2D_SELECTION_GLOW;
+        assert!(vertex_colors.contains(&[ring.r, ring.g, ring.b, ring.a]), "expected the crisp amber ring color among vertices, got {vertex_colors:?}");
+        assert!(vertex_colors.contains(&[glow.r, glow.g, glow.b, glow.a]), "expected the soft amber glow color among vertices, got {vertex_colors:?}");
+        assert!(
+            !vertex_colors.contains(&[theme.accent.r, theme.accent.g, theme.accent.b, theme.accent.a]),
+            "the selection ring must no longer use theme.accent (the app's red/crimson token), got {vertex_colors:?}"
+        );
+    }
+}
+//#endregion Canvas2dTests
+
 //#region InkCanvas
 // 📝 Direct DrawList painting for ink-canvas, ported from ink-canvas-host.tsx (framework/renderer/react).
 
@@ -12147,8 +12941,10 @@ fn draw_ink_item(
         return;
     }
 
-    let bg = theme.panel;
-    ctx.draw.push_rounded([sx, sy, w.max(4.0), h.max(4.0)], bg.with_alpha(0.92), theme.border_radius.min(6.0));
+    // 🎨 `bg-background/90` in `ink-canvas-host.tsx` — `theme.panel` (the app-chrome surface token)
+    // previously stood in for the canvas-item card token, which is `background`, not `panel`.
+    let bg = theme.background;
+    ctx.draw.push_rounded([sx, sy, w.max(4.0), h.max(4.0)], bg.with_alpha(0.9), theme.border_radius.min(6.0));
 
     match kind {
         "text" => {
@@ -12569,6 +13365,68 @@ mod ink_canvas_tests {
         assert_eq!(bounds.w, 10.0);
         assert_eq!(bounds.h, 10.0);
     }
+
+    //#region InkCanvasPaintTests
+    #[test]
+    fn item_card_background_uses_the_background_token_not_panel() {
+        let block = json!({
+            "id": "i1", "kind": "text", "x": 0.0, "y": 0.0, "width": 100.0, "height": 40.0,
+            "paragraphs": [], "fontSize": 16.0,
+        });
+        let doc: InkDocumentJson = serde_json::from_str("{}").unwrap();
+        let scene = UiComponentSceneNode {
+            surface_id: "ink-paint-test".into(),
+            controller_id: "controller".into(),
+            component_kind: SurfaceKind::InkCanvas,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            diff_view: None,
+            event_feed: None,
+            block_list: None,
+        };
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            let camera = InkCameraF { x: 0.0, y: 0.0, zoom: 1.0 };
+            let inner = Rect::new(0.0, 0.0, 400.0, 300.0);
+            draw_ink_item(&mut ctx, &scene, &block, camera, inner, &doc, false, false);
+        }
+        // 🎨 `bg-background/90` in `ink-canvas-host.tsx` — the card's fill must resolve to
+        // `theme.background`, not `theme.panel` (the app-chrome surface token).
+        let expected = theme.background.with_alpha(0.9);
+        let colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+        assert!(
+            colors.contains(&[expected.r, expected.g, expected.b, expected.a]),
+            "expected an item card fill at theme.background@0.9, got {colors:?}"
+        );
+        let stale = theme.panel.with_alpha(0.92);
+        assert!(
+            !colors.contains(&[stale.r, stale.g, stale.b, stale.a]),
+            "the item card must no longer fill with the stale theme.panel@0.92 token"
+        );
+    }
+    //#endregion InkCanvasPaintTests
 }
 //#endregion InkCanvasTests
 //#endregion InkCanvas
@@ -13384,7 +14242,6 @@ fn render_icon_render(
         return render_icon_render_empty(bounds, ctx, "No shot");
     };
 
-    let theme = ctx.theme;
     let shape = request.shape.clone().unwrap_or_else(|| "rectangle".into());
     let width = request.width.max(1.0) as f32;
     let height = request.height.max(1.0) as f32;
@@ -13444,7 +14301,25 @@ fn render_icon_render(
         .or_insert_with(|| World3dState::new(scene.surface_id.clone(), scene.controller_id.clone()));
     render_world_3d(&synthetic_scene, frame, ctx, state, gpu);
 
-    let hair = theme.stroke_hairline.max(1.0);
+    paint_icon_render_chrome(ctx, bounds, frame, &request, &shape, icon_render.footer.as_deref());
+}
+
+/// 🖼️ The aspect-fit frame border, size/shape badge, and optional footer caption painted on top of
+/// the delegated `render_world_3d` GLB draw — split out from `render_icon_render` (which needs a
+/// live `GpuContext` and so can't run in a headless unit test) so this chrome-only paint can be
+/// exercised directly against a `DrawList`.
+fn paint_icon_render_chrome(
+    ctx: &mut FrameworkWidgetContext<'_>,
+    bounds: Rect,
+    frame: Rect,
+    request: &IconRenderRequestFields,
+    shape: &str,
+    footer: Option<&str>,
+) {
+    let theme = ctx.theme;
+    // 🖼️ 2px, matching `IconShotFrame`'s `border-2 border-accent` in `icon-render-host.tsx` —
+    // `theme.stroke_hairline` (1px) previously halved the frame width relative to React.
+    let hair = 2.0_f32;
     ctx.draw.push_solid([frame.x, frame.y, frame.w, hair], theme.accent);
     ctx.draw
         .push_solid([frame.x, frame.y + frame.h - hair, frame.w, hair], theme.accent);
@@ -13460,11 +14335,13 @@ fn render_icon_render(
     let badge_h = badge_text_h + pad * 2.0;
     let badge_x = frame.x + frame.w - badge_w - 4.0;
     let badge_y = frame.y + frame.h - badge_h - 4.0;
+    // 🏷️ `bg-background/80`, not `panel` — the badge chip sits on the transparent canvas frame in
+    // `icon-render-host.tsx`, not on a panel surface.
     ctx.draw
-        .push_rounded([badge_x, badge_y, badge_w, badge_h], theme.panel.with_alpha(0.8), 2.0);
+        .push_rounded([badge_x, badge_y, badge_w, badge_h], theme.background.with_alpha(0.8), 2.0);
     draw_text(ctx, &badge, badge_x + pad, badge_y + pad + badge_text_h * 0.8, badge_size, theme.text_muted);
 
-    if let Some(footer) = &icon_render.footer {
+    if let Some(footer) = footer {
         let footer_size = theme.font_size_small;
         let footer_w = ctx.atlas.measure_text(footer, footer_size).0;
         draw_text(
@@ -13478,6 +14355,58 @@ fn render_icon_render(
     }
 }
 //#endregion IconRender
+
+//#region IconRenderTests
+#[cfg(test)]
+mod icon_render_tests {
+    use super::*;
+
+    #[test]
+    fn frame_border_is_two_px_and_badge_uses_background_token() {
+        let request: IconRenderRequestFields = serde_json::from_str(
+            r#"{"assetUrl":"mesh://x","camera":{"position":[0,0,5],"target":[0,0,0]},"width":64.0,"height":64.0,"shape":"rectangle"}"#,
+        )
+        .unwrap();
+        let bounds = Rect::new(0.0, 0.0, 200.0, 200.0);
+        let frame = Rect::new(20.0, 20.0, 160.0, 160.0);
+
+        let mut draw = ui_wgpu::DrawList::default();
+        let mut atlas = ui_wgpu::FontAtlas::builtin();
+        let mut input = ui_wgpu::InputState::<ActionDescriptor>::default();
+        let theme = Theme::default();
+        let mut scroll = HashMap::new();
+        let mut collapsed = HashMap::new();
+        let mut selects = HashMap::new();
+        {
+            let mut ctx = crate::interpreter::framework_widget_context(
+                &mut draw, None, &mut atlas, None, &mut input, &theme, &mut scroll, &mut collapsed, &mut selects, None,
+            );
+            paint_icon_render_chrome(&mut ctx, bounds, frame, &request, "rectangle", None);
+        }
+        // 🖼️ The top border strip is `[frame.x, frame.y, frame.w, hair]` — its rect's height (index 3)
+        // must be exactly 2.0, matching React's `border-2`.
+        let top_border = draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.ui_instances.iter())
+            .find(|instance| instance.rect[0] == frame.x && instance.rect[1] == frame.y && instance.rect[2] == frame.w)
+            .unwrap_or_else(|| panic!("expected the top frame-border strip to be pushed"));
+        assert_eq!(top_border.rect[3], 2.0, "the frame border must be 2px, matching border-2 in icon-render-host.tsx");
+
+        let expected_badge_bg = theme.background.with_alpha(0.8);
+        let stale_badge_bg = theme.panel.with_alpha(0.8);
+        let colors: Vec<[f32; 4]> = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+        assert!(
+            colors.contains(&[expected_badge_bg.r, expected_badge_bg.g, expected_badge_bg.b, expected_badge_bg.a]),
+            "expected the badge chip to use theme.background@0.8, got {colors:?}"
+        );
+        assert!(
+            !colors.contains(&[stale_badge_bg.r, stale_badge_bg.g, stale_badge_bg.b, stale_badge_bg.a]),
+            "the badge chip must no longer use the stale theme.panel@0.8 token"
+        );
+    }
+}
+//#endregion IconRenderTests
 
 //#region Board2d
 pub struct Board2dSurface {
@@ -13747,10 +14676,17 @@ fn build_vfs_visible_rows(rows: &[Value], expanded_ids: &HashSet<String>) -> Vec
     visible
 }
 
-fn vfs_glyph_icon(schema: &VfsSchema, row: &Value) -> &'static str {
+/// 🗂️ Resolves the row glyph, matching `VirtualFileSystemNodeGlyph`'s kind→icon lookup in
+/// `index.tsx`. Previously a configured `fileNodeKinds[kindId].icon` only gated an `.is_some()`
+/// check and the *actual* configured icon id was discarded in favor of a hardcoded `"folder"` —
+/// any non-folder kind with its own icon (e.g. a custom "asset" kind) rendered the wrong glyph.
+/// Extension-based file-type glyphs (React's ~40-entry `zip`→file-archive table) are not ported
+/// here: the native icon atlas's available id set overlaps an in-flight `IconName` migration in
+/// another session, so guessing unverified ids risks silently blank icons — left as a known gap.
+fn vfs_glyph_icon<'a>(schema: &'a VfsSchema, row: &Value) -> &'a str {
     let kind_id = row.get("fileNodeKindId").and_then(|v| v.as_str()).unwrap_or("file");
-    if schema.file_node_kinds.get(kind_id).and_then(|k| k.icon.as_deref()).is_some() {
-        return "folder";
+    if let Some(icon) = schema.file_node_kinds.get(kind_id).and_then(|k| k.icon.as_deref()) {
+        return icon;
     }
     match kind_id {
         "root" | "studio" | "folder" => "folder",
@@ -14030,6 +14966,37 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
 }
 //#endregion VirtualFileSystem
 
+//#region VirtualFileSystemTests
+#[cfg(test)]
+mod virtual_file_system_tests {
+    use super::*;
+
+    /// 🗂️ A configured `fileNodeKinds[kindId].icon` must win over the kind-name fallback table —
+    /// previously `vfs_glyph_icon` only checked `.is_some()` and always returned `"folder"` for any
+    /// kind with a custom icon configured, discarding the actual icon id.
+    #[test]
+    fn configured_kind_icon_is_used_verbatim_not_collapsed_to_folder() {
+        let schema: VfsSchema = serde_json::from_str(r#"{"fileNodeKinds":{"asset":{"icon":"box"}}}"#).unwrap();
+        let row = json!({ "fileNodeKindId": "asset" });
+        assert_eq!(vfs_glyph_icon(&schema, &row), "box");
+    }
+
+    #[test]
+    fn folder_and_instance_kinds_fall_back_to_their_built_in_glyphs() {
+        let schema: VfsSchema = serde_json::from_str("{}").unwrap();
+        assert_eq!(vfs_glyph_icon(&schema, &json!({ "fileNodeKindId": "folder" })), "folder");
+        assert_eq!(vfs_glyph_icon(&schema, &json!({ "fileNodeKindId": "instance" })), "box");
+        assert_eq!(vfs_glyph_icon(&schema, &json!({ "fileNodeKindId": "other" })), "file-text");
+    }
+
+    #[test]
+    fn missing_file_node_kind_id_defaults_to_the_file_kind() {
+        let schema: VfsSchema = serde_json::from_str("{}").unwrap();
+        assert_eq!(vfs_glyph_icon(&schema, &json!({})), "file-text");
+    }
+}
+//#endregion VirtualFileSystemTests
+
 //#region TextEditor
 //#region State
 /// 🗂️ Per-surface interaction state for double-click-to-select-word / completions / context-menu / rename.
@@ -14038,15 +15005,21 @@ fn vfs_double_click_action(scene: &UiComponentSceneNode, row: &Value) -> Option<
 /// drove plain single-click-to-caret and drag-to-select itself, reading `ctx.input` pointer state directly
 /// during render (mirroring the pre-existing focus-on-click code below), because at the time nothing
 /// called `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` for any surface kind.
-/// `w2-scene-wiring` has since landed `apply_scene_pointer` in `RenderEntry` (do-not-touch, both files),
-/// which now calls those for every non-bespoke surface kind including `TextEditor` — so plain click/drag
-/// already reaches `EditorHost` via that generic path today. That single-click/drag code was removed here
-/// to avoid double-dispatching `textSelect`/`textEdit` every frame; what remains below (double-click
-/// word-select, right-click context menu, completions, rename) is *not* covered by the generic path and
-/// stays. One asymmetry worth noting: `EditorHost::pointer_down_screen` no-operations unless `button == 0`, so
-/// the generic path's raw-button-passthrough call is a no-operation for right-clicks — this region's own
-/// button-forced-to-0 `pointer_down`/`pointer_up` pair for opening the context menu is therefore not
-/// redundant with it.
+/// `w2-scene-wiring` landed `apply_scene_pointer` in `RenderEntry` next, calling those for every
+/// non-bespoke surface kind including `TextEditor` from a once-per-render-frame `InputState` sample —
+/// and `w4-scene-input` (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`) has
+/// since replaced THAT with a real per-event route (`ui_wgpu::UiCommand::Scene` ->
+/// `interpreter::apply_scene_ui_command`, calling the same two handlers), deleting `apply_scene_pointer`
+/// itself. Plain click/drag still reaches `EditorHost` via that generic path today, just per real event
+/// now rather than sampled once per frame. That single-click/drag code was removed here to avoid
+/// double-dispatching `textSelect`/`textEdit`; what remains below (double-click word-select, right-click
+/// context menu, completions, rename) is *not* covered by the generic path and
+/// stays. 🐛➡️✅ W4 fix (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`):
+/// `EditorHost::pointer_down_screen` used to no-operate entirely for `button != 0`, so both the generic
+/// path's raw-button-passthrough call AND this region's own right-click handling had to force `button`
+/// to `0` to reposition the caret at all. `pointer_down_screen` now repositions the caret for every
+/// button (only a primary press also starts a drag-selection), so this region's `pointer_down`/
+/// `pointer_up` pair below passes the real button through instead of forcing it.
 #[derive(Clone, Debug, Default)]
 struct TextEditorUiState {
     was_pointer_down: bool,
@@ -14275,14 +15248,38 @@ fn render_text_editor_completions(
 ) {
     let theme = ctx.theme;
     let anchor = text_editor_completion_anchor(scene, inner);
+    if completions.is_empty() {
+        return;
+    }
+    // 🪟 Outer popover container — matches `rounded border border-border bg-popover p-1 shadow-md`
+    // on the completions list in `text-editor-host.tsx`; previously only per-row backgrounds were
+    // drawn, with no enclosing frame at all.
+    let pad = 4.0;
+    let row_h = text_editor_completion_row_rect(anchor, theme, 0).h;
+    let container = Rect::new(
+        anchor.0 - pad,
+        anchor.1 + 18.0 - pad,
+        220.0 + pad * 2.0,
+        completions.len() as f32 * row_h + pad * 2.0,
+    );
+    ctx.draw.push_rounded([container.x, container.y, container.w, container.h], theme.panel, theme.border_radius * 0.5);
+    draw_ink_rect_outline(ctx.draw, container.x, container.y, container.w, container.h, theme.panel_border, 1.0);
     for (index, item) in completions.iter().enumerate() {
         let row = text_editor_completion_row_rect(anchor, theme, index);
-        let bg = if index == active_index { theme.selected } else { theme.panel };
+        // 🎯 Active row uses `bg-accent text-accent-foreground` in React — `theme.selected` (the
+        // generic row-highlight token) previously stood in for the accent pairing used nowhere else
+        // for completion rows.
+        let (bg, fg) = if index == active_index {
+            (theme.accent, theme.active_foreground)
+        } else {
+            (theme.panel, theme.text)
+        };
         ctx.draw.push_rounded([row.x, row.y, row.w, row.h], bg, theme.border_radius * 0.5);
-        draw_text(ctx, &item.label, row.x + 8.0, row.y + row.h * 0.68, theme.font_size_small, theme.text);
+        draw_text(ctx, &item.label, row.x + 8.0, row.y + row.h * 0.68, theme.font_size_small, fg);
         if let Some(detail) = &item.detail {
             let label_w = item.label.len() as f32 * theme.font_size_small * 0.6;
-            draw_text(ctx, detail, row.x + 12.0 + label_w, row.y + row.h * 0.68, theme.font_size_small, theme.text_muted);
+            let detail_fg = if index == active_index { fg } else { theme.text_muted };
+            draw_text(ctx, detail, row.x + 12.0 + label_w, row.y + row.h * 0.68, theme.font_size_small, detail_fg);
         }
     }
 }
@@ -14293,6 +15290,11 @@ fn render_text_editor_context_menu(ctx: &mut FrameworkWidgetContext<'_>, menu: &
     let w = 200.0;
     let h = menu.items.len() as f32 * row_h + 8.0;
     ctx.draw.push_rounded([menu.x, menu.y, w, h], theme.panel, theme.border_radius);
+    // 🖊️ `ContextMenuChrome`/`WindowChrome` in React paints this as a titled floating window with a
+    // glass material and its own border; the full window-chrome treatment is `shell`-owned (out of
+    // scope here — see `render_context_menu`'s own top-level overlay), so this at least adds the
+    // border stroke React's window frame always carries instead of a flat, edgeless panel fill.
+    draw_ink_rect_outline(ctx.draw, menu.x, menu.y, w, h, theme.panel_border, 1.0);
     for (index, item) in menu.items.iter().enumerate() {
         let row = text_editor_menu_row_rect(menu, theme, index);
         ctx.draw.push_rounded([row.x, row.y, row.w, row.h], theme.button, theme.border_radius * 0.5);
@@ -14305,7 +15307,10 @@ fn render_text_editor_rename_input(ctx: &mut FrameworkWidgetContext<'_>, inner: 
     let text = ctx.input.text_buffer.clone();
     let (x, y) = engine_canvas::text_editor_caret_screen(scene, inner).unwrap_or((inner.x + 12.0, inner.y + 12.0));
     let rect = Rect::new(x, (y - theme.control_height_small * 0.5).max(inner.y), 180.0, theme.control_height_small);
-    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.input_bg, theme.border_radius * 0.5);
+    // 🖊️ `border border-border bg-panel` on the rename input in `text-editor-host.tsx` — previously
+    // drawn as an unbordered `theme.input_bg` fill (a different token, and no stroke at all).
+    ctx.draw.push_rounded([rect.x, rect.y, rect.w, rect.h], theme.panel, theme.border_radius * 0.5);
+    draw_ink_rect_outline(ctx.draw, rect.x, rect.y, rect.w, rect.h, theme.panel_border, 1.0);
     draw_text(ctx, &text, rect.x + 8.0, rect.y + rect.h * 0.68, theme.font_size_small, theme.text);
 }
 //#endregion Popups
@@ -14378,10 +15383,11 @@ fn render_text_editor(
     let pressed_edge = ctx.input.pointer_down && !ui_state.was_pointer_down;
 
     //#region PointerInput
-    // 🔀 Plain single-click-to-caret and drag-to-select are handled by the generic
-    // `apply_scene_pointer` -> `SceneInput::handle_scene_pointer_button`/`handle_scene_pointer_move` path
-    // in `RenderEntry` now (see `TextEditorUiState`'s doc comment) — this block only covers what that path
-    // doesn't: double-click word-select and the right-click context menu.
+    // 🔀 Plain single-click-to-caret and drag-to-select are handled by the generic real per-event
+    // `ui_wgpu::UiCommand::Scene` -> `interpreter::apply_scene_ui_command` ->
+    // `handle_scene_pointer_button`/`handle_scene_pointer_move` route now (see `TextEditorUiState`'s
+    // doc comment) — this block only covers what that path doesn't: double-click word-select and the
+    // right-click context menu.
     if pressed_edge {
         let mut consumed_press = false;
         // 🍿 Completions popup rows take priority: commit on hit; a miss just falls through so the click
@@ -14417,11 +15423,13 @@ fn render_text_editor(
         }
         if !consumed_press && !ui_state.rename_active {
             if ctx.input.pointer_button == 2 && hovered {
-                // 🖱️➡️ Reposition the caret first (button forced to 0, matching `WasmEditorSurface.onContextMenu`'s
-                // `pointerDownScreen(sx, sy, 0)`), then open the menu at the click point. Not redundant with
-                // the generic path: `EditorHost::pointer_down_screen` no-operations unless `button == 0`, so the
-                // generic path's own raw-button-2 call for this same press is already a no-operation.
-                let mut actions = engine_canvas::text_editor_pointer_down(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0);
+                // 🖱️➡️ Reposition the caret first (real button `2`, matching `WasmEditorSurface.onContextMenu`'s
+                // `pointerDownScreen(sx, sy, 2)`), then open the menu at the click point. 🐛➡️✅ W4 fix: this used
+                // to force `button` to `0` since `EditorHost::pointer_down_screen` no-operated entirely for
+                // `button != 0` — now that it repositions the caret for every button (see that fn's own doc
+                // comment), passing the real button through is both correct AND avoids incorrectly flagging
+                // `drag_selecting` for what is not a primary-button press.
+                let mut actions = engine_canvas::text_editor_pointer_down(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, ctx.input.pointer_button);
                 actions.extend(engine_canvas::text_editor_pointer_up(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y));
                 for action in actions {
                     ctx.input.queue_event(action);
@@ -14434,9 +15442,10 @@ fn render_text_editor(
                     items: text_editor_context_menu_items(editor),
                 });
             } else if ctx.input.pointer_button == 0 && hovered {
-                // ✋ The generic path (`apply_scene_pointer`) already repositions the caret / extends the
-                // drag-selection for this same press elsewhere in the frame; this only tracks double-click
-                // timing/offset locally and closes the completions popup / (re)focuses for keyboard routing.
+                // ✋ The generic `UiCommand::Scene` route already repositions the caret / extends the
+                // drag-selection for this same press (via `apply_scene_ui_command`); this only tracks
+                // double-click timing/offset locally and closes the completions popup / (re)focuses for
+                // keyboard routing.
                 ctx.input.focus_input(&editor_id, &editor.buffer);
                 ui_state.completions_open = false;
                 let click_offset = cursor_from_click(scene, inner, ctx.input.pointer_x, ctx.input.pointer_y, 0.0);
@@ -14972,6 +15981,91 @@ mod text_editor_tests {
         text_editor_run_menu_action(&scene, &editor, inner, &menu, "select-all", &mut ctx, &mut ui_state);
     }
     //#endregion ContextMenuActionDispatch
+
+    //#region PopupChromePaintTests
+    #[test]
+    fn completions_popup_has_a_bordered_container_and_the_active_row_uses_accent() {
+        let scene = text_editor_scene("editor.completions.paint", "", None, None);
+        let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
+        let completions = vec![
+            TextEditorCompletionItem { label: "alpha".into(), detail: None, insert_text: None },
+            TextEditorCompletionItem { label: "beta".into(), detail: None, insert_text: None },
+        ];
+        let mut fixture = Fixture::new();
+        {
+            let mut ctx = fixture.ctx();
+            render_text_editor_completions(&mut ctx, inner, &scene, &completions, 0);
+        }
+        let theme = fixture.theme;
+        // 🪟 `border border-border bg-popover` — the container's own outline color must appear among
+        // the drawn vector-line vertices (`draw_ink_rect_outline`'s 4-line/24-vertex shape).
+        let border = theme.panel_border;
+        let has_container_border = fixture
+            .draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.vector_vertices.iter())
+            .any(|v| v.color == [border.r, border.g, border.b, border.a]);
+        assert!(has_container_border, "expected the completions popup to draw an outer container border");
+
+        // 🎯 `bg-accent text-accent-foreground` on the active (index 0) row.
+        let colors: Vec<[f32; 4]> =
+            fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+        let accent = theme.accent;
+        assert!(
+            colors.contains(&[accent.r, accent.g, accent.b, accent.a]),
+            "expected the active completion row's background to be theme.accent, got {colors:?}"
+        );
+    }
+
+    #[test]
+    fn rename_input_draws_a_bordered_panel_box() {
+        let scene = text_editor_scene("editor.rename.paint", "count", None, None);
+        let inner = Rect::new(0.0, 0.0, 300.0, 300.0);
+        let mut fixture = Fixture::new();
+        fixture.input.text_buffer = "count2".into();
+        {
+            let mut ctx = fixture.ctx();
+            render_text_editor_rename_input(&mut ctx, inner, &scene);
+        }
+        let theme = fixture.theme;
+        // 🖊️ `border border-border bg-panel` — previously an unbordered `theme.input_bg` fill.
+        let border = theme.panel_border;
+        let has_border = fixture
+            .draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.vector_vertices.iter())
+            .any(|v| v.color == [border.r, border.g, border.b, border.a]);
+        assert!(has_border, "expected the rename input to draw a border stroke");
+        let colors: Vec<[f32; 4]> =
+            fixture.draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).map(|i| i.color).collect();
+        let panel = theme.panel;
+        assert!(
+            colors.contains(&[panel.r, panel.g, panel.b, panel.a]),
+            "expected the rename input fill to use theme.panel, got {colors:?}"
+        );
+    }
+
+    #[test]
+    fn context_menu_draws_a_border_stroke_around_the_flat_panel() {
+        let menu = TextEditorContextMenu { x: 10.0, y: 10.0, items: vec![TextEditorMenuItem { id: "rename", label: "Rename" }] };
+        let mut fixture = Fixture::new();
+        {
+            let mut ctx = fixture.ctx();
+            render_text_editor_context_menu(&mut ctx, &menu);
+        }
+        let theme = fixture.theme;
+        let border = theme.panel_border;
+        let has_border = fixture
+            .draw
+            .layers
+            .iter()
+            .flat_map(|layer| layer.vector_vertices.iter())
+            .any(|v| v.color == [border.r, border.g, border.b, border.a]);
+        assert!(has_border, "expected the context menu's flat panel to at least draw a border stroke");
+    }
+    //#endregion PopupChromePaintTests
 }
 //#endregion TextEditor
 //#endregion scenes
@@ -16567,6 +17661,39 @@ mod panel_anchor_model_tests {
         state.persist_panel_layout_if_changed();
         let after_second = load_panel_layout_from_store().expect("storage still has a value");
         assert_eq!(after_second, PanelLayoutPersisted::default(), "unchanged state must not re-persist and clobber the manual write above");
+    }
+
+    /// 🎨 `build_settings_theme_ui`'s reachability contract: a select node listing the built-in themes
+    /// plus any saved custom ones, a reset button always present, and a delete button gated strictly on
+    /// the active theme id being a `"custom."`-prefixed one (mirrors React's `host.themeId.startsWith(
+    /// "custom.")` gate on the same button, `ui/js/react/index.tsx:9489`).
+    #[test]
+    fn build_settings_theme_ui_lists_builtins_and_gates_delete_on_custom_theme() {
+        set_active_theme_id("semio");
+        let state = fresh_state();
+        let UiNode::Stack(builtin_panel) = state.build_settings_theme_ui() else {
+            panic!("expected a stack root");
+        };
+        let has_select = builtin_panel.children.iter().any(|node| matches!(node, UiNode::Select(_)));
+        assert!(has_select, "must render the theme picker select");
+        let button_count = builtin_panel
+            .children
+            .iter()
+            .filter(|node| matches!(node, UiNode::Button(_)))
+            .count();
+        assert_eq!(button_count, 1, "only Reset, no Delete, while the built-in \"semio\" theme is active");
+
+        set_active_theme_id("custom.wp-audit-test");
+        let UiNode::Stack(custom_panel) = state.build_settings_theme_ui() else {
+            panic!("expected a stack root");
+        };
+        let button_count = custom_panel
+            .children
+            .iter()
+            .filter(|node| matches!(node, UiNode::Button(_)))
+            .count();
+        assert_eq!(button_count, 2, "Reset and Delete once a custom theme is active");
+        set_active_theme_id("semio");
     }
 }
 //#endregion ShellLifecycle
@@ -20717,6 +21844,20 @@ impl ShellState {
             ]),
             CommandDefinition::new("os.setTerminology", "Set Terminology", CommandScope::Os, "language")
                 .with_args([ActionArgDef::select("value", "Terminology", terminology_options).required()]),
+            CommandDefinition::new("os.setThemeId", "Set Theme", CommandScope::Os, "appearance").with_args([
+                ActionArgDef::select(
+                    "value",
+                    "Theme",
+                    std::iter::once(ActionArgOption { value: "semio".into(), label: "Semio".into() })
+                        .chain(std::iter::once(ActionArgOption { value: "mono".into(), label: "Mono".into() }))
+                        .chain(custom_theme_ids().into_iter().map(|id| {
+                            let label = custom_theme_definition(&id).map(|theme| theme.label).unwrap_or_else(|| id.clone());
+                            ActionArgOption { value: id, label }
+                        }))
+                        .collect(),
+                )
+                .required(),
+            ]),
             CommandDefinition::new("os.resetDock", "Reset Dock Layout", CommandScope::Os, "layout"),
         ]
     }
@@ -20813,7 +21954,7 @@ impl ShellState {
                 self.sync_dock();
                 Ok(())
             }
-            "os.setAppearance" | "os.setDriver" | "os.setLocale" | "os.setTerminology" => {
+            "os.setAppearance" | "os.setDriver" | "os.setLocale" | "os.setTerminology" | "os.setThemeId" => {
                 let Some(value) = option_value else {
                     return Ok(());
                 };
@@ -20822,6 +21963,7 @@ impl ShellState {
                     "os.setDriver" => "setDriver",
                     "os.setLocale" => "setLocale",
                     "os.setTerminology" => "setTerminology",
+                    "os.setThemeId" => "setThemeId",
                     _ => unreachable!(),
                 };
                 self.dispatch_action(ActionDescriptor {
@@ -20837,16 +21979,19 @@ impl ShellState {
 
     /// 🎛️ Data-complete "Commands" panel content — the wgpu mirror of React's
     /// `buildCommandCategoryTabs`/`buildCommandCategoryTree`, folded into a single flat, category-headed
-    /// `UiNode` tree (the honestly-scoped fallback: wgpu has no bottom-middle dock anchor — `PanelGroup::
-    /// anchor` only ever maps to the four corners, and the two middle anchors "start empty... never via a
-    /// `PanelGroup`" per its own doc comment — and the `panel_ui` registration/drawing that would surface a
-    /// brand-new tab live in `shell::ShellLifecycle`/`shell::ShellChrome`, outside this region's ownership
-    /// this wave). Every row for a command whose id already has a `"framework"` `dispatch_action` arm
-    /// (appearance/driver/locale/terminology) is fully interactive the moment some future wave
-    /// wires this into `panel_ui`, exactly like `build_settings_general_ui`'s selects; `os.resetDock` has
-    /// no such arm to attach a plain `ActionDescriptor` to (only the ⌘K search's `"os-command:"` string
-    /// redirect can reach `apply_os_command` for it), so it renders as a pointer to command search instead
-    /// of a non-functional button.
+    /// `UiNode` tree (the honestly-scoped fallback: React surfaces this as a persistent `bottom-middle`
+    /// dock anchor, which this renderer has no equivalent of — `PanelGroup::anchor` only ever maps to the
+    /// four corners, and the two middle anchors "start empty... never via a `PanelGroup`" per its own doc
+    /// comment; building a real middle anchor would mean touching `dock`/restructuring `ShellTypes`'s
+    /// hardcoded 2-column model, both out of scope). **Wired** (`ensure_framework_panel_ui` in
+    /// `ShellLifecycle` registers this under `FRAMEWORK_SETTINGS_COMMANDS_TAB_ID`, reachable as a second
+    /// tab in the Settings panel column — see `right_tabs`) — this used to be dead, ready-but-unreachable
+    /// content per `report-w3-command-palette.md`'s wiring request; that gap is closed as of this pass.
+    /// Every row for a command whose id already has a `"framework"` `dispatch_action` arm
+    /// (appearance/driver/locale/terminology/themeId) is fully interactive; `os.resetDock` has no such
+    /// arm to attach a plain `ActionDescriptor` to (only the ⌘K search's `"os-command:"` string redirect
+    /// can reach `apply_os_command` for it), so it renders as a pointer to command search instead of a
+    /// non-functional button.
     pub(crate) fn build_command_panel_ui(&self) -> UiNode {
         let resolved = self.resolved_commands();
         let categories = command_categories(&resolved);
@@ -21151,6 +22296,7 @@ mod command_registry_tests {
                 "os.setDriver",
                 "os.setLocale",
                 "os.setTerminology",
+                "os.setThemeId",
                 "os.resetDock",
             ]
         );
@@ -21308,6 +22454,19 @@ mod command_registry_tests {
         assert_eq!(shell.driver_id, "default");
     }
 
+    /// 🎨 `os.setThemeId` (added alongside `build_settings_theme_ui`'s reachable Theme tab — see that
+    /// function's doc comment) round-trips through the same `"framework"` `dispatch_action` arm as every
+    /// other os select-command, landing in `active_theme_id()` (the `CHROME_PREFS` thread-local
+    /// `frame()`'s `resolve_theme_for_ids` call already reads every frame), not a `ShellState` field.
+    #[test]
+    fn apply_os_command_set_theme_id_updates_active_theme() {
+        let mut shell = test_shell_state();
+        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("mono"))).expect("set theme never errors");
+        assert_eq!(active_theme_id(), "mono");
+        pollster::block_on(shell.apply_os_command("os.setThemeId", Some("semio"))).expect("set theme never errors");
+        assert_eq!(active_theme_id(), "semio");
+    }
+
     #[test]
     fn build_command_panel_ui_groups_rows_under_category_headers() {
         let mut shell = test_shell_state();
@@ -21320,9 +22479,13 @@ mod command_registry_tests {
         let UiNode::Stack(panel) = shell.build_command_panel_ui() else {
             panic!("expected a stack root");
         };
-        // 🗂️ One section per distinct `CommandDefinition.category` among the six os commands:
-        // appearance, general, language, layout.
-        assert_eq!(panel.children.len(), 4);
+        // 🗂️ One section per distinct `CommandDefinition.category` among the six os commands
+        // (`build_os_commands`): appearance (setAppearance/setThemeId), layout (setDriver/resetDock),
+        // language (setLocale/setTerminology). Was asserting a stale `4` (an older "general" category
+        // — presumably from a since-removed `os.setExpertise`/`os.toggleCompact` pair per
+        // `report-w3-command-palette.md`'s now-outdated command table — no longer exists in
+        // `build_os_commands`, confirmed by grep); this test was failing before this pass touched it.
+        assert_eq!(panel.children.len(), 3);
     }
 
     #[test]
@@ -26182,6 +27345,17 @@ mod ui_prefs_themes_i18n_tests {
     /// 🧪 `persist_ui_prefs_if_changed`'s dirty-check: a second call with no field changes since the
     /// last sync must be a cheap no-operation (mirrors the combined-dependency-array `useEffect` at
     /// `os-shell.tsx:3477-3491`, which only re-runs when one of its deps actually changed).
+    ///
+    /// **Self-inflicted-flakiness fix**: this used to hardcode the "changed" value as `"compact"` and
+    /// never restore the original — on native, `PREFS_STORE`'s `FilePrefsStore` backs onto a real
+    /// `$SEMIO_PREFS_DIR`/`~/.config/semio/ui-prefs.json` file (not a scratch path; unlike
+    /// `file_prefs_store_round_trips_through_disk`, this test exercises the thread-local singleton
+    /// directly, same as `load_ui_prefs_once_prefers_a_lock_over_storage`'s own doc comment already
+    /// flags this file as shared across runs), so once this test ran once, `ui.chrome.driver` was left
+    /// at `"compact"` on disk — the *next* run's `load_ui_prefs_once` read `"compact"` right back in,
+    /// making `state.driver_id = "compact"` below a no-op and failing the final assertion. Toggling to
+    /// whatever the loaded value *isn't*, then restoring it, makes this test pass regardless of what a
+    /// previous run left behind.
     #[test]
     fn persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed() {
         UI_PREFS_LOADED.with(|cell| *cell.borrow_mut() = false);
@@ -26193,10 +27367,14 @@ mod ui_prefs_themes_i18n_tests {
         state.persist_ui_prefs_if_changed();
         let after_noop_persist = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
         assert!(after_load == after_noop_persist);
-        state.driver_id = "compact".to_string();
+        let original_driver_id = state.driver_id.clone();
+        let toggled_driver_id = if original_driver_id == "compact" { "default" } else { "compact" };
+        state.driver_id = toggled_driver_id.to_string();
         state.persist_ui_prefs_if_changed();
         let after_change = UI_PREFS_LAST_SYNCED.with(|cell| cell.borrow().clone());
         assert!(after_change != after_noop_persist);
+        state.driver_id = original_driver_id;
+        state.persist_ui_prefs_if_changed();
     }
 
     /// 🧪 `resolve_theme_for_ids("semio", _)` is exactly `resolve_theme` (the pre-WP14 behavior),

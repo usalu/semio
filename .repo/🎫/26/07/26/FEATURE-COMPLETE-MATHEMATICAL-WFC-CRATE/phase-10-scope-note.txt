@@ -1,0 +1,98 @@
+P10 — nogood learning + beam + repair — scope note
+====================================================
+
+Implemented (231 tests passing, cargo clippy clean for mathematical_wfc itself):
+
+- nogood.rs: `NogoodConfig` (opt-in, disabled by default — zero cost when off), `NogoodStore`
+  with a real two-watched-literal (2WL) propagation scheme mapped onto WFC decisions: a literal
+  `(node, pattern)` is "false" exactly when `node` is singleton-decided to exactly `pattern`.
+  `record()` learns the current decision prefix on every contradiction (called from
+  `search::backtrack_and_repair`, so it fires for both ordinary propagation wipeouts and
+  constraint-rejected complete assignments); `rewatch_for_new_attempt()` re-establishes watches
+  against each fresh attempt's domain state (so nogoods correctly persist and stay watchable
+  across `SearchMode::RestartOnly` restarts, which share the same `init_domains`/`fixed`/
+  constraints); `on_decision()` reacts to real search decisions, finding a replacement watch,
+  unit-propagating the partner literal, or reporting the conflict the nogood was learned from.
+  Caps: `max_len` (skip recording over-long clauses) and `max_count` with activity-based
+  eviction. Wired into `search::SearchConfig` as `pub nogood: NogoodConfig`, threaded through
+  `decide_and_propagate`/`backtrack_and_repair`/`drive`/`drive_all`/`solve_inner`/
+  `solve_all_inner`.
+- repair.rs: `halo()` (BFS over `AdjacencyView` by relation-hop radius) and `repair_region()` —
+  pins every node outside the halo to its value in a caller-supplied prior assignment and
+  re-solves through the ordinary `search::solve` kernel, so correctness rides entirely on the
+  already-proven propagation/backtracking machinery. Wired into `GraphSolver::repair(...)`.
+- beam.rs: `BeamConfig` (width, max_steps, heuristic) and `beam_search()` — maintains up to
+  `width` independent partial-domain-state beams, expands each round by branching every
+  surviving beam's frontier node over *all* still-possible patterns (not one sampled value —
+  width comes from branch-then-prune, not random sampling), scores by remaining-candidate count,
+  keeps the top `width`. Deliberately incomplete (documented explicitly: never proves unsat,
+  can discard an actually-solvable beam) and clearly scoped as such in its module doc. Wired
+  into `GraphSolver::solve_beam(...)`.
+- Trail gained `active_decisions()` (the node/pattern pairs nogood learning records from).
+
+Two real bugs found and fixed during this phase, both via failing integration/differential
+tests (not just the isolated unit tests, which passed throughout and would not have caught
+either):
+
+1. **Missing AC-3 re-propagation after a nogood-forced exclusion** — the initial `on_decision`/
+   `rewatch_for_new_attempt` only checked the directly-excluded node for wipeout, never
+   re-queuing AC-3 from it. A forced exclusion can invalidate support at that node's *neighbors*
+   too, exactly like any other propagation-causing mutation in this crate; skipping the
+   re-propagation left the domain store arc-inconsistent and let an actually-invalid assignment
+   reach `all_singleton()` on `k_graph(5,4)` (K5 needing 5 colors with only 4 available — a
+   `Solved` outcome should be impossible there). Caught by
+   `nogood_learning_survives_restarts_and_still_proves_unsat` returning `Solved` with two
+   adjacent same-colored nodes. Fixed by adding `force_exclude_and_propagate()`, which re-runs
+   `prop_ac3::run_to_fixed_point` queued from the excluded node after every nogood-forced
+   removal — this required threading `model`/`topo`/`queue` into both `NogoodStore` methods,
+   not just `domains`/`trail`/weights.
+2. **Stale watcher-map entries after moving a watch** — when `on_decision` found a replacement
+   literal and moved a nogood's watch away from `(node, pattern)`, it added the new
+   `(literal) -> index` registration but never removed the *old* one. A later re-decision of the
+   same `(node, pattern)` (plausible after backtracking un-decides and re-explores) would then
+   look up a stale index whose `watch_a`/`watch_b` had since moved elsewhere entirely — caught by
+   a `debug_assert_eq!` panic (`left: (NodeId(2), PatternId(0)) right: (NodeId(1), PatternId(2))`)
+   once bug 1 was fixed and the search actually ran long enough to re-trigger the same node.
+   Fixed by explicitly retaining-out the moved indices from the old key's watcher list.
+   Re-stress-tested at 3000 trials (from the normal 100) after the fix, then reverted to 100.
+
+Mid-phase incident (not a bug in this crate, documented for continuity — see
+[[feedback-automated-single-file-consolidation]]): partway through this phase, a concurrent
+process (matching the repo's `SINGLE-FILE-REPO` goal, confirmed via memory from a prior
+unrelated session hitting the same thing on a different crate) merged every
+`mathematical/wfc/rs/src/*.rs` file into a single flattened `lib.rs` and deleted the individual
+files — including `nogood.rs`/`repair.rs` (created minutes earlier) and uncommitted edits to
+`search.rs`/`trail.rs`/`solver_graph.rs`. `mcp__repo__section_extract` (the apparent intended
+reverse tool) could not find the regions by name. Recovered by: verifying every pre-existing
+module's flattened content was byte-identical to the last commit (`git show <sha>:path`), then
+writing a Rust-aware brace-depth-matching Python script to split the monolithic `lib.rs` back
+into per-module files, and manually reapplying (from this session's own record of its edits) the
+in-flight `nogood.rs`/`repair.rs`/`search.rs`/`trail.rs`/`solver_graph.rs` changes on top. All
+231 tests passing after restoration confirms nothing was lost.
+
+Deferred from the original plan's P10 scope (left for a later pass, not silently dropped):
+
+- Nogood learning only reacts to explicit search *decisions*, never ordinary propagation-caused
+  domain reductions (stated explicitly in nogood.rs's module doc as a deliberate, sound
+  scope-narrowing: a missed early-prune opportunity only costs speed, never correctness, since
+  the underlying model's real constraint structure will still eventually catch the same
+  contradiction through ordinary AC-3 propagation). Reacting to every propagation-caused
+  reduction too is a possible future extension but adds meaningful complexity for a
+  purely-performance benefit.
+  Nogood survival across restarts is unconditional (always on when nogoods are enabled at all);
+  a config toggle to reset per-restart instead was not added — no current caller needs it.
+- `beam.rs` has no soft-constraint-guided scoring hook yet — `score()` is purely
+  domain-shape-based (remaining-candidate count). Layering `crate::soft::SoftConstraint` scoring
+  on top is straightforward but deferred until a concrete consumer needs it.
+- `repair.rs` is wired into `GraphSolver` only, not `Grid2dSolver`/`Grid3dSolver` — the
+  underlying `repair_region()` is already generic over `Topology` and works unchanged for grids;
+  adding the same one-line wrapper method to the grid solvers is deferred to whichever later
+  phase (chunk streaming, P11) actually needs grid-local repair, so it lands with a real
+  consumer and test rather than speculatively.
+
+Rationale for scoping down: nogood learning's core watched-literal mechanism, repair's
+halo-and-pin re-solve, and beam's branch-and-prune loop each independently prove out the
+architecture the original plan called for (2-watched-literal clauses, exterior-pinned local
+repair, configurable-width beam search); the remaining items above are straightforward,
+low-risk extensions of already-proven designs, better scoped against a real consumer later than
+spent now without one.

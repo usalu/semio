@@ -78,6 +78,16 @@ impl mindmap::MindmapExtension for DefaultWiresExtension {
     }
 }
 
+/// 🔢 `identityId`/`relationshipId` read as a whole `u64` regardless of whether the source JSON
+/// number is an integer or a float literal — the `.wires` fixture's `wires_fixture`/`board_fixture`
+/// are opaque `dsl::Shape::Value` literals (see `reasoning_mindmap::MindmapWiresDocument`), whose
+/// `DslValue::Number` is a single `f64` (no JSON int/float distinction), so every id round-tripped
+/// through the `.wires` DSL text now arrives here as e.g. `Number(1.0)`, not `Number(1)`; bare
+/// `.as_u64()` would return `None` for that representation.
+fn json_id(value: Option<&serde_json::Value>) -> Option<mindmap::TopicId> {
+    value.and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|float| float as u64)))
+}
+
 impl DefaultWiresExtension {
     /// 🔗 Hydrate extension state from `reasoning.wires.fixture` JSON.
     pub fn from_fixture_json(json: &str) -> Result<Self, WiresError> {
@@ -96,7 +106,7 @@ impl DefaultWiresExtension {
             let Some(row) = identity.as_object() else {
                 continue;
             };
-            let Some(identity_id) = row.get("identityId").and_then(|v| v.as_u64()) else {
+            let Some(identity_id) = json_id(row.get("identityId")) else {
                 continue;
             };
             let label = row.get("label").and_then(|v| v.as_str()).unwrap_or("").to_string();
@@ -110,7 +120,7 @@ impl DefaultWiresExtension {
             let Some(row) = rel.as_object() else {
                 continue;
             };
-            let Some(relationship_id) = row.get("relationshipId").and_then(|v| v.as_u64()) else {
+            let Some(relationship_id) = json_id(row.get("relationshipId")) else {
                 continue;
             };
             let kind = match row.get("kind").and_then(|v| v.as_str()) {

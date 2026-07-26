@@ -11,7 +11,7 @@ use base64::Engine as _;
 use semio_framework_core::MeshData;
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
-use vcs::{DocumentDsl, Operation, OperationDiff, OpText, TextError, TextSpan};
+use vcs::{Operation, OperationDiff};
 
 pub const REMODEL_DOCUMENT_SCHEMA: &str = "remodel.scene";
 
@@ -69,6 +69,40 @@ impl PackedU8 {
         self.0.is_empty()
     }
 }
+
+/// 🌉 `PackedF32`'s inner string is ALREADY the wire format (base64 text), so it binds as a plain
+/// `Shape::Text` rather than `#[dsl(base64)]` (which is for raw `Vec<u8>` fields only) — no double
+/// encoding, no `-` sentinel: an empty buffer is just an empty quoted string.
+impl dsl::DslField for PackedF32 {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
+/// 🌉 Same reasoning as `PackedF32`'s impl above.
+impl dsl::DslField for PackedU8 {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
 //#endregion 🔖Packed
 
 //#region 🔖Domain
@@ -77,7 +111,7 @@ impl PackedU8 {
 /// `GeoProducts.{dsm,dtm,ortho}_asset_id`. Sampled video frames use `image/jpeg` (~10x smaller than
 /// PNG for photographic content); PNG stays reserved for exports/textures/rasters that need
 /// lossless round trips.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ImageAsset {
     pub mime: String,
@@ -89,26 +123,34 @@ pub struct ImageAsset {
 /// 🗂️ Which shape a `MediaStream`'s frames were captured as. Video input is always eagerly extracted
 /// into individually-addressable `FrameRef`s before persistence (video bytes themselves are never
 /// stored) — `MediaKind::Video` only records that provenance, `MediaStream.source` carries the detail.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum MediaKind {
     #[default]
+    #[dsl(key = "image-sequence")]
     ImageSequence,
+    #[dsl(key = "video")]
     Video,
 }
 
 /// 🎞️ Codec a `VideoSource` was demuxed from — a plain mirror of `remodel_video::VideoCodec` without
 /// its `FourCc` payload (an unrecognized four-character code collapses to `Unknown`, which is enough
 /// provenance for a QC/diagnostic label).
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum VideoCodec {
+    #[dsl(key = "avc")]
     Avc,
+    #[dsl(key = "hevc")]
     Hevc,
+    #[dsl(key = "vp9")]
     Vp9,
+    #[dsl(key = "av1")]
     Av1,
+    #[dsl(key = "mjpeg")]
     Mjpeg,
     #[default]
+    #[dsl(key = "unknown")]
     Unknown,
 }
 
@@ -117,7 +159,7 @@ pub enum VideoCodec {
 /// once at import time from `remodel_video::probe`. "Video input = image sequence with timestamps":
 /// by the time a stream reaches this document its frames are already individually-addressable
 /// `ImageAsset`s with true media timestamps; this struct only records where they came from.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct VideoSource {
     pub name: String,
@@ -129,7 +171,7 @@ pub struct VideoSource {
     pub height: u32,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FrameRef {
     pub index: u32,
@@ -139,7 +181,7 @@ pub struct FrameRef {
 
 /// 🎞️ One imported media source (an image sequence or a video), decoded into `FrameRef`s pointing at
 /// `RemodelScene::assets`. Multiple cameras/angles are multiple streams, joined by `camera_id`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MediaStream {
     pub id: String,
@@ -149,6 +191,7 @@ pub struct MediaStream {
     pub sync_offset_ms: f64,
     pub fps_hint: f64,
     pub frames: Vec<FrameRef>,
+    #[dsl(block)]
     pub source: Option<VideoSource>,
 }
 
@@ -158,7 +201,7 @@ pub struct MediaStream {
 /// serialize into a stable arg-form-editable shape — the document instead always carries a flat
 /// 5-slot `distortion` array plus a `model` label the plugin uses to decide which slots are live,
 /// matching the "pinhole|brownConrady|fisheye" UI select.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraCalibration {
     pub id: String,
@@ -178,7 +221,7 @@ pub struct CameraCalibration {
 /// 🎯 One rig member's pose relative to the rig origin — a plain mirror of `remodel_camera`'s
 /// `RigExtrinsic{camera_id, pose_in_rig: Se3}`, flattened to a quaternion + translation since `Se3`
 /// (a `mathematical_lie` manifold type) is a plugin-runtime concern, not a document one.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct RigExtrinsic {
     pub camera_id: String,
@@ -193,14 +236,14 @@ impl Default for RigExtrinsic {
 }
 
 /// 🎯 Per-camera intrinsics/distortion plus rig extrinsics, refined by `remodel_camera`/`remodel_sfm`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CalibrationState {
     pub cameras: Vec<CameraCalibration>,
     pub rig: Vec<RigExtrinsic>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct GcpObservation {
     pub stream_id: String,
@@ -209,7 +252,7 @@ pub struct GcpObservation {
 }
 
 /// 📍 A surveyed ground-control point used by `remodel_geo` to georeference the reconstruction.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GroundControlPoint {
     pub id: String,
@@ -221,7 +264,7 @@ pub struct GroundControlPoint {
 /// ⏭️ Frame sampling/decode limits `remodel_engine` applies before feature extraction. `min_sharpness`
 /// is the blur gate: a candidate frame is dropped when its sharpness falls below this fraction of the
 /// rolling median sharpness of the last ~15 accepted frames.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct IngestParams {
     pub frame_sample_stride: u32,
@@ -236,16 +279,19 @@ impl Default for IngestParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum FeatureDetector {
     #[default]
+    #[dsl(key = "orb")]
     Orb,
+    #[dsl(key = "akaze")]
     Akaze,
+    #[dsl(key = "harris")]
     Harris,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct FeatureParams {
     pub detector: FeatureDetector,
@@ -260,15 +306,17 @@ impl Default for FeatureParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum MatcherKind {
     #[default]
+    #[dsl(key = "brute-force")]
     BruteForce,
+    #[dsl(key = "kd-tree")]
     KdTree,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MatchParams {
     pub matcher: MatcherKind,
@@ -292,16 +340,19 @@ impl Default for MatchParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum RobustLossKind {
+    #[dsl(key = "l2")]
     L2,
     #[default]
+    #[dsl(key = "huber")]
     Huber,
+    #[dsl(key = "cauchy")]
     Cauchy,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SfmParams {
     pub ransac_iterations: u32,
@@ -325,16 +376,19 @@ impl Default for SfmParams {
     }
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum DenseResolution {
+    #[dsl(key = "low")]
     Low,
     #[default]
+    #[dsl(key = "medium")]
     Medium,
+    #[dsl(key = "high")]
     High,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseParams {
     pub resolution: DenseResolution,
@@ -362,7 +416,7 @@ impl Default for DenseParams {
 /// `hole_fill_max_boundary_verts`, and `self_intersection_check` are the watertight-guarantee knobs:
 /// when `guarantee_watertight` is set and repair/hole-fill can't recover a closed 2-manifold, the
 /// `🔖Close` fallback triggers and re-validates until the result passes.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MeshParams {
     pub tsdf_voxel_size_mm: f32,
@@ -392,7 +446,7 @@ impl Default for MeshParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionParams {
     pub enabled: bool,
@@ -408,7 +462,7 @@ impl Default for MotionParams {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoParams {
     pub enabled: bool,
@@ -440,49 +494,75 @@ impl Default for GeoParams {
 /// these directly to configure `remodel_image`/`remodel_video`/`remodel_camera`/`remodel_feature`/
 /// `remodel_sfm`/`remodel_dense`/`remodel_mesh`/`remodel_motion`/`remodel_geo` without this crate
 /// depending on any of them.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionParams {
+    #[dsl(block)]
     pub ingest: IngestParams,
+    #[dsl(block)]
     pub feature: FeatureParams,
+    #[dsl(block)]
     pub matching: MatchParams,
+    #[dsl(block)]
     pub sfm: SfmParams,
+    #[dsl(block)]
     pub dense: DenseParams,
+    #[dsl(block)]
     pub mesh: MeshParams,
+    #[dsl(block)]
     pub motion: MotionParams,
+    #[dsl(block)]
     pub geo: GeoParams,
 }
 
 /// 🚦 Mirrors `remodel_engine`'s pipeline lifecycle so the document can render progress without
 /// polling internals directly.
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum ReconstructionStage {
     #[default]
+    #[dsl(key = "idle")]
     Idle,
+    #[dsl(key = "ingesting")]
     Ingesting,
+    #[dsl(key = "calibrating")]
     Calibrating,
+    #[dsl(key = "extracting-features")]
     ExtractingFeatures,
+    #[dsl(key = "matching-features")]
     MatchingFeatures,
+    #[dsl(key = "estimating-poses")]
     EstimatingPoses,
+    #[dsl(key = "bundle-adjusting")]
     BundleAdjusting,
+    #[dsl(key = "georeferencing")]
     Georeferencing,
+    #[dsl(key = "dense-stereo")]
     DenseStereo,
+    #[dsl(key = "fusing-volume")]
     FusingVolume,
+    #[dsl(key = "extracting-surface")]
     ExtractingSurface,
+    #[dsl(key = "cleaning-mesh")]
     CleaningMesh,
+    #[dsl(key = "texturing")]
     Texturing,
+    #[dsl(key = "tracking-motion")]
     TrackingMotion,
+    #[dsl(key = "deriving-geo-products")]
     DerivingGeoProducts,
+    #[dsl(key = "reporting-qc")]
     ReportingQc,
+    #[dsl(key = "done")]
     Done,
+    #[dsl(key = "failed")]
     Failed,
 }
 
 /// 📷 A single recovered camera pose — streamed early into `ReconstructionJob.camera_poses_preview`
 /// for live preview during sparse reconstruction, and reused verbatim as `CameraTrajectory.poses` once
 /// the run finishes (no separate heavier pose type: both are the same lightweight snapshot).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CameraPosePreview {
     pub camera_id: String,
@@ -501,7 +581,7 @@ impl Default for CameraPosePreview {
 /// needs to render progress and what undo/redo needs to restore. `native_port` (a phantom pointer at
 /// a `remodel-native` service that was never implemented) has been removed entirely — there is no
 /// out-of-process reconstruction backend, only in-process WASM-safe classical algorithms.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionJob {
     pub id: String,
@@ -515,19 +595,22 @@ pub struct ReconstructionJob {
     pub sparse_point_cloud_preview: PackedF32,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum MeshSource {
     #[default]
+    #[dsl(key = "placeholder")]
     Placeholder,
+    #[dsl(key = "reconstructed")]
     Reconstructed,
+    #[dsl(key = "imported")]
     Imported,
 }
 
 /// ✅ A plain-JSON mirror of `remodel_mesh::WatertightReport`'s summary fields (all scalars — the
 /// report itself carries no array data, so this is a snapshot only in the sense of avoiding a hard
 /// dependency on `remodel_mesh`, not in the sense of trimming size).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct WatertightReportSnapshot {
     pub vertex_count: u32,
@@ -561,8 +644,227 @@ pub struct RemodelMesh {
     pub watertight: Option<WatertightReportSnapshot>,
 }
 
+//#region 🔖MeshBridge
+/// 🔢 Base64-packed `u32` buffer, the `indices`/`faceIds`/`vertexIds`/`edgeIds` counterpart to
+/// {@link PackedF32}/{@link PackedU8} — kept private to {@link MeshDataTwin} since nothing else in
+/// this document needs a `u32` buffer.
+#[derive(Clone, Debug, Default, PartialEq)]
+struct PackedU32(String);
+
+impl PackedU32 {
+    fn from_u32_slice(values: &[u32]) -> Self {
+        let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
+        Self(base64::engine::general_purpose::STANDARD.encode(bytes))
+    }
+
+    fn to_u32_vec(&self) -> Vec<u32> {
+        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(self.0.as_bytes()) else {
+            return Vec::new();
+        };
+        let (chunks, remainder) = bytes.as_chunks::<4>();
+        if !remainder.is_empty() {
+            return Vec::new();
+        }
+        chunks.iter().map(|chunk| u32::from_le_bytes(*chunk)).collect()
+    }
+}
+
+impl dsl::DslField for PackedU32 {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
+/// 🌉 Local structural twin of `semio_framework_core::MeshData`'s numeric buffers, for the DSL
+/// boundary only — `MeshData` is foreign (`framework/core`, out of scope for this conversion), so
+/// `RemodelMesh.mesh` can't get a derive-generated `dsl::DslField` impl directly (the orphan rule
+/// blocks `impl dsl::DslField for MeshData` here: both the trait and the type are foreign to this
+/// crate). Every buffer packs base64 exactly like the old hand-rolled parser did; see
+/// `RemodelMesh`'s own hand `dsl::DslField` impl below for how this twin is used without ever
+/// changing `mesh: MeshData`'s public Rust type (`remodel/plugin` calls `.vertex_count()`/`.aabb()`
+/// and builds `RemodelMesh { mesh: mesh_from_kind(..), .. }` directly against it).
+#[derive(Clone, Debug, Default, PartialEq, dsl::DslRecord)]
+struct MeshDataTwin {
+    positions: PackedF32,
+    normals: PackedF32,
+    colors: PackedF32,
+    indices: PackedU32,
+    uvs: PackedF32,
+    #[dsl(key = "faceIds")]
+    face_ids: PackedU32,
+    #[dsl(key = "vertexIds")]
+    vertex_ids: PackedU32,
+    #[dsl(key = "edgePositions")]
+    edge_positions: PackedF32,
+    #[dsl(key = "edgeIds")]
+    edge_ids: PackedU32,
+    #[dsl(key = "edgeUvs")]
+    edge_uvs: PackedF32,
+    #[dsl(key = "edgeIsSeam")]
+    edge_is_seam: PackedU8,
+    #[dsl(key = "paintTexture")]
+    paint_texture_base64: Option<String>,
+}
+
+impl From<&MeshData> for MeshDataTwin {
+    fn from(mesh: &MeshData) -> Self {
+        Self {
+            positions: PackedF32::from_f32_slice(&mesh.positions),
+            normals: PackedF32::from_f32_slice(&mesh.normals),
+            colors: PackedF32::from_f32_slice(&mesh.colors),
+            indices: PackedU32::from_u32_slice(&mesh.indices),
+            uvs: PackedF32::from_f32_slice(&mesh.uvs),
+            face_ids: PackedU32::from_u32_slice(&mesh.face_ids),
+            vertex_ids: PackedU32::from_u32_slice(&mesh.vertex_ids),
+            edge_positions: PackedF32::from_f32_slice(&mesh.edge_positions),
+            edge_ids: PackedU32::from_u32_slice(&mesh.edge_ids),
+            edge_uvs: PackedF32::from_f32_slice(&mesh.edge_uvs),
+            edge_is_seam: PackedU8::from_u8_slice(&mesh.edge_is_seam),
+            paint_texture_base64: mesh.paint_texture_base64.clone(),
+        }
+    }
+}
+
+impl From<MeshDataTwin> for MeshData {
+    fn from(twin: MeshDataTwin) -> Self {
+        Self {
+            positions: twin.positions.to_f32_vec(),
+            normals: twin.normals.to_f32_vec(),
+            colors: twin.colors.to_f32_vec(),
+            indices: twin.indices.to_u32_vec(),
+            uvs: twin.uvs.to_f32_vec(),
+            face_ids: twin.face_ids.to_u32_vec(),
+            vertex_ids: twin.vertex_ids.to_u32_vec(),
+            edge_positions: twin.edge_positions.to_f32_vec(),
+            edge_ids: twin.edge_ids.to_u32_vec(),
+            edge_uvs: twin.edge_uvs.to_f32_vec(),
+            edge_is_seam: twin.edge_is_seam.to_u8_vec(),
+            paint_texture_base64: twin.paint_texture_base64,
+        }
+    }
+}
+
+/// 🌉 Hand-written (NOT `#[derive(dsl::DslRecord)]`) `dsl::DslField`/spec/record trio for
+/// `RemodelMesh` — mirrors exactly what the derive macro would generate for a plain record, except
+/// the `mesh: MeshData` field routes through `MeshDataTwin` above instead of `<MeshData as
+/// dsl::DslField>`, which can't exist here (orphan rule). Field ids are purely internal wiring
+/// between these three functions, not a wire-compatibility concern.
+impl RemodelMesh {
+    fn __dsl_spec() -> dsl::RecordSpec {
+        dsl::RecordSpec::new_owned(
+            None,
+            dsl::RecordLayout::Inline,
+            vec![
+                dsl::FieldSpec::new(0, "source", <MeshSource as dsl::DslField>::shape()),
+                dsl::FieldSpec::new(1, "textureAssetId", <String as dsl::DslField>::shape()).optional(),
+                dsl::FieldSpec::new(2, "geometry", dsl::Shape::Block(Box::new(<MeshDataTwin as dsl::DslField>::shape()))),
+                dsl::FieldSpec::new(3, "watertight", dsl::Shape::Block(Box::new(<WatertightReportSnapshot as dsl::DslField>::shape()))).optional(),
+            ],
+        )
+    }
+
+    fn __dsl_to_record(&self) -> dsl::RecordValue {
+        let mut record = dsl::RecordValue::default();
+        record.fields.insert(0, dsl::DslField::to_value(&self.source));
+        record.fields.insert(
+            1,
+            match &self.texture_asset_id {
+                Some(v) => dsl::DslField::to_value(v),
+                None => dsl::FieldValue::Absent,
+            },
+        );
+        record.fields.insert(2, dsl::FieldValue::Block(Box::new(dsl::DslField::to_value(&MeshDataTwin::from(&self.mesh)))));
+        record.fields.insert(
+            3,
+            match &self.watertight {
+                Some(v) => dsl::FieldValue::Block(Box::new(dsl::DslField::to_value(v))),
+                None => dsl::FieldValue::Absent,
+            },
+        );
+        record
+    }
+
+    fn __dsl_from_record(record: &dsl::RecordValue) -> Result<Self, dsl::TextError> {
+        let source = {
+            let value = record.get(0).ok_or_else(|| dsl::__rt::field_error("missing field 'source'"))?;
+            <MeshSource as dsl::DslField>::from_value(value).map_err(dsl::__rt::field_error)?
+        };
+        let texture_asset_id = {
+            let value = record.get(1).ok_or_else(|| dsl::__rt::field_error("missing field 'textureAssetId'"))?;
+            match value {
+                dsl::FieldValue::Absent => None,
+                other => Some(<String as dsl::DslField>::from_value(other).map_err(dsl::__rt::field_error)?),
+            }
+        };
+        let mesh = {
+            let value = record.get(2).ok_or_else(|| dsl::__rt::field_error("missing field 'geometry'"))?;
+            let twin = match value {
+                dsl::FieldValue::Block(inner) => <MeshDataTwin as dsl::DslField>::from_value(inner.as_ref()).map_err(dsl::__rt::field_error)?,
+                dsl::FieldValue::Absent => <MeshDataTwin as dsl::DslField>::from_value(&dsl::FieldValue::Absent).map_err(dsl::__rt::field_error)?,
+                other => return Err(dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
+            };
+            MeshData::from(twin)
+        };
+        let watertight = {
+            let value = record.get(3).ok_or_else(|| dsl::__rt::field_error("missing field 'watertight'"))?;
+            match value {
+                dsl::FieldValue::Block(inner) => match inner.as_ref() {
+                    dsl::FieldValue::Absent => None,
+                    other => Some(<WatertightReportSnapshot as dsl::DslField>::from_value(other).map_err(dsl::__rt::field_error)?),
+                },
+                dsl::FieldValue::Absent => None,
+                other => return Err(dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
+            }
+        };
+        Ok(RemodelMesh { mesh, source, texture_asset_id, watertight })
+    }
+}
+
+impl dsl::DslField for RemodelMesh {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Record(Self::__dsl_spec)
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Record(self.__dsl_to_record())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Record(record) => Self::__dsl_from_record(record).map_err(|e| e.message),
+            other => Err(format!("expected Record, found {other:?}")),
+        }
+    }
+}
+
+/// 🌉 `Box<T>` is a `#[fundamental]` std type, so implementing the foreign `dsl::DslField` trait for
+/// `Box<RemodelMesh>` (a local type parameter) here is coherence-legal — needed because
+/// `RemodelOperation::SetMeshResult`/`RemodelDiff::SetMeshResult` carry `mesh: Box<RemodelMesh>`
+/// (boxed only to shrink the enum's overall size; `RemodelMesh` itself is a plain record, not a
+/// `DslEnum`, so the derive's `#[dsl(statements)] Box<T>` "exactly-one-tagged-value" idiom doesn't
+/// apply — this is the ordinary boxed-scalar case instead).
+impl dsl::DslField for Box<RemodelMesh> {
+    fn shape() -> dsl::Shape {
+        <RemodelMesh as dsl::DslField>::shape()
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        <RemodelMesh as dsl::DslField>::to_value(self.as_ref())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        <RemodelMesh as dsl::DslField>::from_value(value).map(Box::new)
+    }
+}
+//#endregion 🔖MeshBridge
+
 /// ☁️ Sparse point cloud from bundle adjustment (`points` = flat xyz triples).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct SparseCloud {
     pub points: PackedF32,
@@ -572,7 +874,7 @@ pub struct SparseCloud {
 /// ☁️ Dense point cloud with optional per-point LAS-style classification codes (0 unclassified, 2
 /// ground, 6 building, …) — `remodel_dense::PointClass` is a bespoke enum without numeric LAS
 /// discriminants, so `remodel_engine` maps it to LAS codes when it distills this snapshot.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct DenseCloud {
     pub positions: PackedF32,
@@ -582,24 +884,26 @@ pub struct DenseCloud {
 }
 
 /// 🎥 Recovered camera trajectory across all registered frames.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraTrajectory {
     pub poses: Vec<CameraPosePreview>,
 }
 
-#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum TrackClass {
     #[default]
+    #[dsl(key = "static")]
     Static,
+    #[dsl(key = "moving")]
     Moving,
 }
 
 /// 🏃 A distilled summary of one `remodel_motion` track — full per-frame keyframe paths
 /// (`Track2d`/`Trajectory3d` in the motion crate) are plugin-runtime scratch, not durable document
 /// state; only enough is kept here to list/label tracks and drive the report table.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct MotionTrackSummary {
     pub id: String,
@@ -612,7 +916,7 @@ pub struct MotionTrackSummary {
 /// PNG, ortho as an RGB PNG) rather than an embedded float grid — rasters are pixels, so they follow
 /// the same persistence rule as every other image in this document instead of a bespoke height-grid
 /// packed-array shape.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct GeoProducts {
     pub dsm_asset_id: Option<String>,
@@ -624,11 +928,12 @@ pub struct GeoProducts {
 /// watertight snapshot (mirroring `QualityReport.watertight: Option<WatertightReport>`) and a few
 /// cheap scalar summaries (`remodel_engine` computes these once at the end of a run; the underlying
 /// per-camera covariance/per-point-sigma arrays and density/overlap rasters stay plugin-runtime).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct QcReportSnapshot {
     pub reprojection_rms_px: f64,
     pub gcp_checkpoint_rmse: Option<f64>,
+    #[dsl(block)]
     pub watertight: Option<WatertightReportSnapshot>,
     pub mean_track_length: f32,
     pub registered_frame_ratio: f32,
@@ -637,15 +942,21 @@ pub struct QcReportSnapshot {
 }
 
 /// 📦 Everything a completed (or partially completed) reconstruction run has produced so far.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct ReconstructionResults {
+    #[dsl(block)]
     pub sparse: Option<SparseCloud>,
+    #[dsl(block)]
     pub dense: Option<DenseCloud>,
+    #[dsl(block)]
     pub mesh: RemodelMesh,
+    #[dsl(block)]
     pub trajectory: Option<CameraTrajectory>,
     pub tracks: Vec<MotionTrackSummary>,
+    #[dsl(block)]
     pub geo: Option<GeoProducts>,
+    #[dsl(block)]
     pub qc: Option<QcReportSnapshot>,
 }
 
@@ -653,7 +964,8 @@ pub struct ReconstructionResults {
 /// viewport state (camera/selection/cursors), algorithm scratch (descriptors, match graphs, depth
 /// maps, TSDF volumes), and the active utility (host-owned `view_state.active_utility_id`) all live in
 /// the plugin runtime, never in this document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "remodel")]
 #[serde(rename_all = "camelCase")]
 pub struct RemodelScene {
     pub schema: String,
@@ -663,14 +975,18 @@ pub struct RemodelScene {
     #[serde(default)]
     pub assets: BTreeMap<String, ImageAsset>,
     #[serde(default)]
+    #[dsl(block)]
     pub calibration: CalibrationState,
     #[serde(default)]
+    #[dsl(block)]
     pub params: ReconstructionParams,
     #[serde(default)]
     pub gcps: Vec<GroundControlPoint>,
     #[serde(default)]
+    #[dsl(block)]
     pub job: ReconstructionJob,
     #[serde(default)]
+    #[dsl(block)]
     pub results: ReconstructionResults,
 }
 
@@ -701,77 +1017,114 @@ pub fn default_remodel_scene() -> RemodelScene {
 /// param group, publish a partial result) and each operation carries its own inverse from the pre-edit state.
 /// `SetAsset` is per-key (not a whole-map replace) so two peers importing different frames converge
 /// without clobbering each other's assets — see `concurrent_set_asset_ops_converge_regardless_of_order`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RemodelOperation {
+    #[dsl(key = "setStreams")]
     SetStreams {
         streams: Vec<MediaStream>,
     },
+    #[dsl(key = "setAsset")]
     SetAsset {
         key: String,
         #[serde(default)]
+        #[dsl(block)]
         value: Option<ImageAsset>,
     },
+    #[dsl(key = "setCalibration")]
     SetCalibration {
+        #[dsl(block)]
         calibration: CalibrationState,
     },
+    #[dsl(key = "setGcps")]
     SetGcps {
         gcps: Vec<GroundControlPoint>,
     },
+    #[dsl(key = "setIngestParams")]
     SetIngestParams {
+        #[dsl(block)]
         params: IngestParams,
     },
+    #[dsl(key = "setFeatureParams")]
     SetFeatureParams {
+        #[dsl(block)]
         params: FeatureParams,
     },
+    #[dsl(key = "setMatchParams")]
     SetMatchParams {
+        #[dsl(block)]
         params: MatchParams,
     },
+    #[dsl(key = "setSfmParams")]
     SetSfmParams {
+        #[dsl(block)]
         params: SfmParams,
     },
+    #[dsl(key = "setDenseParams")]
     SetDenseParams {
+        #[dsl(block)]
         params: DenseParams,
     },
+    #[dsl(key = "setMeshParams")]
     SetMeshParams {
+        #[dsl(block)]
         params: MeshParams,
     },
+    #[dsl(key = "setMotionParams")]
     SetMotionParams {
+        #[dsl(block)]
         params: MotionParams,
     },
+    #[dsl(key = "setGeoParams")]
     SetGeoParams {
+        #[dsl(block)]
         params: GeoParams,
     },
+    #[dsl(key = "setJob")]
     SetJob {
+        #[dsl(block)]
         job: ReconstructionJob,
     },
+    #[dsl(key = "setSparse")]
     SetSparse {
         #[serde(default)]
+        #[dsl(block)]
         sparse: Option<SparseCloud>,
     },
+    #[dsl(key = "setDense")]
     SetDense {
         #[serde(default)]
+        #[dsl(block)]
         dense: Option<DenseCloud>,
     },
     /// 📦 Boxed: `RemodelMesh` (a full `MeshData` plus an optional watertight snapshot) is far larger
     /// than any sibling variant, and `clippy::large_enum_variant` flags the resulting size disparity
     /// across `RemodelOperation`/`RemodelDiff` — boxing keeps every other variant cheap to move.
+    #[dsl(key = "setMeshResult")]
     SetMeshResult {
+        #[dsl(block)]
         mesh: Box<RemodelMesh>,
     },
+    #[dsl(key = "setTrajectory")]
     SetTrajectory {
         #[serde(default)]
+        #[dsl(block)]
         trajectory: Option<CameraTrajectory>,
     },
+    #[dsl(key = "setTracks")]
     SetTracks {
         tracks: Vec<MotionTrackSummary>,
     },
+    #[dsl(key = "setGeoProducts")]
     SetGeoProducts {
         #[serde(default)]
+        #[dsl(block)]
         geo: Option<GeoProducts>,
     },
+    #[dsl(key = "setQc")]
     SetQc {
         #[serde(default)]
+        #[dsl(block)]
         qc: Option<QcReportSnapshot>,
     },
 }
@@ -973,1578 +1326,6 @@ impl Operation<RemodelScene> for RemodelOperation {
     }
 }
 //#endregion 🔖Operations
-
-//#region 🔖Dsl
-/// 📜 Hand-rolled lexer, parser and printer for the `.remodel` DSL (`RemodelScene`) and for
-/// `RemodelOperation`'s single-line op encoding — replaces the JSON envelope for both the initial
-/// projection and the op log. Whitespace (including newlines) is never significant to the parser:
-/// `print_dsl` inserts a newline between top-level sections purely for readability, `print_op`
-/// renders the identical grammar on one line. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod remodel_text {
-    use super::*;
-    use std::collections::HashMap;
-
-    //#region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
-    }
-
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: TextSpan,
-    }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` and
-    /// `,` are ordinary word characters — `key=value` collapses into one token (split later by
-    /// {@link Parser::parse_kv_map}), and only a quoted value forces a token boundary right after `key=`.
-    fn lex(input: &str) -> Result<Vec<Lexed>, TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: TextSpan::at(line, col) });
-        Ok(out)
-    }
-    //#endregion Lexer
-
-    //#region Parser
-    #[derive(Clone, Debug)]
-    enum FieldValue {
-        Str(String),
-        Word(String),
-    }
-
-    type FieldMap = HashMap<String, (FieldValue, TextSpan)>;
-
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
-    }
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_lbrace(&self) -> bool {
-            matches!(self.peek(), Tok::LBrace)
-        }
-
-        fn at_rbrace(&self) -> bool {
-            matches!(self.peek(), Tok::RBrace)
-        }
-
-        /// 🔎 True when the next token is the bare `-` sentinel word (never a `key=value` pair) used
-        /// throughout this grammar to mean "this optional construct is absent".
-        fn at_dash(&self) -> bool {
-            matches!(self.peek(), Tok::Word(w) if w == "-")
-        }
-
-        fn expect_word(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_lbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::LBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-            }
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
-        /// generic header-field reader every construct is built on.
-        fn parse_kv_map(&mut self) -> Result<FieldMap, TextError> {
-            let mut map = HashMap::new();
-            loop {
-                let word = match self.peek() {
-                    Tok::Word(w) if w.contains('=') => w.clone(),
-                    _ => break,
-                };
-                let span = self.span();
-                self.bump();
-                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-                let value = if rest.is_empty() { FieldValue::Str(self.expect_str_at(span)?) } else { FieldValue::Word(rest.to_string()) };
-                map.insert(key.to_string(), (value, span));
-            }
-            Ok(map)
-        }
-
-        fn expect_str_at(&mut self, span: TextSpan) -> Result<String, TextError> {
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-
-        /// 📚 Greedily reads quoted strings — the list grammar for `warnings`.
-        fn greedy_str_list(&mut self) -> Vec<String> {
-            let mut out = Vec::new();
-            while let Tok::Str(_) = self.peek() {
-                if let Tok::Str(s) = self.bump() {
-                    out.push(s);
-                }
-            }
-            out
-        }
-    }
-
-    fn kv_str(map: &FieldMap, key: &str, span: TextSpan) -> Result<String, TextError> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Ok(s.clone()),
-            Some((FieldValue::Word(_), field_span)) => Err(TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
-            None => Err(TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_opt_str(map: &FieldMap, key: &str) -> Option<String> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Some(s.clone()),
-            _ => None,
-        }
-    }
-
-    fn kv_word(map: &FieldMap, key: &str, span: TextSpan) -> Result<String, TextError> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
-            Some((FieldValue::Str(_), field_span)) => Err(TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
-            None => Err(TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_opt_word(map: &FieldMap, key: &str) -> Option<String> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) if w != "-" => Some(w.clone()),
-            _ => None,
-        }
-    }
-
-    fn kv_bool(map: &FieldMap, key: &str, span: TextSpan) -> Result<bool, TextError> {
-        match kv_word(map, key, span)?.as_str() {
-            "true" => Ok(true),
-            "false" => Ok(false),
-            _ => Err(TextError::expected(format!("field '{key}' must be 'true' or 'false'"), span, "true|false")),
-        }
-    }
-
-    fn kv_num<T: std::str::FromStr>(map: &FieldMap, key: &str, span: TextSpan, label: &str) -> Result<T, TextError> {
-        let word = kv_word(map, key, span)?;
-        word.parse::<T>().map_err(|_| TextError::expected(format!("field '{key}' must be a {label}"), span, label.to_string()))
-    }
-
-    fn kv_opt_num<T: std::str::FromStr>(map: &FieldMap, key: &str) -> Option<T> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) if w != "-" => w.parse::<T>().ok(),
-            _ => None,
-        }
-    }
-    //#endregion Parser
-
-    //#region Scalars
-    /// 🔐 Minimal escape for free-text fields (names/labels/error messages) — mirrors `vcs`'s own
-    /// `escape_text_field`/`unescape_text_field` (unescaping happens inline in the lexer's `"` branch).
-    fn quote(value: &str) -> String {
-        let mut out = String::with_capacity(value.len() + 2);
-        out.push('"');
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out.push('"');
-        out
-    }
-
-    /// 🔗 Prints `-` for `None`, else `print`'s result — the dash-sentinel form of every optional
-    /// scalar token in this grammar (`map_or_else` rather than `map(..).unwrap_or_else(..)` per the
-    /// workspace's `map_unwrap_or` clippy lint).
-    fn dash_or<T>(value: Option<T>, print: impl FnOnce(T) -> String) -> String {
-        value.map_or_else(|| "-".to_string(), print)
-    }
-
-    fn csv<T: std::fmt::Display>(values: &[T]) -> String {
-        values.iter().map(|v| format!("{v}")).collect::<Vec<_>>().join(",")
-    }
-
-    fn parse_csv<T: std::str::FromStr, const N: usize>(word: &str, span: TextSpan) -> Result<[T; N], TextError> {
-        let parts: Vec<&str> = word.split(',').collect();
-        if parts.len() != N {
-            return Err(TextError::expected(format!("expected {N} comma-separated numbers, got {}", parts.len()), span, format!("{N} numbers")));
-        }
-        let mut values: Vec<T> = Vec::with_capacity(N);
-        for part in &parts {
-            values.push(part.parse::<T>().map_err(|_| TextError::expected(format!("invalid number '{part}'"), span, "number"))?);
-        }
-        values.try_into().map_err(|_| TextError::new("internal csv arity mismatch", span))
-    }
-
-    /// 📦 Base64-packs a `u32` slice as little-endian bytes — the `indices`/`faceIds`/`vertexIds`/
-    /// `edgeIds` counterpart to {@link PackedF32}/{@link PackedU8}, kept local since `u32` arithmetic
-    /// (unlike `f32` bit patterns) has no existing wrapper type in `🔖Packed`.
-    fn pack_u32(values: &[u32]) -> String {
-        let bytes: Vec<u8> = values.iter().flat_map(|value| value.to_le_bytes()).collect();
-        base64::engine::general_purpose::STANDARD.encode(bytes)
-    }
-
-    fn unpack_u32(text: &str) -> Vec<u32> {
-        let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(text.as_bytes()) else {
-            return Vec::new();
-        };
-        let (chunks, remainder) = bytes.as_chunks::<4>();
-        if !remainder.is_empty() {
-            return Vec::new();
-        }
-        chunks.iter().map(|chunk| u32::from_le_bytes(*chunk)).collect()
-    }
-
-    fn print_packed_f32(values: &PackedF32) -> String {
-        if values.is_empty() { "-".to_string() } else { values.0.clone() }
-    }
-
-    fn parse_packed_f32(word: &str) -> PackedF32 {
-        if word == "-" { PackedF32::default() } else { PackedF32(word.to_string()) }
-    }
-
-    fn print_packed_u8(values: &PackedU8) -> String {
-        if values.is_empty() { "-".to_string() } else { values.0.clone() }
-    }
-
-    fn parse_packed_u8(word: &str) -> PackedU8 {
-        if word == "-" { PackedU8::default() } else { PackedU8(word.to_string()) }
-    }
-
-    fn print_packed_u32(values: &[u32]) -> String {
-        if values.is_empty() { "-".to_string() } else { pack_u32(values) }
-    }
-
-    fn parse_packed_u32(word: &str) -> Vec<u32> {
-        if word == "-" { Vec::new() } else { unpack_u32(word) }
-    }
-
-    /// 🔤 Every closed enum in this document round-trips through its serde kebab-case string — hand
-    /// mirrored here (rather than routed through `serde_json`) to keep the DSL a self-contained grammar.
-    fn media_kind_str(value: MediaKind) -> &'static str {
-        match value {
-            MediaKind::ImageSequence => "image-sequence",
-            MediaKind::Video => "video",
-        }
-    }
-    fn parse_media_kind(word: &str, span: TextSpan) -> Result<MediaKind, TextError> {
-        match word {
-            "image-sequence" => Ok(MediaKind::ImageSequence),
-            "video" => Ok(MediaKind::Video),
-            other => Err(TextError::expected(format!("unknown media kind '{other}'"), span, "image-sequence|video")),
-        }
-    }
-
-    fn video_codec_str(value: VideoCodec) -> &'static str {
-        match value {
-            VideoCodec::Avc => "avc",
-            VideoCodec::Hevc => "hevc",
-            VideoCodec::Vp9 => "vp9",
-            VideoCodec::Av1 => "av1",
-            VideoCodec::Mjpeg => "mjpeg",
-            VideoCodec::Unknown => "unknown",
-        }
-    }
-    fn parse_video_codec(word: &str, span: TextSpan) -> Result<VideoCodec, TextError> {
-        match word {
-            "avc" => Ok(VideoCodec::Avc),
-            "hevc" => Ok(VideoCodec::Hevc),
-            "vp9" => Ok(VideoCodec::Vp9),
-            "av1" => Ok(VideoCodec::Av1),
-            "mjpeg" => Ok(VideoCodec::Mjpeg),
-            "unknown" => Ok(VideoCodec::Unknown),
-            other => Err(TextError::expected(format!("unknown video codec '{other}'"), span, "avc|hevc|vp9|av1|mjpeg|unknown")),
-        }
-    }
-
-    fn feature_detector_str(value: FeatureDetector) -> &'static str {
-        match value {
-            FeatureDetector::Orb => "orb",
-            FeatureDetector::Akaze => "akaze",
-            FeatureDetector::Harris => "harris",
-        }
-    }
-    fn parse_feature_detector(word: &str, span: TextSpan) -> Result<FeatureDetector, TextError> {
-        match word {
-            "orb" => Ok(FeatureDetector::Orb),
-            "akaze" => Ok(FeatureDetector::Akaze),
-            "harris" => Ok(FeatureDetector::Harris),
-            other => Err(TextError::expected(format!("unknown feature detector '{other}'"), span, "orb|akaze|harris")),
-        }
-    }
-
-    fn matcher_kind_str(value: MatcherKind) -> &'static str {
-        match value {
-            MatcherKind::BruteForce => "brute-force",
-            MatcherKind::KdTree => "kd-tree",
-        }
-    }
-    fn parse_matcher_kind(word: &str, span: TextSpan) -> Result<MatcherKind, TextError> {
-        match word {
-            "brute-force" => Ok(MatcherKind::BruteForce),
-            "kd-tree" => Ok(MatcherKind::KdTree),
-            other => Err(TextError::expected(format!("unknown matcher kind '{other}'"), span, "brute-force|kd-tree")),
-        }
-    }
-
-    fn robust_loss_str(value: RobustLossKind) -> &'static str {
-        match value {
-            RobustLossKind::L2 => "l2",
-            RobustLossKind::Huber => "huber",
-            RobustLossKind::Cauchy => "cauchy",
-        }
-    }
-    fn parse_robust_loss(word: &str, span: TextSpan) -> Result<RobustLossKind, TextError> {
-        match word {
-            "l2" => Ok(RobustLossKind::L2),
-            "huber" => Ok(RobustLossKind::Huber),
-            "cauchy" => Ok(RobustLossKind::Cauchy),
-            other => Err(TextError::expected(format!("unknown robust loss '{other}'"), span, "l2|huber|cauchy")),
-        }
-    }
-
-    fn dense_resolution_str(value: DenseResolution) -> &'static str {
-        match value {
-            DenseResolution::Low => "low",
-            DenseResolution::Medium => "medium",
-            DenseResolution::High => "high",
-        }
-    }
-    fn parse_dense_resolution(word: &str, span: TextSpan) -> Result<DenseResolution, TextError> {
-        match word {
-            "low" => Ok(DenseResolution::Low),
-            "medium" => Ok(DenseResolution::Medium),
-            "high" => Ok(DenseResolution::High),
-            other => Err(TextError::expected(format!("unknown dense resolution '{other}'"), span, "low|medium|high")),
-        }
-    }
-
-    fn reconstruction_stage_str(value: ReconstructionStage) -> &'static str {
-        match value {
-            ReconstructionStage::Idle => "idle",
-            ReconstructionStage::Ingesting => "ingesting",
-            ReconstructionStage::Calibrating => "calibrating",
-            ReconstructionStage::ExtractingFeatures => "extracting-features",
-            ReconstructionStage::MatchingFeatures => "matching-features",
-            ReconstructionStage::EstimatingPoses => "estimating-poses",
-            ReconstructionStage::BundleAdjusting => "bundle-adjusting",
-            ReconstructionStage::Georeferencing => "georeferencing",
-            ReconstructionStage::DenseStereo => "dense-stereo",
-            ReconstructionStage::FusingVolume => "fusing-volume",
-            ReconstructionStage::ExtractingSurface => "extracting-surface",
-            ReconstructionStage::CleaningMesh => "cleaning-mesh",
-            ReconstructionStage::Texturing => "texturing",
-            ReconstructionStage::TrackingMotion => "tracking-motion",
-            ReconstructionStage::DerivingGeoProducts => "deriving-geo-products",
-            ReconstructionStage::ReportingQc => "reporting-qc",
-            ReconstructionStage::Done => "done",
-            ReconstructionStage::Failed => "failed",
-        }
-    }
-    fn parse_reconstruction_stage(word: &str, span: TextSpan) -> Result<ReconstructionStage, TextError> {
-        match word {
-            "idle" => Ok(ReconstructionStage::Idle),
-            "ingesting" => Ok(ReconstructionStage::Ingesting),
-            "calibrating" => Ok(ReconstructionStage::Calibrating),
-            "extracting-features" => Ok(ReconstructionStage::ExtractingFeatures),
-            "matching-features" => Ok(ReconstructionStage::MatchingFeatures),
-            "estimating-poses" => Ok(ReconstructionStage::EstimatingPoses),
-            "bundle-adjusting" => Ok(ReconstructionStage::BundleAdjusting),
-            "georeferencing" => Ok(ReconstructionStage::Georeferencing),
-            "dense-stereo" => Ok(ReconstructionStage::DenseStereo),
-            "fusing-volume" => Ok(ReconstructionStage::FusingVolume),
-            "extracting-surface" => Ok(ReconstructionStage::ExtractingSurface),
-            "cleaning-mesh" => Ok(ReconstructionStage::CleaningMesh),
-            "texturing" => Ok(ReconstructionStage::Texturing),
-            "tracking-motion" => Ok(ReconstructionStage::TrackingMotion),
-            "deriving-geo-products" => Ok(ReconstructionStage::DerivingGeoProducts),
-            "reporting-qc" => Ok(ReconstructionStage::ReportingQc),
-            "done" => Ok(ReconstructionStage::Done),
-            "failed" => Ok(ReconstructionStage::Failed),
-            other => Err(TextError::expected(format!("unknown reconstruction stage '{other}'"), span, "reconstruction stage")),
-        }
-    }
-
-    fn mesh_source_str(value: MeshSource) -> &'static str {
-        match value {
-            MeshSource::Placeholder => "placeholder",
-            MeshSource::Reconstructed => "reconstructed",
-            MeshSource::Imported => "imported",
-        }
-    }
-    fn parse_mesh_source(word: &str, span: TextSpan) -> Result<MeshSource, TextError> {
-        match word {
-            "placeholder" => Ok(MeshSource::Placeholder),
-            "reconstructed" => Ok(MeshSource::Reconstructed),
-            "imported" => Ok(MeshSource::Imported),
-            other => Err(TextError::expected(format!("unknown mesh source '{other}'"), span, "placeholder|reconstructed|imported")),
-        }
-    }
-
-    fn track_class_str(value: TrackClass) -> &'static str {
-        match value {
-            TrackClass::Static => "static",
-            TrackClass::Moving => "moving",
-        }
-    }
-    fn parse_track_class(word: &str, span: TextSpan) -> Result<TrackClass, TextError> {
-        match word {
-            "static" => Ok(TrackClass::Static),
-            "moving" => Ok(TrackClass::Moving),
-            other => Err(TextError::expected(format!("unknown track class '{other}'"), span, "static|moving")),
-        }
-    }
-    //#endregion Scalars
-
-    //#region Constructs
-    fn print_frame(frame: &FrameRef) -> String {
-        format!("frame index={} t={} asset={}", frame.index, frame.timestamp_ms, frame.asset_id)
-    }
-    fn parse_frame(p: &mut Parser) -> Result<FrameRef, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(FrameRef { index: kv_num(&map, "index", span, "integer")?, timestamp_ms: kv_num(&map, "t", span, "number")?, asset_id: kv_word(&map, "asset", span)? })
-    }
-
-    fn print_video_source(source: &VideoSource) -> String {
-        format!(
-            "source {{ name={} container={} codec={} durationMs={} frameCount={} width={} height={} }}",
-            quote(&source.name),
-            source.container,
-            video_codec_str(source.codec),
-            source.duration_ms,
-            source.frame_count,
-            source.width,
-            source.height
-        )
-    }
-    fn parse_video_source(p: &mut Parser) -> Result<VideoSource, TextError> {
-        p.expect_lbrace()?;
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        p.expect_rbrace()?;
-        Ok(VideoSource {
-            name: kv_str(&map, "name", span)?,
-            container: kv_word(&map, "container", span)?,
-            codec: parse_video_codec(&kv_word(&map, "codec", span)?, span)?,
-            duration_ms: kv_num(&map, "durationMs", span, "number")?,
-            frame_count: kv_num(&map, "frameCount", span, "integer")?,
-            width: kv_num(&map, "width", span, "integer")?,
-            height: kv_num(&map, "height", span, "integer")?,
-        })
-    }
-
-    fn print_stream(stream: &MediaStream) -> String {
-        let mut out = format!(
-            "stream id={} name={} kind={} camera={} syncOffsetMs={} fpsHint={} {{",
-            stream.id,
-            quote(&stream.name),
-            media_kind_str(stream.kind),
-            stream.camera_id.as_deref().unwrap_or("-"),
-            stream.sync_offset_ms,
-            stream.fps_hint
-        );
-        if let Some(source) = &stream.source {
-            out.push(' ');
-            out.push_str(&print_video_source(source));
-        }
-        for frame in &stream.frames {
-            out.push(' ');
-            out.push_str(&print_frame(frame));
-        }
-        out.push_str(" }");
-        out
-    }
-    fn parse_stream(p: &mut Parser) -> Result<MediaStream, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let id = kv_word(&map, "id", span)?;
-        let name = kv_str(&map, "name", span)?;
-        let kind = parse_media_kind(&kv_word(&map, "kind", span)?, span)?;
-        let camera_id = kv_opt_word(&map, "camera");
-        let sync_offset_ms = kv_num(&map, "syncOffsetMs", span, "number")?;
-        let fps_hint = kv_num(&map, "fpsHint", span, "number")?;
-        p.expect_lbrace()?;
-        let mut source = None;
-        let mut frames = Vec::new();
-        while !p.at_rbrace() {
-            match p.expect_word()?.as_str() {
-                "source" => source = Some(parse_video_source(p)?),
-                "frame" => frames.push(parse_frame(p)?),
-                other => return Err(TextError::new(format!("unknown stream child '{other}'"), span)),
-            }
-        }
-        p.expect_rbrace()?;
-        Ok(MediaStream { id, name, kind, camera_id, sync_offset_ms, fps_hint, frames, source })
-    }
-
-    fn print_asset_fields(asset: &ImageAsset) -> String {
-        format!("mime={} width={} height={} data={}", asset.mime, asset.width, asset.height, asset.data)
-    }
-    fn print_asset(id: &str, asset: &ImageAsset) -> String {
-        format!("asset id={id} {}", print_asset_fields(asset))
-    }
-    fn parse_asset(p: &mut Parser) -> Result<(String, ImageAsset), TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let id = kv_word(&map, "id", span)?;
-        let asset = ImageAsset { mime: kv_word(&map, "mime", span)?, width: kv_num(&map, "width", span, "integer")?, height: kv_num(&map, "height", span, "integer")?, data: kv_word(&map, "data", span)? };
-        Ok((id, asset))
-    }
-
-    fn print_camera(camera: &CameraCalibration) -> String {
-        format!(
-            "camera id={} label={} model={} fx={} fy={} cx={} cy={} skew={} distortion={} rms={} locked={}",
-            camera.id,
-            quote(&camera.label),
-            camera.model,
-            camera.fx,
-            camera.fy,
-            camera.cx,
-            camera.cy,
-            camera.skew,
-            csv(&camera.distortion),
-            dash_or(camera.rms_reprojection_px, |v| v.to_string()),
-            camera.locked
-        )
-    }
-    fn parse_camera(p: &mut Parser) -> Result<CameraCalibration, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(CameraCalibration {
-            id: kv_word(&map, "id", span)?,
-            label: kv_str(&map, "label", span)?,
-            model: kv_word(&map, "model", span)?,
-            fx: kv_num(&map, "fx", span, "number")?,
-            fy: kv_num(&map, "fy", span, "number")?,
-            cx: kv_num(&map, "cx", span, "number")?,
-            cy: kv_num(&map, "cy", span, "number")?,
-            skew: kv_num(&map, "skew", span, "number")?,
-            distortion: parse_csv::<f32, 5>(&kv_word(&map, "distortion", span)?, span)?,
-            rms_reprojection_px: kv_opt_num(&map, "rms"),
-            locked: kv_bool(&map, "locked", span)?,
-        })
-    }
-
-    fn print_rig(rig: &RigExtrinsic) -> String {
-        format!("rig camera={} rot={} t={}", rig.camera_id, csv(&rig.rotation_wxyz), csv(&rig.translation_m))
-    }
-    fn parse_rig(p: &mut Parser) -> Result<RigExtrinsic, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(RigExtrinsic {
-            camera_id: kv_word(&map, "camera", span)?,
-            rotation_wxyz: parse_csv::<f32, 4>(&kv_word(&map, "rot", span)?, span)?,
-            translation_m: parse_csv::<f32, 3>(&kv_word(&map, "t", span)?, span)?,
-        })
-    }
-
-    fn print_calibration_fields(calibration: &CalibrationState) -> String {
-        let mut out = "{".to_string();
-        for camera in &calibration.cameras {
-            out.push(' ');
-            out.push_str(&print_camera(camera));
-        }
-        for rig in &calibration.rig {
-            out.push(' ');
-            out.push_str(&print_rig(rig));
-        }
-        out.push_str(" }");
-        out
-    }
-    fn print_calibration(calibration: &CalibrationState) -> String {
-        format!("calibration {}", print_calibration_fields(calibration))
-    }
-    fn parse_calibration(p: &mut Parser) -> Result<CalibrationState, TextError> {
-        let span = p.span();
-        p.expect_lbrace()?;
-        let mut cameras = Vec::new();
-        let mut rig = Vec::new();
-        while !p.at_rbrace() {
-            match p.expect_word()?.as_str() {
-                "camera" => cameras.push(parse_camera(p)?),
-                "rig" => rig.push(parse_rig(p)?),
-                other => return Err(TextError::new(format!("unknown calibration child '{other}'"), span)),
-            }
-        }
-        p.expect_rbrace()?;
-        Ok(CalibrationState { cameras, rig })
-    }
-
-    fn print_obs(obs: &GcpObservation) -> String {
-        format!("obs stream={} frame={} pixel={}", obs.stream_id, obs.frame_index, csv(&obs.pixel))
-    }
-    fn parse_obs(p: &mut Parser) -> Result<GcpObservation, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(GcpObservation { stream_id: kv_word(&map, "stream", span)?, frame_index: kv_num(&map, "frame", span, "integer")?, pixel: parse_csv::<f32, 2>(&kv_word(&map, "pixel", span)?, span)? })
-    }
-
-    fn print_gcp(gcp: &GroundControlPoint) -> String {
-        let mut out = format!("gcp id={} name={} pos={} {{", gcp.id, quote(&gcp.name), csv(&gcp.world_position));
-        for obs in &gcp.observations {
-            out.push(' ');
-            out.push_str(&print_obs(obs));
-        }
-        out.push_str(" }");
-        out
-    }
-    fn parse_gcp(p: &mut Parser) -> Result<GroundControlPoint, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let id = kv_word(&map, "id", span)?;
-        let name = kv_str(&map, "name", span)?;
-        let world_position = parse_csv::<f64, 3>(&kv_word(&map, "pos", span)?, span)?;
-        p.expect_lbrace()?;
-        let mut observations = Vec::new();
-        while !p.at_rbrace() {
-            p.expect_word()?;
-            observations.push(parse_obs(p)?);
-        }
-        p.expect_rbrace()?;
-        Ok(GroundControlPoint { id, name, world_position, observations })
-    }
-
-    fn print_ingest_fields(params: &IngestParams) -> String {
-        format!("stride={} maxFrames={} downscale={} minSharpness={}", params.frame_sample_stride, params.max_frames, params.downscale_long_edge_px, params.min_sharpness)
-    }
-    fn print_ingest(params: &IngestParams) -> String {
-        format!("ingest {}", print_ingest_fields(params))
-    }
-    fn parse_ingest(p: &mut Parser) -> Result<IngestParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(IngestParams {
-            frame_sample_stride: kv_num(&map, "stride", span, "integer")?,
-            max_frames: kv_num(&map, "maxFrames", span, "integer")?,
-            downscale_long_edge_px: kv_num(&map, "downscale", span, "integer")?,
-            min_sharpness: kv_num(&map, "minSharpness", span, "number")?,
-        })
-    }
-
-    fn print_feature_fields(params: &FeatureParams) -> String {
-        format!("detector={} targetCount={} octaves={} edgeThreshold={}", feature_detector_str(params.detector), params.target_count, params.octaves, params.edge_threshold)
-    }
-    fn print_feature(params: &FeatureParams) -> String {
-        format!("feature {}", print_feature_fields(params))
-    }
-    fn parse_feature(p: &mut Parser) -> Result<FeatureParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(FeatureParams {
-            detector: parse_feature_detector(&kv_word(&map, "detector", span)?, span)?,
-            target_count: kv_num(&map, "targetCount", span, "integer")?,
-            octaves: kv_num(&map, "octaves", span, "integer")?,
-            edge_threshold: kv_num(&map, "edgeThreshold", span, "number")?,
-        })
-    }
-
-    fn print_match_fields(params: &MatchParams) -> String {
-        format!(
-            "matcher={} ratio={} crossCheck={} seqWindow={} maxPairs={} loopClosure={}",
-            matcher_kind_str(params.matcher),
-            params.ratio_test,
-            params.cross_check,
-            params.sequential_window,
-            params.max_pairs_per_frame,
-            params.loop_closure
-        )
-    }
-    fn print_match(params: &MatchParams) -> String {
-        format!("match {}", print_match_fields(params))
-    }
-    fn parse_match(p: &mut Parser) -> Result<MatchParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MatchParams {
-            matcher: parse_matcher_kind(&kv_word(&map, "matcher", span)?, span)?,
-            ratio_test: kv_num(&map, "ratio", span, "number")?,
-            cross_check: kv_bool(&map, "crossCheck", span)?,
-            sequential_window: kv_num(&map, "seqWindow", span, "integer")?,
-            max_pairs_per_frame: kv_num(&map, "maxPairs", span, "integer")?,
-            loop_closure: kv_bool(&map, "loopClosure", span)?,
-        })
-    }
-
-    fn print_sfm_fields(params: &SfmParams) -> String {
-        format!(
-            "ransacIter={} ransacThresh={} minTrackLen={} baIter={} robustLoss={} huberDelta={}",
-            params.ransac_iterations,
-            params.ransac_threshold_px,
-            params.min_track_length,
-            params.ba_max_iterations,
-            robust_loss_str(params.robust_loss),
-            params.huber_delta_px
-        )
-    }
-    fn print_sfm(params: &SfmParams) -> String {
-        format!("sfm {}", print_sfm_fields(params))
-    }
-    fn parse_sfm(p: &mut Parser) -> Result<SfmParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(SfmParams {
-            ransac_iterations: kv_num(&map, "ransacIter", span, "integer")?,
-            ransac_threshold_px: kv_num(&map, "ransacThresh", span, "number")?,
-            min_track_length: kv_num(&map, "minTrackLen", span, "integer")?,
-            ba_max_iterations: kv_num(&map, "baIter", span, "integer")?,
-            robust_loss: parse_robust_loss(&kv_word(&map, "robustLoss", span)?, span)?,
-            huber_delta_px: kv_num(&map, "huberDelta", span, "number")?,
-        })
-    }
-
-    fn print_dense_params_fields(params: &DenseParams) -> String {
-        format!(
-            "resolution={} windowRadius={} minViewConsistency={} confidence={} maxPoints={}",
-            dense_resolution_str(params.resolution),
-            params.window_radius_px,
-            params.min_view_consistency,
-            params.confidence_threshold,
-            params.max_points
-        )
-    }
-    fn print_dense_params(params: &DenseParams) -> String {
-        format!("dense {}", print_dense_params_fields(params))
-    }
-    fn parse_dense_params(p: &mut Parser) -> Result<DenseParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(DenseParams {
-            resolution: parse_dense_resolution(&kv_word(&map, "resolution", span)?, span)?,
-            window_radius_px: kv_num(&map, "windowRadius", span, "integer")?,
-            min_view_consistency: kv_num(&map, "minViewConsistency", span, "integer")?,
-            confidence_threshold: kv_num(&map, "confidence", span, "number")?,
-            max_points: kv_num(&map, "maxPoints", span, "integer")?,
-        })
-    }
-
-    fn print_mesh_params_fields(params: &MeshParams) -> String {
-        format!(
-            "voxel={} truncation={} decimateTarget={} smoothing={} texture={} textureSize={} guaranteeWatertight={} holeFillMax={} selfIntersectionCheck={}",
-            params.tsdf_voxel_size_mm,
-            params.tsdf_truncation_mm,
-            params.decimate_target_triangles,
-            params.smoothing_iterations,
-            params.texture_enabled,
-            params.texture_size,
-            params.guarantee_watertight,
-            params.hole_fill_max_boundary_verts,
-            params.self_intersection_check
-        )
-    }
-    fn print_mesh_params(params: &MeshParams) -> String {
-        format!("mesh {}", print_mesh_params_fields(params))
-    }
-    fn parse_mesh_params(p: &mut Parser) -> Result<MeshParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MeshParams {
-            tsdf_voxel_size_mm: kv_num(&map, "voxel", span, "number")?,
-            tsdf_truncation_mm: kv_num(&map, "truncation", span, "number")?,
-            decimate_target_triangles: kv_num(&map, "decimateTarget", span, "integer")?,
-            smoothing_iterations: kv_num(&map, "smoothing", span, "integer")?,
-            texture_enabled: kv_bool(&map, "texture", span)?,
-            texture_size: kv_num(&map, "textureSize", span, "integer")?,
-            guarantee_watertight: kv_bool(&map, "guaranteeWatertight", span)?,
-            hole_fill_max_boundary_verts: kv_num(&map, "holeFillMax", span, "integer")?,
-            self_intersection_check: kv_bool(&map, "selfIntersectionCheck", span)?,
-        })
-    }
-
-    fn print_motion_params_fields(params: &MotionParams) -> String {
-        format!(
-            "enabled={} maxTracks={} windowPx={} minQuality={} minLenFrames={}",
-            params.enabled, params.max_tracks, params.track_window_px, params.min_track_quality, params.min_track_length_frames
-        )
-    }
-    fn print_motion_params(params: &MotionParams) -> String {
-        format!("motion {}", print_motion_params_fields(params))
-    }
-    fn parse_motion_params(p: &mut Parser) -> Result<MotionParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MotionParams {
-            enabled: kv_bool(&map, "enabled", span)?,
-            max_tracks: kv_num(&map, "maxTracks", span, "integer")?,
-            track_window_px: kv_num(&map, "windowPx", span, "integer")?,
-            min_track_quality: kv_num(&map, "minQuality", span, "number")?,
-            min_track_length_frames: kv_num(&map, "minLenFrames", span, "integer")?,
-        })
-    }
-
-    fn print_geo_params_fields(params: &GeoParams) -> String {
-        format!(
-            "enabled={} originLon={} originLat={} originAlt={} gsd={} dsmCell={} dtmRadius={} orthoMax={}",
-            params.enabled,
-            dash_or(params.origin_lon, |v| v.to_string()),
-            dash_or(params.origin_lat, |v| v.to_string()),
-            dash_or(params.origin_alt, |v| v.to_string()),
-            params.gsd_m,
-            params.dsm_cell_m,
-            params.dtm_filter_radius_m,
-            params.ortho_max_px
-        )
-    }
-    fn print_geo_params(params: &GeoParams) -> String {
-        format!("geo {}", print_geo_params_fields(params))
-    }
-    fn parse_geo_params(p: &mut Parser) -> Result<GeoParams, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(GeoParams {
-            enabled: kv_bool(&map, "enabled", span)?,
-            origin_lon: kv_opt_num(&map, "originLon"),
-            origin_lat: kv_opt_num(&map, "originLat"),
-            origin_alt: kv_opt_num(&map, "originAlt"),
-            gsd_m: kv_num(&map, "gsd", span, "number")?,
-            dsm_cell_m: kv_num(&map, "dsmCell", span, "number")?,
-            dtm_filter_radius_m: kv_num(&map, "dtmRadius", span, "number")?,
-            ortho_max_px: kv_num(&map, "orthoMax", span, "integer")?,
-        })
-    }
-
-    fn print_params(params: &ReconstructionParams) -> String {
-        format!(
-            "params {{ {} {} {} {} {} {} {} {} }}",
-            print_ingest(&params.ingest),
-            print_feature(&params.feature),
-            print_match(&params.matching),
-            print_sfm(&params.sfm),
-            print_dense_params(&params.dense),
-            print_mesh_params(&params.mesh),
-            print_motion_params(&params.motion),
-            print_geo_params(&params.geo)
-        )
-    }
-    fn parse_params(p: &mut Parser) -> Result<ReconstructionParams, TextError> {
-        let span = p.span();
-        p.expect_lbrace()?;
-        let mut params = ReconstructionParams::default();
-        while !p.at_rbrace() {
-            match p.expect_word()?.as_str() {
-                "ingest" => params.ingest = parse_ingest(p)?,
-                "feature" => params.feature = parse_feature(p)?,
-                "match" => params.matching = parse_match(p)?,
-                "sfm" => params.sfm = parse_sfm(p)?,
-                "dense" => params.dense = parse_dense_params(p)?,
-                "mesh" => params.mesh = parse_mesh_params(p)?,
-                "motion" => params.motion = parse_motion_params(p)?,
-                "geo" => params.geo = parse_geo_params(p)?,
-                other => return Err(TextError::new(format!("unknown params child '{other}'"), span)),
-            }
-        }
-        p.expect_rbrace()?;
-        Ok(params)
-    }
-
-    fn print_pose(pose: &CameraPosePreview) -> String {
-        format!("pose camera={} rot={} t={}", pose.camera_id, csv(&pose.rotation_wxyz), csv(&pose.translation))
-    }
-    fn parse_pose(p: &mut Parser) -> Result<CameraPosePreview, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(CameraPosePreview {
-            camera_id: kv_word(&map, "camera", span)?,
-            rotation_wxyz: parse_csv::<f32, 4>(&kv_word(&map, "rot", span)?, span)?,
-            translation: parse_csv::<f32, 3>(&kv_word(&map, "t", span)?, span)?,
-        })
-    }
-
-    fn print_job_fields(job: &ReconstructionJob) -> String {
-        let mut out = format!(
-            "id={} stage={} progress={} cancel={} cursor={} started={} error={} sparsePreview={} {{",
-            job.id,
-            reconstruction_stage_str(job.stage),
-            job.progress_0_1,
-            job.cancel_requested,
-            job.stage_cursor,
-            dash_or(job.started_at_ms, |v| v.to_string()),
-            dash_or(job.error.as_deref(), quote),
-            print_packed_f32(&job.sparse_point_cloud_preview)
-        );
-        for pose in &job.camera_poses_preview {
-            out.push(' ');
-            out.push_str(&print_pose(pose));
-        }
-        out.push_str(" }");
-        out
-    }
-    fn print_job(job: &ReconstructionJob) -> String {
-        format!("job {}", print_job_fields(job))
-    }
-    fn parse_job(p: &mut Parser) -> Result<ReconstructionJob, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let id = kv_word(&map, "id", span)?;
-        let stage = parse_reconstruction_stage(&kv_word(&map, "stage", span)?, span)?;
-        let progress_0_1 = kv_num(&map, "progress", span, "number")?;
-        let cancel_requested = kv_bool(&map, "cancel", span)?;
-        let stage_cursor = kv_num(&map, "cursor", span, "integer")?;
-        let started_at_ms = kv_opt_num(&map, "started");
-        let error = kv_opt_str(&map, "error");
-        let sparse_point_cloud_preview = parse_packed_f32(&kv_word(&map, "sparsePreview", span)?);
-        p.expect_lbrace()?;
-        let mut camera_poses_preview = Vec::new();
-        while !p.at_rbrace() {
-            p.expect_word()?;
-            camera_poses_preview.push(parse_pose(p)?);
-        }
-        p.expect_rbrace()?;
-        Ok(ReconstructionJob { id, stage, progress_0_1, cancel_requested, stage_cursor, started_at_ms, error, camera_poses_preview, sparse_point_cloud_preview })
-    }
-
-    fn print_watertight(report: &WatertightReportSnapshot) -> String {
-        format!(
-            "{{ vertexCount={} triangleCount={} boundaryEdgeCount={} boundaryLoopCount={} nonManifoldEdgeCount={} nonManifoldVertexCount={} connectedComponents={} consistentlyOriented={} euler={} genus={} signedVolume={} selfIntersectionPairs={} closedFallbackUsed={} isClosed={} isTwoManifold={} isWatertight={} }}",
-            report.vertex_count,
-            report.triangle_count,
-            report.boundary_edge_count,
-            report.boundary_loop_count,
-            report.non_manifold_edge_count,
-            report.non_manifold_vertex_count,
-            report.connected_components,
-            report.consistently_oriented,
-            report.euler_characteristic,
-            dash_or(report.genus, |v| v.to_string()),
-            report.signed_volume,
-            dash_or(report.self_intersection_pairs, |v| v.to_string()),
-            report.closed_fallback_used,
-            report.is_closed,
-            report.is_two_manifold,
-            report.is_watertight
-        )
-    }
-    fn parse_watertight(p: &mut Parser) -> Result<WatertightReportSnapshot, TextError> {
-        let span = p.span();
-        p.expect_lbrace()?;
-        let map = p.parse_kv_map()?;
-        p.expect_rbrace()?;
-        Ok(WatertightReportSnapshot {
-            vertex_count: kv_num(&map, "vertexCount", span, "integer")?,
-            triangle_count: kv_num(&map, "triangleCount", span, "integer")?,
-            boundary_edge_count: kv_num(&map, "boundaryEdgeCount", span, "integer")?,
-            boundary_loop_count: kv_num(&map, "boundaryLoopCount", span, "integer")?,
-            non_manifold_edge_count: kv_num(&map, "nonManifoldEdgeCount", span, "integer")?,
-            non_manifold_vertex_count: kv_num(&map, "nonManifoldVertexCount", span, "integer")?,
-            connected_components: kv_num(&map, "connectedComponents", span, "integer")?,
-            consistently_oriented: kv_bool(&map, "consistentlyOriented", span)?,
-            euler_characteristic: kv_num(&map, "euler", span, "integer")?,
-            genus: kv_opt_num(&map, "genus"),
-            signed_volume: kv_num(&map, "signedVolume", span, "number")?,
-            self_intersection_pairs: kv_opt_num(&map, "selfIntersectionPairs"),
-            closed_fallback_used: kv_bool(&map, "closedFallbackUsed", span)?,
-            is_closed: kv_bool(&map, "isClosed", span)?,
-            is_two_manifold: kv_bool(&map, "isTwoManifold", span)?,
-            is_watertight: kv_bool(&map, "isWatertight", span)?,
-        })
-    }
-
-    /// 🧵 Prints `RemodelMesh`'s flat fields (no leading keyword — callers prefix `mesh`/`setMeshResult`)
-    /// followed by an optional trailing `{ ... }` watertight block; `MeshData`'s numeric buffers are
-    /// always base64-packed (`🔖Packed`) regardless of size, so this never emits per-element text.
-    fn print_mesh_body(mesh: &RemodelMesh) -> String {
-        let data = &mesh.mesh;
-        let mut out = format!(
-            "source={} texture={} positions={} normals={} colors={} indices={} uvs={} faceIds={} vertexIds={} edgePositions={} edgeIds={} edgeUvs={} edgeIsSeam={} paintTexture={}",
-            mesh_source_str(mesh.source),
-            mesh.texture_asset_id.as_deref().unwrap_or("-"),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.positions)),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.normals)),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.colors)),
-            print_packed_u32(&data.indices),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.uvs)),
-            print_packed_u32(&data.face_ids),
-            print_packed_u32(&data.vertex_ids),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.edge_positions)),
-            print_packed_u32(&data.edge_ids),
-            print_packed_f32(&PackedF32::from_f32_slice(&data.edge_uvs)),
-            print_packed_u8(&PackedU8::from_u8_slice(&data.edge_is_seam)),
-            data.paint_texture_base64.as_deref().unwrap_or("-")
-        );
-        if let Some(watertight) = &mesh.watertight {
-            out.push(' ');
-            out.push_str(&print_watertight(watertight));
-        }
-        out
-    }
-    fn parse_mesh_body(p: &mut Parser) -> Result<RemodelMesh, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let mesh = MeshData {
-            positions: parse_packed_f32(&kv_word(&map, "positions", span)?).to_f32_vec(),
-            normals: parse_packed_f32(&kv_word(&map, "normals", span)?).to_f32_vec(),
-            colors: parse_packed_f32(&kv_word(&map, "colors", span)?).to_f32_vec(),
-            indices: parse_packed_u32(&kv_word(&map, "indices", span)?),
-            uvs: parse_packed_f32(&kv_word(&map, "uvs", span)?).to_f32_vec(),
-            face_ids: parse_packed_u32(&kv_word(&map, "faceIds", span)?),
-            vertex_ids: parse_packed_u32(&kv_word(&map, "vertexIds", span)?),
-            edge_positions: parse_packed_f32(&kv_word(&map, "edgePositions", span)?).to_f32_vec(),
-            edge_ids: parse_packed_u32(&kv_word(&map, "edgeIds", span)?),
-            edge_uvs: parse_packed_f32(&kv_word(&map, "edgeUvs", span)?).to_f32_vec(),
-            edge_is_seam: parse_packed_u8(&kv_word(&map, "edgeIsSeam", span)?).to_u8_vec(),
-            paint_texture_base64: kv_opt_word(&map, "paintTexture"),
-        };
-        let watertight = if p.at_lbrace() { Some(parse_watertight(p)?) } else { None };
-        Ok(RemodelMesh { mesh, source: parse_mesh_source(&kv_word(&map, "source", span)?, span)?, texture_asset_id: kv_opt_word(&map, "texture"), watertight })
-    }
-
-    fn print_track(track: &MotionTrackSummary) -> String {
-        format!("track id={} length={} class={} speed={}", track.id, track.length, track_class_str(track.class), track.mean_speed_m_s)
-    }
-    fn parse_track(p: &mut Parser) -> Result<MotionTrackSummary, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(MotionTrackSummary {
-            id: kv_word(&map, "id", span)?,
-            length: kv_num(&map, "length", span, "integer")?,
-            class: parse_track_class(&kv_word(&map, "class", span)?, span)?,
-            mean_speed_m_s: kv_num(&map, "speed", span, "number")?,
-        })
-    }
-
-    fn print_results(results: &ReconstructionResults) -> String {
-        let mut out = "results {".to_string();
-        out.push(' ');
-        out.push_str(&match &results.sparse {
-            None => "sparse -".to_string(),
-            Some(sparse) => format!("sparse points={} colors={}", print_packed_f32(&sparse.points), dash_or(sparse.colors.as_ref(), print_packed_u8)),
-        });
-        out.push(' ');
-        out.push_str(&match &results.dense {
-            None => "dense -".to_string(),
-            Some(dense) => format!(
-                "dense positions={} colors={} confidence={} classification={}",
-                print_packed_f32(&dense.positions),
-                dash_or(dense.colors.as_ref(), print_packed_u8),
-                dash_or(dense.confidence.as_ref(), print_packed_f32),
-                dash_or(dense.classification.as_ref(), print_packed_u8),
-            ),
-        });
-        out.push(' ');
-        out.push_str("mesh ");
-        out.push_str(&print_mesh_body(&results.mesh));
-        out.push(' ');
-        out.push_str(&match &results.trajectory {
-            None => "trajectory -".to_string(),
-            Some(trajectory) => {
-                let mut t = "trajectory {".to_string();
-                for pose in &trajectory.poses {
-                    t.push(' ');
-                    t.push_str(&print_pose(pose));
-                }
-                t.push_str(" }");
-                t
-            }
-        });
-        for track in &results.tracks {
-            out.push(' ');
-            out.push_str(&print_track(track));
-        }
-        out.push(' ');
-        out.push_str(&match &results.geo {
-            None => "geoProducts -".to_string(),
-            Some(geo) => format!(
-                "geoProducts dsm={} dtm={} ortho={}",
-                geo.dsm_asset_id.as_deref().unwrap_or("-"),
-                geo.dtm_asset_id.as_deref().unwrap_or("-"),
-                geo.ortho_asset_id.as_deref().unwrap_or("-")
-            ),
-        });
-        out.push(' ');
-        out.push_str(&match &results.qc {
-            None => "qc -".to_string(),
-            Some(qc) => {
-                let mut q = format!(
-                    "qc reprojRms={} gcpRmse={} meanTrackLen={} registeredRatio={} denseCoverage={}",
-                    qc.reprojection_rms_px,
-                    dash_or(qc.gcp_checkpoint_rmse, |v| v.to_string()),
-                    qc.mean_track_length,
-                    qc.registered_frame_ratio,
-                    qc.dense_coverage_ratio
-                );
-                for warning in &qc.warnings {
-                    q.push(' ');
-                    q.push_str(&quote(warning));
-                }
-                if let Some(watertight) = &qc.watertight {
-                    q.push(' ');
-                    q.push_str(&print_watertight(watertight));
-                }
-                q
-            }
-        });
-        out.push_str(" }");
-        out
-    }
-    /// 🔀 Shared "dash-or-fields" reader for every `Option<Struct>` results field — a bare `-` token
-    /// means `None`, otherwise the struct's own flat kv fields follow immediately. Used from both
-    /// `parse_results` (prefixed by its own keyword, e.g. `sparse ...`) and `parse_operation`'s matching
-    /// `Set*` op (prefixed by the verb instead, e.g. `setSparse ...`) since the grammar past that point
-    /// is identical.
-    fn parse_sparse(p: &mut Parser) -> Result<Option<SparseCloud>, TextError> {
-        if p.at_dash() {
-            p.bump();
-            return Ok(None);
-        }
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(Some(SparseCloud { points: parse_packed_f32(&kv_word(&map, "points", span)?), colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)) }))
-    }
-
-    fn parse_dense(p: &mut Parser) -> Result<Option<DenseCloud>, TextError> {
-        if p.at_dash() {
-            p.bump();
-            return Ok(None);
-        }
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok(Some(DenseCloud {
-            positions: parse_packed_f32(&kv_word(&map, "positions", span)?),
-            colors: kv_opt_word(&map, "colors").map(|w| parse_packed_u8(&w)),
-            confidence: kv_opt_word(&map, "confidence").map(|w| parse_packed_f32(&w)),
-            classification: kv_opt_word(&map, "classification").map(|w| parse_packed_u8(&w)),
-        }))
-    }
-
-    fn parse_trajectory(p: &mut Parser) -> Result<Option<CameraTrajectory>, TextError> {
-        if p.at_dash() {
-            p.bump();
-            return Ok(None);
-        }
-        p.expect_lbrace()?;
-        let mut poses = Vec::new();
-        while !p.at_rbrace() {
-            p.expect_word()?;
-            poses.push(parse_pose(p)?);
-        }
-        p.expect_rbrace()?;
-        Ok(Some(CameraTrajectory { poses }))
-    }
-
-    fn parse_geo_products(p: &mut Parser) -> Result<Option<GeoProducts>, TextError> {
-        if p.at_dash() {
-            p.bump();
-            return Ok(None);
-        }
-        let map = p.parse_kv_map()?;
-        Ok(Some(GeoProducts { dsm_asset_id: kv_opt_word(&map, "dsm"), dtm_asset_id: kv_opt_word(&map, "dtm"), ortho_asset_id: kv_opt_word(&map, "ortho") }))
-    }
-
-    fn parse_qc(p: &mut Parser) -> Result<Option<QcReportSnapshot>, TextError> {
-        if p.at_dash() {
-            p.bump();
-            return Ok(None);
-        }
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        let warnings = p.greedy_str_list();
-        let watertight = if p.at_lbrace() { Some(parse_watertight(p)?) } else { None };
-        Ok(Some(QcReportSnapshot {
-            reprojection_rms_px: kv_num(&map, "reprojRms", span, "number")?,
-            gcp_checkpoint_rmse: kv_opt_num(&map, "gcpRmse"),
-            watertight,
-            mean_track_length: kv_num(&map, "meanTrackLen", span, "number")?,
-            registered_frame_ratio: kv_num(&map, "registeredRatio", span, "number")?,
-            dense_coverage_ratio: kv_num(&map, "denseCoverage", span, "number")?,
-            warnings,
-        }))
-    }
-
-    fn parse_results(p: &mut Parser) -> Result<ReconstructionResults, TextError> {
-        let span = p.span();
-        p.expect_lbrace()?;
-        let mut results = ReconstructionResults::default();
-        while !p.at_rbrace() {
-            match p.expect_word()?.as_str() {
-                "sparse" => results.sparse = parse_sparse(p)?,
-                "dense" => results.dense = parse_dense(p)?,
-                "mesh" => results.mesh = parse_mesh_body(p)?,
-                "trajectory" => results.trajectory = parse_trajectory(p)?,
-                "track" => results.tracks.push(parse_track(p)?),
-                "geoProducts" => results.geo = parse_geo_products(p)?,
-                "qc" => results.qc = parse_qc(p)?,
-                other => return Err(TextError::new(format!("unknown results child '{other}'"), span)),
-            }
-        }
-        p.expect_rbrace()?;
-        Ok(results)
-    }
-    //#endregion Constructs
-
-    //#region Document
-    pub(super) fn print_document(scene: &RemodelScene) -> String {
-        let mut out = format!("remodel schema={} id={} {{\n", scene.schema, scene.id);
-        for stream in &scene.streams {
-            out.push_str("  ");
-            out.push_str(&print_stream(stream));
-            out.push('\n');
-        }
-        for (id, asset) in &scene.assets {
-            out.push_str("  ");
-            out.push_str(&print_asset(id, asset));
-            out.push('\n');
-        }
-        out.push_str("  ");
-        out.push_str(&print_calibration(&scene.calibration));
-        out.push('\n');
-        for gcp in &scene.gcps {
-            out.push_str("  ");
-            out.push_str(&print_gcp(gcp));
-            out.push('\n');
-        }
-        out.push_str("  ");
-        out.push_str(&print_params(&scene.params));
-        out.push('\n');
-        out.push_str("  ");
-        out.push_str(&print_job(&scene.job));
-        out.push('\n');
-        out.push_str("  ");
-        out.push_str(&print_results(&scene.results));
-        out.push('\n');
-        out.push('}');
-        out
-    }
-
-    pub(super) fn parse_document(text: &str) -> Result<RemodelScene, TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        p.expect_word().and_then(|w| if w == "remodel" { Ok(()) } else { Err(TextError::expected(format!("expected 'remodel', found '{w}'"), span, "remodel")) })?;
-        let map = p.parse_kv_map()?;
-        let schema = kv_word(&map, "schema", span)?;
-        let id = kv_word(&map, "id", span)?;
-        p.expect_lbrace()?;
-        let mut streams = Vec::new();
-        let mut assets = BTreeMap::new();
-        let mut calibration = CalibrationState::default();
-        let mut gcps = Vec::new();
-        let mut params = ReconstructionParams::default();
-        let mut job = ReconstructionJob::default();
-        let mut results = ReconstructionResults::default();
-        while !p.at_rbrace() {
-            match p.expect_word()?.as_str() {
-                "stream" => streams.push(parse_stream(&mut p)?),
-                "asset" => {
-                    let (asset_id, asset) = parse_asset(&mut p)?;
-                    assets.insert(asset_id, asset);
-                }
-                "calibration" => calibration = parse_calibration(&mut p)?,
-                "gcp" => gcps.push(parse_gcp(&mut p)?),
-                "params" => params = parse_params(&mut p)?,
-                "job" => job = parse_job(&mut p)?,
-                "results" => results = parse_results(&mut p)?,
-                other => return Err(TextError::new(format!("unknown remodel document child '{other}'"), span)),
-            }
-        }
-        p.expect_rbrace()?;
-        Ok(RemodelScene { schema, id, streams, assets, calibration, params, gcps, job, results })
-    }
-    //#endregion Document
-
-    //#region Ops
-    pub(super) fn print_operation(operation: &RemodelOperation) -> String {
-        match operation {
-            RemodelOperation::SetStreams { streams } => {
-                let mut out = "setStreams {".to_string();
-                for stream in streams {
-                    out.push(' ');
-                    out.push_str(&print_stream(stream));
-                }
-                out.push_str(" }");
-                out
-            }
-            RemodelOperation::SetAsset { key, value } => match value {
-                None => format!("setAsset key={key} value=-"),
-                Some(asset) => format!("setAsset key={key} {}", print_asset_fields(asset)),
-            },
-            RemodelOperation::SetCalibration { calibration } => format!("setCalibration {}", print_calibration_fields(calibration)),
-            RemodelOperation::SetGcps { gcps } => {
-                let mut out = "setGcps {".to_string();
-                for gcp in gcps {
-                    out.push(' ');
-                    out.push_str(&print_gcp(gcp));
-                }
-                out.push_str(" }");
-                out
-            }
-            RemodelOperation::SetIngestParams { params } => format!("setIngestParams {}", print_ingest_fields(params)),
-            RemodelOperation::SetFeatureParams { params } => format!("setFeatureParams {}", print_feature_fields(params)),
-            RemodelOperation::SetMatchParams { params } => format!("setMatchParams {}", print_match_fields(params)),
-            RemodelOperation::SetSfmParams { params } => format!("setSfmParams {}", print_sfm_fields(params)),
-            RemodelOperation::SetDenseParams { params } => format!("setDenseParams {}", print_dense_params_fields(params)),
-            RemodelOperation::SetMeshParams { params } => format!("setMeshParams {}", print_mesh_params_fields(params)),
-            RemodelOperation::SetMotionParams { params } => format!("setMotionParams {}", print_motion_params_fields(params)),
-            RemodelOperation::SetGeoParams { params } => format!("setGeoParams {}", print_geo_params_fields(params)),
-            RemodelOperation::SetJob { job } => format!("setJob {}", print_job_fields(job)),
-            RemodelOperation::SetSparse { sparse } => match sparse {
-                None => "setSparse -".to_string(),
-                Some(sparse) => format!("setSparse points={} colors={}", print_packed_f32(&sparse.points), dash_or(sparse.colors.as_ref(), print_packed_u8)),
-            },
-            RemodelOperation::SetDense { dense } => match dense {
-                None => "setDense -".to_string(),
-                Some(dense) => format!(
-                    "setDense positions={} colors={} confidence={} classification={}",
-                    print_packed_f32(&dense.positions),
-                    dash_or(dense.colors.as_ref(), print_packed_u8),
-                    dash_or(dense.confidence.as_ref(), print_packed_f32),
-                    dash_or(dense.classification.as_ref(), print_packed_u8),
-                ),
-            },
-            RemodelOperation::SetMeshResult { mesh } => format!("setMeshResult {}", print_mesh_body(mesh)),
-            RemodelOperation::SetTrajectory { trajectory } => match trajectory {
-                None => "setTrajectory -".to_string(),
-                Some(trajectory) => {
-                    let mut out = "setTrajectory {".to_string();
-                    for pose in &trajectory.poses {
-                        out.push(' ');
-                        out.push_str(&print_pose(pose));
-                    }
-                    out.push_str(" }");
-                    out
-                }
-            },
-            RemodelOperation::SetTracks { tracks } => {
-                let mut out = "setTracks {".to_string();
-                for track in tracks {
-                    out.push(' ');
-                    out.push_str(&print_track(track));
-                }
-                out.push_str(" }");
-                out
-            }
-            RemodelOperation::SetGeoProducts { geo } => match geo {
-                None => "setGeoProducts -".to_string(),
-                Some(geo) => format!(
-                    "setGeoProducts dsm={} dtm={} ortho={}",
-                    geo.dsm_asset_id.as_deref().unwrap_or("-"),
-                    geo.dtm_asset_id.as_deref().unwrap_or("-"),
-                    geo.ortho_asset_id.as_deref().unwrap_or("-")
-                ),
-            },
-            RemodelOperation::SetQc { qc } => match qc {
-                None => "setQc -".to_string(),
-                Some(qc) => {
-                    let mut out = format!(
-                        "setQc reprojRms={} gcpRmse={} meanTrackLen={} registeredRatio={} denseCoverage={}",
-                        qc.reprojection_rms_px,
-                        dash_or(qc.gcp_checkpoint_rmse, |v| v.to_string()),
-                        qc.mean_track_length,
-                        qc.registered_frame_ratio,
-                        qc.dense_coverage_ratio
-                    );
-                    for warning in &qc.warnings {
-                        out.push(' ');
-                        out.push_str(&quote(warning));
-                    }
-                    if let Some(watertight) = &qc.watertight {
-                        out.push(' ');
-                        out.push_str(&print_watertight(watertight));
-                    }
-                    out
-                }
-            },
-        }
-    }
-
-    pub(super) fn parse_operation(line: &str) -> Result<RemodelOperation, TextError> {
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let verb = p.expect_word()?;
-        match verb.as_str() {
-            "setStreams" => {
-                p.expect_lbrace()?;
-                let mut streams = Vec::new();
-                while !p.at_rbrace() {
-                    p.expect_word()?;
-                    streams.push(parse_stream(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetStreams { streams })
-            }
-            "setAsset" => {
-                let span = p.span();
-                let map = p.parse_kv_map()?;
-                let key = kv_word(&map, "key", span)?;
-                let value = if kv_opt_word(&map, "value").is_none() && map.contains_key("value") {
-                    None
-                } else {
-                    Some(ImageAsset { mime: kv_word(&map, "mime", span)?, width: kv_num(&map, "width", span, "integer")?, height: kv_num(&map, "height", span, "integer")?, data: kv_word(&map, "data", span)? })
-                };
-                Ok(RemodelOperation::SetAsset { key, value })
-            }
-            "setCalibration" => Ok(RemodelOperation::SetCalibration { calibration: parse_calibration(&mut p)? }),
-            "setGcps" => {
-                p.expect_lbrace()?;
-                let mut gcps = Vec::new();
-                while !p.at_rbrace() {
-                    p.expect_word()?;
-                    gcps.push(parse_gcp(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetGcps { gcps })
-            }
-            "setIngestParams" => Ok(RemodelOperation::SetIngestParams { params: parse_ingest(&mut p)? }),
-            "setFeatureParams" => Ok(RemodelOperation::SetFeatureParams { params: parse_feature(&mut p)? }),
-            "setMatchParams" => Ok(RemodelOperation::SetMatchParams { params: parse_match(&mut p)? }),
-            "setSfmParams" => Ok(RemodelOperation::SetSfmParams { params: parse_sfm(&mut p)? }),
-            "setDenseParams" => Ok(RemodelOperation::SetDenseParams { params: parse_dense_params(&mut p)? }),
-            "setMeshParams" => Ok(RemodelOperation::SetMeshParams { params: parse_mesh_params(&mut p)? }),
-            "setMotionParams" => Ok(RemodelOperation::SetMotionParams { params: parse_motion_params(&mut p)? }),
-            "setGeoParams" => Ok(RemodelOperation::SetGeoParams { params: parse_geo_params(&mut p)? }),
-            "setJob" => Ok(RemodelOperation::SetJob { job: parse_job(&mut p)? }),
-            "setSparse" => Ok(RemodelOperation::SetSparse { sparse: parse_sparse(&mut p)? }),
-            "setDense" => Ok(RemodelOperation::SetDense { dense: parse_dense(&mut p)? }),
-            "setMeshResult" => Ok(RemodelOperation::SetMeshResult { mesh: Box::new(parse_mesh_body(&mut p)?) }),
-            "setTrajectory" => Ok(RemodelOperation::SetTrajectory { trajectory: parse_trajectory(&mut p)? }),
-            "setTracks" => {
-                p.expect_lbrace()?;
-                let mut tracks = Vec::new();
-                while !p.at_rbrace() {
-                    p.expect_word()?;
-                    tracks.push(parse_track(&mut p)?);
-                }
-                p.expect_rbrace()?;
-                Ok(RemodelOperation::SetTracks { tracks })
-            }
-            "setGeoProducts" => Ok(RemodelOperation::SetGeoProducts { geo: parse_geo_products(&mut p)? }),
-            "setQc" => Ok(RemodelOperation::SetQc { qc: parse_qc(&mut p)? }),
-            other => Err(TextError::new(format!("unknown operation '{other}'"), p.span())),
-        }
-    }
-
-    //#endregion Ops
-}
-
-impl DocumentDsl for RemodelScene {
-    const EXTENSION: &'static str = "remodel";
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        remodel_text::parse_document(text)
-    }
-    fn print_dsl(&self) -> String {
-        remodel_text::print_document(self)
-    }
-}
-//#endregion 🔖Dsl
-
-//#region 🔖OpText
-impl OpText for RemodelOperation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        remodel_text::parse_operation(line)
-    }
-    fn print_op(&self) -> String {
-        remodel_text::print_operation(self)
-    }
-}
-//#endregion 🔖OpText
 
 //#region 🧪Tests
 #[cfg(test)]

@@ -360,7 +360,9 @@ pub enum PresentError {
 //#endregion 🔖Error
 
 //#region 🔖Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 📐 Normalized `x,y,width,height` rect — always reached through a `#[dsl(block)]` field (see
+/// {@link FigureTileSource}/{@link FigureTileDraft}), so it declares no `#[dsl(keyword)]` of its own.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FigureTileFrame {
     pub x: f64,
@@ -369,11 +371,12 @@ pub struct FigureTileFrame {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FigureTileSource {
     pub src: String,
     pub kind: String,
+    #[dsl(block)]
     pub frame: FigureTileFrame,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub source_aspect: Option<f64>,
@@ -381,18 +384,23 @@ pub struct FigureTileSource {
     pub pdf_page: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FigureTileDraft {
     pub id: String,
     pub name: String,
+    #[dsl(block)]
     pub crop: FigureTileFrame,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 📜 `.present` textual document: `schema=... \n source { ... } \n tiles [ ... ]` (see
+/// {@link vcs::DocumentDsl}).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "present", layout = "lines")]
 #[serde(rename_all = "camelCase")]
 pub struct PresentDeck {
     pub schema: String,
+    #[dsl(block)]
     pub source: FigureTileSource,
     pub tiles: Vec<FigureTileDraft>,
 }
@@ -551,10 +559,11 @@ impl Identified<String> for FigureTileDraft {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FigureTileDraftPatch {
     pub name: Option<String>,
+    #[dsl(block)]
     pub crop: Option<FigureTileFrame>,
 }
 
@@ -674,522 +683,89 @@ impl Operation<PresentDeck> for PresentOperation {
 //#endregion 🔖Operations
 
 //#region 🔖Dsl
-/// 📜 Hand-rolled lexer, recursive-descent parser and printer shared by `PresentDeck`'s `.present` DSL
-/// (`🔖Dsl`) and `PresentOperation`'s compact single-line op-log encoding (`🔖OpText`) — both share the
-/// same `keyword key=value ... { nested }` line grammar (mirrors `imperative_text` in
-/// `imperative/core/rs/lib.rs`). A `key=value` token collapses key and bareword value into one word;
-/// `key=` alone means the value is a separate following token (a quoted string or a `{ }` block).
-/// Whitespace (including newlines) is never significant to the parser — `print_dsl` inserts
-/// newlines/indentation purely for readability, `print_op` renders the identical grammar on one line.
-/// See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod present_text {
-    use super::{FigureTileDraft, FigureTileDraftPatch, FigureTileFrame, FigureTileSource, PresentDeck, PresentOperation};
-    use vcs::{CollectionOperation, TextError, TextSpan};
-
-    //#region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
-    }
-
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: TextSpan,
-    }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` and
-    /// `,` are ordinary word characters — `key=value` and `0.1,0.2,0.3,0.4` each collapse into one token.
-    fn lex(input: &str) -> Result<Vec<Lexed>, TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: TextSpan::at(line, col) });
-        Ok(out)
-    }
-    //#endregion Lexer
-
-    //#region Parser
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
-    }
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_rbrace(&self) -> bool {
-            matches!(self.peek(), Tok::RBrace)
-        }
-
-        fn at_keyword(&self, keyword: &str) -> bool {
-            matches!(self.peek(), Tok::Word(w) if w == keyword)
-        }
-
-        fn expect_word(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_keyword(&mut self, keyword: &str) -> Result<(), TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            if word != keyword {
-                return Err(TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-            }
-            Ok(())
-        }
-
-        fn expect_lbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::LBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-            }
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        fn expect_eof(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Eof => Ok(()),
-                other => Err(TextError::expected(format!("expected end of input, found {other:?}"), span, "eof")),
-            }
-        }
-
-        fn expect_str(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-
-        /// 🗝️ Consumes a `key=`/`key=value` word token whose key must equal `key`, returning the
-        /// inline suffix — empty when the value is a separate following token (a quoted string),
-        /// non-empty when it is a bareword value collapsed into the same token.
-        fn expect_kv(&mut self, key: &str) -> Result<String, TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            let (found, rest) = word
-                .split_once('=')
-                .ok_or_else(|| TextError::expected(format!("expected '{key}=...', found '{word}'"), span, format!("{key}=...")))?;
-            if found != key {
-                return Err(TextError::expected(format!("expected '{key}=...', found '{found}=...'"), span, format!("{key}=...")));
-            }
-            Ok(rest.to_string())
-        }
-
-        fn expect_kv_str(&mut self, key: &str) -> Result<String, TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if !rest.is_empty() {
-                return Err(TextError::expected(format!("field '{key}' must be a quoted string"), span, "string"));
-            }
-            self.expect_str()
-        }
-
-        /// 🕳️ Like {@link expect_kv_str} but `-` (bareword) means `None` — vcs's own sentinel for an
-        /// absent optional text field.
-        fn expect_kv_opt_str(&mut self, key: &str) -> Result<Option<String>, TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if rest.is_empty() {
-                return Ok(Some(self.expect_str()?));
-            }
-            if rest == "-" {
-                return Ok(None);
-            }
-            Err(TextError::expected(format!("field '{key}' must be a quoted string or '-'"), span, "string|-"))
-        }
-
-        fn expect_kv_word(&mut self, key: &str) -> Result<String, TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if rest.is_empty() {
-                return Err(TextError::expected(format!("field '{key}' must not be quoted"), span, "word"));
-            }
-            Ok(rest)
-        }
-
-        fn expect_kv_usize(&mut self, key: &str) -> Result<usize, TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            word.parse::<usize>().map_err(|_| TextError::expected(format!("field '{key}' must be a non-negative integer"), span, "usize"))
-        }
-
-        fn expect_kv_opt_f64(&mut self, key: &str) -> Result<Option<f64>, TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            if word == "-" {
-                return Ok(None);
-            }
-            word.parse::<f64>().map(Some).map_err(|_| TextError::expected(format!("field '{key}' must be a number or '-'"), span, "number|-"))
-        }
-
-        fn expect_kv_opt_u32(&mut self, key: &str) -> Result<Option<u32>, TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            if word == "-" {
-                return Ok(None);
-            }
-            word.parse::<u32>().map(Some).map_err(|_| TextError::expected(format!("field '{key}' must be an integer or '-'"), span, "integer|-"))
-        }
-
-        /// 📐 Consumes a `key=x,y,width,height` frame token (see {@link parse_frame_token}).
-        fn expect_kv_frame(&mut self, key: &str) -> Result<FigureTileFrame, TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            parse_frame_token(&word, span)
-        }
-
-        fn expect_kv_opt_frame(&mut self, key: &str) -> Result<Option<FigureTileFrame>, TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            if word == "-" {
-                return Ok(None);
-            }
-            Ok(Some(parse_frame_token(&word, span)?))
-        }
-    }
-    //#endregion Parser
-
-    //#region Primitives
-    fn quote(value: &str) -> String {
-        let mut out = String::with_capacity(value.len() + 2);
-        out.push('"');
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out.push('"');
-        out
-    }
-
-    /// 📐 Parses a `x,y,width,height` frame token (see {@link print_frame}).
-    fn parse_frame_token(token: &str, span: TextSpan) -> Result<FigureTileFrame, TextError> {
-        let parts: Vec<&str> = token.split(',').collect();
-        if parts.len() != 4 {
-            return Err(TextError::expected(format!("expected 'x,y,width,height', got '{token}'"), span, "x,y,width,height"));
-        }
-        let parse = |value: &str| value.parse::<f64>().map_err(|_| TextError::expected(format!("expected a number, got '{value}'"), span, "number"));
-        Ok(FigureTileFrame { x: parse(parts[0])?, y: parse(parts[1])?, width: parse(parts[2])?, height: parse(parts[3])? })
-    }
-
-    /// 📤 Prints a `FigureTileFrame` as one whitespace-free `x,y,width,height` token.
-    fn print_frame(frame: &FigureTileFrame) -> String {
-        format!("{},{},{},{}", frame.x, frame.y, frame.width, frame.height)
-    }
-
-    fn indent(depth: usize) -> String {
-        "  ".repeat(depth)
-    }
-
-    /// 🧱 Wraps already-rendered `items` in `{ }`, one per line indented at `depth + 1` when `pretty`,
-    /// or space-joined on one line otherwise — mirrors `imperative_text::wrap_body`.
-    fn wrap_body(items: &[String], depth: usize, pretty: bool) -> String {
-        if pretty {
-            let inner_pad = indent(depth + 1);
-            let outer_pad = indent(depth);
-            let body: String = items.iter().map(|item| format!("{inner_pad}{item}\n")).collect();
-            format!("{{\n{body}{outer_pad}}}")
-        } else {
-            format!("{{ {} }}", items.join(" "))
-        }
-    }
-    //#endregion Primitives
-
-    //#region Source
-    fn parse_source(p: &mut Parser) -> Result<FigureTileSource, TextError> {
-        p.expect_keyword("source")?;
-        let src = p.expect_kv_str("src")?;
-        let kind = p.expect_kv_str("kind")?;
-        let frame = p.expect_kv_frame("frame")?;
-        let source_aspect = p.expect_kv_opt_f64("aspect")?;
-        let pdf_page = p.expect_kv_opt_u32("pdfPage")?;
-        Ok(FigureTileSource { src, kind, frame, source_aspect, pdf_page })
-    }
-
-    fn print_source(source: &FigureTileSource) -> String {
-        format!(
-            "source src={} kind={} frame={} aspect={} pdfPage={}",
-            quote(&source.src),
-            quote(&source.kind),
-            print_frame(&source.frame),
-            source.source_aspect.map(|value| value.to_string()).unwrap_or_else(|| "-".to_string()),
-            source.pdf_page.map(|value| value.to_string()).unwrap_or_else(|| "-".to_string()),
-        )
-    }
-    //#endregion Source
-
-    //#region Tile
-    fn parse_tile(p: &mut Parser) -> Result<FigureTileDraft, TextError> {
-        p.expect_keyword("tile")?;
-        let id = p.expect_kv_str("id")?;
-        let name = p.expect_kv_str("name")?;
-        let crop = p.expect_kv_frame("crop")?;
-        Ok(FigureTileDraft { id, name, crop })
-    }
-
-    fn print_tile(tile: &FigureTileDraft) -> String {
-        format!("tile id={} name={} crop={}", quote(&tile.id), quote(&tile.name), print_frame(&tile.crop))
-    }
-
-    fn parse_tiles_block(p: &mut Parser) -> Result<Vec<FigureTileDraft>, TextError> {
-        p.expect_lbrace()?;
-        let mut tiles = Vec::new();
-        while !p.at_rbrace() {
-            tiles.push(parse_tile(p)?);
-        }
-        p.expect_rbrace()?;
-        Ok(tiles)
-    }
-
-    fn parse_tile_patch(p: &mut Parser) -> Result<FigureTileDraftPatch, TextError> {
-        let name = p.expect_kv_opt_str("name")?;
-        let crop = p.expect_kv_opt_frame("crop")?;
-        Ok(FigureTileDraftPatch { name, crop })
-    }
-
-    fn print_tile_patch(patch: &FigureTileDraftPatch) -> String {
-        format!(
-            "name={} crop={}",
-            patch.name.as_deref().map(quote).unwrap_or_else(|| "-".to_string()),
-            patch.crop.as_ref().map(print_frame).unwrap_or_else(|| "-".to_string()),
-        )
-    }
-    //#endregion Tile
-
-    //#region Document
-    /// 📥 Parses the shared `schema=... ` + `source ...` + `tiles { ... }` body reused by both the full
-    /// `.present` DSL document ({@link parse_document}) and `PresentOperation::SetDeck`'s op-text.
-    fn parse_deck_body(p: &mut Parser) -> Result<PresentDeck, TextError> {
-        let schema = p.expect_kv_str("schema")?;
-        let source = parse_source(p)?;
-        let tiles = if p.at_keyword("tiles") {
-            p.bump();
-            parse_tiles_block(p)?
-        } else {
-            Vec::new()
-        };
-        Ok(PresentDeck { schema, source, tiles })
-    }
-
-    fn print_deck_body(deck: &PresentDeck, pretty: bool) -> String {
-        let items: Vec<String> = deck.tiles.iter().map(print_tile).collect();
-        let parts = vec![format!("schema={}", quote(&deck.schema)), print_source(&deck.source), format!("tiles {}", wrap_body(&items, 0, pretty))];
-        parts.join(if pretty { "\n" } else { " " })
-    }
-
-    /// 📥 Parses a full `.present` document: `present schema=... \n source ... \n tiles { ... }` (see
-    /// {@link print_document}).
-    pub(crate) fn parse_document(text: &str) -> Result<PresentDeck, TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-        p.expect_keyword("present")?;
-        let deck = parse_deck_body(&mut p)?;
-        p.expect_eof()?;
-        Ok(deck)
-    }
-
-    /// 📤 Prints a `PresentDeck` back to its `.present` DSL form (see {@link parse_document}).
-    pub(crate) fn print_document(deck: &PresentDeck) -> String {
-        format!("present {}", print_deck_body(deck, true))
-    }
-    //#endregion Document
-
-    //#region Operation
-    /// 📥 Parses a single one-line `PresentOperation`: `tiles-add|tiles-remove|tiles-move|tiles-patch`
-    /// (mirroring `vcs::CollectionOperation`) or `set-source|set-tiles|set-deck` (see {@link print_operation}).
-    pub(crate) fn parse_operation(line: &str) -> Result<PresentOperation, TextError> {
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        let keyword = p.expect_word()?;
-        let operation = match keyword.as_str() {
-            "tiles-add" => {
-                let index = p.expect_kv_usize("index")?;
-                let item = parse_tile(&mut p)?;
-                PresentOperation::Tiles(CollectionOperation::Add { index, item })
-            }
-            "tiles-remove" => {
-                let id = p.expect_kv_str("id")?;
-                PresentOperation::Tiles(CollectionOperation::Remove { id })
-            }
-            "tiles-move" => {
-                let id = p.expect_kv_str("id")?;
-                let to_index = p.expect_kv_usize("to")?;
-                PresentOperation::Tiles(CollectionOperation::Move { id, to_index })
-            }
-            "tiles-patch" => {
-                let id = p.expect_kv_str("id")?;
-                let patch = parse_tile_patch(&mut p)?;
-                PresentOperation::Tiles(CollectionOperation::Patch { id, patch })
-            }
-            "set-source" => PresentOperation::SetSource { source: parse_source(&mut p)? },
-            "set-tiles" => PresentOperation::SetTiles { tiles: parse_tiles_block(&mut p)? },
-            "set-deck" => PresentOperation::SetDeck { deck: parse_deck_body(&mut p)? },
-            other => {
-                return Err(TextError::expected(
-                    format!("unknown present operation '{other}'"),
-                    span,
-                    "tiles-add|tiles-remove|tiles-move|tiles-patch|set-source|set-tiles|set-deck",
-                ))
-            }
-        };
-        p.expect_eof()?;
-        Ok(operation)
-    }
-
-    /// 📤 Renders one `PresentOperation` as a single line (see {@link parse_operation}).
-    pub(crate) fn print_operation(operation: &PresentOperation) -> String {
-        match operation {
-            PresentOperation::Tiles(CollectionOperation::Add { index, item }) => format!("tiles-add index={index} {}", print_tile(item)),
-            PresentOperation::Tiles(CollectionOperation::Remove { id }) => format!("tiles-remove id={}", quote(id)),
-            PresentOperation::Tiles(CollectionOperation::Move { id, to_index }) => format!("tiles-move id={} to={to_index}", quote(id)),
-            PresentOperation::Tiles(CollectionOperation::Patch { id, patch }) => format!("tiles-patch id={} {}", quote(id), print_tile_patch(patch)),
-            PresentOperation::SetSource { source } => format!("set-source {}", print_source(source)),
-            PresentOperation::SetTiles { tiles } => {
-                let items: Vec<String> = tiles.iter().map(print_tile).collect();
-                format!("set-tiles {}", wrap_body(&items, 0, false))
-            }
-            PresentOperation::SetDeck { deck } => format!("set-deck {}", print_deck_body(deck, false)),
-        }
-    }
-    //#endregion Operation
-}
-
-/// 📜 `.present` textual document: `present schema=...` then `source ...` then `tiles { ... }` — see
-/// {@link present_text}.
-impl vcs::DocumentDsl for PresentDeck {
-    const EXTENSION: &'static str = "present";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        present_text::parse_document(text)
-    }
-
-    fn print_dsl(&self) -> String {
-        present_text::print_document(self)
-    }
-}
+/// 📜 `PresentDeck`'s `.present` DSL grammar (`schema=... source { ... } tiles [ ... ]`) is declared
+/// directly on the struct definitions above via `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslRecord)]`
+/// (see {@link vcs::DocumentDsl}).
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ⚡ One-line op-text for every `PresentOperation` variant (see {@link present_text}).
+/// ⚡ DSL-facing mirror of `PresentOperation`, declared purely so `#[derive(dsl::DslOps)]` has
+/// something to attach to: `PresentOperation::Tiles` wraps `vcs::CollectionOperation<..>`, a foreign
+/// generic type the derive can't classify (and can't gain a `DslField` impl here either — both the
+/// trait and the type live outside this crate, so Rust's orphan rules forbid it). Every `Tiles(...)`
+/// case is flattened into its own tagged variant instead; `SetSource`/`SetTiles`/`SetDeck` carry
+/// straight through unchanged. `From`/`Into` below keep this an implementation detail — nothing
+/// outside `impl vcs::OpText for PresentOperation` ever names it.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum PresentOperationDsl {
+    #[dsl(key = "tilesAdd")]
+    TilesAdd {
+        index: usize,
+        #[dsl(block)]
+        item: FigureTileDraft,
+    },
+    #[dsl(key = "tilesRemove")]
+    TilesRemove { id: String },
+    #[dsl(key = "tilesMove")]
+    TilesMove { id: String, to_index: usize },
+    #[dsl(key = "tilesPatch")]
+    TilesPatch {
+        id: String,
+        #[dsl(block)]
+        patch: FigureTileDraftPatch,
+    },
+    #[dsl(key = "setSource")]
+    SetSource {
+        #[dsl(block)]
+        source: FigureTileSource,
+    },
+    #[dsl(key = "setTiles")]
+    SetTiles { tiles: Vec<FigureTileDraft> },
+    #[dsl(key = "setDeck")]
+    SetDeck {
+        #[dsl(block)]
+        deck: PresentDeck,
+    },
+}
+
+impl From<&PresentOperation> for PresentOperationDsl {
+    fn from(operation: &PresentOperation) -> Self {
+        match operation {
+            PresentOperation::Tiles(CollectionOperation::Add { index, item }) => PresentOperationDsl::TilesAdd { index: *index, item: item.clone() },
+            PresentOperation::Tiles(CollectionOperation::Remove { id }) => PresentOperationDsl::TilesRemove { id: id.clone() },
+            PresentOperation::Tiles(CollectionOperation::Move { id, to_index }) => PresentOperationDsl::TilesMove { id: id.clone(), to_index: *to_index },
+            PresentOperation::Tiles(CollectionOperation::Patch { id, patch }) => PresentOperationDsl::TilesPatch { id: id.clone(), patch: patch.clone() },
+            PresentOperation::SetSource { source } => PresentOperationDsl::SetSource { source: source.clone() },
+            PresentOperation::SetTiles { tiles } => PresentOperationDsl::SetTiles { tiles: tiles.clone() },
+            PresentOperation::SetDeck { deck } => PresentOperationDsl::SetDeck { deck: deck.clone() },
+        }
+    }
+}
+
+impl From<PresentOperationDsl> for PresentOperation {
+    fn from(operation: PresentOperationDsl) -> Self {
+        match operation {
+            PresentOperationDsl::TilesAdd { index, item } => PresentOperation::Tiles(CollectionOperation::Add { index, item }),
+            PresentOperationDsl::TilesRemove { id } => PresentOperation::Tiles(CollectionOperation::Remove { id }),
+            PresentOperationDsl::TilesMove { id, to_index } => PresentOperation::Tiles(CollectionOperation::Move { id, to_index }),
+            PresentOperationDsl::TilesPatch { id, patch } => PresentOperation::Tiles(CollectionOperation::Patch { id, patch }),
+            PresentOperationDsl::SetSource { source } => PresentOperation::SetSource { source },
+            PresentOperationDsl::SetTiles { tiles } => PresentOperation::SetTiles { tiles },
+            PresentOperationDsl::SetDeck { deck } => PresentOperation::SetDeck { deck },
+        }
+    }
+}
+
+/// ⚡ One-line op-text for every `PresentOperation` variant, routed through {@link PresentOperationDsl}
+/// (see its doc comment for why a direct `#[derive(dsl::DslOps)]` on `PresentOperation` itself isn't
+/// possible).
 impl vcs::OpText for PresentOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        present_text::parse_operation(line)
+        PresentOperationDsl::parse_op(line).map(PresentOperationDsl::into)
     }
 
     fn print_op(&self) -> String {
-        present_text::print_operation(self)
+        PresentOperationDsl::from(self).print_op()
     }
 }
 //#endregion 🔖OpText

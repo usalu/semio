@@ -1,8 +1,10 @@
 //! 📐 Procedural 3d document model on `vcs`.
 
+use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
 use protocol::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
+use std::collections::BTreeMap;
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PROCEDURAL_3D_SCHEMA: &str = "procedural.3d";
@@ -255,612 +257,403 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 //#endregion 🔖Operations
 
 //#region 🔖Dsl
-/// 📜 Hand-rolled lexer, parser and printer for `Procedural3dDocument`'s `.procedural3d` DSL and for
-/// `Procedural3dOperation`'s compact single-line op encoding. The outer `document`/`widget`/`synapse`/
-/// `layout`/`generation` grammar (`key=value` header fields, `{ }` body) is entirely hand-rolled;
-/// genuinely free-form leaf payloads (`Dictionary` params/preview, port/expanded lists, `Tree`/`FlowGui`
-/// cluster subtrees, generation `values`/`value`) are carried as an already-JSON-shaped quoted string
-/// re-parsed with `serde_json` (already a workspace dependency — mirrors `protocol`'s `kv_json`). See
-/// {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod procedural3d_text {
-    use super::{Procedural3dDocument, Procedural3dOperation};
-    use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-    use protocol::{FormGeneration, GenerationOperation, GenerationPlayState};
-    use std::collections::{BTreeMap, HashMap};
-    use vcs::{TextError, TextSpan};
-
-    //#region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
-    }
-
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: TextSpan,
-    }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` is an
-    /// ordinary word character — `key=value` collapses into one token, split later by `parse_kv_map`.
-    fn lex(input: &str) -> Result<Vec<Lexed>, TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: TextSpan::at(line, col) });
-        Ok(out)
-    }
-    //#endregion Lexer
-
-    //#region Parser
-    #[derive(Clone, Debug)]
-    enum FieldValue {
-        Str(String),
-        Word(String),
-    }
-
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
-    }
-
-    type FieldMap = HashMap<String, (FieldValue, TextSpan)>;
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_rbrace(&self) -> bool {
-            matches!(self.peek(), Tok::RBrace)
-        }
-
-        fn expect_word(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_keyword(&mut self, keyword: &str) -> Result<(), TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            if word != keyword {
-                return Err(TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-            }
-            Ok(())
-        }
-
-        fn expect_lbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::LBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-            }
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        fn expect_eof(&mut self) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Eof => Ok(()),
-                other => Err(TextError::expected(format!("expected end of input, found {other:?}"), span, "eof")),
-            }
-        }
-
-        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
-        /// generic header-field reader every construct (document/widget/synapse/layout/generation) is
-        /// built on. A `set-*` op line's `index`/`id` fields share the same flat map as the nested
-        /// widget/synapse/generation fields, since the whole line is a single `parse_kv_map` call.
-        fn parse_kv_map(&mut self) -> Result<FieldMap, TextError> {
-            let mut map = HashMap::new();
-            loop {
-                let word = match self.peek() {
-                    Tok::Word(w) if w.contains('=') => w.clone(),
-                    _ => break,
-                };
-                let span = self.span();
-                self.bump();
-                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-                let value = if rest.is_empty() { FieldValue::Str(self.expect_str()?) } else { FieldValue::Word(rest.to_string()) };
-                map.insert(key.to_string(), (value, span));
-            }
-            Ok(map)
-        }
-
-        fn expect_str(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-    }
-
-    fn kv_str(map: &FieldMap, key: &str, span: TextSpan) -> Result<String, TextError> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Ok(s.clone()),
-            Some((FieldValue::Word(_), field_span)) => Err(TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
-            None => Err(TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_opt_str(map: &FieldMap, key: &str) -> Option<String> {
-        match map.get(key) {
-            Some((FieldValue::Str(s), _)) => Some(s.clone()),
-            _ => None,
-        }
-    }
-
-    fn kv_word(map: &FieldMap, key: &str, span: TextSpan) -> Result<String, TextError> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
-            Some((FieldValue::Str(_), field_span)) => Err(TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
-            None => Err(TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_num(map: &FieldMap, key: &str, span: TextSpan) -> Result<f64, TextError> {
-        let word = kv_word(map, key, span)?;
-        word.parse::<f64>().map_err(|_| TextError::expected(format!("field '{key}' must be a number"), span, "number"))
-    }
-
-    fn kv_bool(map: &FieldMap, key: &str, span: TextSpan) -> Result<bool, TextError> {
-        match kv_word(map, key, span)?.as_str() {
-            "true" => Ok(true),
-            "false" => Ok(false),
-            _ => Err(TextError::expected(format!("field '{key}' must be 'true' or 'false'"), span, "true|false")),
-        }
-    }
-
-    fn kv_usize(map: &FieldMap, key: &str, span: TextSpan) -> Result<usize, TextError> {
-        let word = kv_word(map, key, span)?;
-        word.parse::<usize>().map_err(|_| TextError::expected(format!("field '{key}' must be a non-negative integer"), span, "usize"))
-    }
-
-    /// 🧬 Reads a required free-form JSON field (`Dictionary` params/preview, port/expanded lists,
-    /// `Tree`/`FlowGui` cluster subtrees, generation `values`/`value`): the field's quoted string
-    /// content is itself compact JSON text, re-parsed with `serde_json` (already a workspace
-    /// dependency — only the surrounding `.procedural3d`/op-line grammar is hand-rolled).
-    fn kv_json<T: serde::de::DeserializeOwned>(map: &FieldMap, key: &str, span: TextSpan) -> Result<T, TextError> {
-        let text = kv_str(map, key, span)?;
-        serde_json::from_str(&text).map_err(|error| TextError::expected(format!("field '{key}' must be valid JSON: {error}"), span, "json"))
-    }
-    //#endregion Parser
-
-    //#region Printer
-    fn quote(value: &str) -> String {
-        let mut out = String::with_capacity(value.len() + 2);
-        out.push('"');
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out.push('"');
-        out
-    }
-
-    fn fmt_num(value: f64) -> String {
-        value.to_string()
-    }
-
-    /// 🧬 Prints a value already carried as an opaque JSON payload (see `kv_json`) — compact JSON text
-    /// quoted as a single DSL string field.
-    fn print_json<T: serde::Serialize>(value: &T) -> String {
-        quote(&serde_json::to_string(value).unwrap_or_else(|_| "null".into()))
-    }
-    //#endregion Printer
-
-    //#region Widget
-    fn widget_from_map(map: &FieldMap, span: TextSpan) -> Result<Widget, TextError> {
-        let kind = kv_word(map, "kind", span)?;
-        let id = kv_str(map, "id", span)?;
-        match kind.as_str() {
-            "neuron" => Ok(Widget::Neuron {
-                id,
-                neuron_kind: kv_word(map, "neuronKind", span)?,
-                params: kv_json(map, "params", span)?,
-                input_ports: kv_json(map, "inputPorts", span)?,
-                output_ports: kv_json(map, "outputPorts", span)?,
-                preview: kv_bool(map, "preview", span)?,
-            }),
-            "inputSlider" => Ok(Widget::InputSlider { id, value: kv_num(map, "value", span)?, min: kv_num(map, "min", span)?, max: kv_num(map, "max", span)?, step: kv_num(map, "step", span)? }),
-            "inputNote" => Ok(Widget::InputNote { id, text: kv_str(map, "text", span)? }),
-            "inputImage" => Ok(Widget::InputImage { id, src: kv_str(map, "src", span)? }),
-            "variable" => Ok(Widget::Variable { id, name: kv_str(map, "name", span)?, schema: kv_word(map, "schema", span)? }),
-            "outputPreview" => Ok(Widget::OutputPreview { id, preview: kv_json(map, "preview", span)?, expanded: kv_json(map, "expanded", span)? }),
-            "outputAction" => Ok(Widget::OutputAction { id, action: kv_str(map, "action", span)? }),
-            "outputExport" => Ok(Widget::OutputExport { id, format: kv_word(map, "format", span)? }),
-            "cluster" => Ok(Widget::Cluster { id, name: kv_str(map, "name", span)?, tree: kv_json(map, "tree", span)?, flow: kv_json(map, "flow", span)? }),
-            other => Err(TextError::expected(
-                format!("unknown widget kind '{other}'"),
-                span,
-                "neuron|inputSlider|inputNote|inputImage|variable|outputPreview|outputAction|outputExport|cluster",
-            )),
-        }
-    }
-
-    fn parse_widget(p: &mut Parser) -> Result<Widget, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        widget_from_map(&map, span)
-    }
-
-    fn print_widget_fields(widget: &Widget) -> String {
-        match widget {
-            Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
-                format!(
-                    "kind=neuron id={} neuronKind={} preview={} inputPorts={} outputPorts={} params={}",
-                    quote(id),
-                    neuron_kind,
-                    preview,
-                    print_json(input_ports),
-                    print_json(output_ports),
-                    print_json(params)
-                )
-            }
-            Widget::InputSlider { id, value, min, max, step } => format!("kind=inputSlider id={} value={} min={} max={} step={}", quote(id), fmt_num(*value), fmt_num(*min), fmt_num(*max), fmt_num(*step)),
-            Widget::InputNote { id, text } => format!("kind=inputNote id={} text={}", quote(id), quote(text)),
-            Widget::InputImage { id, src } => format!("kind=inputImage id={} src={}", quote(id), quote(src)),
-            Widget::Variable { id, name, schema } => format!("kind=variable id={} name={} schema={}", quote(id), quote(name), schema),
-            Widget::OutputPreview { id, preview, expanded } => format!("kind=outputPreview id={} preview={} expanded={}", quote(id), print_json(preview), print_json(expanded)),
-            Widget::OutputAction { id, action } => format!("kind=outputAction id={} action={}", quote(id), quote(action)),
-            Widget::OutputExport { id, format } => format!("kind=outputExport id={} format={}", quote(id), format),
-            Widget::Cluster { id, name, tree, flow } => format!("kind=cluster id={} name={} tree={} flow={}", quote(id), quote(name), print_json(tree), print_json(flow)),
-        }
-    }
-    //#endregion Widget
-
-    //#region Synapse
-    fn synapse_from_map(map: &FieldMap, span: TextSpan) -> Result<SynapseSpec, TextError> {
-        Ok(SynapseSpec { id: kv_str(map, "id", span)?, from: kv_str(map, "from", span)?, to: kv_str(map, "to", span)?, from_port: kv_str(map, "fromPort", span)?, to_port: kv_str(map, "toPort", span)? })
-    }
-
-    fn parse_synapse(p: &mut Parser) -> Result<SynapseSpec, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        synapse_from_map(&map, span)
-    }
-
-    fn print_synapse_fields(synapse: &SynapseSpec) -> String {
-        format!("id={} from={} to={} fromPort={} toPort={}", quote(&synapse.id), quote(&synapse.from), quote(&synapse.to), quote(&synapse.from_port), quote(&synapse.to_port))
-    }
-    //#endregion Synapse
-
-    //#region Layout
-    fn layout_from_map(map: &FieldMap, span: TextSpan) -> Result<WidgetLayout, TextError> {
-        Ok(WidgetLayout { x: kv_num(map, "x", span)?, y: kv_num(map, "y", span)? })
-    }
-
-    fn parse_layout(p: &mut Parser) -> Result<(String, WidgetLayout), TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        Ok((kv_str(&map, "id", span)?, layout_from_map(&map, span)?))
-    }
-
-    fn print_layout_fields(id: &str, layout: &WidgetLayout) -> String {
-        format!("id={} x={} y={}", quote(id), fmt_num(layout.x), fmt_num(layout.y))
-    }
-    //#endregion Layout
-
-    //#region Generation
-    fn generation_from_map(map: &FieldMap, span: TextSpan) -> Result<FormGeneration, TextError> {
-        Ok(FormGeneration { id: kv_str(map, "id", span)?, name: kv_str(map, "name", span)?, values: kv_json(map, "values", span)? })
-    }
-
-    fn parse_generation(p: &mut Parser) -> Result<FormGeneration, TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        generation_from_map(&map, span)
-    }
-
-    fn print_generation_fields(generation: &FormGeneration) -> String {
-        format!("id={} name={} values={}", quote(&generation.id), quote(&generation.name), print_json(&generation.values))
-    }
-    //#endregion Generation
-
-    //#region DocumentText
-    /// 📥 Parses a full `.procedural3d` document: `document schema=/camera.x=/camera.y=/camera.zoom=
-    /// [selectedGeneration=] [previewText=]` header, then a mandatory `{ }` body of `widget`/`synapse`/
-    /// `layout`/`generation` records (see `print_document` for the mirrored grammar).
-    pub(super) fn parse_document(text: &str) -> Result<Procedural3dDocument, TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        p.expect_keyword("document")?;
-        let map = p.parse_kv_map()?;
-        let schema = kv_str(&map, "schema", span)?;
-        let camera = CameraJson { x: kv_num(&map, "camera.x", span)?, y: kv_num(&map, "camera.y", span)?, zoom: kv_num(&map, "camera.zoom", span)? };
-        let selected_generation_id = kv_opt_str(&map, "selectedGeneration");
-        let preview_text = kv_opt_str(&map, "previewText");
-        p.expect_lbrace()?;
-        let mut widgets = Vec::new();
-        let mut synapses = Vec::new();
-        let mut layout = BTreeMap::new();
-        let mut generations = Vec::new();
-        while !p.at_rbrace() {
-            let keyword_span = p.span();
-            let keyword = p.expect_word()?;
-            match keyword.as_str() {
-                "widget" => widgets.push(parse_widget(&mut p)?),
-                "synapse" => synapses.push(parse_synapse(&mut p)?),
-                "layout" => {
-                    let (id, entry) = parse_layout(&mut p)?;
-                    layout.insert(id, entry);
-                }
-                "generation" => generations.push(parse_generation(&mut p)?),
-                other => return Err(TextError::expected(format!("unknown document record '{other}'"), keyword_span, "widget|synapse|layout|generation")),
-            }
-        }
-        p.expect_rbrace()?;
-        p.expect_eof()?;
-        Ok(Procedural3dDocument {
-            fixture: FlowFixture { schema, camera, widgets, synapses, layout },
-            generation: GenerationPlayState { generations, selected_generation_id, preview_text },
-        })
-    }
-
-    pub(super) fn print_document(document: &Procedural3dDocument) -> String {
-        let fixture = &document.fixture;
-        let generation = &document.generation;
-        let mut out = format!(
-            "document schema={} camera.x={} camera.y={} camera.zoom={}",
-            quote(&fixture.schema),
-            fmt_num(fixture.camera.x),
-            fmt_num(fixture.camera.y),
-            fmt_num(fixture.camera.zoom)
-        );
-        if let Some(id) = &generation.selected_generation_id {
-            out.push_str(&format!(" selectedGeneration={}", quote(id)));
-        }
-        if let Some(text) = &generation.preview_text {
-            out.push_str(&format!(" previewText={}", quote(text)));
-        }
-        out.push_str(" {\n");
-        for widget in &fixture.widgets {
-            out.push_str("  widget ");
-            out.push_str(&print_widget_fields(widget));
-            out.push('\n');
-        }
-        for synapse in &fixture.synapses {
-            out.push_str("  synapse ");
-            out.push_str(&print_synapse_fields(synapse));
-            out.push('\n');
-        }
-        for (id, entry) in &fixture.layout {
-            out.push_str("  layout ");
-            out.push_str(&print_layout_fields(id, entry));
-            out.push('\n');
-        }
-        for entry in &generation.generations {
-            out.push_str("  generation ");
-            out.push_str(&print_generation_fields(entry));
-            out.push('\n');
-        }
-        out.push_str("}\n");
-        out
-    }
-    //#endregion DocumentText
-
-    //#region OpText
-    /// ⚡ Parses one op-log line: a keyword (`set-widget`/`remove-widget`/`set-synapse`/`remove-synapse`/
-    /// `set-layout`/`remove-layout`/`set-camera`/`set-schema`/`generation-add`/`generation-remove`/
-    /// `generation-rename`/`generation-update-values`) then its own `key=value` fields.
-    pub(super) fn parse_operation(line: &str) -> Result<Procedural3dOperation, TextError> {
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        let keyword = p.expect_word()?;
-        let operation = match keyword.as_str() {
-            "set-widget" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::SetWidget { index: kv_usize(&map, "index", span)?, widget: widget_from_map(&map, span)? }
-            }
-            "remove-widget" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::RemoveWidget { id: kv_str(&map, "id", span)? }
-            }
-            "set-synapse" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::SetSynapse { index: kv_usize(&map, "index", span)?, synapse: synapse_from_map(&map, span)? }
-            }
-            "remove-synapse" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::RemoveSynapse { id: kv_str(&map, "id", span)? }
-            }
-            "set-layout" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::SetLayout { id: kv_str(&map, "id", span)?, layout: layout_from_map(&map, span)? }
-            }
-            "remove-layout" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::RemoveLayout { id: kv_str(&map, "id", span)? }
-            }
-            "set-camera" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::SetCamera { camera: CameraJson { x: kv_num(&map, "x", span)?, y: kv_num(&map, "y", span)?, zoom: kv_num(&map, "zoom", span)? } }
-            }
-            "set-schema" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::SetSchema { schema: kv_str(&map, "schema", span)? }
-            }
-            "generation-add" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::Generation(GenerationOperation::Add { generation: generation_from_map(&map, span)? })
-            }
-            "generation-remove" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::Generation(GenerationOperation::Remove { id: kv_str(&map, "id", span)? })
-            }
-            "generation-rename" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::Generation(GenerationOperation::Rename { id: kv_str(&map, "id", span)?, name: kv_str(&map, "name", span)? })
-            }
-            "generation-update-values" => {
-                let map = p.parse_kv_map()?;
-                Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id: kv_str(&map, "id", span)?, question_id: kv_str(&map, "questionId", span)?, value: kv_json(&map, "value", span)? })
-            }
-            other => {
-                return Err(TextError::expected(
-                    format!("unknown operation '{other}'"),
-                    span,
-                    "set-widget|remove-widget|set-synapse|remove-synapse|set-layout|remove-layout|set-camera|set-schema|generation-add|generation-remove|generation-rename|generation-update-values",
-                ))
-            }
-        };
-        p.expect_eof()?;
-        Ok(operation)
-    }
-
-    pub(super) fn print_operation(operation: &Procedural3dOperation) -> String {
-        match operation {
-            Procedural3dOperation::SetWidget { index, widget } => format!("set-widget index={} {}", index, print_widget_fields(widget)),
-            Procedural3dOperation::RemoveWidget { id } => format!("remove-widget id={}", quote(id)),
-            Procedural3dOperation::SetSynapse { index, synapse } => format!("set-synapse index={} {}", index, print_synapse_fields(synapse)),
-            Procedural3dOperation::RemoveSynapse { id } => format!("remove-synapse id={}", quote(id)),
-            Procedural3dOperation::SetLayout { id, layout } => format!("set-layout {}", print_layout_fields(id, layout)),
-            Procedural3dOperation::RemoveLayout { id } => format!("remove-layout id={}", quote(id)),
-            Procedural3dOperation::SetCamera { camera } => format!("set-camera x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
-            Procedural3dOperation::SetSchema { schema } => format!("set-schema schema={}", quote(schema)),
-            Procedural3dOperation::Generation(GenerationOperation::Add { generation }) => format!("generation-add {}", print_generation_fields(generation)),
-            Procedural3dOperation::Generation(GenerationOperation::Remove { id }) => format!("generation-remove id={}", quote(id)),
-            Procedural3dOperation::Generation(GenerationOperation::Rename { id, name }) => format!("generation-rename id={} name={}", quote(id), quote(name)),
-            Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }) => {
-                format!("generation-update-values id={} questionId={} value={}", quote(id), quote(question_id), print_json(value))
-            }
-        }
-    }
-    //#endregion OpText
+//#region 🔖DslMirror
+/// 🔒 `FlowFixture`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow_core`) and
+/// `GenerationPlayState`/`FormGeneration`/`GenerationOperation` (from `protocol`) are all foreign to
+/// this crate, so none can carry a `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires
+/// the impl target type to live in the crate that also owns the trait or the type, and neither is
+/// true here. The `*Dsl` types below are LOCAL structural twins the real types convert to/from right
+/// at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary (same pattern as `fem_2d`'s `FemDof`
+/// and `imperative_core`'s `ValueDsl`/`StepNodeDsl`/`PathDsl`) — `Procedural3dDocument`/
+/// `Procedural3dOperation` themselves keep their ORIGINAL foreign field types unchanged, so
+/// `procedural-plugin` (which constructs/matches on them directly) keeps compiling unmodified.
+///
+/// `ValueDsl` mirrors `flow_core::neural::Value`/`Atom` field-for-field (duplicating
+/// `imperative_core::ValueDsl`'s approach for the identical `neural_engine` types, since crates can't
+/// share a private type across the orphan boundary either) rather than routing through the engine's
+/// dynamic `Shape::Value`/`DslValue` escape hatch, which merges `Atom::Integer`/`Atom::Decimal` into
+/// one `Number(f64)` case — a real, observable loss of fidelity `ValueDsl`'s own mutually-exclusive
+/// `Option` fields avoid entirely.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct ValueDsl {
+    /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
+    #[dsl(key = "null")]
+    null: Option<bool>,
+    #[dsl(key = "bool")]
+    boolean: Option<bool>,
+    #[dsl(key = "int")]
+    integer: Option<i64>,
+    #[dsl(key = "decimal")]
+    decimal: Option<f64>,
+    #[dsl(key = "text")]
+    text: Option<String>,
+    #[dsl(key = "dict")]
+    dictionary: Option<Vec<DictEntryDsl>>,
 }
 
-/// 📜 `.procedural3d` textual document: `document schema=... camera.x=/y=/zoom=
-/// [selectedGeneration=] [previewText=] { widget ... synapse ... layout ... generation ... }` — see
-/// `procedural3d_text` for the hand-rolled lexer/parser/printer.
+/// 🗝️ One `Dictionary`/`Value::Dictionary` entry — a `Vec` of `(key, value)` records rather than a
+/// bare `Shape::Map` (`{ key=value }`): a `Shape::Map` key is a bare identifier (the engine lexer's
+/// `is_ident_start` only accepts alphabetic/`_`), but real `Dictionary` keys are arbitrary strings —
+/// notably `neural_engine::SCHEMA_KEY` (`"$schema"`), which every schema-tagged value in this
+/// codebase carries and which starts with `$`, a character no bare identifier can start with.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct DictEntryDsl {
+    key: String,
+    #[dsl(block)]
+    value: ValueDsl,
+}
+
+fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
+    let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
+    match value {
+        NeuralValue::Atom(Atom::Null) => dsl_value.null = Some(true),
+        NeuralValue::Atom(Atom::Boolean(b)) => dsl_value.boolean = Some(*b),
+        NeuralValue::Atom(Atom::Integer(i)) => dsl_value.integer = Some(*i),
+        NeuralValue::Atom(Atom::Decimal(d)) => dsl_value.decimal = Some(*d),
+        NeuralValue::Atom(Atom::String(s)) => dsl_value.text = Some(s.clone()),
+        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_entries(dict)),
+    }
+    dsl_value
+}
+
+fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
+    if dsl_value.null.is_some() {
+        return NeuralValue::Atom(Atom::Null);
+    }
+    if let Some(b) = dsl_value.boolean {
+        return NeuralValue::Atom(Atom::Boolean(b));
+    }
+    if let Some(i) = dsl_value.integer {
+        return NeuralValue::Atom(Atom::Integer(i));
+    }
+    if let Some(d) = dsl_value.decimal {
+        return NeuralValue::Atom(Atom::Decimal(d));
+    }
+    if let Some(s) = &dsl_value.text {
+        return NeuralValue::Atom(Atom::String(s.clone()));
+    }
+    match &dsl_value.dictionary {
+        Some(entries) => NeuralValue::Dictionary(value_dsl_entries_to_dictionary(entries)),
+        None => NeuralValue::Atom(Atom::Null),
+    }
+}
+
+fn dictionary_to_value_dsl_entries(dict: &Dictionary) -> Vec<DictEntryDsl> {
+    dict.keys().map(|key| DictEntryDsl { key: key.clone(), value: value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")) }).collect()
+}
+
+fn value_dsl_entries_to_dictionary(entries: &[DictEntryDsl]) -> Dictionary {
+    entries.iter().fold(Dictionary::new(), |dict, entry| dict.insert(entry.key.clone(), value_dsl_to_value(&entry.value)))
+}
+
+/// 🎥 Local twin of `flow_core::CameraJson`.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct CameraJsonDsl {
+    x: f64,
+    y: f64,
+    zoom: f64,
+}
+
+fn camera_to_dsl(camera: &CameraJson) -> CameraJsonDsl {
+    CameraJsonDsl { x: camera.x, y: camera.y, zoom: camera.zoom }
+}
+
+fn camera_from_dsl(camera: CameraJsonDsl) -> CameraJson {
+    CameraJson { x: camera.x, y: camera.y, zoom: camera.zoom }
+}
+
+/// 📍 Local twin of `flow_core::WidgetLayout`.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct WidgetLayoutDsl {
+    x: f64,
+    y: f64,
+}
+
+fn layout_to_dsl(layout: &WidgetLayout) -> WidgetLayoutDsl {
+    WidgetLayoutDsl { x: layout.x, y: layout.y }
+}
+
+fn layout_from_dsl(layout: WidgetLayoutDsl) -> WidgetLayout {
+    WidgetLayout { x: layout.x, y: layout.y }
+}
+
+/// 🔗 Local twin of `flow_core::SynapseSpec`.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct SynapseSpecDsl {
+    id: String,
+    from: String,
+    to: String,
+    #[dsl(key = "fromPort")]
+    from_port: String,
+    #[dsl(key = "toPort")]
+    to_port: String,
+}
+
+fn synapse_to_dsl(synapse: &SynapseSpec) -> SynapseSpecDsl {
+    SynapseSpecDsl { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() }
+}
+
+fn synapse_from_dsl(synapse: SynapseSpecDsl) -> SynapseSpec {
+    SynapseSpec { id: synapse.id, from: synapse.from, to: synapse.to, from_port: synapse.from_port, to_port: synapse.to_port }
+}
+
+/// 🎛️ Local twin of `flow_core::Widget` — `Neuron`/`OutputPreview`'s `Dictionary` fields route
+/// through `ValueDsl`; `Cluster`'s `tree`/`flow` (a `neural_engine::Tree`/`flow_core::FlowGui` pair,
+/// each themselves nested foreign aggregates several layers deep) are carried as an opaque
+/// `serde_json::Value` blob — exactly the same "already-JSON-shaped" treatment the OLD hand-rolled
+/// `procedural3d_text::kv_json` gave them, just bound through the engine's own `Shape::Value` bridge
+/// instead of a hand-rolled quoted-string re-parse.
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+enum WidgetDsl {
+    #[dsl(key = "neuron")]
+    Neuron {
+        id: String,
+        #[dsl(key = "neuronKind", ident)]
+        neuron_kind: String,
+        preview: bool,
+        #[dsl(key = "inputPorts")]
+        input_ports: Vec<String>,
+        #[dsl(key = "outputPorts")]
+        output_ports: Vec<String>,
+        params: Vec<DictEntryDsl>,
+    },
+    #[dsl(key = "inputSlider")]
+    InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
+    #[dsl(key = "inputNote")]
+    InputNote { id: String, text: String },
+    #[dsl(key = "inputImage")]
+    InputImage { id: String, src: String },
+    #[dsl(key = "variable")]
+    Variable { id: String, name: String, #[dsl(ident)] schema: String },
+    #[dsl(key = "outputPreview")]
+    OutputPreview { id: String, preview: Vec<DictEntryDsl>, expanded: Vec<String> },
+    #[dsl(key = "outputAction")]
+    OutputAction { id: String, action: String },
+    #[dsl(key = "outputExport")]
+    OutputExport { id: String, #[dsl(ident)] format: String },
+    #[dsl(key = "cluster")]
+    Cluster { id: String, name: String, tree: serde_json::Value, flow: serde_json::Value },
+}
+
+fn widget_to_dsl(widget: &Widget) -> WidgetDsl {
+    match widget {
+        Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
+            WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), preview: *preview, input_ports: input_ports.clone(), output_ports: output_ports.clone(), params: dictionary_to_value_dsl_entries(params) }
+        }
+        Widget::InputSlider { id, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), value: *value, min: *min, max: *max, step: *step },
+        Widget::InputNote { id, text } => WidgetDsl::InputNote { id: id.clone(), text: text.clone() },
+        Widget::InputImage { id, src } => WidgetDsl::InputImage { id: id.clone(), src: src.clone() },
+        Widget::Variable { id, name, schema } => WidgetDsl::Variable { id: id.clone(), name: name.clone(), schema: schema.clone() },
+        Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_value_dsl_entries(preview), expanded: expanded.iter().cloned().collect() },
+        Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
+        Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
+        Widget::Cluster { id, name, tree, flow } => {
+            WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: serde_json::to_value(tree).unwrap_or(serde_json::Value::Null), flow: serde_json::to_value(flow).unwrap_or(serde_json::Value::Null) }
+        }
+    }
+}
+
+fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, vcs::TextError> {
+    Ok(match widget {
+        WidgetDsl::Neuron { id, neuron_kind, preview, input_ports, output_ports, params } => Widget::Neuron { id, neuron_kind, params: value_dsl_entries_to_dictionary(&params), input_ports, output_ports, preview },
+        WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
+        WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
+        WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
+        WidgetDsl::Variable { id, name, schema } => Widget::Variable { id, name, schema },
+        WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: value_dsl_entries_to_dictionary(&preview), expanded: expanded.into_iter().collect() },
+        WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
+        WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster {
+            id,
+            name,
+            tree: serde_json::from_value(tree).map_err(|error| vcs::TextError::new(format!("invalid cluster tree JSON: {error}"), vcs::TextSpan::at(1, 1)))?,
+            flow: serde_json::from_value(flow).map_err(|error| vcs::TextError::new(format!("invalid cluster flow JSON: {error}"), vcs::TextSpan::at(1, 1)))?,
+        },
+    })
+}
+
+/// 🧬 Local twin of `protocol::FormGeneration` — `values` is already a `serde_json::Map`/`Value` pair
+/// in the real type, so it binds directly through the engine's `Shape::Value` bridge with no
+/// intermediate conversion.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct FormGenerationDsl {
+    id: String,
+    name: String,
+    values: serde_json::Map<String, serde_json::Value>,
+}
+
+fn form_generation_to_dsl(generation: &FormGeneration) -> FormGenerationDsl {
+    FormGenerationDsl { id: generation.id.clone(), name: generation.name.clone(), values: generation.values.clone() }
+}
+
+fn form_generation_from_dsl(generation: FormGenerationDsl) -> FormGeneration {
+    FormGeneration { id: generation.id, name: generation.name, values: generation.values }
+}
+
+/// 🧾 Local twin of `Procedural3dDocument`, flattening `FlowFixture`/`GenerationPlayState`'s fields
+/// into one top-level `#[derive(dsl::DslDocument)]` grammar.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "procedural3d", layout = "lines")]
+struct Procedural3dDocumentDsl {
+    schema: String,
+    #[dsl(block)]
+    camera: CameraJsonDsl,
+    #[dsl(statements, block)]
+    widgets: Vec<WidgetDsl>,
+    synapses: Vec<SynapseSpecDsl>,
+    layout: BTreeMap<String, WidgetLayoutDsl>,
+    #[dsl(key = "selectedGeneration")]
+    selected_generation_id: Option<String>,
+    #[dsl(key = "previewText")]
+    preview_text: Option<String>,
+    generations: Vec<FormGenerationDsl>,
+}
+
+fn procedural3d_document_to_dsl(document: &Procedural3dDocument) -> Procedural3dDocumentDsl {
+    let fixture = &document.fixture;
+    let generation = &document.generation;
+    Procedural3dDocumentDsl {
+        schema: fixture.schema.clone(),
+        camera: camera_to_dsl(&fixture.camera),
+        widgets: fixture.widgets.iter().map(widget_to_dsl).collect(),
+        synapses: fixture.synapses.iter().map(synapse_to_dsl).collect(),
+        layout: fixture.layout.iter().map(|(id, entry)| (id.clone(), layout_to_dsl(entry))).collect(),
+        selected_generation_id: generation.selected_generation_id.clone(),
+        preview_text: generation.preview_text.clone(),
+        generations: generation.generations.iter().map(form_generation_to_dsl).collect(),
+    }
+}
+
+fn procedural3d_document_from_dsl(parsed: Procedural3dDocumentDsl) -> Result<Procedural3dDocument, vcs::TextError> {
+    let widgets = parsed.widgets.into_iter().map(widget_from_dsl).collect::<Result<Vec<_>, _>>()?;
+    let synapses = parsed.synapses.into_iter().map(synapse_from_dsl).collect();
+    let layout = parsed.layout.into_iter().map(|(id, entry)| (id, layout_from_dsl(entry))).collect();
+    Ok(Procedural3dDocument {
+        fixture: FlowFixture { schema: parsed.schema, camera: camera_from_dsl(parsed.camera), widgets, synapses, layout },
+        generation: GenerationPlayState { generations: parsed.generations.into_iter().map(form_generation_from_dsl).collect(), selected_generation_id: parsed.selected_generation_id, preview_text: parsed.preview_text },
+    })
+}
+//#endregion 🔖DslMirror
+
+/// 📜 `.procedural3d` textual document — derive-engine grammar via `Procedural3dDocumentDsl`
+/// (see `🔖DslMirror`); `parse_dsl`/`print_dsl` convert at the boundary.
 impl vcs::DocumentDsl for Procedural3dDocument {
     const EXTENSION: &'static str = "procedural3d";
 
     fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        procedural3d_text::parse_document(text)
+        let parsed = <Procedural3dDocumentDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+        procedural3d_document_from_dsl(parsed)
     }
 
     fn print_dsl(&self) -> String {
-        procedural3d_text::print_document(self)
+        <Procedural3dDocumentDsl as vcs::DocumentDsl>::print_dsl(&procedural3d_document_to_dsl(self))
     }
 }
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ⚡ `Procedural3dOperation`'s compact single-line op encoding — see `procedural3d_text`.
+/// ⚡ Local twin of `Procedural3dOperation` — flattens the `Generation(GenerationOperation)` newtype
+/// variant into its own four top-level keyword variants (mirroring the OLD hand-rolled op-line
+/// keywords `generation-add`/`generation-remove`/`generation-rename`/`generation-update-values`)
+/// since a `#[derive(dsl::DslOps)]` enum's variants are each their own tagged record, not a nested
+/// enum-in-enum.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum Procedural3dOperationDsl {
+    #[dsl(key = "set-widget")]
+    SetWidget {
+        index: usize,
+        #[dsl(statements)]
+        widget: Box<WidgetDsl>,
+    },
+    #[dsl(key = "remove-widget")]
+    RemoveWidget { id: String },
+    #[dsl(key = "set-synapse")]
+    SetSynapse {
+        index: usize,
+        #[dsl(block)]
+        synapse: SynapseSpecDsl,
+    },
+    #[dsl(key = "remove-synapse")]
+    RemoveSynapse { id: String },
+    #[dsl(key = "set-layout")]
+    SetLayout {
+        id: String,
+        #[dsl(block)]
+        layout: WidgetLayoutDsl,
+    },
+    #[dsl(key = "remove-layout")]
+    RemoveLayout { id: String },
+    #[dsl(key = "set-camera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: CameraJsonDsl,
+    },
+    #[dsl(key = "set-schema")]
+    SetSchema { schema: String },
+    #[dsl(key = "generation-add")]
+    GenerationAdd {
+        #[dsl(block)]
+        generation: FormGenerationDsl,
+    },
+    #[dsl(key = "generation-remove")]
+    GenerationRemove { id: String },
+    #[dsl(key = "generation-rename")]
+    GenerationRename { id: String, name: String },
+    #[dsl(key = "generation-update-values")]
+    GenerationUpdateValues {
+        id: String,
+        #[dsl(key = "questionId")]
+        question_id: String,
+        value: serde_json::Value,
+    },
+}
+
+fn procedural3d_operation_to_dsl(operation: &Procedural3dOperation) -> Procedural3dOperationDsl {
+    match operation {
+        Procedural3dOperation::SetWidget { index, widget } => Procedural3dOperationDsl::SetWidget { index: *index, widget: Box::new(widget_to_dsl(widget)) },
+        Procedural3dOperation::RemoveWidget { id } => Procedural3dOperationDsl::RemoveWidget { id: id.clone() },
+        Procedural3dOperation::SetSynapse { index, synapse } => Procedural3dOperationDsl::SetSynapse { index: *index, synapse: synapse_to_dsl(synapse) },
+        Procedural3dOperation::RemoveSynapse { id } => Procedural3dOperationDsl::RemoveSynapse { id: id.clone() },
+        Procedural3dOperation::SetLayout { id, layout } => Procedural3dOperationDsl::SetLayout { id: id.clone(), layout: layout_to_dsl(layout) },
+        Procedural3dOperation::RemoveLayout { id } => Procedural3dOperationDsl::RemoveLayout { id: id.clone() },
+        Procedural3dOperation::SetCamera { camera } => Procedural3dOperationDsl::SetCamera { camera: camera_to_dsl(camera) },
+        Procedural3dOperation::SetSchema { schema } => Procedural3dOperationDsl::SetSchema { schema: schema.clone() },
+        Procedural3dOperation::Generation(GenerationOperation::Add { generation }) => Procedural3dOperationDsl::GenerationAdd { generation: form_generation_to_dsl(generation) },
+        Procedural3dOperation::Generation(GenerationOperation::Remove { id }) => Procedural3dOperationDsl::GenerationRemove { id: id.clone() },
+        Procedural3dOperation::Generation(GenerationOperation::Rename { id, name }) => Procedural3dOperationDsl::GenerationRename { id: id.clone(), name: name.clone() },
+        Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }) => {
+            Procedural3dOperationDsl::GenerationUpdateValues { id: id.clone(), question_id: question_id.clone(), value: value.clone() }
+        }
+    }
+}
+
+fn procedural3d_operation_from_dsl(operation: Procedural3dOperationDsl) -> Result<Procedural3dOperation, vcs::TextError> {
+    Ok(match operation {
+        Procedural3dOperationDsl::SetWidget { index, widget } => Procedural3dOperation::SetWidget { index, widget: widget_from_dsl(*widget)? },
+        Procedural3dOperationDsl::RemoveWidget { id } => Procedural3dOperation::RemoveWidget { id },
+        Procedural3dOperationDsl::SetSynapse { index, synapse } => Procedural3dOperation::SetSynapse { index, synapse: synapse_from_dsl(synapse) },
+        Procedural3dOperationDsl::RemoveSynapse { id } => Procedural3dOperation::RemoveSynapse { id },
+        Procedural3dOperationDsl::SetLayout { id, layout } => Procedural3dOperation::SetLayout { id, layout: layout_from_dsl(layout) },
+        Procedural3dOperationDsl::RemoveLayout { id } => Procedural3dOperation::RemoveLayout { id },
+        Procedural3dOperationDsl::SetCamera { camera } => Procedural3dOperation::SetCamera { camera: camera_from_dsl(camera) },
+        Procedural3dOperationDsl::SetSchema { schema } => Procedural3dOperation::SetSchema { schema },
+        Procedural3dOperationDsl::GenerationAdd { generation } => Procedural3dOperation::Generation(GenerationOperation::Add { generation: form_generation_from_dsl(generation) }),
+        Procedural3dOperationDsl::GenerationRemove { id } => Procedural3dOperation::Generation(GenerationOperation::Remove { id }),
+        Procedural3dOperationDsl::GenerationRename { id, name } => Procedural3dOperation::Generation(GenerationOperation::Rename { id, name }),
+        Procedural3dOperationDsl::GenerationUpdateValues { id, question_id, value } => Procedural3dOperation::Generation(GenerationOperation::UpdateValues { id, question_id, value }),
+    })
+}
+
+/// ⚡ `Procedural3dOperation`'s compact single-line op encoding — derive-engine grammar via
+/// `Procedural3dOperationDsl` (see above); `parse_op`/`print_op` convert at the boundary.
 impl vcs::OpText for Procedural3dOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        procedural3d_text::parse_operation(line)
+        let parsed = <Procedural3dOperationDsl as vcs::OpText>::parse_op(line)?;
+        procedural3d_operation_from_dsl(parsed)
     }
 
     fn print_op(&self) -> String {
-        procedural3d_text::print_operation(self)
+        <Procedural3dOperationDsl as vcs::OpText>::print_op(&procedural3d_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -969,6 +762,189 @@ mod tests {
         assert!(operations.iter().all(|operation| !matches!(operation, Procedural3dOperation::SetCamera { .. })));
     }
 
+    #[test]
+    fn procedural3d_fixture_operations_detects_widget_synapse_layout_schema_changes() {
+        let mut before = FlowFixture::default();
+        before.schema = "old-schema".into();
+        before.widgets = vec![
+            Widget::InputNote { id: "w-gone".into(), text: String::new() },
+            Widget::InputNote { id: "w-keep".into(), text: "old".into() },
+        ];
+        before.synapses = vec![
+            SynapseSpec { id: "s-gone".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() },
+            SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "old".into() },
+        ];
+        before.layout.insert("l-gone".into(), WidgetLayout { x: 0.0, y: 0.0 });
+        before.layout.insert("l-keep".into(), WidgetLayout { x: 1.0, y: 1.0 });
+
+        let mut after = FlowFixture::default();
+        after.schema = "new-schema".into();
+        after.widgets = vec![
+            Widget::InputNote { id: "w-keep".into(), text: "new".into() },
+            Widget::InputNote { id: "w-new".into(), text: String::new() },
+        ];
+        after.synapses = vec![
+            SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() },
+            SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() },
+        ];
+        after.layout.insert("l-keep".into(), WidgetLayout { x: 2.0, y: 2.0 });
+        after.layout.insert("l-new".into(), WidgetLayout { x: 3.0, y: 3.0 });
+
+        let operations = procedural3d_fixture_operations(&before, &after);
+        assert!(operations.contains(&Procedural3dOperation::RemoveWidget { id: "w-gone".into() }));
+        assert!(operations.contains(&Procedural3dOperation::SetWidget { index: 0, widget: Widget::InputNote { id: "w-keep".into(), text: "new".into() } }));
+        assert!(operations.contains(&Procedural3dOperation::SetWidget { index: 1, widget: Widget::InputNote { id: "w-new".into(), text: String::new() } }));
+        assert!(operations.contains(&Procedural3dOperation::RemoveSynapse { id: "s-gone".into() }));
+        assert!(operations
+            .contains(&Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "s-keep".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "new".into() } }));
+        assert!(operations
+            .contains(&Procedural3dOperation::SetSynapse { index: 1, synapse: SynapseSpec { id: "s-new".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() } }));
+        assert!(operations.contains(&Procedural3dOperation::RemoveLayout { id: "l-gone".into() }));
+        assert!(operations.contains(&Procedural3dOperation::SetLayout { id: "l-keep".into(), layout: WidgetLayout { x: 2.0, y: 2.0 } }));
+        assert!(operations.contains(&Procedural3dOperation::SetLayout { id: "l-new".into(), layout: WidgetLayout { x: 3.0, y: 3.0 } }));
+        assert!(operations.contains(&Procedural3dOperation::SetSchema { schema: "new-schema".into() }));
+    }
+
+    //#region 🔖WidgetIdTests
+    #[test]
+    fn widget_id_covers_all_widget_kinds() {
+        let widgets: Vec<Widget> = vec![
+            Widget::Neuron { id: "neuron-1".into(), neuron_kind: "math.add".into(), params: Default::default(), input_ports: vec![], output_ports: vec![], preview: true },
+            Widget::InputSlider { id: "slider-1".into(), value: 0.0, min: 0.0, max: 1.0, step: 0.1 },
+            Widget::InputNote { id: "note-1".into(), text: String::new() },
+            Widget::InputImage { id: "image-1".into(), src: String::new() },
+            Widget::Variable { id: "variable-1".into(), name: "x".into(), schema: "number".into() },
+            Widget::OutputPreview { id: "preview-1".into(), preview: Default::default(), expanded: Default::default() },
+            Widget::OutputAction { id: "action-1".into(), action: "run".into() },
+            Widget::OutputExport { id: "export-1".into(), format: "gltf".into() },
+            Widget::Cluster { id: "cluster-1".into(), name: "c".into(), tree: Default::default(), flow: Default::default() },
+        ];
+        for widget in &widgets {
+            assert_eq!(widget_id(widget), &widget_id(widget).to_string());
+        }
+        let ids: Vec<&str> = widgets.iter().map(widget_id).collect();
+        assert_eq!(
+            ids,
+            vec!["neuron-1", "slider-1", "note-1", "image-1", "variable-1", "preview-1", "action-1", "export-1", "cluster-1"]
+        );
+    }
+    //#endregion 🔖WidgetIdTests
+
+    //#region 🔖CollectionDiffTests
+    #[test]
+    fn set_widget_round_trip_replaces_existing_widget_by_id() {
+        let mut before = empty_procedural3d_projection();
+        // 🩹 Pre-existing bug fix (unrelated to the dsl:: engine conversion): `empty_procedural3d_projection`
+        // returns `FlowFixture::default()`'s own demo widgets/synapses, not an empty fixture — this test
+        // needs a clean slate to assert an exact post-replace length, matching the `.clear()` pattern
+        // `fixture_ops_widget_id_matches_every_widget_kind` already uses for the same reason.
+        before.fixture.widgets.clear();
+        before.fixture.widgets.push(Widget::InputNote { id: "note-9".into(), text: "old".into() });
+        let after = round_trip(&before, &Procedural3dOperation::SetWidget { index: 0, widget: Widget::InputNote { id: "note-9".into(), text: "new".into() } });
+        assert_eq!(after.fixture.widgets.len(), 1);
+        assert_eq!(after.fixture.widgets[0], Widget::InputNote { id: "note-9".into(), text: "new".into() });
+    }
+
+    #[test]
+    fn backwards_remove_widget_when_missing_returns_empty() {
+        let projection = empty_procedural3d_projection();
+        assert!(Procedural3dOperation::RemoveWidget { id: "ghost".into() }.backwards(&projection).is_empty());
+    }
+
+    #[test]
+    fn set_synapse_round_trip_replaces_existing_synapse_by_id() {
+        let mut before = empty_procedural3d_projection();
+        // 🩹 Pre-existing bug fix (unrelated to the dsl:: engine conversion): see the sibling widget
+        // test above for why a clean slate is needed before asserting an exact post-replace length.
+        before.fixture.synapses.clear();
+        before.fixture.synapses.push(SynapseSpec { id: "e1".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() });
+        let after = round_trip(
+            &before,
+            &Procedural3dOperation::SetSynapse { index: 0, synapse: SynapseSpec { id: "e1".into(), from: "a".into(), to: "c".into(), from_port: "out".into(), to_port: "in".into() } },
+        );
+        assert_eq!(after.fixture.synapses.len(), 1);
+        assert_eq!(after.fixture.synapses[0].to, "c");
+    }
+
+    #[test]
+    fn backwards_remove_synapse_when_missing_returns_empty() {
+        let projection = empty_procedural3d_projection();
+        assert!(Procedural3dOperation::RemoveSynapse { id: "ghost".into() }.backwards(&projection).is_empty());
+    }
+
+    #[test]
+    fn set_layout_round_trip_inserts_when_absent() {
+        let before = empty_procedural3d_projection();
+        let after = round_trip(&before, &Procedural3dOperation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } });
+        assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 1.0, y: 2.0 }));
+    }
+
+    #[test]
+    fn set_layout_round_trip_replaces_when_present() {
+        let mut before = empty_procedural3d_projection();
+        before.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
+        let after = round_trip(&before, &Procedural3dOperation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 5.0, y: 6.0 } });
+        assert_eq!(after.fixture.layout.get("extrude"), Some(&WidgetLayout { x: 5.0, y: 6.0 }));
+    }
+
+    #[test]
+    fn remove_layout_backwards_present_restores_set_layout_missing_returns_empty() {
+        let mut projection = empty_procedural3d_projection();
+        projection.fixture.layout.insert("extrude".into(), WidgetLayout { x: 1.0, y: 2.0 });
+        assert_eq!(
+            Procedural3dOperation::RemoveLayout { id: "extrude".into() }.backwards(&projection),
+            vec![Procedural3dOperation::SetLayout { id: "extrude".into(), layout: WidgetLayout { x: 1.0, y: 2.0 } }]
+        );
+        assert!(Procedural3dOperation::RemoveLayout { id: "ghost".into() }.backwards(&projection).is_empty());
+    }
+
+    #[test]
+    fn set_camera_round_trip_updates_camera() {
+        let before = empty_procedural3d_projection();
+        let after = round_trip(&before, &Procedural3dOperation::SetCamera { camera: CameraJson { x: 1.0, y: 2.0, zoom: 3.0 } });
+        assert_eq!(after.fixture.camera, CameraJson { x: 1.0, y: 2.0, zoom: 3.0 });
+    }
+
+    #[test]
+    fn set_schema_round_trip_updates_schema() {
+        let before = empty_procedural3d_projection();
+        let after = round_trip(&before, &Procedural3dOperation::SetSchema { schema: "flow.fixture.v2".into() });
+        assert_eq!(after.fixture.schema, "flow.fixture.v2");
+    }
+
+    #[test]
+    fn diff_absorb_merges_collections_and_prefers_incoming_scalars() {
+        let mut first = Procedural3dDiff::default();
+        first.widgets.removed.push("w-a".into());
+        first.widgets.set.push((0, Widget::InputNote { id: "w-b".into(), text: String::new() }));
+        first.synapses.removed.push("s-a".into());
+        first.layout.removed.push("l-a".into());
+        first.camera = Some(CameraJson { x: 1.0, y: 1.0, zoom: 1.0 });
+        first.schema = Some("schema-1".into());
+        first.generation.push(GenerationOperation::Rename { id: "generation-1".into(), name: "First".into() });
+
+        let mut second = Procedural3dDiff::default();
+        second.widgets.removed.push("w-c".into());
+        second.synapses.set.push((0, SynapseSpec { id: "s-b".into(), from: "a".into(), to: "b".into(), from_port: "out".into(), to_port: "in".into() }));
+        second.layout.set.push(("l-b".into(), WidgetLayout { x: 2.0, y: 2.0 }));
+        second.camera = Some(CameraJson { x: 9.0, y: 9.0, zoom: 9.0 });
+        second.schema = None;
+        second.generation.push(GenerationOperation::Rename { id: "generation-1".into(), name: "Second".into() });
+
+        first.absorb(second);
+
+        assert_eq!(first.widgets.removed, vec!["w-a".to_string(), "w-c".to_string()]);
+        assert_eq!(first.widgets.set.len(), 1);
+        assert_eq!(first.synapses.removed, vec!["s-a".to_string()]);
+        assert_eq!(first.synapses.set.len(), 1);
+        assert_eq!(first.layout.removed, vec!["l-a".to_string()]);
+        assert_eq!(first.layout.set.len(), 1);
+        assert_eq!(first.camera, Some(CameraJson { x: 9.0, y: 9.0, zoom: 9.0 }));
+        assert_eq!(first.schema, Some("schema-1".to_string()));
+        assert_eq!(first.generation.len(), 2);
+    }
+    //#endregion 🔖CollectionDiffTests
+
     //#region 🔖DslTests
     #[test]
     fn dsl_round_trip_empty_projection() {
@@ -1000,13 +976,51 @@ mod tests {
     fn dsl_round_trip_with_generation_state() {
         let mut projection = empty_procedural3d_projection();
         let mut values = serde_json::Map::new();
-        values.insert("count".into(), serde_json::json!(3));
+        // 🌱 A float literal, not `json!(3)` (an integer-backed `serde_json::Number`): the DSL
+        // engine's `Shape::Value`/`DslValue::Number` is a single `f64` variant (see `dsl/rs/lib.rs`'s
+        // own documented int-vs-float caveat), so a value round tripping through generation `values`
+        // always comes back float-backed — this is the known, accepted engine limitation, not a bug
+        // in this crate's mirror/conversion code.
+        values.insert("count".into(), serde_json::json!(3.0));
         projection.generation.generations.push(protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);
     }
+
+    #[test]
+    fn dsl_round_trip_covers_remaining_widget_kinds() {
+        let mut projection = empty_procedural3d_projection();
+        projection.fixture.widgets = vec![
+            Widget::InputNote { id: "note-1".into(), text: "hello \"world\"".into() },
+            Widget::InputImage { id: "image-1".into(), src: "https://example.test/a.png".into() },
+            Widget::Variable { id: "variable-1".into(), name: "height".into(), schema: "number".into() },
+            Widget::OutputAction { id: "action-1".into(), action: "export".into() },
+            Widget::OutputExport { id: "export-1".into(), format: "gltf".into() },
+            Widget::Cluster { id: "cluster-1".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() },
+        ];
+        test_support::assert_dsl_round_trip(&projection);
+    }
     //#endregion 🔖DslTests
+
+    //#region 🔖ParseErrorTests
+    /// 🏷️ An unrecognized widget kind keyword is simply left unconsumed by `Shape::Statements`
+    /// (the engine breaks its variant-matching loop rather than erroring — see `dsl_schema::parse`,
+    /// out of this crate's ownership scope), so parsing ultimately fails at the enclosing `widgets
+    /// { }` block's closing brace instead of with a dedicated "unknown widget kind" message.
+    #[test]
+    fn parse_dsl_rejects_unknown_widget_kind() {
+        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { bogus id=\"w-1\" }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+        let error = Procedural3dDocument::parse_dsl(text).expect_err("unknown widget kind must fail to parse");
+        assert!(error.to_string().contains("expected RBrace"), "unexpected error: {error}");
+    }
+
+    #[test]
+    fn parse_op_rejects_unknown_operation() {
+        let error = Procedural3dOperation::parse_op("bogus-op id=\"w-1\"").expect_err("unknown operation must fail to parse");
+        assert!(error.to_string().contains("unknown operation"), "unexpected error: {error}");
+    }
+    //#endregion 🔖ParseErrorTests
 
     //#region 🔖OpTextTests
     #[test]

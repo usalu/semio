@@ -7,22 +7,22 @@ todos:
     status: completed
   - id: wave-a-number-poly
     content: Consolidate mathematical/number then mathematical/polynomial into lib.rs; delete src/; cargo test
-    status: in_progress
+    status: completed
   - id: wave-a-cas-entropy
     content: Consolidate mathematical/cas then mathematical/entropy into lib.rs; delete src/; cargo test
-    status: pending
+    status: completed
   - id: wave-a-wfc
     content: Consolidate mathematical/wfc into lib.rs preserving all pub/pub(crate) mods; cargo test
-    status: pending
+    status: completed
   - id: wave-a-brep
     content: Inline kernel/3d/brep native src/* into lib.rs; delete src/; keep wrapper behavior; cargo test
-    status: pending
+    status: completed
   - id: wave-b-ts
     content: Merge animate markdown.ts and ui/styling theme.ts into their index files; run package tests
-    status: pending
+    status: completed
   - id: verify-close
     content: Final multi-crate cargo test, write ticket logs, ticket_close with summary and file list
-    status: pending
+    status: completed
 isProject: false
 ---
 

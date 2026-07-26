@@ -1,0 +1,12 @@
+Unique Specific Icons — implementation summary
+
+Phase 0: icon_concepts.ts harness + ticket inventory
+Phase 1: 70 new catalog SVGs (projection + domain-specific), hover CSS, worldProjectionSpecIconId, SET_WINDOW_ICON, dock/display/switch wiring
+Phase 2: window/app icon remaps across plugins (cad, fem, puzzle, trinity, procedural, etc.)
+Phase 3: semantic aliases (SceneIcon, HudIcon, TypeIcon, WorkbenchIcon), utilities (transform/relocate/volume-brush), panel tabs, sketchpad display-windows
+Phase 4: Concepts Storybook story, vitest guards
+
+Tests run:
+- framework/renderer/react SET_WINDOW_ICON vitest: pass
+- ui/js/react icon concept + hover CSS vitest: pass
+- infinite/world/r3f projection icon vitest: pass

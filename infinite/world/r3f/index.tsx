@@ -4924,6 +4924,14 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("worldProjectionSpecIconId", () => {
+    it("maps orthographic and three-point specs to distinct projection icons", () => {
+      expect(worldProjectionSpecIconId(worldProjectionDefaults("orthographic"))).toBe("projection-orthographic");
+      expect(worldProjectionSpecIconId(worldProjectionDefaults("threePoint"))).toBe("projection-three-point");
+      expect(worldProjectionSpecIconId(worldProjectionDefaults("orthographic"))).not.toBe(worldProjectionSpecIconId(worldProjectionDefaults("threePoint")));
+    });
+  });
+
   describe("createWorldProjectionTemplates", () => {
     it("emits Parallel/Perspective mode tree without gizmo orientations", () => {
       const templates = createWorldProjectionTemplates({ controllerId: "demo" });
@@ -4934,6 +4942,8 @@ if (import.meta.vitest) {
       expect(parallel!.children![1]!.children!.map((row) => row.label)).toEqual(["Isometric", "Dimetric", "Trimetric"]);
       expect(parallel!.children![2]!.children!.map((row) => row.label)).toEqual(["Cabinet", "Cavalier", "Military"]);
       expect(perspective!.children!.map((row) => row.label)).toEqual(["1-Point", "2-Point", "3-Point", "Curvilinear"]);
+      expect(parallel!.children![0]!.iconId).toBe("projection-orthographic");
+      expect(perspective!.children![2]!.iconId).toBe("projection-three-point");
       expect(templates[0]).toMatchObject({ controllerId: "demo", command: WORLD_PROJECTION_COMMAND });
     });
   });

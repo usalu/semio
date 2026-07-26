@@ -84,6 +84,7 @@ import {
   orbitCameraDistance,
   orbitCameraViewGumballPlane,
   worldProjectionFamily,
+  worldProjectionSpecIconId,
   type OrbitCameraProjection,
   type WorldProjectionSpec,
   WorldReferenceLayer,
@@ -4736,7 +4737,7 @@ function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec:
   const [anchor, setAnchor] = reactHostPort.useState<Anchor>("bottom-right");
   const [folded, setFolded] = reactHostPort.useState(true);
   const pane = (
-    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label="Projection">
+    <Pane id="cad-orbit-projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec)} label="Projection">
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );

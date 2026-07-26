@@ -15336,7 +15336,7 @@ const SKETCHPAD_MANIFEST_LABELS: UiTerminologyLabelSet<"display" | "composeSketc
 function sketchpadKitPanelTabs(): readonly SideTabSpec[] {
   const l = SKETCHPAD_MANIFEST_LABELS[composeCurrentUiLocale()];
   return [
-    { id: "display", iconId: "compose.sketchpad.icon.windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: l.display },
+    { id: "display", iconId: "display-windows", panel: "display", bodyKey: SKETCHPAD_PANEL_WINDOWS_BODY, label: l.display },
     { id: FRAMEWORK_PANEL_TAB_DOCUMENT_ID, iconId: FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID, panel: "workbench", order: 0, bodyKey: SKETCHPAD_PANEL_DOCUMENT_BODY, label: FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL },
     { id: FRAMEWORK_PANEL_TAB_CATALOGUE_ID, iconId: FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID, panel: "workbench", order: 1, bodyKey: SKETCHPAD_PANEL_CATALOGUE_BODY, label: FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL },
     { id: FRAMEWORK_PANEL_TAB_INSPECTION_ID, iconId: FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID, panel: "details", order: 0, bodyKey: SKETCHPAD_PANEL_INSPECTION_BODY, label: FRAMEWORK_PANEL_TAB_INSPECTION_LABEL },

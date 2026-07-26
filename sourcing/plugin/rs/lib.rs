@@ -546,12 +546,12 @@ pub fn create_sourcing_curate_app() -> App {
                 export_formats: vec![],
                 import_formats: vec![],
             })
-            .icon_id("box")
+            .icon_id("library")
             .mode("curate", "Curate")
             .default_mode_id("curate")
             .window_kind(WINDOW_POOL, "Pool", BODY_POOL, SurfaceKind::Table, "library")
             .window_kind(WINDOW_CURATED, "Curated", BODY_CURATED, SurfaceKind::Table, "tags")
-            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "eye")
+            .window_kind(WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "preview")
             .window_kind(WINDOW_GRID, "Grid", BODY_GRID, SurfaceKind::World3d, "grid-3x3")
             .default_layout(sourcing_three_column_layout())
             // 🔧 Every curate edit — filters, sort, selection, curation counts — is persisted in the

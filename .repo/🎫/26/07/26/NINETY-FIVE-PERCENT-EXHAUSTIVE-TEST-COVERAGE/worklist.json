@@ -2,8 +2,8 @@
   "version": 2,
   "generatedAt": "2026-07-26",
   "repoWidePct": {
-    "baseline": 55.53654313144871,
-    "current": 55.53654313144871,
+    "baseline": 58.78599890243611,
+    "current": 58.78599890243611,
     "target": 95
   },
   "items": [
@@ -48,6 +48,19 @@
       "attempts": 0
     },
     {
+      "id": "Users_ueli_Documents_semio_compose_client_lib_py__main_py",
+      "lang": "py",
+      "sourceFile": "main.py",
+      "groupKey": "_Users_ueli_Documents_semio_compose_client_lib_py",
+      "scriptCwd": "compose/client/lib/py",
+      "totalLines": 11007,
+      "coveredLines": 5267,
+      "pct": 47.85136731171073,
+      "priority": 5740,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
       "id": "animate_core_animate_present___Users_ueli_Documents_semio_animate_core_rs_lib_rs",
       "lang": "unknown",
       "sourceFile": "/Users/ueli/Documents/semio/animate/core/rs/lib.rs",
@@ -80,24 +93,10 @@
       "groupKey": "animate_core",
       "scriptCwd": "animate/core/rs",
       "cargoPackage": "animate_core",
-      "totalLines": 4312,
-      "coveredLines": 0,
-      "pct": 0,
-      "priority": 4312,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "framework_surface_tiled_map___Users_ueli_Documents_semio_framework_surface_tiled-map_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/tiled-map/rs/lib.rs",
-      "groupKey": "framework_surface_tiled_map",
-      "scriptCwd": "framework/surface/tiled-map/rs",
-      "cargoPackage": "framework_surface_tiled_map",
-      "totalLines": 2752,
-      "coveredLines": 0,
-      "pct": 0,
-      "priority": 2752,
+      "totalLines": 4733,
+      "coveredLines": 3176,
+      "pct": 67.1033171350095,
+      "priority": 1557,
       "status": "pending",
       "attempts": 0
     },
@@ -112,6 +111,20 @@
       "coveredLines": 7051,
       "pct": 82.30419049842419,
       "priority": 1516,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "vcs___Users_ueli_Documents_semio_vcs_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/vcs/rs/lib.rs",
+      "groupKey": "vcs",
+      "scriptCwd": "vcs/rs",
+      "cargoPackage": "vcs",
+      "totalLines": 4560,
+      "coveredLines": 3246,
+      "pct": 71.1842105263158,
+      "priority": 1314,
       "status": "pending",
       "attempts": 0
     },
@@ -226,20 +239,6 @@
       "attempts": 0
     },
     {
-      "id": "framework_surface_paint___Users_ueli_Documents_semio_framework_surface_paint_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/paint/rs/lib.rs",
-      "groupKey": "framework_surface_paint",
-      "scriptCwd": "framework/surface/paint/rs",
-      "cargoPackage": "framework_surface_paint",
-      "totalLines": 674,
-      "coveredLines": 0,
-      "pct": 0,
-      "priority": 674,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
       "id": "kernel_3d_brepkit___Users_ueli_Documents_semio_kernel_3d_brep_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/kernel/3d/brep/rs/lib.rs",
@@ -295,30 +294,16 @@
       "attempts": 0
     },
     {
-      "id": "lowpoly_core___Users_ueli_Documents_semio_lowpoly_core_rs_lib_rs",
+      "id": "framework_surface_tiled_map___Users_ueli_Documents_semio_framework_surface_tiled-map_rs_lib_rs",
       "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/lowpoly/core/rs/lib.rs",
-      "groupKey": "lowpoly_core",
-      "scriptCwd": "lowpoly/core",
-      "cargoPackage": "lowpoly_core",
-      "totalLines": 1365,
-      "coveredLines": 1015,
-      "pct": 74.35897435897436,
-      "priority": 350,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "mathematical_graph___Users_ueli_Documents_semio_mathematical_graph_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/mathematical/graph/rs/lib.rs",
-      "groupKey": "mathematical_graph",
-      "scriptCwd": "mathematical/graph",
-      "cargoPackage": "mathematical_graph",
-      "totalLines": 1872,
-      "coveredLines": 1553,
-      "pct": 82.95940170940172,
-      "priority": 319,
+      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/tiled-map/rs/lib.rs",
+      "groupKey": "framework_surface_tiled_map",
+      "scriptCwd": "framework/surface/tiled-map/rs",
+      "cargoPackage": "framework_surface_tiled_map",
+      "totalLines": 2963,
+      "coveredLines": 2617,
+      "pct": 88.32264596692542,
+      "priority": 346,
       "status": "pending",
       "attempts": 0
     },
@@ -333,62 +318,6 @@
       "coveredLines": 1838,
       "pct": 85.80765639589168,
       "priority": 304,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "trinity_rewrite___Users_ueli_Documents_semio_trinity_rewrite_engine_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/trinity/rewrite/engine/rs/lib.rs",
-      "groupKey": "trinity_rewrite",
-      "scriptCwd": "trinity/rewrite/engine",
-      "cargoPackage": "trinity_rewrite",
-      "totalLines": 858,
-      "coveredLines": 557,
-      "pct": 64.91841491841492,
-      "priority": 301,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "vcs___Users_ueli_Documents_semio_vcs_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/vcs/rs/lib.rs",
-      "groupKey": "vcs",
-      "scriptCwd": "vcs/rs",
-      "cargoPackage": "vcs",
-      "totalLines": 4197,
-      "coveredLines": 3904,
-      "pct": 93.01882296878723,
-      "priority": 293,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "fem-plugin___Users_ueli_Documents_semio_fem_plugin_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/fem/plugin/rs/lib.rs",
-      "groupKey": "fem-plugin",
-      "scriptCwd": "fem/plugin/rs",
-      "cargoPackage": "fem-plugin",
-      "totalLines": 1500,
-      "coveredLines": 1211,
-      "pct": 80.73333333333333,
-      "priority": 289,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "layout_rs___Users_ueli_Documents_semio_layout_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/layout/rs/lib.rs",
-      "groupKey": "layout_rs",
-      "scriptCwd": "layout/rs",
-      "cargoPackage": "layout_rs",
-      "totalLines": 1816,
-      "coveredLines": 1533,
-      "pct": 84.41629955947137,
-      "priority": 283,
       "status": "pending",
       "attempts": 0
     },
@@ -421,20 +350,6 @@
       "attempts": 0
     },
     {
-      "id": "framework_surface_terrain___Users_ueli_Documents_semio_framework_surface_terrain_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/terrain/rs/lib.rs",
-      "groupKey": "framework_surface_terrain",
-      "scriptCwd": "framework/surface/terrain/rs",
-      "cargoPackage": "framework_surface_terrain",
-      "totalLines": 269,
-      "coveredLines": 0,
-      "pct": 0,
-      "priority": 269,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
       "id": "ui_tui___Users_ueli_Documents_semio_ui_tui_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/ui/tui/rs/lib.rs",
@@ -445,20 +360,6 @@
       "coveredLines": 2079,
       "pct": 89.53488372093024,
       "priority": 243,
-      "status": "pending",
-      "attempts": 0
-    },
-    {
-      "id": "kernel_2d_rs___Users_ueli_Documents_semio_kernel_2d_rs_lib_rs",
-      "lang": "rust",
-      "sourceFile": "/Users/ueli/Documents/semio/kernel/2d/rs/lib.rs",
-      "groupKey": "kernel_2d_rs",
-      "scriptCwd": "kernel/2d/rs",
-      "cargoPackage": "kernel_2d_rs",
-      "totalLines": 750,
-      "coveredLines": 513,
-      "pct": 68.4,
-      "priority": 237,
       "status": "pending",
       "attempts": 0
     },
@@ -589,6 +490,20 @@
       "attempts": 0
     },
     {
+      "id": "fem-plugin___Users_ueli_Documents_semio_fem_plugin_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/fem/plugin/rs/lib.rs",
+      "groupKey": "fem-plugin",
+      "scriptCwd": "fem/plugin/rs",
+      "cargoPackage": "fem-plugin",
+      "totalLines": 1782,
+      "coveredLines": 1629,
+      "pct": 91.41414141414141,
+      "priority": 153,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
       "id": "_port_directed_normal___Users_ueli_Documents_semio_mathematical_graph_port_directed_normal_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs/lib.rs",
@@ -643,6 +558,20 @@
       "attempts": 0
     },
     {
+      "id": "mathematical_graph___Users_ueli_Documents_semio_mathematical_graph_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/mathematical/graph/rs/lib.rs",
+      "groupKey": "mathematical_graph",
+      "scriptCwd": "mathematical/graph",
+      "cargoPackage": "mathematical_graph",
+      "totalLines": 2174,
+      "coveredLines": 2032,
+      "pct": 93.46826126954922,
+      "priority": 142,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
       "id": "framework_surface_node_graph___Users_ueli_Documents_semio_framework_surface_node-graph_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/framework/surface/node-graph/rs/lib.rs",
@@ -653,6 +582,20 @@
       "coveredLines": 115,
       "pct": 44.74708171206226,
       "priority": 142,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "lowpoly_core___Users_ueli_Documents_semio_lowpoly_core_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/lowpoly/core/rs/lib.rs",
+      "groupKey": "lowpoly_core",
+      "scriptCwd": "lowpoly/core",
+      "cargoPackage": "lowpoly_core",
+      "totalLines": 1710,
+      "coveredLines": 1570,
+      "pct": 91.81286549707602,
+      "priority": 140,
       "status": "pending",
       "attempts": 0
     },
@@ -894,6 +837,20 @@
       "attempts": 0
     },
     {
+      "id": "layout_rs___Users_ueli_Documents_semio_layout_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/layout/rs/lib.rs",
+      "groupKey": "layout_rs",
+      "scriptCwd": "layout/rs",
+      "cargoPackage": "layout_rs",
+      "totalLines": 2125,
+      "coveredLines": 2048,
+      "pct": 96.37647058823529,
+      "priority": 77,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
       "id": "mathematical_causal___Users_ueli_Documents_semio_mathematical_causal_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/mathematical/causal/rs/lib.rs",
@@ -964,6 +921,20 @@
       "attempts": 0
     },
     {
+      "id": "kernel_2d_rs___Users_ueli_Documents_semio_kernel_2d_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/kernel/2d/rs/lib.rs",
+      "groupKey": "kernel_2d_rs",
+      "scriptCwd": "kernel/2d/rs",
+      "cargoPackage": "kernel_2d_rs",
+      "totalLines": 1064,
+      "coveredLines": 994,
+      "pct": 93.42105263157895,
+      "priority": 70,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
       "id": "mathematical_graph_manifest___Users_ueli_Documents_semio_mathematical_graph_manifest_rs_lib_rs",
       "lang": "rust",
       "sourceFile": "/Users/ueli/Documents/semio/mathematical/graph/manifest/rs/lib.rs",
@@ -1001,6 +972,20 @@
       "totalLines": 703,
       "coveredLines": 637,
       "pct": 90.61166429587483,
+      "priority": 66,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "trinity_rewrite___Users_ueli_Documents_semio_trinity_rewrite_engine_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/trinity/rewrite/engine/rs/lib.rs",
+      "groupKey": "trinity_rewrite",
+      "scriptCwd": "trinity/rewrite/engine",
+      "cargoPackage": "trinity_rewrite",
+      "totalLines": 1122,
+      "coveredLines": 1056,
+      "pct": 94.11764705882352,
       "priority": 66,
       "status": "pending",
       "attempts": 0
@@ -1141,6 +1126,20 @@
       "coveredLines": 0,
       "pct": 0,
       "priority": 54,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "framework_surface_paint___Users_ueli_Documents_semio_framework_surface_paint_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/paint/rs/lib.rs",
+      "groupKey": "framework_surface_paint",
+      "scriptCwd": "framework/surface/paint/rs",
+      "cargoPackage": "framework_surface_paint",
+      "totalLines": 1117,
+      "coveredLines": 1068,
+      "pct": 95.61324977618622,
+      "priority": 49,
       "status": "pending",
       "attempts": 0
     },
@@ -2148,6 +2147,20 @@
       "coveredLines": 0,
       "pct": 0,
       "priority": 2,
+      "status": "pending",
+      "attempts": 0
+    },
+    {
+      "id": "framework_surface_terrain___Users_ueli_Documents_semio_framework_surface_terrain_rs_lib_rs",
+      "lang": "rust",
+      "sourceFile": "/Users/ueli/Documents/semio/framework/surface/terrain/rs/lib.rs",
+      "groupKey": "framework_surface_terrain",
+      "scriptCwd": "framework/surface/terrain/rs",
+      "cargoPackage": "framework_surface_terrain",
+      "totalLines": 369,
+      "coveredLines": 368,
+      "pct": 99.7289972899729,
+      "priority": 1,
       "status": "pending",
       "attempts": 0
     },

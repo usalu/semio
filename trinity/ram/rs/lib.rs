@@ -106,7 +106,7 @@ pub struct Node {
 }
 
 /// 🔗 Runtime edge (connection).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Edge {
     pub id: String,
@@ -118,7 +118,7 @@ pub struct Edge {
 }
 
 /// 📷 Camera for fixture documents.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Camera {
     pub x: f64,
@@ -1113,6 +1113,10 @@ impl DslParser {
         }
     }
 
+    /// 🧪 Not called by production code anymore (the hand-rolled node/edge/op grammar that used it
+    /// was replaced by the `dsl::` derive engine — see `🔖DslMirrors`), but kept as a general-purpose
+    /// `DslParser` helper alongside `expect_ident`/`expect_tok`, and still exercised directly by
+    /// `dsl_parser_expect_helpers_report_errors_on_mismatch`.
     fn expect_str(&mut self) -> Result<String, TextError> {
         match self.bump() {
             DslTok::Str(s) => Ok(s),
@@ -1120,6 +1124,7 @@ impl DslParser {
         }
     }
 
+    /// 🧪 See `expect_str`'s doc comment — same status.
     fn expect_number(&mut self) -> Result<f64, TextError> {
         match self.bump() {
             DslTok::Number(n) => Ok(n),
@@ -1208,33 +1213,11 @@ pub fn parse_property_value_line(text: &str) -> Result<PropertyValue, TextError>
     Ok(value)
 }
 
-fn print_property_bag(bag: &PropertyBag) -> String {
-    if bag.is_empty() {
-        return String::new();
-    }
-    let inner = bag.iter().map(|(k, v)| format!("{k}: {}", print_property_value(v))).collect::<Vec<_>>().join(", ");
-    format!("{{{inner}}}")
-}
-
-fn parse_property_bag(p: &mut DslParser) -> Result<PropertyBag, TextError> {
-    let mut bag = PropertyBag::new();
-    if !matches!(p.peek(), DslTok::LBrace) {
-        return Ok(bag);
-    }
-    p.bump();
-    while !matches!(p.peek(), DslTok::RBrace) {
-        let key = p.expect_ident()?;
-        p.expect_tok(DslTok::Colon, "':'")?;
-        let value = parse_property_value(p)?;
-        bag.insert(key, value);
-        if matches!(p.peek(), DslTok::Comma) {
-            p.bump();
-        }
-    }
-    p.bump();
-    Ok(bag)
-}
-
+/// ✂️ Still used by `print_property_value`'s `String` case; the rest of the hand-rolled
+/// `.trinity` document/op grammar that used to share this (`print_property_bag`/`quote_text`) was
+/// removed once `GraphFixtureDsl`/`TrinityGraphOperationDsl` (see `🔖DslMirrors`) took over — a
+/// `PropertyBag` field binds directly through the engine's `BTreeMap<String, T: DslField>` blanket
+/// impl now, and every other quoted-text field goes through the engine's own `Shape::Text`.
 fn escape_quoted(value: &str, quote: char) -> String {
     let mut out = String::with_capacity(value.len());
     for ch in value.chars() {
@@ -1250,336 +1233,301 @@ fn escape_quoted(value: &str, quote: char) -> String {
     }
     out
 }
-
-fn quote_text(value: &str) -> String {
-    format!("\"{}\"", escape_quoted(value, '"'))
-}
 //#endregion 🔖DslValue
 
-//#region 🔖DslEntities
-fn print_port_direction(direction: PortDirection) -> &'static str {
-    match direction {
-        PortDirection::In => "in",
-        PortDirection::Out => "out",
-    }
+//#region 🔖DslMirrors
+/// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
+/// consumed by `trinity_jack`/`trinity_plugin`/`framework::*` — this crate does not own the freedom
+/// to reshape it) purely so the DSL engine's derive macros have something local to bind: the orphan
+/// rule blocks `impl dsl::DslField for PortDirection` directly in this crate. Converted at the
+/// `Port`/`PortDsl` boundary via `From`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
+enum PortDirectionDsl {
+    #[dsl(key = "in")]
+    In,
+    #[dsl(key = "out")]
+    Out,
 }
 
-fn parse_port_direction(p: &mut DslParser) -> Result<PortDirection, TextError> {
-    match p.expect_ident()?.as_str() {
-        "in" => Ok(PortDirection::In),
-        "out" => Ok(PortDirection::Out),
-        other => Err(p.err(format!("expected port direction 'in'/'out', got '{other}'"))),
-    }
-}
-
-fn print_port(port: &Port) -> String {
-    let mut out = format!("{}:{}:{}", port.id, port.kind, print_port_direction(port.direction));
-    let props = print_property_bag(&port.properties);
-    if !props.is_empty() {
-        out.push_str(&props);
-    }
-    out
-}
-
-fn parse_port(p: &mut DslParser) -> Result<Port, TextError> {
-    let id = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let kind = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let direction = parse_port_direction(p)?;
-    let properties = parse_property_bag(p)?;
-    Ok(Port { id, kind, direction, properties })
-}
-
-fn print_ports_list(ports: &[Port]) -> String {
-    format!("[{}]", ports.iter().map(print_port).collect::<Vec<_>>().join(", "))
-}
-
-fn parse_ports_list(p: &mut DslParser) -> Result<Vec<Port>, TextError> {
-    let mut ports = Vec::new();
-    if !matches!(p.peek(), DslTok::LBracket) {
-        return Ok(ports);
-    }
-    p.bump();
-    while !matches!(p.peek(), DslTok::RBracket) {
-        ports.push(parse_port(p)?);
-        if matches!(p.peek(), DslTok::Comma) {
-            p.bump();
+impl From<PortDirection> for PortDirectionDsl {
+    fn from(value: PortDirection) -> Self {
+        match value {
+            PortDirection::In => PortDirectionDsl::In,
+            PortDirection::Out => PortDirectionDsl::Out,
         }
     }
-    p.bump();
-    Ok(ports)
 }
 
-/// 📝 Prints one `node` line: `node id:Kind "name" x y w h {props} [ports]` — geometry/name/multi-port
-/// fields a bare `mathematical_graph_dsl::wire::WireNode` (id/kind/one optional port) cannot carry, so
-/// this is a from-scratch grammar in the same lexical style rather than a call into `wire`.
-fn print_node_line(node: &Node) -> String {
-    let mut out = format!("node {}:{} {} {} {} {} {}", node.id, node.kind, quote_text(&node.name), node.x, node.y, node.width, node.height);
-    let props = print_property_bag(&node.properties);
-    if !props.is_empty() {
-        out.push(' ');
-        out.push_str(&props);
-    }
-    if !node.ports.is_empty() {
-        out.push(' ');
-        out.push_str(&print_ports_list(&node.ports));
-    }
-    out
-}
-
-fn parse_node_fields(p: &mut DslParser) -> Result<Node, TextError> {
-    let id = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let kind = p.expect_ident()?;
-    let name = p.expect_str()?;
-    let x = p.expect_number()?;
-    let y = p.expect_number()?;
-    let width = p.expect_number()?;
-    let height = p.expect_number()?;
-    let properties = parse_property_bag(p)?;
-    let ports = parse_ports_list(p)?;
-    Ok(Node { id, kind, name, x, y, width, height, properties, ports })
-}
-
-/// 📝 Prints one `edge` line reusing `mathematical_graph_dsl::wire`'s connector notation verbatim:
-/// `edge id:Kind from:FromKind@fromPort->to:ToKind@toPort {props}` (node kinds are looked up for
-/// readability only, exactly as `wire_literal_from_dag` does — they are dropped again on parse).
-fn print_edge_line(edge: &Edge, nodes: &[Node]) -> String {
-    let src_node = port_node_id(&edge.source).unwrap_or("node");
-    let src_port = port_port_id(&edge.source).unwrap_or("");
-    let tgt_node = port_node_id(&edge.target).unwrap_or("node");
-    let tgt_port = port_port_id(&edge.target).unwrap_or("");
-    let src_kind = nodes.iter().find(|n| n.id == src_node).map(|n| n.kind.as_str()).unwrap_or("node");
-    let tgt_kind = nodes.iter().find(|n| n.id == tgt_node).map(|n| n.kind.as_str()).unwrap_or("node");
-    let mut out = format!("edge {}:{} {}:{}@{}->{}:{}@{}", edge.id, edge.kind, src_node, src_kind, src_port, tgt_node, tgt_kind, tgt_port);
-    let props = print_property_bag(&edge.properties);
-    if !props.is_empty() {
-        out.push(' ');
-        out.push_str(&props);
-    }
-    out
-}
-
-fn parse_port_ref(p: &mut DslParser) -> Result<(String, String), TextError> {
-    let id = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let _kind = p.expect_ident()?;
-    p.expect_tok(DslTok::At, "'@'")?;
-    let port = p.expect_ident()?;
-    Ok((id, port))
-}
-
-fn parse_edge_fields(p: &mut DslParser) -> Result<Edge, TextError> {
-    let id = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let kind = p.expect_ident()?;
-    let (src_node, src_port) = parse_port_ref(p)?;
-    p.expect_tok(DslTok::Arrow, "'->'")?;
-    let (tgt_node, tgt_port) = parse_port_ref(p)?;
-    let properties = parse_property_bag(p)?;
-    Ok(Edge { id, kind, source: port_key(&src_node, &src_port), target: port_key(&tgt_node, &tgt_port), properties })
-}
-
-fn parse_plain_port_ref(p: &mut DslParser) -> Result<String, TextError> {
-    let id = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let port = p.expect_ident()?;
-    Ok(port_key(&id, &port))
-}
-
-fn entity_kind_and_id(entity: &EntityRef) -> (&'static str, &str) {
-    match entity {
-        EntityRef::Node(id) => ("node", id.as_str()),
-        EntityRef::Edge(id) => ("edge", id.as_str()),
+impl From<PortDirectionDsl> for PortDirection {
+    fn from(value: PortDirectionDsl) -> Self {
+        match value {
+            PortDirectionDsl::In => PortDirection::In,
+            PortDirectionDsl::Out => PortDirection::Out,
+        }
     }
 }
 
-fn parse_entity_and_key(p: &mut DslParser) -> Result<(EntityRef, String), TextError> {
-    let kind = p.expect_ident()?;
-    p.expect_tok(DslTok::Colon, "':'")?;
-    let id = p.expect_ident()?;
-    let key = p.expect_ident()?;
-    let entity = match kind.as_str() {
-        "node" => EntityRef::Node(id),
-        "edge" => EntityRef::Edge(id),
-        other => return Err(p.err(format!("unknown entity kind '{other}'"))),
+/// 🔌 Local mirror of `Port` for DSL round-tripping — `Port.direction: PortDirection` is foreign, so
+/// `Port` itself cannot derive `dsl::DslRecord` (orphan rule); this twin swaps in `PortDirectionDsl`.
+/// `properties: PropertyBag` binds directly (no twin needed): `PropertyValue` already implements
+/// `dsl::DslField` from the `mathematical_graph_manifest` prep step, so `BTreeMap<String,
+/// PropertyValue>` reaches the engine's own blanket `Shape::Map` impl unchanged.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct PortDsl {
+    id: String,
+    kind: String,
+    direction: PortDirectionDsl,
+    properties: PropertyBag,
+}
+
+fn port_to_port_dsl(port: &Port) -> PortDsl {
+    PortDsl { id: port.id.clone(), kind: port.kind.clone(), direction: port.direction.into(), properties: port.properties.clone() }
+}
+
+fn port_dsl_to_port(port: PortDsl) -> Port {
+    Port { id: port.id, kind: port.kind, direction: port.direction.into(), properties: port.properties }
+}
+
+/// 🧩 Local mirror of `Node` — needed only because `Node.ports: Vec<Port>` transitively carries
+/// `Port`'s foreign `direction` field; every other `Node` field is already DSL-ready directly.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct NodeDsl {
+    id: String,
+    kind: String,
+    name: String,
+    x: f64,
+    y: f64,
+    width: f64,
+    height: f64,
+    properties: PropertyBag,
+    ports: Vec<PortDsl>,
+}
+
+fn node_to_node_dsl(node: &Node) -> NodeDsl {
+    NodeDsl {
+        id: node.id.clone(),
+        kind: node.kind.clone(),
+        name: node.name.clone(),
+        x: node.x,
+        y: node.y,
+        width: node.width,
+        height: node.height,
+        properties: node.properties.clone(),
+        ports: node.ports.iter().map(port_to_port_dsl).collect(),
+    }
+}
+
+fn node_dsl_to_node(node: NodeDsl) -> Node {
+    Node { id: node.id, kind: node.kind, name: node.name, x: node.x, y: node.y, width: node.width, height: node.height, properties: node.properties, ports: node.ports.into_iter().map(port_dsl_to_port).collect() }
+}
+
+/// 📦 Local mirror of `GraphFixture` for the `.trinity` document DSL. `manifest: Manifest` is
+/// deliberately NOT a field here at all — the OLD hand-rolled grammar never round-tripped the full
+/// compile-time `Manifest`/`TrinityManifest` schema through text either, only the `manifestId`
+/// lookup key (see `GraphFixture::resolve_manifest`), and `Manifest` itself has no `dsl::` derive
+/// from the prep step (only `PropertyValue`/`PropertyBag` do) so it would need its own local-twin
+/// tree for no behavioral gain. `nodes: Vec<Node>` also can't bind directly (transitively foreign via
+/// `Port.direction`), so it becomes `Vec<NodeDsl>` here; `edges`/`camera` bind directly since `Edge`
+/// and `Camera` derive `dsl::DslRecord` themselves (no foreign fields of their own).
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "trinity", layout = "lines")]
+struct GraphFixtureDsl {
+    schema: String,
+    name: String,
+    manifest_id: Option<String>,
+    #[dsl(block)]
+    camera: Camera,
+    nodes: Vec<NodeDsl>,
+    edges: Vec<Edge>,
+    root_node_id: Option<String>,
+}
+
+fn graph_fixture_to_dsl(fixture: &GraphFixture) -> GraphFixtureDsl {
+    GraphFixtureDsl {
+        schema: fixture.schema.clone(),
+        name: fixture.name.clone(),
+        manifest_id: fixture.manifest_id.clone(),
+        camera: fixture.camera.clone(),
+        nodes: fixture.nodes.iter().map(node_to_node_dsl).collect(),
+        edges: fixture.edges.clone(),
+        root_node_id: fixture.root_node_id.clone(),
+    }
+}
+
+/// 🔁 Reconstructs the real `manifest` field via `resolve_manifest` (looked up from `manifest_id`),
+/// exactly like the OLD `parse_dsl` did — the DSL text never carries the manifest body itself.
+fn graph_fixture_dsl_to_graph_fixture(parsed: GraphFixtureDsl) -> Result<GraphFixture, TrinityRamError> {
+    let mut fixture = GraphFixture {
+        schema: parsed.schema,
+        name: parsed.name,
+        manifest_id: parsed.manifest_id,
+        manifest: Manifest::default(),
+        camera: parsed.camera,
+        nodes: parsed.nodes.into_iter().map(node_dsl_to_node).collect(),
+        edges: parsed.edges,
+        root_node_id: parsed.root_node_id,
     };
-    Ok((entity, key))
+    fixture.resolve_manifest()?;
+    Ok(fixture)
 }
-//#endregion 🔖DslEntities
+
+/// 🏷️ The `entity` half of `EntityRefDsl` — a plain 2-variant scalar tag (`dsl::DslScalar`, not
+/// `DslEnum`): `EntityRefDsl` needs `dsl::DslField` (to bind as an ordinary record field on
+/// `TrinityGraphOperationDsl`'s variants), and a `DslRecord` of `{ kind, id }` gets that directly,
+/// unlike a tagged-variant `DslEnum` (which only yields `DslVariants`, fit for `#[dsl(statements)]`
+/// collections, not a single required field).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, dsl::DslScalar)]
+enum EntityKindDsl {
+    #[dsl(key = "node")]
+    Node,
+    #[dsl(key = "edge")]
+    Edge,
+}
+
+/// 🎯 Local twin of `EntityRef` purely for the DSL engine's tuple-variant limitation: a
+/// `#[derive(dsl::DslEnum)]` single-field UNNAMED variant (`Node(String)`) delegates to its inner
+/// type's own `Shape::Record` (see `dsl_derive::dsl_variants_codegen`'s doc comment), which panics
+/// for a primitive inner type like `String`. `EntityRef` itself keeps its real tuple-variant shape
+/// unchanged — it's a public re-exported type `trinity_jack` constructs as `EntityRef::Node(id)`, and
+/// this crate does not own the freedom to reshape it — so this flat `{ kind, id }` twin exists
+/// solely to give the derive something it can bind, converted at the op-text boundary via `From`.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct EntityRefDsl {
+    kind: EntityKindDsl,
+    id: String,
+}
+
+impl From<&EntityRef> for EntityRefDsl {
+    fn from(value: &EntityRef) -> Self {
+        match value {
+            EntityRef::Node(id) => EntityRefDsl { kind: EntityKindDsl::Node, id: id.clone() },
+            EntityRef::Edge(id) => EntityRefDsl { kind: EntityKindDsl::Edge, id: id.clone() },
+        }
+    }
+}
+
+impl From<EntityRefDsl> for EntityRef {
+    fn from(value: EntityRefDsl) -> Self {
+        match value.kind {
+            EntityKindDsl::Node => EntityRef::Node(value.id),
+            EntityKindDsl::Edge => EntityRef::Edge(value.id),
+        }
+    }
+}
+
+/// ⚡ Local mirror of `TrinityGraphOperation` for `vcs::OpText` — `entity: EntityRef` and
+/// `ports`/`fixture` fields transitively carry the same foreign/tuple-variant shapes handled above,
+/// so the real enum can't derive `dsl::DslOps` directly. `fixture: GraphFixture` binds through
+/// `GraphFixture`'s own hand-written `dsl::DslField` impl (below) unchanged — a nested `Record`
+/// field renders fully inline (no embedded newlines) regardless of the outer document's `Lines`
+/// layout, satisfying `OpText::print_op`'s one-line law without any manual escaping.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum TrinityGraphOperationDsl {
+    #[dsl(key = "createNode")]
+    CreateNode { id: String, kind: String, name: String, x: f64, y: f64, width: f64, height: f64, ports: Vec<PortDsl> },
+    #[dsl(key = "deleteNode")]
+    DeleteNode { id: String },
+    #[dsl(key = "createEdge")]
+    CreateEdge { id: String, kind: String, source: String, target: String, properties: PropertyBag },
+    #[dsl(key = "deleteEdge")]
+    DeleteEdge { id: String },
+    #[dsl(key = "rename")]
+    Rename { id: String, name: String },
+    #[dsl(key = "reposition")]
+    Reposition { id: String, x: f64, y: f64 },
+    #[dsl(key = "setDataProperty")]
+    SetDataProperty { entity: EntityRefDsl, key: String, value: PropertyValue },
+    #[dsl(key = "clearDataProperty")]
+    ClearDataProperty { entity: EntityRefDsl, key: String },
+    #[dsl(key = "setCamera")]
+    SetCamera { camera: Camera },
+    #[dsl(key = "setFixture")]
+    SetFixture { fixture: GraphFixture },
+}
+
+fn trinity_graph_operation_to_dsl(operation: &TrinityGraphOperation) -> TrinityGraphOperationDsl {
+    match operation {
+        TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports } => {
+            TrinityGraphOperationDsl::CreateNode { id: id.clone(), kind: kind.clone(), name: name.clone(), x: *x, y: *y, width: *width, height: *height, ports: ports.iter().map(port_to_port_dsl).collect() }
+        }
+        TrinityGraphOperation::DeleteNode { id } => TrinityGraphOperationDsl::DeleteNode { id: id.clone() },
+        TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => {
+            TrinityGraphOperationDsl::CreateEdge { id: id.clone(), kind: kind.clone(), source: source.clone(), target: target.clone(), properties: properties.clone() }
+        }
+        TrinityGraphOperation::DeleteEdge { id } => TrinityGraphOperationDsl::DeleteEdge { id: id.clone() },
+        TrinityGraphOperation::Rename { id, name } => TrinityGraphOperationDsl::Rename { id: id.clone(), name: name.clone() },
+        TrinityGraphOperation::Reposition { id, x, y } => TrinityGraphOperationDsl::Reposition { id: id.clone(), x: *x, y: *y },
+        TrinityGraphOperation::SetDataProperty { entity, key, value } => TrinityGraphOperationDsl::SetDataProperty { entity: entity.into(), key: key.clone(), value: value.clone() },
+        TrinityGraphOperation::ClearDataProperty { entity, key } => TrinityGraphOperationDsl::ClearDataProperty { entity: entity.into(), key: key.clone() },
+        TrinityGraphOperation::SetCamera { camera } => TrinityGraphOperationDsl::SetCamera { camera: camera.clone() },
+        TrinityGraphOperation::SetFixture { fixture } => TrinityGraphOperationDsl::SetFixture { fixture: fixture.clone() },
+    }
+}
+
+fn trinity_graph_operation_from_dsl(operation: TrinityGraphOperationDsl) -> TrinityGraphOperation {
+    match operation {
+        TrinityGraphOperationDsl::CreateNode { id, kind, name, x, y, width, height, ports } => {
+            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports: ports.into_iter().map(port_dsl_to_port).collect() }
+        }
+        TrinityGraphOperationDsl::DeleteNode { id } => TrinityGraphOperation::DeleteNode { id },
+        TrinityGraphOperationDsl::CreateEdge { id, kind, source, target, properties } => TrinityGraphOperation::CreateEdge { id, kind, source, target, properties },
+        TrinityGraphOperationDsl::DeleteEdge { id } => TrinityGraphOperation::DeleteEdge { id },
+        TrinityGraphOperationDsl::Rename { id, name } => TrinityGraphOperation::Rename { id, name },
+        TrinityGraphOperationDsl::Reposition { id, x, y } => TrinityGraphOperation::Reposition { id, x, y },
+        TrinityGraphOperationDsl::SetDataProperty { entity, key, value } => TrinityGraphOperation::SetDataProperty { entity: entity.into(), key, value },
+        TrinityGraphOperationDsl::ClearDataProperty { entity, key } => TrinityGraphOperation::ClearDataProperty { entity: entity.into(), key },
+        TrinityGraphOperationDsl::SetCamera { camera } => TrinityGraphOperation::SetCamera { camera },
+        TrinityGraphOperationDsl::SetFixture { fixture } => TrinityGraphOperation::SetFixture { fixture },
+    }
+}
+//#endregion 🔖DslMirrors
 
 //#region 🔖DslDocument
-/// 📜 Handcrafted `.trinity` textual notation for a whole [`GraphFixture`] (`vcs::DocumentDsl`):
-/// `manifest`/`name`/`camera`/`root` header lines, then one `node`/`edge` line per entity. Adapts
-/// `mathematical_graph_dsl::wire`'s `id:Kind@port` connector style for edges; nodes need their own
-/// grammar (see {@link print_node_line}) since `WireNode` cannot express geometry/name/multiple ports.
+/// 📜 `.trinity` textual notation for a whole [`GraphFixture`] (`vcs::DocumentDsl`), delegating to
+/// the derive-generated `GraphFixtureDsl` mirror (see `🔖DslMirrors`). Also hand-implements
+/// `dsl::DslField` (normally auto-emitted alongside `#[derive(dsl::DslDocument)]`) so `GraphFixture`
+/// can be nested as an ordinary field too — `TrinityGraphOperation::SetFixture` embeds a whole
+/// fixture snapshot.
 impl DocumentDsl for GraphFixture {
     const EXTENSION: &'static str = "trinity";
 
     fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let mut manifest_id: Option<String> = None;
-        let mut name = String::new();
-        let mut camera = Camera::default();
-        let mut root_node_id: Option<String> = None;
-        let mut nodes = Vec::new();
-        let mut edges = Vec::new();
-
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            let line = raw_line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            let tokens = dsl_lex(line, line_no)?;
-            let mut p = DslParser::new(tokens, line_no);
-            let keyword = p.expect_ident()?;
-            match keyword.as_str() {
-                "manifest" => {
-                    let value = p.expect_ident()?;
-                    manifest_id = if value == "-" { None } else { Some(value) };
-                }
-                "name" => name = p.expect_str()?,
-                "camera" => camera = Camera { x: p.expect_number()?, y: p.expect_number()?, zoom: p.expect_number()? },
-                "root" => root_node_id = Some(p.expect_ident()?),
-                "node" => nodes.push(parse_node_fields(&mut p)?),
-                "edge" => edges.push(parse_edge_fields(&mut p)?),
-                other => return Err(TextError::new(format!("unknown dsl line keyword '{other}'"), TextSpan::at(line_no, 1))),
-            }
-            p.expect_eof()?;
-        }
-
-        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.to_string(), name, manifest_id, manifest: Manifest::default(), camera, nodes, edges, root_node_id };
-        fixture.resolve_manifest().map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
-        Ok(fixture)
+        let parsed = <GraphFixtureDsl as DocumentDsl>::parse_dsl(text)?;
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
     }
 
     fn print_dsl(&self) -> String {
-        let mut lines = Vec::new();
-        lines.push(format!("manifest {}", self.manifest_id.as_deref().unwrap_or("-")));
-        lines.push(format!("name {}", quote_text(&self.name)));
-        lines.push(format!("camera {} {} {}", self.camera.x, self.camera.y, self.camera.zoom));
-        if let Some(root) = &self.root_node_id {
-            lines.push(format!("root {root}"));
-        }
-        for node in &self.nodes {
-            lines.push(print_node_line(node));
-        }
-        for edge in &self.edges {
-            lines.push(print_edge_line(edge, &self.nodes));
-        }
-        lines.join("\n")
+        <GraphFixtureDsl as DocumentDsl>::print_dsl(&graph_fixture_to_dsl(self))
+    }
+}
+
+impl dsl::DslField for GraphFixture {
+    fn shape() -> dsl::Shape {
+        <GraphFixtureDsl as dsl::DslField>::shape()
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        <GraphFixtureDsl as dsl::DslField>::to_value(&graph_fixture_to_dsl(self))
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        let parsed = <GraphFixtureDsl as dsl::DslField>::from_value(value)?;
+        graph_fixture_dsl_to_graph_fixture(parsed).map_err(|error| error.to_string())
     }
 }
 //#endregion 🔖DslDocument
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ⚡ Handcrafted one-line textual notation for [`TrinityGraphOperation`] (`vcs::OpText`) — one keyword
-/// per variant followed by its fields in the same lexical style as `🔖Dsl`; `SetFixture` embeds a whole
-/// `print_dsl()` document inline via an escaped quoted field (escaping turns its newlines into `\n`, so
-/// the printed op line itself never contains one, satisfying `OpText::print_op`'s one-line law).
+/// ⚡ One-line textual notation for [`TrinityGraphOperation`] (`vcs::OpText`), delegating to the
+/// derive-generated `TrinityGraphOperationDsl` mirror (see `🔖DslMirrors`).
 impl OpText for TrinityGraphOperation {
     fn parse_op(line: &str) -> Result<Self, TextError> {
-        let tokens = dsl_lex(line, 1)?;
-        let mut p = DslParser::new(tokens, 1);
-        let keyword = p.expect_ident()?;
-        let operation = match keyword.as_str() {
-            "createNode" => {
-                let id = p.expect_ident()?;
-                p.expect_tok(DslTok::Colon, "':'")?;
-                let kind = p.expect_ident()?;
-                let x = p.expect_number()?;
-                let y = p.expect_number()?;
-                let width = p.expect_number()?;
-                let height = p.expect_number()?;
-                let ports = parse_ports_list(&mut p)?;
-                let name = p.expect_str()?;
-                TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports }
-            }
-            "deleteNode" => TrinityGraphOperation::DeleteNode { id: p.expect_ident()? },
-            "createEdge" => {
-                let id = p.expect_ident()?;
-                p.expect_tok(DslTok::Colon, "':'")?;
-                let kind = p.expect_ident()?;
-                let source = parse_plain_port_ref(&mut p)?;
-                p.expect_tok(DslTok::Arrow, "'->'")?;
-                let target = parse_plain_port_ref(&mut p)?;
-                let properties = parse_property_bag(&mut p)?;
-                TrinityGraphOperation::CreateEdge { id, kind, source, target, properties }
-            }
-            "deleteEdge" => TrinityGraphOperation::DeleteEdge { id: p.expect_ident()? },
-            "rename" => {
-                let id = p.expect_ident()?;
-                let name = p.expect_str()?;
-                TrinityGraphOperation::Rename { id, name }
-            }
-            "reposition" => {
-                let id = p.expect_ident()?;
-                let x = p.expect_number()?;
-                let y = p.expect_number()?;
-                TrinityGraphOperation::Reposition { id, x, y }
-            }
-            "setDataProperty" => {
-                let (entity, key) = parse_entity_and_key(&mut p)?;
-                let value = parse_property_value(&mut p)?;
-                TrinityGraphOperation::SetDataProperty { entity, key, value }
-            }
-            "clearDataProperty" => {
-                let (entity, key) = parse_entity_and_key(&mut p)?;
-                TrinityGraphOperation::ClearDataProperty { entity, key }
-            }
-            "setCamera" => {
-                let camera = Camera { x: p.expect_number()?, y: p.expect_number()?, zoom: p.expect_number()? };
-                TrinityGraphOperation::SetCamera { camera }
-            }
-            "setFixture" => {
-                let text = p.expect_str()?;
-                let fixture = GraphFixture::parse_dsl(&text)?;
-                TrinityGraphOperation::SetFixture { fixture }
-            }
-            other => return Err(TextError::new(format!("unknown op keyword '{other}'"), TextSpan::at(1, 1))),
-        };
-        p.expect_eof()?;
-        Ok(operation)
+        <TrinityGraphOperationDsl as OpText>::parse_op(line).map(trinity_graph_operation_from_dsl)
     }
 
     fn print_op(&self) -> String {
-        match self {
-            TrinityGraphOperation::CreateNode { id, kind, name, x, y, width, height, ports } => {
-                let mut out = format!("createNode {id}:{kind} {x} {y} {width} {height}");
-                if !ports.is_empty() {
-                    out.push(' ');
-                    out.push_str(&print_ports_list(ports));
-                }
-                out.push(' ');
-                out.push_str(&quote_text(name));
-                out
-            }
-            TrinityGraphOperation::DeleteNode { id } => format!("deleteNode {id}"),
-            TrinityGraphOperation::CreateEdge { id, kind, source, target, properties } => {
-                let mut out = format!("createEdge {id}:{kind} {source}->{target}");
-                let props = print_property_bag(properties);
-                if !props.is_empty() {
-                    out.push(' ');
-                    out.push_str(&props);
-                }
-                out
-            }
-            TrinityGraphOperation::DeleteEdge { id } => format!("deleteEdge {id}"),
-            TrinityGraphOperation::Rename { id, name } => format!("rename {id} {}", quote_text(name)),
-            TrinityGraphOperation::Reposition { id, x, y } => format!("reposition {id} {x} {y}"),
-            TrinityGraphOperation::SetDataProperty { entity, key, value } => {
-                let (kind, id) = entity_kind_and_id(entity);
-                format!("setDataProperty {kind}:{id} {key} {}", print_property_value(value))
-            }
-            TrinityGraphOperation::ClearDataProperty { entity, key } => {
-                let (kind, id) = entity_kind_and_id(entity);
-                format!("clearDataProperty {kind}:{id} {key}")
-            }
-            TrinityGraphOperation::SetCamera { camera } => format!("setCamera {} {} {}", camera.x, camera.y, camera.zoom),
-            TrinityGraphOperation::SetFixture { fixture } => format!("setFixture {}", quote_text(&fixture.print_dsl())),
-        }
+        <TrinityGraphOperationDsl as OpText>::print_op(&trinity_graph_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
@@ -1991,5 +1939,459 @@ mod tests {
         assert_document_text_round_trip(&store);
     }
     //#endregion 🔖DslTests
+
+    //#region 🔖SchemaAndManifestTests
+    #[test]
+    fn from_json_rejects_wrong_schema() {
+        let json = r#"{"schema":"bogus","name":"x","camera":{"x":0,"y":0,"zoom":1},"nodes":[],"edges":[]}"#;
+        let err = GraphFixture::from_json(json).expect_err("schema mismatch");
+        assert!(err.to_string().contains("expected schema trinity.graph"));
+    }
+
+    #[test]
+    fn resolve_manifest_errors_when_missing_and_empty() {
+        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "x".into(), manifest_id: None, manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+        let err = fixture.resolve_manifest().expect_err("missing manifest");
+        assert!(matches!(err, TrinityRamError::ManifestMissing));
+    }
+
+    #[test]
+    fn resolve_manifest_errors_on_unknown_id() {
+        let mut fixture = GraphFixture { schema: GraphFixture::SCHEMA.into(), name: "x".into(), manifest_id: Some("nope".into()), manifest: Manifest::default(), camera: Camera::default(), nodes: vec![], edges: vec![], root_node_id: None };
+        let err = fixture.resolve_manifest().expect_err("unknown manifest id");
+        assert!(err.to_string().contains("unknown manifest id nope"));
+    }
+
+    #[test]
+    fn graph_from_fixture_rejects_port_kind_not_declared_on_node_kind() {
+        let mut fixture = mini_fixture();
+        fixture.nodes[0].ports.push(Port { id: "bad".into(), kind: "core circular bottom".into(), direction: PortDirection::Out, properties: PropertyBag::new() });
+        let err = Graph::from_fixture(fixture).expect_err("undeclared port kind");
+        assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnFixture { .. }));
+        assert!(err.to_string().contains("root"));
+    }
+    //#endregion 🔖SchemaAndManifestTests
+
+    //#region 🔖GraphAccessorTests
+    #[test]
+    fn graph_accessors_and_mutators() {
+        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+        assert!(g.node("root").is_some());
+        assert!(g.node("ghost").is_none());
+        assert!(g.edge("e1").is_some());
+        g.node_mut("root").unwrap().name = "renamed".into();
+        assert_eq!(g.node("root").unwrap().name, "renamed");
+
+        g.add_node(Node { id: "extra".into(), kind: "Piece".into(), name: "extra".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![] });
+        assert!(g.node("extra").is_some());
+
+        g.add_edge(Edge { id: "e2".into(), kind: "Connection".into(), source: "root:out-a".into(), target: "extra:in-a".into(), properties: PropertyBag::new() });
+        assert!(g.edge("e2").is_some());
+        assert!(g.remove_edge("e2"));
+        assert!(!g.remove_edge("e2"));
+    }
+
+    #[test]
+    fn graph_remove_node_clears_root_node_id() {
+        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+        assert!(g.remove_node("root"));
+        assert!(g.edges.is_empty());
+        assert!(g.nodes.contains_key("child"));
+        assert!(g.root_node_id.is_none());
+        assert!(!g.remove_node("root"));
+    }
+
+    #[test]
+    fn graph_set_property_success_and_errors() {
+        let mut g = Graph::from_fixture(mini_fixture()).unwrap();
+        g.set_property(EntityRef::Node("root".into()), "label", PropertyValue::String("hi".into())).expect("set node prop");
+        assert_eq!(g.node("root").unwrap().properties.get("label"), Some(&PropertyValue::String("hi".into())));
+        let err = g.set_property(EntityRef::Node("ghost".into()), "label", PropertyValue::Null).expect_err("missing node");
+        assert!(matches!(err, TrinityRamError::NodeNotFound(_)));
+
+        g.set_property(EntityRef::Edge("e1".into()), "gap", PropertyValue::Number(1.0)).expect("set edge prop");
+        assert_eq!(g.edge("e1").unwrap().properties.get("gap"), Some(&PropertyValue::Number(1.0)));
+        let err = g.set_property(EntityRef::Edge("ghost".into()), "gap", PropertyValue::Null).expect_err("missing edge");
+        assert!(matches!(err, TrinityRamError::EdgeNotFound(_)));
+    }
+
+    #[test]
+    fn graph_to_fixture_and_fixture_json() {
+        let g = Graph::from_fixture(mini_fixture()).unwrap();
+        let fixture = g.to_fixture();
+        assert_eq!(fixture.nodes.len(), 2);
+        assert_eq!(fixture.manifest_id.as_deref(), Some("nakagin"));
+        let json = g.fixture_json().expect("fixture json");
+        assert!(json.contains("\"schema\""));
+    }
+
+    #[test]
+    fn subgraph_fixture_filters_entities_and_keeps_root_when_included() {
+        let g = Graph::from_fixture(mini_fixture()).unwrap();
+        let node_ids: BTreeSet<String> = ["root".to_string()].into_iter().collect();
+        let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
+        assert_eq!(sub.nodes.len(), 1);
+        assert!(sub.edges.is_empty());
+        assert_eq!(sub.root_node_id.as_deref(), Some("root"));
+        assert!(sub.name.contains("subgraph"));
+    }
+
+    #[test]
+    fn subgraph_fixture_drops_root_when_not_included() {
+        let g = Graph::from_fixture(mini_fixture()).unwrap();
+        let node_ids: BTreeSet<String> = ["child".to_string()].into_iter().collect();
+        let sub = g.subgraph_fixture(&node_ids, &BTreeSet::new());
+        assert!(sub.root_node_id.is_none());
+    }
+
+    #[test]
+    fn recompute_derived_noop_on_empty_graph() {
+        let mut g = Graph::from_fixture(empty_trinity_graph_fixture()).unwrap();
+        g.recompute_derived();
+        assert!(g.nodes.is_empty());
+    }
+
+    #[test]
+    fn derived_flat_position_handles_cycles_without_looping() {
+        let fixture = GraphFixture {
+            schema: GraphFixture::SCHEMA.into(),
+            name: "cycle".into(),
+            manifest_id: Some("nakagin".into()),
+            manifest: Manifest::nakagin_default(),
+            camera: Camera::default(),
+            root_node_id: Some("a".into()),
+            nodes: vec![
+                Node { id: "a".into(), kind: "Piece".into(), name: "a".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
+                Node { id: "b".into(), kind: "Piece".into(), name: "b".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, properties: PropertyBag::new(), ports: vec![Port { id: "out".into(), kind: "Connector".into(), direction: PortDirection::Out, properties: PropertyBag::new() }] },
+            ],
+            edges: vec![
+                Edge { id: "ab".into(), kind: "Connection".into(), source: "a:out".into(), target: "b:out".into(), properties: { let mut p = PropertyBag::new(); p.insert("u".into(), PropertyValue::Number(1.0)); p.insert("v".into(), PropertyValue::Number(0.0)); p } },
+                Edge { id: "ba".into(), kind: "Connection".into(), source: "b:out".into(), target: "a:out".into(), properties: PropertyBag::new() },
+            ],
+        };
+        let mut g = Graph::from_fixture(fixture).unwrap();
+        g.recompute_derived();
+        assert!(g.node("a").unwrap().properties.get("flatPosition").is_some());
+        assert!(g.node("b").unwrap().properties.get("flatPosition").is_some());
+    }
+
+    #[test]
+    fn port_key_helpers_handle_malformed_keys() {
+        assert_eq!(parse_port_key("node:port"), Some(("node", "port")));
+        assert_eq!(parse_port_key("noport"), None);
+        assert_eq!(parse_port_key(":port"), None);
+        assert_eq!(parse_port_key("node:"), None);
+        assert_eq!(port_node_id("node:port"), Some("node"));
+        assert_eq!(port_port_id("node:port"), Some("port"));
+        assert_eq!(port_key("a", "b"), "a:b");
+    }
+    //#endregion 🔖GraphAccessorTests
+
+    //#region 🔖GraphOperationValidationTests
+    #[test]
+    fn graph_op_rejects_port_kind_not_declared_on_operation() {
+        let mut fixture = mini_fixture();
+        // 🔀 Nakagin's trinity-projected manifest only resolves a direction for `Connector`, so it is
+        // the sole valid trinity port kind there; a second directioned port kind is hand-crafted here
+        // to exercise the "known port kind, but not declared on this node kind" branch.
+        fixture.manifest = TrinityManifest {
+            node_kinds: vec![mathematical_graph_manifest::TrinityNodeKindDef { name: "Piece".into(), properties: vec![], port_kinds: vec!["Connector".into()] }],
+            edge_kinds: vec![mathematical_graph_manifest::TrinityEdgeKindDef { name: "Connection".into(), properties: vec![] }],
+            port_kinds: vec![
+                mathematical_graph_manifest::TrinityPortKindDef { name: "Connector".into(), direction: PortDirection::Out, properties: vec![] },
+                mathematical_graph_manifest::TrinityPortKindDef { name: "Other".into(), direction: PortDirection::In, properties: vec![] },
+            ],
+        };
+        let op = TrinityGraphOperation::CreateNode { id: "new".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![Port { id: "p".into(), kind: "Other".into(), direction: PortDirection::In, properties: PropertyBag::new() }] };
+        let err = validate_trinity_graph_operation(&op, &fixture).expect_err("bad port kind");
+        assert!(matches!(err, TrinityRamError::PortKindNotDeclaredOnOperation { .. }));
+    }
+
+    #[test]
+    fn graph_op_create_edge_rejects_invalid_port_keys() {
+        let fixture = mini_fixture();
+        let bad_source = TrinityGraphOperation::CreateEdge { id: "e2".into(), kind: "Connection".into(), source: "noColon".into(), target: port_key("child", "in-a"), properties: PropertyBag::new() };
+        assert!(matches!(validate_trinity_graph_operation(&bad_source, &fixture), Err(TrinityRamError::InvalidSourcePortKey(_))));
+        let bad_target = TrinityGraphOperation::CreateEdge { id: "e3".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: "noColon".into(), properties: PropertyBag::new() };
+        assert!(matches!(validate_trinity_graph_operation(&bad_target, &fixture), Err(TrinityRamError::InvalidTargetPortKey(_))));
+    }
+
+    #[test]
+    fn graph_op_create_edge_rejects_missing_source_and_target_nodes() {
+        let fixture = mini_fixture();
+        let missing_source = TrinityGraphOperation::CreateEdge { id: "e2".into(), kind: "Connection".into(), source: port_key("ghost", "out"), target: port_key("child", "in-a"), properties: PropertyBag::new() };
+        assert!(matches!(validate_trinity_graph_operation(&missing_source, &fixture), Err(TrinityRamError::SourceNodeNotFound(_))));
+        let missing_target = TrinityGraphOperation::CreateEdge { id: "e3".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: port_key("ghost", "in"), properties: PropertyBag::new() };
+        assert!(matches!(validate_trinity_graph_operation(&missing_target, &fixture), Err(TrinityRamError::TargetNodeNotFound(_))));
+    }
+
+    #[test]
+    fn graph_op_rejects_duplicate_node_and_edge_ids() {
+        let fixture = mini_fixture();
+        let dup_node = TrinityGraphOperation::CreateNode { id: "root".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 80.0, height: 40.0, ports: vec![] };
+        assert!(matches!(validate_trinity_graph_operation(&dup_node, &fixture), Err(TrinityRamError::NodeAlreadyExists(_))));
+        let dup_edge = TrinityGraphOperation::CreateEdge { id: "e1".into(), kind: "Connection".into(), source: port_key("root", "out-a"), target: port_key("child", "in-a"), properties: PropertyBag::new() };
+        assert!(matches!(validate_trinity_graph_operation(&dup_edge, &fixture), Err(TrinityRamError::EdgeAlreadyExists(_))));
+    }
+
+    #[test]
+    fn graph_op_rejects_missing_entities_on_delete_rename_reposition() {
+        let fixture = mini_fixture();
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::DeleteNode { id: "ghost".into() }, &fixture), Err(TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::DeleteEdge { id: "ghost".into() }, &fixture), Err(TrinityRamError::EdgeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::Rename { id: "ghost".into(), name: "x".into() }, &fixture), Err(TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::Reposition { id: "ghost".into(), x: 0.0, y: 0.0 }, &fixture), Err(TrinityRamError::NodeNotFound(_))));
+    }
+
+    #[test]
+    fn graph_op_set_data_property_rejects_unknown_entity_kind() {
+        let mut fixture = mini_fixture();
+        fixture.nodes[0].kind = "Ghost".into();
+        let err = validate_trinity_graph_operation(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("x".into()) }, &fixture).expect_err("unknown entity kind");
+        assert!(matches!(err, TrinityRamError::UnknownEntityKind { .. }));
+    }
+
+    #[test]
+    fn graph_op_set_data_property_rejects_unknown_property_key() {
+        let fixture = mini_fixture();
+        let err = validate_trinity_graph_operation(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "bogus".into(), value: PropertyValue::Null }, &fixture).expect_err("unknown key");
+        assert!(matches!(err, TrinityRamError::UnknownPropertyAtPath { .. }));
+    }
+
+    #[test]
+    fn graph_op_set_data_property_rejects_type_mismatch() {
+        let fixture = mini_fixture();
+        let err = validate_trinity_graph_operation(&TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::Number(1.0) }, &fixture).expect_err("type mismatch");
+        assert!(matches!(err, TrinityRamError::PropertyTypeMismatch { .. }));
+    }
+
+    #[test]
+    fn graph_op_clear_data_property_rejects_missing_entities() {
+        let fixture = mini_fixture();
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Node("ghost".into()), key: "label".into() }, &fixture), Err(TrinityRamError::NodeNotFound(_))));
+        assert!(matches!(validate_trinity_graph_operation(&TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Edge("ghost".into()), key: "u".into() }, &fixture), Err(TrinityRamError::EdgeNotFound(_))));
+    }
+
+    #[test]
+    fn apply_trinity_graph_operations_applies_valid_sequence_and_rejects_invalid() {
+        let fixture = mini_fixture();
+        let ok = apply_trinity_graph_operations(fixture.clone(), &[TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("rename applies");
+        assert_eq!(ok.nodes.iter().find(|n| n.id == "root").unwrap().name, "renamed");
+
+        let err = apply_trinity_graph_operations(fixture, &[TrinityGraphOperation::DeleteNode { id: "ghost".into() }]).expect_err("missing node");
+        assert!(matches!(err, TrinityRamError::NodeNotFound(_)));
+    }
+
+    #[test]
+    fn dispatch_trinity_graph_operations_noop_on_empty() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        let generation_before = store.generation();
+        dispatch_trinity_graph_operations(&mut store, vec![]).expect("empty ops ok");
+        assert_eq!(store.generation(), generation_before);
+    }
+    //#endregion 🔖GraphOperationValidationTests
+
+    //#region 🔖GraphOperationUndoTests
+    #[test]
+    fn graph_op_reposition_and_rename_undo_restore_prior_values() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Reposition { id: "root".into(), x: 50.0, y: 60.0 }]).expect("reposition");
+        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 50.0);
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo reposition");
+        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().x, 0.0);
+
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("rename");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo rename");
+        assert_eq!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().name, "core");
+    }
+
+    #[test]
+    fn graph_op_delete_edge_undo_recreates_edge() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::DeleteEdge { id: "e1".into() }]).expect("delete edge");
+        assert!(store.projection().unwrap().edges.is_empty());
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo delete edge");
+        assert_eq!(store.projection().unwrap().edges.len(), 1);
+    }
+
+    #[test]
+    fn graph_op_delete_node_undo_restores_node_and_incident_edges() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::DeleteNode { id: "root".into() }]).expect("delete node");
+        let projection = store.projection().unwrap();
+        assert_eq!(projection.nodes.len(), 1);
+        assert!(projection.edges.is_empty());
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo delete node");
+        let projection = store.projection().unwrap();
+        assert_eq!(projection.nodes.len(), 2);
+        assert_eq!(projection.edges.len(), 1);
+    }
+
+    #[test]
+    fn graph_op_set_and_clear_data_property_undo_round_trip() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("first".into()) }]).expect("set");
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetDataProperty { entity: EntityRef::Node("root".into()), key: "label".into(), value: PropertyValue::String("second".into()) }]).expect("set again");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo second set");
+        let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        assert_eq!(value, Some(PropertyValue::String("first".into())));
+
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::ClearDataProperty { entity: EntityRef::Node("root".into()), key: "label".into() }]).expect("clear");
+        assert!(store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").is_none());
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo clear");
+        let value = store.projection().unwrap().nodes.iter().find(|n| n.id == "root").unwrap().properties.get("label").cloned();
+        assert_eq!(value, Some(PropertyValue::String("first".into())));
+    }
+
+    #[test]
+    fn graph_op_set_camera_and_set_fixture_undo() {
+        let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetCamera { camera: Camera { x: 5.0, y: 5.0, zoom: 2.0 } }]).expect("set camera");
+        assert_eq!(store.projection().unwrap().camera, Camera { x: 5.0, y: 5.0, zoom: 2.0 });
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo camera");
+        assert_eq!(store.projection().unwrap().camera, Camera::default());
+
+        let replacement = GraphFixture { name: "replacement".into(), ..mini_fixture() };
+        dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::SetFixture { fixture: replacement }]).expect("set fixture");
+        assert_eq!(store.projection().unwrap().name, "replacement");
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo set fixture");
+        assert_eq!(store.projection().unwrap().name, "mini");
+    }
+    //#endregion 🔖GraphOperationUndoTests
+
+    //#region 🔖TrinityGraphDiffTests
+    #[test]
+    fn trinity_graph_diff_absorb_merges_fields() {
+        let mut diff = TrinityGraphDiff { camera: Some(Camera { x: 1.0, y: 2.0, zoom: 1.0 }), ..Default::default() };
+        let other = TrinityGraphDiff {
+            camera: Some(Camera { x: 5.0, y: 6.0, zoom: 2.0 }),
+            recompute_derived: true,
+            nodes: CollectionDiff { added: vec![Node { id: "x".into(), kind: "Piece".into(), name: "x".into(), x: 0.0, y: 0.0, width: 1.0, height: 1.0, properties: PropertyBag::new(), ports: vec![] }], ..Default::default() },
+            ..Default::default()
+        };
+        diff.absorb(other);
+        assert_eq!(diff.camera, Some(Camera { x: 5.0, y: 6.0, zoom: 2.0 }));
+        assert!(diff.recompute_derived);
+        assert_eq!(diff.nodes.added.len(), 1);
+    }
+
+    #[test]
+    fn trinity_graph_diff_apply_uses_set_fixture_as_base_and_recomputes() {
+        let base = mini_fixture();
+        let mut replacement = base.clone();
+        replacement.name = "swapped".into();
+        let diff = TrinityGraphDiff { set_fixture: Some(replacement), recompute_derived: true, ..Default::default() };
+        let applied = diff.apply(&base);
+        assert_eq!(applied.name, "swapped");
+        assert!(applied.nodes.iter().any(|n| n.properties.contains_key("flatPosition")));
+    }
+    //#endregion 🔖TrinityGraphDiffTests
+
+    //#region 🔖DslInternalsTests
+    #[test]
+    fn dsl_lex_rejects_unterminated_string() {
+        let err = dsl_lex("name 'unterminated", 1).expect_err("unterminated string");
+        assert_eq!(err.message, "unterminated string");
+    }
+
+    #[test]
+    fn dsl_lex_rejects_unexpected_character() {
+        let err = dsl_lex("name #bogus", 1).expect_err("unexpected char");
+        assert!(err.message.contains("unexpected character"));
+    }
+
+    #[test]
+    fn dsl_lex_handles_escape_sequences_in_strings() {
+        let tokens = dsl_lex(r#"'a\nb\\c\'d'"#, 1).unwrap();
+        assert_eq!(tokens[0], DslTok::Str("a\nb\\c'd".into()));
+    }
+
+    #[test]
+    fn dsl_lex_scans_negative_number_and_arrow() {
+        let tokens = dsl_lex("-5 ->", 1).unwrap();
+        assert_eq!(tokens[0], DslTok::Number(-5.0));
+        assert_eq!(tokens[1], DslTok::Arrow);
+    }
+
+    #[test]
+    fn dsl_lex_treats_uuid_shaped_ids_as_identifiers() {
+        let tokens = dsl_lex("7dc5b737-3b6b-4dbb", 1).unwrap();
+        assert_eq!(tokens[0], DslTok::Ident("7dc5b737-3b6b-4dbb".into()));
+    }
+
+    #[test]
+    fn looks_like_number_rejects_multiple_dots_and_letters() {
+        assert!(looks_like_number("12.5"));
+        assert!(!looks_like_number("12.5.6"));
+        assert!(!looks_like_number("12a"));
+        assert!(!looks_like_number(""));
+    }
+
+    #[test]
+    fn dsl_parser_expect_helpers_report_errors_on_mismatch() {
+        let mut p = DslParser::new(dsl_lex("42", 1).unwrap(), 1);
+        assert!(p.expect_ident().unwrap_err().message.contains("expected identifier"));
+
+        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
+        assert!(p.expect_number().unwrap_err().message.contains("expected number"));
+
+        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
+        assert!(p.expect_str().unwrap_err().message.contains("expected string"));
+
+        let mut p = DslParser::new(dsl_lex("foo", 1).unwrap(), 1);
+        assert!(p.expect_tok(DslTok::Colon, "':'").unwrap_err().message.contains("expected ':'"));
+
+        let mut p = DslParser::new(dsl_lex("foo bar", 1).unwrap(), 1);
+        p.expect_ident().unwrap();
+        assert!(p.expect_eof().unwrap_err().message.contains("unexpected trailing token"));
+    }
+
+    #[test]
+    fn parse_property_value_line_rejects_invalid_value() {
+        let err = parse_property_value_line(":").expect_err("invalid value");
+        assert!(err.message.contains("expected a property value"));
+    }
+
+    #[test]
+    fn parse_property_value_line_round_trips_all_variants() {
+        assert_eq!(parse_property_value_line("true").unwrap(), PropertyValue::Bool(true));
+        assert_eq!(parse_property_value_line("false").unwrap(), PropertyValue::Bool(false));
+        assert_eq!(parse_property_value_line("null").unwrap(), PropertyValue::Null);
+        let array = parse_property_value_line("[1, 2, 'x']").unwrap();
+        assert_eq!(array, PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Number(2.0), PropertyValue::String("x".into())]));
+        let object = parse_property_value_line("{a: 1, b: 'y'}").unwrap();
+        let mut expected = BTreeMap::new();
+        expected.insert("a".into(), PropertyValue::Number(1.0));
+        expected.insert("b".into(), PropertyValue::String("y".into()));
+        assert_eq!(object, PropertyValue::Object(expected));
+    }
+
+    #[test]
+    fn print_property_value_covers_all_variants() {
+        assert_eq!(print_property_value(&PropertyValue::Null), "null");
+        assert_eq!(print_property_value(&PropertyValue::Bool(true)), "true");
+        assert_eq!(print_property_value(&PropertyValue::Number(1.5)), "1.5");
+        assert_eq!(print_property_value(&PropertyValue::String("a'b".into())), "'a\\'b'");
+        let array = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Bool(false)]);
+        assert_eq!(print_property_value(&array), "[1, false]");
+    }
+
+    #[test]
+    fn parse_dsl_rejects_unknown_keyword() {
+        // 🔀 The `dsl::` derive engine parses `GraphFixtureDsl` as a structured `key=value` record
+        // (see `🔖DslMirrors`), not a line-by-line bare-keyword dispatch like the OLD hand-rolled
+        // grammar — so garbage input now fails with a field-shape mismatch instead of an "unknown
+        // dsl line keyword" message. Still asserts the same underlying contract: malformed text is
+        // rejected, not silently accepted.
+        let err = GraphFixture::parse_dsl("bogus line").expect_err("unknown keyword");
+        assert!(err.message.contains("expected"));
+    }
+
+    #[test]
+    fn parse_op_rejects_unknown_keyword() {
+        let err = TrinityGraphOperation::parse_op("bogusOp x").expect_err("unknown op");
+        assert!(err.message.contains("unknown operation line"));
+    }
+    //#endregion 🔖DslInternalsTests
 }
 // #endregion 🔖Tests

@@ -456,6 +456,18 @@ describe("shell store reducer", () => {
     expect(opened.layout.panels["top-left"].visible).toBe(state.layout.panels["top-left"].visible);
   });
 
+  it("rewrites window icons via SET_WINDOW_ICON for extras and base kinds", () => {
+    const state = shellReducer(baseState(), {
+      type: "SET_EXTRA_WINDOW_INSTANCES",
+      value: [{ id: "puzzle3d-main-top", windowKindId: "puzzle3d-main", title: "Top" }],
+    });
+    const renamedExtra = shellReducer(state, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main-top", iconId: "projection-orthographic" });
+    expect(renamedExtra.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
+    const renamedBase = shellReducer(renamedExtra, { type: "SET_WINDOW_ICON", windowId: "puzzle3d-main", iconId: "projection-three-point" });
+    expect(renamedBase.layout.windowIconsById["puzzle3d-main"]).toBe("projection-three-point");
+    expect(renamedBase.layout.windowIconsById["puzzle3d-main-top"]).toBe("projection-orthographic");
+  });
+
   it("rewrites window titles via SET_WINDOW_TITLE for extras and base kinds", () => {
     const state = shellReducer(baseState(), {
       type: "SET_EXTRA_WINDOW_INSTANCES",

@@ -737,6 +737,13 @@ impl<T: Field> MatG<T> {
     pub fn inverse(&self) -> Option<Self> {
         assert_eq!(self.rows, self.cols, "MatG::inverse: requires a square matrix");
         let n = self.rows;
+        // 🐛 Rank must come from `self` alone: the augmented `[A | I]` matrix's own rref rank is
+        // NOT a valid full-rank check, because `rref`'s first-nonzero pivoting can plant pivot
+        // columns inside the appended identity block once `A`'s columns run out of pivots — that
+        // silently inflates the reported rank to `n` even when `A` is singular.
+        if self.rank() < n {
+            return None;
+        }
         let mut augmented = Self::zeros(n, 2 * n);
         for row in 0..n {
             for col in 0..n {
@@ -744,10 +751,7 @@ impl<T: Field> MatG<T> {
             }
             augmented.set(row, n + row, T::one());
         }
-        let (rref, _, rank) = augmented.rref();
-        if rank < n {
-            return None;
-        }
+        let (rref, _, _) = augmented.rref();
         let mut inv = Self::zeros(n, n);
         for row in 0..n {
             for col in 0..n {
@@ -760,6 +764,11 @@ impl<T: Field> MatG<T> {
     pub fn solve(&self, b: &VecG<T>) -> Option<VecG<T>> {
         assert_eq!(self.rows, self.cols, "MatG::solve: requires a square matrix");
         let n = self.rows;
+        // 🐛 See `inverse`: rank must be checked on `self` alone, not on the `[A | b]` augmented
+        // rref, since a stray pivot found inside the `b` column can otherwise mask a singular `A`.
+        if self.rank() < n {
+            return None;
+        }
         let mut augmented = Self::zeros(n, n + 1);
         for row in 0..n {
             for col in 0..n {
@@ -767,10 +776,7 @@ impl<T: Field> MatG<T> {
             }
             augmented.set(row, n, b.get(row).clone());
         }
-        let (rref, _, rank) = augmented.rref();
-        if rank < n {
-            return None;
-        }
+        let (rref, _, _) = augmented.rref();
         Some(VecG::from_vec((0..n).map(|row| rref.get(row, n).clone()).collect()))
     }
 
@@ -2695,6 +2701,180 @@ mod tests {
         assert_eq!(poly_roots_companion(&[5.0]), Err(AlgebraError::Singular));
     }
 
+    #[test]
+    fn vec3_array_round_trip() {
+        let v = Vec3::from_array([1.0, 2.0, 3.0]);
+        assert_eq!(v.to_array(), [1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn vec3_add_sub_scale_dot_length_match_hand_computation() {
+        let a = Vec3::new(1.0, 2.0, 3.0);
+        let b = Vec3::new(0.5, 0.5, 0.5);
+        assert_eq!(a.add(b), Vec3::new(1.5, 2.5, 3.5));
+        assert_eq!(a.sub(b), Vec3::new(0.5, 1.5, 2.5));
+        assert_eq!(a.scale(2.0), Vec3::new(2.0, 4.0, 6.0));
+        assert!((a.dot(a) - 14.0).abs() < 1e-6);
+        assert!((Vec3::new(3.0, 4.0, 0.0).length() - 5.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mat4_perspective_maps_near_and_far_planes_to_depth_zero_and_one() {
+        let m = Mat4::perspective(std::f32::consts::FRAC_PI_2, 1.0, 1.0, 10.0);
+        let near = m.transform_point(Vec3::new(0.0, 0.0, -1.0));
+        let far = m.transform_point(Vec3::new(0.0, 0.0, -10.0));
+        assert!(near.z.abs() < 1e-5, "near plane depth was {}", near.z);
+        assert!((far.z - 1.0).abs() < 1e-5, "far plane depth was {}", far.z);
+    }
+
+    #[test]
+    fn mat4_look_at_places_target_along_negative_z() {
+        let m = Mat4::look_at(Vec3::new(0.0, 0.0, 5.0), Vec3::ZERO, Vec3::new(0.0, 1.0, 0.0));
+        let cam_space = m.transform_point(Vec3::ZERO);
+        assert!(cam_space.x.abs() < 1e-5);
+        assert!(cam_space.y.abs() < 1e-5);
+        assert!((cam_space.z + 5.0).abs() < 1e-5);
+    }
+
+    #[test]
+    fn mat4_mul_composes_transforms_in_matrix_order() {
+        let t = Mat4::translation(Vec3::new(1.0, 0.0, 0.0));
+        let s = Mat4::scale_vec(Vec3::new(2.0, 2.0, 2.0));
+        let combined = t.mul(s);
+        let out = combined.transform_point(Vec3::new(1.0, 1.0, 1.0));
+        assert!((out.x - 3.0).abs() < 1e-6 && (out.y - 2.0).abs() < 1e-6 && (out.z - 2.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mat4_transform_direction_ignores_translation_and_normalizes() {
+        let m = Mat4::translation(Vec3::new(5.0, 5.0, 5.0));
+        let dir = m.transform_direction(Vec3::new(2.0, 0.0, 0.0));
+        assert!((dir.x - 1.0).abs() < 1e-6 && dir.y.abs() < 1e-6 && dir.z.abs() < 1e-6);
+    }
+
+    #[test]
+    fn mat4_inverse_of_singular_matrix_returns_identity() {
+        let singular = Mat4 { cols: [[0.0; 4]; 4] };
+        assert_eq!(singular.inverse().to_cols_array(), Mat4::identity().to_cols_array());
+    }
+
+    #[test]
+    fn mat4_scale_vec_scales_each_axis() {
+        let m = Mat4::scale_vec(Vec3::new(2.0, 3.0, 4.0));
+        let p = m.transform_point(Vec3::new(1.0, 1.0, 1.0));
+        assert!((p.x - 2.0).abs() < 1e-6 && (p.y - 3.0).abs() < 1e-6 && (p.z - 4.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mat4_from_quat_identity_is_identity() {
+        let m = Mat4::from_quat(0.0, 0.0, 0.0, 1.0);
+        let p = Vec3::new(1.0, 2.0, 3.0);
+        let out = m.transform_point(p);
+        assert!((out.x - p.x).abs() < 1e-6 && (out.y - p.y).abs() < 1e-6 && (out.z - p.z).abs() < 1e-6);
+    }
+
+    #[test]
+    fn mat4_from_quat_90_degrees_about_z_rotates_x_to_y() {
+        let half = std::f32::consts::FRAC_PI_4;
+        let m = Mat4::from_quat(0.0, 0.0, half.sin(), half.cos());
+        let out = m.transform_point(Vec3::new(1.0, 0.0, 0.0));
+        assert!(out.x.abs() < 1e-5);
+        assert!((out.y - 1.0).abs() < 1e-5);
+        assert!(out.z.abs() < 1e-5);
+    }
+
+    #[test]
+    fn mat4_to_cols_array_matches_column_major_layout() {
+        let m = Mat4::translation(Vec3::new(1.0, 2.0, 3.0));
+        let arr = m.to_cols_array();
+        assert_eq!(arr[12], 1.0);
+        assert_eq!(arr[13], 2.0);
+        assert_eq!(arr[14], 3.0);
+        assert_eq!(arr[15], 1.0);
+    }
+
+    #[test]
+    fn vec3d_sub_and_length_match_hand_computation() {
+        let diff = vec3d_sub([3.0, 4.0, 0.0], [1.0, 1.0, 0.0]);
+        assert_eq!(diff, [2.0, 3.0, 0.0]);
+        assert!((vec3d_length([3.0, 4.0, 0.0]) - 5.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn algebra_error_display_covers_remaining_variants() {
+        assert_eq!(AlgebraError::NotPositiveDefinite.to_string(), "matrix is not positive definite");
+        assert_eq!(AlgebraError::DimensionMismatch { expected: (2, 2), got: (3, 3) }.to_string(), "dimension mismatch: expected (2, 2), got (3, 3)");
+        assert_eq!(AlgebraError::PowerIterationFailedConvergence { iterations: 42 }.to_string(), "iterative solver failed to converge after 42 iterations");
+    }
+
+    #[test]
+    fn matd_matmul_skips_zero_entries_and_still_correct() {
+        let mut m = MatD::zeros(2, 2);
+        m.set(0, 0, 0.0);
+        m.set(0, 1, 2.0);
+        m.set(1, 0, 3.0);
+        m.set(1, 1, 0.0);
+        let out = m.matmul(&MatD::identity(2));
+        assert_eq!(out, m);
+    }
+
+    #[test]
+    fn weighted_normal_equations_skips_zero_entries_in_a() {
+        let mut a = MatD::zeros(2, 2);
+        a.set(0, 0, 0.0);
+        a.set(0, 1, 1.0);
+        a.set(1, 0, 2.0);
+        a.set(1, 1, 3.0);
+        let b = VecD::from_vec(vec![1.0, 2.0]);
+        let (ata, atb) = weighted_normal_equations(&a, &b, &[1.0, 1.0]);
+        assert!((ata.get(0, 0) - 4.0).abs() < 1e-12);
+        assert!((ata.get(0, 1) - 6.0).abs() < 1e-12);
+        assert!((ata.get(1, 1) - 10.0).abs() < 1e-12);
+        assert!((atb.get(0) - 4.0).abs() < 1e-12);
+        assert!((atb.get(1) - 7.0).abs() < 1e-12);
+    }
+
+    #[test]
+    fn hessenberg_skips_already_zero_subdiagonal_column() {
+        let mut a = MatD::zeros(4, 4);
+        for i in 0..4 {
+            a.set(i, i, (i + 1) as f64);
+        }
+        let (h, q) = hessenberg(&a);
+        assert_eq!(h, a);
+        assert_eq!(q, MatD::identity(4));
+    }
+
+    #[test]
+    fn qr_householder_skips_already_zero_column_segment() {
+        let mut a = MatD::zeros(3, 3);
+        a.set(0, 0, 1.0);
+        a.set(0, 1, 5.0);
+        a.set(0, 2, 3.0);
+        a.set(1, 2, 1.0);
+        a.set(2, 2, 5.0);
+        let (q, r) = qr_householder(&a);
+        let product = q.matmul(&r);
+        for row in 0..3 {
+            for col in 0..3 {
+                assert!((product.get(row, col) - a.get(row, col)).abs() < 1e-7);
+            }
+        }
+    }
+
+    #[test]
+    fn svd_nullvector_rejects_matrix_with_zero_columns() {
+        let a = MatD::zeros(2, 0);
+        assert!(matches!(svd_nullvector(&a), Err(AlgebraError::DimensionMismatch { .. })));
+    }
+
+    #[test]
+    fn solve_llsq_detects_rank_deficient_system() {
+        let a = planted_rank_deficient();
+        let b = VecD::from_vec((0..6).map(|i| i as f64).collect());
+        assert!(matches!(solve_llsq(&a, &b), Err(AlgebraError::Singular)));
+    }
+
     fn tridiagonal_spd(n: usize) -> CsrMatrix {
         let mut triplets = Vec::new();
         for i in 0..n {
@@ -2871,6 +3051,56 @@ mod exact_tests {
         assert!(shortest_after <= shortest_before);
     }
 
+    #[test]
+    fn vecg_basic_ops_match_hand_computation() {
+        let a = VecG::from_vec(vec![rat(1, 1), rat(2, 1)]);
+        let b = VecG::from_vec(vec![rat(3, 1), rat(4, 1)]);
+        assert_eq!(a.len(), 2);
+        assert!(!a.is_empty());
+        assert!(VecG::<Rational>::zeros(0).is_empty());
+        let sum = a.add(&b);
+        assert_eq!(*sum.get(0), rat(4, 1));
+        assert_eq!(*sum.get(1), rat(6, 1));
+        let diff = b.sub(&a);
+        assert_eq!(*diff.get(0), rat(2, 1));
+        assert_eq!(*diff.get(1), rat(2, 1));
+        let scaled = a.scale(&rat(2, 1));
+        assert_eq!(*scaled.get(0), rat(2, 1));
+        assert_eq!(*scaled.get(1), rat(4, 1));
+        assert_eq!(a.dot(&b), rat(11, 1));
+        let mut c = VecG::zeros(2);
+        c.set(0, rat(9, 1));
+        assert_eq!(*c.get(0), rat(9, 1));
+    }
+
+    #[test]
+    fn det_of_singular_matrix_is_zero() {
+        let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
+        assert_eq!(m.det(), Rational::zero());
+    }
+
+    #[test]
+    fn inverse_of_singular_matrix_is_none() {
+        let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
+        assert!(m.inverse().is_none());
+    }
+
+    #[test]
+    fn solve_of_singular_system_is_none() {
+        let m = rat_mat(vec![vec![1, 2], vec![2, 4]]);
+        let b = VecG::from_vec(vec![rat(1, 1), rat(2, 1)]);
+        assert!(m.solve(&b).is_none());
+    }
+
+
+    #[test]
+    fn rank_bareiss_hand_cases_full_and_deficient_rank() {
+        let full = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(2), Integer::from_i64(1), Integer::from_i64(1)], vec![Integer::from_i64(1), Integer::from_i64(3), Integer::from_i64(2)], vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(0)]]);
+        assert_eq!(full.rank_bareiss(), 3);
+        let deficient = MatG::<Integer>::from_rows(vec![vec![Integer::from_i64(1), Integer::from_i64(2), Integer::from_i64(3)], vec![Integer::from_i64(2), Integer::from_i64(4), Integer::from_i64(6)], vec![Integer::from_i64(1), Integer::from_i64(0), Integer::from_i64(1)]]);
+        assert_eq!(deficient.rank_bareiss(), 2);
+    }
+
     // #region 🔖QuickExactTests
     mod quick {
         use super::*;
@@ -2926,6 +3156,32 @@ mod exact_tests {
                 let via_bareiss = mi.det_bareiss();
                 let via_field = mr.det();
                 assert_eq!(Rational::from_integer(via_bareiss), via_field);
+            }
+        }
+
+        #[test]
+        fn rank_bareiss_matches_field_rank_on_random_integer_matrices() {
+            let mut seed = 0x9988_7766_5544_3322u64;
+            let mut next = move || {
+                seed ^= seed << 13;
+                seed ^= seed >> 7;
+                seed ^= seed << 17;
+                (seed % 5) as i64 - 2
+            };
+            for _ in 0..20 {
+                let n = 3;
+                let mut rows_i = vec![vec![Integer::from_i64(0); n]; n];
+                let mut rows_r = vec![vec![rat(0, 1); n]; n];
+                for i in 0..n {
+                    for j in 0..n {
+                        let v = next();
+                        rows_i[i][j] = Integer::from_i64(v);
+                        rows_r[i][j] = rat(v, 1);
+                    }
+                }
+                let mi = MatG::from_rows(rows_i);
+                let mr = MatG::from_rows(rows_r);
+                assert_eq!(mi.rank_bareiss(), mr.rank());
             }
         }
     }

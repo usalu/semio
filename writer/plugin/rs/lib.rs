@@ -110,7 +110,7 @@ use semio_framework_plugin::{SurfaceKind, PanelGroup, PanelTabSpec,
     build_text_editor_scene, engagement_token_matches, is_de_locale, localized_label_map, resolve_labels, strip_engagement_prefix,
     tree_item, ui_declarative_sections_to_tree, ui_text, App,
     ActionArgDef, ActionArgOption, ActionDefinition, ActionKind, ActionDescriptor, ActionEmit, AppLabelsOverlay, AppLabelsOverlayExt,
-    DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
+    DocumentApp, DocumentView, IconName, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelTreeBuilder, ResourceKindSpec, TextEditorScene, UiNode, UiPresence, UiSectionNode,
     UiTreeItemNode, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -337,7 +337,9 @@ fn jack_ast_to_tree_item(node: &JackAstNode) -> UiTreeItemNode {
         id: node.id.clone(),
         label: node.label.clone(),
         description: Some(node.kind.clone()),
-        icon_id: jack_ast_tree_icon(&node.kind).map(str::to_string),
+        // 🛟 `and_then(IconName::from_str)` (not the panicking `IconName::from`) so a jack AST kind
+        // whose icon string isn't (yet) in the shared icon catalog just renders with no icon.
+        icon_id: jack_ast_tree_icon(&node.kind).and_then(IconName::from_str),
         presence: UiPresence::default(),
         default_open: Some(matches!(node.kind.as_str(), "query" | "match" | "pattern" | "return")),
         action: Some(play_action(
@@ -871,7 +873,7 @@ fn render_document_panel(document: &WriterProjection, runtime: &WriterPlayRuntim
     let items = if root.kind == "error" {
         vec![UiTreeItemNode {
             description: Some(root.kind.clone()),
-            icon_id: jack_ast_tree_icon(&root.kind).map(str::to_string),
+            icon_id: jack_ast_tree_icon(&root.kind).and_then(IconName::from_str),
             ..tree_item(root.id.as_str(), root.label.as_str())
         }]
     } else {
@@ -1104,12 +1106,20 @@ impl DocumentApp for WriterPlayApp {
         let str_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str);
         let usize_arg = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_u64).map(|value| value as usize);
         match action {
-            "textEdit" | "setText" => {
+            "textEdit" => {
                 if let Some(text) = str_arg("text") {
                     // ⌨️ Keystroke-granular edits coalesce under a stable key so a typing burst amends into
                     // a few undo steps, not one-per-keystroke. Any interrupting action (format, example
                     // load, engagement submit) applies without this key and breaks the coalescing run.
                     return ActionEmit::amend(vec![WriterOperation::SetText { text: text.into() }], "writer-text-edit");
+                }
+                ActionEmit::default()
+            }
+            "setText" => {
+                if let Some(text) = str_arg("text") {
+                    // 🪙 A discrete document replacement (unlike `textEdit`'s keystroke bursts) — each call
+                    // is its own undo step, so it must NOT share `textEdit`'s coalescing key.
+                    return ActionEmit::operations(vec![WriterOperation::SetText { text: text.into() }]);
                 }
                 ActionEmit::default()
             }
@@ -1454,7 +1464,7 @@ fn create_writer_app() -> App {
             .icon_id("writer")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "file-text")
+            .window_kind(WRITER_PLAY_WINDOW_KIND, "Jack", WRITER_PLAY_BODY_MAIN, SurfaceKind::TextEditor, "document-jack")
             .default_layout(create_default_layout(
                 &[WRITER_PLAY_WINDOW_KIND.into()],
                 "row",

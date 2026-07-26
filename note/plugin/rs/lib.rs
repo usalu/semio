@@ -1206,7 +1206,7 @@ fn render_document_panel(document: &NoteDocument, selected_ids: &[String], view_
     let action_rows: Vec<UiTreeItemNode> = [
         ("text", labels.add_text, "type"),
         ("table", labels.add_table, "table"),
-        ("math", labels.add_math, "sigma"),
+        ("math", labels.add_math, "note-math"),
         ("image", labels.add_image, "image"),
         ("group", labels.add_group, "folder-plus"),
     ]

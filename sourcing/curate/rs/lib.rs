@@ -56,12 +56,16 @@ pub fn typology_flatten(root: &TypologyNode) -> Vec<(Vec<String>, String)> {
 
 //#region 🔖Geometry
 /// 📦 A parametric geometry recipe an object kind is composed of — data describing shape, not a subclass.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRecipe {
+    #[dsl(key = "box")]
     Box { width: f64, height: f64, depth: f64 },
+    #[dsl(key = "frame")]
     Frame { width: f64, height: f64, depth: f64, profile: f64 },
+    #[dsl(key = "slab")]
     Slab { width: f64, depth: f64, thickness: f64 },
+    #[dsl(key = "mesh")]
     Mesh { positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
 }
 
@@ -149,7 +153,11 @@ pub fn bounding_extent(recipe: &GeometryRecipe) -> f64 {
 
 //#region 🔖ObjectKind
 /// 🧱 A catalogue object KIND: identity ∘ typology reference ∘ availability ∘ geometry (composition, not subclassing).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+///
+/// `geometry` is `Box<GeometryRecipe>` (not a bare `GeometryRecipe`) because `#[dsl(statements)]`'s
+/// `RequiredStatements` shape — the "exactly one required tagged value" slot a `DslEnum` sum type
+/// needs to occupy a plain (non-`Option`, non-`Vec`) field — only recognizes a `Box<T>` inner type.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct ObjectKind {
     pub id: String,
@@ -157,19 +165,22 @@ pub struct ObjectKind {
     pub module_id: String,
     pub typology_path: Vec<String>,
     pub availability: u32,
-    pub geometry: GeometryRecipe,
+    #[dsl(statements)]
+    pub geometry: Box<GeometryRecipe>,
 }
 //#endregion 🔖ObjectKind
 
 //#region 🔖Document
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum SortDirection {
+    #[dsl(key = "asc")]
     Asc,
+    #[dsl(key = "desc")]
     Desc,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct TableSort {
     pub column_id: String,
@@ -177,7 +188,7 @@ pub struct TableSort {
 }
 
 /// 🔍 The pool table's active filter set — narrows `CurateDocument::stock` down to `filtered_stock()`.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct Filters {
     #[serde(default)]
@@ -189,11 +200,12 @@ pub struct Filters {
     #[serde(default)]
     pub min_availability: u32,
     #[serde(default)]
+    #[dsl(block)]
     pub sort: Option<TableSort>,
 }
 
 /// 🧺 One curated object kind and how many units of it have been picked.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CuratedItem {
     pub object_id: String,
@@ -201,7 +213,7 @@ pub struct CuratedItem {
 }
 
 /// 🖱️ Ephemeral cross-window UI state — which single object is selected for the preview window.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct CurateRuntime {
     #[serde(default)]
@@ -209,16 +221,19 @@ pub struct CurateRuntime {
 }
 
 /// 🛒 The curate document: a stock of catalogue kinds ∘ filters ∘ a curated set ∘ ephemeral runtime state.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "curate", layout = "lines")]
 pub struct CurateDocument {
     #[serde(default)]
     pub stock: Vec<ObjectKind>,
     #[serde(default)]
+    #[dsl(block)]
     pub filters: Filters,
     #[serde(default)]
     pub curated: Vec<CuratedItem>,
     #[serde(default)]
+    #[dsl(block)]
     pub runtime: CurateRuntime,
 }
 
@@ -272,10 +287,14 @@ impl CurateDocument {
 //#region 🔖Operations
 /// 🛒 Curate document operation: currently always a wholesale swap — every action recomputes the
 /// full document and this carries it, with a true inverse restoring the exact prior document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum SourcingOperation {
-    SetDocument { document: CurateDocument },
+    #[dsl(key = "setDocument")]
+    SetDocument {
+        #[dsl(block)]
+        document: CurateDocument,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -313,421 +332,6 @@ impl Operation<CurateDocument> for SourcingOperation {
     }
 }
 //#endregion 🔖Operations
-
-//#region 🔖Dsl
-/// 📜 Hand-rolled lexer/printer for `CurateDocument`'s `.curate` DSL (`🔖Dsl`) and for
-/// `SourcingOperation`'s one-line op text (`🔖OpText`) — both share the same `marker key=value ...
-/// "trailing text"` line grammar `vcs`'s own structural lines use, hand-rolled locally since `vcs`'s
-/// escaping helpers are private to that crate.
-mod curate_dsl {
-    use super::{CuratedItem, CurateDocument, CurateRuntime, Filters, GeometryRecipe, ObjectKind, SortDirection, SourcingOperation, TableSort};
-    use std::collections::HashMap;
-    use vcs::{TextError, TextSpan};
-
-    //#region 🔖Lexer
-    /// 🔐 Escapes `\`, `"` and newlines so arbitrary source text fits inside one quoted field.
-    fn escape_text(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out
-    }
-
-    fn unescape_text(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        let mut chars = value.chars();
-        while let Some(ch) = chars.next() {
-            if ch == '\\' {
-                match chars.next() {
-                    Some('n') => out.push('\n'),
-                    Some('"') => out.push('"'),
-                    Some('\\') => out.push('\\'),
-                    Some(other) => {
-                        out.push('\\');
-                        out.push(other);
-                    }
-                    None => out.push('\\'),
-                }
-            } else {
-                out.push(ch);
-            }
-        }
-        out
-    }
-
-    /// 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, mirroring
-    /// `vcs`'s private `find_unescaped_trailing_quote` (kept in lock-step, see that doc comment).
-    fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
-        if chars.is_empty() || *chars.last().unwrap() != '"' {
-            return None;
-        }
-        let last = chars.len() - 1;
-        let mut i = last;
-        while i > 0 {
-            i -= 1;
-            if chars[i] == '"' {
-                let mut backslashes = 0;
-                let mut j = i;
-                while j > 0 && chars[j - 1] == '\\' {
-                    backslashes += 1;
-                    j -= 1;
-                }
-                if backslashes % 2 == 0 {
-                    return Some(i);
-                }
-            }
-        }
-        None
-    }
-
-    /// 🧾 One parsed `marker key=value ...` line plus its optional trailing quoted text field.
-    struct KvLine {
-        marker: String,
-        fields: HashMap<String, String>,
-        text: Option<String>,
-    }
-
-    fn parse_kv_line(line: &str, line_no: u32) -> Result<KvLine, TextError> {
-        let chars: Vec<char> = line.chars().collect();
-        let (head, text) = match find_unescaped_trailing_quote(&chars) {
-            Some(open) => {
-                let content: String = chars[open + 1..chars.len() - 1].iter().collect();
-                let head: String = chars[..open].iter().collect();
-                (head.trim_end().to_string(), Some(unescape_text(&content)))
-            }
-            None => (line.to_string(), None),
-        };
-        let mut tokens = head.split_whitespace();
-        let marker = tokens
-            .next()
-            .ok_or_else(|| TextError::new("expected a marker", TextSpan::at(line_no, 1)))?
-            .to_string();
-        let mut fields = HashMap::new();
-        for token in tokens {
-            let (key, value) = token
-                .split_once('=')
-                .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(line_no, 1)))?;
-            fields.insert(key.to_string(), value.to_string());
-        }
-        Ok(KvLine { marker, fields, text })
-    }
-
-    fn field<'a>(fields: &'a HashMap<String, String>, key: &str, line_no: u32) -> Result<&'a str, TextError> {
-        fields.get(key).map(|value| value.as_str()).ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(line_no, 1)))
-    }
-
-    fn parse_u32(value: &str, key: &str, line_no: u32) -> Result<u32, TextError> {
-        value.parse::<u32>().map_err(|_| TextError::new(format!("expected integer for '{key}', got '{value}'"), TextSpan::at(line_no, 1)))
-    }
-
-    /// 🛤️ `-` marks an empty `/`-joined path (an empty path would otherwise print as `""`, ambiguous
-    /// with a genuine one-empty-segment path).
-    fn join_path(segments: &[String]) -> String {
-        if segments.is_empty() { "-".to_string() } else { segments.join("/") }
-    }
-
-    fn split_path(value: &str) -> Vec<String> {
-        if value == "-" { Vec::new() } else { value.split('/').map(String::from).collect() }
-    }
-
-    fn join_ids(ids: &[String]) -> String {
-        if ids.is_empty() { "-".to_string() } else { ids.join(",") }
-    }
-
-    fn split_ids(value: &str) -> Vec<String> {
-        if value == "-" { Vec::new() } else { value.split(',').map(String::from).collect() }
-    }
-    //#endregion 🔖Lexer
-
-    //#region 🔖Geometry
-    fn join_f32(values: &[f32]) -> String {
-        values.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(",")
-    }
-
-    fn join_u32_list(values: &[u32]) -> String {
-        values.iter().map(|value| value.to_string()).collect::<Vec<_>>().join(",")
-    }
-
-    fn split_f32_csv(value: &str, line_no: u32) -> Result<Vec<f32>, TextError> {
-        if value.is_empty() {
-            return Ok(Vec::new());
-        }
-        value.split(',').map(|part| part.parse::<f32>().map_err(|_| TextError::new(format!("expected number, got '{part}'"), TextSpan::at(line_no, 1)))).collect()
-    }
-
-    fn split_u32_csv(value: &str, line_no: u32) -> Result<Vec<u32>, TextError> {
-        if value.is_empty() {
-            return Ok(Vec::new());
-        }
-        value.split(',').map(|part| part.parse::<u32>().map_err(|_| TextError::new(format!("expected integer, got '{part}'"), TextSpan::at(line_no, 1)))).collect()
-    }
-
-    fn parse_f64_field(value: &str, line_no: u32) -> Result<f64, TextError> {
-        value.parse::<f64>().map_err(|_| TextError::new(format!("expected number, got '{value}'"), TextSpan::at(line_no, 1)))
-    }
-
-    /// 📤 Prints a `GeometryRecipe` as one whitespace-free token: `box:w,h,d` | `frame:w,h,d,profile` |
-    /// `slab:w,d,t` | `mesh:pos,pos,...;norm,norm,...;idx,idx,...`.
-    fn print_geometry(recipe: &GeometryRecipe) -> String {
-        match recipe {
-            GeometryRecipe::Box { width, height, depth } => format!("box:{width},{height},{depth}"),
-            GeometryRecipe::Frame { width, height, depth, profile } => format!("frame:{width},{height},{depth},{profile}"),
-            GeometryRecipe::Slab { width, depth, thickness } => format!("slab:{width},{depth},{thickness}"),
-            GeometryRecipe::Mesh { positions, normals, indices } => format!("mesh:{};{};{}", join_f32(positions), join_f32(normals), join_u32_list(indices)),
-        }
-    }
-
-    /// 📥 Parses one geometry token (see {@link print_geometry}).
-    fn parse_geometry(token: &str, line_no: u32) -> Result<GeometryRecipe, TextError> {
-        let (kind, rest) = token
-            .split_once(':')
-            .ok_or_else(|| TextError::new(format!("expected 'kind:params' geometry, got '{token}'"), TextSpan::at(line_no, 1)))?;
-        match kind {
-            "box" => {
-                let parts: Vec<&str> = rest.split(',').collect();
-                if parts.len() != 3 {
-                    return Err(TextError::new(format!("expected 3 box params, got '{rest}'"), TextSpan::at(line_no, 1)));
-                }
-                Ok(GeometryRecipe::Box { width: parse_f64_field(parts[0], line_no)?, height: parse_f64_field(parts[1], line_no)?, depth: parse_f64_field(parts[2], line_no)? })
-            }
-            "frame" => {
-                let parts: Vec<&str> = rest.split(',').collect();
-                if parts.len() != 4 {
-                    return Err(TextError::new(format!("expected 4 frame params, got '{rest}'"), TextSpan::at(line_no, 1)));
-                }
-                Ok(GeometryRecipe::Frame {
-                    width: parse_f64_field(parts[0], line_no)?,
-                    height: parse_f64_field(parts[1], line_no)?,
-                    depth: parse_f64_field(parts[2], line_no)?,
-                    profile: parse_f64_field(parts[3], line_no)?,
-                })
-            }
-            "slab" => {
-                let parts: Vec<&str> = rest.split(',').collect();
-                if parts.len() != 3 {
-                    return Err(TextError::new(format!("expected 3 slab params, got '{rest}'"), TextSpan::at(line_no, 1)));
-                }
-                Ok(GeometryRecipe::Slab { width: parse_f64_field(parts[0], line_no)?, depth: parse_f64_field(parts[1], line_no)?, thickness: parse_f64_field(parts[2], line_no)? })
-            }
-            "mesh" => {
-                let segments: Vec<&str> = rest.splitn(3, ';').collect();
-                if segments.len() != 3 {
-                    return Err(TextError::new(format!("expected 'positions;normals;indices', got '{rest}'"), TextSpan::at(line_no, 1)));
-                }
-                Ok(GeometryRecipe::Mesh {
-                    positions: split_f32_csv(segments[0], line_no)?,
-                    normals: split_f32_csv(segments[1], line_no)?,
-                    indices: split_u32_csv(segments[2], line_no)?,
-                })
-            }
-            other => Err(TextError::expected(format!("unknown geometry kind '{other}'"), TextSpan::at(line_no, 1), "box | frame | slab | mesh")),
-        }
-    }
-    //#endregion 🔖Geometry
-
-    //#region 🔖Sections
-    fn print_stock_item(kind: &ObjectKind, out: &mut String) {
-        out.push_str(&format!(
-            "  kind id={} module={} availability={} typology={} geometry={} \"{}\"\n",
-            kind.id,
-            kind.module_id,
-            kind.availability,
-            join_path(&kind.typology_path),
-            print_geometry(&kind.geometry),
-            escape_text(&kind.name),
-        ));
-    }
-
-    fn parse_stock_item(line: &str, line_no: u32) -> Result<ObjectKind, TextError> {
-        let parsed = parse_kv_line(line, line_no)?;
-        if parsed.marker != "kind" {
-            return Err(TextError::expected(format!("expected a 'kind' line, got '{}'", parsed.marker), TextSpan::at(line_no, 1), "kind"));
-        }
-        Ok(ObjectKind {
-            id: field(&parsed.fields, "id", line_no)?.to_string(),
-            name: parsed.text.ok_or_else(|| TextError::new("kind requires a quoted name field", TextSpan::at(line_no, 1)))?,
-            module_id: field(&parsed.fields, "module", line_no)?.to_string(),
-            typology_path: split_path(field(&parsed.fields, "typology", line_no)?),
-            availability: parse_u32(field(&parsed.fields, "availability", line_no)?, "availability", line_no)?,
-            geometry: parse_geometry(field(&parsed.fields, "geometry", line_no)?, line_no)?,
-        })
-    }
-
-    fn print_curated_item(item: &CuratedItem, out: &mut String) {
-        out.push_str(&format!("  pick {} {}\n", item.object_id, item.count));
-    }
-
-    fn parse_curated_item(line: &str, line_no: u32) -> Result<CuratedItem, TextError> {
-        let tokens: Vec<&str> = line.split_whitespace().collect();
-        if tokens.len() != 3 || tokens[0] != "pick" {
-            return Err(TextError::expected(format!("expected 'pick <objectId> <count>', got '{line}'"), TextSpan::at(line_no, 1), "pick <objectId> <count>"));
-        }
-        Ok(CuratedItem { object_id: tokens[1].to_string(), count: parse_u32(tokens[2], "count", line_no)? })
-    }
-
-    fn print_filters(filters: &Filters) -> String {
-        let sort = match &filters.sort {
-            Some(sort) => format!("{}:{}", sort.column_id, if sort.direction == SortDirection::Desc { "desc" } else { "asc" }),
-            None => "-".to_string(),
-        };
-        format!(
-            "filters modules={} typology={} minAvailability={} sort={} \"{}\"\n",
-            join_ids(&filters.module_ids),
-            join_path(&filters.typology_path),
-            filters.min_availability,
-            sort,
-            escape_text(&filters.query),
-        )
-    }
-
-    fn parse_filters(line: &str, line_no: u32) -> Result<Filters, TextError> {
-        let parsed = parse_kv_line(line, line_no)?;
-        if parsed.marker != "filters" {
-            return Err(TextError::expected(format!("expected a 'filters' line, got '{}'", parsed.marker), TextSpan::at(line_no, 1), "filters"));
-        }
-        let sort_field = field(&parsed.fields, "sort", line_no)?;
-        let sort = if sort_field == "-" {
-            None
-        } else {
-            let (column_id, direction) = sort_field
-                .split_once(':')
-                .ok_or_else(|| TextError::new(format!("expected 'columnId:asc|desc', got '{sort_field}'"), TextSpan::at(line_no, 1)))?;
-            Some(TableSort { column_id: column_id.to_string(), direction: if direction == "desc" { SortDirection::Desc } else { SortDirection::Asc } })
-        };
-        Ok(Filters {
-            query: parsed.text.unwrap_or_default(),
-            module_ids: split_ids(field(&parsed.fields, "modules", line_no)?),
-            typology_path: split_path(field(&parsed.fields, "typology", line_no)?),
-            min_availability: parse_u32(field(&parsed.fields, "minAvailability", line_no)?, "minAvailability", line_no)?,
-            sort,
-        })
-    }
-
-    fn print_runtime(runtime: &CurateRuntime) -> String {
-        format!("runtime selected={}\n", runtime.selected_object_id.clone().unwrap_or_else(|| "-".to_string()))
-    }
-
-    fn parse_runtime(line: &str, line_no: u32) -> Result<CurateRuntime, TextError> {
-        let parsed = parse_kv_line(line, line_no)?;
-        if parsed.marker != "runtime" {
-            return Err(TextError::expected(format!("expected a 'runtime' line, got '{}'", parsed.marker), TextSpan::at(line_no, 1), "runtime"));
-        }
-        let selected = field(&parsed.fields, "selected", line_no)?;
-        Ok(CurateRuntime { selected_object_id: if selected == "-" { None } else { Some(selected.to_string()) } })
-    }
-    //#endregion 🔖Sections
-
-    //#region 🔖Document
-    /// 📥 Parses a full `.curate` document: `stock`/`curated` sections (one two-space-indented item
-    /// per line) plus single `filters`/`runtime` lines, in any order — see {@link print_document}.
-    pub fn parse_document(text: &str) -> Result<CurateDocument, TextError> {
-        let mut stock = Vec::new();
-        let mut filters = Filters::default();
-        let mut curated = Vec::new();
-        let mut runtime = CurateRuntime::default();
-        let mut section: Option<&str> = None;
-
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            if raw_line.trim().is_empty() {
-                continue;
-            }
-            if let Some(indented) = raw_line.strip_prefix("  ") {
-                match section {
-                    Some("stock") => stock.push(parse_stock_item(indented, line_no)?),
-                    Some("curated") => curated.push(parse_curated_item(indented, line_no)?),
-                    _ => return Err(TextError::new("indented line outside a 'stock' or 'curated' section", TextSpan::at(line_no, 1))),
-                }
-                continue;
-            }
-            let trimmed = raw_line.trim();
-            let marker = trimmed.split_whitespace().next().unwrap_or("");
-            match marker {
-                "stock" => section = Some("stock"),
-                "curated" => section = Some("curated"),
-                "filters" => {
-                    filters = parse_filters(trimmed, line_no)?;
-                    section = None;
-                }
-                "runtime" => {
-                    runtime = parse_runtime(trimmed, line_no)?;
-                    section = None;
-                }
-                other => return Err(TextError::expected(format!("unknown section '{other}'"), TextSpan::at(line_no, 1), "stock | filters | curated | runtime")),
-            }
-        }
-        Ok(CurateDocument { stock, filters, curated, runtime })
-    }
-
-    /// 📤 Prints a `CurateDocument` back to its `.curate` DSL form (see {@link parse_document}).
-    pub fn print_document(document: &CurateDocument) -> String {
-        let mut out = String::new();
-        out.push_str("stock\n");
-        for kind in &document.stock {
-            print_stock_item(kind, &mut out);
-        }
-        out.push_str(&print_filters(&document.filters));
-        out.push_str("curated\n");
-        for item in &document.curated {
-            print_curated_item(item, &mut out);
-        }
-        out.push_str(&print_runtime(&document.runtime));
-        out
-    }
-    //#endregion 🔖Document
-
-    //#region 🔖Operation
-    /// 📥 Parses a single one-line `SourcingOperation`: `setDocument "<escaped .curate document>"`.
-    pub fn parse_operation(line: &str) -> Result<SourcingOperation, TextError> {
-        let parsed = parse_kv_line(line, 1)?;
-        match parsed.marker.as_str() {
-            "setDocument" => {
-                let text = parsed.text.ok_or_else(|| TextError::new("setDocument requires a quoted document field", TextSpan::at(1, 1)))?;
-                Ok(SourcingOperation::SetDocument { document: parse_document(&text)? })
-            }
-            other => Err(TextError::expected(format!("unknown sourcing operation '{other}'"), TextSpan::at(1, 1), "setDocument")),
-        }
-    }
-
-    /// 📤 Prints a `SourcingOperation` back to its one-line op text (see {@link parse_operation}).
-    pub fn print_operation(operation: &SourcingOperation) -> String {
-        match operation {
-            SourcingOperation::SetDocument { document } => format!("setDocument \"{}\"", escape_text(&print_document(document))),
-        }
-    }
-    //#endregion 🔖Operation
-}
-
-impl vcs::DocumentDsl for CurateDocument {
-    const EXTENSION: &'static str = "curate";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        curate_dsl::parse_document(text)
-    }
-
-    fn print_dsl(&self) -> String {
-        curate_dsl::print_document(self)
-    }
-}
-//#endregion 🔖Dsl
-
-//#region 🔖OpText
-impl vcs::OpText for SourcingOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        curate_dsl::parse_operation(line)
-    }
-
-    fn print_op(&self) -> String {
-        curate_dsl::print_operation(self)
-    }
-}
-//#endregion 🔖OpText
 
 //#region 🔖Modules
 /// 🧩 A sourcing module composes a typology subtree, demo catalogue kinds, and preview meshing for one
@@ -773,7 +377,7 @@ pub mod beams {
                     module_id: "beams".into(),
                     typology_path: vec!["beams".into(), "solid-timber".into(), "glulam".into()],
                     availability: 24,
-                    geometry: GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 },
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.2, height: 0.4, depth: 6.0 }),
                 },
                 ObjectKind {
                     id: "beam-kvh-c24".into(),
@@ -781,7 +385,7 @@ pub mod beams {
                     module_id: "beams".into(),
                     typology_path: vec!["beams".into(), "solid-timber".into(), "kvh".into()],
                     availability: 60,
-                    geometry: GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 4.0 },
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 4.0 }),
                 },
                 ObjectKind {
                     id: "beam-steel-ipe200".into(),
@@ -789,7 +393,7 @@ pub mod beams {
                     module_id: "beams".into(),
                     typology_path: vec!["beams".into(), "steel".into(), "ipe".into()],
                     availability: 12,
-                    geometry: GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 5.0 },
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.1, height: 0.2, depth: 5.0 }),
                 },
                 ObjectKind {
                     id: "beam-steel-hea160".into(),
@@ -797,7 +401,7 @@ pub mod beams {
                     module_id: "beams".into(),
                     typology_path: vec!["beams".into(), "steel".into(), "hea".into()],
                     availability: 8,
-                    geometry: GeometryRecipe::Box { width: 0.16, height: 0.152, depth: 5.0 },
+                    geometry: Box::new(GeometryRecipe::Box { width: 0.16, height: 0.152, depth: 5.0 }),
                 },
             ]
         }
@@ -827,7 +431,7 @@ pub mod windows {
                     module_id: "windows".into(),
                     typology_path: vec!["windows".into(), "casement".into()],
                     availability: 18,
-                    geometry: GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 },
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.0, height: 1.2, depth: 0.08, profile: 0.08 }),
                 },
                 ObjectKind {
                     id: "window-fixed-150x150".into(),
@@ -835,7 +439,7 @@ pub mod windows {
                     module_id: "windows".into(),
                     typology_path: vec!["windows".into(), "fixed".into()],
                     availability: 10,
-                    geometry: GeometryRecipe::Frame { width: 1.5, height: 1.5, depth: 0.06, profile: 0.06 },
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.5, height: 1.5, depth: 0.06, profile: 0.06 }),
                 },
                 ObjectKind {
                     id: "window-tilt-turn-120x140".into(),
@@ -843,7 +447,7 @@ pub mod windows {
                     module_id: "windows".into(),
                     typology_path: vec!["windows".into(), "tilt-turn".into()],
                     availability: 14,
-                    geometry: GeometryRecipe::Frame { width: 1.2, height: 1.4, depth: 0.09, profile: 0.09 },
+                    geometry: Box::new(GeometryRecipe::Frame { width: 1.2, height: 1.4, depth: 0.09, profile: 0.09 }),
                 },
             ]
         }
@@ -873,7 +477,7 @@ pub mod slabs {
                     module_id: "slabs".into(),
                     typology_path: vec!["slabs".into(), "concrete".into()],
                     availability: 30,
-                    geometry: GeometryRecipe::Slab { width: 2.4, depth: 1.2, thickness: 0.24 },
+                    geometry: Box::new(GeometryRecipe::Slab { width: 2.4, depth: 1.2, thickness: 0.24 }),
                 },
                 ObjectKind {
                     id: "slab-clt-160".into(),
@@ -881,7 +485,7 @@ pub mod slabs {
                     module_id: "slabs".into(),
                     typology_path: vec!["slabs".into(), "clt".into()],
                     availability: 20,
-                    geometry: GeometryRecipe::Slab { width: 2.95, depth: 1.25, thickness: 0.16 },
+                    geometry: Box::new(GeometryRecipe::Slab { width: 2.95, depth: 1.25, thickness: 0.16 }),
                 },
                 ObjectKind {
                     id: "slab-hollow-core-265".into(),
@@ -889,7 +493,7 @@ pub mod slabs {
                     module_id: "slabs".into(),
                     typology_path: vec!["slabs".into(), "hollow-core".into()],
                     availability: 16,
-                    geometry: GeometryRecipe::Slab { width: 1.2, depth: 6.0, thickness: 0.265 },
+                    geometry: Box::new(GeometryRecipe::Slab { width: 1.2, depth: 6.0, thickness: 0.265 }),
                 },
             ]
         }
@@ -1073,7 +677,7 @@ mod tests {
                 module_id: "beams".into(),
                 typology_path: vec!["beams".into(), "steel".into()],
                 availability: 5,
-                geometry: GeometryRecipe::Mesh { positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0], normals: vec![0.0, 1.0, 0.0, 0.0, 1.0, 0.0], indices: vec![0, 1, 2] },
+                geometry: Box::new(GeometryRecipe::Mesh { positions: vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0], normals: vec![0.0, 1.0, 0.0, 0.0, 1.0, 0.0], indices: vec![0, 1, 2] }),
             }],
             ..Default::default()
         };

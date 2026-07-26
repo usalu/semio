@@ -21485,7 +21485,7 @@ mod tests {
                 scope: crate::operation::Scope::CreateDesign { owner_id, design_id: crate::id::Id::from("design-scoped-1") },
                 input: crate::operation::Input::EntityScalars { name: "Scoped Design".to_string(), description: None, icon: None, image: None, unit: None },
             };
-            crate::kit_graph_engine::apply_kit_operation(&graph, &workspace_id, &crate::id::Id::from("tx-scoped-0"), create_design).await.expect("apply createDesign for scoped fixture");
+            crate::kit_graph_engine::apply_kit_operation(&graph, &workspace_id, &crate::id::Id::from("tx-scoped-1"), create_design).await.expect("apply createDesign for scoped fixture");
 
             let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
@@ -21536,21 +21536,21 @@ mod tests {
             let kit_json = json!({
                 "id": "kit-flatten",
                 "name": "Flatten Kit",
-                "types": [{
+                "types": { "hash": "…", "items": [{
                     "id": "type-a",
                     "name": "A",
-                    "connectors": [{
+                    "connectors": { "hash": "…", "items": [{
                         "id": "conn-a",
                         "name": "c0",
                         "point": { "x": 0.0, "y": 0.0, "z": 0.0 },
                         "direction": { "x": 0.0, "y": 0.0, "z": 1.0 },
                         "t": 0.0
-                    }]
-                }],
-                "designs": [{
+                    }] }
+                }] },
+                "designs": { "hash": "…", "items": [{
                     "id": "design-1",
                     "name": "D1",
-                    "pieces": [
+                    "pieces": { "hash": "…", "items": [
                         {
                             "id": "fixed-root",
                             "name": "root",
@@ -21569,8 +21569,8 @@ mod tests {
                             "name": "child",
                             "type": { "id": "type-a" }
                         }
-                    ],
-                    "connections": [{
+                    ] },
+                    "connections": { "hash": "…", "items": [{
                         "id": "link-1",
                         "gap": 0.0,
                         "shift": 0.0,
@@ -21582,8 +21582,8 @@ mod tests {
                         "v": 0.25,
                         "parent": { "piece": { "id": "fixed-root" }, "connector": { "id": "conn-a" } },
                         "child": { "piece": { "id": "linked-child" }, "connector": { "id": "conn-a" } }
-                    }]
-                }]
+                    }] }
+                }] }
             });
             let graph = crate::kit_backbone::graph_new_overlay_from_initial_projection_json(kit_json).await.expect("hydrate kit");
             let kit = graph.mutable_kit.read().await.clone();

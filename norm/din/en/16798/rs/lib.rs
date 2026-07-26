@@ -851,7 +851,9 @@ pub struct Document {
     pub l_aeq_db: f64,
 
     pub persons: u32,
-    #[dsl(ident)]
+    // Not `#[dsl(ident)]`: values like `"2"` are bare digits, which the lexer always tokenizes as
+    // an integer, never as an identifier — quoted `Text` (the default String shape) has no such
+    // ambiguity.
     pub ida_class: String,
     pub ventilation_m3_h: f64,
     pub floor_area_m2: f64,

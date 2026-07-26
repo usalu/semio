@@ -21539,7 +21539,7 @@ class TestMaxChildren:
         }
         import json as _json
 
-        restored = _json_codec.loads(_json_codec.dumps(kit_dict))
+        restored = _json.loads(_json.dumps(kit_dict))
         assert restored["ports"][0]["maxChildren"] == 3
         assert restored["types"][0]["connectors"][0]["maxChildren"] == 5
 

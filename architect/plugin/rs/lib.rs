@@ -1761,7 +1761,7 @@ fn create_architect_app() -> App {
             .mode("report", "Report")
             .default_mode_id("edit")
             .window_kind(ARCHITECT_WINDOW_ADJACENCY, "Adjacency", ARCHITECT_BODY_ADJACENCY, SurfaceKind::Canvas2d, "grid-3x3")
-            .window_kind(ARCHITECT_WINDOW_GRAPH, "Graph", ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph, "network")
+            .window_kind(ARCHITECT_WINDOW_GRAPH, "Graph", ARCHITECT_BODY_GRAPH, SurfaceKind::NodeGraph, "architect-graph")
             .window_kind(ARCHITECT_WINDOW_REGISTER, "Register", ARCHITECT_BODY_REGISTER, SurfaceKind::BlockList, "list")
             .window_kind(ARCHITECT_WINDOW_REPORT, "Report", ARCHITECT_BODY_REPORT, SurfaceKind::TextEditor, "file-text")
             .window_kind(ARCHITECT_WINDOW_TRACE, "Trace", ARCHITECT_BODY_TRACE, SurfaceKind::TextEditor, "file-code")

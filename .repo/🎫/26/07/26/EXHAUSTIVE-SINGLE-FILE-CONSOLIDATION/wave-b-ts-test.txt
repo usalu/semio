@@ -1,0 +1,2 @@
+ui/styling/js: bun ./script.ts test quick — 22 passed
+animate/present/renderer/react: vitest run — 272 passed (markdown inlined into index.tsx)

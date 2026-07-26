@@ -14027,7 +14027,7 @@ use std::collections::HashMap;
 
 use crate::arena::NodeId;
 use crate::component::layout::ActionDescriptor;
-use crate::component::ui::{UiNode, UiTreeItemNode, UiTreeSectionNode};
+use crate::component::ui::{SurfaceKind, UiNode, UiTreeItemNode, UiTreeSectionNode};
 use crate::geometry::Rect;
 use crate::tree::{EditState, Node, NodeFlags, NodeKey, UiTree};
 use crate::IconName;
@@ -14711,6 +14711,17 @@ pub enum UiCommand {
     /// 📋 `Ctrl`/`Cmd`+`V`: host must read the OS clipboard and feed the result back as
     /// `UiEvent::Paste` (the OS clipboard read itself is a `host`-region concern, not `events`').
     ClipboardPasteRequested { window_id: String },
+    /// 🎬 A real `PointerDown`/`PointerUp`/`PointerMove`/`Scroll` `event` that hit-tested to a
+    /// `ComponentScene` leaf — the host looks up `node`'s live `UiComponentSceneNode` (same
+    /// `window_id`+`node` the retained tree's `scene_slots` region reads) and routes `event` into
+    /// that `kind`'s own per-`SurfaceKind` input handler, instead of sampling an aggregate
+    /// `InputState` once per render frame the way `framework/renderer/wgpu`'s `RenderEntry` region
+    /// used to. `surface_id`/`kind`/`rect` are carried directly (resolved once here, at dispatch
+    /// time, from the same ancestor-offset accumulation `scene_slots::collect_scene_slots`/
+    /// `hit_test_node` use) so a host doesn't need its own tree walk just to decide whether this
+    /// surface already gets real OS-event-driven input through its own bespoke host (`world-3d`/
+    /// `node-graph`/`tiled-map`/`board-2d`) before paying for the `node` lookup.
+    Scene { window_id: String, node: NodeId, surface_id: String, kind: SurfaceKind, rect: Rect, event: UiEvent },
 }
 
 /// 🧭 Owns capture + focus + overlay + drag + scroll-thumb state for one window's retained tree and
@@ -15187,6 +15198,11 @@ impl EventRouter {
                     _ => {}
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
+                if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
                 commands.extend(self.update_hover(tree, target));
                 commands.extend(self.maybe_dismiss_tooltip_on_hover_out(tree, *x, *y));
             }
@@ -15198,6 +15214,9 @@ impl EventRouter {
                 let target = hit_test(tree, root, *x, *y);
                 commands.extend(self.update_hover(tree, target));
                 if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
                     if let Some(&(scrollable, axis)) = self.scroll_thumbs.get(&id) {
                         let offset = tree.node(scrollable).map(|node| node.state.scroll_offset).unwrap_or_default();
                         self.capture.target = Some((scrollable, CaptureKind::ScrollThumb(axis)));
@@ -15284,6 +15303,11 @@ impl EventRouter {
                     }
                 }
                 let target = self.resolve_target(tree, root, *x, *y);
+                if let Some(id) = target {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
                 commands.extend(self.update_hover(tree, target));
             }
             UiEvent::KeyDown { key, modifiers } => {
@@ -15305,9 +15329,43 @@ impl EventRouter {
             UiEvent::TextInput { text } => self.route_text_insert(tree, text),
             UiEvent::Paste { text } => self.route_text_insert(tree, text),
             UiEvent::Ime(ime_event) => self.route_ime(tree, ime_event),
-            UiEvent::Scroll { x, y, delta_x, delta_y } => self.route_scroll(tree, root, *x, *y, *delta_x, *delta_y),
+            UiEvent::Scroll { x, y, delta_x, delta_y } => {
+                if let Some(id) = hit_test(tree, root, *x, *y) {
+                    if let Some(cmd) = self.scene_command(tree, id, event) {
+                        commands.push(cmd);
+                    }
+                }
+                self.route_scroll(tree, root, *x, *y, *delta_x, *delta_y);
+            }
         }
         commands
+    }
+
+    /// 🎬 If `id` is a `ComponentScene` leaf, resolves its `SurfaceKind`/absolute rect (the same
+    /// ancestor-offset accumulation `scene_slots::collect_scene_slots`/`hit_test_node`/
+    /// `paint::paint_node` each do independently — not reusing `collect_scene_slots` itself, since
+    /// that walks the WHOLE tree per call and this runs once per real input event) and builds the
+    /// `UiCommand::Scene` the host should route into that surface's per-`SurfaceKind` input handler.
+    fn scene_command(&self, tree: &UiTree, id: NodeId, event: &UiEvent) -> Option<UiCommand> {
+        let node = tree.node(id)?;
+        let UiNode::ComponentScene(scene) = &node.spec.0 else { return None };
+        let mut x = node.layout.x;
+        let mut y = node.layout.y;
+        let mut current = node.parent;
+        while let Some(parent_id) = current {
+            let parent = tree.node(parent_id)?;
+            x += parent.layout.x;
+            y += parent.layout.y;
+            current = parent.parent;
+        }
+        Some(UiCommand::Scene {
+            window_id: self.window_id.clone(),
+            node: id,
+            surface_id: scene.surface_id.clone(),
+            kind: scene.component_kind,
+            rect: Rect::new(x, y, node.layout.width, node.layout.height),
+            event: event.clone(),
+        })
     }
 }
 //#endregion 🔖UiCommand
@@ -15316,8 +15374,8 @@ impl EventRouter {
 mod tests {
     use super::*;
     use crate::component::ui::{
-        UiButtonNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode, UiStackNode,
-        UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
+        UiButtonNode, UiComponentSceneNode, UiInputNode, UiPresence, UiSelectItem, UiSelectNode, UiSeparatorNode,
+        UiStackNode, UiTextNode, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
     };
     use crate::tree::{Node, NodeKey, WidgetSpec};
 
@@ -16006,6 +16064,131 @@ mod tests {
         assert_eq!(drag.payload, payload);
     }
     //#endregion 🔖W2InteractivityTests
+
+    //#region 🔖W4SceneCommandTests
+    /// 🎬 A minimal `ComponentScene` leaf — every optional per-`SurfaceKind` payload left `None`,
+    /// mirroring `scene_slots::tests::scene`'s own fixture (this module can't reuse that one directly:
+    /// it's private to the `scene_slots` submodule).
+    fn component_scene_ui(surface_id: &str, kind: SurfaceKind) -> UiNode {
+        UiNode::ComponentScene(UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "ctrl".into(),
+            component_kind: kind,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+            diff_view: None,
+            event_feed: None,
+        })
+    }
+
+    #[test]
+    fn pointer_down_on_a_component_scene_leaf_emits_a_scene_command() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        let scene_id = leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
+        let mut router = EventRouter::new("main");
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary });
+
+        let scene_cmd = commands.iter().find_map(|cmd| match cmd {
+            UiCommand::Scene { window_id, node, surface_id, kind, rect, event } => Some((window_id, node, surface_id, kind, rect, event)),
+            _ => None,
+        });
+        let (window_id, node, surface_id, kind, rect, event) = scene_cmd.expect("pointer-down over a ComponentScene leaf should emit UiCommand::Scene");
+        assert_eq!(window_id, "main");
+        assert_eq!(*node, scene_id);
+        assert_eq!(surface_id, "s1");
+        assert_eq!(*kind, SurfaceKind::Canvas2d);
+        assert_eq!(*rect, Rect::new(10.0, 10.0, 100.0, 80.0), "rect should be the leaf's own absolute layout rect");
+        assert_eq!(*event, UiEvent::PointerDown { x: 20.0, y: 20.0, button: PointerButton::Secondary }, "the real event should be carried through verbatim, including its button");
+    }
+
+    #[test]
+    fn pointer_down_outside_any_component_scene_leaf_emits_no_scene_command() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Canvas2d), (10.0, 10.0, 100.0, 80.0));
+        let mut router = EventRouter::new("main");
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 150.0, y: 150.0, button: PointerButton::Primary });
+
+        assert!(!commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { .. })), "a press outside the scene's own rect should not emit UiCommand::Scene");
+    }
+
+    #[test]
+    fn pointer_down_on_a_plain_button_emits_no_scene_command() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, button_ui("b1"), (0.0, 0.0, 50.0, 20.0));
+        let mut router = EventRouter::new("main");
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
+
+        assert!(!commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { .. })), "a plain widget leaf should never emit UiCommand::Scene");
+    }
+
+    #[test]
+    fn pointer_move_over_a_component_scene_leaf_emits_a_scene_command() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::InkCanvas), (0.0, 0.0, 200.0, 200.0));
+        let mut router = EventRouter::new("main");
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerMove { x: 50.0, y: 50.0 });
+
+        assert!(
+            commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { kind: SurfaceKind::InkCanvas, .. })),
+            "moving over a ComponentScene leaf should emit UiCommand::Scene too, not just PointerDown/Up"
+        );
+    }
+
+    #[test]
+    fn scroll_over_a_component_scene_leaf_emits_a_scene_command_and_still_routes_container_scroll() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 200.0, 200.0));
+        leaf(&mut tree, Some(root), 1, component_scene_ui("s1", SurfaceKind::Table), (0.0, 0.0, 200.0, 200.0));
+        let mut router = EventRouter::new("main");
+
+        let commands = router.dispatch(&mut tree, root, &UiEvent::Scroll { x: 50.0, y: 50.0, delta_x: 0.0, delta_y: 12.0 });
+
+        assert!(
+            commands.iter().any(|cmd| matches!(cmd, UiCommand::Scene { kind: SurfaceKind::Table, event: UiEvent::Scroll { .. }, .. })),
+            "wheel input over a ComponentScene leaf should emit UiCommand::Scene carrying the Scroll event"
+        );
+    }
+
+    #[test]
+    fn a_component_scene_nested_under_a_container_resolves_its_absolute_rect() {
+        let mut tree = UiTree::new();
+        let root = leaf(&mut tree, None, 0, stack_ui(), (0.0, 0.0, 300.0, 300.0));
+        let container = leaf(&mut tree, Some(root), 1, stack_ui(), (20.0, 30.0, 250.0, 250.0));
+        let scene_id = leaf(&mut tree, Some(container), 2, component_scene_ui("s1", SurfaceKind::Paint2d), (5.0, 5.0, 100.0, 100.0));
+        let mut router = EventRouter::new("main");
+
+        // Absolute position is (20+5, 30+5) = (25, 35); a point inside that rect must hit-test to the scene.
+        let commands = router.dispatch(&mut tree, root, &UiEvent::PointerDown { x: 40.0, y: 50.0, button: PointerButton::Primary });
+
+        let rect = commands.iter().find_map(|cmd| match cmd {
+            UiCommand::Scene { node, rect, .. } if *node == scene_id => Some(*rect),
+            _ => None,
+        });
+        assert_eq!(rect, Some(Rect::new(25.0, 35.0, 100.0, 100.0)), "a nested scene's rect should accumulate every ancestor's own layout offset");
+    }
+    //#endregion 🔖W4SceneCommandTests
 }
 // #endregion events
 }
@@ -19590,6 +19773,53 @@ fn key_action_from_event(event: &KeyEvent) -> Option<KeyAction> {
         _ => None,
     }
 }
+
+//#region 🔖ClipboardHost
+/** 📋 OS clipboard write for `events::UiCommand::ClipboardCopy`/`ClipboardCut` — a caller (e.g.
+ * `framework/renderer/wgpu`'s `interpreter::apply_ui_commands`) hands over the already-computed
+ * copied/cut `text` and this fn is the ONLY thing in either engine that touches a real clipboard
+ * backend, matching this crate's "wrap external libraries behind an interface, never leak the
+ * library's own types past it" convention. Native wraps `arboard::Clipboard::set_text` (silently
+ * no-ops without a display/clipboard, e.g. headless CI — `Clipboard::new()`'s `Err` is swallowed
+ * rather than propagated, since there is no sensible way for a UI copy gesture to surface a clipboard
+ * backend failure back through this call chain). Wasm fires the async Clipboard API's `writeText`
+ * without awaiting it: the underlying `Promise` already starts executing the instant it's created, so
+ * not awaiting it just means this fn doesn't itself learn whether the write ultimately succeeded —
+ * exactly like a browser's own Ctrl+C, which never blocks the UI thread on the OS clipboard settling. */
+#[cfg(not(target_arch = "wasm32"))]
+pub fn clipboard_write_text(text: &str) {
+    if let Ok(mut clipboard) = arboard::Clipboard::new() {
+        let _ = clipboard.set_text(text.to_string());
+    }
+}
+
+#[cfg(target_arch = "wasm32")]
+pub fn clipboard_write_text(text: &str) {
+    if let Some(window) = web_sys::window() {
+        let _ = window.navigator().clipboard().write_text(text);
+    }
+}
+
+/** 📋 Blocking OS clipboard read for `events::UiCommand::ClipboardPasteRequested` — native only:
+ * `arboard::Clipboard::get_text` is itself synchronous, so a caller can read the OS clipboard and
+ * feed the result straight back into `engine::Ui::dispatch_event` as a `events::UiEvent::Paste`
+ * within the very same call. `None` on any failure (no clipboard backend, or the clipboard doesn't
+ * currently hold text) — a caller treats that identically to "user pasted nothing". */
+#[cfg(not(target_arch = "wasm32"))]
+pub fn clipboard_read_text() -> Option<String> {
+    arboard::Clipboard::new().ok()?.get_text().ok()
+}
+
+/** 📋 The wasm mirror of `clipboard_read_text` above — `async` because the browser's Clipboard API
+ * is Promise-based with no synchronous escape hatch; a caller drives this from a
+ * `wasm_bindgen_futures::spawn_local` task (see `report-w3-clipboard-dnd.md`), since the OS
+ * clipboard permission prompt/read can't resolve within one synchronous per-frame call. */
+#[cfg(target_arch = "wasm32")]
+pub async fn clipboard_read_text() -> Option<String> {
+    let promise = web_sys::window()?.navigator().clipboard().read_text();
+    wasm_bindgen_futures::JsFuture::from(promise).await.ok()?.as_string()
+}
+//#endregion 🔖ClipboardHost
 // #endregion host
 }
 
@@ -19653,7 +19883,7 @@ pub use gpu::GpuContext;
 #[cfg(feature = "engine")]
 pub use gpu::schedule_frame;
 #[cfg(feature = "engine")]
-pub use host::{dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
+pub use host::{clipboard_read_text, clipboard_write_text, dispatch_window_event, modifiers_from_winit, pointer_coords, WindowInputState};
 #[cfg(feature = "engine")]
 pub use input::{DragAxis, DragState, HitKind, HitTarget, InputState, KeyAction, PointerCallbacks, PointerModifiers, TreeDragState, TreeDropPosition};
 #[cfg(feature = "engine")]

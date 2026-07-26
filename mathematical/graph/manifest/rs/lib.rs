@@ -61,6 +61,56 @@ impl PropertyValue {
     }
 }
 
+//#region 🔖DslField
+// 🌱 `PropertyValue` is structurally a dynamic JSON-equivalent literal (Null/Bool/Number/String/
+// Array/Object), exactly like `dsl::DslValue` itself, so it binds as `Shape::Value` rather than
+// through `#[derive(dsl::DslEnum)]`: the derive's tuple-variant codegen treats every single-field
+// unnamed variant as a "newtype" delegating to the inner type's own `Shape::Record` (see
+// `dsl::__rt::newtype_variant_spec`), which panics for a primitive/collection inner type such as
+// `bool`/`f64`/`Vec<Self>`/`BTreeMap<String, Self>` — none of which are `Shape::Record`. Binding
+// directly through `DslValue` (mirroring the engine's own `serde_json::Value` bridge) is both
+// correct and the natural fit for an untyped recursive value type, and it needs no attributes on
+// the Array/Object variants: recursion is carried by `DslValue` itself, not by field-level nesting.
+fn property_value_to_dsl_value(value: &PropertyValue) -> dsl::DslValue {
+    match value {
+        PropertyValue::Null => dsl::DslValue::Null,
+        PropertyValue::Bool(b) => dsl::DslValue::Bool(*b),
+        PropertyValue::Number(n) => dsl::DslValue::Number(*n),
+        PropertyValue::String(s) => dsl::DslValue::String(s.clone()),
+        PropertyValue::Array(items) => dsl::DslValue::Array(items.iter().map(property_value_to_dsl_value).collect()),
+        PropertyValue::Object(map) => dsl::DslValue::Object(map.iter().map(|(k, v)| (k.clone(), property_value_to_dsl_value(v))).collect()),
+    }
+}
+
+fn dsl_value_to_property_value(value: &dsl::DslValue) -> PropertyValue {
+    match value {
+        dsl::DslValue::Null => PropertyValue::Null,
+        dsl::DslValue::Bool(b) => PropertyValue::Bool(*b),
+        dsl::DslValue::Number(n) => PropertyValue::Number(*n),
+        dsl::DslValue::String(s) => PropertyValue::String(s.clone()),
+        dsl::DslValue::Array(items) => PropertyValue::Array(items.iter().map(dsl_value_to_property_value).collect()),
+        dsl::DslValue::Object(entries) => PropertyValue::Object(entries.iter().map(|(k, v)| (k.clone(), dsl_value_to_property_value(v))).collect()),
+    }
+}
+
+impl dsl::DslField for PropertyValue {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Value
+    }
+
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Value(property_value_to_dsl_value(self))
+    }
+
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(dsl_value) => Ok(dsl_value_to_property_value(dsl_value)),
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+//#endregion 🔖DslField
+
 /// 🏷️ Compile-time property kind.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -526,6 +576,28 @@ mod tests {
     fn manifest_by_id_resolves() {
         let m = crate::generated::manifest_by_id("nakagin").expect("nakagin");
         assert!(m.node_kind("Balcony").is_some());
+    }
+
+    #[test]
+    fn property_value_dsl_field_round_trips_nested_array_and_object() {
+        // 🌳 Nested case: an Object containing an Array containing an Object — proves the
+        // `dsl::DslField` bridge (via `dsl::DslValue`) recurses correctly at every depth, not just
+        // for a flat value.
+        let mut inner_obj = std::collections::BTreeMap::new();
+        inner_obj.insert("flag".to_string(), PropertyValue::Bool(true));
+        inner_obj.insert("label".to_string(), PropertyValue::String("leaf".to_string()));
+
+        let array_of_objects = PropertyValue::Array(vec![PropertyValue::Number(1.0), PropertyValue::Object(inner_obj), PropertyValue::Null]);
+
+        let mut root = std::collections::BTreeMap::new();
+        root.insert("id".to_string(), PropertyValue::String("root".to_string()));
+        root.insert("count".to_string(), PropertyValue::Number(3.0));
+        root.insert("items".to_string(), array_of_objects);
+        let value = PropertyValue::Object(root);
+
+        let field_value = <PropertyValue as ::dsl::DslField>::to_value(&value);
+        let round_tripped = <PropertyValue as ::dsl::DslField>::from_value(&field_value).expect("round trip must succeed");
+        assert_eq!(round_tripped, value, "PropertyValue dsl::DslField round trip diverged for a nested Object/Array/Object value");
     }
 }
 // #endregion 🔖Tests

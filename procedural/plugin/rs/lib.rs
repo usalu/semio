@@ -1003,8 +1003,8 @@ pub mod app_2d {
                 .mode("edit", "Edit")
                 .mode("generate", "Generate")
                 .default_mode_id("edit")
-                .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "network")
-                .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "eye")
+                .window_kind(PROCEDURAL2D_PLAY_WINDOW_MAIN, "Flow", PROCEDURAL2D_PLAY_BODY_MAIN, SurfaceKind::NodeGraph, "flow-graph")
+                .window_kind(PROCEDURAL2D_PLAY_WINDOW_PREVIEW, "Preview", PROCEDURAL2D_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
                 .window_kind(
                     PROCEDURAL2D_PLAY_WINDOW_GENERATIONS,
                     "Generations",
@@ -1018,7 +1018,7 @@ pub mod app_2d {
                     "Preview",
                     PROCEDURAL2D_PLAY_BODY_GENERATE_PREVIEW,
                     SurfaceKind::Canvas2d,
-                    "eye",
+                    "preview",
                 )
                 .default_layout(create_default_layout(
                     &[PROCEDURAL2D_PLAY_WINDOW_MAIN.into(), PROCEDURAL2D_PLAY_WINDOW_PREVIEW.into()],
@@ -1365,7 +1365,7 @@ pub mod app_3d {
         ("neuron", "cpu"),
         ("inputSlider", "sliders-horizontal"),
         ("inputNote", "file-text"),
-        ("outputPreview", "eye"),
+        ("outputPreview", "preview"),
     ];
 
     /// 🧰 The gumball utility active when the host has not yet set `view_state.active_utility_id` (first UtilityRef).
@@ -2895,14 +2895,14 @@ pub mod app_3d {
                     "Flow",
                     PROCEDURAL_3D_PLAY_BODY_MAIN,
                     SurfaceKind::NodeGraph,
-                    "network",
+                    "flow-graph",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_PREVIEW,
                     "Preview",
                     PROCEDURAL_3D_PLAY_BODY_PREVIEW,
                     SurfaceKind::World3d,
-                    "eye",
+                    "preview",
                 )
                 .window_kind(
                     PROCEDURAL_3D_PLAY_WINDOW_GENERATIONS,
@@ -2923,7 +2923,7 @@ pub mod app_3d {
                     "Preview",
                     PROCEDURAL_3D_PLAY_BODY_GENERATE_PREVIEW,
                     SurfaceKind::World3d,
-                    "eye",
+                    "preview",
                 )
                 .default_layout(create_default_layout(
                     &[PROCEDURAL_3D_PLAY_WINDOW_MAIN.into(), PROCEDURAL_3D_PLAY_WINDOW_PREVIEW.into()],

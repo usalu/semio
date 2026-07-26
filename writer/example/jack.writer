@@ -1,4 +1,4 @@
-@writer schema=writer.document id=jack language=jack uri=writer://jack x=0 y=0 zoom=1 lines=3
-MATCH (a:Piece)-[r:Connection]->(b:Piece)
-WHERE a.name = 'core'
-RETURN a.name, b.name
+schema="writer.document" id="jack" language_id="jack" uri="writer://jack" text="MATCH (a:Piece)-[r:Connection]->(b:Piece)\nWHERE a.name = 'core'\nRETURN a.name, b.name"
+camera {
+  x=0 y=0 zoom=1
+}

@@ -123,10 +123,19 @@ fn metabolism_wires_example_document() -> MindmapWiresDocument {
     MindmapWiresDocument::parse_dsl(METABOLISM_WIRES_EXAMPLE_TEXT).unwrap_or_else(|_| empty_mindmap_wires_document())
 }
 
+/// 🔢 `identityId`/`sourceIdentityId`/`targetIdentityId` read as a whole `u64` regardless of whether
+/// the source JSON number is an integer or a float literal — the `.wires` fixture is round-tripped
+/// through `reasoning_mindmap`'s `dsl`-derived `Shape::Value` grammar, whose `DslValue::Number` is a
+/// single `f64` (no JSON int/float distinction), so every id arrives here as e.g. `Number(1.0)`, not
+/// `Number(1)`; bare `.as_u64()` would return `None` for that representation.
+fn json_id(value: Option<&Value>) -> Option<u64> {
+    value.and_then(|value| value.as_u64().or_else(|| value.as_f64().map(|float| float as u64)))
+}
+
 fn identity_label(wires: &Value, identity_id: u64) -> Option<String> {
     wires_identities(wires)
         .iter()
-        .find(|identity| identity.get("identityId").and_then(|value| value.as_u64()) == Some(identity_id))
+        .find(|identity| json_id(identity.get("identityId")) == Some(identity_id))
         .and_then(|identity| identity.get("label").and_then(|value| value.as_str()))
         .map(str::to_string)
 }
@@ -146,8 +155,8 @@ fn wires_relationship_document_label(wires: &Value, edge_id: &str, labels: &Wire
         row.get("edgeId").and_then(|value| value.as_str()) == Some(edge_id)
     })?;
     let kind = relationship.get("kind")?.as_str()?;
-    let source_id = relationship.get("sourceIdentityId")?.as_u64()?;
-    let target_id = relationship.get("targetIdentityId")?.as_u64()?;
+    let source_id = json_id(relationship.get("sourceIdentityId"))?;
+    let target_id = json_id(relationship.get("targetIdentityId"))?;
     let source = identity_label(wires, source_id)?;
     let target = identity_label(wires, target_id)?;
     Some(format!(

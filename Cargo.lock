@@ -139,6 +139,7 @@ version = "0.1.0"
 dependencies = [
  "animate_core",
  "animate_video",
+ "dsl",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -200,6 +201,26 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c3d036a3c4ab069c7b410a2ce876bd74808d2d0888a82667669f8e783a898bf1"
 dependencies = [
  "derive_arbitrary",
+]
+
+[[package]]
+name = "arboard"
+version = "3.6.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "0348a1c054491f4bfe6ab86a7b6ab1e44e45d899005de92f58b3df180b36ddaf"
+dependencies = [
+ "clipboard-win",
+ "image",
+ "log",
+ "objc2 0.6.4",
+ "objc2-app-kit 0.3.2",
+ "objc2-core-foundation",
+ "objc2-core-graphics",
+ "objc2-foundation 0.3.2",
+ "parking_lot",
+ "percent-encoding",
+ "windows-sys 0.60.2",
+ "x11rb",
 ]
 
 [[package]]
@@ -1337,6 +1358,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c8d4a3bb8b1e0c1050499d1815f5ab16d04f0959b233085fb31653fbfc9d98f9"
 
 [[package]]
+name = "clipboard-win"
+version = "5.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "bde03770d3df201d4fb868f2c9c59e66a3e4e2bd06692a0fe701e7103c7e84d4"
+dependencies = [
+ "error-code",
+]
+
+[[package]]
 name = "cobs"
 version = "0.3.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2225,6 +2255,7 @@ dependencies = [
  "dsl_derive",
  "dsl_schema",
  "serde",
+ "serde_json",
  "vcs",
 ]
 
@@ -2422,6 +2453,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "error-code"
+version = "3.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "dea2df4cf52843e0452895c455a1a2cfbb842a1e7329671acf418fdc53ed4c59"
+
+[[package]]
 name = "etcetera"
 version = "0.8.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2518,6 +2555,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9f1f227452a390804cdb637b74a86990f2a7d7ba4b7d5693aac9b4dd6defd8d6"
 
 [[package]]
+name = "fax"
+version = "0.2.7"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "caf1079563223d5d59d83c85886a56e586cfd5c1a26292e971a0fa266531ac5a"
+
+[[package]]
 name = "fd-lock"
 version = "4.0.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2554,6 +2597,7 @@ dependencies = [
 name = "fem_2d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fem_core",
  "serde",
  "serde_json",
@@ -2566,6 +2610,7 @@ dependencies = [
 name = "fem_3d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fem_core",
  "serde",
  "serde_json",
@@ -3303,6 +3348,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "gethostname"
+version = "1.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1bd49230192a3797a9a4d6abe9b3eed6f7fa4c8a8a4947977c6f80025f92cbd8"
+dependencies = [
+ "rustix 1.1.4",
+ "windows-link",
+]
+
+[[package]]
 name = "getrandom"
 version = "0.2.17"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -3380,6 +3435,7 @@ dependencies = [
 name = "gis-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "framework_surface_terrain",
  "framework_surface_tiled_map",
  "semio-framework-os",
@@ -4397,6 +4453,7 @@ dependencies = [
  "moxcms 0.8.1",
  "num-traits",
  "png 0.18.1",
+ "tiff",
  "zune-core 0.5.1",
  "zune-jpeg 0.5.15",
 ]
@@ -4439,6 +4496,7 @@ dependencies = [
 name = "imperative_core"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "imperative_engine",
  "imperative_module_core",
  "neural_engine",
@@ -4589,6 +4647,7 @@ dependencies = [
 name = "infinite_board_port_directed_dag"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "infinite_board_port_directed",
  "infinite_cavas",
  "js-sys",
@@ -5076,6 +5135,7 @@ dependencies = [
 name = "layout_rs"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fontique 0.4.0",
  "image",
  "infinite_cavas",
@@ -5250,6 +5310,7 @@ dependencies = [
  "base64 0.22.1",
  "cad-plugin",
  "cad_document",
+ "dsl",
  "kernel_3d_brepkit",
  "kernel_3d_engine",
  "kernel_3d_mesh",
@@ -5310,6 +5371,7 @@ checksum = "47e1ffaa40ddd1f3ed91f717a33c8c0ee23fff369e3aa8772b9605cc1d22f4c3"
 name = "mathematical-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "mathematical_algebra",
  "mathematical_geometry",
  "mathematical_graph",
@@ -5559,6 +5621,7 @@ dependencies = [
 name = "mathematical_graph_manifest"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "neural_engine",
  "serde",
  "serde_json",
@@ -6700,6 +6763,7 @@ dependencies = [
  "bitflags 2.11.1",
  "block2 0.6.2",
  "objc2 0.6.4",
+ "objc2-core-graphics",
  "objc2-foundation 0.3.2",
 ]
 
@@ -6748,6 +6812,19 @@ dependencies = [
  "bitflags 2.11.1",
  "dispatch2",
  "objc2 0.6.4",
+]
+
+[[package]]
+name = "objc2-core-graphics"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e022c9d066895efa1345f8e33e584b9f958da2fd4cd116792e15e07e4720a807"
+dependencies = [
+ "bitflags 2.11.1",
+ "dispatch2",
+ "objc2 0.6.4",
+ "objc2-core-foundation",
+ "objc2-io-surface",
 ]
 
 [[package]]
@@ -6808,6 +6885,17 @@ name = "objc2-foundation"
 version = "0.3.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e3e0adef53c21f888deb4fa59fc59f7eb17404926ee8a6f59f5df0fd7f9f3272"
+dependencies = [
+ "bitflags 2.11.1",
+ "objc2 0.6.4",
+ "objc2-core-foundation",
+]
+
+[[package]]
+name = "objc2-io-surface"
+version = "0.3.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "180788110936d59bab6bd83b6060ffdfffb3b922ba1396b312ae795e1de9d81d"
 dependencies = [
  "bitflags 2.11.1",
  "objc2 0.6.4",
@@ -7610,6 +7698,7 @@ dependencies = [
 name = "procedural_2d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "flow_core",
  "protocol",
  "serde",
@@ -7622,6 +7711,7 @@ dependencies = [
 name = "procedural_3d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "flow_core",
  "protocol",
  "serde",
@@ -7650,6 +7740,7 @@ dependencies = [
 name = "process_3d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "serde",
  "serde_json",
  "vcs",
@@ -7689,6 +7780,7 @@ dependencies = [
 name = "protocol"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "serde",
  "serde_json",
  "ui_wgpu",
@@ -8022,6 +8114,7 @@ checksum = "ca45419789ae5a7899559e9512e58ca889e41f04f1f2445e9f4b290ceccd1d08"
 name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -8109,6 +8202,7 @@ dependencies = [
 name = "reasoning_mindmap"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "infinite_board_normal_directed",
  "infinite_cavas",
  "serde",
@@ -8299,6 +8393,7 @@ name = "remodel_document"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "dsl",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -8775,6 +8870,7 @@ name = "s-plugin"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "dsl",
  "infinite_board_port_directed_dag",
  "semio-framework-core",
  "semio-framework-os",
@@ -8788,6 +8884,7 @@ dependencies = [
 name = "s_studio"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "js-sys",
  "serde",
  "serde-wasm-bindgen",
@@ -8953,6 +9050,7 @@ name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "dsl",
  "kernel_3d_brepkit",
  "kernel_3d_engine",
  "png 0.17.16",
@@ -9119,6 +9217,7 @@ dependencies = [
 name = "sequence_core"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "imperative_engine",
  "imperative_module_core",
  "infinite_board_port_directed_dag",
@@ -9339,6 +9438,7 @@ checksum = "0fda2ff0d084019ba4d7c6f371c95d8fd75ce3524c3cb8fb653a3023f6323e64"
 name = "shooting"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "serde",
  "serde_json",
  "vcs",
@@ -9547,6 +9647,7 @@ dependencies = [
 name = "sourcing_curate"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "serde",
  "serde_json",
  "vcs",
@@ -10037,6 +10138,20 @@ dependencies = [
 ]
 
 [[package]]
+name = "tiff"
+version = "0.11.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "b63feaf3343d35b6ca4d50483f94843803b0f51634937cc2ec519fc32232bc52"
+dependencies = [
+ "fax",
+ "flate2",
+ "half",
+ "quick-error",
+ "weezl",
+ "zune-jpeg 0.5.15",
+]
+
+[[package]]
 name = "time"
 version = "0.3.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -10499,6 +10614,7 @@ dependencies = [
 name = "trinity_ram"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "mathematical_graph_manifest",
  "serde",
  "serde_json",
@@ -10511,6 +10627,7 @@ dependencies = [
 name = "trinity_rewrite"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "infinite_board_port_directed",
  "infinite_board_port_directed_normal",
  "infinite_cavas",
@@ -10931,6 +11048,7 @@ dependencies = [
 name = "ui_wgpu"
 version = "0.1.0"
 dependencies = [
+ "arboard",
  "bytemuck",
  "js-sys",
  "kernel_3d_scene",
@@ -12931,6 +13049,7 @@ checksum = "1ffae5123b2d3fc086436f8834ae3ab053a283cfac8fe0a0b8eaae044768a4c4"
 name = "writer"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "framework_editor",
  "serde",
  "serde_json",
@@ -12951,6 +13070,23 @@ dependencies = [
  "vcs",
  "writer",
 ]
+
+[[package]]
+name = "x11rb"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "9993aa5be5a26815fe2c3eacfc1fde061fc1a1f094bf1ad2a18bf9c495dd7414"
+dependencies = [
+ "gethostname",
+ "rustix 1.1.4",
+ "x11rb-protocol",
+]
+
+[[package]]
+name = "x11rb-protocol"
+version = "0.13.2"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "ea6fc2961e4ef194dcbfe56bb845534d0dc8098940c7e5c012a258bfec6701bd"
 
 [[package]]
 name = "xattr"

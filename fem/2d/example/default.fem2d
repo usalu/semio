@@ -1,38 +1,28 @@
-@node id=n1 x=0 y=-4
-@node id=n2 x=0 y=0
-@node id=p8 x=8 y=0
-@node id=p0_l1 x=0 y=2.8
-@node id=p8_l1 x=8 y=2.8
-@node id=p0_l2 x=0 y=5.6
-@node id=p8_l2 x=8 y=5.6
-@node id=ridge x=4 y=7.6
-@node id=rc0 x=10 y=2.75
-@node id=rc1 x=12 y=2.75
-@node id=rc2 x=12 y=2.85
-@node id=rc3 x=10 y=2.85
-@beam id=e3 start=n1 end=n2 material=steel section=chs76
-@beam id=e4 start=n2 end=p0_l1 material=timber section=post140
-@beam id=e5 start=p0_l1 end=p0_l2 material=timber section=post140
-@beam id=e6 start=p8 end=p8_l1 material=timber section=post140
-@beam id=e7 start=p8_l1 end=p8_l2 material=timber section=post140
-@beam id=e8 start=p0_l1 end=p8_l1 material=timber section=floorbeam
-@beam id=e9 start=p0_l2 end=p8_l2 material=timber section=floorbeam
-@beam id=e10 start=p0_l2 end=ridge material=timber section=rafter
-@beam id=e11 start=ridge end=p8_l2 material=timber section=rafter
-@region id=r1 material=concrete thickness=0.2 mesh=1 outline=10,2.75;12,2.75;12,2.85;10,2.85 holes=- "First Floor Slab"
-@material id=steel e=210000000000 nu=0.3 rho=7850 "Steel S235"
-@material id=timber e=11000000000 nu=0.3 rho=450 "C24 Timber"
-@material id=concrete e=33000000000 nu=0.2 rho=2400 "C30/37 Concrete"
-@section id=chs76 area=0.001 iy=0.000001 "CHS 76 Foundation Column"
-@section id=post140 area=0.0196 iy=0.000032 "Timber Post 140x140"
-@section id=floorbeam area=0.0176 iy=0.000071 "Timber Floor Beam 80x220"
-@section id=rafter area=0.0144 iy=0.000039 "Timber Rafter 80x180"
-@support id=s1 node=n1 fixed=Tx,Ty
-@support id=s2 node=p8 fixed=Ty
-@support id=s3 node=rc0 fixed=Tx,Ty
-@support id=s4 node=rc1 fixed=Tx,Ty
-@loadcase id=dead selfweight=true loads=area:l5:r1:800 "Dead Load"
-@loadcase id=live selfweight=false loads=nodal:l6:p8_l1:Ty:-12000|area:l7:r1:1500 "Live Load"
-@combination id=uls terms=dead:1.35,live:1.5 "ULS"
-@analysis modal=3 buckling=3 scale=300
-@camera x=4 y=2 zoom=0.12
+nodes= [ id="n1" x=0 y=-4 id="n2" x=0 y=0 id="p8" x=8 y=0 id="p0_l1" x=0 y=2.8 id="p8_l1" x=8 y=2.8 id="p0_l2" x=0 y=5.6 id="p8_l2" x=8 y=5.6 id="ridge" x=4 y=7.6 id="rc0" x=10 y=2.75 id="rc1" x=12 y=2.75 id="rc2" x=12 y=2.85 id="rc3" x=10 y=2.85 ]
+elements {
+  beam id="e3" start="n1" end="n2" material_id="steel" section_id="chs76"
+  beam id="e4" start="n2" end="p0_l1" material_id="timber" section_id="post140"
+  beam id="e5" start="p0_l1" end="p0_l2" material_id="timber" section_id="post140"
+  beam id="e6" start="p8" end="p8_l1" material_id="timber" section_id="post140"
+  beam id="e7" start="p8_l1" end="p8_l2" material_id="timber" section_id="post140"
+  beam id="e8" start="p0_l1" end="p8_l1" material_id="timber" section_id="floorbeam"
+  beam id="e9" start="p0_l2" end="p8_l2" material_id="timber" section_id="floorbeam"
+  beam id="e10" start="p0_l2" end="ridge" material_id="timber" section_id="rafter"
+  beam id="e11" start="ridge" end="p8_l2" material_id="timber" section_id="rafter"
+}
+regions= [ id="r1" name="First Floor Slab" outline= [ 10,2.75 12,2.75 12,2.85 10,2.85 ] holes= [ ] thickness=0.2 material_id="concrete" mesh_size=1 ] materials= [ id="steel" name="Steel S235" e=210000000000 nu=0.3 rho=7850 id="timber" name="C24 Timber" e=11000000000 nu=0.3 rho=450 id="concrete" name="C30/37 Concrete" e=33000000000 nu=0.2 rho=2400 ] sections= [ id="chs76" name="CHS 76 Foundation Column" area=0.001 iy=0.000001 id="post140" name="Timber Post 140x140" area=0.0196 iy=0.000032 id="floorbeam" name="Timber Floor Beam 80x220" area=0.0176 iy=0.000071 id="rafter" name="Timber Rafter 80x180" area=0.0144 iy=0.000039 ] supports= [ id="s1" node_id="n1" fixed= [ Tx Ty ] id="s2" node_id="p8" fixed= [ Ty ] id="s3" node_id="rc0" fixed= [ Tx Ty ] id="s4" node_id="rc1" fixed= [ Tx Ty ] ] load_cases= [ id="dead" name="Dead Load"
+loads {
+  area id="l5" region_id="r1" pressure=800
+}
+self_weight=true id="live" name="Live Load"
+loads {
+  nodal id="l6" node_id="p8_l1" dof=Ty value=-12000
+  area id="l7" region_id="r1" pressure=1500
+}
+self_weight=false ] combinations= [ id="uls" name="ULS" terms= [ case_id="dead" factor=1.35 case_id="live" factor=1.5 ] ]
+analysis {
+  modal_count=3 buckling_count=3 deformation_scale=300
+}
+camera {
+  x=4 y=2 zoom=0.12
+}

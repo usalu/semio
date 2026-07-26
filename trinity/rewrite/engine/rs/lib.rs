@@ -9,9 +9,10 @@ use infinite_board_port_directed_normal::BoardHost;
 pub use infinite_cavas as cavas;
 use serde::{Deserialize, Serialize};
 use std::cell::Cell;
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use trinity_jack::{execute, parse};
 use trinity_ram::{create_trinity_graph_envelope, dispatch_trinity_graph_operations, port_key, Graph, GraphFixture, Node, PortDirection, PropertyValue, TrinityGraphOperation, TrinityGraphStore};
+use vcs::{DocumentDsl, OpText};
 
 pub use trinity_jack::{complete as complete_jack, parse as parse_jack, run as run_jack, run_json as run_jack_json, tokenize as tokenize_jack, Completion as JackCompletion, Pattern, QueryResult, QueryResultKind, TokenSpan as JackTokenSpan};
 pub use trinity_ram::{self, Camera, Manifest};
@@ -277,17 +278,48 @@ struct RuleQueryResult {
 // #region 🔖RuleVcs
 use vcs::{create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
-/// 📐 The full rewrite-rule document: before fixture, LHS/RHS patterns, parameter bindings, and rule-graph layout overrides.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 📍 Local `{x, y}` twin for a bare `(f64, f64)` tuple — the DSL engine's `DslField` binding has no
+/// impl for raw Rust tuples (only named `DslRecord`/`DslScalar` types can bind), so `rule_layout`'s
+/// value type is this named record instead, with `From`/`Into` conversions at this crate's own
+/// remaining `(f64, f64)` call sites (tests only — no production logic reads `rule_layout` today).
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+pub struct LayoutPoint {
+    pub x: f64,
+    pub y: f64,
+}
+
+impl From<(f64, f64)> for LayoutPoint {
+    fn from((x, y): (f64, f64)) -> Self {
+        Self { x, y }
+    }
+}
+
+impl From<LayoutPoint> for (f64, f64) {
+    fn from(point: LayoutPoint) -> Self {
+        (point.x, point.y)
+    }
+}
+
+/// 📐 The full rewrite-rule document: before fixture, LHS/RHS patterns, parameter bindings, and
+/// rule-graph layout overrides. Every field binds directly through the `dsl::` engine: the `_json`
+/// fields are plain opaque `String`s (the engine's own `Shape::Text` already escapes embedded quotes/
+/// newlines — see `dsl_core::escape_text`/`unescape_text` — so a pretty-printed JSON blob round-trips
+/// with no hand-rolled quoting), `parameter_bindings` is `BTreeMap<String, PropertyValue>` (bare
+/// `HashMap` has no blanket `DslField` impl, only `BTreeMap` does, and nothing here relies on
+/// `HashMap`'s unordered iteration), and `rule_layout` uses the `LayoutPoint` twin above in place of a
+/// bare tuple.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase")]
+#[dsl(extension = "rewrite", layout = "lines")]
 pub struct RewriteRuleState {
     pub before_fixture_json: String,
     pub lhs_json: String,
     pub rhs_json: String,
     #[serde(default)]
-    pub parameter_bindings: HashMap<String, PropertyValue>,
+    pub parameter_bindings: BTreeMap<String, PropertyValue>,
     #[serde(default)]
-    pub rule_layout: HashMap<String, (f64, f64)>,
+    pub rule_layout: BTreeMap<String, LayoutPoint>,
 }
 
 /// 🔁 Whole-state snapshot diff: the rule document is one small unit, so history stores full pre/post states rather than field-level patches.
@@ -309,9 +341,10 @@ impl OperationDiff<RewriteRuleState> for RewriteRuleDiff {
     }
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RewriteRuleOperation {
+    #[dsl(key = "setState")]
     SetState { state: RewriteRuleState },
 }
 
@@ -348,158 +381,11 @@ pub fn dispatch_rewrite_rule_state(store: &mut RewriteRuleStore, state: RewriteR
 // #endregion 🔖RuleVcs
 
 //#region 🔖Dsl
-use trinity_ram::{parse_property_value_line, print_property_value};
-use vcs::{DocumentDsl, OpText, TextError, TextSpan};
-
-//#region 🔖DslText
-/// 🔐 Backslash-escapes `\`, `"`, and newline so an arbitrary blob (typically JSON) can be embedded as
-/// one `"..."` quoted field on a single DSL/op-text line — same scheme as `vcs`'s own private
-/// `escape_text_field`, hand-rolled again here since that helper is not exported.
-fn quote_blob(value: &str) -> String {
-    let mut out = String::with_capacity(value.len() + 2);
-    out.push('"');
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            _ => out.push(ch),
-        }
-    }
-    out.push('"');
-    out
-}
-
-/// 🔍 Reads one `"..."` quoted field from the start of `rest`, unescaping as it scans; errors if `rest`
-/// is not a single well-formed quoted field (no trailing content is tolerated — callers pass the whole
-/// remainder of the line).
-fn parse_quoted_blob(rest: &str, line_no: u32) -> Result<String, TextError> {
-    let mut chars = rest.chars();
-    if chars.next() != Some('"') {
-        return Err(TextError::new("expected opening '\"'", TextSpan::at(line_no, 1)));
-    }
-    let mut out = String::new();
-    loop {
-        match chars.next() {
-            Some('\\') => match chars.next() {
-                Some('n') => out.push('\n'),
-                Some('"') => out.push('"'),
-                Some('\\') => out.push('\\'),
-                Some(other) => {
-                    out.push('\\');
-                    out.push(other);
-                }
-                None => return Err(TextError::new("unterminated escape", TextSpan::at(line_no, 1))),
-            },
-            Some('"') => {
-                if chars.next().is_some() {
-                    return Err(TextError::new("unexpected trailing content after quoted field", TextSpan::at(line_no, 1)));
-                }
-                return Ok(out);
-            }
-            Some(ch) => out.push(ch),
-            None => return Err(TextError::new("unterminated string", TextSpan::at(line_no, 1))),
-        }
-    }
-}
-//#endregion 🔖DslText
-
-//#region 🔖DslDocument
-/// 📜 Handcrafted `.rewrite` textual notation for [`RewriteRuleState`] (`vcs::DocumentDsl`): `before`/
-/// `lhs`/`rhs` lines each hold one escaped JSON blob (the state's own `_json` fields are left as JSON —
-/// only this DSL's line framing is new), then one `binding <key> <value>` line per parameter binding and
-/// one `layout <key> <x> <y>` line per rule-graph layout override, reusing `trinity_ram`'s property-
-/// value literal grammar (`print_property_value`/`parse_property_value_line`) instead of a second copy.
-impl DocumentDsl for RewriteRuleState {
-    const EXTENSION: &'static str = "rewrite";
-
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let mut before_fixture_json = String::new();
-        let mut lhs_json = String::new();
-        let mut rhs_json = String::new();
-        let mut parameter_bindings = HashMap::new();
-        let mut rule_layout = HashMap::new();
-
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            let line = raw_line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-            match keyword {
-                "before" => before_fixture_json = parse_quoted_blob(rest, line_no)?,
-                "lhs" => lhs_json = parse_quoted_blob(rest, line_no)?,
-                "rhs" => rhs_json = parse_quoted_blob(rest, line_no)?,
-                "binding" => {
-                    let (key, value_text) = rest.split_once(' ').ok_or_else(|| TextError::new("expected 'binding <key> <value>'", TextSpan::at(line_no, 1)))?;
-                    parameter_bindings.insert(key.to_string(), parse_property_value_line(value_text.trim())?);
-                }
-                "layout" => {
-                    let mut parts = rest.split_whitespace();
-                    let key = parts.next().ok_or_else(|| TextError::new("expected 'layout <key> <x> <y>'", TextSpan::at(line_no, 1)))?;
-                    let x: f64 = parts
-                        .next()
-                        .and_then(|s| s.parse().ok())
-                        .ok_or_else(|| TextError::new("expected numeric x", TextSpan::at(line_no, 1)))?;
-                    let y: f64 = parts
-                        .next()
-                        .and_then(|s| s.parse().ok())
-                        .ok_or_else(|| TextError::new("expected numeric y", TextSpan::at(line_no, 1)))?;
-                    rule_layout.insert(key.to_string(), (x, y));
-                }
-                other => return Err(TextError::new(format!("unknown dsl line keyword '{other}'"), TextSpan::at(line_no, 1))),
-            }
-        }
-
-        Ok(RewriteRuleState { before_fixture_json, lhs_json, rhs_json, parameter_bindings, rule_layout })
-    }
-
-    fn print_dsl(&self) -> String {
-        let mut lines = Vec::new();
-        lines.push(format!("before {}", quote_blob(&self.before_fixture_json)));
-        lines.push(format!("lhs {}", quote_blob(&self.lhs_json)));
-        lines.push(format!("rhs {}", quote_blob(&self.rhs_json)));
-        let mut binding_keys: Vec<&String> = self.parameter_bindings.keys().collect();
-        binding_keys.sort();
-        for key in binding_keys {
-            lines.push(format!("binding {key} {}", print_property_value(&self.parameter_bindings[key])));
-        }
-        let mut layout_keys: Vec<&String> = self.rule_layout.keys().collect();
-        layout_keys.sort();
-        for key in layout_keys {
-            let (x, y) = self.rule_layout[key];
-            lines.push(format!("layout {key} {x} {y}"));
-        }
-        lines.join("\n")
-    }
-}
-//#endregion 🔖DslDocument
+/// 📜 `RewriteRuleState`/`RewriteRuleOperation` derive their `vcs::DocumentDsl`/`vcs::OpText` impls
+/// directly (see `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on their own declarations in
+/// `🔖RuleVcs`) — every field already binds through the `dsl::` engine with no foreign types, so no
+/// hand-written parser/printer or twin type is needed here at all.
 //#endregion 🔖Dsl
-
-//#region 🔖OpText
-/// ⚡ Handcrafted one-line notation for [`RewriteRuleOperation`] (`vcs::OpText`) — its one variant embeds
-/// a whole `RewriteRuleState::print_dsl()` document inline via `quote_blob`, whose escaping guarantees
-/// the printed line never contains a literal newline (`OpText::print_op`'s one-line law).
-impl OpText for RewriteRuleOperation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let (keyword, rest) = line.split_once(' ').unwrap_or((line, ""));
-        match keyword {
-            "setState" => {
-                let text = parse_quoted_blob(rest.trim(), 1)?;
-                Ok(RewriteRuleOperation::SetState { state: RewriteRuleState::parse_dsl(&text)? })
-            }
-            other => Err(TextError::new(format!("unknown op keyword '{other}'"), TextSpan::at(1, 1))),
-        }
-    }
-
-    fn print_op(&self) -> String {
-        match self {
-            RewriteRuleOperation::SetState { state } => format!("setState {}", quote_blob(&state.print_dsl())),
-        }
-    }
-}
-//#endregion 🔖OpText
 
 // #region 🔖Lod
 use cavas::lod::{Lod, LodScale};
@@ -1565,11 +1451,11 @@ mod tests {
     use vcs::test_support::{assert_dsl_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     fn sample_rule_state() -> RewriteRuleState {
-        let mut parameter_bindings = HashMap::new();
+        let mut parameter_bindings = BTreeMap::new();
         parameter_bindings.insert("label".to_string(), PropertyValue::String("nakagin-core".into()));
         parameter_bindings.insert("count".to_string(), PropertyValue::Number(3.0));
-        let mut rule_layout = HashMap::new();
-        rule_layout.insert("a".to_string(), (10.5, -20.25));
+        let mut rule_layout = BTreeMap::new();
+        rule_layout.insert("a".to_string(), LayoutPoint::from((10.5, -20.25)));
         RewriteRuleState {
             before_fixture_json: "{\"schema\":\"trinity.graph\",\"name\":\"x \\\"quoted\\\"\\nline\"}".to_string(),
             lhs_json: r#"{"pattern":{"leftVar":"a","leftKind":"Piece"}}"#.to_string(),
@@ -1705,8 +1591,13 @@ mod tests {
     //#region 🔖DslErrorTests
     #[test]
     fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
+        // 🔀 The `dsl::` derive engine parses `RewriteRuleState` as a structured `key=value` record
+        // (see its `#[derive(dsl::DslDocument)]` in `🔖RuleVcs`), not a line-by-line bare-keyword
+        // dispatch like the OLD hand-rolled grammar — so garbage input now fails with a field-shape
+        // mismatch instead of an "unknown dsl line keyword" message. Still asserts the same
+        // underlying contract: malformed text is rejected, not silently accepted.
         let err = RewriteRuleState::parse_dsl("bogus line").unwrap_err();
-        assert!(err.message.contains("unknown dsl line keyword"));
+        assert!(err.message.contains("expected"));
     }
 
     #[test]
@@ -1723,10 +1614,12 @@ mod tests {
 
     #[test]
     fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
-        let text = "before \"{}\"\nlhs \"{}\"\nrhs \"{}\"\nbinding label 'hi'\nlayout a 1 2";
-        let state = RewriteRuleState::parse_dsl(text).unwrap();
+        let mut original = RewriteRuleState { before_fixture_json: "{}".into(), lhs_json: "{}".into(), rhs_json: "{}".into(), ..Default::default() };
+        original.parameter_bindings.insert("label".to_string(), PropertyValue::String("hi".into()));
+        original.rule_layout.insert("a".to_string(), LayoutPoint { x: 1.0, y: 2.0 });
+        let state = RewriteRuleState::parse_dsl(&original.print_dsl()).unwrap();
         assert_eq!(state.parameter_bindings.get("label"), Some(&PropertyValue::String("hi".into())));
-        assert_eq!(state.rule_layout.get("a"), Some(&(1.0, 2.0)));
+        assert_eq!(state.rule_layout.get("a"), Some(&LayoutPoint { x: 1.0, y: 2.0 }));
     }
 
     #[test]
@@ -1747,7 +1640,7 @@ mod tests {
     #[test]
     fn op_text_parse_op_errors_on_unknown_keyword() {
         let err = RewriteRuleOperation::parse_op("bogus xyz").unwrap_err();
-        assert!(err.message.contains("unknown op keyword"));
+        assert!(err.message.contains("unknown operation line"));
     }
     //#endregion 🔖DslErrorTests
 

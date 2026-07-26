@@ -648,213 +648,6 @@ where
 }
 // #endregion 🔖OpText
 
-// #region 🔖DslKv
-/// 🗝️ Shared `key value`-per-line DSL support for every norm family's flat `Document` struct — one
-/// physical line per field, so 13 near-identical hand-rolled parsers collapse onto typed field
-/// readers/writers instead of each family reinventing tokenizing. Nested/collection fields (a wall's
-/// layer list, a monthly climate array, …) are still hand-written per family alongside these calls.
-pub mod dsl_kv {
-    use super::{TextError, TextSpan};
-    use std::collections::HashMap;
-
-    /// 📖 Splits `text` into `key -> value` pairs: one non-blank, non-`#`-comment line per field, first
-    /// space separates the key from its (possibly space-containing) value.
-    pub fn parse_lines(text: &str) -> Result<HashMap<String, String>, TextError> {
-        let mut fields = HashMap::new();
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            let trimmed = raw_line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
-                continue;
-            }
-            let (key, value) = trimmed
-                .split_once(' ')
-                .ok_or_else(|| TextError::new(format!("expected 'key value', got '{trimmed}'"), TextSpan::at(line_no, 1)))?;
-            fields.insert(key.to_string(), value.trim().to_string());
-        }
-        Ok(fields)
-    }
-
-    /// 🔍 Required raw-string field lookup.
-    pub fn field<'a>(fields: &'a HashMap<String, String>, key: &str) -> Result<&'a str, TextError> {
-        fields
-            .get(key)
-            .map(|value| value.as_str())
-            .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(1, 1)))
-    }
-
-    /// 🔤 A scalar that can round-trip through one `dsl_kv` field value; `parse_scalar` inverts `print_scalar`.
-    pub trait DslScalar: Sized {
-        fn print_scalar(&self) -> String;
-        fn parse_scalar(text: &str) -> Result<Self, String>;
-    }
-
-    macro_rules! impl_dsl_scalar_numeric {
-        ($($ty:ty),+ $(,)?) => {
-            $(impl DslScalar for $ty {
-                fn print_scalar(&self) -> String {
-                    self.to_string()
-                }
-                fn parse_scalar(text: &str) -> Result<Self, String> {
-                    text.parse::<$ty>().map_err(|_| format!("expected {}, got '{text}'", stringify!($ty)))
-                }
-            })+
-        };
-    }
-    impl_dsl_scalar_numeric!(f64, f32, i32, i64, u8, u16, u32, u64, usize);
-
-    impl DslScalar for bool {
-        fn print_scalar(&self) -> String {
-            self.to_string()
-        }
-        fn parse_scalar(text: &str) -> Result<Self, String> {
-            match text {
-                "true" => Ok(true),
-                "false" => Ok(false),
-                other => Err(format!("expected 'true'/'false', got '{other}'")),
-            }
-        }
-    }
-
-    /// 🔡 A bare (unquoted) single-token string field — every current caller's string fields are
-    /// identifiers/enum-like tags with no internal whitespace, so no quoting/escaping is needed.
-    impl DslScalar for String {
-        fn print_scalar(&self) -> String {
-            self.clone()
-        }
-        fn parse_scalar(text: &str) -> Result<Self, String> {
-            Ok(text.to_string())
-        }
-    }
-
-    /// 🧮 Reads a required `key` field of scalar type `T`, converting parse failures into a `TextError`.
-    pub fn scalar<T: DslScalar>(fields: &HashMap<String, String>, key: &str) -> Result<T, TextError> {
-        let raw = field(fields, key)?;
-        T::parse_scalar(raw).map_err(|message| TextError::new(format!("field '{key}': {message}"), TextSpan::at(1, 1)))
-    }
-
-    /// 📤 Formats one `key value` line (callers append `\n`).
-    pub fn line<T: DslScalar>(key: &str, value: &T) -> String {
-        format!("{key} {}", value.print_scalar())
-    }
-}
-
-/// 🌡️ `zone1`..`zone4` (lowercase `{:?}`).
-impl dsl_kv::DslScalar for ClimateZoneDe {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Zone1 => "zone1".into(),
-            Self::Zone2 => "zone2".into(),
-            Self::Zone3 => "zone3".into(),
-            Self::Zone4 => "zone4".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "zone1" => Ok(Self::Zone1),
-            "zone2" => Ok(Self::Zone2),
-            "zone3" => Ok(Self::Zone3),
-            "zone4" => Ok(Self::Zone4),
-            other => Err(format!("expected zone1..zone4, got '{other}'")),
-        }
-    }
-}
-
-/// 🇪🇺🇩🇪 `en`/`de`.
-impl dsl_kv::DslScalar for AnnexChoice {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::En => "en".into(),
-            Self::De => "de".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "en" => Ok(Self::En),
-            "de" => Ok(Self::De),
-            other => Err(format!("expected en/de, got '{other}'")),
-        }
-    }
-}
-
-/// 📊 `a`..`h` (EN 1991-1-1 Table 6.1 category letter).
-impl dsl_kv::DslScalar for ImposedCategory {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::A => "a".into(),
-            Self::B => "b".into(),
-            Self::C => "c".into(),
-            Self::D => "d".into(),
-            Self::E => "e".into(),
-            Self::F => "f".into(),
-            Self::G => "g".into(),
-            Self::H => "h".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "a" => Ok(Self::A),
-            "b" => Ok(Self::B),
-            "c" => Ok(Self::C),
-            "d" => Ok(Self::D),
-            "e" => Ok(Self::E),
-            "f" => Ok(Self::F),
-            "g" => Ok(Self::G),
-            "h" => Ok(Self::H),
-            other => Err(format!("expected a..h, got '{other}'")),
-        }
-    }
-}
-
-/// ⚖️ `persistent`/`transient`/`accidental`/`seismic`.
-impl dsl_kv::DslScalar for DesignSituation {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Persistent => "persistent".into(),
-            Self::Transient => "transient".into(),
-            Self::Accidental => "accidental".into(),
-            Self::Seismic => "seismic".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "persistent" => Ok(Self::Persistent),
-            "transient" => Ok(Self::Transient),
-            "accidental" => Ok(Self::Accidental),
-            "seismic" => Ok(Self::Seismic),
-            other => Err(format!("expected persistent/transient/accidental/seismic, got '{other}'")),
-        }
-    }
-}
-
-/// 🏠 `residential`/`office`/`classroom`/`retail`/`meeting`/`kitchen`/`corridor`.
-impl dsl_kv::DslScalar for OccupancyType {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Residential => "residential".into(),
-            Self::Office => "office".into(),
-            Self::Classroom => "classroom".into(),
-            Self::Retail => "retail".into(),
-            Self::Meeting => "meeting".into(),
-            Self::Kitchen => "kitchen".into(),
-            Self::Corridor => "corridor".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "residential" => Ok(Self::Residential),
-            "office" => Ok(Self::Office),
-            "classroom" => Ok(Self::Classroom),
-            "retail" => Ok(Self::Retail),
-            "meeting" => Ok(Self::Meeting),
-            "kitchen" => Ok(Self::Kitchen),
-            "corridor" => Ok(Self::Corridor),
-            other => Err(format!("expected residential/office/classroom/retail/meeting/kitchen/corridor, got '{other}'")),
-        }
-    }
-}
-// #endregion 🔖DslKv
-
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -879,7 +672,8 @@ mod tests {
         assert_eq!(result.status, CheckStatus::Pass);
     }
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "demo-norm", layout = "lines")]
     struct DemoDocument {
         value: f64,
     }
@@ -909,21 +703,6 @@ mod tests {
         assert!(host.report().checks[0].utilization > 1.0);
     }
 
-    //#region 🔖Dsl
-    impl DocumentDsl for DemoDocument {
-        const EXTENSION: &'static str = "demo-norm";
-
-        fn parse_dsl(text: &str) -> Result<Self, TextError> {
-            let fields = dsl_kv::parse_lines(text)?;
-            Ok(DemoDocument { value: dsl_kv::scalar(&fields, "value")? })
-        }
-
-        fn print_dsl(&self) -> String {
-            format!("{}\n", dsl_kv::line("value", &self.value))
-        }
-    }
-    //#endregion 🔖Dsl
-
     #[test]
     fn demo_document_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&DemoDocument { value: 4.5 });
@@ -940,7 +719,7 @@ mod tests {
         // `\n` escape (not just the general round-trip law already covered above).
         let printed = SetDocumentOperation::SetDocument { document: DemoDocument { value: 7.0 } }.print_op();
         assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
-        assert_eq!(printed, "set-document \"value 7\\n\"");
+        assert_eq!(printed, "set-document \"value=7\\n\"");
         let parsed = <SetDocumentOperation<DemoDocument> as OpText>::parse_op(&printed).expect("parse_op");
         assert_eq!(parsed, SetDocumentOperation::SetDocument { document: DemoDocument { value: 7.0 } });
     }

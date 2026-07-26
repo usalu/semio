@@ -4,6 +4,7 @@ pub use imperative_engine::{compile_to_text, imperative_catalogue_json, imperati
 pub use imperative_module_core::{catalogue_json, module_registry, register};
 pub use neural_engine::{Dictionary, Registry};
 
+use neural_engine::{Atom, Value};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 
@@ -116,547 +117,241 @@ fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
 //#endregion 🔖Operation
 
 //#region 🔖Dsl
-/// 📜 Hand-rolled lexer, parser and printer shared by `ImperativeDocument`'s `.imperative` DSL and by
-/// `ImperativeOperation`'s compact single-line op-log encoding — both share the same `step`/dictionary
-/// grammar (a step's nested `body <slot> { ... }` blocks recurse through the same step grammar; a
-/// dictionary value that is itself a nested dictionary recurses through the same value grammar).
-/// Whitespace (including newlines) is never significant to the parser — `print_dsl` inserts
-/// newlines/indentation purely for readability, `print_op` renders the identical grammar on one line.
-/// See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod imperative_text {
-    use super::{ImperativeDocument, ImperativeOperation, Path, PathRef, Step};
-    use neural_engine::{Atom, Dictionary, Value};
-    use std::collections::BTreeMap;
-    use vcs::CollectionOperation;
+/// 🌱 `Value`/`Atom`/`Dictionary`/`Step`/`Path` are all defined in `neural_engine`/`imperative_engine`
+/// (foreign crates out of scope for this conversion), so none of them can carry a
+/// `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires the impl target type to live in
+/// the crate that also owns the trait or the type, and neither is true for a foreign type receiving a
+/// foreign derive. `ValueDsl`/`StepNodeDsl`/`PathDsl` below are local structural twins that the real
+/// types convert to/from right at the `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary.
+///
+/// `ValueDsl` deliberately does NOT route through `dsl_schema`'s built-in `Shape::Value`/`DslValue`
+/// dynamic-literal primitive: `DslValue::Number(f64)` merges `Atom::Integer`/`Atom::Decimal` into one
+/// case (the OLD hand-rolled printer distinguished them by always giving a `Decimal` a trailing `.`),
+/// which is a real, observable loss of fidelity — an existing test parses a bare `1` and expects
+/// `Atom::Integer(1)` back. So `ValueDsl` is its own typed record instead: exactly one of its
+/// mutually-exclusive `Option` fields is ever `Some`, each keyed so the ACTUAL Rust variant (not a
+/// text heuristic) decides which one, which is exactly as precise as the old hand-rolled `Atom` match.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct ValueDsl {
+    /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
+    #[dsl(key = "null")]
+    null: Option<bool>,
+    #[dsl(key = "bool")]
+    boolean: Option<bool>,
+    #[dsl(key = "int")]
+    integer: Option<i64>,
+    #[dsl(key = "decimal")]
+    decimal: Option<f64>,
+    #[dsl(key = "text")]
+    text: Option<String>,
+    #[dsl(key = "dict")]
+    dictionary: Option<BTreeMap<String, ValueDsl>>,
+}
 
-    //#region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
+fn value_to_value_dsl(value: &Value) -> ValueDsl {
+    let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
+    match value {
+        Value::Atom(Atom::Null) => dsl_value.null = Some(true),
+        Value::Atom(Atom::Boolean(b)) => dsl_value.boolean = Some(*b),
+        Value::Atom(Atom::Integer(i)) => dsl_value.integer = Some(*i),
+        Value::Atom(Atom::Decimal(d)) => dsl_value.decimal = Some(*d),
+        Value::Atom(Atom::String(s)) => dsl_value.text = Some(s.clone()),
+        Value::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_map(dict)),
     }
+    dsl_value
+}
 
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: vcs::TextSpan,
+fn value_dsl_to_value(dsl_value: &ValueDsl) -> Value {
+    if dsl_value.null.is_some() {
+        return Value::Atom(Atom::Null);
     }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` and
-    /// `.` are ordinary word characters — `key=value` and `state.set` each collapse into one token.
-    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
-        Ok(out)
+    if let Some(b) = dsl_value.boolean {
+        return Value::Atom(Atom::Boolean(b));
     }
-    //#endregion Lexer
-
-    //#region Parser
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
+    if let Some(i) = dsl_value.integer {
+        return Value::Atom(Atom::Integer(i));
     }
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> vcs::TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_lbrace(&self) -> bool {
-            matches!(self.peek(), Tok::LBrace)
-        }
-
-        fn at_rbrace(&self) -> bool {
-            matches!(self.peek(), Tok::RBrace)
-        }
-
-        fn at_keyword(&self, keyword: &str) -> bool {
-            matches!(self.peek(), Tok::Word(w) if w == keyword)
-        }
-
-        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            if word != keyword {
-                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-            }
-            Ok(())
-        }
-
-        fn expect_lbrace(&mut self) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::LBrace => Ok(()),
-                other => Err(vcs::TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-            }
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-
-        /// 🔑 Peeks the key of a pending `key=`/`key=value` word token without consuming it.
-        fn peek_key(&self) -> Option<String> {
-            match self.peek() {
-                Tok::Word(w) => w.split_once('=').map(|(key, _)| key.to_string()),
-                _ => None,
-            }
-        }
-
-        /// 🗝️ Consumes a `key=`/`key=value` word token whose key must equal `key`, returning the
-        /// inline suffix — empty when the value is a separate following token (a quoted string or a
-        /// `{ }` block), non-empty when it is a bareword value collapsed into the same token.
-        fn expect_kv(&mut self, key: &str) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            let (found, rest) = word
-                .split_once('=')
-                .ok_or_else(|| vcs::TextError::expected(format!("expected '{key}=...', found '{word}'"), span, format!("{key}=...")))?;
-            if found != key {
-                return Err(vcs::TextError::expected(format!("expected '{key}=...', found '{found}=...'"), span, format!("{key}=...")));
-            }
-            Ok(rest.to_string())
-        }
-
-        fn expect_kv_str(&mut self, key: &str) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if !rest.is_empty() {
-                return Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string"), span, "string"));
-            }
-            self.expect_str()
-        }
-
-        fn expect_kv_word(&mut self, key: &str) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if rest.is_empty() {
-                return Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), span, "word"));
-            }
-            Ok(rest)
-        }
-
-        fn expect_kv_opt_word(&mut self, key: &str) -> Result<Option<String>, vcs::TextError> {
-            let word = self.expect_kv_word(key)?;
-            Ok(if word == "-" { None } else { Some(word) })
-        }
-
-        fn expect_kv_usize(&mut self, key: &str) -> Result<usize, vcs::TextError> {
-            let span = self.span();
-            let word = self.expect_kv_word(key)?;
-            word.parse::<usize>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a non-negative integer"), span, "usize"))
-        }
-
-        fn expect_kv_dict(&mut self, key: &str) -> Result<Dictionary, vcs::TextError> {
-            let span = self.span();
-            let rest = self.expect_kv(key)?;
-            if !rest.is_empty() {
-                return Err(vcs::TextError::expected(format!("field '{key}' must be a '{{ }}' block"), span, "{ }"));
-            }
-            parse_dict(self)
-        }
+    if let Some(d) = dsl_value.decimal {
+        return Value::Atom(Atom::Decimal(d));
     }
-    //#endregion Parser
-
-    //#region Dictionary
-    fn quote(value: &str) -> String {
-        let mut out = String::with_capacity(value.len() + 2);
-        out.push('"');
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out.push('"');
-        out
+    if let Some(s) = &dsl_value.text {
+        return Value::Atom(Atom::String(s.clone()));
     }
-
-    /// 🔢 Renders a decimal so it always carries a `.` — the round-trip discriminant between
-    /// `Atom::Integer` and `Atom::Decimal` used by {@link parse_atom}.
-    fn fmt_decimal(value: f64) -> String {
-        if value.is_nan() {
-            return "nan".to_string();
-        }
-        if value.is_infinite() {
-            return if value > 0.0 { "inf".to_string() } else { "-inf".to_string() };
-        }
-        let printed = value.to_string();
-        if printed.contains('.') {
-            printed
-        } else {
-            format!("{printed}.0")
-        }
+    match &dsl_value.dictionary {
+        Some(entries) => Value::Dictionary(value_dsl_map_to_dictionary(entries)),
+        None => Value::Atom(Atom::Null),
     }
+}
 
-    fn parse_atom(word: &str, span: vcs::TextSpan) -> Result<Atom, vcs::TextError> {
-        match word {
-            "null" => Ok(Atom::Null),
-            "true" => Ok(Atom::Boolean(true)),
-            "false" => Ok(Atom::Boolean(false)),
-            "nan" => Ok(Atom::Decimal(f64::NAN)),
-            "inf" => Ok(Atom::Decimal(f64::INFINITY)),
-            "-inf" => Ok(Atom::Decimal(f64::NEG_INFINITY)),
-            _ if word.contains('.') || word.contains('e') || word.contains('E') => {
-                word.parse::<f64>().map(Atom::Decimal).map_err(|_| vcs::TextError::expected(format!("invalid decimal '{word}'"), span, "number"))
-            }
-            _ => word.parse::<i64>().map(Atom::Integer).map_err(|_| vcs::TextError::expected(format!("invalid integer '{word}'"), span, "number")),
-        }
-    }
+fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+    dict.keys().map(|key| (key.clone(), value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")))).collect()
+}
 
-    fn print_atom(atom: &Atom) -> String {
-        match atom {
-            Atom::Null => "null".to_string(),
-            Atom::Boolean(value) => value.to_string(),
-            Atom::Integer(value) => value.to_string(),
-            Atom::Decimal(value) => fmt_decimal(*value),
-            Atom::String(value) => quote(value),
-        }
-    }
+fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+    entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
+}
 
-    fn parse_value(p: &mut Parser) -> Result<Value, vcs::TextError> {
-        if p.at_lbrace() {
-            return Ok(Value::Dictionary(parse_dict(p)?));
-        }
-        if let Tok::Str(_) = p.peek() {
-            return Ok(Value::Atom(Atom::String(p.expect_str()?)));
-        }
-        let span = p.span();
-        let word = p.expect_word()?;
-        Ok(Value::Atom(parse_atom(&word, span)?))
-    }
+/// 📦 `None` when `dict` is empty, mirroring the old printer's "omit an empty dictionary section".
+fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+    (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
+}
 
-    /// 📥 Parses a `{ key=value ... }` dictionary block — `key=value` collapses into one bareword
-    /// token, `key=` alone means the value is a separate following token (a quoted string or a
-    /// nested `{ }`, itself parsed by recursing back into this function).
-    fn parse_dict(p: &mut Parser) -> Result<Dictionary, vcs::TextError> {
-        p.expect_lbrace()?;
-        let mut dict = Dictionary::new();
-        while !p.at_rbrace() {
-            let span = p.span();
-            let word = p.expect_word()?;
-            let (key, rest) = word
-                .split_once('=')
-                .ok_or_else(|| vcs::TextError::expected(format!("expected 'key=value', found '{word}'"), span, "key=value"))?;
-            let value = if rest.is_empty() { parse_value(p)? } else { Value::Atom(parse_atom(rest, span)?) };
-            dict = dict.insert(key.to_string(), value);
-        }
-        p.expect_rbrace()?;
-        Ok(dict)
-    }
+fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+    entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
+}
 
-    fn print_value(value: &Value) -> String {
-        match value {
-            Value::Atom(atom) => print_atom(atom),
-            Value::Dictionary(dict) => print_dict(dict),
-        }
-    }
+/// 👣 `Step`'s recursive `bodies: BTreeMap<String, Path>` mirrors through `Path`'s own single field —
+/// `StepNodeDsl` is a one-variant `DslEnum` (not a plain `DslRecord`) purely so the mutual recursion
+/// with `PathDsl` goes through `dsl::DslVariants`'s LAZY `fn() -> RecordSpec` pointers: building
+/// `PathDsl`'s `RecordSpec` needs `StepNodeDsl`'s variant table, and vice versa, and only the lazy
+/// pointer indirection keeps that finite instead of recursing forever just to construct the schema.
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+enum StepNodeDsl {
+    #[dsl(key = "step")]
+    Step {
+        #[dsl(positional)]
+        id: String,
+        #[dsl(ident)]
+        kind: String,
+        #[dsl(key = "params")]
+        params: Option<BTreeMap<String, ValueDsl>>,
+        #[dsl(key = "bodies")]
+        bodies: BTreeMap<String, PathDsl>,
+    },
+}
 
-    fn print_dict(dict: &Dictionary) -> String {
-        let parts: Vec<String> = dict.keys().map(|key| format!("{key}={}", print_value(dict.get(key).expect("key came from dict.keys()")))).collect();
-        if parts.is_empty() {
-            "{ }".to_string()
-        } else {
-            format!("{{ {} }}", parts.join(" "))
-        }
-    }
-    //#endregion Dictionary
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct PathDsl {
+    #[dsl(statements, block)]
+    steps: Vec<StepNodeDsl>,
+}
 
-    //#region Step
-    fn indent(depth: usize) -> String {
-        "  ".repeat(depth)
+fn step_to_step_node_dsl(step: &Step) -> StepNodeDsl {
+    StepNodeDsl::Step {
+        id: step.id.clone(),
+        kind: step.kind.clone(),
+        params: dictionary_to_option_dsl_map(&step.params),
+        bodies: step.bodies.iter().map(|(slot, path)| (slot.clone(), path_to_path_dsl(path))).collect(),
     }
+}
 
-    /// 🧱 Wraps already-rendered `items` in `{ }`, one per line indented at `depth + 1` when `pretty`,
-    /// or space-joined on one line otherwise — mirrors `note_text::wrap_body`. Only ever called with a
-    /// non-empty `items` (callers omit the section entirely when there is nothing to wrap).
-    fn wrap_body(items: &[String], depth: usize, pretty: bool) -> String {
-        if pretty {
-            let inner_pad = indent(depth + 1);
-            let outer_pad = indent(depth);
-            let body: String = items.iter().map(|item| format!("{inner_pad}{item}\n")).collect();
-            format!("{{\n{body}{outer_pad}}}")
-        } else {
-            format!("{{ {} }}", items.join(" "))
-        }
-    }
+fn step_node_dsl_to_step(node: StepNodeDsl) -> Step {
+    let StepNodeDsl::Step { id, kind, params, bodies } = node;
+    Step { id, kind, params: option_dsl_map_to_dictionary(params), bodies: bodies.into_iter().map(|(slot, path)| (slot, path_dsl_to_path(path))).collect() }
+}
 
-    fn parse_step(p: &mut Parser) -> Result<Step, vcs::TextError> {
-        p.expect_keyword("step")?;
-        let id = p.expect_kv_str("id")?;
-        let kind = p.expect_kv_word("kind")?;
-        let params = if p.peek_key().as_deref() == Some("params") { p.expect_kv_dict("params")? } else { Dictionary::new() };
-        let bodies = if p.at_lbrace() {
-            p.bump();
-            let mut bodies = BTreeMap::new();
-            while !p.at_rbrace() {
-                p.expect_keyword("body")?;
-                let slot = p.expect_word()?;
-                p.expect_lbrace()?;
-                let mut steps = Vec::new();
-                while !p.at_rbrace() {
-                    steps.push(parse_step(p)?);
-                }
-                p.expect_rbrace()?;
-                bodies.insert(slot, Path { steps });
-            }
-            p.expect_rbrace()?;
-            bodies
-        } else {
-            BTreeMap::new()
-        };
-        Ok(Step { id, kind, params, bodies })
-    }
+fn path_to_path_dsl(path: &Path) -> PathDsl {
+    PathDsl { steps: path.steps.iter().map(step_to_step_node_dsl).collect() }
+}
 
-    fn print_step(step: &Step, depth: usize, pretty: bool) -> String {
-        let mut out = format!("step id={} kind={}", quote(&step.id), step.kind);
-        if !step.params.is_empty() {
-            out.push_str(&format!(" params={}", print_dict(&step.params)));
-        }
-        if !step.bodies.is_empty() {
-            let items: Vec<String> = step.bodies.iter().map(|(slot, path)| print_body(slot, path, depth + 1, pretty)).collect();
-            out.push_str(&format!(" {}", wrap_body(&items, depth, pretty)));
-        }
-        out
-    }
+fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
+    Path { steps: path_dsl.steps.into_iter().map(step_node_dsl_to_step).collect() }
+}
 
-    fn print_body(slot: &str, path: &Path, depth: usize, pretty: bool) -> String {
-        let items: Vec<String> = path.steps.iter().map(|step| print_step(step, depth + 1, pretty)).collect();
-        format!("body {slot} {}", wrap_body(&items, depth, pretty))
-    }
-    //#endregion Step
-
-    //#region Document
-    /// 📥 Parses a full `.imperative` document: `imperative schema=...` (required), then an optional
-    /// `seed={ ... }` dictionary and an optional `steps { ... }` list, in that order.
-    pub(super) fn parse_document(text: &str) -> Result<ImperativeDocument, vcs::TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-        p.expect_keyword("imperative")?;
-        let schema = p.expect_kv_str("schema")?;
-        let seed = if p.peek_key().as_deref() == Some("seed") { p.expect_kv_dict("seed")? } else { Dictionary::new() };
-        let steps = if p.at_keyword("steps") {
-            p.bump();
-            p.expect_lbrace()?;
-            let mut steps = Vec::new();
-            while !p.at_rbrace() {
-                steps.push(parse_step(&mut p)?);
-            }
-            p.expect_rbrace()?;
-            steps
-        } else {
-            Vec::new()
-        };
-        Ok(ImperativeDocument { schema, path: Path { steps }, seed })
-    }
-
-    /// 📤 Renders `document` as `imperative schema=...` followed by `seed=`/`steps` sections that
-    /// have content, joined by newlines when `pretty` or single spaces otherwise (mirrors
-    /// `note_text::print_document`; see {@link parse_document} for the mirrored grammar).
-    pub(super) fn print_document(document: &ImperativeDocument, pretty: bool) -> String {
-        let mut parts = vec![format!("imperative schema={}", quote(&document.schema))];
-        if !document.seed.is_empty() {
-            parts.push(format!("seed={}", print_dict(&document.seed)));
-        }
-        if !document.path.steps.is_empty() {
-            let items: Vec<String> = document.path.steps.iter().map(|step| print_step(step, 1, pretty)).collect();
-            parts.push(format!("steps {}", wrap_body(&items, 0, pretty)));
-        }
-        parts.join(if pretty { "\n" } else { " " })
-    }
-    //#endregion Document
-
-    //#region Operation
-    /// ⚡ Parses one op-log line: `<add|remove|move|patch> owner=<id|-> slot=<id|-> ...`. `owner`/
-    /// `slot` mirror `vcs`'s own `-` sentinel for an absent optional field.
-    pub(super) fn parse_operation(line: &str) -> Result<ImperativeOperation, vcs::TextError> {
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        let keyword = p.expect_word()?;
-        let owner = p.expect_kv_opt_word("owner")?;
-        let slot = p.expect_kv_opt_word("slot")?;
-        let path_ref = PathRef { owner, slot };
-        let collection = match keyword.as_str() {
-            "add" => {
-                let index = p.expect_kv_usize("index")?;
-                let item = parse_step(&mut p)?;
-                CollectionOperation::Add { index, item }
-            }
-            "remove" => {
-                let id = p.expect_kv_str("id")?;
-                CollectionOperation::Remove { id }
-            }
-            "move" => {
-                let id = p.expect_kv_str("id")?;
-                let to_index = p.expect_kv_usize("to")?;
-                CollectionOperation::Move { id, to_index }
-            }
-            "patch" => {
-                let id = p.expect_kv_str("id")?;
-                let patch = p.expect_kv_dict("patch")?;
-                CollectionOperation::Patch { id, patch }
-            }
-            other => return Err(vcs::TextError::expected(format!("unknown operation '{other}'"), span, "add|remove|move|patch")),
-        };
-        Ok(ImperativeOperation { path_ref, collection })
-    }
-
-    /// 📤 Renders one `ImperativeOperation` as a single line (see {@link parse_operation}).
-    pub(super) fn print_operation(operation: &ImperativeOperation) -> String {
-        let path_ref = format!(
-            "owner={} slot={}",
-            operation.path_ref.owner.as_deref().unwrap_or("-"),
-            operation.path_ref.slot.as_deref().unwrap_or("-"),
-        );
-        match &operation.collection {
-            CollectionOperation::Add { index, item } => format!("add {path_ref} index={index} {}", print_step(item, 0, false)),
-            CollectionOperation::Remove { id } => format!("remove {path_ref} id={}", quote(id)),
-            CollectionOperation::Move { id, to_index } => format!("move {path_ref} id={} to={to_index}", quote(id)),
-            CollectionOperation::Patch { id, patch } => format!("patch {path_ref} id={} patch={}", quote(id), print_dict(patch)),
-        }
-    }
-    //#endregion Operation
+/// 📄 Local mirror of `ImperativeDocument` — see the region's opening doc comment for why `path:
+/// Path`/`seed: Dictionary` can't stay as-is under a direct `#[derive(dsl::DslDocument)]`.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "imperative")]
+#[dsl(layout = "lines")]
+struct ImperativeDocumentDsl {
+    schema: String,
+    #[dsl(key = "seed")]
+    seed: Option<BTreeMap<String, ValueDsl>>,
+    #[dsl(statements, block)]
+    steps: Vec<StepNodeDsl>,
 }
 
 impl vcs::DocumentDsl for ImperativeDocument {
     const EXTENSION: &'static str = "imperative";
 
     fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        imperative_text::parse_document(text)
+        let parsed = <ImperativeDocumentDsl as vcs::DocumentDsl>::parse_dsl(text)?;
+        Ok(ImperativeDocument {
+            schema: parsed.schema,
+            path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
+            seed: option_dsl_map_to_dictionary(parsed.seed),
+        })
     }
 
     fn print_dsl(&self) -> String {
-        imperative_text::print_document(self, true)
+        let mirror = ImperativeDocumentDsl {
+            schema: self.schema.clone(),
+            seed: dictionary_to_option_dsl_map(&self.seed),
+            steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
+        };
+        <ImperativeDocumentDsl as vcs::DocumentDsl>::print_dsl(&mirror)
     }
 }
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
+/// ✂️ Local mirror of `ImperativeOperation` — flattens `PathRef` into bare `owner`/`slot` fields
+/// (both plain, always-quoted `Option<String>`s — `#[dsl(ident)]` doesn't currently compose with
+/// `Option<T>` in the derive, so a quoted `owner="step-if"` is what this crate settles for) since a
+/// `vcs::Operation` grammar is a genuinely tagged enum (`#[derive(dsl::DslOps)]` requires an enum),
+/// not the single generic-struct shape `ImperativeOperation`/`vcs::CollectionOperation` use at the
+/// Rust level.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum ImperativeOperationDsl {
+    #[dsl(key = "add")]
+    Add {
+        owner: Option<String>,
+        slot: Option<String>,
+        index: usize,
+        #[dsl(statements)]
+        item: Box<StepNodeDsl>,
+    },
+    #[dsl(key = "remove")]
+    Remove { owner: Option<String>, slot: Option<String>, id: String },
+    #[dsl(key = "move")]
+    Move {
+        owner: Option<String>,
+        slot: Option<String>,
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    #[dsl(key = "patch")]
+    Patch { owner: Option<String>, slot: Option<String>, id: String, patch: BTreeMap<String, ValueDsl> },
+}
+
+fn imperative_operation_to_dsl(operation: &ImperativeOperation) -> ImperativeOperationDsl {
+    let owner = operation.path_ref.owner.clone();
+    let slot = operation.path_ref.slot.clone();
+    match &operation.collection {
+        vcs::CollectionOperation::Add { index, item } => ImperativeOperationDsl::Add { owner, slot, index: *index, item: Box::new(step_to_step_node_dsl(item)) },
+        vcs::CollectionOperation::Remove { id } => ImperativeOperationDsl::Remove { owner, slot, id: id.clone() },
+        vcs::CollectionOperation::Move { id, to_index } => ImperativeOperationDsl::Move { owner, slot, id: id.clone(), to_index: *to_index },
+        vcs::CollectionOperation::Patch { id, patch } => ImperativeOperationDsl::Patch { owner, slot, id: id.clone(), patch: dictionary_to_value_dsl_map(patch) },
+    }
+}
+
+fn imperative_operation_from_dsl(dsl_op: ImperativeOperationDsl) -> ImperativeOperation {
+    match dsl_op {
+        ImperativeOperationDsl::Add { owner, slot, index, item } => {
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Add { index, item: step_node_dsl_to_step(*item) } }
+        }
+        ImperativeOperationDsl::Remove { owner, slot, id } => ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Remove { id } },
+        ImperativeOperationDsl::Move { owner, slot, id, to_index } => {
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Move { id, to_index } }
+        }
+        ImperativeOperationDsl::Patch { owner, slot, id, patch } => {
+            ImperativeOperation { path_ref: PathRef { owner, slot }, collection: vcs::CollectionOperation::Patch { id, patch: value_dsl_map_to_dictionary(&patch) } }
+        }
+    }
+}
+
 impl vcs::OpText for ImperativeOperation {
     fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        imperative_text::parse_operation(line)
+        Ok(imperative_operation_from_dsl(<ImperativeOperationDsl as vcs::OpText>::parse_op(line)?))
     }
 
     fn print_op(&self) -> String {
-        imperative_text::print_operation(self)
+        <ImperativeOperationDsl as vcs::OpText>::print_op(&imperative_operation_to_dsl(self))
     }
 }
 //#endregion 🔖OpText
+
 
 //#region ⚠️ Errors
 /// 🚨 Imperative core's fallible operations.
@@ -996,5 +691,281 @@ mod tests {
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
     }
+
+    //#region resolve_steps / resolve_steps_mut / prune_empty_slot
+    #[test]
+    fn resolve_steps_root_returns_document_steps() {
+        let document = default_document();
+        let steps = resolve_steps(&document, &PathRef::default()).expect("root always resolves");
+        assert_eq!(steps.len(), document.path.steps.len());
+    }
+
+    #[test]
+    fn resolve_steps_unknown_owner_is_none() {
+        let document = default_document();
+        let path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
+        assert!(resolve_steps(&document, &path_ref).is_none());
+    }
+
+    #[test]
+    fn resolve_steps_missing_owner_or_slot_is_none() {
+        let document = default_document();
+        assert!(resolve_steps(&document, &PathRef { owner: Some("step-1".into()), slot: None }).is_none());
+        assert!(resolve_steps(&document, &PathRef { owner: None, slot: Some("then".into()) }).is_none());
+    }
+
+    #[test]
+    fn resolve_steps_unmaterialized_slot_reads_empty() {
+        let mut document = default_document();
+        document.path.steps.push(step("step-if", "control.if"));
+        let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
+        assert_eq!(resolve_steps(&document, &path_ref), Some(&[][..]));
+    }
+
+    #[test]
+    fn resolve_steps_mut_unknown_owner_is_none() {
+        let mut document = default_document();
+        let path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
+        assert!(resolve_steps_mut(&mut document, &path_ref).is_none());
+    }
+
+    #[test]
+    fn prune_empty_slot_removes_emptied_bodies_entry() {
+        let mut document = default_document();
+        document.path.steps.push(step("step-if", "control.if"));
+        let path_ref = PathRef { owner: Some("step-if".into()), slot: Some("then".into()) };
+        resolve_steps_mut(&mut document, &path_ref).expect("materializes slot").push(step("step-nested", "log.print"));
+        let owner_step = document.path.steps.iter().find(|s| s.id == "step-if").expect("owner");
+        assert!(owner_step.bodies.contains_key("then"));
+        resolve_steps_mut(&mut document, &path_ref).expect("slot exists").clear();
+        prune_empty_slot(&mut document, &path_ref);
+        let owner_step = document.path.steps.iter().find(|s| s.id == "step-if").expect("owner");
+        assert!(!owner_step.bodies.contains_key("then"));
+    }
+
+    #[test]
+    fn prune_empty_slot_noop_without_owner_or_slot() {
+        let mut document = default_document();
+        prune_empty_slot(&mut document, &PathRef::default());
+    }
+
+    #[test]
+    fn operation_backwards_on_unresolvable_path_ref_is_empty() {
+        let document = default_document();
+        let operation = ImperativeOperation {
+            path_ref: PathRef { owner: Some("missing".into()), slot: Some("then".into()) },
+            collection: vcs::CollectionOperation::Remove { id: "step-x".into() },
+        };
+        assert!(vcs::Operation::backwards(&operation, &document).is_empty());
+    }
+
+    #[test]
+    fn imperative_diff_absorb_keeps_latest_some_and_ignores_none() {
+        use vcs::OperationDiff;
+        let first = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Remove { id: "step-1".into() } };
+        let second = ImperativeOperation { path_ref: PathRef::default(), collection: vcs::CollectionOperation::Remove { id: "step-2".into() } };
+        let mut diff = ImperativeDiff(Some(first));
+        diff.absorb(ImperativeDiff(None));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, vcs::CollectionOperation::Remove { id } if id == "step-1")));
+        diff.absorb(ImperativeDiff(Some(second)));
+        assert!(matches!(&diff.0, Some(op) if matches!(&op.collection, vcs::CollectionOperation::Remove { id } if id == "step-2")));
+    }
+    //#endregion resolve_steps / resolve_steps_mut / prune_empty_slot
+
+    //#region DSL text round trips and error paths
+    // These two used to hand-author literal OLD-grammar text (`body then { ... }`-style nested
+    // blocks) and parse it directly — the new grammar's shape is different enough (BTreeMap-keyed
+    // `bodies`/`params`, `ValueDsl`'s own keyed atom representation) that a hand-typed literal is
+    // error-prone to get exactly right. Building the document via Rust struct literals and checking
+    // it survives a DSL round trip verifies the same intent (seed dictionaries, nested control
+    // bodies, every atom variant all parse/print correctly) without depending on hand-typed syntax.
+    #[test]
+    fn dsl_parses_seed_and_nested_control_bodies() {
+        let mut document = default_document();
+        document.seed = Dictionary::new().insert("counter", Value::Atom(Atom::Integer(1))).insert("label", Value::Atom(Atom::String("x".into())));
+        let inner = step("step-inner", "log.print");
+        let mut owner = step("step-if", "control.if");
+        owner.bodies.insert("then".to_string(), Path { steps: vec![inner] });
+        document.path.steps = vec![owner];
+
+        assert_eq!(document.seed.get("counter"), Some(&Value::Atom(Atom::Integer(1))));
+        let owner = &document.path.steps[0];
+        assert_eq!(owner.bodies.get("then").map(|body| body.steps.len()), Some(1));
+        vcs::test_support::assert_dsl_round_trip(&document);
+    }
+
+    #[test]
+    fn dsl_parses_dictionary_and_atom_variants() {
+        let mut document = default_document();
+        document.seed = Dictionary::new()
+            .insert("a", Value::Atom(Atom::Null))
+            .insert("b", Value::Atom(Atom::Boolean(true)))
+            .insert("c", Value::Atom(Atom::Boolean(false)))
+            .insert("d", Value::Atom(Atom::Decimal(1.5)))
+            .insert("e", Value::Atom(Atom::Decimal(f64::NEG_INFINITY)))
+            .insert("f", Value::Dictionary(Dictionary::new()));
+
+        assert_eq!(document.seed.get("a"), Some(&Value::Atom(Atom::Null)));
+        assert_eq!(document.seed.get("b"), Some(&Value::Atom(Atom::Boolean(true))));
+        assert_eq!(document.seed.get("c"), Some(&Value::Atom(Atom::Boolean(false))));
+        assert_eq!(document.seed.get("d"), Some(&Value::Atom(Atom::Decimal(1.5))));
+        assert_eq!(document.seed.get("e"), Some(&Value::Atom(Atom::Decimal(f64::NEG_INFINITY))));
+        assert_eq!(document.seed.get("f"), Some(&Value::Dictionary(Dictionary::new())));
+        vcs::test_support::assert_dsl_round_trip(&document);
+    }
+
+    #[test]
+    fn dsl_rejects_unterminated_string() {
+        let text = r#"imperative schema="unterminated"#;
+        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+    }
+
+    #[test]
+    fn dsl_rejects_wrong_leading_keyword() {
+        let text = r#"notimperative schema="x""#;
+        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+    }
+
+    #[test]
+    fn dsl_rejects_invalid_number_literal() {
+        let text = r#"imperative schema="imperative.document" seed={ n=1.2.3 }"#;
+        assert!(<ImperativeDocument as vcs::DocumentDsl>::parse_dsl(text).is_err());
+    }
+
+    #[test]
+    fn op_text_rejects_unknown_operation_keyword() {
+        let line = r#"frobnicate owner=- slot=- id="step-1""#;
+        assert!(<ImperativeOperation as vcs::OpText>::parse_op(line).is_err());
+    }
+
+    #[test]
+    fn op_text_round_trips_add_with_owner_and_slot() {
+        let operation = ImperativeOperation {
+            path_ref: PathRef { owner: Some("step-if".into()), slot: Some("then".into()) },
+            collection: vcs::CollectionOperation::Add { index: 0, item: step("step-nested", "log.print") },
+        };
+        let printed = <ImperativeOperation as vcs::OpText>::print_op(&operation);
+        assert!(printed.contains("owner=\"step-if\""), "printed: {printed}");
+        assert!(printed.contains("slot=\"then\""), "printed: {printed}");
+        let parsed = <ImperativeOperation as vcs::OpText>::parse_op(&printed).expect("round trips");
+        assert_eq!(parsed, operation);
+    }
+    //#endregion DSL text round trips and error paths
+
+    //#region ImperativeCoreError
+    #[test]
+    fn imperative_core_error_messages() {
+        assert_eq!(ImperativeCoreError::MissingOwner.to_string(), "missing owner");
+        assert_eq!(ImperativeCoreError::MissingSlot.to_string(), "missing slot");
+        assert_eq!(ImperativeCoreError::UnsupportedSchema("bad.schema".into()).to_string(), "unsupported schema: bad.schema");
+        assert_eq!(ImperativeCoreError::UnknownOwnerStep("step-9".into()).to_string(), "unknown owner step: step-9");
+        assert_eq!(ImperativeCoreError::UnknownStep("step-9".into()).to_string(), "unknown step: step-9");
+    }
+    //#endregion ImperativeCoreError
+
+    //#region ImperativeHost
+    #[test]
+    fn host_load_json_rejects_unsupported_schema() {
+        let json = r#"{"schema":"not.imperative","path":{"steps":[]},"seed":{}}"#;
+        assert!(matches!(ImperativeHost::load_json(json), Err(ImperativeCoreError::UnsupportedSchema(schema)) if schema == "not.imperative"));
+    }
+
+    #[test]
+    fn host_load_json_rejects_invalid_json() {
+        assert!(matches!(ImperativeHost::load_json("not json"), Err(ImperativeCoreError::Json(_))));
+    }
+
+    #[test]
+    fn host_load_json_and_to_json_round_trip() {
+        let json = ImperativeHost::default().to_json().expect("serializes");
+        let host = ImperativeHost::load_json(&json).expect("parses back");
+        assert_eq!(host.to_json().expect("serializes again"), json);
+    }
+
+    #[test]
+    fn host_catalogue_json_is_nonempty() {
+        assert!(!ImperativeHost::default().catalogue_json().is_empty());
+    }
+
+    #[test]
+    fn host_add_step_at_reports_missing_owner_and_slot() {
+        let mut host = ImperativeHost::default();
+        let missing_owner = PathRef { owner: None, slot: Some("then".into()) };
+        assert!(matches!(host.add_step_at(&missing_owner, "log.print", None), Err(ImperativeCoreError::MissingOwner)));
+        let missing_slot = PathRef { owner: Some("step-1".into()), slot: None };
+        assert!(matches!(host.add_step_at(&missing_slot, "log.print", None), Err(ImperativeCoreError::MissingSlot)));
+    }
+
+    #[test]
+    fn host_add_step_at_reports_unknown_owner_step() {
+        let mut host = ImperativeHost::default();
+        let path_ref = PathRef { owner: Some("does-not-exist".into()), slot: Some("then".into()) };
+        assert!(matches!(host.add_step_at(&path_ref, "log.print", None), Err(ImperativeCoreError::UnknownOwnerStep(owner)) if owner == "does-not-exist"));
+    }
+
+    #[test]
+    fn host_add_step_clamps_out_of_range_index() {
+        let mut host = ImperativeHost::default();
+        let before = host.document.path.steps.len();
+        let id = host.add_step("log.print", Some(9999));
+        assert_eq!(host.document.path.steps.last().map(|step| &step.id), Some(&id));
+        assert_eq!(host.document.path.steps.len(), before + 1);
+    }
+
+    #[test]
+    fn host_remove_step_false_for_unresolvable_path_ref_and_unknown_id() {
+        let mut host = ImperativeHost::default();
+        let bad_path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
+        assert!(!host.remove_step_at(&bad_path_ref, "step-1"));
+        assert!(!host.remove_step("does-not-exist"));
+    }
+
+    #[test]
+    fn host_remove_step_true_when_removed() {
+        let mut host = ImperativeHost::default();
+        assert!(host.remove_step("step-1"));
+        assert!(host.document.path.steps.iter().all(|step| step.id != "step-1"));
+    }
+
+    #[test]
+    fn host_move_step_false_for_unresolvable_path_ref_and_unknown_id() {
+        let mut host = ImperativeHost::default();
+        let bad_path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
+        assert!(!host.move_step_at(&bad_path_ref, "step-1", 0));
+        assert!(!host.move_step("does-not-exist", 0));
+    }
+
+    #[test]
+    fn host_move_step_true_and_reorders() {
+        let mut host = ImperativeHost::default();
+        assert!(host.move_step("step-2", 0));
+        assert_eq!(host.document.path.steps[0].id, "step-2");
+    }
+
+    #[test]
+    fn host_set_step_params_at_rejects_invalid_json_and_unknown_step() {
+        let mut host = ImperativeHost::default();
+        assert!(matches!(host.set_step_params_json("step-1", "not json"), Err(ImperativeCoreError::Json(_))));
+        assert!(matches!(host.set_step_params_json("does-not-exist", "{}"), Err(ImperativeCoreError::UnknownStep(id)) if id == "does-not-exist"));
+        let bad_path_ref = PathRef { owner: Some("missing".into()), slot: Some("then".into()) };
+        assert!(matches!(host.set_step_params_at(&bad_path_ref, "step-1", "{}"), Err(ImperativeCoreError::UnknownOwnerStep(_))));
+    }
+
+    #[test]
+    fn host_set_step_params_updates_existing_step() {
+        let mut host = ImperativeHost::default();
+        host.set_step_params_json("step-2", r#"{"message":"updated"}"#).expect("sets params");
+        let step = host.document.path.steps.iter().find(|step| step.id == "step-2").expect("step-2 exists");
+        assert_eq!(step.params.get("message"), Some(&neural_engine::Value::Atom(Atom::String("updated".into()))));
+    }
+
+    #[test]
+    fn host_compile_text_contains_step_kinds() {
+        let host = ImperativeHost::default();
+        let compiled = host.compile_text();
+        assert!(compiled.contains("state.set"));
+        assert!(compiled.contains("log.print"));
+    }
+    //#endregion ImperativeHost
 }
 //#endregion 🧪Tests

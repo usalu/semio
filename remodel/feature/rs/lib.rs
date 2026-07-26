@@ -1026,6 +1026,49 @@ mod tests {
         let flat = ImageGray::new(48, 48);
         assert!(detect_harris_keypoints(&flat, 30).is_empty(), "a flat image should have no harris keypoints");
     }
+
+    #[test]
+    fn detect_orb_keypoints_returns_empty_for_empty_pyramid_or_zero_target() {
+        let img = textured_image(32);
+        let pyramid = build_pyramid(&img, 2);
+        assert!(detect_orb_keypoints(&pyramid, 0).is_empty(), "zero target_count should yield no keypoints");
+        let empty_pyramid = Pyramid { levels: Vec::new(), scale: 0.5 };
+        assert!(detect_orb_keypoints(&empty_pyramid, 10).is_empty(), "an empty pyramid should yield no keypoints");
+    }
+
+    #[test]
+    fn detect_harris_keypoints_returns_empty_for_zero_target_or_empty_image() {
+        let img = textured_image(16);
+        assert!(detect_harris_keypoints(&img, 0).is_empty(), "zero target_count should yield no keypoints");
+        assert!(detect_harris_keypoints(&ImageGray::new(0, 0), 10).is_empty(), "a zero-width/height image should yield no keypoints");
+        assert!(detect_harris_keypoints(&ImageGray::new(5, 0), 10).is_empty(), "a zero-height image should yield no keypoints");
+    }
+
+    #[test]
+    fn shi_tomasi_grid_prefers_planted_corner_and_caps_per_cell() {
+        let img = corner_image(48);
+        let cell = 16u32;
+        let results = shi_tomasi_grid(&img, cell, 1);
+        assert!(!results.is_empty(), "expected some shi-tomasi candidates");
+        assert!(results.len() <= 9, "with 3x3 cells and per_cell=1 at most 9 points should survive, got {}", results.len());
+        let mut per_bucket: std::collections::HashMap<(u32, u32), usize> = std::collections::HashMap::new();
+        for &(x, y, _) in &results {
+            *per_bucket.entry((x / cell, y / cell)).or_default() += 1;
+        }
+        assert!(per_bucket.values().all(|&n| n <= 1), "each grid cell should keep at most per_cell=1 points");
+        assert!(
+            results.iter().any(|&(x, y, score)| (x as i32 - 24).abs() <= 8 && (y as i32 - 24).abs() <= 8 && score > 0.0),
+            "expected a high min-eigenvalue point near the planted corner at (24, 24), got {results:?}"
+        );
+    }
+
+    #[test]
+    fn shi_tomasi_grid_handles_zero_cell_without_panicking() {
+        let img = corner_image(8);
+        let results = shi_tomasi_grid(&img, 0, 2);
+        assert!(!results.is_empty(), "a zero cell size should be clamped to 1 and still return candidates");
+        assert!(results.len() <= 64, "should not exceed the pixel count of an 8x8 image, got {}", results.len());
+    }
     // #endregion 🔖DetectTests
 
     // #region 🔖DescribeTests
@@ -1074,6 +1117,117 @@ mod tests {
         assert!(checked > 0, "expected some interior matches to check");
         assert!(f64::from(correct) / f64::from(checked) >= 0.9, "expected at least 90% correct correspondences, got {correct}/{checked}");
     }
+
+    #[test]
+    fn match_brute_desc_b_empty_returns_empty() {
+        let desc_a = [Descriptor256([0, 0, 0, 0])];
+        assert!(match_brute(&desc_a, &[], 0.75, false).is_empty(), "matching against an empty pool should yield no matches");
+    }
+
+    #[test]
+    fn match_brute_single_candidate_bypasses_ratio_test() {
+        let desc_a = [Descriptor256([0, 0, 0, 0]), Descriptor256([u64::MAX, 0, 0, 0])];
+        let desc_b = [Descriptor256([0, 0, 0, 0])];
+        let matches = match_brute(&desc_a, &desc_b, 0.01, false);
+        assert_eq!(matches.len(), 2, "with only one candidate, second_dist is MAX and every query should bypass the ratio test");
+        assert!(matches.iter().all(|m| m.b == 0));
+    }
+
+    #[test]
+    fn match_brute_mutual_filters_non_reciprocal_matches() {
+        let a0 = Descriptor256([0, 0, 0, 0]);
+        let a1 = Descriptor256([0xF, 0, 0, 0]);
+        let b0 = Descriptor256([0, 0, 0, 0]);
+        let b1 = Descriptor256([u64::MAX, u64::MAX, u64::MAX, u64::MAX]);
+        let desc_a = [a0, a1];
+        let desc_b = [b0, b1];
+        let unfiltered = match_brute(&desc_a, &desc_b, 0.99, false);
+        assert_eq!(unfiltered.len(), 2, "without mutual cross-check both a0 and a1 should match b0");
+        let mutual = match_brute(&desc_a, &desc_b, 0.99, true);
+        assert_eq!(mutual.len(), 1, "mutual cross-check should keep only the reciprocal a0<->b0 match");
+        assert_eq!(mutual[0].a, 0);
+        assert_eq!(mutual[0].b, 0);
+    }
+
+    #[test]
+    fn match_guided_epipolar_recovers_match_along_horizontal_line_and_filters_off_line_candidate() {
+        let zero = Descriptor256([0, 0, 0, 0]);
+        let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let desc_a = [zero];
+        let kp_b = [
+            Keypoint { x: 12.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 },
+            Keypoint { x: 50.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 },
+            Keypoint { x: 5.0, y: 100.0, octave: 0, angle: 0.0, response: 1.0 },
+            Keypoint { x: 20.0, y: 23.9, octave: 0, angle: 0.0, response: 1.0 },
+        ];
+        let desc_b = [zero, Descriptor256([u64::MAX, 0, 0, 0]), zero, zero];
+        // F for a pure horizontal-translation stereo rig: epipolar lines are horizontal (Y = y).
+        let f_matrix = [[0.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]];
+        let matches = match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &f_matrix, 3.0);
+        assert_eq!(matches.len(), 1, "expected exactly one match, got {matches:?}");
+        assert_eq!(matches[0].a, 0);
+        assert_eq!(matches[0].b, 0, "the off-line candidate at index 3 should be excluded despite an identical descriptor");
+        assert_eq!(matches[0].distance, 0);
+    }
+
+    #[test]
+    fn match_guided_epipolar_handles_vertical_epipolar_line() {
+        let zero = Descriptor256([0, 0, 0, 0]);
+        let kp_a = [Keypoint { x: 15.0, y: 5.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let desc_a = [zero];
+        let kp_b = [Keypoint { x: 15.0, y: 10.0, octave: 0, angle: 0.0, response: 1.0 }, Keypoint { x: 15.0, y: 80.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let desc_b = [zero, Descriptor256([u64::MAX, 0, 0, 0])];
+        // F for a pure vertical-translation stereo rig: epipolar lines are vertical (X = x), exercising the y-stepping branch.
+        let f_matrix = [[0.0, 0.0, 1.0], [0.0, 0.0, 0.0], [-1.0, 0.0, 0.0]];
+        let matches = match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &f_matrix, 3.0);
+        assert_eq!(matches.len(), 1, "expected exactly one match along the vertical epipolar line, got {matches:?}");
+        assert_eq!(matches[0].a, 0);
+        assert_eq!(matches[0].b, 0);
+    }
+
+    #[test]
+    fn match_guided_epipolar_returns_empty_for_empty_kp_b_and_degenerate_matrix() {
+        let kp_a = [Keypoint { x: 10.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let desc_a = [Descriptor256([0, 0, 0, 0])];
+        let f_matrix = [[0.0, 0.0, 0.0], [0.0, 0.0, -1.0], [0.0, 1.0, 0.0]];
+        assert!(match_guided_epipolar(&kp_a, &desc_a, &[], &[], &f_matrix, 3.0).is_empty(), "an empty kp_b should yield no matches");
+        let kp_b = [Keypoint { x: 12.0, y: 20.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let desc_b = [Descriptor256([0, 0, 0, 0])];
+        let degenerate_f = [[0.0; 3]; 3];
+        assert!(match_guided_epipolar(&kp_a, &desc_a, &kp_b, &desc_b, &degenerate_f, 3.0).is_empty(), "a degenerate (all-zero) F matrix should yield no matches");
+    }
+
+    #[test]
+    fn match_zncc_fallback_finds_correct_correspondence_within_radius() {
+        let size = 64u32;
+        let img_a = lcg_texture(size, 55);
+        let shift = 3.0f32;
+        let m = [[1.0, 0.0, -shift], [0.0, 1.0, -shift]];
+        let img_b = warp_affine(&img_a, &m, size, size);
+        let kp_a = [Keypoint { x: 30.0, y: 32.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let kp_b = [Keypoint { x: 33.0, y: 35.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let matches = match_zncc_fallback(&img_a, &kp_a, &img_b, &kp_b, 6.0);
+        assert_eq!(matches.len(), 1, "expected the correctly-shifted candidate to match, got {matches:?}");
+        assert_eq!(matches[0].a, 0);
+        assert_eq!(matches[0].b, 0);
+        assert!(matches[0].distance < 100, "expected a high zncc correlation (low distance), got {}", matches[0].distance);
+    }
+
+    #[test]
+    fn match_zncc_fallback_returns_empty_for_empty_kp_b() {
+        let img = lcg_texture(32, 1);
+        let kp_a = [Keypoint { x: 16.0, y: 16.0, octave: 0, angle: 0.0, response: 1.0 }];
+        assert!(match_zncc_fallback(&img, &kp_a, &img, &[], 5.0).is_empty(), "an empty kp_b should yield no matches");
+    }
+
+    #[test]
+    fn match_zncc_fallback_no_match_when_correlation_below_threshold() {
+        let img_a = lcg_texture(48, 1);
+        let img_b = lcg_texture(48, 2);
+        let kp_a = [Keypoint { x: 24.0, y: 24.0, octave: 0, angle: 0.0, response: 1.0 }];
+        let kp_b = [Keypoint { x: 24.0, y: 24.0, octave: 0, angle: 0.0, response: 1.0 }];
+        assert!(match_zncc_fallback(&img_a, &kp_a, &img_b, &kp_b, 5.0).is_empty(), "uncorrelated noise patches should fall below the zncc threshold");
+    }
     // #endregion 🔖MatchTests
 
     // #region 🔖FlowTests
@@ -1112,6 +1266,38 @@ mod tests {
         forward_backward_prune(&pyr_a, &pyr_b, &points, &mut tracked, 5, 20, 0.5);
         assert!(tracked[0].valid, "well-tracked point should remain valid after fb-pruning");
         assert!(!tracked[1].valid, "an implausible/degenerate track should be invalidated by the fb round-trip check");
+    }
+
+    #[test]
+    fn forward_backward_prune_skips_already_invalid_points() {
+        let size = 32u32;
+        let img = smooth_texture(size);
+        let pyr = build_pyramid(&img, 2);
+        let points = [(10.0, 10.0)];
+        let original = TrackPoint { x: 999.0, y: 999.0, valid: false, error: 5.0 };
+        let mut tracked = [original];
+        forward_backward_prune(&pyr, &pyr, &points, &mut tracked, 5, 20, 0.5);
+        assert_eq!(tracked[0], original, "an already-invalid track point should be left untouched");
+    }
+
+    #[test]
+    fn klt_track_returns_invalid_for_empty_pyramid_levels() {
+        let empty_pyr = Pyramid { levels: Vec::new(), scale: 0.5 };
+        let other_pyr = Pyramid { levels: vec![ImageGray::new(8, 8)], scale: 0.5 };
+        let tracked = klt_track(&empty_pyr, &other_pyr, &[(1.0, 1.0)], 3, 5);
+        assert_eq!(tracked.len(), 1);
+        assert!(!tracked[0].valid, "tracking with zero shared pyramid levels should be invalid");
+        assert_eq!(tracked[0].x, 1.0);
+        assert_eq!(tracked[0].y, 1.0);
+        assert_eq!(tracked[0].error, f32::INFINITY);
+    }
+
+    #[test]
+    fn klt_track_flags_invalid_on_singular_flat_region() {
+        let flat = ImageGray::new(32, 32);
+        let pyr = build_pyramid(&flat, 2);
+        let tracked = klt_track(&pyr, &pyr, &[(10.0, 10.0)], 5, 10);
+        assert!(!tracked[0].valid, "a flat/textureless region has a near-singular structure tensor and should be invalid");
     }
     // #endregion 🔖FlowTests
 
@@ -1222,6 +1408,34 @@ mod tests {
         let d2 = describe_akaze(&scale_space, &[kp]);
         assert_eq!(d1[0], d2[0], "describing the same AKAZE keypoint twice should give an identical M-LDB descriptor");
         assert_eq!(d1[0].hamming_distance(&d1[0]), 0);
+    }
+
+    #[test]
+    fn fed_tau_schedule_returns_empty_for_non_positive_time() {
+        assert!(fed_tau_schedule(0.0, AKAZE_FED_TAU_MAX).is_empty());
+        assert!(fed_tau_schedule(-1.0, AKAZE_FED_TAU_MAX).is_empty());
+        assert!(!fed_tau_schedule(1.0, AKAZE_FED_TAU_MAX).is_empty(), "a positive evolution time should produce at least one FED step");
+    }
+
+    #[test]
+    fn diffusion_step_returns_input_clone_for_zero_sized_image() {
+        let empty = ImageGray { width: 0, height: 0, data: Vec::new() };
+        let out = diffusion_step(&empty, &[], 0.1);
+        assert_eq!(out, empty, "a zero-width/height image should pass through diffusion_step unchanged");
+    }
+
+    #[test]
+    fn akaze_grid_top_k_returns_empty_for_no_candidates_or_zero_target() {
+        assert!(akaze_grid_top_k(Vec::new(), 64, 64, 16, 10).is_empty(), "no candidates should yield no selection");
+        let candidates = vec![AkazeCandidate { x: 1.0, y: 1.0, response: 1.0, level: 0 }];
+        assert!(akaze_grid_top_k(candidates, 64, 64, 16, 0).is_empty(), "a zero target_count should yield no selection");
+    }
+
+    #[test]
+    fn quadratic_refine_2d_returns_zero_offset_for_singular_hessian() {
+        let response = vec![1.0f32; 25];
+        let (ox, oy) = quadratic_refine_2d(&response, 5, 2, 2);
+        assert_eq!((ox, oy), (0.0, 0.0), "a perfectly flat response has a singular Hessian and should refine to a zero offset");
     }
     // #endregion 🔖AkazeTests
 }

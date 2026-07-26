@@ -1,7 +1,7 @@
 {
   "kitHash": {
     "kit": "kit/dev/metabolism/wip/initialKit/kit.compose.json",
-    "expected": "2a7c49348c09e2bcb30a8ebc0224591e8b3041f81748d1acc30f88b9aca63a01",
+    "expected": "a19a962ee064dd7bd5e389263f576696ced699a5afc62e47422dc3329e23e44e",
     "expectedNet48": "3640c4cf3718af017555369e6f2396e7c3b8e0f74830599dad4e3f2ee2c39268"
   },
   "kitDiffHash": {

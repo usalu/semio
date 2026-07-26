@@ -611,16 +611,21 @@ impl EditorHost {
         self.clamp_camera();
     }
 
+    /// 🖱️➡️ W4 fix: every button repositions the caret to the click point — a right-click's context-menu
+    /// UX wants the same "click lands the caret here" behavior a left click gets (see
+    /// `framework/renderer/wgpu`'s text-editor context-menu caller, which used to work around this by
+    /// forcing `button` to `0` before calling in, since this fn used to no-op entirely for `button != 0`).
+    /// Only a primary-button (`button == 0`) press also starts a drag-selection — a right/middle click
+    /// must never extend the current selection.
     pub fn pointer_down_screen(&mut self, sx: f64, sy: f64, button: i32) {
-        if button != 0 {
-            return;
-        }
-        self.drag_selecting = true;
         let world = editor_screen_to_world(&self.camera, Point::new(sx, sy));
         let offset = self.snap_offset_for_atomic(self.hit_test_offset(world));
         self.caret = offset;
         self.anchor = offset;
         self.set_hover_at_offset(offset);
+        if button == 0 {
+            self.drag_selecting = true;
+        }
     }
 
     pub fn pointer_move_screen(&mut self, sx: f64, sy: f64, _buttons: i32) {
@@ -2058,14 +2063,28 @@ mod tests {
         assert_eq!(host.camera.y, 0.0);
     }
 
+    /// 🐛 W4 fix (`.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w4-scene-input.md`): a right-click
+    /// used to be a total no-op here (this test used to assert the caret/anchor stayed put) — now it
+    /// still repositions the caret to the click point (matching left-click, for the right-click
+    /// context-menu's "open where you clicked" UX) but must never start a drag-selection.
     #[test]
-    fn pointer_down_screen_ignores_non_primary_button() {
+    fn pointer_down_screen_repositions_caret_for_non_primary_button_but_does_not_start_a_drag_selection() {
         let mut host = EditorHost::new();
         host.set_text("hello world".into());
         host.set_caret_anchor(3);
+        let expected_offset = host.hit_test_offset_screen(0.0, 0.0);
         host.pointer_down_screen(0.0, 0.0, 2);
-        assert_eq!(host.caret(), 3);
-        assert_eq!(host.anchor(), 3);
+        assert_eq!(host.caret(), expected_offset, "a right-click should still reposition the caret to the click point");
+        assert_eq!(host.anchor(), expected_offset);
+        assert!(!host.drag_selecting, "a right-click must not start a drag-selection");
+    }
+
+    #[test]
+    fn pointer_down_screen_primary_button_still_starts_a_drag_selection() {
+        let mut host = EditorHost::new();
+        host.set_text("hello world".into());
+        host.pointer_down_screen(0.0, 0.0, 0);
+        assert!(host.drag_selecting, "a primary-button press must still start a drag-selection");
     }
 
     #[test]

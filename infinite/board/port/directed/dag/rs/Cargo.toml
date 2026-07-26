@@ -13,6 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../../../../vcs/rs" }
+dsl = { path = "../../../../../../dsl/rs" }
 ui_styling = { path = "../../../../../../ui/styling/rs" }
 infinite_board_port_directed = { path = "../../rs" }
 mathematical_graph_manifest = { path = "../../../../../../mathematical/graph/manifest/rs" }

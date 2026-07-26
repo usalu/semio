@@ -1,49 +1,38 @@
-@node id=n00_g x=0 y=0 z=0
-@node id=n00_l1 x=0 y=0 z=2.8
-@node id=n00_l2 x=0 y=0 z=5.6
-@node id=n20_g x=8 y=0 z=0
-@node id=n20_l1 x=8 y=0 z=2.8
-@node id=n20_l2 x=8 y=0 z=5.6
-@node id=n02_g x=0 y=10 z=0
-@node id=n02_l1 x=0 y=10 z=2.8
-@node id=n02_l2 x=0 y=10 z=5.6
-@node id=n22_g x=8 y=10 z=0
-@node id=n22_l1 x=8 y=10 z=2.8
-@node id=n22_l2 x=8 y=10 z=5.6
-@node id=sc0 x=10 y=0 z=0
-@node id=sc1 x=12 y=0 z=0
-@node id=sc2 x=12 y=2 z=0
-@node id=sc3 x=10 y=2 z=0
-@frame id=e1 start=n00_g end=n00_l1 material=steel section=hea200 roll=0
-@frame id=col_00_u start=n00_l1 end=n00_l2 material=steel section=hea200 roll=0
-@frame id=col_20_l start=n20_g end=n20_l1 material=steel section=hea200 roll=0
-@frame id=col_20_u start=n20_l1 end=n20_l2 material=steel section=hea200 roll=0
-@frame id=col_02_l start=n02_g end=n02_l1 material=steel section=hea200 roll=0
-@frame id=col_02_u start=n02_l1 end=n02_l2 material=steel section=hea200 roll=0
-@frame id=col_22_l start=n22_g end=n22_l1 material=steel section=hea200 roll=0
-@frame id=col_22_u start=n22_l1 end=n22_l2 material=steel section=hea200 roll=0
-@frame id=fb1_0 start=n00_l1 end=n20_l1 material=steel section=hea200 roll=0
-@frame id=fb2_0 start=n00_l2 end=n20_l2 material=steel section=hea200 roll=0
-@frame id=fb1_2 start=n02_l1 end=n22_l1 material=steel section=hea200 roll=0
-@frame id=fb2_2 start=n02_l2 end=n22_l2 material=steel section=hea200 roll=0
-@frame id=fb1_3 start=n00_l1 end=n02_l1 material=steel section=hea200 roll=0
-@frame id=fb2_3 start=n00_l2 end=n02_l2 material=steel section=hea200 roll=0
-@frame id=fb1_1 start=n20_l1 end=n22_l1 material=steel section=hea200 roll=0
-@frame id=fb2_1 start=n20_l2 end=n22_l2 material=steel section=hea200 roll=0
-@material id=steel e=210000000000 g=80770000000 nu=0.3 rho=7850 "Steel S235"
-@material id=concrete e=33000000000 g=13750000000 nu=0.2 rho=2400 "C30/37 Concrete"
-@section id=hea200 area=0.00538 iy=0.0000369 iz=0.0000133 j=0.0000006 "HEA 200"
-@solid id=sol1 material=concrete basez=0 height=0.5 layers=1 mesh=1 outline=10,0;12,0;12,2;10,2 holes=- "First Floor Slab"
-@support id=s_00 node=n00_g fixed=Tx,Ty,Tz,Rx,Ry,Rz
-@support id=s_20 node=n20_g fixed=Tx,Ty,Tz,Rx,Ry,Rz
-@support id=s_02 node=n02_g fixed=Tx,Ty,Tz,Rx,Ry,Rz
-@support id=s_22 node=n22_g fixed=Tx,Ty,Tz,Rx,Ry,Rz
-@support id=ss_0 node=sc0 fixed=Tx,Ty,Tz
-@support id=ss_1 node=sc1 fixed=Tx,Ty,Tz
-@support id=ss_2 node=sc2 fixed=Tx,Ty,Tz
-@support id=ss_3 node=sc3 fixed=Tx,Ty,Tz
-@loadcase id=dead selfweight=true loads=area:l1:sol1:800 "Dead Load"
-@loadcase id=live selfweight=false loads=nodal:l2:n20_l1:Tz:-5000|area:l3:sol1:1500 "Live Load"
-@combination id=uls terms=dead:1.35,live:1.5 "ULS"
-@analysis modal=3 buckling=3 scale=300
-@camera "{}"
+nodes= [ node id="n00_g" x=0 y=0 z=0 node id="n00_l1" x=0 y=0 z=2.8 node id="n00_l2" x=0 y=0 z=5.6 node id="n20_g" x=8 y=0 z=0 node id="n20_l1" x=8 y=0 z=2.8 node id="n20_l2" x=8 y=0 z=5.6 node id="n02_g" x=0 y=10 z=0 node id="n02_l1" x=0 y=10 z=2.8 node id="n02_l2" x=0 y=10 z=5.6 node id="n22_g" x=8 y=10 z=0 node id="n22_l1" x=8 y=10 z=2.8 node id="n22_l2" x=8 y=10 z=5.6 node id="sc0" x=10 y=0 z=0 node id="sc1" x=12 y=0 z=0 node id="sc2" x=12 y=2 z=0 node id="sc3" x=10 y=2 z=0 ]
+elements {
+  frame id="e1" start="n00_g" end="n00_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="col_00_u" start="n00_l1" end="n00_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="col_20_l" start="n20_g" end="n20_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="col_20_u" start="n20_l1" end="n20_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="col_02_l" start="n02_g" end="n02_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="col_02_u" start="n02_l1" end="n02_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="col_22_l" start="n22_g" end="n22_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="col_22_u" start="n22_l1" end="n22_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="fb1_0" start="n00_l1" end="n20_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="fb2_0" start="n00_l2" end="n20_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="fb1_2" start="n02_l1" end="n22_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="fb2_2" start="n02_l2" end="n22_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="fb1_3" start="n00_l1" end="n02_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="fb2_3" start="n00_l2" end="n02_l2" material_id="steel" section_id="hea200" roll=0
+  frame id="fb1_1" start="n20_l1" end="n22_l1" material_id="steel" section_id="hea200" roll=0
+  frame id="fb2_1" start="n20_l2" end="n22_l2" material_id="steel" section_id="hea200" roll=0
+}
+materials= [ material id="steel" name="Steel S235" e=210000000000 g=80770000000 nu=0.3 rho=7850 material id="concrete" name="C30/37 Concrete" e=33000000000 g=13750000000 nu=0.2 rho=2400 ] sections= [ section id="hea200" name="HEA 200" area=0.00538 iy=0.0000369 iz=0.0000133 j=0.0000006 ] solids= [ solid id="sol1" name="First Floor Slab" outline= [ 10,0 12,0 12,2 10,2 ] holes= [ ] base_z=0 height=0.5 layers=1 mesh_size=1 material_id="concrete" ] supports= [ support id="s_00" node_id="n00_g" fixed= [ Tx Ty Tz Rx Ry Rz ] support id="s_20" node_id="n20_g" fixed= [ Tx Ty Tz Rx Ry Rz ] support id="s_02" node_id="n02_g" fixed= [ Tx Ty Tz Rx Ry Rz ] support id="s_22" node_id="n22_g" fixed= [ Tx Ty Tz Rx Ry Rz ] support id="ss_0" node_id="sc0" fixed= [ Tx Ty Tz ] support id="ss_1" node_id="sc1" fixed= [ Tx Ty Tz ] support id="ss_2" node_id="sc2" fixed= [ Tx Ty Tz ] support id="ss_3" node_id="sc3" fixed= [ Tx Ty Tz ] ] load_cases= [ loadcase id="dead" name="Dead Load"
+loads {
+  area id="l1" solid_id="sol1" pressure=800
+}
+self_weight=true loadcase id="live" name="Live Load"
+loads {
+  nodal id="l2" node_id="n20_l1" dof=Tz value=-5000
+  area id="l3" solid_id="sol1" pressure=1500
+}
+self_weight=false ] combinations= [ combination id="uls" name="ULS" terms= {
+  dead=1.35 live=1.5
+}
+]
+analysis {
+  modal_count=3 buckling_count=3 deformation_scale=300
+}
+camera {
+  json="{}"
+}

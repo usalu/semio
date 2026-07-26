@@ -1,0 +1,1 @@
+mathematical_wfc: cargo test --lib — 266 passed; 0 failed (re-consolidated after parallel #[path] revert; 39 src modules inlined)

@@ -506,6 +506,17 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
             push!(if closed { TokenKind::Text } else { TokenKind::Error }, start_line, start_col, start_byte, buf);
             continue;
         }
+        // `-inf` is its own special float literal (the negative-infinity half of the "nan/inf/-inf"
+        // ident convention `format_f64`/`parse_f64` round-trip) — unlike ordinary numbers, `-` isn't
+        // followed by a digit here, and `-` isn't a valid ident-start character either, so without
+        // this it falls through every branch below to "unknown character".
+        if c == '-' && i + 4 <= chars.len() && chars[i + 1] == 'i' && chars[i + 2] == 'n' && chars[i + 3] == 'f' && !chars.get(i + 4).is_some_and(|next| is_ident_continue(*next)) {
+            i += 4;
+            byte_offset += 4;
+            column += 4;
+            push!(TokenKind::Float, start_line, start_col, start_byte, "-inf".to_string());
+            continue;
+        }
         if c.is_ascii_digit() || (c == '-' && i + 1 < chars.len() && chars[i + 1].is_ascii_digit()) {
             let mut j = i;
             let mut buf = String::new();
@@ -818,6 +829,35 @@ mod tests {
                 (TokenKind::Ident, "target".to_string()),
             ]
         );
+    }
+
+    #[test]
+    fn lexer_recognizes_negative_infinity_as_one_float_token() {
+        let tokens = lex("x=-inf y=-influence z=5", &Limits::default(), true).expect("lex");
+        let significant: Vec<(TokenKind, String)> =
+            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Ident, "x".to_string()),
+                (TokenKind::Equals, "=".to_string()),
+                (TokenKind::Float, "-inf".to_string()),
+                (TokenKind::Ident, "y".to_string()),
+                (TokenKind::Equals, "=".to_string()),
+                // "-influence" must NOT be split into a "-inf" float token plus a stray "luence"
+                // ident — the lookahead requires the char right after "-inf" to not itself
+                // continue an identifier, so this falls through to ordinary "unknown character"
+                // handling for the leading '-' instead (forgiving mode turns it into an Error
+                // token), then lexes "influence" as its own ident.
+                (TokenKind::Error, "-".to_string()),
+                (TokenKind::Ident, "influence".to_string()),
+                (TokenKind::Ident, "z".to_string()),
+                (TokenKind::Equals, "=".to_string()),
+                (TokenKind::Int, "5".to_string()),
+            ]
+        );
+        assert_eq!(parse_f64("-inf").unwrap(), f64::NEG_INFINITY);
+        assert_eq!(format_f64(f64::NEG_INFINITY), "-inf");
     }
 
     #[test]

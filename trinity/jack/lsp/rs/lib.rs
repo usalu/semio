@@ -451,5 +451,299 @@ mod tests {
         let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&open.to_string())).unwrap();
         assert!(replies.iter().any(|row| row["method"] == "textDocument/publishDiagnostics"));
     }
+
+    fn open_doc(server: &mut JackLanguageServer, uri: &str, id: i64, text: &str) {
+        let open = json!({
+            "jsonrpc": "2.0",
+            "id": id,
+            "method": "textDocument/didOpen",
+            "params": { "textDocument": { "uri": uri, "languageId": "jack", "version": 1, "text": text } }
+        });
+        server.handle_message_json(&open.to_string());
+    }
+
+    #[test]
+    fn handle_message_json_returns_parse_error_for_invalid_json() {
+        let mut server = JackLanguageServer::new();
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json("not json")).unwrap();
+        assert_eq!(replies[0]["error"]["code"], -32700);
+    }
+
+    #[test]
+    fn handle_message_ignores_message_without_method() {
+        let mut server = JackLanguageServer::new();
+        let message = JsonRpcMessage { id: None, method: None, params: None };
+        assert!(server.handle_message(message).is_empty());
+    }
+
+    #[test]
+    fn initialized_notification_returns_no_replies() {
+        let mut server = JackLanguageServer::new();
+        let raw = r#"{"jsonrpc":"2.0","method":"initialized"}"#;
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(raw)).unwrap();
+        assert!(replies.is_empty());
+    }
+
+    #[test]
+    fn unknown_method_returns_method_not_found_error() {
+        let mut server = JackLanguageServer::new();
+        let raw = r#"{"jsonrpc":"2.0","id":14,"method":"foo/bar"}"#;
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(raw)).unwrap();
+        assert_eq!(replies[0]["error"]["code"], -32601);
+        assert!(replies[0]["error"]["message"].as_str().unwrap().contains("foo/bar"));
+    }
+
+    #[test]
+    fn did_change_updates_document_and_republishes() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://change", 1, "RETURN a");
+        let change = json!({
+            "jsonrpc": "2.0",
+            "id": 3,
+            "method": "textDocument/didChange",
+            "params": {
+                "textDocument": { "uri": "writer://change", "version": 2 },
+                "contentChanges": [{ "text": "RETURN a.name" }]
+            }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&change.to_string())).unwrap();
+        assert_eq!(replies[0]["result"], Value::Null);
+        assert_eq!(replies[0]["id"], 3);
+        assert!(replies.iter().any(|row| row["method"] == "textDocument/publishDiagnostics"));
+        assert!(replies.iter().any(|row| row["method"] == "writer/semanticTokens"));
+    }
+
+    #[test]
+    fn did_change_without_prior_open_returns_null_result() {
+        let mut server = JackLanguageServer::new();
+        let change = json!({
+            "jsonrpc": "2.0",
+            "id": 99,
+            "method": "textDocument/didChange",
+            "params": {
+                "textDocument": { "uri": "writer://never-opened", "version": 2 },
+                "contentChanges": [{ "text": "RETURN a" }]
+            }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&change.to_string())).unwrap();
+        assert_eq!(replies.len(), 1);
+        assert_eq!(replies[0]["result"], Value::Null);
+        assert_eq!(replies[0]["id"], 99);
+    }
+
+    #[test]
+    fn completion_for_unknown_document_returns_empty_items() {
+        let mut server = JackLanguageServer::new();
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 4, "method": "textDocument/completion",
+            "params": { "textDocument": { "uri": "writer://none" }, "position": { "line": 0, "character": 0 } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"]["items"], json!([]));
+        assert_eq!(replies[0]["result"]["isIncomplete"], false);
+    }
+
+    #[test]
+    fn completion_for_known_document_returns_matching_kind() {
+        let mut server = JackLanguageServer::new();
+        let text = "MATCH (a:P";
+        open_doc(&mut server, "writer://completion", 1, text);
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 5, "method": "textDocument/completion",
+            "params": { "textDocument": { "uri": "writer://completion" }, "position": { "line": 0, "character": text.len() } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        let items = replies[0]["result"]["items"].as_array().unwrap();
+        assert!(items.iter().any(|item| item["label"] == "Piece"));
+    }
+
+    #[test]
+    fn hover_for_unknown_document_returns_null() {
+        let mut server = JackLanguageServer::new();
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 6, "method": "textDocument/hover",
+            "params": { "textDocument": { "uri": "writer://none" }, "position": { "line": 0, "character": 0 } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"], Value::Null);
+    }
+
+    #[test]
+    fn hover_for_known_document_returns_keyword_info() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://hover-kw", 1, "MATCH");
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 7, "method": "textDocument/hover",
+            "params": { "textDocument": { "uri": "writer://hover-kw" }, "position": { "line": 0, "character": 2 } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"]["contents"], "Jack keyword `MATCH`");
+    }
+
+    #[test]
+    fn hover_for_known_document_returns_null_when_no_match() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://hover-none", 1, "xyz123");
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 8, "method": "textDocument/hover",
+            "params": { "textDocument": { "uri": "writer://hover-none" }, "position": { "line": 0, "character": 2 } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"], Value::Null);
+    }
+
+    #[test]
+    fn formatting_for_unknown_document_returns_empty_array() {
+        let mut server = JackLanguageServer::new();
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 9, "method": "textDocument/formatting",
+            "params": { "textDocument": { "uri": "writer://none" } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"], json!([]));
+    }
+
+    #[test]
+    fn formatting_for_known_document_returns_edit() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://format", 1, "MATCH(a:Piece)RETURN a.name");
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 10, "method": "textDocument/formatting",
+            "params": { "textDocument": { "uri": "writer://format" } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        let edits = replies[0]["result"].as_array().unwrap();
+        assert_eq!(edits.len(), 1);
+        assert!(edits[0]["newText"].as_str().unwrap().starts_with("MATCH"));
+    }
+
+    #[test]
+    fn formatting_error_returns_error_response() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://format-err", 1, "MATCH (a:x) WHERE a.p = 'oops");
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 11, "method": "textDocument/formatting",
+            "params": { "textDocument": { "uri": "writer://format-err" } }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["error"]["code"], -32603);
+    }
+
+    #[test]
+    fn semantic_tokens_missing_params_returns_error() {
+        let mut server = JackLanguageServer::new();
+        let raw = r#"{"jsonrpc":"2.0","id":12,"method":"textDocument/semanticTokens/full"}"#;
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(raw)).unwrap();
+        assert_eq!(replies[0]["error"]["code"], -32602);
+    }
+
+    #[test]
+    fn semantic_tokens_for_unknown_document_returns_empty_data() {
+        let mut server = JackLanguageServer::new();
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 13, "method": "textDocument/semanticTokens/full",
+            "params": { "uri": "writer://none" }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert_eq!(replies[0]["result"], json!({ "data": [] }));
+    }
+
+    #[test]
+    fn semantic_tokens_for_known_document_returns_tokens() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://tokens", 1, "RETURN a");
+        let raw = json!({
+            "jsonrpc": "2.0", "id": 15, "method": "textDocument/semanticTokens/full",
+            "params": { "uri": "writer://tokens" }
+        });
+        let replies: Vec<Value> = serde_json::from_str(&server.handle_message_json(&raw.to_string())).unwrap();
+        assert!(replies[0]["result"]["tokens"].is_array());
+        assert!(!replies[0]["result"]["tokens"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn load_fixture_for_domain_trinity_and_nakagin_succeed() {
+        let mut server = JackLanguageServer::new();
+        let fixture_json = trinity_jack::example_graph_fixture_json();
+        server.load_fixture_for_domain(&fixture_json, "trinity").unwrap();
+        assert_eq!(server.graph_domain(), "trinity");
+        server.load_fixture_for_domain(&fixture_json, "nakagin").unwrap();
+        assert_eq!(server.graph_domain(), "nakagin");
+    }
+
+    #[test]
+    fn load_fixture_for_domain_board_aliases_succeed() {
+        let mut server = JackLanguageServer::new();
+        for domain in ["dag", "puzzle2d", "2d", "s-media-graph", "s", "flow", "sequence", "wires", "some-unlisted-domain"] {
+            server.load_fixture_for_domain("{}", domain).unwrap();
+            assert_eq!(server.graph_domain(), domain);
+        }
+    }
+
+    #[test]
+    fn load_fixture_for_domain_puzzle3d_converts_objects_array() {
+        let mut server = JackLanguageServer::new();
+        let fixture = r#"{"objects":[{"id":"o1","kind":"Widget","name":"Thing"}]}"#;
+        server.load_fixture_for_domain(fixture, "puzzle3d").unwrap();
+        server.load_fixture_for_domain(fixture, "3d").unwrap();
+    }
+
+    #[test]
+    fn load_fixture_for_domain_invalid_json_returns_graph_error_for_trinity() {
+        let mut server = JackLanguageServer::new();
+        let err = server.load_fixture_for_domain("not json", "trinity").unwrap_err();
+        assert!(matches!(err, TrinityJackLspError::Graph(_)));
+    }
+
+    #[test]
+    fn load_fixture_for_domain_invalid_json_returns_dsl_error_for_board() {
+        let mut server = JackLanguageServer::new();
+        let err = server.load_fixture_for_domain("not json", "dag").unwrap_err();
+        assert!(matches!(err, TrinityJackLspError::Dsl(_)));
+    }
+
+    #[test]
+    fn load_fixture_json_uses_current_domain() {
+        let mut server = JackLanguageServer::new();
+        server.set_graph_domain("dag");
+        server.load_fixture_json("{}").unwrap();
+        assert_eq!(server.graph_domain(), "dag");
+    }
+
+    #[test]
+    fn default_matches_new_domain() {
+        let server = JackLanguageServer::default();
+        assert_eq!(server.graph_domain(), "trinity");
+    }
+
+    #[test]
+    fn load_fixture_for_domain_refreshes_open_documents() {
+        let mut server = JackLanguageServer::new();
+        open_doc(&mut server, "writer://refresh", 1, "RETURN a");
+        let fixture_json = trinity_jack::example_graph_fixture_json();
+        assert!(server.load_fixture_for_domain(&fixture_json, "trinity").is_ok());
+    }
+
+    #[test]
+    fn position_to_offset_clamps_character_to_line_length() {
+        let text = "ab\ncdef";
+        let pos = Position { line: 0, character: 10 };
+        assert_eq!(position_to_offset(text, &pos), 2);
+    }
+
+    #[test]
+    fn position_to_offset_returns_text_len_when_line_out_of_range() {
+        let text = "ab\ncdef";
+        let pos = Position { line: 5, character: 0 };
+        assert_eq!(position_to_offset(text, &pos), text.len());
+    }
+
+    #[test]
+    fn offset_to_position_and_position_to_offset_round_trip() {
+        let text = "ab\ncdef";
+        let pos = offset_to_position(text, 5);
+        assert_eq!(pos, json!({ "line": 1, "character": 2 }));
+        assert_eq!(position_to_offset(text, &Position { line: 1, character: 2 }), 5);
+    }
 }
 // #endregion 🔖Tests

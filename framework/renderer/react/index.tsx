@@ -7471,7 +7471,7 @@ export function FrameworkOsShell({
       return [
         {
           id: instance.id,
-          iconId: windowIconsById[kind.id] ?? kind.iconId,
+          iconId: windowIconsById[instance.id] ?? kind.iconId,
           title: windowTitlesById[instance.id] ?? instance.title,
           fill: true,
           showControls: true,
@@ -13841,7 +13841,7 @@ function WorldOrbitProjectionSwitchPane({ spec, onSpecChange }: { readonly spec:
   const [folded, setFolded] = useState(true);
   const projectionLabel = useLabel("ui.host.projection");
   const pane = (
-    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon="camera" label={projectionLabel}>
+    <Pane id="framework.worldOrbit.projection" anchor={anchor} onAnchorChange={setAnchor} folded={folded} onFoldToggle={() => setFolded((value) => !value)} icon={worldProjectionSpecIconId(spec) as IconName} label={projectionLabel}>
       <WorldProjectionKindSwitch spec={spec} onSpecChange={onSpecChange} />
     </Pane>
   );
@@ -13890,6 +13890,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   const scene = node.world3d;
   const windowInstanceId = useContext(WindowInstanceIdContext);
   const setWindowTitle = useContext(SetWindowTitleContext);
+  const setWindowIcon = useContext(SetWindowIconContext);
   const emptySceneLabel = useLabel("ui.host.emptyScene");
   const meshStylePalette = useMeshStylePalette();
   const colors = useMemo(() => semanticColorsFromPalette(meshStylePalette), [meshStylePalette]);
@@ -14462,28 +14463,38 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
     [adoptViewportCamera],
   );
 
-  const syncProjectionWindowTitle = useCallback(
+  const syncProjectionWindowChrome = useCallback(
     (spec: WorldProjectionSpec) => {
-      if (!windowInstanceId || !setWindowTitle) return;
-      setWindowTitle(windowInstanceId, worldProjectionSpecLabel(spec));
+      if (!windowInstanceId) return;
+      setWindowTitle?.(windowInstanceId, worldProjectionSpecLabel(spec));
+      setWindowIcon?.(windowInstanceId, worldProjectionSpecIconId(spec) as IconName);
     },
-    [setWindowTitle, windowInstanceId],
+    [setWindowIcon, setWindowTitle, windowInstanceId],
   );
+
+  useEffect(() => {
+    const pending = peekPendingWorldProjection(windowInstanceId);
+    if (pending) syncProjectionWindowChrome(pending);
+  }, [syncProjectionWindowChrome, windowInstanceId]);
 
   const handleGizmoCameraChange = useCallback(
     (state: WorldCameraState) => {
       adoptViewportCamera(state, true);
-      if (state.projectionSpec) syncProjectionWindowTitle(state.projectionSpec);
+      if (state.projectionSpec) syncProjectionWindowChrome(state.projectionSpec);
     },
-    [adoptViewportCamera, syncProjectionWindowTitle],
+    [adoptViewportCamera, syncProjectionWindowChrome],
   );
 
   const [externalPendingProjectionSpec, setExternalPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
   const [pendingProjectionSpec, setPendingProjectionSpec] = useState<WorldProjectionSpec | null>(null);
 
-  const handleProjectionKindChange = useCallback((spec: WorldProjectionSpec) => {
-    setExternalPendingProjectionSpec(spec);
-  }, []);
+  const handleProjectionKindChange = useCallback(
+    (spec: WorldProjectionSpec) => {
+      setExternalPendingProjectionSpec(spec);
+      syncProjectionWindowChrome(spec);
+    },
+    [syncProjectionWindowChrome],
+  );
 
   const handleProjectionContentFrame = useCallback((state: WorldParsedCameraState) => {
     setViewportCamera(state);
@@ -17431,7 +17442,7 @@ export function buildTextEditorContextMenuItems(
   }
   items.push({ id: "writer-select-token", label: hostLabel("ui.contextMenu.selectToken"), icon: "text-cursor", onSelect: actions.selectToken });
   items.push({ id: "writer-select-line", label: hostLabel("ui.contextMenu.selectLine"), icon: "list-ordered", onSelect: actions.selectLine });
-  items.push({ id: "writer-select-all", label: hostLabel("ui.contextMenu.selectAll"), icon: "maximize-2", shortcut: "⌘A", onSelect: actions.selectAll });
+  items.push({ id: "writer-select-all", label: hostLabel("ui.contextMenu.selectAll"), icon: "select-all", shortcut: "⌘A", onSelect: actions.selectAll });
   if (input.canRename) {
     items.push({ id: "writer-rename", label: hostLabel("ui.contextMenu.rename"), icon: "edit-3", shortcut: "F2", onSelect: actions.rename });
   }
@@ -20015,7 +20026,7 @@ export function buildPuzzle2dSelectionMenuItems(fixtureJson: string, selectionJs
   }
   const selected = parseSelectionIds(selectionJson);
   if (selected.length === 0) {
-    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), icon: "maximize-2", action: "selectAll" }];
+    return [{ id: "selectAll", label: hostLabel("ui.contextMenu.selectAll"), icon: "select-all", action: "selectAll" }];
   }
 
   const selectedSet = new Set(selected);

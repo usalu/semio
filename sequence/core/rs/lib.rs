@@ -127,43 +127,118 @@ fn slot_key(slot: Option<&SlotRef>) -> Option<(String, String)> {
 }
 
 // #region 🔖Fixture
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 📦 Local newtype around {@link neural_engine::Dictionary} — dynamic/schema-less step params
+/// can't be shape-derived field-by-field (arbitrary keys, recursive `Value`), and `Dictionary`
+/// itself can't gain a `dsl::DslField` impl directly (foreign trait, foreign type, no local anchor
+/// for the orphan rule). Wrapping it as one opaque JSON-text field reuses the exact `serde_json`
+/// round trip {@link SequenceHost::to_json}/{@link SequenceHost::load_json} already depend on for
+/// fidelity — unlike a schema-less `dsl::Shape::Value`, this never collapses `Atom::Integer` and
+/// `Atom::Decimal` into the same wire number.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(transparent)]
+pub struct StepParams(pub Dictionary);
+
+impl StepParams {
+    pub fn new() -> Self {
+        Self(Dictionary::new())
+    }
+
+    pub fn insert(self, key: impl Into<String>, value: Value) -> Self {
+        Self(self.0.insert(key, value))
+    }
+}
+
+impl std::ops::Deref for StepParams {
+    type Target = Dictionary;
+    fn deref(&self) -> &Dictionary {
+        &self.0
+    }
+}
+
+impl dsl::DslField for StepParams {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(serde_json::to_string(&self.0).unwrap_or_else(|_| "{}".into()))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(text) => serde_json::from_str(text).map(Self).map_err(|err| err.to_string()),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
+/// 🎥 Local DSL-derivable mirror of {@link dag::DagCamera} — the foreign type can't itself gain a
+/// `dsl::DslField` impl (crate-external, no local type to anchor the orphan-rule-legal impl on), so
+/// this newtype carries the same three fields through the sequence grammar and converts losslessly
+/// at the `DagHost`/`DagFixture` boundary.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct SequenceCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
+}
+
+impl From<DagCamera> for SequenceCamera {
+    fn from(value: DagCamera) -> Self {
+        Self { x: value.x, y: value.y, zoom: value.zoom }
+    }
+}
+
+impl From<SequenceCamera> for DagCamera {
+    fn from(value: SequenceCamera) -> Self {
+        DagCamera { x: value.x, y: value.y, zoom: value.zoom }
+    }
+}
+
+/// 🎯 Only ever embedded `#[dsl(block)]`-wrapped (on `SequenceStep::slot`), so it carries no
+/// `#[dsl(keyword = "...")]` of its own — the embedding field already supplies the bare `slot`
+/// leading keyword.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SlotRef {
     pub owner: String,
     pub name: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "step")]
 pub struct SequenceStep {
     pub id: String,
     pub kind: String,
     #[serde(default)]
-    pub params: Dictionary,
+    pub params: StepParams,
     #[serde(default)]
     pub x: f64,
     #[serde(default)]
     pub y: f64,
     #[serde(default)]
+    #[dsl(block)]
     pub slot: Option<SlotRef>,
     #[serde(default)]
     pub collapsed: bool,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "edge")]
 pub struct SequenceEdge {
     pub id: String,
     pub from: String,
     pub to: String,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "sequence", layout = "lines")]
 pub struct SequenceFixture {
     pub schema: String,
-    pub camera: DagCamera,
+    #[dsl(block)]
+    pub camera: SequenceCamera,
     pub steps: Vec<SequenceStep>,
     pub edges: Vec<SequenceEdge>,
 }
@@ -177,18 +252,18 @@ impl Default for SequenceFixture {
 pub fn default_fixture() -> SequenceFixture {
     SequenceFixture {
         schema: "sequence.fixture".into(),
-        camera: DagCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+        camera: SequenceCamera { x: 0.0, y: 0.0, zoom: 1.0 },
         steps: vec![
             SequenceStep {
                 id: "step-1".into(),
                 kind: "state.set".into(),
-                params: Dictionary::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))),
+                params: StepParams::new().insert("key", Value::Atom(Atom::String("counter".into()))).insert("value", Value::Atom(Atom::Decimal(0.0))),
                 x: 0.0,
                 y: 0.0,
                 slot: None,
                 collapsed: false,
             },
-            SequenceStep { id: "step-2".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))), x: 280.0, y: 0.0, slot: None, collapsed: false },
+            SequenceStep { id: "step-2".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hello sequence".into()))), x: 280.0, y: 0.0, slot: None, collapsed: false },
         ],
         edges: vec![SequenceEdge { id: "edge-1".into(), from: "step-1".into(), to: "step-2".into() }],
     }
@@ -323,7 +398,7 @@ impl SequenceHost {
     pub fn add_step_in_slot(&mut self, kind: &str, x: f64, y: f64, slot: Option<SlotRef>) -> String {
         self.clear_ghost_step();
         let id = self.next_step_id();
-        self.fixture.steps.push(SequenceStep { id: id.clone(), kind: kind.into(), params: Dictionary::new(), x, y, slot, collapsed: false });
+        self.fixture.steps.push(SequenceStep { id: id.clone(), kind: kind.into(), params: StepParams::new(), x, y, slot, collapsed: false });
         self.rebuild_dag();
         id
     }
@@ -360,7 +435,7 @@ impl SequenceHost {
     }
 
     pub fn set_step_params_json(&mut self, id: &str, json: &str) -> Result<(), SequenceCoreError> {
-        let params: Dictionary = serde_json::from_str(json)?;
+        let params: StepParams = serde_json::from_str(json)?;
         let Some(step) = self.fixture.steps.iter_mut().find(|step| step.id == id) else {
             return Err(SequenceCoreError::UnknownStep(id.into()));
         };
@@ -428,7 +503,7 @@ impl SequenceHost {
     }
 
     pub fn sync_from_dag(&mut self) {
-        self.fixture.camera = self.dag.fixture.camera.clone();
+        self.fixture.camera = self.dag.fixture.camera.clone().into();
         self.sync_edges_from_dag();
         for step in &mut self.fixture.steps {
             let Some(node) = self.dag.fixture.nodes.iter().find(|node| node.id == step.id) else {
@@ -487,7 +562,7 @@ impl SequenceHost {
                 bodies.insert(slot_name.to_string(), self.build_path_for_slot(Some(&slot_ref)));
             }
         }
-        Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.clone(), bodies }
+        Step { id: step.id.clone(), kind: step.kind.clone(), params: step.params.0.clone(), bodies }
     }
 
     fn is_step_visible(&self, step: &SequenceStep) -> bool {
@@ -578,7 +653,7 @@ impl SequenceHost {
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
             .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}:{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
-        DagFixture { schema: "dag.fixture".into(), camera: self.fixture.camera.clone(), nodes, edges }
+        DagFixture { schema: "dag.fixture".into(), camera: self.fixture.camera.clone().into(), nodes, edges }
     }
 
     fn step_to_dag_node(&self, step: &SequenceStep) -> DagNodeSpec {
@@ -612,7 +687,7 @@ impl SequenceHost {
     }
 
     pub fn set_ghost_step(&mut self, kind: &str, x: f64, y: f64) {
-        let ghost = SequenceStep { id: "__ghost__".into(), kind: kind.into(), params: Dictionary::new(), x, y, slot: None, collapsed: false };
+        let ghost = SequenceStep { id: "__ghost__".into(), kind: kind.into(), params: StepParams::new(), x, y, slot: None, collapsed: false };
         let node = self.step_to_dag_node(&ghost);
         self.dag.set_ghost_node(Some(node));
     }
@@ -792,7 +867,7 @@ mod wasm_session {
         #[wasm_bindgen(js_name = renderFrame)]
         pub fn render_frame(&self) -> Result<(), JsValue> {
             let mut inner = self.state.borrow_mut();
-            inner.host.fixture.camera = inner.host.dag.fixture.camera.clone();
+            inner.host.fixture.camera = inner.host.dag.fixture.camera.clone().into();
             let mut scene = infinite_cavas::Scene::new();
             let clear = inner.host.dag.canvas_theme.raster_clear;
             inner.host.dag.paint_scene(&mut scene, inner.width, inner.height, inner.dpr);
@@ -1010,7 +1085,7 @@ mod tests {
     fn connect_steps_rejects_fan_out() {
         let mut host = SequenceHost::default();
         host.fixture.edges.clear();
-        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         assert!(host.connect_steps("step-1", "step-2").is_ok());
         assert!(host.connect_steps("step-1", "step-3").is_err());
     }
@@ -1018,11 +1093,11 @@ mod tests {
     #[test]
     fn build_path_includes_control_bodies() {
         let mut host = SequenceHost::default();
-        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new().insert("key", Value::Atom(Atom::String("flag".into()))), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new().insert("key", Value::Atom(Atom::String("flag".into()))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         host.fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),
-            params: Dictionary::new().insert("message", Value::Atom(Atom::String("yes".into()))),
+            params: StepParams::new().insert("message", Value::Atom(Atom::String("yes".into()))),
             x: 560.0,
             y: 160.0,
             slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }),
@@ -1040,7 +1115,7 @@ mod tests {
     fn rebuild_dag_preserves_selection() {
         let mut host = SequenceHost::default();
         host.dag.set_selection(&["step-1".into()]);
-        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: Dictionary::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
         host.rebuild_dag();
         assert!(host.dag.selected_node_ids().contains(&"step-1".to_string()));
     }
@@ -1056,7 +1131,7 @@ mod tests {
     #[test]
     fn function_steps_use_data_ports_without_visible_execution_pins() {
         let host = SequenceHost::default();
-        let step = SequenceStep { id: "step-fn".into(), kind: "math.add".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
+        let step = SequenceStep { id: "step-fn".into(), kind: "math.add".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
         let node = host.step_to_dag_node(&step);
         assert!(node.inputs().iter().any(|port| port.id == "a" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "prev" && !port.visible));
@@ -1067,7 +1142,7 @@ mod tests {
     #[test]
     fn text_steps_use_data_ports_without_visible_execution_pins() {
         let host = SequenceHost::default();
-        let step = SequenceStep { id: "step-txt".into(), kind: "text.concat".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
+        let step = SequenceStep { id: "step-txt".into(), kind: "text.concat".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false };
         let node = host.step_to_dag_node(&step);
         assert!(node.inputs().iter().any(|port| port.id == "left" && port.visible));
         assert!(node.inputs().iter().any(|port| port.id == "into" && port.visible));
@@ -1106,7 +1181,7 @@ mod tests {
     #[test]
     fn add_step_dropped_targets_expanded_control_slot() {
         let mut host = SequenceHost::default();
-        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: Dictionary::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
         let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
         let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
         assert_eq!(step.slot.as_ref().map(|slot| slot.name.as_str()), Some("then"));
@@ -1117,6 +1192,253 @@ mod tests {
         let host = SequenceHost::default();
         let fixture = host.build_dag_fixture();
         assert!(fixture.edges.iter().all(|edge| edge.route_style == dag::EdgeRouteStyle::SharpSz));
+    }
+
+    #[test]
+    fn set_step_collapsed_toggles_control_step() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        assert!(host.set_step_collapsed("step-3", true));
+        assert!(host.fixture.steps.iter().find(|step| step.id == "step-3").unwrap().collapsed);
+    }
+
+    #[test]
+    fn set_step_collapsed_rejects_unknown_id() {
+        let mut host = SequenceHost::default();
+        assert!(!host.set_step_collapsed("nope", true));
+    }
+
+    #[test]
+    fn set_step_collapsed_rejects_non_control_step() {
+        let mut host = SequenceHost::default();
+        assert!(!host.set_step_collapsed("step-1", true));
+        assert!(!host.fixture.steps.iter().find(|step| step.id == "step-1").unwrap().collapsed);
+    }
+
+    #[test]
+    fn remove_step_also_removes_slot_children() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 560.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
+        assert!(host.remove_step("step-3"));
+        assert!(!host.fixture.steps.iter().any(|step| step.id == "step-3" || step.id == "step-4"));
+    }
+
+    #[test]
+    fn remove_step_returns_false_for_unknown_id() {
+        let mut host = SequenceHost::default();
+        assert!(!host.remove_step("nope"));
+    }
+
+    #[test]
+    fn set_step_params_json_updates_step_params() {
+        let mut host = SequenceHost::default();
+        host.set_step_params_json("step-1", r#"{"key":"renamed"}"#).expect("set params");
+        let step = host.fixture.steps.iter().find(|step| step.id == "step-1").unwrap();
+        assert_eq!(step.params.get("key").and_then(|v| v.as_atom()).and_then(|a| a.as_str()), Some("renamed"));
+    }
+
+    #[test]
+    fn set_step_params_json_rejects_unknown_step() {
+        let mut host = SequenceHost::default();
+        let err = host.set_step_params_json("nope", "{}").unwrap_err();
+        assert!(matches!(err, SequenceCoreError::UnknownStep(id) if id == "nope"));
+    }
+
+    #[test]
+    fn set_step_params_json_rejects_invalid_json() {
+        let mut host = SequenceHost::default();
+        let err = host.set_step_params_json("step-1", "not json").unwrap_err();
+        assert!(matches!(err, SequenceCoreError::Json(_)));
+    }
+
+    #[test]
+    fn connect_steps_rejects_self_connect() {
+        let mut host = SequenceHost::default();
+        assert!(matches!(host.connect_steps("step-1", "step-1").unwrap_err(), SequenceCoreError::SelfConnect));
+    }
+
+    #[test]
+    fn connect_steps_rejects_unknown_from_step() {
+        let mut host = SequenceHost::default();
+        assert!(matches!(host.connect_steps("nope", "step-2").unwrap_err(), SequenceCoreError::StepNotFound(id) if id == "nope"));
+    }
+
+    #[test]
+    fn connect_steps_rejects_unknown_to_step() {
+        let mut host = SequenceHost::default();
+        assert!(matches!(host.connect_steps("step-1", "nope").unwrap_err(), SequenceCoreError::StepNotFound(id) if id == "nope"));
+    }
+
+    #[test]
+    fn connect_steps_rejects_mismatched_slot_scope() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 560.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
+        assert!(matches!(host.connect_steps("step-2", "step-4").unwrap_err(), SequenceCoreError::MismatchedSlotScope));
+    }
+
+    #[test]
+    fn connect_steps_rejects_cycle() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.connect_steps("step-2", "step-3").expect("connect step-2 to step-3");
+        assert!(matches!(host.connect_steps("step-3", "step-1").unwrap_err(), SequenceCoreError::CycleDetected));
+    }
+
+    #[test]
+    fn connect_steps_rewires_existing_incoming_edge() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "wait.delay".into(), params: StepParams::new().insert("ms", Value::Atom(Atom::Decimal(10.0))), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.connect_steps("step-3", "step-2").expect("rewire onto step-2");
+        assert_eq!(host.fixture.edges.len(), 1);
+        assert_eq!(host.fixture.edges[0].from, "step-3");
+        assert_eq!(host.fixture.edges[0].to, "step-2");
+    }
+
+    #[test]
+    fn disconnect_steps_returns_false_when_no_matching_edge() {
+        let mut host = SequenceHost::default();
+        assert!(!host.disconnect_steps("step-2", "step-1"));
+        assert_eq!(host.fixture.edges.len(), 1);
+    }
+
+    #[test]
+    fn load_json_parses_valid_fixture() {
+        let json = SequenceHost::default().to_json().expect("fixture json");
+        let host = SequenceHost::load_json(&json).expect("load json");
+        assert_eq!(host.fixture.steps.len(), 2);
+    }
+
+    #[test]
+    fn load_json_rejects_unsupported_schema() {
+        let result = SequenceHost::load_json(r#"{"schema":"other","camera":{"x":0.0,"y":0.0,"zoom":1.0},"steps":[],"edges":[]}"#);
+        assert!(matches!(result, Err(SequenceCoreError::UnsupportedSchema(schema)) if schema == "other"));
+    }
+
+    #[test]
+    fn catalogue_json_reports_imperative_catalogue_schema() {
+        let host = SequenceHost::default();
+        assert!(host.catalogue_json().contains("\"imperative.catalogue\""));
+    }
+
+    #[test]
+    fn layout_expanded_slots_positions_slot_members_relative_to_owner() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
+        host.layout_expanded_slots();
+        let child = host.fixture.steps.iter().find(|step| step.id == "step-4").unwrap();
+        assert_eq!(child.x, 400.0);
+        assert_eq!(child.y, 160.0);
+    }
+
+    #[test]
+    fn reorganize_syncs_step_positions_from_dag_layout() {
+        let mut host = SequenceHost::default();
+        host.reorganize(&DagLayoutOptions::default()).expect("reorganize");
+        for step in &host.fixture.steps {
+            let node = host.dag.fixture.nodes.iter().find(|node| node.id == step.id).expect("node for step");
+            assert_eq!(step.x, node.x);
+            assert_eq!(step.y, node.y);
+        }
+    }
+
+    #[test]
+    fn pick_step_id_at_screen_finds_step_under_cursor() {
+        let host = SequenceHost::default();
+        let id = host.pick_step_id_at_screen(400.0, 300.0, 800, 600, 1.0);
+        assert_eq!(id, Some("step-1".to_string()));
+    }
+
+    #[test]
+    fn pick_step_id_at_screen_returns_none_when_missing_all_nodes() {
+        let host = SequenceHost::default();
+        let id = host.pick_step_id_at_screen(-9000.0, -9000.0, 800, 600, 1.0);
+        assert_eq!(id, None);
+    }
+
+    #[test]
+    fn add_step_dropped_falls_back_when_owner_collapsed() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: true });
+        let id = host.add_step_dropped("log.print", 600.0, 180.0, Some("step-3"));
+        let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
+        assert!(step.slot.is_none());
+    }
+
+    #[test]
+    fn add_step_dropped_falls_back_for_non_control_owner() {
+        let mut host = SequenceHost::default();
+        let id = host.add_step_dropped("log.print", 300.0, 0.0, Some("step-2"));
+        let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
+        assert!(step.slot.is_none());
+    }
+
+    #[test]
+    fn add_step_dropped_falls_back_for_unknown_owner_id() {
+        let mut host = SequenceHost::default();
+        let id = host.add_step_dropped("log.print", 300.0, 0.0, Some("nope"));
+        let step = host.fixture.steps.iter().find(|entry| entry.id == id).expect("added step");
+        assert!(step.slot.is_none());
+    }
+
+    #[test]
+    fn build_path_returns_unordered_slot_body_when_multiple_heads() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-4".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
+        host.fixture.steps.push(SequenceStep { id: "step-5".into(), kind: "log.print".into(), params: StepParams::new(), x: 280.0, y: 160.0, slot: Some(SlotRef { owner: "step-3".into(), name: "then".into() }), collapsed: false });
+        let path = host.build_path();
+        let control = path.steps.iter().find(|step| step.id == "step-3").expect("control step");
+        let body = control.bodies.get("then").expect("then body");
+        assert_eq!(body.steps.len(), 2);
+        assert!(body.steps.iter().any(|step| step.id == "step-4"));
+        assert!(body.steps.iter().any(|step| step.id == "step-5"));
+    }
+
+    #[test]
+    fn step_to_dag_node_shows_collapsed_indicator_for_collapsed_control_step() {
+        let mut host = SequenceHost::default();
+        host.fixture.steps.push(SequenceStep { id: "step-3".into(), kind: "control.if".into(), params: StepParams::new(), x: 560.0, y: 0.0, slot: None, collapsed: false });
+        let expanded = host.step_to_dag_node(&host.fixture.steps.iter().find(|step| step.id == "step-3").unwrap().clone());
+        assert_eq!(expanded.abbreviation, "▾0");
+        host.set_step_collapsed("step-3", true);
+        let collapsed = host.step_to_dag_node(&host.fixture.steps.iter().find(|step| step.id == "step-3").unwrap().clone());
+        assert_eq!(collapsed.abbreviation, "▸0");
+    }
+
+    #[test]
+    fn set_ghost_step_and_clear_ghost_step_toggle_dag_ghost_node() {
+        let mut host = SequenceHost::default();
+        assert!(host.dag.ghost_node().is_none());
+        host.set_ghost_step("math.add", 10.0, 20.0);
+        assert!(host.dag.ghost_node().is_some());
+        host.clear_ghost_step();
+        assert!(host.dag.ghost_node().is_none());
+    }
+
+    #[test]
+    fn run_executes_default_fixture_and_records_scope() {
+        let host = SequenceHost::default();
+        let result = host.run();
+        assert_eq!(result.scope.get("counter").and_then(|v| v.as_atom()).and_then(|a| a.as_f64()), Some(0.0));
+        assert!(!result.effects.is_empty());
+    }
+
+    #[test]
+    fn compile_text_renders_default_fixture_steps() {
+        let host = SequenceHost::default();
+        let text = host.compile_text();
+        assert!(text.contains("state.set"));
+        assert!(text.contains("log.print"));
+    }
+
+    #[test]
+    fn compiled_wire_literal_includes_step_ids() {
+        let host = SequenceHost::default();
+        let literal = host.compiled_wire_literal();
+        assert!(literal.contains("step-1"));
+        assert!(literal.contains("step-2"));
     }
 }
 
@@ -1142,11 +1464,13 @@ impl Identified<String> for SequenceEdge {
 }
 
 /// 🩹 Sparse patch for a step — only the fields user actions ever mutate after creation (kind/slot
-/// are fixed for a step's lifetime, so add/remove carries those instead).
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// are fixed for a step's lifetime, so add/remove carries those instead). Only ever embedded
+/// `#[dsl(block)]`-wrapped (on `SequenceOperation::StepsPatch`), so it carries no `#[dsl(keyword =
+/// "...")]` of its own.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SequenceStepPatch {
-    pub params: Option<Dictionary>,
+    pub params: Option<StepParams>,
     pub x: Option<f64>,
     pub y: Option<f64>,
     pub collapsed: Option<bool>,
@@ -1171,8 +1495,9 @@ impl Patchable<SequenceStepPatch> for SequenceStep {
     }
 }
 
-/// 🩹 Sparse patch for an edge endpoint rewire.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+/// 🩹 Sparse patch for an edge endpoint rewire. Only ever embedded `#[dsl(block)]`-wrapped (on
+/// `SequenceOperation::EdgesPatch`), so it carries no `#[dsl(keyword = "...")]` of its own.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SequenceEdgePatch {
     pub from: Option<String>,
@@ -1226,12 +1551,73 @@ fn absorb_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: &mut 
 
 // #region 🔖Operations
 /// 🧮 Typed sequence operation: id-keyed step/edge collection edits plus the scalar canvas camera.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// Flattened into one keyword-tagged variant per {@link vcs::CollectionOperation} case rather than
+/// wrapping that generic type directly — `CollectionOperation` is foreign (defined in `vcs`) and
+/// generic, so it can never itself implement `dsl::DslField`/`dsl::DslVariants` from this crate (the
+/// orphan rule requires a local type to anchor the impl on, and its OWN outer type isn't local).
+/// {@link Operation for SequenceOperation} below reconstructs a `CollectionOperation` ad hoc per
+/// match arm to keep reusing `vcs`'s generic collection diff/invert helpers.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum SequenceOperation {
-    Steps(CollectionOperation<String, SequenceStep, SequenceStepPatch>),
-    Edges(CollectionOperation<String, SequenceEdge, SequenceEdgePatch>),
-    SetCamera { camera: DagCamera },
+    #[dsl(key = "steps.add")]
+    StepsAdd {
+        index: usize,
+        #[dsl(block)]
+        item: SequenceStep,
+    },
+    #[dsl(key = "steps.remove")]
+    StepsRemove { id: String },
+    #[dsl(key = "steps.move")]
+    StepsMove { id: String, to_index: usize },
+    #[dsl(key = "steps.patch")]
+    StepsPatch {
+        id: String,
+        #[dsl(block)]
+        patch: SequenceStepPatch,
+    },
+    #[dsl(key = "edges.add")]
+    EdgesAdd {
+        index: usize,
+        #[dsl(block)]
+        item: SequenceEdge,
+    },
+    #[dsl(key = "edges.remove")]
+    EdgesRemove { id: String },
+    #[dsl(key = "edges.move")]
+    EdgesMove { id: String, to_index: usize },
+    #[dsl(key = "edges.patch")]
+    EdgesPatch {
+        id: String,
+        #[dsl(block)]
+        patch: SequenceEdgePatch,
+    },
+    #[dsl(key = "camera.set")]
+    SetCamera {
+        #[dsl(block)]
+        camera: SequenceCamera,
+    },
+}
+
+/// 🔁 Converts a generic step `CollectionOperation` (as produced by `vcs::invert_collection_operation`)
+/// back into its flat `SequenceOperation` variant.
+fn steps_operation_from_collection(operation: CollectionOperation<String, SequenceStep, SequenceStepPatch>) -> SequenceOperation {
+    match operation {
+        CollectionOperation::Add { index, item } => SequenceOperation::StepsAdd { index, item },
+        CollectionOperation::Remove { id } => SequenceOperation::StepsRemove { id },
+        CollectionOperation::Move { id, to_index } => SequenceOperation::StepsMove { id, to_index },
+        CollectionOperation::Patch { id, patch } => SequenceOperation::StepsPatch { id, patch },
+    }
+}
+
+/// 🔁 Edge counterpart of {@link steps_operation_from_collection}.
+fn edges_operation_from_collection(operation: CollectionOperation<String, SequenceEdge, SequenceEdgePatch>) -> SequenceOperation {
+    match operation {
+        CollectionOperation::Add { index, item } => SequenceOperation::EdgesAdd { index, item },
+        CollectionOperation::Remove { id } => SequenceOperation::EdgesRemove { id },
+        CollectionOperation::Move { id, to_index } => SequenceOperation::EdgesMove { id, to_index },
+        CollectionOperation::Patch { id, patch } => SequenceOperation::EdgesPatch { id, patch },
+    }
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1239,7 +1625,7 @@ pub enum SequenceOperation {
 pub struct SequenceDiff {
     pub steps: Option<CollectionDiff<String, SequenceStepPatch, SequenceStep>>,
     pub edges: Option<CollectionDiff<String, SequenceEdgePatch, SequenceEdge>>,
-    pub camera: Option<DagCamera>,
+    pub camera: Option<SequenceCamera>,
 }
 
 impl OperationDiff<SequenceFixture> for SequenceDiff {
@@ -1271,16 +1657,48 @@ impl Operation<SequenceFixture> for SequenceOperation {
 
     fn diff(&self, projection: &SequenceFixture) -> SequenceDiff {
         match self {
-            SequenceOperation::Steps(operation) => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, operation)), ..Default::default() },
-            SequenceOperation::Edges(operation) => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, operation)), ..Default::default() },
+            SequenceOperation::StepsAdd { index, item } => {
+                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() }
+            }
+            SequenceOperation::StepsRemove { id } => SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
+            SequenceOperation::StepsMove { id, to_index } => {
+                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() }
+            }
+            SequenceOperation::StepsPatch { id, patch } => {
+                SequenceDiff { steps: Some(collection_diff_from_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
+            }
+            SequenceOperation::EdgesAdd { index, item } => {
+                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() })), ..Default::default() }
+            }
+            SequenceOperation::EdgesRemove { id } => SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() })), ..Default::default() },
+            SequenceOperation::EdgesMove { id, to_index } => {
+                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index })), ..Default::default() }
+            }
+            SequenceOperation::EdgesPatch { id, patch } => {
+                SequenceDiff { edges: Some(collection_diff_from_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() })), ..Default::default() }
+            }
             SequenceOperation::SetCamera { camera } => SequenceDiff { camera: Some(camera.clone()), ..Default::default() },
         }
     }
 
     fn backwards(&self, projection: &SequenceFixture) -> Vec<Self> {
         match self {
-            SequenceOperation::Steps(operation) => vec![SequenceOperation::Steps(invert_collection_operation(&projection.steps, operation))],
-            SequenceOperation::Edges(operation) => vec![SequenceOperation::Edges(invert_collection_operation(&projection.edges, operation))],
+            SequenceOperation::StepsAdd { index, item } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Add { index: *index, item: item.clone() }))],
+            SequenceOperation::StepsRemove { id } => vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Remove { id: id.clone() }))],
+            SequenceOperation::StepsMove { id, to_index } => {
+                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
+            }
+            SequenceOperation::StepsPatch { id, patch } => {
+                vec![steps_operation_from_collection(invert_collection_operation(&projection.steps, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
+            }
+            SequenceOperation::EdgesAdd { index, item } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Add { index: *index, item: item.clone() }))],
+            SequenceOperation::EdgesRemove { id } => vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Remove { id: id.clone() }))],
+            SequenceOperation::EdgesMove { id, to_index } => {
+                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Move { id: id.clone(), to_index: *to_index }))]
+            }
+            SequenceOperation::EdgesPatch { id, patch } => {
+                vec![edges_operation_from_collection(invert_collection_operation(&projection.edges, &CollectionOperation::Patch { id: id.clone(), patch: patch.clone() }))]
+            }
             SequenceOperation::SetCamera { .. } => vec![SequenceOperation::SetCamera { camera: projection.camera.clone() }],
         }
     }
@@ -1293,12 +1711,12 @@ pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFix
     let mut operations = Vec::new();
     for step in &before.steps {
         if !after.steps.iter().any(|entry| entry.id == step.id) {
-            operations.push(SequenceOperation::Steps(CollectionOperation::Remove { id: step.id.clone() }));
+            operations.push(SequenceOperation::StepsRemove { id: step.id.clone() });
         }
     }
     for (index, step) in after.steps.iter().enumerate() {
         match before.steps.iter().find(|entry| entry.id == step.id) {
-            None => operations.push(SequenceOperation::Steps(CollectionOperation::Add { index, item: step.clone() })),
+            None => operations.push(SequenceOperation::StepsAdd { index, item: step.clone() }),
             Some(prior) => {
                 let patch = SequenceStepPatch {
                     params: (prior.params != step.params).then(|| step.params.clone()),
@@ -1307,23 +1725,23 @@ pub fn sequence_fixture_operations(before: &SequenceFixture, after: &SequenceFix
                     collapsed: (prior.collapsed != step.collapsed).then_some(step.collapsed),
                 };
                 if patch != SequenceStepPatch::default() {
-                    operations.push(SequenceOperation::Steps(CollectionOperation::Patch { id: step.id.clone(), patch }));
+                    operations.push(SequenceOperation::StepsPatch { id: step.id.clone(), patch });
                 }
             }
         }
     }
     for edge in &before.edges {
         if !after.edges.iter().any(|entry| entry.id == edge.id) {
-            operations.push(SequenceOperation::Edges(CollectionOperation::Remove { id: edge.id.clone() }));
+            operations.push(SequenceOperation::EdgesRemove { id: edge.id.clone() });
         }
     }
     for (index, edge) in after.edges.iter().enumerate() {
         match before.edges.iter().find(|entry| entry.id == edge.id) {
-            None => operations.push(SequenceOperation::Edges(CollectionOperation::Add { index, item: edge.clone() })),
+            None => operations.push(SequenceOperation::EdgesAdd { index, item: edge.clone() }),
             Some(prior) => {
                 let patch = SequenceEdgePatch { from: (prior.from != edge.from).then(|| edge.from.clone()), to: (prior.to != edge.to).then(|| edge.to.clone()) };
                 if patch != SequenceEdgePatch::default() {
-                    operations.push(SequenceOperation::Edges(CollectionOperation::Patch { id: edge.id.clone(), patch }));
+                    operations.push(SequenceOperation::EdgesPatch { id: edge.id.clone(), patch });
                 }
             }
         }
@@ -1354,19 +1772,19 @@ mod ops_tests {
     #[test]
     fn add_remove_patch_steps_round_trip() {
         let fixture = default_fixture();
-        let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: Dictionary::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
-        let added = round_trip(&fixture, &SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: step }));
+        let step = SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new(), x: 5.0, y: 6.0, slot: None, collapsed: false };
+        let added = round_trip(&fixture, &SequenceOperation::StepsAdd { index: 2, item: step });
         assert_eq!(added.steps.len(), 3);
-        let patched = round_trip(&added, &SequenceOperation::Steps(CollectionOperation::Patch { id: "step-99".into(), patch: SequenceStepPatch { x: Some(120.0), ..Default::default() } }));
+        let patched = round_trip(&added, &SequenceOperation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch { x: Some(120.0), ..Default::default() } });
         assert_eq!(patched.steps.iter().find(|step| step.id == "step-99").unwrap().x, 120.0);
-        let removed = round_trip(&patched, &SequenceOperation::Steps(CollectionOperation::Remove { id: "step-99".into() }));
+        let removed = round_trip(&patched, &SequenceOperation::StepsRemove { id: "step-99".into() });
         assert!(!removed.steps.iter().any(|step| step.id == "step-99"));
     }
 
     #[test]
     fn set_camera_round_trip() {
         let fixture = default_fixture();
-        let next = round_trip(&fixture, &SequenceOperation::SetCamera { camera: DagCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
+        let next = round_trip(&fixture, &SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.0, y: 20.0, zoom: 2.0 } });
         assert_eq!(next.camera.zoom, 2.0);
     }
 
@@ -1376,7 +1794,7 @@ mod ops_tests {
         let before = host.fixture.clone();
         let id = host.add_step("math.add", 40.0, 40.0);
         let operations = sequence_fixture_operations(&before, &host.fixture);
-        assert!(operations.iter().any(|operation| matches!(operation, SequenceOperation::Steps(CollectionOperation::Add { item, .. }) if item.id == id)));
+        assert!(operations.iter().any(|operation| matches!(operation, SequenceOperation::StepsAdd { item, .. } if item.id == id)));
     }
 
     #[test]
@@ -1384,7 +1802,7 @@ mod ops_tests {
         let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence", default_fixture(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } })],
+                operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");
@@ -1403,7 +1821,7 @@ mod ops_tests {
         fixture.steps.push(SequenceStep {
             id: "step-3".into(),
             kind: "control.if".into(),
-            params: Dictionary::new().insert("flag", Value::Atom(Atom::Boolean(true))),
+            params: StepParams::new().insert("flag", Value::Atom(Atom::Boolean(true))),
             x: 560.0,
             y: 0.0,
             slot: None,
@@ -1412,7 +1830,7 @@ mod ops_tests {
         fixture.steps.push(SequenceStep {
             id: "step-4".into(),
             kind: "log.print".into(),
-            params: Dictionary::new().insert("message", Value::Atom(Atom::String("nested \"quote\" and \\ backslash".into()))).insert(
+            params: StepParams::new().insert("message", Value::Atom(Atom::String("nested \"quote\" and \\ backslash".into()))).insert(
                 "meta",
                 Value::Dictionary(Dictionary::new().insert("count", Value::Atom(Atom::Integer(-3))).insert("ratio", Value::Atom(Atom::Decimal(2.5)))),
             ),
@@ -1426,71 +1844,71 @@ mod ops_tests {
 
     #[test]
     fn op_text_round_trips_steps_add() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Add {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
             index: 2,
-            item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: Dictionary::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
-        }));
+            item: SequenceStep { id: "step-99".into(), kind: "log.print".into(), params: StepParams::new().insert("message", Value::Atom(Atom::String("hi there".into()))), x: 5.0, y: -6.5, slot: None, collapsed: false },
+        });
     }
 
     #[test]
     fn op_text_round_trips_steps_add_with_slot() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Add {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsAdd {
             index: 0,
-            item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: Dictionary::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
-        }));
+            item: SequenceStep { id: "step-98".into(), kind: "control.while".into(), params: StepParams::new(), x: 0.0, y: 0.0, slot: Some(SlotRef { owner: "step-3".into(), name: "body".into() }), collapsed: true },
+        });
     }
 
     #[test]
     fn op_text_round_trips_steps_remove() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Remove { id: "step-99".into() }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsRemove { id: "step-99".into() });
     }
 
     #[test]
     fn op_text_round_trips_steps_move() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Move { id: "step-99".into(), to_index: 3 }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsMove { id: "step-99".into(), to_index: 3 });
     }
 
     #[test]
     fn op_text_round_trips_steps_patch() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Patch {
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch {
             id: "step-99".into(),
             patch: SequenceStepPatch {
-                params: Some(Dictionary::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
+                params: Some(StepParams::new().insert("value", Value::Atom(Atom::Decimal(120.0))).insert("meta", Value::Dictionary(Dictionary::new().insert("k", Value::Atom(Atom::Null))))),
                 x: Some(120.0),
                 y: None,
                 collapsed: Some(true),
             },
-        }));
+        });
     }
 
     #[test]
     fn op_text_round_trips_steps_patch_with_no_fields() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Steps(CollectionOperation::Patch { id: "step-99".into(), patch: SequenceStepPatch::default() }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::StepsPatch { id: "step-99".into(), patch: SequenceStepPatch::default() });
     }
 
     #[test]
     fn op_text_round_trips_edges_add() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Add { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesAdd { index: 1, item: SequenceEdge { id: "edge-2".into(), from: "step-2".into(), to: "step-3".into() } });
     }
 
     #[test]
     fn op_text_round_trips_edges_remove() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Remove { id: "edge-1".into() }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesRemove { id: "edge-1".into() });
     }
 
     #[test]
     fn op_text_round_trips_edges_move() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Move { id: "edge-1".into(), to_index: 0 }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesMove { id: "edge-1".into(), to_index: 0 });
     }
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::Edges(CollectionOperation::Patch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } }));
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::EdgesPatch { id: "edge-1".into(), patch: SequenceEdgePatch { from: Some("step-3".into()), to: None } });
     }
 
     #[test]
     fn op_text_round_trips_set_camera() {
-        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: DagCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
+        vcs::test_support::assert_op_line_round_trip(&SequenceOperation::SetCamera { camera: SequenceCamera { x: 10.5, y: -20.25, zoom: 2.0 } });
     }
 
     #[test]
@@ -1498,7 +1916,7 @@ mod ops_tests {
         let mut store = SequenceStore::new(create_document_vcs_envelope(SEQUENCE_FIXTURE_SCHEMA, "sequence-text-test", default_fixture(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![SequenceOperation::Steps(CollectionOperation::Add { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: Dictionary::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } })],
+                operations: vec![SequenceOperation::StepsAdd { index: 2, item: SequenceStep { id: "step-7".into(), kind: "log.print".into(), params: StepParams::new(), x: 12.0, y: 24.0, slot: None, collapsed: false } }],
                 description: None,
             })
             .expect("apply");
@@ -1509,591 +1927,3 @@ mod ops_tests {
 // #endregion 🧪OpsTests
 // #endregion 🔖DocumentVcs
 
-// #region 🔖Dsl
-/// 📜 Hand-rolled lexer, parser and printer shared by `SequenceFixture`'s `.sequence` DSL and by
-/// `SequenceOperation`'s compact single-line op encoding (`steps.*`/`edges.*`/`camera.set` reprint the
-/// same step/edge/camera grammar on one line). Whitespace (including newlines) is never significant to
-/// the parser — `print_dsl` inserts newlines purely for readability, `print_op` renders the identical
-/// grammar space-joined on one line. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-mod sequence_text {
-    use super::{Atom, DagCamera, Dictionary, SequenceEdge, SequenceEdgePatch, SequenceFixture, SequenceStep, SequenceStepPatch, SlotRef, Value};
-    use std::collections::HashMap;
-
-    // #region Lexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum Tok {
-        Word(String),
-        Str(String),
-        LBrace,
-        RBrace,
-        Eof,
-    }
-
-    #[derive(Clone, Debug)]
-    struct Lexed {
-        tok: Tok,
-        span: vcs::TextSpan,
-    }
-
-    /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`"`, so `=` is an
-    /// ordinary word character — `key=value` collapses into one token (split later by
-    /// {@link Parser::parse_kv_map}), and only a quoted value or a nested `{` forces a token boundary
-    /// right after `key=`.
-    fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line = 1u32;
-        let mut col = 1u32;
-        while i < chars.len() {
-            match chars[i] {
-                ' ' | '\t' | '\r' => {
-                    i += 1;
-                    col += 1;
-                }
-                '\n' => {
-                    i += 1;
-                    line += 1;
-                    col = 1;
-                }
-                '{' => {
-                    out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    let (start_line, start_col) = (line, col);
-                    i += 1;
-                    col += 1;
-                    let mut s = String::new();
-                    let mut closed = false;
-                    while i < chars.len() {
-                        let ch = chars[i];
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => s.push('\n'),
-                                '"' => s.push('"'),
-                                '\\' => s.push('\\'),
-                                other => {
-                                    s.push('\\');
-                                    s.push(other);
-                                }
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            closed = true;
-                            break;
-                        } else if ch == '\n' {
-                            s.push(ch);
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            s.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    if !closed {
-                        return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
-                    }
-                    out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-                _ => {
-                    let (start_line, start_col, start) = (line, col, i);
-                    while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '"') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let word: String = chars[start..i].iter().collect();
-                    out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
-                }
-            }
-        }
-        out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
-        Ok(out)
-    }
-    // #endregion Lexer
-
-    // #region Parser
-    #[derive(Clone, Debug)]
-    enum FieldValue {
-        Str(String),
-        Word(String),
-    }
-
-    type FieldMap = HashMap<String, (FieldValue, vcs::TextSpan)>;
-
-    struct Parser {
-        toks: Vec<Lexed>,
-        pos: usize,
-    }
-
-    impl Parser {
-        fn peek(&self) -> &Tok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> vcs::TextSpan {
-            self.toks[self.pos].span
-        }
-
-        fn bump(&mut self) -> Tok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn at_lbrace(&self) -> bool {
-            matches!(self.peek(), Tok::LBrace)
-        }
-
-        fn expect_word(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Word(w) => Ok(w),
-                other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-            }
-        }
-
-        fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            let word = self.expect_word()?;
-            if word != keyword {
-                return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-            }
-            Ok(())
-        }
-
-        fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::RBrace => Ok(()),
-                other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-            }
-        }
-
-        fn expect_str(&mut self) -> Result<String, vcs::TextError> {
-            let span = self.span();
-            match self.bump() {
-                Tok::Str(s) => Ok(s),
-                other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-            }
-        }
-
-        /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one — the
-        /// generic header-field reader every construct (document/camera/step/edge/patch) is built on.
-        fn parse_kv_map(&mut self) -> Result<FieldMap, vcs::TextError> {
-            let mut map = HashMap::new();
-            loop {
-                let word = match self.peek() {
-                    Tok::Word(w) if w.contains('=') => w.clone(),
-                    _ => break,
-                };
-                let span = self.span();
-                self.bump();
-                let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-                let value = if rest.is_empty() { FieldValue::Str(self.expect_str()?) } else { FieldValue::Word(rest.to_string()) };
-                map.insert(key.to_string(), (value, span));
-            }
-            Ok(map)
-        }
-    }
-
-    fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => Ok(w.clone()),
-            Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
-            None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
-        }
-    }
-
-    fn kv_opt_word(map: &FieldMap, key: &str) -> Option<String> {
-        match map.get(key) {
-            Some((FieldValue::Word(w), _)) => Some(w.clone()),
-            _ => None,
-        }
-    }
-
-    fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
-        let word = kv_word(map, key, span)?;
-        word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
-    }
-
-    fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
-        kv_opt_word(map, key).and_then(|w| w.parse::<f64>().ok())
-    }
-
-    fn kv_opt_bool(map: &FieldMap, key: &str) -> Option<bool> {
-        match kv_opt_word(map, key)?.as_str() {
-            "true" => Some(true),
-            "false" => Some(false),
-            _ => None,
-        }
-    }
-    // #endregion Parser
-
-    // #region Values
-    /// 🔤 Minimal backslash-escape for quoted `Atom::String` values — mirrors {@link vcs}'s private
-    /// `escape_text_field` (not exported across the crate boundary, so reimplemented here).
-    fn escape_string(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out
-    }
-
-    fn parse_atom_word(word: &str, span: vcs::TextSpan) -> Result<Atom, vcs::TextError> {
-        match word {
-            "null" => Ok(Atom::Null),
-            "true" => Ok(Atom::Boolean(true)),
-            "false" => Ok(Atom::Boolean(false)),
-            _ => {
-                if !word.contains('.') && !word.contains('e') && !word.contains('E') {
-                    if let Ok(value) = word.parse::<i64>() {
-                        return Ok(Atom::Integer(value));
-                    }
-                }
-                word.parse::<f64>().map(Atom::Decimal).map_err(|_| vcs::TextError::expected(format!("invalid value literal '{word}'"), span, "null|true|false|number|\"string\""))
-            }
-        }
-    }
-
-    fn print_atom(atom: &Atom) -> String {
-        match atom {
-            Atom::Null => "null".to_string(),
-            Atom::Boolean(value) => value.to_string(),
-            Atom::Integer(value) => value.to_string(),
-            Atom::Decimal(value) => {
-                let mut printed = value.to_string();
-                if !printed.contains('.') && !printed.contains('e') && !printed.contains('E') {
-                    printed.push_str(".0");
-                }
-                printed
-            }
-            Atom::String(value) => format!("\"{}\"", escape_string(value)),
-        }
-    }
-
-    /// 🌲 Reads `key=value` dictionary entries until a non-`key=`-shaped token (the block's closing
-    /// `}`), recursing into a nested `Dictionary` whenever a value is `{...}` instead of an atom —
-    /// `neural_engine::Value` is `Atom | Dictionary`, so this is the only recursive grammar in the DSL.
-    fn parse_dict_entries(p: &mut Parser) -> Result<Dictionary, vcs::TextError> {
-        let mut dict = Dictionary::new();
-        loop {
-            let word = match p.peek() {
-                Tok::Word(w) if w.contains('=') => w.clone(),
-                _ => break,
-            };
-            let span = p.span();
-            p.bump();
-            let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-            let value = if !rest.is_empty() {
-                Value::Atom(parse_atom_word(rest, span)?)
-            } else if p.at_lbrace() {
-                p.bump();
-                let nested = parse_dict_entries(p)?;
-                p.expect_rbrace()?;
-                Value::Dictionary(nested)
-            } else {
-                Value::Atom(Atom::String(p.expect_str()?))
-            };
-            dict = dict.insert(key.to_string(), value);
-        }
-        Ok(dict)
-    }
-
-    fn print_value(value: &Value) -> String {
-        match value {
-            Value::Atom(atom) => print_atom(atom),
-            Value::Dictionary(dict) => format!("{{ {} }}", print_dict_entries(dict)),
-        }
-    }
-
-    fn print_dict_entries(dict: &Dictionary) -> String {
-        dict.keys().map(|key| format!("{key}={}", print_value(dict.get(key).expect("key from dict.keys() always resolves via dict.get")))).collect::<Vec<_>>().join(" ")
-    }
-    // #endregion Values
-
-    // #region Fields
-    fn fmt_num(value: f64) -> String {
-        value.to_string()
-    }
-
-    /// 🧱 Reads a step's `id=/kind=/x=/y=/collapsed=/slotOwner=/slotName=` fields (already collected into
-    /// `map`) plus its optional trailing `{ params }` block — shared by a top-level `step ...` line and
-    /// by `steps.add`'s inline item (which prepends its own `index=` field to the same flat `map`).
-    fn build_step_from_map(map: &FieldMap, span: vcs::TextSpan, p: &mut Parser) -> Result<SequenceStep, vcs::TextError> {
-        let id = kv_word(map, "id", span)?;
-        let kind = kv_word(map, "kind", span)?;
-        let x = kv_num(map, "x", span)?;
-        let y = kv_num(map, "y", span)?;
-        let collapsed = kv_opt_bool(map, "collapsed").unwrap_or(false);
-        let slot = match (kv_opt_word(map, "slotOwner"), kv_opt_word(map, "slotName")) {
-            (Some(owner), Some(name)) => Some(SlotRef { owner, name }),
-            _ => None,
-        };
-        let params = if p.at_lbrace() {
-            p.bump();
-            let dict = parse_dict_entries(p)?;
-            p.expect_rbrace()?;
-            dict
-        } else {
-            Dictionary::new()
-        };
-        Ok(SequenceStep { id, kind, params, x, y, slot, collapsed })
-    }
-
-    fn build_edge_from_map(map: &FieldMap, span: vcs::TextSpan) -> Result<SequenceEdge, vcs::TextError> {
-        Ok(SequenceEdge { id: kv_word(map, "id", span)?, from: kv_word(map, "from", span)?, to: kv_word(map, "to", span)? })
-    }
-
-    fn build_step_patch_from_map(map: &FieldMap, p: &mut Parser) -> Result<SequenceStepPatch, vcs::TextError> {
-        let params = if p.at_lbrace() {
-            p.bump();
-            let dict = parse_dict_entries(p)?;
-            p.expect_rbrace()?;
-            Some(dict)
-        } else {
-            None
-        };
-        Ok(SequenceStepPatch { params, x: kv_opt_num(map, "x"), y: kv_opt_num(map, "y"), collapsed: kv_opt_bool(map, "collapsed") })
-    }
-
-    fn build_edge_patch_from_map(map: &FieldMap) -> SequenceEdgePatch {
-        SequenceEdgePatch { from: kv_opt_word(map, "from"), to: kv_opt_word(map, "to") }
-    }
-
-    fn parse_step(p: &mut Parser) -> Result<SequenceStep, vcs::TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        build_step_from_map(&map, span, p)
-    }
-
-    fn parse_edge(p: &mut Parser) -> Result<SequenceEdge, vcs::TextError> {
-        let span = p.span();
-        let map = p.parse_kv_map()?;
-        build_edge_from_map(&map, span)
-    }
-
-    fn print_step_fields(step: &SequenceStep) -> String {
-        let mut out = format!(" id={} kind={} x={} y={}", step.id, step.kind, fmt_num(step.x), fmt_num(step.y));
-        if step.collapsed {
-            out.push_str(" collapsed=true");
-        }
-        if let Some(slot) = &step.slot {
-            out.push_str(&format!(" slotOwner={} slotName={}", slot.owner, slot.name));
-        }
-        if !step.params.is_empty() {
-            out.push_str(" { ");
-            out.push_str(&print_dict_entries(&step.params));
-            out.push_str(" }");
-        }
-        out
-    }
-
-    fn print_edge_fields(edge: &SequenceEdge) -> String {
-        format!(" id={} from={} to={}", edge.id, edge.from, edge.to)
-    }
-
-    fn print_step_patch_fields(patch: &SequenceStepPatch) -> String {
-        let mut out = String::new();
-        if let Some(x) = patch.x {
-            out.push_str(&format!(" x={}", fmt_num(x)));
-        }
-        if let Some(y) = patch.y {
-            out.push_str(&format!(" y={}", fmt_num(y)));
-        }
-        if let Some(collapsed) = patch.collapsed {
-            out.push_str(&format!(" collapsed={collapsed}"));
-        }
-        if let Some(params) = &patch.params {
-            out.push_str(" { ");
-            out.push_str(&print_dict_entries(params));
-            out.push_str(" }");
-        }
-        out
-    }
-
-    fn print_edge_patch_fields(patch: &SequenceEdgePatch) -> String {
-        let mut out = String::new();
-        if let Some(from) = &patch.from {
-            out.push_str(&format!(" from={from}"));
-        }
-        if let Some(to) = &patch.to {
-            out.push_str(&format!(" to={to}"));
-        }
-        out
-    }
-    // #endregion Fields
-
-    // #region Document
-    pub(super) fn parse_fixture(text: &str) -> Result<SequenceFixture, vcs::TextError> {
-        let toks = lex(text)?;
-        let mut p = Parser { toks, pos: 0 };
-
-        let header_span = p.span();
-        p.expect_keyword("sequence")?;
-        let header_map = p.parse_kv_map()?;
-        let schema = kv_word(&header_map, "schema", header_span)?;
-
-        let camera_span = p.span();
-        p.expect_keyword("camera")?;
-        let camera_map = p.parse_kv_map()?;
-        let camera = DagCamera { x: kv_num(&camera_map, "x", camera_span)?, y: kv_num(&camera_map, "y", camera_span)?, zoom: kv_num(&camera_map, "zoom", camera_span)? };
-
-        let mut steps = Vec::new();
-        let mut edges = Vec::new();
-        loop {
-            match p.peek().clone() {
-                Tok::Eof => break,
-                Tok::Word(w) if w == "step" => {
-                    p.bump();
-                    steps.push(parse_step(&mut p)?);
-                }
-                Tok::Word(w) if w == "edge" => {
-                    p.bump();
-                    edges.push(parse_edge(&mut p)?);
-                }
-                other => return Err(vcs::TextError::expected(format!("expected 'step' or 'edge', found {other:?}"), p.span(), "step|edge")),
-            }
-        }
-        Ok(SequenceFixture { schema, camera, steps, edges })
-    }
-
-    pub(super) fn print_fixture(fixture: &SequenceFixture) -> String {
-        let mut parts = Vec::with_capacity(2 + fixture.steps.len() + fixture.edges.len());
-        parts.push(format!("sequence schema={}", fixture.schema));
-        parts.push(format!("camera x={} y={} zoom={}", fmt_num(fixture.camera.x), fmt_num(fixture.camera.y), fmt_num(fixture.camera.zoom)));
-        for step in &fixture.steps {
-            parts.push(format!("step{}", print_step_fields(step)));
-        }
-        for edge in &fixture.edges {
-            parts.push(format!("edge{}", print_edge_fields(edge)));
-        }
-        parts.join("\n")
-    }
-    // #endregion Document
-
-    // #region Operation
-    /// ⚡ Renders one `SequenceOperation` as a single line — `steps.add`/`edges.add` reuse the same
-    /// space-joined field grammar as {@link print_step_fields}/{@link print_edge_fields}.
-    pub(super) fn print_operation(operation: &super::SequenceOperation) -> String {
-        use super::SequenceOperation;
-        match operation {
-            SequenceOperation::Steps(op) => match op {
-                vcs::CollectionOperation::Add { index, item } => format!("steps.add index={}{}", index, print_step_fields(item)),
-                vcs::CollectionOperation::Remove { id } => format!("steps.remove id={id}"),
-                vcs::CollectionOperation::Move { id, to_index } => format!("steps.move id={id} to={to_index}"),
-                vcs::CollectionOperation::Patch { id, patch } => format!("steps.patch id={id}{}", print_step_patch_fields(patch)),
-            },
-            SequenceOperation::Edges(op) => match op {
-                vcs::CollectionOperation::Add { index, item } => format!("edges.add index={}{}", index, print_edge_fields(item)),
-                vcs::CollectionOperation::Remove { id } => format!("edges.remove id={id}"),
-                vcs::CollectionOperation::Move { id, to_index } => format!("edges.move id={id} to={to_index}"),
-                vcs::CollectionOperation::Patch { id, patch } => format!("edges.patch id={id}{}", print_edge_patch_fields(patch)),
-            },
-            SequenceOperation::SetCamera { camera } => format!("camera.set x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
-        }
-    }
-
-    pub(super) fn parse_operation(line: &str) -> Result<super::SequenceOperation, vcs::TextError> {
-        use super::SequenceOperation;
-        let toks = lex(line)?;
-        let mut p = Parser { toks, pos: 0 };
-        let span = p.span();
-        let keyword = p.expect_word()?;
-        match keyword.as_str() {
-            "steps.add" => {
-                let map = p.parse_kv_map()?;
-                let index = kv_num(&map, "index", span)? as usize;
-                let item = build_step_from_map(&map, span, &mut p)?;
-                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Add { index, item }))
-            }
-            "steps.remove" => {
-                let map = p.parse_kv_map()?;
-                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Remove { id: kv_word(&map, "id", span)? }))
-            }
-            "steps.move" => {
-                let map = p.parse_kv_map()?;
-                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Move { id: kv_word(&map, "id", span)?, to_index: kv_num(&map, "to", span)? as usize }))
-            }
-            "steps.patch" => {
-                let map = p.parse_kv_map()?;
-                let id = kv_word(&map, "id", span)?;
-                let patch = build_step_patch_from_map(&map, &mut p)?;
-                Ok(SequenceOperation::Steps(vcs::CollectionOperation::Patch { id, patch }))
-            }
-            "edges.add" => {
-                let map = p.parse_kv_map()?;
-                let index = kv_num(&map, "index", span)? as usize;
-                let item = build_edge_from_map(&map, span)?;
-                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Add { index, item }))
-            }
-            "edges.remove" => {
-                let map = p.parse_kv_map()?;
-                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Remove { id: kv_word(&map, "id", span)? }))
-            }
-            "edges.move" => {
-                let map = p.parse_kv_map()?;
-                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Move { id: kv_word(&map, "id", span)?, to_index: kv_num(&map, "to", span)? as usize }))
-            }
-            "edges.patch" => {
-                let map = p.parse_kv_map()?;
-                let id = kv_word(&map, "id", span)?;
-                Ok(SequenceOperation::Edges(vcs::CollectionOperation::Patch { id, patch: build_edge_patch_from_map(&map) }))
-            }
-            "camera.set" => {
-                let map = p.parse_kv_map()?;
-                Ok(SequenceOperation::SetCamera { camera: DagCamera { x: kv_num(&map, "x", span)?, y: kv_num(&map, "y", span)?, zoom: kv_num(&map, "zoom", span)? } })
-            }
-            other => Err(vcs::TextError::expected(
-                format!("unknown operation '{other}'"),
-                span,
-                "steps.add|steps.remove|steps.move|steps.patch|edges.add|edges.remove|edges.move|edges.patch|camera.set",
-            )),
-        }
-    }
-    // #endregion Operation
-}
-
-impl vcs::DocumentDsl for SequenceFixture {
-    const EXTENSION: &'static str = "sequence";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        sequence_text::parse_fixture(text)
-    }
-
-    fn print_dsl(&self) -> String {
-        sequence_text::print_fixture(self)
-    }
-}
-// #endregion 🔖Dsl
-
-// #region 🔖OpText
-impl vcs::OpText for SequenceOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        sequence_text::parse_operation(line)
-    }
-
-    fn print_op(&self) -> String {
-        sequence_text::print_operation(self)
-    }
-}
-// #endregion 🔖OpText

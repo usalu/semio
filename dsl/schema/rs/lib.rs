@@ -35,8 +35,11 @@ pub enum Shape {
     Tuple(Box<Shape>, Option<usize>),
     /// Bracketed `[a b c]`.
     List(Box<Shape>),
-    /// Inline nested `key=value` run using another record's fields, unwrapped.
-    Record(Box<RecordSpec>),
+    /// Inline nested `key=value` run using another record's fields, unwrapped. Lazy for the same
+    /// reason `Statements` is: a self-referential `#[derive(DslRecord)]` struct (a field whose type
+    /// recurses back to the struct itself, e.g. a dynamic-value type with a nested-dictionary-of-
+    /// itself field) would otherwise recurse infinitely just building its own `RecordSpec`.
+    Record(fn() -> RecordSpec),
     /// Wraps the inner shape in `{ ... }`.
     Block(Box<Shape>),
     /// Keyword-dispatched, order-preserving repeated records: `(keyword, spec_fn)` per variant.
@@ -404,7 +407,7 @@ fn parse_shape(cursor: &mut Cursor<'_>, shape: &Shape, depth: usize) -> Result<F
             cursor.expect(TokenKind::RBracket)?;
             Ok(FieldValue::List(items))
         }
-        Shape::Record(spec) => Ok(FieldValue::Record(parse_record_body(cursor, spec, depth + 1)?)),
+        Shape::Record(spec_fn) => Ok(FieldValue::Record(parse_record_body(cursor, &spec_fn(), depth + 1)?)),
         Shape::Block(inner) => {
             cursor.expect(TokenKind::LBrace)?;
             let value = parse_shape(cursor, inner, depth + 1)?;
@@ -930,8 +933,8 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
             }
             writer.atom("]");
         }
-        (FieldValue::Record(record), Shape::Record(spec)) => {
-            print_record(record, spec, writer);
+        (FieldValue::Record(record), Shape::Record(spec_fn)) => {
+            print_record(record, &spec_fn(), writer);
         }
         (FieldValue::Block(inner_value), Shape::Block(inner_shape)) => {
             writer.open_block();
@@ -1091,7 +1094,7 @@ impl<'g> LanguageService<'g> {
 
     fn keywords(&self) -> Vec<String> {
         let mut out = Vec::new();
-        collect_keywords(self.spec, &mut out, &mut HashSet::new());
+        collect_keywords(self.spec, &mut out, &mut HashSet::new(), &mut HashSet::new());
         out
     }
 
@@ -1128,32 +1131,40 @@ impl<'g> LanguageService<'g> {
     }
 }
 
-fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet<String>) {
+fn collect_keywords(spec: &RecordSpec, out: &mut Vec<String>, seen: &mut HashSet<String>, seen_records: &mut HashSet<usize>) {
     if let Some(kw) = &spec.keyword {
         out.push(kw.clone());
     }
     for field in &spec.fields {
-        collect_shape_keywords(&field.shape, out, seen);
+        collect_shape_keywords(&field.shape, out, seen, seen_records);
     }
 }
 
 /// @emoji 🔁 `seen` guards against a genuinely self-referential `Statements` table (a recursive
 /// block tree whose own variant list contains itself): each `spec_fn()` call is only expanded the
 /// first time its keyword is reached, so the keyword set — which is always finite, even when the
-/// grammar's real nesting isn't — is collected exactly once instead of infinitely.
-fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashSet<String>) {
+/// grammar's real nesting isn't — is collected exactly once instead of infinitely. `seen_records`
+/// is the same guard for a self-referential `Shape::Record` (a `#[derive(DslRecord)]` struct field
+/// whose type recurses back to itself, e.g. a dynamic-value type nesting a map of itself) — a bare
+/// Record has no keyword to key on, so this tracks the `fn() -> RecordSpec` pointer's own address
+/// instead (two calls to the same generated `__dsl_spec` always share one code address).
+fn collect_shape_keywords(shape: &Shape, out: &mut Vec<String>, seen: &mut HashSet<String>, seen_records: &mut HashSet<usize>) {
     match shape {
-        Shape::Record(spec) => collect_keywords(spec, out, seen),
-        Shape::Block(inner) => collect_shape_keywords(inner, out, seen),
+        Shape::Record(spec_fn) => {
+            if seen_records.insert(*spec_fn as usize) {
+                collect_keywords(&spec_fn(), out, seen, seen_records);
+            }
+        }
+        Shape::Block(inner) => collect_shape_keywords(inner, out, seen, seen_records),
         Shape::Statements(variants) => {
             for (kw, spec_fn) in variants {
                 out.push(kw.clone());
                 if seen.insert(kw.clone()) {
-                    collect_keywords(&spec_fn(), out, seen);
+                    collect_keywords(&spec_fn(), out, seen, seen_records);
                 }
             }
         }
-        Shape::List(inner) | Shape::Tuple(inner, _) | Shape::Map(inner) => collect_shape_keywords(inner, out, seen),
+        Shape::List(inner) | Shape::Tuple(inner, _) | Shape::Map(inner) => collect_shape_keywords(inner, out, seen, seen_records),
         _ => {}
     }
 }

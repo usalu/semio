@@ -15,6 +15,7 @@ path = "lib.rs"
 dsl_core = { path = "../core/rs" }
 dsl_schema = { path = "../schema/rs" }
 dsl_derive = { path = "../derive/rs" }
+serde_json = "1.0.140"
 
 [dev-dependencies]
 vcs = { path = "../../vcs/rs" }

@@ -28,14 +28,14 @@ mod document {
 
     pub const LAYOUT_FIXTURE_SCHEMA: &str = "layout.fixture";
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct LayoutCamera {
         pub x: f64,
         pub y: f64,
         pub zoom: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct LayoutRect {
         pub x: f64,
         pub y: f64,
@@ -45,7 +45,7 @@ mod document {
         pub height: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct LayoutBounds {
         pub x: f64,
         pub y: f64,
@@ -56,7 +56,7 @@ mod document {
         pub rotation: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PageMargins {
         pub top: f64,
         pub right: f64,
@@ -64,14 +64,15 @@ mod document {
         pub left: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PageColumns {
         pub count: u32,
         pub gutter: f64,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Layer {
+        #[dsl(ident)]
         pub id: String,
         pub name: String,
         pub visible: bool,
@@ -131,14 +132,18 @@ mod document {
         pub link_id: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
     #[serde(tag = "kind")]
     pub enum Frame {
         #[serde(rename = "rect")]
+        #[dsl(key = "rect")]
         Rect {
+            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
+            #[dsl(ident)]
             layer_id: String,
+            #[dsl(block)]
             bounds: LayoutBounds,
             locked: Option<bool>,
             visible: Option<bool>,
@@ -146,31 +151,42 @@ mod document {
             stroke: Option<[f32; 4]>,
         },
         #[serde(rename = "text")]
+        #[dsl(key = "text")]
         Text {
+            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
+            #[dsl(ident)]
             layer_id: String,
+            #[dsl(block)]
             bounds: LayoutBounds,
             locked: Option<bool>,
             visible: Option<bool>,
             #[serde(rename = "storyId")]
+            #[dsl(ident)]
             story_id: String,
             #[serde(rename = "threadNext")]
             thread_next: Option<String>,
             columns: u32,
+            #[dsl(block)]
             inset: LayoutRect,
             #[serde(rename = "wrapMode")]
             wrap_mode: String,
         },
         #[serde(rename = "image")]
+        #[dsl(key = "image")]
         Image {
+            #[dsl(ident)]
             id: String,
             #[serde(rename = "layerId")]
+            #[dsl(ident)]
             layer_id: String,
+            #[dsl(block)]
             bounds: LayoutBounds,
             locked: Option<bool>,
             visible: Option<bool>,
             #[serde(rename = "linkId")]
+            #[dsl(ident)]
             link_id: String,
         },
     }
@@ -203,7 +219,7 @@ mod document {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct TextStyleRun {
         pub start: usize,
         pub end: usize,
@@ -213,16 +229,18 @@ mod document {
         pub character_style_id: Option<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct TextStory {
+        #[dsl(ident)]
         pub id: String,
         pub content: String,
         #[serde(rename = "styleRuns")]
         pub style_runs: Vec<TextStyleRun>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ParagraphStyle {
+        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "fontFamily")]
@@ -236,8 +254,9 @@ mod document {
         pub alignment: String,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ImageLink {
+        #[dsl(ident)]
         pub id: String,
         pub path: String,
         pub hash: String,
@@ -251,17 +270,20 @@ mod document {
         pub proxy_data_url: Option<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PageOverride {
         #[serde(rename = "objectId")]
+        #[dsl(ident)]
         pub object_id: String,
+        #[dsl(block)]
         pub bounds: Option<LayoutBounds>,
         pub visible: Option<bool>,
         pub locked: Option<bool>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ParentPage {
+        #[dsl(ident)]
         pub id: String,
         pub name: String,
         pub width: f64,
@@ -269,38 +291,45 @@ mod document {
         #[serde(rename = "layerIds")]
         pub layer_ids: Vec<String>,
         pub layers: Vec<Layer>,
+        #[dsl(statements, block)]
         pub frames: Vec<Frame>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Page {
+        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "spreadId")]
+        #[dsl(ident)]
         pub spread_id: String,
         #[serde(rename = "parentPageId")]
         pub parent_page_id: Option<String>,
         pub width: f64,
         pub height: f64,
+        #[dsl(block)]
         pub margins: PageMargins,
+        #[dsl(block)]
         pub columns: PageColumns,
         pub guides: Vec<LayoutRect>,
         #[serde(rename = "layerIds")]
         pub layer_ids: Vec<String>,
         pub layers: Vec<Layer>,
+        #[dsl(statements, block)]
         pub frames: Vec<Frame>,
         pub overrides: Vec<PageOverride>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Spread {
+        #[dsl(ident)]
         pub id: String,
         pub name: String,
         #[serde(rename = "pageIds")]
         pub page_ids: Vec<String>,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct GridSettings {
         #[serde(rename = "baselineGrid")]
         pub baseline_grid: f64,
@@ -310,13 +339,18 @@ mod document {
         pub snap_to_baseline: bool,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "layout", layout = "lines")]
     pub struct LayoutDocument {
+        #[dsl(ident)]
         pub schema: String,
         pub name: String,
+        #[dsl(block)]
         pub camera: LayoutCamera,
         #[serde(rename = "previewCamera")]
+        #[dsl(block)]
         pub preview_camera: LayoutCamera,
+        #[dsl(block)]
         pub grid: GridSettings,
         #[serde(rename = "paragraphStyles")]
         pub paragraph_styles: Vec<ParagraphStyle>,
@@ -1269,7 +1303,7 @@ mod operations {
 
     //#region 🔖Patches
     /// 📄 Sparse scalar patch for a {@link Page} (name, size, margins, columns).
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct PagePatch {
         pub name: Option<String>,
@@ -1328,7 +1362,7 @@ mod operations {
     }
 
     /// 📝 Sparse patch for a {@link TextStory}'s body content.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TextStoryPatch {
         pub content: Option<String>,
@@ -1345,7 +1379,7 @@ mod operations {
     }
 
     /// 🔗 Sparse patch for an {@link ImageLink}'s file path.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ImageLinkPatch {
         pub path: Option<String>,
@@ -1706,1354 +1740,250 @@ mod operations {
 
 mod dsl {
     //#region 🔖Dsl
-    //! 🔤 Handcrafted textual DSL for `LayoutDocument` (`vcs::DocumentDsl`) and one-line op-text for
-    //! `LayoutOperation` (`vcs::OpText`, see `🔖OpText`) — replaces the JSON fixture format. Grammar is a
-    //! small hand-rolled tokenizer + recursive-descent parser (no external parser crate), in the spirit of
-    //! `mathematical_graph_dsl::wire` and `draw_rs`'s own `🔖Dsl` region. Nested values (bounds/margins/
-    //! columns/colors as `( )` tuples, id lists as `[ ]`, structured lists as `[ {..} {..} ]`, pages/
-    //! layers/frames as `{ }` blocks) are self-delimiting and never contain a literal newline, so the exact
-    //! same printer/parser pair works whether chunks are newline-joined (pretty `print_dsl`) or embedded
-    //! inline in a one-line op (`🔖OpText`).
+    //! 🔤 `LayoutDocument`'s `vcs::DocumentDsl` and `LayoutOperation`'s `vcs::OpText` are now generated
+    //! by the `dsl::` derive engine (see `dsl_derive`/`dsl_schema`) instead of a hand-rolled
+    //! tokenizer/parser: every nested type in `crate::document` derives `dsl::DslRecord`/`dsl::DslEnum`
+    //! directly, and `LayoutDocument` itself derives `dsl::DslDocument` (see `mod document`). Only
+    //! `LayoutOperation` needs anything in this module: `vcs::CollectionOperation<K,V,P>` (used by its
+    //! `Pages`/`Stories`/`Links` variants) is declared in the `vcs` crate, so it can't gain a
+    //! `dsl::DslField`/`dsl::DslVariants` binding here (orphan rule) — `LayoutOperationDsl` is a local,
+    //! DSL-only mirror that flattens each collection wrapper into its own keyworded variants, mirroring
+    //! `process_3d::Process3dOperationDsl`'s identical fix for the same foreign-type problem.
+    //! `FramePatch.fill`/`.stroke` (`Option<Option<[f32;4]>>`) has the same "no direct binding" issue
+    //! one level down — `ColorPatch`/`FramePatchDsl` fix that the same way, converting only at the
+    //! `patchFrame` op boundary; `FramePatch` itself is untouched so `layout/plugin` keeps compiling.
 
     use crate::document::*;
     use crate::operations::*;
-    use vcs::{CollectionOperation, DocumentDsl, OpText, TextError, TextSpan};
+    use vcs::{CollectionOperation, OpText, TextError};
 
-    //#region 🔖DslLexer
-    #[derive(Clone, Debug, PartialEq)]
-    enum LayoutTok {
-        Ident(String),
-        Str(String),
-        Num(f64),
-        Eq,
-        Colon,
-        Comma,
-        LParen,
-        RParen,
-        LBracket,
-        RBracket,
-        LBrace,
-        RBrace,
-        Eof,
+    //#region 🔖FramePatchDsl
+    /// 🎨 3-state tag standing in for `FramePatch.fill`/`.stroke`'s `Option<Option<[f32;4]>>` — the DSL
+    /// engine's plain `Option<T>` can only express "untouched vs present"; `Clear` carries the doubly-
+    /// optional field's "explicitly cleared to none" state that a single `Option` can't.
+    #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+    enum ColorPatch {
+        #[dsl(key = "clear")]
+        Clear,
+        #[dsl(key = "set")]
+        Set { color: [f32; 4] },
     }
 
-    #[derive(Clone, Debug)]
-    struct LayoutSpannedTok {
-        tok: LayoutTok,
-        line: u32,
-        column: u32,
+    /// 🩹 DSL-only mirror of `FramePatch` — only `fill`/`stroke` differ from the real type (see
+    /// `ColorPatch`); every other field passes through unchanged. Never fixture-visible (only ever
+    /// appears inside a `patchFrame` op line), so its own shape has no compatibility obligation beyond
+    /// its own round trip.
+    #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+    struct FramePatchDsl {
+        x: Option<f64>,
+        y: Option<f64>,
+        width: Option<f64>,
+        height: Option<f64>,
+        #[dsl(statements, block)]
+        fill: Option<ColorPatch>,
+        #[dsl(statements, block)]
+        stroke: Option<ColorPatch>,
+        wrap_mode: Option<String>,
+        columns: Option<u32>,
     }
 
-    /// 🔍 Hand-rolled char-by-char tokenizer for the layout DSL/op-text grammar; tracks line/column so
-    /// parse errors carry a `TextSpan` a dev can jump to.
-    fn lex_layout_dsl(input: &str) -> Result<Vec<LayoutSpannedTok>, TextError> {
-        let chars: Vec<char> = input.chars().collect();
-        let mut out = Vec::new();
-        let mut i = 0usize;
-        let mut line: u32 = 1;
-        let mut col: u32 = 1;
-        while i < chars.len() {
-            let c = chars[i];
-            if c == '\n' {
-                i += 1;
-                line += 1;
-                col = 1;
-                continue;
-            }
-            if c.is_whitespace() {
-                i += 1;
-                col += 1;
-                continue;
-            }
-            let (start_line, start_col) = (line, col);
-            match c {
-                '=' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Eq, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                ':' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Colon, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                ',' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Comma, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                '(' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::LParen, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                ')' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::RParen, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                '[' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::LBracket, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                ']' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::RBracket, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                '{' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::LBrace, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                '}' => {
-                    out.push(LayoutSpannedTok { tok: LayoutTok::RBrace, line: start_line, column: start_col });
-                    i += 1;
-                    col += 1;
-                }
-                '"' => {
-                    i += 1;
-                    col += 1;
-                    let mut value = String::new();
-                    loop {
-                        if i >= chars.len() {
-                            return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
-                        }
-                        let ch = chars[i];
-                        if ch == '"' {
-                            i += 1;
-                            col += 1;
-                            break;
-                        }
-                        if ch == '\\' && i + 1 < chars.len() {
-                            match chars[i + 1] {
-                                'n' => value.push('\n'),
-                                '"' => value.push('"'),
-                                '\\' => value.push('\\'),
-                                other => value.push(other),
-                            }
-                            i += 2;
-                            col += 2;
-                        } else if ch == '\n' {
-                            value.push('\n');
-                            i += 1;
-                            line += 1;
-                            col = 1;
-                        } else {
-                            value.push(ch);
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Str(value), line: start_line, column: start_col });
-                }
-                '-' | '0'..='9' => {
-                    let start = i;
-                    if c == '-' {
-                        i += 1;
-                        col += 1;
-                    }
-                    while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
-                        i += 1;
-                        col += 1;
-                    }
-                    if i < chars.len() && (chars[i] == 'e' || chars[i] == 'E') {
-                        i += 1;
-                        col += 1;
-                        if i < chars.len() && (chars[i] == '+' || chars[i] == '-') {
-                            i += 1;
-                            col += 1;
-                        }
-                        while i < chars.len() && chars[i].is_ascii_digit() {
-                            i += 1;
-                            col += 1;
-                        }
-                    }
-                    let text: String = chars[start..i].iter().collect();
-                    let value: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(start_line, start_col)))?;
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Num(value), line: start_line, column: start_col });
-                }
-                other if other.is_ascii_alphabetic() || other == '_' => {
-                    let start = i;
-                    while i < chars.len() && (chars[i].is_ascii_alphanumeric() || chars[i] == '_' || chars[i] == '-' || chars[i] == '.') {
-                        i += 1;
-                        col += 1;
-                    }
-                    let text: String = chars[start..i].iter().collect();
-                    out.push(LayoutSpannedTok { tok: LayoutTok::Ident(text), line: start_line, column: start_col });
-                }
-                other => return Err(TextError::new(format!("unexpected character '{other}'"), TextSpan::at(start_line, start_col))),
-            }
-        }
-        out.push(LayoutSpannedTok { tok: LayoutTok::Eof, line, column: col });
-        Ok(out)
-    }
-
-    /// 🔐 Escapes `\`, `"` and newlines for embedding a string inside a `"..."` DSL literal.
-    fn escape_str(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out
-    }
-
-    /// 🔢 Prints an `f64` via its shortest round-trippable `Display` form, named for call-site clarity
-    /// next to `escape_str`.
-    fn fmt_num(value: f64) -> String {
-        value.to_string()
-    }
-    //#endregion 🔖DslLexer
-
-    //#region 🔖DslParser
-    struct LayoutDslParser {
-        toks: Vec<LayoutSpannedTok>,
-        pos: usize,
-    }
-
-    impl LayoutDslParser {
-        fn new(toks: Vec<LayoutSpannedTok>) -> Self {
-            Self { toks, pos: 0 }
-        }
-
-        fn peek(&self) -> &LayoutTok {
-            &self.toks[self.pos].tok
-        }
-
-        fn span(&self) -> TextSpan {
-            let tok = &self.toks[self.pos];
-            TextSpan::at(tok.line, tok.column)
-        }
-
-        fn bump(&mut self) -> LayoutTok {
-            let tok = self.toks[self.pos].tok.clone();
-            if self.pos + 1 < self.toks.len() {
-                self.pos += 1;
-            }
-            tok
-        }
-
-        fn expect_tok(&mut self, expected: &LayoutTok, label: &str) -> Result<(), TextError> {
-            let span = self.span();
-            let got = self.bump();
-            if &got == expected {
-                Ok(())
-            } else {
-                Err(TextError::expected(format!("expected '{label}'"), span, format!("{got:?}")))
-            }
-        }
-
-        fn expect_ident(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                LayoutTok::Ident(value) => Ok(value),
-                other => Err(TextError::expected("expected identifier", span, format!("{other:?}"))),
-            }
-        }
-
-        fn expect_str(&mut self) -> Result<String, TextError> {
-            let span = self.span();
-            match self.bump() {
-                LayoutTok::Str(value) => Ok(value),
-                other => Err(TextError::expected("expected string literal", span, format!("{other:?}"))),
-            }
-        }
-
-        fn expect_num(&mut self) -> Result<f64, TextError> {
-            let span = self.span();
-            match self.bump() {
-                LayoutTok::Num(value) => Ok(value),
-                other => Err(TextError::expected("expected number", span, format!("{other:?}"))),
-            }
-        }
-
-        fn expect_bool(&mut self) -> Result<bool, TextError> {
-            let span = self.span();
-            match self.bump() {
-                LayoutTok::Ident(value) if value == "true" => Ok(true),
-                LayoutTok::Ident(value) if value == "false" => Ok(false),
-                other => Err(TextError::expected("expected 'true' or 'false'", span, format!("{other:?}"))),
-            }
-        }
-
-        fn at_ident(&self, value: &str) -> bool {
-            matches!(self.peek(), LayoutTok::Ident(candidate) if candidate == value)
-        }
-
-        fn peek_at(&self, offset: usize) -> &LayoutTok {
-            let idx = (self.pos + offset).min(self.toks.len() - 1);
-            &self.toks[idx].tok
-        }
-
-        fn eat_keyword(&mut self, value: &str) -> Result<(), TextError> {
-            let span = self.span();
-            match self.bump() {
-                LayoutTok::Ident(candidate) if candidate == value => Ok(()),
-                other => Err(TextError::expected(format!("expected '{value}'"), span, format!("{other:?}"))),
-            }
-        }
-
-        /// 🔎 True when the parser sits at the start of a `key=value` attribute (one token of lookahead
-        /// past the identifier) — the signal every sparse-patch attr-loop uses to decide whether to keep
-        /// consuming optional fields.
-        fn at_attr(&self) -> bool {
-            matches!(self.peek(), LayoutTok::Ident(_)) && matches!(self.peek_at(1), LayoutTok::Eq)
-        }
-
-        fn peek_attr_key(&self) -> Option<&str> {
-            if let LayoutTok::Ident(value) = self.peek() {
-                Some(value.as_str())
-            } else {
-                None
-            }
+    fn frame_patch_to_dsl(patch: &FramePatch) -> FramePatchDsl {
+        FramePatchDsl {
+            x: patch.x,
+            y: patch.y,
+            width: patch.width,
+            height: patch.height,
+            fill: match patch.fill {
+                None => None,
+                Some(None) => Some(ColorPatch::Clear),
+                Some(Some(color)) => Some(ColorPatch::Set { color }),
+            },
+            stroke: match patch.stroke {
+                None => None,
+                Some(None) => Some(ColorPatch::Clear),
+                Some(Some(color)) => Some(ColorPatch::Set { color }),
+            },
+            wrap_mode: patch.wrap_mode.clone(),
+            columns: patch.columns,
         }
     }
 
-    /// 🏷️ Consumes `key=` (assumes `at_attr()` already confirmed the shape) and returns `key`.
-    fn take_attr_key(p: &mut LayoutDslParser) -> Result<String, TextError> {
-        let key = p.expect_ident()?;
-        p.expect_tok(&LayoutTok::Eq, "=")?;
-        Ok(key)
-    }
-
-    /// 🏷️ Consumes `expected=` and errors if the attribute name doesn't match.
-    fn expect_key(p: &mut LayoutDslParser, expected: &str) -> Result<(), TextError> {
-        let span = p.span();
-        let key = take_attr_key(p)?;
-        if key == expected {
-            Ok(())
-        } else {
-            Err(TextError::expected(format!("expected key '{expected}'"), span, key))
+    fn frame_patch_from_dsl(patch: FramePatchDsl) -> FramePatch {
+        FramePatch {
+            x: patch.x,
+            y: patch.y,
+            width: patch.width,
+            height: patch.height,
+            fill: match patch.fill {
+                None => None,
+                Some(ColorPatch::Clear) => Some(None),
+                Some(ColorPatch::Set { color }) => Some(Some(color)),
+            },
+            stroke: match patch.stroke {
+                None => None,
+                Some(ColorPatch::Clear) => Some(None),
+                Some(ColorPatch::Set { color }) => Some(Some(color)),
+            },
+            wrap_mode: patch.wrap_mode,
+            columns: patch.columns,
         }
     }
-
-    /// 🏷️ Consumes `expected:` — the field-label marker used before an inline nested value (a whole
-    /// `Page`/`TextStory`/`ImageLink`/frame) embedded in a one-line op, decoupled from the value's own
-    /// self-delimiting grammar so the label never collides with the value's leading token.
-    fn expect_key_colon(p: &mut LayoutDslParser, expected: &str) -> Result<(), TextError> {
-        let span = p.span();
-        let key = p.expect_ident()?;
-        if key != expected {
-            return Err(TextError::expected(format!("expected '{expected}:'"), span, key));
-        }
-        p.expect_tok(&LayoutTok::Colon, ":")?;
-        Ok(())
-    }
-
-    fn parse_kv_ident(p: &mut LayoutDslParser, key: &str) -> Result<String, TextError> {
-        expect_key(p, key)?;
-        p.expect_ident()
-    }
-
-    fn parse_kv_str(p: &mut LayoutDslParser, key: &str) -> Result<String, TextError> {
-        expect_key(p, key)?;
-        p.expect_str()
-    }
-
-    fn parse_kv_num(p: &mut LayoutDslParser, key: &str) -> Result<f64, TextError> {
-        expect_key(p, key)?;
-        p.expect_num()
-    }
-
-    fn parse_kv_bool(p: &mut LayoutDslParser, key: &str) -> Result<bool, TextError> {
-        expect_key(p, key)?;
-        p.expect_bool()
-    }
-
-    /// 🕳️ `none` sentinel for an absent `Option<String>` identifier field (ids, `threadNext`, …).
-    fn parse_opt_ident(p: &mut LayoutDslParser) -> Result<Option<String>, TextError> {
-        if p.at_ident("none") {
-            p.bump();
-            return Ok(None);
-        }
-        Ok(Some(p.expect_ident()?))
-    }
-
-    fn parse_kv_opt_ident(p: &mut LayoutDslParser, key: &str) -> Result<Option<String>, TextError> {
-        expect_key(p, key)?;
-        parse_opt_ident(p)
-    }
-
-    fn print_opt_ident(value: &Option<String>) -> String {
-        value.clone().unwrap_or_else(|| "none".to_string())
-    }
-
-    /// 🕳️ `none` sentinel for an absent `Option<String>` free-text field (paths, hashes, labels, …).
-    fn parse_opt_str(p: &mut LayoutDslParser) -> Result<Option<String>, TextError> {
-        if p.at_ident("none") {
-            p.bump();
-            return Ok(None);
-        }
-        Ok(Some(p.expect_str()?))
-    }
-
-    fn parse_kv_opt_str(p: &mut LayoutDslParser, key: &str) -> Result<Option<String>, TextError> {
-        expect_key(p, key)?;
-        parse_opt_str(p)
-    }
-
-    fn print_opt_str(value: &Option<String>) -> String {
-        match value {
-            Some(s) => format!("\"{}\"", escape_str(s)),
-            None => "none".to_string(),
-        }
-    }
-
-    /// 🕳️ `none` sentinel for an absent `Option<bool>` field (`locked`/`visible` on frames/overrides).
-    fn parse_opt_bool(p: &mut LayoutDslParser) -> Result<Option<bool>, TextError> {
-        if p.at_ident("none") {
-            p.bump();
-            return Ok(None);
-        }
-        Ok(Some(p.expect_bool()?))
-    }
-
-    fn parse_kv_opt_bool(p: &mut LayoutDslParser, key: &str) -> Result<Option<bool>, TextError> {
-        expect_key(p, key)?;
-        parse_opt_bool(p)
-    }
-
-    fn print_opt_bool(value: &Option<bool>) -> String {
-        match value {
-            Some(true) => "true".to_string(),
-            Some(false) => "false".to_string(),
-            None => "none".to_string(),
-        }
-    }
-    //#endregion 🔖DslParser
-
-    //#region 🔖DslValues
-    /// 🔢 Reads `(n0,n1,...,n{count-1})` — the shared tuple grammar backing bounds/margins/columns/color.
-    fn parse_num_tuple(p: &mut LayoutDslParser, count: usize) -> Result<Vec<f64>, TextError> {
-        p.expect_tok(&LayoutTok::LParen, "(")?;
-        let mut values = Vec::with_capacity(count);
-        for i in 0..count {
-            if i > 0 {
-                p.expect_tok(&LayoutTok::Comma, ",")?;
-            }
-            values.push(p.expect_num()?);
-        }
-        p.expect_tok(&LayoutTok::RParen, ")")?;
-        Ok(values)
-    }
-
-    fn print_num_tuple(values: &[f64]) -> String {
-        format!("({})", values.iter().map(|v| fmt_num(*v)).collect::<Vec<_>>().join(","))
-    }
-
-    fn parse_bounds(p: &mut LayoutDslParser) -> Result<LayoutBounds, TextError> {
-        let v = parse_num_tuple(p, 5)?;
-        Ok(LayoutBounds { x: v[0], y: v[1], width: v[2], height: v[3], rotation: v[4] })
-    }
-
-    fn print_bounds(b: &LayoutBounds) -> String {
-        print_num_tuple(&[b.x, b.y, b.width, b.height, b.rotation])
-    }
-
-    fn parse_opt_bounds(p: &mut LayoutDslParser) -> Result<Option<LayoutBounds>, TextError> {
-        if p.at_ident("none") {
-            p.bump();
-            return Ok(None);
-        }
-        Ok(Some(parse_bounds(p)?))
-    }
-
-    fn print_opt_bounds(b: &Option<LayoutBounds>) -> String {
-        match b {
-            Some(v) => print_bounds(v),
-            None => "none".to_string(),
-        }
-    }
-
-    fn parse_margins(p: &mut LayoutDslParser) -> Result<PageMargins, TextError> {
-        let v = parse_num_tuple(p, 4)?;
-        Ok(PageMargins { top: v[0], right: v[1], bottom: v[2], left: v[3] })
-    }
-
-    fn print_margins(m: &PageMargins) -> String {
-        print_num_tuple(&[m.top, m.right, m.bottom, m.left])
-    }
-
-    fn parse_columns(p: &mut LayoutDslParser) -> Result<PageColumns, TextError> {
-        let v = parse_num_tuple(p, 2)?;
-        Ok(PageColumns { count: v[0] as u32, gutter: v[1] })
-    }
-
-    fn print_columns(c: &PageColumns) -> String {
-        print_num_tuple(&[c.count as f64, c.gutter])
-    }
-
-    fn parse_rect(p: &mut LayoutDslParser) -> Result<LayoutRect, TextError> {
-        let v = parse_num_tuple(p, 4)?;
-        Ok(LayoutRect { x: v[0], y: v[1], width: v[2], height: v[3] })
-    }
-
-    fn print_rect(r: &LayoutRect) -> String {
-        print_num_tuple(&[r.x, r.y, r.width, r.height])
-    }
-
-    fn parse_color4(p: &mut LayoutDslParser) -> Result<[f32; 4], TextError> {
-        let v = parse_num_tuple(p, 4)?;
-        Ok([v[0] as f32, v[1] as f32, v[2] as f32, v[3] as f32])
-    }
-
-    fn print_color4(c: &[f32; 4]) -> String {
-        print_num_tuple(&[c[0] as f64, c[1] as f64, c[2] as f64, c[3] as f64])
-    }
-
-    fn parse_opt_color4(p: &mut LayoutDslParser) -> Result<Option<[f32; 4]>, TextError> {
-        if p.at_ident("none") {
-            p.bump();
-            return Ok(None);
-        }
-        Ok(Some(parse_color4(p)?))
-    }
-
-    fn print_opt_color4(c: &Option<[f32; 4]>) -> String {
-        match c {
-            Some(v) => print_color4(v),
-            None => "none".to_string(),
-        }
-    }
-
-    fn parse_camera_fields(p: &mut LayoutDslParser) -> Result<LayoutCamera, TextError> {
-        let x = parse_kv_num(p, "x")?;
-        let y = parse_kv_num(p, "y")?;
-        let zoom = parse_kv_num(p, "zoom")?;
-        Ok(LayoutCamera { x, y, zoom })
-    }
-
-    fn print_camera_line(prefix: &str, c: &LayoutCamera) -> String {
-        format!("{prefix} x={} y={} zoom={}", fmt_num(c.x), fmt_num(c.y), fmt_num(c.zoom))
-    }
-
-    /// ⚡ Tuple-form `LayoutCamera` used inline in `setCamera` op-text (the pretty top-level `camera`/
-    /// `previewCamera` lines use the attr-style `parse_camera_fields`/`print_camera_line` instead).
-    fn parse_camera_tuple(p: &mut LayoutDslParser) -> Result<LayoutCamera, TextError> {
-        let v = parse_num_tuple(p, 3)?;
-        Ok(LayoutCamera { x: v[0], y: v[1], zoom: v[2] })
-    }
-
-    fn print_camera_tuple(c: &LayoutCamera) -> String {
-        print_num_tuple(&[c.x, c.y, c.zoom])
-    }
-
-    /// 🕳️ Parses `[id,id,...]` (or `[]`) — the shared grammar for `layerIds`/`objectIds`/`pageIds`.
-    fn parse_id_list(p: &mut LayoutDslParser) -> Result<Vec<String>, TextError> {
-        p.expect_tok(&LayoutTok::LBracket, "[")?;
-        let mut ids = Vec::new();
-        if !matches!(p.peek(), LayoutTok::RBracket) {
-            loop {
-                ids.push(p.expect_ident()?);
-                if matches!(p.peek(), LayoutTok::Comma) {
-                    p.bump();
-                } else {
-                    break;
-                }
-            }
-        }
-        p.expect_tok(&LayoutTok::RBracket, "]")?;
-        Ok(ids)
-    }
-
-    fn print_id_list(ids: &[String]) -> String {
-        format!("[{}]", ids.join(","))
-    }
-
-    fn parse_rect_list(p: &mut LayoutDslParser) -> Result<Vec<LayoutRect>, TextError> {
-        p.expect_tok(&LayoutTok::LBracket, "[")?;
-        let mut rects = Vec::new();
-        if !matches!(p.peek(), LayoutTok::RBracket) {
-            loop {
-                rects.push(parse_rect(p)?);
-                if matches!(p.peek(), LayoutTok::Comma) {
-                    p.bump();
-                } else {
-                    break;
-                }
-            }
-        }
-        p.expect_tok(&LayoutTok::RBracket, "]")?;
-        Ok(rects)
-    }
-
-    fn print_rect_list(rects: &[LayoutRect]) -> String {
-        format!("[{}]", rects.iter().map(print_rect).collect::<Vec<_>>().join(","))
-    }
-
-    fn parse_style_run(p: &mut LayoutDslParser) -> Result<TextStyleRun, TextError> {
-        p.expect_tok(&LayoutTok::LBrace, "{")?;
-        let start = parse_kv_num(p, "start")? as usize;
-        let end = parse_kv_num(p, "end")? as usize;
-        let paragraph_style_id = parse_kv_opt_ident(p, "paragraphStyleId")?;
-        let character_style_id = parse_kv_opt_ident(p, "characterStyleId")?;
-        p.expect_tok(&LayoutTok::RBrace, "}")?;
-        Ok(TextStyleRun { start, end, paragraph_style_id, character_style_id })
-    }
-
-    fn print_style_run(r: &TextStyleRun) -> String {
-        format!(
-            "{{start={} end={} paragraphStyleId={} characterStyleId={}}}",
-            r.start,
-            r.end,
-            print_opt_ident(&r.paragraph_style_id),
-            print_opt_ident(&r.character_style_id)
-        )
-    }
-
-    fn parse_style_runs(p: &mut LayoutDslParser) -> Result<Vec<TextStyleRun>, TextError> {
-        p.expect_tok(&LayoutTok::LBracket, "[")?;
-        let mut runs = Vec::new();
-        while !matches!(p.peek(), LayoutTok::RBracket) {
-            runs.push(parse_style_run(p)?);
-        }
-        p.expect_tok(&LayoutTok::RBracket, "]")?;
-        Ok(runs)
-    }
-
-    fn print_style_runs(runs: &[TextStyleRun]) -> String {
-        format!("[{}]", runs.iter().map(print_style_run).collect::<Vec<_>>().join(" "))
-    }
-
-    fn parse_override(p: &mut LayoutDslParser) -> Result<PageOverride, TextError> {
-        p.expect_tok(&LayoutTok::LBrace, "{")?;
-        let object_id = parse_kv_ident(p, "objectId")?;
-        expect_key(p, "bounds")?;
-        let bounds = parse_opt_bounds(p)?;
-        let visible = parse_kv_opt_bool(p, "visible")?;
-        let locked = parse_kv_opt_bool(p, "locked")?;
-        p.expect_tok(&LayoutTok::RBrace, "}")?;
-        Ok(PageOverride { object_id, bounds, visible, locked })
-    }
-
-    fn print_override(o: &PageOverride) -> String {
-        format!("{{objectId={} bounds={} visible={} locked={}}}", o.object_id, print_opt_bounds(&o.bounds), print_opt_bool(&o.visible), print_opt_bool(&o.locked))
-    }
-
-    fn parse_overrides(p: &mut LayoutDslParser) -> Result<Vec<PageOverride>, TextError> {
-        p.expect_tok(&LayoutTok::LBracket, "[")?;
-        let mut overrides = Vec::new();
-        while !matches!(p.peek(), LayoutTok::RBracket) {
-            overrides.push(parse_override(p)?);
-        }
-        p.expect_tok(&LayoutTok::RBracket, "]")?;
-        Ok(overrides)
-    }
-
-    fn print_overrides(overrides: &[PageOverride]) -> String {
-        format!("[{}]", overrides.iter().map(print_override).collect::<Vec<_>>().join(" "))
-    }
-    //#endregion 🔖DslValues
-
-    //#region 🔖DslEntities
-    fn parse_paragraph_style(p: &mut LayoutDslParser) -> Result<ParagraphStyle, TextError> {
-        p.eat_keyword("paragraphStyle")?;
-        let id = parse_kv_ident(p, "id")?;
-        let name = parse_kv_str(p, "name")?;
-        let font_family = parse_kv_str(p, "fontFamily")?;
-        let font_size = parse_kv_num(p, "fontSize")?;
-        let font_weight = parse_kv_num(p, "fontWeight")? as u32;
-        let leading = parse_kv_num(p, "leading")?;
-        let tracking = parse_kv_num(p, "tracking")?;
-        let alignment = parse_kv_str(p, "alignment")?;
-        Ok(ParagraphStyle { id, name, font_family, font_size, font_weight, leading, tracking, alignment })
-    }
-
-    fn print_paragraph_style(s: &ParagraphStyle) -> String {
-        format!(
-            "paragraphStyle id={} name=\"{}\" fontFamily=\"{}\" fontSize={} fontWeight={} leading={} tracking={} alignment=\"{}\"",
-            s.id,
-            escape_str(&s.name),
-            escape_str(&s.font_family),
-            fmt_num(s.font_size),
-            s.font_weight,
-            fmt_num(s.leading),
-            fmt_num(s.tracking),
-            escape_str(&s.alignment)
-        )
-    }
-
-    /// 🌫️ `characterStyles` is an untyped `Vec<serde_json::Value>` on `LayoutDocument` (no fixed schema
-    /// yet) — round-tripped as an opaque JSON blob embedded in a quoted DSL string rather than inventing
-    /// grammar for a shape nothing constrains.
-    fn parse_character_style(p: &mut LayoutDslParser) -> Result<serde_json::Value, TextError> {
-        p.eat_keyword("characterStyle")?;
-        let span = p.span();
-        let raw = parse_kv_str(p, "json")?;
-        serde_json::from_str(&raw).map_err(|error| TextError::new(format!("invalid characterStyle json: {error}"), span))
-    }
-
-    fn print_character_style(v: &serde_json::Value) -> String {
-        let raw = serde_json::to_string(v).unwrap_or_else(|_| "null".to_string());
-        format!("characterStyle json=\"{}\"", escape_str(&raw))
-    }
-
-    fn parse_story_fields(p: &mut LayoutDslParser) -> Result<TextStory, TextError> {
-        let id = parse_kv_ident(p, "id")?;
-        let content = parse_kv_str(p, "content")?;
-        expect_key(p, "styleRuns")?;
-        let style_runs = parse_style_runs(p)?;
-        Ok(TextStory { id, content, style_runs })
-    }
-
-    fn print_story_fields(s: &TextStory) -> String {
-        format!("id={} content=\"{}\" styleRuns={}", s.id, escape_str(&s.content), print_style_runs(&s.style_runs))
-    }
-
-    fn parse_story(p: &mut LayoutDslParser) -> Result<TextStory, TextError> {
-        p.eat_keyword("story")?;
-        parse_story_fields(p)
-    }
-
-    fn print_story(s: &TextStory) -> String {
-        format!("story {}", print_story_fields(s))
-    }
-
-    fn parse_link_fields(p: &mut LayoutDslParser) -> Result<ImageLink, TextError> {
-        let id = parse_kv_ident(p, "id")?;
-        let path = parse_kv_str(p, "path")?;
-        let hash = parse_kv_str(p, "hash")?;
-        let width = parse_kv_num(p, "width")? as u32;
-        let height = parse_kv_num(p, "height")? as u32;
-        let dpi = parse_kv_num(p, "dpi")? as u32;
-        let color_profile = parse_kv_opt_str(p, "colorProfile")?;
-        let state = parse_kv_opt_str(p, "state")?;
-        let proxy_data_url = parse_kv_opt_str(p, "proxyDataUrl")?;
-        Ok(ImageLink { id, path, hash, width, height, dpi, color_profile, state, proxy_data_url })
-    }
-
-    fn print_link_fields(l: &ImageLink) -> String {
-        format!(
-            "id={} path=\"{}\" hash=\"{}\" width={} height={} dpi={} colorProfile={} state={} proxyDataUrl={}",
-            l.id,
-            escape_str(&l.path),
-            escape_str(&l.hash),
-            l.width,
-            l.height,
-            l.dpi,
-            print_opt_str(&l.color_profile),
-            print_opt_str(&l.state),
-            print_opt_str(&l.proxy_data_url)
-        )
-    }
-
-    fn parse_link(p: &mut LayoutDslParser) -> Result<ImageLink, TextError> {
-        p.eat_keyword("link")?;
-        parse_link_fields(p)
-    }
-
-    fn print_link(l: &ImageLink) -> String {
-        format!("link {}", print_link_fields(l))
-    }
-
-    fn parse_layer_stmt(p: &mut LayoutDslParser) -> Result<Layer, TextError> {
-        p.eat_keyword("layer")?;
-        let id = parse_kv_ident(p, "id")?;
-        let name = parse_kv_str(p, "name")?;
-        let visible = parse_kv_bool(p, "visible")?;
-        let locked = parse_kv_bool(p, "locked")?;
-        expect_key(p, "objectIds")?;
-        let object_ids = parse_id_list(p)?;
-        Ok(Layer { id, name, visible, locked, object_ids })
-    }
-
-    fn print_layer_stmt(l: &Layer) -> String {
-        format!("layer id={} name=\"{}\" visible={} locked={} objectIds={}", l.id, escape_str(&l.name), l.visible, l.locked, print_id_list(&l.object_ids))
-    }
-
-    /// 🖼️ Reads a `Frame` starting directly at its kind ident (`rect`/`text`/`image`, no wrapping
-    /// keyword) — self-delimiting the same way `draw_rs`'s `DrawLayerNode` kind tag is, so it can sit
-    /// either inside a page's `{ }` block or right after an op-text `frame:` field label.
-    fn parse_frame_value(p: &mut LayoutDslParser) -> Result<Frame, TextError> {
-        let span = p.span();
-        let kind = p.expect_ident()?;
-        let id = parse_kv_ident(p, "id")?;
-        let layer_id = parse_kv_ident(p, "layerId")?;
-        expect_key(p, "bounds")?;
-        let bounds = parse_bounds(p)?;
-        let locked = parse_kv_opt_bool(p, "locked")?;
-        let visible = parse_kv_opt_bool(p, "visible")?;
-        match kind.as_str() {
-            "rect" => {
-                expect_key(p, "fill")?;
-                let fill = parse_opt_color4(p)?;
-                expect_key(p, "stroke")?;
-                let stroke = parse_opt_color4(p)?;
-                Ok(Frame::Rect { id, layer_id, bounds, locked, visible, fill, stroke })
-            }
-            "text" => {
-                let story_id = parse_kv_ident(p, "storyId")?;
-                let thread_next = parse_kv_opt_ident(p, "threadNext")?;
-                let columns = parse_kv_num(p, "columns")? as u32;
-                expect_key(p, "inset")?;
-                let inset = parse_rect(p)?;
-                let wrap_mode = parse_kv_str(p, "wrapMode")?;
-                Ok(Frame::Text { id, layer_id, bounds, locked, visible, story_id, thread_next, columns, inset, wrap_mode })
-            }
-            "image" => {
-                let link_id = parse_kv_ident(p, "linkId")?;
-                Ok(Frame::Image { id, layer_id, bounds, locked, visible, link_id })
-            }
-            other => Err(TextError::expected(format!("unknown frame kind '{other}'"), span, "rect|text|image")),
-        }
-    }
-
-    fn print_frame_value(f: &Frame) -> String {
-        match f {
-            Frame::Rect { id, layer_id, bounds, locked, visible, fill, stroke } => format!(
-                "rect id={} layerId={} bounds={} locked={} visible={} fill={} stroke={}",
-                id,
-                layer_id,
-                print_bounds(bounds),
-                print_opt_bool(locked),
-                print_opt_bool(visible),
-                print_opt_color4(fill),
-                print_opt_color4(stroke)
-            ),
-            Frame::Text { id, layer_id, bounds, locked, visible, story_id, thread_next, columns, inset, wrap_mode } => format!(
-                "text id={} layerId={} bounds={} locked={} visible={} storyId={} threadNext={} columns={} inset={} wrapMode=\"{}\"",
-                id,
-                layer_id,
-                print_bounds(bounds),
-                print_opt_bool(locked),
-                print_opt_bool(visible),
-                story_id,
-                print_opt_ident(thread_next),
-                columns,
-                print_rect(inset),
-                escape_str(wrap_mode)
-            ),
-            Frame::Image { id, layer_id, bounds, locked, visible, link_id } => {
-                format!("image id={} layerId={} bounds={} locked={} visible={} linkId={}", id, layer_id, print_bounds(bounds), print_opt_bool(locked), print_opt_bool(visible), link_id)
-            }
-        }
-    }
-
-    /// 🧱 Reads the `{ layer... rect|text|image... }` block shared by `Page` and `ParentPage` — zero or
-    /// more `layer` statements followed by zero or more frame values, discriminated purely by their own
-    /// leading keyword/kind (no extra wrapper needed).
-    fn parse_layers_and_frames(p: &mut LayoutDslParser) -> Result<(Vec<Layer>, Vec<Frame>), TextError> {
-        p.expect_tok(&LayoutTok::LBrace, "{")?;
-        let mut layers = Vec::new();
-        let mut frames = Vec::new();
-        loop {
-            match p.peek().clone() {
-                LayoutTok::RBrace => break,
-                LayoutTok::Ident(kw) if kw == "layer" => layers.push(parse_layer_stmt(p)?),
-                LayoutTok::Ident(kw) if kw == "rect" || kw == "text" || kw == "image" => frames.push(parse_frame_value(p)?),
-                other => return Err(TextError::expected("expected 'layer', a frame kind, or '}'", p.span(), format!("{other:?}"))),
-            }
-        }
-        p.expect_tok(&LayoutTok::RBrace, "}")?;
-        Ok((layers, frames))
-    }
-
-    fn print_layers_and_frames(layers: &[Layer], frames: &[Frame]) -> String {
-        let mut parts = Vec::with_capacity(layers.len() + frames.len());
-        for l in layers {
-            parts.push(print_layer_stmt(l));
-        }
-        for f in frames {
-            parts.push(print_frame_value(f));
-        }
-        format!("{{ {} }}", parts.join(" "))
-    }
-
-    fn parse_parent_page(p: &mut LayoutDslParser) -> Result<ParentPage, TextError> {
-        p.eat_keyword("parentPage")?;
-        let id = parse_kv_ident(p, "id")?;
-        let name = parse_kv_str(p, "name")?;
-        let width = parse_kv_num(p, "width")?;
-        let height = parse_kv_num(p, "height")?;
-        expect_key(p, "layerIds")?;
-        let layer_ids = parse_id_list(p)?;
-        let (layers, frames) = parse_layers_and_frames(p)?;
-        Ok(ParentPage { id, name, width, height, layer_ids, layers, frames })
-    }
-
-    fn print_parent_page(pp: &ParentPage) -> String {
-        format!(
-            "parentPage id={} name=\"{}\" width={} height={} layerIds={} {}",
-            pp.id,
-            escape_str(&pp.name),
-            fmt_num(pp.width),
-            fmt_num(pp.height),
-            print_id_list(&pp.layer_ids),
-            print_layers_and_frames(&pp.layers, &pp.frames)
-        )
-    }
-
-    fn parse_page_fields(p: &mut LayoutDslParser) -> Result<Page, TextError> {
-        let id = parse_kv_ident(p, "id")?;
-        let name = parse_kv_str(p, "name")?;
-        let spread_id = parse_kv_ident(p, "spreadId")?;
-        let parent_page_id = parse_kv_opt_ident(p, "parentPageId")?;
-        let width = parse_kv_num(p, "width")?;
-        let height = parse_kv_num(p, "height")?;
-        expect_key(p, "margins")?;
-        let margins = parse_margins(p)?;
-        expect_key(p, "columns")?;
-        let columns = parse_columns(p)?;
-        expect_key(p, "guides")?;
-        let guides = parse_rect_list(p)?;
-        expect_key(p, "layerIds")?;
-        let layer_ids = parse_id_list(p)?;
-        let (layers, frames) = parse_layers_and_frames(p)?;
-        expect_key(p, "overrides")?;
-        let overrides = parse_overrides(p)?;
-        Ok(Page { id, name, spread_id, parent_page_id, width, height, margins, columns, guides, layer_ids, layers, frames, overrides })
-    }
-
-    fn print_page_fields(pg: &Page) -> String {
-        format!(
-            "id={} name=\"{}\" spreadId={} parentPageId={} width={} height={} margins={} columns={} guides={} layerIds={} {} overrides={}",
-            pg.id,
-            escape_str(&pg.name),
-            pg.spread_id,
-            print_opt_ident(&pg.parent_page_id),
-            fmt_num(pg.width),
-            fmt_num(pg.height),
-            print_margins(&pg.margins),
-            print_columns(&pg.columns),
-            print_rect_list(&pg.guides),
-            print_id_list(&pg.layer_ids),
-            print_layers_and_frames(&pg.layers, &pg.frames),
-            print_overrides(&pg.overrides)
-        )
-    }
-
-    fn parse_page(p: &mut LayoutDslParser) -> Result<Page, TextError> {
-        p.eat_keyword("page")?;
-        parse_page_fields(p)
-    }
-
-    fn print_page(pg: &Page) -> String {
-        format!("page {}", print_page_fields(pg))
-    }
-
-    fn parse_spread(p: &mut LayoutDslParser) -> Result<Spread, TextError> {
-        p.eat_keyword("spread")?;
-        let id = parse_kv_ident(p, "id")?;
-        let name = parse_kv_str(p, "name")?;
-        expect_key(p, "pageIds")?;
-        let page_ids = parse_id_list(p)?;
-        Ok(Spread { id, name, page_ids })
-    }
-
-    fn print_spread(s: &Spread) -> String {
-        format!("spread id={} name=\"{}\" pageIds={}", s.id, escape_str(&s.name), print_id_list(&s.page_ids))
-    }
-    //#endregion 🔖DslEntities
-
-    //#region 🔖DslDocument
-    /// 📤 Renders `doc` as a list of self-delimited top-level statements (`doc`/`camera`/`previewCamera`/
-    /// `grid`/one per style/story/link/parent page/spread/page/`printTarget`) — joined with `"\n"` for
-    /// the pretty `print_dsl`.
-    fn print_dsl_chunks(doc: &LayoutDocument) -> Vec<String> {
-        let mut chunks = Vec::new();
-        chunks.push(format!("doc schema={} name=\"{}\"", doc.schema, escape_str(&doc.name)));
-        chunks.push(print_camera_line("camera", &doc.camera));
-        chunks.push(print_camera_line("previewCamera", &doc.preview_camera));
-        chunks.push(format!("grid baselineGrid={} baselineOffset={} snapToBaseline={}", fmt_num(doc.grid.baseline_grid), fmt_num(doc.grid.baseline_offset), doc.grid.snap_to_baseline));
-        for s in &doc.paragraph_styles {
-            chunks.push(print_paragraph_style(s));
-        }
-        for c in &doc.character_styles {
-            chunks.push(print_character_style(c));
-        }
-        for s in &doc.stories {
-            chunks.push(print_story(s));
-        }
-        for l in &doc.links {
-            chunks.push(print_link(l));
-        }
-        for pp in &doc.parent_pages {
-            chunks.push(print_parent_page(pp));
-        }
-        for sp in &doc.spreads {
-            chunks.push(print_spread(sp));
-        }
-        for pg in &doc.pages {
-            chunks.push(print_page(pg));
-        }
-        chunks.push(format!("printTarget={}", print_opt_str(&doc.print_target)));
-        chunks
-    }
-
-    fn parse_document(p: &mut LayoutDslParser) -> Result<LayoutDocument, TextError> {
-        p.eat_keyword("doc")?;
-        let schema = parse_kv_ident(p, "schema")?;
-        let name = parse_kv_str(p, "name")?;
-        p.eat_keyword("camera")?;
-        let camera = parse_camera_fields(p)?;
-        p.eat_keyword("previewCamera")?;
-        let preview_camera = parse_camera_fields(p)?;
-        p.eat_keyword("grid")?;
-        let baseline_grid = parse_kv_num(p, "baselineGrid")?;
-        let baseline_offset = parse_kv_num(p, "baselineOffset")?;
-        let snap_to_baseline = parse_kv_bool(p, "snapToBaseline")?;
-        let grid = GridSettings { baseline_grid, baseline_offset, snap_to_baseline };
-        let mut paragraph_styles = Vec::new();
-        while p.at_ident("paragraphStyle") {
-            paragraph_styles.push(parse_paragraph_style(p)?);
-        }
-        let mut character_styles = Vec::new();
-        while p.at_ident("characterStyle") {
-            character_styles.push(parse_character_style(p)?);
-        }
-        let mut stories = Vec::new();
-        while p.at_ident("story") {
-            stories.push(parse_story(p)?);
-        }
-        let mut links = Vec::new();
-        while p.at_ident("link") {
-            links.push(parse_link(p)?);
-        }
-        let mut parent_pages = Vec::new();
-        while p.at_ident("parentPage") {
-            parent_pages.push(parse_parent_page(p)?);
-        }
-        let mut spreads = Vec::new();
-        while p.at_ident("spread") {
-            spreads.push(parse_spread(p)?);
-        }
-        let mut pages = Vec::new();
-        while p.at_ident("page") {
-            pages.push(parse_page(p)?);
-        }
-        p.eat_keyword("printTarget")?;
-        p.expect_tok(&LayoutTok::Eq, "=")?;
-        let print_target = parse_opt_str(p)?;
-        Ok(LayoutDocument { schema, name, camera, preview_camera, grid, paragraph_styles, character_styles, stories, links, parent_pages, spreads, pages, print_target })
-    }
-
-    impl DocumentDsl for LayoutDocument {
-        const EXTENSION: &'static str = "layout";
-
-        fn parse_dsl(text: &str) -> Result<Self, TextError> {
-            let tokens = lex_layout_dsl(text)?;
-            let mut parser = LayoutDslParser::new(tokens);
-            parse_document(&mut parser)
-        }
-
-        fn print_dsl(&self) -> String {
-            print_dsl_chunks(self).join("\n")
-        }
-    }
-    //#endregion 🔖DslDocument
+    //#endregion 🔖FramePatchDsl
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
-    /// 🩹 Sparse `key=value` attr-loop reader/printer for `PagePatch` — reused verbatim by both the
-    /// `pagesPatch` op-text line and (indirectly, via the same field set) nothing else, since `Page` has
-    /// no other sparse-patch surface.
-    fn parse_page_patch(p: &mut LayoutDslParser) -> Result<PagePatch, TextError> {
-        let mut patch = PagePatch::default();
-        while p.at_attr() {
-            let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-            match key.as_str() {
-                "name" => {
-                    take_attr_key(p)?;
-                    patch.name = Some(p.expect_str()?);
-                }
-                "width" => {
-                    take_attr_key(p)?;
-                    patch.width = Some(p.expect_num()?);
-                }
-                "height" => {
-                    take_attr_key(p)?;
-                    patch.height = Some(p.expect_num()?);
-                }
-                "marginTop" => {
-                    take_attr_key(p)?;
-                    patch.margin_top = Some(p.expect_num()?);
-                }
-                "marginRight" => {
-                    take_attr_key(p)?;
-                    patch.margin_right = Some(p.expect_num()?);
-                }
-                "marginBottom" => {
-                    take_attr_key(p)?;
-                    patch.margin_bottom = Some(p.expect_num()?);
-                }
-                "marginLeft" => {
-                    take_attr_key(p)?;
-                    patch.margin_left = Some(p.expect_num()?);
-                }
-                "columnsCount" => {
-                    take_attr_key(p)?;
-                    patch.columns_count = Some(p.expect_num()? as u32);
-                }
-                "columnsGutter" => {
-                    take_attr_key(p)?;
-                    patch.columns_gutter = Some(p.expect_num()?);
-                }
-                _ => break,
+    /// ⚡ DSL-only mirror of `LayoutOperation` — see this module's opening doc comment. Converts at the
+    /// `vcs::OpText` boundary only; `LayoutOperation` itself (and every consumer matching on it, e.g.
+    /// `layout/plugin`) is completely untouched.
+    #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+    enum LayoutOperationDsl {
+        #[dsl(key = "pagesAdd")]
+        PagesAdd {
+            index: usize,
+            #[dsl(block)]
+            item: Page,
+        },
+        #[dsl(key = "pagesRemove")]
+        PagesRemove { id: String },
+        #[dsl(key = "pagesMove")]
+        PagesMove {
+            id: String,
+            #[dsl(key = "toIndex")]
+            to_index: usize,
+        },
+        #[dsl(key = "pagesPatch")]
+        PagesPatch {
+            id: String,
+            #[dsl(block)]
+            patch: PagePatch,
+        },
+        #[dsl(key = "storiesAdd")]
+        StoriesAdd {
+            index: usize,
+            #[dsl(block)]
+            item: TextStory,
+        },
+        #[dsl(key = "storiesRemove")]
+        StoriesRemove { id: String },
+        #[dsl(key = "storiesMove")]
+        StoriesMove {
+            id: String,
+            #[dsl(key = "toIndex")]
+            to_index: usize,
+        },
+        #[dsl(key = "storiesPatch")]
+        StoriesPatch {
+            id: String,
+            #[dsl(block)]
+            patch: TextStoryPatch,
+        },
+        #[dsl(key = "linksAdd")]
+        LinksAdd {
+            index: usize,
+            #[dsl(block)]
+            item: ImageLink,
+        },
+        #[dsl(key = "linksRemove")]
+        LinksRemove { id: String },
+        #[dsl(key = "linksMove")]
+        LinksMove {
+            id: String,
+            #[dsl(key = "toIndex")]
+            to_index: usize,
+        },
+        #[dsl(key = "linksPatch")]
+        LinksPatch {
+            id: String,
+            #[dsl(block)]
+            patch: ImageLinkPatch,
+        },
+        #[dsl(key = "addFrame")]
+        AddFrame {
+            #[dsl(key = "pageId")]
+            page_id: String,
+            index: usize,
+            #[dsl(statements)]
+            frame: Box<Frame>,
+            #[dsl(key = "layerId")]
+            layer_id: Option<String>,
+        },
+        #[dsl(key = "removeFrame")]
+        RemoveFrame {
+            #[dsl(key = "pageId")]
+            page_id: String,
+            #[dsl(key = "frameId")]
+            frame_id: String,
+        },
+        #[dsl(key = "patchFrame")]
+        PatchFrame {
+            #[dsl(key = "pageId")]
+            page_id: String,
+            #[dsl(key = "frameId")]
+            frame_id: String,
+            #[dsl(block)]
+            patch: FramePatchDsl,
+        },
+        #[dsl(key = "setCamera")]
+        SetCamera {
+            blueprint: bool,
+            #[dsl(block)]
+            camera: LayoutCamera,
+        },
+    }
+
+    fn layout_operation_to_dsl(operation: &LayoutOperation) -> LayoutOperationDsl {
+        match operation {
+            LayoutOperation::Pages(CollectionOperation::Add { index, item }) => LayoutOperationDsl::PagesAdd { index: *index, item: item.clone() },
+            LayoutOperation::Pages(CollectionOperation::Remove { id }) => LayoutOperationDsl::PagesRemove { id: id.clone() },
+            LayoutOperation::Pages(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::PagesMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Pages(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::PagesPatch { id: id.clone(), patch: patch.clone() },
+            LayoutOperation::Stories(CollectionOperation::Add { index, item }) => LayoutOperationDsl::StoriesAdd { index: *index, item: item.clone() },
+            LayoutOperation::Stories(CollectionOperation::Remove { id }) => LayoutOperationDsl::StoriesRemove { id: id.clone() },
+            LayoutOperation::Stories(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::StoriesMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Stories(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::StoriesPatch { id: id.clone(), patch: patch.clone() },
+            LayoutOperation::Links(CollectionOperation::Add { index, item }) => LayoutOperationDsl::LinksAdd { index: *index, item: item.clone() },
+            LayoutOperation::Links(CollectionOperation::Remove { id }) => LayoutOperationDsl::LinksRemove { id: id.clone() },
+            LayoutOperation::Links(CollectionOperation::Move { id, to_index }) => LayoutOperationDsl::LinksMove { id: id.clone(), to_index: *to_index },
+            LayoutOperation::Links(CollectionOperation::Patch { id, patch }) => LayoutOperationDsl::LinksPatch { id: id.clone(), patch: patch.clone() },
+            LayoutOperation::AddFrame { page_id, index, frame, layer_id } => {
+                LayoutOperationDsl::AddFrame { page_id: page_id.clone(), index: *index, frame: Box::new(frame.clone()), layer_id: layer_id.clone() }
             }
-        }
-        Ok(patch)
-    }
-
-    fn print_page_patch(patch: &PagePatch) -> String {
-        let mut parts = Vec::new();
-        if let Some(v) = &patch.name {
-            parts.push(format!("name=\"{}\"", escape_str(v)));
-        }
-        if let Some(v) = patch.width {
-            parts.push(format!("width={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.height {
-            parts.push(format!("height={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.margin_top {
-            parts.push(format!("marginTop={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.margin_right {
-            parts.push(format!("marginRight={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.margin_bottom {
-            parts.push(format!("marginBottom={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.margin_left {
-            parts.push(format!("marginLeft={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.columns_count {
-            parts.push(format!("columnsCount={v}"));
-        }
-        if let Some(v) = patch.columns_gutter {
-            parts.push(format!("columnsGutter={}", fmt_num(v)));
-        }
-        parts.join(" ")
-    }
-
-    /// 🩹 Sparse `key=value` attr-loop reader/printer for `FramePatch` — `fill`/`stroke` are doubly
-    /// optional (outer presence = "this key was touched", inner `none`/color = "cleared"/"set"), matching
-    /// `FramePatch`'s own `Option<Option<[f32;4]>>` shape.
-    fn parse_frame_patch(p: &mut LayoutDslParser) -> Result<FramePatch, TextError> {
-        let mut patch = FramePatch::default();
-        while p.at_attr() {
-            let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-            match key.as_str() {
-                "x" => {
-                    take_attr_key(p)?;
-                    patch.x = Some(p.expect_num()?);
-                }
-                "y" => {
-                    take_attr_key(p)?;
-                    patch.y = Some(p.expect_num()?);
-                }
-                "width" => {
-                    take_attr_key(p)?;
-                    patch.width = Some(p.expect_num()?);
-                }
-                "height" => {
-                    take_attr_key(p)?;
-                    patch.height = Some(p.expect_num()?);
-                }
-                "fill" => {
-                    take_attr_key(p)?;
-                    patch.fill = Some(parse_opt_color4(p)?);
-                }
-                "stroke" => {
-                    take_attr_key(p)?;
-                    patch.stroke = Some(parse_opt_color4(p)?);
-                }
-                "wrapMode" => {
-                    take_attr_key(p)?;
-                    patch.wrap_mode = Some(p.expect_str()?);
-                }
-                "columns" => {
-                    take_attr_key(p)?;
-                    patch.columns = Some(p.expect_num()? as u32);
-                }
-                _ => break,
+            LayoutOperation::RemoveFrame { page_id, frame_id } => LayoutOperationDsl::RemoveFrame { page_id: page_id.clone(), frame_id: frame_id.clone() },
+            LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
+                LayoutOperationDsl::PatchFrame { page_id: page_id.clone(), frame_id: frame_id.clone(), patch: frame_patch_to_dsl(patch) }
             }
+            LayoutOperation::SetCamera { blueprint, camera } => LayoutOperationDsl::SetCamera { blueprint: *blueprint, camera: camera.clone() },
         }
-        Ok(patch)
     }
 
-    fn print_frame_patch(patch: &FramePatch) -> String {
-        let mut parts = Vec::new();
-        if let Some(v) = patch.x {
-            parts.push(format!("x={}", fmt_num(v)));
+    fn layout_operation_from_dsl(operation: LayoutOperationDsl) -> LayoutOperation {
+        match operation {
+            LayoutOperationDsl::PagesAdd { index, item } => LayoutOperation::Pages(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::PagesRemove { id } => LayoutOperation::Pages(CollectionOperation::Remove { id }),
+            LayoutOperationDsl::PagesMove { id, to_index } => LayoutOperation::Pages(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::PagesPatch { id, patch } => LayoutOperation::Pages(CollectionOperation::Patch { id, patch }),
+            LayoutOperationDsl::StoriesAdd { index, item } => LayoutOperation::Stories(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::StoriesRemove { id } => LayoutOperation::Stories(CollectionOperation::Remove { id }),
+            LayoutOperationDsl::StoriesMove { id, to_index } => LayoutOperation::Stories(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::StoriesPatch { id, patch } => LayoutOperation::Stories(CollectionOperation::Patch { id, patch }),
+            LayoutOperationDsl::LinksAdd { index, item } => LayoutOperation::Links(CollectionOperation::Add { index, item }),
+            LayoutOperationDsl::LinksRemove { id } => LayoutOperation::Links(CollectionOperation::Remove { id }),
+            LayoutOperationDsl::LinksMove { id, to_index } => LayoutOperation::Links(CollectionOperation::Move { id, to_index }),
+            LayoutOperationDsl::LinksPatch { id, patch } => LayoutOperation::Links(CollectionOperation::Patch { id, patch }),
+            LayoutOperationDsl::AddFrame { page_id, index, frame, layer_id } => LayoutOperation::AddFrame { page_id, index, frame: *frame, layer_id },
+            LayoutOperationDsl::RemoveFrame { page_id, frame_id } => LayoutOperation::RemoveFrame { page_id, frame_id },
+            LayoutOperationDsl::PatchFrame { page_id, frame_id, patch } => LayoutOperation::PatchFrame { page_id, frame_id, patch: frame_patch_from_dsl(patch) },
+            LayoutOperationDsl::SetCamera { blueprint, camera } => LayoutOperation::SetCamera { blueprint, camera },
         }
-        if let Some(v) = patch.y {
-            parts.push(format!("y={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.width {
-            parts.push(format!("width={}", fmt_num(v)));
-        }
-        if let Some(v) = patch.height {
-            parts.push(format!("height={}", fmt_num(v)));
-        }
-        if let Some(v) = &patch.fill {
-            parts.push(format!("fill={}", print_opt_color4(v)));
-        }
-        if let Some(v) = &patch.stroke {
-            parts.push(format!("stroke={}", print_opt_color4(v)));
-        }
-        if let Some(v) = &patch.wrap_mode {
-            parts.push(format!("wrapMode=\"{}\"", escape_str(v)));
-        }
-        if let Some(v) = patch.columns {
-            parts.push(format!("columns={v}"));
-        }
-        parts.join(" ")
     }
 
-    /// ⚡ One-line textual encoding of every `LayoutOperation` variant (`vcs::OpText`). Reuses the value
-    /// grammars from `🔖Dsl` (page/story/link/frame/patch) so a full nested item embeds inline on one
-    /// line — the DSL grammar never depends on newlines, so this is the same text either way.
     impl OpText for LayoutOperation {
         fn parse_op(line: &str) -> Result<Self, TextError> {
-            let tokens = lex_layout_dsl(line)?;
-            let mut p = LayoutDslParser::new(tokens);
-            let span = p.span();
-            let op_name = p.expect_ident()?;
-            let operation = match op_name.as_str() {
-                "pagesAdd" => {
-                    let index = parse_kv_num(&mut p, "index")? as usize;
-                    expect_key_colon(&mut p, "page")?;
-                    let item = parse_page_fields(&mut p)?;
-                    LayoutOperation::Pages(CollectionOperation::Add { index, item })
-                }
-                "pagesRemove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    LayoutOperation::Pages(CollectionOperation::Remove { id })
-                }
-                "pagesMove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let to_index = parse_kv_num(&mut p, "toIndex")? as usize;
-                    LayoutOperation::Pages(CollectionOperation::Move { id, to_index })
-                }
-                "pagesPatch" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let patch = parse_page_patch(&mut p)?;
-                    LayoutOperation::Pages(CollectionOperation::Patch { id, patch })
-                }
-                "storiesAdd" => {
-                    let index = parse_kv_num(&mut p, "index")? as usize;
-                    expect_key_colon(&mut p, "story")?;
-                    let item = parse_story_fields(&mut p)?;
-                    LayoutOperation::Stories(CollectionOperation::Add { index, item })
-                }
-                "storiesRemove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    LayoutOperation::Stories(CollectionOperation::Remove { id })
-                }
-                "storiesMove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let to_index = parse_kv_num(&mut p, "toIndex")? as usize;
-                    LayoutOperation::Stories(CollectionOperation::Move { id, to_index })
-                }
-                "storiesPatch" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let content = if p.at_attr() { Some(parse_kv_str(&mut p, "content")?) } else { None };
-                    LayoutOperation::Stories(CollectionOperation::Patch { id, patch: TextStoryPatch { content } })
-                }
-                "linksAdd" => {
-                    let index = parse_kv_num(&mut p, "index")? as usize;
-                    expect_key_colon(&mut p, "link")?;
-                    let item = parse_link_fields(&mut p)?;
-                    LayoutOperation::Links(CollectionOperation::Add { index, item })
-                }
-                "linksRemove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    LayoutOperation::Links(CollectionOperation::Remove { id })
-                }
-                "linksMove" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let to_index = parse_kv_num(&mut p, "toIndex")? as usize;
-                    LayoutOperation::Links(CollectionOperation::Move { id, to_index })
-                }
-                "linksPatch" => {
-                    let id = parse_kv_ident(&mut p, "id")?;
-                    let path = if p.at_attr() { Some(parse_kv_str(&mut p, "path")?) } else { None };
-                    LayoutOperation::Links(CollectionOperation::Patch { id, patch: ImageLinkPatch { path } })
-                }
-                "addFrame" => {
-                    let page_id = parse_kv_ident(&mut p, "pageId")?;
-                    let index = parse_kv_num(&mut p, "index")? as usize;
-                    let layer_id = parse_kv_opt_ident(&mut p, "layerId")?;
-                    expect_key_colon(&mut p, "frame")?;
-                    let frame = parse_frame_value(&mut p)?;
-                    LayoutOperation::AddFrame { page_id, index, frame, layer_id }
-                }
-                "removeFrame" => {
-                    let page_id = parse_kv_ident(&mut p, "pageId")?;
-                    let frame_id = parse_kv_ident(&mut p, "frameId")?;
-                    LayoutOperation::RemoveFrame { page_id, frame_id }
-                }
-                "patchFrame" => {
-                    let page_id = parse_kv_ident(&mut p, "pageId")?;
-                    let frame_id = parse_kv_ident(&mut p, "frameId")?;
-                    let patch = parse_frame_patch(&mut p)?;
-                    LayoutOperation::PatchFrame { page_id, frame_id, patch }
-                }
-                "setCamera" => {
-                    let blueprint = parse_kv_bool(&mut p, "blueprint")?;
-                    expect_key(&mut p, "camera")?;
-                    let camera = parse_camera_tuple(&mut p)?;
-                    LayoutOperation::SetCamera { blueprint, camera }
-                }
-                other => return Err(TextError::expected(format!("unknown layout operation '{other}'"), span, "known LayoutOperation variant")),
-            };
-            Ok(operation)
+            Ok(layout_operation_from_dsl(<LayoutOperationDsl as OpText>::parse_op(line)?))
         }
 
         fn print_op(&self) -> String {
-            match self {
-                LayoutOperation::Pages(cop) => match cop {
-                    CollectionOperation::Add { index, item } => format!("pagesAdd index={index} page:{}", print_page_fields(item)),
-                    CollectionOperation::Remove { id } => format!("pagesRemove id={id}"),
-                    CollectionOperation::Move { id, to_index } => format!("pagesMove id={id} toIndex={to_index}"),
-                    CollectionOperation::Patch { id, patch } => {
-                        let fields = print_page_patch(patch);
-                        if fields.is_empty() {
-                            format!("pagesPatch id={id}")
-                        } else {
-                            format!("pagesPatch id={id} {fields}")
-                        }
-                    }
-                },
-                LayoutOperation::Stories(cop) => match cop {
-                    CollectionOperation::Add { index, item } => format!("storiesAdd index={index} story:{}", print_story_fields(item)),
-                    CollectionOperation::Remove { id } => format!("storiesRemove id={id}"),
-                    CollectionOperation::Move { id, to_index } => format!("storiesMove id={id} toIndex={to_index}"),
-                    CollectionOperation::Patch { id, patch } => match &patch.content {
-                        Some(v) => format!("storiesPatch id={id} content=\"{}\"", escape_str(v)),
-                        None => format!("storiesPatch id={id}"),
-                    },
-                },
-                LayoutOperation::Links(cop) => match cop {
-                    CollectionOperation::Add { index, item } => format!("linksAdd index={index} link:{}", print_link_fields(item)),
-                    CollectionOperation::Remove { id } => format!("linksRemove id={id}"),
-                    CollectionOperation::Move { id, to_index } => format!("linksMove id={id} toIndex={to_index}"),
-                    CollectionOperation::Patch { id, patch } => match &patch.path {
-                        Some(v) => format!("linksPatch id={id} path=\"{}\"", escape_str(v)),
-                        None => format!("linksPatch id={id}"),
-                    },
-                },
-                LayoutOperation::AddFrame { page_id, index, frame, layer_id } => {
-                    format!("addFrame pageId={page_id} index={index} layerId={} frame:{}", print_opt_ident(layer_id), print_frame_value(frame))
-                }
-                LayoutOperation::RemoveFrame { page_id, frame_id } => format!("removeFrame pageId={page_id} frameId={frame_id}"),
-                LayoutOperation::PatchFrame { page_id, frame_id, patch } => {
-                    let fields = print_frame_patch(patch);
-                    if fields.is_empty() {
-                        format!("patchFrame pageId={page_id} frameId={frame_id}")
-                    } else {
-                        format!("patchFrame pageId={page_id} frameId={frame_id} {fields}")
-                    }
-                }
-                LayoutOperation::SetCamera { blueprint, camera } => format!("setCamera blueprint={blueprint} camera={}", print_camera_tuple(camera)),
-            }
+            <LayoutOperationDsl as OpText>::print_op(&layout_operation_to_dsl(self))
         }
     }
     //#endregion 🔖OpText
@@ -3061,7 +1991,7 @@ mod dsl {
     #[cfg(test)]
     mod tests {
         use super::*;
-        use vcs::{create_document_vcs_envelope, test_support, DocumentVcsCommand, DocumentVcsStore};
+        use vcs::{create_document_vcs_envelope, test_support, DocumentDsl, DocumentVcsCommand, DocumentVcsStore};
 
         fn sample_document() -> LayoutDocument {
             LayoutDocument::parse_dsl(include_str!("../example/sample.layout")).expect("sample fixture parses")
@@ -3227,38 +2157,27 @@ mod dsl {
         }
 
         #[test]
-        fn parse_dsl_reports_lexer_and_parser_errors() {
-            assert!(LayoutDocument::parse_dsl("doc @").is_err(), "unexpected character must fail lexing");
-            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=\"unterminated").is_err(), "unterminated string literal must fail lexing");
-            assert!(LayoutDocument::parse_dsl("1.2.3").is_err(), "malformed number literal must fail lexing");
-            assert!(LayoutDocument::parse_dsl("doc schema=\"layout.fixture\" name=\"t\"").is_err(), "quoted schema must fail expect_ident");
-            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=unquoted").is_err(), "unquoted name must fail expect_str");
-            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=\"t\" camera x=notanumber y=0 zoom=1").is_err(), "non-numeric camera field must fail expect_num");
-            let bad_bool = "doc schema=layout.fixture name=\"t\" camera x=0 y=0 zoom=1 previewCamera x=0 y=0 zoom=1 grid baselineGrid=12 baselineOffset=0 snapToBaseline=maybe";
-            assert!(LayoutDocument::parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail expect_bool");
-            assert!(LayoutOperation::parse_op("setCamera blueprint=true camera=1,2,3").is_err(), "unparenthesized tuple must fail expect_tok");
-        }
-
-        #[test]
-        fn parse_frame_value_rejects_unknown_frame_kind() {
-            let tokens = lex_layout_dsl("triangle id=frame-1 layerId=layer-1 bounds=(0,0,1,1,0) locked=none visible=none").expect("lex succeeds");
-            let mut parser = LayoutDslParser::new(tokens);
-            let error = parse_frame_value(&mut parser).expect_err("unknown frame kind must fail");
-            assert!(error.message.contains("unknown frame kind"));
-        }
-
-        #[test]
-        fn parse_character_style_rejects_invalid_json_payload() {
-            let tokens = lex_layout_dsl("characterStyle json=\"not json\"").expect("lex succeeds");
-            let mut parser = LayoutDslParser::new(tokens);
-            let error = parse_character_style(&mut parser).expect_err("invalid json payload must fail");
-            assert!(error.message.contains("invalid characterStyle json"));
+        fn parse_dsl_reports_engine_parser_errors() {
+            // The hand-rolled lexer/parser (and its bespoke error messages) is gone — parsing now goes
+            // through the `dsl::` derive engine directly, so these assert only on the public
+            // `vcs::DocumentDsl`/`vcs::OpText` surface, generically on failure rather than on exact
+            // internal wording that no longer exists.
+            assert!(LayoutDocument::parse_dsl("").is_err(), "empty text must fail: a document has required fields");
+            assert!(LayoutDocument::parse_dsl("not a document at all").is_err(), "unrecognized leading token must fail");
+            assert!(LayoutDocument::parse_dsl("schema=\"layout.fixture\" name=\"t\"").is_err(), "quoted schema must fail: schema is a bare ident");
+            assert!(LayoutDocument::parse_dsl("schema=layout.fixture name=unquoted").is_err(), "unquoted name must fail: name is a quoted string");
+            assert!(
+                LayoutDocument::parse_dsl("schema=layout.fixture name=\"t\" camera { x=notanumber y=0 zoom=1 }").is_err(),
+                "non-numeric camera field must fail"
+            );
+            let bad_bool = "schema=layout.fixture name=\"t\" camera { x=0 y=0 zoom=1 } previewCamera { x=0 y=0 zoom=1 } grid { baselineGrid=12 baselineOffset=0 snapToBaseline=maybe }";
+            assert!(LayoutDocument::parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail");
+            assert!(LayoutOperation::parse_op("setCamera blueprint=true camera=1,2,3").is_err(), "camera must be a block, not a bare tuple attribute");
         }
 
         #[test]
         fn op_text_rejects_unknown_operation_name() {
-            let error = LayoutOperation::parse_op("bogusOp id=x").expect_err("unknown op must fail");
-            assert!(error.message.contains("unknown layout operation"));
+            assert!(LayoutOperation::parse_op("bogusOp id=x").is_err(), "unknown op keyword must fail");
         }
     }
 }

@@ -5,10 +5,10 @@
 /// `RasterHost`/`RasterSession` (the generic paint-canvas hosting mechanism) live in
 /// `framework_surface_paint`.
 pub(crate) mod domain {
-    use std::collections::HashMap;
+    use std::collections::BTreeMap;
 
     //#region 🔖DocumentVcs
-    use vcs::{DocumentDsl, OpText, Operation, OperationDiff};
+    use vcs::{Operation, OperationDiff};
 
     pub const RASTER_DOCUMENT_SCHEMA: &str = "raster.document";
 
@@ -25,7 +25,7 @@ pub(crate) mod domain {
     /// camera, plus embedded image assets. This is the authoritative projection shared by the wasm
     /// compositor bridge and the `raster-plugin` `DocumentApp`. Ephemeral tool/brush/selection state
     /// lives in the plugin's app struct, never here.
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterCamera {
         #[serde(default)]
@@ -50,15 +50,17 @@ pub(crate) mod domain {
         "normal".into()
     }
     
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterTransform {
         #[serde(default)]
         pub x: f64,
         #[serde(default)]
         pub y: f64,
+        #[dsl(key = "scaleX")]
         #[serde(default = "default_one")]
         pub scale_x: f64,
+        #[dsl(key = "scaleY")]
         #[serde(default = "default_one")]
         pub scale_y: f64,
         #[serde(default)]
@@ -71,7 +73,7 @@ pub(crate) mod domain {
         }
     }
     
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterLayerMask {
         #[serde(default = "default_true")]
@@ -84,9 +86,10 @@ pub(crate) mod domain {
         pub height: Option<u32>,
     }
     
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslEnum)]
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum RasterLayerNode {
+        #[dsl(key = "pixel")]
         #[serde(rename = "pixel", rename_all = "camelCase")]
         Pixel {
             id: String,
@@ -95,15 +98,20 @@ pub(crate) mod domain {
             visible: bool,
             #[serde(default = "one_f32")]
             opacity: f32,
+            #[dsl(key = "blend")]
             #[serde(default = "default_blend")]
             blend_mode: String,
+            #[dsl(block)]
             #[serde(default)]
             transform: RasterTransform,
+            #[dsl(block)]
             mask: Option<RasterLayerMask>,
             width: Option<u32>,
             height: Option<u32>,
+            #[dsl(key = "image")]
             image_key: Option<String>,
         },
+        #[dsl(key = "group")]
         #[serde(rename = "group", rename_all = "camelCase")]
         Group {
             id: String,
@@ -112,13 +120,18 @@ pub(crate) mod domain {
             visible: bool,
             #[serde(default = "one_f32")]
             opacity: f32,
+            #[dsl(key = "blend")]
             #[serde(default = "default_blend")]
             blend_mode: String,
+            #[dsl(block)]
             #[serde(default)]
             transform: RasterTransform,
+            #[dsl(block)]
             mask: Option<RasterLayerMask>,
+            #[dsl(statements, block)]
             children: Vec<RasterLayerNode>,
         },
+        #[dsl(key = "adjustment")]
         #[serde(rename = "adjustment", rename_all = "camelCase")]
         Adjustment {
             id: String,
@@ -127,38 +140,44 @@ pub(crate) mod domain {
             visible: bool,
             #[serde(default = "one_f32")]
             opacity: f32,
+            #[dsl(key = "blend")]
             #[serde(default = "default_blend")]
             blend_mode: String,
+            #[dsl(block)]
             #[serde(default)]
             transform: RasterTransform,
+            #[dsl(key = "kind")]
             adjustment_kind: String,
             #[serde(default)]
             params: serde_json::Map<String, serde_json::Value>,
         },
     }
     
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterImageAsset {
         pub mime: String,
         pub data: String,
     }
-    
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslDocument)]
     #[serde(rename_all = "camelCase")]
+    #[dsl(extension = "raster", layout = "lines")]
     pub struct RasterProjection {
         pub schema: String,
         pub id: String,
         #[serde(default)]
         pub title: Option<String>,
+        #[dsl(block)]
         #[serde(default)]
         pub camera: RasterCamera,
+        #[dsl(statements, block)]
         #[serde(default)]
         pub layers: Vec<RasterLayerNode>,
         #[serde(default)]
-        pub assets: HashMap<String, RasterImageAsset>,
+        pub assets: BTreeMap<String, RasterImageAsset>,
     }
-    
+
     pub fn empty_raster_projection() -> RasterProjection {
         RasterProjection {
             schema: RASTER_DOCUMENT_SCHEMA.into(),
@@ -166,7 +185,7 @@ pub(crate) mod domain {
             title: Some("Untitled".into()),
             camera: RasterCamera::default(),
             layers: Vec::new(),
-            assets: HashMap::new(),
+            assets: BTreeMap::new(),
         }
     }
     //#endregion 🔖Projection
@@ -382,17 +401,21 @@ pub(crate) mod domain {
     //#endregion 🔖Tree
     
     //#region 🔖Operations
-    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RasterLayerPatch {
         pub name: Option<String>,
         pub visible: Option<bool>,
         pub opacity: Option<f32>,
+        #[dsl(key = "blend")]
         pub blend_mode: Option<String>,
+        #[dsl(key = "x")]
         pub transform_x: Option<f64>,
+        #[dsl(key = "y")]
         pub transform_y: Option<f64>,
         pub width: Option<u32>,
         pub height: Option<u32>,
+        #[dsl(key = "kind")]
         pub adjustment_kind: Option<String>,
     }
     
@@ -424,15 +447,21 @@ pub(crate) mod domain {
         }
     }
     
-    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
+    #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum RasterOperation {
-        AddLayer { parent_id: Option<String>, index: usize, layer: RasterLayerNode },
-        RemoveLayer { layer_id: String },
-        PatchLayer { layer_id: String, patch: RasterLayerPatch },
-        MoveLayer { layer_id: String, parent_id: Option<String>, index: usize },
-        SetCamera { camera: RasterCamera },
-        ReplaceDocument { document: RasterProjection },
+        #[dsl(key = "addLayer")]
+        AddLayer { parent_id: Option<String>, index: usize, #[dsl(statements)] layer: Box<RasterLayerNode> },
+        #[dsl(key = "removeLayer")]
+        RemoveLayer { #[dsl(key = "id")] layer_id: String },
+        #[dsl(key = "patchLayer")]
+        PatchLayer { #[dsl(key = "id")] layer_id: String, #[dsl(block)] patch: RasterLayerPatch },
+        #[dsl(key = "moveLayer")]
+        MoveLayer { #[dsl(key = "id")] layer_id: String, #[dsl(key = "parent")] parent_id: Option<String>, index: usize },
+        #[dsl(key = "setCamera")]
+        SetCamera { #[dsl(block)] camera: RasterCamera },
+        #[dsl(key = "replaceDocument")]
+        ReplaceDocument { #[dsl(block)] document: RasterProjection },
     }
     
     #[derive(Clone, Debug, Default, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -477,7 +506,7 @@ pub(crate) mod domain {
         fn diff(&self, _projection: &RasterProjection) -> RasterDiff {
             match self {
                 RasterOperation::AddLayer { parent_id, index, layer } => {
-                    step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: layer.clone() })
+                    step_diff(RasterStep::AddLayer { parent_id: parent_id.clone(), index: *index, layer: (**layer).clone() })
                 }
                 RasterOperation::RemoveLayer { layer_id } => step_diff(RasterStep::RemoveLayer { layer_id: layer_id.clone() }),
                 RasterOperation::PatchLayer { layer_id, patch } => {
@@ -495,7 +524,7 @@ pub(crate) mod domain {
             match self {
                 RasterOperation::AddLayer { layer, .. } => vec![RasterOperation::RemoveLayer { layer_id: layer_node_id(layer).to_string() }],
                 RasterOperation::RemoveLayer { layer_id } => match (locate_layer(&projection.layers, layer_id), find_layer(&projection.layers, layer_id)) {
-                    (Some((parent_id, index)), Some(layer)) => vec![RasterOperation::AddLayer { parent_id, index, layer: layer.clone() }],
+                    (Some((parent_id, index)), Some(layer)) => vec![RasterOperation::AddLayer { parent_id, index, layer: Box::new(layer.clone()) }],
                     _ => Vec::new(),
                 },
                 RasterOperation::PatchLayer { layer_id, patch } => {
@@ -520,851 +549,9 @@ pub(crate) mod domain {
     //#endregion 🔖Operations
 
     //#region 🔖Dsl
-    /// 📜 Hand-rolled lexer, parser and printer shared by `RasterProjection`'s `.raster` DSL and by
-    /// `RasterOperation`'s compact single-line op encoding (`AddLayer`/`ReplaceDocument` reprint the same
-    /// layer/document grammar on one line). Whitespace (including newlines) is never significant to the
-    /// parser — `print_dsl` inserts newlines/indentation purely for readability, `print_op` renders the
-    /// identical grammar with spaces only. See {@link vcs::DocumentDsl} and {@link vcs::OpText}.
-    mod raster_text {
-        use super::{RasterCamera, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterProjection, RasterTransform};
-        use std::collections::HashMap;
-
-        //#region Lexer
-        #[derive(Clone, Debug, PartialEq)]
-        enum Tok {
-            Word(String),
-            Str(String),
-            LBrace,
-            RBrace,
-            LBracket,
-            RBracket,
-            Eof,
-        }
-
-        #[derive(Clone, Debug)]
-        struct Lexed {
-            tok: Tok,
-            span: vcs::TextSpan,
-        }
-
-        /// 🔤 Scans `input` into tokens. A bareword `Word` runs until whitespace/`{`/`}`/`[`/`]`/`"`, so
-        /// `=` and `,` are ordinary word characters — `key=value` collapses into one token (split later
-        /// by {@link Parser::parse_kv_map}), and only a quoted value or `[`/`{` forces a token boundary
-        /// right after `key=`.
-        fn lex(input: &str) -> Result<Vec<Lexed>, vcs::TextError> {
-            let chars: Vec<char> = input.chars().collect();
-            let mut out = Vec::new();
-            let mut i = 0usize;
-            let mut line = 1u32;
-            let mut col = 1u32;
-            while i < chars.len() {
-                match chars[i] {
-                    ' ' | '\t' | '\r' => {
-                        i += 1;
-                        col += 1;
-                    }
-                    '\n' => {
-                        i += 1;
-                        line += 1;
-                        col = 1;
-                    }
-                    '{' => {
-                        out.push(Lexed { tok: Tok::LBrace, span: vcs::TextSpan::at(line, col) });
-                        i += 1;
-                        col += 1;
-                    }
-                    '}' => {
-                        out.push(Lexed { tok: Tok::RBrace, span: vcs::TextSpan::at(line, col) });
-                        i += 1;
-                        col += 1;
-                    }
-                    '[' => {
-                        out.push(Lexed { tok: Tok::LBracket, span: vcs::TextSpan::at(line, col) });
-                        i += 1;
-                        col += 1;
-                    }
-                    ']' => {
-                        out.push(Lexed { tok: Tok::RBracket, span: vcs::TextSpan::at(line, col) });
-                        i += 1;
-                        col += 1;
-                    }
-                    '"' => {
-                        let (start_line, start_col) = (line, col);
-                        i += 1;
-                        col += 1;
-                        let mut s = String::new();
-                        let mut closed = false;
-                        while i < chars.len() {
-                            let ch = chars[i];
-                            if ch == '\\' && i + 1 < chars.len() {
-                                match chars[i + 1] {
-                                    'n' => s.push('\n'),
-                                    '"' => s.push('"'),
-                                    '\\' => s.push('\\'),
-                                    other => {
-                                        s.push('\\');
-                                        s.push(other);
-                                    }
-                                }
-                                i += 2;
-                                col += 2;
-                            } else if ch == '"' {
-                                i += 1;
-                                col += 1;
-                                closed = true;
-                                break;
-                            } else if ch == '\n' {
-                                s.push(ch);
-                                i += 1;
-                                line += 1;
-                                col = 1;
-                            } else {
-                                s.push(ch);
-                                i += 1;
-                                col += 1;
-                            }
-                        }
-                        if !closed {
-                            return Err(vcs::TextError::new("unterminated string literal", vcs::TextSpan::at(start_line, start_col)));
-                        }
-                        out.push(Lexed { tok: Tok::Str(s), span: vcs::TextSpan::at(start_line, start_col) });
-                    }
-                    _ => {
-                        let (start_line, start_col, start) = (line, col, i);
-                        while i < chars.len() && !matches!(chars[i], ' ' | '\t' | '\r' | '\n' | '{' | '}' | '[' | ']' | '"') {
-                            i += 1;
-                            col += 1;
-                        }
-                        let word: String = chars[start..i].iter().collect();
-                        out.push(Lexed { tok: Tok::Word(word), span: vcs::TextSpan::at(start_line, start_col) });
-                    }
-                }
-            }
-            out.push(Lexed { tok: Tok::Eof, span: vcs::TextSpan::at(line, col) });
-            Ok(out)
-        }
-        //#endregion Lexer
-
-        //#region Parser
-        #[derive(Clone, Debug)]
-        enum FieldValue {
-            Str(String),
-            Word(String),
-        }
-
-        struct Parser {
-            toks: Vec<Lexed>,
-            pos: usize,
-        }
-
-        impl Parser {
-            fn peek(&self) -> &Tok {
-                &self.toks[self.pos].tok
-            }
-
-            fn span(&self) -> vcs::TextSpan {
-                self.toks[self.pos].span
-            }
-
-            fn bump(&mut self) -> Tok {
-                let tok = self.toks[self.pos].tok.clone();
-                if self.pos + 1 < self.toks.len() {
-                    self.pos += 1;
-                }
-                tok
-            }
-
-            fn at_lbrace(&self) -> bool {
-                matches!(self.peek(), Tok::LBrace)
-            }
-
-            fn at_rbrace(&self) -> bool {
-                matches!(self.peek(), Tok::RBrace)
-            }
-
-            fn at_rbracket(&self) -> bool {
-                matches!(self.peek(), Tok::RBracket)
-            }
-
-            fn at_word(&self, word: &str) -> bool {
-                matches!(self.peek(), Tok::Word(w) if w == word)
-            }
-
-            fn expect_word(&mut self) -> Result<String, vcs::TextError> {
-                let span = self.span();
-                match self.bump() {
-                    Tok::Word(w) => Ok(w),
-                    other => Err(vcs::TextError::expected(format!("expected a word, found {other:?}"), span, "word")),
-                }
-            }
-
-            fn expect_keyword(&mut self, keyword: &str) -> Result<(), vcs::TextError> {
-                let span = self.span();
-                let word = self.expect_word()?;
-                if word != keyword {
-                    return Err(vcs::TextError::expected(format!("expected '{keyword}', found '{word}'"), span, keyword.to_string()));
-                }
-                Ok(())
-            }
-
-            fn expect_lbrace(&mut self) -> Result<(), vcs::TextError> {
-                let span = self.span();
-                match self.bump() {
-                    Tok::LBrace => Ok(()),
-                    other => Err(vcs::TextError::expected(format!("expected '{{', found {other:?}"), span, "{")),
-                }
-            }
-
-            fn expect_rbrace(&mut self) -> Result<(), vcs::TextError> {
-                let span = self.span();
-                match self.bump() {
-                    Tok::RBrace => Ok(()),
-                    other => Err(vcs::TextError::expected(format!("expected '}}', found {other:?}"), span, "}")),
-                }
-            }
-
-            fn expect_rbracket(&mut self) -> Result<(), vcs::TextError> {
-                let span = self.span();
-                match self.bump() {
-                    Tok::RBracket => Ok(()),
-                    other => Err(vcs::TextError::expected(format!("expected ']', found {other:?}"), span, "]")),
-                }
-            }
-
-            fn expect_str(&mut self) -> Result<String, vcs::TextError> {
-                let span = self.span();
-                match self.bump() {
-                    Tok::Str(s) => Ok(s),
-                    other => Err(vcs::TextError::expected(format!("expected a quoted string, found {other:?}"), span, "string")),
-                }
-            }
-
-            /// 🗺️ Greedily reads `key=value` tokens (order-independent) until a token that isn't one —
-            /// the generic header-field reader every construct (document/camera/layer/mask/asset) is
-            /// built on.
-            fn parse_kv_map(&mut self) -> Result<HashMap<String, (FieldValue, vcs::TextSpan)>, vcs::TextError> {
-                let mut map = HashMap::new();
-                loop {
-                    let word = match self.peek() {
-                        Tok::Word(w) if w.contains('=') => w.clone(),
-                        _ => break,
-                    };
-                    let span = self.span();
-                    self.bump();
-                    let (key, rest) = word.split_once('=').expect("word already checked to contain '='");
-                    let value = if rest.is_empty() {
-                        FieldValue::Str(self.expect_str()?)
-                    } else {
-                        FieldValue::Word(rest.to_string())
-                    };
-                    map.insert(key.to_string(), (value, span));
-                }
-                Ok(map)
-            }
-        }
-
-        type FieldMap = HashMap<String, (FieldValue, vcs::TextSpan)>;
-
-        fn kv_str(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
-            match map.get(key) {
-                Some((FieldValue::Str(s), _)) => Ok(s.clone()),
-                Some((FieldValue::Word(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must be a quoted string"), *field_span, "string")),
-                None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
-            }
-        }
-
-        fn kv_opt_str(map: &FieldMap, key: &str) -> Option<String> {
-            match map.get(key) {
-                Some((FieldValue::Str(s), _)) => Some(s.clone()),
-                _ => None,
-            }
-        }
-
-        fn kv_word(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<String, vcs::TextError> {
-            match map.get(key) {
-                Some((FieldValue::Word(w), _)) => Ok(w.clone()),
-                Some((FieldValue::Str(_), field_span)) => Err(vcs::TextError::expected(format!("field '{key}' must not be quoted"), *field_span, "word")),
-                None => Err(vcs::TextError::new(format!("missing required field '{key}'"), span)),
-            }
-        }
-
-        fn kv_num(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f64, vcs::TextError> {
-            let word = kv_word(map, key, span)?;
-            word.parse::<f64>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
-        }
-
-        fn kv_num32(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<f32, vcs::TextError> {
-            let word = kv_word(map, key, span)?;
-            word.parse::<f32>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be a number"), span, "number"))
-        }
-
-        fn kv_opt_num32(map: &FieldMap, key: &str) -> Option<f32> {
-            match map.get(key) {
-                Some((FieldValue::Word(w), _)) => w.parse::<f32>().ok(),
-                _ => None,
-            }
-        }
-
-        fn kv_bool(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<bool, vcs::TextError> {
-            match kv_word(map, key, span)?.as_str() {
-                "true" => Ok(true),
-                "false" => Ok(false),
-                _ => Err(vcs::TextError::expected(format!("field '{key}' must be 'true' or 'false'"), span, "true|false")),
-            }
-        }
-
-        fn kv_opt_bool(map: &FieldMap, key: &str) -> Option<bool> {
-            match map.get(key) {
-                Some((FieldValue::Word(w), _)) if w == "true" => Some(true),
-                Some((FieldValue::Word(w), _)) if w == "false" => Some(false),
-                _ => None,
-            }
-        }
-
-        fn kv_opt_num(map: &FieldMap, key: &str) -> Option<f64> {
-            match map.get(key) {
-                Some((FieldValue::Word(w), _)) => w.parse::<f64>().ok(),
-                _ => None,
-            }
-        }
-
-        fn kv_opt_u32(map: &FieldMap, key: &str) -> Option<u32> {
-            match map.get(key) {
-                Some((FieldValue::Word(w), _)) => w.parse::<u32>().ok(),
-                _ => None,
-            }
-        }
-
-        fn kv_usize(map: &FieldMap, key: &str, span: vcs::TextSpan) -> Result<usize, vcs::TextError> {
-            let word = kv_word(map, key, span)?;
-            word.parse::<usize>().map_err(|_| vcs::TextError::expected(format!("field '{key}' must be an unsigned integer"), span, "uint"))
-        }
-
-        //#region Value
-        /// 🧬 Recursive value grammar backing `RasterLayerNode::Adjustment`'s free-form `params` map —
-        /// number/bool/null/string plus `[ ]` arrays and `{ key=value }` objects, so any `serde_json::Value`
-        /// an adjustment kind ever needs round-trips without a JSON-in-a-string escape hatch.
-        fn parse_scalar_word(word: &str, span: vcs::TextSpan) -> Result<serde_json::Value, vcs::TextError> {
-            match word {
-                "true" => Ok(serde_json::Value::Bool(true)),
-                "false" => Ok(serde_json::Value::Bool(false)),
-                "null" => Ok(serde_json::Value::Null),
-                _ => word
-                    .parse::<f64>()
-                    .map(serde_json::Value::from)
-                    .map_err(|_| vcs::TextError::expected(format!("invalid value '{word}'"), span, "number|true|false|null")),
-            }
-        }
-
-        fn parse_value(p: &mut Parser) -> Result<serde_json::Value, vcs::TextError> {
-            let span = p.span();
-            match p.peek().clone() {
-                Tok::Str(s) => {
-                    p.bump();
-                    Ok(serde_json::Value::String(s))
-                }
-                Tok::LBracket => {
-                    p.bump();
-                    let mut items = Vec::new();
-                    while !p.at_rbracket() {
-                        items.push(parse_value(p)?);
-                    }
-                    p.expect_rbracket()?;
-                    Ok(serde_json::Value::Array(items))
-                }
-                Tok::LBrace => {
-                    p.bump();
-                    let mut map = serde_json::Map::new();
-                    while !p.at_rbrace() {
-                        let entry_span = p.span();
-                        let word = p.expect_word()?;
-                        let (key, value) = parse_kv_value(&word, entry_span, p)?;
-                        map.insert(key, value);
-                    }
-                    p.expect_rbrace()?;
-                    Ok(serde_json::Value::Object(map))
-                }
-                Tok::Word(w) => {
-                    p.bump();
-                    parse_scalar_word(&w, span)
-                }
-                other => Err(vcs::TextError::expected(format!("expected a value, found {other:?}"), span, "value")),
-            }
-        }
-
-        /// 🔑 Splits a `key=value`/`key=` token and reads its value — the value is either the inline
-        /// scalar bareword already in `rest`, or (when `rest` is empty) whatever follows: a quoted
-        /// string, a `[ ]` array, or a `{ }` object, via {@link parse_value}.
-        fn parse_kv_value(word: &str, entry_span: vcs::TextSpan, p: &mut Parser) -> Result<(String, serde_json::Value), vcs::TextError> {
-            let Some((key, rest)) = word.split_once('=') else {
-                return Err(vcs::TextError::expected("expected 'key=value' in params", entry_span, "key=value"));
-            };
-            let value = if rest.is_empty() { parse_value(p)? } else { parse_scalar_word(rest, entry_span)? };
-            Ok((key.to_string(), value))
-        }
-
-        fn parse_params(p: &mut Parser) -> Result<serde_json::Map<String, serde_json::Value>, vcs::TextError> {
-            p.expect_lbrace()?;
-            let mut map = serde_json::Map::new();
-            while !p.at_rbrace() {
-                let entry_span = p.span();
-                let word = p.expect_word()?;
-                let (key, value) = parse_kv_value(&word, entry_span, p)?;
-                map.insert(key, value);
-            }
-            p.expect_rbrace()?;
-            Ok(map)
-        }
-
-        fn print_value(value: &serde_json::Value) -> String {
-            match value {
-                serde_json::Value::Null => "null".to_string(),
-                serde_json::Value::Bool(b) => b.to_string(),
-                serde_json::Value::Number(n) => n.to_string(),
-                serde_json::Value::String(s) => quote(s),
-                serde_json::Value::Array(items) => format!("[{}]", items.iter().map(print_value).collect::<Vec<_>>().join(" ")),
-                serde_json::Value::Object(map) => {
-                    format!("{{ {} }}", map.iter().map(|(k, v)| format!("{k}={}", print_value(v))).collect::<Vec<_>>().join(" "))
-                }
-            }
-        }
-        //#endregion Value
-
-        fn parse_mask(p: &mut Parser) -> Result<RasterLayerMask, vcs::TextError> {
-            p.expect_keyword("mask")?;
-            p.expect_lbrace()?;
-            let span = p.span();
-            let map = p.parse_kv_map()?;
-            p.expect_rbrace()?;
-            Ok(RasterLayerMask {
-                enabled: kv_bool(&map, "enabled", span)?,
-                linked: kv_bool(&map, "linked", span)?,
-                invert: kv_bool(&map, "invert", span)?,
-                width: kv_opt_u32(&map, "width"),
-                height: kv_opt_u32(&map, "height"),
-            })
-        }
-
-        /// 📥 Parses one layer node (`pixel`/`group`/`adjustment`), including its optional trailing
-        /// `mask { ... }` and (for `group`) `{ children }` / (for `adjustment`) `params { ... }`.
-        fn parse_layer(p: &mut Parser) -> Result<RasterLayerNode, vcs::TextError> {
-            let span = p.span();
-            let kind = p.expect_word()?;
-            let map = p.parse_kv_map()?;
-            let id = kv_str(&map, "id", span)?;
-            let name = kv_str(&map, "name", span)?;
-            let visible = kv_bool(&map, "visible", span)?;
-            let opacity = kv_num32(&map, "opacity", span)?;
-            let blend_mode = kv_str(&map, "blend", span)?;
-            let transform = RasterTransform {
-                x: kv_num(&map, "x", span)?,
-                y: kv_num(&map, "y", span)?,
-                scale_x: kv_num(&map, "scaleX", span)?,
-                scale_y: kv_num(&map, "scaleY", span)?,
-                rotation: kv_num(&map, "rotation", span)?,
-            };
-            match kind.as_str() {
-                "pixel" => {
-                    let width = kv_opt_u32(&map, "width");
-                    let height = kv_opt_u32(&map, "height");
-                    let image_key = kv_opt_str(&map, "image");
-                    let mask = if p.at_word("mask") { Some(parse_mask(p)?) } else { None };
-                    Ok(RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key })
-                }
-                "group" => {
-                    let mask = if p.at_word("mask") { Some(parse_mask(p)?) } else { None };
-                    let children = if p.at_lbrace() {
-                        p.bump();
-                        let mut children = Vec::new();
-                        while !p.at_rbrace() {
-                            children.push(parse_layer(p)?);
-                        }
-                        p.expect_rbrace()?;
-                        children
-                    } else {
-                        Vec::new()
-                    };
-                    Ok(RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children })
-                }
-                "adjustment" => {
-                    let adjustment_kind = kv_str(&map, "kind", span)?;
-                    let params = if p.at_word("params") {
-                        p.bump();
-                        parse_params(p)?
-                    } else {
-                        serde_json::Map::new()
-                    };
-                    Ok(RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params })
-                }
-                other => Err(vcs::TextError::expected(format!("unknown layer kind '{other}'"), span, "pixel|group|adjustment")),
-            }
-        }
-
-        /// 📥 Parses a full `.raster` document: `raster`/`camera` (required, any order-independent
-        /// fields), then `assets`/`layers` (each optional, in any order).
-        pub(super) fn parse_document(text: &str) -> Result<RasterProjection, vcs::TextError> {
-            let toks = lex(text)?;
-            let mut p = Parser { toks, pos: 0 };
-
-            let doc_span = p.span();
-            p.expect_keyword("raster")?;
-            let doc_map = p.parse_kv_map()?;
-            let id = kv_str(&doc_map, "id", doc_span)?;
-            let schema = kv_str(&doc_map, "schema", doc_span)?;
-            let title = kv_opt_str(&doc_map, "title");
-
-            let camera_span = p.span();
-            p.expect_keyword("camera")?;
-            let camera_map = p.parse_kv_map()?;
-            let camera = RasterCamera {
-                x: kv_num(&camera_map, "x", camera_span)?,
-                y: kv_num(&camera_map, "y", camera_span)?,
-                zoom: kv_num(&camera_map, "zoom", camera_span)?,
-            };
-
-            let mut assets = HashMap::new();
-            let mut layers = Vec::new();
-            loop {
-                let keyword = match p.peek() {
-                    Tok::Word(w) => w.clone(),
-                    _ => break,
-                };
-                match keyword.as_str() {
-                    "assets" => {
-                        p.bump();
-                        p.expect_lbrace()?;
-                        while !p.at_rbrace() {
-                            let key = p.expect_word()?;
-                            p.expect_lbrace()?;
-                            let entry_span = p.span();
-                            let entry_map = p.parse_kv_map()?;
-                            p.expect_rbrace()?;
-                            assets.insert(
-                                key,
-                                RasterImageAsset {
-                                    mime: kv_str(&entry_map, "mime", entry_span)?,
-                                    data: kv_str(&entry_map, "data", entry_span)?,
-                                },
-                            );
-                        }
-                        p.expect_rbrace()?;
-                    }
-                    "layers" => {
-                        p.bump();
-                        p.expect_lbrace()?;
-                        while !p.at_rbrace() {
-                            layers.push(parse_layer(&mut p)?);
-                        }
-                        p.expect_rbrace()?;
-                    }
-                    other => return Err(vcs::TextError::expected(format!("unknown document section '{other}'"), p.span(), "assets|layers")),
-                }
-            }
-
-            Ok(RasterProjection { schema, id, title, camera, layers, assets })
-        }
-
-        /// ⚡ Parses one op-log line. Every variant but `replace-document ...` (which embeds a whole
-        /// compact document — handled as a direct string slice before tokenizing, since it is itself a
-        /// nested instance of this same grammar) shares the `Parser` used by {@link parse_document}.
-        pub(super) fn parse_operation(line: &str) -> Result<super::RasterOperation, vcs::TextError> {
-            use super::RasterOperation;
-            let trimmed = line.trim_start();
-            if let Some(rest) = trimmed.strip_prefix("replace-document ") {
-                return Ok(RasterOperation::ReplaceDocument { document: parse_document(rest)? });
-            }
-
-            let toks = lex(line)?;
-            let mut p = Parser { toks, pos: 0 };
-            let span = p.span();
-            let keyword = p.expect_word()?;
-            match keyword.as_str() {
-                "add-layer" => {
-                    let map = p.parse_kv_map()?;
-                    let parent_id = kv_opt_str(&map, "parent");
-                    let index = kv_usize(&map, "index", span)?;
-                    let layer = parse_layer(&mut p)?;
-                    Ok(RasterOperation::AddLayer { parent_id, index, layer })
-                }
-                "remove-layer" => {
-                    let map = p.parse_kv_map()?;
-                    Ok(RasterOperation::RemoveLayer { layer_id: kv_str(&map, "id", span)? })
-                }
-                "patch-layer" => {
-                    let map = p.parse_kv_map()?;
-                    let layer_id = kv_str(&map, "id", span)?;
-                    let patch = RasterLayerPatch {
-                        name: kv_opt_str(&map, "name"),
-                        visible: kv_opt_bool(&map, "visible"),
-                        opacity: kv_opt_num32(&map, "opacity"),
-                        blend_mode: kv_opt_str(&map, "blend"),
-                        transform_x: kv_opt_num(&map, "x"),
-                        transform_y: kv_opt_num(&map, "y"),
-                        width: kv_opt_u32(&map, "width"),
-                        height: kv_opt_u32(&map, "height"),
-                        adjustment_kind: kv_opt_str(&map, "kind"),
-                    };
-                    Ok(RasterOperation::PatchLayer { layer_id, patch })
-                }
-                "move-layer" => {
-                    let map = p.parse_kv_map()?;
-                    Ok(RasterOperation::MoveLayer {
-                        layer_id: kv_str(&map, "id", span)?,
-                        parent_id: kv_opt_str(&map, "parent"),
-                        index: kv_usize(&map, "index", span)?,
-                    })
-                }
-                "set-camera" => {
-                    let map = p.parse_kv_map()?;
-                    Ok(RasterOperation::SetCamera {
-                        camera: RasterCamera {
-                            x: kv_num(&map, "x", span)?,
-                            y: kv_num(&map, "y", span)?,
-                            zoom: kv_num(&map, "zoom", span)?,
-                        },
-                    })
-                }
-                other => Err(vcs::TextError::expected(format!("unknown operation '{other}'"), span, "operation keyword")),
-            }
-        }
-        //#endregion Parser
-
-        //#region Printer
-        fn quote(value: &str) -> String {
-            let mut out = String::with_capacity(value.len() + 2);
-            out.push('"');
-            for ch in value.chars() {
-                match ch {
-                    '\\' => out.push_str("\\\\"),
-                    '"' => out.push_str("\\\""),
-                    '\n' => out.push_str("\\n"),
-                    _ => out.push(ch),
-                }
-            }
-            out.push('"');
-            out
-        }
-
-        fn fmt_num(value: f64) -> String {
-            value.to_string()
-        }
-
-        fn fmt_num32(value: f32) -> String {
-            value.to_string()
-        }
-
-        fn indent_str(depth: usize) -> String {
-            "  ".repeat(depth)
-        }
-
-        /// 🧱 Wraps `items` (each already rendered, without its own leading indentation) in `{ }`, one
-        /// per line indented at `depth + 1` when `pretty`, or space-joined on one line otherwise.
-        fn wrap_body(items: &[String], depth: usize, pretty: bool) -> String {
-            if pretty {
-                let inner_pad = indent_str(depth + 1);
-                let outer_pad = indent_str(depth);
-                let body: String = items.iter().map(|item| format!("{inner_pad}{item}\n")).collect();
-                format!("{{\n{body}{outer_pad}}}")
-            } else {
-                format!("{{ {} }}", items.join(" "))
-            }
-        }
-
-        fn common_header(id: &str, name: &str, visible: bool, opacity: f32, blend_mode: &str, transform: &RasterTransform) -> String {
-            format!(
-                "id={} name={} visible={visible} opacity={} blend={} x={} y={} scaleX={} scaleY={} rotation={}",
-                quote(id),
-                quote(name),
-                fmt_num32(opacity),
-                quote(blend_mode),
-                fmt_num(transform.x),
-                fmt_num(transform.y),
-                fmt_num(transform.scale_x),
-                fmt_num(transform.scale_y),
-                fmt_num(transform.rotation),
-            )
-        }
-
-        fn print_mask(mask: &RasterLayerMask) -> String {
-            let mut body = format!("enabled={} linked={} invert={}", mask.enabled, mask.linked, mask.invert);
-            if let Some(width) = mask.width {
-                body.push_str(&format!(" width={width}"));
-            }
-            if let Some(height) = mask.height {
-                body.push_str(&format!(" height={height}"));
-            }
-            format!("mask {{ {body} }}")
-        }
-
-        fn print_params(params: &serde_json::Map<String, serde_json::Value>, depth: usize, pretty: bool) -> String {
-            let items: Vec<String> = params.iter().map(|(key, value)| format!("{key}={}", print_value(value))).collect();
-            format!("params {}", wrap_body(&items, depth, pretty))
-        }
-
-        fn print_layer(layer: &RasterLayerNode, depth: usize, pretty: bool) -> String {
-            match layer {
-                RasterLayerNode::Pixel { id, name, visible, opacity, blend_mode, transform, mask, width, height, image_key } => {
-                    let mut header = format!("pixel {}", common_header(id, name, *visible, *opacity, blend_mode, transform));
-                    if let Some(width) = width {
-                        header.push_str(&format!(" width={width}"));
-                    }
-                    if let Some(height) = height {
-                        header.push_str(&format!(" height={height}"));
-                    }
-                    if let Some(image_key) = image_key {
-                        header.push_str(&format!(" image={}", quote(image_key)));
-                    }
-                    match mask {
-                        Some(mask) => format!("{header} {}", print_mask(mask)),
-                        None => header,
-                    }
-                }
-                RasterLayerNode::Group { id, name, visible, opacity, blend_mode, transform, mask, children } => {
-                    let mut header = format!("group {}", common_header(id, name, *visible, *opacity, blend_mode, transform));
-                    if let Some(mask) = mask {
-                        header = format!("{header} {}", print_mask(mask));
-                    }
-                    if children.is_empty() {
-                        header
-                    } else {
-                        let items: Vec<String> = children.iter().map(|child| print_layer(child, depth + 1, pretty)).collect();
-                        format!("{header} {}", wrap_body(&items, depth, pretty))
-                    }
-                }
-                RasterLayerNode::Adjustment { id, name, visible, opacity, blend_mode, transform, adjustment_kind, params } => {
-                    let header = format!("adjustment {} kind={}", common_header(id, name, *visible, *opacity, blend_mode, transform), quote(adjustment_kind));
-                    if params.is_empty() {
-                        header
-                    } else {
-                        format!("{header} {}", print_params(params, depth, pretty))
-                    }
-                }
-            }
-        }
-
-        fn print_assets_section(assets: &HashMap<String, RasterImageAsset>, depth: usize, pretty: bool) -> String {
-            let mut keys: Vec<&String> = assets.keys().collect();
-            keys.sort();
-            let items: Vec<String> = keys
-                .into_iter()
-                .map(|key| {
-                    let asset = &assets[key];
-                    format!("{key} {{ mime={} data={} }}", quote(&asset.mime), quote(&asset.data))
-                })
-                .collect();
-            format!("assets {}", wrap_body(&items, depth, pretty))
-        }
-
-        fn print_layers_section(layers: &[RasterLayerNode], depth: usize, pretty: bool) -> String {
-            let items: Vec<String> = layers.iter().map(|layer| print_layer(layer, depth + 1, pretty)).collect();
-            format!("layers {}", wrap_body(&items, depth, pretty))
-        }
-
-        /// 📤 Renders `document` as `raster`/`camera` (always present) followed by `assets`/`layers`
-        /// when non-empty, joined by newlines when `pretty` or single spaces otherwise (see
-        /// {@link parse_document} for the mirrored grammar).
-        pub(super) fn print_document(document: &RasterProjection, pretty: bool) -> String {
-            let mut parts = Vec::new();
-
-            let mut header = format!("raster id={} schema={}", quote(&document.id), quote(&document.schema));
-            if let Some(title) = &document.title {
-                header.push_str(&format!(" title={}", quote(title)));
-            }
-            parts.push(header);
-
-            parts.push(format!("camera x={} y={} zoom={}", fmt_num(document.camera.x), fmt_num(document.camera.y), fmt_num(document.camera.zoom)));
-
-            if !document.assets.is_empty() {
-                parts.push(print_assets_section(&document.assets, 0, pretty));
-            }
-            if !document.layers.is_empty() {
-                parts.push(print_layers_section(&document.layers, 0, pretty));
-            }
-
-            parts.join(if pretty { "\n" } else { " " })
-        }
-
-        /// ⚡ Renders one `RasterOperation` as a single line — `AddLayer`/`ReplaceDocument` reuse the
-        /// compact (space-joined) form of {@link print_layer}/{@link print_document}.
-        pub(super) fn print_operation(operation: &super::RasterOperation) -> String {
-            use super::RasterOperation;
-            match operation {
-                RasterOperation::AddLayer { parent_id, index, layer } => {
-                    let mut header = format!("add-layer index={index}");
-                    if let Some(parent) = parent_id {
-                        header.push_str(&format!(" parent={}", quote(parent)));
-                    }
-                    format!("{header} {}", print_layer(layer, 0, false))
-                }
-                RasterOperation::RemoveLayer { layer_id } => format!("remove-layer id={}", quote(layer_id)),
-                RasterOperation::PatchLayer { layer_id, patch } => {
-                    let mut line = format!("patch-layer id={}", quote(layer_id));
-                    if let Some(name) = &patch.name {
-                        line.push_str(&format!(" name={}", quote(name)));
-                    }
-                    if let Some(visible) = patch.visible {
-                        line.push_str(&format!(" visible={visible}"));
-                    }
-                    if let Some(opacity) = patch.opacity {
-                        line.push_str(&format!(" opacity={}", fmt_num32(opacity)));
-                    }
-                    if let Some(blend_mode) = &patch.blend_mode {
-                        line.push_str(&format!(" blend={}", quote(blend_mode)));
-                    }
-                    if let Some(x) = patch.transform_x {
-                        line.push_str(&format!(" x={}", fmt_num(x)));
-                    }
-                    if let Some(y) = patch.transform_y {
-                        line.push_str(&format!(" y={}", fmt_num(y)));
-                    }
-                    if let Some(width) = patch.width {
-                        line.push_str(&format!(" width={width}"));
-                    }
-                    if let Some(height) = patch.height {
-                        line.push_str(&format!(" height={height}"));
-                    }
-                    if let Some(adjustment_kind) = &patch.adjustment_kind {
-                        line.push_str(&format!(" kind={}", quote(adjustment_kind)));
-                    }
-                    line
-                }
-                RasterOperation::MoveLayer { layer_id, parent_id, index } => {
-                    let mut line = format!("move-layer id={} index={index}", quote(layer_id));
-                    if let Some(parent) = parent_id {
-                        line.push_str(&format!(" parent={}", quote(parent)));
-                    }
-                    line
-                }
-                RasterOperation::SetCamera { camera } => format!("set-camera x={} y={} zoom={}", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
-                RasterOperation::ReplaceDocument { document } => format!("replace-document {}", print_document(document, false)),
-            }
-        }
-        //#endregion Printer
-    }
-
-    impl DocumentDsl for RasterProjection {
-        const EXTENSION: &'static str = "raster";
-
-        fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-            raster_text::parse_document(text)
-        }
-
-        fn print_dsl(&self) -> String {
-            raster_text::print_document(self, true)
-        }
-    }
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
-    impl OpText for RasterOperation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            raster_text::parse_operation(line)
-        }
-
-        fn print_op(&self) -> String {
-            raster_text::print_operation(self)
-        }
-    }
     //#endregion 🔖OpText
 
     //#region 🔖WasmDocumentVcs
@@ -1456,7 +643,7 @@ pub(crate) mod domain {
         #[test]
         fn add_remove_patch_layer_round_trip() {
             let projection = empty_raster_projection();
-            let added = round_trip(&projection, &RasterOperation::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") });
+            let added = round_trip(&projection, &RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) });
             assert_eq!(added.layers.len(), 1);
             let patched = round_trip(
                 &added,
@@ -1509,7 +696,7 @@ pub(crate) mod domain {
             ));
             store
                 .dispatch(DocumentVcsCommand::Apply {
-                    operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: pixel_layer("l1", "Base") }],
+                    operations: vec![RasterOperation::AddLayer { parent_id: None, index: 0, layer: Box::new(pixel_layer("l1", "Base")) }],
                     description: None,
                 })
                 .expect("apply");
@@ -1536,10 +723,10 @@ use semio_framework_plugin::{SurfaceKind,
 };
 use crate::domain::{
     empty_raster_projection, find_layer, flatten_raster_layers, layer_name, layer_node_id, layer_visible,
-    RasterCamera, RasterImageAsset, RasterLayerNode, RasterLayerPatch, RasterOperation,
+    RasterCamera, RasterImageAsset, RasterLayerMask, RasterLayerNode, RasterLayerPatch, RasterOperation,
     RasterProjection as RasterDocument, RasterTransform,
 };
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 use serde::{Deserialize, Serialize};
 use serde_json::{json, Value};
 use std::sync::atomic::{AtomicU32, Ordering};
@@ -2258,13 +1445,13 @@ impl DocumentApp for RasterPlayApp {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
                 self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer }])
+                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
             }
             "dropLayerKind" => {
                 let kind = args.and_then(|value| value.get("kind")).and_then(|value| value.as_str()).unwrap_or("pixel");
                 let layer = create_layer_of_kind(kind);
                 self.runtime.selected_ids = vec![layer_node_id(&layer).to_string()];
-                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer }])
+                ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(layer) }])
             }
             "deleteLayer" => {
                 let Some(target_id) = args.and_then(|value| value.get("layerId")).and_then(|value| value.as_str()) else {
@@ -2284,7 +1471,7 @@ impl DocumentApp for RasterPlayApp {
                     Some(layer) => {
                         let copy = clone_layer(layer);
                         self.runtime.selected_ids = vec![layer_node_id(&copy).to_string()];
-                        ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: copy }])
+                        ActionEmit::operations(vec![RasterOperation::AddLayer { parent_id: None, index: document.layers.len(), layer: Box::new(copy) }])
                     }
                     None => ActionEmit::default(),
                 }
@@ -2413,7 +1600,7 @@ fn create_raster_app() -> App {
             .icon_id("raster")
             .mode("edit", "Edit")
             .default_mode_id("edit")
-            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "layers")
+            .window_kind(RASTER_PLAY_WINDOW_COMPOSITE, "Composite", RASTER_PLAY_BODY_COMPOSITE, SurfaceKind::Paint2d, "image")
             .window_kind(RASTER_PLAY_WINDOW_NAVIGATOR, "Navigator", RASTER_PLAY_BODY_NAVIGATOR, SurfaceKind::Paint2d, "focus")
             .default_layout(create_default_layout(
                 &[RASTER_PLAY_WINDOW_COMPOSITE.into(), RASTER_PLAY_WINDOW_NAVIGATOR.into()],
@@ -2500,7 +1687,7 @@ fn raster_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Re
     if let RasterLayerNode::Pixel { image_key, .. } = &mut layer {
         *image_key = Some(asset_key.clone());
     }
-    let mut assets = HashMap::new();
+    let mut assets = BTreeMap::new();
     assets.insert(asset_key, RasterImageAsset { mime: "image/png".into(), data });
     let document = RasterDocument {
         schema: RASTER_DOCUMENT_SCHEMA.into(),
@@ -2850,7 +2037,7 @@ mod tests {
 
     //#region 🔖DslAndOpText
     fn representative_raster_document() -> RasterDocument {
-        let mut assets = HashMap::new();
+        let mut assets = BTreeMap::new();
         assets.insert(
             "asset-1".into(),
             RasterImageAsset { mime: "image/png".into(), data: "data:image/png;base64,abc==".into() },
@@ -2943,7 +2130,7 @@ mod tests {
         vcs::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
             parent_id: None,
             index: 0,
-            layer: RasterLayerNode::Pixel {
+            layer: Box::new(RasterLayerNode::Pixel {
                 id: "l1".into(),
                 name: "Base".into(),
                 visible: true,
@@ -2954,12 +2141,12 @@ mod tests {
                 width: Some(512),
                 height: Some(512),
                 image_key: None,
-            },
+            }),
         });
         vcs::test_support::assert_op_line_round_trip(&RasterOperation::AddLayer {
             parent_id: Some("group-1".into()),
             index: 3,
-            layer: RasterLayerNode::Group {
+            layer: Box::new(RasterLayerNode::Group {
                 id: "g2".into(),
                 name: "Nested".into(),
                 visible: true,
@@ -2968,7 +2155,7 @@ mod tests {
                 transform: RasterTransform::default(),
                 mask: Some(RasterLayerMask { enabled: true, linked: true, invert: false, width: Some(10), height: Some(20) }),
                 children: vec![],
-            },
+            }),
         });
         vcs::test_support::assert_op_line_round_trip(&RasterOperation::RemoveLayer { layer_id: "l1".into() });
         vcs::test_support::assert_op_line_round_trip(&RasterOperation::PatchLayer {
@@ -2994,7 +2181,7 @@ mod tests {
                 operations: vec![RasterOperation::AddLayer {
                     parent_id: None,
                     index: 1,
-                    layer: RasterLayerNode::Adjustment {
+                    layer: Box::new(RasterLayerNode::Adjustment {
                         id: "adjust-text".into(),
                         name: "Levels".into(),
                         visible: true,
@@ -3003,7 +2190,7 @@ mod tests {
                         transform: RasterTransform::default(),
                         adjustment_kind: "levels".into(),
                         params: serde_json::Map::new(),
-                    },
+                    }),
                 }],
                 description: None,
             })

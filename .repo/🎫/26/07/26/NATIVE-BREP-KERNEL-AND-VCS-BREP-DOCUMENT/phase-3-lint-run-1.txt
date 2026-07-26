@@ -1,0 +1,466 @@
+    Blocking waiting for file lock on build directory
+warning: redundant field names in struct initialization
+    --> ui/wgpu/rs/lib.rs:1264:9
+     |
+1264 |         icon_id: icon_id,
+     |         ^^^^^^^^^^^^^^^^ help: replace it with: `icon_id`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_field_names
+     = note: `-W clippy::redundant-field-names` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::redundant_field_names)]`
+
+warning: redundant field names in struct initialization
+    --> ui/wgpu/rs/lib.rs:1285:9
+     |
+1285 |         icon_id: icon_id,
+     |         ^^^^^^^^^^^^^^^^ help: replace it with: `icon_id`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_field_names
+
+warning: redundant field names in struct initialization
+    --> ui/wgpu/rs/lib.rs:1306:9
+     |
+1306 |         icon_id: icon_id,
+     |         ^^^^^^^^^^^^^^^^ help: replace it with: `icon_id`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_field_names
+
+warning: method `from_str` can be confused for the standard trait method `std::str::FromStr::from_str`
+    --> ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:912:5
+     |
+ 912 | /     pub fn from_str(s: &str) -> Option<Self> {
+ 913 | |         match s.trim() {
+ 914 | |             "alert-circle" => Some(Self::AlertCircle),
+ 915 | |             "align-left" => Some(Self::AlignLeft),
+...    |
+1140 | |     }
+     | |_____^
+     |
+     = help: consider implementing the trait `std::str::FromStr` or choosing a less ambiguous method name
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#should_implement_trait
+     = note: `-W clippy::should-implement-trait` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::should_implement_trait)]`
+
+warning: using `clone` on type `IconName` which implements the `Copy` trait
+    --> ui/wgpu/rs/lib.rs:1345:22
+     |
+1345 |             icon_id: utility.icon_id.clone(),
+     |                      ^^^^^^^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `utility.icon_id`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+     = note: `-W clippy::clone-on-copy` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::clone_on_copy)]`
+
+warning: using `clone` on type `IconName` which implements the `Copy` trait
+    --> ui/wgpu/rs/lib.rs:1376:34
+     |
+1376 |                         icon_id: utility.icon_id.clone(),
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^ help: try removing the `clone` call: `utility.icon_id`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#clone_on_copy
+
+warning: `ui_wgpu` (lib) generated 6 warnings (run `cargo clippy --fix --lib -p ui_wgpu -- ` to apply 5 suggestions)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:142:33
+    |
+142 |         for tri in self.indices.chunks_exact(3) {
+    |                                 ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+    = note: `-W clippy::chunks-exact-to-as-chunks` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::chunks_exact_to_as_chunks)]`
+
+warning: using `chunks_exact_mut` with a constant chunk size
+   --> framework/core/rs/lib.rs:163:35
+    |
+163 |         for chunk in self.normals.chunks_exact_mut(3) {
+    |                                   ^^^^^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks_mut::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:176:37
+    |
+176 |         for chunk in self.positions.chunks_exact(3) {
+    |                                     ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: the loop variable `tri` is only used to index `face_ids`
+   --> framework/core/rs/lib.rs:472:24
+    |
+472 |             for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
+    |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_range_loop
+    = note: `-W clippy::needless-range-loop` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::needless_range_loop)]`
+help: consider using an iterator
+    |
+472 -             for tri in start_tri..(start_tri + count_tri).min(triangle_count) {
+472 +             for <item> in face_ids.iter_mut().take((start_tri + count_tri).min(triangle_count)).skip(start_tri) {
+    |
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:485:33
+    |
+485 |     for chunk in mesh.positions.chunks_exact(3) {
+    |                                 ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:489:35
+    |
+489 |         for chunk in mesh.normals.chunks_exact(3) {
+    |                                   ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:493:29
+    |
+493 |     for tri in mesh.indices.chunks_exact(3) {
+    |                             ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: this argument is passed by value, but not consumed in the function body
+   --> framework/core/rs/lib.rs:718:57
+    |
+718 | fn append_glb_primitive(mesh: &mut MeshData, primitive: gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                         ^^^^^^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+    = note: requested on the command line with `-W clippy::needless-pass-by-value`
+help: consider taking a reference instead
+    |
+718 | fn append_glb_primitive(mesh: &mut MeshData, primitive: &gltf::Primitive<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                         +
+
+warning: called `map(<f>).unwrap_or_else(<g>)` on an `Option` value
+   --> framework/core/rs/lib.rs:724:36
+    |
+724 | ... = reader.read_indices().map(|indices| indices.into_u32().collect()).unwrap_or_else(|| (0..positions.len() as u32).collect());
+    |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: try: `reader.read_indices().map_or_else(|| (0..positions.len() as u32).collect(), |indices| indices.into_u32().collect())`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+    = note: requested on the command line with `-W clippy::map-unwrap-or`
+
+warning: this argument is passed by value, but not consumed in the function body
+   --> framework/core/rs/lib.rs:750:49
+    |
+750 | fn append_glb_mesh(mesh: &mut MeshData, source: gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                 ^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+    |
+750 | fn append_glb_mesh(mesh: &mut MeshData, source: &gltf::Mesh<'_>, matrix: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                                 +
+
+warning: this argument is passed by value, but not consumed in the function body
+   --> framework/core/rs/lib.rs:757:47
+    |
+757 | fn append_glb_node(mesh: &mut MeshData, node: gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                               ^^^^^^^^^^^^^^
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+    |
+757 | fn append_glb_node(mesh: &mut MeshData, node: &gltf::Node<'_>, parent: GlbMatrix, bin: &[u8]) -> Result<(), String> {
+    |                                               +
+
+warning: manual implementation of `.is_multiple_of()`
+   --> framework/core/rs/lib.rs:797:11
+    |
+797 |     while data.len() % 4 != 0 {
+    |           ^^^^^^^^^^^^^^^^^^^ help: replace with: `!data.len().is_multiple_of(4)`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_is_multiple_of
+    = note: `-W clippy::manual-is-multiple-of` implied by `-W clippy::all`
+    = help: to override `-W clippy::all` add `#[allow(clippy::manual_is_multiple_of)]`
+
+warning: using `chunks_exact` with a constant chunk size
+   --> framework/core/rs/lib.rs:829:29
+    |
+829 |     for tri in mesh.indices.chunks_exact(3) {
+    |                             ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0`
+    |
+    = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: methods called `from_*` usually take no `self`
+    --> framework/core/rs/lib.rs:1193:18
+     |
+1193 |     fn from_form(&self) -> MediaForm;
+     |                  ^^^^^
+     |
+     = help: consider choosing a less ambiguous name
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#wrong_self_convention
+     = note: `-W clippy::wrong-self-convention` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::wrong_self_convention)]`
+
+warning: using `chunks_exact` with a constant chunk size
+    --> framework/core/rs/lib.rs:2275:50
+     |
+2275 |     let vertices: Vec<[f64; 3]> = mesh.positions.chunks_exact(3).map(|c| [c[0] as f64, c[1] as f64, c[2] as f64]).collect();
+     |                                                  ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0.iter()`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: using `chunks_exact` with a constant chunk size
+    --> framework/core/rs/lib.rs:2278:10
+     |
+2278 |         .chunks_exact(3)
+     |          ^^^^^^^^^^^^^^^ help: consider using `as_chunks` instead: `as_chunks::<3>().0.iter()`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#chunks_exact_to_as_chunks
+
+warning: called `map(<f>).unwrap_or(<a>)` on an `Option` value
+    --> framework/core/rs/lib.rs:4803:5
+     |
+4803 |     app.terminology_documents.get(terminology).map(Vec::as_slice).unwrap_or(&app.document)
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+
+warning: `semio-framework-core` (lib) generated 20 warnings (run `cargo clippy --fix --lib -p semio-framework-core -- ` to apply 11 suggestions)
+    Checking kernel_3d_brepkit v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/rs)
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:28
+     |
+7007 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:106
+     |
+7007 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:28
+     |
+7050 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:106
+     |
+7050 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> kernel/3d/brep/rs/lib.rs:5828:23
+     |
+5828 |     fn map_err(error: brepkit_operations::OperationsError) -> BrepError {
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+     = note: requested on the command line with `-W clippy::needless-pass-by-value`
+help: consider taking a reference instead
+     |
+5828 |     fn map_err(error: &brepkit_operations::OperationsError) -> BrepError {
+     |                       +
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> kernel/3d/brep/rs/lib.rs:5832:28
+     |
+5832 |     fn map_topo_err(error: TopologyError) -> BrepError {
+     |                            ^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+5832 |     fn map_topo_err(error: &TopologyError) -> BrepError {
+     |                            +
+
+warning: this argument is passed by value, but not consumed in the function body
+    --> kernel/3d/brep/rs/lib.rs:5836:26
+     |
+5836 |     fn map_io_err(error: brepkit_io::IoError) -> BrepError {
+     |                          ^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_pass_by_value
+help: consider taking a reference instead
+     |
+5836 |     fn map_io_err(error: &brepkit_io::IoError) -> BrepError {
+     |                          +
+
+warning: called `map(<f>).unwrap_or(false)` on a `Result` value
+    --> kernel/3d/brep/rs/lib.rs:5857:9
+     |
+5857 | ...   explorer::solid_faces(&self.topo, solid).map(|faces| faces.into_iter().any(|face_id| self.topo.face(face_id).ok().is_some_and(|face| matches!(face.surface(), FaceSurface::Torus(_))))).unwrap_or(false)
+     |       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#map_unwrap_or
+     = note: requested on the command line with `-W clippy::map-unwrap-or`
+help: use `is_ok_and(<f>)` instead
+     |
+5857 -         explorer::solid_faces(&self.topo, solid).map(|faces| faces.into_iter().any(|face_id| self.topo.face(face_id).ok().is_some_and(|face| matches!(face.surface(), FaceSurface::Torus(_))))).unwrap_or(false)
+5857 +         explorer::solid_faces(&self.topo, solid).is_ok_and(|faces| faces.into_iter().any(|face_id| self.topo.face(face_id).ok().is_some_and(|face| matches!(face.surface(), FaceSurface::Torus(_)))))
+     |
+
+warning: this function's return value is unnecessarily wrapped by `Result`
+    --> kernel/3d/brep/rs/lib.rs:6093:5
+     |
+6093 |     fn parse_points(points: &[Vec3]) -> Result<Vec<Point3>, BrepError> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#unnecessary_wraps
+     = note: requested on the command line with `-W clippy::unnecessary-wraps`
+help: remove `Result` from the return type...
+     |
+6093 -     fn parse_points(points: &[Vec3]) -> Result<Vec<Point3>, BrepError> {
+6093 +     fn parse_points(points: &[Vec3]) -> std::vec::Vec<brepkit_math::vec::Position<3>> {
+     |
+help: ...and then remove the surrounding `Ok()` from returning expressions
+     |
+6094 -         Ok(points.iter().map(|p| p3(*p)).collect())
+6094 +         points.iter().map(|p| p3(*p)).collect()
+     |
+
+warning: redundant clone
+    --> kernel/3d/brep/rs/lib.rs:7009:117
+     |
+7009 |         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+     |                                                                                                                     ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> kernel/3d/brep/rs/lib.rs:7009:105
+     |
+7009 |         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+     |                                                                                                         ^^^^^^^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+     = note: requested on the command line with `-W clippy::redundant-clone`
+
+warning: redundant clone
+    --> kernel/3d/brep/rs/lib.rs:7052:117
+     |
+7052 |         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+     |                                                                                                                     ^^^^^^^^ help: remove this
+     |
+note: this value is dropped without further use
+    --> kernel/3d/brep/rs/lib.rs:7052:105
+     |
+7052 |         let triangle_mesh = brepkit_operations::tessellate::TriangleMesh { positions, normals, indices: mesh.indices.clone() };
+     |                                                                                                         ^^^^^^^^^^^^
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#redundant_clone
+
+warning: very complex type used. Consider factoring parts into `type` definitions
+    --> kernel/3d/brep/rs/lib.rs:7064:69
+     |
+7064 | ..., handle: &GeometryHandle) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+     = note: `-W clippy::type-complexity` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::type_complexity)]`
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+    --> kernel/3d/brep/rs/lib.rs:7079:55
+     |
+7079 |                     let vid = oriented.oriented_start(&edge);
+     |                                                       ^^^^^ help: change this to: `edge`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+     = note: `-W clippy::needless-borrow` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::needless_borrow)]`
+
+warning: `kernel_3d_brepkit` (lib) generated 15 warnings (run `cargo clippy --fix --lib -p kernel_3d_brepkit -- ` to apply 10 suggestions)
+warning: manual `RangeInclusive::contains` implementation
+    --> kernel/3d/brep/rs/lib.rs:8039:17
+     |
+8039 | ...   assert!(dist >= 1.0 - 1e-6 && dist <= 3.0 + 1e-6, "ellipse point distance from center should be within [minor, major], got {...
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `(1.0 - 1e-6..=3.0 + 1e-6).contains(&dist)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains
+     = note: `-W clippy::manual-range-contains` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::manual_range_contains)]`
+
+warning: `kernel_3d_brepkit` (lib test) generated 16 warnings (15 duplicates) (run `cargo clippy --fix --lib -p kernel_3d_brepkit --tests -- ` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized] target(s) in 13.92s

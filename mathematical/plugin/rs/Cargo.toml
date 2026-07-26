@@ -29,5 +29,6 @@ mathematical_geometry = { path = "../../geometry/rs" }
 mathematical_algebra = { path = "../../algebra/rs" }
 semio-framework-plugin = { path = "../../../framework/plugin/rs" }
 vcs = { path = "../../../vcs/rs" }
+dsl = { path = "../../../dsl/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -83,9 +83,58 @@ import { Document, Page, pdfjs } from "react-pdf";
 import Reveal from "reveal.js";
 import "reveal.js/dist/reveal.css";
 import "./globals.css";
-import { compileMarkdownToHtml } from "./markdown.ts";
+import remarkGfm from "remark-gfm";
+import remarkParse from "remark-parse";
+import remarkRehype from "remark-rehype";
+import rehypeStringify from "rehype-stringify";
+import { unified } from "unified";
 pdfjs.GlobalWorkerOptions.workerSrc = new URL("pdfjs-dist/build/pdf.worker.min.mjs", import.meta.url).toString();
 // #endregion 🔌Adapters
+
+// #region 🔖Markdown
+/** @emoji 📝 Compiles markdown source into an HTML fragment. */
+export interface MarkdownHtmlCompiler {
+	compile(markdown: string): Promise<string>;
+}
+
+const defaultMarkdownHtmlCompiler: MarkdownHtmlCompiler = {
+	async compile(markdown) {
+		const file = await unified()
+			.use(remarkParse)
+			.use(remarkGfm)
+			.use(remarkRehype)
+			.use(rehypeStringify)
+			.process(markdown);
+		return String(file);
+	},
+};
+
+let markdownHtmlCompiler: MarkdownHtmlCompiler = defaultMarkdownHtmlCompiler;
+
+/** @emoji 🔌 Replaces the markdown HTML compiler (tests or alternate renderers). */
+export function setMarkdownHtmlCompiler(compiler: MarkdownHtmlCompiler): void {
+	markdownHtmlCompiler = compiler;
+}
+
+/** @emoji 📝 Compiles markdown through the active {@link MarkdownHtmlCompiler}. */
+export function compileMarkdownToHtml(markdown: string): Promise<string> {
+	return markdownHtmlCompiler.compile(markdown);
+}
+
+if (import.meta.vitest) {
+	const { describe, expect, it } = import.meta.vitest;
+
+	describe("compileMarkdownToHtml", () => {
+		it("renders GFM tables as HTML", async () => {
+			const html = await compileMarkdownToHtml(
+				"| A | B |\n| - | - |\n| `x` | y |",
+			);
+			expect(html).toContain("<table");
+			expect(html).toContain("<code>x</code>");
+		});
+	});
+}
+// #endregion 🔖Markdown
 
 export type {
     AffiliationEntry,

@@ -10,16 +10,16 @@ todos:
     status: completed
   - id: phase-1-wire
     content: worldProjectionSpecIconId + SET_WINDOW_ICON + Display/dock/switch tree wiring
-    status: in_progress
+    status: completed
   - id: phase-2-windows
     content: Split overloaded window/app icons (box, eye, network, camera, sigma, panel tabs, …)
-    status: pending
+    status: completed
   - id: phase-3-utilities-aliases
     content: Canonicalize same-meaning tools; split cross-meaning utilities; fix semantic aliases
-    status: pending
+    status: completed
   - id: phase-4-enforce
     content: Complete uniqueness harness coverage, fix fixtures, close ticket
-    status: pending
+    status: completed
 isProject: false
 ---
 

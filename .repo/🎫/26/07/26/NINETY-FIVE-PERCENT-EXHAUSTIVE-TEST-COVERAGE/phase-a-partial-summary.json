@@ -1,20 +1,8 @@
 {
-  "linesFound": 186570,
-  "linesHit": 108404,
-  "pct": 58.10366082435547,
+  "linesFound": 201657,
+  "linesHit": 123189,
+  "pct": 61.08838274892515,
   "perFile": [
-    {
-      "path": "/Users/ueli/Documents/semio/animate/core/rs/lib.rs",
-      "linesFound": 4312,
-      "linesHit": 0,
-      "pct": 0
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/framework/surface/tiled-map/rs/lib.rs",
-      "linesFound": 2752,
-      "linesHit": 0,
-      "pct": 0
-    },
     {
       "path": "/Users/ueli/Documents/semio/animate/present/rs/lib.rs",
       "linesFound": 856,
@@ -30,18 +18,6 @@
     {
       "path": "/Users/ueli/Documents/semio/animate/plugin/rs/lib.rs",
       "linesFound": 680,
-      "linesHit": 0,
-      "pct": 0
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/framework/surface/paint/rs/lib.rs",
-      "linesFound": 674,
-      "linesHit": 0,
-      "pct": 0
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/framework/surface/terrain/rs/lib.rs",
-      "linesFound": 269,
       "linesHit": 0,
       "pct": 0
     },
@@ -178,6 +154,12 @@
       "pct": 44.827586206896555
     },
     {
+      "path": "main.py",
+      "linesFound": 11007,
+      "linesHit": 5267,
+      "pct": 47.85136731171073
+    },
+    {
       "path": "/Users/ueli/Documents/semio/ui/wgpu/rs/lib.rs",
       "linesFound": 2528,
       "linesHit": 1233,
@@ -206,6 +188,12 @@
       "linesFound": 64,
       "linesHit": 35,
       "pct": 54.6875
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/animate/core/rs/lib.rs",
+      "linesFound": 5459,
+      "linesHit": 3176,
+      "pct": 58.17915369115223
     },
     {
       "path": "/Users/ueli/Documents/semio/kernel/2d/engine/rs/lib.rs",
@@ -244,22 +232,10 @@
       "pct": 63.85725132877752
     },
     {
-      "path": "/Users/ueli/Documents/semio/trinity/rewrite/engine/rs/lib.rs",
-      "linesFound": 858,
-      "linesHit": 557,
-      "pct": 64.91841491841492
-    },
-    {
       "path": "/Users/ueli/Documents/semio/mathematical/graph/manifest/rs/lib.rs",
       "linesFound": 208,
       "linesHit": 138,
       "pct": 66.34615384615384
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/kernel/2d/rs/lib.rs",
-      "linesFound": 750,
-      "linesHit": 513,
-      "pct": 68.4
     },
     {
       "path": "/Users/ueli/Documents/semio/mathematical/number/rs/src/traits.rs",
@@ -280,6 +256,12 @@
       "pct": 70.53571428571429
     },
     {
+      "path": "/Users/ueli/Documents/semio/vcs/rs/lib.rs",
+      "linesFound": 4560,
+      "linesHit": 3246,
+      "pct": 71.1842105263158
+    },
+    {
       "path": "/Users/ueli/Documents/semio/mathematical/graph/port/directed/normal/rs/lib.rs",
       "linesFound": 532,
       "linesHit": 379,
@@ -296,12 +278,6 @@
       "linesFound": 2032,
       "linesHit": 1487,
       "pct": 73.17913385826772
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/lowpoly/core/rs/lib.rs",
-      "linesFound": 1365,
-      "linesHit": 1015,
-      "pct": 74.35897435897436
     },
     {
       "path": "/Users/ueli/Documents/semio/compose/client/lib/query/rs/lib.rs",
@@ -370,12 +346,6 @@
       "pct": 80.57537912578056
     },
     {
-      "path": "/Users/ueli/Documents/semio/fem/plugin/rs/lib.rs",
-      "linesFound": 1500,
-      "linesHit": 1211,
-      "pct": 80.73333333333333
-    },
-    {
       "path": "/Users/ueli/Documents/semio/s/rs/lib.rs",
       "linesFound": 491,
       "linesHit": 398,
@@ -418,12 +388,6 @@
       "pct": 82.48673237300986
     },
     {
-      "path": "/Users/ueli/Documents/semio/mathematical/graph/rs/lib.rs",
-      "linesFound": 1872,
-      "linesHit": 1553,
-      "pct": 82.95940170940172
-    },
-    {
       "path": "/Users/ueli/Documents/semio/sequence/core/rs/lib.rs",
       "linesFound": 1218,
       "linesHit": 1013,
@@ -440,12 +404,6 @@
       "linesFound": 107,
       "linesHit": 90,
       "pct": 84.11214953271028
-    },
-    {
-      "path": "/Users/ueli/Documents/semio/layout/rs/lib.rs",
-      "linesFound": 1816,
-      "linesHit": 1533,
-      "pct": 84.41629955947137
     },
     {
       "path": "/Users/ueli/Documents/semio/fsm/rs/lib.rs",
@@ -526,6 +484,12 @@
       "pct": 88.19742489270385
     },
     {
+      "path": "/Users/ueli/Documents/semio/framework/surface/tiled-map/rs/lib.rs",
+      "linesFound": 2963,
+      "linesHit": 2617,
+      "pct": 88.32264596692542
+    },
+    {
       "path": "/Users/ueli/Documents/semio/mathematical/entropy/rs/src/continuous.rs",
       "linesFound": 338,
       "linesHit": 299,
@@ -598,10 +562,22 @@
       "pct": 91.41221374045801
     },
     {
+      "path": "/Users/ueli/Documents/semio/fem/plugin/rs/lib.rs",
+      "linesFound": 1782,
+      "linesHit": 1629,
+      "pct": 91.41414141414141
+    },
+    {
       "path": "/Users/ueli/Documents/semio/norm/en/1990/rs/lib.rs",
       "linesFound": 482,
       "linesHit": 442,
       "pct": 91.70124481327801
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/lowpoly/core/rs/lib.rs",
+      "linesFound": 1710,
+      "linesHit": 1570,
+      "pct": 91.81286549707602
     },
     {
       "path": "/Users/ueli/Documents/semio/puzzle/3d/rs/lib.rs",
@@ -622,10 +598,16 @@
       "pct": 92.89940828402366
     },
     {
-      "path": "/Users/ueli/Documents/semio/vcs/rs/lib.rs",
-      "linesFound": 4197,
-      "linesHit": 3904,
-      "pct": 93.01882296878723
+      "path": "/Users/ueli/Documents/semio/kernel/2d/rs/lib.rs",
+      "linesFound": 1064,
+      "linesHit": 994,
+      "pct": 93.42105263157895
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/mathematical/graph/rs/lib.rs",
+      "linesFound": 2174,
+      "linesHit": 2032,
+      "pct": 93.46826126954922
     },
     {
       "path": "/Users/ueli/Documents/semio/mathematical/entropy/rs/src/discrete.rs",
@@ -662,6 +644,12 @@
       "linesFound": 827,
       "linesHit": 778,
       "pct": 94.07496977025393
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/trinity/rewrite/engine/rs/lib.rs",
+      "linesFound": 1122,
+      "linesHit": 1056,
+      "pct": 94.11764705882352
     },
     {
       "path": "/Users/ueli/Documents/semio/remodel/dense/rs/lib.rs",
@@ -766,6 +754,12 @@
       "pct": 95.47872340425532
     },
     {
+      "path": "/Users/ueli/Documents/semio/framework/surface/paint/rs/lib.rs",
+      "linesFound": 1117,
+      "linesHit": 1068,
+      "pct": 95.61324977618622
+    },
+    {
       "path": "/Users/ueli/Documents/semio/mathematical/entropy/rs/src/regularity.rs",
       "linesFound": 255,
       "linesHit": 244,
@@ -818,6 +812,12 @@
       "linesFound": 191,
       "linesHit": 184,
       "pct": 96.33507853403141
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/layout/rs/lib.rs",
+      "linesFound": 2125,
+      "linesHit": 2048,
+      "pct": 96.37647058823529
     },
     {
       "path": "/Users/ueli/Documents/semio/mathematical/entropy/rs/src/estimators.rs",
@@ -926,6 +926,12 @@
       "linesFound": 571,
       "linesHit": 567,
       "pct": 99.29947460595446
+    },
+    {
+      "path": "/Users/ueli/Documents/semio/framework/surface/terrain/rs/lib.rs",
+      "linesFound": 369,
+      "linesHit": 368,
+      "pct": 99.7289972899729
     },
     {
       "path": "/Users/ueli/Documents/semio/mathematical/entropy/rs/src/fisher.rs",

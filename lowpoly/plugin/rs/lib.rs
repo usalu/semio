@@ -17,7 +17,7 @@ use semio_framework_plugin::{
     mesh_from_kind, resolve_labels, tree_item_with_action, ui_inspector_groups_to_tree, ui_inspector_readonly_field,
     ui_stack_vertical, ui_text, world3d_camera_json, world3d_scene, world3d_selection_json, world3d_sun_measures,
     ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt,
-    Canvas2dScene, DocumentApp, DocumentView, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
+    Canvas2dScene, DocumentApp, DocumentView, IconName, MeshData, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder,
     ResourceKindSpec, SurfaceKind, UiFieldNode, UiInspectorFieldGroup, UiNode, UiPresence, UiTreeItemAction, UiTreeItemNode,
     UiToggleNode, UtilityCategory, UtilityDefinition, ViewState, WindowEngagement, WindowEngagementInput,
     WindowEngagementOption, WindowMeasure, WorldSunConfig, FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
@@ -30,7 +30,6 @@ use serde::{Deserialize, Serialize};
 use serde_json::{json, Map, Value};
 use std::cell::RefCell;
 use std::collections::HashMap;
-use vcs::CollectionOperation;
 
 //#region 🔖Constants
 const LOWPOLY_PLAY_APP_ID: &str = "lowpoly-play";
@@ -816,7 +815,7 @@ fn build_document_tree(view: LowpolyView, doc: &LowpolyDocument, labels: &Lowpol
                             }]);
                         }
                         UiTreeItemNode {
-                            icon_id: Some(icon.to_string()),
+                            icon_id: IconName::from_str(icon),
                             action: Some(lowpoly_action(
                                 "toggleSelectionTarget",
                                 Some(json!({
@@ -834,7 +833,7 @@ fn build_document_tree(view: LowpolyView, doc: &LowpolyDocument, labels: &Lowpol
                     })
                     .collect();
                 UiTreeItemNode {
-                    icon_id: Some(icon.to_string()),
+                    icon_id: IconName::from_str(icon),
                     items: Some(leaves),
                     description: Some(format!("{count}")),
                     ..UiTreeItemNode::base(format!("lowpoly-document.{object_id}.{mode}.group"), label.to_string())
@@ -877,7 +876,7 @@ fn build_catalogue_tree(labels: &LowpolyLabels) -> UiNode {
     let items: Vec<UiTreeItemNode> = PRIMITIVE_CATALOG
         .iter()
         .map(|(kind, label, icon)| UiTreeItemNode {
-            icon_id: Some((*icon).to_string()),
+            icon_id: IconName::from_str(icon),
             ..tree_item_with_action(
                 format!("lowpoly-play-catalogue.{kind}"),
                 primitive_catalog_label(kind, label, labels),
@@ -1464,7 +1463,7 @@ impl LowpolyPlayApp {
         if patch == LowpolyObjectPatch::default() {
             return ActionEmit::default();
         }
-        ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: object_id, patch })])
+        ActionEmit::operations(vec![LowpolyOperation::ObjectsPatch { id: object_id, patch }])
     }
 
     /// @emoji 📌 Commits the accumulated paint scratch as ONE described `PaintStroke` edit (scratch-commit
@@ -1621,7 +1620,7 @@ impl LowpolyPlayApp {
             return ActionEmit::default();
         }
         ActionEmit::commit(
-            vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: session.object_id, patch })],
+            vec![LowpolyOperation::ObjectsPatch { id: session.object_id, patch }],
             "Transform selection",
         )
     }
@@ -1953,7 +1952,7 @@ impl DocumentApp for LowpolyPlayApp {
                 let index = projection.objects.len();
                 self.runtime.active_object_id = new_id;
                 self.runtime.selection = LowpolySelection::default();
-                ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Add { index, item: new_object })])
+                ActionEmit::operations(vec![LowpolyOperation::ObjectsAdd { index, item: new_object }])
             }
             "patchObject" => {
                 let object_id = args.and_then(|value| value.get("objectId")).and_then(|value| value.as_str()).unwrap_or("");
@@ -1976,7 +1975,7 @@ impl DocumentApp for LowpolyPlayApp {
                 if patch == LowpolyObjectPatch::default() {
                     return ActionEmit::default();
                 }
-                ActionEmit::operations(vec![LowpolyOperation::Objects(CollectionOperation::Patch { id: object_id.into(), patch })])
+                ActionEmit::operations(vec![LowpolyOperation::ObjectsPatch { id: object_id.into(), patch }])
             }
             "extrude" => {
                 let distance = arg_f32(args, "extrudeDistance", utility_param_f32(&self.runtime.utility_params, "extrudeDistance", 0.25));
@@ -2291,12 +2290,12 @@ fn create_lowpoly_app() -> App {
                 export_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj, OsMediaFormat::Stl],
                 import_formats: vec![OsMediaFormat::Glb, OsMediaFormat::Obj],
             })
-            .icon_id("box")
+            .icon_id("shapes")
             .mode("edit", "Edit")
             .mode("paint", "Paint")
             .mode_layout("paint", "lowpoly-paint")
             .default_mode_id("edit")
-            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "box")
+            .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_MAIN, "Model", LOWPOLY_PLAY_BODY_MAIN, SurfaceKind::World3d, engagement.clone(), "lowpoly-model")
             .window_kind_with_engagement(LOWPOLY_PLAY_WINDOW_UV, "UV", LOWPOLY_PLAY_BODY_UV, SurfaceKind::Canvas2d, engagement, "layout-grid")
             .default_layout(create_default_layout(&[LOWPOLY_PLAY_WINDOW_MAIN.into()], "row", Some(&[100.0]), Some(&["Model".into()])))
             .named_layout(create_named_layout(

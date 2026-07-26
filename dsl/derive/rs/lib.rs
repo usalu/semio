@@ -467,7 +467,7 @@ pub fn derive_dsl_record(input: TokenStream) -> TokenStream {
 
         impl ::dsl::DslField for #name {
             fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Box::new(Self::__dsl_spec()))
+                ::dsl::Shape::Record(Self::__dsl_spec)
             }
             fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())
@@ -534,7 +534,7 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
         // snapshot" operation variant), so it needs `DslField` too, not just `vcs::DocumentDsl`.
         impl ::dsl::DslField for #name {
             fn shape() -> ::dsl::Shape {
-                ::dsl::Shape::Record(Box::new(Self::__dsl_spec()))
+                ::dsl::Shape::Record(Self::__dsl_spec)
             }
             fn to_value(&self) -> ::dsl::FieldValue {
                 ::dsl::FieldValue::Record(self.__dsl_to_record())

@@ -4,7 +4,7 @@
 use fem_core::ElementResult;
 use fem_core::{analyses, Bar3, Dof, Element, Frame3, MemberUdl, Model, NodalLoad, Node, Support};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
+use std::collections::{BTreeMap, HashMap};
 #[cfg(target_arch = "wasm32")]
 use vcs::create_document_vcs_envelope;
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
@@ -12,9 +12,62 @@ use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 pub const FEM_3D_SCHEMA: &str = "fem.3d";
 
 // #region 🔖Document
+/// 🔁 fem_3d's own DSL-printable mirror of `fem_core::Dof` — `fem_core::Dof` can't derive
+/// `dsl::DslScalar` from outside its own crate (the orphan rule blocks implementing a foreign
+/// `dsl::DslField` for a foreign `fem_core::Dof`), so every DOF-typed field in the `Fem3dDocument`
+/// grammar (`FemSupport::fixed`, `FemLoad::Nodal::dof`) uses this local tag instead, converting
+/// to/from `fem_core::Dof` at the `fem_core::Model`/`Support`/`NodalLoad` boundary (see
+/// `resolve_geometry`, `translate_loads`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+pub enum FemDof {
+    #[dsl(key = "Tx")]
+    Tx,
+    #[dsl(key = "Ty")]
+    Ty,
+    #[dsl(key = "Tz")]
+    Tz,
+    #[dsl(key = "Rx")]
+    Rx,
+    #[dsl(key = "Ry")]
+    Ry,
+    #[dsl(key = "Rz")]
+    Rz,
+}
+
+impl FemDof {
+    pub const ALL: [FemDof; 6] = [FemDof::Tx, FemDof::Ty, FemDof::Tz, FemDof::Rx, FemDof::Ry, FemDof::Rz];
+}
+
+impl From<Dof> for FemDof {
+    fn from(dof: Dof) -> Self {
+        match dof {
+            Dof::Tx => FemDof::Tx,
+            Dof::Ty => FemDof::Ty,
+            Dof::Tz => FemDof::Tz,
+            Dof::Rx => FemDof::Rx,
+            Dof::Ry => FemDof::Ry,
+            Dof::Rz => FemDof::Rz,
+        }
+    }
+}
+
+impl From<FemDof> for Dof {
+    fn from(dof: FemDof) -> Self {
+        match dof {
+            FemDof::Tx => Dof::Tx,
+            FemDof::Ty => Dof::Ty,
+            FemDof::Tz => Dof::Tz,
+            FemDof::Rx => Dof::Rx,
+            FemDof::Ry => Dof::Ry,
+            FemDof::Rz => Dof::Rz,
+        }
+    }
+}
+
 /// 📍 A structural node: a stable id and a global position, plain SI meters.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "node")]
 pub struct FemNode {
     pub id: String,
     pub x: f64,
@@ -23,20 +76,23 @@ pub struct FemNode {
 }
 
 /// 🔩 A two-node member: an axial `Bar` or a full 6-DOF `Frame` with a local-axis `roll` angle (radians).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemElement {
     #[serde(rename_all = "camelCase")]
+    #[dsl(key = "bar")]
     Bar { id: String, start: String, end: String, material_id: String, section_id: String },
     #[serde(rename_all = "camelCase")]
+    #[dsl(key = "frame")]
     Frame { id: String, start: String, end: String, material_id: String, section_id: String, roll: f64 },
 }
 
 /// 🧱 Linear-elastic isotropic material: Young's modulus `e`, shear modulus `g` (Pa), Poisson's ratio
 /// `nu` (dimensionless, drives `Tet4` solid elements), and density `rho` (kg/m³, drives self-weight via
 /// `Bar3`/`Frame3`/`Tet4`'s `mass()`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "material")]
 pub struct FemMaterial {
     pub id: String,
     pub name: String,
@@ -47,8 +103,9 @@ pub struct FemMaterial {
 }
 
 /// 📐 Cross-section properties: area (m²), second moments of area about local y/z (m⁴), torsion constant (m⁴).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "section")]
 pub struct FemSection {
     pub id: String,
     pub name: String,
@@ -59,25 +116,29 @@ pub struct FemSection {
 }
 
 /// 🔒 A support: the subset of a node's DOFs restrained to zero displacement.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "support")]
 pub struct FemSupport {
     pub id: String,
     pub node_id: String,
-    pub fixed: Vec<Dof>,
+    pub fixed: Vec<FemDof>,
 }
 
 /// 🏋️ A load — a concentrated nodal force/moment, a member UDL on a `Bar`/`Frame` element, or a normal
 /// pressure (Pa) over a meshed `FemSolid`'s top face, simplified as a uniform global `-Z` nodal load
 /// (see `area_load_nodal_loads_3d`) — mirrors `fem_2d::FemLoad`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FemLoad {
     #[serde(rename_all = "camelCase")]
-    Nodal { id: String, node_id: String, dof: Dof, value: f64 },
+    #[dsl(key = "nodal")]
+    Nodal { id: String, node_id: String, dof: FemDof, value: f64 },
     #[serde(rename_all = "camelCase")]
+    #[dsl(key = "memberUdl")]
     MemberUdl { id: String, element_id: String, wx: f64, wy: f64, wz: f64 },
     #[serde(rename_all = "camelCase")]
+    #[dsl(key = "area")]
     Area { id: String, solid_id: String, pressure: f64 },
 }
 
@@ -89,23 +150,27 @@ pub fn load_id(load: &FemLoad) -> &str {
 }
 
 /// 📦 A named set of loads applied together for one analysis run, optionally including self-weight.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "loadcase")]
 pub struct FemLoadCase {
     pub id: String,
     pub name: String,
+    #[dsl(statements, block)]
     pub loads: Vec<FemLoad>,
     pub self_weight: bool,
 }
 
-/// 📦 A linear combination of load cases — `(case_id, factor)` terms superposed from already-solved
-/// case results.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 📦 A linear combination of load cases — case id → factor terms superposed from already-solved
+/// case results. `BTreeMap` (not `Vec<(String, f64)>`, which the DSL engine has no primitive for)
+/// keyed by case id — duplicates collapse to the last value, which never happened in practice anyway.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "combination")]
 pub struct FemCombination {
     pub id: String,
     pub name: String,
-    pub terms: Vec<(String, f64)>,
+    pub terms: BTreeMap<String, f64>,
 }
 
 /// ⚙️ Analysis settings: mode/factor counts for modal and buckling analyses, plus a deformation
@@ -113,7 +178,10 @@ pub struct FemCombination {
 /// (meter-scale) displacements only; modal/buckling mode shapes are dimensionless (mass/Kg-
 /// orthonormalized) and the viewer normalizes them to a fixed fraction of the model's own extent
 /// instead of using this factor.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// No `#[dsl(keyword = ...)]` here: the only field embedding this type (`Fem3dDocument::analysis`,
+// `Fem3dOperation::SetAnalysisSettings::settings`) is itself `#[dsl(block)]`, which already supplies
+// the bare leading keyword from the FIELD's own name — an inner keyword too would double it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemAnalysisSettings {
     pub modal_count: usize,
@@ -131,8 +199,9 @@ impl Default for FemAnalysisSettings {
 /// `base_z` by `height` across `layers` equal-height layers, filled with `Tet4` elements at solve time
 /// (see `resolve_geometry`) — mirrors `fem_2d::FemRegion`, extended into 3D via `fem_core::mesh`'s
 /// extrusion + tet-splitting.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "solid")]
 pub struct FemSolid {
     pub id: String,
     pub name: String,
@@ -145,8 +214,10 @@ pub struct FemSolid {
     pub material_id: String,
 }
 
-/// 🎥 Opaque camera state string; the plugin layer owns and interprets its shape.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 🎥 Opaque camera state string; the plugin layer owns and interprets its shape. No
+/// `#[dsl(keyword = ...)]`: every field embedding this type is itself `#[dsl(block)]` (see
+/// `FemAnalysisSettings`'s doc comment above for why that means the keyword stays off here).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FemCamera {
     pub json: String,
@@ -159,10 +230,12 @@ impl Default for FemCamera {
 }
 
 /// 🧾 Persistent fem-3d document — nodes, members, catalogs, supports and load cases plus camera state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, Default, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "fem3d", layout = "lines")]
 pub struct Fem3dDocument {
     pub nodes: Vec<FemNode>,
+    #[dsl(statements, block)]
     pub elements: Vec<FemElement>,
     pub materials: Vec<FemMaterial>,
     pub sections: Vec<FemSection>,
@@ -170,7 +243,9 @@ pub struct Fem3dDocument {
     pub supports: Vec<FemSupport>,
     pub load_cases: Vec<FemLoadCase>,
     pub combinations: Vec<FemCombination>,
+    #[dsl(block)]
     pub analysis: FemAnalysisSettings,
+    #[dsl(block)]
     pub camera: FemCamera,
 }
 
@@ -421,29 +496,64 @@ impl OperationDiff<Fem3dDocument> for Fem3dDiff {
 
 /// 🧮 Fem-3d operation: id-keyed collection edits over nodes/elements/materials/sections/supports/load
 /// cases, plus the scalar camera, each with a true inverse via `backwards`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum Fem3dOperation {
+    #[dsl(key = "setNode")]
     SetNode { index: usize, node: FemNode },
+    #[dsl(key = "removeNode")]
     RemoveNode { id: String },
-    SetElement { index: usize, element: FemElement },
+    // `FemElement` is a `DslEnum` (tagged, data-carrying variants), not a `DslRecord`, so it has no
+    // `DslField` impl of its own — a bare scalar field can't bind it directly. `#[dsl(statements)]`
+    // on a `Box<T>` is the engine's "exactly one required tagged value" shape for that case.
+    #[dsl(key = "setElement")]
+    SetElement {
+        index: usize,
+        #[dsl(statements)]
+        element: Box<FemElement>,
+    },
+    #[dsl(key = "removeElement")]
     RemoveElement { id: String },
+    #[dsl(key = "setMaterial")]
     SetMaterial { index: usize, material: FemMaterial },
+    #[dsl(key = "removeMaterial")]
     RemoveMaterial { id: String },
+    #[dsl(key = "setSection")]
     SetSection { index: usize, section: FemSection },
+    #[dsl(key = "removeSection")]
     RemoveSection { id: String },
+    #[dsl(key = "setSolid")]
     SetSolid { index: usize, solid: FemSolid },
+    #[dsl(key = "removeSolid")]
     RemoveSolid { id: String },
+    #[dsl(key = "setSupport")]
     SetSupport { index: usize, support: FemSupport },
+    #[dsl(key = "removeSupport")]
     RemoveSupport { id: String },
+    #[dsl(key = "setLoadCase")]
     SetLoadCase { index: usize, load_case: FemLoadCase },
+    #[dsl(key = "removeLoadCase")]
     RemoveLoadCase { id: String },
+    #[dsl(key = "setCombination")]
     SetCombination { index: usize, combination: FemCombination },
+    #[dsl(key = "removeCombination")]
     RemoveCombination { id: String },
-    SetCamera { camera: FemCamera },
-    SetAnalysisSettings { settings: FemAnalysisSettings },
+    #[dsl(key = "setCamera")]
+    SetCamera {
+        #[dsl(block)]
+        camera: FemCamera,
+    },
+    #[dsl(key = "setAnalysisSettings")]
+    SetAnalysisSettings {
+        #[dsl(block)]
+        settings: FemAnalysisSettings,
+    },
     /// 🌍 Replaces the whole document (example import / reset).
-    SetDocument { document: Fem3dDocument },
+    #[dsl(key = "setDocument")]
+    SetDocument {
+        #[dsl(block)]
+        document: Fem3dDocument,
+    },
 }
 
 fn node_index(doc: &Fem3dDocument, id: &str) -> Option<usize> {
@@ -486,7 +596,7 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
         match self {
             Fem3dOperation::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
             Fem3dOperation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
-            Fem3dOperation::SetElement { index, element } => diff.elements.set.push((*index, element.clone())),
+            Fem3dOperation::SetElement { index, element } => diff.elements.set.push((*index, element.as_ref().clone())),
             Fem3dOperation::RemoveElement { id } => diff.elements.removed.push(id.clone()),
             Fem3dOperation::SetMaterial { index, material } => diff.materials.set.push((*index, material.clone())),
             Fem3dOperation::RemoveMaterial { id } => diff.materials.removed.push(id.clone()),
@@ -515,10 +625,12 @@ impl Operation<Fem3dDocument> for Fem3dOperation {
             },
             Fem3dOperation::RemoveNode { id } => node_index(projection, id).map(|index| vec![Fem3dOperation::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
             Fem3dOperation::SetElement { element, .. } => match element_index(projection, element_id(element)) {
-                Some(index) => vec![Fem3dOperation::SetElement { index, element: projection.elements[index].clone() }],
+                Some(index) => vec![Fem3dOperation::SetElement { index, element: Box::new(projection.elements[index].clone()) }],
                 None => vec![Fem3dOperation::RemoveElement { id: element_id(element).to_string() }],
             },
-            Fem3dOperation::RemoveElement { id } => element_index(projection, id).map(|index| vec![Fem3dOperation::SetElement { index, element: projection.elements[index].clone() }]).unwrap_or_default(),
+            Fem3dOperation::RemoveElement { id } => {
+                element_index(projection, id).map(|index| vec![Fem3dOperation::SetElement { index, element: Box::new(projection.elements[index].clone()) }]).unwrap_or_default()
+            }
             Fem3dOperation::SetMaterial { material, .. } => match material_index(projection, &material.id) {
                 Some(index) => vec![Fem3dOperation::SetMaterial { index, material: projection.materials[index].clone() }],
                 None => vec![Fem3dOperation::RemoveMaterial { id: material.id.clone() }],
@@ -565,616 +677,11 @@ pub fn empty_fem3d_projection() -> Fem3dDocument {
 }
 
 // #region 🔖Dsl
-/// 📜 Hand-rolled lexer/printer for `Fem3dDocument`'s `.fem3d` DSL (`🔖Dsl`) and `Fem3dOperation`'s
-/// one-line op text (`🔖OpText`) — mirrors `fem_2d`'s `fem2d_dsl` module style exactly (same
-/// `@marker key=value ... "trailing text"` grammar, same per-entity `print_*_fields`/`parse_*` pair
-/// shared verbatim by a document line and its matching operation line), extended for 3D: `z` on nodes,
-/// `Frame`'s `roll`, `g`/`iz`/`j` on materials/sections, and `FemSolid`'s extrusion fields replacing
-/// `fem_2d::FemRegion`'s flat `thickness`. `FemCamera` here is opaque JSON (the plugin layer owns its
-/// shape), so `@camera`/`setCamera` just carry one escaped quoted field. ASSUMES ids never contain `,`
-/// `:` `;` `|` `-` (mirrors `vcs`'s own `split_ids`/`join_ids` precedent).
-mod fem3d_dsl {
-    use super::{Fem3dDocument, Fem3dOperation, FemAnalysisSettings, FemCamera, FemCombination, FemElement, FemLoad, FemLoadCase, FemMaterial, FemNode, FemSection, FemSolid, FemSupport};
-    use fem_core::Dof;
-    use std::collections::HashMap;
-    use vcs::{TextError, TextSpan};
-
-    //#region Lexer
-    /// 🔐 Escapes `\`, `"` and newlines so arbitrary text (a name, an opaque camera json blob, or a
-    /// whole nested `setDocument` document) fits inside one quoted field.
-    fn escape_text(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        for ch in value.chars() {
-            match ch {
-                '\\' => out.push_str("\\\\"),
-                '"' => out.push_str("\\\""),
-                '\n' => out.push_str("\\n"),
-                _ => out.push(ch),
-            }
-        }
-        out
-    }
-
-    fn unescape_text(value: &str) -> String {
-        let mut out = String::with_capacity(value.len());
-        let mut chars = value.chars();
-        while let Some(ch) = chars.next() {
-            if ch == '\\' {
-                match chars.next() {
-                    Some('n') => out.push('\n'),
-                    Some('"') => out.push('"'),
-                    Some('\\') => out.push('\\'),
-                    Some(other) => {
-                        out.push('\\');
-                        out.push(other);
-                    }
-                    None => out.push('\\'),
-                }
-            } else {
-                out.push(ch);
-            }
-        }
-        out
-    }
-
-    /// 🔎 Finds the char index of the unescaped opening `"` of a trailing quoted field, mirroring
-    /// `vcs`'s private `find_unescaped_trailing_quote` (kept in lock-step, see that doc comment).
-    fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
-        if chars.is_empty() || *chars.last().unwrap() != '"' {
-            return None;
-        }
-        let last = chars.len() - 1;
-        let mut i = last;
-        while i > 0 {
-            i -= 1;
-            if chars[i] == '"' {
-                let mut backslashes = 0;
-                let mut j = i;
-                while j > 0 && chars[j - 1] == '\\' {
-                    backslashes += 1;
-                    j -= 1;
-                }
-                if backslashes % 2 == 0 {
-                    return Some(i);
-                }
-            }
-        }
-        None
-    }
-
-    /// 🧾 One parsed `@marker key=value ...` line plus its optional trailing quoted text field.
-    struct KvLine {
-        marker: String,
-        fields: HashMap<String, String>,
-        text: Option<String>,
-    }
-
-    fn parse_kv_line(line: &str, line_no: u32) -> Result<KvLine, TextError> {
-        let chars: Vec<char> = line.chars().collect();
-        let (head, text) = match find_unescaped_trailing_quote(&chars) {
-            Some(open) => {
-                let content: String = chars[open + 1..chars.len() - 1].iter().collect();
-                let head: String = chars[..open].iter().collect();
-                (head.trim_end().to_string(), Some(unescape_text(&content)))
-            }
-            None => (line.to_string(), None),
-        };
-        let mut tokens = head.split_whitespace();
-        let marker = tokens
-            .next()
-            .ok_or_else(|| TextError::new("expected a marker or operation name", TextSpan::at(line_no, 1)))?
-            .to_string();
-        let mut fields = HashMap::new();
-        for token in tokens {
-            let (key, value) = token
-                .split_once('=')
-                .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(line_no, 1)))?;
-            fields.insert(key.to_string(), value.to_string());
-        }
-        Ok(KvLine { marker, fields, text })
-    }
-
-    fn field<'a>(fields: &'a HashMap<String, String>, key: &str, line_no: u32) -> Result<&'a str, TextError> {
-        fields
-            .get(key)
-            .map(|value| value.as_str())
-            .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(line_no, 1)))
-    }
-
-    fn parse_f64(value: &str, key: &str, line_no: u32) -> Result<f64, TextError> {
-        value.parse::<f64>().map_err(|_| TextError::new(format!("expected number for '{key}', got '{value}'"), TextSpan::at(line_no, 1)))
-    }
-
-    fn parse_usize(value: &str, key: &str, line_no: u32) -> Result<usize, TextError> {
-        value.parse::<usize>().map_err(|_| TextError::new(format!("expected integer for '{key}', got '{value}'"), TextSpan::at(line_no, 1)))
-    }
-
-    fn parse_bool(value: &str, key: &str, line_no: u32) -> Result<bool, TextError> {
-        match value {
-            "true" => Ok(true),
-            "false" => Ok(false),
-            other => Err(TextError::expected(format!("expected bool for '{key}', got '{other}'"), TextSpan::at(line_no, 1), "true|false")),
-        }
-    }
-
-    /// 🔢 Prints an `f64` via Rust's shortest round-trippable `Display` form (`"0"`, not `"0.0"`).
-    fn fmt_num(value: f64) -> String {
-        value.to_string()
-    }
-    //#endregion Lexer
-
-    //#region Composite
-    /// 📐 `x,y;x,y;...` polygon vertex list, or `-` for empty.
-    fn print_points(points: &[[f64; 2]]) -> String {
-        if points.is_empty() {
-            return "-".to_string();
-        }
-        points.iter().map(|p| format!("{},{}", fmt_num(p[0]), fmt_num(p[1]))).collect::<Vec<_>>().join(";")
-    }
-
-    fn parse_points(spec: &str, key: &str, line_no: u32) -> Result<Vec<[f64; 2]>, TextError> {
-        if spec == "-" {
-            return Ok(Vec::new());
-        }
-        spec.split(';')
-            .map(|pair| {
-                let (x, y) = pair.split_once(',').ok_or_else(|| TextError::new(format!("expected '{key}' point 'x,y', got '{pair}'"), TextSpan::at(line_no, 1)))?;
-                Ok([parse_f64(x, key, line_no)?, parse_f64(y, key, line_no)?])
-            })
-            .collect()
-    }
-
-    /// 🕳️ `points|points|...` hole list (each hole itself a `print_points` polygon), or `-` for none.
-    fn print_holes(holes: &[Vec<[f64; 2]>]) -> String {
-        if holes.is_empty() {
-            return "-".to_string();
-        }
-        holes.iter().map(|hole| print_points(hole)).collect::<Vec<_>>().join("|")
-    }
-
-    fn parse_holes(spec: &str, key: &str, line_no: u32) -> Result<Vec<Vec<[f64; 2]>>, TextError> {
-        if spec == "-" {
-            return Ok(Vec::new());
-        }
-        spec.split('|').map(|hole| parse_points(hole, key, line_no)).collect()
-    }
-
-    fn dof_name(dof: Dof) -> &'static str {
-        match dof {
-            Dof::Tx => "Tx",
-            Dof::Ty => "Ty",
-            Dof::Tz => "Tz",
-            Dof::Rx => "Rx",
-            Dof::Ry => "Ry",
-            Dof::Rz => "Rz",
-        }
-    }
-
-    fn parse_dof(token: &str, line_no: u32) -> Result<Dof, TextError> {
-        match token {
-            "Tx" => Ok(Dof::Tx),
-            "Ty" => Ok(Dof::Ty),
-            "Tz" => Ok(Dof::Tz),
-            "Rx" => Ok(Dof::Rx),
-            "Ry" => Ok(Dof::Ry),
-            "Rz" => Ok(Dof::Rz),
-            other => Err(TextError::expected(format!("unknown dof '{other}'"), TextSpan::at(line_no, 1), "Tx|Ty|Tz|Rx|Ry|Rz")),
-        }
-    }
-
-    fn print_dofs(dofs: &[Dof]) -> String {
-        if dofs.is_empty() {
-            return "-".to_string();
-        }
-        dofs.iter().map(|dof| dof_name(*dof)).collect::<Vec<_>>().join(",")
-    }
-
-    fn parse_dofs(spec: &str, line_no: u32) -> Result<Vec<Dof>, TextError> {
-        if spec == "-" {
-            return Ok(Vec::new());
-        }
-        spec.split(',').map(|token| parse_dof(token, line_no)).collect()
-    }
-
-    /// 🧮 `id:factor,id:factor,...` combination term list, or `-` for empty.
-    fn print_terms(terms: &[(String, f64)]) -> String {
-        if terms.is_empty() {
-            return "-".to_string();
-        }
-        terms.iter().map(|(id, factor)| format!("{id}:{}", fmt_num(*factor))).collect::<Vec<_>>().join(",")
-    }
-
-    fn parse_terms(spec: &str, line_no: u32) -> Result<Vec<(String, f64)>, TextError> {
-        if spec == "-" {
-            return Ok(Vec::new());
-        }
-        spec.split(',')
-            .map(|entry| {
-                let (id, factor) = entry.split_once(':').ok_or_else(|| TextError::new(format!("expected 'id:factor' term, got '{entry}'"), TextSpan::at(line_no, 1)))?;
-                Ok((id.to_string(), parse_f64(factor, "term.factor", line_no)?))
-            })
-            .collect()
-    }
-
-    fn next_part<'a>(parts: &mut impl Iterator<Item = &'a str>, what: &str, line_no: u32) -> Result<&'a str, TextError> {
-        parts.next().ok_or_else(|| TextError::new(format!("expected {what}"), TextSpan::at(line_no, 1)))
-    }
-
-    /// 🏋️ One `FemLoad` as `kind:id:...kind-specific fields...` — see `parse_load` for each kind's shape.
-    fn print_load(load: &FemLoad) -> String {
-        match load {
-            FemLoad::Nodal { id, node_id, dof, value } => format!("nodal:{id}:{node_id}:{}:{}", dof_name(*dof), fmt_num(*value)),
-            FemLoad::MemberUdl { id, element_id, wx, wy, wz } => format!("memberUdl:{id}:{element_id}:{}:{}:{}", fmt_num(*wx), fmt_num(*wy), fmt_num(*wz)),
-            FemLoad::Area { id, solid_id, pressure } => format!("area:{id}:{solid_id}:{}", fmt_num(*pressure)),
-        }
-    }
-
-    fn parse_load(token: &str, line_no: u32) -> Result<FemLoad, TextError> {
-        let mut parts = token.split(':');
-        let kind = next_part(&mut parts, "a load kind", line_no)?;
-        match kind {
-            "nodal" => {
-                let id = next_part(&mut parts, "load id", line_no)?.to_string();
-                let node_id = next_part(&mut parts, "load node id", line_no)?.to_string();
-                let dof = parse_dof(next_part(&mut parts, "load dof", line_no)?, line_no)?;
-                let value = parse_f64(next_part(&mut parts, "load value", line_no)?, "value", line_no)?;
-                Ok(FemLoad::Nodal { id, node_id, dof, value })
-            }
-            "memberUdl" => {
-                let id = next_part(&mut parts, "load id", line_no)?.to_string();
-                let element_id = next_part(&mut parts, "load element id", line_no)?.to_string();
-                let wx = parse_f64(next_part(&mut parts, "load wx", line_no)?, "wx", line_no)?;
-                let wy = parse_f64(next_part(&mut parts, "load wy", line_no)?, "wy", line_no)?;
-                let wz = parse_f64(next_part(&mut parts, "load wz", line_no)?, "wz", line_no)?;
-                Ok(FemLoad::MemberUdl { id, element_id, wx, wy, wz })
-            }
-            "area" => {
-                let id = next_part(&mut parts, "load id", line_no)?.to_string();
-                let solid_id = next_part(&mut parts, "load solid id", line_no)?.to_string();
-                let pressure = parse_f64(next_part(&mut parts, "load pressure", line_no)?, "pressure", line_no)?;
-                Ok(FemLoad::Area { id, solid_id, pressure })
-            }
-            other => Err(TextError::expected(format!("unknown load kind '{other}'"), TextSpan::at(line_no, 1), "nodal|memberUdl|area")),
-        }
-    }
-
-    /// 🏋️ `load|load|...` load list, or `-` for empty.
-    fn print_loads(loads: &[FemLoad]) -> String {
-        if loads.is_empty() {
-            return "-".to_string();
-        }
-        loads.iter().map(print_load).collect::<Vec<_>>().join("|")
-    }
-
-    fn parse_loads(spec: &str, line_no: u32) -> Result<Vec<FemLoad>, TextError> {
-        if spec == "-" {
-            return Ok(Vec::new());
-        }
-        spec.split('|').map(|token| parse_load(token, line_no)).collect()
-    }
-    //#endregion Composite
-
-    //#region Entities
-    fn print_node_fields(node: &FemNode) -> String {
-        format!("id={} x={} y={} z={}", node.id, fmt_num(node.x), fmt_num(node.y), fmt_num(node.z))
-    }
-
-    fn parse_node(fields: &HashMap<String, String>, line_no: u32) -> Result<FemNode, TextError> {
-        Ok(FemNode {
-            id: field(fields, "id", line_no)?.to_string(),
-            x: parse_f64(field(fields, "x", line_no)?, "x", line_no)?,
-            y: parse_f64(field(fields, "y", line_no)?, "y", line_no)?,
-            z: parse_f64(field(fields, "z", line_no)?, "z", line_no)?,
-        })
-    }
-
-    fn element_kind(element: &FemElement) -> &'static str {
-        match element {
-            FemElement::Bar { .. } => "bar",
-            FemElement::Frame { .. } => "frame",
-        }
-    }
-
-    fn print_element_fields(element: &FemElement) -> String {
-        match element {
-            FemElement::Bar { id, start, end, material_id, section_id } => format!("id={id} start={start} end={end} material={material_id} section={section_id}"),
-            FemElement::Frame { id, start, end, material_id, section_id, roll } => format!("id={id} start={start} end={end} material={material_id} section={section_id} roll={}", fmt_num(*roll)),
-        }
-    }
-
-    fn parse_element(kind: &str, fields: &HashMap<String, String>, line_no: u32) -> Result<FemElement, TextError> {
-        let id = field(fields, "id", line_no)?.to_string();
-        let start = field(fields, "start", line_no)?.to_string();
-        let end = field(fields, "end", line_no)?.to_string();
-        let material_id = field(fields, "material", line_no)?.to_string();
-        let section_id = field(fields, "section", line_no)?.to_string();
-        match kind {
-            "bar" => Ok(FemElement::Bar { id, start, end, material_id, section_id }),
-            "frame" => Ok(FemElement::Frame { id, start, end, material_id, section_id, roll: parse_f64(field(fields, "roll", line_no)?, "roll", line_no)? }),
-            other => Err(TextError::expected(format!("unknown element kind '{other}'"), TextSpan::at(line_no, 1), "bar|frame")),
-        }
-    }
-
-    fn print_material_fields(material: &FemMaterial) -> String {
-        format!("id={} e={} g={} nu={} rho={}", material.id, fmt_num(material.e), fmt_num(material.g), fmt_num(material.nu), fmt_num(material.rho))
-    }
-
-    fn parse_material(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemMaterial, TextError> {
-        Ok(FemMaterial {
-            id: field(fields, "id", line_no)?.to_string(),
-            name,
-            e: parse_f64(field(fields, "e", line_no)?, "e", line_no)?,
-            g: parse_f64(field(fields, "g", line_no)?, "g", line_no)?,
-            nu: parse_f64(field(fields, "nu", line_no)?, "nu", line_no)?,
-            rho: parse_f64(field(fields, "rho", line_no)?, "rho", line_no)?,
-        })
-    }
-
-    fn print_section_fields(section: &FemSection) -> String {
-        format!("id={} area={} iy={} iz={} j={}", section.id, fmt_num(section.area), fmt_num(section.iy), fmt_num(section.iz), fmt_num(section.j))
-    }
-
-    fn parse_section(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemSection, TextError> {
-        Ok(FemSection {
-            id: field(fields, "id", line_no)?.to_string(),
-            name,
-            area: parse_f64(field(fields, "area", line_no)?, "area", line_no)?,
-            iy: parse_f64(field(fields, "iy", line_no)?, "iy", line_no)?,
-            iz: parse_f64(field(fields, "iz", line_no)?, "iz", line_no)?,
-            j: parse_f64(field(fields, "j", line_no)?, "j", line_no)?,
-        })
-    }
-
-    fn print_solid_fields(solid: &FemSolid) -> String {
-        format!(
-            "id={} material={} basez={} height={} layers={} mesh={} outline={} holes={}",
-            solid.id,
-            solid.material_id,
-            fmt_num(solid.base_z),
-            fmt_num(solid.height),
-            solid.layers,
-            fmt_num(solid.mesh_size),
-            print_points(&solid.outline),
-            print_holes(&solid.holes)
-        )
-    }
-
-    fn parse_solid(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemSolid, TextError> {
-        Ok(FemSolid {
-            id: field(fields, "id", line_no)?.to_string(),
-            name,
-            outline: parse_points(field(fields, "outline", line_no)?, "outline", line_no)?,
-            holes: parse_holes(field(fields, "holes", line_no)?, "holes", line_no)?,
-            base_z: parse_f64(field(fields, "basez", line_no)?, "basez", line_no)?,
-            height: parse_f64(field(fields, "height", line_no)?, "height", line_no)?,
-            layers: parse_usize(field(fields, "layers", line_no)?, "layers", line_no)?,
-            mesh_size: parse_f64(field(fields, "mesh", line_no)?, "mesh", line_no)?,
-            material_id: field(fields, "material", line_no)?.to_string(),
-        })
-    }
-
-    fn print_support_fields(support: &FemSupport) -> String {
-        format!("id={} node={} fixed={}", support.id, support.node_id, print_dofs(&support.fixed))
-    }
-
-    fn parse_support(fields: &HashMap<String, String>, line_no: u32) -> Result<FemSupport, TextError> {
-        Ok(FemSupport { id: field(fields, "id", line_no)?.to_string(), node_id: field(fields, "node", line_no)?.to_string(), fixed: parse_dofs(field(fields, "fixed", line_no)?, line_no)? })
-    }
-
-    fn print_load_case_fields(load_case: &FemLoadCase) -> String {
-        format!("id={} selfweight={} loads={}", load_case.id, load_case.self_weight, print_loads(&load_case.loads))
-    }
-
-    fn parse_load_case(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemLoadCase, TextError> {
-        Ok(FemLoadCase {
-            id: field(fields, "id", line_no)?.to_string(),
-            name,
-            loads: parse_loads(field(fields, "loads", line_no)?, line_no)?,
-            self_weight: parse_bool(field(fields, "selfweight", line_no)?, "selfweight", line_no)?,
-        })
-    }
-
-    fn print_combination_fields(combination: &FemCombination) -> String {
-        format!("id={} terms={}", combination.id, print_terms(&combination.terms))
-    }
-
-    fn parse_combination(fields: &HashMap<String, String>, name: String, line_no: u32) -> Result<FemCombination, TextError> {
-        Ok(FemCombination { id: field(fields, "id", line_no)?.to_string(), name, terms: parse_terms(field(fields, "terms", line_no)?, line_no)? })
-    }
-    //#endregion Entities
-
-    //#region Document
-    /// 📤 Prints a full `.fem3d` document: nodes, elements (bar/frame, own line-kind per variant),
-    /// materials, sections, solids, supports, load cases, combinations, one `@analysis` line and one
-    /// `@camera` line — field order mirrors `Fem3dDocument`'s own struct field order.
-    pub fn print_document(doc: &Fem3dDocument) -> String {
-        let mut lines = Vec::new();
-        for node in &doc.nodes {
-            lines.push(format!("@node {}", print_node_fields(node)));
-        }
-        for element in &doc.elements {
-            lines.push(format!("@{} {}", element_kind(element), print_element_fields(element)));
-        }
-        for material in &doc.materials {
-            lines.push(format!("@material {} \"{}\"", print_material_fields(material), escape_text(&material.name)));
-        }
-        for section in &doc.sections {
-            lines.push(format!("@section {} \"{}\"", print_section_fields(section), escape_text(&section.name)));
-        }
-        for solid in &doc.solids {
-            lines.push(format!("@solid {} \"{}\"", print_solid_fields(solid), escape_text(&solid.name)));
-        }
-        for support in &doc.supports {
-            lines.push(format!("@support {}", print_support_fields(support)));
-        }
-        for load_case in &doc.load_cases {
-            lines.push(format!("@loadcase {} \"{}\"", print_load_case_fields(load_case), escape_text(&load_case.name)));
-        }
-        for combination in &doc.combinations {
-            lines.push(format!("@combination {} \"{}\"", print_combination_fields(combination), escape_text(&combination.name)));
-        }
-        lines.push(format!("@analysis modal={} buckling={} scale={}", doc.analysis.modal_count, doc.analysis.buckling_count, fmt_num(doc.analysis.deformation_scale)));
-        lines.push(format!("@camera \"{}\"", escape_text(&doc.camera.json)));
-        lines.join("\n")
-    }
-
-    /// 📥 Parses a full `.fem3d` document back into a `Fem3dDocument` (see `print_document`). Every
-    /// line kind is order-independent (dispatched purely by its `@marker`), so a hand-edited fixture may
-    /// interleave entity kinds freely.
-    pub fn parse_document(text: &str) -> Result<Fem3dDocument, TextError> {
-        let mut doc = Fem3dDocument::default();
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            let line = raw_line.trim();
-            if line.is_empty() {
-                continue;
-            }
-            let parsed = parse_kv_line(line, line_no)?;
-            match parsed.marker.as_str() {
-                "@node" => doc.nodes.push(parse_node(&parsed.fields, line_no)?),
-                "@bar" | "@frame" => doc.elements.push(parse_element(&parsed.marker[1..], &parsed.fields, line_no)?),
-                "@material" => doc.materials.push(parse_material(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
-                "@section" => doc.sections.push(parse_section(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
-                "@solid" => doc.solids.push(parse_solid(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
-                "@support" => doc.supports.push(parse_support(&parsed.fields, line_no)?),
-                "@loadcase" => doc.load_cases.push(parse_load_case(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
-                "@combination" => doc.combinations.push(parse_combination(&parsed.fields, parsed.text.clone().unwrap_or_default(), line_no)?),
-                "@analysis" => {
-                    doc.analysis = FemAnalysisSettings {
-                        modal_count: parse_usize(field(&parsed.fields, "modal", line_no)?, "modal", line_no)?,
-                        buckling_count: parse_usize(field(&parsed.fields, "buckling", line_no)?, "buckling", line_no)?,
-                        deformation_scale: parse_f64(field(&parsed.fields, "scale", line_no)?, "scale", line_no)?,
-                    };
-                }
-                "@camera" => {
-                    doc.camera = FemCamera { json: parsed.text.clone().unwrap_or_else(|| "{}".to_string()) };
-                }
-                other => {
-                    return Err(TextError::expected(
-                        format!("unknown fem3d dsl marker '{other}'"),
-                        TextSpan::at(line_no, 1),
-                        "@node|@bar|@frame|@material|@section|@solid|@support|@loadcase|@combination|@analysis|@camera",
-                    ))
-                }
-            }
-        }
-        Ok(doc)
-    }
-    //#endregion Document
-
-    //#region Operation
-    /// 📤 Prints a single one-line `Fem3dOperation` — every `Set*` variant reuses the SAME
-    /// `print_*_fields` helper its matching `@marker` document line uses, plus an `index=` field; a
-    /// `setDocument` embeds `print_document`'s full multi-line output escaped into one quoted field.
-    pub fn print_operation(operation: &Fem3dOperation) -> String {
-        match operation {
-            Fem3dOperation::SetNode { index, node } => format!("setNode index={index} {}", print_node_fields(node)),
-            Fem3dOperation::RemoveNode { id } => format!("removeNode id={id}"),
-            Fem3dOperation::SetElement { index, element } => format!("setElement index={index} kind={} {}", element_kind(element), print_element_fields(element)),
-            Fem3dOperation::RemoveElement { id } => format!("removeElement id={id}"),
-            Fem3dOperation::SetMaterial { index, material } => format!("setMaterial index={index} {} \"{}\"", print_material_fields(material), escape_text(&material.name)),
-            Fem3dOperation::RemoveMaterial { id } => format!("removeMaterial id={id}"),
-            Fem3dOperation::SetSection { index, section } => format!("setSection index={index} {} \"{}\"", print_section_fields(section), escape_text(&section.name)),
-            Fem3dOperation::RemoveSection { id } => format!("removeSection id={id}"),
-            Fem3dOperation::SetSolid { index, solid } => format!("setSolid index={index} {} \"{}\"", print_solid_fields(solid), escape_text(&solid.name)),
-            Fem3dOperation::RemoveSolid { id } => format!("removeSolid id={id}"),
-            Fem3dOperation::SetSupport { index, support } => format!("setSupport index={index} {}", print_support_fields(support)),
-            Fem3dOperation::RemoveSupport { id } => format!("removeSupport id={id}"),
-            Fem3dOperation::SetLoadCase { index, load_case } => format!("setLoadCase index={index} {} \"{}\"", print_load_case_fields(load_case), escape_text(&load_case.name)),
-            Fem3dOperation::RemoveLoadCase { id } => format!("removeLoadCase id={id}"),
-            Fem3dOperation::SetCombination { index, combination } => format!("setCombination index={index} {} \"{}\"", print_combination_fields(combination), escape_text(&combination.name)),
-            Fem3dOperation::RemoveCombination { id } => format!("removeCombination id={id}"),
-            Fem3dOperation::SetCamera { camera } => format!("setCamera \"{}\"", escape_text(&camera.json)),
-            Fem3dOperation::SetAnalysisSettings { settings } => format!("setAnalysisSettings modal={} buckling={} scale={}", settings.modal_count, settings.buckling_count, fmt_num(settings.deformation_scale)),
-            Fem3dOperation::SetDocument { document } => format!("setDocument \"{}\"", escape_text(&print_document(document))),
-        }
-    }
-
-    /// 📥 Parses a single one-line `Fem3dOperation` (see `print_operation`). Always parsed as "line 1" —
-    /// the caller (`vcs::parse_document_text`) remaps the error span onto the op log's real line number.
-    pub fn parse_operation(line: &str) -> Result<Fem3dOperation, TextError> {
-        let parsed = parse_kv_line(line, 1)?;
-        match parsed.marker.as_str() {
-            "setNode" => Ok(Fem3dOperation::SetNode { index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?, node: parse_node(&parsed.fields, 1)? }),
-            "removeNode" => Ok(Fem3dOperation::RemoveNode { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setElement" => Ok(Fem3dOperation::SetElement {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                element: parse_element(field(&parsed.fields, "kind", 1)?, &parsed.fields, 1)?,
-            }),
-            "removeElement" => Ok(Fem3dOperation::RemoveElement { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setMaterial" => Ok(Fem3dOperation::SetMaterial {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                material: parse_material(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
-            }),
-            "removeMaterial" => Ok(Fem3dOperation::RemoveMaterial { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setSection" => Ok(Fem3dOperation::SetSection {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                section: parse_section(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
-            }),
-            "removeSection" => Ok(Fem3dOperation::RemoveSection { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setSolid" => Ok(Fem3dOperation::SetSolid {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                solid: parse_solid(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
-            }),
-            "removeSolid" => Ok(Fem3dOperation::RemoveSolid { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setSupport" => Ok(Fem3dOperation::SetSupport { index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?, support: parse_support(&parsed.fields, 1)? }),
-            "removeSupport" => Ok(Fem3dOperation::RemoveSupport { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setLoadCase" => Ok(Fem3dOperation::SetLoadCase {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                load_case: parse_load_case(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
-            }),
-            "removeLoadCase" => Ok(Fem3dOperation::RemoveLoadCase { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setCombination" => Ok(Fem3dOperation::SetCombination {
-                index: parse_usize(field(&parsed.fields, "index", 1)?, "index", 1)?,
-                combination: parse_combination(&parsed.fields, parsed.text.clone().unwrap_or_default(), 1)?,
-            }),
-            "removeCombination" => Ok(Fem3dOperation::RemoveCombination { id: field(&parsed.fields, "id", 1)?.to_string() }),
-            "setCamera" => Ok(Fem3dOperation::SetCamera { camera: FemCamera { json: parsed.text.clone().unwrap_or_else(|| "{}".to_string()) } }),
-            "setAnalysisSettings" => Ok(Fem3dOperation::SetAnalysisSettings {
-                settings: FemAnalysisSettings {
-                    modal_count: parse_usize(field(&parsed.fields, "modal", 1)?, "modal", 1)?,
-                    buckling_count: parse_usize(field(&parsed.fields, "buckling", 1)?, "buckling", 1)?,
-                    deformation_scale: parse_f64(field(&parsed.fields, "scale", 1)?, "scale", 1)?,
-                },
-            }),
-            "setDocument" => {
-                let text = parsed.text.ok_or_else(|| TextError::new("setDocument requires a quoted document field", TextSpan::at(1, 1)))?;
-                Ok(Fem3dOperation::SetDocument { document: parse_document(&text)? })
-            }
-            other => Err(TextError::expected(
-                format!("unknown fem3d operation '{other}'"),
-                TextSpan::at(1, 1),
-                "setNode|removeNode|setElement|removeElement|setMaterial|removeMaterial|setSection|removeSection|setSolid|removeSolid|setSupport|removeSupport|setLoadCase|removeLoadCase|setCombination|removeCombination|setCamera|setAnalysisSettings|setDocument",
-            )),
-        }
-    }
-    //#endregion Operation
-}
-
-impl vcs::DocumentDsl for Fem3dDocument {
-    const EXTENSION: &'static str = "fem3d";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        fem3d_dsl::parse_document(text)
-    }
-
-    fn print_dsl(&self) -> String {
-        fem3d_dsl::print_document(self)
-    }
-}
+// `Fem3dDocument`'s `vcs::DocumentDsl` and `Fem3dOperation`'s `vcs::OpText` are generated by
+// `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions in
+// `🔖Document`/`🔖Operations` above — the engine's `dsl_schema` grammar replaces this crate's own
+// hand-rolled lexer/parser/printer.
 // #endregion 🔖Dsl
-
-// #region 🔖OpText
-impl vcs::OpText for Fem3dOperation {
-    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-        fem3d_dsl::parse_operation(line)
-    }
-
-    fn print_op(&self) -> String {
-        fem3d_dsl::print_operation(self)
-    }
-}
-// #endregion 🔖OpText
 
 // #region 🔖Bridge
 
@@ -1300,7 +807,7 @@ fn resolve_geometry(doc: &Fem3dDocument) -> Result<ResolvedGeometry, Fem3dError>
         meshed_solids.push(MeshedSolid { solid_id: solid.id.clone(), node_ids, top_offset, top_footprint_points: tri_mesh.points, top_footprint_tris: tri_mesh.tris });
     }
 
-    let supports = doc.supports.iter().map(|support| Support { node_id: support.node_id.clone(), fixed: support.fixed.clone() }).collect();
+    let supports = doc.supports.iter().map(|support| Support { node_id: support.node_id.clone(), fixed: support.fixed.iter().map(|dof| Dof::from(*dof)).collect() }).collect();
     Ok((nodes, elements, meshed_solids, supports))
 }
 
@@ -1327,7 +834,7 @@ fn translate_loads(loads: &[FemLoad], solids: &[MeshedSolid]) -> Result<(Vec<Nod
     let mut member_loads = Vec::new();
     for load in loads {
         match load {
-            FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: *dof, value: *value }),
+            FemLoad::Nodal { node_id, dof, value, .. } => nodal_loads.push(NodalLoad { node_id: node_id.clone(), dof: Dof::from(*dof), value: *value }),
             FemLoad::MemberUdl { element_id, wx, wy, wz, .. } => member_loads.push((element_id.clone(), MemberUdl { wx: *wx, wy: *wy, wz: *wz })),
             FemLoad::Area { solid_id, pressure, .. } => {
                 let solid = solids.iter().find(|s| &s.solid_id == solid_id).ok_or_else(|| Fem3dError::UnknownSolidId(solid_id.clone()))?;
@@ -1368,7 +875,8 @@ pub fn fem3d_solve_all(doc: &Fem3dDocument) -> Result<HashMap<String, fem_core::
         let (nodal_loads, member_loads) = translate_loads(&case.loads, &solids)?;
         cases.push(analyses::LoadCase { id: case.id.clone(), nodal_loads, member_loads, self_weight: case.self_weight });
     }
-    let combinations: Vec<analyses::Combination> = doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.clone() }).collect();
+    let combinations: Vec<analyses::Combination> =
+        doc.combinations.iter().map(|combination| analyses::Combination { id: combination.id.clone(), terms: combination.terms.iter().map(|(id, factor)| (id.clone(), *factor)).collect() }).collect();
     analyses::solve_multi_case(&model, &cases, &combinations, [0.0, 0.0, -9.81]).map_err(Fem3dError::from)
 }
 
@@ -1580,8 +1088,8 @@ mod tests {
             materials: vec![FemMaterial { id: "steel".into(), name: "Steel".into(), e, g, nu: 0.3, rho: 7850.0 }],
             sections: vec![FemSection { id: "hea200".into(), name: "HEA200".into(), area: a, iy, iz, j }],
             solids: vec![],
-            supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() }],
-            load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -p }], self_weight: false }],
+            supports: vec![FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() }],
+            load_cases: vec![FemLoadCase { id: "point".into(), name: "Point Load".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -p }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -1603,11 +1111,11 @@ mod tests {
             sections: vec![FemSection { id: "rod".into(), name: "Rod".into(), area: 0.001, iy: 1e-6, iz: 1e-6, j: 1e-6 }],
             solids: vec![],
             supports: vec![
-                FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() },
-                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: Dof::ALL.to_vec() },
-                FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: Dof::ALL.to_vec() },
+                FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() },
+                FemSupport { id: "s2".into(), node_id: "n2".into(), fixed: FemDof::ALL.to_vec() },
+                FemSupport { id: "s3".into(), node_id: "n4".into(), fixed: FemDof::ALL.to_vec() },
             ],
-            load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: Dof::Tz, value: -1000.0 }], self_weight: false }],
+            load_cases: vec![FemLoadCase { id: "drop".into(), name: "Drop".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n3".into(), dof: FemDof::Tz, value: -1000.0 }], self_weight: false }],
             combinations: vec![],
             analysis: FemAnalysisSettings::default(),
             camera: FemCamera::default(),
@@ -1639,7 +1147,7 @@ mod tests {
     fn element_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
         let updated = FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 };
-        let after_set = round_trip(&base, &Fem3dOperation::SetElement { index: 0, element: updated });
+        let after_set = round_trip(&base, &Fem3dOperation::SetElement { index: 0, element: Box::new(updated) });
         round_trip(&after_set, &Fem3dOperation::RemoveElement { id: "e1".into() });
     }
 
@@ -1662,7 +1170,7 @@ mod tests {
     #[test]
     fn support_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let support = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] };
+        let support = FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] };
         let after_set = round_trip(&base, &Fem3dOperation::SetSupport { index: 0, support });
         round_trip(&after_set, &Fem3dOperation::RemoveSupport { id: "s1".into() });
     }
@@ -1670,7 +1178,7 @@ mod tests {
     #[test]
     fn load_case_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -9000.0 }], self_weight: false };
+        let load_case = FemLoadCase { id: "point".into(), name: "Point Load Updated".into(), loads: vec![FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -9000.0 }], self_weight: false };
         let after_set = round_trip(&base, &Fem3dOperation::SetLoadCase { index: 0, load_case });
         round_trip(&after_set, &Fem3dOperation::RemoveLoadCase { id: "point".into() });
     }
@@ -1678,7 +1186,7 @@ mod tests {
     #[test]
     fn combination_set_and_remove_round_trip() {
         let (base, ..) = cantilever_fixture();
-        let combination = FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35)] };
+        let combination = FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) };
         let after_set = round_trip(&base, &Fem3dOperation::SetCombination { index: 0, combination });
         round_trip(&after_set, &Fem3dOperation::RemoveCombination { id: "uls".into() });
     }
@@ -1812,8 +1320,8 @@ mod tests {
     #[test]
     fn fem3d_solve_all_returns_case_and_combination_results() {
         let (mut doc, ..) = cantilever_fixture();
-        doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: Dof::Tz, value: -2000.0 }], self_weight: false });
-        doc.combinations = vec![FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35), ("point2".into(), 1.0)] }];
+        doc.load_cases.push(FemLoadCase { id: "point2".into(), name: "Point Load 2".into(), loads: vec![FemLoad::Nodal { id: "l2".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -2000.0 }], self_weight: false });
+        doc.combinations = vec![FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("point2".into(), 1.0)]) }];
 
         let results = fem3d_solve_all(&doc).expect("solves");
         let mut keys: Vec<&String> = results.keys().collect();
@@ -1881,10 +1389,10 @@ mod tests {
             sections: vec![],
             solids: vec![FemSolid { id: "sol1".into(), name: "Slab".into(), outline: vec![[0.0, 0.0], [2.0, 0.0], [2.0, 1.0], [0.0, 1.0]], holes: vec![], base_z: 0.0, height: 0.5, layers: 1, mesh_size: 1.0, material_id: "concrete".into() }],
             supports: vec![
-                FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                FemSupport { id: "s3".into(), node_id: "sc2".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
-                FemSupport { id: "s4".into(), node_id: "sc3".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Tz] },
+                FemSupport { id: "s1".into(), node_id: "sc0".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
+                FemSupport { id: "s2".into(), node_id: "sc1".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
+                FemSupport { id: "s3".into(), node_id: "sc2".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
+                FemSupport { id: "s4".into(), node_id: "sc3".into(), fixed: vec![FemDof::Tx, FemDof::Ty, FemDof::Tz] },
             ],
             load_cases: vec![FemLoadCase { id: "self".into(), name: "Self Weight".into(), loads: vec![], self_weight: true }],
             combinations: vec![],
@@ -2012,7 +1520,7 @@ mod tests {
         vcs::test_support::assert_dsl_round_trip(&truss_fixture());
         vcs::test_support::assert_dsl_round_trip(&solid_slab_doc());
         let mut with_combination = cantilever;
-        with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35)] });
+        with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) });
         vcs::test_support::assert_dsl_round_trip(&with_combination);
     }
 
@@ -2022,11 +1530,11 @@ mod tests {
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveNode { id: "n1".into() });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement {
             index: 0,
-            element: FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 },
+            element: Box::new(FemElement::Frame { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "hea200".into(), roll: 0.5 }),
         });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetElement {
             index: 0,
-            element: FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() },
+            element: Box::new(FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n2".into(), material_id: "steel".into(), section_id: "rod".into() }),
         });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveElement { id: "e1".into() });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetMaterial { index: 0, material: FemMaterial { id: "steel".into(), name: "Steel".into(), e: 210e9, g: 80.77e9, nu: 0.3, rho: 7850.0 } });
@@ -2048,7 +1556,7 @@ mod tests {
             },
         });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveSolid { id: "sol1".into() });
-        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: Dof::ALL.to_vec() } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetSupport { index: 0, support: FemSupport { id: "s1".into(), node_id: "n1".into(), fixed: FemDof::ALL.to_vec() } });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveSupport { id: "s1".into() });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetLoadCase {
             index: 0,
@@ -2056,7 +1564,7 @@ mod tests {
                 id: "point".into(),
                 name: "Point Load".into(),
                 loads: vec![
-                    FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: Dof::Tz, value: -5000.0 },
+                    FemLoad::Nodal { id: "l1".into(), node_id: "n2".into(), dof: FemDof::Tz, value: -5000.0 },
                     FemLoad::MemberUdl { id: "l2".into(), element_id: "e1".into(), wx: 0.0, wy: 0.0, wz: -800.0 },
                     FemLoad::Area { id: "l3".into(), solid_id: "sol1".into(), pressure: 800.0 },
                 ],
@@ -2064,7 +1572,7 @@ mod tests {
             },
         });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveLoadCase { id: "point".into() });
-        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("point".into(), 1.35), ("live".into(), 1.5)] } });
+        vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCombination { index: 0, combination: FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35), ("live".into(), 1.5)]) } });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::RemoveCombination { id: "uls".into() });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetCamera { camera: FemCamera { json: "{\"zoom\":2}".into() } });
         vcs::test_support::assert_op_line_round_trip(&Fem3dOperation::SetAnalysisSettings { settings: FemAnalysisSettings { modal_count: 5, buckling_count: 2, deformation_scale: 10.0 } });

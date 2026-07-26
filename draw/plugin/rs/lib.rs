@@ -2035,7 +2035,7 @@ fn create_draw_app() -> App {
             .utility(draw_utility("selectLasso", "Lasso Select", "lasso", "Select", UtilityCategory::Selection))
             .utility(draw_utility("selectDirect", "Direct Select", "mouse-pointer-2", "Select", UtilityCategory::Selection))
             .utility(draw_utility("pen", "Pen", "pen-tool", "Draw", UtilityCategory::Utilities))
-            .utility(draw_utility("shapeRect", "Rectangle", "square", "Draw", UtilityCategory::Utilities))
+            .utility(draw_utility("shapeRect", "Rectangle", "rectangle-tool", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("shapeEllipse", "Ellipse", "circle", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("shapeLine", "Line", "minus", "Draw", UtilityCategory::Utilities))
             .utility(draw_utility("shapePolygon", "Polygon", "pentagon", "Draw", UtilityCategory::Utilities))

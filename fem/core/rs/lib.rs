@@ -1001,6 +1001,175 @@ pub mod analyses {
             assert!((*averaged.get("b1").unwrap() - vb).abs() < 1e-9);
             assert!((*averaged.get("b2").unwrap() - vb).abs() < 1e-9);
         }
+
+        /// 🔍 An empty `AnalysisModel` is rejected the same way `Model`'s top-level `validate` rejects it.
+        #[test]
+        fn empty_model_is_rejected() {
+            let model = AnalysisModel { nodes: vec![], elements: vec![], supports: vec![] };
+            let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
+            assert_eq!(err, FemError::EmptyModel);
+        }
+
+        /// 🔍 An element referencing a node id absent from `model.nodes` is rejected.
+        #[test]
+        fn dangling_element_node_ref_is_rejected() {
+            let model = AnalysisModel {
+                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }],
+                elements: vec![Box::new(Bar2 { id: "e1".into(), start: "a".into(), end: "missing".into(), e: 1.0, area: 1.0, density: 0.0 })],
+                supports: vec![],
+            };
+            let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
+            assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
+        }
+
+        /// 🔍 A support referencing a node id absent from `model.nodes` is rejected.
+        #[test]
+        fn dangling_support_node_ref_is_rejected() {
+            let model = AnalysisModel {
+                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }],
+                elements: vec![],
+                supports: vec![Support { node_id: "missing".into(), fixed: vec![Dof::Tx] }],
+            };
+            let err = solve_multi_case(&model, &[], &[], [0.0, 0.0, 0.0]).unwrap_err();
+            assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
+        }
+
+        /// 🔍 A `LoadCase` nodal load referencing a node id absent from `model.nodes` is rejected —
+        /// `validate_case`'s own check, distinct from `validate`'s model-wide checks above.
+        #[test]
+        fn dangling_load_case_node_ref_is_rejected() {
+            let model = AnalysisModel { nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }], elements: vec![], supports: vec![] };
+            let case = LoadCase { id: "bad".into(), nodal_loads: vec![NodalLoad { node_id: "missing".into(), dof: Dof::Tx, value: 1.0 }], member_loads: vec![], self_weight: false };
+            let err = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).unwrap_err();
+            assert_eq!(err, FemError::DanglingNodeRef("missing".into()));
+        }
+
+        /// 🌬️ `solve_multi_case`'s member-UDL branch (`case_rhs_old`'s `equivalent_nodal_loads` path) must
+        /// match `solve_linear_static`'s dense pipeline (`model.member_loads`) on an equivalent model.
+        #[test]
+        fn solve_multi_case_applies_member_udl_equivalent_loads() {
+            let (e, area, iy, l, w) = (200e9, 0.01, 1e-5, 2.0, 500.0);
+            let model = AnalysisModel {
+                nodes: vec![Node { id: "a".into(), pos: [0.0, 0.0, 0.0] }, Node { id: "b".into(), pos: [l, 0.0, 0.0] }],
+                elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+                supports: vec![Support { node_id: "a".into(), fixed: vec![Dof::Tx, Dof::Ty, Dof::Rz] }],
+            };
+            let case = LoadCase { id: "udl".into(), nodal_loads: vec![], member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })], self_weight: false };
+            let results = solve_multi_case(&model, &[case], &[], [0.0, 0.0, 0.0]).expect("solves");
+            let sparse_result = results.get("udl").unwrap();
+
+            let dense_model = Model {
+                nodes: model.nodes.clone(),
+                elements: vec![Box::new(BeamEb2 { id: "e1".into(), start: "a".into(), end: "b".into(), e, area, iy, density: 0.0 })],
+                supports: model.supports.clone(),
+                nodal_loads: vec![],
+                member_loads: vec![("e1".into(), MemberUdl { wx: 0.0, wy: -w, wz: 0.0 })],
+            };
+            let dense_result = solve_linear_static(&dense_model).expect("dense solves");
+
+            for sd in &sparse_result.displacements {
+                let dd = dense_result.displacements.iter().find(|d| d.node_id == sd.node_id).unwrap();
+                for k in 0..6 {
+                    assert!((sd.values[k] - dd.values[k]).abs() < 1e-8, "displacement mismatch at {} dof {k}", sd.node_id);
+                }
+            }
+        }
+
+        /// 🌱 `zero_like` zero-initializes every non-`Beam` `ElementResult` variant (the `Beam` variant is
+        /// covered by `combination_equals_manual_superposition` above), and `add_scaled_element_result` on
+        /// a freshly-zeroed accumulator reduces to exactly `factor * term`, field-by-field, per variant.
+        #[test]
+        fn zero_like_and_add_scaled_element_result_handle_every_non_beam_variant() {
+            let factor = 2.5;
+
+            let bar = ElementResult::Bar { n: 4.0 };
+            let zero_bar = zero_like(&bar);
+            assert_eq!(zero_bar, ElementResult::Bar { n: 0.0 });
+            match add_scaled_element_result(&zero_bar, &bar, factor) {
+                ElementResult::Bar { n } => assert!((n - factor * 4.0).abs() < 1e-12),
+                other => panic!("expected bar, got {other:?}"),
+            }
+
+            let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
+            let zero_plane = zero_like(&plane);
+            match &zero_plane {
+                ElementResult::Plane { gauss } => assert_eq!(gauss[0], PlaneStress { sxx: 0.0, syy: 0.0, sxy: 0.0, von_mises: 0.0 }),
+                other => panic!("expected plane, got {other:?}"),
+            }
+            match add_scaled_element_result(&zero_plane, &plane, factor) {
+                ElementResult::Plane { gauss } => {
+                    assert!((gauss[0].sxx - factor * 1.0).abs() < 1e-12);
+                    assert!((gauss[0].syy - factor * 2.0).abs() < 1e-12);
+                    assert!((gauss[0].sxy - factor * 3.0).abs() < 1e-12);
+                }
+                other => panic!("expected plane, got {other:?}"),
+            }
+
+            let plate = ElementResult::Plate { gauss: vec![PlateMoments { mx: 1.0, my: 2.0, mxy: 3.0 }] };
+            let zero_plate = zero_like(&plate);
+            match add_scaled_element_result(&zero_plate, &plate, factor) {
+                ElementResult::Plate { gauss } => {
+                    assert!((gauss[0].mx - factor * 1.0).abs() < 1e-12);
+                    assert!((gauss[0].my - factor * 2.0).abs() < 1e-12);
+                    assert!((gauss[0].mxy - factor * 3.0).abs() < 1e-12);
+                }
+                other => panic!("expected plate, got {other:?}"),
+            }
+
+            let solid = ElementResult::Solid { gauss: vec![SolidStress { sxx: 1.0, syy: 2.0, szz: 3.0, sxy: 4.0, syz: 5.0, sxz: 6.0, von_mises: 7.0 }] };
+            let zero_solid = zero_like(&solid);
+            match add_scaled_element_result(&zero_solid, &solid, factor) {
+                ElementResult::Solid { gauss } => {
+                    assert!((gauss[0].sxx - factor * 1.0).abs() < 1e-12);
+                    assert!((gauss[0].szz - factor * 3.0).abs() < 1e-12);
+                    assert!((gauss[0].syz - factor * 5.0).abs() < 1e-12);
+                }
+                other => panic!("expected solid, got {other:?}"),
+            }
+
+            let shell = ElementResult::Shell { gauss: vec![ShellState { nxx: 1.0, nyy: 2.0, nxy: 3.0, mxx: 4.0, myy: 5.0, mxy: 6.0, von_mises_top: 7.0, von_mises_bottom: 8.0 }] };
+            let zero_shell = zero_like(&shell);
+            match add_scaled_element_result(&zero_shell, &shell, factor) {
+                ElementResult::Shell { gauss } => {
+                    assert!((gauss[0].nxx - factor * 1.0).abs() < 1e-12);
+                    assert!((gauss[0].mxy - factor * 6.0).abs() < 1e-12);
+                    assert!((gauss[0].von_mises_bottom - factor * 8.0).abs() < 1e-12);
+                }
+                other => panic!("expected shell, got {other:?}"),
+            }
+        }
+
+        /// 📊 `element_scalar_average` covers every element-kind/scalar combination it recognizes (`Some`)
+        /// and every mismatched combination (`None`) — arms `nodal_averaged_scalar`'s own patch tests never
+        /// happen to exercise (those only touch `Plane`/`VonMises`).
+        #[test]
+        fn element_scalar_average_covers_every_variant_and_scalar_combination() {
+            let plane = ElementResult::Plane { gauss: vec![PlaneStress { sxx: 1.0, syy: 2.0, sxy: 3.0, von_mises: 4.0 }] };
+            assert_eq!(element_scalar_average(&plane, StressScalar::VonMises), Some(4.0));
+            assert_eq!(element_scalar_average(&plane, StressScalar::Sxx), Some(1.0));
+            assert_eq!(element_scalar_average(&plane, StressScalar::Syy), Some(2.0));
+            assert_eq!(element_scalar_average(&plane, StressScalar::Sxy), Some(3.0));
+            assert_eq!(element_scalar_average(&plane, StressScalar::Szz), None);
+            assert_eq!(element_scalar_average(&plane, StressScalar::VonMisesTop), None);
+
+            let solid = ElementResult::Solid { gauss: vec![SolidStress { sxx: 1.0, syy: 2.0, szz: 3.0, sxy: 4.0, syz: 5.0, sxz: 6.0, von_mises: 7.0 }] };
+            assert_eq!(element_scalar_average(&solid, StressScalar::VonMises), Some(7.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Sxx), Some(1.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Syy), Some(2.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Szz), Some(3.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Sxy), Some(4.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Syz), Some(5.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::Sxz), Some(6.0));
+            assert_eq!(element_scalar_average(&solid, StressScalar::VonMisesTop), None);
+
+            let shell = ElementResult::Shell { gauss: vec![ShellState { nxx: 0.0, nyy: 0.0, nxy: 0.0, mxx: 0.0, myy: 0.0, mxy: 0.0, von_mises_top: 8.0, von_mises_bottom: 9.0 }] };
+            assert_eq!(element_scalar_average(&shell, StressScalar::VonMisesTop), Some(8.0));
+            assert_eq!(element_scalar_average(&shell, StressScalar::VonMisesBottom), Some(9.0));
+            assert_eq!(element_scalar_average(&shell, StressScalar::VonMises), None);
+
+            let bar = ElementResult::Bar { n: 42.0 };
+            assert_eq!(element_scalar_average(&bar, StressScalar::VonMises), None);
+        }
     }
     // #endregion 🔖Tests
 }
@@ -2377,6 +2546,180 @@ pub mod elements2d {
                 assert!(f.get(i).abs() < 1e-9, "rigid-body geometric force[{i}] = {}", f.get(i));
             }
         }
+
+        /// 🌀 `Quad4::geometric_stiffness` must vanish under a pure rigid translation and be symmetric —
+        /// the last `Quad4` method not already exercised by `quad4_mass_total_equals_rho_t_area`/the patch
+        /// and rigid-translation stiffness tests above.
+        #[test]
+        fn quad4_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3]];
+            let el = Quad4 { id: "q".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Strain, density: 0.0 };
+            let ctx = ctx_of(&coords);
+            let u = linear_field_u_local(&coords, A, B);
+            let kg = el.geometric_stiffness(&ctx, &u).expect("quad4 reports geometric stiffness");
+            for r in 0..8 {
+                for c in 0..8 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let kg_rigid = el.geometric_stiffness(&ctx, &rigid_translation_u_local(4, 1.5, -2.3)).unwrap();
+            let f = kg_rigid.mul_vec(&rigid_translation_u_local(4, 0.4, 0.6));
+            for i in 0..8 {
+                assert!(f.get(i).abs() < 1e-9, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
+        }
+
+        /// ⚖️ `Tri6Lst::mass` total (same partition-of-unity identity `tri3_cst_mass_total_equals_rho_t_area`
+        /// uses) — `Tri6Lst`'s `mass`/`mass_rule`/`shape_full` are otherwise never exercised.
+        #[test]
+        fn tri6_lst_mass_total_equals_rho_t_area() {
+            let (density, thickness) = (7850.0, 0.02);
+            let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
+            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness, kind: PlaneKind::Stress, density };
+            let ctx = ctx_of(&coords);
+            let m = el.mass(&ctx).expect("tri6lst reports mass");
+            let area = triangle_signed_area(&[coords[0], coords[1], coords[2]]).abs();
+            let sum_tx: f64 = (0..6).flat_map(|r| (0..6).map(move |c| (2 * r, 2 * c))).map(|(r, c)| m.get(r, c)).sum();
+            let expected = density * thickness * area;
+            assert!((sum_tx - expected).abs() / expected < 1e-6, "sum={sum_tx} expected={expected}");
+        }
+
+        /// 🌀 `Tri6Lst::geometric_stiffness` must vanish under a pure rigid translation and be symmetric.
+        #[test]
+        fn tri6_lst_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8], [1.0, 0.05], [1.1, 0.95], [0.1, 0.9]];
+            let el = Tri6Lst { id: "t".into(), nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 };
+            let ctx = ctx_of(&coords);
+            let u = linear_field_u_local(&coords, A, B);
+            let kg = el.geometric_stiffness(&ctx, &u).expect("tri6lst reports geometric stiffness");
+            for r in 0..12 {
+                for c in 0..12 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let kg_rigid = el.geometric_stiffness(&ctx, &rigid_translation_u_local(6, 1.5, -2.3)).unwrap();
+            let f = kg_rigid.mul_vec(&rigid_translation_u_local(6, 0.4, 0.6));
+            for i in 0..12 {
+                assert!(f.get(i).abs() < 1e-9, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
+        }
+
+        /// ⚖️ `Quad8::mass` total (same identity as `quad4_mass_total_equals_rho_t_area`) — `Quad8`'s
+        /// `mass`/`shape_full` are otherwise never exercised.
+        #[test]
+        fn quad8_mass_total_equals_rho_t_area() {
+            let (density, thickness) = (2400.0, 0.15);
+            let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
+            let el = Quad8 {
+                id: "q8".into(),
+                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
+                e: E,
+                nu: NU,
+                thickness,
+                kind: PlaneKind::Stress,
+                density,
+            };
+            let ctx = ctx_of(&coords);
+            let m = el.mass(&ctx).expect("quad8 reports mass");
+            let area = triangle_signed_area(&[coords[0], coords[1], coords[2]]).abs() + triangle_signed_area(&[coords[0], coords[2], coords[3]]).abs();
+            let sum_tx: f64 = (0..8).flat_map(|r| (0..8).map(move |c| (2 * r, 2 * c))).map(|(r, c)| m.get(r, c)).sum();
+            let expected = density * thickness * area;
+            assert!((sum_tx - expected).abs() / expected < 1e-6, "sum={sum_tx} expected={expected}");
+        }
+
+        /// 🌀 `Quad8::geometric_stiffness` must vanish under a pure rigid translation and be symmetric.
+        #[test]
+        fn quad8_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let coords = [[0.0, 0.0], [3.0, 0.2], [3.3, 2.5], [0.2, 2.3], [1.5, 0.1], [3.15, 1.35], [1.75, 2.4], [0.1, 1.15]];
+            let el = Quad8 {
+                id: "q8".into(),
+                nodes: ["a".into(), "b".into(), "c".into(), "d".into(), "e".into(), "f".into(), "g".into(), "h".into()],
+                e: E,
+                nu: NU,
+                thickness: 1.0,
+                kind: PlaneKind::Stress,
+                density: 0.0,
+            };
+            let ctx = ctx_of(&coords);
+            let u = linear_field_u_local(&coords, A, B);
+            let kg = el.geometric_stiffness(&ctx, &u).expect("quad8 reports geometric stiffness");
+            for r in 0..16 {
+                for c in 0..16 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let kg_rigid = el.geometric_stiffness(&ctx, &rigid_translation_u_local(8, 1.5, -2.3)).unwrap();
+            let f = kg_rigid.mul_vec(&rigid_translation_u_local(8, 0.4, 0.6));
+            for i in 0..16 {
+                assert!(f.get(i).abs() < 1e-9, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
+        }
+
+        /// 🔌 `Tri3Cst`/`Tri6Lst`/`Quad8` used as `Box<dyn Element>` inside a solved `Model` — unlike every
+        /// other test in this module (which calls their methods directly), this exercises `id`/`node_ids`/
+        /// `dofs_per_node` via the SAME dynamic-dispatch assembly path `solve_linear_static` uses for every
+        /// element kind, on three disjoint single-element-type patches sharing one solve.
+        #[test]
+        fn continuum_elements_solve_correctly_via_dyn_dispatch() {
+            let p = 1000.0;
+            let mut nodes = vec![
+                Node { id: "t3_a".into(), pos: [0.0, 0.0, 0.0] },
+                Node { id: "t3_b".into(), pos: [2.0, 0.0, 0.0] },
+                Node { id: "t3_c".into(), pos: [0.0, 2.0, 0.0] },
+            ];
+            let mut elements: Vec<Box<dyn Element>> =
+                vec![Box::new(Tri3Cst { id: "t3".into(), nodes: ["t3_a".into(), "t3_b".into(), "t3_c".into()], e: E, nu: NU, thickness: 1.0, kind: PlaneKind::Stress, density: 0.0 })];
+            let mut supports = vec![Support { node_id: "t3_a".into(), fixed: vec![Dof::Tx, Dof::Ty] }, Support { node_id: "t3_b".into(), fixed: vec![Dof::Tx, Dof::Ty] }];
+            let mut nodal_loads = vec![NodalLoad { node_id: "t3_c".into(), dof: Dof::Tx, value: p }];
+
+            let tri6_ids = ["t6_n0", "t6_n1", "t6_n2", "t6_n01", "t6_n12", "t6_n20"];
+            let tri6_coords: [[f64; 2]; 6] = [[10.0, 0.0], [12.0, 0.0], [10.0, 2.0], [11.0, 0.0], [11.0, 1.0], [10.0, 1.0]];
+            for i in 0..6 {
+                nodes.push(Node { id: tri6_ids[i].into(), pos: [tri6_coords[i][0], tri6_coords[i][1], 0.0] });
+            }
+            elements.push(Box::new(Tri6Lst {
+                id: "t6".into(),
+                nodes: std::array::from_fn(|i| tri6_ids[i].to_string()),
+                e: E,
+                nu: NU,
+                thickness: 1.0,
+                kind: PlaneKind::Stress,
+                density: 0.0,
+            }));
+            for &id in &tri6_ids[..5] {
+                supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
+            }
+            nodal_loads.push(NodalLoad { node_id: "t6_n20".into(), dof: Dof::Tx, value: p });
+
+            let quad8_ids = ["q8_c0", "q8_c1", "q8_c2", "q8_c3", "q8_m01", "q8_m12", "q8_m23", "q8_m30"];
+            let quad8_coords: [[f64; 2]; 8] = [[20.0, 0.0], [22.0, 0.0], [22.0, 2.0], [20.0, 2.0], [21.0, 0.0], [22.0, 1.0], [21.0, 2.0], [20.0, 1.0]];
+            for i in 0..8 {
+                nodes.push(Node { id: quad8_ids[i].into(), pos: [quad8_coords[i][0], quad8_coords[i][1], 0.0] });
+            }
+            elements.push(Box::new(Quad8 {
+                id: "q8".into(),
+                nodes: std::array::from_fn(|i| quad8_ids[i].to_string()),
+                e: E,
+                nu: NU,
+                thickness: 1.0,
+                kind: PlaneKind::Stress,
+                density: 0.0,
+            }));
+            for &id in &quad8_ids[..7] {
+                supports.push(Support { node_id: id.into(), fixed: vec![Dof::Tx, Dof::Ty] });
+            }
+            nodal_loads.push(NodalLoad { node_id: "q8_m30".into(), dof: Dof::Tx, value: p });
+
+            let model = Model { nodes, elements, supports, nodal_loads, member_loads: vec![] };
+            let result = solve_linear_static(&model).expect("mixed continuum patches solve");
+
+            assert_eq!(result.elements.len(), 3);
+            for (free_node, element_id) in [("t3_c", "t3"), ("t6_n20", "t6"), ("q8_m30", "q8")] {
+                let d = result.displacements.iter().find(|d| d.node_id == free_node).unwrap();
+                assert!(d.values[Dof::Tx.index()] > 0.0 && d.values[Dof::Tx.index()].is_finite(), "{free_node}: {}", d.values[Dof::Tx.index()]);
+                assert!(result.elements.iter().any(|(id, _)| id == element_id), "missing element result for {element_id}");
+            }
+        }
     }
     // #endregion 🔖ContinuumTests
 
@@ -2440,6 +2783,35 @@ pub mod elements2d {
             let f = ke.mul_vec(&rigid);
             for i in 0..9 {
                 assert!(f.get(i).abs() < 1e-6, "rigid-body force[{i}] = {}", f.get(i));
+            }
+        }
+
+        /// 🏋️ `PlateDkt::mass` lumps `ρtA/3` onto each node's `Tz` only — zero rotary inertia, zero
+        /// coupling to `Rx`/`Ry` — `mass` is otherwise never exercised (`stiffness_global`/`recover` are
+        /// covered by the patch/rigid-translation/simply-supported tests above and below).
+        #[test]
+        fn plate_dkt_mass_lumps_rho_t_area_over_3_onto_each_tz_only() {
+            let (density, thickness) = (2500.0, 0.02);
+            let coords = [[0.0, 0.0], [2.0, 0.1], [0.2, 1.8]];
+            let el = PlateDkt { id: "p".into(), nodes: ["a".into(), "b".into(), "c".into()], e: E, nu: NU, thickness, density };
+            let ctx = ctx_of(&coords);
+            let m = el.mass(&ctx).expect("plate_dkt reports mass");
+
+            let area = 0.5 * ((coords[1][0] - coords[0][0]) * (coords[2][1] - coords[0][1]) - (coords[2][0] - coords[0][0]) * (coords[1][1] - coords[0][1])).abs();
+            let expected_share = density * thickness * area / 3.0;
+            for i in 0..3 {
+                assert!((m.get(3 * i, 3 * i) - expected_share).abs() / expected_share < 1e-9, "node {i} Tz mass");
+            }
+            for r in 0..9 {
+                for c in 0..9 {
+                    if r != c {
+                        assert!(m.get(r, c).abs() < 1e-12, "unexpected coupling at ({r},{c})");
+                    }
+                }
+            }
+            for i in 0..3 {
+                assert!(m.get(3 * i + 1, 3 * i + 1).abs() < 1e-12, "node {i} Rx should carry no mass");
+                assert!(m.get(3 * i + 2, 3 * i + 2).abs() < 1e-12, "node {i} Ry should carry no mass");
             }
         }
 
@@ -3646,6 +4018,46 @@ pub mod elements3d {
                 }
             }
         }
+
+        /// 🌬️ `Bar3::equivalent_nodal_loads` splits a global UDL `wL/2` exactly evenly at both nodes —
+        /// the 3D analogue of `elements2d::bar2_equivalent_nodal_loads_matches_wl_over_2`.
+        #[test]
+        fn bar3_equivalent_nodal_loads_matches_wl_over_2() {
+            let (e, a, l) = (200e9, 0.001, 5.0);
+            let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
+            let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
+            let udl = MemberUdl { wx: 100.0, wy: -50.0, wz: 20.0 };
+            let f = bar.equivalent_nodal_loads(&ctx, &udl).expect("bar3 reports equivalent nodal loads");
+            let half = l / 2.0;
+            assert!((f.get(0) - udl.wx * half).abs() < 1e-9);
+            assert!((f.get(1) - udl.wy * half).abs() < 1e-9);
+            assert!((f.get(2) - udl.wz * half).abs() < 1e-9);
+            assert!((f.get(3) - udl.wx * half).abs() < 1e-9);
+            assert!((f.get(4) - udl.wy * half).abs() < 1e-9);
+            assert!((f.get(5) - udl.wz * half).abs() < 1e-9);
+        }
+
+        /// 🌀 `Bar3::geometric_stiffness`: zero under rigid translation, symmetric, and (same reasoning
+        /// as `elements2d::bar2_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric`)
+        /// zero along the bar's own axis.
+        #[test]
+        fn bar3_geometric_stiffness_rigid_translation_gives_zero_force_and_is_symmetric() {
+            let (e, a) = (200e9, 0.001);
+            let bar = Bar3 { id: "e1".into(), node_a: "a".into(), node_b: "b".into(), e, a, density: 0.0 };
+            let ctx = ElementContext { positions: vec![[0.0, 0.0, 0.0], [3.0, 4.0, 0.0]] };
+            let u = VecD::from_vec(vec![0.0, 0.0, 0.0, 0.001, 0.0, 0.0]);
+            let kg = bar.geometric_stiffness(&ctx, &u).expect("bar3 reports geometric stiffness");
+            for r in 0..6 {
+                for c in 0..6 {
+                    assert!((kg.get(r, c) - kg.get(c, r)).abs() < 1e-9, "Kg not symmetric at ({r},{c})");
+                }
+            }
+            let rigid = VecD::from_vec(vec![3.0, 4.0, 1.0, 3.0, 4.0, 1.0]);
+            let f = kg.mul_vec(&rigid);
+            for i in 0..6 {
+                assert!(f.get(i).abs() < 1e-6, "rigid-body geometric force[{i}] = {}", f.get(i));
+            }
+        }
     }
     // #endregion 🔖Tests
 
@@ -4456,6 +4868,18 @@ pub mod formulation {
             assert!((j[1][1] - ly / 2.0).abs() < 1e-12);
             assert!((det_j - lx * ly / 4.0).abs() < 1e-9);
         }
+
+        #[test]
+        #[should_panic(expected = "gauss_1d: unsupported order")]
+        fn gauss_1d_panics_on_unsupported_order() {
+            gauss_1d(5);
+        }
+
+        #[test]
+        #[should_panic(expected = "gauss_tri: unsupported order")]
+        fn gauss_tri_panics_on_unsupported_order() {
+            gauss_tri(2);
+        }
     }
     // #endregion 🔖Tests
 }
@@ -5222,6 +5646,63 @@ pub mod mesh {
                     let normal_z = e0[0] * e1[1] - e0[1] * e1[0];
                     assert!(normal_z < 0.0, "bottom face normal should point outward (-z), got normal_z={normal_z}");
                 }
+            }
+        }
+
+        #[test]
+        fn triangulate_rejects_degenerate_outer_boundary() {
+            let domain = PlanarDomain { outer: vec![[0.0, 0.0], [1.0, 0.0]], holes: vec![] };
+            match triangulate(&domain, &no_refine()) {
+                Err(MeshError::DegenerateDomain) => {}
+                other => panic!("expected DegenerateDomain, got {other:?}"),
+            }
+        }
+
+        #[test]
+        fn triangulate_rejects_degenerate_hole() {
+            let domain = PlanarDomain { outer: square(10.0), holes: vec![vec![[3.0, 3.0], [4.0, 4.0]]] };
+            match triangulate(&domain, &no_refine()) {
+                Err(MeshError::DegenerateDomain) => {}
+                other => panic!("expected DegenerateDomain, got {other:?}"),
+            }
+        }
+
+        #[test]
+        fn point_in_polygon_returns_false_for_degenerate_polygon() {
+            assert!(!point_in_polygon([0.0, 0.0], &[]));
+            assert!(!point_in_polygon([0.0, 0.0], &[[0.0, 0.0], [1.0, 0.0]]));
+        }
+
+        /// 📊 `tri_mesh_quality` flags a clockwise-wound (negative signed area) triangle via
+        /// `min_jacobian_sign_positive`, and reports `0.0` angle bounds for an empty mesh instead of the
+        /// unhelpful `f64::INFINITY`/`NEG_INFINITY` an empty min/max fold would otherwise leave behind.
+        #[test]
+        fn tri_mesh_quality_detects_inverted_winding_and_handles_empty_mesh() {
+            let ccw = TriMesh2 { points: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], tris: vec![[0, 1, 2]] };
+            assert!(tri_mesh_quality(&ccw).min_jacobian_sign_positive);
+
+            let cw = TriMesh2 { points: vec![[0.0, 0.0], [1.0, 0.0], [0.0, 1.0]], tris: vec![[0, 2, 1]] };
+            assert!(!tri_mesh_quality(&cw).min_jacobian_sign_positive);
+
+            let empty = TriMesh2 { points: vec![], tris: vec![] };
+            let quality = tri_mesh_quality(&empty);
+            assert_eq!(quality.min_angle_deg, 0.0);
+            assert_eq!(quality.max_angle_deg, 0.0);
+            assert_eq!(quality.element_count, 0);
+        }
+
+        /// 🔺 A `Cell::Tet4` already present in the input `VolumeMesh` passes through `split_to_tets`
+        /// completely unchanged — the only cell kind besides `Wedge6`/`Hex8` `split_to_tets` accepts.
+        #[test]
+        fn split_to_tets_passes_through_existing_tet4_cells() {
+            let points = vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
+            let tet = Cell::Tet4([0, 1, 2, 3]);
+            let mesh = VolumeMesh { points, cells: vec![tet] };
+            let result = split_to_tets(&mesh);
+            assert_eq!(result.cells.len(), 1);
+            match result.cells[0] {
+                Cell::Tet4(nodes) => assert_eq!(nodes, [0, 1, 2, 3]),
+                _ => panic!("expected the Tet4 cell to pass through unchanged"),
             }
         }
     }
@@ -6116,6 +6597,107 @@ pub mod sparse {
                 assert!((pairs.values[i] - dense_vals[i]).abs() / dense_vals[i].abs().max(1e-9) < 1e-3);
             }
         }
+
+        /// 🔍 `CscSym::get` reads back every entry of a symmetric matrix (both `row<=col` and `row>col`
+        /// orderings resolve to the same stored upper-triangle slot) and returns `0.0` for an absent entry;
+        /// `to_csr_full` mirrors the SAME matrix into a full (both triangles materialized) `Csr`.
+        #[test]
+        fn csc_sym_get_and_to_csr_full_match_dense() {
+            let mut coo = Coo::new(3);
+            coo.add(0, 0, 4.0);
+            coo.add(1, 1, 5.0);
+            coo.add(2, 2, 6.0);
+            coo.add(0, 1, 2.0);
+            coo.add(1, 0, 2.0);
+            coo.add(1, 2, 3.0);
+            coo.add(2, 1, 3.0);
+            let dense = coo.to_dense();
+            let csc = coo.to_csc_sym_upper();
+
+            for r in 0..3 {
+                for c in 0..3 {
+                    assert!((csc.get(r, c) - dense.get(r, c)).abs() < 1e-12, "get({r},{c}) = {} vs dense {}", csc.get(r, c), dense.get(r, c));
+                }
+            }
+            assert_eq!(csc.get(0, 2), 0.0, "no (0,2) entry was ever added");
+
+            let full = csc.to_csr_full();
+            let x = VecD::from_vec(vec![1.0, 2.0, 3.0]);
+            let expected = dense.mul_vec(&x);
+            let actual = full.mul_vec(&x);
+            for i in 0..3 {
+                assert!((actual.get(i) - expected.get(i)).abs() < 1e-9, "mul_vec[{i}] = {} vs {}", actual.get(i), expected.get(i));
+            }
+        }
+
+        /// 🔢 `negative_pivot_count` counts `D[j] < 0` — a diagonal (already-factored-trivially) indefinite
+        /// matrix with one negative entry must report exactly one negative pivot.
+        #[test]
+        fn negative_pivot_count_counts_negative_diagonal_entries() {
+            let mut coo = Coo::new(3);
+            coo.add(0, 0, 1.0);
+            coo.add(1, 1, -2.0);
+            coo.add(2, 2, 3.0);
+            let factor = ldlt_factor(&coo.to_csc_sym_upper()).expect("diagonal matrix factors trivially");
+            assert_eq!(factor.negative_pivot_count(), 1);
+        }
+
+        /// ⏱️ `pcg` returns immediately (zero iterations, `converged: true`) when the initial guess `x0`
+        /// already satisfies the residual tolerance.
+        #[test]
+        fn pcg_converges_immediately_when_initial_guess_is_already_exact() {
+            let mut coo = Coo::new(3);
+            coo.add(0, 0, 2.0);
+            coo.add(1, 1, 3.0);
+            coo.add(2, 2, 4.0);
+            let csr = coo.to_csr();
+            let mut x0 = VecD::from_vec(vec![1.0, 2.0, 3.0]);
+            let b = csr.mul_vec(&x0);
+            let stats = pcg(&csr, &b, &mut x0, 1e-8, 100);
+            assert_eq!(stats.iterations, 0);
+            assert!(stats.converged);
+        }
+
+        /// ⏱️ `pcg` with `max_iter: 0` never enters its iteration loop and reports `converged: false`.
+        #[test]
+        fn pcg_reports_not_converged_when_max_iter_is_zero() {
+            let mut coo = Coo::new(3);
+            coo.add(0, 0, 2.0);
+            coo.add(1, 1, 3.0);
+            coo.add(2, 2, 4.0);
+            let csr = coo.to_csr();
+            let b = VecD::from_vec(vec![1.0, 1.0, 1.0]);
+            let mut x0 = VecD::zeros(3);
+            let stats = pcg(&csr, &b, &mut x0, 1e-12, 0);
+            assert_eq!(stats.iterations, 0);
+            assert!(!stats.converged);
+        }
+
+        /// ⏱️ `pcg` against an all-zero operator has zero search-direction curvature (`pᵀAp = 0`) on its
+        /// very first step, hitting the early `break` guard against dividing by zero — reported as
+        /// `converged: false` after exactly 1 iteration.
+        #[test]
+        fn pcg_breaks_on_zero_curvature_direction() {
+            let coo = Coo::new(3); // no entries added: A is the zero operator
+            let csr = coo.to_csr();
+            let b = VecD::from_vec(vec![1.0, 1.0, 1.0]);
+            let mut x0 = VecD::zeros(3);
+            let stats = pcg(&csr, &b, &mut x0, 1e-12, 50);
+            assert_eq!(stats.iterations, 1);
+            assert!(!stats.converged);
+        }
+
+        /// 🎯 `dense_symmetric_eigen_jacobi` on a 0x0 matrix returns empty eigenvalues/eigenvectors instead
+        /// of looping — the degenerate size `subspace_iteration`'s own `.max(1)` guard against normally
+        /// avoids, but the helper itself must still handle directly.
+        #[test]
+        fn dense_symmetric_eigen_jacobi_handles_zero_size_matrix() {
+            let a = MatD::zeros(0, 0);
+            let (vals, vecs) = dense_symmetric_eigen_jacobi(&a);
+            assert!(vals.is_empty());
+            assert_eq!(vecs.rows, 0);
+            assert_eq!(vecs.cols, 0);
+        }
     }
     // #endregion 🔖Tests
 }
@@ -6668,6 +7250,38 @@ mod tests {
         let result = solve_linear_static(&model).expect("solves despite inactive-dof load");
         let n2 = result.displacements.iter().find(|d| d.node_id == "n2").unwrap();
         assert!((n2.values[Dof::Tx.index()] - 0.01).abs() < 1e-9);
+    }
+
+    /// 🔍 Duplicate node ids are rejected the same way `analyses::validate` rejects them.
+    #[test]
+    fn duplicate_node_id_is_rejected() {
+        let mut model = two_spring_model();
+        model.nodes.push(Node { id: "n1".into(), pos: [5.0, 0.0, 0.0] });
+        assert_eq!(solve_linear_static(&model), Err(FemError::DuplicateNodeId("n1".into())));
+    }
+
+    /// 🔍 `Model`'s hand-rolled `Debug` (trait objects aren't `Debug`) must print element ids, not panic.
+    #[test]
+    fn model_debug_fmt_prints_element_ids_not_trait_objects() {
+        let model = two_spring_model();
+        let printed = format!("{model:?}");
+        assert!(printed.contains("e1"), "expected element id \"e1\" in {printed}");
+        assert!(printed.contains("n1") && printed.contains("n2"), "expected node ids in {printed}");
+    }
+
+    /// 🌬️ A member UDL on an element that doesn't override `equivalent_nodal_loads` (the trait default,
+    /// `None`) is silently a no-op — same displacement as solving with no member load at all.
+    #[test]
+    fn member_udl_on_element_without_udl_support_is_a_no_op() {
+        let mut model = two_spring_model();
+        model.member_loads.push(("e1".into(), MemberUdl { wx: 123.0, wy: 456.0, wz: 0.0 }));
+        let with_udl = solve_linear_static(&model).expect("solves");
+        let without_udl = solve_linear_static(&two_spring_model()).expect("solves");
+        for (a, b) in with_udl.displacements.iter().zip(without_udl.displacements.iter()) {
+            for k in 0..6 {
+                assert!((a.values[k] - b.values[k]).abs() < 1e-12, "dof {k}: {} vs {}", a.values[k], b.values[k]);
+            }
+        }
     }
 }
 // #endregion 🔖Tests

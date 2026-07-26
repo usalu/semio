@@ -106,23 +106,27 @@ pub mod app_home {
     //#endregion 🔖Constants
 
     //#region 🔖Types
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
     #[serde(rename_all = "camelCase")]
+    #[dsl(extension = "shome")]
     pub struct SHomeDocument {
         schema: String,
         #[serde(default)]
+        #[dsl(key = "gen")]
         catalog_generation: u64,
     }
 
     /// @emoji 🔢 The Home launcher's only document operation: pins the catalog-generation counter that forces a
     /// re-materialize of the studio list after a create/import/delete side-effect on the catalog port.
     /// It is its own {@link vcs::OperationDiff} (idempotent set), so forward/backward are symmetric.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     pub enum SHomeOperation {
         /// 🫙 The identity operation — an `OperationDiff` needs `Default`; never emitted by `handle_action`.
         #[default]
+        #[dsl(key = "noOperation")]
         NoOperation,
+        #[dsl(key = "setCatalogGeneration")]
         SetCatalogGeneration { value: u64 },
     }
 
@@ -157,109 +161,17 @@ pub mod app_home {
     //#endregion 🔖Types
 
     //#region 🔖Dsl
-    // 📜 Handcrafted textual DSL for `SHomeDocument` (`vcs::DocumentDsl`, extension `.shome`) and
-    // one-line op-text for `SHomeOperation` (`vcs::OpText`, see `🔖OpText`) — mirrors `writer`'s
-    // `writer_dsl` module pattern; hand-rolled locally since `vcs`'s kv-line helpers are private to
-    // that crate.
-    mod home_dsl {
-        use super::{SHomeDocument, SHomeOperation};
-        use std::collections::HashMap;
-        use vcs::{TextError, TextSpan};
-
-        struct KvLine {
-            marker: String,
-            fields: HashMap<String, String>,
-        }
-
-        fn parse_kv_line(line: &str) -> Result<KvLine, TextError> {
-            let mut tokens = line.trim().split_whitespace();
-            let marker = tokens
-                .next()
-                .ok_or_else(|| TextError::new("expected a marker or operation name", TextSpan::at(1, 1)))?
-                .to_string();
-            let mut fields = HashMap::new();
-            for token in tokens {
-                let (key, value) = token
-                    .split_once('=')
-                    .ok_or_else(|| TextError::new(format!("expected key=value token, got '{token}'"), TextSpan::at(1, 1)))?;
-                fields.insert(key.to_string(), value.to_string());
-            }
-            Ok(KvLine { marker, fields })
-        }
-
-        fn field<'a>(fields: &'a HashMap<String, String>, key: &str) -> Result<&'a str, TextError> {
-            fields
-                .get(key)
-                .map(|value| value.as_str())
-                .ok_or_else(|| TextError::new(format!("missing field '{key}'"), TextSpan::at(1, 1)))
-        }
-
-        fn parse_u64(value: &str, key: &str) -> Result<u64, TextError> {
-            value
-                .parse::<u64>()
-                .map_err(|_| TextError::new(format!("expected integer for '{key}', got '{value}'"), TextSpan::at(1, 1)))
-        }
-
-        /// 📥 Parses a full `.shome` document: a single `@home schema=.. gen=..` header line.
-        pub fn parse_document(source: &str) -> Result<SHomeDocument, TextError> {
-            let line = source.lines().find(|line| !line.trim().is_empty()).unwrap_or_default();
-            let parsed = parse_kv_line(line)?;
-            if parsed.marker != "@home" {
-                return Err(TextError::new(format!("expected a '@home' header line, got '{}'", parsed.marker), TextSpan::at(1, 1)));
-            }
-            let schema = field(&parsed.fields, "schema")?.to_string();
-            let catalog_generation = parse_u64(field(&parsed.fields, "gen")?, "gen")?;
-            Ok(SHomeDocument { schema, catalog_generation })
-        }
-
-        /// 📤 Prints an `SHomeDocument` back to its `.shome` DSL form (see {@link parse_document}).
-        pub fn print_document(document: &SHomeDocument) -> String {
-            format!("@home schema={} gen={}", document.schema, document.catalog_generation)
-        }
-
-        /// 📥 Parses a single one-line `SHomeOperation`: `noOperation` or `setCatalogGeneration value=..`.
-        pub fn parse_operation(line: &str) -> Result<SHomeOperation, TextError> {
-            let parsed = parse_kv_line(line)?;
-            match parsed.marker.as_str() {
-                "noOperation" => Ok(SHomeOperation::NoOperation),
-                "setCatalogGeneration" => Ok(SHomeOperation::SetCatalogGeneration { value: parse_u64(field(&parsed.fields, "value")?, "value")? }),
-                other => Err(TextError::expected(format!("unknown home operation '{other}'"), TextSpan::at(1, 1), "noOperation | setCatalogGeneration")),
-            }
-        }
-
-        /// 📤 Prints an `SHomeOperation` back to its one-line op text (see {@link parse_operation}).
-        pub fn print_operation(operation: &SHomeOperation) -> String {
-            match operation {
-                SHomeOperation::NoOperation => "noOperation".to_string(),
-                SHomeOperation::SetCatalogGeneration { value } => format!("setCatalogGeneration value={value}"),
-            }
-        }
-    }
-
-    impl vcs::DocumentDsl for SHomeDocument {
-        const EXTENSION: &'static str = "shome";
-
-        fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-            home_dsl::parse_document(text)
-        }
-
-        fn print_dsl(&self) -> String {
-            home_dsl::print_document(self)
-        }
-    }
+    // `impl vcs::DocumentDsl for SHomeDocument` is emitted automatically by the
+    // `#[derive(dsl::DslDocument)]` on `SHomeDocument` itself (see `🔖Types`) — no manual impl
+    // needed here. The former hand-rolled `mod home_dsl` lexer/parser/printer has been removed now
+    // that the DSL round trip runs through the derive-generated printer/parser.
     //#endregion 🔖Dsl
 
     //#region 🔖OpText
-    impl vcs::OpText for SHomeOperation {
-        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
-            home_dsl::parse_operation(line)
-        }
-
-        fn print_op(&self) -> String {
-            home_dsl::print_operation(self)
-        }
-    }
+    // `impl vcs::OpText for SHomeOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
+    // on `SHomeOperation` itself (see `🔖Types`) — no manual impl needed here.
     //#endregion 🔖OpText
+
 
     //#region 🔖DocumentHelpers
     static CATALOG_PORT: LazyLock<Arc<dyn OsBackbonePort>> = LazyLock::new(|| {
@@ -917,7 +829,7 @@ pub mod app_studio {
     use semio_framework_plugin::{
         app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
         create_default_layout, host_now_ms, is_de_locale, localized_label_map, resolve_labels, tree_item_desc,
-        ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, MeasureSelectItem, WindowEngagementStatus,
+        ui_declarative_sections_to_tree, ui_inspector_all_equal, ui_text, IconName, MeasureSelectItem, WindowEngagementStatus,
         ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind, App,
         AppLabelsOverlay, AppLabelsOverlayExt, DocumentApp, DocumentView, HostEffect, NodeGraphScene, PanelGroup,
         PanelTreeBuilder, SurfaceKind, TextEditorScene, UiButtonNode, UiFieldNode, UiInputNode, UiNode, UiPresence,
@@ -1538,7 +1450,7 @@ pub mod app_studio {
         let app = node.app;
         let description = app.as_ref().and_then(|entry| (!entry.yields.is_empty()).then(|| entry.yields.clone()));
         let mut item = tree_item_desc(format!("s-play-catalogue.document.{id_path}"), label, description);
-        item.icon_id = app.as_ref().map(|entry| entry.app_id.clone());
+        item.icon_id = app.as_ref().and_then(|entry| IconName::from_str(&entry.app_id));
         item.default_open = (!children.is_empty()).then_some(true);
         if let Some(app) = &app {
             let mut drag_data = HashMap::new();
@@ -3205,7 +3117,7 @@ pub mod app_studio {
             .icon_id("s")
             .mode("main", "Studio")
             .default_mode_id("main")
-            .window_kind(S_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", S_PLAY_BODY_MEDIA_GRAPH, SurfaceKind::NodeGraph, "network")
+            .window_kind(S_PLAY_WINDOW_MEDIA_GRAPH, "Media Graph", S_PLAY_BODY_MEDIA_GRAPH, SurfaceKind::NodeGraph, "graph-media")
             .window_kind(S_PLAY_WINDOW_MEDIA_VFS, "Media VFS", S_PLAY_BODY_MEDIA_VFS, SurfaceKind::VirtualFileSystem, "folder")
             .window_kind(
                 S_PLAY_WINDOW_COMPILED_DAG,

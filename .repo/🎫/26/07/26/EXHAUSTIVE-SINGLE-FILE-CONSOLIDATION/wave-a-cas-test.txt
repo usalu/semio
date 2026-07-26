@@ -1,0 +1,148 @@
+    Blocking waiting for file lock on package cache
+   Compiling mathematical_number v0.1.0 (/Users/ueli/Documents/semio/mathematical/number/rs)
+   Compiling mathematical_random v0.1.0 (/Users/ueli/Documents/semio/mathematical/random/rs)
+   Compiling mathematical_algebra v0.1.0 (/Users/ueli/Documents/semio/mathematical/algebra/rs)
+   Compiling mathematical_polynomial v0.1.0 (/Users/ueli/Documents/semio/mathematical/polynomial/rs)
+   Compiling mathematical_cas v0.1.0 (/Users/ueli/Documents/semio/mathematical/cas/rs)
+    Finished `test` profile [unoptimized] target(s) in 8.47s
+     Running unittests lib.rs (/Users/ueli/Documents/semio/.repo/🎫/26/07/26/EXHAUSTIVE-SINGLE-FILE-CONSOLIDATION/target-cas/debug/deps/mathematical_cas-62c2a22e9b578377)
+
+running 138 tests
+test assume::tests::bound_for_deduces_sign_from_assumption_store ... ok
+test assume::tests::close_propagates_even_to_integer_rational_real ... ok
+test assume::tests::close_propagates_positive_to_real_nonnegative_nonzero ... ok
+test assume::tests::close_rejects_positive_and_negative - should panic ... ok
+test canon::tests::add_collects_like_terms ... ok
+test canon::tests::add_drops_zero ... ok
+test canon::tests::func_special_values_fold ... ok
+test canon::tests::canonicalization_is_idempotent_on_a_small_corpus ... ok
+test canon::tests::add_folds_numeric_literals ... ok
+test canon::tests::i_power_cycles_with_period_four ... ok
+test assume::tests::close_rejects_even_and_odd - should panic ... ok
+test canon::tests::mul_combines_like_bases ... ok
+test canon::tests::mul_by_zero_absorbs ... ok
+test canon::tests::mul_nonzero_times_complex_infinity_is_complex_infinity ... ok
+test canon::tests::mul_folds_numeric_literals ... ok
+test canon::tests::mul_zero_times_complex_infinity_is_undefined ... ok
+test canon::tests::nested_pow_combines_exponents_for_integer_outer_exponent ... ok
+test canon::tests::pow_identities ... ok
+test canon::tests::pow_integer_folds_exactly ... ok
+test canon::tests::pow_negative_integer_exponent_gives_rational ... ok
+test canon::tests::radical_exact_perfect_power_folds_fully ... ok
+test canon::tests::radical_of_prime_stays_symbolic ... ok
+test canon::tests::radical_partial_extraction_matches_plan_example ... ok
+test diff::tests::diff_of_constant_is_zero ... ok
+test diff::tests::diff_of_other_symbol_is_zero ... ok
+test diff::tests::chain_rule_sin_of_square ... ok
+test diff::tests::bessel_j_recurrence_derivative ... ok
+test diff::tests::diff_of_x_is_one ... ok
+test diff::tests::general_power_logarithmic_differentiation ... ok
+test diff::tests::exp_of_x_is_itself ... ok
+test diff::tests::power_rule ... ok
+test diff::tests::gradient_computes_all_partials ... ok
+test diff::tests::ln_derivative ... ok
+test expr::tests::ord_is_consistent_and_total ... ok
+test expr::tests::hash_is_deterministic ... ok
+test expr::tests::symbols_with_different_assumptions_are_distinct ... ok
+test expr::tests::structural_equality_ignores_sharing ... ok
+test diff::tests::product_rule ... ok
+test diff::tests::unknown_function_derivative_is_none ... ok
+test fmt::tests::latex_constant_pi ... ok
+test fmt::tests::display_division ... ok
+test fmt::tests::latex_fraction_and_power ... ok
+test fmt::tests::display_simple_polynomial ... ok
+test fmt::tests::display_negative_term ... ok
+test fnkind::tests::arity_hand_cases ... ok
+test fnkind::tests::name_hand_cases ... ok
+test fnkind::tests::parity_hand_cases ... ok
+test integrate::tests::definite_integral_of_power ... ok
+test integrate::tests::integrate_reciprocal_gives_ln ... ok
+test integrate::tests::integrate_power_rule ... ok
+test integrate::tests::integrate_sin_and_cos ... ok
+test integrate::tests::integrate_ln_by_parts ... ok
+test integrate::tests::integrate_polynomial_sum ... ok
+test integrate::tests::integrate_by_parts_x_times_exp ... ok
+test integrate::tests::integrate_u_substitution ... ok
+test integrate::tests::residue_at_simple_pole ... ok
+test limits::tests::direct_substitution_when_defined ... ok
+test limits::tests::limit_at_infinity_of_rational_function ... FAILED
+test limits::tests::classic_sin_x_over_x_at_zero ... ok
+test limits::tests::polynomial_ratio_at_removable_singularity ... ok
+test matrix::tests::det_2x2_hand_case ... ok
+test limits::tests::one_plus_one_over_n_to_the_n_via_lhopital_on_log_form ... ok
+test matrix::tests::cayley_hamilton_holds_for_a_3x3_matrix ... ok
+test matrix::tests::det_symbolic_2x2 ... ok
+test matrix::tests::rank_of_numeric_matrix ... ok
+test matrix::tests::rref_of_numeric_matrix ... ok
+test matrix::tests::inverse_times_original_is_identity ... ok
+test matrix::tests::charpoly_and_eigenvalues_of_diagonal_matrix ... ok
+test matrix::tests::singular_matrix_has_no_inverse ... ok
+test matrix::tests::solve_numeric_linear_system ... ok
+test ode::tests::bernoulli_ode ... FAILED
+test ode::tests::linear_first_order_ode ... FAILED
+test integrate::tests::integrate_simple_partial_fraction ... FAILED
+test pattern::tests::ac_match_finds_permuted_assignment ... ok
+test ode::tests::separable_ode_y_prime_equals_x_over_y ... ok
+test pattern::tests::free_of_constraint_rejects_expressions_containing_the_symbol ... ok
+test pattern::tests::pow_exponent_mismatch_fails ... ok
+test ode::tests::linear_constant_coefficient_second_order_distinct_real_roots ... FAILED
+test ode::tests::linear_constant_coefficient_repeated_root ... ok
+test pattern::tests::rule_rewrites_matching_expression ... ok
+test pattern::tests::seq_wildcard_absorbs_remaining_terms ... ok
+test pattern::tests::wildcard_any_matches_anything ... ok
+test pattern::tests::ruleset_bottom_up_rewrites_nested_occurrence ... ok
+test pattern::tests::wildcard_number_rejects_symbols ... ok
+test pattern::tests::structural_match_on_pow ... ok
+test polybridge::tests::as_poly_uni_fails_for_other_generators ... ok
+test polybridge::tests::as_poly_uni_extracts_univariate_polynomial ... ok
+test polybridge::tests::as_poly_roundtrips_through_from_poly ... ok
+test polybridge::tests::as_ratfunc_auto_recovers_together_form ... ok
+test polybridge::tests::build_ratio_folds_constant_denominator ... ok
+test polybridge::tests::detect_gens_finds_symbols_and_functions ... ok
+test polybridge::tests::factor_poly_u_recombines_to_the_original ... ok
+test series::tests::series_to_expr_round_trips_a_polynomial ... ok
+test series::tests::taylor_series_fails_at_a_pole ... ok
+test series::tests::taylor_series_of_exp_matches_known_coefficients ... ok
+test series::tests::leading_term_skips_zero_coefficients ... ok
+test simplify::tests::apart_splits_simple_rational_function ... ok
+test series::tests::taylor_series_of_sin_around_zero_has_no_even_terms ... ok
+test simplify::tests::collect_groups_like_powers ... ok
+test simplify::tests::cancel_removes_common_univariate_factor ... ok
+test simplify::tests::denest_sqrt_classic_example ... ok
+test simplify::tests::expand_distributes_over_function_argument_unchanged ... ok
+test simplify::tests::factor_recovers_linear_factors ... FAILED
+test simplify::tests::expand_binomial_square ... ok
+test simplify::tests::together_combines_fractions ... ok
+test solve::tests::solve_2x2_linear_system ... ok
+test simplify::tests::simplify_picks_the_smallest_candidate ... ok
+test solve::tests::solve_exp_equation ... ok
+test solve::tests::solve_inequality_simple_quadratic ... ok
+test solve::tests::solve_linear_equation ... ok
+test solve::tests::solve_quadratic_with_real_roots ... ok
+test sums::tests::sum_geometric_series_hand_case ... ok
+test solve::tests::solve_sin_equation_gives_parametric_family ... ok
+test sums::tests::fourier_coefficients_of_a_polynomial_smoke_test ... FAILED
+test sums::tests::sum_of_k_from_1_to_n_is_gauss_formula ... FAILED
+test sums::tests::sum_of_k_squared_matches_known_hand_values ... FAILED
+test transforms::tests::laplace_and_inverse_round_trip_for_exp ... ok
+test transforms::tests::laplace_linearity ... ok
+test transforms::tests::laplace_of_exp ... ok
+test transforms::tests::laplace_of_t_to_the_n ... ok
+test trig::tests::expand_log_of_product_and_power ... ok
+test trig::tests::logcombine_merges_positive_logs ... ok
+test trig::tests::expand_trig_sin_of_sum ... ok
+test trig::tests::logcombine_skips_unknown_sign_arguments ... ok
+test trig::tests::powsimp_combines_same_exponent_factors ... ok
+test trig::tests::trig_canon_applies_pythagorean_identity ... ok
+test visit::tests::contains_symbol_detects_nested_occurrence ... ok
+test visit::tests::free_symbols_deduplicates_and_sorts ... ok
+test trig::tests::trig_canon_pythagorean_with_extra_terms ... ok
+test trig::tests::trig_canon_rewrites_tan_to_sin_over_cos ... ok
+test visit::tests::node_count_hand_case ... ok
+test visit::tests::subs_replaces_matching_subtree ... ok
+test integrate::tests::integrate_irreducible_quadratic_denominator has been running for over 60 seconds
+test ode::tests::linear_constant_coefficient_complex_roots has been running for over 60 seconds
+test rootof::tests::real_roots_of_quadratic_gives_two_rootofs has been running for over 60 seconds
+test rootof::tests::root_of_sign_matches_isolation_interval has been running for over 60 seconds
+test solve::tests::solve_high_degree_gives_rootof has been running for over 60 seconds
+test solve::tests::solve_quadratic_with_complex_roots has been running for over 60 seconds

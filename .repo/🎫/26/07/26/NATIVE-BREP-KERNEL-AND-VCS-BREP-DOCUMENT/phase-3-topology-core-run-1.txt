@@ -1,0 +1,339 @@
+    Blocking waiting for file lock on build directory
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling kernel_3d_brepkit v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/rs)
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:28
+     |
+7007 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:106
+     |
+7007 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:28
+     |
+7050 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:106
+     |
+7050 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: `kernel_3d_brepkit` (lib test) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit --tests` to apply 6 suggestions)
+    Finished `test` profile [unoptimized] target(s) in 32.66s
+     Running unittests lib.rs (target/debug/deps/kernel_3d_brepkit-01ce2960f2c563f3)
+
+running 220 tests
+test arena::tests::insert_and_get_round_trips ... ok
+test arena::tests::display_uses_readable_tag_index_generation_format ... ok
+test arena::tests::len_reflects_only_live_entries ... ok
+test bezier::tests::control_hull_box_contains_all_sampled_curve_points ... ok
+test arena::tests::remove_then_get_returns_none ... ok
+test bezier::tests::eval_at_endpoints_matches_first_and_last_control_point ... ok
+test bezier::tests::elevate_preserves_the_curve_exactly ... ok
+test arena::tests::iteration_is_index_ordered_and_skips_removed_slots ... ok
+test arena::tests::stale_handle_after_reuse_returns_none ... ok
+test bezier::tests::boxes_overlap_detects_disjoint_and_touching_boxes ... ok
+test arena::tests::serde_round_trips_an_id ... ok
+test bezier::tests::subdivide_matches_original_at_endpoints_and_split_point ... ok
+test arena::tests::quick::random_insert_remove_sequence_never_aliases_a_removed_id ... ok
+test bezier::tests::subdivide_of_rational_bezier_preserves_curve_points ... ok
+test bezier::tests::unweighted_bezier_eval_matches_de_casteljau_by_hand ... ok
+test bezier::tests::subdivide_until_flat_leaves_cover_the_full_parameter_range ... ok
+test bspline::tests::basis_function_derivatives_match_finite_differences ... ok
+test bspline::tests::basis_function_derivatives_order_zero_matches_basis_functions ... ok
+test bspline::tests::basis_functions_are_nonnegative ... ok
+test bspline::tests::basis_functions_sum_to_one_everywhere_in_domain ... ok
+test bspline::tests::clamped_uniform_has_correct_domain_and_multiplicity ... ok
+test bspline::tests::de_boor_interpolates_endpoints_of_clamped_curve ... ok
+test bspline::tests::find_span_matches_brute_force_scan ... ok
+test bspline::tests::insert_knot_does_not_change_the_curve ... ok
+test bspline::tests::elevate_bezier_span_preserves_curve_value ... ok
+test bspline::tests::knot_vector_rejects_decreasing_sequence ... ok
+test bspline::tests::knot_vector_rejects_wrong_length ... ok
+test curve::tests::circle_curvature_equals_reciprocal_radius ... ok
+test curve::tests::circle_eval_stays_on_circle_and_derivatives_match_finite_differences ... ok
+test curve::tests::circle_to_nurbs_traces_the_circle_exactly_for_full_circle_multi_span ... ok
+test curve::tests::circle_to_nurbs_traces_the_circle_exactly_for_small_arc ... ok
+test bspline::tests::quick::knot_insertion_is_geometrically_a_no_op_on_random_curves ... ok
+test curve::tests::curve2_line_and_circle_eval ... ok
+test curve::tests::ellipse_derivatives_match_finite_differences ... ok
+test curve::tests::ellipse_to_nurbs_traces_the_ellipse_exactly ... ok
+test curve::tests::line_eval_and_derivatives ... ok
+test curve::tests::line_to_nurbs_matches_line_eval ... ok
+test curve_ops::tests::all_extrema_finds_both_near_and_far_points_on_circle ... ok
+test curve_ops::tests::arc_length_of_line_equals_euclidean_distance ... ok
+test curve_ops::tests::arc_length_of_quarter_circle_matches_closed_form ... ok
+test curve_ops::tests::closest_point_on_circle_matches_radial_projection ... ok
+test curve_ops::tests::closest_point_on_line_matches_perpendicular_foot ... ok
+test curve_ops::tests::interpolate_centripetal_passes_through_all_points ... ok
+test curve_ops::tests::param_at_length_round_trips_with_arc_length ... ok
+test curve_ops::tests::reverse_nurbs_reproduces_the_same_curve_reversed ... ok
+test bspline::tests::quick::de_boor_matches_bernstein_sum_oracle_on_random_bezier_span_curves ... ok
+test curve_ops::tests::split_nurbs_pieces_reproduce_the_original_curve ... ok
+test error::tests::boolean_error_wraps_intersect_error ... ok
+test error::tests::intersect_error_converts_into_kernel_error ... ok
+test error::tests::kernel_error_displays_readable_message ... ok
+test error::tests::validation_issue_displays_code_entity_message ... ok
+test euler::tests::each_face_loop_is_a_closed_ring_of_three_coedges ... ok
+test euler::tests::split_edge_on_a_free_edge_creates_two_edges_and_a_vertex ... ok
+test euler::tests::split_edge_on_a_self_referential_single_coedge_loop_produces_a_valid_two_coedge_ring ... ok
+test euler::tests::split_edge_within_a_loop_ring_preserves_ring_validity ... ok
+test euler::tests::tetrahedron_satisfies_euler_poincare_formula ... ok
+test history::tests::empty_delta_reports_is_empty ... ok
+test history::tests::label_source_never_repeats ... ok
+test history::tests::op_delta_merge_concatenates_all_three_lists ... ok
+test history::tests::recorder_deduplicates_repeated_reports ... ok
+test euler::tests::tetrahedron_build_records_every_entity_as_generated ... ok
+test curve::tests::quick::circle_to_nurbs_traces_the_circle_exactly_for_random_arcs ... ok
+test mat::tests::quat_from_axis_angle_rotates_correctly ... ok
+test mat::tests::quat_to_mat3_matches_direct_rotation ... ok
+test mat::tests::quick::trsf_inverse_round_trips_random_points ... ok
+test mat::tests::slerp_endpoints_match_inputs ... ok
+test history::tests::recorder_generated_entity_is_not_also_reported_modified ... ok
+test mat::tests::trsf_compose_matches_sequential_application ... ok
+test history::tests::recorder_generated_then_deleted_cancels_out ... ok
+test mat::tests::frame_from_normal_deterministic_for_axis_aligned_normals ... ok
+test mat::tests::frame_from_normal_is_right_handed ... ok
+test mat::tests::frame_from_normal_round_trips_local_world ... ok
+test mat::tests::mat3_from_axis_angle_matches_quat_rotation ... ok
+test mat::tests::quat_conjugate_is_inverse_rotation ... ok
+test mat::tests::mat3_determinant_of_identity_is_one ... ok
+test mat::tests::trsf_inverse_round_trips_a_point ... ok
+test oracle::tests::box_sdf_is_negative_inside_and_positive_outside ... ok
+test oracle::tests::cylinder_sdf_is_correct_on_axis_and_cap ... ok
+test oracle::tests::difference_removes_the_second_operand ... ok
+test oracle::tests::placed_box_sdf_respects_transform ... ok
+test oracle::tests::sphere_sdf_matches_analytic_distance ... ok
+test oracle::tests::union_is_the_min_and_matches_containment_of_either_operand ... ok
+test poly::tests::bernstein_eval_matches_monomial_conversion ... ok
+test poly::tests::bernstein_subdivide_matches_original_at_shared_endpoints_and_split_point ... ok
+test poly::tests::bernstein_to_monomial_round_trips_from_monomial ... ok
+test poly::tests::eval_with_derivative_matches_separate_calls ... ok
+test poly::tests::isolate_roots_finds_no_intervals_for_root_free_polynomial ... ok
+test poly::tests::isolate_roots_finds_single_root_of_linear_bernstein ... ok
+test poly::tests::poly_derivative_matches_power_rule ... ok
+test poly::tests::poly_eval_matches_direct_computation ... ok
+test poly::tests::quick::bernstein_monomial_round_trip_holds_on_random_polynomials ... ok
+test poly::tests::refine_root_converges_to_known_root ... ok
+test poly::tests::sign_variations_certifies_no_root_for_monotone_positive_control_polygon ... ok
+test poly::tests::sign_variations_detects_single_sign_change ... ok
+test poly::tests::solve_cubic_finds_single_real_root ... ok
+test poly::tests::solve_cubic_finds_three_known_real_roots ... ok
+test poly::tests::solve_quadratic_avoids_cancellation_for_large_b ... ok
+test poly::tests::solve_quadratic_finds_known_roots ... ok
+test poly::tests::solve_quadratic_handles_no_real_roots ... ok
+test predicates::tests::orient2d_detects_counterclockwise_and_clockwise ... ok
+test predicates::tests::in_circle2d_detects_inside_and_outside_unit_circle ... ok
+test predicates::tests::orient2d_detects_exact_collinearity ... ok
+test predicates::tests::orient2d_resolves_near_degenerate_case_correctly ... ok
+test predicates::tests::orient3d_detects_exact_coplanarity ... ok
+test predicates::tests::orient3d_detects_right_handed_and_left_handed_tetrahedra ... ok
+test predicates::tests::orient3d_resolves_near_degenerate_case_correctly ... ok
+test predicates::tests::sign_of_dot_classifies_acute_right_obtuse ... ok
+test surface::tests::cone_radius_grows_linearly_with_v_and_derivatives_match_finite_differences ... ok
+test surface::tests::cylinder_derivatives_match_finite_differences_and_lie_on_cylinder ... ok
+test surface::tests::cylinder_gaussian_curvature_is_zero_and_mean_curvature_is_half_reciprocal_radius ... ok
+test surface::tests::plane_eval_and_normal ... ok
+test surface::tests::plane_second_derivatives_are_zero_and_gaussian_curvature_is_zero ... ok
+test surface::tests::sphere_eval_stays_on_sphere_and_derivatives_match_finite_differences ... ok
+test surface::tests::sphere_gaussian_curvature_equals_reciprocal_radius_squared ... ok
+test surface::tests::torus_derivatives_match_finite_differences ... ok
+test surface::tests::torus_eval_stays_at_correct_distance_from_main_circle ... ok
+test surface_ops::tests::closest_point_on_cylinder_matches_expected_geometry ... ok
+test surface_ops::tests::closest_point_on_plane_matches_orthogonal_projection ... ok
+test surface_ops::tests::closest_point_on_sphere_matches_radial_projection ... ok
+test surface_ops::tests::coons_patch_of_planar_boundaries_is_the_bilinear_plane ... ok
+test surface_ops::tests::coons_patch_reproduces_boundary_curves_exactly ... ok
+test tests::approximate_curve_builds_a_fitted_nurbs_curve ... ok
+test tests::arc_curve_domain_point_tangent_and_curvature ... ok
+test tests::bounding_box_of_a_compound_covers_every_member_solid ... ok
+test tests::box_edge_curve_queries_use_line_branch ... ok
+test tests::box_surface_area ... ok
+test tests::box_and_tessellate ... ok
+test tests::convex_hull_rejects_fewer_than_four_points ... ok
+test tests::box_tessellation_emits_one_face_group_per_topological_face ... ok
+test tests::coons_patch_rejects_fewer_than_four_curves ... ok
+test tests::curve_curve_intersect_finds_crossing_point ... ok
+test tests::curve_surface_intersect_pierces_a_flat_nurbs_patch ... ok
+test tests::curve_tessellation_produces_edges ... ok
+test tests::deconstruct_box_returns_topology_counts ... ok
+test tests::dispose_sync_removes_the_handle_from_the_registry ... ok
+test tests::defeature_removes_a_face_and_returns_a_solid ... ok
+test tests::distance_closest_point_and_classify_point ... ok
+test tests::draft_applies_pull_direction_taper ... ok
+test tests::extrude_rectangle_volume ... ok
+test tests::dwg_export_import_round_trips_a_box ... ok
+test tests::ellipse_curve_domain_point_and_curvature ... ok
+test tests::extrude_wire_rejects_zero_length_vector ... ok
+test tests::face_surfaces_of_curved_primitives_evaluate_without_error ... ok
+test tests::fillet_edges_and_chamfer_edges_target_a_single_edge ... ok
+test tests::compound_cut_removes_multiple_tools_from_a_target ... ok
+test tests::fillet_and_translate ... ok
+test tests::glb_export_import_round_trips_a_box_through_the_mesh_codec ... ok
+test tests::glb_tessellation_bridge_produces_reasonable_mesh_data ... ok
+test tests::heal_solid_and_convert_to_nurbs_return_the_same_handle ... ok
+test tests::interpolate_curve_rejects_fewer_than_two_points ... ok
+test tests::line_curve_evaluate ... ok
+test tests::line_curve_rejects_coincident_endpoints ... ok
+test tests::linear_circular_and_grid_patterns_build_compounds ... ok
+test tests::mirror_and_copy_preserve_volume ... ok
+test tests::missing_handle_returns_missing_handle_error ... ok
+test tests::nurbs_surface_from_grid_point_and_normal ... ok
+test tests::offset_solid_produces_a_larger_solid_for_positive_distance ... ok
+test tests::planar_face_from_points_rejects_fewer_than_three_points ... ok
+test tests::plane_surface_point_and_normal_match_frame ... ok
+test tests::polyline_wire_rejects_fewer_than_two_points ... ok
+test tests::regular_polygon_wire_rejects_fewer_than_three_sides ... ok
+test tests::retain_sync_drops_unreferenced_handles ... ok
+test tests::rotate_rejects_zero_length_axis ... ok
+test tests::scale_sync_scales_about_a_center ... ok
+test tests::section_box_returns_faces ... ok
+test tests::shell_hollows_out_a_box ... ok
+test tests::solid_exporters_and_importers_round_trip_a_box_per_format ... ok
+test tests::solid_face_loops_returns_a_quad_per_box_face ... ok
+test tests::fillet_variable_and_chamfer_asymmetric_produce_valid_solids ... ok
+test poly::tests::quick::isolate_roots_plus_refine_matches_bisection_oracle_on_random_polynomials ... ok
+test curve_ops::tests::quick::closest_point_matches_brute_force_dense_sampling_oracle ... ok
+test tests::split_box_returns_two_solids_that_sum_to_original_volume ... ok
+test tests::step_export_import_roundtrip_stub ... ok
+test tests::surface_surface_intersect_of_two_flat_nurbs_patches_returns_a_curve ... ok
+test tests::sweep_wire_profile_produces_tube_mesh ... ok
+test tests::tessellate_face_carries_boundary_edge_positions ... ok
+test tests::tessellate_to_mesh_data_carries_face_ids ... ok
+test tests::validate_reports_valid_for_a_clean_box ... ok
+test tests::vertex_and_face_from_wire_register_expected_kinds ... ok
+test tests::wrong_entity_type_errors_are_invalid_input ... ok
+test tolerance::tests::check_containment_flags_violation ... ok
+test tolerance::tests::interval_add_widens_conservatively ... ok
+test tolerance::tests::interval_mul_contains_true_product_for_mixed_signs ... ok
+test tolerance::tests::interval_sign_certain_when_strictly_positive_or_negative ... ok
+test tolerance::tests::interval_sign_is_none_when_straddling_zero ... ok
+test tolerance::tests::negative_tolerance_clamps_to_zero ... ok
+test tolerance::tests::quick::interval_arithmetic_always_contains_scalar_result ... ok
+test tolerance::tests::tol_contains_checks_absolute_distance ... ok
+test tolerance::tests::tol_tighter_and_looser_pick_correctly ... ok
+test topo::tests::coedge_endpoints_respects_orientation ... ok
+test topo::tests::deep_copy_produces_an_independent_body ... ok
+test topo::tests::face_loops_includes_outer_and_all_inner_loops ... ok
+test topo::tests::loop_coedges_walks_the_full_ring_once ... ok
+test topo::tests::serde_round_trips_a_whole_body ... ok
+test topo::tests::shell_and_solid_traversal_returns_all_members ... ok
+test topo::tests::vertex_edges_and_edge_coedges_find_all_incident_entries ... ok
+test validate::tests::a_broken_ring_pointer_is_detected ... ok
+test validate::tests::a_cleanly_built_tetrahedron_validates_with_no_issues ... ok
+test validate::tests::a_non_manifold_edge_is_flagged ... ok
+test validate::tests::a_vertex_tolerance_exceeding_its_edge_tolerance_is_detected ... ok
+test validate::tests::same_parameter_violation_is_detected_when_pcurve_disagrees_with_3d_curve ... ok
+test vec::tests::angle_diff_wraps_into_minus_pi_pi ... ok
+test vec::tests::any_orthogonal_is_perpendicular_for_all_axis_aligned_inputs ... ok
+test vec::tests::cross_product_is_orthogonal_to_both_operands ... ok
+test vec::tests::lerp_at_endpoints_returns_endpoints ... ok
+test vec::tests::normalize_angle_wraps_into_0_tau ... ok
+test vec::tests::normalized_has_unit_length ... ok
+test vec::tests::normalized_returns_none_for_zero_vector ... ok
+test vec::tests::point_minus_point_is_vector_and_point_plus_vector_is_point ... ok
+test vec::tests::quick::cross_product_antisymmetric_on_random_vectors ... ok
+test vec::tests::vec2_cross_sign_matches_turn_direction ... ok
+test predicates::tests::quick::orient2d_filtered_agrees_with_exact_on_random_and_near_degenerate_triples ... ok
+test tests::sphere_cut_cylinder_completes ... ok
+test surface_ops::tests::quick::closest_point_on_cylinder_matches_brute_force_grid_oracle ... ok
+test tests::sphere_cut_disjoint_torus_completes ... ok
+test predicates::tests::quick::in_circle2d_filtered_agrees_with_exact_on_random_configurations ... ok
+test predicates::tests::quick::orient3d_filtered_agrees_with_exact_on_random_and_near_degenerate_quadruples ... ok
+test tests::sphere_cut_intersecting_torus_completes ... ok
+test tests::fixture_sphere_cut_torus_volume_is_less_than_sphere ... ok
+test tests::fixture_sphere_cut_torus_at_slider_max_completes ... ok
+
+test result: ok. 220 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 13.97s
+

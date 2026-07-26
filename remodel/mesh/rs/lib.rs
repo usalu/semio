@@ -2950,6 +2950,48 @@ mod tests {
         remodel_camera::CameraPose(mathematical_lie::Se3 { r: mathematical_lie::So3(rotation), t: translation })
     }
 
+    fn checkerboard_image(width: u32, height: u32, cell: u32) -> remodel_image::ImageRgba8 {
+        let mut img = remodel_image::ImageRgba8::new(width, height);
+        for y in 0..height {
+            for x in 0..width {
+                let on = ((x / cell) + (y / cell)) % 2 == 0;
+                let v = if on { 220u8 } else { 30u8 };
+                let idx = ((y * width + x) * 4) as usize;
+                img.data[idx] = v;
+                img.data[idx + 1] = v;
+                img.data[idx + 2] = v;
+                img.data[idx + 3] = 255;
+            }
+        }
+        img
+    }
+
+    fn vertical_edge_image(width: u32, height: u32) -> remodel_image::ImageRgba8 {
+        let mut img = remodel_image::ImageRgba8::new(width, height);
+        for y in 0..height {
+            for x in 0..width {
+                let v = if x < width / 2 { 0u8 } else { 255u8 };
+                let idx = ((y * width + x) * 4) as usize;
+                img.data[idx] = v;
+                img.data[idx + 1] = v;
+                img.data[idx + 2] = v;
+                img.data[idx + 3] = 255;
+            }
+        }
+        img
+    }
+
+    fn solid_color_image(width: u32, height: u32, value: u8) -> remodel_image::ImageRgba8 {
+        let mut img = remodel_image::ImageRgba8::new(width, height);
+        for px in img.data.chunks_mut(4) {
+            px[0] = value;
+            px[1] = value;
+            px[2] = value;
+            px[3] = 255;
+        }
+        img
+    }
+
     fn sphere_trace(origin: [f64; 3], dir: [f64; 3], sdf: impl Fn([f64; 3]) -> f64, max_t: f64) -> Option<f64> {
         let mut t = 0.0;
         for _ in 0..128 {
@@ -3081,6 +3123,51 @@ mod tests {
     }
     // #endregion 🔖TriMeshTests
 
+    // #region 🔖TopologyTests
+    #[test]
+    fn topology_error_display_messages() {
+        assert_eq!(TopologyError::NonManifoldEdge { a: 1, b: 2, face_count: 3 }.to_string(), "edge (1,2) has 3 incident faces");
+        assert_eq!(TopologyError::InconsistentOrientation { a: 1, b: 2 }.to_string(), "edge (1,2) is traversed the same direction by two faces");
+        assert_eq!(TopologyError::NonManifoldVertex(5).to_string(), "vertex 5 has more than one incident fan");
+        assert_eq!(TopologyError::DegenerateTriangle(7).to_string(), "triangle 7 is degenerate");
+    }
+
+    #[test]
+    fn orient_error_display_message() {
+        assert_eq!(OrientError::UnresolvableConflict.to_string(), "could not consistently orient mesh after retry");
+    }
+
+    #[test]
+    fn halfedge_topology_build_rejects_degenerate_triangle() {
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 0, 1]] };
+        assert_eq!(HalfedgeTopology::build(&mesh).err().expect("degenerate triangle must be rejected"), TopologyError::DegenerateTriangle(0));
+    }
+
+    #[test]
+    fn halfedge_topology_build_rejects_non_manifold_edge() {
+        let mesh = TriMesh {
+            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0], [0.0, 0.0, 1.0]],
+            triangles: vec![[0, 1, 2], [0, 1, 3], [0, 1, 4]],
+        };
+        let err = HalfedgeTopology::build(&mesh).err().expect("edge shared by 3 faces must be rejected");
+        assert!(matches!(err, TopologyError::NonManifoldEdge { a: 0, b: 1, face_count: 3 }), "unexpected error: {err:?}");
+    }
+
+    #[test]
+    fn halfedge_topology_build_rejects_inconsistent_orientation() {
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, -1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
+        let err = HalfedgeTopology::build(&mesh).err().expect("same-direction shared edge must be rejected");
+        assert!(matches!(err, TopologyError::InconsistentOrientation { a: 0, b: 1 }), "unexpected error: {err:?}");
+    }
+
+    #[test]
+    fn halfedge_topology_build_rejects_non_manifold_vertex() {
+        let mesh = two_spheres_sharing_vertex();
+        let err = HalfedgeTopology::build(&mesh).err().expect("pinch vertex must be rejected");
+        assert!(matches!(err, TopologyError::NonManifoldVertex(_)), "unexpected error: {err:?}");
+    }
+    // #endregion 🔖TopologyTests
+
     // #region 🔖CloseUnitTest
     #[test]
     fn close_voxel_alone_is_always_closed_and_manifold() {
@@ -3105,6 +3192,19 @@ mod tests {
         assert!(report.is_two_manifold, "close_voxel output must be a 2-manifold, non-manifold edges={} vertices={}", report.non_manifold_edge_count, report.non_manifold_vertex_count);
     }
     // #endregion 🔖CloseUnitTest
+
+    // #region 🔖DenseFieldTests
+    #[test]
+    fn dense_field_get_set_out_of_range_are_noops() {
+        let mut field = DenseField::new(2, 2, 2, [0.0; 3], 1.0, 0.0);
+        assert_eq!(field.get(-1, 0, 0), None);
+        assert_eq!(field.get(5, 0, 0), None);
+        assert_eq!(field.get(0, 5, 0), None);
+        field.set(-1, 0, 0, 9.0);
+        field.set(0, 0, 0, 9.0);
+        assert_eq!(field.get(0, 0, 0), Some(9.0));
+    }
+    // #endregion 🔖DenseFieldTests
 
     // #region 🔖WatertightSuite
     #[test]
@@ -3200,6 +3300,20 @@ mod tests {
         assert!(volume_error < 0.02, "volume error {volume_error} after hole filling too large");
     }
     // #endregion 🔖WatertightSuite
+
+    // #region 🔖HoleFillStatsTests
+    #[test]
+    fn fill_holes_skips_loops_larger_than_max_boundary_verts() {
+        let mut mesh = make_uv_sphere(1.0, 30, 40);
+        delete_patch(&mut mesh, 0, 50);
+        clean_mesh(&mut mesh, 0, 0.0);
+        repair_non_manifold(&mut mesh);
+        orient_consistently(&mut mesh).expect("planted-hole sphere stays orientable");
+        let stats = fill_holes(&mut mesh, &HoleFillParams { max_boundary_verts: 10 });
+        assert!(stats.holes_skipped_too_large >= 1, "stats={stats:?}");
+        assert_eq!(stats.holes_filled, 0, "stats={stats:?}");
+    }
+    // #endregion 🔖HoleFillStatsTests
 
     // #region 🔖RepairTests
     fn two_spheres_sharing_edge() -> TriMesh {
@@ -3299,6 +3413,69 @@ mod tests {
     }
     // #endregion 🔖RepairTests
 
+    // #region 🔖CleanTests
+    #[test]
+    fn clean_mesh_welds_duplicate_vertices() {
+        let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 0.0]], triangles: vec![[0, 1, 2], [3, 1, 2]] };
+        let stats = clean_mesh(&mut mesh, 0, 0.0);
+        assert_eq!(stats.vertices_welded, 1, "stats={stats:?}");
+        assert_eq!(mesh.vertex_count(), 3);
+    }
+
+    #[test]
+    fn clean_mesh_removes_degenerate_triangles() {
+        let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [2.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 1, 3]] };
+        let stats = clean_mesh(&mut mesh, 0, 0.0);
+        assert_eq!(stats.degenerate_triangles_removed, 1, "stats={stats:?}");
+        assert_eq!(mesh.triangle_count(), 1);
+    }
+
+    #[test]
+    fn clean_mesh_collapses_near_zero_length_edges() {
+        let mut mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1e-13, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 3], [1, 2, 3]] };
+        let stats = clean_mesh(&mut mesh, 0, 0.0);
+        assert!(stats.zero_length_edges_collapsed >= 1, "stats={stats:?}");
+    }
+
+    #[test]
+    fn clean_mesh_removes_small_disconnected_components() {
+        let mut mesh = make_uv_sphere(1.0, 10, 10);
+        let shift = mesh.positions.len() as u32;
+        mesh.positions.extend([[100.0, 100.0, 100.0], [100.01, 100.0, 100.0], [100.0, 100.01, 100.0]]);
+        mesh.triangles.push([shift, shift + 1, shift + 2]);
+        let stats = clean_mesh(&mut mesh, 8, 0.02);
+        assert_eq!(stats.small_components_removed, 1, "stats={stats:?}");
+    }
+    // #endregion 🔖CleanTests
+
+    // #region 🔖TaubinTests
+    #[test]
+    fn taubin_smooth_noop_on_empty_mesh() {
+        let mut mesh = TriMesh::new();
+        taubin_smooth(&mut mesh, 0.5, -0.53, 5);
+        assert!(mesh.positions.is_empty());
+    }
+
+    #[test]
+    fn taubin_smooth_reduces_vertex_noise_amplitude() {
+        let mut state = 99u64;
+        let mut mesh = make_uv_sphere(1.0, 20, 30);
+        for p in &mut mesh.positions {
+            let n = normalize3(*p);
+            *p = add3(*p, scale3(n, (lcg_next(&mut state) - 0.5) * 0.05));
+        }
+        let radius_variance = |positions: &[[f64; 3]]| -> f64 {
+            let radii: Vec<f64> = positions.iter().map(|p| norm3(*p)).collect();
+            let mean = radii.iter().sum::<f64>() / radii.len() as f64;
+            radii.iter().map(|r| (r - mean).powi(2)).sum::<f64>() / radii.len() as f64
+        };
+        let noisy_variance = radius_variance(&mesh.positions);
+        taubin_smooth(&mut mesh, 0.5, -0.53, 10);
+        let smoothed_variance = radius_variance(&mesh.positions);
+        assert!(smoothed_variance < noisy_variance, "expected taubin smoothing to reduce radius variance: before={noisy_variance} after={smoothed_variance}");
+    }
+    // #endregion 🔖TaubinTests
+
     // #region 🔖SimplifyTests
     #[test]
     fn qem_simplification_preserves_watertight_invariant() {
@@ -3311,7 +3488,47 @@ mod tests {
         let after = validate_watertight(&mesh, false);
         assert!(after.is_watertight, "simplified sphere must stay watertight, report: {after:?}");
     }
+
+    #[test]
+    fn simplify_qem_rejects_collapses_that_violate_link_condition() {
+        let mut mesh = two_spheres_sharing_edge();
+        let stats = simplify_qem(&mut mesh, 4, &SimplifyParams::default());
+        assert!(stats.collapses_rejected_by_link_condition > 0, "expected the shared bowtie edge to force at least one link-condition rejection, stats={stats:?}");
+    }
+
+    #[test]
+    fn simplify_qem_stops_when_error_exceeds_max_error() {
+        let mut mesh = make_uv_sphere(1.0, 20, 30);
+        let total_before = mesh.triangle_count();
+        let stats = simplify_qem(&mut mesh, 0, &SimplifyParams { max_error: 1e-6 });
+        assert!(stats.collapses_performed > 0, "some cheap collapses should still happen, stats={stats:?}");
+        assert!(mesh.triangle_count() > 0, "max_error should halt simplification before the mesh disappears, stats={stats:?}");
+        assert!(mesh.triangle_count() < total_before, "expected at least some simplification, stats={stats:?}");
+    }
     // #endregion 🔖SimplifyTests
+
+    // #region 🔖SegmentChartsTests
+    #[test]
+    fn segment_charts_keeps_coplanar_faces_in_one_chart() {
+        let mesh = TriMesh { positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0]], triangles: vec![[0, 1, 2], [0, 2, 3]] };
+        let charts = segment_charts(&mesh, 10.0);
+        assert_eq!(charts.len(), 1, "coplanar faces within threshold should stay in one chart");
+        assert_eq!(charts[0].faces.len(), 2);
+    }
+
+    #[test]
+    fn segment_charts_cuts_at_sharp_dihedral_angle() {
+        let mesh = TriMesh {
+            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [1.0, 1.0, 0.0], [0.0, 1.0, 0.0], [0.0, 0.0, 1.0], [0.0, 1.0, 1.0]],
+            triangles: vec![[0, 1, 2], [0, 2, 3], [0, 3, 5], [0, 5, 4]],
+        };
+        let charts = segment_charts(&mesh, 45.0);
+        assert_eq!(charts.len(), 2, "a 90-degree fold above a 45-degree threshold should split into two charts");
+        for chart in &charts {
+            assert_eq!(chart.faces.len(), 2);
+        }
+    }
+    // #endregion 🔖SegmentChartsTests
 
     // #region 🔖UnwrapTests
     #[test]
@@ -3341,6 +3558,28 @@ mod tests {
         }
     }
     // #endregion 🔖UnwrapTests
+
+    // #region 🔖SelfIntersectionTests
+    #[test]
+    fn validate_watertight_detects_self_intersections_when_requested() {
+        let mesh = TriMesh {
+            positions: vec![[-1.0, 0.0, -1.0], [1.0, 0.0, -1.0], [0.0, 0.0, 2.0], [0.0, -1.0, -0.5], [0.0, 1.0, -0.5], [0.0, 0.0, 1.0]],
+            triangles: vec![[0, 1, 2], [3, 4, 5]],
+        };
+        let report = validate_watertight(&mesh, true);
+        assert_eq!(report.self_intersection_pairs, Some(1), "report: {report:?}");
+    }
+
+    #[test]
+    fn validate_watertight_reports_no_self_intersections_for_disjoint_triangles() {
+        let mesh = TriMesh {
+            positions: vec![[0.0, 0.0, 0.0], [1.0, 0.0, 0.0], [0.0, 1.0, 0.0], [10.0, 10.0, 10.0], [11.0, 10.0, 10.0], [10.0, 11.0, 10.0]],
+            triangles: vec![[0, 1, 2], [3, 4, 5]],
+        };
+        let report = validate_watertight(&mesh, true);
+        assert_eq!(report.self_intersection_pairs, Some(0), "report: {report:?}");
+    }
+    // #endregion 🔖SelfIntersectionTests
 
     // #region 🔖ContractTest
     #[test]
@@ -3428,6 +3667,73 @@ mod tests {
     }
     // #endregion 🔖ContractTest
 
+    // #region 🔖TextureTests
+    #[test]
+    fn image_gradient_magnitude_zero_on_flat_image() {
+        let img = solid_color_image(32, 32, 100);
+        assert_eq!(image_gradient_magnitude(&img, 16.0, 16.0), 0.0);
+    }
+
+    #[test]
+    fn image_gradient_magnitude_detects_vertical_edge() {
+        let img = vertical_edge_image(32, 32);
+        let at_edge = image_gradient_magnitude(&img, 16.0, 16.0);
+        let away_from_edge = image_gradient_magnitude(&img, 4.0, 16.0);
+        assert!(at_edge > 0.9, "expected a near-maximal normalized gradient right at the edge, got {at_edge}");
+        assert_eq!(away_from_edge, 0.0, "expected zero gradient away from the edge, got {away_from_edge}");
+    }
+
+    #[test]
+    fn face_projected_area_none_behind_camera_some_in_front() {
+        let intr = intrinsics_for(64, 64);
+        let identity_pose = remodel_camera::CameraPose(mathematical_lie::Se3 { r: mathematical_lie::So3(mathematical_algebra::Mat3d::IDENTITY), t: [0.0, 0.0, 0.0] });
+        let behind = TriMesh { positions: vec![[-0.1, -0.1, -1.0], [0.1, -0.1, -1.0], [0.0, 0.1, -1.0]], triangles: vec![[0, 1, 2]] };
+        assert!(face_projected_area(&behind, 0, &intr, &identity_pose).is_none());
+        let front = TriMesh { positions: vec![[-0.1, -0.1, 2.0], [0.1, -0.1, 2.0], [0.0, 0.1, 2.0]], triangles: vec![[0, 1, 2]] };
+        let area = face_projected_area(&front, 0, &intr, &identity_pose).expect("triangle in front of camera projects");
+        assert!(area > 0.0, "expected a positive projected area, got {area}");
+    }
+
+    #[test]
+    fn level_seam_solves_gain_and_offset() {
+        let a: Vec<[f32; 3]> = (0..5).map(|i| [f64::from(i) as f32 * 10.0; 3]).collect();
+        let b: Vec<[f32; 3]> = a.iter().map(|p| [p[0] * 2.0 + 5.0, p[1] * 2.0 + 5.0, p[2] * 2.0 + 5.0]).collect();
+        let fit = level_seam(&a, &b);
+        for (gain, offset) in fit {
+            assert!((gain - 2.0).abs() < 1e-3, "fit={fit:?}");
+            assert!((offset - 5.0).abs() < 1e-2, "fit={fit:?}");
+        }
+    }
+
+    #[test]
+    fn level_seam_returns_identity_for_insufficient_samples() {
+        assert_eq!(level_seam(&[[1.0, 2.0, 3.0]], &[[4.0, 5.0, 6.0]]), [(1.0, 0.0); 3]);
+    }
+
+    #[test]
+    fn bake_texture_paints_atlas_from_multiple_views() {
+        let mut mesh = make_uv_sphere(0.4, 10, 14);
+        let target = (mesh.triangle_count() as f64 * 0.3) as usize;
+        simplify_qem(&mut mesh, target, &SimplifyParams::default());
+        let charts = segment_charts(&mesh, 60.0);
+        let uvs = unwrap_mesh(&mut mesh, &charts);
+        let intr = intrinsics_for(64, 64);
+        let views: Vec<TextureView> = orbit_views(2.0).into_iter().take(8).map(|pose| TextureView { pose, intrinsics: intr, image: checkerboard_image(64, 64, 8) }).collect();
+        let atlas = bake_texture(&mesh, &uvs, 64, &views);
+        let painted = atlas.data.chunks(4).filter(|px| px[3] == 255).count();
+        assert!(painted > 0, "expected bake_texture to paint at least some atlas pixels from {} views", views.len());
+    }
+
+    #[test]
+    fn bake_texture_is_empty_with_no_views() {
+        let mut mesh = make_uv_sphere(0.4, 6, 8);
+        let charts = segment_charts(&mesh, 60.0);
+        let uvs = unwrap_mesh(&mut mesh, &charts);
+        let atlas = bake_texture(&mesh, &uvs, 32, &[]);
+        assert!(atlas.data.iter().all(|&b| b == 0), "expected an untouched (fully transparent) atlas with no views");
+    }
+    // #endregion 🔖TextureTests
+
     mod long {
         use super::*;
 
@@ -3452,6 +3758,25 @@ mod tests {
             let mesh_data = pipeline.result().expect("pipeline produced mesh data");
             assert!(!mesh_data.positions.is_empty());
             assert!(!mesh_data.uvs.is_empty());
+        }
+
+        #[test]
+        fn full_pipeline_with_views_bakes_and_encodes_texture() {
+            let mesh = make_uv_sphere(0.4, 10, 14);
+            let intr = intrinsics_for(48, 48);
+            let views: Vec<TextureView> = orbit_views(1.5).into_iter().take(6).map(|pose| TextureView { pose, intrinsics: intr, image: checkerboard_image(48, 48, 6) }).collect();
+            let params = MeshParams { target_triangles: 150, ..MeshParams::default() };
+            let mut pipeline = MeshPipeline::from_mesh(mesh, params).with_views(views);
+            let mut status = mesh_pipeline_step(&mut pipeline, 1);
+            let mut guard = 0;
+            while !matches!(status, MeshPipelineStatus::Done | MeshPipelineStatus::Failed(_)) {
+                status = mesh_pipeline_step(&mut pipeline, 1);
+                guard += 1;
+                assert!(guard < 100, "pipeline did not terminate");
+            }
+            assert!(matches!(status, MeshPipelineStatus::Done), "pipeline status: {status:?}");
+            let mesh_data = pipeline.result().expect("pipeline produced mesh data");
+            assert!(mesh_data.paint_texture_base64.is_some(), "expected texture bake+encode to populate paint_texture_base64");
         }
     }
 }

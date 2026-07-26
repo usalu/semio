@@ -15,6 +15,7 @@ crate-type = ["rlib", "cdylib"]
 path = "lib.rs"
 
 [dependencies]
+dsl = { path = "../../../dsl/rs" }
 imperative_engine = { path = "../../engine/rs" }
 imperative_module_core = { path = "../../module/core/rs" }
 neural_engine = { path = "../../../neural/engine/rs" }

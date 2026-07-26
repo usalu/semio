@@ -125,7 +125,7 @@ import { cva, type VariantProps } from "class-variance-authority";
 import { ClassValue, clsx } from "clsx";
 import { Command as CommandPrimitive } from "cmdk";
 import { forceCenter, forceCollide, forceLink, forceManyBody, forceSimulation, forceX, forceY, Simulation, SimulationLinkDatum, SimulationNodeDatum } from "d3-force";
-import { ICONS, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
+import { ICONS, assertUniqueIconConceptAssignments, isIconName, resolveCatalogIconSvgFromTheme, shortcodeCatalogKey, shortcodeEmoji, type IconName } from "@semio-tech/ui-asset";
 import { isMetabolismIconName, METABOLISM_ICONS, resolveMetabolismIconSvgFromTheme, type MetabolismIconName } from "@semio-tech/semio-asset";
 export type { IconName, MetabolismIconName };
 import { createPortal } from "react-dom";
@@ -29092,6 +29092,12 @@ if (import.meta.vitest) {
       setActiveUiTheme(themed);
       expect(resolveCatalogIconSvg("search")).toContain("data-theme-variant");
       setActiveUiTheme(semioTheme());
+    });
+  });
+
+  describe("icon concept assignments", () => {
+    it("keeps every canonical concept on a unique catalog icon", () => {
+      expect(() => assertUniqueIconConceptAssignments()).not.toThrow();
     });
   });
 

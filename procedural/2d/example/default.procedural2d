@@ -1,7 +1,12 @@
-document schema="flow.fixture" camera.x=0 camera.y=0 camera.zoom=1 {
-  widget kind=neuron id="rect" neuronKind=draw.shape.rect preview=true inputPorts="[]" outputPorts="[]" params="{}"
-  widget kind=neuron id="fill" neuronKind=draw.style.fill preview=true inputPorts="[]" outputPorts="[]" params="{}"
-  widget kind=outputPreview id="preview" preview="{}" expanded="[]"
-  synapse id="s1" from="rect" to="fill" fromPort="draw.drawing" toPort="drawing"
-  synapse id="s2" from="fill" to="preview" fromPort="draw.drawing" toPort=""
+schema="flow.fixture"
+camera {
+  x=0 y=0 zoom=1
 }
+widgets {
+  neuron id="rect" neuronKind=draw.shape.rect preview=true inputPorts= [ ] outputPorts= [ ] params= [ ]
+  neuron id="fill" neuronKind=draw.style.fill preview=true inputPorts= [ ] outputPorts= [ ] params= [ ]
+  outputPreview id="preview" preview= [ ] expanded= [ ]
+}
+synapses= [ id="s1" from="rect" to="fill" fromPort="draw.drawing" toPort="drawing" id="s2" from="fill" to="preview" fromPort="draw.drawing" toPort="" ] layout= {
+}
+generations= [ ]

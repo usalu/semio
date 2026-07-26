@@ -1,3 +1,129 @@
+# Follow-up: compose-rs / compose-py fixture-data investigation (2026-07-26, later session)
+
+Investigated the `compose-rs` (`compose/client/lib/rs`) and `compose-py` (`compose/client/lib/py/main.py`)
+exclusions from the baseline run. Root causes were NOT one bug — several independent, genuine fixture/data bugs
+stacked on top of each other, plus one deeper engine bug that's out of scope for "fixture data" and spawned as
+its own follow-up (see task chip). Failures: compose-rs 16→12, compose-py 49→33.
+
+**Fixed (compose-rs, `cargo test -p compose --lib`):**
+1. `compose/fixture/script.ts`'s `annotateValue()` double-wrapped already-`{hash,items}`-shaped collections
+   (typologies/types/designs) into `{hash,items:{hash,items:[...]}}` — every array-valued field found anywhere
+   in the tree got blanket-`wrapCollection`'d, including ones already wrapped by
+   `assembleSplitInitialKitFromDirectory`. Fixed the recursive walker to detect an existing `{hash,items:[...]}`
+   block and map into `items` directly instead of rewrapping. Regenerated `metabolism.kit.light.compose.json`
+   (`bun ./script.ts regenerate-metabolism-light` in `compose/fixture`) — byte-identical otherwise, confirms the
+   bug was fully deterministic, not stale data.
+2. `metabolism.kit.diff.compose.json` (+ `.inverted` pair) had an empty, wrong-shaped `"typologies"` stub
+   instead of the real top-level `types`/`designs` diff blocks that `canonical_kit_diff_to_wire_json` (lib.rs
+   ~11385) actually produces (confirmed via `TypesCollectionDiff`/`DesignsCollectionDiff` struct shapes and the
+   `tags`/`concepts`/`files`/`folders` siblings already using `{removed,modified,added}`). Rewrote both fixtures
+   with real added/modified/removed entries (real ids from `metabolism.kit.light.compose.json`: Capsule
+   Backslash/Slash, Slanted/Twisted) and fixed `canonical_kit_diff_metabolism_fixture_has_contract_keys` to
+   assert the real `types`/`designs` keys instead of the nonexistent `typologies` wrapper.
+3. `kit_bundle_hoist_and_materialize_file_blobs_round_trip` / `kit_bundle_purge_unreferenced_blob_entities`:
+   tests constructed `"files"` as a bare JSON array, but `json_block_items_ref`/`_mut` (and every other reader
+   of kit collections) only accept `{hash,items:[...]}` — fixed the tests to use the block shape (production
+   code was already correct and consistent; this was a test-authoring bug).
+4. `flatten_design_resolves_linked_piece_absolute_pose`: same bug — inline `types`/`designs`/`connectors`/
+   `pieces`/`connections` JSON literals used bare arrays; `hydrate_kit_from_initial_projection_value`'s hydrate
+   path requires block shape throughout. Fixed.
+5. `metabolism_light_fixture_kinds_for_types_and_ports` / `architect_fixtures_hydrate_and_cases_catalog`:
+   fixed as a side effect of #1 (they read the regenerated fixture).
+6. `normalized_create_fixed_piece_replay_reuses_scoped_piece_id`: test applied `CreateFixedPiece` against
+   `design_id: "design-scoped-1"` on a brand-new empty `Graph` — the design was never created. Added a
+   `CreateDesign` op first (same transaction id — a separate tx id made the design invisible to the second
+   call, since transactions/edits appear to be independent WIP branches). **Still fails** — see the spawned
+   follow-up below, this exposed a real, deeper engine bug, not just a test-setup gap.
+
+**Still failing (12) — NOT fixture data, spawned as a separate task ("Investigate compose engine
+create/materialize visibility bug")**: `create_{concept,design,quality,tag,type}_on_kit_graphql_roundtrip`,
+`delete_tag_mutation_returns_response_payload`, `no_deep_clone_on_traversal`,
+`kit_store_bundle_serialize_hydrate_round_trip_via_graphql`, `kit_virtual_file_system_create_folder_and_move_design`,
+`normalized_create_fixed_piece_replay_reuses_scoped_piece_id`, `long::create_fixed_piece_end_to_end`,
+`long::mutation_visible_without_resnapshotting`. All share one symptom: an entity created via a GraphQL mutation
+(or `apply_kit_operation` directly) never becomes visible in the materialized wip kit on a subsequent read.
+**Confirmed NOT a timing flake**: reran the 10 non-`long::` ones with `--test-threads=1` in a fresh isolated
+`CARGO_TARGET_DIR` — identical, deterministic failures. Lead: `Graph::record_operation_in_open_transaction`
+(lib.rs ~8161) dispatches the operation as a `ComposeWireOperation` to `the_kit_snapshot_store` rather than
+mutating `mutable_kit` directly — likely `ComposeWireOperation::from_operation` or the snapshot store's
+`Apply` handler silently drops these operation kinds. Needs real engine tracing, not a fixture fix.
+
+**Fixed (compose-py, `bun ./script.ts test exhaustive` in `compose/client/lib/py`):**
+1. **Root cause of the "Design 'X' not found" cluster (dozens of failures)**: `_test_load_json`/
+   `_assemble_split_initial_kit_from_directory` (main.py ~19206–19270) checked for `types`/`designs`
+   (plural) sidecar directories, but `compose/fixture/kit/dev/metabolism/wip/initialKit/` actually has
+   singular `type`/`design` (matching the TS version in `compose/fixture/script.ts`, which correctly checks
+   singular first). The plural-only check always missed, so every Python test loading this kit silently got
+   the raw, unmerged shell — no designs, no types, nothing referencing the sidecar files at all. Fixed the
+   directory-detection fallback in both places to match TS (singular first, plural fallback).
+2. Neither the shell nor the assembled kit ever had a **flat top-level `types`/`designs`** — only
+   `typologies[].types`/`typologies[].designs`. But `_test_find_design`, `flattenDesignDict`, `kitToShallow`,
+   etc. all read `kit.get("designs", [])`/`kit.get("types", [])` directly at the top level (this is the actual,
+   intentional convention this whole test suite is written against — confirmed by `Kit._sync_flat_from_typologies`
+   at main.py ~5582, the production model-level equivalent). Added flattening from `typologies` into top-level
+   `types`/`designs` inside `_assemble_split_initial_kit_from_directory`, plus a recursive
+   `_deep_unwrap_hash_items_blocks()` pass (scoped to that one function only — NOT applied to `_test_load_json`
+   generally, since other fixtures/consumers depend on the raw block shape, e.g. `installProjection` tests in
+   JS/TS) that turns every remaining `{hash,items:[...]}` collection (pieces, connections, connectors, etc.)
+   into a plain list, since every test helper here is written for flat lists.
+3. `slanted.design.compose.json`, `twisted.design.compose.json`, `dancing.design.compose.json` were each
+   missing their top-level `"parent"` field (should point at Nakagin Capsule Tower, id
+   `9a890dd4-0a9c-48ac-920a-9e62666465ef`) — confirmed via `flatten.cases.compose.json`'s `designPath`s
+   (`["Nakagin Capsule Tower", "Slanted"]` etc). Fixed.
+4. The 5 `flat*.design.compose.json` variants (`flat`, `flat-2`..`flat-5`) were each missing `"parent"` too.
+   Mapped each to its target design by reading its own `description` field (each literally describes which
+   Nakagin variant it's the flattened output of — "wild dream of capsule towers"→Capsule Dream, "dancing with
+   each other"→Dancing, "former Nakagin Capsule Tower...Kisho Kurokawa"→Nakagin itself, "sloped
+   variant...stepped"→Slanted, "twisted variant...trapezoids"→Twisted). Fixed all 5.
+5. `metabolism.shallow.kit.compose.json` was missing flat top-level `types`/`designs` (needed by
+   `TestKitShallow`/`TestKitToMetaShallow`) — this file is ALSO used as a raw kit-projection fixture by JS/TS
+   `installProjection` tests (`compose/client/lib/js/index.ts`), so did NOT regenerate the whole file; instead
+   computed `typeToShallow`/`designToShallow` over the real assembled kit's flat types/designs (via the actual
+   `main.py` functions, for exact parity) and inserted just those two keys, preserving everything else
+   (typologies/families/hash) untouched.
+6. `hash.cases.compose.json`'s `kitHash.expected` was a stale golden hash — recomputed via `hash_kit()` now
+   that the kit content changed (items 3-4 above). Did NOT touch `expectedNet48` (the .NET/C# parity hash,
+   consumed only by `compose/client/lib/net/Compose.Tests`) — updating it needs the .NET toolchain, out of
+   scope for a Rust/Python fixture pass; flagging so it doesn't silently drift from `expected`.
+7. `_json_codec` → `_json` typo in `TestMaxChildren::test_kit_max_children_json_roundtrip` (main.py ~21540) —
+   `import json as _json` right above it, one-line NameError fix.
+
+**Still failing (33) — genuinely separate, need individual triage, NOT touched this session:**
+- `TestKitKind` (4) + `TestRoundtrip::TestMetabolism::test_roundtrip`: `FileNotFoundError: compose-store` — the
+  `compose-store` binary isn't built/on PATH in this environment (`resolve_compose_store_binary()`), a build-
+  ordering issue, not fixture data.
+- `TestExportDesignRepresentation` (10, several `ifcopenshell`-related) + `TestGetGeometricInsightsForRepresentation`:
+  some fail on `ModuleNotFoundError: ifcopenshell.id` (environment/dependency, not fixture), others may cascade
+  from the `TestFlatten` issue below (both operate on the flattened Nakagin design/representations) — not
+  separated out, needs its own pass.
+- `TestFlatten` (5, all `nakagin_capsule_tower*`/`capsule_dream`) + `TestFlattenMerkle::test_shared_asset_mutation_cases`
+  + `TestDelete::test_delete_pieces_and_connections[...tambour...]`: got past the "design/expected-Flat not
+  found" structural failures (items 1-4 above fixed that layer) but now fail on an actual geometry mismatch —
+  e.g. computed piece center `{u:0.0,v:2.697}` vs expected `{u:-1.9,v:36.19}`, wildly different, not a rounding
+  issue. Either a real bug in `flattenDesignDict`'s BFS/pose composition, a piece-name collision making the
+  `next(...)` expected-piece lookup pick the wrong piece, or the `flat*.design.compose.json` piece positions
+  are themselves stale relative to the current `nakagin-capsule-tower.design.compose.json` pieces/connections.
+  Not investigated further — real geometry debugging, not a quick fixture patch.
+- `TestValidation::TestMetabolism::test_metabolism_kit_validate_empty_report`: now that `types` is actually
+  populated (item 2 above), validation surfaces a **real** `Duplicate representation name` problem across two
+  types — previously invisible because `types` was always empty. Might be genuine duplicate content in two
+  `type.compose.json` sidecars, needs a look.
+- `TestValidation::TestInvalid::...`: `KeyError: 'entityKind'` at main.py:13546 — separate code bug, unrelated.
+- `TestKitFilterDesign` (2) + `TestFindReplaceableTypesInDesigns` (3): count/membership mismatches, likely
+  downstream of the same "types/designs now actually populated" change surfacing stale hardcoded expectations
+  — not triaged individually.
+- `TestValidateKitDiffDict` (2): not investigated.
+
+**Separate, NOT touched (flagged only, mentioned in the original exclusion note)**: `compose-hub`
+(`compose/server/hub/rs`) references an entire `asset/compose/...` fixture tree
+(`compose/server/hub/asset/compose/`) that **does not exist on disk at all** (confirmed via `find`) — every
+test in `compose/server/hub/rs/bin.rs`'s `mod metabolism_diff_tests` etc. that calls `load_metabolism_diff_json()`
+or similar will FileNotFoundError. This is a separate crate from `compose` (client/lib/rs) with its own missing-
+asset problem (plus the previously-noted `KitSnapshot`/`ComposeWireOperation` Serialize/Deserialize trait-bound
+errors) — out of scope for this pass (task explicitly scoped to `compose-rs`/`compose-py`), left excluded.
+
+---
+
 # Follow-up resolved: `semio-framework-renderer-wgpu` 20 compile errors (2026-07-26, later session)
 
 The follow-up spawned from item 3 of the "framework-core/wgpu icon-refactor breakage" section below (`framework/
@@ -57,15 +183,35 @@ in the function) — got 3, not 4. This doesn't touch `icon_id`/`IconName` at al
 dropped from `build_os_commands()` at some point without updating the test, or the test was written ahead of
 an unimplemented 6th command. Needs someone who knows the intended command list to fix, not guessed at here.
 
-**Verification status:** `cargo check -p semio-framework-renderer-wgpu --tests` is clean (0 errors). Full
-`cargo test -p semio-framework-renderer-wgpu --tests` could not be completed this session — `kernel_3d_brepkit`
-(a transitive dependency) is under active concurrent modification by this same ticket's Phase C workforce
-(wave 1 pushed its coverage 40.9%→72.52%, see below), so the shared build kept failing/changing error counts
-(40 → 12 → …) between consecutive invocations, unrelated to this fix. 218 of the other 228 tests in this crate
-passed before that blocker; the only two categories of failure seen were the self-inflicted icon-literal panics
-(fixed above) and the one pre-existing category-count mismatch (flagged above, not fixed). Retry once the
-concurrent wave settles. The `--exclude @semio-tech/framework-renderer-wgpu` used by prior baseline runs can be
-dropped now that this compiles.
+**Verification status: fully green.** `cargo check -p semio-framework-renderer-wgpu --tests` is clean (0
+errors). Once `kernel_3d_brepkit` (a transitive dep, under concurrent modification by this same ticket's Phase
+C wave 1 at the time — see below) stabilized, `cargo test -p semio-framework-renderer-wgpu --tests` reached
+**235/235 passing**. The `--exclude @semio-tech/framework-renderer-wgpu` used by prior baseline runs can be
+dropped now.
+
+Two more issues surfaced and got resolved along the way, both self-inflicted by re-running the suite twice in
+this same sandbox rather than by the crate's own code:
+- Another `.into()`-on-a-fake-icon-name site, same class as above but in a *different* test
+  (`utility_options_partition_gates_tagged_group_by_active_utility`, `icon_id: "brush".into()`) — "brush" isn't
+  a catalog id either (real one is `paintbrush`, per item 2's fixed `framework-core` fixtures below). Fixed.
+- `shell::ui_prefs_themes_i18n_tests::persist_ui_prefs_if_changed_is_idempotent_when_nothing_changed` and
+  `load_ui_prefs_once_prefers_a_lock_over_storage` are **not isolated from each other or from real disk
+  state**: `prefs_get`/`prefs_set` (`framework/renderer/wgpu/rs/lib.rs` ~25588) read/write an actual
+  `~/.config/semio/ui-prefs.json`, cached in a `thread_local! PREFS_STORE` that's populated once per OS thread
+  and never reset between tests. Two consecutive full-suite runs in the same sandbox showed two *different*
+  failures in this module depending on run order/thread reuse (first run polluted the on-disk driver_id to
+  `"compact"`, second run's parallel scheduling hit a different ordering-dependent collision) — genuinely
+  flaky, not deterministic, and **not caused by the icon-migration diff** (neither test touches `icon_id`).
+  Deleted the stray `~/.config/semio/ui-prefs.json` this session created to restore a clean baseline; did NOT
+  touch the test/production code — fixing the isolation properly means giving `FilePrefsStore`/`PREFS_STORE` a
+  per-test-run override (e.g. respecting `SEMIO_PREFS_DIR` from each test, which the code already supports but
+  the tests don't set) and/or resetting the thread_local between tests, which is out of this follow-up's scope.
+  Flagging for whoever next touches this test module.
+
+**Not fixed, flagged as a separate pre-existing issue, unrelated to this crate's icon-migration diff or the
+flakiness above:** `shell::command_registry_tests::build_command_panel_ui_groups_rows_under_category_headers`
+— see below, this one IS deterministic (reproduced 3 times), just needs someone who knows the intended command
+list.
 
 ---
 

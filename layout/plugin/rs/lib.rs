@@ -13,7 +13,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_inspector_groups_to_tree, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef,
     ActionArgOption, ActionDefinition, ActionEmit, ActionKind, App, AppLabelsOverlay, AppLabelsOverlayExt,
     Canvas2dScene, ActionDescriptor, DocumentApp, DocumentView, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, PanelTreeBuilder, ResourceKindSpec,
-    UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
+    IconName, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiPresence, UiSectionNode, UiSelectItem, UiSelectNode, UiTreeItemNode,
     ViewState, WindowEngagement, WindowEngagementInput, WindowEngagementPossible, WindowEngagementStatus,
     FRAMEWORK_PANEL_TAB_CATALOGUE_ID,
     FRAMEWORK_PANEL_TAB_CATALOGUE_LABEL, FRAMEWORK_PANEL_TAB_DOCUMENT_ID, FRAMEWORK_PANEL_TAB_DOCUMENT_LABEL,
@@ -685,7 +685,7 @@ fn layout_tree_item(
         Some(action) => tree_item_with_action(id, label, description, action),
         None => tree_item_desc(id, label, description),
     };
-    item.icon_id = icon_id;
+    item.icon_id = icon_id.and_then(|id| IconName::from_str(&id));
     item
 }
 
@@ -1739,7 +1739,7 @@ fn create_layout_app() -> App {
             .mode("edit", "Edit")
             .default_mode_id("edit")
             .window_kind(LAYOUT_PLAY_WINDOW_BLUEPRINT, "Blueprint", LAYOUT_PLAY_BODY_BLUEPRINT, SurfaceKind::Canvas2d, "layout")
-            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "eye")
+            .window_kind(LAYOUT_PLAY_WINDOW_PREVIEW, "Preview", LAYOUT_PLAY_BODY_PREVIEW, SurfaceKind::Canvas2d, "preview")
             .default_layout(create_default_layout(
                 &[LAYOUT_PLAY_WINDOW_BLUEPRINT.into(), LAYOUT_PLAY_WINDOW_PREVIEW.into()],
                 "row",

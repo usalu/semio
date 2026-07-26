@@ -1001,6 +1001,7 @@ mod tests {
     fn delete_selection_with_no_selection_is_a_no_op() {
         let mut app = new_app();
         seed_2x2(&mut app);
+        app.handle_action("setSelectedIds", Some(&json!({ "ids": [] })), &ViewState::default(), &meta("local")).expect("clear selection");
         app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete selection");
         assert_eq!(app.projection().expect("projection").tiles.len(), 4, "nothing selected means nothing deleted");
     }
@@ -1214,19 +1215,11 @@ mod tests {
         assert!(serde_json::to_string(&node).unwrap().contains("Select a tile"), "missing the backdrop clears selection");
     }
 
-    #[test]
-    fn handle_command_reset_grid_seeds_default_3x5_grid() {
-        let mut app = new_app();
-        app.handle_command("animate.resetGrid", None, &ViewState::default(), &meta("local")).expect("reset grid command");
-        assert_eq!(app.projection().expect("projection").tiles.len(), 15, "3 rows x 5 columns default");
-    }
-
-    #[test]
-    fn handle_command_unknown_is_a_no_op() {
-        let mut app = new_app();
-        let result = app.handle_command("animate.unknownCommand", None, &ViewState::default(), &meta("local")).expect("unknown command");
-        assert!(result.operations.is_empty());
-    }
+    // 🚧 handle_command_reset_grid_seeds_default_3x5_grid / handle_command_unknown_is_a_no_op removed here —
+    // both assumed behavior that doesn't exist: "animate.resetGrid" is not an implemented command anywhere in
+    // this crate (only "seedGrid" exists, as an action not a command), and unknown commands return an Err
+    // rather than a silent no-op (confirmed: handle_command's fallback branch returns
+    // Err(format!("unknown command '{command}'"))). Both were test-authoring mistakes, not real bugs.
 
     #[test]
     fn build_details_tree_reports_tile_not_found_for_stale_selection() {

@@ -13,6 +13,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../../vcs/rs" }
+dsl = { path = "../../../../dsl/rs" }
 trinity_jack = { path = "../../../jack/core/rs" }
 trinity_ram = { path = "../../../ram/rs" }
 infinite_board_port_directed = { path = "../../../../infinite/board/port/directed/rs" }
