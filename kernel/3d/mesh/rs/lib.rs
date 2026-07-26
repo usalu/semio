@@ -1191,7 +1191,11 @@ impl HalfedgeMesh {
         if target_verts >= self.vertex_count() {
             return Ok(());
         }
-        while self.vertex_count() > target_verts && self.edge_count() > 0 {
+        // 🩹 Merging remaps a vertex id but never shrinks `self.vertices`, so `self.vertex_count()` itself
+        // never drops; track the live (merged-away-aware) count locally for the loop guard instead, or this
+        // never converges on `target_verts` and instead collapses edges until the mesh is empty.
+        let mut live_verts = self.vertex_count();
+        while live_verts > target_verts && self.edge_count() > 0 {
             let mut shortest: Option<(EdgeId, f32)> = None;
             for he_id in 0..self.halfedges.len() {
                 if he_id % 2 != 0 {
@@ -1225,8 +1229,35 @@ impl HalfedgeMesh {
                 })
                 .collect();
             self.rebuild_from_polygon_soup(&new_positions, &new_faces)?;
+            live_verts -= 1;
         }
-        Ok(())
+        self.drop_unreferenced_vertices()
+    }
+
+    /// 🧹 Compacts away vertices no longer referenced by any face, so `vertex_count()` reflects the mesh's
+    /// actual remaining complexity after operations (like [`Self::decimate`]) that remap vertex ids away
+    /// without themselves shrinking the position buffer.
+    fn drop_unreferenced_vertices(&mut self) -> MeshResult<()> {
+        let (positions, face_list) = self.polygon_soup();
+        let mut used = vec![false; positions.len()];
+        for face in &face_list {
+            for &vi in face {
+                used[vi as usize] = true;
+            }
+        }
+        if used.iter().all(|&u| u) {
+            return Ok(());
+        }
+        let mut remap = vec![0u32; positions.len()];
+        let mut compacted = Vec::new();
+        for (i, &keep) in used.iter().enumerate() {
+            if keep {
+                remap[i] = compacted.len() as u32;
+                compacted.push(positions[i]);
+            }
+        }
+        let new_faces: Vec<Vec<u32>> = face_list.into_iter().map(|f| f.into_iter().map(|vi| remap[vi as usize]).collect()).collect();
+        self.rebuild_from_polygon_soup(&compacted, &new_faces)
     }
 
     pub fn set_shading(&mut self, faces: &[FaceId], smooth: bool) -> MeshResult<()> {
@@ -2233,14 +2264,6 @@ mod tests {
         assert!(mesh.vertex_count() <= before);
     }
 
-    #[test]
-    fn debug_decimate_probe() {
-        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
-        eprintln!("[DEBUG] before verts={} faces={}", mesh.vertex_count(), mesh.face_count());
-        mesh.decimate(0.5).unwrap();
-        eprintln!("[DEBUG] after verts={} faces={}", mesh.vertex_count(), mesh.face_count());
-        panic!("stop");
-    }
 
     #[test]
     fn json_roundtrip() {
@@ -2733,6 +2756,16 @@ mod tests {
         let before_sphere = sphere.vertex_count();
         sphere.decimate(0.0).unwrap();
         assert!(sphere.vertex_count() < before_sphere, "ratio below 0.1 must clamp to 0.1, not become a no-op");
+    }
+
+    #[test]
+    fn decimate_converges_near_target_ratio_without_emptying_mesh() {
+        let mut mesh = HalfedgeMesh::ico_sphere_prim(1.0, 2).unwrap();
+        let before = mesh.vertex_count();
+        mesh.decimate(0.5).unwrap();
+        let target = ((before as f32) * 0.5).ceil() as usize;
+        assert!(mesh.vertex_count() <= target + 1, "decimate must converge on roughly the requested vertex count, not merge forever");
+        assert!(mesh.face_count() > 0, "a 50% decimation must not leave zero faces");
     }
 
     #[test]

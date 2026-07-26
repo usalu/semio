@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 use std::sync::atomic::{AtomicU64, Ordering};
 #[cfg(target_arch = "wasm32")]
 use vcs::create_document_vcs_envelope;
-use vcs::{DocumentVcsEnvelope, DocumentVcsStore, OpText, Operation, OperationDiff, TextError, TextSpan};
+use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 /// 🔁 Reexported so downstream crates (e.g. `draw-plugin`) can call `DrawDocument::parse_dsl`/
 /// `.print_dsl()` without taking a direct `vcs` dependency just for the trait.
 pub use vcs::DocumentDsl;
@@ -17,7 +17,11 @@ pub const DRAW_SHAPE_KINDS: &[&str] = &["rect", "ellipse", "circle", "line", "po
 pub const DRAW_UTILITY_IDS: &[&str] = &["selectMarquee", "selectLasso", "selectDirect", "pen", "shapeRect", "shapeEllipse", "shapeLine", "shapePolygon", "booleanCombine", "trace", "transformMove"];
 
 //#region 🔖Domain
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// No `#[dsl(keyword = ...)]` on `DrawCamera`/`DrawTransform`/`DrawTraceParams`/`DrawArtboard`:
+// every field of these types is itself `#[dsl(block)]`, which already supplies the bare leading
+// keyword from the FIELD's own name — an inner keyword too would double it (`camera { camera
+// x=0 ... }`), same reasoning as `note`'s `NoteCamera`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawCamera {
     pub x: f64,
@@ -25,7 +29,7 @@ pub struct DrawCamera {
     pub zoom: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawTransform {
     pub x: f64,
@@ -35,22 +39,28 @@ pub struct DrawTransform {
     pub rotation: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// No keyword either: reached only through `Vec<GradientStop>` (a plain, un-tagged list) —
+// `parse_record_body` self-terminates on the first unrecognized key regardless, the same reasoning
+// verified for `note`'s `NoteImageAsset` nested inside a `Map` value slot.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct GradientStop {
     pub offset: f64,
     pub color: [f64; 4],
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum FillStyle {
+    #[dsl(key = "solid")]
     Solid { color: [f64; 4] },
+    #[dsl(key = "linearGradient")]
     LinearGradient { x1: f64, y1: f64, x2: f64, y2: f64, stops: Vec<GradientStop> },
+    #[dsl(key = "radialGradient")]
     RadialGradient { cx: f64, cy: f64, r: f64, stops: Vec<GradientStop> },
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct StrokeStyle {
     pub color: [f64; 4],
@@ -61,23 +71,28 @@ pub struct StrokeStyle {
     pub dash: Option<Vec<f64>>,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawAttributes {
+    // `fill` is a sum type (`FillStyle` has several tagged variants), so it uses
+    // `#[dsl(statements, block)]` — see `dsl::DslVariants`'s doc comment on `OptionStatements`.
+    // `stroke` is a single record type, so a plain `#[dsl(block)]` scalar Option suffices.
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(statements, block)]
     pub fill: Option<FillStyle>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub stroke: Option<StrokeStyle>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawTraceParams {
     pub threshold: f64,
     pub simplify_epsilon: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawImageAsset {
     pub mime: String,
@@ -88,7 +103,7 @@ pub struct DrawImageAsset {
     pub height: Option<u32>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawLayerBase {
     pub id: String,
@@ -97,12 +112,14 @@ pub struct DrawLayerBase {
     pub locked: bool,
     pub opacity: f64,
     pub blend_mode: String,
+    #[dsl(block)]
     pub transform: DrawTransform,
     #[serde(default)]
+    #[dsl(block)]
     pub attributes: DrawAttributes,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawRect {
     pub x: f64,
@@ -111,7 +128,7 @@ pub struct DrawRect {
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawEllipse {
     pub cx: f64,
@@ -120,7 +137,7 @@ pub struct DrawEllipse {
     pub ry: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawCircle {
     pub cx: f64,
@@ -128,7 +145,7 @@ pub struct DrawCircle {
     pub r: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawLine {
     pub x1: f64,
@@ -137,42 +154,59 @@ pub struct DrawLine {
     pub y2: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawPolygon {
     pub points: Vec<[f64; 2]>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// Each body carries its own `#[dsl(keyword = ...)]` — required by the single-field tuple
+// ("newtype") variants of `DrawLayerNode` below, which delegate their entire `RecordSpec` to the
+// inner body's own spec (see `dsl::__rt::newtype_variant_spec`) rather than wrapping it in one more
+// layer. `base: DrawLayerBase` replaces `#[serde(flatten)]` with `#[dsl(block)]` — the engine has no
+// flatten-splice primitive (yet); a bare nested `base { ... }` line is the declarative equivalent.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "shape")]
 pub struct DrawShapeBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
     pub shape_kind: String,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub rect: Option<DrawRect>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub ellipse: Option<DrawEllipse>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub circle: Option<DrawCircle>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub line: Option<DrawLine>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub polygon: Option<DrawPolygon>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "path")]
 pub struct DrawPathBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
+    #[dsl(statements, block)]
     pub segments: Vec<PathSegment>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "text")]
 pub struct DrawTextBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
     pub x: f64,
     pub y: f64,
@@ -180,91 +214,118 @@ pub struct DrawTextBody {
     pub size: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "image")]
 pub struct DrawImageBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
     pub image_key: String,
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "group")]
 pub struct DrawGroupBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
+    #[dsl(statements, block)]
     pub children: Vec<DrawLayerNode>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "boolean")]
 pub struct DrawBooleanBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
     pub operation: String,
     pub children: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
+#[dsl(keyword = "trace")]
 pub struct DrawTraceBody {
     #[serde(flatten)]
+    #[dsl(block)]
     pub base: DrawLayerBase,
     pub source_key: String,
+    #[dsl(block)]
     pub params: DrawTraceParams,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind")]
 pub enum DrawLayerNode {
     #[serde(rename = "shape")]
+    #[dsl(key = "shape")]
     Shape(DrawShapeBody),
     #[serde(rename = "path")]
+    #[dsl(key = "path")]
     Path(DrawPathBody),
     #[serde(rename = "text")]
+    #[dsl(key = "text")]
     Text(DrawTextBody),
     #[serde(rename = "image")]
+    #[dsl(key = "image")]
     Image(DrawImageBody),
     #[serde(rename = "group")]
+    #[dsl(key = "group")]
     Group(DrawGroupBody),
     #[serde(rename = "boolean")]
+    #[dsl(key = "boolean")]
     Boolean(DrawBooleanBody),
     #[serde(rename = "trace")]
+    #[dsl(key = "trace")]
     Trace(DrawTraceBody),
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum PathSegment {
+    #[dsl(key = "move")]
     Move { to: [f64; 2] },
+    #[dsl(key = "line")]
     Line { to: [f64; 2] },
+    #[dsl(key = "quad")]
     Quad { ctrl: [f64; 2], to: [f64; 2] },
+    #[dsl(key = "cubic")]
     Cubic { ctrl1: [f64; 2], ctrl2: [f64; 2], to: [f64; 2] },
+    #[dsl(key = "arc")]
     Arc { rx: f64, ry: f64, rotation: f64, large_arc: bool, sweep: bool, to: [f64; 2] },
+    #[dsl(key = "close")]
     Close,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct DrawArtboard {
     pub width: f64,
     pub height: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "draw", layout = "lines")]
 pub struct DrawDocument {
     pub schema: String,
     pub id: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
+    #[dsl(block)]
     pub camera: DrawCamera,
+    #[dsl(statements, block)]
     pub layers: Vec<DrawLayerNode>,
     #[serde(skip_serializing_if = "Option::is_none")]
-    pub assets: Option<std::collections::HashMap<String, DrawImageAsset>>,
+    pub assets: Option<std::collections::BTreeMap<String, DrawImageAsset>>,
     #[serde(skip_serializing_if = "Option::is_none")]
+    #[dsl(block)]
     pub artboard: Option<DrawArtboard>,
 }
 
@@ -802,1242 +863,13 @@ pub fn clone_draw_layer_node(node: &DrawLayerNode, name_suffix: &str) -> DrawLay
 //#endregion 🔖Domain
 
 //#region 🔖Dsl
-// 🔤 Handcrafted textual DSL for `DrawDocument` (`vcs::DocumentDsl`) and one-line op-text for
-// `DrawOperation` (`vcs::OpText`, see `🔖OpText`) — replaces the JSON fixture format. Grammar is a
-// small hand-rolled tokenizer + recursive-descent parser (no external parser crate), in the spirit of
-// `mathematical_graph_dsl::wire`. Layers nest via `{ }`, tuples via `( )`, lists via `[ ]`, and every
-// statement is self-delimiting so the same printer/parser pair works whether chunks are newline-joined
-// (pretty `print_dsl`) or space-joined (one-line op-text embedding a whole layer or document).
-
-//#region 🔖DslLexer
-#[derive(Clone, Debug, PartialEq)]
-enum DrawTok {
-    Ident(String),
-    Str(String),
-    Num(f64),
-    Eq,
-    Colon,
-    Comma,
-    LParen,
-    RParen,
-    LBracket,
-    RBracket,
-    LBrace,
-    RBrace,
-    At,
-    Arrow,
-    Eof,
-}
-
-#[derive(Clone, Debug)]
-struct DrawSpannedTok {
-    tok: DrawTok,
-    line: u32,
-    column: u32,
-}
-
-/// 🔍 Hand-rolled char-by-char tokenizer for the draw DSL/op-text grammar; tracks line/column so parse
-/// errors carry a `TextSpan` a dev can jump to.
-fn lex_draw_dsl(input: &str) -> Result<Vec<DrawSpannedTok>, TextError> {
-    let chars: Vec<char> = input.chars().collect();
-    let mut out = Vec::new();
-    let mut i = 0usize;
-    let mut line: u32 = 1;
-    let mut col: u32 = 1;
-    while i < chars.len() {
-        let c = chars[i];
-        if c == '\n' {
-            i += 1;
-            line += 1;
-            col = 1;
-            continue;
-        }
-        if c.is_whitespace() {
-            i += 1;
-            col += 1;
-            continue;
-        }
-        let (start_line, start_col) = (line, col);
-        match c {
-            '=' => {
-                out.push(DrawSpannedTok { tok: DrawTok::Eq, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            ':' => {
-                out.push(DrawSpannedTok { tok: DrawTok::Colon, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            ',' => {
-                out.push(DrawSpannedTok { tok: DrawTok::Comma, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '(' => {
-                out.push(DrawSpannedTok { tok: DrawTok::LParen, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            ')' => {
-                out.push(DrawSpannedTok { tok: DrawTok::RParen, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '[' => {
-                out.push(DrawSpannedTok { tok: DrawTok::LBracket, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            ']' => {
-                out.push(DrawSpannedTok { tok: DrawTok::RBracket, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '{' => {
-                out.push(DrawSpannedTok { tok: DrawTok::LBrace, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '}' => {
-                out.push(DrawSpannedTok { tok: DrawTok::RBrace, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '@' => {
-                out.push(DrawSpannedTok { tok: DrawTok::At, line: start_line, column: start_col });
-                i += 1;
-                col += 1;
-            }
-            '-' if i + 1 < chars.len() && chars[i + 1] == '>' => {
-                out.push(DrawSpannedTok { tok: DrawTok::Arrow, line: start_line, column: start_col });
-                i += 2;
-                col += 2;
-            }
-            '"' => {
-                i += 1;
-                col += 1;
-                let mut value = String::new();
-                loop {
-                    if i >= chars.len() {
-                        return Err(TextError::new("unterminated string literal", TextSpan::at(start_line, start_col)));
-                    }
-                    let ch = chars[i];
-                    if ch == '"' {
-                        i += 1;
-                        col += 1;
-                        break;
-                    }
-                    if ch == '\\' && i + 1 < chars.len() {
-                        match chars[i + 1] {
-                            'n' => value.push('\n'),
-                            '"' => value.push('"'),
-                            '\\' => value.push('\\'),
-                            other => value.push(other),
-                        }
-                        i += 2;
-                        col += 2;
-                    } else if ch == '\n' {
-                        value.push('\n');
-                        i += 1;
-                        line += 1;
-                        col = 1;
-                    } else {
-                        value.push(ch);
-                        i += 1;
-                        col += 1;
-                    }
-                }
-                out.push(DrawSpannedTok { tok: DrawTok::Str(value), line: start_line, column: start_col });
-            }
-            '-' | '0'..='9' => {
-                let start = i;
-                if c == '-' {
-                    i += 1;
-                    col += 1;
-                }
-                while i < chars.len() && (chars[i].is_ascii_digit() || chars[i] == '.') {
-                    i += 1;
-                    col += 1;
-                }
-                if i < chars.len() && (chars[i] == 'e' || chars[i] == 'E') {
-                    i += 1;
-                    col += 1;
-                    if i < chars.len() && (chars[i] == '+' || chars[i] == '-') {
-                        i += 1;
-                        col += 1;
-                    }
-                    while i < chars.len() && chars[i].is_ascii_digit() {
-                        i += 1;
-                        col += 1;
-                    }
-                }
-                let text: String = chars[start..i].iter().collect();
-                let value: f64 = text.parse().map_err(|_| TextError::new(format!("invalid number '{text}'"), TextSpan::at(start_line, start_col)))?;
-                out.push(DrawSpannedTok { tok: DrawTok::Num(value), line: start_line, column: start_col });
-            }
-            other if other.is_ascii_alphabetic() || other == '_' => {
-                let start = i;
-                while i < chars.len() && (chars[i].is_ascii_alphanumeric() || chars[i] == '_' || chars[i] == '-' || chars[i] == '.') {
-                    i += 1;
-                    col += 1;
-                }
-                let text: String = chars[start..i].iter().collect();
-                out.push(DrawSpannedTok { tok: DrawTok::Ident(text), line: start_line, column: start_col });
-            }
-            other => return Err(TextError::new(format!("unexpected character '{other}'"), TextSpan::at(start_line, start_col))),
-        }
-    }
-    out.push(DrawSpannedTok { tok: DrawTok::Eof, line, column: col });
-    Ok(out)
-}
-
-/// 🔐 Escapes `\`, `"` and newlines for embedding a string inside a `"..."` DSL literal.
-fn escape_str(value: &str) -> String {
-    let mut out = String::with_capacity(value.len());
-    for ch in value.chars() {
-        match ch {
-            '\\' => out.push_str("\\\\"),
-            '"' => out.push_str("\\\""),
-            '\n' => out.push_str("\\n"),
-            _ => out.push(ch),
-        }
-    }
-    out
-}
-
-/// 🔢 Prints an `f64` via its shortest round-trippable `Display` form (Rust's float formatter already
-/// guarantees `s.parse::<f64>() == value`), named for call-site clarity next to `escape_str`.
-fn fmt_num(value: f64) -> String {
-    value.to_string()
-}
-//#endregion 🔖DslLexer
-
-//#region 🔖DslParser
-struct DrawDslParser {
-    toks: Vec<DrawSpannedTok>,
-    pos: usize,
-}
-
-impl DrawDslParser {
-    fn new(toks: Vec<DrawSpannedTok>) -> Self {
-        Self { toks, pos: 0 }
-    }
-
-    fn peek(&self) -> &DrawTok {
-        &self.toks[self.pos].tok
-    }
-
-    fn peek_at(&self, offset: usize) -> &DrawTok {
-        let idx = (self.pos + offset).min(self.toks.len() - 1);
-        &self.toks[idx].tok
-    }
-
-    fn span(&self) -> TextSpan {
-        let tok = &self.toks[self.pos];
-        TextSpan::at(tok.line, tok.column)
-    }
-
-    fn bump(&mut self) -> DrawTok {
-        let tok = self.toks[self.pos].tok.clone();
-        if self.pos + 1 < self.toks.len() {
-            self.pos += 1;
-        }
-        tok
-    }
-
-    fn expect_tok(&mut self, expected: &DrawTok, label: &str) -> Result<(), TextError> {
-        let span = self.span();
-        let got = self.bump();
-        if &got == expected {
-            Ok(())
-        } else {
-            Err(TextError::expected(format!("expected '{label}'"), span, format!("{got:?}")))
-        }
-    }
-
-    fn expect_ident(&mut self) -> Result<String, TextError> {
-        let span = self.span();
-        match self.bump() {
-            DrawTok::Ident(value) => Ok(value),
-            other => Err(TextError::expected("expected identifier", span, format!("{other:?}"))),
-        }
-    }
-
-    fn expect_str(&mut self) -> Result<String, TextError> {
-        let span = self.span();
-        match self.bump() {
-            DrawTok::Str(value) => Ok(value),
-            other => Err(TextError::expected("expected string literal", span, format!("{other:?}"))),
-        }
-    }
-
-    fn expect_num(&mut self) -> Result<f64, TextError> {
-        let span = self.span();
-        match self.bump() {
-            DrawTok::Num(value) => Ok(value),
-            other => Err(TextError::expected("expected number", span, format!("{other:?}"))),
-        }
-    }
-
-    fn expect_bool(&mut self) -> Result<bool, TextError> {
-        let span = self.span();
-        match self.bump() {
-            DrawTok::Ident(value) if value == "true" => Ok(true),
-            DrawTok::Ident(value) if value == "false" => Ok(false),
-            other => Err(TextError::expected("expected 'true' or 'false'", span, format!("{other:?}"))),
-        }
-    }
-
-    fn at_ident(&self, value: &str) -> bool {
-        matches!(self.peek(), DrawTok::Ident(candidate) if candidate == value)
-    }
-
-    fn eat_keyword(&mut self, value: &str) -> Result<(), TextError> {
-        let span = self.span();
-        match self.bump() {
-            DrawTok::Ident(candidate) if candidate == value => Ok(()),
-            other => Err(TextError::expected(format!("expected '{value}'"), span, format!("{other:?}"))),
-        }
-    }
-
-    /// 🔎 True when the parser sits at the start of a `key=value` attribute (one token of lookahead
-    /// past the identifier), the signal every attr-loop uses to decide whether to keep consuming.
-    fn at_attr(&self) -> bool {
-        matches!(self.peek(), DrawTok::Ident(_)) && matches!(self.peek_at(1), DrawTok::Eq)
-    }
-
-    fn peek_attr_key(&self) -> Option<&str> {
-        if let DrawTok::Ident(value) = self.peek() {
-            Some(value.as_str())
-        } else {
-            None
-        }
-    }
-}
-
-/// 🏷️ Consumes `key=` (assumes `at_attr()` already confirmed the shape) and returns `key`.
-fn take_attr_key(p: &mut DrawDslParser) -> Result<String, TextError> {
-    let key = p.expect_ident()?;
-    p.expect_tok(&DrawTok::Eq, "=")?;
-    Ok(key)
-}
-
-/// 🏷️ Consumes `expected=` and errors if the attribute name doesn't match (keeps op-text/DSL parsing
-/// honest about field order without a full generic key-value bag).
-fn expect_key(p: &mut DrawDslParser, expected: &str) -> Result<(), TextError> {
-    let span = p.span();
-    let key = take_attr_key(p)?;
-    if key == expected {
-        Ok(())
-    } else {
-        Err(TextError::expected(format!("expected key '{expected}'"), span, key))
-    }
-}
-
-/// 🏷️ Consumes `expected:` — the marker used before an inline nested layer/document expression, since
-/// those values aren't a simple scalar/tuple/list and instead parse their own self-delimited grammar.
-fn expect_key_colon(p: &mut DrawDslParser, expected: &str) -> Result<(), TextError> {
-    let span = p.span();
-    let key = p.expect_ident()?;
-    if key != expected {
-        return Err(TextError::expected(format!("expected '{expected}:'"), span, key));
-    }
-    p.expect_tok(&DrawTok::Colon, ":")?;
-    Ok(())
-}
-
-fn parse_kv_ident(p: &mut DrawDslParser, key: &str) -> Result<String, TextError> {
-    expect_key(p, key)?;
-    p.expect_ident()
-}
-
-fn parse_kv_str(p: &mut DrawDslParser, key: &str) -> Result<String, TextError> {
-    expect_key(p, key)?;
-    p.expect_str()
-}
-
-fn parse_kv_num(p: &mut DrawDslParser, key: &str) -> Result<f64, TextError> {
-    expect_key(p, key)?;
-    p.expect_num()
-}
-
-fn parse_kv_bool(p: &mut DrawDslParser, key: &str) -> Result<bool, TextError> {
-    expect_key(p, key)?;
-    p.expect_bool()
-}
-
-/// 🕳️ `none` sentinel for an absent `Option<String>` op-text field (`parentId`, …).
-fn parse_kv_opt_ident(p: &mut DrawDslParser, key: &str) -> Result<Option<String>, TextError> {
-    expect_key(p, key)?;
-    match p.peek().clone() {
-        DrawTok::Ident(value) if value == "none" => {
-            p.bump();
-            Ok(None)
-        }
-        DrawTok::Ident(value) => {
-            p.bump();
-            Ok(Some(value))
-        }
-        other => Err(TextError::expected("expected identifier or 'none'", p.span(), format!("{other:?}"))),
-    }
-}
-
-fn parse_kv_opt_num(p: &mut DrawDslParser, key: &str) -> Result<Option<f64>, TextError> {
-    expect_key(p, key)?;
-    match p.peek().clone() {
-        DrawTok::Ident(value) if value == "none" => {
-            p.bump();
-            Ok(None)
-        }
-        DrawTok::Num(value) => {
-            p.bump();
-            Ok(Some(value))
-        }
-        other => Err(TextError::expected("expected number or 'none'", p.span(), format!("{other:?}"))),
-    }
-}
-
-fn print_opt_ident(value: &Option<String>) -> String {
-    value.clone().unwrap_or_else(|| "none".to_string())
-}
-
-fn print_opt_num(value: &Option<usize>) -> String {
-    value.map(|v| v.to_string()).unwrap_or_else(|| "none".to_string())
-}
-
-fn parse_point(p: &mut DrawDslParser) -> Result<[f64; 2], TextError> {
-    let x = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let y = p.expect_num()?;
-    Ok([x, y])
-}
-
-fn parse_color4_bare(p: &mut DrawDslParser) -> Result<[f64; 4], TextError> {
-    let r = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let g = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let b = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let a = p.expect_num()?;
-    Ok([r, g, b, a])
-}
-
-fn print_color4(color: [f64; 4]) -> String {
-    format!("{},{},{},{}", fmt_num(color[0]), fmt_num(color[1]), fmt_num(color[2]), fmt_num(color[3]))
-}
-
-fn parse_num_list(p: &mut DrawDslParser) -> Result<Vec<f64>, TextError> {
-    p.expect_tok(&DrawTok::LBracket, "[")?;
-    let mut out = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBracket) {
-        out.push(p.expect_num()?);
-    }
-    p.expect_tok(&DrawTok::RBracket, "]")?;
-    Ok(out)
-}
-
-fn print_num_list(values: &[f64]) -> String {
-    format!("[{}]", values.iter().map(|value| fmt_num(*value)).collect::<Vec<_>>().join(" "))
-}
-
-fn parse_point_list(p: &mut DrawDslParser) -> Result<Vec<[f64; 2]>, TextError> {
-    p.expect_tok(&DrawTok::LBracket, "[")?;
-    let mut out = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBracket) {
-        out.push(parse_point(p)?);
-    }
-    p.expect_tok(&DrawTok::RBracket, "]")?;
-    Ok(out)
-}
-
-fn parse_id_list(p: &mut DrawDslParser) -> Result<Vec<String>, TextError> {
-    p.expect_tok(&DrawTok::LBracket, "[")?;
-    let mut out = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBracket) {
-        out.push(p.expect_ident()?);
-    }
-    p.expect_tok(&DrawTok::RBracket, "]")?;
-    Ok(out)
-}
-
-fn parse_transform(p: &mut DrawDslParser) -> Result<DrawTransform, TextError> {
-    p.expect_tok(&DrawTok::LParen, "(")?;
-    let x = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let y = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let scale_x = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let scale_y = p.expect_num()?;
-    p.expect_tok(&DrawTok::Comma, ",")?;
-    let rotation = p.expect_num()?;
-    p.expect_tok(&DrawTok::RParen, ")")?;
-    Ok(DrawTransform { x, y, scale_x, scale_y, rotation })
-}
-
-fn print_transform(t: &DrawTransform) -> String {
-    format!("({},{},{},{},{})", fmt_num(t.x), fmt_num(t.y), fmt_num(t.scale_x), fmt_num(t.scale_y), fmt_num(t.rotation))
-}
-
-fn parse_gradient_stops(p: &mut DrawDslParser) -> Result<Vec<GradientStop>, TextError> {
-    p.expect_tok(&DrawTok::LBracket, "[")?;
-    let mut stops = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBracket) {
-        let offset = p.expect_num()?;
-        p.expect_tok(&DrawTok::At, "@")?;
-        let color = parse_color4_bare(p)?;
-        stops.push(GradientStop { offset, color });
-    }
-    p.expect_tok(&DrawTok::RBracket, "]")?;
-    Ok(stops)
-}
-
-fn print_gradient_stops(stops: &[GradientStop]) -> String {
-    let items: Vec<String> = stops.iter().map(|stop| format!("{}@{}", fmt_num(stop.offset), print_color4(stop.color))).collect();
-    format!("[{}]", items.join(" "))
-}
-
-fn parse_fill(p: &mut DrawDslParser) -> Result<Option<FillStyle>, TextError> {
-    let span = p.span();
-    let kind = p.expect_ident()?;
-    match kind.as_str() {
-        "none" => Ok(None),
-        "solid" => {
-            p.expect_tok(&DrawTok::LParen, "(")?;
-            let color = parse_color4_bare(p)?;
-            p.expect_tok(&DrawTok::RParen, ")")?;
-            Ok(Some(FillStyle::Solid { color }))
-        }
-        "linear" => {
-            p.expect_tok(&DrawTok::LParen, "(")?;
-            let x1 = p.expect_num()?;
-            p.expect_tok(&DrawTok::Comma, ",")?;
-            let y1 = p.expect_num()?;
-            p.expect_tok(&DrawTok::Comma, ",")?;
-            let x2 = p.expect_num()?;
-            p.expect_tok(&DrawTok::Comma, ",")?;
-            let y2 = p.expect_num()?;
-            p.expect_tok(&DrawTok::RParen, ")")?;
-            let stops = parse_gradient_stops(p)?;
-            Ok(Some(FillStyle::LinearGradient { x1, y1, x2, y2, stops }))
-        }
-        "radial" => {
-            p.expect_tok(&DrawTok::LParen, "(")?;
-            let cx = p.expect_num()?;
-            p.expect_tok(&DrawTok::Comma, ",")?;
-            let cy = p.expect_num()?;
-            p.expect_tok(&DrawTok::Comma, ",")?;
-            let r = p.expect_num()?;
-            p.expect_tok(&DrawTok::RParen, ")")?;
-            let stops = parse_gradient_stops(p)?;
-            Ok(Some(FillStyle::RadialGradient { cx, cy, r, stops }))
-        }
-        other => Err(TextError::expected(format!("unknown fill kind '{other}'"), span, "none|solid|linear|radial")),
-    }
-}
-
-fn print_fill(fill: &Option<FillStyle>) -> String {
-    match fill {
-        None => "none".to_string(),
-        Some(FillStyle::Solid { color }) => format!("solid({})", print_color4(*color)),
-        Some(FillStyle::LinearGradient { x1, y1, x2, y2, stops }) => format!("linear({},{},{},{}){}", fmt_num(*x1), fmt_num(*y1), fmt_num(*x2), fmt_num(*y2), print_gradient_stops(stops)),
-        Some(FillStyle::RadialGradient { cx, cy, r, stops }) => format!("radial({},{},{}){}", fmt_num(*cx), fmt_num(*cy), fmt_num(*r), print_gradient_stops(stops)),
-    }
-}
-
-/// 🖌️ Parses `stroke=none` or `stroke=(r,g,b,a) width=.. cap=.. join=.. [dash=[..]]` — the shared shape
-/// used both for a layer's base `stroke=` attribute and for the `setStroke` op's payload.
-fn parse_stroke_value(p: &mut DrawDslParser) -> Result<Option<StrokeStyle>, TextError> {
-    match p.peek().clone() {
-        DrawTok::Ident(value) if value == "none" => {
-            p.bump();
-            Ok(None)
-        }
-        DrawTok::LParen => {
-            p.bump();
-            let color = parse_color4_bare(p)?;
-            p.expect_tok(&DrawTok::RParen, ")")?;
-            let width = parse_kv_num(p, "width")?;
-            let cap = parse_kv_ident(p, "cap")?;
-            let join = parse_kv_ident(p, "join")?;
-            let dash = if p.at_ident("dash") {
-                p.bump();
-                p.expect_tok(&DrawTok::Eq, "=")?;
-                Some(parse_num_list(p)?)
-            } else {
-                None
-            };
-            Ok(Some(StrokeStyle { color, width, cap, join, dash }))
-        }
-        other => Err(TextError::expected("expected stroke value", p.span(), format!("{other:?}"))),
-    }
-}
-
-fn print_stroke_value(stroke: &Option<StrokeStyle>) -> String {
-    match stroke {
-        None => "none".to_string(),
-        Some(s) => format!("({})", print_color4(s.color)),
-    }
-}
-
-/// 🖌️ The `width=`/`cap=`/`join=`/`dash=` attrs that accompany a non-`none` `stroke=`, shared by the
-/// layer base printer and the `setStroke` op printer.
-fn print_stroke_trailing_attrs(stroke: &StrokeStyle) -> Vec<String> {
-    let mut out = vec![format!("width={}", fmt_num(stroke.width)), format!("cap={}", stroke.cap), format!("join={}", stroke.join)];
-    if let Some(dash) = &stroke.dash {
-        out.push(format!("dash={}", print_num_list(dash)));
-    }
-    out
-}
-//#endregion 🔖DslParser
-
-//#region 🔖DslSegments
-fn parse_segments(p: &mut DrawDslParser) -> Result<Vec<PathSegment>, TextError> {
-    p.expect_tok(&DrawTok::LBrace, "{")?;
-    let mut segments = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBrace) {
-        let span = p.span();
-        let keyword = p.expect_ident()?;
-        let segment = match keyword.as_str() {
-            "move" => PathSegment::Move { to: parse_point(p)? },
-            "line" => PathSegment::Line { to: parse_point(p)? },
-            "quad" => {
-                let ctrl = parse_point(p)?;
-                p.expect_tok(&DrawTok::Arrow, "->")?;
-                let to = parse_point(p)?;
-                PathSegment::Quad { ctrl, to }
-            }
-            "cubic" => {
-                let ctrl1 = parse_point(p)?;
-                let ctrl2 = parse_point(p)?;
-                p.expect_tok(&DrawTok::Arrow, "->")?;
-                let to = parse_point(p)?;
-                PathSegment::Cubic { ctrl1, ctrl2, to }
-            }
-            "arc" => {
-                let rx = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let ry = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let rotation = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let large_arc = p.expect_bool()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let sweep = p.expect_bool()?;
-                p.expect_tok(&DrawTok::Arrow, "->")?;
-                let to = parse_point(p)?;
-                PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to }
-            }
-            "close" => PathSegment::Close,
-            other => return Err(TextError::expected(format!("unknown path segment '{other}'"), span, "move|line|quad|cubic|arc|close")),
-        };
-        segments.push(segment);
-    }
-    p.expect_tok(&DrawTok::RBrace, "}")?;
-    Ok(segments)
-}
-
-fn print_segment(segment: &PathSegment) -> String {
-    match segment {
-        PathSegment::Move { to } => format!("move {},{}", fmt_num(to[0]), fmt_num(to[1])),
-        PathSegment::Line { to } => format!("line {},{}", fmt_num(to[0]), fmt_num(to[1])),
-        PathSegment::Quad { ctrl, to } => format!("quad {},{} -> {},{}", fmt_num(ctrl[0]), fmt_num(ctrl[1]), fmt_num(to[0]), fmt_num(to[1])),
-        PathSegment::Cubic { ctrl1, ctrl2, to } => format!("cubic {},{} {},{} -> {},{}", fmt_num(ctrl1[0]), fmt_num(ctrl1[1]), fmt_num(ctrl2[0]), fmt_num(ctrl2[1]), fmt_num(to[0]), fmt_num(to[1])),
-        PathSegment::Arc { rx, ry, rotation, large_arc, sweep, to } => format!("arc {},{},{},{},{} -> {},{}", fmt_num(*rx), fmt_num(*ry), fmt_num(*rotation), large_arc, sweep, fmt_num(to[0]), fmt_num(to[1])),
-        PathSegment::Close => "close".to_string(),
-    }
-}
-//#endregion 🔖DslSegments
-
-//#region 🔖DslLayer
-/// 🧱 Fields shared by every layer kind's `DrawLayerBase`, accumulated by `parse_base_and_extra_attrs`
-/// before the caller wraps them (plus its own kind-specific fields) into a `DrawLayerNode` variant.
-struct DrawBaseAttrs {
-    visible: bool,
-    locked: bool,
-    opacity: f64,
-    blend_mode: String,
-    transform: DrawTransform,
-    fill: Option<FillStyle>,
-    stroke: Option<StrokeStyle>,
-}
-
-fn build_base(id: String, name: String, attrs: DrawBaseAttrs) -> DrawLayerBase {
-    DrawLayerBase {
-        id,
-        name,
-        visible: attrs.visible,
-        locked: attrs.locked,
-        opacity: attrs.opacity,
-        blend_mode: attrs.blend_mode,
-        transform: attrs.transform,
-        attributes: DrawAttributes { fill: attrs.fill, stroke: attrs.stroke },
-    }
-}
-
-fn print_base_attrs(base: &DrawLayerBase) -> Vec<String> {
-    let mut out = vec![
-        format!("visible={}", base.visible),
-        format!("locked={}", base.locked),
-        format!("opacity={}", fmt_num(base.opacity)),
-        format!("blend={}", base.blend_mode),
-        format!("transform={}", print_transform(&base.transform)),
-        format!("fill={}", print_fill(&base.attributes.fill)),
-        format!("stroke={}", print_stroke_value(&base.attributes.stroke)),
-    ];
-    if let Some(stroke) = &base.attributes.stroke {
-        out.extend(print_stroke_trailing_attrs(stroke));
-    }
-    out
-}
-
-/// 🔁 Parses every base `DrawLayerBase` attribute (`visible=`/`locked=`/`opacity=`/`blend=`/
-/// `transform=`/`fill=`/`stroke=` + its trailing `width=`/`cap=`/`join=`/`dash=`), delegating any key it
-/// doesn't recognize to `handle_extra` so each layer kind supplies only its own extra fields.
-fn parse_base_and_extra_attrs(p: &mut DrawDslParser, mut handle_extra: impl FnMut(&mut DrawDslParser, &str) -> Result<bool, TextError>) -> Result<DrawBaseAttrs, TextError> {
-    let mut visible = true;
-    let mut locked = false;
-    let mut opacity = 1.0;
-    let mut blend_mode = "normal".to_string();
-    let mut transform = default_draw_transform();
-    let mut fill = None;
-    let mut stroke: Option<StrokeStyle> = None;
-    while p.at_attr() {
-        let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-        match key.as_str() {
-            "visible" => {
-                take_attr_key(p)?;
-                visible = p.expect_bool()?;
-            }
-            "locked" => {
-                take_attr_key(p)?;
-                locked = p.expect_bool()?;
-            }
-            "opacity" => {
-                take_attr_key(p)?;
-                opacity = p.expect_num()?;
-            }
-            "blend" => {
-                take_attr_key(p)?;
-                blend_mode = p.expect_ident()?;
-            }
-            "transform" => {
-                take_attr_key(p)?;
-                transform = parse_transform(p)?;
-            }
-            "fill" => {
-                take_attr_key(p)?;
-                fill = parse_fill(p)?;
-            }
-            "stroke" => {
-                take_attr_key(p)?;
-                stroke = parse_stroke_value(p)?;
-            }
-            "width" | "cap" | "join" | "dash" if stroke.is_some() => {
-                // 🩹 Trailing stroke attrs land here; re-parse them onto the just-parsed stroke.
-                let mut s = stroke.take().expect("stroke.is_some() checked above");
-                match key.as_str() {
-                    "width" => {
-                        take_attr_key(p)?;
-                        s.width = p.expect_num()?;
-                    }
-                    "cap" => {
-                        take_attr_key(p)?;
-                        s.cap = p.expect_ident()?;
-                    }
-                    "join" => {
-                        take_attr_key(p)?;
-                        s.join = p.expect_ident()?;
-                    }
-                    _ => {
-                        take_attr_key(p)?;
-                        s.dash = Some(parse_num_list(p)?);
-                    }
-                }
-                stroke = Some(s);
-            }
-            _ => {
-                if !handle_extra(p, &key)? {
-                    break;
-                }
-            }
-        }
-    }
-    Ok(DrawBaseAttrs { visible, locked, opacity, blend_mode, transform, fill, stroke })
-}
-
-fn parse_shape_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let mut shape_kind = String::new();
-    let mut rect = None;
-    let mut ellipse = None;
-    let mut circle = None;
-    let mut line = None;
-    let mut polygon = None;
-    let base_attrs = parse_base_and_extra_attrs(p, |p, key| -> Result<bool, TextError> {
-        match key {
-            "shapeKind" => {
-                take_attr_key(p)?;
-                shape_kind = p.expect_ident()?;
-                Ok(true)
-            }
-            "rect" => {
-                take_attr_key(p)?;
-                p.expect_tok(&DrawTok::LParen, "(")?;
-                let x = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let y = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let width = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let height = p.expect_num()?;
-                p.expect_tok(&DrawTok::RParen, ")")?;
-                rect = Some(DrawRect { x, y, width, height });
-                Ok(true)
-            }
-            "ellipse" => {
-                take_attr_key(p)?;
-                p.expect_tok(&DrawTok::LParen, "(")?;
-                let cx = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let cy = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let rx = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let ry = p.expect_num()?;
-                p.expect_tok(&DrawTok::RParen, ")")?;
-                ellipse = Some(DrawEllipse { cx, cy, rx, ry });
-                Ok(true)
-            }
-            "circle" => {
-                take_attr_key(p)?;
-                p.expect_tok(&DrawTok::LParen, "(")?;
-                let cx = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let cy = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let r = p.expect_num()?;
-                p.expect_tok(&DrawTok::RParen, ")")?;
-                circle = Some(DrawCircle { cx, cy, r });
-                Ok(true)
-            }
-            "line" => {
-                take_attr_key(p)?;
-                p.expect_tok(&DrawTok::LParen, "(")?;
-                let x1 = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let y1 = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let x2 = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let y2 = p.expect_num()?;
-                p.expect_tok(&DrawTok::RParen, ")")?;
-                line = Some(DrawLine { x1, y1, x2, y2 });
-                Ok(true)
-            }
-            "polygon" => {
-                take_attr_key(p)?;
-                polygon = Some(DrawPolygon { points: parse_point_list(p)? });
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
-    })?;
-    Ok(DrawLayerNode::Shape(DrawShapeBody { base: build_base(id, name, base_attrs), shape_kind, rect, ellipse, circle, line, polygon }))
-}
-
-fn print_shape(body: &DrawShapeBody) -> String {
-    let mut parts = vec![format!("shape {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    parts.push(format!("shapeKind={}", body.shape_kind));
-    if let Some(rect) = &body.rect {
-        parts.push(format!("rect=({},{},{},{})", fmt_num(rect.x), fmt_num(rect.y), fmt_num(rect.width), fmt_num(rect.height)));
-    }
-    if let Some(ellipse) = &body.ellipse {
-        parts.push(format!("ellipse=({},{},{},{})", fmt_num(ellipse.cx), fmt_num(ellipse.cy), fmt_num(ellipse.rx), fmt_num(ellipse.ry)));
-    }
-    if let Some(circle) = &body.circle {
-        parts.push(format!("circle=({},{},{})", fmt_num(circle.cx), fmt_num(circle.cy), fmt_num(circle.r)));
-    }
-    if let Some(line) = &body.line {
-        parts.push(format!("line=({},{},{},{})", fmt_num(line.x1), fmt_num(line.y1), fmt_num(line.x2), fmt_num(line.y2)));
-    }
-    if let Some(polygon) = &body.polygon {
-        let points: Vec<String> = polygon.points.iter().map(|point| format!("{},{}", fmt_num(point[0]), fmt_num(point[1]))).collect();
-        parts.push(format!("polygon=[{}]", points.join(" ")));
-    }
-    parts.join(" ")
-}
-
-fn parse_path_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let base_attrs = parse_base_and_extra_attrs(p, |_p, _key| Ok(false))?;
-    let segments = parse_segments(p)?;
-    Ok(DrawLayerNode::Path(DrawPathBody { base: build_base(id, name, base_attrs), segments }))
-}
-
-fn print_path(body: &DrawPathBody) -> String {
-    let mut parts = vec![format!("path {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    let segments: Vec<String> = body.segments.iter().map(print_segment).collect();
-    parts.push(format!("{{ {} }}", segments.join(" ")));
-    parts.join(" ")
-}
-
-fn parse_text_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let mut x = 0.0;
-    let mut y = 0.0;
-    let mut content = String::new();
-    let mut size = 0.0;
-    let base_attrs = parse_base_and_extra_attrs(p, |p, key| -> Result<bool, TextError> {
-        match key {
-            "x" => {
-                take_attr_key(p)?;
-                x = p.expect_num()?;
-                Ok(true)
-            }
-            "y" => {
-                take_attr_key(p)?;
-                y = p.expect_num()?;
-                Ok(true)
-            }
-            "content" => {
-                take_attr_key(p)?;
-                content = p.expect_str()?;
-                Ok(true)
-            }
-            "size" => {
-                take_attr_key(p)?;
-                size = p.expect_num()?;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
-    })?;
-    Ok(DrawLayerNode::Text(DrawTextBody { base: build_base(id, name, base_attrs), x, y, content, size }))
-}
-
-fn print_text(body: &DrawTextBody) -> String {
-    let mut parts = vec![format!("text {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    parts.push(format!("x={}", fmt_num(body.x)));
-    parts.push(format!("y={}", fmt_num(body.y)));
-    parts.push(format!("content=\"{}\"", escape_str(&body.content)));
-    parts.push(format!("size={}", fmt_num(body.size)));
-    parts.join(" ")
-}
-
-fn parse_image_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let mut image_key = String::new();
-    let mut width = 0.0;
-    let mut height = 0.0;
-    let base_attrs = parse_base_and_extra_attrs(p, |p, key| -> Result<bool, TextError> {
-        match key {
-            "imageKey" => {
-                take_attr_key(p)?;
-                image_key = p.expect_ident()?;
-                Ok(true)
-            }
-            "width" => {
-                take_attr_key(p)?;
-                width = p.expect_num()?;
-                Ok(true)
-            }
-            "height" => {
-                take_attr_key(p)?;
-                height = p.expect_num()?;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
-    })?;
-    Ok(DrawLayerNode::Image(DrawImageBody { base: build_base(id, name, base_attrs), image_key, width, height }))
-}
-
-fn print_image(body: &DrawImageBody) -> String {
-    let mut parts = vec![format!("image {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    parts.push(format!("imageKey={}", body.image_key));
-    parts.push(format!("width={}", fmt_num(body.width)));
-    parts.push(format!("height={}", fmt_num(body.height)));
-    parts.join(" ")
-}
-
-fn parse_group_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let base_attrs = parse_base_and_extra_attrs(p, |_p, _key| Ok(false))?;
-    p.expect_tok(&DrawTok::LBrace, "{")?;
-    let mut children = Vec::new();
-    while !matches!(p.peek(), DrawTok::RBrace) {
-        children.push(parse_layer(p)?);
-    }
-    p.expect_tok(&DrawTok::RBrace, "}")?;
-    Ok(DrawLayerNode::Group(DrawGroupBody { base: build_base(id, name, base_attrs), children }))
-}
-
-fn print_group(body: &DrawGroupBody) -> String {
-    let mut parts = vec![format!("group {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    let children: Vec<String> = body.children.iter().map(print_layer_node).collect();
-    parts.push(format!("{{ {} }}", children.join(" ")));
-    parts.join(" ")
-}
-
-fn parse_boolean_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let mut operation = String::new();
-    let mut children = Vec::new();
-    let base_attrs = parse_base_and_extra_attrs(p, |p, key| -> Result<bool, TextError> {
-        match key {
-            "operation" => {
-                take_attr_key(p)?;
-                operation = p.expect_ident()?;
-                Ok(true)
-            }
-            "children" => {
-                take_attr_key(p)?;
-                children = parse_id_list(p)?;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
-    })?;
-    Ok(DrawLayerNode::Boolean(DrawBooleanBody { base: build_base(id, name, base_attrs), operation, children }))
-}
-
-fn print_boolean(body: &DrawBooleanBody) -> String {
-    let mut parts = vec![format!("boolean {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    parts.push(format!("operation={}", body.operation));
-    parts.push(format!("children=[{}]", body.children.join(" ")));
-    parts.join(" ")
-}
-
-fn parse_trace_layer(p: &mut DrawDslParser, id: String, name: String) -> Result<DrawLayerNode, TextError> {
-    let mut source_key = String::new();
-    let mut threshold = 0.0;
-    let mut simplify_epsilon = 0.0;
-    let base_attrs = parse_base_and_extra_attrs(p, |p, key| -> Result<bool, TextError> {
-        match key {
-            "sourceKey" => {
-                take_attr_key(p)?;
-                source_key = p.expect_ident()?;
-                Ok(true)
-            }
-            "threshold" => {
-                take_attr_key(p)?;
-                threshold = p.expect_num()?;
-                Ok(true)
-            }
-            "simplify" => {
-                take_attr_key(p)?;
-                simplify_epsilon = p.expect_num()?;
-                Ok(true)
-            }
-            _ => Ok(false),
-        }
-    })?;
-    Ok(DrawLayerNode::Trace(DrawTraceBody { base: build_base(id, name, base_attrs), source_key, params: DrawTraceParams { threshold, simplify_epsilon } }))
-}
-
-fn print_trace(body: &DrawTraceBody) -> String {
-    let mut parts = vec![format!("trace {} \"{}\"", body.base.id, escape_str(&body.base.name))];
-    parts.extend(print_base_attrs(&body.base));
-    parts.push(format!("sourceKey={}", body.source_key));
-    parts.push(format!("threshold={}", fmt_num(body.params.threshold)));
-    parts.push(format!("simplify={}", fmt_num(body.params.simplify_epsilon)));
-    parts.join(" ")
-}
-
-fn parse_layer(p: &mut DrawDslParser) -> Result<DrawLayerNode, TextError> {
-    let span = p.span();
-    let kind = p.expect_ident()?;
-    let id = p.expect_ident()?;
-    let name = p.expect_str()?;
-    match kind.as_str() {
-        "shape" => parse_shape_layer(p, id, name),
-        "path" => parse_path_layer(p, id, name),
-        "text" => parse_text_layer(p, id, name),
-        "image" => parse_image_layer(p, id, name),
-        "group" => parse_group_layer(p, id, name),
-        "boolean" => parse_boolean_layer(p, id, name),
-        "trace" => parse_trace_layer(p, id, name),
-        other => Err(TextError::expected(format!("unknown layer kind '{other}'"), span, "shape|path|text|image|group|boolean|trace")),
-    }
-}
-
-fn print_layer_node(node: &DrawLayerNode) -> String {
-    match node {
-        DrawLayerNode::Shape(body) => print_shape(body),
-        DrawLayerNode::Path(body) => print_path(body),
-        DrawLayerNode::Text(body) => print_text(body),
-        DrawLayerNode::Image(body) => print_image(body),
-        DrawLayerNode::Group(body) => print_group(body),
-        DrawLayerNode::Boolean(body) => print_boolean(body),
-        DrawLayerNode::Trace(body) => print_trace(body),
-    }
-}
-//#endregion 🔖DslLayer
-
-//#region 🔖DslDocument
-fn print_asset(key: &str, asset: &DrawImageAsset) -> String {
-    let mut s = format!("asset {} mime=\"{}\" data=\"{}\"", key, escape_str(&asset.mime), escape_str(&asset.data));
-    if let Some(width) = asset.width {
-        s.push_str(&format!(" width={width}"));
-    }
-    if let Some(height) = asset.height {
-        s.push_str(&format!(" height={height}"));
-    }
-    s
-}
-
-/// 📤 Renders `doc` as a list of self-delimited top-level statements (`doc`/`camera`/`artboard`/
-/// `assets`/one per top-level layer) — joined with `"\n"` for the pretty `print_dsl`, or with `" "` to
-/// embed a whole document inline in a one-line `setDocument` op (see `🔖OpText`).
-fn print_dsl_chunks(doc: &DrawDocument) -> Vec<String> {
-    let mut chunks = Vec::new();
-    let mut header = format!("doc {} schema={}", doc.id, doc.schema);
-    if let Some(title) = &doc.title {
-        header.push_str(&format!(" title=\"{}\"", escape_str(title)));
-    }
-    chunks.push(header);
-    chunks.push(format!("camera x={} y={} zoom={}", fmt_num(doc.camera.x), fmt_num(doc.camera.y), fmt_num(doc.camera.zoom)));
-    if let Some(artboard) = &doc.artboard {
-        chunks.push(format!("artboard width={} height={}", fmt_num(artboard.width), fmt_num(artboard.height)));
-    }
-    if let Some(assets) = &doc.assets {
-        let mut keys: Vec<&String> = assets.keys().collect();
-        keys.sort();
-        let entries: Vec<String> = keys.iter().map(|key| print_asset(key, &assets[*key])).collect();
-        chunks.push(format!("assets {{ {} }}", entries.join(" ")));
-    }
-    for layer in &doc.layers {
-        chunks.push(print_layer_node(layer));
-    }
-    chunks
-}
-
-fn parse_document(p: &mut DrawDslParser) -> Result<DrawDocument, TextError> {
-    p.eat_keyword("doc")?;
-    let id = p.expect_ident()?;
-    let mut schema = String::new();
-    let mut title = None;
-    while p.at_attr() {
-        let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-        match key.as_str() {
-            "schema" => {
-                take_attr_key(p)?;
-                schema = p.expect_ident()?;
-            }
-            "title" => {
-                take_attr_key(p)?;
-                title = Some(p.expect_str()?);
-            }
-            _ => break,
-        }
-    }
-    p.eat_keyword("camera")?;
-    let mut camera_x = 0.0;
-    let mut camera_y = 0.0;
-    let mut camera_zoom = 1.0;
-    while p.at_attr() {
-        let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-        match key.as_str() {
-            "x" => {
-                take_attr_key(p)?;
-                camera_x = p.expect_num()?;
-            }
-            "y" => {
-                take_attr_key(p)?;
-                camera_y = p.expect_num()?;
-            }
-            "zoom" => {
-                take_attr_key(p)?;
-                camera_zoom = p.expect_num()?;
-            }
-            _ => break,
-        }
-    }
-    let camera = DrawCamera { x: camera_x, y: camera_y, zoom: camera_zoom };
-    let mut artboard = None;
-    if p.at_ident("artboard") {
-        p.bump();
-        let mut width = 0.0;
-        let mut height = 0.0;
-        while p.at_attr() {
-            let key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-            match key.as_str() {
-                "width" => {
-                    take_attr_key(p)?;
-                    width = p.expect_num()?;
-                }
-                "height" => {
-                    take_attr_key(p)?;
-                    height = p.expect_num()?;
-                }
-                _ => break,
-            }
-        }
-        artboard = Some(DrawArtboard { width, height });
-    }
-    let mut assets = None;
-    if p.at_ident("assets") {
-        p.bump();
-        p.expect_tok(&DrawTok::LBrace, "{")?;
-        let mut map = std::collections::HashMap::new();
-        while !matches!(p.peek(), DrawTok::RBrace) {
-            p.eat_keyword("asset")?;
-            let key = p.expect_ident()?;
-            let mut mime = String::new();
-            let mut data = String::new();
-            let mut width = None;
-            let mut height = None;
-            while p.at_attr() {
-                let attr_key = p.peek_attr_key().expect("at_attr confirmed an identifier").to_string();
-                match attr_key.as_str() {
-                    "mime" => {
-                        take_attr_key(p)?;
-                        mime = p.expect_str()?;
-                    }
-                    "data" => {
-                        take_attr_key(p)?;
-                        data = p.expect_str()?;
-                    }
-                    "width" => {
-                        take_attr_key(p)?;
-                        width = Some(p.expect_num()? as u32);
-                    }
-                    "height" => {
-                        take_attr_key(p)?;
-                        height = Some(p.expect_num()? as u32);
-                    }
-                    _ => break,
-                }
-            }
-            map.insert(key, DrawImageAsset { mime, data, width, height });
-        }
-        p.expect_tok(&DrawTok::RBrace, "}")?;
-        assets = Some(map);
-    }
-    let mut layers = Vec::new();
-    while !matches!(p.peek(), DrawTok::Eof) {
-        layers.push(parse_layer(p)?);
-    }
-    Ok(DrawDocument { schema, id, title, camera, layers, assets, artboard })
-}
-
-impl DocumentDsl for DrawDocument {
-    const EXTENSION: &'static str = "draw";
-
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        let tokens = lex_draw_dsl(text)?;
-        let mut parser = DrawDslParser::new(tokens);
-        parse_document(&mut parser)
-    }
-
-    fn print_dsl(&self) -> String {
-        print_dsl_chunks(self).join("\n")
-    }
-}
-//#endregion 🔖DslDocument
+// `DrawDocument`'s `vcs::DocumentDsl` and `DrawOperation`'s `vcs::OpText` are now generated by
+// `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions
+// themselves (see the `🔖Domain` region above), together with `#[derive(dsl::DslRecord)]` on every
+// leaf/body type and `#[derive(dsl::DslEnum)]` on the recursive `DrawLayerNode` tree and the
+// `FillStyle`/`PathSegment` sum types — the engine's `dsl_schema` grammar replaces this crate's own
+// hand-rolled lexer/parser/printer (previously ~1230 lines: tokenizer, recursive-descent parser,
+// value-grammar printer for transform/fill/stroke/segments/layers/document).
 //#endregion 🔖Dsl
 
 //#region 🔖SegmentGeometry
@@ -2404,74 +1236,97 @@ fn resolve_trace_layer_segments(doc: &DrawDocument, trace: &DrawTraceBody) -> Ve
 //#endregion 🔖KernelResolve
 
 //#region 🔖EditOperations
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum DrawOperation {
+    #[dsl(key = "setLayerVisible")]
     SetLayerVisible {
         layer_id: String,
         visible: bool,
     },
+    #[dsl(key = "setLayerLocked")]
     SetLayerLocked {
         layer_id: String,
         locked: bool,
     },
+    #[dsl(key = "setLayerOpacity")]
     SetLayerOpacity {
         layer_id: String,
         opacity: f64,
     },
+    #[dsl(key = "setLayerBlendMode")]
     SetLayerBlendMode {
         layer_id: String,
         blend_mode: String,
     },
+    #[dsl(key = "setLayerName")]
     SetLayerName {
         layer_id: String,
         name: String,
     },
+    #[dsl(key = "setLayerTransform")]
     SetLayerTransform {
         layer_id: String,
+        #[dsl(block)]
         transform: DrawTransform,
     },
+    #[dsl(key = "setFill")]
     SetFill {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[dsl(statements, block)]
         fill: Option<FillStyle>,
     },
+    #[dsl(key = "setStroke")]
     SetStroke {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
+        #[dsl(block)]
         stroke: Option<StrokeStyle>,
     },
+    #[dsl(key = "setBooleanOperation")]
     SetBooleanOperation {
         layer_id: String,
         boolean_operation: String,
     },
+    #[dsl(key = "setTraceParams")]
     SetTraceParams {
         layer_id: String,
+        #[dsl(block)]
         params: DrawTraceParams,
     },
+    #[dsl(key = "addLayer")]
     AddLayer {
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_id: Option<String>,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
+        #[dsl(statements)]
         layer: Box<DrawLayerNode>,
     },
+    #[dsl(key = "duplicateLayer")]
     DuplicateLayer {
         layer_id: String,
     },
+    #[dsl(key = "removeLayer")]
     RemoveLayer {
         layer_id: String,
     },
+    #[dsl(key = "reorderLayer")]
     ReorderLayer {
         layer_id: String,
         #[serde(skip_serializing_if = "Option::is_none")]
         parent_id: Option<String>,
         index: usize,
     },
+    #[dsl(key = "setCamera")]
     SetCamera {
+        #[dsl(block)]
         camera: DrawCamera,
     },
+    #[dsl(key = "setDocument")]
     SetDocument {
+        #[dsl(block)]
         document: DrawDocument,
     },
 }
@@ -2771,142 +1626,9 @@ pub fn patch_layer_field(doc: &DrawDocument, layer_id: &str, field: &str, value:
 }
 //#endregion 🔖EditOperations
 
-//#region 🔖OpText
-/// ⚡ One-line textual encoding of every `DrawOperation` variant (`vcs::OpText`). Reuses the value
-/// grammars from `🔖Dsl` (transform/fill/stroke/segments/layer) so a full `DrawLayerNode` subtree
-/// (`addLayer`) or an entire `DrawDocument` (`setDocument`) embeds inline on one line — the DSL grammar
-/// never depends on newlines, so joining its chunks with `" "` instead of `"\n"` round-trips identically.
-impl OpText for DrawOperation {
-    fn parse_op(line: &str) -> Result<Self, TextError> {
-        let tokens = lex_draw_dsl(line)?;
-        let mut p = DrawDslParser::new(tokens);
-        let span = p.span();
-        let op_name = p.expect_ident()?;
-        let operation = match op_name.as_str() {
-            "setLayerVisible" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let visible = parse_kv_bool(&mut p, "visible")?;
-                DrawOperation::SetLayerVisible { layer_id, visible }
-            }
-            "setLayerLocked" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let locked = parse_kv_bool(&mut p, "locked")?;
-                DrawOperation::SetLayerLocked { layer_id, locked }
-            }
-            "setLayerOpacity" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let opacity = parse_kv_num(&mut p, "opacity")?;
-                DrawOperation::SetLayerOpacity { layer_id, opacity }
-            }
-            "setLayerBlendMode" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let blend_mode = parse_kv_ident(&mut p, "blend")?;
-                DrawOperation::SetLayerBlendMode { layer_id, blend_mode }
-            }
-            "setLayerName" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let name = parse_kv_str(&mut p, "name")?;
-                DrawOperation::SetLayerName { layer_id, name }
-            }
-            "setLayerTransform" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                expect_key(&mut p, "transform")?;
-                let transform = parse_transform(&mut p)?;
-                DrawOperation::SetLayerTransform { layer_id, transform }
-            }
-            "setFill" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                expect_key(&mut p, "fill")?;
-                let fill = parse_fill(&mut p)?;
-                DrawOperation::SetFill { layer_id, fill }
-            }
-            "setStroke" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                expect_key(&mut p, "stroke")?;
-                let stroke = parse_stroke_value(&mut p)?;
-                DrawOperation::SetStroke { layer_id, stroke }
-            }
-            "setBooleanOperation" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let boolean_operation = parse_kv_ident(&mut p, "operation")?;
-                DrawOperation::SetBooleanOperation { layer_id, boolean_operation }
-            }
-            "setTraceParams" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let threshold = parse_kv_num(&mut p, "threshold")?;
-                let simplify_epsilon = parse_kv_num(&mut p, "simplify")?;
-                DrawOperation::SetTraceParams { layer_id, params: DrawTraceParams { threshold, simplify_epsilon } }
-            }
-            "addLayer" => {
-                let parent_id = parse_kv_opt_ident(&mut p, "parentId")?;
-                let index = parse_kv_opt_num(&mut p, "index")?.map(|value| value as usize);
-                expect_key_colon(&mut p, "layer")?;
-                let layer = parse_layer(&mut p)?;
-                DrawOperation::AddLayer { parent_id, index, layer: Box::new(layer) }
-            }
-            "duplicateLayer" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                DrawOperation::DuplicateLayer { layer_id }
-            }
-            "removeLayer" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                DrawOperation::RemoveLayer { layer_id }
-            }
-            "reorderLayer" => {
-                let layer_id = parse_kv_ident(&mut p, "layerId")?;
-                let parent_id = parse_kv_opt_ident(&mut p, "parentId")?;
-                let index = parse_kv_num(&mut p, "index")? as usize;
-                DrawOperation::ReorderLayer { layer_id, parent_id, index }
-            }
-            "setCamera" => {
-                expect_key(&mut p, "camera")?;
-                p.expect_tok(&DrawTok::LParen, "(")?;
-                let x = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let y = p.expect_num()?;
-                p.expect_tok(&DrawTok::Comma, ",")?;
-                let zoom = p.expect_num()?;
-                p.expect_tok(&DrawTok::RParen, ")")?;
-                DrawOperation::SetCamera { camera: DrawCamera { x, y, zoom } }
-            }
-            "setDocument" => {
-                let document = parse_document(&mut p)?;
-                DrawOperation::SetDocument { document }
-            }
-            other => return Err(TextError::expected(format!("unknown draw operation '{other}'"), span, "known DrawOperation variant")),
-        };
-        Ok(operation)
-    }
-
-    fn print_op(&self) -> String {
-        match self {
-            DrawOperation::SetLayerVisible { layer_id, visible } => format!("setLayerVisible layerId={layer_id} visible={visible}"),
-            DrawOperation::SetLayerLocked { layer_id, locked } => format!("setLayerLocked layerId={layer_id} locked={locked}"),
-            DrawOperation::SetLayerOpacity { layer_id, opacity } => format!("setLayerOpacity layerId={layer_id} opacity={}", fmt_num(*opacity)),
-            DrawOperation::SetLayerBlendMode { layer_id, blend_mode } => format!("setLayerBlendMode layerId={layer_id} blend={blend_mode}"),
-            DrawOperation::SetLayerName { layer_id, name } => format!("setLayerName layerId={layer_id} name=\"{}\"", escape_str(name)),
-            DrawOperation::SetLayerTransform { layer_id, transform } => format!("setLayerTransform layerId={layer_id} transform={}", print_transform(transform)),
-            DrawOperation::SetFill { layer_id, fill } => format!("setFill layerId={layer_id} fill={}", print_fill(fill)),
-            DrawOperation::SetStroke { layer_id, stroke } => {
-                let mut line = format!("setStroke layerId={layer_id} stroke={}", print_stroke_value(stroke));
-                if let Some(s) = stroke {
-                    line.push(' ');
-                    line.push_str(&print_stroke_trailing_attrs(s).join(" "));
-                }
-                line
-            }
-            DrawOperation::SetBooleanOperation { layer_id, boolean_operation } => format!("setBooleanOperation layerId={layer_id} operation={boolean_operation}"),
-            DrawOperation::SetTraceParams { layer_id, params } => format!("setTraceParams layerId={layer_id} threshold={} simplify={}", fmt_num(params.threshold), fmt_num(params.simplify_epsilon)),
-            DrawOperation::AddLayer { parent_id, index, layer } => format!("addLayer parentId={} index={} layer:{}", print_opt_ident(parent_id), print_opt_num(index), print_layer_node(layer)),
-            DrawOperation::DuplicateLayer { layer_id } => format!("duplicateLayer layerId={layer_id}"),
-            DrawOperation::RemoveLayer { layer_id } => format!("removeLayer layerId={layer_id}"),
-            DrawOperation::ReorderLayer { layer_id, parent_id, index } => format!("reorderLayer layerId={layer_id} parentId={} index={index}", print_opt_ident(parent_id)),
-            DrawOperation::SetCamera { camera } => format!("setCamera camera=({},{},{})", fmt_num(camera.x), fmt_num(camera.y), fmt_num(camera.zoom)),
-            DrawOperation::SetDocument { document } => format!("setDocument {}", print_dsl_chunks(document).join(" ")),
-        }
-    }
-}
-//#endregion 🔖OpText
+// `vcs::OpText for DrawOperation` is now generated by `#[derive(dsl::DslOps)]` on the type
+// definition itself (see `DrawOperation` in the `🔖EditOperations` region below) — the engine's
+// `dsl_schema` grammar replaces this crate's own hand-rolled one-line op encoder.
 
 //#region 🔖Vcs
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -3370,7 +2092,7 @@ mod tests {
         image::DynamicImage::ImageRgba8(image_buffer).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
         let mut doc = default_draw_document("trace-test", None);
         doc.layers.clear();
-        let mut assets = std::collections::HashMap::new();
+        let mut assets = std::collections::BTreeMap::new();
         assets.insert("source".to_string(), DrawImageAsset { mime: "image/png".into(), data: BASE64.encode(&bytes), width: None, height: None });
         doc.assets = Some(assets);
         doc.artboard = Some(DrawArtboard { width: 16.0, height: 16.0 });
@@ -3410,7 +2132,7 @@ mod tests {
     /// stroke, all 6 path segment kinds, nested group, an asset, and quote/backslash/newline-bearing
     /// strings) so `assert_dsl_round_trip` is a real stress test, not just a smoke test.
     fn representative_draw_document() -> DrawDocument {
-        let mut assets = std::collections::HashMap::new();
+        let mut assets = std::collections::BTreeMap::new();
         assets.insert("src-1".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(8), height: Some(8) });
 
         let mut rect_shape = create_draw_shape_layer_rect("Rect");
@@ -3881,7 +2603,7 @@ mod tests {
         let trace_no_assets = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
         assert!(resolve_trace_layer_segments(&doc, &trace_no_assets).is_empty());
 
-        let mut assets = std::collections::HashMap::new();
+        let mut assets = std::collections::BTreeMap::new();
         assets.insert("present".to_string(), DrawImageAsset { mime: "image/png".into(), data: "not-base64!!".into(), width: None, height: None });
         doc.assets = Some(assets);
         let trace_missing_key = DrawTraceBody { base: default_layer_base("T"), source_key: "missing".into(), params: default_draw_trace_params() };
@@ -4143,7 +2865,7 @@ mod tests {
             shape.base.attributes.fill = Some(FillStyle::LinearGradient { x1: 0.0, y1: 0.0, x2: 1.0, y2: 1.0, stops: Vec::new() });
         }
         let text = DrawLayerNode::Text(DrawTextBody { base: default_layer_base("T"), x: 0.0, y: 0.0, content: "<a & b>".into(), size: 12.0 });
-        let mut assets = std::collections::HashMap::new();
+        let mut assets = std::collections::BTreeMap::new();
         assets.insert("img".to_string(), DrawImageAsset { mime: "image/png".into(), data: "aGVsbG8=".into(), width: Some(4), height: Some(4) });
         let image = create_draw_image_layer("Image", "img");
 

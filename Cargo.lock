@@ -2193,6 +2193,7 @@ name = "draw"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "dsl",
  "image",
  "kernel_2d_engine",
  "kernel_2d_rs",
@@ -4943,8 +4944,12 @@ dependencies = [
  "brepkit-topology",
  "criterion",
  "kernel_3d_engine",
+ "mathematical_number",
+ "mathematical_random",
  "rayon",
  "semio-framework-core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

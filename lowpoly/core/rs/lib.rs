@@ -1861,6 +1861,395 @@ mod tests {
         assert_eq!(next, projection);
     }
 
+    //#region 🔖ComputeSessionCoverage
+    #[test]
+    fn add_primitive_supports_every_known_kind() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        for kind in ["plane", "cylinder", "cone", "ico_sphere"] {
+            let id = doc.add_primitive(kind).unwrap();
+            assert_eq!(doc.active_object_id(), id);
+            assert!(doc.projection().objects.iter().any(|o| o.id == id));
+        }
+        assert_eq!(doc.projection().objects.len(), 5);
+    }
+
+    #[test]
+    fn add_primitive_unknown_kind_errors() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let result = doc.add_primitive("teapot");
+        assert!(matches!(result, Err(LowpolyCoreError::UnknownPrimitive(kind)) if kind == "teapot"));
+    }
+
+    #[test]
+    fn object_index_errors_for_unknown_id() {
+        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        assert!(matches!(doc.object_index("missing"), Err(LowpolyCoreError::ObjectNotFound)));
+    }
+
+    #[test]
+    fn ensure_paint_layer_errors_for_unknown_object_and_out_of_range_index() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let object_id = doc.active_object_id().to_string();
+        assert!(matches!(doc.ensure_paint_layer("missing", 0), Err(LowpolyCoreError::ObjectNotFound)));
+        assert!(matches!(doc.ensure_paint_layer(&object_id, 99), Err(LowpolyCoreError::LayerIndexOutOfRange)));
+    }
+
+    #[test]
+    fn layer_pixels_errors_for_out_of_range_index() {
+        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        let object_id = doc.active_object_id().to_string();
+        assert!(matches!(doc.layer_pixels(&object_id, 5), Err(LowpolyCoreError::LayerIndexOutOfRange)));
+    }
+
+    #[test]
+    fn active_mesh_errors_when_active_object_id_is_unknown() {
+        let doc = LowpolyDocument::with_context(default_projection(), "does-not-exist".into(), LowpolySelection::default()).unwrap();
+        assert!(matches!(doc.active_mesh(), Err(LowpolyCoreError::NoActiveObject)));
+    }
+
+    #[test]
+    fn mesh_at_returns_none_past_object_count() {
+        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        assert!(doc.mesh_at(0).is_some());
+        assert!(doc.mesh_at(99).is_none());
+    }
+
+    #[test]
+    fn sync_meshes_to_projection_writes_back_mesh_json() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.add_primitive("box").unwrap();
+        doc.active_mesh_mut().unwrap().translate(Vec3::new(1.0, 0.0, 0.0)).unwrap();
+        let idx = doc.active_index().unwrap();
+        let before = doc.projection().objects[idx].mesh_json.clone();
+        doc.sync_meshes_to_projection().unwrap();
+        assert_ne!(doc.projection().objects[idx].mesh_json, before);
+    }
+
+    #[test]
+    fn normalize_selection_mode_maps_object_to_mesh_and_passes_through_others() {
+        assert_eq!(LowpolyDocument::normalize_selection_mode("object"), "mesh");
+        assert_eq!(LowpolyDocument::normalize_selection_mode("face"), "face");
+        assert_eq!(LowpolyDocument::normalize_selection_mode("vertex"), "vertex");
+    }
+
+    #[test]
+    fn apply_selection_normalizes_mode_and_stores_ids() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.apply_selection("object", vec![3, 4]);
+        assert_eq!(doc.selection().mode, "mesh");
+        assert_eq!(doc.selection().ids, vec![3, 4]);
+    }
+
+    #[test]
+    fn selected_ids_are_empty_when_selection_mode_mismatches() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.apply_selection("face", vec![1, 2]);
+        assert!(doc.selected_vertex_ids().is_empty());
+        assert!(doc.selected_edge_ids().is_empty());
+        assert_eq!(doc.selected_face_ids().len(), 2);
+    }
+
+    #[test]
+    fn selection_vertex_ids_face_mode_dedupes_shared_vertices() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.add_primitive("box").unwrap();
+        doc.apply_selection("face", vec![0, 1]);
+        let verts = doc.selection_vertex_ids().unwrap();
+        let mesh = doc.active_mesh().unwrap();
+        let mut expected: Vec<u32> = Vec::new();
+        for face in [FaceId(0), FaceId(1)] {
+            for vid in mesh.face_vertex_ids(face).unwrap() {
+                if !expected.contains(&vid.0) {
+                    expected.push(vid.0);
+                }
+            }
+        }
+        assert_eq!(verts.into_iter().map(|v| v.0).collect::<Vec<_>>(), expected);
+    }
+
+    #[test]
+    fn selection_vertex_ids_edge_mode_returns_endpoints() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.add_primitive("box").unwrap();
+        doc.apply_selection("edge", vec![0]);
+        let verts = doc.selection_vertex_ids().unwrap();
+        let mesh = doc.active_mesh().unwrap();
+        let (v0, v1) = mesh.edge_endpoints(EdgeId(0)).unwrap();
+        assert_eq!(verts, vec![v0, v1]);
+    }
+
+    #[test]
+    fn selection_vertex_ids_mesh_mode_is_empty() {
+        let doc = LowpolyDocument::new(default_projection()).unwrap();
+        assert!(doc.selection_vertex_ids().unwrap().is_empty());
+    }
+
+    #[test]
+    fn selection_transform_pivot_mesh_mode_averages_all_vertices() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.add_primitive("box").unwrap();
+        let mesh = doc.active_mesh().unwrap();
+        let count = mesh.vertex_count();
+        let mut sum = Vec3::new(0.0, 0.0, 0.0);
+        for index in 0..count {
+            sum = sum.add(mesh.vertex_position(VertexId(index as u32)).unwrap());
+        }
+        let expected = sum.scale(1.0 / count as f32);
+        let pivot = doc.selection_transform_pivot().unwrap();
+        assert!((pivot.x() - expected.x()).abs() < 1e-5);
+        assert!((pivot.y() - expected.y()).abs() < 1e-5);
+        assert!((pivot.z() - expected.z()).abs() < 1e-5);
+    }
+
+    #[test]
+    fn selection_transform_pivot_vertex_mode_averages_selected_vertices() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.add_primitive("box").unwrap();
+        doc.apply_selection("vertex", vec![0, 1]);
+        let mesh = doc.active_mesh().unwrap();
+        let p0 = mesh.vertex_position(VertexId(0)).unwrap();
+        let p1 = mesh.vertex_position(VertexId(1)).unwrap();
+        let expected = p0.add(p1).scale(0.5);
+        let pivot = doc.selection_transform_pivot().unwrap();
+        assert!((pivot.x() - expected.x()).abs() < 1e-5);
+    }
+
+    #[test]
+    fn selection_transform_pivot_empty_vertex_selection_is_origin() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        doc.apply_selection("vertex", vec![]);
+        let pivot = doc.selection_transform_pivot().unwrap();
+        assert_eq!((pivot.x(), pivot.y(), pivot.z()), (0.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn ensure_all_paint_buffers_adds_missing_layer_and_fixes_wrong_size() {
+        let mut projection = default_projection();
+        projection.objects[0].paint_layers.clear();
+        let mut doc = LowpolyDocument::new(projection).unwrap();
+        assert_eq!(doc.projection().objects[0].paint_layers.len(), 1);
+        assert_eq!(doc.projection().objects[0].paint_layers[0].name, "Base");
+        doc.projection_mut().objects[0].paint_layers[0].pixels = vec![1, 2, 3];
+        doc.ensure_all_paint_buffers();
+        assert_eq!(doc.projection().objects[0].paint_layers[0].pixels.len(), LOWPOLY_PAINT_TEXTURE_SIZE * LOWPOLY_PAINT_TEXTURE_SIZE * 4);
+    }
+
+    #[test]
+    fn fill_bucket_and_sample_pixel_reflect_new_color() {
+        let mut doc = LowpolyDocument::new(default_projection()).unwrap();
+        let object_id = doc.active_object_id().to_string();
+        doc.fill_bucket(&object_id, 0, 0.5, 0.5, [10, 20, 30, 255]).unwrap();
+        assert_eq!(doc.sample_pixel(&object_id, 0.5, 0.5).unwrap(), [10, 20, 30, 255]);
+    }
+
+    #[test]
+    fn composite_layer_pixels_skips_invisible_layers() {
+        let mut layer = LowpolyPaintLayer::new("Hidden");
+        layer.visible = false;
+        layer.pixels = vec![255, 0, 0, 255];
+        let out = composite_layer_pixels(&[layer]);
+        assert_eq!(&out[0..4], &[0, 0, 0, 0]);
+    }
+
+    #[test]
+    fn composite_layer_pixels_blends_partial_opacity_over_transparent_base() {
+        let mut layer = LowpolyPaintLayer::new("Half");
+        layer.opacity = 0.5;
+        layer.pixels = vec![200, 100, 50, 255];
+        let out = composite_layer_pixels(&[layer]);
+        assert_eq!(&out[0..4], &[200, 100, 50, 128]);
+    }
+
+    #[test]
+    fn composite_layer_pixels_blends_stacked_opaque_and_translucent_layers() {
+        let base = LowpolyPaintLayer { name: "Base".into(), visible: true, opacity: 1.0, blend_mode: "normal".into(), pixels: vec![255, 0, 0, 255] };
+        let top = LowpolyPaintLayer { name: "Top".into(), visible: true, opacity: 0.5, blend_mode: "normal".into(), pixels: vec![0, 0, 255, 255] };
+        let out = composite_layer_pixels(&[base, top]);
+        assert_eq!(&out[0..4], &[128, 0, 128, 255]);
+    }
+
+    #[test]
+    fn stamp_brush_eraser_reduces_alpha_at_center() {
+        let mut pixels = empty_paint_pixels();
+        stamp_brush(&mut pixels, 0.5, 0.5, 4.0, [0, 0, 0, 0], 1.0, 1.0, true);
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+        let center = (size / 2 * size + size / 2) * 4;
+        assert!(pixels[center + 3] < 255);
+    }
+
+    #[test]
+    fn flood_fill_only_affects_contiguous_matching_region() {
+        let mut pixels = empty_paint_pixels();
+        let size = LOWPOLY_PAINT_TEXTURE_SIZE;
+        for y in 0..10 {
+            for x in 0..10 {
+                let offset = (y * size + x) * 4;
+                pixels[offset..offset + 4].copy_from_slice(&[0, 255, 0, 255]);
+            }
+        }
+        flood_fill(&mut pixels, 0.99, 0.01, [255, 0, 0, 255]);
+        assert_eq!(&pixels[0..4], &[0, 255, 0, 255]);
+        let far_offset = (500 * size + 500) * 4;
+        assert_eq!(&pixels[far_offset..far_offset + 4], &[255, 0, 0, 255]);
+    }
+
+    #[test]
+    fn projection_from_mesh_json_builds_single_object_with_base_layer() {
+        let mesh_json = HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json");
+        let projection = projection_from_mesh_json(&mesh_json, "obj-42", "Widget");
+        assert_eq!(projection.schema, LOWPOLY_DOCUMENT_SCHEMA);
+        assert_eq!(projection.objects.len(), 1);
+        assert_eq!(projection.objects[0].id, "obj-42");
+        assert_eq!(projection.objects[0].name, "Widget");
+        assert_eq!(projection.objects[0].mesh_json, mesh_json);
+        assert_eq!(projection.objects[0].paint_layers.len(), 1);
+        assert_eq!(projection.objects[0].paint_layers[0].name, "Base");
+    }
+
+    #[test]
+    fn lowpoly_selection_defaults_target_whole_mesh() {
+        let targets = LowpolySelectionTargets::default();
+        assert!(targets.mesh);
+        assert!(!targets.vertex && !targets.edge && !targets.face);
+        let selection = LowpolySelection::default();
+        assert_eq!(selection.mode, "mesh");
+        assert!(selection.ids.is_empty());
+    }
+    //#endregion 🔖ComputeSessionCoverage
+
+    //#region 🔖OperationsCoverage
+    #[test]
+    fn apply_operations_on_missing_object_are_no_ops() {
+        let projection = default_projection();
+        let mut mutated = projection.clone();
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::AddPaintLayer { object_id: "missing".into(), index: 0, layer: LowpolyPaintLayer::new("X") });
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::RemovePaintLayer { object_id: "missing".into(), index: 0 });
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::PatchPaintLayer { object_id: "missing".into(), index: 0, patch: LowpolyPaintLayerPatch::default() });
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::PaintStroke { object_id: "missing".into(), layer_index: 0, runs: vec![] });
+        assert_eq!(mutated, projection);
+    }
+
+    #[test]
+    fn apply_remove_and_patch_and_stroke_out_of_range_are_no_ops() {
+        let projection = default_projection();
+        let object_id = projection.objects[0].id.clone();
+        let mut mutated = projection.clone();
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::RemovePaintLayer { object_id: object_id.clone(), index: 99 });
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::PatchPaintLayer { object_id: object_id.clone(), index: 99, patch: LowpolyPaintLayerPatch { visible: Some(false), ..Default::default() } });
+        apply_lowpoly_operation(&mut mutated, &LowpolyOperation::PaintStroke { object_id, layer_index: 99, runs: vec![PixelRun { offset: 0, bytes: vec![1] }] });
+        assert_eq!(mutated, projection);
+    }
+
+    #[test]
+    fn apply_set_projection_replaces_entire_projection() {
+        let mut projection = default_projection();
+        let replacement = projection_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
+        apply_lowpoly_operation(&mut projection, &LowpolyOperation::SetProjection { projection: replacement.clone() });
+        assert_eq!(projection, replacement);
+    }
+
+    #[test]
+    fn invert_add_paint_layer_produces_remove_at_same_index() {
+        let projection = default_projection();
+        let operation = LowpolyOperation::AddPaintLayer { object_id: projection.objects[0].id.clone(), index: 1, layer: LowpolyPaintLayer::new("New") };
+        let inverse = invert_lowpoly_operation(&projection, &operation);
+        match inverse {
+            LowpolyOperation::RemovePaintLayer { object_id, index } => {
+                assert_eq!(object_id, projection.objects[0].id);
+                assert_eq!(index, 1);
+            }
+            other => panic!("expected RemovePaintLayer, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn invert_remove_paint_layer_restores_the_removed_layer_by_content() {
+        let projection = default_projection();
+        let object_id = projection.objects[0].id.clone();
+        let operation = LowpolyOperation::RemovePaintLayer { object_id, index: 0 };
+        let inverse = invert_lowpoly_operation(&projection, &operation);
+        let mut mutated = projection.clone();
+        apply_lowpoly_operation(&mut mutated, &operation);
+        assert_ne!(mutated, projection);
+        apply_lowpoly_operation(&mut mutated, &inverse);
+        assert_eq!(mutated, projection);
+    }
+
+    #[test]
+    fn invert_remove_paint_layer_on_missing_layer_falls_back_to_default_layer() {
+        let projection = default_projection();
+        let operation = LowpolyOperation::RemovePaintLayer { object_id: projection.objects[0].id.clone(), index: 99 };
+        let inverse = invert_lowpoly_operation(&projection, &operation);
+        match inverse {
+            LowpolyOperation::AddPaintLayer { index, layer, .. } => {
+                assert_eq!(index, 99);
+                assert_eq!(layer.name, "Layer");
+            }
+            other => panic!("expected AddPaintLayer, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn invert_patch_paint_layer_round_trips_through_apply() {
+        let projection = default_projection();
+        let object_id = projection.objects[0].id.clone();
+        let patch = LowpolyPaintLayerPatch { name: Some("Renamed".into()), visible: Some(false), opacity: Some(0.3), blend_mode: Some("screen".into()) };
+        let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch };
+        let inverse = invert_lowpoly_operation(&projection, &operation);
+        let mut mutated = projection.clone();
+        apply_lowpoly_operation(&mut mutated, &operation);
+        assert_ne!(mutated, projection);
+        apply_lowpoly_operation(&mut mutated, &inverse);
+        assert_eq!(mutated, projection);
+    }
+
+    #[test]
+    fn invert_set_projection_captures_pre_state() {
+        let projection = default_projection();
+        let replacement = projection_from_mesh_json(&tiny_mesh_json(), "obj-x", "X");
+        let operation = LowpolyOperation::SetProjection { projection: replacement };
+        let inverse = invert_lowpoly_operation(&projection, &operation);
+        match inverse {
+            LowpolyOperation::SetProjection { projection: restored } => assert_eq!(restored, projection),
+            other => panic!("expected SetProjection, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn object_patch_apply_mutates_and_inverse_restores_all_fields() {
+        let mut object = tiny_object("obj-1", "Original");
+        let original = object.clone();
+        let new_mesh = HalfedgeMesh::plane_prim(2.0, 2.0).expect("plane prim").to_json().expect("mesh json");
+        let patch = LowpolyObjectPatch {
+            name: Some("Renamed".into()),
+            smooth_shading: Some(true),
+            transform: Some(LowpolyTransform { position: [1.0, 2.0, 3.0], ..LowpolyTransform::default() }),
+            mesh_json: Some(new_mesh.clone()),
+        };
+        let inverse = object.apply_patch(&patch);
+        assert_eq!(object.name, "Renamed");
+        assert!(object.smooth_shading);
+        assert_eq!(object.transform.position, [1.0, 2.0, 3.0]);
+        assert_eq!(object.mesh_json, new_mesh);
+        object.apply_patch(&inverse);
+        assert_eq!(object, original);
+    }
+
+    #[test]
+    fn paint_layer_patch_apply_mutates_and_inverse_restores_all_fields() {
+        let mut layer = LowpolyPaintLayer::new("Base");
+        let original = layer.clone();
+        let patch = LowpolyPaintLayerPatch { name: Some("Top".into()), visible: Some(false), opacity: Some(0.25), blend_mode: Some("multiply".into()) };
+        let inverse = apply_paint_layer_patch(&mut layer, &patch);
+        assert_eq!(layer.name, "Top");
+        assert!(!layer.visible);
+        assert_eq!(layer.opacity, 0.25);
+        assert_eq!(layer.blend_mode, "multiply");
+        apply_paint_layer_patch(&mut layer, &inverse);
+        assert_eq!(layer, original);
+    }
+    //#endregion 🔖OperationsCoverage
+
     //#region 🔖DslAndOpText
     fn tiny_mesh_json() -> String {
         HalfedgeMesh::box_prim(1.0, 1.0, 1.0).expect("box prim").to_json().expect("mesh json")
@@ -1955,6 +2344,65 @@ mod tests {
         let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
         store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+    }
+
+    #[test]
+    fn dsl_parse_rejects_text_missing_doc_header() {
+        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl("object id=\"o\" name=\"Name\" smooth=false");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dsl_parse_rejects_unterminated_string_literal() {
+        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl("doc schema=\"unterminated");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dsl_parse_rejects_unknown_record_keyword() {
+        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl("doc schema=\"lowpoly.document\" bogus foo=bar");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dsl_parse_rejects_object_missing_required_field() {
+        let text = "doc schema=\"lowpoly.document\"\nobject id=\"o\" smooth=false\n";
+        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dsl_parse_rejects_record_unexpected_inside_object() {
+        let text = "doc schema=\"lowpoly.document\"\nobject id=\"o\" name=\"O\" smooth=false\ndoc schema=\"nested\"\n";
+        let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn dsl_parse_skips_comment_lines() {
+        let text = "# a leading comment\ndoc schema=\"lowpoly.document\" # trailing comment\n";
+        let projection = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text).expect("comments are not significant");
+        assert_eq!(projection.schema, LOWPOLY_DOCUMENT_SCHEMA);
+        assert!(projection.objects.is_empty());
+    }
+
+    #[test]
+    fn dsl_parse_handles_escaped_characters_in_quoted_strings() {
+        let text = "doc schema=\"lowpoly.document\"\nobject id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" smooth=false\n";
+        let projection = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text).expect("escapes must decode");
+        assert_eq!(projection.objects[0].name, "Quote \" and \\ and newline\ndone");
+    }
+
+    #[test]
+    fn op_text_parse_rejects_unknown_operation_kind() {
+        let result = <LowpolyOperation as vcs::OpText>::parse_op("bogusOperation foo=bar");
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn op_text_parse_rejects_unknown_objects_suboperation() {
+        let result = <LowpolyOperation as vcs::OpText>::parse_op("objects frobnicate id=obj-1");
+        assert!(result.is_err());
     }
     //#endregion 🔖DslAndOpText
 }

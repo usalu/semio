@@ -987,6 +987,307 @@ mod tests {
         assert_eq!(deck.tiles.len(), 1);
     }
 
+    #[test]
+    fn delete_selection_removes_selected_tiles_and_clears_selection() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        let first_id = app.projection().expect("projection").tiles[0].id.clone();
+        app.handle_action("setSelectedIds", Some(&json!({ "ids": [first_id] })), &ViewState::default(), &meta("local")).expect("select");
+        app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete selection");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 3, "only the selected tile is removed");
+    }
+
+    #[test]
+    fn delete_selection_with_no_selection_is_a_no_op() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        app.handle_action("deleteSelection", None, &ViewState::default(), &meta("local")).expect("delete selection");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4, "nothing selected means nothing deleted");
+    }
+
+    #[test]
+    fn delete_tile_with_unknown_id_is_a_no_op() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        app.handle_action("deleteTile", Some(&json!({ "id": "does-not-exist" })), &ViewState::default(), &meta("local")).expect("delete missing");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4, "unknown ids are filtered out before dispatch");
+    }
+
+    #[test]
+    fn rename_tiles_with_blank_value_leaves_name_unchanged() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        let before = app.projection().expect("projection").tiles[0].name.clone();
+        app.handle_action("renameTiles", Some(&json!({ "ids": [tile_id], "value": "   " })), &ViewState::default(), &meta("local")).expect("rename blank");
+        assert_eq!(app.projection().expect("projection").tiles[0].name, before, "whitespace-only rename is rejected");
+    }
+
+    #[test]
+    fn rename_tiles_with_unknown_ids_is_a_no_op() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        app.handle_action("renameTiles", Some(&json!({ "ids": ["nope"], "value": "Hero" })), &ViewState::default(), &meta("local")).expect("rename unknown");
+        assert_ne!(app.projection().expect("projection").tiles[0].name, "Hero");
+    }
+
+    #[test]
+    fn patch_tile_crops_covers_all_fields_across_multiple_tiles() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        let ids: Vec<String> = app.projection().expect("projection").tiles.iter().map(|tile| tile.id.clone()).collect();
+        for field in ["x", "y", "width", "height"] {
+            app.handle_action("patchTileCrops", Some(&json!({ "ids": ids, "field": field, "value": 0.4 })), &ViewState::default(), &meta("local")).expect("patch field");
+        }
+        for tile in &app.projection().expect("projection").tiles {
+            assert_eq!(tile.crop.width, 0.4);
+            assert_eq!(tile.crop.height, 0.4);
+        }
+    }
+
+    #[test]
+    fn patch_tile_crops_without_value_or_field_is_a_no_op() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        let before = app.projection().expect("projection").tiles[0].crop.clone();
+        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id.clone()], "field": "width" })), &ViewState::default(), &meta("local")).expect("no value");
+        app.handle_action("patchTileCrops", Some(&json!({ "ids": [tile_id], "value": 0.4 })), &ViewState::default(), &meta("local")).expect("no field");
+        assert_eq!(app.projection().expect("projection").tiles[0].crop, before, "missing value or field never mutates a tile");
+    }
+
+    #[test]
+    fn patch_tile_crops_targeting_no_existing_tile_is_a_no_op() {
+        let mut app = new_app();
+        app.handle_action("patchTileCrops", Some(&json!({ "ids": ["ghost"], "field": "width", "value": 0.4 })), &ViewState::default(), &meta("local")).expect("patch ghost");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+    }
+
+    #[test]
+    fn set_source_replaces_source_and_clears_tiles_when_src_changes() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+        app.handle_action("setSource", Some(&json!({ "src": "/new-figure.png", "kind": "image" })), &ViewState::default(), &meta("local")).expect("set source");
+        let deck = app.projection().expect("projection");
+        assert_eq!(deck.source.src, "/new-figure.png");
+        assert_eq!(deck.source.kind, "image");
+        assert!(deck.tiles.is_empty(), "changing the source src clears stale tiles");
+    }
+
+    #[test]
+    fn set_source_with_same_src_keeps_existing_tiles() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        let src = app.projection().expect("projection").source.src.clone();
+        app.handle_action("setSource", Some(&json!({ "src": src, "kind": "figure" })), &ViewState::default(), &meta("local")).expect("set source same src");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4, "unchanged src does not clear tiles");
+    }
+
+    #[test]
+    fn set_source_accepts_a_full_source_object_without_wrapper_keys() {
+        let mut app = new_app();
+        let full_source = json!({
+            "src": "/full-source.png",
+            "kind": "video",
+            "frame": { "x": 0.0, "y": 0.0, "width": 1.0, "height": 1.0 },
+        });
+        app.handle_action("setSource", Some(&full_source), &ViewState::default(), &meta("local")).expect("set full source");
+        let deck = app.projection().expect("projection");
+        assert_eq!(deck.source.src, "/full-source.png");
+        assert_eq!(deck.source.kind, "video");
+    }
+
+    #[test]
+    fn set_source_with_no_args_is_a_no_op() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection").source.clone();
+        app.handle_action("setSource", None, &ViewState::default(), &meta("local")).expect("set source none");
+        assert_eq!(app.projection().expect("projection").source, before);
+    }
+
+    #[test]
+    fn set_frame_updates_source_frame() {
+        let mut app = new_app();
+        app.handle_action("setFrame", Some(&json!({ "frame": { "x": 0.1, "y": 0.2, "width": 0.3, "height": 0.4 } })), &ViewState::default(), &meta("local")).expect("set frame");
+        let frame = app.projection().expect("projection").source.frame;
+        assert_eq!(frame.x, 0.1);
+        assert_eq!(frame.y, 0.2);
+        assert_eq!(frame.width, 0.3);
+        assert_eq!(frame.height, 0.4);
+    }
+
+    #[test]
+    fn set_frame_with_invalid_frame_is_a_no_op() {
+        let mut app = new_app();
+        let before = app.projection().expect("projection").source.frame.clone();
+        app.handle_action("setFrame", Some(&json!({ "frame": "not-a-frame" })), &ViewState::default(), &meta("local")).expect("set frame invalid");
+        assert_eq!(app.projection().expect("projection").source.frame, before);
+        app.handle_action("setFrame", None, &ViewState::default(), &meta("local")).expect("set frame missing");
+        assert_eq!(app.projection().expect("projection").source.frame, before);
+    }
+
+    #[test]
+    fn set_active_example_demo_resets_to_default_deck() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "demo" })), &ViewState::default(), &meta("local")).expect("reset demo");
+        assert!(app.projection().expect("projection").tiles.is_empty(), "resetting to demo clears seeded tiles");
+    }
+
+    #[test]
+    fn set_active_example_unknown_id_is_a_no_op() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        app.handle_action("setActiveExample", Some(&json!({ "exampleId": "other" })), &ViewState::default(), &meta("local")).expect("unknown example");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 4);
+    }
+
+    #[test]
+    fn clear_tiles_action_empties_tiles_and_selection() {
+        let mut app = new_app();
+        seed_2x2(&mut app);
+        let first_id = app.projection().expect("projection").tiles[0].id.clone();
+        app.handle_action("setSelectedIds", Some(&json!({ "ids": [first_id] })), &ViewState::default(), &meta("local")).expect("select");
+        app.handle_action("clearTiles", None, &ViewState::default(), &meta("local")).expect("clear");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+        let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details");
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("Select a tile"), "selection was cleared alongside tiles");
+    }
+
+    #[test]
+    fn export_video_from_deck_reports_no_scene_hashes_as_download_error() {
+        let mut app = new_app();
+        let result = app.handle_action("exportVideoFromDeck", None, &ViewState::default(), &meta("local")).expect("export");
+        match result.requested_effects.as_slice() {
+            [HostEffect::DownloadMediaExport { filename, mime_type, data, .. }] => {
+                assert_eq!(filename, "animate-video-export-error.txt");
+                assert_eq!(mime_type, "text/plain");
+                assert!(!data.is_empty());
+            }
+            other => panic!("expected a single download error effect, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn engagement_input_stores_draft_and_submit_parses_grid_pattern() {
+        let mut app = new_app();
+        app.handle_action("engagementInput", Some(&json!({ "value": "2x3" })), &ViewState::default(), &meta("local")).expect("engagement input");
+        app.handle_action("engagementSubmit", None, &ViewState::default(), &meta("local")).expect("engagement submit");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 6, "2x3 grid pattern seeds 6 tiles");
+    }
+
+    #[test]
+    fn engagement_submit_add_clear_and_copy_keywords() {
+        let mut app = new_app();
+        app.handle_action("engagementSubmit", Some(&json!({ "value": "add" })), &ViewState::default(), &meta("local")).expect("add keyword");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 1);
+
+        app.handle_action("engagementSubmit", Some(&json!({ "value": "clear" })), &ViewState::default(), &meta("local")).expect("clear keyword");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("seed for copy");
+        let copy_result = app.handle_action("engagementSubmit", Some(&json!({ "value": "copy prompt" })), &ViewState::default(), &meta("local")).expect("copy keyword");
+        assert!(matches!(copy_result.requested_effects.as_slice(), [HostEffect::DownloadMediaExport { .. }]));
+    }
+
+    #[test]
+    fn engagement_submit_unrecognized_input_is_a_no_op() {
+        let mut app = new_app();
+        let result = app.handle_action("engagementSubmit", Some(&json!({ "value": "gibberish" })), &ViewState::default(), &meta("local")).expect("unrecognized");
+        assert!(result.operations.is_empty());
+        assert!(result.requested_effects.is_empty());
+    }
+
+    #[test]
+    fn canvas_pointer_down_selects_matching_tile_and_clears_on_miss() {
+        let mut app = new_app();
+        app.handle_action("addTile", None, &ViewState::default(), &meta("local")).expect("add tile");
+        let tile_id = app.projection().expect("projection").tiles[0].id.clone();
+        app.handle_action("canvasPointerDown", Some(&json!({ "layerId": tile_id })), &ViewState::default(), &meta("local")).expect("pointer hit");
+        let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details after hit");
+        assert!(serde_json::to_string(&node).unwrap().contains("animate.present.play.details.crop"), "hitting a tile populates the details panel");
+
+        app.handle_action("canvasPointerDown", Some(&json!({ "layerId": "source-frame" })), &ViewState::default(), &meta("local")).expect("pointer miss");
+        let node = app.render(ANIMATE_PRESENT_PLAY_BODY_DETAILS, None, &ViewState::default()).expect("render details after miss");
+        assert!(serde_json::to_string(&node).unwrap().contains("Select a tile"), "missing the backdrop clears selection");
+    }
+
+    #[test]
+    fn handle_command_reset_grid_seeds_default_3x5_grid() {
+        let mut app = new_app();
+        app.handle_command("animate.resetGrid", None, &ViewState::default(), &meta("local")).expect("reset grid command");
+        assert_eq!(app.projection().expect("projection").tiles.len(), 15, "3 rows x 5 columns default");
+    }
+
+    #[test]
+    fn handle_command_unknown_is_a_no_op() {
+        let mut app = new_app();
+        let result = app.handle_command("animate.unknownCommand", None, &ViewState::default(), &meta("local")).expect("unknown command");
+        assert!(result.operations.is_empty());
+    }
+
+    #[test]
+    fn build_details_tree_reports_tile_not_found_for_stale_selection() {
+        let mut app = new_app();
+        app.handle_action("setSelectedIds", Some(&json!({ "ids": ["was-deleted"] })), &ViewState::default(), &meta("local")).expect("select stale");
+        assert!(app.projection().expect("projection").tiles.is_empty());
+    }
+
+    #[test]
+    fn render_unknown_body_key_reports_it_by_name() {
+        let mut app = new_app();
+        let node = app.render("some.unknown.body", None, &ViewState::default()).expect("render unknown");
+        let json_str = serde_json::to_string(&node).unwrap();
+        assert!(json_str.contains("Unknown body: some.unknown.body"));
+    }
+
+    #[test]
+    fn deck_to_canvas_layers_omits_data_url_when_source_has_no_image() {
+        let mut deck = default_present_deck();
+        deck.source.src = String::new();
+        let layers_json = deck_to_canvas_layers(&deck, &[]);
+        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let source_layer = layers.first().expect("source layer present");
+        assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
+        assert!(source_layer.get("dataUrl").is_none() || source_layer.get("dataUrl") == Some(&Value::Null));
+    }
+
+    #[test]
+    fn deck_to_canvas_layers_treats_pdf_kind_as_non_image() {
+        let mut deck = default_present_deck();
+        deck.source.kind = "pdf".into();
+        let layers_json = deck_to_canvas_layers(&deck, &[]);
+        let layers: Vec<Value> = serde_json::from_str(&layers_json).unwrap();
+        let source_layer = layers.first().expect("source layer present");
+        assert_eq!(source_layer.get("kind").and_then(|v| v.as_str()), Some("source"));
+    }
+
+    #[test]
+    fn animate_present_document_json_to_svg_embeds_title() {
+        let (svg, width, height) = animate_present_document_json_to_svg(&json!({ "title": "My Deck" })).expect("svg");
+        assert!(svg.contains("My Deck"));
+        assert_eq!((width, height), (1280, 720));
+    }
+
+    #[test]
+    fn animate_present_document_json_to_svg_falls_back_to_app_label_without_title() {
+        let (svg, _, _) = animate_present_document_json_to_svg(&json!({})).expect("svg fallback");
+        assert!(svg.contains("Animate Present"));
+    }
+
+    #[test]
+    fn app_manifest_declares_expected_operations_and_shell_actions() {
+        let definition = create_animate_present_app().definition;
+        let operation_ids: Vec<&str> = definition.actions.iter().filter(|action| matches!(action.kind, ActionKind::Operation)).map(|action| action.id.as_str()).collect();
+        for expected in ["seedGrid", "addTile", "deleteTile", "deleteSelection", "renameTile", "renameTiles", "patchTileCrop", "patchTileCrops", "setSource", "setFrame", "setActiveExample", "clearTiles", "engagementSubmit"] {
+            assert!(operation_ids.contains(&expected), "missing declared operation {expected}");
+        }
+        assert!(definition.actions.iter().any(|action| action.id == "exportVideoFromDeck" && matches!(action.kind, ActionKind::Shell)));
+        assert!(definition.actions.iter().any(|action| action.id == "setSelectedIds" && matches!(action.kind, ActionKind::View)));
+    }
+
     /// 🧪 Two independent instances start empty, apply DISJOINT edits (A adds a tile, B sets the
     /// source), and exchanging operations over a `MemoryBackbone` converges both sides to contain BOTH edits —
     /// impossible with whole-document snapshots, which would clobber one another.

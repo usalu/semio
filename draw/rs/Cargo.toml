@@ -16,6 +16,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../vcs/rs" }
+dsl = { path = "../../dsl/rs" }
 kernel_2d_engine = { path = "../../kernel/2d/engine/rs" }
 kernel_2d_rs = { path = "../../kernel/2d/rs" }
 semio-framework-core = { path = "../../framework/core/rs" }

@@ -4,6 +4,7 @@
 //! signal stops the attempt short of either conclusion.
 
 use crate::bitset::PatternSet;
+use crate::constraint::ConstraintSet;
 use crate::diag::{DiagLevel, Event, EventSink, Metrics};
 use crate::domain::{DomainStore, RestrictResult};
 use crate::heuristics::{self, ObserveHeuristic};
@@ -198,6 +199,14 @@ enum StepOutcome {
     Cancelled,
 }
 
+/// 🧷 Whether every constraint accepts the current (assumed all-singleton) domain state. `true`
+/// (vacuously) when there are no constraints to check.
+fn constraints_accept(domains: &DomainStore, constraints: Option<&ConstraintSet<'_>>) -> bool {
+    let Some(cs) = constraints else { return true };
+    let assignment: Vec<PatternId> = domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect();
+    cs.constraints.iter().all(|c| c.validate_complete(&assignment, cs.adjacency).is_ok())
+}
+
 #[allow(clippy::too_many_arguments)]
 fn decide_and_propagate<T: Topology>(
     model: &CompiledModel,
@@ -239,11 +248,22 @@ fn drive<T: Topology>(
     start: std::time::Instant,
     cancel: Option<&CancelToken>,
     local_backtrack_budget: Option<u64>,
+    constraints: Option<&ConstraintSet<'_>>,
 ) -> StepOutcome {
     let mut local_remaining = local_backtrack_budget;
     loop {
         if domains.all_singleton() {
-            return StepOutcome::Solved;
+            if constraints_accept(domains, constraints) {
+                return StepOutcome::Solved;
+            }
+            // A global constraint rejected this complete assignment: exactly like a contradiction
+            // needing a backtrack, reusing the same proven repair machinery.
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
+                RepairOutcome::Repaired => continue,
+                RepairOutcome::Exhausted => return StepOutcome::Exhausted,
+                RepairOutcome::BudgetExceeded => return StepOutcome::BudgetExceeded,
+                RepairOutcome::LocalLimitReached => return StepOutcome::LocalLimitReached,
+            }
         }
         let node = match heuristics::select_unresolved(config.heuristic, domains) {
             Some(n) => n,
@@ -296,13 +316,16 @@ fn drive_all<T: Topology>(
     start: std::time::Instant,
     solutions: &mut Vec<Vec<PatternId>>,
     limit: usize,
+    constraints: Option<&ConstraintSet<'_>>,
 ) -> StepOutcome {
     let mut local_remaining = None;
     loop {
         if domains.all_singleton() {
-            solutions.push(domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect());
-            if solutions.len() >= limit {
-                return StepOutcome::Solved;
+            if constraints_accept(domains, constraints) {
+                solutions.push(domains.iter().map(|(_, d)| d.singleton().expect("all_singleton guaranteed every domain is a singleton")).collect());
+                if solutions.len() >= limit {
+                    return StepOutcome::Solved;
+                }
             }
             match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
                 RepairOutcome::Repaired => continue,
@@ -349,7 +372,7 @@ struct InitResult {
     wipeout: Option<NodeId>,
 }
 
-fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> InitResult {
+fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], constraints: Option<&ConstraintSet<'_>>) -> InitResult {
     let node_count = topo.node_count();
     let mut domains = DomainStore::new_full(node_count, model.weights());
     let mut trail = Trail::new();
@@ -373,6 +396,20 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
         }
         trail.record_removed_set(n, &removed);
     }
+    if let Some(cs) = constraints {
+        for c in cs.constraints {
+            let Ok(restrictions) = c.initialize(&domains, model.weights(), cs.adjacency) else {
+                continue; // a misconfigured constraint is a build-time concern, not a solve-time one
+            };
+            for (n, allowed) in restrictions {
+                let mut removed = PatternSet::new_empty(model.pattern_count());
+                if let RestrictResult::Wipeout = domains.get_mut(n).restrict_collecting(&allowed, model.weights(), &mut removed) {
+                    wipeout = Some(n);
+                }
+                trail.record_removed_set(n, &removed);
+            }
+        }
+    }
 
     let mut queue = PropQueue::new(node_count);
     queue.push_all(node_count);
@@ -387,21 +424,28 @@ fn initialize<T: Topology>(model: &CompiledModel, topo: &T, init_domains: Option
 /// drives search per `config` until solved, proven unsatisfiable, or a budget/restart limit stops
 /// the attempt. `init_domains`, when present, must have one entry per node.
 pub(crate) fn solve<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)]) -> SolveOutcome {
-    solve_inner(model, topo, config, seed, init_domains, fixed, None)
+    solve_inner(model, topo, config, seed, init_domains, fixed, None, None)
 }
 
 pub(crate) fn solve_cancellable<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: &CancelToken) -> SolveOutcome {
-    solve_inner(model, topo, config, seed, init_domains, fixed, Some(cancel))
+    solve_inner(model, topo, config, seed, init_domains, fixed, Some(cancel), None)
+}
+
+/// 🌳 Like [`solve`], but also applies every constraint's initial restriction and rejects (via an
+/// ordinary backtrack) any complete assignment a constraint does not accept.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn solve_with_constraints<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>, constraints: &ConstraintSet<'_>) -> SolveOutcome {
+    solve_inner(model, topo, config, seed, init_domains, fixed, cancel, Some(constraints))
 }
 
 #[allow(clippy::too_many_arguments)]
-fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>) -> SolveOutcome {
+fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], cancel: Option<&CancelToken>, constraints: Option<&ConstraintSet<'_>>) -> SolveOutcome {
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
     let mut restarts = 0u64;
 
     loop {
-        let mut init = initialize(model, topo, init_domains, fixed);
+        let mut init = initialize(model, topo, init_domains, fixed, constraints);
         let mut sink = EventSink::new(config.diag_level);
         let mut decision_counter = 0u32;
 
@@ -414,7 +458,7 @@ fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConf
             SearchMode::RestartOnly => config.restart_schedule.backtrack_budget(restarts),
             SearchMode::Backtrack | SearchMode::Backjump => None,
         };
-        let step = drive(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, cancel, local_budget);
+        let step = drive(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, cancel, local_budget, constraints);
         init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
 
         match step {
@@ -456,9 +500,21 @@ fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConf
 /// 🌳 Exhaustively enumerates up to `limit` solutions, proving `complete = true` iff the whole
 /// tree was explored (never stopped early by `limit` or a budget).
 pub(crate) fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize) -> (Vec<Solution>, bool) {
+    solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, None)
+}
+
+/// 🌳 Like [`solve_all`], but also applies every constraint's initial restriction and excludes any
+/// complete assignment a constraint does not accept.
+#[allow(clippy::too_many_arguments)]
+pub(crate) fn solve_all_with_constraints<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: &ConstraintSet<'_>) -> (Vec<Solution>, bool) {
+    solve_all_inner(model, topo, config, seed, init_domains, fixed, limit, Some(constraints))
+}
+
+#[allow(clippy::too_many_arguments)]
+fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConfig, seed: u64, init_domains: Option<&[PatternSet]>, fixed: &[(NodeId, PatternId)], limit: usize, constraints: Option<&ConstraintSet<'_>>) -> (Vec<Solution>, bool) {
     let start = std::time::Instant::now();
     let mut rng = Rng::from_seed(seed);
-    let mut init = initialize(model, topo, init_domains, fixed);
+    let mut init = initialize(model, topo, init_domains, fixed, constraints);
     let mut decision_counter = 0u32;
     let mut raw_solutions = Vec::new();
 
@@ -466,7 +522,7 @@ pub(crate) fn solve_all<T: Topology>(model: &CompiledModel, topo: &T, config: &S
         return (Vec::new(), true);
     }
 
-    let step = drive_all(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, &mut raw_solutions, limit);
+    let step = drive_all(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, &mut raw_solutions, limit, constraints);
     init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
 
     let complete = matches!(step, StepOutcome::Exhausted);

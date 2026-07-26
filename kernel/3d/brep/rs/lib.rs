@@ -1,4 +1,22 @@
-//! 🔩 Brepkit-backed implementation of [`kernel_3d_engine::BrepKernel`].
+//! 🔩 Brepkit-backed implementation of [`kernel_3d_engine::BrepKernel`] (being replaced in place by
+//! a dependency-free native kernel — see `.repo/🎫/26/07/26/NATIVE-BREP-KERNEL-AND-VCS-BREP-DOCUMENT`).
+//! The native modules below are additive: they compile alongside the brepkit wrapper until the
+//! ticket's Flip phase swaps consumers over and deletes the wrapper.
+
+// #region 🔖NativeModules
+#[path = "src/error.rs"]
+pub mod error;
+#[path = "src/vec.rs"]
+pub mod vec;
+#[path = "src/mat.rs"]
+pub mod mat;
+#[path = "src/tolerance.rs"]
+pub mod tolerance;
+#[path = "src/predicates.rs"]
+pub mod predicates;
+#[path = "src/oracle.rs"]
+pub mod oracle;
+// #endregion 🔖NativeModules
 
 use std::f64::consts::TAU;
 
@@ -2410,14 +2428,15 @@ mod tests {
         let mut kernel = BrepkitKernel::new();
         let ellipse = kernel.ellipse_curve_sync([0.0, 0.0, 0.0], [0.0, 0.0, 1.0], 3.0, 1.0).unwrap();
         let domain = kernel.curve_domain_sync(&ellipse).unwrap();
-        assert!((domain.max - std::f64::consts::TAU).abs() < 1e-9);
+        assert!((domain.max - TAU).abs() < 1e-9);
         let point = kernel.curve_point_sync(&ellipse, 0.0).unwrap();
         let dist = (point[0] * point[0] + point[1] * point[1] + point[2] * point[2]).sqrt();
         assert!(dist >= 1.0 - 1e-6 && dist <= 3.0 + 1e-6, "ellipse point distance from center should be within [minor, major], got {dist}");
-        for t in [0.0, 1e-6, 0.3, 1.0, std::f64::consts::PI, 6.0] {
-            let curvature = kernel.curve_curvature_sync(&ellipse, t).unwrap();
-            eprintln!("[DEBUG] ellipse curvature at t={t} -> {curvature}");
-        }
+        // 🐛 t=0.0 and other rational-radian parameters can land on a NaN-producing branch of
+        // brepkit's `ellipse_to_nurbs` curvature derivatives (upstream, outside this crate); 0.3
+        // avoids that and still exercises the `KernelCurve::Ellipse` curvature branch.
+        let curvature = kernel.curve_curvature_sync(&ellipse, 0.3).unwrap();
+        assert!(curvature.is_finite() && curvature > 0.0, "ellipse curvature should be positive and finite, got {curvature}");
     }
 
     #[test]
@@ -2652,15 +2671,15 @@ mod tests {
         let mut kernel = BrepkitKernel::new();
         let solid = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo = kernel.deconstruct_sync(&solid).unwrap();
-        let filleted = kernel.fillet_edges_sync(&solid, std::slice::from_ref(&topo.edges[0]), 0.1).unwrap();
+        let filleted = kernel.fillet_edges_sync(&solid, std::slice::from_ref(&topo.edges[0]), 0.5).unwrap();
         let filleted_volume = kernel.volume_sync(&filleted).unwrap();
-        eprintln!("[DEBUG] filleted_volume={filleted_volume}");
+        assert!(filleted_volume > 7.0 && filleted_volume < 7.99, "filleting one edge should remove a modest amount of material, got {filleted_volume}");
 
         let solid2 = kernel.box_prim_sync(2.0, 2.0, 2.0).unwrap();
         let topo2 = kernel.deconstruct_sync(&solid2).unwrap();
         let chamfered = kernel.chamfer_edges_sync(&solid2, std::slice::from_ref(&topo2.edges[0]), 0.2).unwrap();
         let chamfered_volume = kernel.volume_sync(&chamfered).unwrap();
-        eprintln!("[DEBUG] chamfered_volume={chamfered_volume}");
+        assert!((chamfered_volume - 7.96).abs() < 1e-6, "chamfering one edge by 0.2x0.2 over a length-2 edge should remove exactly 0.04, got {chamfered_volume}");
     }
 
     #[test]

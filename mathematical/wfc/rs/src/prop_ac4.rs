@@ -60,6 +60,14 @@ impl Ac4Engine {
             });
         }
 
+        // The same (node, pattern) pair can be discovered independently via more than one
+        // incoming arc slot (each slot's own zero count triggers its own push); deduplicate before
+        // treating this as a worklist — a duplicate entry would otherwise make `propagate` decrement
+        // that removal's downstream support counters twice, over-pruning patterns that still had
+        // support after the *single* real removal.
+        initially_unsupported.sort_unstable_by_key(|&(n, p)| (n.get(), p.get()));
+        initially_unsupported.dedup();
+
         let mut engine = Self { counts, pattern_count };
         for &(u, a) in &initially_unsupported {
             if !domains.get(u).bits().get(a) {
@@ -83,8 +91,18 @@ impl Ac4Engine {
     /// ⚡ Propagates from a worklist of already-removed `(node, pattern)` pairs to a fixed point.
     /// `seed_removed` must reflect patterns actually absent from `domains` relative to whatever
     /// state this engine was [`Ac4Engine::new`]-initialized against. Returns `Err(node)` for the
-    /// first domain wiped to empty.
+    /// first domain wiped to empty — including a domain the *caller's own* pre-applied removal
+    /// already wiped before this call even started: `propagate`'s internal decrement loop only
+    /// ever inspects domains it removes patterns from itself, so a seed removal that was the last
+    /// straw for its own node would otherwise be invisible here (an already-empty domain can only
+    /// ever report `Unchanged`, never re-report `Wipeout`, the same hazard this crate's AC-3 search
+    /// integration hit once with un-checked `Domain::remove` results).
     pub fn propagate<T: Topology>(&mut self, model: &CompiledModel, topo: &T, domains: &mut DomainStore, seed_removed: &[(NodeId, PatternId)], metrics: &mut Metrics) -> Result<(), NodeId> {
+        for &(v, _) in seed_removed {
+            if domains.get(v).is_wiped() {
+                return Err(v);
+            }
+        }
         let mut queue: std::collections::VecDeque<(NodeId, PatternId)> = seed_removed.iter().copied().collect();
         let mut wipeout: Option<NodeId> = None;
         while let Some((v, b)) = queue.pop_front() {
@@ -247,6 +265,90 @@ mod tests {
         (model, r)
     }
 
+    /// Regression test for a real bug: `Ac4Engine::new`'s initial "already unsupported" sweep can
+    /// discover the same `(node, pattern)` pair via more than one incoming-arc slot, and feeding
+    /// that list into `propagate` without deduplicating caused some support counters to be decremented
+    /// twice for a single logical removal — over-pruning patterns that still had support. Applying
+    /// a batch of removals up front (one `propagate` call with the whole worklist) must give
+    /// exactly the same result as applying them one at a time (one `propagate` call each).
+    #[test]
+    fn sequential_and_batch_seed_application_agree() {
+        let mut rng = mathematical_random::Rng::from_seed(4040);
+        for trial in 0..100 {
+            let pattern_count = 1 + rng.next_range(0, 4) as usize;
+            let node_count = 1 + rng.next_range(0, 8) as usize;
+            let (model, r) = random_symmetric_model(&mut rng, pattern_count, 0.5);
+            let arcs = testgen::random_arcs(&mut rng, node_count, r);
+            let mut tb = GraphTopologyBuilder::new(node_count);
+            for a in &arcs {
+                tb.arc(a.from, a.to, a.relation);
+            }
+            let topo = tb.build().unwrap();
+
+            let mut scratch = DomainStore::new_full(node_count, model.weights());
+            let removal_count = rng.next_range(0, (node_count * pattern_count) as u64) as usize;
+            let mut seed_events = Vec::new();
+            for _ in 0..removal_count {
+                let n = NodeId::from_index(rng.next_range(0, node_count as u64) as usize);
+                let p = PatternId::from_index(rng.next_range(0, pattern_count as u64) as usize);
+                if scratch.get(n).bits().get(p) {
+                    scratch.get_mut(n).remove(p, model.weights());
+                    seed_events.push((n, p));
+                }
+            }
+
+            // Sequential: one propagate() call per removal, applied one at a time.
+            let mut domains_seq = DomainStore::new_full(node_count, model.weights());
+            let mut metrics_seq = Metrics::default();
+            let seq_result = Ac4Engine::new(&model, &topo, &mut domains_seq, &mut metrics_seq).and_then(|mut engine| {
+                for &(n, p) in &seed_events {
+                    if !domains_seq.get(n).bits().get(p) {
+                        continue;
+                    }
+                    domains_seq.get_mut(n).remove(p, model.weights());
+                    engine.propagate(&model, &topo, &mut domains_seq, &[(n, p)], &mut metrics_seq)?;
+                }
+                Ok(())
+            });
+
+            // Batch: all removals applied up front, one propagate() call with the full worklist.
+            let mut domains_batch = DomainStore::new_full(node_count, model.weights());
+            let mut metrics_batch = Metrics::default();
+            let batch_result = Ac4Engine::new(&model, &topo, &mut domains_batch, &mut metrics_batch).and_then(|mut engine| {
+                let mut applied = Vec::new();
+                for &(n, p) in &seed_events {
+                    if domains_batch.get(n).bits().get(p) {
+                        domains_batch.get_mut(n).remove(p, model.weights());
+                        applied.push((n, p));
+                    }
+                }
+                engine.propagate(&model, &topo, &mut domains_batch, &applied, &mut metrics_batch)
+            });
+
+            if let (Err(_), Ok(())) | (Ok(()), Err(_)) = (&seq_result, &batch_result) {
+                eprintln!("DEBUG trial {trial}: pattern_count={pattern_count} node_count={node_count}");
+                eprintln!("DEBUG arcs={arcs:?}");
+                eprintln!("DEBUG seed_events={seed_events:?}");
+                for a in 0..pattern_count {
+                    for c in 0..pattern_count {
+                        eprintln!("DEBUG allowed(r,{a},{c})={}", model.allowed(r, PatternId::from_index(a)).get(PatternId::from_index(c)));
+                    }
+                }
+            }
+
+            match (seq_result, batch_result) {
+                (Ok(()), Ok(())) => {
+                    for n in 0..node_count {
+                        let nid = NodeId::from_index(n);
+                        assert_eq!(domains_seq.get(nid).bits(), domains_batch.get(nid).bits(), "trial {trial} node {n}: sequential and batch seed application diverged");
+                    }
+                }
+                (Err(_), Err(_)) => {}
+                (a, b) => panic!("trial {trial}: sequential and batch seed application disagreed on satisfiability: sequential={a:?} batch={b:?}"),
+            }
+        }
+    }
+
     mod quick {
         use super::*;
 
@@ -317,21 +419,6 @@ mod tests {
                         engine.propagate(&model, &topo, &mut domains_b, &applied, &mut metrics_b)
                     }
                 };
-
-                if trial == 76 {
-                    eprintln!("DEBUG trial 76: pattern_count={pattern_count} node_count={node_count}");
-                    eprintln!("DEBUG arcs={arcs:?}");
-                    eprintln!("DEBUG seed_events={seed_events:?}");
-                    for a in 0..pattern_count {
-                        for c in 0..pattern_count {
-                            eprintln!("DEBUG allowed(r,{a},{c})={}", model.allowed(r, PatternId::from_index(a)).get(PatternId::from_index(c)));
-                        }
-                    }
-                    eprintln!("DEBUG result_a={result_a:?} result_b={result_b:?}");
-                    for n in 0..node_count {
-                        eprintln!("DEBUG domains_a[{n}]={:?}", domains_a.get(NodeId::from_index(n)).bits());
-                    }
-                }
 
                 match (result_a, result_b) {
                     (Ok(()), Ok(())) => {

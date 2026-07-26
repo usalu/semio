@@ -1,0 +1,58 @@
+P0 scope note (2026-07-26)
+
+Implemented:
+- Added kernel/3d/brep/rs/src/{error,vec,mat,tolerance,predicates,oracle}.rs as new, additive
+  modules wired into lib.rs via #[path = "src/…"] pub mod declarations (mathematical_wfc pattern).
+  The pre-existing brepkit wrapper code in lib.rs is untouched and keeps compiling/serving
+  consumers unchanged — this is the "additive build" strategy from the plan.
+- error.rs: hand-rolled flat KernelError/IntersectError/BooleanError/StepError + ValidationIssue
+  (no thiserror, matching mathematical_wfc convention).
+- vec.rs: plain-f64 Vec2/Vec3/Pnt2/Pnt3 newtypes (point vs vector distinguished at the type level),
+  ulp-aware comparison helper, angle normalization/diff.
+- mat.rs: Mat3, unit Quat (axis-angle, slerp, to_mat3), Trsf (rigid + uniform scale, compose,
+  inverse — deliberately excludes shear/non-uniform scale so transformed analytic surfaces stay
+  analytic), Frame3 (deterministic from-normal / from-x-z construction).
+- tolerance.rs: Resolution (linear 1e-7 / angular 1e-9 / param 1e-9 defaults), Tol newtype with
+  tighter/looser/contains and a check_containment() helper for the vertex≤edge≤face hierarchy,
+  and a certified interval type Iv (add/sub/mul/neg/contains_zero/sign) used by predicates.rs.
+- predicates.rs: orient2d, orient3d, in_circle2d, collinear2d, coplanar3d, sign_of_dot. Two-stage:
+  fast f64 evaluation + a conservative forward error bound (bound = (n_terms+1)*eps*Σ|terms|)
+  decides the sign when possible; otherwise escalates to exact mathematical_number::Rational
+  arithmetic (confirmed Rational::from_f64/add/sub/mul/cmp are available and lossless for finite
+  f64 per mathematical/number/rs/src/rational.rs). Deliberately simpler than Shewchuk expansions
+  per the plan — the exact path is cold.
+- oracle.rs: Sdf enum (Box/Sphere/Cylinder + Union/Intersect/Difference) as the first slice of the
+  brute-force ground-truth oracle; more Sdf primitives and the mass-property/watertightness/
+  shape-generator oracles land in later phases as the kernel gains the corresponding features.
+- Cargo.toml: added mathematical_number (regular dep, used by predicates.rs's exact fallback) and
+  mathematical_random (dev-dep only — every reference is inside #[cfg(test)] mod quick blocks).
+
+Validated by:
+- cargo test -p kernel_3d_brepkit --lib: 114 passed, 0 failed (up from the pre-existing baseline;
+  all new tests are additive, no existing brepkit-wrapper test was touched or broken).
+- Differential gate (the flagship Phase-0 test per the plan): predicates::tests::quick::* run 5000
+  (orient2d), 3000 (orient3d), 3000 (in_circle2d) seeded trials — half random, half constructed to
+  sit exactly on or within 1e-12 of a degenerate configuration — asserting the filtered fast path
+  agrees with the independent exact-Rational recomputation on every trial. Dedicated near-ULP
+  regression tests (predicates::tests::orient2d_resolves_near_degenerate_case_correctly,
+  orient3d_resolves_near_degenerate_case_correctly) use true next-representable-float
+  perturbations (not a raw f64::EPSILON add, which rounds away at magnitude ≥ 2.0) to force the
+  exact-fallback path and confirm it returns the geometrically correct sign.
+- Transform round-trip: mat::tests::trsf_inverse_round_trips_a_point + the quick-tier randomized
+  version (200 seeded trials) confirm inverse().apply_point(apply_point(p)) == p to 1e-7.
+  quat_conjugate_is_inverse_rotation, trsf_compose_matches_sequential_application also pass.
+- cargo clippy -p kernel_3d_brepkit --lib --tests: zero warnings in any of the six new files;
+  remaining warnings are 100% pre-existing in the brepkit wrapper (verified by grep — none
+  overlap src/error.rs, src/vec.rs, src/mat.rs, src/tolerance.rs, src/predicates.rs, src/oracle.rs).
+- Full logs: phase-0-foundations-run-1.txt (cargo test), phase-0-lint-run-1.txt (cargo clippy).
+
+Deferred (not part of this phase, tracked for later phases per the plan):
+- oracle.rs's mass-property, watertightness and shape-generator regions — added incrementally as
+  Phase 4 (primitives/measure/tessellate) and Phase 6 (boolean) land, since they need those
+  kernel capabilities to have oracle-comparable outputs.
+- Polynomial/spline/curve/surface/topology/etc. modules — Phases 1-10 per the plan, additive in
+  the same style.
+- The public Brep API, crate rename, dependency drop and consumer refactor — the single declared
+  "Flip" phase (Phase 11), intentionally deferred until the native kernel is feature-complete so
+  the big-bang swap only has to happen once.
+None of these block subsequent phases; each new module only adds to the crate's surface.

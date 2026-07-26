@@ -1916,13 +1916,17 @@ mod operations {
             let before = program.adjacencies.clone();
             let mut new_adjacency = before[0].clone();
             new_adjacency.header.id = EntityId::new_serial("adjacency");
+            new_adjacency.element_a_id = EntityId::new_serial("element");
+            new_adjacency.element_b_id = EntityId::new_serial("element");
             new_adjacency.weight = 5.0;
             let set_op = ProgramOperation::SetAdjacency { adjacency: new_adjacency.clone() };
-            apply_program_operation(&mut program, &set_op);
-            assert!(program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
             let set_undo = invert_program_operation(&program, &set_op);
             assert!(matches!(set_undo, ProgramOperation::ClearAdjacency { .. }));
+            apply_program_operation(&mut program, &set_op);
+            assert_eq!(program.adjacencies.len(), before.len() + 1);
+            assert!(program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
             apply_program_operation(&mut program, &set_undo);
+            assert_eq!(program.adjacencies.len(), before.len());
             assert!(!program.adjacencies.iter().any(|a| a.header.id == new_adjacency.header.id));
 
             let clear_op = ProgramOperation::ClearAdjacency { id: before[0].header.id.clone() };
@@ -1930,6 +1934,8 @@ mod operations {
             assert!(matches!(clear_undo, ProgramOperation::SetAdjacency { .. }));
             apply_program_operation(&mut program, &clear_op);
             assert!(!program.adjacencies.iter().any(|a| a.header.id == before[0].header.id));
+            apply_program_operation(&mut program, &clear_undo);
+            assert!(program.adjacencies.iter().any(|a| a.header.id == before[0].header.id));
         }
 
         #[test]

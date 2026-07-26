@@ -3,6 +3,7 @@
 //! and fixed pins before delegating to the same generic [`crate::search::solve`] every solver uses.
 
 use crate::bitset::PatternSet;
+use crate::constraint::{AdjacencyView, Constraint, ConstraintSet, build_adjacency_view};
 use crate::error::SolveError;
 use crate::grid2d::Grid2dTopology;
 use crate::ids::PatternId;
@@ -13,18 +14,18 @@ use crate::topology::Topology;
 
 // #region 🔖Builder
 /// 🏗️ Builds a [`Grid2dSolver`] over a dense `width × height` grid.
-#[derive(Clone, Debug)]
 pub struct Grid2dSolverBuilder {
     model: CompiledModel,
     topology: Grid2dTopology,
     init_domains: Option<Vec<PatternSet>>,
     fixed: Vec<(crate::ids::NodeId, PatternId)>,
     config: SearchConfig,
+    constraints: Vec<Box<dyn Constraint>>,
 }
 
 impl Grid2dSolverBuilder {
     pub fn new(model: CompiledModel, topology: Grid2dTopology) -> Self {
-        Self { model, topology, init_domains: None, fixed: Vec::new(), config: SearchConfig::default() }
+        Self { model, topology, init_domains: None, fixed: Vec::new(), config: SearchConfig::default(), constraints: Vec::new() }
     }
 
     pub fn fix(mut self, x: usize, y: usize, p: PatternId) -> Result<Self, SolveError> {
@@ -46,6 +47,13 @@ impl Grid2dSolverBuilder {
         self
     }
 
+    /// 🏗️ Adds a global constraint. See [`crate::constraint::Constraint`]'s docs for exactly when
+    /// it runs (initial restriction + complete-assignment validation, not incremental mid-search).
+    pub fn constraint(mut self, c: Box<dyn Constraint>) -> Self {
+        self.constraints.push(c);
+        self
+    }
+
     pub fn build(self) -> Result<Grid2dSolver, SolveError> {
         let node_count = self.topology.node_count();
         let mut init_domains = self.init_domains.unwrap_or_else(|| vec![self.model.full_domain(); node_count]);
@@ -59,33 +67,48 @@ impl Grid2dSolverBuilder {
             fixed.push((n, placeholder));
         }
 
-        Ok(Grid2dSolver { model: self.model, topology: self.topology, init_domains, fixed, config: self.config })
+        let adjacency = build_adjacency_view(&self.topology);
+        Ok(Grid2dSolver { model: self.model, topology: self.topology, init_domains, fixed, config: self.config, constraints: self.constraints, adjacency })
     }
 }
 // #endregion 🔖Builder
 
 // #region 🔖Solver
 /// 🧱 A WFC solver over a dense 2D grid.
-#[derive(Clone, Debug)]
 pub struct Grid2dSolver {
     model: CompiledModel,
     topology: Grid2dTopology,
     init_domains: Vec<PatternSet>,
     fixed: Vec<(crate::ids::NodeId, PatternId)>,
     config: SearchConfig,
+    constraints: Vec<Box<dyn Constraint>>,
+    adjacency: AdjacencyView,
 }
 
 impl Grid2dSolver {
+    fn constraint_set(&self) -> Option<ConstraintSet<'_>> {
+        if self.constraints.is_empty() { None } else { Some(ConstraintSet { constraints: &self.constraints, adjacency: &self.adjacency }) }
+    }
+
     pub fn solve(&mut self, seed: u64) -> SolveOutcome {
-        search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed)
+        match self.constraint_set() {
+            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, None, &cs),
+            None => search::solve(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed),
+        }
     }
 
     pub fn solve_cancellable(&mut self, seed: u64, cancel: &CancelToken) -> SolveOutcome {
-        search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel)
+        match self.constraint_set() {
+            Some(cs) => search::solve_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, Some(cancel), &cs),
+            None => search::solve_cancellable(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, cancel),
+        }
     }
 
     pub fn solve_all(&mut self, seed: u64, limit: usize) -> (Vec<Solution>, bool) {
-        search::solve_all(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit)
+        match self.constraint_set() {
+            Some(cs) => search::solve_all_with_constraints(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit, &cs),
+            None => search::solve_all(&self.model, &self.topology, &self.config, seed, Some(&self.init_domains), &self.fixed, limit),
+        }
     }
 
     pub fn model(&self) -> &CompiledModel {

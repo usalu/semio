@@ -3968,5 +3968,275 @@ mod tests {
         let with_labels = host.build_vector_scene().encoding().path_tags.len();
         assert!(with_labels > without, "colored vector labels should add glyph paths (with={with_labels}, without={without})");
     }
+
+    #[test]
+    fn map_point_segment_distance_zero_length_segment_uses_point_distance() {
+        let d = super::map_point_segment_distance(3.0, 4.0, 0.0, 0.0, 0.0, 0.0);
+        assert!((d - 5.0).abs() < 1e-9);
+    }
+
+    #[test]
+    fn map_point_in_polygon_rejects_degenerate_polygon() {
+        assert!(!super::map_point_in_polygon(0.0, 0.0, &[]));
+        assert!(!super::map_point_in_polygon(0.0, 0.0, &[super::Point::new(0.0, 0.0), super::Point::new(1.0, 1.0)]));
+    }
+
+    #[test]
+    fn map_polyline_intersects_rect_detects_edge_crossing_without_endpoints_inside() {
+        let line = [super::Point::new(-10.0, 5.0), super::Point::new(10.0, 5.0)];
+        assert!(super::map_polyline_intersects_rect(&line, 0.0, 0.0, 4.0, 10.0));
+        let miss = [super::Point::new(-10.0, 50.0), super::Point::new(10.0, 50.0)];
+        assert!(!super::map_polyline_intersects_rect(&miss, 0.0, 0.0, 4.0, 10.0));
+    }
+
+    #[test]
+    fn map_polyline_intersects_polygon_detects_crossing_edge() {
+        let square = [super::Point::new(0.0, 0.0), super::Point::new(10.0, 0.0), super::Point::new(10.0, 10.0), super::Point::new(0.0, 10.0)];
+        let crossing = [super::Point::new(-5.0, 5.0), super::Point::new(15.0, 5.0)];
+        assert!(super::map_polyline_intersects_polygon(&crossing, &square));
+        let outside = [super::Point::new(-5.0, 50.0), super::Point::new(-1.0, 50.0)];
+        assert!(!super::map_polyline_intersects_polygon(&outside, &square));
+    }
+
+    #[test]
+    fn features_in_polygon_json_invalid_json_returns_empty() {
+        let host = super::MapHost::new();
+        let out = host.features_in_polygon_json("not json", true);
+        let v: serde_json::Value = serde_json::from_str(&out).expect("json");
+        assert!(v["positions"].as_array().unwrap().is_empty());
+        assert!(v["routes"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn features_in_polygon_json_requires_at_least_a_triangle() {
+        let host = super::MapHost::new();
+        let out = host.features_in_polygon_json("[[0.0,0.0],[1.0,1.0]]", true);
+        let v: serde_json::Value = serde_json::from_str(&out).expect("json");
+        assert!(v["positions"].as_array().unwrap().is_empty());
+    }
+
+    #[test]
+    fn features_in_polygon_json_finds_enclosed_position() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.sync_map_json(r#"{"positions":[{"id":"p1","lon":0.0,"lat":0.0}]}"#).expect("sync");
+        let s = host.position_screen_json("p1");
+        let sv: serde_json::Value = serde_json::from_str(&s).expect("json");
+        let (sx, sy) = (sv["x"].as_f64().unwrap(), sv["y"].as_f64().unwrap());
+        let polygon = format!("[[{},{}],[{},{}],[{},{}]]", sx - 20.0, sy - 20.0, sx + 20.0, sy - 20.0, sx, sy + 20.0);
+        let out = host.features_in_polygon_json(&polygon, true);
+        let v: serde_json::Value = serde_json::from_str(&out).expect("json");
+        assert_eq!(v["positions"].as_array().unwrap().first().and_then(|x| x.as_str()), Some("p1"));
+    }
+
+    #[test]
+    fn feature_screen_json_covers_route_missing_and_unknown_kind() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.sync_map_json(r#"{"routes":[{"id":"r1","points":[[0.0,0.0],[1.0,1.0]]}]}"#).expect("sync");
+        let route_json = host.feature_screen_json("route", "r1");
+        assert_ne!(route_json, "null");
+        assert_eq!(host.feature_screen_json("route", "missing"), "null");
+        assert_eq!(host.feature_screen_json("bogus", "r1"), "null");
+        host.sync_map_json(r#"{"routes":[{"id":"empty","points":[]}]}"#).expect("sync");
+        assert_eq!(host.feature_screen_json("route", "empty"), "null");
+    }
+
+    #[test]
+    fn set_selection_json_replaces_previous_selection_and_rejects_bad_json() {
+        let mut host = super::MapHost::new();
+        host.set_selection_json(r#"{"positions":["p1","p2"],"routes":["r1"]}"#).expect("select");
+        assert_eq!(host.selected_positions_json().len(), 2);
+        assert_eq!(host.selected_routes_json(), vec!["r1".to_string()]);
+        host.set_selection_json(r#"{"positions":[],"routes":[]}"#).expect("clear");
+        assert!(host.selected_positions_json().is_empty());
+        assert!(host.selected_routes_json().is_empty());
+        assert!(host.set_selection_json("not json").is_err());
+    }
+
+    #[test]
+    fn set_hover_json_null_clears_and_valid_json_sets_kind_and_id() {
+        let mut host = super::MapHost::new();
+        host.set_hover_json(r#"{"kind":"position","id":"p1"}"#).expect("hover");
+        assert_eq!(host.hovered_kind(), Some("position"));
+        assert_eq!(host.hovered_id(), Some("p1"));
+        host.set_hover_json("null").expect("clear hover");
+        assert_eq!(host.hovered_kind(), None);
+        assert_eq!(host.hovered_id(), None);
+        assert!(host.set_hover_json("not json").is_err());
+    }
+
+    #[test]
+    fn focus_feature_position_moves_camera_and_missing_id_returns_false() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.sync_map_json(r#"{"positions":[{"id":"p1","lon":10.0,"lat":20.0}]}"#).expect("sync");
+        assert!(!host.focus_feature("position", "missing"));
+        assert!(host.focus_feature("position", "p1"));
+        let expected = super::projection::lonlat_to_world(10.0, 20.0);
+        assert!((host.camera.x - expected.x).abs() < 1e-9);
+        assert!((host.camera.y - expected.y).abs() < 1e-9);
+    }
+
+    #[test]
+    fn focus_feature_route_requires_at_least_two_points_and_fits_bounds() {
+        let mut host = super::MapHost::new();
+        host.set_size(800, 600, 1.0);
+        host.sync_map_json(r#"{"routes":[{"id":"short","points":[[0.0,0.0]]},{"id":"r1","points":[[0.0,0.0],[5.0,5.0]]}]}"#).expect("sync");
+        assert!(!host.focus_feature("route", "short"));
+        assert!(host.focus_feature("route", "r1"));
+        assert!(!host.focus_feature("route", "missing"));
+    }
+
+    #[test]
+    fn focus_feature_unknown_kind_returns_false() {
+        let mut host = super::MapHost::new();
+        assert!(!host.focus_feature("bogus", "anything"));
+    }
+
+    #[test]
+    fn has_tile_and_has_vector_tile_reflect_uploads() {
+        let mut host = super::MapHost::new();
+        assert!(!host.has_tile("0/0/0"));
+        host.upload_tile(0, 0, 0, &test_png_1x1()).expect("upload png");
+        assert!(host.has_tile("0/0/0"));
+        assert!(!host.has_tile("1/0/0"));
+        assert!(!host.has_vector_tile("0/0/0"));
+    }
+
+    #[test]
+    fn upload_tile_invalid_png_bytes_returns_err() {
+        let mut host = super::MapHost::new();
+        assert!(host.upload_tile(0, 0, 0, b"not a png").is_err());
+    }
+
+    #[test]
+    fn upload_vector_tile_invalid_bytes_returns_err() {
+        let mut host = super::MapHost::new();
+        assert!(host.upload_vector_tile(0, 0, 0, &[0x80]).is_err());
+    }
+
+    #[test]
+    fn set_map_theme_from_json_invalid_json_returns_err() {
+        let mut host = super::MapHost::new();
+        assert!(host.set_map_theme_from_json("not json").is_err());
+    }
+
+    #[test]
+    fn set_layer_visibility_from_json_invalid_json_returns_err_and_partial_json_overrides_only_given_fields() {
+        let mut host = super::MapHost::new();
+        assert!(host.set_layer_visibility_from_json("not json").is_err());
+        host.set_layer_visibility_from_json(r#"{"roads":false}"#).expect("partial");
+        let v: serde_json::Value = serde_json::from_str(&host.layer_visibility_json()).expect("json");
+        assert_eq!(v["roads"], false);
+        assert_eq!(v["water"], true);
+    }
+
+    #[test]
+    fn set_layer_stroke_scale_from_json_sanitizes_out_of_range_weights() {
+        let mut host = super::MapHost::new();
+        assert!(host.set_layer_stroke_scale_from_json("not json").is_err());
+        host.set_layer_stroke_scale_from_json(r#"{"roads":999.0,"water":-5.0}"#).expect("scale");
+        let v: serde_json::Value = serde_json::from_str(&host.layer_stroke_scale_json()).expect("json");
+        assert_eq!(v["roads"].as_f64().unwrap(), super::MAP_LAYER_WEIGHT_MAX);
+        assert_eq!(v["water"].as_f64().unwrap(), super::MAP_LAYER_WEIGHT_MIN);
+    }
+
+    #[test]
+    fn clamp_map_layer_weight_handles_bounds_and_non_finite_values() {
+        assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MIN - 1.0), super::MAP_LAYER_WEIGHT_MIN);
+        assert_eq!(super::clamp_map_layer_weight(super::MAP_LAYER_WEIGHT_MAX + 1.0), super::MAP_LAYER_WEIGHT_MAX);
+        assert_eq!(super::clamp_map_layer_weight(f64::NAN), 1.0);
+        assert_eq!(super::clamp_map_layer_weight(f64::INFINITY), 1.0);
+    }
+
+    #[test]
+    fn map_layer_stroke_scale_sanitized_clamps_every_field() {
+        let scale = super::MapLayerStrokeScale {
+            raster: 100.0,
+            water: -1.0,
+            land: 100.0,
+            roads: 100.0,
+            buildings: 100.0,
+            borders: 100.0,
+            labels: 100.0,
+            positions: 100.0,
+            position_labels: 100.0,
+            routes: 100.0,
+            regions: -1.0,
+        };
+        let s = scale.sanitized();
+        assert_eq!(s.raster, super::MAP_LAYER_WEIGHT_MAX);
+        assert_eq!(s.water, super::MAP_LAYER_WEIGHT_MIN);
+        assert_eq!(s.regions, super::MAP_LAYER_WEIGHT_MIN);
+    }
+
+    #[test]
+    fn gis_map_lod_scale_json_lists_all_lod_bands() {
+        let v: Vec<serde_json::Value> = serde_json::from_str(&super::gis_map_lod_scale_json()).expect("json");
+        assert_eq!(v.len(), 8);
+        assert_eq!(v[0]["id"], "world");
+        assert!(v[0]["maxZoom"].as_f64().unwrap() > 0.0);
+    }
+
+    #[test]
+    fn gis_map_camera_limits_json_min_never_exceeds_max() {
+        let v: serde_json::Value = serde_json::from_str(&super::gis_map_camera_limits_json()).expect("json");
+        assert!(v["min"].as_f64().unwrap() <= v["max"].as_f64().unwrap());
+    }
+
+    #[test]
+    fn map_layer_weight_slider_keys_respect_render_mode() {
+        let image_keys = super::map_layer_weight_slider_keys_at_lod("city", "image");
+        assert!(image_keys.contains(&"raster"));
+        assert!(!image_keys.contains(&"water"));
+        let vector_keys = super::map_layer_weight_slider_keys_at_lod("city", "vector");
+        assert!(!vector_keys.contains(&"raster"));
+        let combined_keys = super::map_layer_weight_slider_keys_at_lod("city", "bogus-mode");
+        assert!(combined_keys.contains(&"raster"));
+        assert!(combined_keys.contains(&"positions"));
+    }
+
+    #[test]
+    fn resolve_detail_lod_index_falls_back_when_forced_lod_unknown() {
+        let span = 50.0;
+        assert_eq!(super::resolve_detail_lod_index(span, Some("bogus-lod")), super::resolve_map_lod_index_from_span(span));
+        assert_eq!(super::resolve_detail_lod_index(span, Some("city")), super::GIS_MAP_LOD_SCALE.index_of("city").unwrap());
+    }
+
+    #[test]
+    fn parse_tile_key_rejects_malformed_keys() {
+        assert_eq!(super::tiles::parse_tile_key("1/2/3"), Some((1, 2, 3)));
+        assert_eq!(super::tiles::parse_tile_key("1/2"), None);
+        assert_eq!(super::tiles::parse_tile_key("1/2/3/4"), None);
+        assert_eq!(super::tiles::parse_tile_key("a/b/c"), None);
+    }
+
+    #[test]
+    fn map_vector_style_as_str_round_trips_all_variants() {
+        for style in [super::MapVectorStyle::Colored, super::MapVectorStyle::FigureGround, super::MapVectorStyle::InvertedFigure] {
+            assert_eq!(super::MapVectorStyle::from_str(style.as_str()), style);
+        }
+        assert_eq!(super::MapVectorStyle::from_str("bogus"), super::MapVectorStyle::Colored);
+    }
+
+    #[test]
+    fn label_declutter_rejects_when_over_capacity_or_offscreen() {
+        let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
+        let mut declutter = super::LabelDeclutter::for_viewport(&viewport, 20.0, 1);
+        assert!(declutter.try_place("first", super::Point::new(50.0, 50.0), 12.0));
+        assert!(!declutter.try_place("second", super::Point::new(150.0, 150.0), 12.0), "max_count of 1 must reject a second label");
+        let mut roomy = super::LabelDeclutter::for_viewport(&viewport, 20.0, 10);
+        assert!(!roomy.try_place("offscreen", super::Point::new(10_000.0, 10_000.0), 12.0));
+    }
+
+    #[test]
+    fn clamp_map_zoom_and_for_viewport_stay_within_bounds() {
+        assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MIN - 5.0), super::MAP_CAMERA_ZOOM_MIN);
+        assert_eq!(super::clamp_map_zoom(super::MAP_CAMERA_ZOOM_MAX + 5.0), super::MAP_CAMERA_ZOOM_MAX);
+        let viewport = Viewport { width: 4000, height: 4000, dpr: 1.0 };
+        let cover = super::projection::cover_zoom_for_viewport(&viewport);
+        assert!(super::clamp_map_zoom_for_viewport(0.0, &viewport) >= cover);
+    }
 }
 // #endregion 🔖Tests

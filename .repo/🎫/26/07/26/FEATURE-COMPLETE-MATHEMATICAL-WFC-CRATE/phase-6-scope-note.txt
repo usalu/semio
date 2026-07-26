@@ -1,0 +1,42 @@
+P6 scope note (2026-07-26)
+
+Implemented: prop_ac4.rs — AC-4-style support-count propagation engine (Ac4Engine), forward
+fixed-point only (rollback/backtracking integration deliberately deferred — see module docs).
+Refactored the Topology trait: for_each_in_arc now yields (source, relation, slot) directly
+instead of a separate in_arc_slot(target, ordinal) lookup, removing an ordinal-ambiguity design
+gap discovered while implementing AC-4 (topology.rs, grid2d.rs, grid3d.rs all updated).
+
+Validated via the P6 gate: AC-3 vs AC-4 fixed-point equivalence on 300 (stress-tested to 3000)
+random symmetric-relation instances, all byte-identical or mutually-agreeing-on-contradiction.
+
+Three real bugs found and fixed during this phase, each with a permanent regression test:
+1. Model well-formedness: the shared `oracle::testgen::random_model` generates relations that are
+   declared self-inverse but not necessarily symmetric in their compatibility table (fails
+   model.validate()). AC-3's forward-only restriction (per its own documented design) only reaches
+   *full* arc-consistency for validated/well-formed models — this doesn't affect existing
+   search()-based tests (backtracking still converges to the right answer regardless of AC-3's
+   fixed-point tightness) but does affect direct AC-3-vs-AC-4 comparison. Added a local
+   random_symmetric_model generator in prop_ac4.rs for this specific differential test.
+2. Ac4Engine::new() only computed counters; it never checked for patterns whose support was
+   *already* zero at initialization (globally-unsupported patterns) — AC-3 catches this for free
+   because search.rs seeds every node into the queue at solve start, but AC-4 only reacts to a
+   counter being decremented to zero, never one that starts there. Fixed by adding an initial
+   sweep in Ac4Engine::new() that removes and cascades any already-unsupported pattern.
+3. That same initial sweep could discover the same (node, pattern) pair via more than one
+   incoming-arc slot, and feeding the undeduplicated list into propagate() as a worklist caused
+   some support counters to be decremented twice for one logical removal — over-pruning patterns
+   that still had support. Fixed with a sort+dedup before use.
+4. propagate()'s caller-applied seed removals (patterns removed directly by the caller before the
+   call, per the documented contract) were never checked for wiping a domain on their own —
+   propagate() only detected wipeouts from removals it triggered itself. An already-empty domain
+   can never re-report Wipeout (only Unchanged), so this could silently miss a real contradiction
+   in the exact same way search.rs's original trail-recording gap did (P2). Fixed with an upfront
+   check at the top of propagate().
+
+Deferred (not part of this phase, tracked for a later pass):
+- Trail-integrated rollback for Ac4Engine (needed before it can be wired into search.rs's
+  backtracking loop as a selectable engine — see prop_ac4.rs module docs for the reasoning).
+- Watched-support engine variant (prop_watched.rs).
+- EngineKind runtime selection in SearchConfig.
+- Mirror-boundary in_arc correctness for grid topologies (documented limitation in grid2d.rs's
+  Boundary::Mirror doc comment, predates this phase but now explicitly relevant to AC-4 too).

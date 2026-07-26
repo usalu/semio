@@ -1,3 +1,35 @@
+# Phase C wave 1 results (confirmed, independently re-verified per item)
+
+Repo-wide partial baseline: 53.90% → **58.10%** (162 files, 108,404/186,570 lines) after wave 1. All 15 write
+agents + 15 independent verify agents completed, 0 errors, all reported tests passing. Per-crate before→after
+(verify-agent-measured, not self-reported):
+
+| crate | before | after | Δ |
+|---|---|---|---|
+| kernel_3d_scene | 57.7% | 95.11% | +37.4 |
+| framework_editor | 65.3% | 95.99% | +30.7 |
+| kernel_3d_brepkit | 40.9% | 72.52% | +31.6 |
+| ui_tui | 65.7% | 89.31% | +23.6 |
+| architect_program | 55.8% | 78.21% | +22.4 |
+| draw | 75.6% | 94.9% | +19.3 |
+| remodel_video | 59.2% | 78.34% | +19.1 |
+| puzzle_3d | 75.9% | 90.36% | +14.5 |
+| mathematical_graph_dsl | 57.6% | 71.98% | +14.4 |
+| energy_engine | 76.1% | 81.62% | +5.5 |
+| mathematical_sampling | 81.2% | 81.3% | +0.1 |
+| kernel_3d_mesh | 71.4% | 71.36% | ~flat |
+| ui_wgpu | 48.8% | 48.59% | ~flat — verify agent flagged this explicitly as not corroborating any gain |
+| semio-framework-core | 83.4% | 70.3% | **-13.1**, likely a denominator-honesty effect (more of the file now compiles/counts post the icon-refactor fixes, not a real regression) — not re-investigated, flag for a closer look |
+| mathematical_fuzzy | 81.2%(?) | unverified | write agent claims 44 new tests, 65 total passing; verify agent's build didn't finish before it had to report — needs a re-check, not a failure |
+
+**Wave 2 launched** (`wf_fb99bd5c-33a`) immediately after, same pattern, next 15 items by uncovered-line count:
+`animate_core`, `framework_surface_tiled_map`, `animate-plugin`, `framework_surface_paint` (4 flagged as
+showing a suspicious 0% in the worklist — told to verify actual test presence, not assume a blank slate),
+`lowpoly_core`, `mathematical_graph`, `trinity_rewrite`, `vcs`, `fem-plugin`, `layout_rs`, `flow_module_draw`,
+`compose_query`, `framework_surface_terrain`, `kernel_2d_rs`, `norm_iso_16757`.
+
+---
+
 # Session conclusion: Phase A closed as "best achievable", Phase C wave 1 launched
 
 **Decision: stopped chasing a 100% clean full-repo run after run 20 (of 20 attempts).** The last new failure

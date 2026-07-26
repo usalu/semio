@@ -2326,6 +2326,610 @@ mod tests {
         assert_eq!(engine.queue.len(), queue_len_before, "registering a mesh rebuilds the same scene, so the queue shape is unchanged, but the cache/fill must have been recomputed fresh");
         assert!(engine.brush_cache.is_empty(), "rebuild_queue clears brush_cache; a stale entry from before the real mesh arrived must not survive");
     }
+
+    fn unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+        (
+            vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
+            vec![0, 1, 2, 0, 2, 3, 4, 6, 5, 4, 7, 6, 0, 4, 5, 0, 5, 1, 2, 6, 7, 2, 7, 3, 0, 3, 7, 0, 7, 4, 1, 5, 6, 1, 6, 2],
+        )
+    }
+
+    /// 🧊 Same box as `unit_cube_mesh_buffers` but with outward-facing (CCW-from-outside) winding, needed
+    /// for tests that rely on `CollisionShape::contains_point` actually reporting interior points as inside.
+    fn outward_wound_unit_cube_mesh_buffers() -> (Vec<f32>, Vec<u32>) {
+        (
+            vec![-1.0, -1.0, -1.0, 1.0, -1.0, -1.0, 1.0, 1.0, -1.0, -1.0, 1.0, -1.0, -1.0, -1.0, 1.0, 1.0, -1.0, 1.0, 1.0, 1.0, 1.0, -1.0, 1.0, 1.0],
+            vec![0, 2, 1, 0, 3, 2, 4, 5, 6, 4, 6, 7, 0, 5, 4, 0, 1, 5, 2, 7, 6, 2, 3, 7, 0, 7, 3, 0, 4, 7, 1, 6, 5, 1, 2, 6],
+        )
+    }
+
+    #[test]
+    fn vec3d_and_point3d_basic_ops() {
+        let a = Vec3d::new(1.0, 2.0, 3.0);
+        let b = Vec3d::new(4.0, -1.0, 0.5);
+        let sum = a + b;
+        assert_eq!((sum.x(), sum.y(), sum.z()), (5.0, 1.0, 3.5));
+        let scaled = a * 2.0;
+        assert_eq!((scaled.x(), scaled.y(), scaled.z()), (2.0, 4.0, 6.0));
+        assert_eq!(Vec3d::new(-5.0, 3.0, -1.0).amax(), 5.0);
+
+        let p1 = Point3d::new(1.0, 5.0, -2.0);
+        let p2 = Point3d::new(4.0, 2.0, 3.0);
+        let inf = p1.inf(&p2);
+        let sup = p1.sup(&p2);
+        assert_eq!((inf.x(), inf.y(), inf.z()), (1.0, 2.0, -2.0));
+        assert_eq!((sup.x(), sup.y(), sup.z()), (4.0, 5.0, 3.0));
+        let diff = p2 - p1;
+        assert_eq!((diff.x(), diff.y(), diff.z()), (3.0, -3.0, 5.0));
+        let back = Point3d::from_coords(diff);
+        assert_eq!((back.x(), back.y(), back.z()), (3.0, -3.0, 5.0));
+    }
+
+    #[test]
+    fn rotation3d_identity_ijkw_roundtrip_and_apply() {
+        let identity = Rotation3d::identity();
+        assert_eq!(identity.to_ijkw(), (0.0, 0.0, 0.0, 1.0));
+        let q = Rotation3d::from_ijkw(0.0, 0.0, 0.0, 1.0);
+        let v = Vec3d::new(1.0, 0.0, 0.0);
+        let rotated = q.apply(v);
+        assert_eq!((rotated.x(), rotated.y(), rotated.z()), (1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn rotation3d_rotation_between_none_for_antiparallel() {
+        let from = Vec3d::new(1.0, 0.0, 0.0);
+        let to = Vec3d::new(-1.0, 0.0, 0.0);
+        assert!(Rotation3d::rotation_between(from, to).is_none(), "opposite vectors have no unique rotation axis");
+        let to2 = Vec3d::new(0.0, 1.0, 0.0);
+        assert!(Rotation3d::rotation_between(from, to2).is_some());
+    }
+
+    #[test]
+    fn pose3d_compose_inverse_transform_point() {
+        let rotation = Rotation3d::from_ijkw(0.0, 0.0, 0.0, 1.0);
+        let translation = Vec3d::new(1.0, 2.0, 3.0);
+        let pose = Pose3d::from_parts(translation, rotation);
+        let point = Point3d::new(0.0, 0.0, 0.0);
+        let transformed = pose.transform_point(&point);
+        assert_eq!((transformed.x(), transformed.y(), transformed.z()), (1.0, 2.0, 3.0));
+        let back = pose.inverse().transform_point(&transformed);
+        assert!(back.x().abs() < 1e-6 && back.y().abs() < 1e-6 && back.z().abs() < 1e-6);
+        let composed = pose.compose(&Pose3d::identity());
+        let composed_point = composed.transform_point(&point);
+        assert_eq!((composed_point.x(), composed_point.y(), composed_point.z()), (1.0, 2.0, 3.0));
+    }
+
+    #[test]
+    fn normalize_vec3_handles_zero_length() {
+        assert_eq!(normalize_vec3([0.0, 0.0, 0.0]), [0.0, 0.0, -1.0]);
+        let n = normalize_vec3([3.0, 0.0, 4.0]);
+        assert!((n[0] - 0.6).abs() < 1e-9 && (n[2] - 0.8).abs() < 1e-9);
+    }
+
+    #[test]
+    fn vec3_math_helpers() {
+        assert_eq!(vec3_dot([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]), 32.0);
+        assert_eq!(vec3_cross([1.0, 0.0, 0.0], [0.0, 1.0, 0.0]), [0.0, 0.0, 1.0]);
+        assert_eq!(vec3_add([1.0, 2.0, 3.0], [1.0, 1.0, 1.0]), [2.0, 3.0, 4.0]);
+        assert_eq!(vec3_sub([1.0, 2.0, 3.0], [1.0, 1.0, 1.0]), [0.0, 1.0, 2.0]);
+        assert_eq!(negate_vec3([1.0, -2.0, 3.0]), [-1.0, 2.0, -3.0]);
+    }
+
+    #[test]
+    fn vec3_scale_variants() {
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &None), [1.0, 2.0, 3.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!(2.0))), [2.0, 4.0, 6.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!([2.0, 3.0, 4.0]))), [2.0, 6.0, 12.0]);
+        assert_eq!(vec3_scale([1.0, 2.0, 3.0], &Some(serde_json::json!("bogus"))), [1.0, 2.0, 3.0]);
+    }
+
+    #[test]
+    fn quat_rotate_vec_and_180_degree_axis() {
+        let identity: Quat = [0.0, 0.0, 0.0, 1.0];
+        let rotated = quat_rotate_vec(identity, [1.0, 2.0, 3.0]);
+        assert!((rotated[0] - 1.0).abs() < 1e-9 && (rotated[1] - 2.0).abs() < 1e-9 && (rotated[2] - 3.0).abs() < 1e-9);
+        let q = quaternion_from_180_degree_axis([0.0, 0.0, 2.0]);
+        assert_eq!(q, [0.0, 0.0, 1.0, 0.0]);
+    }
+
+    #[test]
+    fn anti_parallel_brush_orientation_branches() {
+        let in_plane = anti_parallel_brush_orientation([1.0, 0.0, 0.0]);
+        assert_eq!(in_plane, quaternion_from_180_degree_axis([0.0, 0.0, 1.0]), "near-planar target direction falls back to the z axis");
+        let along_z = anti_parallel_brush_orientation([0.0, 0.0, 1.0]);
+        assert_eq!(along_z, quaternion_from_180_degree_axis([1.0, 0.0, 0.0]), "target parallel to z has an undefined cross axis, falls back to x");
+        let general = anti_parallel_brush_orientation([0.0, 1.0, 0.5]);
+        assert_eq!(general, quaternion_from_180_degree_axis([-1.0, 0.0, 0.0]), "general case uses cross(z, target)");
+    }
+
+    #[test]
+    fn compute_brush_placement_pose_host_orientation_branch() {
+        let host_orientation: Quat = [0.0, 0.0, 0.0, 1.0];
+        let (origin, orientation) = compute_brush_placement_pose([1.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [10.0, 0.0, 0.0], [0.0, 0.0, 1.0], Some(host_orientation), true);
+        assert_eq!(orientation, host_orientation, "an antiparallel host-source direction keeps the host's own orientation");
+        assert_eq!(origin, [9.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn compute_brush_placement_pose_falls_back_without_reference_orientation() {
+        let (_, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [0.0, 0.0, 0.0], [0.0, 0.0, -1.0], None, true);
+        let anti = anti_parallel_brush_orientation([0.0, 0.0, -1.0]);
+        assert_eq!(orientation, anti, "use_host_orientation with no reference orientation must fall through to the general path");
+    }
+
+    #[test]
+    fn compute_brush_placement_pose_general_rotation_between() {
+        let (origin, orientation) = compute_brush_placement_pose([0.0, 0.0, 0.0], [0.0, 0.0, -1.0], &None, [5.0, 0.0, 0.0], [1.0, 0.0, 0.0], None, false);
+        let rotated = quat_rotate_vec(orientation, [0.0, 0.0, -1.0]);
+        assert!((rotated[0] + 1.0).abs() < 1e-4, "local dir must rotate onto the desired world dir: {rotated:?}");
+        assert!((origin[0] - 5.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn collision_body_from_buffers_rejects_too_few_or_degenerate() {
+        assert!(collision_body_from_buffers(&[0.0; 6], &[0, 1, 2]).is_none(), "fewer than 3 vertices must be rejected");
+        assert!(collision_body_from_buffers(&[0.0; 9], &[0, 1]).is_none(), "fewer than one triangle's worth of indices must be rejected");
+        let tiny_positions: Vec<f32> = vec![0.0, 0.0, 0.0, 0.1, 0.0, 0.0, 0.0, 0.1, 0.0];
+        assert!(collision_body_from_buffers(&tiny_positions, &[0, 1, 2]).is_none(), "extent below the minimum collision mesh extent must be rejected");
+    }
+
+    #[test]
+    fn collision_body_from_buffers_accepts_valid_mesh() {
+        let (positions, indices) = unit_cube_mesh_buffers();
+        let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
+        let body = collision_body_from_buffers(&scaled, &indices).expect("valid mesh should build a body");
+        assert_eq!(body.parts.len(), 1);
+        assert_eq!((body.local_bounds_min.x(), body.local_bounds_max.x()), (-4.0, 4.0));
+    }
+
+    #[test]
+    fn world_bounds_transforms_local_aabb_corners() {
+        let (positions, indices) = unit_cube_mesh_buffers();
+        let body = collision_body_from_buffers(&positions, &indices).expect("body");
+        let pose = Pose3d::from_parts(Vec3d::new(10.0, 0.0, 0.0), Rotation3d::identity());
+        let (min, max) = world_bounds(&body, &pose);
+        assert_eq!((min.x(), max.x()), (9.0, 11.0));
+    }
+
+    #[test]
+    fn world_volumes_contain_aabb_empty_and_multi_volume() {
+        assert!(world_volumes_contain_aabb(&[], Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "no target volumes means unconstrained");
+        let volumes = vec![
+            WorldVolumeProps { id: "far".into(), origin: [100.0, 0.0, 0.0], orientation: None, scale: None },
+            WorldVolumeProps { id: "near".into(), origin: [0.0, 0.0, 0.0], orientation: None, scale: Some(serde_json::json!(4.0)) },
+        ];
+        assert!(world_volumes_contain_aabb(&volumes, Point3d::new(-1.0, -1.0, -1.0), Point3d::new(1.0, 1.0, 1.0)), "any single containing volume is enough");
+    }
+
+    #[test]
+    fn bodies_intersect_and_solid_overlap_volume_reject_disjoint_aabbs() {
+        let (positions, indices) = unit_cube_mesh_buffers();
+        let body = collision_body_from_buffers(&positions, &indices).expect("body");
+        let pose_a = Pose3d::identity();
+        let pose_b = Pose3d::from_parts(Vec3d::new(100.0, 0.0, 0.0), Rotation3d::identity());
+        assert!(!bodies_intersect(&body, &pose_a, &body, &pose_b));
+        assert_eq!(solid_overlap_volume(&body, &pose_a, &body, &pose_b, 64, 0.02), 0.0);
+    }
+
+    #[test]
+    fn solid_overlap_volume_reports_positive_overlap_for_coincident_bodies() {
+        let (positions, indices) = outward_wound_unit_cube_mesh_buffers();
+        let scaled: Vec<f32> = positions.iter().map(|c| c * 4.0).collect();
+        let body = collision_body_from_buffers(&scaled, &indices).expect("body");
+        let pose = Pose3d::identity();
+        assert!(point_inside_body(&body, &pose, Point3d::new(0.0, 0.0, 0.0)), "the box's own center must be inside itself");
+        let overlap = solid_overlap_volume(&body, &pose, &body, &pose, 256, 0.0);
+        assert!(overlap > 0.0, "two fully coincident solid bodies must report a positive overlap: {overlap}");
+    }
+
+    #[test]
+    fn vortex_port_shape_and_compatibility() {
+        assert_eq!(puzzle3d_vortex_port_shape("foo circular bar"), Some("circular"));
+        assert_eq!(puzzle3d_vortex_port_shape("foo rectangular bar"), Some("rectangular"));
+        assert_eq!(puzzle3d_vortex_port_shape("plain"), None);
+        assert!(puzzle3d_vortex_port_shapes_compatible("plain", "foo circular bar"));
+        assert!(puzzle3d_vortex_port_shapes_compatible("foo circular bar", "baz circular qux"));
+        assert!(!puzzle3d_vortex_port_shapes_compatible("foo circular bar", "baz rectangular qux"));
+    }
+
+    #[test]
+    fn single_letter_port_family_and_compatibility() {
+        assert_eq!(puzzle3d_single_letter_port_family("a-socket"), Some('a'));
+        assert_eq!(puzzle3d_single_letter_port_family("ab-socket"), None);
+        assert_eq!(puzzle3d_single_letter_port_family("A-socket"), None);
+        assert_eq!(puzzle3d_single_letter_port_family("plain"), None);
+        assert!(puzzle3d_single_letter_port_families_compatible("plain", "a-socket"));
+        assert!(puzzle3d_single_letter_port_families_compatible("a-socket", "a-plug"));
+        assert!(!puzzle3d_single_letter_port_families_compatible("a-socket", "b-plug"));
+    }
+
+    #[test]
+    fn resolve_cable_and_attraction_kind_defaults_and_lookup() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![],
+            vortices: vec![VortexKindCatalog { id: "vk".into(), default_cable_kind: Some("  cable.custom  ".into()) }, VortexKindCatalog { id: "vk-empty".into(), default_cable_kind: Some("   ".into()) }],
+            cables: vec![CableKindCatalog { id: "cable.custom".into(), default_attraction_kind: Some("attraction.custom".into()) }],
+        };
+        assert_eq!(resolve_cable_kind_for_vortex("vk", &catalogs), "cable.custom");
+        assert_eq!(resolve_cable_kind_for_vortex("vk-empty", &catalogs), DEFAULT_CABLE_KIND_ID);
+        assert_eq!(resolve_cable_kind_for_vortex("missing", &catalogs), DEFAULT_CABLE_KIND_ID);
+        assert_eq!(resolve_attraction_kind_for_cable("cable.custom", &catalogs), "attraction.custom");
+        assert_eq!(resolve_attraction_kind_for_cable("missing", &catalogs), "");
+    }
+
+    #[test]
+    fn compat_pair_matches_and_specificity_rank() {
+        let rule = KindCompatEntry { source: "a".into(), target: "b".into(), bidirectional: false, important: false, specificity: None };
+        assert!(compat_pair_matches(&rule, "a", "b"));
+        assert!(!compat_pair_matches(&rule, "b", "a"));
+        let bidi = KindCompatEntry { bidirectional: true, ..rule };
+        assert!(compat_pair_matches(&bidi, "b", "a"));
+        assert_eq!(specificity_rank(Some("general")), 0);
+        assert_eq!(specificity_rank(Some("object")), 1);
+        assert_eq!(specificity_rank(Some("attraction")), 2);
+        assert_eq!(specificity_rank(Some("cable")), 3);
+        assert_eq!(specificity_rank(Some("vortex")), 4);
+        assert_eq!(specificity_rank(Some("unknown")), 4);
+        assert_eq!(specificity_rank(None), 4);
+    }
+
+    #[test]
+    fn attraction_gesture_rule_applies_specificity_branches() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![],
+            vortices: vec![VortexKindCatalog { id: "sv".into(), default_cable_kind: Some("cable.a".into()) }, VortexKindCatalog { id: "tv".into(), default_cable_kind: Some("cable.b".into()) }],
+            cables: vec![CableKindCatalog { id: "cable.a".into(), default_attraction_kind: Some("attr.a".into()) }, CableKindCatalog { id: "cable.b".into(), default_attraction_kind: Some("attr.b".into()) }],
+        };
+        let attracting = AttractionVortexContext { object_kind: Some("ObjA".into()), vortex_kind: Some("sv".into()) };
+        let attracted = AttractionVortexContext { object_kind: Some("ObjB".into()), vortex_kind: Some("tv".into()) };
+        let rule_for = |source: &str, target: &str, specificity: Option<&str>| KindCompatEntry { source: source.into(), target: target.into(), bidirectional: false, important: false, specificity: specificity.map(String::from) };
+        assert!(attraction_gesture_rule_applies(&rule_for("sv", "tv", Some("general")), &attracting, &attracted, &catalogs));
+        assert!(attraction_gesture_rule_applies(&rule_for("ObjA", "ObjB", Some("object")), &attracting, &attracted, &catalogs));
+        assert!(attraction_gesture_rule_applies(&rule_for("attr.a", "attr.b", Some("attraction")), &attracting, &attracted, &catalogs));
+        assert!(attraction_gesture_rule_applies(&rule_for("cable.a", "cable.b", Some("cable")), &attracting, &attracted, &catalogs));
+        assert!(attraction_gesture_rule_applies(&rule_for("sv", "tv", None), &attracting, &attracted, &catalogs));
+        assert!(attraction_gesture_rule_applies(&rule_for("sv", "tv", Some("weird")), &attracting, &attracted, &catalogs));
+        assert!(!attraction_gesture_rule_applies(&rule_for("sv", "other", Some("general")), &attracting, &attracted, &catalogs));
+    }
+
+    #[test]
+    fn vortices_attraction_compatible_for_drag_branches() {
+        let catalogs = KindCatalogBundle { objects: vec![], vortices: vec![], cables: vec![] };
+        let a_circ = AttractionVortexContext { object_kind: None, vortex_kind: Some("x circular y".into()) };
+        let a_rect = AttractionVortexContext { object_kind: None, vortex_kind: Some("x rectangular y".into()) };
+        assert!(!vortices_attraction_compatible_for_drag(&a_circ, &a_rect, &[], &catalogs), "incompatible port shapes must reject regardless of rules");
+
+        let a_letter = AttractionVortexContext { object_kind: None, vortex_kind: Some("a-socket".into()) };
+        let b_letter = AttractionVortexContext { object_kind: None, vortex_kind: Some("b-plug".into()) };
+        assert!(!vortices_attraction_compatible_for_drag(&a_letter, &b_letter, &[], &catalogs), "mismatched single-letter families must reject");
+
+        let sv = AttractionVortexContext { object_kind: None, vortex_kind: Some("sv".into()) };
+        let tv = AttractionVortexContext { object_kind: None, vortex_kind: Some("tv".into()) };
+        assert!(vortices_attraction_compatible_for_drag(&sv, &tv, &[], &catalogs), "no rules means compatible");
+
+        let unrelated = KindCompatEntry { source: "sv".into(), target: "other".into(), bidirectional: false, important: false, specificity: Some("general".into()) };
+        assert!(!vortices_attraction_compatible_for_drag(&sv, &tv, &[unrelated], &catalogs), "no matching rule must reject");
+
+        let low = KindCompatEntry { source: "sv".into(), target: "tv".into(), bidirectional: false, important: false, specificity: Some("general".into()) };
+        let important = KindCompatEntry { important: true, ..low.clone() };
+        assert!(vortices_attraction_compatible_for_drag(&sv, &tv, &[low, important], &catalogs), "an important match among matched rules must keep it compatible");
+    }
+
+    #[test]
+    fn brush_stack_pair_helpers() {
+        assert_eq!(brush_stack_vortex_base("column bottom"), Some("column"));
+        assert_eq!(brush_stack_vortex_base("column top"), Some("column"));
+        assert_eq!(brush_stack_vortex_base("column"), None);
+        assert!(brush_stack_bottom_top_pair("column bottom", "column top"));
+        assert!(!brush_stack_bottom_top_pair("column top", "column bottom"));
+        assert!(brush_stack_top_bottom_pair("column top", "column bottom"));
+        assert!(!brush_stack_top_bottom_pair("column bottom", "column top"));
+        assert!(brush_stack_mate_pair("column bottom", "column top"));
+        assert!(brush_stack_mate_pair("column top", "column bottom"));
+        assert!(!brush_stack_mate_pair("column bottom", "beam top"));
+        assert!(!brush_stack_mate_pair("x circular column bottom", "x rectangular column top"), "incompatible port shapes must reject even a stack mate pair");
+    }
+
+    #[test]
+    fn brush_candidate_rank_scores_kind_match_and_stack_and_tambour_rules() {
+        let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
+        let template = ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), position: [0.0, 0.0, 0.0], direction: None };
+        let same_kind = BrushCompatibleCandidate { object_kind_id: "Host".into(), source_vortex_index: 0 };
+        let score = brush_candidate_rank(&same_kind, &template, &target);
+        assert_eq!(score, 15_000, "matching object kind (+10000) plus a stack mate pair (+5000)");
+
+        let target_tambour = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
+        let capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door tambour circular".into()), position: [0.0, 0.0, 0.0], direction: None };
+        let capital = BrushCompatibleCandidate { object_kind_id: "Capital".into(), source_vortex_index: 0 };
+        assert!(brush_candidate_rank(&capital, &capsule_template, &target_tambour) < 0, "capital on tambour must be penalized");
+
+        let cylindric = BrushCompatibleCandidate { object_kind_id: "Cylindric Tambour".into(), source_vortex_index: 0 };
+        assert!(brush_candidate_rank(&cylindric, &capsule_template, &target_tambour) > 0, "cylindric tambour stacking onto a mid-tambour host should score positively");
+    }
+
+    #[test]
+    fn host_accepts_candidate_rule_branches() {
+        let rules = BrushHostRules::default();
+        let target = AttractionVortexContext { object_kind: Some("Tambour".into()), vortex_kind: Some("door tambour circular".into()) };
+        let door_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), position: [1.0, 0.0, 0.0], direction: None };
+
+        let capital = BrushCompatibleCandidate { object_kind_id: "Capital".into(), source_vortex_index: 0 };
+        assert!(!host_accepts_candidate(&rules, &target, &capital, &door_capsule_template), "reject_capital_on_tambour must reject Capital");
+
+        let storey = BrushCompatibleCandidate { object_kind_id: "Last Storey".into(), source_vortex_index: 0 };
+        assert!(!host_accepts_candidate(&rules, &target, &storey, &door_capsule_template), "reject_last_single_storey_on_mid_tambour must reject Last Storey on a Tambour host");
+
+        let door_ok = BrushCompatibleCandidate { object_kind_id: "Door".into(), source_vortex_index: 0 };
+        assert!(host_accepts_candidate(&rules, &target, &door_ok, &door_capsule_template), "a door capsule far enough on x and close enough on y must be accepted");
+
+        let non_capsule_template = ObjectKindVortexTemplate { vortex_kind: Some("not a capsule".into()), position: [1.0, 0.0, 0.0], direction: None };
+        assert!(!host_accepts_candidate(&rules, &target, &door_ok, &non_capsule_template), "a door tambour target requires a door-capsule source vortex");
+
+        let close_template = ObjectKindVortexTemplate { vortex_kind: Some("door capsule".into()), position: [0.1, 0.0, 0.0], direction: None };
+        assert!(!host_accepts_candidate(&rules, &target, &door_ok, &close_template), "the door capsule position must satisfy the minimum absolute x");
+
+        let door_rule_off = BrushHostRules { door_tambour_requires_door_capsule: false, ..BrushHostRules::default() };
+        assert!(host_accepts_candidate(&door_rule_off, &target, &door_ok, &non_capsule_template), "disabling door_tambour_requires_door_capsule accepts regardless of the source vortex kind");
+    }
+
+    #[test]
+    fn brush_placement_uses_host_orientation_branches() {
+        let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
+        assert!(!brush_placement_uses_host_orientation(&target, "column bottom", "Host"), "stack mate pairs never use host orientation");
+        assert!(!brush_placement_uses_host_orientation(&target, "other", "Host"), "different vortex kinds never use host orientation");
+        assert!(brush_placement_uses_host_orientation(&target, "column top", "Host"), "matching vortex kind and object kind uses host orientation");
+        assert!(!brush_placement_uses_host_orientation(&target, "column top", "OtherKind"), "matching vortex kind but a different candidate kind rejects host orientation");
+    }
+
+    #[test]
+    fn resolve_object_kind_mesh_url_prefers_catalog_then_falls_back_to_fixture() {
+        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/catalog.glb".into()), scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
+        let fixture = Fixture { attractions: vec![], target_volumes: vec![], objects: vec![] };
+        assert_eq!(resolve_object_kind_mesh_url("Kind", &catalogs, &fixture), Some("/catalog.glb".to_string()));
+
+        let empty_catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("".into()), scale: None, vortices: vec![] }], vortices: vec![], cables: vec![] };
+        let fixture_with_object = Fixture {
+            attractions: vec![],
+            target_volumes: vec![],
+            objects: vec![FixtureObject { id: "o1".into(), object_kind: Some("Kind".into()), mesh_url: Some("/fixture.glb".into()), origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![], reveal_index: None }],
+        };
+        assert_eq!(resolve_object_kind_mesh_url("Kind", &empty_catalogs, &fixture_with_object), Some("/fixture.glb".to_string()));
+        assert_eq!(resolve_object_kind_mesh_url("Missing", &empty_catalogs, &fixture_with_object), None);
+    }
+
+    #[test]
+    fn brush_compatible_candidates_filters_and_sorts() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![
+                ObjectKind { id: "NoMesh".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] },
+                ObjectKind { id: "NoVortices".into(), mesh_url: Some("/a.glb".into()), scale: None, vortices: vec![] },
+                ObjectKind { id: "Match".into(), mesh_url: Some("/b.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] },
+            ],
+            vortices: vec![],
+            cables: vec![],
+        };
+        let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("sv".into()) };
+        let candidates = brush_compatible_candidates(&target, &catalogs, &[], &BrushHostRules::default());
+        assert_eq!(candidates.len(), 1, "kinds with no mesh url or no vortices must be excluded: {candidates:?}");
+        assert_eq!(candidates[0].object_kind_id, "Match");
+    }
+
+    #[test]
+    fn brush_compatible_candidates_stack_target_only_matches_mates() {
+        let catalogs = KindCatalogBundle {
+            objects: vec![
+                ObjectKind { id: "Mate".into(), mesh_url: Some("/a.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("column bottom".into()), position: [0.0, 0.0, 0.0], direction: None }] },
+                ObjectKind { id: "NotMate".into(), mesh_url: Some("/b.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("beam".into()), position: [0.0, 0.0, 0.0], direction: None }] },
+            ],
+            vortices: vec![],
+            cables: vec![],
+        };
+        let target = AttractionVortexContext { object_kind: Some("Host".into()), vortex_kind: Some("column top".into()) };
+        let candidates = brush_compatible_candidates(&target, &catalogs, &[], &BrushHostRules::default());
+        assert_eq!(candidates.len(), 1, "a stack-top target must only match stack mates: {candidates:?}");
+        assert_eq!(candidates[0].object_kind_id, "Mate");
+    }
+
+    #[test]
+    fn blocked_vortex_full_ids_and_enumeration_excludes_them() {
+        let attractions = vec![AttractionProps { id: "a1".into(), attracting: "host:v0".into(), attracted: "guest:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 }];
+        let blocked = blocked_vortex_full_ids(&attractions);
+        assert!(blocked.contains("host:v0") && blocked.contains("guest:v0"));
+
+        let fixture = Fixture {
+            attractions,
+            target_volumes: vec![],
+            objects: vec![
+                FixtureObject { id: "host".into(), object_kind: Some("Host".into()), mesh_url: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }], reveal_index: None },
+                FixtureObject { id: "free".into(), object_kind: Some("Free".into()), mesh_url: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, vortices: vec![VortexProps { id: "v0".into(), vortex_kind: None, position: [0.0, 0.0, 0.0], direction: None }], reveal_index: None },
+            ],
+        };
+        let targets = enumerate_brush_fill_vortex_targets(&fixture);
+        assert_eq!(targets.len(), 1);
+        assert_eq!(targets[0].full_id, "free:v0");
+    }
+
+    #[test]
+    fn vortex_world_from_object_none_for_missing_index() {
+        let object = FixtureObject { id: "o".into(), object_kind: None, mesh_url: None, origin: [1.0, 2.0, 3.0], orientation: None, scale: None, vortices: vec![], reveal_index: None };
+        assert!(vortex_world_from_object(&object, 0).is_none());
+    }
+
+    #[test]
+    fn weight_lookup_helpers_default_to_one_or_gate_on_zero() {
+        let mut weights = BrushKindWeights::default();
+        weights.object_weights.insert("A".into(), 2.0);
+        weights.vortex_weights.insert("v".into(), 0.0);
+        assert_eq!(brush_kind_weight_value(&weights.object_weights, "A"), 2.0);
+        assert_eq!(brush_kind_weight_value(&weights.object_weights, "missing"), 1.0);
+        assert!(!brush_target_vortex_allows_suggestion(Some("v"), &weights));
+        assert!(brush_target_vortex_allows_suggestion(Some("other"), &weights));
+        assert!(brush_target_vortex_allows_suggestion(None, &weights));
+
+        let target = BrushFillVortexTarget { full_id: "f".into(), object_id: "o".into(), object_kind: None, vortex_kind: Some("v".into()), vortex_index: 0 };
+        assert_eq!(fill_vortex_target_weight(&target, &weights), 0.0);
+    }
+
+    #[test]
+    fn weighted_sample_without_replacement_edge_cases() {
+        let items = vec![1, 2, 3];
+        let mut rng = 42u32;
+        let single: Vec<i32> = weighted_sample_without_replacement(&[1], |_| 1.0, &mut rng);
+        assert_eq!(single, vec![1]);
+        let all_zero: Vec<i32> = weighted_sample_without_replacement(&items, |_| 0.0, &mut rng);
+        assert!(all_zero.is_empty(), "all-zero weights leave nothing eligible");
+        let sampled = weighted_sample_without_replacement(&items, |_| 1.0, &mut rng);
+        let mut sorted = sampled.clone();
+        sorted.sort_unstable();
+        assert_eq!(sorted, items, "every eligible item appears exactly once");
+    }
+
+    #[test]
+    fn fill_rng_is_deterministic_for_a_given_seed() {
+        let mut a = 123u32;
+        let mut b = 123u32;
+        for _ in 0..5 {
+            assert_eq!(fill_rng(&mut a), fill_rng(&mut b));
+        }
+        assert_ne!(a, 123);
+    }
+
+    #[test]
+    fn fill_candidate_diversity_score_rewards_distance_within_same_kind() {
+        let candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 3 };
+        assert_eq!(fill_candidate_diversity_score(&candidate, 0, Some("Other")), 0, "a different target object kind never scores");
+        assert_eq!(fill_candidate_diversity_score(&candidate, 0, Some("Kind")), 1000 + 300);
+        assert_eq!(fill_candidate_diversity_score(&candidate, 3, Some("Kind")), 1000);
+    }
+
+    #[test]
+    fn brush_preview_from_candidate_none_branches() {
+        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+        let target_ctx = AttractionVortexContext { object_kind: None, vortex_kind: None };
+        let world = TargetVortexWorld { position: [0.0, 0.0, 0.0], direction: [0.0, 0.0, -1.0], reference_orientation: None };
+
+        let missing_kind = BrushCompatibleCandidate { object_kind_id: "Missing".into(), source_vortex_index: 0 };
+        assert!(brush_preview_from_candidate("t", &missing_kind, &target_ctx, world, &catalogs, &fixture).is_none());
+
+        let bad_index = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 5 };
+        assert!(brush_preview_from_candidate("t", &bad_index, &target_ctx, world, &catalogs, &fixture).is_none());
+
+        let empty_mesh_catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let ok_candidate = BrushCompatibleCandidate { object_kind_id: "Kind".into(), source_vortex_index: 0 };
+        assert!(brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &empty_mesh_catalogs, &fixture).is_none(), "a missing mesh url must yield no preview");
+
+        let preview = brush_preview_from_candidate("t", &ok_candidate, &target_ctx, world, &catalogs, &fixture).expect("a valid candidate should produce a preview");
+        assert_eq!(preview.mesh_url, "/mesh.glb");
+        assert_eq!(preview.object_kind_id, "Kind");
+    }
+
+    #[test]
+    fn apply_brush_placement_to_fixture_rejects_missing_kind_template_or_mesh() {
+        let fixture = Fixture { attractions: vec![], objects: vec![], target_volumes: vec![] };
+        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: None, scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+
+        let missing_kind = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Missing".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_kind, &catalogs).objects.len(), 0);
+
+        let missing_template = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 9, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_template, &catalogs).objects.len(), 0);
+
+        let missing_mesh = BrushPlacePayload { target_vortex_full_id: "t:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert_eq!(apply_brush_placement_to_fixture(&fixture, &missing_mesh, &catalogs).objects.len(), 0, "no resolvable mesh url means the placement must be rejected");
+    }
+
+    #[test]
+    fn apply_brush_placement_to_fixture_rejects_duplicate_attraction_target() {
+        let catalogs = KindCatalogBundle { objects: vec![ObjectKind { id: "Kind".into(), mesh_url: Some("/mesh.glb".into()), scale: None, vortices: vec![ObjectKindVortexTemplate { vortex_kind: Some("sv".into()), position: [0.0, 0.0, 0.0], direction: None }] }], vortices: vec![], cables: vec![] };
+        let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        let fixture = Fixture { attractions: vec![AttractionProps { id: "a".into(), attracting: "host:v0".into(), attracted: "other:v0".into(), gap: 0.0, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 }], objects: vec![], target_volumes: vec![] };
+        let next = apply_brush_placement_to_fixture(&fixture, &payload, &catalogs);
+        assert_eq!(next.objects.len(), 0, "a target vortex that is already attracting must reject the placement");
+    }
+
+    #[test]
+    fn engine_precompute_step_and_fill_step_false_with_no_scene() {
+        let mut engine = Puzzle3dEngine::new();
+        assert!(!engine.precompute_step(10));
+        assert!(!engine.fill_step_one());
+    }
+
+    #[test]
+    fn engine_apply_brush_placement_none_without_scene_or_catalogs() {
+        let mut engine = Puzzle3dEngine::new();
+        let payload = BrushPlacePayload { target_vortex_full_id: "host:v0".into(), object_kind_id: "Kind".into(), source_vortex_index: 0, origin: [0.0, 0.0, 0.0], orientation: [0.0, 0.0, 0.0, 1.0], scale: None };
+        assert!(engine.apply_brush_placement(&payload).is_none(), "no scene means no placement");
+
+        engine.set_scene(&single_object_scene_json()).expect("seed");
+        if let Some(scene) = &mut engine.scene {
+            scene.kind_catalogs = None;
+        }
+        assert!(engine.apply_brush_placement(&payload).is_none(), "no catalogs means no placement");
+    }
+
+    #[test]
+    fn engine_has_mesh_invalidate_and_refresh_brush_candidates() {
+        let mut engine = Puzzle3dEngine::new();
+        engine.set_scene(&single_object_scene_json()).expect("seed");
+        assert!(!engine.has_mesh("/test/host.glb"));
+        let (positions, indices) = unit_cube_mesh_buffers();
+        engine.register_mesh("/test/host.glb".to_string(), positions, indices);
+        assert!(engine.has_mesh("/test/host.glb"));
+
+        engine.invalidate_brush_target("host:v0");
+        match engine.queue.first() {
+            Some(PrecomputeTask::BrushTarget(id)) => assert_eq!(id.as_str(), "host:v0"),
+            other => panic!("expected the invalidated target requeued at the front, got {other:?}"),
+        }
+        assert!(!engine.brush_cache.contains_key("host:v0"));
+
+        engine.refresh_brush_candidates("host:v0");
+        assert!(engine.brush_cache.contains_key("host:v0"));
+        assert_eq!(engine.brush_preview_json("host:v0", 0), None, "the catalog's Host kind has no vortices, so there are no free candidates");
+    }
+
+    #[test]
+    fn precompute_session_native_wrapper_exercises_public_methods() {
+        let mut session = Puzzle3dPrecomputeSession::default();
+        session.set_scene(&single_object_scene_json()).expect("set_scene");
+        assert!(!session.has_mesh("/test/host.glb"));
+        let (positions, indices) = unit_cube_mesh_buffers();
+        session.register_mesh("/test/host.glb", &positions, &indices);
+        assert!(session.has_mesh("/test/host.glb"));
+        assert!(!session.fill_is_done(), "a freshly (re)seeded fill session has not stalled or hit max_count yet");
+
+        session.precompute_step(50);
+        session.invalidate_brush_target("host:v0");
+        session.refresh_brush_candidates("host:v0");
+        let candidates_json = session.brush_candidates("host:v0");
+        assert!(candidates_json.contains("free"));
+        assert!(session.brush_preview_json("host:v0", 0).is_none());
+
+        assert!(session.fill_progress().contains("maxCount"));
+        assert_eq!(session.fill_available_count(), 0);
+
+        let mut object_weights = HashMap::new();
+        object_weights.insert("Host".to_string(), 1.0);
+        session.update_kind_weights_rust(object_weights, HashMap::new());
+
+        assert!(session.apply_brush_placement_rust("not json").is_err());
+
+        let fixture_json = session.apply_fill_count_rust(0).expect("fill session available");
+        assert!(fixture_json.contains("\"host\""));
+        let display_json = session.compose_fill_display_rust(0).expect("fill session available");
+        assert!(display_json.contains("\"host\""));
+    }
+
+    #[test]
+    fn precompute_session_native_wrapper_errors_without_scene() {
+        let mut session = Puzzle3dPrecomputeSession::new();
+        assert!(session.apply_fill_count_rust(0).is_err());
+        assert!(session.compose_fill_display_rust(0).is_err());
+        assert!(session.apply_brush_placement_rust(r#"{"targetVortexFullId":"a","objectKindId":"b","sourceVortexIndex":0,"origin":[0,0,0],"orientation":[0,0,0,1]}"#).is_err());
+        assert!(session.fill_is_done());
+        assert_eq!(session.fill_available_count(), 0);
+    }
 }
 
 #[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]

@@ -101,6 +101,18 @@ enum FieldKind {
     VecBlockStatements(Box<Type>),
     /// `BTreeMap<String, V>` — `V` must itself implement `DslField`; keys print sorted.
     MapField(Box<Type>),
+    /// `#[dsl(statements)] Option<T>` — a "sum type" scalar field (`fill: Option<FillStyle>`,
+    /// exactly one of several keyword-tagged variants, or none) rather than a collection. Reuses
+    /// `Shape::Statements`/`DslVariants` at 0-or-1 length instead of a new shape: a record isn't
+    /// allowed more than one *bare* `Statements` field, but two `Option<T>` fields of this kind can
+    /// coexist because each is dispatched by its own field key (always paired with `#[dsl(block)]`
+    /// in practice, since an un-blocked one would hit that same one-per-record limit).
+    OptionStatements(Box<Type>),
+    /// `#[dsl(statements)] Box<T>` (or bare `T`) — exactly one required tagged value (`layer:
+    /// Box<DrawLayerNode>` on an `AddLayer` operation), the non-optional counterpart of
+    /// `OptionStatements`: same `Shape::Statements` reuse, but errors if the count isn't exactly 1
+    /// rather than treating 0 as `None`.
+    RequiredStatements(Box<Type>),
     Bytes64,
     IdentString,
 }
@@ -146,10 +158,18 @@ fn btreemap_string_value(ty: &Type) -> Option<Type> {
 
 fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
     if let Some(inner) = inner_of(ty, "Option") {
+        if attrs.statements {
+            return (FieldKind::OptionStatements(Box::new(inner.clone())), inner);
+        }
         return (FieldKind::OptionScalar(Box::new(inner.clone())), inner);
     }
     if attrs.base64 && is_vec_u8(ty) {
         return (FieldKind::Bytes64, ty.clone());
+    }
+    if attrs.statements {
+        if let Some(inner) = inner_of(ty, "Box") {
+            return (FieldKind::RequiredStatements(Box::new(inner.clone())), inner);
+        }
     }
     if let Some(value_ty) = btreemap_string_value(ty) {
         return (FieldKind::MapField(Box::new(value_ty.clone())), value_ty);
@@ -195,7 +215,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         let ident = field.ident.clone().expect("dsl_derive only supports named fields");
         let (kind, elem_ty) = classify_field(&field.ty, &attrs);
         let key = attrs.key.clone().unwrap_or_else(|| ident.to_string());
-        let optional = matches!(kind, FieldKind::OptionScalar(_));
+        let optional = matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
         let positional = if attrs.positional {
             let p = positional_counter;
             positional_counter += 1;
@@ -331,19 +351,62 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                     }
                 },
             ),
+            FieldKind::OptionStatements(inner) => (
+                quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
+                quote! {
+                    ::dsl::FieldValue::Statements(match &self.#ident {
+                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
+                        None => vec![],
+                    })
+                },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::Absent => None,
+                        ::dsl::FieldValue::Statements(items) if items.is_empty() => None,
+                        ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
+                            Some(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
+                        }
+                        other => return Err(::dsl::__rt::field_error(format!("expected 0 or 1 tagged values, found {other:?}"))),
+                    }
+                },
+            ),
+            FieldKind::RequiredStatements(inner) => (
+                quote! { ::dsl::Shape::Statements(<#inner as ::dsl::DslVariants>::variants()) },
+                quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(self.#ident.as_ref())]) },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::Statements(items) if items.len() == 1 => {
+                            Box::new(<#inner as ::dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1)?)
+                        }
+                        other => return Err(::dsl::__rt::field_error(format!("expected exactly 1 tagged value, found {other:?}"))),
+                    }
+                },
+            ),
         };
 
         // `#[dsl(block)]` on a field whose own `FieldKind` doesn't already imply `{ }` wrapping
         // (`VecBlockStatements` does that itself) — generically wraps whatever shape the match
         // above produced, e.g. turning a nested `#[derive(DslRecord)]` scalar field into a bare
         // `camera { x=0 y=0 zoom=1 }` line instead of a `camera=...` attribute.
+        //
+        // `FieldValue::Absent` (an `Option<T>` field's `None`) is deliberately NOT wrapped: an
+        // empty `stroke { }` would reparse as "a record whose every field is absent", not "no
+        // record at all" — `StrokeStyle`'s own non-optional fields would then fail with "expected
+        // a 4-item Tuple, found Absent" instead of the field itself just being omitted, exactly
+        // like an ordinary (non-block) optional field already is.
         let (shape_expr, to_value_expr, from_value_expr) = if *block {
             (
                 quote! { ::dsl::Shape::Block(Box::new(#shape_expr)) },
-                quote! { ::dsl::FieldValue::Block(Box::new(#to_value_expr)) },
+                quote! {
+                    match #to_value_expr {
+                        ::dsl::FieldValue::Absent => ::dsl::FieldValue::Absent,
+                        other => ::dsl::FieldValue::Block(Box::new(other)),
+                    }
+                },
                 quote! {
                     match value {
                         ::dsl::FieldValue::Block(inner) => { let value = inner.as_ref(); #from_value_expr },
+                        ::dsl::FieldValue::Absent => { let value = &::dsl::FieldValue::Absent; #from_value_expr },
                         other => return Err(::dsl::__rt::field_error(format!("expected Block, found {other:?}"))),
                     }
                 },
@@ -549,6 +612,28 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
         let variant_ident = variant.ident.clone();
         let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab_or_camel(&variant_ident.to_string()));
         let fields = &variant.fields;
+
+        // A single-field tuple variant (`Shape(DrawShapeBody)`) delegates entirely to its inner
+        // type's own `DslField` impl — its `RecordSpec` IS the inner type's, not a wrapper with one
+        // positional field, so a body already declared with `#[derive(DslRecord)]` (its own keyword,
+        // its own fields) prints/parses completely unchanged whether reached through the enum or on
+        // its own.
+        if let Fields::Unnamed(unnamed) = fields {
+            if unnamed.unnamed.len() == 1 {
+                let inner_ty = &unnamed.unnamed[0].ty;
+                variants_exprs.push(quote! {
+                    (#keyword.to_string(), ::dsl::__rt::newtype_variant_spec::<#inner_ty> as fn() -> ::dsl::RecordSpec)
+                });
+                to_named_arms.push(quote! {
+                    #name::#variant_ident(inner) => (#keyword.to_string(), ::dsl::__rt::newtype_variant_to_record(inner))
+                });
+                from_named_arms.push(quote! {
+                    #keyword => Ok(#name::#variant_ident(::dsl::__rt::newtype_variant_from_record::<#inner_ty>(record)?))
+                });
+                continue;
+            }
+        }
+
         let (spec_exprs, _to_value_stmts, from_value_stmts, field_idents) = record_codegen(fields);
 
         variants_exprs.push(quote! {
@@ -681,8 +766,24 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                 FieldKind::VecStatements(_) => quote! { ::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()) },
                 FieldKind::VecBlockStatements(_) => quote! { ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()))) },
                 FieldKind::MapField(_) => quote! { ::dsl::FieldValue::Map(#ident.iter().map(|(k, v)| (k.clone(), ::dsl::DslField::to_value(v))).collect()) },
+                FieldKind::OptionStatements(_) => quote! {
+                    ::dsl::FieldValue::Statements(match #ident {
+                        Some(v) => vec![::dsl::DslVariants::to_named_record(v)],
+                        None => vec![],
+                    })
+                },
+                FieldKind::RequiredStatements(_) => quote! { ::dsl::FieldValue::Statements(vec![::dsl::DslVariants::to_named_record(#ident.as_ref())]) },
             };
-            let to_value_expr = if *block { quote! { ::dsl::FieldValue::Block(Box::new(#to_value_expr)) } } else { to_value_expr };
+            let to_value_expr = if *block {
+                quote! {
+                    match #to_value_expr {
+                        ::dsl::FieldValue::Absent => ::dsl::FieldValue::Absent,
+                        other => ::dsl::FieldValue::Block(Box::new(other)),
+                    }
+                }
+            } else {
+                to_value_expr
+            };
             quote! { record.fields.insert(#id, #to_value_expr); }
         })
         .collect()

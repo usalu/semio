@@ -1587,8 +1587,8 @@ mod tests {
 
     #[test]
     fn ray_segment_distance_measures_perpendicular_gap() {
-        let dist = ray_segment_distance(Vec3::new(0.0, 5.0, 0.0), Vec3::new(1.0, 0.0, 0.0), Vec3::new(2.0, 0.0, 0.0), Vec3::new(2.0, 10.0, 0.0)).expect("distance");
-        assert!((dist - 2.0).abs() < 1e-4, "dist={dist}");
+        let dist = ray_segment_distance(Vec3::new(3.0, 0.0, 0.0), Vec3::new(0.0, 0.0, 1.0), Vec3::new(0.0, -5.0, 0.0), Vec3::new(0.0, 5.0, 0.0)).expect("distance");
+        assert!((dist - 3.0).abs() < 1e-4, "dist={dist}");
     }
 
     #[test]

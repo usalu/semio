@@ -1,0 +1,183 @@
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+    Blocking waiting for file lock on package cache
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling mathematical_wfc v0.1.0 (/Users/ueli/Documents/semio/mathematical/wfc/rs)
+    Finished `test` profile [unoptimized] target(s) in 1.97s
+     Running unittests lib.rs (/Users/ueli/Documents/semio/target/debug/deps/mathematical_wfc-101bd5f7024833bd)
+
+running 164 tests
+test diag::tests::metrics_default_to_zero ... ok
+test bitset::tests::set_get_roundtrip ... ok
+test bitset::tests::restrict_no_change_returns_zero ... ok
+test bitset::tests::empty_and_full ... ok
+test bitset::tests::first_set_and_iter_ones_skip_zero_words ... ok
+test bitset::tests::restrict_returning_removed_matches_naive ... ok
+test bitset::tests::full_respects_boundary_bits ... ok
+test bitset::tests::and_or_and_not ... ok
+test diag::tests::summary_sink_records_events ... ok
+test diag::tests::off_sink_records_nothing ... ok
+test bitset::tests::subset_and_intersects ... ok
+test domain::tests::new_full_has_all_patterns_and_correct_sums ... ok
+test domain::tests::assign_forces_single_pattern ... ok
+test domain::tests::domain_store_all_singleton ... ok
+test domain::tests::re_add_exactly_reverses_remove ... ok
+test domain::tests::reduced_count_is_removed_not_remaining ... ok
+test domain::tests::quick::resync_boundary_does_not_change_observable_state ... ok
+test domain::tests::remove_to_singleton_and_wipeout ... ok
+test domain::tests::restrict_reduces_and_updates_caches ... ok
+test domain::tests::restrict_unchanged_when_already_subset ... ok
+test domain::tests::singleton_has_zero_entropy_regardless_of_weight ... ok
+test domain::tests::uniform_weights_entropy_matches_ln_cardinality ... ok
+test domain::tests::wiped_domain_has_zero_entropy ... ok
+test error::tests::errors_are_std_error ... ok
+test error::tests::display_messages_are_human_readable ... ok
+test extract::tests::extraction_rejects_empty_sample_list ... ok
+test extract::tests::extracted_model_relations_match_von_neumann_stencil ... ok
+test grid2d::tests::custom_stencil_rejects_duplicate_and_self_offset ... ok
+test extract::tests::window_content_is_preserved_for_decode ... ok
+test extract::tests::multiple_samples_merge_frequencies ... ok
+test grid2d::tests::custom_stencil_rejects_unpaired_offset ... ok
+test extract::tests::periodic_sample_solves_on_a_same_size_wrapped_grid ... ok
+test extract::tests::window_one_extracts_one_pattern_per_distinct_tile ... ok
+test extract::tests::window_two_deduplicates_repeated_windows ... ok
+test extract::tests::symmetry_expansion_can_only_add_patterns_never_remove ... ok
+test grid2d::tests::mask_excludes_inactive_cells_from_arcs ... ok
+test grid2d::tests::fixed_outside_restrictions_only_on_boundary_facing_axis ... ok
+test grid2d::tests::mirror_boundary_reflects_at_edges ... ok
+test grid2d::tests::node_at_and_coords_roundtrip ... ok
+test grid2d::tests::open_boundary_drops_out_of_range_arcs ... ok
+test grid2d::tests::size_one_axis_wrap_self_loops ... ok
+test grid2d::tests::von_neumann_offsets_are_symmetric ... ok
+test grid2d::tests::wrap_boundary_connects_opposite_edges ... ok
+test grid2d::tests::in_arc_matches_out_arc_on_open_boundary ... ok
+test grid3d::tests::face6_edge18_vertex26_offset_counts ... ok
+test grid3d::tests::all_built_in_stencils_validate ... ok
+test grid3d::tests::mask_excludes_inactive_voxels ... ok
+test grid3d::tests::node_at_and_coords_roundtrip ... ok
+test grid3d::tests::open_boundary_corner_has_three_neighbors ... ok
+test heuristics::tests::mrv_picks_smallest_domain ... ok
+test grid3d::tests::wrap_boundary_connects_all_axes ... ok
+test heuristics::tests::none_when_all_singleton ... ok
+test heuristics::tests::ties_break_by_ascending_node_id ... ok
+test heuristics::tests::singleton_and_resolved_domains_are_skipped ... ok
+test heuristics::tests::weighted_entropy_prefers_lower_entropy_domain ... ok
+test ids::tests::id_index_roundtrip ... ok
+test ids::tests::id_ordering_and_equality ... ok
+test model::tests::allowed_and_supporters_are_transposes ... ok
+test model::tests::compile_rejects_empty_pattern_universe ... ok
+test model::tests::compile_rejects_invalid_weight ... ok
+test model::tests::deny_wins_over_allow_regardless_of_order ... ok
+test ids::tests::id_serde_roundtrip ... ok
+test model::tests::lint_flags_unconstrained_and_unsupported ... ok
+test model::tests::fingerprint_is_deterministic_and_sensitive ... ok
+test model::tests::tags_are_interned_and_deduplicated ... ok
+test model::tests::stats_report_sane_values ... ok
+test model::tests::validate_fails_on_asymmetric_declaration ... ok
+test oracle::tests::check_assignment_detects_violation ... ok
+test oracle::tests::checkerboard_path_is_satisfiable_and_alternates ... ok
+test model::tests::validate_passes_on_mirrored_model ... ok
+test oracle::tests::even_cycle_is_satisfiable ... ok
+test oracle::tests::complete_graph_coloring_matches_chromatic_condition ... ok
+test oracle::tests::unsat_odd_cycle_has_no_solutions ... ok
+test oracle::tests::limit_caps_collected_solutions ... ok
+test prop_ac3::tests::propagation_forces_alternation_after_one_pin ... ok
+test prop_ac4::tests::initial_counts_match_full_domain_supporter_popcounts ... ok
+test prop_ac3::tests::odd_cycle_pin_propagates_to_wipeout ... ok
+test prop_ac4::tests::odd_cycle_pin_propagates_to_wipeout ... ok
+test prop_ac4::tests::propagation_forces_alternation_after_one_pin ... ok
+test prop_ac3::tests::no_dirty_nodes_means_no_op ... ok
+test propagate::tests::push_all_enqueues_every_node_once ... ok
+test propagate::tests::clear_resets_membership ... ok
+test propagate::tests::popped_node_can_be_repushed ... ok
+test grid3d::tests::in_arc_matches_out_arc_on_open_boundary ... ok
+test propagate::tests::push_dedups_and_fifo_orders ... ok
+test domain::tests::quick::random_remove_re_add_sequences_preserve_invariants ... ok
+test sample::tests::same_seed_produces_same_sequence ... ok
+test sample::tests::uniform_only_ever_returns_live_patterns ... ok
+test sample::tests::weighted_roulette_only_ever_returns_live_patterns ... ok
+test bitset::tests::quick::random_and_or_matches_vec_bool_model ... ok
+test sample::tests::weighted_roulette_is_biased_toward_heavier_pattern ... ok
+test search::tests::budget_exceeded_reports_partial_state ... ok
+test search::tests::cancel_token_reflects_state ... ok
+test search::tests::backjump_mode_matches_backtrack_completeness ... ok
+test search::tests::cancellation_stops_search_and_reports_partial ... ok
+test search::tests::luby_sequence_matches_known_values ... ok
+test search::tests::fixed_pins_are_respected ... ok
+test search::tests::proves_unsat_on_odd_cycle_with_backtrack_mode ... ok
+test search::tests::backtracking_solves_graph_coloring_needing_multiple_decisions ... ok
+test search::tests::restart_only_still_solves_satisfiable_instances ... ok
+test search::tests::same_seed_is_fully_reproducible ... ok
+test search::tests::solve_all_finds_every_solution_and_proves_complete ... ok
+test search::tests::restart_only_never_proves_unsat_on_unsatisfiable_instance ... ok
+test search::tests::solve_all_respects_limit_and_reports_incomplete ... ok
+test search::tests::solves_a_satisfiable_path ... ok
+test search::tests::solve_all_on_unsat_instance_returns_empty_and_complete ... ok
+test solver_graph::tests::domain_override_restricts_a_node ... ok
+test solver_graph::tests::builds_and_solves ... ok
+test search::tests::unsatisfiable_k5_with_four_colors_proves_unsat ... ok
+test solver_graph::tests::fix_on_unknown_node_is_rejected ... ok
+test solver_graph::tests::fix_pins_a_node ... ok
+test solver_graph::tests::resume_from_checkpoint_completes_the_solve ... ok
+test solver_graph::tests::resume_rejects_mismatched_fingerprint ... ok
+test solver_graph::tests::solve_all_finds_both_checkerboard_colorings ... ok
+test solver_graph::tests::solve_cancellable_reports_cancelled_when_pre_cancelled ... ok
+test solver_grid2d::tests::decode_tiles_round_trips_tile_provenance ... ok
+test solver_grid2d::tests::masked_cells_are_excluded_and_solve_completes ... ok
+test solver_grid2d::tests::fix_pins_a_cell_and_propagates ... ok
+test solver_grid2d::tests::odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard ... ok
+test solver_grid2d::tests::solves_a_checkerboard_grid ... ok
+test solver_grid2d::tests::wrap_boundary_solves_consistently ... ok
+test solver_grid3d::tests::fix_pins_a_voxel_and_propagates ... ok
+test oracle::tests::quick::random_instances_every_solution_passes_check_assignment ... ok
+test solver_grid3d::tests::masked_voxels_are_excluded_and_solve_completes ... ok
+test solver_grid3d::tests::odd_size_wrap_is_unsatisfiable_for_two_color_checkerboard ... ok
+test symmetry::tests::apply_window_round_trips_through_inverse ... ok
+test solver_grid3d::tests::solves_a_checkerboard_volume ... ok
+test symmetry::tests::apply_offset_matches_apply_window_orientation ... ok
+test solver_grid3d::tests::wrap_boundary_solves_consistently ... ok
+test prop_ac4::tests::sequential_and_batch_seed_application_agree ... ok
+test symmetry::tests::cube_full_symmetry_group_has_exactly_48_elements ... ok
+test symmetry::tests::cube_rotation_group_has_exactly_24_elements ... ok
+test symmetry::tests::cube_offset_transform_preserves_unit_offset_length ... ok
+test solver_grid2d::tests::graph_vs_grid2d_strict_equivalence_von_neumann_open ... ok
+test symmetry::tests::cube_rotation_inverse_composes_to_identity ... ok
+test symmetry::tests::d4_group_has_eight_elements ... ok
+test symmetry::tests::four_quarter_rotations_is_identity ... ok
+test symmetry::tests::group_closure_every_composition_stays_in_d4 ... ok
+test symmetry::tests::identity_matrix_is_neutral ... ok
+test symmetry::tests::two_flips_is_identity ... ok
+test symmetry::tests::inverse_composes_to_identity ... ok
+test symmetry::tests::z_rot4_is_four_distinct_quarter_turns_returning_to_identity ... ok
+test tiled::tests::allow_and_deny_compile_correctly ... ok
+test tiled::tests::allow_where_compiles_predicate_eagerly ... ok
+test tiled::tests::tile_to_pattern_is_one_to_one ... ok
+test topology::tests::builder_produces_correct_out_and_in_arcs ... ok
+test tiled::tests::tags_round_trip_through_tiles ... ok
+test topology::tests::in_arc_slots_are_dense_and_unique_per_node ... ok
+test topology::tests::dangling_arc_is_rejected ... ok
+test solver_grid3d::tests::graph_vs_grid3d_strict_equivalence_face6_open ... ok
+test topology::tests::regions_default_to_zero_and_are_settable ... ok
+test search::tests::quick::random_instances_solved_or_proven_unsat_match_oracle ... ok
+test topology::tests::self_loops_and_multiedges_are_supported ... ok
+test trail::tests::decision_frames_push_and_pop ... ok
+test trail::tests::undo_to_partial_mark_restores_only_later_entries ... ok
+test trail::tests::undo_to_restores_removed_patterns ... ok
+test weights::tests::integer_detection ... ok
+test weights::tests::precomputes_terms ... ok
+test weights::tests::rejects_negative_and_nonfinite ... ok
+test weights::tests::sum_over_matches_manual ... ok
+test weights::tests::zero_weight_terms_are_zero_not_nan ... ok
+test symmetry::tests::cube_rotations_are_closed_under_composition ... ok
+test search::tests::quick::solve_all_matches_oracle_solution_set_on_random_instances ... ok
+test prop_ac4::tests::quick::ac3_and_ac4_reach_identical_fixed_points_on_random_instances ... ok
+
+test result: ok. 164 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+   Doc-tests mathematical_wfc
+
+running 0 tests
+
+test result: ok. 0 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+

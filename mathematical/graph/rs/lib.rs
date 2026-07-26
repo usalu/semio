@@ -2094,6 +2094,90 @@ pub mod algorithms {
             assert_eq!(index.id_of(1), Some("b"));
             assert_eq!(index.id_of(2), Some("c"));
         }
+
+        #[test]
+        fn id_index_from_ids_dedupes_and_reports_len() {
+            let index = IdIndex::from_ids(["b", "a", "a"].into_iter());
+            assert_eq!(index.len(), 2);
+            assert!(!index.is_empty());
+            assert_eq!(index.index_of("a"), Some(0));
+            assert_eq!(index.index_of("z"), None);
+            assert!(IdIndex::from_ids(std::iter::empty()).is_empty());
+        }
+
+        #[test]
+        fn adjacency_accessors_expose_node_count_and_neighbor_lists() {
+            let adj = adj_from(3, &[(0, 1), (0, 2)], true);
+            assert_eq!(adj.node_count(), 3);
+            assert_eq!(adj.out_neighbors(0), &[1, 2]);
+            assert_eq!(adj.in_neighbors(1), &[0]);
+            assert!(adj.in_neighbors(0).is_empty());
+        }
+
+        #[test]
+        fn bfs_order_ignores_out_of_range_seeds() {
+            let adj = adj_from(2, &[(0, 1)], true);
+            assert_eq!(bfs_order(&adj, &[5]), Vec::<usize>::new());
+        }
+
+        #[test]
+        fn dfs_preorder_and_postorder_out_of_range_seed_returns_empty() {
+            let adj = adj_from(2, &[(0, 1)], true);
+            assert!(dfs_preorder(&adj, 9).is_empty());
+            assert!(dfs_postorder(&adj, 9).is_empty());
+        }
+
+        #[test]
+        fn topo_levels_detects_cycle() {
+            let adj = adj_from(3, &[(0, 1), (1, 2), (2, 0)], true);
+            let err = topo_levels(&adj).unwrap_err();
+            assert_eq!(err.cycle.len(), 3);
+        }
+
+        #[test]
+        fn longest_path_layers_propagates_cycle_error() {
+            let adj = adj_from(2, &[(0, 1), (1, 0)], true);
+            assert!(longest_path_layers(&adj).is_err());
+        }
+
+        #[test]
+        fn would_create_cycle_self_loop_is_always_a_cycle() {
+            let adj = adj_from(2, &[(0, 1)], true);
+            assert!(would_create_cycle(&adj, 1, 1));
+        }
+
+        #[test]
+        fn is_reachable_from_equals_to_is_trivially_true() {
+            let adj = adj_from(2, &[], true);
+            assert!(is_reachable(&adj, 1, 1));
+        }
+
+        #[test]
+        fn dijkstra_unreachable_node_stays_none() {
+            let adj = adj_from(3, &[(0, 1)], true);
+            let dist = dijkstra(&adj, &HashMap::new(), 0);
+            assert_eq!(dist, vec![Some(0.0), Some(1.0), None]);
+        }
+
+        #[test]
+        fn dijkstra_path_none_when_unreachable() {
+            let adj = adj_from(2, &[], true);
+            assert!(dijkstra_path(&adj, &HashMap::new(), 0, 1).is_none());
+        }
+
+        #[test]
+        fn dijkstra_and_dijkstra_path_out_of_range_from_returns_empty_or_none() {
+            let adj = adj_from(2, &[(0, 1)], true);
+            assert_eq!(dijkstra(&adj, &HashMap::new(), 9), vec![None, None]);
+            assert!(dijkstra_path(&adj, &HashMap::new(), 9, 0).is_none());
+        }
+
+        #[test]
+        fn minimum_spanning_tree_skips_out_of_range_edges() {
+            let edges = vec![(0, 1, 1.0), (0, 5, 2.0)];
+            let selected = minimum_spanning_tree(2, &edges);
+            assert_eq!(selected, vec![0]);
+        }
     }
     // #endregion 🔖Tests
 }
@@ -2217,6 +2301,40 @@ mod tests {
         g.clear();
         assert_eq!(g.node_count(), 0);
     }
+
+    #[test]
+    fn remove_edge_and_remove_node_return_false_for_unknown_ids() {
+        let mut g = NU::new();
+        assert!(!g.remove_edge(999), "removing a never-created edge id must fail cleanly");
+        assert!(!g.remove_node(999), "removing a never-created node id must fail cleanly");
+    }
+
+    #[test]
+    fn node_attrs_mut_and_edge_attrs_mut_edit_in_place_and_are_none_for_unknown_ids() {
+        let mut g = NU::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        g.node_attrs_mut(a).expect("node exists").insert("k".into(), PropertyValue::Number(1.0));
+        g.edge_attrs_mut(e).expect("edge exists").insert("w".into(), PropertyValue::Number(2.0));
+        assert_eq!(g.node_attrs(a).unwrap().get("k").and_then(PropertyValue::as_f64), Some(1.0));
+        assert_eq!(g.edge_attrs(e).unwrap().get("w").and_then(PropertyValue::as_f64), Some(2.0));
+        assert!(g.node_attrs_mut(999).is_none());
+        assert!(g.edge_attrs_mut(999).is_none());
+    }
+
+    #[test]
+    fn add_handle_denies_missing_node_and_handle_owner_is_none_for_unknown_handle() {
+        let mut g = PU::new();
+        assert!(g.add_handle(999).is_none(), "cannot anchor a handle on a node that doesn't exist");
+        assert!(g.handle_owner(999).is_none());
+    }
+
+    #[test]
+    fn core_edge_normalize_undirected_orders_the_pair() {
+        assert_eq!(CoreEdge::<u64>::normalize_undirected(5, 2), (2, 5));
+        assert_eq!(CoreEdge::<u64>::normalize_undirected(2, 5), (2, 5));
+    }
     // #endsubregion
 
     // #subregion GraphView
@@ -2261,6 +2379,16 @@ mod tests {
         assert!(ND::new().is_directed());
         assert!(!NU::new().is_multigraph());
         assert!(PU::new().is_multigraph());
+    }
+
+    #[test]
+    fn directed_self_loop_counts_once_each_towards_out_and_in_degree() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        g.add_edge(a, a);
+        assert_eq!(g.out_degree(a), 1);
+        assert_eq!(g.in_degree(a), 1);
+        assert_eq!(g.degree(a), 2);
     }
     // #endsubregion
 
@@ -2346,6 +2474,19 @@ mod tests {
         assert!(csr.out_neighbors(ia).contains(&ib));
         assert!(csr.out_neighbors(ib).contains(&ia));
     }
+
+    #[test]
+    fn csr_out_edges_and_unknown_ids_return_none() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let csr = Csr::from_view(&g);
+        let ia = csr.index_of(a).unwrap();
+        assert_eq!(csr.out_edges(ia), &[e]);
+        assert_eq!(csr.node_of(999), None);
+        assert_eq!(csr.index_of(999), None);
+    }
     // #endsubregion
 
     // #subregion Views
@@ -2380,6 +2521,63 @@ mod tests {
     }
 
     #[test]
+    fn subgraph_view_degree_counts_only_edges_within_subset() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let c = g.add_node();
+        g.add_edge(a, b);
+        g.add_edge(a, c);
+        let sub = SubgraphView::new(&g, [a, b]);
+        assert_eq!(sub.out_degree(a), 1, "the edge to c falls outside the node subset");
+        assert_eq!(sub.in_degree(b), 1);
+        assert_eq!(sub.degree(a), sub.out_degree(a) + sub.in_degree(a), "directed subgraph degree is out+in");
+        assert!(sub.is_directed());
+        assert!(!sub.is_multigraph());
+    }
+
+    #[test]
+    fn subgraph_view_attr_view_hides_attrs_outside_the_node_subset() {
+        let mut g = NU::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let sub = SubgraphView::new(&g, [a]);
+        assert!(sub.node_attrs(a).is_some());
+        assert!(sub.node_attrs(b).is_none(), "b is outside the node subset");
+        assert!(sub.edge_attrs(e).is_some(), "edge attrs are not filtered by SubgraphView");
+        assert!(std::ptr::eq(sub.graph_attrs(), g.graph_attrs()));
+    }
+
+    #[test]
+    fn edge_subgraph_view_degree_and_directed_flag() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let c = g.add_node();
+        let e_ab = g.add_edge(a, b);
+        g.add_edge(b, c);
+        let view = EdgeSubgraphView::new(&g, [e_ab]);
+        assert!(view.is_directed());
+        assert_eq!(view.out_degree(a), 1);
+        assert_eq!(view.in_degree(b), 1);
+        assert_eq!(view.degree(a), 1);
+        assert!(view.edge_attrs(e_ab).is_some());
+    }
+
+    #[test]
+    fn edge_subgraph_view_undirected_in_neighbors_matches_out_neighbors() {
+        let mut g = NU::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let view = EdgeSubgraphView::new(&g, [e]);
+        assert!(!view.is_directed());
+        assert_eq!(view.in_neighbors(a).collect::<Vec<_>>(), view.out_neighbors(a).collect::<Vec<_>>());
+        assert_eq!(view.degree(a), view.out_degree(a));
+    }
+
+    #[test]
     fn reversed_view_swaps_direction_on_directed_graph() {
         let mut g = ND::new();
         let a = g.add_node();
@@ -2401,6 +2599,19 @@ mod tests {
     }
 
     #[test]
+    fn reversed_view_edges_and_edges_between_swap_endpoints() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let rev = ReversedView::new(&g);
+        assert_eq!(rev.edges().collect::<Vec<_>>(), vec![EdgeRef { id: e, u: b, v: a }]);
+        assert_eq!(rev.edges_between(b, a).next(), Some(EdgeRef { id: e, u: b, v: a }));
+        assert_eq!(rev.degree(a), g.degree(a));
+        assert_eq!(rev.is_multigraph(), g.is_multigraph());
+    }
+
+    #[test]
     fn filtered_view_keep_predicate_hides_by_inversion() {
         let mut g = NU::new();
         let a = g.add_node();
@@ -2416,6 +2627,31 @@ mod tests {
     }
 
     #[test]
+    fn filtered_view_keep_edge_predicate_hides_specific_edges_without_hiding_nodes() {
+        let mut g = NU::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e_bad = g.add_edge(a, b);
+        let view = FilteredView::new(&g, |_n| true, move |e| e.id != e_bad);
+        assert!(view.contains_node(a));
+        assert!(view.contains_node(b));
+        assert_eq!(view.edge_count(), 0);
+        assert_eq!(view.out_degree(a), 0);
+        assert_eq!(view.degree(a), 0);
+    }
+
+    #[test]
+    fn filtered_view_attr_view_delegates_edge_and_graph_attrs() {
+        let mut g = NU::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let view = FilteredView::new(&g, |_n| true, |_e| true);
+        assert!(view.edge_attrs(e).is_some());
+        assert!(std::ptr::eq(view.graph_attrs(), g.graph_attrs()));
+    }
+
+    #[test]
     fn undirected_view_merges_successors_and_predecessors() {
         let mut g = ND::new();
         let a = g.add_node();
@@ -2425,6 +2661,45 @@ mod tests {
         assert!(!view.is_directed());
         assert_eq!(view.neighbors(a).collect::<Vec<_>>(), vec![b]);
         assert_eq!(view.neighbors(b).collect::<Vec<_>>(), vec![a]);
+    }
+
+    #[test]
+    fn undirected_view_degree_and_edges_between_merge_both_directions() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        g.add_edge(a, b);
+        g.add_edge(b, a);
+        let view = UndirectedView::new(&g);
+        assert_eq!(view.degree(a), 2, "both directed edges count towards undirected degree");
+        assert_eq!(view.edges_between(a, b).count(), 2);
+        assert_eq!(view.is_multigraph(), g.is_multigraph());
+    }
+
+    #[test]
+    fn undirected_view_edges_normalizes_endpoint_order() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(b, a);
+        let view = UndirectedView::new(&g);
+        assert_eq!(
+            view.edges().collect::<Vec<_>>(),
+            vec![EdgeRef { id: e, u: a, v: b }],
+            "edges() orders endpoints u <= v regardless of storage direction"
+        );
+    }
+
+    #[test]
+    fn undirected_view_attr_view_delegates_to_parent() {
+        let mut g = ND::new();
+        let a = g.add_node();
+        let b = g.add_node();
+        let e = g.add_edge(a, b);
+        let view = UndirectedView::new(&g);
+        assert!(view.node_attrs(a).is_some());
+        assert!(view.edge_attrs(e).is_some());
+        assert!(std::ptr::eq(view.graph_attrs(), g.graph_attrs()));
     }
     // #endsubregion
 
@@ -2451,6 +2726,16 @@ mod tests {
         assert_eq!(interner.label_of(1), Some(&"b".to_string()));
         assert_eq!(interner.label_of(2), Some(&"c".to_string()));
     }
+
+    #[test]
+    fn interner_is_empty_and_unknown_lookups_return_none() {
+        let mut interner: Interner<String> = Interner::new();
+        assert!(interner.is_empty());
+        assert_eq!(interner.label_of(0), None);
+        assert_eq!(interner.id_of(&"ghost".to_string()), None);
+        interner.intern("alpha".to_string());
+        assert!(!interner.is_empty());
+    }
     // #endsubregion
 
     // #subregion GraphError
@@ -2468,6 +2753,31 @@ mod tests {
     fn graph_error_is_a_std_error() {
         let err: Box<dyn std::error::Error> = Box::new(GraphError::HasACycle);
         assert_eq!(err.to_string(), "graph has a cycle");
+    }
+
+    #[test]
+    fn graph_error_display_covers_remaining_variants() {
+        assert_eq!(GraphError::EdgeNotFound(3).to_string(), "edge 3 not found");
+        assert_eq!(GraphError::NoCycle.to_string(), "graph has no cycle");
+        assert_eq!(GraphError::Unfeasible("x".into()).to_string(), "unfeasible: x");
+        assert_eq!(GraphError::Unbounded("y".into()).to_string(), "unbounded: y");
+        assert_eq!(GraphError::NotATree.to_string(), "graph is not a tree");
+        assert_eq!(GraphError::NotAForest.to_string(), "graph is not a forest");
+        assert_eq!(GraphError::NotBipartite.to_string(), "graph is not bipartite");
+        assert_eq!(GraphError::NotPlanar.to_string(), "graph is not planar");
+        assert_eq!(GraphError::NotEulerian.to_string(), "graph is not eulerian");
+        assert_eq!(GraphError::NotConnected.to_string(), "graph is not connected");
+        assert_eq!(GraphError::NotStronglyConnected.to_string(), "graph is not strongly connected");
+        assert_eq!(GraphError::AmbiguousSolution("z".into()).to_string(), "ambiguous solution: z");
+        assert_eq!(GraphError::ExceededMaxIterations { iterations: 5 }.to_string(), "exceeded max iterations (5)");
+        assert_eq!(
+            GraphError::PowerIterationFailedConvergence { iterations: 8 }.to_string(),
+            "power iteration failed to converge after 8 iterations"
+        );
+        assert_eq!(GraphError::NegativeCycle.to_string(), "graph has a negative cycle");
+        assert_eq!(GraphError::NotGraphical("odd sum".into()).to_string(), "not a graphical degree sequence: odd sum");
+        assert_eq!(GraphError::Io("disk full".into()).to_string(), "io error: disk full");
+        assert_eq!(GraphError::Parse { line: 4, message: "bad token".into() }.to_string(), "parse error at line 4: bad token");
     }
     // #endsubregion
 
@@ -2511,6 +2821,32 @@ mod tests {
         assert_eq!(heap.pop_min(), Some((5, "b")));
         assert!(heap.contains(&"a"));
         assert!(!heap.contains(&"b"));
+    }
+
+    #[test]
+    fn mapped_heap_len_and_is_empty_track_size() {
+        let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+        assert!(heap.is_empty());
+        assert_eq!(heap.len(), 0);
+        heap.push_or_decrease("a", 5);
+        assert!(!heap.is_empty());
+        assert_eq!(heap.len(), 1);
+    }
+
+    #[test]
+    fn mapped_heap_push_or_decrease_ignores_higher_or_equal_priority() {
+        let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+        heap.push_or_decrease("a", 5);
+        heap.push_or_decrease("a", 10);
+        assert_eq!(heap.len(), 1, "a higher priority for an already-present item must be a no-operation");
+        heap.push_or_decrease("a", 5);
+        assert_eq!(heap.pop_min(), Some((5, "a")), "priority must stay at the lowest value ever pushed");
+    }
+
+    #[test]
+    fn decrease_key_returns_false_for_absent_item() {
+        let mut heap: MappedHeap<i64, &str> = MappedHeap::new();
+        assert!(!heap.decrease_key(&"missing", 1));
     }
     // #endsubregion
 
@@ -2612,6 +2948,27 @@ mod tests {
         let flow_b = second.max_flow(0, 5);
         assert_eq!(flow_a, flow_b, "identically constructed networks must yield byte-identical flow values");
         assert_eq!(first.min_cut(0), second.min_cut(0), "identically constructed networks must yield byte-identical min-cut node sets");
+    }
+    // #endsubregion
+
+    // #subregion PropertyJson
+    #[test]
+    fn property_bag_json_round_trips_and_empty_bag_serializes_to_none() {
+        let mut bag = PropertyBag::new();
+        bag.insert("label".into(), PropertyValue::String("hi".into()));
+        bag.insert("count".into(), PropertyValue::Number(3.0));
+        let json = property_bag_to_json(&bag).expect("non-empty bag serializes to Some");
+        let round_tripped = property_bag_from_json(&json);
+        assert_eq!(round_tripped.get("label").and_then(PropertyValue::as_str), Some("hi"));
+        assert_eq!(round_tripped.get("count").and_then(PropertyValue::as_f64), Some(3.0));
+        assert!(property_bag_to_json(&PropertyBag::new()).is_none(), "an empty bag serializes to None");
+    }
+
+    #[test]
+    fn property_bag_from_json_falls_back_to_default_on_unparsable_shape() {
+        let value = serde_json::json!("not-an-object-map");
+        let bag = property_bag_from_json(&value);
+        assert!(bag.is_empty(), "a JSON value that can't deserialize into a PropertyBag falls back to empty");
     }
     // #endsubregion
 }

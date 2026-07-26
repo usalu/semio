@@ -43,9 +43,12 @@ static NOTE_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
 //#endregion 🔖Constants
 
 //#region 🔖Types
+// No `#[dsl(keyword = ...)]` here: every field of this type (`NoteDocument::camera`,
+// `NoteOperation::SetCamera::camera`) is itself `#[dsl(block)]`, which already supplies the bare
+// leading keyword from the FIELD's own name — an inner keyword too would print `camera { camera
+// x=0 ... }`, doubled for no reason.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-#[dsl(keyword = "camera")]
 struct NoteCamera {
     #[serde(default)]
     x: f64,
@@ -2587,82 +2590,6 @@ mod tests {
     use super::*;
     use semio_framework_plugin::{DwgColor, DwgEntity, DwgLayer, PluginApp};
     use semio_framework_plugin::testkit::{assert_undo_redo_round_trip, meta, new_app, new_app_with_registry};
-
-    #[test]
-    fn __print_new_semio_fixture() {
-        let document = NoteDocument {
-            schema: NOTE_DOCUMENT_SCHEMA.into(),
-            id: "semio".into(),
-            title: Some("Semio Note".into()),
-            camera: NoteCamera { x: 0.0, y: 0.0, zoom: 1.0 },
-            blocks: vec![
-                NoteBlockNode::Text {
-                    id: "welcome-text".into(),
-                    name: "Welcome".into(),
-                    x: 80.0,
-                    y: 80.0,
-                    width: 360.0,
-                    height: 120.0,
-                    rotation: 0.0,
-                    visible: true,
-                    locked: false,
-                    paragraphs: vec![NoteTextParagraph {
-                        runs: vec![NoteTextRun {
-                            text: "Welcome to Note — an infinite canvas for text, images, tables, math, and pencil ink.".into(),
-                            bold: None,
-                            italic: None,
-                            underline: None,
-                            link: None,
-                        }],
-                    }],
-                    font_size: 20.0,
-                    font_weight: "normal".into(),
-                    align: "left".into(),
-                },
-                NoteBlockNode::Math {
-                    id: "welcome-math".into(),
-                    name: "Equation".into(),
-                    x: 80.0,
-                    y: 240.0,
-                    width: 240.0,
-                    height: 80.0,
-                    rotation: 0.0,
-                    visible: true,
-                    locked: false,
-                    tex: "E = mc^2".into(),
-                    display_mode: true,
-                },
-                NoteBlockNode::Table {
-                    id: "welcome-table".into(),
-                    name: "Blocks".into(),
-                    x: 80.0,
-                    y: 360.0,
-                    width: 360.0,
-                    height: 140.0,
-                    rotation: 0.0,
-                    visible: true,
-                    locked: false,
-                    columns: vec!["Block".into(), "Description".into()],
-                    rows: vec![
-                        vec![NoteTableCell { content: "Text".into() }, NoteTableCell { content: "Rich text blocks".into() }],
-                        vec![NoteTableCell { content: "Math".into() }, NoteTableCell { content: "TeX equations".into() }],
-                        vec![NoteTableCell { content: "Ink".into() }, NoteTableCell { content: "Freehand pencil strokes".into() }],
-                    ],
-                },
-            ],
-            grid_visible: Some(true),
-            grid_spacing: None,
-            grid_subdivisions: None,
-            grid_opacity: None,
-            snap_enabled: Some(false),
-            snap_grid_spacing: None,
-            pencil_width: Some(3.0),
-            eraser_radius: Some(12.0),
-            assets: BTreeMap::new(),
-        };
-        let printed = <NoteDocument as vcs::DocumentDsl>::print_dsl(&document);
-        panic!("PRINTED_FIXTURE_START\n{printed}PRINTED_FIXTURE_END");
-    }
 
     #[test]
     fn renders_composite_canvas() {

@@ -33,6 +33,14 @@ pub mod heuristics;
 pub mod sample;
 #[path = "src/trail.rs"]
 pub(crate) mod trail;
+#[path = "src/constraint.rs"]
+pub mod constraint;
+#[path = "src/constraints_card.rs"]
+pub mod constraints_card;
+#[path = "src/constraints_conn.rs"]
+pub mod constraints_conn;
+#[path = "src/soft.rs"]
+pub mod soft;
 #[path = "src/search.rs"]
 pub mod search;
 #[path = "src/outcome.rs"]
@@ -57,6 +65,9 @@ pub mod solver_grid3d;
 
 // #region 🔖Exports
 pub use bitset::PatternSet;
+pub use constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
+pub use constraints_card::{CardinalityConstraint, Scope};
+pub use constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
 pub use diag::{DiagLevel, Event, EventSink, Metrics};
 pub use domain::{Domain, DomainStore, RestrictResult};
 pub use error::{ConstraintError, ModelError, SolveError, TopologyError};
@@ -70,6 +81,7 @@ pub use oracle::{ArcSpec, OracleResult, Violation, check_assignment, enumerate};
 pub use outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
 pub use sample::ValueSampler;
 pub use search::{Budget, CancelToken, RestartSchedule, SearchConfig, SearchMode};
+pub use soft::{Attempt, BestOfNKeep, ScoreFn, SoftConstraint, WeightField, best_of_n};
 pub use solver_grid2d::{Grid2dSolver, Grid2dSolverBuilder};
 pub use solver_grid3d::{Grid3dSolver, Grid3dSolverBuilder};
 pub use solver_graph::{GraphSolver, GraphSolverBuilder};

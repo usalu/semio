@@ -142,6 +142,25 @@ impl<T: DslField> DslField for Vec<T> {
     }
 }
 
+/// @emoji 🗺️ Same recursion seam as `Vec<T>`, for a `BTreeMap<String, T>` that's itself nested
+/// (e.g. `Option<BTreeMap<String, T>>`) rather than a bare top-level field — `#[derive(DslRecord)]`
+/// classifies a *bare* `BTreeMap<String, T>` field directly via its own dedicated `FieldKind`
+/// (same `Shape::Map` this produces), so the two never conflict.
+impl<T: DslField> DslField for std::collections::BTreeMap<String, T> {
+    fn shape() -> Shape {
+        Shape::Map(Box::new(T::shape()))
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::Map(self.iter().map(|(k, v)| (k.clone(), v.to_value())).collect())
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::Map(entries) => entries.iter().map(|(k, v)| Ok((k.clone(), T::from_value(v)?))).collect(),
+            other => Err(format!("expected Map, found {other:?}")),
+        }
+    }
+}
+
 /// @emoji 📐 Fixed-arity `Shape::Tuple(_, Some(N))` — a packed `x,y,z`-style literal for any `N`.
 impl<T: DslField, const N: usize> DslField for [T; N] {
     fn shape() -> Shape {
@@ -205,6 +224,30 @@ pub mod __rt {
 
     pub fn field_error(message: impl Into<String>) -> TextError {
         TextError::new(message, TextSpan::at(1, 1))
+    }
+
+    /// @emoji 📦 Single-field tuple ("newtype") enum variant support — `Variant(Body)` delegates its
+    /// whole `RecordSpec`/value to `Body`'s own `DslField` impl rather than wrapping it in one
+    /// positional field, so `Body` prints/parses identically whether reached through the enum or on
+    /// its own. `Body` must have `Shape::Record` (i.e. itself come from `#[derive(DslRecord)]` or
+    /// `#[derive(DslDocument)]`) — anything else is a derive-time misuse, hence the panic rather than
+    /// a `Result` (there is no sensible recoverable path for a grammar that's wrong at compile time).
+    pub fn newtype_variant_spec<T: DslField>() -> RecordSpec {
+        match T::shape() {
+            Shape::Record(spec) => *spec,
+            other => panic!("newtype variant's inner type must have Record shape, found {other:?}"),
+        }
+    }
+
+    pub fn newtype_variant_to_record<T: DslField>(inner: &T) -> RecordValue {
+        match inner.to_value() {
+            FieldValue::Record(record) => record,
+            other => panic!("newtype variant's inner type must produce a Record value, found {other:?}"),
+        }
+    }
+
+    pub fn newtype_variant_from_record<T: DslField>(record: &RecordValue) -> Result<T, TextError> {
+        T::from_value(&FieldValue::Record(record.clone())).map_err(field_error)
     }
 }
 //#endregion 🔖Runtime
@@ -382,6 +425,145 @@ mod tests {
         let printed = <SceneDocument as vcs::DocumentDsl>::print_dsl(&doc);
         let parsed = <SceneDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
+    }
+
+    // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
+    // `LayerNode::Shape(ShapeBody)` shape) delegate entirely to the inner type's own spec/keyword ---
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    #[dsl(keyword = "circle")]
+    struct CircleBody {
+        #[dsl(positional)]
+        id: String,
+        r: f64,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    #[dsl(keyword = "square")]
+    struct SquareBody {
+        #[dsl(positional)]
+        id: String,
+        side: f64,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+    enum ShapeNode {
+        #[dsl(key = "circle")]
+        Circle(CircleBody),
+        #[dsl(key = "square")]
+        Square(SquareBody),
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "shapedoc")]
+    struct ShapeDocument {
+        #[dsl(statements, block)]
+        shapes: Vec<ShapeNode>,
+    }
+
+    #[test]
+    fn derived_newtype_tuple_variants_round_trip() {
+        let doc = ShapeDocument {
+            shapes: vec![
+                ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 }),
+                ShapeNode::Square(SquareBody { id: "s1".to_string(), side: 3.0 }),
+            ],
+        };
+        let printed = <ShapeDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        assert!(printed.contains("circle \"c1\" r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
+        let parsed = <ShapeDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
+    }
+
+    // --- end-to-end derive test: `#[dsl(statements, block)] Option<T>` (the `draw` pilot's
+    // `attributes.fill: Option<FillStyle>` shape) — a sum-type scalar field, not a collection ---
+
+    #[derive(Clone, Debug, PartialEq, DslEnum, serde::Serialize, serde::Deserialize)]
+    enum PaintStyle {
+        #[dsl(key = "solid")]
+        Solid { color: [f64; 4] },
+        #[dsl(key = "gradient")]
+        Gradient { stops: Vec<f64> },
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    struct PaintAttributes {
+        #[dsl(statements, block)]
+        fill: Option<PaintStyle>,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "paintdoc")]
+    struct PaintDocument {
+        #[dsl(block)]
+        attributes: PaintAttributes,
+    }
+
+    #[test]
+    fn derived_option_statements_field_round_trips_present_and_absent() {
+        let with_fill = PaintDocument { attributes: PaintAttributes { fill: Some(PaintStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] }) } };
+        let printed = <PaintDocument as vcs::DocumentDsl>::print_dsl(&with_fill);
+        let parsed = <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, with_fill, "Some(..) round trip diverged;\nprinted:\n{printed}");
+
+        let no_fill = PaintDocument { attributes: PaintAttributes { fill: None } };
+        let printed_none = <PaintDocument as vcs::DocumentDsl>::print_dsl(&no_fill);
+        let parsed_none =
+            <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+        assert_eq!(parsed_none, no_fill, "None round trip diverged;\nprinted:\n{printed_none}");
+    }
+
+    // --- regression: `#[dsl(block)] Option<PlainRecord>` (the `draw` pilot's `attributes.stroke:
+    // Option<StrokeStyle>` shape) — `None` must OMIT the field, not print empty `{ }` braces, since
+    // reparsing empty braces would otherwise try to build a record whose required fields are absent ---
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    struct BrushStyle {
+        color: [f64; 4],
+        width: f64,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "brushdoc")]
+    struct BrushDocument {
+        #[dsl(block)]
+        brush: Option<BrushStyle>,
+    }
+
+    #[test]
+    fn derived_option_block_record_field_omits_rather_than_printing_empty_braces_when_absent() {
+        let with_brush = BrushDocument { brush: Some(BrushStyle { color: [0.0, 0.0, 0.0, 1.0], width: 2.5 }) };
+        let printed = <BrushDocument as vcs::DocumentDsl>::print_dsl(&with_brush);
+        let parsed = <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, with_brush, "Some(..) round trip diverged;\nprinted:\n{printed}");
+
+        let no_brush = BrushDocument { brush: None };
+        let printed_none = <BrushDocument as vcs::DocumentDsl>::print_dsl(&no_brush);
+        assert!(!printed_none.contains("brush"), "an absent block-wrapped Option<Record> must be omitted entirely, not printed as empty braces: {printed_none:?}");
+        let parsed_none =
+            <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
+        assert_eq!(parsed_none, no_brush, "None round trip diverged;\nprinted:\n{printed_none:?}");
+    }
+
+    // --- end-to-end derive test: `#[dsl(statements)] Box<T>` (the `draw` pilot's
+    // `AddLayer { layer: Box<DrawLayerNode> }` shape) — exactly one required tagged value ---
+
+    #[derive(Clone, Debug, PartialEq, DslOps, serde::Serialize, serde::Deserialize)]
+    enum PaintOp {
+        #[dsl(key = "addShape")]
+        AddShape {
+            #[dsl(statements)]
+            shape: Box<ShapeNode>,
+        },
+    }
+
+    #[test]
+    fn derived_required_statements_boxed_field_round_trips() {
+        let op = PaintOp::AddShape { shape: Box::new(ShapeNode::Circle(CircleBody { id: "c1".to_string(), r: 2.0 })) };
+        let printed = <PaintOp as vcs::OpText>::print_op(&op);
+        assert!(!printed.contains('\n'), "print_op must be one line: {printed:?}");
+        let parsed = <PaintOp as vcs::OpText>::parse_op(&printed).unwrap_or_else(|e| panic!("parse_op failed for {printed:?}: {e}"));
+        assert_eq!(parsed, op, "boxed required-statements round trip diverged for {printed:?}");
     }
 }
 //#endregion 🧪Tests
