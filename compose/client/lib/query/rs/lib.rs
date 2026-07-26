@@ -1708,7 +1708,7 @@ mod wasm_api {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::HashMap;
+    use std::collections::{BTreeMap, HashMap};
     use std::path::PathBuf;
 
     //#region 🧪architect_cases
@@ -1902,4 +1902,354 @@ mod tests {
         }
     }
     //#endregion 🧪architect_cases
+
+    //#region 🧪unit_coverage
+    #[test]
+    fn parser_escaped_string_literal_unescapes_embedded_quote() {
+        let q = parse(r#"MATCH (d:Design {name: "a\"b"}) RETURN d"#).expect("parse");
+        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+        let ast::PatternElement::Node(n) = &m.patterns[0].elements[0] else { panic!("expected node") };
+        assert_eq!(n.props.get("name").and_then(|v| v.as_str()), Some("a\"b"));
+    }
+
+    #[test]
+    fn parser_number_literal_negative_and_float_values() {
+        let q = parse("MATCH (t:Type) WHERE t.x = -1.5 RETURN t.x AS x").expect("parse");
+        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+        let Some(where_expr) = &m.where_expr else { panic!("expected where expr") };
+        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Eq, right, .. } = where_expr else { panic!("expected eq expr") };
+        let ast::Expr::UnaryNeg(inner) = &**right else { panic!("expected unary neg") };
+        assert_eq!(&**inner, &ast::Expr::Const(serde_json::Value::from(1.5)));
+    }
+
+    #[test]
+    fn parser_call_args_support_array_and_nested_object_literals() {
+        let q = parse(r#"CALL session.store.installProjection({tags: [1, "two", true], meta: {a: 1}}) YIELD ok"#).expect("parse");
+        let ast::Clause::Call(c) = &q.clauses[0] else { panic!("expected call clause") };
+        let tags = c.args.get("tags").and_then(|v| v.as_array()).expect("tags array");
+        assert_eq!(tags.len(), 3);
+        assert_eq!(c.args.get("meta").and_then(|v| v.get("a")).and_then(|v| v.as_i64()), Some(1));
+    }
+
+    #[test]
+    fn parser_boolean_literal_true_false_in_node_props() {
+        let q = parse("MATCH (d:Design {active: true, hidden: false}) RETURN d").expect("parse");
+        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+        let ast::PatternElement::Node(n) = &m.patterns[0].elements[0] else { panic!("expected node") };
+        assert_eq!(n.props.get("active"), Some(&serde_json::Value::Bool(true)));
+        assert_eq!(n.props.get("hidden"), Some(&serde_json::Value::Bool(false)));
+    }
+
+    #[test]
+    fn parser_arithmetic_operator_precedence_mul_before_add() {
+        let q = parse("MATCH (t:Type) RETURN t.x + t.y * 2 AS v").expect("parse");
+        let ret = q.return_clause.expect("return clause");
+        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Add, right, .. } = &ret.projections[0].expr else { panic!("expected add at top") };
+        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Mul, .. } = &**right else { panic!("expected mul on rhs") };
+    }
+
+    #[test]
+    fn parser_comparison_operators_map_to_binary_operator_variants() {
+        let cases = [
+            ("<", ast::BinaryOperator::Lt),
+            ("<=", ast::BinaryOperator::Le),
+            (">", ast::BinaryOperator::Gt),
+            (">=", ast::BinaryOperator::Ge),
+            ("==", ast::BinaryOperator::Eq),
+            ("!=", ast::BinaryOperator::Ne),
+        ];
+        for (op, expected) in cases {
+            let q = parse(&format!("MATCH (t:Type) WHERE t.x {op} 1 RETURN t")).expect("parse");
+            let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+            let ast::Expr::BinaryOperator { operator, .. } = m.where_expr.as_ref().expect("where expr") else { panic!("expected binary op") };
+            assert_eq!(*operator, expected, "operator {op}");
+        }
+    }
+
+    #[test]
+    fn parser_and_binds_tighter_than_or() {
+        let q = parse("MATCH (t:Type) WHERE t.a = 1 AND t.b = 2 OR t.c = 3 RETURN t").expect("parse");
+        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+        let ast::Expr::Or(parts) = m.where_expr.as_ref().expect("where expr") else { panic!("expected or") };
+        assert_eq!(parts.len(), 2);
+        assert!(matches!(parts[0], ast::Expr::And(_)));
+    }
+
+    #[test]
+    fn parser_undirected_relationship_with_multiple_types() {
+        let q = parse("MATCH (a:Type)-[:HAS|OWNS]-(b:Connector) RETURN a").expect("parse");
+        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
+        let ast::PatternElement::Rel(rel) = &m.patterns[0].elements[1] else { panic!("expected rel") };
+        assert_eq!(rel.direction, ast::RelDirection::Undirected);
+        assert_eq!(rel.types, vec!["HAS".to_string(), "OWNS".to_string()]);
+    }
+
+    #[test]
+    fn parser_rejects_trailing_input_after_query() {
+        let err = parse("MATCH (n:Type) RETURN n EXTRA_JUNK").unwrap_err();
+        let ArchitectError::Parse(msg) = err else { panic!("expected parse error") };
+        assert!(msg.contains("trailing input"), "message: {msg}");
+    }
+
+    #[test]
+    fn parser_call_clause_without_yield_has_empty_yield_items() {
+        let q = parse("CALL session.end()").expect("parse");
+        let ast::Clause::Call(c) = &q.clauses[0] else { panic!("expected call clause") };
+        assert!(c.yield_items.is_empty());
+        assert_eq!(c.action_id, "session.end");
+    }
+
+    #[test]
+    fn planner_errors_on_unknown_label() {
+        let q = parse("MATCH (n:Bogus) RETURN n").expect("parse");
+        let err = plan(&q).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("unknown label"), "message: {msg}");
+    }
+
+    #[test]
+    fn planner_errors_when_node_pattern_missing_label() {
+        let q = parse("MATCH (n) RETURN n").expect("parse");
+        let err = plan(&q).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("requires a label"), "message: {msg}");
+    }
+
+    #[test]
+    fn planner_errors_when_unwind_source_is_not_a_variable() {
+        let q = parse("MATCH (t:Type) UNWIND 1 AS x RETURN x").expect("parse");
+        let err = plan(&q).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("UNWIND expects a variable"), "message: {msg}");
+    }
+
+    #[test]
+    fn planner_call_step_resolves_store_alias_and_json_variables() {
+        let q = parse(r#"CALL session.store.installProjection({store: "s1", json: "{}"}) YIELD ok"#).expect("parse");
+        let p = plan(&q).expect("plan");
+        let planner::Step::Call { variables, .. } = &p.steps[0] else { panic!("expected call step") };
+        assert_eq!(variables.get("storeId").and_then(|v| v.as_str()), Some("s1"));
+        assert_eq!(variables.get("json").and_then(|v| v.as_str()), Some("{}"));
+    }
+
+    #[test]
+    fn schema_predicate_parse_is_case_insensitive_and_rejects_unknown() {
+        assert_eq!(schema::Predicate::parse("has"), Some(schema::Predicate::Has));
+        assert_eq!(schema::Predicate::parse("Owns"), Some(schema::Predicate::Owns));
+        assert_eq!(schema::Predicate::parse("bogus"), None);
+    }
+
+    #[test]
+    fn schema_resolve_edge_errors_for_unknown_predicate_combo() {
+        let rel = ast::RelPattern { types: vec!["OWNS".into()], direction: ast::RelDirection::Out, props: BTreeMap::new() };
+        let err = schema::resolve_edge(schema::Label::Kit, schema::Predicate::Owns, schema::Label::Design, &rel, true).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("no edge"), "message: {msg}");
+    }
+
+    #[test]
+    fn schema_resolve_edge_matches_parent_prop_as_string_true_false() {
+        let mut props_true = BTreeMap::new();
+        props_true.insert("parent".to_string(), serde_json::Value::String("true".into()));
+        let rel_true = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: props_true };
+        let parent_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Has, schema::Label::Side, &rel_true, true).expect("parent edge");
+        assert_eq!(parent_edge.field, "parent");
+
+        let mut props_false = BTreeMap::new();
+        props_false.insert("parent".to_string(), serde_json::Value::String("FALSE".into()));
+        let rel_false = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: props_false };
+        let child_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Has, schema::Label::Side, &rel_false, true).expect("child edge");
+        assert_eq!(child_edge.field, "child");
+    }
+
+    #[test]
+    fn schema_node_label_and_rel_predicate_success_and_error_paths() {
+        let labeled = ast::NodePattern { var_name: Some("d".into()), label: Some("Design".into()), props: BTreeMap::new() };
+        assert_eq!(schema::node_label(&labeled).unwrap(), schema::Label::Design);
+
+        let unlabeled = ast::NodePattern { var_name: Some("d".into()), label: None, props: BTreeMap::new() };
+        let err = schema::node_label(&unlabeled).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("requires a label"));
+
+        let rel = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: BTreeMap::new() };
+        assert_eq!(schema::rel_predicate(&rel).unwrap(), schema::Predicate::Has);
+
+        let empty_rel = ast::RelPattern { types: vec![], direction: ast::RelDirection::Out, props: BTreeMap::new() };
+        let err = schema::rel_predicate(&empty_rel).unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("requires a predicate"));
+    }
+
+    #[test]
+    fn schema_entity_scalar_fields_default_branch_for_unlisted_label() {
+        assert_eq!(schema::entity_scalar_fields(schema::Label::Blueprint), &["id", "hash"]);
+        assert_eq!(schema::entity_scalar_fields(schema::Label::Group), &["id", "hash"]);
+    }
+
+    #[test]
+    fn schema_resolve_call_errors_for_unknown_target() {
+        let err = schema::resolve_call("nope.nope").unwrap_err();
+        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
+        assert!(msg.contains("unknown CALL target"));
+    }
+
+    #[test]
+    fn schema_call_variables_empty_for_non_store_action() {
+        let mut args = BTreeMap::new();
+        args.insert("ok".to_string(), serde_json::Value::Bool(true));
+        let vars = schema::call_variables("session.end", &args);
+        assert_eq!(vars, serde_json::json!({}));
+    }
+
+    #[tokio::test]
+    async fn executor_cartesian_merge_combines_independent_patterns() {
+        let query = "MATCH (d:Design), (t:Type) RETURN d.name AS dn, t.name AS tn";
+        let op_plan = compile(query).expect("compile");
+        let design_payload = serde_json::json!({
+            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
+                "hasDesigns": { "edges": [
+                    { "node": { "id": "d1", "hash": "h1", "name": "DesignA" } },
+                    { "node": { "id": "d2", "hash": "h2", "name": "DesignB" } }
+                ] }
+            } } } } } ] } } }
+        });
+        let type_payload = serde_json::json!({
+            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
+                "hasTypes": { "edges": [
+                    { "node": { "id": "t1", "hash": "ht1", "name": "TypeA" } },
+                    { "node": { "id": "t2", "hash": "ht2", "name": "TypeB" } },
+                    { "node": { "id": "t3", "hash": "ht3", "name": "TypeC" } }
+                ] }
+            } } } } } ] } } }
+        });
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[design_payload, type_payload], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows.len(), 6);
+        assert_eq!(result.columns, vec!["dn".to_string(), "tn".to_string()]);
+    }
+
+    #[tokio::test]
+    async fn executor_order_by_and_limit_apply_to_return_rows() {
+        let query = "MATCH (t:Type) RETURN t.name AS name ORDER BY t.name LIMIT 2";
+        let op_plan = compile(query).expect("compile");
+        let payload = serde_json::json!({
+            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
+                "hasTypes": { "edges": [
+                    { "node": { "id": "t1", "hash": "h1", "name": "Gamma" } },
+                    { "node": { "id": "t2", "hash": "h2", "name": "Alpha" } },
+                    { "node": { "id": "t3", "hash": "h3", "name": "Beta" } }
+                ] }
+            } } } } } ] } } }
+        });
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[payload], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        let names: Vec<_> = result.rows.iter().filter_map(|r| r.get("name").and_then(|v| v.as_str())).collect();
+        assert_eq!(names, vec!["Alpha", "Beta"]);
+    }
+
+    #[tokio::test]
+    async fn executor_unwind_flattens_array_value_with_where_filter() {
+        let query = "CALL session.end() UNWIND result AS x WHERE x > 1 RETURN x AS x";
+        let op_plan = compile(query).expect("compile");
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[serde_json::json!([1, 2, 3])], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        let xs: Vec<_> = result.rows.iter().filter_map(|r| r.get("x").and_then(|v| v.as_i64())).collect();
+        assert_eq!(xs, vec![2, 3]);
+    }
+
+    #[tokio::test]
+    async fn executor_unwind_wraps_non_array_value_as_single_item() {
+        let query = "CALL session.end() UNWIND result AS x RETURN x AS x";
+        let op_plan = compile(query).expect("compile");
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[serde_json::json!("solo")], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows.len(), 1);
+        assert_eq!(result.rows[0].get("x").and_then(|v| v.as_str()), Some("solo"));
+    }
+
+    #[tokio::test]
+    async fn executor_return_projection_arithmetic_error_propagates_not_numeric() {
+        let query = "MATCH (d:Design) RETURN d.name + 1 AS bad";
+        let op_plan = compile(query).expect("compile");
+        let payload = serde_json::json!({
+            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
+                "hasDesigns": { "edges": [ { "node": { "id": "d1", "hash": "h1", "name": "NotANumber" } } ] }
+            } } } } } ] } } }
+        });
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[payload], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let err = run(query, &transport).await.unwrap_err();
+        let ArchitectError::Execute(msg) = err else { panic!("expected execute error") };
+        assert!(msg.contains("not numeric"), "message: {msg}");
+    }
+
+    #[tokio::test]
+    async fn executor_ingest_call_yield_without_yield_items_uses_result_key() {
+        let query = "CALL session.end() RETURN result AS r";
+        let op_plan = compile(query).expect("compile");
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[serde_json::json!({"ok": true})], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows[0].get("r"), Some(&serde_json::json!({"ok": true})));
+    }
+
+    #[tokio::test]
+    async fn executor_call_yield_resolves_dotted_key_and_null_for_missing() {
+        let query = "CALL session.end() YIELD session.missing AS m";
+        let op_plan = compile(query).expect("compile");
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[serde_json::json!({"data": {"session": {"end": {"ok": true}}}})], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows[0].get("m"), Some(&serde_json::Value::Null));
+    }
+
+    #[tokio::test]
+    async fn executor_memory_transport_missing_canned_response_errors() {
+        let transport = MemoryTransport::new(HashMap::new());
+        let err = run("MATCH (t:Type) RETURN t.name AS name", &transport).await.unwrap_err();
+        let ArchitectError::Transport(TransportError::Msg(msg)) = err else { panic!("expected transport error") };
+        assert!(msg.contains("no canned response"), "message: {msg}");
+    }
+
+    #[tokio::test]
+    async fn executor_run_subscription_errors_when_plan_has_no_subscription_call() {
+        let op_plan = compile("MATCH (t:Type) RETURN t.name AS name").expect("compile");
+        let transport = MemoryTransport::new(HashMap::new());
+        let err = Executor::run_subscription(&op_plan, &transport).await.unwrap_err();
+        let ArchitectError::Execute(msg) = err else { panic!("expected execute error") };
+        assert!(msg.contains("plan has no subscription CALL"));
+    }
+
+    #[tokio::test]
+    async fn api_run_dispatches_subscription_operation_call() {
+        let query = "CALL subscription.operation() YIELD operation.id AS id";
+        let op_plan = compile(query).expect("compile");
+        let mut responses = HashMap::new();
+        register_canned_steps(&op_plan, &[serde_json::json!({"data": {"operation": {"id": "op1", "hash": "h1"}}})], &mut responses);
+        let transport = MemoryTransport::new(responses);
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows[0].get("id").and_then(|v| v.as_str()), Some("op1"));
+    }
+
+    #[test]
+    fn errors_display_messages_match_thiserror_format() {
+        assert_eq!(ArchitectError::Parse("boom".into()).to_string(), "parse: boom");
+        assert_eq!(ArchitectError::Plan("boom".into()).to_string(), "plan: boom");
+        assert_eq!(ArchitectError::Execute("boom".into()).to_string(), "execute: boom");
+        let transport_err: ArchitectError = TransportError::Msg("boom".into()).into();
+        assert_eq!(transport_err.to_string(), "transport: boom");
+    }
+    //#endregion 🧪unit_coverage
 }

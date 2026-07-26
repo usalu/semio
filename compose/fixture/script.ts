@@ -93,9 +93,15 @@ function annotateValue(value: unknown): unknown {
   if (Array.isArray(value)) return wrapCollection(value);
   const row = { ...(value as Record<string, unknown>) };
   if (typeof row.id === "string") row.hash = HASH;
+  const isBlock = typeof row.hash === "string" && Array.isArray(row.items);
   for (const [key, child] of Object.entries(row)) {
-    if (Array.isArray(child)) row[key] = wrapCollection(child);
-    else if (child != null && typeof child === "object") row[key] = annotateValue(child);
+    if (isBlock && key === "items") {
+      row[key] = (child as unknown[]).map((entry) => annotateValue(entry));
+    } else if (Array.isArray(child)) {
+      row[key] = wrapCollection(child);
+    } else if (child != null && typeof child === "object") {
+      row[key] = annotateValue(child);
+    }
   }
   return row;
 }

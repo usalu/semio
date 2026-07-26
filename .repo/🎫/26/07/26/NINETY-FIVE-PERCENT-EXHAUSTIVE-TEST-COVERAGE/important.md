@@ -1,3 +1,74 @@
+# Follow-up resolved: `semio-framework-renderer-wgpu` 20 compile errors (2026-07-26, later session)
+
+The follow-up spawned from item 3 of the "framework-core/wgpu icon-refactor breakage" section below (`framework/
+renderer/wgpu/rs/lib.rs`, package `semio-framework-renderer-wgpu`, nx project `@semio-tech/framework-renderer-
+wgpu`) is now fixed. `cargo check -p semio-framework-renderer-wgpu --tests` was 20 errors, now 0.
+
+All 20 traced to the same `WindowKindDefinition`/`UtilityDefinition`/etc. `icon_id` fields becoming required
+`semio_framework_core::IconName` (closed catalog) instead of `String`/`Option<String>` — same refactor family
+as items 1–2 below, just in a much larger (28,659-line) crate with its own independent call sites:
+
+- 13 `&str` literals ("icon") passed where `utility_toggle`/`utility_collection` now expect `impl Into<IconName>`
+  — added `.into()`.
+- 1 `.collect()` into `HashMap<String, String>` fed an iterator of `(String, IconName)` — added `.as_str().
+  to_string()` on the icon half.
+- 2 `Option<IconName>::as_deref()` calls (no `Deref` impl) — replaced with `.map(|i| i.as_str())` /
+  destructure-then-`.as_str()`, since `IconName::as_str()` returns `&'static str` which trivially satisfies
+  any borrowed-str lifetime.
+- 2 sites building `WidgetNode`/`UiNode` structs from raw JSON-sourced `icon_id: String` fields (real external
+  data, e.g. a table-cell button payload or block-palette entry) needed `IconName::from_str(&raw)` (fallible,
+  `Option<IconName>` — matches the field) instead of wrapping the raw string directly.
+- 2 sites had no source icon at all (a generic engagement `ToggleGroup` fallback control, and the settings-
+  theme reset/delete buttons) — picked real catalog defaults (`IconName::CircleDot`, `IconName::RotateCcw`,
+  `IconName::Trash2`) since the field is mandatory now, no more "empty string = no icon" option.
+- `dock_tab_content_width` (unrelated bug, not icon-shaped): defined `fn dock_tab_content_width(atlas:
+  &FontAtlas, ...)` calling `atlas.measure_text(...)` which needs `&mut self`, AND was private to the `dock`
+  module while called from `shell` — fixed the signature to `&mut FontAtlas` and made it `pub(crate)` +
+  re-exported through `dock`'s `use` list.
+- `paint_dock_tab_icon`'s `color: Color` param (unrelated bug): `Color` doesn't exist in the `dock` module's
+  scope at all (it's `vello::peniko::Color`, imported only much later at the crate root) — the actual callee
+  (`DrawList::push_textured`) wants `Rgba`, which the `dock` module already imports; changed the param type.
+- 2 `cannot borrow atlas as mutable` (mechanical fallout of the signature fix above): one test still passed
+  `&atlas`/non-`mut` — fixed to `&mut atlas`.
+
+Two errors surfaced only *after* the above 20 were fixed (borrowck/type-check only run once a function's own
+signature type-checks, so these were previously masked):
+- `engine.frame(...)` was called with 5 args; `ui_wgpu::Ui::frame` now takes a 6th `Option<&mut dyn SceneHost>`
+  (an unrelated, independent API change in `ui_wgpu` — this crate's one call site had no scene host in scope,
+  passed `None`).
+- `paint_dock_tab_icon(ctx, ...)` was called as a nested sub-expression inside `dock_text(ctx, ...)`'s own
+  argument list — two overlapping `&mut ctx` borrows, E0499. Not a false positive: hoisted the icon-width calc
+  and the shared tint color into locals before the `dock_text` call (also de-duplicates the identical
+  active/hovered/default tint `if`/`else` that was written out twice).
+
+**Self-inflicted regression caught by `cargo test` (fixed same session):** the mechanical `.into()` fix for the
+13 `&str`-literal sites used the placeholder string `"icon"` verbatim (compiler's own suggested fix), which
+panics at runtime (`IconName::from_str("icon")` → `None` → `.expect("invalid catalog icon name")`) since
+`"icon"` isn't a real catalog id — same class of bug as item 2 below (`"icon.brush"` fixture placeholders).
+Fixed by using a real catalog name (`"circle"`) instead. Also caught the same class of bug already present in
+`actions_utilities_app()`'s test fixture (`UtilityDefinition::new(..., "icon.a")`/`"icon.b"`) — fixed to
+`"circle"`/`"square"`.
+
+**Not fixed, flagged as a separate pre-existing issue, unrelated to this crate's icon-migration diff:**
+`shell::command_registry_tests::build_command_panel_ui_groups_rows_under_category_headers` expects 4 command-
+panel categories (`appearance`, `general`, `language`, `layout`) per its own doc comment ("six os commands"),
+but `build_os_commands()` only defines 5 commands across 3 categories (no `"general"` category exists anywhere
+in the function) — got 3, not 4. This doesn't touch `icon_id`/`IconName` at all; it looks like a command was
+dropped from `build_os_commands()` at some point without updating the test, or the test was written ahead of
+an unimplemented 6th command. Needs someone who knows the intended command list to fix, not guessed at here.
+
+**Verification status:** `cargo check -p semio-framework-renderer-wgpu --tests` is clean (0 errors). Full
+`cargo test -p semio-framework-renderer-wgpu --tests` could not be completed this session — `kernel_3d_brepkit`
+(a transitive dependency) is under active concurrent modification by this same ticket's Phase C workforce
+(wave 1 pushed its coverage 40.9%→72.52%, see below), so the shared build kept failing/changing error counts
+(40 → 12 → …) between consecutive invocations, unrelated to this fix. 218 of the other 228 tests in this crate
+passed before that blocker; the only two categories of failure seen were the self-inflicted icon-literal panics
+(fixed above) and the one pre-existing category-count mismatch (flagged above, not fixed). Retry once the
+concurrent wave settles. The `--exclude @semio-tech/framework-renderer-wgpu` used by prior baseline runs can be
+dropped now that this compiles.
+
+---
+
 # Phase C wave 1 results (confirmed, independently re-verified per item)
 
 Repo-wide partial baseline: 53.90% → **58.10%** (162 files, 108,404/186,570 lines) after wave 1. All 15 write

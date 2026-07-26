@@ -19208,7 +19208,9 @@ def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
     with open(os.path.join(initial_kit_dir, "kit.compose.json"), "r", encoding="utf-8") as f:
         kit = json.load(f)
     type_by_id: dict[str, dict] = {}
-    types_dir = os.path.join(initial_kit_dir, "types")
+    types_dir = os.path.join(initial_kit_dir, "type")
+    if not os.path.isdir(types_dir):
+        types_dir = os.path.join(initial_kit_dir, "types")
     if os.path.isdir(types_dir):
         for name in os.listdir(types_dir):
             if not name.endswith(".type.compose.json"):
@@ -19218,7 +19220,9 @@ def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
             if isinstance(row, dict) and row.get("id"):
                 type_by_id[str(row["id"])] = row
     design_by_id: dict[str, dict] = {}
-    designs_dir = os.path.join(initial_kit_dir, "designs")
+    designs_dir = os.path.join(initial_kit_dir, "design")
+    if not os.path.isdir(designs_dir):
+        designs_dir = os.path.join(initial_kit_dir, "designs")
     if os.path.isdir(designs_dir):
         for name in os.listdir(designs_dir):
             if not name.endswith(".design.compose.json"):
@@ -19246,7 +19250,22 @@ def _assemble_split_initial_kit_from_directory(initial_kit_dir: str) -> dict:
         if design_items:
             merged_designs = [design_by_id.get(str(stub.get("id", "")), stub) for stub in design_items if isinstance(stub, dict)]
             topo["designs"] = {"hash": topo.get("designs", {}).get("hash", "af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262"), "items": merged_designs}
-    return kit
+    if not kit.get("types"):
+        kit["types"] = [t for topo in _items(kit.get("typologies")) if isinstance(topo, dict) for t in _items(topo.get("types"))]
+    if not kit.get("designs"):
+        kit["designs"] = [d for topo in _items(kit.get("typologies")) if isinstance(topo, dict) for d in _items(topo.get("designs"))]
+    return _deep_unwrap_hash_items_blocks(kit)
+
+
+def _deep_unwrap_hash_items_blocks(node):
+    """🧩 Recursively replaces every `{ hash, items: [...] }` collection block with its plain `items` array (test helpers operate on flat lists)."""
+    if isinstance(node, dict):
+        if isinstance(node.get("items"), list) and "hash" in node:
+            return [_deep_unwrap_hash_items_blocks(v) for v in node["items"]]
+        return {k: _deep_unwrap_hash_items_blocks(v) for k, v in node.items()}
+    if isinstance(node, list):
+        return [_deep_unwrap_hash_items_blocks(v) for v in node]
+    return node
 
 
 def _test_load_json(filename: str) -> dict:
@@ -19255,7 +19274,7 @@ def _test_load_json(filename: str) -> dict:
         raise FileNotFoundError(f"Asset not found: {path}")
     if filename.endswith("kit.compose.json"):
         initial_kit_dir = os.path.dirname(path)
-        if os.path.isdir(os.path.join(initial_kit_dir, "types")):
+        if os.path.isdir(os.path.join(initial_kit_dir, "type")) or os.path.isdir(os.path.join(initial_kit_dir, "types")):
             return _assemble_split_initial_kit_from_directory(initial_kit_dir)
     with open(path, "r", encoding="utf-8") as f:
         return json.load(f)

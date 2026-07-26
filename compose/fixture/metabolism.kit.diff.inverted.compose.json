@@ -118,8 +118,50 @@
       }
     ]
   },
-  "typologies": {
-    "hash": "typology-migration-stub",
-    "items": []
+  "types": {
+    "added": [
+      {
+        "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d",
+        "name": "Capsule Backslash"
+      }
+    ],
+    "removed": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000023"
+      }
+    ],
+    "modified": [
+      {
+        "type": {
+          "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
+        },
+        "diff": {
+          "name": "Capsule Slash"
+        }
+      }
+    ]
+  },
+  "designs": {
+    "added": [
+      {
+        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf",
+        "name": "Slanted"
+      }
+    ],
+    "removed": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000024"
+      }
+    ],
+    "modified": [
+      {
+        "design": {
+          "id": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
+        },
+        "diff": {
+          "name": "Twisted"
+        }
+      }
+    ]
   }
 }

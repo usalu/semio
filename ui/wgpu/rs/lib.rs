@@ -12459,11 +12459,16 @@ pub mod paint {
 //! exists), reading resolved geometry from `tree::LayoutBucket` (accumulating parent-relative
 //! offsets while walking, since taffy's `Layout::location` is parent-relative — see that struct's
 //! doc comment) instead of the old `bounds: Rect` argument an immediate-mode caller threaded down.
-//! Interaction-derived visuals (hover/focus/active/pressed) read `NodeFlags`/`WidgetState` — both
-//! still default/empty until M5 (events) wires them up, which is fine and expected here.
-//! `WidgetState`-backed composites (Select's open popup, Tree's live scroll offset, an Input's
-//! in-progress edit buffer) paint their *closed*/rest-state appearance only; a later milestone
-//! (M5 events, M6 shell) both wires the state and expands these composites into retained children.
+//! Interaction-derived visuals (hover/focus/active/selected) read live `NodeFlags`/`WidgetState`,
+//! written each frame by `events::EventRouter` (M5, landed) — no longer default/empty by the time
+//! `paint_tree` runs, as an earlier revision of this comment used to caveat. `WidgetState`-backed
+//! composites have since gained real paint support too: an open `Select`'s popup expands live
+//! (`paint_select`'s `open`/`retained` params, wired by the W2 pass — see
+//! `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-ui-wgpu-integration.md`), and a focused
+//! `Input`'s caret/selection-highlight render straight from its live `EditState` (`paint_input`,
+//! W2 widget-visuals pass). `Tree`'s live scroll offset (`WidgetState::scroll_offset`) remains the
+//! one rest-state-only exception — no scrollable-viewport paint exists yet, out of every pass to
+//! date's scope.
 
 use crate::arena::NodeId;
 use crate::chrome::{chrome_item_bg, item_bg, item_text, push_chrome_border, push_control_border, push_icon, ICON_TINY};
@@ -12478,7 +12483,7 @@ use crate::IconName;
 use crate::geometry::Rect;
 use crate::text::FontAtlas;
 use crate::theme::{GlassTier, Rgba, Theme};
-use crate::tree::{NodeFlags, NodeKey, UiTree};
+use crate::tree::{EditState, NodeFlags, NodeKey, UiTree};
 use crate::widgets::{draw_text_on, wrap_text};
 
 const PANEL_HEADER: f32 = 24.0;
@@ -12497,9 +12502,15 @@ const TREE_ICON_SIZE: f32 = 14.0;
 /// build yet. Whether to call `paint_tree` at all this frame — i.e. "was anything dirty" — is a
 /// decision a later milestone's `engine` facade owns (it already knows from driving `flex::compute`
 /// and `reconcile::apply_tree`), not something `paint_tree` decides for itself.
-pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+/// 🎬 `has_scene_host` gates the `ComponentScene`/`Image` leaf arms below (see `paint_node`'s own
+/// match): when the caller's `engine::Ui::frame` has a real `scene_slots::SceneHost` for this tick,
+/// those leaves paint NOTHING here — the host paints the real content into the same rect right after
+/// this call, in `Ui::frame`'s `collect_scene_slots` loop — instead of this pass drawing placeholder
+/// chrome that the host would then have to paint over. With no host (`false`), behavior is unchanged
+/// from before this parameter existed: `paint_component_scene`/`paint_image`'s own placeholder chrome.
+pub(crate) fn paint_tree(tree: &mut UiTree, root: NodeId, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     sync_interactive_state(tree, root, theme);
-    paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, draw);
+    paint_node(tree, root, 0.0, 0.0, theme, atlas, icons, has_scene_host, draw);
     clear_dirty_paint(tree, root);
 }
 
@@ -12698,7 +12709,7 @@ fn presence_overlay(draw: &mut DrawList, bounds: Rect, theme: &Theme, presence: 
     }
 }
 
-pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let Some(node) = tree.node(id) else { return };
     let presence = node.spec.0.presence();
     if !presence.visible() {
@@ -12718,34 +12729,45 @@ pub(crate) fn paint_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32
     match &node.spec.0 {
         UiNode::Stack(stack) => {
             paint_stack_frame(stack, bounds, flags, theme, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Text(text) => paint_text(text, bounds, theme, atlas, draw),
         UiNode::Separator(_) => paint_separator(bounds, theme, draw),
         UiNode::Button(button) => paint_button(button, bounds, flags, theme, atlas, icons, draw),
-        UiNode::Input(input) => paint_input(input, bounds, flags, theme, atlas, draw),
+        UiNode::Input(input) => paint_input(input, node.state.edit.as_ref(), bounds, flags, theme, atlas, draw),
         UiNode::Select(select) => paint_select(select, bounds, flags, node.state.open, Some((tree, id)), theme, atlas, icons, draw),
         UiNode::Toggle(toggle) => paint_toggle(toggle, bounds, flags, theme, atlas, icons, draw),
         UiNode::KeyValue(kv) => paint_key_value(kv, bounds, theme, atlas, draw),
         UiNode::Slider(slider) => paint_slider(slider, bounds, theme, atlas, draw),
-        UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, theme, atlas, draw),
+        UiNode::NumberStepper(stepper) => paint_number_stepper(stepper, bounds, flags, theme, atlas, draw),
         UiNode::Ring(ring) => paint_ring(ring, bounds, theme, draw),
         UiNode::IconSelect(select) => paint_icon_select(select, bounds, flags, theme, atlas, icons, draw),
         UiNode::Field(field) => {
             paint_field(field, bounds, theme, atlas, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Section(section) => {
             paint_section(section, bounds, theme, atlas, icons, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Group(group) => {
             paint_group(group, bounds, theme, atlas, icons, draw);
-            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, draw);
+            paint_stack(tree, id, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
         }
         UiNode::Tree(tree_node) => paint_tree_widget(tree_node, bounds, theme, atlas, icons, draw),
-        UiNode::Image(image) => paint_image(image, bounds, theme, atlas, draw),
-        UiNode::ComponentScene(scene) => paint_component_scene(scene, bounds, theme, draw),
+        // 🎬 With a `SceneHost` registered this tick, leave these two rects untouched here —
+        // `engine::Ui::frame`'s `collect_scene_slots` loop paints the real content right after this
+        // pass returns. With no host, fall back to the unchanged placeholder chrome.
+        UiNode::Image(image) => {
+            if !has_scene_host {
+                paint_image(image, bounds, theme, atlas, draw);
+            }
+        }
+        UiNode::ComponentScene(scene) => {
+            if !has_scene_host {
+                paint_component_scene(scene, bounds, theme, draw);
+            }
+        }
         UiNode::ExternalSlot(slot) => paint_external_slot(slot, bounds, theme, atlas, draw),
     }
     presence_overlay(draw, bounds, theme, presence);
@@ -12802,10 +12824,10 @@ fn paint_stack_frame(stack: &UiStackNode, bounds: Rect, flags: NodeFlags, theme:
 /// `reconcile::children_of`) — `paint_stack_frame` doesn't apply to either (neither carries
 /// `activate`/`selected`).
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
-fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
+fn paint_stack(tree: &UiTree, id: NodeId, abs_x: f32, abs_y: f32, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, has_scene_host: bool, draw: &mut DrawList) {
     let children: Vec<NodeId> = tree.children(id).collect();
     for child in children {
-        paint_node(tree, child, abs_x, abs_y, theme, atlas, icons, draw);
+        paint_node(tree, child, abs_x, abs_y, theme, atlas, icons, has_scene_host, draw);
     }
 }
 
@@ -12834,9 +12856,15 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     // an independent, `UiButtonNode.disabled`-driven fix rather than a widgets port.
     let disabled = node.presence.state == UiState::Disabled;
     let hovered = !disabled && flags.contains(NodeFlags::HOVERED);
+    // 🎯 `formControlFocusBorderClass`'s `focus-visible:border-accent` (`ui/js/react/index.tsx`,
+    // applied to every form-control primitive including `Button`) — `widgets::render_button` never
+    // implemented a focus ring either (only `render_input` did), so this is another independent
+    // React-sourced fix, mirroring `paint_input`'s own established border-swap convention.
+    let focused = !disabled && flags.contains(NodeFlags::FOCUSED);
     let dim = |color: Rgba| if disabled { color.with_alpha(color.a * 0.5) } else { color };
     let bg = dim(item_bg(theme, false, hovered));
-    push_control_border(draw, bounds, theme, dim(theme.border_normal), bg);
+    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, dim(border), bg);
     let mut text_x = bounds.x + theme.padding_standard;
     let icon_key = if node.icon_id == IconName::CircleDot { node.label.as_str() } else { node.icon_id.as_str() };
     if let Some(icons) = icons {
@@ -12848,16 +12876,56 @@ fn paint_button(node: &UiButtonNode, bounds: Rect, flags: NodeFlags, theme: &The
     draw_text_on(draw, atlas, &node.label, text_x, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, dim(item_text(theme, false, hovered)));
 }
 
-fn paint_input(node: &UiInputNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+/// ↔️ Local mirror of `events::selection_bounds` — `anchor..caret` as `(start, end)` regardless of
+/// which is smaller (see `tree::EditState`'s own doc comment). Duplicated rather than imported
+/// across the `paint`/`events` module boundary for a one-line pure function; keep the two in sync
+/// if `EditState`'s selection convention ever changes.
+fn edit_selection_bounds(anchor: usize, caret: usize) -> (usize, usize) {
+    (anchor.min(caret), anchor.max(caret))
+}
+
+/// ✍️ `edit` is `node.state.edit` (see `tree::WidgetState`'s doc comment: `Some` only while this
+/// `Input` is focused and has a live typing buffer). While present, the live `EditState::text`
+/// (with any in-progress IME `composition` spliced in at the caret for preview) wins over the
+/// declarative `node.value` — the same "focused buffer governs" contract `events::FocusState`
+/// already establishes — since caret/selection coordinates are only meaningful against the exact
+/// string they were computed from. Neither `widgets::render_input` nor React's native `<input>`
+/// (whose caret/selection are rendered by the browser itself, not by application code — there is no
+/// CSS/JSX to port for their exact geometry) has anything to port from, so caret/selection styling
+/// (`theme.accent`) is this pass's own independent choice, kept consistent with `paint_input`'s own
+/// pre-existing `border_emphasized`-on-focus convention.
+fn paint_input(node: &UiInputNode, edit: Option<&EditState>, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let focused = flags.contains(NodeFlags::FOCUSED);
     let border = if focused { theme.border_emphasized } else { theme.border_normal };
     push_control_border(draw, bounds, theme, border, theme.input_bg);
+    let text_x = bounds.x + 8.0;
+    let text_baseline_y = bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0;
+    if let Some(edit) = focused.then_some(edit).flatten() {
+        let (start, end) = edit_selection_bounds(edit.anchor, edit.caret);
+        if start != end {
+            let (x0, _) = atlas.measure_text(&edit.text[..start], theme.font_size_body);
+            let (x1, _) = atlas.measure_text(&edit.text[..end], theme.font_size_body);
+            let sel_h = theme.font_size_body * 1.2;
+            let sel_y = bounds.y + (bounds.h - sel_h) * 0.5;
+            draw.push_solid([text_x + x0, sel_y, (x1 - x0).max(1.0), sel_h], theme.accent.with_alpha(0.3));
+        }
+        let mut display = edit.text.clone();
+        if let Some(composition) = &edit.composition {
+            display.insert_str(edit.caret, composition);
+        }
+        draw_text_on(draw, atlas, &display, text_x, text_baseline_y, theme.font_size_body, theme.text);
+        let (caret_x, _) = atlas.measure_text(&edit.text[..edit.caret], theme.font_size_body);
+        let caret_h = theme.font_size_body * 1.2;
+        let caret_y = bounds.y + (bounds.h - caret_h) * 0.5;
+        draw.push_solid([text_x + caret_x, caret_y, 1.0, caret_h], theme.accent);
+        return;
+    }
     let (display, muted): (&str, bool) = if node.value.is_empty() {
         (node.placeholder.as_deref().unwrap_or(""), true)
     } else {
         (node.value.as_str(), false)
     };
-    draw_text_on(draw, atlas, display, bounds.x + 8.0, bounds.y + (bounds.h + theme.font_size_body) * 0.5 - 2.0, theme.font_size_body, if muted { theme.text_muted } else { theme.text });
+    draw_text_on(draw, atlas, display, text_x, text_baseline_y, theme.font_size_body, if muted { theme.text_muted } else { theme.text });
 }
 
 /// 🔽 `retained` is `Some((tree, id))` for a real top-level `Select` node (able to read its
@@ -12872,8 +12940,13 @@ fn paint_input(node: &UiInputNode, bounds: Rect, flags: NodeFlags, theme: &Theme
 #[allow(clippy::too_many_arguments, reason = "one arg per paint context resource; grouping into a struct is a T2 restructure, out of scope")]
 fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool, retained: Option<(&UiTree, NodeId)>, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
+    // 🎯 `SelectTrigger`'s own `formControlFocusBorderClass` (`ui/js/react/index.tsx`) swaps its
+    // border to `border-accent` on `focus-visible` — mirrored via the same border-swap convention
+    // `paint_input`/`paint_button` already use, since `widgets::render_select` never implemented one.
+    let focused = flags.contains(NodeFlags::FOCUSED);
     let bg = if hovered { theme.button_hover } else { theme.input_bg };
-    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, bg);
     let label = node
         .items
         .iter()
@@ -12907,8 +12980,12 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
 fn paint_toggle(node: &UiToggleNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let pressed = node.presence.selected;
     let hovered = flags.contains(NodeFlags::HOVERED);
+    // 🎯 Same `formControlFocusBorderClass` border-swap as `paint_button`/`paint_select` — the icon-
+    // button variant `Toggle` renders through (`ui/js/react/index.tsx`) carries it too.
+    let focused = flags.contains(NodeFlags::FOCUSED);
     let bg = item_bg(theme, pressed, hovered);
-    push_control_border(draw, bounds, theme, theme.border_normal, bg);
+    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, bg);
     let mut content_x = bounds.x + theme.padding_standard;
     if let Some(icons) = icons {
         if icons.icon_uv(node.icon_id.as_str()).is_some() {
@@ -12956,13 +13033,24 @@ fn paint_slider(node: &UiSliderNode, bounds: Rect, theme: &Theme, atlas: &mut Fo
     }
 }
 
-fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
+fn paint_number_stepper(node: &UiNumberStepperNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     let seg = bounds.w / 3.0;
     let minus = Rect::new(bounds.x, bounds.y, seg, bounds.h);
     let center = Rect::new(bounds.x + seg, bounds.y, seg, bounds.h);
     let plus = Rect::new(bounds.x + seg * 2.0, bounds.y, seg, bounds.h);
     let hair = theme.stroke_hairline;
-    push_control_border(draw, bounds, theme, theme.border_normal, theme.input_bg);
+    // 🖱️ `Stepper`'s minus/plus `<Button variant="outline">`s (`ui/js/react/index.tsx`) each carry
+    // their own `hover:bg-muted`/`focus-visible:bg-muted`/`formControlFocusBorderClass`; this retained
+    // model has no per-segment `NodeId` (the whole stepper is one hit-testable node — see this
+    // function's caller, `paint_control`'s doc comment, for the same one-`NodeId`-per-composite
+    // caveat), so the closest in-model approximation tints the shared outer bg/border for hover/focus,
+    // which the nested center-segment border below then repaints back to `input_bg`/`border_normal`
+    // (the center "value" segment isn't a button — it never carries React's own hover/focus fill).
+    let hovered = flags.contains(NodeFlags::HOVERED);
+    let focused = flags.contains(NodeFlags::FOCUSED);
+    let outer_bg = if hovered { theme.button_hover } else { theme.input_bg };
+    let outer_border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, outer_border, outer_bg);
     draw.push_solid([bounds.x + seg, bounds.y, hair, bounds.h], theme.border_normal);
     draw.push_solid([bounds.x + seg * 2.0, bounds.y, hair, bounds.h], theme.border_normal);
     // 🔲 `widgets::render_number_stepper` renders the center value segment through a full
@@ -13009,7 +13097,12 @@ fn paint_ring(node: &UiRingNode, bounds: Rect, theme: &Theme, draw: &mut DrawLis
 
 fn paint_icon_select(node: &UiIconSelectNode, bounds: Rect, flags: NodeFlags, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let hovered = flags.contains(NodeFlags::HOVERED);
-    push_control_border(draw, bounds, theme, theme.border_normal, chrome_item_bg(theme, false, hovered));
+    // 🎯 Same border-swap-on-focus convention as `paint_button`/`paint_select`/`paint_toggle` — the
+    // real `IconSelector` (`ui/js/react/index.tsx`) nests a `Select` for its mode picker, which
+    // inherits `formControlFocusBorderClass` the same way.
+    let focused = flags.contains(NodeFlags::FOCUSED);
+    let border = if focused { theme.border_emphasized } else { theme.border_normal };
+    push_control_border(draw, bounds, theme, border, chrome_item_bg(theme, false, hovered));
     let content_x = bounds.x + theme.padding_standard;
     let has_icon = icons.and_then(|icons| icons.icon_uv(&node.value)).is_some();
     if let (true, Some(icons)) = (has_icon, icons) {
@@ -13047,8 +13140,9 @@ fn paint_field(node: &UiFieldNode, bounds: Rect, theme: &Theme, atlas: &mut Font
 }
 
 /// 📂 A `Section`'s header chevron+label; its `children` are retained children painted separately by
-/// `paint_stack`. Collapsed state reads `default_open` directly (no `WidgetState`-backed toggle
-/// persistence yet — that's M5/M6, same caveat as `paint_select`'s closed-only popup).
+/// `paint_stack`. Collapsed state still reads `default_open` directly — no `WidgetState`-backed
+/// toggle persistence exists for `Section` yet (unlike `Select`'s popup open/closed state and
+/// `Input`'s live edit buffer, both wired by now — see `WidgetState`'s own doc comment).
 fn paint_section(node: &UiSectionNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, icons: Option<&IconAtlas>, draw: &mut DrawList) {
     let Some(label) = &node.label else { return };
     let collapsed = !node.default_open.unwrap_or(true);
@@ -13226,21 +13320,23 @@ fn paint_control(control: &UiControlNode, bounds: Rect, theme: &Theme, atlas: &m
     let flags = NodeFlags::empty();
     match control {
         UiControlNode::Button(node) => paint_button(node, bounds, flags, theme, atlas, icons, draw),
-        UiControlNode::Input(node) => paint_input(node, bounds, flags, theme, atlas, draw),
+        UiControlNode::Input(node) => paint_input(node, None, bounds, flags, theme, atlas, draw),
         UiControlNode::Select(node) => paint_select(node, bounds, flags, false, None, theme, atlas, icons, draw),
         UiControlNode::Toggle(node) => paint_toggle(node, bounds, flags, theme, atlas, icons, draw),
         UiControlNode::KeyValue(node) => paint_key_value(node, bounds, theme, atlas, draw),
         UiControlNode::Slider(node) => paint_slider(node, bounds, theme, atlas, draw),
-        UiControlNode::NumberStepper(node) => paint_number_stepper(node, bounds, theme, atlas, draw),
+        UiControlNode::NumberStepper(node) => paint_number_stepper(node, bounds, flags, theme, atlas, draw),
         UiControlNode::Ring(node) => paint_ring(node, bounds, theme, draw),
         UiControlNode::IconSelect(node) => paint_icon_select(node, bounds, flags, theme, atlas, icons, draw),
     }
 }
 
-/// 🖼️ No host-side texture-upload queue exists in `ui_wgpu` yet (that lives in the renderer's
-/// `plugin_bridge`/`engine_canvas`, outside this milestone's scope); paints a raster quad keyed by
-/// `src` on the assumption a later host/`scene_slots` milestone populates `RasterTextureStore` under
-/// that same key, falling back to `alt` text when there's nothing to show yet.
+/// 🖼️ `paint_node`'s caller (`paint_tree`) only reaches this when `has_scene_host` is `false` this
+/// tick — a real `scene_slots::SceneHost` paints the actual image content instead (see `paint_node`'s
+/// `UiNode::Image` arm). No host-side texture-upload queue exists in `ui_wgpu` itself even so (that
+/// lives in the renderer's `plugin_bridge`/`engine_canvas`, outside this crate's scope); paints a
+/// raster quad keyed by `src` on the chance a caller-owned `RasterTextureStore` already has that key
+/// uploaded, falling back to `alt` text when there's nothing to show yet.
 fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut FontAtlas, draw: &mut DrawList) {
     if node.src.is_empty() {
         if let Some(alt) = &node.alt {
@@ -13251,9 +13347,11 @@ fn paint_image(node: &UiImageNode, bounds: Rect, theme: &Theme, atlas: &mut Font
     draw.push_raster_quad(&node.src, [bounds.x, bounds.y, bounds.w, bounds.h], [0.0, 0.0, 1.0, 1.0], 1.0);
 }
 
-/// 🎬 Scene surfaces (canvas2d/world3d/node-graph/…) are painted by a `SceneHost` after layout hands
-/// it slot rects (plan's `scene_slots`, M6) — this milestone paints placeholder chrome only, so the
-/// retained tree has *something* visible in that rect before scene-host wiring lands.
+/// 🎬 `paint_node`'s caller only reaches this when `has_scene_host` is `false` this tick — with a
+/// real `scene_slots::SceneHost` registered, `engine::Ui::frame`'s `collect_scene_slots` loop paints
+/// the actual scene surface (canvas2d/world3d/node-graph/…) into this same rect right after this
+/// pass returns (see `paint_node`'s `UiNode::ComponentScene` arm), so this placeholder chrome is
+/// purely the no-host fallback — "there's something visible in that rect" rather than nothing.
 fn paint_component_scene(node: &UiComponentSceneNode, bounds: Rect, theme: &Theme, draw: &mut DrawList) {
     let _ = &node.surface_id;
     push_control_border(draw, bounds, theme, theme.border_normal, theme.panel);
@@ -13274,8 +13372,9 @@ mod tests {
         UiFieldNode, UiNumberStepperNode, UiSectionNode, UiSeparatorNode, UiSliderNode,
         UiStackNode, UiTreeItemAction, UiTreeSectionNode,
     };
-    use crate::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_WAITING_BORDER};
+    use crate::draw::{KIND_GLYPH, KIND_LOADING_BORDER, KIND_SOLID, KIND_WAITING_BORDER};
     use crate::flex::LayoutEngine;
+    use crate::tree::EditState;
 
     fn action() -> ActionDescriptor {
         ActionDescriptor { controller_id: "ctrl".into(), action: "go".into(), args: None }
@@ -13337,7 +13436,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&text("hi"));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let total_instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(total_instances > 0, "text node should emit at least one glyph instance");
@@ -13349,7 +13448,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&ui);
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let total_instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         let total_vectors: usize = draw.layers.iter().map(|layer| layer.vector_vertices.len()).sum();
@@ -13363,7 +13462,7 @@ mod tests {
         assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DIRTY_PAINT));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let after_first = tree.node(root).unwrap().flags;
         assert!(!after_first.contains(NodeFlags::DIRTY_PAINT));
@@ -13372,7 +13471,7 @@ mod tests {
 
         // Second call must be a no-operation w.r.t. these flags — repeat of the M3 SUBTREE_DIRTY bug class
         // (calling twice shouldn't set or double-clear something it shouldn't).
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
         let after_second = tree.node(root).unwrap().flags;
         assert_eq!(after_first, after_second);
     }
@@ -13382,7 +13481,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&loading_button("save"));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_loading_border = draw
             .layers
@@ -13397,7 +13496,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_button("save"));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_waiting_border = draw
             .layers
@@ -13423,7 +13522,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&button("btn", true));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let dimmed = draw
             .layers
@@ -13442,7 +13541,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&loading_section("sec"));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
         assert!(has_loading_border, "a loading section should emit a KIND_LOADING_BORDER instance");
@@ -13457,7 +13556,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_section("sec"));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
         assert!(has_waiting_border, "a waiting section should emit a KIND_WAITING_BORDER instance");
@@ -13472,7 +13571,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&loading_stack(vec![text("a")]));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
         assert!(has_loading_border, "a loading stack should emit a KIND_LOADING_BORDER instance");
@@ -13487,7 +13586,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_stack(vec![text("a")]));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
         assert!(has_waiting_border, "a waiting stack should emit a KIND_WAITING_BORDER instance");
@@ -13516,7 +13615,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&loading_tree());
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_loading_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_LOADING_BORDER).abs() < 0.01);
         assert!(has_loading_border, "a loading tree should emit a KIND_LOADING_BORDER instance");
@@ -13527,7 +13626,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&waiting_tree());
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_waiting_border = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| (instance.params[2] - KIND_WAITING_BORDER).abs() < 0.01);
         assert!(has_waiting_border, "a waiting tree should emit a KIND_WAITING_BORDER instance");
@@ -13542,7 +13641,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         // Outer control border (bg + 4 edges = 5) + 2 divider lines + nested center-value border
@@ -13557,7 +13656,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, false));
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let has_muted_glyph = draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
             (instance.params[2] - KIND_GLYPH).abs() < 0.01
@@ -13576,11 +13675,11 @@ mod tests {
     fn painting_a_slider_with_a_unit_emits_extra_glyphs_for_the_readout() {
         let (mut plain_tree, plain_root, theme, mut plain_atlas) = setup(&slider("sl", None));
         let mut plain_draw = DrawList::default();
-        paint_tree(&mut plain_tree, plain_root, &theme, &mut plain_atlas, None, &mut plain_draw);
+        paint_tree(&mut plain_tree, plain_root, &theme, &mut plain_atlas, None, false, &mut plain_draw);
 
         let (mut unit_tree, unit_root, theme2, mut unit_atlas) = setup(&slider("sl", Some("mm")));
         let mut unit_draw = DrawList::default();
-        paint_tree(&mut unit_tree, unit_root, &theme2, &mut unit_atlas, None, &mut unit_draw);
+        paint_tree(&mut unit_tree, unit_root, &theme2, &mut unit_atlas, None, false, &mut unit_draw);
 
         let plain_total: usize = plain_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         let unit_total: usize = unit_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
@@ -13595,11 +13694,11 @@ mod tests {
     fn painting_a_field_with_description_required_and_error_emits_extra_glyphs() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&field(None, false, None));
         let mut bare_draw = DrawList::default();
-        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, &mut bare_draw);
+        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
 
         let (mut rich_tree, rich_root, theme2, mut rich_atlas) = setup(&field(Some("desc"), true, Some("bad")));
         let mut rich_draw = DrawList::default();
-        paint_tree(&mut rich_tree, rich_root, &theme2, &mut rich_atlas, None, &mut rich_draw);
+        paint_tree(&mut rich_tree, rich_root, &theme2, &mut rich_atlas, None, false, &mut rich_draw);
 
         let bare_total: usize = bare_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         let rich_total: usize = rich_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
@@ -13631,11 +13730,11 @@ mod tests {
     fn painting_a_tree_item_with_description_emits_more_than_a_bare_item() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&tree_with_bare_item());
         let mut bare_draw = DrawList::default();
-        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, &mut bare_draw);
+        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
 
         let (mut rich_tree, rich_root, theme2, mut rich_atlas) = setup(&tree_with_item_description());
         let mut rich_draw = DrawList::default();
-        paint_tree(&mut rich_tree, rich_root, &theme2, &mut rich_atlas, None, &mut rich_draw);
+        paint_tree(&mut rich_tree, rich_root, &theme2, &mut rich_atlas, None, false, &mut rich_draw);
 
         let bare_total: usize = bare_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         let rich_total: usize = rich_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
@@ -13664,13 +13763,13 @@ mod tests {
     fn painting_an_open_select_popup_emits_more_instances_than_a_closed_one_and_highlights_the_value() {
         let (mut tree, root, theme, mut atlas) = setup(&select("sel", "b"));
         let mut closed_draw = DrawList::default();
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut closed_draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut closed_draw);
         let closed_total: usize = closed_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
 
         tree.node_mut(root).unwrap().state.open = true;
         tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
         let mut open_draw = DrawList::default();
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut open_draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut open_draw);
         let open_total: usize = open_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
 
         assert!(open_total > closed_total, "an open Select should paint its popup rows in addition to the closed trigger");
@@ -13689,7 +13788,7 @@ mod tests {
         tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let row_a = find_child_by_key(&tree, root, &NodeKey::Explicit("a".into())).expect("reconcile should have synthesized a retained row for item \"a\"");
         let row_b = find_child_by_key(&tree, root, &NodeKey::Explicit("b".into())).expect("reconcile should have synthesized a retained row for item \"b\"");
@@ -13707,12 +13806,12 @@ mod tests {
     fn a_stacks_drop_target_flag_tracks_its_drop_action() {
         let (mut tree, root, theme, mut atlas) = setup(&drop_stack(Some(action())));
         let mut draw = DrawList::default();
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
         assert!(tree.node(root).unwrap().flags.contains(NodeFlags::DROP_TARGET), "a Stack with a drop_action should be flagged NodeFlags::DROP_TARGET");
 
         let (mut plain_tree, plain_root, plain_theme, mut plain_atlas) = setup(&drop_stack(None));
         let mut plain_draw = DrawList::default();
-        paint_tree(&mut plain_tree, plain_root, &plain_theme, &mut plain_atlas, None, &mut plain_draw);
+        paint_tree(&mut plain_tree, plain_root, &plain_theme, &mut plain_atlas, None, false, &mut plain_draw);
         assert!(!plain_tree.node(plain_root).unwrap().flags.contains(NodeFlags::DROP_TARGET), "a Stack without a drop_action must not be flagged DROP_TARGET");
     }
 
@@ -13724,18 +13823,18 @@ mod tests {
     fn an_activatable_stack_paints_a_frame_and_a_selected_one_paints_an_extra_ring() {
         let (mut bare_tree, bare_root, theme, mut bare_atlas) = setup(&stack(vec![text("child")]));
         let mut bare_draw = DrawList::default();
-        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, &mut bare_draw);
+        paint_tree(&mut bare_tree, bare_root, &theme, &mut bare_atlas, None, false, &mut bare_draw);
         let bare_total: usize = bare_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
 
         let (mut card_tree, card_root, theme2, mut card_atlas) = setup(&activatable_stack(false));
         let mut card_draw = DrawList::default();
-        paint_tree(&mut card_tree, card_root, &theme2, &mut card_atlas, None, &mut card_draw);
+        paint_tree(&mut card_tree, card_root, &theme2, &mut card_atlas, None, false, &mut card_draw);
         let card_total: usize = card_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(card_total > bare_total, "an activatable Stack should paint a bg+border frame a bare Stack doesn't");
 
         let (mut selected_tree, selected_root, theme3, mut selected_atlas) = setup(&activatable_stack(true));
         let mut selected_draw = DrawList::default();
-        paint_tree(&mut selected_tree, selected_root, &theme3, &mut selected_atlas, None, &mut selected_draw);
+        paint_tree(&mut selected_tree, selected_root, &theme3, &mut selected_atlas, None, false, &mut selected_draw);
         let selected_total: usize = selected_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(selected_total > card_total, "a selected activatable Stack should paint an extra ring border beyond the plain activate frame");
     }
@@ -13756,7 +13855,7 @@ mod tests {
         let (mut tree, root, theme, mut atlas) = setup(&tree_with_draggable_item());
         let mut draw = DrawList::default();
 
-        paint_tree(&mut tree, root, &theme, &mut atlas, None, &mut draw);
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
 
         let section = find_child_by_key(&tree, root, &NodeKey::Explicit("s1".into())).expect("reconcile should have synthesized a retained row for section \"s1\"");
         let row = find_child_by_key(&tree, section, &NodeKey::Explicit("i1".into())).expect("reconcile should have synthesized a retained row for item \"i1\"");
@@ -13765,6 +13864,150 @@ mod tests {
         assert!(tree.node(row).unwrap().flags.contains(NodeFlags::DRAG_SOURCE), "a draggable Tree item's row should be flagged NodeFlags::DRAG_SOURCE");
     }
     //#endregion 🔖W2InteractivityFixes
+
+    //#region 🔖W2WidgetVisuals
+    // 🖱️✍️🎯 Tests for `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`'s W2 widget-visuals pass: a
+    // focused `Input`'s caret/selection-highlight (`paint_input`, sourced from `tree::EditState`),
+    // and the `formControlFocusBorderClass`-matching focus ring ported onto every remaining
+    // focusable control kind (`Button`/`Select`/`Toggle`/`NumberStepper`/`IconSelect`, plus a
+    // `NumberStepper` hover tint) that only `paint_input` had before this pass.
+    fn input(id: &str, value: &str) -> UiNode {
+        UiNode::Input(UiInputNode { id: id.into(), input_kind: "text".into(), value: value.into(), placeholder: None, commit: None, min: None, max: None, step: None, accept: None, on_change: action(), presence: UiPresence::default() })
+    }
+
+    fn focus(tree: &mut UiTree, id: NodeId) {
+        tree.node_mut(id).unwrap().flags.set(NodeFlags::FOCUSED, true);
+        tree.mark_dirty(id, NodeFlags::DIRTY_PAINT);
+    }
+
+    fn has_solid_instance_colored(draw: &DrawList, color: Rgba) -> bool {
+        draw.layers.iter().flat_map(|layer| layer.ui_instances.iter()).any(|instance| {
+            (instance.params[2] - KIND_SOLID).abs() < 0.01
+                && (instance.color[0] - color.r).abs() < 0.001
+                && (instance.color[1] - color.g).abs() < 0.001
+                && (instance.color[2] - color.b).abs() < 0.001
+                && (instance.color[3] - color.a).abs() < 0.001
+        })
+    }
+
+    #[test]
+    fn painting_an_unfocused_input_emits_no_caret_or_selection() {
+        let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
+        tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello".into(), caret: 5, anchor: 0, composition: None, scroll_x: 0.0 });
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+
+        assert!(!has_solid_instance_colored(&draw, theme.accent), "an unfocused Input must not paint a caret even if a stale EditState lingers on it");
+        assert!(!has_solid_instance_colored(&draw, theme.accent.with_alpha(0.3)), "an unfocused Input must not paint a selection highlight");
+    }
+
+    #[test]
+    fn painting_a_focused_input_with_a_collapsed_selection_emits_a_caret_line_but_no_highlight() {
+        let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello"));
+        focus(&mut tree, root);
+        tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello".into(), caret: 5, anchor: 5, composition: None, scroll_x: 0.0 });
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+
+        assert!(has_solid_instance_colored(&draw, theme.accent), "a focused Input should paint its caret as a theme.accent solid instance");
+        assert!(!has_solid_instance_colored(&draw, theme.accent.with_alpha(0.3)), "a collapsed selection (anchor == caret) must not paint a highlight rect");
+    }
+
+    #[test]
+    fn painting_a_focused_input_with_a_real_selection_emits_a_translucent_highlight() {
+        let (mut tree, root, theme, mut atlas) = setup(&input("in", "hello world"));
+        focus(&mut tree, root);
+        tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "hello world".into(), caret: 5, anchor: 0, composition: None, scroll_x: 0.0 });
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+
+        assert!(has_solid_instance_colored(&draw, theme.accent.with_alpha(0.3)), "a real anchor..caret selection should paint a theme.accent-at-0.3-alpha highlight rect");
+    }
+
+    #[test]
+    fn painting_a_focused_input_shows_the_live_edit_buffer_text_not_the_stale_declarative_value() {
+        let (mut tree, root, theme, mut atlas) = setup(&input("in", "old"));
+        focus(&mut tree, root);
+        tree.node_mut(root).unwrap().state.edit = Some(EditState { text: "a much longer buffer".into(), caret: 20, anchor: 20, composition: None, scroll_x: 0.0 });
+        let mut draw = DrawList::default();
+
+        let (mut stale_tree, stale_root, stale_theme, mut stale_atlas) = setup(&input("in", "old"));
+        let mut stale_draw = DrawList::default();
+        paint_tree(&mut stale_tree, stale_root, &stale_theme, &mut stale_atlas, None, false, &mut stale_draw);
+        let stale_total: usize = stale_draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+        let focused_total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        assert!(focused_total > stale_total, "a focused Input with a live EditState should paint its live (longer) buffer text, not the stale shorter declarative value");
+    }
+
+    fn toggle(id: &str) -> UiNode {
+        UiNode::Toggle(UiToggleNode { id: id.into(), icon_id: IconName::CircleDot, text: Some("Toggle".into()), on_change: action(), presence: UiPresence::default() })
+    }
+
+    fn icon_select(id: &str) -> UiNode {
+        UiNode::IconSelect(UiIconSelectNode { id: id.into(), value: "star".into(), uniform: true, classifier_kind: "generic".into(), on_change: action(), presence: UiPresence::default() })
+    }
+
+    /// 🎯 Shared assertion for the border-swap-on-focus fix: an otherwise-identical pair of trees,
+    /// one with `NodeFlags::FOCUSED` set on the root, should differ in at least one border instance's
+    /// color (`theme.border_emphasized` replacing `theme.border_normal`) — mirrors
+    /// `formControlFocusBorderClass`'s `focus-visible:border-accent` (`ui/js/react/index.tsx`).
+    fn assert_focus_swaps_border_color(make: impl Fn() -> UiNode, label: &str) {
+        let (mut unfocused_tree, unfocused_root, theme, mut unfocused_atlas) = setup(&make());
+        let mut unfocused_draw = DrawList::default();
+        paint_tree(&mut unfocused_tree, unfocused_root, &theme, &mut unfocused_atlas, None, false, &mut unfocused_draw);
+
+        let (mut focused_tree, focused_root, focused_theme, mut focused_atlas) = setup(&make());
+        focus(&mut focused_tree, focused_root);
+        let mut focused_draw = DrawList::default();
+        paint_tree(&mut focused_tree, focused_root, &focused_theme, &mut focused_atlas, None, false, &mut focused_draw);
+
+        assert!(!has_solid_instance_colored(&unfocused_draw, theme.border_emphasized), "{label}: an unfocused control must not paint its border_emphasized color");
+        assert!(has_solid_instance_colored(&focused_draw, theme.border_emphasized), "{label}: a focused control should swap its border to theme.border_emphasized");
+    }
+
+    #[test]
+    fn painting_a_focused_button_swaps_its_border_to_border_emphasized() {
+        assert_focus_swaps_border_color(|| button("btn", false), "Button");
+    }
+
+    #[test]
+    fn painting_a_focused_select_swaps_its_border_to_border_emphasized() {
+        assert_focus_swaps_border_color(|| select("sel", "a"), "Select");
+    }
+
+    #[test]
+    fn painting_a_focused_toggle_swaps_its_border_to_border_emphasized() {
+        assert_focus_swaps_border_color(|| toggle("tog"), "Toggle");
+    }
+
+    #[test]
+    fn painting_a_focused_number_stepper_swaps_its_outer_border_to_border_emphasized() {
+        assert_focus_swaps_border_color(|| stepper("ns", 2.0, true), "NumberStepper");
+    }
+
+    #[test]
+    fn painting_a_focused_icon_select_swaps_its_border_to_border_emphasized() {
+        assert_focus_swaps_border_color(|| icon_select("ic"), "IconSelect");
+    }
+
+    #[test]
+    fn painting_a_hovered_number_stepper_tints_its_outer_background() {
+        let (mut tree, root, theme, mut atlas) = setup(&stepper("ns", 2.0, true));
+        tree.node_mut(root).unwrap().flags.set(NodeFlags::HOVERED, true);
+        tree.mark_dirty(root, NodeFlags::DIRTY_PAINT);
+        let mut draw = DrawList::default();
+
+        paint_tree(&mut tree, root, &theme, &mut atlas, None, false, &mut draw);
+
+        assert!(has_solid_instance_colored(&draw, theme.button_hover), "a hovered NumberStepper should tint its shared minus/plus background to theme.button_hover");
+    }
+    //#endregion 🔖W2WidgetVisuals
 }
 // #endregion paint
 }
@@ -14911,6 +15154,13 @@ impl EventRouter {
     pub(crate) fn capture(&self) -> Option<(NodeId, CaptureKind)> {
         self.capture.target
     }
+
+    /// 🎯 Read-only: whether this window's retained content currently holds keyboard focus — see
+    /// `engine::Ui::window_has_focus` (its only caller), added for the `w2-input-wiring` host-side
+    /// focus arbitration (content vs. chrome routing, `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY`).
+    pub(crate) fn is_focused(&self) -> bool {
+        self.focus.focused.is_some()
+    }
     //#endregion 🔖CursorApi
 
     /// 🧹 Drops registry entries (`drag_payloads`/`drop_accept`/`scroll_thumbs`) keyed by a `NodeId`
@@ -15763,59 +16013,92 @@ mod tests {
 #[cfg(feature = "engine")]
 pub mod scene_slots {
 // #region scene_slots
-//! 🎬 Scene-host bridge: after each layout+paint pass the engine collects every `ComponentScene`
-//! leaf's resolved absolute rect into a `SceneSlot` and hands it to a caller-provided `SceneHost`,
-//! which owns the actual scene rendering (world3d via `infinite_world`, canvas2d, vello surfaces).
-//! `ui_wgpu` never links vello/resvg/tiny-skia itself — it only orchestrates slot geometry and event
-//! routing, matching the plan's dependency-graph invariant that those crates stay in the renderer.
+//! 🎬 Scene-host bridge: after each layout+paint pass the engine collects every `ComponentScene`/
+//! `Image` leaf's resolved absolute rect PLUS a borrowed reference to its own stored `UiNode`
+//! payload into a `SceneSlot`, and hands each one to a caller-provided `SceneHost`, which owns the
+//! actual scene/image rendering (world3d via `infinite_world`, canvas2d, vello surfaces, raster
+//! image decode/upload). `ui_wgpu` never links vello/resvg/tiny-skia/an image codec itself — it only
+//! orchestrates slot geometry and payload borrowing, matching the plan's dependency-graph invariant
+//! that those crates stay in the renderer. Slots borrow directly from the retained `UiTree`'s own
+//! arena-stored `UiNode` — never a second parallel structure — so a host reading a slot's payload is
+//! reading the exact same data `paint::paint_node` would have painted a placeholder for.
 
 use crate::arena::NodeId;
-use crate::component::ui::{SurfaceKind, UiNode};
-use crate::draw::DrawList;
-use crate::events::{UiCommand, UiEvent};
+use crate::component::ui::{SurfaceKind, UiComponentSceneNode, UiImageNode, UiNode};
+use crate::draw::{DrawList, IconAtlas};
 use crate::geometry::Rect;
+use crate::text::FontAtlas;
 use crate::tree::UiTree;
 
-/// 🎬 One `ComponentScene` leaf's resolved absolute rect, ready to hand to a `SceneHost`.
-#[derive(Clone, Debug, PartialEq)]
-pub struct SceneSlot {
+/// 🎬 A `SceneSlot`'s borrowed payload — points directly at the leaf's own `UiNode` variant stored
+/// in the retained `UiTree`'s arena, never a clone.
+#[derive(Debug, PartialEq)]
+pub enum SlotContent<'tree> {
+    Scene(&'tree UiComponentSceneNode),
+    Image(&'tree UiImageNode),
+}
+
+/// 🎬 One `ComponentScene`/`Image` leaf's resolved absolute rect plus its full borrowed payload,
+/// ready to hand to a `SceneHost`.
+#[derive(Debug, PartialEq)]
+pub struct SceneSlot<'tree> {
     pub node: NodeId,
-    pub surface_id: String,
-    pub kind: SurfaceKind,
     pub rect: Rect,
+    pub content: SlotContent<'tree>,
 }
 
-/// 🖇️ External scene renderer/router — the only place vello/world3d/etc-specific code may live;
-/// `ui_wgpu` calls into it after layout+paint with resolved slot geometry, never the reverse.
+impl<'tree> SceneSlot<'tree> {
+    /// 🪪 `(surface_id, SurfaceKind)` when this slot is a `ComponentScene` — `None` for `Image`,
+    /// which carries no `SurfaceKind` (it's routed by `SlotContent`'s own variant instead).
+    pub fn surface(&self) -> Option<(&'tree str, SurfaceKind)> {
+        match self.content {
+            SlotContent::Scene(scene) => Some((scene.surface_id.as_str(), scene.component_kind)),
+            SlotContent::Image(_) => None,
+        }
+    }
+}
+
+/// 🖇️ External scene/image renderer — the only place vello/world3d/raster-decode-specific code may
+/// live; `ui_wgpu` calls into it after layout+paint with resolved slot geometry plus the borrowed
+/// node payload, never the reverse. Paint-only this milestone: routing pointer/keyboard events that
+/// hit a slot to this same host needs a different mechanism (event routing is keyed by `NodeId`
+/// through `events::EventRouter` today, which knows nothing about host-owned sub-surfaces) — that's
+/// later, separate work, not this trait's job to anticipate.
 pub trait SceneHost {
-    /// 🖌️ Pushes this slot's own draw calls (e.g. a `ScenePass3d`) into the shared `DrawList`.
-    fn paint_slot(&mut self, slot: &SceneSlot, draw: &mut DrawList);
-    /// 🕹️ Routes an event that hit this slot to the host, returning any `UiCommand`s it produces.
-    fn handle_event(&mut self, slot: &SceneSlot, event: &UiEvent) -> Vec<UiCommand>;
+    /// 🖌️ Pushes this slot's own draw calls into `draw` — the retained window's own `DrawList`, in
+    /// that window's local `(0,0)`-origin coordinate space, the same space `slot.rect` is expressed
+    /// in (the caller composites/offsets the whole `DrawList` afterward, same as every other
+    /// retained-paint call). `atlas`/`icons` are the SAME instances the frame's caller passed into
+    /// `Ui::frame`, reborrowed fresh per slot so a host that draws text/icons shares the one real,
+    /// GPU-uploaded glyph/icon texture instead of needing (or clobbering) its own.
+    fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, atlas: &mut FontAtlas, icons: Option<&IconAtlas>);
 }
 
-/// 📥 Walks `tree` from `root`, collecting every `ComponentScene` leaf's absolute rect (ancestor
-/// offsets accumulated the same way `events::hit_test_node`/`paint::paint_node` do). Always includes
-/// every reachable scene node regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene leaves are
-/// always-dirty unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the
-/// host's behalf this milestone.
-pub(crate) fn collect_scene_slots(tree: &UiTree, root: NodeId) -> Vec<SceneSlot> {
+/// 📥 Walks `tree` from `root`, collecting every `ComponentScene`/`Image` leaf's absolute rect
+/// (ancestor offsets accumulated the same way `events::hit_test_node`/`paint::paint_node` do) plus a
+/// borrowed reference to its own stored `UiNode` payload. Recurses into every node's own arena
+/// children unconditionally — not gated by node kind — so leaves nested under ANY container
+/// (`Stack`/`Field`/`Section`/`Group`/`Tree` alike) are found; `tree.children` already reflects
+/// `reconcile`'s real parent-child links for every `UiNode` kind, including `Field`'s single child,
+/// so there is no special-casing needed here for any one container kind. Always includes every
+/// reachable leaf regardless of `DIRTY_PAINT`/`DIRTY_LAYOUT` — scene/image leaves are always-dirty
+/// unless the host opts into its own caching, so `ui_wgpu` doesn't try to cache on the host's behalf
+/// this milestone.
+pub(crate) fn collect_scene_slots<'tree>(tree: &'tree UiTree, root: NodeId) -> Vec<SceneSlot<'tree>> {
     let mut slots = Vec::new();
     collect_scene_slots_node(tree, root, 0.0, 0.0, &mut slots);
     slots
 }
 
-fn collect_scene_slots_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot>) {
+fn collect_scene_slots_node<'tree>(tree: &'tree UiTree, id: NodeId, origin_x: f32, origin_y: f32, out: &mut Vec<SceneSlot<'tree>>) {
     let Some(node) = tree.node(id) else { return };
     let abs_x = origin_x + node.layout.x;
     let abs_y = origin_y + node.layout.y;
-    if let UiNode::ComponentScene(scene) = &node.spec.0 {
-        out.push(SceneSlot {
-            node: id,
-            surface_id: scene.surface_id.clone(),
-            kind: scene.component_kind,
-            rect: Rect::new(abs_x, abs_y, node.layout.width, node.layout.height),
-        });
+    let rect = Rect::new(abs_x, abs_y, node.layout.width, node.layout.height);
+    match &node.spec.0 {
+        UiNode::ComponentScene(scene) => out.push(SceneSlot { node: id, rect, content: SlotContent::Scene(scene) }),
+        UiNode::Image(image) => out.push(SceneSlot { node: id, rect, content: SlotContent::Image(image) }),
+        _ => {}
     }
     for child in tree.children(id) {
         collect_scene_slots_node(tree, child, abs_x, abs_y, out);
@@ -15825,9 +16108,8 @@ fn collect_scene_slots_node(tree: &UiTree, id: NodeId, origin_x: f32, origin_y: 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::component::ui::{UiComponentSceneNode, UiPresence, UiStackNode, UiTextNode};
+    use crate::component::ui::{UiComponentSceneNode, UiGroupNode, UiPresence, UiStackNode, UiTextNode};
     use crate::flex::LayoutEngine;
-    use crate::text::FontAtlas;
     use crate::theme::Theme;
 
     fn text(value: &str) -> UiNode {
@@ -15860,6 +16142,10 @@ mod tests {
         })
     }
 
+    fn image(id: &str) -> UiNode {
+        UiNode::Image(UiImageNode { id: id.into(), src: "https://example.test/x.png".into(), alt: None, presence: UiPresence::default() })
+    }
+
     fn stack(children: Vec<UiNode>) -> UiNode {
         UiNode::Stack(UiStackNode {
             direction: "vertical".into(),
@@ -15874,21 +16160,30 @@ mod tests {
         })
     }
 
-    #[test]
-    fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets() {
+    fn group(children: Vec<UiNode>) -> UiNode {
+        UiNode::Group(UiGroupNode { id: "group".into(), label: "Group".into(), default_open: None, presence: UiPresence::default(), children })
+    }
+
+    fn layout(node: &UiNode) -> UiTree {
         let mut tree = UiTree::new();
-        tree.apply_tree(&stack(vec![text("above"), scene("surface.one")]));
+        tree.apply_tree(node);
         let root = tree.root.unwrap();
         let mut engine = LayoutEngine::new();
         let mut atlas = FontAtlas::builtin();
         let theme = Theme::default();
         engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
+        tree
+    }
+
+    #[test]
+    fn collects_a_scene_leaf_with_its_absolute_rect_accounting_for_ancestor_offsets() {
+        let tree = layout(&stack(vec![text("above"), scene("surface.one")]));
+        let root = tree.root.unwrap();
 
         let slots = collect_scene_slots(&tree, root);
         assert_eq!(slots.len(), 1);
         let slot = &slots[0];
-        assert_eq!(slot.surface_id, "surface.one");
-        assert_eq!(slot.kind, SurfaceKind::World3d);
+        assert_eq!(slot.surface(), Some(("surface.one", SurfaceKind::World3d)));
         // The scene leaf is the stack's second child (below the text sibling plus the stack's own
         // top padding) -- a nonzero absolute y proves ancestor offsets were accumulated, not just
         // the leaf's own parent-relative `LayoutBucket` coordinates.
@@ -15898,25 +16193,44 @@ mod tests {
 
     #[test]
     fn finds_no_slots_when_the_tree_has_no_scene_nodes() {
-        let mut tree = UiTree::new();
-        tree.apply_tree(&stack(vec![text("only text")]));
+        let tree = layout(&stack(vec![text("only text")]));
         let root = tree.root.unwrap();
         assert!(collect_scene_slots(&tree, root).is_empty());
     }
 
     #[test]
     fn collects_multiple_scene_leaves_in_document_order() {
-        let mut tree = UiTree::new();
-        tree.apply_tree(&stack(vec![scene("surface.a"), scene("surface.b")]));
+        let tree = layout(&stack(vec![scene("surface.a"), scene("surface.b")]));
         let root = tree.root.unwrap();
-        let mut engine = LayoutEngine::new();
-        let mut atlas = FontAtlas::builtin();
-        let theme = Theme::default();
-        engine.compute(&mut tree, root, &mut atlas, &theme, 400.0, 400.0);
 
         let slots = collect_scene_slots(&tree, root);
-        let ids: Vec<&str> = slots.iter().map(|slot| slot.surface_id.as_str()).collect();
+        let ids: Vec<&str> = slots.iter().filter_map(|slot| slot.surface().map(|(id, _)| id)).collect();
         assert_eq!(ids, vec!["surface.a", "surface.b"]);
+    }
+
+    #[test]
+    fn collects_an_image_leaf_alongside_a_scene_leaf() {
+        let tree = layout(&stack(vec![image("img.one"), scene("surface.one")]));
+        let root = tree.root.unwrap();
+
+        let slots = collect_scene_slots(&tree, root);
+        assert_eq!(slots.len(), 2);
+        assert!(matches!(slots[0].content, SlotContent::Image(node) if node.id == "img.one"));
+        assert!(matches!(slots[1].content, SlotContent::Scene(node) if node.surface_id == "surface.one"));
+    }
+
+    #[test]
+    fn collects_a_scene_leaf_nested_under_a_group_ancestor() {
+        // 🌳 Regression for the shadow-walk gap this bridge replaces: the legacy immediate-mode walk
+        // it superseded only recursed into Stack/Section/Field, so a ComponentScene nested under a
+        // Group never resolved to real content. `collect_scene_slots_node` recurses into every
+        // node's `tree.children` unconditionally, so a Group ancestor is no different from a Stack.
+        let tree = layout(&group(vec![text("label"), scene("surface.nested")]));
+        let root = tree.root.unwrap();
+
+        let slots = collect_scene_slots(&tree, root);
+        assert_eq!(slots.len(), 1);
+        assert_eq!(slots[0].surface(), Some(("surface.nested", SurfaceKind::World3d)));
     }
 }
 // #endregion scene_slots
@@ -16298,7 +16612,6 @@ pub struct Ui {
     windows: HashMap<String, UiWindow>,
     shell: Shell,
     theme: Theme,
-    scene_host: Option<Box<dyn SceneHost>>,
     pending_commands: Vec<UiCommand>,
 }
 
@@ -16308,19 +16621,12 @@ impl Ui {
             windows: HashMap::new(),
             shell: Shell::new(),
             theme: Theme::default(),
-            scene_host: None,
             pending_commands: Vec::new(),
         }
     }
 
     pub fn set_theme(&mut self, theme: Theme) {
         self.theme = theme;
-    }
-
-    /// 🎬 Registers the host's `scene_slots::SceneHost`; `frame` hands it every `ComponentScene`
-    /// leaf's resolved rect after each paint pass, per `scene_slots`'s own doc comment.
-    pub fn set_scene_host(&mut self, host: Box<dyn SceneHost>) {
-        self.scene_host = Some(host);
     }
 
     fn window_mut(&mut self, window_id: &str) -> &mut UiWindow {
@@ -16370,10 +16676,10 @@ impl Ui {
     /// 🖼️ The dirty-gated per-tick pipeline for `window_id`: `flex::LayoutEngine::compute` (itself a
     /// no-operation unless the root carries `DIRTY_LAYOUT`/`SUBTREE_DIRTY`) followed — only if that or the
     /// root's own `DIRTY_PAINT` fired — by `paint::paint_tree`, then handing every
-    /// `scene_slots::collect_scene_slots` leaf to the registered `SceneHost`. Returns `None` if
-    /// `window_id` has no tree yet (`apply_tree` never called). A dirty window always repaints its
-    /// whole tree — `paint::paint_tree`'s own doc comment: `DrawList` only supports a full
-    /// clear-and-rebuild, no incremental dirty-subtree replacement yet.
+    /// `scene_slots::collect_scene_slots` leaf to `scene_host`, when the caller passed one this tick.
+    /// Returns `None` if `window_id` has no tree yet (`apply_tree` never called). A dirty window
+    /// always repaints its whole tree — `paint::paint_tree`'s own doc comment: `DrawList` only
+    /// supports a full clear-and-rebuild, no incremental dirty-subtree replacement yet.
     ///
     /// 🖋️ `atlas`/`icons` are the CALLER's own `FontAtlas`/`IconAtlas` — `Ui` never owns either (see
     /// this region's top-of-file doc comment): the host must pass the SAME instances it already
@@ -16381,7 +16687,24 @@ impl Ui {
     /// compute`/`paint::paint_tree` already receive them as parameters rather than fields. This lets
     /// retained-mode content share glyph/icon UVs with the rest of the host's chrome instead of
     /// clobbering (or never populating) a second, independent GPU texture.
-    pub fn frame(&mut self, window_id: &str, viewport_width: f32, viewport_height: f32, atlas: &mut FontAtlas, icons: Option<&IconAtlas>) -> Option<&DrawList> {
+    ///
+    /// 🎬 `scene_host` is a PER-FRAME parameter, not a stored field (there used to be a stored
+    /// `Option<Box<dyn SceneHost>>` — removed): a caller-owned host typically needs to borrow the
+    /// same per-frame state this call site already has in scope (a `GpuContext`, per-surface state
+    /// maps, …), which a `Box<dyn SceneHost>` stored on `Ui` itself could never hold, exactly like
+    /// `atlas`/`icons` above are parameters rather than fields for the same reason. `paint_tree`
+    /// already knows (via `scene_host.is_some()`) whether to paint its own placeholder chrome for
+    /// `ComponentScene`/`Image` leaves this tick or leave that rect for the host to fill in below —
+    /// see `paint`'s own doc comment on that gate.
+    pub fn frame(
+        &mut self,
+        window_id: &str,
+        viewport_width: f32,
+        viewport_height: f32,
+        atlas: &mut FontAtlas,
+        icons: Option<&IconAtlas>,
+        mut scene_host: Option<&mut dyn SceneHost>,
+    ) -> Option<&DrawList> {
         let window = self.windows.get_mut(window_id)?;
         let root = window.tree.root?;
         window.viewport = (viewport_width, viewport_height);
@@ -16393,10 +16716,10 @@ impl Ui {
         }
         window.layout.compute(&mut window.tree, root, atlas, &self.theme, viewport_width, viewport_height);
         window.draw.clear();
-        paint_tree(&mut window.tree, root, &self.theme, atlas, icons, &mut window.draw);
-        if let Some(host) = self.scene_host.as_mut() {
+        paint_tree(&mut window.tree, root, &self.theme, atlas, icons, scene_host.is_some(), &mut window.draw);
+        if let Some(host) = scene_host.as_deref_mut() {
             for slot in collect_scene_slots(&window.tree, root) {
-                host.paint_slot(&slot, &mut window.draw);
+                host.paint_slot(&slot, &mut window.draw, atlas, icons);
             }
         }
         Some(&window.draw)
@@ -16467,6 +16790,16 @@ impl Ui {
     pub fn theme(&self) -> Theme {
         self.theme
     }
+
+    /// 🎯 Whether `window_id`'s retained content currently has a focused node — `false` if that
+    /// window has no retained state at all. Lets a host (`w2-input-wiring`,
+    /// `.repo/🎫/26/07/11/WGPU-RENDERER-FULL-PARITY/report-w2-input-wiring.md`) decide whether real
+    /// keyboard/IME events belong to this window's content (route via `dispatch_event`) or should
+    /// fall back to chrome-level shortcuts. Forwards to `EventRouter::is_focused`, itself added this
+    /// same pass — both purely additive reads, no change to `dispatch_event`'s own focus logic.
+    pub fn window_has_focus(&self, window_id: &str) -> bool {
+        self.windows.get(window_id).is_some_and(|window| window.router.is_focused())
+    }
 }
 //#endregion 🔬Introspection
 
@@ -16476,7 +16809,7 @@ mod tests {
     use crate::component::layout::ActionDescriptor;
     use crate::component::ui::{
         ui_node_to_control, SurfaceKind, UiButtonNode, UiComponentSceneNode, UiControlNode,
-        UiExternalSlotNode, UiFieldNode, UiIconSelectNode, UiImageNode, UiInputNode,
+        UiExternalSlotNode, UiFieldNode, UiGroupNode, UiIconSelectNode, UiImageNode, UiInputNode,
         UiKeyValueEntry, UiKeyValueNode, UiNumberStepperNode, UiPresence, UiRingNode, UiSectionNode,
         UiSelectItem, UiSelectNode, UiSeparatorNode, UiSliderNode, UiStackNode, UiState, UiTextNode,
         UiToggleNode, UiTreeItemAction, UiTreeItemNode, UiTreeNode, UiTreeSectionNode,
@@ -16484,6 +16817,7 @@ mod tests {
     use crate::events::PointerButton;
     use crate::geometry::Rect;
     use crate::input::InputState;
+    use crate::scene_slots::SceneSlot;
     use crate::widgets::{
         draw_text_on, draw_text_overlay_on, measure_widget, render_scroll_region, render_widget,
         wrap_text, ControlNode, InputMeta, KeyValueEntry, RingMeta, SelectItem, SliderMeta,
@@ -16522,7 +16856,7 @@ mod tests {
         ui.apply_tree("main", &stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]));
 
         assert!(ui.needs_frame(), "a freshly applied tree must report needing a frame");
-        let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None).expect("frame must produce a draw list once a tree was applied");
+        let draw = ui.frame("main", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list once a tree was applied");
         let total: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
         assert!(total > 0, "expected the text node to emit at least one glyph instance");
     }
@@ -16531,7 +16865,7 @@ mod tests {
     fn frame_before_any_apply_tree_returns_none() {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
-        assert!(ui.frame("nonexistent", 400.0, 400.0, &mut atlas, None).is_none());
+        assert!(ui.frame("nonexistent", 400.0, 400.0, &mut atlas, None, None).is_none());
     }
 
     #[test]
@@ -16540,7 +16874,7 @@ mod tests {
         let mut atlas = FontAtlas::builtin();
         let ui_node = stack_ui(vec![UiNode::Text(UiTextNode { value: "hi".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() })]);
         ui.apply_tree("main", &ui_node);
-        ui.frame("main", 400.0, 400.0, &mut atlas, None);
+        ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
         assert!(!ui.needs_frame(), "nothing changed since the last frame, so no frame should be needed");
 
         ui.apply_tree("main", &ui_node);
@@ -16552,7 +16886,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("main", &stack_ui(vec![button_ui("go", "Go")]));
-        ui.frame("main", 400.0, 400.0, &mut atlas, None);
+        ui.frame("main", 400.0, 400.0, &mut atlas, None, None);
 
         ui.dispatch_event("main", UiEvent::PointerDown { x: 10.0, y: 10.0, button: PointerButton::Primary });
         let commands = ui.dispatch_event("main", UiEvent::PointerUp { x: 10.0, y: 10.0, button: PointerButton::Primary });
@@ -16570,6 +16904,101 @@ mod tests {
         assert!(ui.shell().window_layout().is_some());
     }
     //#endregion 🔖FacadeTests
+
+    //#region 🔖SceneHostTests
+    fn component_scene_ui(surface_id: &str) -> UiNode {
+        UiNode::ComponentScene(UiComponentSceneNode {
+            surface_id: surface_id.into(),
+            controller_id: "ctrl".into(),
+            component_kind: SurfaceKind::World3d,
+            pane_id: None,
+            binding_id: None,
+            presence: UiPresence::default(),
+            canvas_2d: None,
+            world_3d: None,
+            node_graph: None,
+            text_editor: None,
+            table: None,
+            paint_2d: None,
+            virtual_file_system: None,
+            tiled_map: None,
+            board2d: None,
+            icon_render: None,
+            ink_canvas: None,
+            graph_timeline: None,
+            block_list: None,
+            diff_view: None,
+            event_feed: None,
+        })
+    }
+
+    /// 🎬 A bare-bones `SceneHost` recording every call it receives, so tests can assert `Ui::frame`
+    /// actually reaches the host (once per slot, with the right payload) instead of just trusting the
+    /// wiring compiles. Paints a single filled rect per slot so a hosted frame's `DrawList` is
+    /// distinguishable from an unpainted one.
+    struct RecordingSceneHost {
+        paint_calls: usize,
+        last_surface_id: Option<String>,
+    }
+
+    impl SceneHost for RecordingSceneHost {
+        fn paint_slot(&mut self, slot: &SceneSlot<'_>, draw: &mut DrawList, _atlas: &mut FontAtlas, _icons: Option<&IconAtlas>) {
+            self.paint_calls += 1;
+            self.last_surface_id = slot.surface().map(|(surface_id, _)| surface_id.to_string());
+            draw.push_rounded([slot.rect.x, slot.rect.y, slot.rect.w, slot.rect.h], Theme::default().accent, 0.0);
+        }
+    }
+
+    #[test]
+    fn frame_with_no_scene_host_falls_back_to_the_placeholder_chrome() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.no-host")]));
+        let draw = ui.frame("w", 400.0, 400.0, &mut atlas, None, None).expect("frame must produce a draw list");
+        let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+        assert!(instances > 0, "with no scene host registered, paint_component_scene's placeholder chrome should still paint");
+    }
+
+    #[test]
+    fn frame_with_a_scene_host_routes_the_component_scene_leaf_through_it() {
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        ui.apply_tree("w", &stack_ui(vec![component_scene_ui("surface.host-test")]));
+
+        let mut host = RecordingSceneHost { paint_calls: 0, last_surface_id: None };
+        let draw = ui
+            .frame("w", 400.0, 400.0, &mut atlas, None, Some(&mut host))
+            .expect("frame must produce a draw list even with a scene host registered");
+        let instances: usize = draw.layers.iter().map(|layer| layer.ui_instances.len()).sum();
+
+        assert_eq!(host.paint_calls, 1, "the host should be invoked exactly once for the single ComponentScene leaf");
+        assert_eq!(host.last_surface_id.as_deref(), Some("surface.host-test"));
+        assert!(instances > 0, "the host's own draw call should still land in the frame's DrawList");
+    }
+
+    #[test]
+    fn frame_with_a_scene_host_still_paints_ancestor_chrome_around_the_hosted_slot() {
+        // 🌳 Nests the ComponentScene under a Group (not just a bare Stack) — regression for the
+        // shadow-walk gap this bridge replaces: `collect_scene_slots` must still find it, and the
+        // Group's own header/frame chrome (unrelated to the scene leaf) must still paint normally.
+        let mut ui = Ui::new();
+        let mut atlas = FontAtlas::builtin();
+        let group_node = UiNode::Group(UiGroupNode {
+            id: "group".into(),
+            label: "Group".into(),
+            default_open: None,
+            presence: UiPresence::default(),
+            children: vec![UiNode::Text(UiTextNode { value: "label".into(), emphasize: None, data_attributes: None, presence: UiPresence::default() }), component_scene_ui("surface.nested")],
+        });
+        ui.apply_tree("w", &group_node);
+
+        let mut host = RecordingSceneHost { paint_calls: 0, last_surface_id: None };
+        ui.frame("w", 400.0, 400.0, &mut atlas, None, Some(&mut host)).expect("frame must produce a draw list");
+
+        assert_eq!(host.paint_calls, 1);
+        assert_eq!(host.last_surface_id.as_deref(), Some("surface.nested"));
+    }
+    //#endregion 🔖SceneHostTests
 
     //#region 🔖GoldenHarness
     /// 🏆 Acceptance gate for this workstream: for a curated fixture of every `UiNode` variant, runs
@@ -16730,7 +17159,7 @@ mod tests {
         let mut ui = Ui::new();
         let mut atlas = FontAtlas::builtin();
         ui.apply_tree("golden", node);
-        let draw = ui.frame("golden", 400.0, 400.0, &mut atlas, None).expect("apply_tree then frame must produce a draw list");
+        let draw = ui.frame("golden", 400.0, 400.0, &mut atlas, None, None).expect("apply_tree then frame must produce a draw list");
         stats(draw)
     }
 
@@ -19210,7 +19639,7 @@ pub use events::{
     UiEvent, resolve_overlay_placement,
 };
 #[cfg(feature = "engine")]
-pub use scene_slots::{SceneHost, SceneSlot};
+pub use scene_slots::{SceneHost, SceneSlot, SlotContent};
 #[cfg(feature = "engine")]
 pub use shell::{Shell, ShellEvent};
 // 🧵 W2 wiring: the retained-mode façade itself (`engine::Ui` — `apply_tree`/`frame`/

@@ -1,0 +1,30 @@
+1473 | ..., handle: &GeometryHandle) -> Result<(Vec<[f32; 3]>, Vec<(Vec<u32>, Vec<Vec<u32>>)>), BrepError> {
+     |                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#type_complexity
+     = note: `-W clippy::type-complexity` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::type_complexity)]`
+
+warning: this expression creates a reference which is immediately dereferenced by the compiler
+    --> kernel/3d/brep/rs/lib.rs:1488:55
+     |
+1488 |                     let vid = oriented.oriented_start(&edge);
+     |                                                       ^^^^^ help: change this to: `edge`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#needless_borrow
+     = note: `-W clippy::needless-borrow` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::needless_borrow)]`
+
+warning: `kernel_3d_brepkit` (lib) generated 15 warnings (run `cargo clippy --fix --lib -p kernel_3d_brepkit -- ` to apply 10 suggestions)
+warning: manual `RangeInclusive::contains` implementation
+    --> kernel/3d/brep/rs/lib.rs:2448:17
+     |
+2448 | ...   assert!(dist >= 1.0 - 1e-6 && dist <= 3.0 + 1e-6, "ellipse point distance from center should be within [minor, major], got {...
+     |               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ help: use: `(1.0 - 1e-6..=3.0 + 1e-6).contains(&dist)`
+     |
+     = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#manual_range_contains
+     = note: `-W clippy::manual-range-contains` implied by `-W clippy::all`
+     = help: to override `-W clippy::all` add `#[allow(clippy::manual_range_contains)]`
+
+warning: `kernel_3d_brepkit` (lib test) generated 16 warnings (15 duplicates) (run `cargo clippy --fix --lib -p kernel_3d_brepkit --tests -- ` to apply 1 suggestion)
+    Finished `dev` profile [unoptimized] target(s) in 18.97s

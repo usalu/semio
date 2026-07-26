@@ -15,6 +15,7 @@ import {
   gumballConfigVisible,
   gumballHandleKindToTransformMode,
   useCanvasAppearanceSync,
+  Icon,
   type GumballConfig,
   type GumballPlaneId,
   type GumballPose,
@@ -1924,6 +1925,7 @@ export function worldProjectionSwitchTreeItems(templates: readonly WorldProjecti
   return templates.map((template) => ({
     id: template.id,
     label: template.label,
+    icon: <Icon icon={template.iconId} size={12} className="size-tiny shrink-0" />,
     defaultOpen: true,
     onClick: () => onSelect(worldProjectionTemplateApplySpec(template.args.spec, currentSpec)),
     ...(template.children?.length ? { items: worldProjectionSwitchTreeItems(template.children, onSelect, currentSpec) } : {}),
@@ -3005,6 +3007,7 @@ function WorldCurvilinearPass(props: { readonly mode: Extract<WorldProjectionMod
 export interface WorldProjectionTemplateDescriptor {
   readonly id: string;
   readonly label: string;
+  readonly iconId: string;
   readonly controllerId: string;
   readonly command: string;
   readonly args: { readonly spec: WorldProjectionSpec };
@@ -3016,12 +3019,12 @@ export interface CreateWorldProjectionTemplatesConfig {
   readonly command?: string;
 }
 
-function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
-  return { id, label, controllerId, command, args: { spec } };
+function worldProjectionTemplateLeaf(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec): WorldProjectionTemplateDescriptor {
+  return { id, label, iconId, controllerId, command, args: { spec } };
 }
 
-function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
-  return { id, label, controllerId, command, args: { spec }, children };
+function worldProjectionTemplateBranch(controllerId: string, command: string, id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]): WorldProjectionTemplateDescriptor {
+  return { id, label, iconId, controllerId, command, args: { spec }, children };
 }
 
 /** @emoji 🪟 Builds the projection-mode taxonomy tree (no Top/Front — those are gizmo orientations):
@@ -3030,52 +3033,54 @@ function worldProjectionTemplateBranch(controllerId: string, command: string, id
 export function createWorldProjectionTemplates(config: CreateWorldProjectionTemplatesConfig): readonly WorldProjectionTemplateDescriptor[] {
   const { controllerId } = config;
   const command = config.command ?? WORLD_PROJECTION_COMMAND;
-  const leaf = (id: string, label: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, spec);
-  const branch = (id: string, label: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, spec, children);
+  const leaf = (id: string, label: string, iconId: string, spec: WorldProjectionSpec) => worldProjectionTemplateLeaf(controllerId, command, id, label, iconId, spec);
+  const branch = (id: string, label: string, iconId: string, spec: WorldProjectionSpec, children: readonly WorldProjectionTemplateDescriptor[]) => worldProjectionTemplateBranch(controllerId, command, id, label, iconId, spec, children);
 
-  const orthographic = leaf("orthographic", "Orthographic", worldProjectionDefaults("orthographic"));
+  const orthographic = leaf("orthographic", "Orthographic", "projection-orthographic", worldProjectionDefaults("orthographic"));
 
-  const axonometricVariants: readonly [WorldAxonometricVariant, string][] = [
-    ["isometric", "Isometric"],
-    ["dimetric", "Dimetric"],
-    ["trimetric", "Trimetric"],
+  const axonometricVariants: readonly [WorldAxonometricVariant, string, string][] = [
+    ["isometric", "Isometric", "projection-isometric"],
+    ["dimetric", "Dimetric", "projection-dimetric"],
+    ["trimetric", "Trimetric", "projection-trimetric"],
   ];
   const axonometric = branch(
     "axonometric",
     "Axonometric",
+    "projection-axonometric",
     worldProjectionDefaults("axonometric"),
-    axonometricVariants.map(([variant, label]) =>
-      leaf(`axonometric-${variant}`, label, {
+    axonometricVariants.map(([variant, label, iconId]) =>
+      leaf(`axonometric-${variant}`, label, iconId, {
         mode: { kind: "axonometric", variant, angleA: variant === "trimetric" ? 12 : 15, angleB: variant === "trimetric" ? 42 : variant === "isometric" ? 30 : 15 },
         orientation: { type: "corner", quadrant: "ne", hemisphere: "upper" },
       }),
     ),
   );
 
-  const obliqueVariants: readonly [WorldObliqueVariant, string][] = [
-    ["cabinet", "Cabinet"],
-    ["cavalier", "Cavalier"],
-    ["military", "Military"],
+  const obliqueVariants: readonly [WorldObliqueVariant, string, string][] = [
+    ["cabinet", "Cabinet", "projection-oblique-cabinet"],
+    ["cavalier", "Cavalier", "projection-oblique-cavalier"],
+    ["military", "Military", "projection-oblique-military"],
   ];
   const oblique = branch(
     "oblique",
     "Oblique",
+    "projection-oblique",
     worldProjectionDefaults("oblique"),
-    obliqueVariants.map(([variant, label]) =>
-      leaf(`oblique-${variant}`, label, {
+    obliqueVariants.map(([variant, label, iconId]) =>
+      leaf(`oblique-${variant}`, label, iconId, {
         mode: { kind: "oblique", variant, angle: 45, depthScale: variant === "cabinet" ? 0.5 : 1 },
         orientation: { type: "cardinal", view: variant === "military" ? "plan" : "front" },
       }),
     ),
   );
 
-  const parallel = branch("parallel", "Parallel", worldProjectionDefaults("orthographic"), [orthographic, axonometric, oblique]);
+  const parallel = branch("parallel", "Parallel", "projection-parallel", worldProjectionDefaults("orthographic"), [orthographic, axonometric, oblique]);
 
-  const perspective = branch("perspective", "Perspective", worldProjectionDefaults("threePoint"), [
-    leaf("one-point", "1-Point", worldProjectionDefaults("onePoint")),
-    leaf("two-point", "2-Point", worldProjectionDefaults("twoPoint")),
-    leaf("three-point", "3-Point", worldProjectionDefaults("threePoint")),
-    leaf("curvilinear", "Curvilinear", worldProjectionDefaults("curvilinear")),
+  const perspective = branch("perspective", "Perspective", "projection-perspective", worldProjectionDefaults("threePoint"), [
+    leaf("one-point", "1-Point", "projection-one-point", worldProjectionDefaults("onePoint")),
+    leaf("two-point", "2-Point", "projection-two-point", worldProjectionDefaults("twoPoint")),
+    leaf("three-point", "3-Point", "projection-three-point", worldProjectionDefaults("threePoint")),
+    leaf("curvilinear", "Curvilinear", "projection-curvilinear", worldProjectionDefaults("curvilinear")),
   ]);
 
   return [parallel, perspective];
@@ -3143,6 +3148,42 @@ export function worldProjectionModeLabel(mode: WorldProjectionMode): string {
 /** @emoji 🪟 Window title for a live projection — matches {@link createWorldProjectionTemplates} mode labels. */
 export function worldProjectionSpecLabel(spec: WorldProjectionSpec): string {
   return worldProjectionModeLabel(spec.mode);
+}
+
+/** @emoji 🖼️ Catalog icon for a live projection — matches {@link createWorldProjectionTemplates} icons. */
+export function worldProjectionSpecIconId(spec: WorldProjectionSpec): string {
+  switch (spec.mode.kind) {
+    case "orthographic":
+      return "projection-orthographic";
+    case "axonometric":
+      switch (spec.mode.variant) {
+        case "isometric":
+          return "projection-isometric";
+        case "dimetric":
+          return "projection-dimetric";
+        case "trimetric":
+          return "projection-trimetric";
+      }
+      break;
+    case "oblique":
+      switch (spec.mode.variant) {
+        case "cabinet":
+          return "projection-oblique-cabinet";
+        case "cavalier":
+          return "projection-oblique-cavalier";
+        case "military":
+          return "projection-oblique-military";
+      }
+      break;
+    case "onePoint":
+      return "projection-one-point";
+    case "twoPoint":
+      return "projection-two-point";
+    case "threePoint":
+      return "projection-three-point";
+    case "curvilinear":
+      return "projection-curvilinear";
+  }
 }
 // #endregion 📐WorldProjection
 

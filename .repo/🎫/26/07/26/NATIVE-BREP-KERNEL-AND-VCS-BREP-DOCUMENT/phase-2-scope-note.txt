@@ -1,0 +1,78 @@
+P2 scope note (2026-07-26)
+
+Implemented:
+- kernel/3d/brep/rs/src/curve.rs: Curve3 (Line/Circle/Ellipse/Nurbs) + Curve2 (the pcurve type,
+  same four variant shapes in 2D), eval/d1/d2/tangent/curvature, domain()/is_periodic()/period(),
+  and Curve3::to_nurbs(domain) — an exact rational-NURBS conversion for every variant (Line is a
+  degree-1 segment; Circle/Ellipse use the standard rational-quadratic circular/elliptical-arc
+  construction, splitting spans >120° for conditioning).
+- src/curve_ops.rs: arc_length (adaptive 5-point Gauss-Legendre with recursive error control),
+  param_at_length (bisection on arc_length), closest_point + all_extrema (coarse sampling seeding
+  a safeguarded, periodicity-aware Newton refinement on the first-order optimality condition
+  (C(t)-P)·C'(t)=0), interpolate_centripetal (global cubic interpolation via centripetal
+  parameterization + Cox-de Boor collocation matrix + partial-pivoting Gaussian elimination),
+  reverse_nurbs and split_nurbs (Boehm knot-insertion-to-full-multiplicity + control-net slicing).
+- src/surface.rs: Surface (Plane/Cylinder/Cone/Sphere/Torus/Nurbs), eval + analytic first/second
+  partial derivatives per variant (Nurbs falls back to central finite differences), normal,
+  Gaussian/mean/principal curvature via the standard first/second fundamental form formulas.
+- src/surface_ops.rs: closest_point (exact closed forms for Plane/Sphere, periodicity-aware coarse
+  grid + 2D Newton for Cylinder/Cone/Torus/Nurbs), coons_patch_eval (bilinear transfinite
+  interpolation from four boundary curve closures).
+- All four files wired into lib.rs, additive alongside the brepkit wrapper and Phases 0-1.
+
+Validated by:
+- cargo test -p kernel_3d_brepkit --lib: 188 passed, 0 failed (up from 153 after Phase 1; 35 new
+  tests, nothing pre-existing touched).
+- Two real bugs found by the test suite and fixed during this phase:
+  1. curve_ops::split_nurbs had an off-by-one in locating the control-net split boundary
+     (used find_span(t)-degree+1 instead of find_span(t)-degree, then compounded it with wrong
+     slice ranges) — caught by split_nurbs_pieces_reproduce_the_original_curve, re-derived the
+     Boehm-split boundary condition by hand against a concrete 3-control-point example, fixed,
+     re-verified against both a hand-picked interpolated curve and (transitively) every other
+     split-dependent test.
+  2. curve_ops::closest_point / surface_ops::closest_point were not periodicity-aware: clamping
+     Newton's step to the raw parameter domain traps it exactly at a domain boundary (e.g. angle
+     0) when the true closest point actually sits just across the periodic seam (e.g. angle
+     2π-ε) — caught by the seeded quick-tier oracle tests (closest_point_matches_brute_force_
+     dense_sampling_oracle for curves; a matching cylinder oracle for surfaces), root-caused via
+     a targeted [DEBUG]-prefixed eprintln isolating the exact failing case (t=0 exactly, meaning
+     Newton never moved), fixed by wrapping into the period instead of clamping wherever
+     `curve.is_periodic()`/`surface.is_{u,v}_periodic()`, re-verified.
+  Also fixed one incorrect test methodology (not a kernel bug): the initial circle/ellipse
+  to_nurbs tests wrongly assumed the NURBS conversion's own parameter equals the original curve's
+  angle pointwise; a standalone check confirmed the standard rational-quadratic arc construction
+  traces the circle exactly but is *not* angle-linear except at span breakpoints (a well-known,
+  documented property of the construction, not an approximation) — tests rewritten to check the
+  actual invariants (trace lies exactly on the circle/ellipse; endpoints and span breakpoints
+  match exactly) instead, and Curve3::to_nurbs's doc comment now states this explicitly.
+- Flagship differential/oracle gates: curve::tests::quick::circle_to_nurbs_traces_the_circle_
+  exactly_for_random_arcs (100 seeded arcs, full/partial spans, arbitrary frames); curve_ops::
+  tests::quick::closest_point_matches_brute_force_dense_sampling_oracle (100 seeded circles vs a
+  100,000-sample dense oracle); surface_ops::tests::quick::closest_point_on_cylinder_matches_
+  brute_force_grid_oracle (50 seeded cylinders vs a 2000×200 dense grid oracle). All finite-
+  difference derivative checks (curve tangents/curvature, surface partials, Gaussian/mean
+  curvature for cylinder/sphere against their known closed forms 0 and 1/r²) passed on first
+  implementation attempt.
+- cargo clippy -p kernel_3d_brepkit --lib --tests: zero warnings in curve.rs, curve_ops.rs,
+  surface.rs, surface_ops.rs after fixing 5 lint findings (excessive_precision on Gauss-Legendre
+  constants, iter_cloned_collect + needless_range_loop in the linear solver — the range-loop fix
+  required extracting the pivot row before the inner mutable-borrow loop to satisfy the borrow
+  checker, unused_variables on an unused `radius` binding in the sphere projection fast path).
+- Full logs: phase-2-curves-surfaces-run-1.txt (cargo test), phase-2-lint-run-1.txt (clippy).
+
+Deferred (not part of this phase, tracked for later phases per the plan):
+- Curve3::d1/d2 for the Nurbs variant use central finite differences rather than the analytic
+  rational-derivative de Boor recurrence (`A_k(u)`) — adequate for tangent/curvature/tessellation
+  use per the plan's own note in curve.rs's docstring; the analytic version is worth adding before
+  Phase 5's tight NURBS/NURBS intersection Newton iterations, which is the first place finite-
+  difference-quality derivatives would actually bite.
+- Surface curve-lifting (3D curve → UV pcurve inverse evaluation) and analytic-to-NURBS conversion
+  for Surface were intentionally left out of this phase's scope — the plan's surface_ops.rs
+  "Iso"/"Lift"/"Fit" regions are deferred until Phase 5 (intersection) and Phase 6 (imprint) need
+  them, since a good API for curve-on-surface lifting is easier to get right alongside the actual
+  intersection code that will consume it, rather than speculatively designing it now.
+- Coons patch is a standalone eval function (bilinear blend of 4 boundary-curve closures), not a
+  Surface enum variant — sufficient for the sweep/fill-face phases that need it; promoting it to
+  a first-class Surface variant (with proper domain/derivative/curvature support) is deferred until
+  a consumer actually needs to treat a Coons patch as a full Surface (e.g. for tessellation).
+None of these block Phase 3.

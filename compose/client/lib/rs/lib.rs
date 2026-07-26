@@ -21091,7 +21091,7 @@ mod tests {
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "updatedAt": "2020-01-01T00:00:00.000Z",
-            "files": [],
+            "files": { "hash": "…", "items": [] },
         });
         crate::kit_backbone::DevBackboneBundleDoc::purge_unreferenced_blobs(&mut bundle);
         assert!(bundle.blobs.items.is_empty());
@@ -21108,22 +21108,22 @@ mod tests {
             "name": "K",
             "createdAt": "2020-01-01T00:00:00.000Z",
             "updatedAt": "2020-01-01T00:00:00.000Z",
-            "files": [{
+            "files": { "hash": "…", "items": [{
                 "id": "f-blob",
                 "name": "a.bin",
                 "blob": blob_txt,
                 "createdAt": "2020-01-01T00:00:00.000Z",
                 "updatedAt": "2020-01-01T00:00:00.000Z",
-            }],
+            }] },
         });
         crate::kit_backbone::DevBackboneBundleDoc::hoist_inline_file_blobs_for_storage(&mut bundle);
-        assert!(bundle.wip.initial_kit["files"][0].as_object().expect("file obj").get("blob").is_none());
-        assert_eq!(bundle.wip.initial_kit["files"][0]["blobHash"].as_str().expect("blobHash"), dig);
+        assert!(bundle.wip.initial_kit["files"]["items"][0].as_object().expect("file obj").get("blob").is_none());
+        assert_eq!(bundle.wip.initial_kit["files"]["items"][0]["blobHash"].as_str().expect("blobHash"), dig);
         assert_eq!(bundle.blobs.items.len(), 1);
         assert_eq!(bundle.blobs.items[0]["hash"].as_str().expect("blob entity hash"), dig);
         let mut merged = bundle.wip.initial_kit.clone();
         crate::kit_backbone::DevBackboneBundleDoc::merge_bundle_file_blobs_into_kit_json(&mut merged, &bundle.blobs.items);
-        assert_eq!(merged["files"][0]["blob"].as_str().expect("merged blob"), blob_txt);
+        assert_eq!(merged["files"]["items"][0]["blob"].as_str().expect("merged blob"), blob_txt);
     }
 
     #[cfg(not(target_arch = "wasm32"))]
@@ -21383,10 +21383,12 @@ mod tests {
         const FIXTURE: &str = include_str!("../../../fixture/metabolism.kit.diff.compose.json");
         let raw: crate::external_adapters::serde_json::Value = crate::external_adapters::serde_json::from_str(FIXTURE).expect("fixture parses as JSON");
         assert_eq!(raw.get("name").and_then(|v| v.as_str()), Some("Metabolism Modified"));
-        assert!(raw.get("typologies").is_some(), "fixture must include typologies collection");
-        let topo_items = crate::kit_backbone::json_block_items_ref(raw.get("typologies").expect("typologies")).expect("typologies list");
-        assert!(topo_items.iter().any(|t| t.get("types").is_some()), "fixture typologies must include types");
-        assert!(topo_items.iter().any(|t| t.get("designs").is_some()), "fixture typologies must include designs");
+        assert!(raw.get("types").is_some(), "fixture must include a top-level types collection diff");
+        assert!(raw.get("designs").is_some(), "fixture must include a top-level designs collection diff");
+        let types = raw.get("types").expect("types");
+        assert!(types.get("added").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()), "fixture types diff must include added entries");
+        let designs = raw.get("designs").expect("designs");
+        assert!(designs.get("added").and_then(|v| v.as_array()).is_some_and(|a| !a.is_empty()), "fixture designs diff must include added entries");
     }
 
     //#region 🪪 merkle hashing
@@ -21478,6 +21480,13 @@ mod tests {
         block_on(async {
             let graph = crate::vcs::Graph::new().await;
             let workspace_id = graph.id.clone();
+            let owner_id = graph.mutable_kit.read().await.clone().workspace_kit_id().await;
+            let create_design = crate::operation::Operation::CreateDesign {
+                scope: crate::operation::Scope::CreateDesign { owner_id, design_id: crate::id::Id::from("design-scoped-1") },
+                input: crate::operation::Input::EntityScalars { name: "Scoped Design".to_string(), description: None, icon: None, image: None, unit: None },
+            };
+            crate::kit_graph_engine::apply_kit_operation(&graph, &workspace_id, &crate::id::Id::from("tx-scoped-0"), create_design).await.expect("apply createDesign for scoped fixture");
+
             let operation = crate::operation::Operation::CreateFixedPiece {
                 scope: crate::operation::Scope::CreateFixedPiece {
                     design_id: crate::id::Id::from("design-scoped-1"),

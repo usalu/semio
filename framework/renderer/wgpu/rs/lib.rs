@@ -1378,11 +1378,11 @@ fn register_join_corner_hits(
     }
 }
 
-fn dock_tab_content_width(atlas: &FontAtlas, theme: &Theme, label: &str) -> f32 {
+pub(crate) fn dock_tab_content_width(atlas: &mut FontAtlas, theme: &Theme, label: &str) -> f32 {
     14.0 + theme.gap_standard + atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0
 }
 
-fn paint_dock_tab_icon(ctx: &mut DockRenderContext<'_>, icon_id: &str, x: f32, tab_rect: Rect, color: Color) -> f32 {
+fn paint_dock_tab_icon(ctx: &mut DockRenderContext<'_>, icon_id: &str, x: f32, tab_rect: Rect, color: Rgba) -> f32 {
     const ICON_TINY: f32 = 14.0;
     if let Some(uv) = ctx.icons.icon_uv(icon_id) {
         ctx.draw.push_textured(
@@ -1485,31 +1485,21 @@ fn render_stack(
             // 🪟 Inactive sibling pills — fill only; outer outline is the stack silhouette.
             ctx.draw.push_solid([tab_rect.x, tab_rect.y, tab_rect.w, tab_rect.h], theme.panel);
         }
+        let tint = if stack_active_tab {
+            theme.active_foreground
+        } else if hovered {
+            theme.border_emphasized
+        } else {
+            theme.text_element
+        };
+        let icon_w = paint_dock_tab_icon(ctx, icon_id, tab_rect.x + theme.padding_standard, tab_rect, tint);
         dock_text(
             ctx,
             label,
-            tab_rect.x + theme.padding_standard + paint_dock_tab_icon(
-                ctx,
-                icon_id,
-                tab_rect.x + theme.padding_standard,
-                tab_rect,
-                if stack_active_tab {
-                    theme.active_foreground
-                } else if hovered {
-                    theme.border_emphasized
-                } else {
-                    theme.text_element
-                },
-            ),
+            tab_rect.x + theme.padding_standard + icon_w,
             tab_rect.y + (tab_rect.h + theme.font_size_small) * 0.5 - 1.0,
             theme.font_size_small,
-            if stack_active_tab {
-                theme.active_foreground
-            } else if hovered {
-                theme.border_emphasized
-            } else {
-                theme.text_element
-            },
+            tint,
         );
         ctx.input.register_hit(HitTarget {
             rect: tab_rect,
@@ -2046,9 +2036,9 @@ mod tests {
     #[test]
     fn dock_tab_content_width_reserves_icon_slot() {
         let theme = Theme::default();
-        let atlas = FontAtlas::builtin();
+        let mut atlas = FontAtlas::builtin();
         let label = "Main";
-        let with_icon = dock_tab_content_width(&atlas, &theme, label);
+        let with_icon = dock_tab_content_width(&mut atlas, &theme, label);
         let text_only = atlas.measure_text(label, theme.font_size_small).0 + theme.padding_standard * 2.0;
         assert!(with_icon > text_only);
     }
@@ -2502,10 +2492,10 @@ mod tests {
         let mut app = sample_app(&["main", "aux"], None);
         app.controller_id = "ctrl".into();
         app.utilities = vec![
-            UtilityDefinition::new("utility.a", "Utility A", "icon.a"),
+            UtilityDefinition::new("utility.a", "Utility A", "circle"),
             UtilityDefinition {
                 allows_actions_while_active: true,
-                ..UtilityDefinition::new("utility.b", "Utility B", "icon.b")
+                ..UtilityDefinition::new("utility.b", "Utility B", "square")
             },
         ];
         app.actions = vec![
@@ -5577,42 +5567,6 @@ fn render_plan_error_widget(message: &str, bounds: Rect, ctx: &mut FrameworkWidg
 }
 //#endregion RenderPlanValidator
 
-pub fn measure_ui_node(atlas: &mut ui_wgpu::FontAtlas, theme: &Theme, node: &UiNode) -> (f32, f32) {
-    match node {
-        UiNode::ComponentScene(_) => (320.0, 240.0),
-        UiNode::Image(_) => (128.0, 128.0),
-        UiNode::Stack(stack) => {
-            let gap = gap_for_token(theme, stack.gap.as_deref());
-            let padding = padding_for_token(theme, stack.padding.as_deref()) * 2.0;
-            let vertical = stack.direction != "horizontal";
-            let mut total_main = 0.0f32;
-            let mut max_cross = 0.0f32;
-            for (index, child) in stack.children.iter().enumerate() {
-                let (w, h) = measure_ui_node(atlas, theme, child);
-                if vertical {
-                    total_main += h;
-                    max_cross = max_cross.max(w);
-                    if index + 1 < stack.children.len() {
-                        total_main += gap;
-                    }
-                } else {
-                    total_main += w;
-                    max_cross = max_cross.max(h);
-                    if index + 1 < stack.children.len() {
-                        total_main += gap;
-                    }
-                }
-            }
-            if vertical {
-                (max_cross + padding, total_main + padding)
-            } else {
-                (total_main + padding, max_cross + padding)
-            }
-        }
-        other => measure_widget(atlas, theme, &ui_node_to_widget(other)),
-    }
-}
-
 //#region RetainedEngineCutover
 /** 🧵 The wave-3 cutover: `render_ui_node`'s live implementation is now `ui_wgpu::engine::Ui`
  * (retained-mode `apply_tree`/`frame`/`dispatch_event`), not `ui_node_to_widget`+`render_widget`.
@@ -5766,10 +5720,11 @@ fn shift_scissor(scissor: ui_wgpu::draw::ScissorRect, dx: f32, dy: f32) -> ui_wg
  * caller-supplied absolute `Rect`s. `DrawLayer::foreground_of` indexes into `glass_regions` (not
  * `layers` — confirmed by reading `DrawList::push_glass`/`begin_glass_content`), so only that index
  * needs rebasing by however many glass regions `target` already had; `ScenePass3d::layer_index` does
- * index into `layers` and is rebased accordingly, kept correct for whatever a future `SceneHost` might
- * push (today's `paint::paint_component_scene` placeholder — no `SceneHost` is registered, see the
- * `ComponentScene`/`Image` shadow-paint note below — doesn't populate `scene_passes`, so this is
- * presently a no-operation copy of an empty `Vec`, kept for correctness rather than left a silent gap). */
+ * index into `layers` and is rebased accordingly — real content `FrameworkSceneHost::paint_slot`
+ * paints directly into this same `retained` `DrawList` (e.g. `render_component_scene`'s `World3d`
+ * arm, which calls into `infinite_world::render_world_3d`'s own `ctx.draw.push_scene_pass`) rides
+ * along through this exact rebasing, no special-casing needed here now that a real `SceneHost` is
+ * registered. */
 fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wgpu::DrawList, offset_x: f32, offset_y: f32) {
     let glass_base = target.glass_regions.len();
     for region in &retained.glass_regions {
@@ -5803,95 +5758,84 @@ fn composite_retained_draw_list(target: &mut ui_wgpu::DrawList, retained: &ui_wg
     }
 }
 
-/** 🎬🖼️ `ComponentScene`/`Image` have no `SceneHost` bridge this pass (see the ticket report's "Why
- * no `SceneHost` impl" finding: `scene_slots::SceneSlot` only carries `{surface_id, kind, rect}` —
- * never the full `UiComponentSceneNode` payload a real `render_component_scene` call needs — and
- * doesn't cover `Image`/`ExternalSlot` at all, so a trait bridge would still need this exact
- * fallback for two of the three kinds regardless). Instead this walks the *original* `UiNode` (not
- * the retained tree) with the pre-cutover immediate-mode layout math (`measure_ui_node`/
- * `layout_vertical`/`layout_horizontal`, both still very much alive and now dual-purposed) purely to
- * resolve `ComponentScene`/`Image` leaf bounds, then paints their real content — unchanged
- * `render_component_scene`/`render_ui_image` calls — directly into the live `ctx.draw`, layered after
- * the retained composite above. `ExternalSlot` is left to the retained engine's own placeholder
- * (`resolve_external_slots_in_tree` already substitutes real content upstream before a tree ever
- * reaches `render_ui_node`, so a bare `ExternalSlot` reaching here is already the rare/fallback case).
- * Every other kind is skipped (`_ => {}`) since the retained engine already painted it — recursing
- * into it here too would double-paint. Bounds may not exactly match the retained engine's own
- * flex-computed bounds for `Field`/`Section` containers (one of this ticket's explicitly
- * pre-authorized "known gap" kinds) — documented, not silently accepted. */
-fn paint_unbridged_scene_and_image_leaves(
-    node: &UiNode,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
-    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
-    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
-) {
-    match node {
-        UiNode::ComponentScene(scene) => render_component_scene(
-            scene,
-            bounds,
-            ctx,
-            gpu,
-            world3d_states,
-            node_graph_states,
-            tiled_map_states,
-            icon_render_states,
-            board2d_states,
-        ),
-        UiNode::Image(image) => render_ui_image(image, bounds, ctx),
-        UiNode::Stack(stack) => {
-            let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
-            let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
-            let vertical = stack.direction != "horizontal";
-            let sizes: Vec<f32> = stack
-                .children
-                .iter()
-                .map(|child| {
-                    let (w, h) = measure_ui_node(ctx.atlas, ctx.theme, child);
-                    if vertical { h } else { w }
-                })
-                .collect();
-            let rects = if vertical {
-                layout_vertical(bounds, gap, padding, &sizes)
-            } else {
-                layout_horizontal(bounds, gap, padding, &sizes)
-            };
-            for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                paint_unbridged_scene_and_image_leaves(
-                    child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
-                );
-            }
+/** 🎬 The `SceneHost` implementor closing the SceneHost gap `paint_unbridged_scene_and_image_leaves`
+ * used to paper over: reads a `SceneSlot`'s payload — a `&UiComponentSceneNode`/`&UiImageNode`
+ * borrowed straight from `ui_wgpu`'s own retained tree, never a second copy — and dispatches to the
+ * UNCHANGED `render_component_scene`/`render_ui_image`, the exact functions the deleted shadow walk
+ * used to call, now reached through the real bridge instead of a second immediate-mode layout pass.
+ * `collect_scene_slots` (inside `Ui::frame`) already does a full, unconditional tree walk, so a scene
+ * nested under `Group`/`Tree`/any other container resolves here too — not just `Stack`/`Section`/
+ * `Field`, the shadow walk's own hard-coded set.
+ *
+ * Constructed fresh once per `render_ui_node` call, borrowing exactly the per-frame state that call
+ * already has in scope (never stored longer than that one call) — mirrors why `Ui::frame` itself
+ * takes `scene_host` as a parameter rather than a stored field (see that method's doc comment):
+ * `gpu`/the per-surface-kind state maps aren't anything a `Ui`-owned `Box<dyn SceneHost>` could hold. */
+struct FrameworkSceneHost<'ctx> {
+    gpu: &'ctx mut ui_wgpu::GpuContext,
+    input: &'ctx mut ui_wgpu::InputState<ActionDescriptor>,
+    theme: &'ctx Theme,
+    scroll_offsets: &'ctx mut std::collections::HashMap<String, f32>,
+    collapsed_sections: &'ctx mut std::collections::HashMap<String, bool>,
+    open_selects: &'ctx mut std::collections::HashMap<String, bool>,
+    world3d_states: &'ctx mut std::collections::HashMap<String, infinite_world::World3dState>,
+    node_graph_states: &'ctx mut std::collections::HashMap<String, NodeGraphSurface>,
+    tiled_map_states: &'ctx mut std::collections::HashMap<String, TiledMapSurface>,
+    icon_render_states: &'ctx mut std::collections::HashMap<String, infinite_world::World3dState>,
+    board2d_states: &'ctx mut std::collections::HashMap<String, Board2dSurface>,
+}
+
+impl ui_wgpu::SceneHost for FrameworkSceneHost<'_> {
+    /// 🖌️ `draw`/`atlas`/`icons` are `Ui::frame`'s own per-tick parameters, reborrowed fresh by the
+    /// engine for each slot (see `scene_slots::SceneHost::paint_slot`'s doc comment) — `draw` is the
+    /// retained window's own `DrawList`, in that window's local `(0,0)`-origin space, the same space
+    /// `slot.rect` is expressed in (the caller composites/offsets the WHOLE retained `DrawList` by
+    /// `bounds.x`/`bounds.y` afterward via `composite_retained_draw_list`, exactly like every other
+    /// retained-paint call — so real scene/image pixels painted here land in the right place for free).
+    fn paint_slot(&mut self, slot: &ui_wgpu::SceneSlot<'_>, draw: &mut ui_wgpu::DrawList, atlas: &mut ui_wgpu::FontAtlas, icons: Option<&ui_wgpu::IconAtlas>) {
+        let mut ctx = framework_widget_context(
+            draw,
+            None,
+            atlas,
+            icons,
+            self.input,
+            self.theme,
+            self.scroll_offsets,
+            self.collapsed_sections,
+            self.open_selects,
+            None,
+        );
+        match &slot.content {
+            ui_wgpu::SlotContent::Scene(scene) => render_component_scene(
+                scene,
+                slot.rect,
+                &mut ctx,
+                self.gpu,
+                self.world3d_states,
+                self.node_graph_states,
+                self.tiled_map_states,
+                self.icon_render_states,
+                self.board2d_states,
+            ),
+            ui_wgpu::SlotContent::Image(image) => render_ui_image(image, slot.rect, &mut ctx),
         }
-        UiNode::Section(section) => {
-            let gap = gap_for_token(ctx.theme, None);
-            let padding = padding_for_token(ctx.theme, None);
-            let sizes: Vec<f32> = section
-                .children
-                .iter()
-                .map(|child| measure_ui_node(ctx.atlas, ctx.theme, child).1)
-                .collect();
-            let rects = layout_vertical(bounds, gap, padding, &sizes);
-            for (child, rect) in section.children.iter().zip(rects.iter()) {
-                paint_unbridged_scene_and_image_leaves(
-                    child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
-                );
-            }
-        }
-        UiNode::Field(field) => paint_unbridged_scene_and_image_leaves(
-            &field.child, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
-        ),
-        _ => {}
     }
 }
 
 /** 🔁 The live cutover entry point (was `ui_node_to_widget`+`render_widget`, now
  * `ui_wgpu::Ui::apply_tree`/`frame`/`dispatch_event`). `window_id` identifies which retained window
  * bucket this call's `node`/`bounds` belong to — see `RetainedEngineCutover`'s doc comment for why
- * this had to become a new parameter and which two call sites outside `interpreter` were touched. */
+ * this had to become a new parameter and which two call sites outside `interpreter` were touched.
+ *
+ * ✅ RESOLVED (was the "SceneHost — deliberately not implemented" gap, `report-w3-interpreter-
+ * cutover.md`): `ComponentScene`/`Image` leaves are now painted by `FrameworkSceneHost` — a real
+ * `scene_slots::SceneHost` — through `Ui::frame`'s per-tick `scene_host` parameter, not by the
+ * separate immediate-mode shadow walk (`paint_unbridged_scene_and_image_leaves`, `measure_ui_node`/
+ * `layout_vertical`/`layout_horizontal`-driven) that used to run after `Ui::frame` returned. That
+ * function and its bounds-divergence-for-`Field`/`Section` gap are gone: `ui_wgpu`'s own
+ * `collect_scene_slots` resolves bounds from the SAME retained taffy layout the rest of the tree
+ * already painted with, for every container kind (including `Group`/`Tree`, which the shadow walk's
+ * hard-coded `Stack`/`Section`/`Field` recursion never covered). */
 pub fn render_ui_node(
     node: &UiNode,
     bounds: Rect,
@@ -5916,80 +5860,27 @@ pub fn render_ui_node(
         engine.apply_tree(window_id, node);
         engine.set_viewport(window_id, viewport_w, viewport_h);
         let commands = dispatch_pointer_events(&mut engine, window_id, bounds, ctx.input);
-        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons) {
-            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
-        }
-        commands
-    });
-    apply_ui_commands(&commands, ctx.input);
-    paint_unbridged_scene_and_image_leaves(
-        node, bounds, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states,
-    );
-}
-//#endregion RetainedEngineCutover
-
-#[allow(dead_code)]
-fn render_ui_node_inner(
-    node: &UiNode,
-    bounds: Rect,
-    ctx: &mut FrameworkWidgetContext<'_>,
-    gpu: &mut ui_wgpu::GpuContext,
-    world3d_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    node_graph_states: &mut std::collections::HashMap<String, NodeGraphSurface>,
-    tiled_map_states: &mut std::collections::HashMap<String, TiledMapSurface>,
-    icon_render_states: &mut std::collections::HashMap<String, infinite_world::World3dState>,
-    board2d_states: &mut std::collections::HashMap<String, Board2dSurface>,
-) {
-    match node {
-        UiNode::ComponentScene(scene) => render_component_scene(
-            scene,
-            bounds,
-            ctx,
+        let mut scene_host = FrameworkSceneHost {
             gpu,
+            input: ctx.input,
+            theme: ctx.theme,
+            scroll_offsets: ctx.scroll_offsets,
+            collapsed_sections: ctx.collapsed_sections,
+            open_selects: ctx.open_selects,
             world3d_states,
             node_graph_states,
             tiled_map_states,
             icon_render_states,
             board2d_states,
-        ),
-        UiNode::Stack(stack) => {
-            let gap = gap_for_token(ctx.theme, stack.gap.as_deref());
-            let padding = padding_for_token(ctx.theme, stack.padding.as_deref());
-            let vertical = stack.direction != "horizontal";
-            let sizes: Vec<f32> = stack
-                .children
-                .iter()
-                .map(|child| {
-                    let (w, h) = measure_ui_node(ctx.atlas, ctx.theme, child);
-                    if vertical { h } else { w }
-                })
-                .collect();
-            let rects = if vertical {
-                layout_vertical(bounds, gap, padding, &sizes)
-            } else {
-                layout_horizontal(bounds, gap, padding, &sizes)
-            };
-            for (child, rect) in stack.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
-            }
+        };
+        if let Some(retained_draw) = engine.frame(window_id, viewport_w, viewport_h, ctx.atlas, ctx.icons, Some(&mut scene_host)) {
+            composite_retained_draw_list(ctx.draw, retained_draw, bounds.x, bounds.y);
         }
-        UiNode::Section(section) => {
-            let gap = gap_for_token(ctx.theme, None);
-            let padding = padding_for_token(ctx.theme, None);
-            let sizes: Vec<f32> = section
-                .children
-                .iter()
-                .map(|child| measure_ui_node(ctx.atlas, ctx.theme, child).1)
-                .collect();
-            let rects = layout_vertical(bounds, gap, padding, &sizes);
-            for (child, rect) in section.children.iter().zip(rects.iter()) {
-                render_ui_node_inner(child, *rect, ctx, gpu, world3d_states, node_graph_states, tiled_map_states, icon_render_states, board2d_states);
-            }
-        }
-        UiNode::Image(image) => render_ui_image(image, bounds, ctx),
-        other => render_widget(&ui_node_to_widget(other), bounds, ctx),
-    }
+        commands
+    });
+    apply_ui_commands(&commands, ctx.input);
 }
+//#endregion RetainedEngineCutover
 
 //#region UiImageLoading
 /** 🌐 A pending async fetch for a plain `Image` UiNode whose `src` is an `http(s)://` or relative
@@ -6257,313 +6148,6 @@ fn render_ui_image(image: &ui_wgpu::UiImageNode, bounds: Rect, ctx: &mut Framewo
         .unwrap_or(bounds);
     ctx.draw
         .push_raster_quad(&key, [target.x, target.y, target.w, target.h], [0.0, 0.0, 1.0, 1.0], 1.0);
-}
-
-pub fn ui_node_to_widget(node: &UiNode) -> WidgetNode<ActionDescriptor> {
-    match node {
-        UiNode::Stack(stack) => WidgetNode::Stack {
-            direction: stack.direction.clone(),
-            gap: stack.gap.clone(),
-            padding: stack.padding.clone(),
-            children: stack.children.iter().map(ui_node_to_widget).collect(),
-        },
-        UiNode::Text(text) => WidgetNode::Text {
-            value: text.value.clone(),
-            emphasize: text.emphasize.unwrap_or(false),
-        },
-        UiNode::Separator(_) => WidgetNode::Separator,
-        UiNode::Button(button) => WidgetNode::Button {
-            id: button.id.clone(),
-            icon_id: Some(button.icon_id.clone()),
-            label: button.label.clone(),
-            event: Some(button.action.clone()),
-        },
-        UiNode::Input(input) => WidgetNode::Input {
-            id: input.id.clone(),
-            input_kind: input.input_kind.clone(),
-            value: input.value.clone(),
-            placeholder: input.placeholder.clone(),
-            commit: input.commit.clone(),
-            on_change: Some(input.on_change.clone()),
-        },
-        UiNode::Select(select) => WidgetNode::Select {
-            id: select.id.clone(),
-            value: select.value.clone(),
-            items: select.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
-            placeholder: select.placeholder.clone(),
-            on_change: Some(select.on_change.clone()),
-        },
-        UiNode::Toggle(toggle) => WidgetNode::Toggle {
-            id: toggle.id.clone(),
-            icon_id: toggle.icon_id.clone(),
-            pressed: toggle.presence.selected,
-            text: toggle.text.clone(),
-            on_change: Some(toggle.on_change.clone()),
-        },
-        UiNode::KeyValue(kv) => WidgetNode::KeyValue {
-            entries: kv.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
-        },
-        UiNode::Slider(slider) => WidgetNode::Slider {
-            id: slider.id.clone(),
-            value: slider.value,
-            min: slider.min,
-            max: slider.max,
-            step: slider.step,
-            ready: None,
-            disabled: false,
-            on_change: Some(slider.on_change.clone()),
-        },
-        UiNode::NumberStepper(stepper) => WidgetNode::NumberStepper {
-            id: stepper.id.clone(),
-            value: stepper.value,
-            step: stepper.step,
-            uniform: stepper.uniform,
-            on_absolute: Some(stepper.on_absolute.clone()),
-            on_delta: Some(stepper.on_delta.clone()),
-        },
-        UiNode::Ring(ring) => WidgetNode::Ring {
-            id: ring.id.clone(),
-            t: ring.t,
-            disabled: ring.presence.state == UiState::Disabled,
-            on_change: Some(ring.on_change.clone()),
-        },
-        UiNode::IconSelect(icon) => WidgetNode::IconSelect {
-            id: icon.id.clone(),
-            value: icon.value.clone(),
-            uniform: icon.uniform,
-            classifier_kind: icon.classifier_kind.clone(),
-            on_change: Some(icon.on_change.clone()),
-        },
-        UiNode::Field(field) => match ui_wgpu::ui_node_to_control(&field.child) {
-            Some(control) => WidgetNode::Field {
-                id: field.id.clone(),
-                label: field.label.clone(),
-                child: control_to_widget(&control),
-            },
-            None => WidgetNode::Section {
-                id: field.id.clone(),
-                label: Some(field.label.clone()),
-                default_open: true,
-                children: vec![ui_node_to_widget(&field.child)],
-            },
-        },
-        UiNode::Section(section) => WidgetNode::Section {
-            id: section.id.clone(),
-            label: section.label.clone(),
-            default_open: section.default_open.unwrap_or(true),
-            children: section.children.iter().map(ui_node_to_widget).collect(),
-        },
-        UiNode::Group(group) => WidgetNode::Section {
-            id: group.id.clone(),
-            label: Some(group.label.clone()),
-            default_open: group.default_open.unwrap_or(true),
-            children: group.children.iter().map(ui_node_to_widget).collect(),
-        },
-        UiNode::Tree(tree) => WidgetNode::Tree {
-            // 🧭 Per-item `selected`/`highlighted` (see `tree_item_to_widget`) already carry the
-            // full signal from `item.presence` — the tree-level id lists are gone, not re-derived.
-            sections: tree.sections.iter().map(tree_section_to_widget).collect(),
-            selected_ids: Vec::new(),
-            highlighted_ids: Vec::new(),
-            selection_change: tree.selection_change.clone(),
-        },
-        UiNode::ComponentScene(_) => WidgetNode::Text {
-            value: String::new(),
-            emphasize: false,
-        },
-        UiNode::ExternalSlot(slot) => WidgetNode::Text {
-            value: format!("Extension: {} / {}", slot.plugin_id, slot.body_key),
-            emphasize: false,
-        },
-        UiNode::Image(_) => WidgetNode::Text {
-            value: String::new(),
-            emphasize: false,
-        },
-    }
-}
-
-fn control_to_widget(control: &UiControlNode) -> ControlNode<ActionDescriptor> {
-    match control {
-        UiControlNode::Button(n) => ControlNode::Button {
-            id: n.id.clone(),
-            icon_id: Some(n.icon_id.clone()),
-            label: n.label.clone(),
-            event: Some(n.action.clone()),
-        },
-        UiControlNode::Input(n) => ControlNode::Input {
-            id: n.id.clone(),
-            input_kind: n.input_kind.clone(),
-            value: n.value.clone(),
-            placeholder: n.placeholder.clone(),
-            commit: n.commit.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Select(n) => ControlNode::Select {
-            id: n.id.clone(),
-            value: n.value.clone(),
-            items: n.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
-            placeholder: n.placeholder.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Toggle(n) => ControlNode::Toggle {
-            id: n.id.clone(),
-            icon_id: n.icon_id.clone(),
-            pressed: n.presence.selected,
-            text: n.text.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::KeyValue(n) => ControlNode::KeyValue {
-            entries: n.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
-        },
-        UiControlNode::Slider(n) => ControlNode::Slider {
-            id: n.id.clone(),
-            value: n.value,
-            min: n.min,
-            max: n.max,
-            step: n.step,
-            ready: None,
-            disabled: false,
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::NumberStepper(n) => ControlNode::NumberStepper {
-            id: n.id.clone(),
-            value: n.value,
-            step: n.step,
-            uniform: n.uniform,
-            on_absolute: Some(n.on_absolute.clone()),
-            on_delta: Some(n.on_delta.clone()),
-        },
-        UiControlNode::Ring(n) => ControlNode::Ring {
-            id: n.id.clone(),
-            t: n.t,
-            disabled: n.presence.state == UiState::Disabled,
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::IconSelect(n) => ControlNode::IconSelect {
-            id: n.id.clone(),
-            value: n.value.clone(),
-            uniform: n.uniform,
-            classifier_kind: n.classifier_kind.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-    }
-}
-
-fn tree_action_to_widget(action: &UiTreeItemAction) -> TreeItemAction<ActionDescriptor> {
-    TreeItemAction {
-        icon_id: action.icon_id.clone(),
-        label: action.label.clone(),
-        event: action.action.clone(),
-        reveal_on_hover: action.reveal_on_hover.unwrap_or(false),
-    }
-}
-
-fn tree_section_to_widget(section: &UiTreeSectionNode) -> TreeSection<ActionDescriptor> {
-    TreeSection {
-        id: section.id.clone(),
-        label: section.label.clone(),
-        default_open: section.default_open.unwrap_or(true),
-        items: section.items.iter().map(tree_item_to_widget).collect(),
-    }
-}
-
-fn tree_item_to_widget(item: &UiTreeItemNode) -> TreeItem<ActionDescriptor> {
-    TreeItem {
-        id: item.id.clone(),
-        label: item.label.clone(),
-        description: item.description.clone(),
-        icon_id: item.icon_id.clone(),
-        selected: item.presence.selected,
-        highlighted: item.presence.state == UiState::Previewed,
-        default_open: item.default_open.unwrap_or(false),
-        dimmed: item.dimmed.unwrap_or(false),
-        event: item.action.clone(),
-        hover_event: item.hover_action.clone(),
-        unhover_event: item.unhover_action.clone(),
-        actions: item
-            .actions
-            .as_ref()
-            .map(|actions| actions.iter().map(tree_action_to_widget).collect())
-            .unwrap_or_default(),
-        draggable: item.draggable.unwrap_or(false),
-        drag_data: item.drag_data.clone().unwrap_or_default(),
-        control: item
-            .control
-            .as_ref()
-            .map(|control| Box::new(control_to_widget_node(control))),
-        children: item
-            .items
-            .as_ref()
-            .map(|items| items.iter().map(tree_item_to_widget).collect())
-            .unwrap_or_default(),
-    }
-}
-
-fn control_to_widget_node(control: &UiControlNode) -> WidgetNode<ActionDescriptor> {
-    match control {
-        UiControlNode::Button(n) => WidgetNode::Button {
-            id: n.id.clone(),
-            icon_id: Some(n.icon_id.clone()),
-            label: n.label.clone(),
-            event: Some(n.action.clone()),
-        },
-        UiControlNode::Input(n) => WidgetNode::Input {
-            id: n.id.clone(),
-            input_kind: n.input_kind.clone(),
-            value: n.value.clone(),
-            placeholder: n.placeholder.clone(),
-            commit: n.commit.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Select(n) => WidgetNode::Select {
-            id: n.id.clone(),
-            value: n.value.clone(),
-            items: n.items.iter().map(|i| SelectItem { value: i.value.clone(), label: i.label.clone() }).collect(),
-            placeholder: n.placeholder.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::Toggle(n) => WidgetNode::Toggle {
-            id: n.id.clone(),
-            icon_id: n.icon_id.clone(),
-            pressed: n.presence.selected,
-            text: n.text.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::KeyValue(n) => WidgetNode::KeyValue {
-            entries: n.entries.iter().map(|e| KeyValueEntry { label: e.label.clone(), value: e.value.clone() }).collect(),
-        },
-        UiControlNode::Slider(n) => WidgetNode::Slider {
-            id: n.id.clone(),
-            value: n.value,
-            min: n.min,
-            max: n.max,
-            step: n.step,
-            ready: None,
-            disabled: false,
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::NumberStepper(n) => WidgetNode::NumberStepper {
-            id: n.id.clone(),
-            value: n.value,
-            step: n.step,
-            uniform: n.uniform,
-            on_absolute: Some(n.on_absolute.clone()),
-            on_delta: Some(n.on_delta.clone()),
-        },
-        UiControlNode::Ring(n) => WidgetNode::Ring {
-            id: n.id.clone(),
-            t: n.t,
-            disabled: n.presence.state == UiState::Disabled,
-            on_change: Some(n.on_change.clone()),
-        },
-        UiControlNode::IconSelect(n) => WidgetNode::IconSelect {
-            id: n.id.clone(),
-            value: n.value.clone(),
-            uniform: n.uniform,
-            classifier_kind: n.classifier_kind.clone(),
-            on_change: Some(n.on_change.clone()),
-        },
-    }
 }
 
 pub fn framework_widget_context<'a>(
@@ -7718,6 +7302,7 @@ use crate::shell::{push_context_menu_item, push_find_item, ContextMenuItem, Shel
 use infinite_world::{render_world_3d, World3dState};
 use base64::Engine;
 use ui_wgpu::{ActionDescriptor, SurfaceKind, UiComponentSceneNode, UiPresence, UiSelectItem, UiSelectNode, UiTextNode};
+use semio_framework_core::IconName;
 use serde::Deserialize;
 use serde_json::{json, Value};
 use std::cell::RefCell;
@@ -8634,7 +8219,11 @@ pub fn render_component_scene(
         SurfaceKind::BlockList => render_block_list(scene, bounds, ctx),
         SurfaceKind::DiffView => render_diff_view(scene, bounds, ctx),
         SurfaceKind::EventFeed => render_event_feed(scene, bounds, ctx),
-        _ => render_placeholder(scene.component_kind.as_str(), bounds, ctx),
+        // 🚨 Deliberately exhaustive, no `_` wildcard: every `SurfaceKind` variant has a real arm
+        // above, so a future variant addition fails to compile here until it's wired up, instead of
+        // silently falling through to `render_placeholder` forever (see `region-claims.json`/this
+        // ticket's task 5 — `render_placeholder` itself is kept for other callers that still want an
+        // explicit "unimplemented" chrome, e.g. an unresolved `ExternalSlot`).
     }
     apply_scene_wheel(scene, bounds, ctx);
     apply_scene_pointer(scene, bounds, ctx);
@@ -9323,7 +8912,7 @@ fn render_table_cell(cell: &Value, rect: Rect, ctx: &mut FrameworkWidgetContext<
                 render_widget(
                     &WidgetNode::Button {
                         id: None,
-                        icon_id: Some(button.icon_id.clone()),
+                        icon_id: IconName::from_str(&button.icon_id),
                         label: button.label.clone().unwrap_or_default(),
                         event: Some(button.action.clone()),
                     },
@@ -9876,7 +9465,7 @@ fn render_block_list(scene: &UiComponentSceneNode, bounds: Rect, ctx: &mut Frame
         render_widget(
             &WidgetNode::Button {
                 id: Some(format!("{}.palette.{}", scene.surface_id, entry.block_kind)),
-                icon_id: (!entry.icon_id.is_empty()).then(|| entry.icon_id.clone()),
+                icon_id: IconName::from_str(&entry.icon_id),
                 label: entry.label.clone(),
                 event: Some(scene_action(scene, "addBlock", json!({ "kind": entry.block_kind }))),
             },
@@ -15393,7 +14982,7 @@ pub mod shell {
 //! 🖥️ OS shell chrome — navbar, footer, floating panels, overlays, and studio mode.
 
 use crate::dock::{
-    compute_dock_drop_zone, dock_from_window_layout, drop_zone_indicator_rect, parse_path,
+    compute_dock_drop_zone, dock_from_window_layout, dock_tab_content_width, drop_zone_indicator_rect, parse_path,
     push_window_silhouette_border, DockDragKind, DockDragPayload, DockDragState, DockDropZone,
     DockRenderContext, DockState, WindowSilhouette,
 };
@@ -15416,7 +15005,7 @@ use semio_framework_sync::{
 };
 use semio_framework_core::{
     app_document_label, app_window_document_label, resolve_app_document, AppDefinition, ExampleDefinition,
-    ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
+    IconName, ModeDefinition, PanelGroup, PanelTabDefinition, ViewState,
 };
 use ui_wgpu::component::layout::WindowEngagementPossible;
 use ui_wgpu::{
@@ -15438,6 +15027,16 @@ use ui_wgpu::{
 const FRAMEWORK_DISPLAY_WINDOWS_TAB_ID: &str = "framework.display.windows";
 const FRAMEWORK_DISPLAY_LAYOUT_TAB_ID: &str = "framework.display.layout";
 const FRAMEWORK_SETTINGS_GENERAL_TAB_ID: &str = "framework.settings.general";
+/// 🎨 Byte-identical to React's `FRAMEWORK_SETTINGS_THEME_TAB_ID` (`ui/js/react/index.tsx:8807`) — the
+/// `PanelTabKind::SettingsTheme` variant this maps to already existed in `framework/core/rs/lib.rs`
+/// but was completely unwired on this side (see `build_settings_theme_ui`/`right_tabs`).
+const FRAMEWORK_SETTINGS_THEME_TAB_ID: &str = "framework.settings.theme";
+/// 🎛️ wgpu-only: React surfaces its command palette as a persistent `bottom-middle` dock anchor
+/// (`buildCommandCategoryTabs`), which this renderer has no equivalent of (`group_side`/`PanelGroup::
+/// anchor` only ever map to the four corners — see that function's own doc comment). This gives
+/// `ShellState::build_command_panel_ui`'s already-built, already-tested content a real, reachable
+/// surface as a second Settings-column tab instead, the closest available honest substitute.
+const FRAMEWORK_SETTINGS_COMMANDS_TAB_ID: &str = "framework.settings.commands";
 const CHROME_ICON_TINY: f32 = 14.0;
 
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq)]
@@ -15863,90 +15462,30 @@ pub struct PanelLayoutPersisted {
     pub right_panel_width: Option<f32>,
 }
 
-#[cfg(target_arch = "wasm32")]
 const PANEL_LAYOUT_STORAGE_KEY: &str = "semio.panelLayout.v1";
 
-/// 🗄️ Calls `localStorage.getItem`/`setItem` via `js_sys::Reflect` rather than `web_sys::Storage` —
-/// the `"Storage"` web-sys feature isn't enabled in `Cargo.toml`, which this ticket must not edit.
-#[cfg(target_arch = "wasm32")]
-fn local_storage_get_item(key: &str) -> Option<String> {
-    let window = web_sys::window()?;
-    let storage = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")).ok()?;
-    let get_item: js_sys::Function = js_sys::Reflect::get(&storage, &wasm_bindgen::JsValue::from_str("getItem"))
-        .ok()?
-        .dyn_into()
-        .ok()?;
-    get_item
-        .call1(&storage, &wasm_bindgen::JsValue::from_str(key))
-        .ok()?
-        .as_string()
-}
-
-#[cfg(target_arch = "wasm32")]
-fn local_storage_set_item(key: &str, value: &str) {
-    let Some(window) = web_sys::window() else { return };
-    let Ok(storage) = js_sys::Reflect::get(&window, &wasm_bindgen::JsValue::from_str("localStorage")) else { return };
-    let Ok(set_item) = js_sys::Reflect::get(&storage, &wasm_bindgen::JsValue::from_str("setItem")) else { return };
-    if let Ok(set_item) = set_item.dyn_into::<js_sys::Function>() {
-        let _ = set_item.call2(&storage, &wasm_bindgen::JsValue::from_str(key), &wasm_bindgen::JsValue::from_str(value));
-    }
-}
-
-#[cfg(target_arch = "wasm32")]
+/// 🗄️ **Dedup note**: this used to be its own `js_sys::Reflect`-based localStorage pair on wasm32
+/// (`local_storage_get_item`/`local_storage_set_item`) plus a parallel native `$HOME/.semio/
+/// panel-layout.json` file store, built independently of and nearly identical to `🗄️PrefsStore`'s
+/// `WebLocalStorage`/`FilePrefsStore` (below, `w3-prefs-i18n-themes` built those for uiPrefs the same
+/// wave) — both landed the same `js_sys::Reflect` workaround for the same "`Storage` web-sys feature
+/// isn't enabled" `Cargo.toml` constraint. Flagged by both `report-w3-panel-dock-6anchor.md` and
+/// `report-w3-prefs-i18n-themes.md` as a wiring/dedup request; resolved here by routing panel layout
+/// through `prefs_get`/`prefs_set` like every other uiPref instead of keeping a second storage mechanism.
 fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
-    local_storage_get_item(PANEL_LAYOUT_STORAGE_KEY).and_then(|json| serde_json::from_str(&json).ok())
+    prefs_get(PANEL_LAYOUT_STORAGE_KEY).and_then(|json| serde_json::from_str(&json).ok())
 }
 
-#[cfg(target_arch = "wasm32")]
 fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
     if let Ok(json) = serde_json::to_string(layout) {
-        local_storage_set_item(PANEL_LAYOUT_STORAGE_KEY, &json);
+        prefs_set(PANEL_LAYOUT_STORAGE_KEY, &json);
     }
 }
 
-/// 🗄️ No `dirs`/`directories` crate dependency (not already in `Cargo.toml`, which this ticket must not
-/// edit) — resolves `%APPDATA%/semio` on Windows and `$HOME/.semio` elsewhere directly from env vars.
-#[cfg(not(target_arch = "wasm32"))]
-fn panel_layout_store_path_under(base: &str) -> std::path::PathBuf {
-    std::path::PathBuf::from(base).join("semio").join("panel-layout.json")
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn panel_layout_store_path() -> Option<std::path::PathBuf> {
-    let base = if cfg!(target_os = "windows") {
-        std::env::var("APPDATA").ok()
-    } else {
-        std::env::var("HOME").ok()
-    }?;
-    Some(panel_layout_store_path_under(&base))
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn native_write_panel_layout(path: &std::path::Path, layout: &PanelLayoutPersisted) {
-    if let Some(parent) = path.parent() {
-        let _ = std::fs::create_dir_all(parent);
-    }
-    if let Ok(json) = serde_json::to_string(layout) {
-        let _ = std::fs::write(path, json);
-    }
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn native_read_panel_layout(path: &std::path::Path) -> Option<PanelLayoutPersisted> {
-    let contents = std::fs::read_to_string(path).ok()?;
-    serde_json::from_str(&contents).ok()
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn load_panel_layout_from_store() -> Option<PanelLayoutPersisted> {
-    panel_layout_store_path().and_then(|path| native_read_panel_layout(&path))
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-fn save_panel_layout_to_store(layout: &PanelLayoutPersisted) {
-    if let Some(path) = panel_layout_store_path() {
-        native_write_panel_layout(&path, layout);
-    }
+thread_local! {
+    /// 🗄️ Last snapshot actually written to storage — lets `persist_panel_layout_if_changed` skip an
+    /// I/O write on frames where nothing moved instead of writing unconditionally every frame.
+    static LAST_PERSISTED_PANEL_LAYOUT: std::cell::RefCell<Option<PanelLayoutPersisted>> = std::cell::RefCell::new(None);
 }
 //#endregion 🧭PanelAnchorModel
 
@@ -16480,6 +16019,12 @@ impl ShellState {
         let settings_ui = self.build_settings_general_ui();
         self.panel_ui
             .insert(FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into(), settings_ui);
+        let theme_ui = self.build_settings_theme_ui();
+        self.panel_ui
+            .insert(FRAMEWORK_SETTINGS_THEME_TAB_ID.into(), theme_ui);
+        let commands_ui = self.build_command_panel_ui();
+        self.panel_ui
+            .insert(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into(), commands_ui);
     }
 
     fn build_display_windows_ui(&self, session: &ActiveSession) -> UiNode {
@@ -16664,6 +16209,83 @@ impl ShellState {
 })
     }
 
+    /// 🎨 The wgpu mirror of React's `buildSettingsThemeTree`'s theme-selector section (`ui/js/react/
+    /// index.tsx:9424-9498`) — deliberately scoped to picking/resetting/deleting a theme, same
+    /// proportion as this crate's `build_settings_general_ui`'s "driver" row having no axis editor.
+    /// `w3-prefs-i18n-themes`'s draft-color-editor primitives (`begin_custom_theme_draft`/
+    /// `set_draft_theme_color`/`save_draft_theme`/`discard_draft_theme`) stay unwired here on purpose —
+    /// that report already scoped the token editor itself down to 5 color slots and called porting
+    /// React's full multi-hundred-token editor "out of proportion to this ticket"; this wave only closes
+    /// the *reachability* gap (the registry/resolver was already live in `frame()`'s `resolve_theme_for_ids`
+    /// call, just invisible — no UI could ever select "mono" or a saved custom theme before this).
+    fn build_settings_theme_ui(&self) -> UiNode {
+        let is_de = self.locale_id == "de";
+        let active_id = active_theme_id();
+        let mut items = vec![
+            UiSelectItem { value: "semio".into(), label: "Semio".into() },
+            UiSelectItem { value: "mono".into(), label: "Mono".into() },
+        ];
+        for id in custom_theme_ids() {
+            let label = custom_theme_definition(&id).map(|theme| theme.label).unwrap_or_else(|| id.clone());
+            items.push(UiSelectItem { value: id, label });
+        }
+        let mut children = vec![
+            UiNode::Text(UiTextNode { presence: UiPresence::default(),
+                value: shell_chrome_string("settings.tab.theme", is_de).to_string(),
+                emphasize: Some(true),
+                data_attributes: None,
+            }),
+            UiNode::Select(UiSelectNode { presence: UiPresence::default(),
+                id: "framework.settings.theme.select".into(),
+                value: active_id.clone(),
+                items,
+                placeholder: None,
+                on_change: ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: "setThemeId".into(),
+                    args: None,
+                },
+            }),
+            UiNode::Button(UiButtonNode {
+                id: Some("framework.settings.theme.reset".into()),
+                icon_id: IconName::RotateCcw,
+                label: shell_chrome_string("settings.theme.reset", is_de).to_string(),
+                action: ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: "resetThemeId".into(),
+                    args: None,
+                },
+                style: None,
+                presence: UiPresence::default(),
+            }),
+        ];
+        if active_id.starts_with("custom.") {
+            children.push(UiNode::Button(UiButtonNode {
+                id: Some("framework.settings.theme.delete".into()),
+                icon_id: IconName::Trash2,
+                label: shell_chrome_string("settings.theme.delete", is_de).to_string(),
+                action: ActionDescriptor {
+                    controller_id: "framework".into(),
+                    action: "deleteThemeId".into(),
+                    args: Some(serde_json::json!({ "value": active_id })),
+                },
+                style: None,
+                presence: UiPresence::default(),
+            }));
+        }
+        UiNode::Stack(UiStackNode {
+            direction: "column".into(),
+            gap: None,
+            padding: None,
+            id: None,
+            children,
+            presence: UiPresence::default(),
+            activate: None,
+            drop_action: None,
+            drop_overlay: None,
+        })
+    }
+
     fn active_terminologies(&self) -> Vec<String> {
         let mut ids = vec!["native".to_string()];
         if let Some(session) = self.session.as_ref() {
@@ -16754,18 +16376,34 @@ impl ShellState {
     }
 
     /// 🗄️ Persists the current panel layout so it survives a reload — mirrors `persist_dock_layout` for
-    /// the unrelated `dock`/Mode system. **Wiring request**: not yet called from `handle_shell_hit`'s
-    /// `ui.panelToggle.*` arms (and the panel-resize-end path) — those live in the do-not-touch
-    /// `ShellInput` region this wave. Whoever next owns `ShellInput` should add one `self.persist_panel_layout();`
-    /// call to each of those arms, exactly like `dock.focus.*`/`dock.close.*` already call `persist_dock_layout()`.
+    /// the unrelated `dock`/Mode system.
     pub fn persist_panel_layout(&self) {
         save_panel_layout_to_store(&self.panel_layout_snapshot());
+        LAST_PERSISTED_PANEL_LAYOUT.with(|cell| *cell.borrow_mut() = Some(self.panel_layout_snapshot()));
     }
 
-    /// 🗄️ Loads any persisted panel layout and applies it — called once from `ShellState::new()`.
+    /// 🗄️ Persists the panel layout only when it actually changed since the last persist/load — called
+    /// once per frame from `render_chrome` (`ShellChrome`). **Resolves the previously-flagged wiring
+    /// gap**: `handle_shell_hit`'s `"ui.panelToggle.*"` arms (and the panel-resize-end path) live in the
+    /// do-not-touch `ShellInput` region, so rather than patch each of those call sites individually (which
+    /// this ticket isn't scoped to edit), this hooks persistence to the render loop instead — a dirty-check
+    /// against `LAST_PERSISTED_PANEL_LAYOUT` keeps it a no-op write on every frame nothing actually moved,
+    /// same shape as `persist_ui_prefs_if_changed` (💾PrefsSync) one frame refresh away in this same file.
+    pub fn persist_panel_layout_if_changed(&self) {
+        let current = self.panel_layout_snapshot();
+        let changed = LAST_PERSISTED_PANEL_LAYOUT.with(|cell| cell.borrow().as_ref() != Some(&current));
+        if changed {
+            self.persist_panel_layout();
+        }
+    }
+
+    /// 🗄️ Loads any persisted panel layout and applies it — called once from `ShellState::new()`. Seeds
+    /// `LAST_PERSISTED_PANEL_LAYOUT` from the loaded snapshot so the very first `render_chrome` frame
+    /// doesn't immediately re-persist a layout that was just read back unchanged.
     fn load_persisted_panel_layout(&mut self) {
         if let Some(layout) = load_panel_layout_from_store() {
             self.apply_panel_layout(&layout);
+            LAST_PERSISTED_PANEL_LAYOUT.with(|cell| *cell.borrow_mut() = Some(self.panel_layout_snapshot()));
         }
     }
     //#endregion 🧭PanelAnchorAccessors
@@ -16888,21 +16526,14 @@ mod panel_anchor_model_tests {
         assert_eq!(state.active_left_kind, LeftPanelKind::Workbench, "absent active kind falls back to the default");
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    /// 🗄️ Now that panel layout storage routes through the same `prefs_get`/`prefs_set` primitives as
+    /// every other uiPref (see the dedup note on `load_panel_layout_from_store`), a round trip through
+    /// `save_panel_layout_to_store`/`load_panel_layout_from_store` exercises the exact same `PREFS_STORE`
+    /// thread-local singleton `file_prefs_store_round_trips_through_disk` (🧪UiPrefsThemesI18nTests)
+    /// already proves is disk-durable on native — this only needs to prove the panel-layout JSON shape
+    /// itself round-trips through that singleton correctly.
     #[test]
-    fn native_panel_layout_store_path_is_namespaced_under_semio() {
-        let path = panel_layout_store_path_under("/tmp/example-home");
-        assert_eq!(path, std::path::PathBuf::from("/tmp/example-home/semio/panel-layout.json"));
-    }
-
-    #[cfg(not(target_arch = "wasm32"))]
-    #[test]
-    fn native_write_then_read_panel_layout_round_trips() {
-        let path = std::env::temp_dir().join(format!(
-            "semio-panel-layout-test-{}-{}.json",
-            std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
-        ));
+    fn panel_layout_round_trips_through_prefs_store() {
         let layout = PanelLayoutPersisted {
             left_panel_open: true,
             right_panel_open: false,
@@ -16911,21 +16542,31 @@ mod panel_anchor_model_tests {
             left_panel_width: Some(321.0),
             right_panel_width: Some(210.0),
         };
-        native_write_panel_layout(&path, &layout);
-        let loaded = native_read_panel_layout(&path).expect("round-tripped layout must parse back");
+        save_panel_layout_to_store(&layout);
+        let loaded = load_panel_layout_from_store().expect("round-tripped layout must parse back");
         assert_eq!(loaded, layout);
-        let _ = std::fs::remove_file(&path);
     }
 
-    #[cfg(not(target_arch = "wasm32"))]
+    /// 🗄️ `persist_panel_layout_if_changed`'s dirty-check: a second call with no field changes since the
+    /// last persist must not touch storage again — mirrors `persist_ui_prefs_if_changed_is_idempotent_
+    /// when_nothing_changed` (🧪UiPrefsThemesI18nTests) one region over, same shape for the same reason
+    /// (this is the render-loop hook that replaces patching every `ui.panelToggle.*` call site — see
+    /// `persist_panel_layout_if_changed`'s doc comment).
     #[test]
-    fn native_read_panel_layout_returns_none_for_missing_file() {
-        let path = std::env::temp_dir().join(format!(
-            "semio-panel-layout-missing-{}-{}.json",
-            std::process::id(),
-            std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_nanos()
-        ));
-        assert!(native_read_panel_layout(&path).is_none());
+    fn persist_panel_layout_if_changed_is_idempotent_when_nothing_changed() {
+        let mut state = fresh_state();
+        state.left_panel_open = true;
+        state.active_left_kind = LeftPanelKind::Display;
+        state.persist_panel_layout_if_changed();
+        let after_first = load_panel_layout_from_store().expect("first call must persist");
+        assert_eq!(after_first.active_left_kind.as_deref(), Some("display"));
+
+        // A second call with identical state must be a no-op — flip storage underneath it directly so a
+        // wrongly-unconditional write would be observable.
+        save_panel_layout_to_store(&PanelLayoutPersisted::default());
+        state.persist_panel_layout_if_changed();
+        let after_second = load_panel_layout_from_store().expect("storage still has a value");
+        assert_eq!(after_second, PanelLayoutPersisted::default(), "unchanged state must not re-persist and clobber the manual write above");
     }
 }
 //#endregion ShellLifecycle
@@ -17264,6 +16905,37 @@ impl ShellState {
                         .and_then(|v| v.as_str())
                     {
                         self.terminology_id = value.to_string();
+                    }
+                    return Ok(());
+                }
+                // 🎨 Backs `build_settings_theme_ui`'s theme select/reset/delete — mutates the same
+                // `CHROME_PREFS` thread-local `active_theme_id()` already reads from in `frame()`'s
+                // `resolve_theme_for_ids` call, exactly like the other `framework` arms above mutate
+                // a plain `self` field. `persist_ui_prefs_if_changed` (💾PrefsSync) picks up the change
+                // and writes it out on the next frame, same as appearance/locale/terminology/driver.
+                "setThemeId" => {
+                    if let Some(value) = action
+                        .args
+                        .as_ref()
+                        .and_then(|args| args.get("value"))
+                        .and_then(|v| v.as_str())
+                    {
+                        set_active_theme_id(value);
+                    }
+                    return Ok(());
+                }
+                "resetThemeId" => {
+                    set_active_theme_id("semio");
+                    return Ok(());
+                }
+                "deleteThemeId" => {
+                    if let Some(value) = action
+                        .args
+                        .as_ref()
+                        .and_then(|args| args.get("value"))
+                        .and_then(|v| v.as_str())
+                    {
+                        delete_custom_theme(value);
                     }
                     return Ok(());
                 }
@@ -17741,6 +17413,79 @@ impl ShellState {
 //#endregion ShellActions
 
 //#region ShellInput
+thread_local! {
+    /// 🎯 Per-window: whether `interpreter::dispatch_ui_event`'s retained content currently holds
+    /// keyboard focus, as last reported by that function's own returned `ui_wgpu::UiCommand::
+    /// FocusChanged` (see `dispatch_ui_event`'s own doc comment — the ONE sanctioned hook into the
+    /// process-wide retained engine this workstream may call; `interpreter`'s `UI_ENGINE` itself is
+    /// private to that off-limits module/region, so there is no direct way to *query* live focus,
+    /// only to *route events through* it and observe what comes back).
+    ///
+    /// 🚧 KNOWN GAP (see `report-w2-input-wiring.md`): a pointer click landing on a content widget
+    /// is dispatched by `interpreter::render_ui_node`'s own per-frame `dispatch_pointer_events` call
+    /// — entirely inside the off-limits region, whose `FocusChanged` commands are silently dropped
+    /// there (`apply_ui_commands`'s own comment) — so this tracker never learns about THOSE focus
+    /// changes, only ones this module's own keyboard routing below itself causes (e.g. Tab entering
+    /// content). Not a silent guess: a real fix needs a small `interpreter`-side
+    /// `pub fn window_has_focus(window_id: &str) -> bool` reading `UI_ENGINE` directly (mirrors
+    /// `ui_wgpu::engine::Ui::window_has_focus`, added this same pass) — flagged as a wiring request
+    /// for whoever next owns that region, not worked around by touching it.
+    static CONTENT_FOCUS: std::cell::RefCell<std::collections::HashMap<String, bool>> =
+        std::cell::RefCell::new(std::collections::HashMap::new());
+}
+
+/// 🎯 Best-effort content-focus lookup — see `CONTENT_FOCUS`'s own doc comment for the documented
+/// gap (pointer-driven focus changes aren't observable from here).
+fn content_has_focus(window_id: &str) -> bool {
+    CONTENT_FOCUS.with(|cell| cell.borrow().get(window_id).copied().unwrap_or(false))
+}
+
+/// 🎯 Updates `CONTENT_FOCUS` from any `FocusChanged` commands `interpreter::dispatch_ui_event`
+/// returned to a caller in this module.
+fn note_content_focus_commands(commands: &[ui_wgpu::UiCommand]) {
+    for command in commands {
+        if let ui_wgpu::UiCommand::FocusChanged { window_id, node } = command {
+            CONTENT_FOCUS.with(|cell| cell.borrow_mut().insert(window_id.clone(), node.is_some()));
+        }
+    }
+}
+
+/// ⌨️ Maps a chrome-level `ui_wgpu::KeyAction` (+ modifiers) to the `ui_wgpu::UiEvent` the retained
+/// content engine's `events::EventRouter::dispatch` expects — mirrors that fn's `UiEvent::KeyDown`
+/// key-string vocabulary exactly (`"ArrowLeft"`/`"Backspace"`/`"c"`+ctrl for copy/etc., see
+/// `ui_wgpu`'s `🔖EditRouting`/`🔖UiCommand` regions). A `Char` held with Ctrl/Cmd routes as
+/// `KeyDown` (so `c`/`x`/`v` clipboard chords reach `route_edit_key` instead of being literally
+/// inserted as text); a plain `Char` routes as `TextInput`. `Space` has no coherent press/release
+/// `UiEvent` (content has no pan-mode concept) and is already fully handled earlier in
+/// `AppRuntime::handle_key`, so it never reaches here.
+fn ui_event_from_key_action(action: &ui_wgpu::KeyAction, modifiers: &ui_wgpu::PointerModifiers) -> Option<ui_wgpu::UiEvent> {
+    let event_modifiers = ui_wgpu::EventModifiers {
+        shift: modifiers.shift,
+        ctrl: modifiers.ctrl,
+        alt: modifiers.alt,
+        meta: modifiers.meta,
+    };
+    match action {
+        ui_wgpu::KeyAction::Char(ch) => {
+            if modifiers.ctrl_or_meta() {
+                Some(ui_wgpu::UiEvent::KeyDown { key: ch.clone(), modifiers: event_modifiers })
+            } else {
+                Some(ui_wgpu::UiEvent::TextInput { text: ch.clone() })
+            }
+        }
+        ui_wgpu::KeyAction::Backspace => Some(ui_wgpu::UiEvent::KeyDown { key: "Backspace".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::Delete => Some(ui_wgpu::UiEvent::KeyDown { key: "Delete".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::Enter => Some(ui_wgpu::UiEvent::KeyDown { key: "Enter".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::Escape => Some(ui_wgpu::UiEvent::KeyDown { key: "Escape".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::ArrowLeft => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowLeft".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::ArrowRight => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowRight".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::ArrowUp => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowUp".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::ArrowDown => Some(ui_wgpu::UiEvent::KeyDown { key: "ArrowDown".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::Tab => Some(ui_wgpu::UiEvent::KeyDown { key: "Tab".into(), modifiers: event_modifiers }),
+        ui_wgpu::KeyAction::Space(_) => None,
+    }
+}
+
 impl ShellState {
     pub async fn handle_pointer_button(
         &mut self,
@@ -19522,6 +19267,29 @@ impl ShellState {
             && self.overlay_state == OverlayState::None
             && self.sync_card_kind.is_none()
             && self.dock_drag.is_none();
+        // 🎯🕹️ Content-focus routing (w2-input-wiring): whenever the active window's retained
+        // content — not chrome — is the one holding focus, real keys belong there via
+        // `interpreter::dispatch_ui_event` (Escape/Tab/edit keys/clipboard chords/text), taking
+        // priority over the idle-Escape-deactivate-utility and app-keybinding dispatch below, both
+        // of which are chrome-level concerns. `content_has_focus` is this module's own best-effort
+        // tracker (see its doc comment for the one documented gap: pointer-click-driven focus
+        // changes, entirely inside the off-limits `interpreter` region, never reach it). `Tab`
+        // reaching `dispatch_event` here is ALSO the full Tab-traversal fix: `events::EventRouter::
+        // dispatch`'s own `KeyDown{key:"Tab"}` arm already calls `FocusState::focus_next`/
+        // `focus_prev` internally — nothing else to wire for that. When content does NOT have
+        // tracked focus, this is a no-operation and `handle_keyboard`'s existing cross-window
+        // `cycle_active_window` Tab handling below still runs exactly as before.
+        if idle {
+            if let Some(window_id) = self.active_window_id.clone() {
+                if content_has_focus(&window_id) {
+                    if let Some(event) = ui_event_from_key_action(&action, modifiers) {
+                        let commands = crate::interpreter::dispatch_ui_event(&window_id, event, input);
+                        note_content_focus_commands(&commands);
+                        return Ok(());
+                    }
+                }
+            }
+        }
         // 🧰 Escape deactivates the active utility for the focused window (P5).
         if idle && action == ui_wgpu::KeyAction::Escape {
             if let Some(window_id) = self.active_window_id.clone() {
@@ -19710,6 +19478,99 @@ mod shell_input_tests {
             out,
             vec![(vec![0], "a".to_string()), (vec![1], "b".to_string())]
         );
+    }
+
+    // 🎯🕹️ w2-input-wiring: `ui_event_from_key_action`/`content_has_focus`/
+    // `note_content_focus_commands` are all free fns (like `dock_window_order` above), so — same
+    // rationale as this module's own header comment — testable without a full `ShellState` fixture.
+
+    #[test]
+    fn ui_event_from_key_action_maps_plain_char_to_text_input() {
+        let modifiers = ui_wgpu::PointerModifiers::default();
+        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Char("a".into()), &modifiers);
+        assert_eq!(event, Some(ui_wgpu::UiEvent::TextInput { text: "a".into() }));
+    }
+
+    #[test]
+    fn ui_event_from_key_action_routes_ctrl_char_as_key_down_for_clipboard_chords() {
+        let modifiers = ui_wgpu::PointerModifiers { ctrl: true, ..Default::default() };
+        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Char("c".into()), &modifiers);
+        assert_eq!(
+            event,
+            Some(ui_wgpu::UiEvent::KeyDown {
+                key: "c".into(),
+                modifiers: ui_wgpu::EventModifiers { shift: false, ctrl: true, alt: false, meta: false },
+            })
+        );
+    }
+
+    #[test]
+    fn ui_event_from_key_action_maps_editing_and_tab_keys_to_matching_key_down_strings() {
+        let modifiers = ui_wgpu::PointerModifiers::default();
+        let cases = [
+            (ui_wgpu::KeyAction::Backspace, "Backspace"),
+            (ui_wgpu::KeyAction::Delete, "Delete"),
+            (ui_wgpu::KeyAction::Enter, "Enter"),
+            (ui_wgpu::KeyAction::Escape, "Escape"),
+            (ui_wgpu::KeyAction::ArrowLeft, "ArrowLeft"),
+            (ui_wgpu::KeyAction::ArrowRight, "ArrowRight"),
+            (ui_wgpu::KeyAction::ArrowUp, "ArrowUp"),
+            (ui_wgpu::KeyAction::ArrowDown, "ArrowDown"),
+            (ui_wgpu::KeyAction::Tab, "Tab"),
+        ];
+        for (action, key) in cases {
+            let event = ui_event_from_key_action(&action, &modifiers);
+            assert_eq!(
+                event,
+                Some(ui_wgpu::UiEvent::KeyDown { key: key.into(), modifiers: ui_wgpu::EventModifiers::default() }),
+                "KeyAction {action:?} should map to KeyDown{{{key}}}"
+            );
+        }
+    }
+
+    #[test]
+    fn ui_event_from_key_action_has_no_mapping_for_space() {
+        let event = ui_event_from_key_action(&ui_wgpu::KeyAction::Space(true), &ui_wgpu::PointerModifiers::default());
+        assert_eq!(event, None);
+    }
+
+    #[test]
+    fn content_focus_tracker_defaults_unfocused_and_tracks_focus_changed_commands() {
+        let window_id = "w2-input-wiring-test-window-a";
+        assert!(!content_has_focus(window_id));
+        let mut arena: ui_wgpu::Arena<()> = ui_wgpu::Arena::new();
+        let node_id = arena.insert(());
+        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged {
+            window_id: window_id.to_string(),
+            node: Some(node_id),
+        }]);
+        assert!(content_has_focus(window_id));
+        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged {
+            window_id: window_id.to_string(),
+            node: None,
+        }]);
+        assert!(!content_has_focus(window_id));
+    }
+
+    #[test]
+    fn content_focus_tracker_ignores_commands_for_other_windows() {
+        let window_id = "w2-input-wiring-test-window-b";
+        let other_window_id = "w2-input-wiring-test-window-c";
+        let mut arena: ui_wgpu::Arena<()> = ui_wgpu::Arena::new();
+        let node_id = arena.insert(());
+        note_content_focus_commands(&[ui_wgpu::UiCommand::FocusChanged {
+            window_id: other_window_id.to_string(),
+            node: Some(node_id),
+        }]);
+        assert!(!content_has_focus(window_id));
+        assert!(content_has_focus(other_window_id));
+    }
+
+    #[test]
+    fn content_focus_tracker_ignores_non_focus_commands() {
+        let window_id = "w2-input-wiring-test-window-d";
+        note_content_focus_commands(&[ui_wgpu::UiCommand::ClipboardPasteRequested { window_id: window_id.to_string() }]);
+        assert!(!content_has_focus(window_id));
     }
 }
 //#endregion ShellInput
@@ -20298,6 +20159,14 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
     if tab.id() == FRAMEWORK_SETTINGS_GENERAL_TAB_ID {
         return "settings-2";
     }
+    // 🎨🎛️ Same icon choices as React's `createFrameworkSettingsPanelTabs`/`buildCommandCategoryTabs`
+    // (`shellTabIcon("paintbrush")` / `COMMAND_CATEGORY_ICON = shellTabIcon("wrench")`).
+    if tab.id() == FRAMEWORK_SETTINGS_THEME_TAB_ID {
+        return "paintbrush";
+    }
+    if tab.id() == FRAMEWORK_SETTINGS_COMMANDS_TAB_ID {
+        return "wrench";
+    }
     if tab.id() == FRAMEWORK_PANEL_TAB_CATALOGUE_ID {
         return "library";
     }
@@ -20305,7 +20174,8 @@ fn panel_tab_icon_id(tab: &PanelTabDefinition) -> &'static str {
 }
 
 fn app_icon_id<'a>(app: &'a AppDefinition, icons: &IconAtlas) -> &'a str {
-    if let Some(id) = app.icon_id.as_deref() {
+    if let Some(id) = app.icon_id {
+        let id = id.as_str();
         if icons.icon_uv(id).is_some() {
             return id;
         }
@@ -21937,6 +21807,9 @@ impl ShellState {
         gpu: &mut ui_wgpu::GpuContext,
     ) {
         self.load_ui_prefs_once();
+        // 🗄️ See `persist_panel_layout_if_changed`'s doc comment: a render-loop dirty-check hook rather
+        // than patching the `ui.panelToggle.*`/resize-end call sites individually.
+        self.persist_panel_layout_if_changed();
         let w = self.screen_w;
         let h = self.screen_h;
         draw.set_screen_height(h);
@@ -22083,13 +21956,38 @@ impl ShellState {
 
     fn right_tabs(&self, session: &ActiveSession) -> Vec<PanelTabDefinition> {
         match self.active_right_kind {
-            RightPanelKind::Settings => vec![PanelTabDefinition {
-                kind: semio_framework_core::PanelTabKind::SettingsGeneral,
-                label: shell_chrome_string("settings.tab.general", self.locale_id == "de").to_string(),
-                group: PanelGroup::Settings,
-                body_key: Some(String::new()),
-                children: Vec::new(),
-            }],
+            RightPanelKind::Settings => {
+                let is_de = self.locale_id == "de";
+                let mut tabs = vec![PanelTabDefinition {
+                    kind: semio_framework_core::PanelTabKind::SettingsGeneral,
+                    label: shell_chrome_string("settings.tab.general", is_de).to_string(),
+                    group: PanelGroup::Settings,
+                    body_key: Some(String::new()),
+                    children: Vec::new(),
+                }];
+                // 🔒 Byte-identical to React's `createFrameworkSettingsPanelTabs` (`ui/js/react/
+                // index.tsx:9526-9528`): a locked theme drops the whole Theme tab, not just its editor.
+                if shell_pref_locks().theme_id.is_none() {
+                    tabs.push(PanelTabDefinition {
+                        kind: semio_framework_core::PanelTabKind::SettingsTheme,
+                        label: shell_chrome_string("settings.tab.theme", is_de).to_string(),
+                        group: PanelGroup::Settings,
+                        body_key: Some(String::new()),
+                        children: Vec::new(),
+                    });
+                }
+                // 🎛️ See `FRAMEWORK_SETTINGS_COMMANDS_TAB_ID`'s doc comment: the honest substitute for
+                // React's `bottom-middle`-anchored command palette dock, which this renderer's 2-column
+                // panel model has no equivalent surface for.
+                tabs.push(PanelTabDefinition {
+                    kind: semio_framework_core::PanelTabKind::App(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into()),
+                    label: shell_chrome_string("settings.tab.commands", is_de).to_string(),
+                    group: PanelGroup::Settings,
+                    body_key: Some(String::new()),
+                    children: Vec::new(),
+                });
+                tabs
+            }
             RightPanelKind::Details => session
                 .app
                 .panel_tabs
@@ -22126,9 +22024,9 @@ impl ShellState {
     }
 
     fn active_right_tab_id(&self, session: &ActiveSession) -> String {
-        if self.active_right_kind == RightPanelKind::Settings {
-            return FRAMEWORK_SETTINGS_GENERAL_TAB_ID.into();
-        }
+        // 🎨🎛️ Settings now has 2-3 tabs (General / Theme / Commands — see `right_tabs`), so this needs
+        // to actually respect `self.active_right_tab` here too, same as every other panel column, instead
+        // of hardcoding General; falls back to General (first tab) exactly like before when unset/stale.
         let tabs = self.right_tabs(session);
         if let Some(id) = &self.active_right_tab {
             if tabs.iter().any(|tab| tab.id() == *id) {
@@ -22715,7 +22613,7 @@ impl ShellState {
             .app
             .window_kinds
             .iter()
-            .map(|kind| (kind.id.clone(), kind.icon_id.clone()))
+            .map(|kind| (kind.id.clone(), kind.icon_id.as_str().to_string()))
             .collect();
         self.dock_canvas_bounds = canvas;
         self.dock_drop_tab_bars = self.dock_tab_bars_for_drop(atlas, theme, canvas, &window_labels, &window_icon_ids);
@@ -24943,7 +24841,7 @@ impl ShellState {
                     .unwrap_or_else(|| "toggle".into());
                 WidgetNode::Toggle {
                     id: id.clone().unwrap_or_else(|| "engagement-toggle".into()),
-                    icon_id: String::new(),
+                    icon_id: IconName::CircleDot,
                     pressed: false,
                     text: Some(label),
                     on_change: on_select.clone(),
@@ -25079,7 +24977,7 @@ impl ShellState {
                 let has_args = !action.args.is_empty();
                 let row = Rect::new(body_x, y, body_w, row_h);
                 let icon = if !has_args {
-                    action.icon_id.as_deref()
+                    action.icon_id.map(|i| i.as_str())
                 } else if is_expanded {
                     Some("chevron-down")
                 } else {
@@ -26015,6 +25913,18 @@ fn shell_chrome_string(key: &'static str, is_de: bool) -> &'static str {
         ("display.tab.layout", true) => "Layout",
         ("settings.tab.general", false) => "General",
         ("settings.tab.general", true) => "Allgemein",
+        // 🎨 wgpu-only additions (not verified against the external `elements/ui` i18next resource
+        // bundle React's `shellLabel`/`uiI18n.t` ultimately reads — that package isn't vendored in this
+        // repo tree, so these are reasonable EN/DE pairs in the same terse register as the rest of this
+        // curated subset, not a byte-identical trace like the entries above copied from `index.tsx:2898-3975`).
+        ("settings.tab.theme", false) => "Theme",
+        ("settings.tab.theme", true) => "Design",
+        ("settings.tab.commands", false) => "Commands",
+        ("settings.tab.commands", true) => "Befehle",
+        ("settings.theme.reset", false) => "Reset",
+        ("settings.theme.reset", true) => "Zurücksetzen",
+        ("settings.theme.delete", false) => "Delete",
+        ("settings.theme.delete", true) => "Löschen",
         ("fullscreen.toggle", false) => "Fullscreen",
         ("fullscreen.toggle", true) => "Vollbild",
         ("panelToggle.display", false) => "Display",
@@ -26762,19 +26672,19 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn utility_subtree_has_active_path_finds_a_pressed_toggle_at_the_top_level() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let nodes = vec![ui_wgpu::utility_toggle("a", "icon", "A", true, action)];
+        let nodes = vec![ui_wgpu::utility_toggle("a", "circle".into(), "A", true, action)];
         assert!(utility_subtree_has_active_path(&nodes));
     }
 
     #[test]
     fn utility_subtree_has_active_path_recurses_into_nested_collections() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let inner = vec![ui_wgpu::utility_toggle("b", "icon", "B", true, action.clone())];
+        let inner = vec![ui_wgpu::utility_toggle("b", "circle".into(), "B", true, action.clone())];
         let nested = ui_wgpu::utility_collection(
             "group-2",
-            "icon",
+            "circle".into(),
             "Group 2",
-            vec![ui_wgpu::utility_collection("group-1", "icon", "Group 1", inner)],
+            vec![ui_wgpu::utility_collection("group-1", "circle".into(), "Group 1", inner)],
         );
         assert!(utility_subtree_has_active_path(std::slice::from_ref(&nested)));
     }
@@ -26783,8 +26693,8 @@ mod chrome_overlays_tour_tests {
     fn utility_subtree_has_active_path_false_when_nothing_pressed() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
         let nodes = vec![
-            ui_wgpu::utility_toggle("a", "icon", "A", false, action.clone()),
-            ui_wgpu::utility_collection("group", "icon", "Group", vec![ui_wgpu::utility_toggle("b", "icon", "B", false, action)]),
+            ui_wgpu::utility_toggle("a", "circle".into(), "A", false, action.clone()),
+            ui_wgpu::utility_collection("group", "circle".into(), "Group", vec![ui_wgpu::utility_toggle("b", "circle".into(), "B", false, action)]),
         ];
         assert!(!utility_subtree_has_active_path(&nodes));
     }
@@ -26796,9 +26706,9 @@ mod chrome_overlays_tour_tests {
     #[test]
     fn render_footer_utility_nodes_recurses_at_least_two_levels_deep() {
         let action = ActionDescriptor { controller_id: "test".into(), action: "noOperation".into(), args: None };
-        let leaf_toggle = ui_wgpu::utility_toggle("leaf", "icon", "Leaf", false, action.clone());
-        let inner_collection = ui_wgpu::utility_collection("inner", "icon", "Inner", vec![leaf_toggle]);
-        let outer_collection = ui_wgpu::utility_collection("outer", "icon", "Outer", vec![inner_collection]);
+        let leaf_toggle = ui_wgpu::utility_toggle("leaf", "circle".into(), "Leaf", false, action.clone());
+        let inner_collection = ui_wgpu::utility_collection("inner", "circle".into(), "Inner", vec![leaf_toggle]);
+        let outer_collection = ui_wgpu::utility_collection("outer", "circle".into(), "Outer", vec![inner_collection]);
         let utilities = vec![outer_collection];
 
         let mut collection_expanded = HashMap::new();
@@ -27894,33 +27804,26 @@ impl AppRuntime {
         if engine_canvas::node_graph_apply_note_edit_key(action.clone(), &modifiers) {
             return;
         }
-        let activate_search = matches!(self.shell.overlay_state, shell::OverlayState::Search)
-            && action == KeyAction::Enter;
-        let activate_find = matches!(self.shell.overlay_state, shell::OverlayState::Find)
-            && action == KeyAction::Enter;
-        let search_index = self.shell.search_selected;
-        let find_index = self.shell.find_selected;
-        self.shell
-            .handle_keyboard(action, &modifiers, &mut self.input);
-        if activate_search {
-            let runtime = self.self_weak.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        let _ = app.shell.activate_search_item(search_index).await;
+        // 🔌 w2-input-wiring: spawns the ASYNC `handle_keyboard_async` (mirrors this fn's own
+        // `on_button`/`on_move` sibling callbacks above, and the `spawn_app_task` pattern this fn
+        // used to hand-roll just for search/find-Enter-activation) instead of calling the sync
+        // `handle_keyboard` directly. Before this fix `handle_keyboard_async` was entirely dead code
+        // (see `report-w3-shell-input-cutover.md`'s "MAJOR FINDING"): the P4 app-keybinding dispatch,
+        // P5 idle-Escape-deactivates-utility, and — worst — committing a focused `Input`'s typed text
+        // via Enter/Escape never fired. `handle_keyboard_async`'s own top already reimplements the
+        // exact search/find-Enter-activation this fn used to hand-duplicate around the sync call, so
+        // that duplication is gone, not just moved.
+        let runtime = self.self_weak.clone();
+        spawn_app_task(async move {
+            if let Some(runtime) = runtime.upgrade() {
+                if let Ok(mut app) = runtime.try_borrow_mut() {
+                    let app = &mut *app;
+                    if let Err(err) = app.shell.handle_keyboard_async(action, &modifiers, &mut app.input).await {
+                        log_debug(&format!("[DEBUG] keyboard failed: {err}"));
                     }
                 }
-            });
-        } else if activate_find {
-            let runtime = self.self_weak.clone();
-            spawn_app_task(async move {
-                if let Some(runtime) = runtime.upgrade() {
-                    if let Ok(mut app) = runtime.try_borrow_mut() {
-                        let _ = app.shell.activate_find_item(find_index).await;
-                    }
-                }
-            });
-        }
+            }
+        });
     }
 
     async fn dispatch_actions(&mut self, actions: Vec<ActionDescriptor>) {

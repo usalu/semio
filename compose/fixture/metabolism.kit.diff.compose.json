@@ -142,8 +142,53 @@
       }
     ]
   },
-  "typologies": {
-    "hash": "typology-migration-stub",
-    "items": []
+  "types": {
+    "removed": [
+      {
+        "id": "cb25017e-5505-4677-a71e-cccbc7a5be7d"
+      }
+    ],
+    "modified": [
+      {
+        "type": {
+          "id": "2c10fcf7-aca6-4ae6-803f-b72cd1baf9b5"
+        },
+        "diff": {
+          "name": "Capsule Slash Modified"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000023",
+        "name": "New Test Type",
+        "description": "New type",
+        "icon": "test-type.svg"
+      }
+    ]
+  },
+  "designs": {
+    "removed": [
+      {
+        "id": "b3f11a7f-0660-48c6-84ed-41d3009a6bdf"
+      }
+    ],
+    "modified": [
+      {
+        "design": {
+          "id": "38f0f014-ceba-42df-9339-4aab84bfbc1f"
+        },
+        "diff": {
+          "name": "Twisted Modified"
+        }
+      }
+    ],
+    "added": [
+      {
+        "id": "019caa00-0000-7000-a000-000000000024",
+        "name": "New Test Design",
+        "description": "New design"
+      }
+    ]
   }
 }

@@ -363,13 +363,15 @@ pub fn check_full_aluminium(
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "en1999", layout = "lines")]
 pub struct Document {
     pub n_ed_kn: f64,
     pub m_ed_knm: f64,
     pub a_mm2: f64,
     pub w_el_mm3: f64,
+    #[dsl(ident)]
     pub alloy: String,
     pub chi: f64,
     pub i_t_mm4: f64,
@@ -485,76 +487,9 @@ impl NormFamily for En1999Family {
 // #endregion 🔖Session
 
 // #region 🔖Dsl
-/// 📜 Handcrafted `key value`-per-line DSL for the EN 1999 aluminium `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "en1999";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let fields = norm_core::dsl_kv::parse_lines(text)?;
-        Ok(Document {
-            n_ed_kn: norm_core::dsl_kv::scalar(&fields, "n_ed_kn")?,
-            m_ed_knm: norm_core::dsl_kv::scalar(&fields, "m_ed_knm")?,
-            a_mm2: norm_core::dsl_kv::scalar(&fields, "a_mm2")?,
-            w_el_mm3: norm_core::dsl_kv::scalar(&fields, "w_el_mm3")?,
-            alloy: norm_core::dsl_kv::scalar(&fields, "alloy")?,
-            chi: norm_core::dsl_kv::scalar(&fields, "chi")?,
-            i_t_mm4: norm_core::dsl_kv::scalar(&fields, "i_t_mm4")?,
-            l_cr_mm: norm_core::dsl_kv::scalar(&fields, "l_cr_mm")?,
-            theta_c: norm_core::dsl_kv::scalar(&fields, "theta_c")?,
-            delta_sigma_ed: norm_core::dsl_kv::scalar(&fields, "delta_sigma_ed")?,
-            delta_sigma_c: norm_core::dsl_kv::scalar(&fields, "delta_sigma_c")?,
-            fatigue_m: norm_core::dsl_kv::scalar(&fields, "fatigue_m")?,
-            n_cycles: norm_core::dsl_kv::scalar(&fields, "n_cycles")?,
-            v_weld_ed_kn: norm_core::dsl_kv::scalar(&fields, "v_weld_ed_kn")?,
-            weld_throat_mm: norm_core::dsl_kv::scalar(&fields, "weld_throat_mm")?,
-            weld_length_mm: norm_core::dsl_kv::scalar(&fields, "weld_length_mm")?,
-            beta_w: norm_core::dsl_kv::scalar(&fields, "beta_w")?,
-            sheet_b_mm: norm_core::dsl_kv::scalar(&fields, "sheet_b_mm")?,
-            sheet_t_mm: norm_core::dsl_kv::scalar(&fields, "sheet_t_mm")?,
-            sheet_k_sigma: norm_core::dsl_kv::scalar(&fields, "sheet_k_sigma")?,
-            sheet_w_el_mm3: norm_core::dsl_kv::scalar(&fields, "sheet_w_el_mm3")?,
-            sheet_m_ed_knm: norm_core::dsl_kv::scalar(&fields, "sheet_m_ed_knm")?,
-            shell_t_mm: norm_core::dsl_kv::scalar(&fields, "shell_t_mm")?,
-            shell_r_mm: norm_core::dsl_kv::scalar(&fields, "shell_r_mm")?,
-            sigma_ed_shell_mpa: norm_core::dsl_kv::scalar(&fields, "sigma_ed_shell_mpa")?,
-            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        [
-            norm_core::dsl_kv::line("n_ed_kn", &self.n_ed_kn),
-            norm_core::dsl_kv::line("m_ed_knm", &self.m_ed_knm),
-            norm_core::dsl_kv::line("a_mm2", &self.a_mm2),
-            norm_core::dsl_kv::line("w_el_mm3", &self.w_el_mm3),
-            norm_core::dsl_kv::line("alloy", &self.alloy),
-            norm_core::dsl_kv::line("chi", &self.chi),
-            norm_core::dsl_kv::line("i_t_mm4", &self.i_t_mm4),
-            norm_core::dsl_kv::line("l_cr_mm", &self.l_cr_mm),
-            norm_core::dsl_kv::line("theta_c", &self.theta_c),
-            norm_core::dsl_kv::line("delta_sigma_ed", &self.delta_sigma_ed),
-            norm_core::dsl_kv::line("delta_sigma_c", &self.delta_sigma_c),
-            norm_core::dsl_kv::line("fatigue_m", &self.fatigue_m),
-            norm_core::dsl_kv::line("n_cycles", &self.n_cycles),
-            norm_core::dsl_kv::line("v_weld_ed_kn", &self.v_weld_ed_kn),
-            norm_core::dsl_kv::line("weld_throat_mm", &self.weld_throat_mm),
-            norm_core::dsl_kv::line("weld_length_mm", &self.weld_length_mm),
-            norm_core::dsl_kv::line("beta_w", &self.beta_w),
-            norm_core::dsl_kv::line("sheet_b_mm", &self.sheet_b_mm),
-            norm_core::dsl_kv::line("sheet_t_mm", &self.sheet_t_mm),
-            norm_core::dsl_kv::line("sheet_k_sigma", &self.sheet_k_sigma),
-            norm_core::dsl_kv::line("sheet_w_el_mm3", &self.sheet_w_el_mm3),
-            norm_core::dsl_kv::line("sheet_m_ed_knm", &self.sheet_m_ed_knm),
-            norm_core::dsl_kv::line("shell_t_mm", &self.shell_t_mm),
-            norm_core::dsl_kv::line("shell_r_mm", &self.shell_r_mm),
-            norm_core::dsl_kv::line("sigma_ed_shell_mpa", &self.sigma_ed_shell_mpa),
-            norm_core::dsl_kv::line("annex", &self.annex),
-        ]
-        .join("\n")
-            + "\n"
-    }
-}
-
+// `Document`'s `vcs::DocumentDsl` impl is now generated by `#[derive(dsl::DslDocument)]` on the
+// type definition above — the engine's `dsl_schema` grammar replaces this crate's own hand-rolled
+// `norm_core::dsl_kv`-based kv printer.
 // #endregion 🔖Dsl
 
 #[cfg(test)]

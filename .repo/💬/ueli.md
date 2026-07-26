@@ -240,6 +240,17 @@ TODO: Start new project `elements` that offers domain-agnostic primitives (such 
 
 ---
 
+Introduce a general tutorial mechanism with voicover, event timeline, video overlay e.g. for camera.
+tutorials are an similar to introductions.
+Add both a tutorial player and a tutorial recorder. Ui state, document state, commands, operations, etc everything is tracked, so that when a tutorial is active then the ui also reacts and jumps to the state of the recording. The user an also modify the ui state but when play is pressed then the current state is interpolated to the one from the recording.
+When a tutorial is active then add on the navbar another line with the timeline and tutorial controls (pause, playback speed, etc).
+Make fullblown, clean mechanisms that generalize well to all apps.
+Make the first demo tutorial for aggregator.
+Implement the tutorial api and support for all apps.
+Everything end to end.
+
+---
+
 All technologies should be split/generalized/augmented into these parts:
 - library
 	- stateful (not rebuilding complete document but initial document with operations)

@@ -460,6 +460,7 @@ import {
   decodeWorldProjectionTemplateId,
   encodeWorldProjectionTemplateId,
   worldProjectionSpecLabel,
+  worldProjectionSpecIconId,
   computeWorldProjectionPose,
   frameWorldProjectionPose,
   worldSceneContentBounds,
@@ -1412,6 +1413,8 @@ type ShellLayoutState = {
   readonly extraWindowInstances: readonly ExtraWindowInstance[];
   /** 🏷️ Live window-title overrides (projection labels, etc.) keyed by window instance id — base kinds and extras. */
   readonly windowTitlesById: Readonly<Record<string, string>>;
+  /** 🖼️ Live window-icon overrides (projection icons, etc.) keyed by window instance id — base kinds and extras. */
+  readonly windowIconsById: Readonly<Record<string, IconName>>;
 };
 
 type OverlayState = {
@@ -1513,6 +1516,7 @@ export type ShellAction =
   | { readonly type: "SET_MOBILE_PANEL_VISIBLE"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_EXTRA_WINDOW_INSTANCES"; readonly value: Updatable<readonly ExtraWindowInstance[]> }
   | { readonly type: "SET_WINDOW_TITLE"; readonly windowId: string; readonly title: string }
+  | { readonly type: "SET_WINDOW_ICON"; readonly windowId: string; readonly iconId: IconName }
   | { readonly type: "SET_SEARCH_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_FIND_OPEN"; readonly value: Updatable<boolean> }
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
@@ -1689,6 +1693,10 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       const extraWindowInstances = state.extraWindowInstances.map((entry) => (entry.id === action.windowId ? { ...entry, title: action.title } : entry));
       return { ...state, windowTitlesById, extraWindowInstances };
     }
+    case "SET_WINDOW_ICON": {
+      const windowIconsById = { ...state.windowIconsById, [action.windowId]: action.iconId };
+      return { ...state, windowIconsById };
+    }
     default:
       return state;
   }
@@ -1804,6 +1812,7 @@ export function initialShellState(_props: {
       mobilePanelVisible: false,
       extraWindowInstances: [],
       windowTitlesById: {},
+      windowIconsById: {},
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionCompletedInteractions: [], dialog: null },
     uiPrefs: {
@@ -3090,7 +3099,17 @@ export function uiNodeToTreePanelConfig(node: UiNode, onAction: (action: ActionD
 function shellTabIcon(iconId: IconName | string): React.FC<{ size?: number }> {
   return function ShellTabIcon({ size = 16 }: { size?: number }) {
     const iconName: IconName =
-      iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID ? "file-text" : isIconName(iconId) ? iconId : "circle-dot";
+      iconId === FRAMEWORK_PANEL_TAB_DOCUMENT_ICON_ID
+        ? "file-text"
+        : iconId === FRAMEWORK_PANEL_TAB_CATALOGUE_ICON_ID
+          ? "panel-catalogue"
+          : iconId === FRAMEWORK_PANEL_TAB_INSPECTION_ICON_ID
+            ? "panel-inspection"
+            : iconId === FRAMEWORK_PANEL_TAB_PARAMETERS_ICON_ID
+              ? "panel-parameters"
+              : isIconName(iconId)
+                ? iconId
+                : "circle-dot";
     return <Icon icon={iconName} size={size} />;
   };
 }
@@ -4658,6 +4677,9 @@ class ShellRenderErrorBoundary extends Component<{ readonly children: ReactNode 
 /** @emoji 🏷️ Lets a per-window host rewrite its Mode window title (e.g. live projection label). */
 const SetWindowTitleContext = createContext<((windowId: string, title: string) => void) | null>(null);
 
+/** @emoji 🖼️ Lets a per-window host rewrite its Mode window icon (e.g. live projection glyph). */
+const SetWindowIconContext = createContext<((windowId: string, iconId: IconName) => void) | null>(null);
+
 const EMPTY_KEYS_BY_ACTION_ID = new Map<string, string>();
 
 /** @emoji ⌨️ Last-wins app keybindings for enriching context-menu shortcut labels in scene hosts. */
@@ -4712,7 +4734,7 @@ export function FrameworkOsShell({
   const { spawnedWindowUi, spawnedWindowEngagements, spawnedWindowMeasures } = shellState.spawnedWindow;
   const { foldedByWindowId: actionPaneFoldedByWindowId, expandedByWindowId: actionPaneExpandedByWindowId, stagedArgsByKey: actionPaneStagedArgsByKey, activeUtilityByWindowId, activeToolId } = shellState.actionPane;
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
-  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById } = shellState.layout;
+  const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
@@ -4731,6 +4753,9 @@ export function FrameworkOsShell({
   extraWindowInstancesRef.current = extraWindowInstances;
   const setWindowTitle = useCallback((windowId: string, title: string) => {
     dispatch({ type: "SET_WINDOW_TITLE", windowId, title });
+  }, []);
+  const setWindowIcon = useCallback((windowId: string, iconId: IconName) => {
+    dispatch({ type: "SET_WINDOW_ICON", windowId, iconId });
   }, []);
   // 🐢 Per-instance content-hash cache for the batched `refresh-ui` call, keyed by the same
   // `pluginId:appId:instanceId` triple as `layoutSeedKeyRef` — cleared on session switch below.
@@ -6120,6 +6145,10 @@ export function FrameworkOsShell({
       const nextExtraInstances = [...extraWindowInstancesRef.current, { id: instanceId, windowKindId: payload.windowKindId, title }];
       extraWindowInstancesRef.current = nextExtraInstances;
       dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: nextExtraInstances });
+      if (projectionSpec) {
+        dispatch({ type: "SET_WINDOW_TITLE", windowId: instanceId, title });
+        dispatch({ type: "SET_WINDOW_ICON", windowId: instanceId, iconId: worldProjectionSpecIconId(projectionSpec) as IconName });
+      }
       // 🪟 The new split pane is its own window instance — fetch its body/measures/engagement right away
       // (see `applyNamedLayout`'s comment) rather than waiting for an unrelated action to trigger a refresh.
       void refreshUi(session, { kind: "full" }, nextExtraInstances);
@@ -7406,7 +7435,7 @@ export function FrameworkOsShell({
       const resolvedEngagement = resolveWindowEngagement(kind, kind.id, windowEngagementsByWindowId);
       return {
         id: kind.id,
-        iconId: kind.iconId,
+        iconId: windowIconsById[kind.id] ?? kind.iconId,
         title: windowTitlesById[kind.id] ?? appWindowDocumentLabel(session.app, uiTerminology, resolveAppLabel(appLabelsOverlay, "windowKind", kind.id, kind.label)),
         fill: true,
         showControls: true,
@@ -7442,7 +7471,7 @@ export function FrameworkOsShell({
       return [
         {
           id: instance.id,
-          iconId: kind.iconId,
+          iconId: windowIconsById[kind.id] ?? kind.iconId,
           title: windowTitlesById[instance.id] ?? instance.title,
           fill: true,
           showControls: true,
@@ -7494,6 +7523,7 @@ export function FrameworkOsShell({
     windowEngagementsByWindowId,
     windowMeasuresByWindowId,
     windowTitlesById,
+    windowIconsById,
     windowUiByWindowId,
   ]);
 
@@ -7656,6 +7686,7 @@ export function FrameworkOsShell({
 
   return (
     <SetWindowTitleContext.Provider value={setWindowTitle}>
+    <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <UIFindProvider>
       <LevelProvider level="window">
@@ -7706,6 +7737,7 @@ export function FrameworkOsShell({
       </LevelProvider>
     </UIFindProvider>
     </AppKeybindingsContext.Provider>
+    </SetWindowIconContext.Provider>
     </SetWindowTitleContext.Provider>
   );
 }
@@ -8867,6 +8899,7 @@ function worldProjectionTemplatesToTreeItems(templates: readonly WorldProjection
     .map((template) => ({
       id: `${idPrefix}.${template.id}`,
       label: template.label,
+      icon: displayWindowKindIcon(template.iconId as IconName),
       defaultOpen: false,
       dragData: { [COMPOSE_WINDOW_TEMPLATE_MIME]: JSON.stringify({ windowKindId, templateId: encodeWorldProjectionTemplateId(template.args.spec) }) },
       ...(template.children?.length ? { items: worldProjectionTemplatesToTreeItems(template.children, windowKindId, `${idPrefix}.${template.id}`) } : {}),

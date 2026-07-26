@@ -2318,6 +2318,988 @@
 }
 [data-icon="flip-vertical"] { --icon-animation: icon-flip-vertical; --icon-animation-duration: 600ms; }
 
+
+/* handcrafted catalog icons — unique-specific-icons */
+@keyframes icon-animate {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="animate"] { --icon-animation: icon-animate; --icon-animation-duration: 400ms; }
+
+@keyframes icon-architect {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="architect"] { --icon-animation: icon-architect; --icon-animation-duration: 400ms; }
+
+@keyframes icon-architect-graph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="architect-graph"] { --icon-animation: icon-architect-graph; --icon-animation-duration: 400ms; }
+
+@keyframes icon-cad-shape {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="cad-shape"] { --icon-animation: icon-cad-shape; --icon-animation-duration: 400ms; }
+
+@keyframes icon-dag {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="dag"] { --icon-animation: icon-dag; --icon-animation-duration: 400ms; }
+
+@keyframes icon-display-windows {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="display-windows"] { --icon-animation: icon-display-windows; --icon-animation-duration: 400ms; }
+
+@keyframes icon-document-jack {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="document-jack"] { --icon-animation: icon-document-jack; --icon-animation-duration: 400ms; }
+
+@keyframes icon-document-report {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="document-report"] { --icon-animation: icon-document-report; --icon-animation-duration: 400ms; }
+
+@keyframes icon-draw {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="draw"] { --icon-animation: icon-draw; --icon-animation-duration: 400ms; }
+
+@keyframes icon-fem-app {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="fem-app"] { --icon-animation: icon-fem-app; --icon-animation-duration: 400ms; }
+
+@keyframes icon-fem-model {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="fem-model"] { --icon-animation: icon-fem-model; --icon-animation-duration: 400ms; }
+
+@keyframes icon-flow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="flow"] { --icon-animation: icon-flow; --icon-animation-duration: 400ms; }
+
+@keyframes icon-flow-graph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="flow-graph"] { --icon-animation: icon-flow-graph; --icon-animation-duration: 400ms; }
+
+@keyframes icon-forms {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="forms"] { --icon-animation: icon-forms; --icon-animation-duration: 400ms; }
+
+@keyframes icon-gis2d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="gis2d"] { --icon-animation: icon-gis2d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-gis3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="gis3d"] { --icon-animation: icon-gis3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-graph-dag {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="graph-dag"] { --icon-animation: icon-graph-dag; --icon-animation-duration: 400ms; }
+
+@keyframes icon-graph-media {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="graph-media"] { --icon-animation: icon-graph-media; --icon-animation-duration: 400ms; }
+
+@keyframes icon-hud-overlay {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="hud-overlay"] { --icon-animation: icon-hud-overlay; --icon-animation-duration: 400ms; }
+
+@keyframes icon-imperative {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="imperative"] { --icon-animation: icon-imperative; --icon-animation-duration: 400ms; }
+
+@keyframes icon-lod-depth {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="lod-depth"] { --icon-animation: icon-lod-depth; --icon-animation-duration: 400ms; }
+
+@keyframes icon-lowpoly-model {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="lowpoly-model"] { --icon-animation: icon-lowpoly-model; --icon-animation-duration: 400ms; }
+
+@keyframes icon-math-app {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="math-app"] { --icon-animation: icon-math-app; --icon-animation-duration: 400ms; }
+
+@keyframes icon-math-graph {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="math-graph"] { --icon-animation: icon-math-graph; --icon-animation-duration: 400ms; }
+
+@keyframes icon-note {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="note"] { --icon-animation: icon-note; --icon-animation-duration: 400ms; }
+
+@keyframes icon-note-math {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="note-math"] { --icon-animation: icon-note-math; --icon-animation-duration: 400ms; }
+
+@keyframes icon-panel-catalogue {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="panel-catalogue"] { --icon-animation: icon-panel-catalogue; --icon-animation-duration: 400ms; }
+
+@keyframes icon-panel-inspection {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="panel-inspection"] { --icon-animation: icon-panel-inspection; --icon-animation-duration: 400ms; }
+
+@keyframes icon-panel-parameters {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="panel-parameters"] { --icon-animation: icon-panel-parameters; --icon-animation-duration: 400ms; }
+
+@keyframes icon-preview {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="preview"] { --icon-animation: icon-preview; --icon-animation-duration: 400ms; }
+
+@keyframes icon-procedural2d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="procedural2d"] { --icon-animation: icon-procedural2d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-process-workpiece {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="process-workpiece"] { --icon-animation: icon-process-workpiece; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-axonometric {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-axonometric"] { --icon-animation: icon-projection-axonometric; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-curvilinear {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-curvilinear"] { --icon-animation: icon-projection-curvilinear; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-dimetric {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-dimetric"] { --icon-animation: icon-projection-dimetric; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-isometric {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-isometric"] { --icon-animation: icon-projection-isometric; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-oblique {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-oblique"] { --icon-animation: icon-projection-oblique; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-oblique-cabinet {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-oblique-cabinet"] { --icon-animation: icon-projection-oblique-cabinet; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-oblique-cavalier {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-oblique-cavalier"] { --icon-animation: icon-projection-oblique-cavalier; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-oblique-military {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-oblique-military"] { --icon-animation: icon-projection-oblique-military; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-one-point {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-one-point"] { --icon-animation: icon-projection-one-point; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-orthographic {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-orthographic"] { --icon-animation: icon-projection-orthographic; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-parallel {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-parallel"] { --icon-animation: icon-projection-parallel; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-perspective {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-perspective"] { --icon-animation: icon-projection-perspective; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-three-point {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-three-point"] { --icon-animation: icon-projection-three-point; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-trimetric {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-trimetric"] { --icon-animation: icon-projection-trimetric; --icon-animation-duration: 400ms; }
+
+@keyframes icon-projection-two-point {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="projection-two-point"] { --icon-animation: icon-projection-two-point; --icon-animation-duration: 400ms; }
+
+@keyframes icon-puzzle5d-3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="puzzle5d-3d"] { --icon-animation: icon-puzzle5d-3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-raster {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="raster"] { --icon-animation: icon-raster; --icon-animation-duration: 400ms; }
+
+@keyframes icon-reasoning-wires {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="reasoning-wires"] { --icon-animation: icon-reasoning-wires; --icon-animation-duration: 400ms; }
+
+@keyframes icon-rectangle-tool {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="rectangle-tool"] { --icon-animation: icon-rectangle-tool; --icon-animation-duration: 400ms; }
+
+@keyframes icon-relocate-3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="relocate-3d"] { --icon-animation: icon-relocate-3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-remodel-app {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="remodel-app"] { --icon-animation: icon-remodel-app; --icon-animation-duration: 400ms; }
+
+@keyframes icon-remodel-model {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="remodel-model"] { --icon-animation: icon-remodel-model; --icon-animation-duration: 400ms; }
+
+@keyframes icon-s {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="s"] { --icon-animation: icon-s; --icon-animation-duration: 400ms; }
+
+@keyframes icon-scene-3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="scene-3d"] { --icon-animation: icon-scene-3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-select-all {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="select-all"] { --icon-animation: icon-select-all; --icon-animation-duration: 400ms; }
+
+@keyframes icon-sequence {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="sequence"] { --icon-animation: icon-sequence; --icon-animation-duration: 400ms; }
+
+@keyframes icon-shooting-scene {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="shooting-scene"] { --icon-animation: icon-shooting-scene; --icon-animation-duration: 400ms; }
+
+@keyframes icon-terrain-3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="terrain-3d"] { --icon-animation: icon-terrain-3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-transform-3d {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="transform-3d"] { --icon-animation: icon-transform-3d; --icon-animation-duration: 400ms; }
+
+@keyframes icon-trinity {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="trinity"] { --icon-animation: icon-trinity; --icon-animation-duration: 400ms; }
+
+@keyframes icon-trinity-lhs {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="trinity-lhs"] { --icon-animation: icon-trinity-lhs; --icon-animation-duration: 400ms; }
+
+@keyframes icon-trinity-rewrite {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="trinity-rewrite"] { --icon-animation: icon-trinity-rewrite; --icon-animation-duration: 400ms; }
+
+@keyframes icon-trinity-rhs {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="trinity-rhs"] { --icon-animation: icon-trinity-rhs; --icon-animation-duration: 400ms; }
+
+@keyframes icon-typography {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="typography"] { --icon-animation: icon-typography; --icon-animation-duration: 400ms; }
+
+@keyframes icon-volume-brush {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="volume-brush"] { --icon-animation: icon-volume-brush; --icon-animation-duration: 400ms; }
+
+@keyframes icon-workbench {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="workbench"] { --icon-animation: icon-workbench; --icon-animation-duration: 400ms; }
+
+@keyframes icon-workflow {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="workflow"] { --icon-animation: icon-workflow; --icon-animation-duration: 400ms; }
+
+@keyframes icon-writer {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.08);
+  }
+  75% {
+    transform: scale(0.96);
+  }
+}
+[data-icon="writer"] { --icon-animation: icon-writer; --icon-animation-duration: 400ms; }
+
 /* #endregion 🫨IconAnim */
 
 /* #region 🔧IconPartAnim — mechanism-accurate hover animations for icons with cleanly separable SVG

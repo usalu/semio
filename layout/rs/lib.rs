@@ -3241,7 +3241,7 @@ mod dsl {
 
         #[test]
         fn parse_frame_value_rejects_unknown_frame_kind() {
-            let tokens = lex_layout_dsl("triangle id=frame-1 layerId=layer-1 bounds=(0,0,1,1,0)").expect("lex succeeds");
+            let tokens = lex_layout_dsl("triangle id=frame-1 layerId=layer-1 bounds=(0,0,1,1,0) locked=none visible=none").expect("lex succeeds");
             let mut parser = LayoutDslParser::new(tokens);
             let error = parse_frame_value(&mut parser).expect_err("unknown frame kind must fail");
             assert!(error.message.contains("unknown frame kind"));
