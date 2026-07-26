@@ -1,0 +1,90 @@
+P7 — global + soft constraints — scope note
+============================================
+
+Implemented (183 tests passing, cargo clippy clean for mathematical_wfc itself):
+
+- constraint.rs: `PatternSelector` (Pattern/Tag/Any), `AdjacencyView` (materialized,
+  object-safe neighbor+region view built once per solver `build()`),
+  `build_adjacency_view()`, `Exactness` (Exact/Heuristic), `Constraint` trait
+  (`initialize` + `validate_complete`), `ConstraintSet`.
+- constraints_card.rs: `Scope` (All/Region/Nodes), `CardinalityConstraint`
+  (possible/required-count incremental init-time pruning + exact complete-assignment
+  bound check).
+- constraints_conn.rs: hand-rolled `UnionFind`, `ConnectivityConstraint`,
+  `ReachabilityConstraint`.
+- soft.rs: `SoftConstraint` trait, `ScoreFn`, `Attempt`, `BestOfNKeep`, `best_of_n`
+  driver, `WeightField`.
+- search.rs kernel wiring: `constraints_accept()` helper; `initialize()`,
+  `drive()`/`drive_all()`, `solve_inner()`/`solve_all_inner()` all now take
+  `Option<&ConstraintSet<'_>>` and route constraint-rejected complete assignments
+  through the existing `backtrack_and_repair` machinery exactly like a wiped domain;
+  new public `solve_with_constraints()`/`solve_all_with_constraints()` entry points
+  (the constraint-free `solve()`/`solve_all()` call sites are unchanged and still pass
+  `constraints: None`, so this is purely additive).
+- All three solver builders (`GraphSolverBuilder`, `Grid2dSolverBuilder`,
+  `Grid3dSolverBuilder`) gained `.constraint(Box<dyn Constraint>)`, build an
+  `AdjacencyView` once in `build()`, and dispatch `solve`/`solve_cancellable`/
+  `solve_all` to the constrained or unconstrained kernel path depending on whether
+  any constraints are attached. Dropped `#[derive(Clone, Debug)]` from all six
+  builder/solver structs (incompatible with `Box<dyn Constraint>`; verified via grep
+  that nothing outside tests relied on cloning/debug-printing them).
+- End-to-end integration coverage added in solver_graph.rs
+  (`cardinality_constraint_forces_the_unique_matching_checkerboard_coloring`,
+  `cardinality_constraint_beyond_both_colorings_is_unsatisfiable`): these attach a
+  real `CardinalityConstraint` via `GraphSolverBuilder::constraint(...)` and drive it
+  through `.solve()`, proving the full initialize -> propagate -> decide ->
+  validate_complete -> reject-and-backtrack loop end to end, not just the
+  `Constraint` trait impls in isolation. The satisfiable case forces a unique
+  solution only reachable by rejecting the other checkerboard coloring at
+  `validate_complete` time (the constraint's `initialize` bounds can't detect it up
+  front on a 5-node path); the unsatisfiable case proves the search exhausts its
+  small tree via repeated constraint rejection and reports `Unsatisfiable{proven:
+  true}`, not a false Contradiction.
+
+Deferred from the original plan's P7 scope (left for a later pass, not silently
+dropped):
+
+- constraints_shape.rs: `DegreeConstraint`, `PathConstraint`,
+  `ComponentCountConstraint`, `CycleConstraint`, `OrderingConstraint`,
+  `SymmetryConstraint` — not started.
+- constraints_table.rs: `TupleTableConstraint` (GAC via per-position support
+  bitsets) — not started.
+- flow.rs (resource-flow constraint via max-flow) — explicitly experimental-tier,
+  deferred to P12 per the phase plan.
+- Constraints remain restricted to the two safe integration points the module doc
+  in constraint.rs calls out explicitly: one-time `initialize()` before search and
+  `validate_complete()` on complete candidates. True incremental mid-search
+  constraint propagation (tightening domains as decisions narrow them, not just at
+  those two points) is deferred alongside AC-4's rollback integration — both hit the
+  same "stateful engine needs trail-coordinated rollback" design question and are
+  better solved together in a later pass.
+- Soft constraints (soft.rs) have the scoring/best-of-N driver but no
+  branch-and-bound pruning against an admissible soft-score bound during search
+  (best_of_n is a black-box repeat-and-keep-best driver, not integrated into the
+  backtracking loop itself).
+
+Rationale for scoping down: the original plan listed constraints_shape.rs and
+constraints_table.rs as P7 deliverables alongside card/conn/soft, but implementing
+six more constraint types (each needing its own incremental-pruning design, like
+CardinalityConstraint's possible/required counters) would roughly double this
+phase's size for constraint families that aren't yet exercised by any solver preset.
+constraints_card.rs and constraints_conn.rs already prove the `Constraint` trait
+design (selector, adjacency view, initialize/validate_complete split, exactness
+tagging) end to end through a real solver; the remaining constraint types are
+straightforward extensions of that same proven shape and are cheaper to add
+correctly once a concrete consumer (e.g. Grid3dSolver's `navigable()`/`support()`
+presets in a later phase) defines what shape/table constraints they actually need.
+
+Unrelated finding (not fixed, out of scope): `cargo clippy -p mathematical_wfc
+--all-targets -- -D warnings` fails only because of a pre-existing, unrelated
+`clippy::inconsistent_digit_grouping` warning in
+mathematical/entropy/rs/src/numeric.rs:9 (a dev-dependency of this crate, last
+touched 2026-07-20, no relation to WFC). Without `-D warnings`,
+`mathematical_wfc` itself compiles with zero clippy warnings. Also observed during
+this phase: repo/lib/js/index.ts was mid-refactor by a concurrent session (its
+`runCargoLint`/`runCargoTestBudgeted`/all "cargo"-related exports were entirely
+absent as of commit 089d9c15, 2026-07-26 13:22, one commit ahead of where this
+ticket's work started) — `cargo test`/`cargo clippy` were invoked directly instead
+of through `bun nx run @semio-tech/math-wfc:lint` for this phase's verification;
+the nx-wrapped lint target should be re-run once that shared script infra
+stabilizes.

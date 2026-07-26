@@ -116,10 +116,13 @@ pub mod part_1_2 {
     use super::*;
 
     /// 🔥 Nominal fire exposure curve per EN 1991-1-2 §3.2/Annex B.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum FireCurve {
+        #[dsl(key = "standard")]
         Standard,
+        #[dsl(key = "external")]
         External,
+        #[dsl(key = "hydrocarbon")]
         Hydrocarbon,
     }
 
@@ -531,8 +534,9 @@ pub fn check_full_actions(document: &Document) -> CheckReport {
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "en1991", layout = "lines")]
 pub struct Document {
     pub area_m2: f64,
     pub category: ImposedCategory,
@@ -631,107 +635,10 @@ impl NormFamily for En1991Family {
 // #endregion 🔖Session
 
 // #region 🔖Dsl
-/// 🔥 `standard`/`external`/`hydrocarbon`.
-impl norm_core::dsl_kv::DslScalar for part_1_2::FireCurve {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Standard => "standard".into(),
-            Self::External => "external".into(),
-            Self::Hydrocarbon => "hydrocarbon".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "standard" => Ok(Self::Standard),
-            "external" => Ok(Self::External),
-            "hydrocarbon" => Ok(Self::Hydrocarbon),
-            other => Err(format!("expected standard/external/hydrocarbon, got '{other}'")),
-        }
-    }
-}
-
-/// 📜 Handcrafted `key value`-per-line DSL for the EN 1991 actions `Document` — every field is a
-/// scalar, so this is a thin wrapper over `dsl_kv`.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "en1991";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let fields = norm_core::dsl_kv::parse_lines(text)?;
-        Ok(Document {
-            area_m2: norm_core::dsl_kv::scalar(&fields, "area_m2")?,
-            category: norm_core::dsl_kv::scalar(&fields, "category")?,
-            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
-            self_weight_material: norm_core::dsl_kv::scalar(&fields, "self_weight_material")?,
-            self_weight_thickness_m: norm_core::dsl_kv::scalar(&fields, "self_weight_thickness_m")?,
-            assumed_g_k_kn_m2: norm_core::dsl_kv::scalar(&fields, "assumed_g_k_kn_m2")?,
-            fire_curve: norm_core::dsl_kv::scalar(&fields, "fire_curve")?,
-            fire_resistance_min: norm_core::dsl_kv::scalar(&fields, "fire_resistance_min")?,
-            fire_member_capacity_c: norm_core::dsl_kv::scalar(&fields, "fire_member_capacity_c")?,
-            snow_zone: norm_core::dsl_kv::scalar(&fields, "snow_zone")?,
-            snow_altitude_m: norm_core::dsl_kv::scalar(&fields, "snow_altitude_m")?,
-            en_s_k_kn_m2: norm_core::dsl_kv::scalar(&fields, "en_s_k_kn_m2")?,
-            wind_zone: norm_core::dsl_kv::scalar(&fields, "wind_zone")?,
-            en_v_b_m_s: norm_core::dsl_kv::scalar(&fields, "en_v_b_m_s")?,
-            delta_t_k: norm_core::dsl_kv::scalar(&fields, "delta_t_k")?,
-            construction_activity: norm_core::dsl_kv::scalar(&fields, "construction_activity")?,
-            accidental_mass_t: norm_core::dsl_kv::scalar(&fields, "accidental_mass_t")?,
-            accidental_speed_km_h: norm_core::dsl_kv::scalar(&fields, "accidental_speed_km_h")?,
-            bridge_lane: norm_core::dsl_kv::scalar(&fields, "bridge_lane")?,
-            bridge_span_m: norm_core::dsl_kv::scalar(&fields, "bridge_span_m")?,
-            bridge_lane_width_m: norm_core::dsl_kv::scalar(&fields, "bridge_lane_width_m")?,
-            bridge_moment_resistance_knm: norm_core::dsl_kv::scalar(&fields, "bridge_moment_resistance_knm")?,
-            crane_class: norm_core::dsl_kv::scalar(&fields, "crane_class")?,
-            hoist_class: norm_core::dsl_kv::scalar(&fields, "hoist_class")?,
-            hoisting_speed_m_s: norm_core::dsl_kv::scalar(&fields, "hoisting_speed_m_s")?,
-            silo_bulk_density_kn_m3: norm_core::dsl_kv::scalar(&fields, "silo_bulk_density_kn_m3")?,
-            silo_height_m: norm_core::dsl_kv::scalar(&fields, "silo_height_m")?,
-            silo_hydraulic_radius_m: norm_core::dsl_kv::scalar(&fields, "silo_hydraulic_radius_m")?,
-            silo_mu: norm_core::dsl_kv::scalar(&fields, "silo_mu")?,
-            silo_k: norm_core::dsl_kv::scalar(&fields, "silo_k")?,
-            c_s: norm_core::dsl_kv::scalar(&fields, "c_s")?,
-            c_d: norm_core::dsl_kv::scalar(&fields, "c_d")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        [
-            norm_core::dsl_kv::line("area_m2", &self.area_m2),
-            norm_core::dsl_kv::line("category", &self.category),
-            norm_core::dsl_kv::line("annex", &self.annex),
-            norm_core::dsl_kv::line("self_weight_material", &self.self_weight_material),
-            norm_core::dsl_kv::line("self_weight_thickness_m", &self.self_weight_thickness_m),
-            norm_core::dsl_kv::line("assumed_g_k_kn_m2", &self.assumed_g_k_kn_m2),
-            norm_core::dsl_kv::line("fire_curve", &self.fire_curve),
-            norm_core::dsl_kv::line("fire_resistance_min", &self.fire_resistance_min),
-            norm_core::dsl_kv::line("fire_member_capacity_c", &self.fire_member_capacity_c),
-            norm_core::dsl_kv::line("snow_zone", &self.snow_zone),
-            norm_core::dsl_kv::line("snow_altitude_m", &self.snow_altitude_m),
-            norm_core::dsl_kv::line("en_s_k_kn_m2", &self.en_s_k_kn_m2),
-            norm_core::dsl_kv::line("wind_zone", &self.wind_zone),
-            norm_core::dsl_kv::line("en_v_b_m_s", &self.en_v_b_m_s),
-            norm_core::dsl_kv::line("delta_t_k", &self.delta_t_k),
-            norm_core::dsl_kv::line("construction_activity", &self.construction_activity),
-            norm_core::dsl_kv::line("accidental_mass_t", &self.accidental_mass_t),
-            norm_core::dsl_kv::line("accidental_speed_km_h", &self.accidental_speed_km_h),
-            norm_core::dsl_kv::line("bridge_lane", &self.bridge_lane),
-            norm_core::dsl_kv::line("bridge_span_m", &self.bridge_span_m),
-            norm_core::dsl_kv::line("bridge_lane_width_m", &self.bridge_lane_width_m),
-            norm_core::dsl_kv::line("bridge_moment_resistance_knm", &self.bridge_moment_resistance_knm),
-            norm_core::dsl_kv::line("crane_class", &self.crane_class),
-            norm_core::dsl_kv::line("hoist_class", &self.hoist_class),
-            norm_core::dsl_kv::line("hoisting_speed_m_s", &self.hoisting_speed_m_s),
-            norm_core::dsl_kv::line("silo_bulk_density_kn_m3", &self.silo_bulk_density_kn_m3),
-            norm_core::dsl_kv::line("silo_height_m", &self.silo_height_m),
-            norm_core::dsl_kv::line("silo_hydraulic_radius_m", &self.silo_hydraulic_radius_m),
-            norm_core::dsl_kv::line("silo_mu", &self.silo_mu),
-            norm_core::dsl_kv::line("silo_k", &self.silo_k),
-            norm_core::dsl_kv::line("c_s", &self.c_s),
-            norm_core::dsl_kv::line("c_d", &self.c_d),
-        ]
-        .join("\n")
-            + "\n"
-    }
-}
+// `Document`'s `vcs::DocumentDsl` impl and `FireCurve`'s scalar-tag mapping are now generated by
+// `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslScalar)]` on the type definitions themselves
+// (see `part_1_2::FireCurve` and `Document` above) — the engine's `dsl_schema` grammar replaces
+// this crate's own hand-rolled `dsl_kv` printer.
 // #endregion 🔖Dsl
 
 #[cfg(test)]

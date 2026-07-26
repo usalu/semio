@@ -1,0 +1,57 @@
+P1 scope note (2026-07-26)
+
+Implemented:
+- kernel/3d/brep/rs/src/poly.rs: Poly (monomial basis, Horner eval + simultaneous
+  eval_with_derivative), solve_quadratic (cancellation-safe q=-1/2(b+sign(b)*sqrt(disc)) form),
+  solve_cubic (trigonometric method for 3 real roots, Cardano otherwise), Bernstein (de Casteljau
+  eval/subdivide, monomial<->Bernstein basis conversion, Descartes sign-variation count),
+  isolate_roots (recursive subdivision certifying 0-or-1-root sub-intervals via sign variations,
+  bounded by max_depth), refine_root (safeguarded Newton with bisection fallback whenever a step
+  would leave the bracket).
+- src/bezier.rs: RationalBezier2/RationalBezier3 (homogeneous-coordinate de Casteljau eval and
+  subdivision so rational and polynomial curves share one algorithm), control_hull_box,
+  degree elevation (polynomial case), subdivide_until_flat (recursive flattening used later by
+  int_cc's Bezier-clipping intersector), boxes_overlap2 (the cheap broad-phase rejection test).
+- src/bspline.rs: KnotVector (validation, clamped-uniform construction, binary-search find_span,
+  multiplicity), basis_functions + basis_function_derivatives (Cox-de Boor triangular recurrence,
+  NURBS-book algorithm — bottom-up, not the naive exponential recursive definition), de_boor
+  (per-coordinate rational evaluation), insert_knot (Boehm's algorithm), elevate_bezier_span.
+- All three files wired into lib.rs via additional #[path = "src/…"] pub mod declarations,
+  additive alongside the existing brepkit wrapper and Phase 0 modules.
+
+Validated by:
+- cargo test -p kernel_3d_brepkit --lib: 153 passed, 0 failed (up from 114 after Phase 0; all
+  39 new tests, nothing pre-existing touched).
+- Bug caught and fixed during this phase: RationalBezier{2,3}::subdivide's right-segment control
+  point extraction initially read the de Casteljau triangle table with row/col swapped
+  (hw[level][n-1-level] instead of the correct hw[n-1-level][level]); caught immediately by
+  subdivide_matches_original_at_endpoints_and_split_point and two sibling tests, fixed, re-verified.
+- Flagship differential gates per the plan: poly::tests::quick::isolate_roots_plus_refine_matches_
+  bisection_oracle_on_random_polynomials (200 seeded random-degree polynomials; isolate_roots +
+  refine_root's root set matches an independent dense-sampling bisection oracle exactly in count
+  and to 1e-6 in value); bspline::tests::quick::de_boor_matches_bernstein_sum_oracle_on_random_
+  bezier_span_curves (200 trials; confirms a single-span clamped B-spline is byte-for-byte the
+  same curve as the Bernstein-basis oracle, an independent evaluation path); bspline::tests::quick
+  ::knot_insertion_is_geometrically_a_no_op_on_random_curves (100 trials, confirms Boehm's
+  algorithm never moves the curve). basis_function_derivatives (the trickiest single function in
+  this phase, the NURBS-book Algorithm A2.3) validated against central finite differences on the
+  first attempt.
+- cargo clippy -p kernel_3d_brepkit --lib --tests: zero warnings in poly.rs, bezier.rs, bspline.rs
+  after fixing 6 lint findings (needless_range_loop x3 — 2 fixed with iterator rewrites, 1 kept as
+  a targeted #[allow] since the loop variable is also used as a value not just an index;
+  needless_pass_by_value on the recursive isolate_recursive helper — changed to take &Bernstein;
+  manual_memcpy x2 in insert_knot — rewritten as copy_from_slice). Remaining warnings in the
+  logs are 100% pre-existing in the brepkit wrapper and semio-framework-core (verified none
+  overlap the three new files).
+- Full logs: phase-1-polynomials-splines-run-1.txt (cargo test), phase-1-lint-run-1.txt (clippy).
+
+Deferred (not part of this phase, tracked for later phases per the plan):
+- Rational elevation for Bezier curves (RationalBezier3::elevate only implements the polynomial
+  case, with a debug_assert guarding it) — the kernel only ever needs rational-Bezier elevation
+  for fixed-degree conic conversions, which are handled directly in curve.rs's to_nurbs (Phase 2)
+  rather than through generic elevation; adding the general rational case is easy to bolt on later
+  if a future phase needs it and does not block anything downstream.
+- curve.rs/surface.rs (Phase 2) will be the first real consumers of Bernstein/KnotVector/de_boor;
+  nothing here was left half-wired for them since the API surface (Bernstein::from_monomial,
+  KnotVector::clamped_uniform, de_boor, insert_knot) already matches what Phase 2 needs.
+None of these block Phase 2.

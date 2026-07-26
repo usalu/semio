@@ -1269,15 +1269,15 @@ mod tests {
     // #region 📄 Document parsing errors
     #[test]
     fn parse_document_rejects_invalid_json() {
-        let err = parse_document("not json").unwrap_err();
+        let err = parse_document("not json").err().unwrap();
         assert!(matches!(err, FrameworkSurfacePaintError::Json(_)));
     }
 
     #[test]
     fn parse_document_rejects_unsupported_schema() {
         let json = r#"{"schema":"vector.document","id":"t","layers":[]}"#;
-        let err = parse_document(json).unwrap_err();
-        match err {
+        let err = parse_document(json).err().unwrap();
+        match &err {
             FrameworkSurfacePaintError::UnsupportedSchema(s) => assert_eq!(s, "vector.document"),
             _ => panic!("expected UnsupportedSchema"),
         }

@@ -137,6 +137,38 @@ pub mod booleans {
             let merged = boolean_paths(&square([0.0, 0.0], 5.0), &disconnected, "union").expect("union");
             assert_eq!(merged.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 3);
         }
+
+        #[test]
+        fn close_polygon_errors_on_too_few_points() {
+            let open = vec![PathSegment::Move { to: [0.0, 0.0] }, PathSegment::Line { to: [1.0, 1.0] }];
+            let err = boolean_paths(&open, &square([0.0, 0.0], 5.0), "union").unwrap_err();
+            assert!(matches!(err, DrawingError::InvalidInput(_)));
+        }
+
+        #[test]
+        fn boolean_paths_errors_on_unknown_operation() {
+            let err = boolean_paths(&square([0.0, 0.0], 5.0), &square([1.0, 1.0], 5.0), "bogus").unwrap_err();
+            assert!(matches!(err, DrawingError::InvalidInput(message) if message.contains("unknown boolean operation")));
+        }
+
+        #[test]
+        fn boolean_paths_intersection_of_disjoint_shapes_errors_on_empty_result() {
+            let err = boolean_paths(&square([0.0, 0.0], 5.0), &square([100.0, 100.0], 5.0), "intersection").unwrap_err();
+            assert!(matches!(err, DrawingError::Operation(message) if message.contains("empty path")));
+        }
+
+        #[test]
+        fn boolean_paths_many_errors_on_empty_inputs() {
+            let err = boolean_paths_many(&[], "union").unwrap_err();
+            assert!(matches!(err, DrawingError::InvalidInput(_)));
+        }
+
+        #[test]
+        fn boolean_paths_many_computes_running_operation_across_three_inputs() {
+            let inputs = vec![square([0.0, 0.0], 10.0), square([0.0, 0.0], 10.0), square([0.0, 0.0], 10.0)];
+            let merged = boolean_paths_many(&inputs, "intersection").expect("intersection");
+            assert!(!merged.is_empty());
+        }
     }
     // #endregion booleans
 }
@@ -359,6 +391,37 @@ pub mod trace {
             let mask = [255_u8, 0, 0, 255];
             let segments = trace_bitmap_paths(2, 2, &mask, 0.5, 0.0).expect("trace");
             assert_eq!(segments.iter().filter(|segment| matches!(segment, PathSegment::Move { .. })).count(), 2);
+        }
+
+        #[test]
+        fn trace_bitmap_errors_on_zero_dimensions() {
+            let err = trace_bitmap_paths(0, 5, &[], 0.5, 0.5).unwrap_err();
+            assert!(matches!(err, DrawingError::InvalidInput(_)));
+        }
+
+        #[test]
+        fn trace_bitmap_errors_on_short_buffer() {
+            let err = trace_bitmap_paths(4, 4, &[0_u8; 2], 0.5, 0.5).unwrap_err();
+            assert!(matches!(err, DrawingError::InvalidInput(message) if message.contains("expects")));
+        }
+
+        #[test]
+        fn trace_bitmap_errors_when_no_pixels_above_threshold() {
+            let mask = vec![0_u8; 16];
+            let err = trace_bitmap_paths(4, 4, &mask, 0.5, 0.5).unwrap_err();
+            assert!(matches!(err, DrawingError::Operation(message) if message.contains("no contours")));
+        }
+
+        #[test]
+        fn douglas_peucker_returns_points_unchanged_when_epsilon_is_non_positive() {
+            let points: Vec<Vec2> = vec![[0.0, 0.0], [1.0, 5.0], [2.0, 0.0]];
+            assert_eq!(douglas_peucker(&points, 0.0), points);
+        }
+
+        #[test]
+        fn perpendicular_distance_handles_degenerate_zero_length_line() {
+            let dist = perpendicular_distance([3.0, 4.0], [0.0, 0.0], [0.0, 0.0]);
+            assert!((dist - 5.0).abs() < 1e-9);
         }
     }
     // #endregion trace
@@ -1031,7 +1094,7 @@ impl DrawingStore {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use kernel_2d_engine::block_on;
+    use kernel_2d_engine::{block_on, LineCap, LineJoin};
 
     #[test]
     fn rect_exports_svg() {
@@ -1074,5 +1137,369 @@ mod tests {
         let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
         assert!(!scene.nodes.is_empty());
     }
+
+    // #region Geometry primitives export
+    #[test]
+    fn ellipse_exports_svg_with_cubic_curves() {
+        let mut store = DrawingStore::new();
+        let ellipse = block_on(store.ellipse(5.0, 5.0, 4.0, 2.0)).unwrap();
+        let svg = store.export_svg_sync(&ellipse).expect("svg");
+        assert!(svg.contains("C "));
+        assert!(svg.contains("Z"));
+    }
+
+    #[test]
+    fn line_exports_svg_move_and_line() {
+        let mut store = DrawingStore::new();
+        let line = block_on(store.line(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let svg = store.export_svg_sync(&line).expect("svg");
+        assert!(svg.contains("M 0 0"));
+        assert!(svg.contains("L 10 10"));
+    }
+
+    #[test]
+    fn polygon_exports_closed_svg_path() {
+        let mut store = DrawingStore::new();
+        let polygon = block_on(store.polygon(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]])).unwrap();
+        let svg = store.export_svg_sync(&polygon).expect("svg");
+        assert!(svg.contains("Z"));
+    }
+
+    #[test]
+    fn polyline_path_exports_open_path_without_close() {
+        let mut store = DrawingStore::new();
+        let polyline = block_on(store.polyline_path(&[[0.0, 0.0], [4.0, 0.0], [2.0, 4.0]])).unwrap();
+        let svg = store.export_svg_sync(&polyline).expect("svg");
+        assert!(!svg.contains("Z"));
+    }
+
+    #[test]
+    fn polygon_errors_on_too_few_points() {
+        let mut store = DrawingStore::new();
+        let err = block_on(store.polygon(&[[0.0, 0.0], [1.0, 1.0]])).unwrap_err();
+        assert!(matches!(err, DrawingError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn polyline_path_errors_on_too_few_points() {
+        let mut store = DrawingStore::new();
+        let err = block_on(store.polyline_path(&[[0.0, 0.0]])).unwrap_err();
+        assert!(matches!(err, DrawingError::InvalidInput(_)));
+    }
+    // #endregion Geometry primitives export
+
+    // #region Style
+    #[test]
+    fn set_fill_solid_renders_opaque_hex_color() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let filled = block_on(store.set_fill(&rect, FillStyle::Solid { color: [1.0, 0.0, 0.0, 1.0] })).unwrap();
+        let svg = store.export_svg_sync(&filled).expect("svg");
+        assert!(svg.contains(r##"fill="#ff0000""##));
+    }
+
+    #[test]
+    fn set_fill_with_alpha_renders_rgba() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let filled = block_on(store.set_fill(&rect, FillStyle::Solid { color: [0.0, 1.0, 0.0, 0.5] })).unwrap();
+        let svg = store.export_svg_sync(&filled).expect("svg");
+        assert!(svg.contains("rgba(0,255,0,0.500)"));
+    }
+
+    #[test]
+    fn linear_gradient_fill_renders_gradient_defs() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let stops = vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }, GradientStop { offset: 1.0, color: [0.0, 0.0, 0.0, 1.0] }];
+        let filled = block_on(store.linear_gradient_fill(&rect, 0.0, 0.0, 5.0, 5.0, &stops)).unwrap();
+        let svg = store.export_svg_sync(&filled).expect("svg");
+        assert!(svg.contains("<linearGradient"));
+        assert!(svg.contains("fill=\"url(#lg"));
+    }
+
+    #[test]
+    fn set_fill_radial_gradient_renders_defs() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let stops = vec![GradientStop { offset: 0.0, color: [1.0, 0.0, 0.0, 1.0] }];
+        let fill = FillStyle::RadialGradient { cx: 2.5, cy: 2.5, r: 2.0, stops };
+        let filled = block_on(store.set_fill(&rect, fill)).unwrap();
+        let svg = store.export_svg_sync(&filled).expect("svg");
+        assert!(svg.contains("<radialGradient"));
+        assert!(svg.contains("fill=\"url(#rg"));
+    }
+
+    #[test]
+    fn set_stroke_renders_stroke_attributes() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let stroke = StrokeStyle { color: [0.0, 0.0, 1.0, 1.0], width: 2.0, cap: LineCap::Round, join: LineJoin::Round, dash: vec![] };
+        let stroked = block_on(store.set_stroke(&rect, stroke)).unwrap();
+        let svg = store.export_svg_sync(&stroked).expect("svg");
+        assert!(svg.contains(r##"stroke="#0000ff""##));
+        assert!(svg.contains(r#"stroke-width="2""#));
+    }
+    // #endregion Style
+
+    // #region Transforms
+    #[test]
+    fn translate_moves_exported_geometry() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let moved = block_on(store.translate(&rect, 10.0, 20.0)).unwrap();
+        let scene = store.flatten_scene_sync(&moved).unwrap();
+        assert_eq!(scene.nodes[0].transform.transform_point([0.0, 0.0]), [10.0, 20.0]);
+    }
+
+    #[test]
+    fn rotate_and_scale_compose_into_transform() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let rotated = block_on(store.rotate(&rect, std::f64::consts::FRAC_PI_2)).unwrap();
+        let scaled = block_on(store.scale(&rotated, 2.0, 2.0)).unwrap();
+        let scene = store.flatten_scene_sync(&scaled).unwrap();
+        let [x, y] = scene.nodes[0].transform.transform_point([1.0, 0.0]);
+        assert!((x - 0.0).abs() < 1e-9);
+        assert!((y - 2.0).abs() < 1e-9);
+    }
+    // #endregion Transforms
+
+    // #region Group and clip
+    #[test]
+    fn group_errors_on_empty_children() {
+        let mut store = DrawingStore::new();
+        let err = block_on(store.group(&[])).unwrap_err();
+        assert!(matches!(err, DrawingError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn apply_clip_stores_clip_segments_on_flatten() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let circle = block_on(store.circle(2.0, 2.0, 1.0)).unwrap();
+        let clipped = block_on(store.apply_clip(&rect, &circle)).unwrap();
+        let scene = store.flatten_scene_sync(&clipped).unwrap();
+        assert!(scene.nodes[0].clip.as_ref().is_some_and(|segments| !segments.is_empty()));
+    }
+    // #endregion Group and clip
+
+    // #region Text
+    #[test]
+    fn text_with_fill_renders_colored_text_element() {
+        let mut store = DrawingStore::new();
+        let text = block_on(store.text(1.0, 2.0, "hi", 12.0)).unwrap();
+        let colored = block_on(store.set_fill(&text, FillStyle::Solid { color: [0.0, 0.0, 1.0, 1.0] })).unwrap();
+        let svg = store.export_svg_sync(&colored).expect("svg");
+        assert!(svg.contains(r##"<text x="1" y="2" font-size="12" fill="#0000ff">hi</text>"##));
+    }
+
+    #[test]
+    fn text_without_fill_defaults_to_black() {
+        let mut store = DrawingStore::new();
+        let text = block_on(store.text(0.0, 0.0, "plain", 10.0)).unwrap();
+        let svg = store.export_svg_sync(&text).expect("svg");
+        assert!(svg.contains(r#"fill="black">plain"#));
+    }
+
+    #[test]
+    fn text_with_gradient_fill_falls_back_to_black_in_svg() {
+        let mut store = DrawingStore::new();
+        let text = block_on(store.text(0.0, 0.0, "grad", 10.0)).unwrap();
+        let stops = vec![GradientStop { offset: 0.0, color: [1.0, 1.0, 1.0, 1.0] }];
+        let gradient = block_on(store.linear_gradient_fill(&text, 0.0, 0.0, 1.0, 1.0, &stops)).unwrap();
+        let svg = store.export_svg_sync(&gradient).expect("svg");
+        assert!(svg.contains(r#"fill="black">grad"#));
+    }
+    // #endregion Text
+
+    // #region Boolean operations via kernel trait
+    #[test]
+    fn bool_union_via_kernel_trait() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
+        let merged = block_on(store.bool_union(&a, &b)).unwrap();
+        assert_eq!(block_on(store.kind(&merged)).unwrap(), DrawingKind::Path);
+    }
+
+    #[test]
+    fn bool_difference_via_kernel_trait() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
+        let diff = block_on(store.bool_difference(&a, &b)).unwrap();
+        let scene = store.flatten_scene_sync(&diff).unwrap();
+        assert!(!scene.nodes.is_empty());
+    }
+
+    #[test]
+    fn bool_intersection_via_kernel_trait() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
+        let intersection = block_on(store.bool_intersection(&a, &b)).unwrap();
+        let scene = store.flatten_scene_sync(&intersection).unwrap();
+        assert!(!scene.nodes.is_empty());
+    }
+
+    #[test]
+    fn bool_xor_via_kernel_trait() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let b = block_on(store.rect_path(5.0, 5.0, 10.0, 10.0)).unwrap();
+        let xor = block_on(store.bool_xor(&a, &b)).unwrap();
+        let scene = store.flatten_scene_sync(&xor).unwrap();
+        assert!(!scene.nodes.is_empty());
+    }
+
+    #[test]
+    fn bool_op_many_forks_single_handle() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let forked = block_on(store.bool_op_many("union", &[rect.clone()])).unwrap();
+        assert_ne!(forked.as_str(), rect.as_str());
+        assert_eq!(block_on(store.kind(&forked)).unwrap(), DrawingKind::Rect);
+    }
+
+    #[test]
+    fn bool_op_many_merges_multiple_handles() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect_path(0.0, 0.0, 10.0, 10.0)).unwrap();
+        let b = block_on(store.rect_path(5.0, 0.0, 10.0, 10.0)).unwrap();
+        let c = block_on(store.rect_path(0.0, 5.0, 10.0, 10.0)).unwrap();
+        let merged = block_on(store.bool_op_many("union", &[a, b, c])).unwrap();
+        assert_eq!(block_on(store.kind(&merged)).unwrap(), DrawingKind::Path);
+    }
+
+    #[test]
+    fn bool_op_many_errors_on_empty_handles() {
+        let mut store = DrawingStore::new();
+        let err = block_on(store.bool_op_many("union", &[])).unwrap_err();
+        assert!(matches!(err, DrawingError::InvalidInput(_)));
+    }
+
+    #[test]
+    fn boolean_segments_trait_delegates_to_booleans_module() {
+        let store = DrawingStore::new();
+        let a = rect_segments(0.0, 0.0, 10.0, 10.0);
+        let b = rect_segments(5.0, 5.0, 10.0, 10.0);
+        let merged = block_on(store.boolean_segments(&a, &b, "union")).expect("union");
+        assert!(!merged.is_empty());
+    }
+    // #endregion Boolean operations via kernel trait
+
+    // #region Trace via kernel trait
+    #[test]
+    fn trace_bitmap_trait_delegates_to_trace_module() {
+        let mut store = DrawingStore::new();
+        let width = 6_u32;
+        let height = 6_u32;
+        let mut mask = vec![0_u8; (width * height) as usize];
+        for y in 1..5 {
+            for x in 1..5 {
+                mask[(y * width + x) as usize] = 255;
+            }
+        }
+        let traced = block_on(store.trace_bitmap(width, height, &mask, 0.5, 0.5)).unwrap();
+        assert_eq!(block_on(store.kind(&traced)).unwrap(), DrawingKind::Path);
+    }
+    // #endregion Trace via kernel trait
+
+    // #region Registry lifecycle
+    #[test]
+    fn registry_len_tracks_inserted_handles() {
+        let mut store = DrawingStore::new();
+        assert_eq!(store.registry_len(), 0);
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        assert_eq!(store.registry_len(), 1);
+        block_on(store.set_fill(&rect, FillStyle::Solid { color: [1.0, 1.0, 1.0, 1.0] })).unwrap();
+        assert_eq!(store.registry_len(), 2);
+    }
+
+    #[test]
+    fn dispose_sync_removes_handle_from_registry() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        store.dispose_sync(&rect);
+        assert_eq!(store.registry_len(), 0);
+        let err = block_on(store.kind(&rect)).unwrap_err();
+        assert!(matches!(err, DrawingError::MissingHandle(_)));
+    }
+
+    #[test]
+    fn retain_sync_keeps_only_live_handles() {
+        let mut store = DrawingStore::new();
+        let a = block_on(store.rect(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let b = block_on(store.circle(1.0, 1.0, 1.0)).unwrap();
+        let live: std::collections::HashSet<String> = [a.as_str().to_string()].into_iter().collect();
+        store.retain_sync(&live);
+        assert!(block_on(store.kind(&a)).is_ok());
+        assert!(block_on(store.kind(&b)).is_err());
+    }
+
+    #[test]
+    fn missing_handle_errors_on_set_fill_and_translate() {
+        let mut store = DrawingStore::new();
+        let bogus = DrawingHandle("drawing-rect-999".to_string());
+        let fill_err = block_on(store.set_fill(&bogus, FillStyle::Solid { color: [0.0, 0.0, 0.0, 1.0] })).unwrap_err();
+        assert!(matches!(fill_err, DrawingError::MissingHandle(_)));
+        let translate_err = block_on(store.translate(&bogus, 1.0, 1.0)).unwrap_err();
+        assert!(matches!(translate_err, DrawingError::MissingHandle(_)));
+    }
+
+    #[test]
+    fn flatten_scene_errors_on_missing_handle() {
+        let store = DrawingStore::new();
+        let bogus = DrawingHandle("drawing-rect-999".to_string());
+        let err = block_on(store.flatten_scene(&bogus)).unwrap_err();
+        assert!(matches!(err, DrawingError::MissingHandle(_)));
+    }
+    // #endregion Registry lifecycle
+
+    // #region DWG export/import branches
+    #[test]
+    fn export_dwg_includes_circle_and_text_entities() {
+        let mut store = DrawingStore::new();
+        let circle = block_on(store.circle(5.0, 5.0, 3.0)).unwrap();
+        let text = block_on(store.text(0.0, 0.0, "hi", 5.0)).unwrap();
+        let group = block_on(store.group(&[circle, text])).unwrap();
+        let bytes = store.export_dwg_sync(&group).expect("export dwg");
+        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
+        let scene = store.flatten_scene_sync(&imported).expect("flatten imported scene");
+        assert_eq!(scene.nodes.len(), 2);
+    }
+
+    #[test]
+    fn import_dwg_of_single_path_skips_group_wrapper() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect_path(0.0, 0.0, 5.0, 5.0)).unwrap();
+        let bytes = store.export_dwg_sync(&rect).expect("export dwg");
+        let imported = store.import_dwg_sync(&bytes).expect("import dwg");
+        assert_eq!(block_on(store.kind(&imported)).unwrap(), DrawingKind::Path);
+    }
+
+    #[test]
+    fn import_dwg_of_empty_drawing_returns_degenerate_path() {
+        let mut store = DrawingStore::new();
+        let empty = semio_framework_core::DwgDrawing::default();
+        let bytes = semio_framework_core::dwg_to_bytes(&empty).expect("encode empty dwg");
+        let imported = store.import_dwg_sync(&bytes).expect("import empty dwg");
+        assert_eq!(block_on(store.kind(&imported)).unwrap(), DrawingKind::Path);
+    }
+    // #endregion DWG export/import branches
+
+    // #region Scene bounds
+    #[test]
+    fn scene_bounds_grows_to_fit_text_and_shapes() {
+        let mut store = DrawingStore::new();
+        let rect = block_on(store.rect(600.0, 0.0, 10.0, 10.0)).unwrap();
+        let text = block_on(store.text(0.0, 700.0, "wide label", 20.0)).unwrap();
+        let group = block_on(store.group(&[rect, text])).unwrap();
+        let scene = store.flatten_scene_sync(&group).unwrap();
+        assert!(scene.width >= 610.0);
+        assert!(scene.height >= 720.0);
+    }
+    // #endregion Scene bounds
 }
 // #endregion 🔖Tests

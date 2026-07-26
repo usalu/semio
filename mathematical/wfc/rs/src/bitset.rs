@@ -9,7 +9,7 @@ use crate::ids::PatternId;
 /// universe this set is defined over, not its popcount — use [`PatternSet::count_ones`] /
 /// [`PatternSet::is_all_zero`] for cardinality, and [`PatternSet::is_empty_universe`] for the
 /// degenerate zero-pattern-universe case.
-#[derive(Clone, PartialEq, Debug)]
+#[derive(Clone, PartialEq, Debug, serde::Serialize, serde::Deserialize)]
 pub struct PatternSet {
     words: Vec<u64>,
     len: usize,
@@ -149,6 +149,25 @@ impl PatternSet {
         debug_assert_eq!(self.len, other.len);
         self.words.iter().zip(other.words.iter()).any(|(a, b)| a & b != 0)
     }
+
+    /// 🎭 Structural invariant check for data crossing a trust boundary (deserialization): word
+    /// count matches `len`, and no stray bits are set past `len` in the final word. Every method
+    /// above assumes this holds (e.g. `count_ones`/`iter_ones` would over-report, `set` would
+    /// panic on an out-of-bounds word); a freshly built `PatternSet` always satisfies it, so this
+    /// only needs calling on data this crate did not construct itself.
+    pub fn is_well_formed(&self) -> bool {
+        if self.words.len() != self.len.div_ceil(64) {
+            return false;
+        }
+        let rem = self.len % 64;
+        if rem != 0 {
+            let mask = !((1u64 << rem) - 1);
+            if self.words[self.words.len() - 1] & mask != 0 {
+                return false;
+            }
+        }
+        true
+    }
     // #endregion 🔖Bitset
 
     // #region 🔖Ops
@@ -267,6 +286,37 @@ mod tests {
         let count = s.restrict_returning_removed(&allowed, &mut removed);
         assert_eq!(count, 0);
         assert!(removed.is_all_zero());
+    }
+
+    #[test]
+    fn freshly_built_sets_are_well_formed() {
+        assert!(PatternSet::new_empty(0).is_well_formed());
+        assert!(PatternSet::new_empty(70).is_well_formed());
+        assert!(PatternSet::new_full(70).is_well_formed());
+        assert!(from_indices(200, &[130, 199]).is_well_formed());
+    }
+
+    #[test]
+    fn wrong_word_count_is_not_well_formed() {
+        let mut s = from_indices(70, &[10]);
+        s.words.push(0); // one extra word beyond what 70 patterns needs
+        assert!(!s.is_well_formed());
+    }
+
+    #[test]
+    fn stray_bits_past_len_in_final_word_are_not_well_formed() {
+        let mut s = from_indices(10, &[2]);
+        s.words[0] |= 1 << 20; // bit 20 is past `len = 10`, still within the single backing word
+        assert!(!s.is_well_formed());
+    }
+
+    #[test]
+    fn serde_round_trip_preserves_bits_and_len() {
+        let s = from_indices(70, &[3, 64, 69]);
+        let json = serde_json::to_string(&s).unwrap();
+        let back: PatternSet = serde_json::from_str(&json).unwrap();
+        assert_eq!(back, s);
+        assert!(back.is_well_formed());
     }
 
     mod quick {

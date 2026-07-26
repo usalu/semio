@@ -28,6 +28,9 @@ pub enum ModelError {
     InvalidSymmetryGroup { reason: &'static str },
     /// 🚨 A socket rule referenced a socket label that was never declared compatible with anything.
     IncompatibleSocketRule { reason: &'static str },
+    /// 🚨 A [`crate::serial::SourceModelDoc`]'s schema version does not match this build's. No
+    /// migration — this crate has no users yet, so an unrecognized version is simply rejected.
+    SchemaVersionMismatch { expected: u32, actual: u32 },
 }
 
 impl core::fmt::Display for ModelError {
@@ -48,6 +51,9 @@ impl core::fmt::Display for ModelError {
             Self::CapacityOverflow { what } => write!(f, "capacity overflow computing {what}"),
             Self::InvalidSymmetryGroup { reason } => write!(f, "invalid symmetry group: {reason}"),
             Self::IncompatibleSocketRule { reason } => write!(f, "incompatible socket rule: {reason}"),
+            Self::SchemaVersionMismatch { expected, actual } => {
+                write!(f, "source model schema version mismatch: expected {expected}, found {actual}")
+            }
         }
     }
 }

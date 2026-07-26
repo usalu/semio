@@ -1598,6 +1598,346 @@ mod tests {
         assert_document_text_round_trip(&store);
     }
     //#endregion 🔖DslTests
+
+    //#region 🔖RewriteQueryTests
+    fn empty_rule() -> Rule {
+        Rule {
+            name: "r".into(),
+            lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: None },
+            rhs: Rhs { create: vec![], delete: vec![], set: vec![], merge: vec![], parameters: vec![] },
+        }
+    }
+
+    #[test]
+    fn pattern_to_match_clause_edge_variants() {
+        let base = |edge_var: Option<&str>, edge_kind: Option<&str>| PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: edge_var.map(String::from), edge_kind: edge_kind.map(String::from), right_var: Some("b".into()), right_kind: Some("Piece".into()) };
+        assert_eq!(pattern_to_match_clause(&base(Some("e"), Some("Connection"))), "(a:Piece)-[e:Connection]->(b:Piece)");
+        assert_eq!(pattern_to_match_clause(&base(Some("e"), None)), "(a:Piece)-[e]->(b:Piece)");
+        assert_eq!(pattern_to_match_clause(&base(None, Some("Connection"))), "(a:Piece)-[:Connection]->(b:Piece)");
+        assert_eq!(pattern_to_match_clause(&base(None, None)), "(a:Piece)-[]->(b:Piece)");
+    }
+
+    #[test]
+    fn build_rule_query_edge_pattern_and_all_clauses() {
+        let rule = Rule {
+            name: "full".into(),
+            lhs: Lhs {
+                pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: Some("e".into()), edge_kind: Some("Connection".into()), right_var: Some("b".into()), right_kind: Some("Piece".into()) },
+                where_clause: Some("a.name = 'b'".into()),
+            },
+            rhs: Rhs {
+                create: vec![PatternJson { left_var: "c".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }],
+                delete: vec!["e".into()],
+                set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("x".into()) }],
+                merge: vec![PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: Some("m".into()), edge_kind: None, right_var: Some("c".into()), right_kind: Some("Piece".into()) }],
+                parameters: vec![],
+            },
+        };
+        let query = build_rule_query(&rule, &HashMap::new());
+        assert!(query.starts_with("MATCH (a:Piece)-[e:Connection]->(b:Piece) WHERE a.name = 'b'"));
+        assert!(query.contains("DELETE e"));
+        assert!(query.contains("SET a.label = 'x'"));
+        assert!(query.contains("CREATE (c:Piece)"));
+        assert!(query.contains("MERGE (a:Piece)-[m]->(c:Piece)"));
+    }
+
+    #[test]
+    fn resolve_parameter_value_variants() {
+        let mut rule = empty_rule();
+        rule.rhs.parameters.push(ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("default-label".into()) });
+        let mut bindings = HashMap::new();
+        bindings.insert("label".to_string(), PropertyValue::String("bound-label".into()));
+
+        assert_eq!(resolve_parameter_value(&rule, &bindings, &PropertyValue::String("$label".into())), PropertyValue::String("bound-label".into()));
+        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$label".into())), PropertyValue::String("default-label".into()));
+        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$unknown".into())), PropertyValue::String("$unknown".into()));
+        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("plain".into())), PropertyValue::String("plain".into()));
+        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::Number(5.0)), PropertyValue::Number(5.0));
+        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
+    }
+
+    #[test]
+    fn assignment_value_jack_formats_each_property_variant() {
+        let rule = empty_rule();
+        let bindings = HashMap::new();
+        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Null), "null");
+        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Bool(true)), "true");
+        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Number(4.5)), "4.5");
+        assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::String("hi".into())), "'hi'");
+        let arr = PropertyValue::Array(vec![PropertyValue::Number(1.0)]);
+        assert_eq!(assignment_value_jack(&rule, &bindings, &arr), serde_json::to_string(&arr).unwrap());
+    }
+
+    #[test]
+    fn parse_bindings_json_handles_empty_and_invalid() {
+        assert_eq!(parse_bindings_json("").unwrap(), HashMap::new());
+        assert_eq!(parse_bindings_json("   ").unwrap(), HashMap::new());
+        assert!(parse_bindings_json("{not json").is_err());
+        let mut expected = HashMap::new();
+        expected.insert("x".to_string(), PropertyValue::Number(1.0));
+        assert_eq!(parse_bindings_json("{\"x\":1}").unwrap(), expected);
+    }
+
+    #[test]
+    fn apply_rule_json_and_rule_query_json_end_to_end() {
+        let mut g = nakagin_graph();
+        let mut rule = empty_rule();
+        rule.name = "label-core".into();
+        rule.lhs.where_clause = Some("a.name = 'b'".into());
+        rule.rhs.set.push(AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) });
+        let rule_json = serde_json::to_string(&rule).unwrap();
+
+        let query_out = rule_query_json(&rule_json, "{}").unwrap();
+        let query_value: serde_json::Value = serde_json::from_str(&query_out).unwrap();
+        assert!(query_value["query"].as_str().unwrap().contains("SET a.label"));
+
+        let apply_out = apply_rule_json(&mut g, &rule_json, "{}").unwrap();
+        let apply_value: serde_json::Value = serde_json::from_str(&apply_out).unwrap();
+        assert!(apply_value.get("fixture").is_some());
+        let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
+        assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
+
+        assert!(apply_rule_json(&mut g, "not json", "{}").is_err());
+        assert!(rule_query_json("not json", "{}").is_err());
+    }
+    //#endregion 🔖RewriteQueryTests
+
+    //#region 🔖DslErrorTests
+    #[test]
+    fn rewrite_rule_state_parse_dsl_errors_on_unknown_keyword() {
+        let err = RewriteRuleState::parse_dsl("bogus line").unwrap_err();
+        assert!(err.message.contains("unknown dsl line keyword"));
+    }
+
+    #[test]
+    fn rewrite_rule_state_parse_dsl_errors_on_malformed_binding() {
+        assert!(RewriteRuleState::parse_dsl("binding onlykey").is_err());
+    }
+
+    #[test]
+    fn rewrite_rule_state_parse_dsl_errors_on_malformed_layout() {
+        assert!(RewriteRuleState::parse_dsl("layout a").is_err());
+        assert!(RewriteRuleState::parse_dsl("layout a notanumber 2").is_err());
+        assert!(RewriteRuleState::parse_dsl("layout a 1 notanumber").is_err());
+    }
+
+    #[test]
+    fn rewrite_rule_state_parse_dsl_valid_binding_and_layout_lines() {
+        let text = "before \"{}\"\nlhs \"{}\"\nrhs \"{}\"\nbinding label 'hi'\nlayout a 1 2";
+        let state = RewriteRuleState::parse_dsl(text).unwrap();
+        assert_eq!(state.parameter_bindings.get("label"), Some(&PropertyValue::String("hi".into())));
+        assert_eq!(state.rule_layout.get("a"), Some(&(1.0, 2.0)));
+    }
+
+    #[test]
+    fn rewrite_rule_state_parse_dsl_errors_on_malformed_quoted_blob() {
+        assert!(RewriteRuleState::parse_dsl("before nope").is_err());
+        assert!(RewriteRuleState::parse_dsl("before \"abc").is_err());
+        assert!(RewriteRuleState::parse_dsl("before \"ok\" trailing").is_err());
+        assert!(RewriteRuleState::parse_dsl(r#"before "a\"#).is_err());
+    }
+
+    #[test]
+    fn quote_blob_round_trips_backslashes_and_quotes() {
+        let mut state = sample_rule_state();
+        state.before_fixture_json = "a\\b\"c\nd".to_string();
+        assert_dsl_round_trip(&state);
+    }
+
+    #[test]
+    fn op_text_parse_op_errors_on_unknown_keyword() {
+        let err = RewriteRuleOperation::parse_op("bogus xyz").unwrap_err();
+        assert!(err.message.contains("unknown op keyword"));
+    }
+    //#endregion 🔖DslErrorTests
+
+    //#region 🔖LodTests
+    #[test]
+    fn trinity_lod_scale_json_lists_all_six_lods() {
+        let json = trinity_lod_scale_json();
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&json).unwrap();
+        assert_eq!(rows.len(), 6);
+        assert_eq!(rows[0]["id"], "minimap");
+        assert_eq!(rows[5]["id"], "micro");
+    }
+
+    #[test]
+    fn trinity_abbreviate_label_short_passthrough_and_long_truncated() {
+        assert_eq!(trinity_abbreviate_label("abcd"), "abcd");
+        assert_eq!(trinity_abbreviate_label("  abcd  "), "abcd");
+        assert_eq!(trinity_abbreviate_label("abcdef"), "abc");
+    }
+
+    #[test]
+    fn trinity_draw_lod_from_id_and_visibility_flags() {
+        assert_eq!(TrinityDrawLod::from_id("bogus"), None);
+        assert_eq!(TrinityDrawLod::from_id("micro"), Some(TrinityDrawLod::Micro));
+        assert!(TrinityDrawLod::Detail.handles_visible());
+        assert!(!TrinityDrawLod::Normal.handles_visible());
+        assert!(!TrinityDrawLod::Minimap.labels_visible());
+        assert!(TrinityDrawLod::Compact.labels_visible());
+        assert!(!TrinityDrawLod::Compact.full_labels());
+        assert!(TrinityDrawLod::Detail.full_labels());
+        assert_eq!(TrinityDrawLod::from_scale_index(5), TrinityDrawLod::Micro);
+        assert_eq!(TrinityDrawLod::from_scale_index(0), TrinityDrawLod::Minimap);
+    }
+
+    #[test]
+    fn trinity_node_radius_uses_dimensions_or_default() {
+        let mut node = Node { id: "n".into(), kind: "Piece".into(), name: "n".into(), x: 0.0, y: 0.0, width: 0.0, height: 0.0, properties: Default::default(), ports: vec![] };
+        assert_eq!(trinity_node_radius(&node), 44.0);
+        node.width = 10.0;
+        node.height = 10.0;
+        assert_eq!(trinity_node_radius(&node), TRINITY_DEFAULT_NODE_RADIUS * 0.5);
+        node.width = 200.0;
+        node.height = 10.0;
+        assert_eq!(trinity_node_radius(&node), 100.0);
+    }
+
+    #[test]
+    fn trinity_circle_port_angle_left_right_spread() {
+        assert!((trinity_circle_port_angle(0, 1, true) - std::f64::consts::PI).abs() < 1e-9);
+        assert_eq!(trinity_circle_port_angle(0, 1, false), 0.0);
+        assert!(trinity_circle_port_angle(0, 2, false) < trinity_circle_port_angle(1, 2, false));
+    }
+
+    #[test]
+    fn trinity_port_endpoint_parts_splits_on_colon() {
+        assert_eq!(trinity_port_endpoint_parts("node1:portA"), ("node1".to_string(), "portA".to_string()));
+        assert_eq!(trinity_port_endpoint_parts("no-colon"), ("no-colon".to_string(), String::new()));
+    }
+
+    #[test]
+    fn trinity_port_handle_key_direction_prefix() {
+        assert_eq!(trinity_port_handle_key("n", "p", true), "n:in:p");
+        assert_eq!(trinity_port_handle_key("n", "p", false), "n:out:p");
+    }
+
+    #[test]
+    fn trinity_graph_to_board_fixture_includes_handles_and_edges() {
+        let g = nakagin_graph();
+        let fixture = trinity_graph_to_board_fixture(&g);
+        assert_eq!(fixture["schema"], "puzzle.2d.fixture");
+        assert_eq!(fixture["nodes"].as_array().unwrap().len(), 9);
+        assert_eq!(fixture["edges"].as_array().unwrap().len(), 6);
+        let root_node = fixture["nodes"].as_array().unwrap().iter().find(|n| n["id"] == "7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
+        assert!(!root_node["handles"].as_array().unwrap().is_empty());
+    }
+    //#endregion 🔖LodTests
+
+    //#region 🔖ForceLayoutTests
+    #[test]
+    fn force_layout_reposition_operations_produces_repositions() {
+        let fixture = nakagin_graph().to_fixture();
+        let operations = force_layout_reposition_operations(&fixture).unwrap();
+        assert!(!operations.is_empty());
+        assert!(operations.iter().all(|op| matches!(op, TrinityGraphOperation::Reposition { .. })));
+    }
+
+    #[test]
+    fn apply_force_layout_positions_errors_when_nodes_missing() {
+        let mut g = nakagin_graph();
+        let fixture = serde_json::json!({});
+        let err = apply_force_layout_positions_to_trinity_graph(&mut g, &fixture).unwrap_err();
+        assert!(matches!(err, TrinityRewriteError::ForceLayoutFixtureMissingNodes));
+    }
+    //#endregion 🔖ForceLayoutTests
+
+    //#region 🔖TrinityHostTests
+    #[test]
+    fn trinity_host_apply_rewrite_json_end_to_end() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        let mut rule = empty_rule();
+        rule.name = "label-core".into();
+        rule.lhs.where_clause = Some("a.name = 'b'".into());
+        rule.rhs.set.push(AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) });
+        let rule_json = serde_json::to_string(&rule).unwrap();
+        let out = host.apply_rewrite_json(&rule_json, "{}").unwrap();
+        let value: serde_json::Value = serde_json::from_str(&out).unwrap();
+        assert!(value.get("fixture").is_some());
+        let core = host.graph.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
+        assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
+    }
+
+    #[test]
+    fn trinity_host_run_jack_json_and_with_fixture() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        let json = host.run_jack_json("MATCH (a:Piece) WHERE a.name = 'b' RETURN a.name").unwrap();
+        let result: QueryResult = serde_json::from_str(&json).unwrap();
+        assert_eq!(result.rows.len(), 1);
+
+        let before = host.graph.nodes.len();
+        let out = host.run_jack_with_fixture_json("CREATE (n:Piece)").unwrap();
+        let value: serde_json::Value = serde_json::from_str(&out).unwrap();
+        assert!(value.get("fixtureJson").is_some());
+        assert_eq!(host.graph.nodes.len(), before + 1);
+    }
+
+    #[test]
+    fn trinity_host_selected_and_highlighted_node_ids() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        host.set_viewport(800, 600, 1.0);
+        host.pointer_down(400.0, 300.0, false);
+        let json = host.selected_node_ids_json().unwrap();
+        let ids: Vec<String> = serde_json::from_str(&json).unwrap();
+        assert_eq!(ids, vec!["7dc5b737-3b6b-4068-b315-b7bacc91c2e1".to_string()]);
+        assert!(host.set_highlighted_node_ids_json("[\"7dc5b737-3b6b-4068-b315-b7bacc91c2e1\"]").is_ok());
+        assert_eq!(host.node_overlays_json().unwrap(), "[]");
+    }
+
+    #[test]
+    fn trinity_host_viewport_camera_and_wheel() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        host.set_viewport(800, 600, 1.0);
+        let before_zoom = host.graph.camera.zoom;
+        host.wheel_screen(400.0, 300.0, -100.0);
+        assert!(host.graph.camera.zoom > before_zoom);
+        host.set_camera(10.0, 20.0, 2.0);
+        assert_eq!((host.graph.camera.x, host.graph.camera.y, host.graph.camera.zoom), (10.0, 20.0, 2.0));
+    }
+
+    #[test]
+    fn trinity_host_pointer_drag_commits_position() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        host.set_viewport(800, 600, 1.0);
+        let node_id = "7dc5b737-3b6b-4068-b315-b7bacc91c2e1";
+        assert_eq!((host.graph.nodes[node_id].x, host.graph.nodes[node_id].y), (0.0, 0.0));
+        host.pointer_down(400.0, 300.0, false);
+        host.pointer_move(460.0, 360.0);
+        host.pointer_up(460.0, 360.0);
+        let after = (host.graph.nodes[node_id].x, host.graph.nodes[node_id].y);
+        assert!((after.0 - 60.0).abs() < 1e-6);
+        assert!((after.1 - 60.0).abs() < 1e-6);
+    }
+
+    #[test]
+    fn trinity_host_commit_checkpoint_and_redo_and_store_generation() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        let gen0 = host.store_generation();
+        host.run_jack("CREATE (n:Piece)").unwrap();
+        assert!(host.store_generation() > gen0);
+        let count_after_create = host.graph.nodes.len();
+        host.commit_checkpoint(None).unwrap();
+        host.undo().unwrap();
+        assert_eq!(host.graph.nodes.len(), count_after_create - 1);
+        host.redo().unwrap();
+        assert_eq!(host.graph.nodes.len(), count_after_create);
+    }
+
+    #[test]
+    fn trinity_host_forced_and_automatic_draw_lod_label() {
+        let mut host = TrinityHost::from_graph(nakagin_graph());
+        host.set_camera(0.0, 0.0, 0.05);
+        assert_eq!(host.draw_lod_label(), "minimap");
+        host.set_automatic_lod(false);
+        host.set_forced_draw_lod_label("micro");
+        assert_eq!(host.draw_lod_label(), "micro");
+        host.set_forced_draw_lod_label("");
+        assert_eq!(host.draw_lod_label(), "minimap");
+        host.set_forced_draw_lod_label("bogus");
+        assert_eq!(host.draw_lod_label(), "minimap");
+    }
+    //#endregion 🔖TrinityHostTests
 }
 // #endregion 🔖Tests
 

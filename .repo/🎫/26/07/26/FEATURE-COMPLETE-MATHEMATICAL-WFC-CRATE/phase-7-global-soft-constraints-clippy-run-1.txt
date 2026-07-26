@@ -1,0 +1,15 @@
+warning: digits grouped inconsistently by underscores
+ --> mathematical/entropy/rs/src/numeric.rs:9:6
+  |
+9 |     -1259.139_216_722_402_8,
+  |      ^^^^^^^^^^^^^^^^^^^^^^ help: consider: `1_259.139_216_722_402_8`
+  |
+  = help: for further information visit https://rust-lang.github.io/rust-clippy/master/index.html#inconsistent_digit_grouping
+  = note: `-W clippy::inconsistent-digit-grouping` implied by `-W clippy::all`
+  = help: to override `-W clippy::all` add `#[allow(clippy::inconsistent_digit_grouping)]`
+
+warning: `mathematical_entropy` (lib) generated 1 warning
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+    Checking mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+    Checking mathematical_wfc v0.1.0 (/Users/ueli/Documents/semio/mathematical/wfc/rs)
+    Finished `dev` profile [unoptimized] target(s) in 1.92s

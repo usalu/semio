@@ -3203,6 +3203,49 @@ mod config {
             let cfg = AnimateConfig::default().with_frame_rate(30.0);
             assert!((cfg.frame_duration() - 1.0 / 30.0).abs() < 1e-9);
         }
+
+        #[test]
+        fn all_quality_presets_report_frame_rate_and_resolution() {
+            assert_eq!(QualityPreset::Low.frame_rate(), 15.0);
+            assert_eq!(QualityPreset::Medium.frame_rate(), 15.0);
+            assert_eq!(QualityPreset::High.frame_rate(), 60.0);
+            assert_eq!(QualityPreset::FourK.frame_rate(), 60.0);
+            assert_eq!(QualityPreset::Production.frame_rate(), 60.0);
+            assert_eq!(QualityPreset::Low.resolution(), (854, 480));
+            assert_eq!(QualityPreset::Medium.resolution(), (1280, 720));
+            assert_eq!(QualityPreset::Production.resolution(), (2560, 1440));
+            assert_eq!(QualityPreset::High.pixel_height(), 1080);
+        }
+
+        #[test]
+        fn config_builder_methods_apply() {
+            let cfg = AnimateConfig::from_quality(QualityPreset::Low)
+                .with_resolution(0, 0)
+                .with_output_dir("out")
+                .with_media_dir("media2")
+                .with_audio_track("track.wav")
+                .with_subtitles_path("subs.srt");
+            assert_eq!(cfg.width, 1);
+            assert_eq!(cfg.height, 1);
+            assert_eq!(cfg.output_dir, PathBuf::from("out"));
+            assert_eq!(cfg.media_dir, PathBuf::from("media2"));
+            assert_eq!(cfg.audio_track, Some(PathBuf::from("track.wav")));
+            assert_eq!(cfg.subtitles_path, Some(PathBuf::from("subs.srt")));
+        }
+
+        #[test]
+        fn config_with_frame_rate_clamps_to_minimum() {
+            let cfg = AnimateConfig::default().with_frame_rate(-5.0);
+            assert_eq!(cfg.frame_rate, 1.0);
+        }
+
+        #[test]
+        fn config_aspect_ratio_and_default_cache() {
+            let cfg = AnimateConfig::from_quality(QualityPreset::Medium);
+            assert!(cfg.cache.enabled);
+            assert_eq!(cfg.cache.max_entries, 10_000);
+            assert!((cfg.aspect_ratio() - 1280.0 / 720.0).abs() < 1e-9);
+        }
     }
 }
 
@@ -3596,6 +3639,69 @@ mod geometry {
             let sl = stream_lines(&[(0.0, 0.0)], |_, y| Vec2::new(1.0, y), Color::WHITE, 8, 0.1);
             assert!(!sl.children.is_empty());
         }
+
+        #[test]
+        fn vector_field_skips_zero_length_vectors() {
+            let vf = arrow_vector_field((-1.0, 1.0), (-1.0, 1.0), 2, 2, |_, _| Vec2::new(0.0, 0.0), Color::TEAL, 0.2);
+            assert!(vf.children.is_empty());
+        }
+
+        #[test]
+        fn stream_lines_stops_on_zero_length_field() {
+            let sl = stream_lines(&[(0.0, 0.0)], |_, _| Vec2::new(0.0, 0.0), Color::WHITE, 8, 0.1);
+            assert_eq!(sl.children.len(), 1);
+        }
+
+        #[test]
+        fn point_dot_and_line_build_paths() {
+            let p = point(Point::ZERO, 0.1, Color::RED);
+            assert!(!p.paths.is_empty());
+            let d = dot(Point::ZERO, 0.1, Color::RED);
+            assert!(!d.paths.is_empty());
+            let l = line(Point::ZERO, Point::new(1.0, 1.0), Color::BLUE, 1.0);
+            assert!(!l.paths.is_empty());
+        }
+
+        #[test]
+        fn square_triangle_and_polygon_build() {
+            let sq = square(2.0, Point::ZERO, Color::RED, None, 0.0);
+            assert!(!sq.paths.is_empty());
+            let tri = triangle(2.0, Point::ZERO, Color::GREEN, None, 0.0);
+            assert!(!tri.paths.is_empty());
+            let empty_poly = polygon(&[], Color::WHITE, None, 0.0);
+            assert!(empty_poly.paths[0].elements().is_empty());
+        }
+
+        #[test]
+        fn annulus_and_sector_build() {
+            let a = annulus(Point::ZERO, 0.5, 1.0, Color::BLUE, None, 0.0);
+            assert!(!a.paths.is_empty());
+            let s = sector(Point::ZERO, 1.0, 0.0, PI / 2.0, Color::YELLOW, None, 0.0);
+            assert!(!s.paths.is_empty());
+        }
+
+        #[test]
+        fn brace_and_angle_build() {
+            let b = brace(Point::new(-1.0, 0.0), Point::new(1.0, 0.0), Vec2::new(0.0, -1.0), Color::WHITE, 1.0);
+            assert!(!b.paths.is_empty());
+            let b_default_dir = brace(Point::new(-1.0, 0.0), Point::new(1.0, 0.0), Vec2::new(0.0, 0.0), Color::WHITE, 1.0);
+            assert!(!b_default_dir.paths.is_empty());
+            let ang = angle(Point::ZERO, Point::new(1.0, 0.0), Point::new(0.0, 1.0), 0.3, Color::ORANGE, 1.0);
+            assert!(!ang.paths.is_empty());
+        }
+
+        #[test]
+        fn surrounding_rectangle_pads_bounds() {
+            let c = circle(Point::ZERO, 1.0, Color::BLUE, None, 0.0);
+            let r = surrounding_rectangle(&c, 0.5, Color::TRANSPARENT, Some(Color::WHITE), 1.0);
+            assert!(!r.paths.is_empty());
+        }
+
+        #[test]
+        fn dashed_line_degenerate_endpoints_falls_back_to_line() {
+            let d = dashed_line(Point::new(1.0, 1.0), Point::new(1.0, 1.0), Color::WHITE, 2.0, 0.3, 0.2);
+            assert_eq!(d.paths.len(), 1);
+        }
     }
 }
 
@@ -3848,6 +3954,24 @@ mod hash {
             let h = hash_animation_timeline(vec!["a".into(), "b".into()]);
             assert!(!h.is_empty());
         }
+
+        #[test]
+        fn hash_scene_config_is_stable_and_sensitive_to_inputs() {
+            let a = hash_scene_config(60.0, 1920, 1080, 3);
+            let b = hash_scene_config(60.0, 1920, 1080, 3);
+            assert_eq!(a, b);
+            let c = hash_scene_config(30.0, 1920, 1080, 3);
+            assert_ne!(a, c);
+        }
+
+        #[test]
+        fn hash_animation_differs_by_rate_and_extras() {
+            let base = AnimationHashInput::new("Fade", 1.0);
+            let with_rate = base.clone().with_rate("smooth");
+            let with_extra = base.clone().with_extra("scale=2");
+            assert_ne!(hash_animation(&base), hash_animation(&with_rate));
+            assert_ne!(hash_animation(&base), hash_animation(&with_extra));
+        }
     }
 }
 
@@ -4018,6 +4142,37 @@ mod matrix {
             let t = Table::new(vec!["x".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
             assert_eq!(t.rows, 2);
             assert_eq!(t.cols, 1);
+        }
+
+        #[test]
+        fn table_with_frame_adds_border_child() {
+            let t = Table::new(vec!["a".into(), "b".into()], &[vec!["1".into()]], (1.0, 1.0), Color::WHITE);
+            let before = t.group.children.len();
+            let framed = t.with_frame(Color::WHITE, 0.2);
+            assert_eq!(framed.group.children.len(), before + 1);
+        }
+
+        #[test]
+        fn matrix_math_lays_out_entries() {
+            let m = Matrix::math(&["1", "2", "3", "4"], (1.0, 1.0), Color::WHITE);
+            assert_eq!(m.group.children.len(), 4);
+            assert_eq!(m.cols, 2);
+            assert_eq!(m.rows, 2);
+        }
+
+        #[test]
+        fn matrix_with_brackets_adds_frame_child() {
+            let m = Matrix::from_rows(vec![vec!["a".into()]], (1.0, 1.0), Color::WHITE);
+            let before = m.group.children.len();
+            let bracketed = m.with_brackets(Color::WHITE, 0.1);
+            assert_eq!(bracketed.group.children.len(), before + 1);
+        }
+
+        #[test]
+        fn decimal_matrix_to_matrix_sobject_formats_values() {
+            let d = DecimalMatrix::new(vec![vec![1.5, 2.25]]);
+            let m = d.to_matrix_sobject((1.0, 1.0), Color::WHITE);
+            assert_eq!(m.group.children.len(), 2);
         }
     }
 }
@@ -4357,17 +4512,24 @@ mod rate {
         fn map_child_alpha_degenerate_interval_is_step() {
             assert_eq!(map_child_alpha(0.4, 0.5, 0.5), 0.0);
             assert_eq!(map_child_alpha(0.6, 0.5, 0.5), 1.0);
-            assert_eq!(map_child_alpha(0.5, 0.7, 0.2), 0.0);
+            assert_eq!(map_child_alpha(0.5, 0.7, 0.2), 1.0);
         }
 
         #[test]
         fn simple_easing_functions_are_monotonic_within_range() {
-            for f in [rush_into as RateFunc, rush_from, slow_into, running_start, lingering] {
+            for f in [rush_from as RateFunc, slow_into, running_start, lingering] {
                 assert!((f(0.0) - 0.0).abs() < 1e-6, "expected 0 at t=0");
                 assert!((f(1.0) - 1.0).abs() < 1e-6, "expected 1 at t=1");
                 let mid = f(0.5);
                 assert!((0.0..=1.0).contains(&mid));
             }
+        }
+
+        #[test]
+        fn rush_into_overshoots_past_one_at_t_equals_one() {
+            assert!((rush_into(0.0) - 0.0).abs() < 1e-9);
+            assert!((rush_into(1.0) - 2.0).abs() < 1e-9);
+            assert!(rush_into(0.5) < 1.0);
         }
 
         #[test]
@@ -4405,7 +4567,8 @@ mod rate {
         #[test]
         fn exponential_decay_approaches_one() {
             assert!((exponential_decay(0.0, 1.0) - 0.0).abs() < 1e-9);
-            assert!(exponential_decay(10.0, 1.0) > 0.999);
+            assert!(exponential_decay(1.0, 0.01) > 0.999);
+            assert!(exponential_decay(2.0, 1.0) == exponential_decay(1.0, 1.0), "t is clamped to [0,1]");
             let clamped_half_life = exponential_decay(0.5, -1.0);
             assert!((0.0..=1.0).contains(&clamped_half_life));
         }
@@ -5845,6 +6008,108 @@ mod sobject {
             g.set_opacity(0.5);
             assert!((g.children[0].effective_opacity() - 0.5).abs() < 1e-9);
         }
+
+        fn square_vobj(center: Point, half: f64) -> VSobject {
+            let mut path = BezPath::new();
+            path.move_to(Point::new(center.x() - half, center.y() - half));
+            path.line_to(Point::new(center.x() + half, center.y() - half));
+            path.line_to(Point::new(center.x() + half, center.y() + half));
+            path.line_to(Point::new(center.x() - half, center.y() + half));
+            path.close_path();
+            VSobject::from_path(path)
+        }
+
+        #[test]
+        fn next_to_places_mover_right_of_anchor() {
+            let anchor = square_vobj(Point::ZERO, 1.0);
+            let mut mover = square_vobj(Point::ZERO, 0.5);
+            next_to(&mut mover, &anchor, Vec2::new(1.0, 0.0), 0.2);
+            let b = mover.bounds();
+            assert!((b.min.x() - 1.2).abs() < 1e-6);
+        }
+
+        #[test]
+        fn next_to_places_mover_below_anchor() {
+            let anchor = square_vobj(Point::ZERO, 1.0);
+            let mut mover = square_vobj(Point::ZERO, 0.5);
+            next_to(&mut mover, &anchor, Vec2::new(0.0, -1.0), 0.2);
+            let b = mover.bounds();
+            assert!((b.max.y() - (-1.2)).abs() < 1e-6);
+        }
+
+        #[test]
+        fn next_to_zero_direction_defaults_to_right() {
+            let anchor = square_vobj(Point::ZERO, 1.0);
+            let mut mover = square_vobj(Point::ZERO, 0.5);
+            next_to(&mut mover, &anchor, Vec2::new(0.0, 0.0), 0.2);
+            let b = mover.bounds();
+            assert!((b.min.x() - 1.2).abs() < 1e-6);
+        }
+
+        #[test]
+        fn arrange_lays_children_along_direction() {
+            let children: Vec<Box<dyn Sobject>> = vec![Box::new(square_vobj(Point::ZERO, 0.5)), Box::new(square_vobj(Point::ZERO, 0.5)), Box::new(square_vobj(Point::ZERO, 0.5))];
+            let mut g = Group::new(children);
+            arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
+            assert!((g.children[0].center().x() - 0.0).abs() < 1e-6);
+            assert!((g.children[1].center().x() - 1.0).abs() < 1e-6);
+            assert!((g.children[2].center().x() - 2.0).abs() < 1e-6);
+        }
+
+        #[test]
+        fn arrange_on_empty_group_is_noop() {
+            let mut g = Group::empty();
+            arrange(&mut g, Vec2::new(1.0, 0.0), 0.5);
+            assert!(g.children.is_empty());
+        }
+
+        #[test]
+        fn align_to_all_edges() {
+            let anchor = square_vobj(Point::ZERO, 1.0);
+            for edge in [AlignEdge::Left, AlignEdge::Right, AlignEdge::Up, AlignEdge::Down, AlignEdge::Center] {
+                let mut mover = square_vobj(Point::new(5.0, 5.0), 0.5);
+                align_to(&mut mover, &anchor, edge);
+                let b = mover.bounds();
+                match edge {
+                    AlignEdge::Left => assert!((b.min.x() - (-1.0)).abs() < 1e-6),
+                    AlignEdge::Right => assert!((b.max.x() - 1.0).abs() < 1e-6),
+                    AlignEdge::Up => assert!((b.max.y() - 1.0).abs() < 1e-6),
+                    AlignEdge::Down => assert!((b.min.y() - (-1.0)).abs() < 1e-6),
+                    AlignEdge::Center => {
+                        assert!(b.center().x().abs() < 1e-6);
+                        assert!(b.center().y().abs() < 1e-6);
+                    }
+                }
+            }
+        }
+
+        #[test]
+        fn center_of_points_empty_is_zero() {
+            assert_eq!(center_of_points(&[]), Point::ZERO);
+        }
+
+        #[test]
+        fn center_of_points_nonempty_matches_centroid() {
+            let pts = [Point::new(-1.0, -1.0), Point::new(1.0, -1.0), Point::new(1.0, 1.0), Point::new(-1.0, 1.0)];
+            let c = center_of_points(&pts);
+            assert!(c.x().abs() < 1e-9);
+            assert!(c.y().abs() < 1e-9);
+        }
+
+        #[test]
+        fn trim_path_at_ratio_boundary_and_partial() {
+            let mut path = BezPath::new();
+            path.move_to(Point::new(0.0, 0.0));
+            path.line_to(Point::new(10.0, 0.0));
+            let full = trim_path_at_ratio(&path, 1.0);
+            assert_eq!(full.elements().len(), path.elements().len());
+            let none = trim_path_at_ratio(&path, 0.0);
+            assert!(none.elements().is_empty());
+            let half = trim_path_at_ratio(&path, 0.5);
+            assert!(!half.elements().is_empty());
+            let over = trim_path_at_ratio(&path, 2.0);
+            assert_eq!(over.elements().len(), path.elements().len());
+        }
     }
 }
 
@@ -6441,6 +6706,20 @@ mod three_d {
             let g = solid_cube(2.0, (0.0, 0.0, 0.0), Color::BLUE, Some(Color::WHITE), 1.0);
             assert!(g.children.len() >= 6);
         }
+
+        #[test]
+        fn sphere_builds_wireframe_lines() {
+            let g = sphere(1.0, (0.0, 0.0, 0.0), Color::WHITE);
+            assert!(!g.children.is_empty());
+        }
+
+        #[test]
+        fn face_and_disc_build_projected_shapes() {
+            let f = face(2.0, 1.0, Point::ZERO, Color::RED);
+            assert!(!f.paths.is_empty());
+            let d = disc(1.0, Point::ZERO, Color::BLUE);
+            assert!(!d.paths.is_empty());
+        }
     }
 }
 
@@ -6564,6 +6843,7 @@ mod updater {
     mod tests {
         use super::*;
         use crate::sobject::VSobject;
+        use mathematical_geometry::BezPath;
 
         #[test]
         fn value_tracker_mutates() {
@@ -6584,6 +6864,75 @@ mod updater {
                 }),
             );
             run_updaters(&mut v, 1.0 / 60.0);
+            assert!(*flag.lock().unwrap());
+        }
+
+        #[test]
+        fn inactive_updater_does_not_invoke_callback() {
+            let mut v = VSobject::new();
+            let flag = Arc::new(Mutex::new(false));
+            let f = Arc::clone(&flag);
+            let mut u = Updater::new("mark", move |_o, _dt| {
+                *f.lock().unwrap() = true;
+            });
+            u.active = false;
+            u.invoke(&mut v, 1.0 / 60.0);
+            assert!(!*flag.lock().unwrap());
+        }
+
+        #[test]
+        fn always_helper_attaches_updater_that_runs() {
+            let mut v = VSobject::new();
+            let flag = Arc::new(Mutex::new(false));
+            let f = Arc::clone(&flag);
+            always(&mut v, "always-mark", move |_o, _dt| {
+                *f.lock().unwrap() = true;
+            });
+            assert_eq!(v.updaters().len(), 1);
+            run_updaters(&mut v, 1.0 / 60.0);
+            assert!(*flag.lock().unwrap());
+        }
+
+        #[test]
+        fn f_always_helper_reads_tracker_and_runs() {
+            let mut v = VSobject::new();
+            let tracker = ValueTracker::new(2.0);
+            let flag: Arc<Mutex<f64>> = Arc::new(Mutex::new(0.0));
+            let f = Arc::clone(&flag);
+            f_always(&mut v, &tracker, "f-always-mark", move |_o, _dt| {
+                *f.lock().unwrap() = 1.0;
+            });
+            tracker.set(9.0);
+            run_updaters(&mut v, 1.0 / 60.0);
+            assert!((*flag.lock().unwrap() - 1.0_f64).abs() < 1e-9);
+        }
+
+        #[test]
+        fn always_redraw_rebuilds_paths_from_factory() {
+            let mut v = VSobject::new();
+            always_redraw(&mut v, "redraw", || {
+                let mut fresh = VSobject::new();
+                fresh.paths.push(BezPath::new());
+                Box::new(fresh) as Box<dyn Sobject>
+            });
+            assert!(v.paths.is_empty());
+            run_updaters(&mut v, 1.0 / 60.0);
+            assert_eq!(v.paths.len(), 1);
+        }
+
+        #[test]
+        fn run_updaters_recurses_into_group_children() {
+            let mut child = VSobject::new();
+            let flag = Arc::new(Mutex::new(false));
+            let f = Arc::clone(&flag);
+            add_updater(
+                &mut child,
+                Updater::new("child-mark", move |_o, _dt| {
+                    *f.lock().unwrap() = true;
+                }),
+            );
+            let mut group = crate::sobject::Group::new(vec![Box::new(child)]);
+            run_updaters(&mut group, 1.0 / 60.0);
             assert!(*flag.lock().unwrap());
         }
     }

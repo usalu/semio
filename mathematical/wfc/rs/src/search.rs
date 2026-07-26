@@ -145,6 +145,7 @@ fn backtrack_and_repair<T: Topology>(
     trail: &mut Trail,
     metrics: &mut Metrics,
     local_remaining: &mut Option<u64>,
+    sink: &mut EventSink,
 ) -> RepairOutcome {
     loop {
         if let Some(rem) = local_remaining {
@@ -171,6 +172,7 @@ fn backtrack_and_repair<T: Topology>(
         }
         let repair_result = domains.get_mut(frame.node).remove(frame.candidate, model.weights());
         trail.record_removed(frame.node, frame.candidate);
+        sink.emit_detailed(Event::Backtracked { node: frame.node, candidate: frame.candidate });
 
         let contradiction = match repair_result {
             RestrictResult::Wipeout => Some(frame.node),
@@ -219,11 +221,13 @@ fn decide_and_propagate<T: Topology>(
     metrics: &mut Metrics,
     decision_counter: &mut u32,
     node: NodeId,
+    sink: &mut EventSink,
 ) -> Option<NodeId> {
     let rng_snapshot = rng.state();
     let candidate = sample::sample_pattern(config.sampler, domains.get(node), model, rng);
     trail.push_frame(DecisionId(*decision_counter), node, candidate, rng_snapshot);
     *decision_counter += 1;
+    sink.emit_detailed(Event::Observed { node, chosen: candidate });
 
     let mut removed = PatternSet::new_empty(model.pattern_count());
     domains.get_mut(node).assign_collecting(candidate, model.weights(), &mut removed);
@@ -249,6 +253,7 @@ fn drive<T: Topology>(
     cancel: Option<&CancelToken>,
     local_backtrack_budget: Option<u64>,
     constraints: Option<&ConstraintSet<'_>>,
+    sink: &mut EventSink,
 ) -> StepOutcome {
     let mut local_remaining = local_backtrack_budget;
     loop {
@@ -258,10 +263,13 @@ fn drive<T: Topology>(
             }
             // A global constraint rejected this complete assignment: exactly like a contradiction
             // needing a backtrack, reusing the same proven repair machinery.
-            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink) {
                 RepairOutcome::Repaired => continue,
                 RepairOutcome::Exhausted => return StepOutcome::Exhausted,
-                RepairOutcome::BudgetExceeded => return StepOutcome::BudgetExceeded,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
                 RepairOutcome::LocalLimitReached => return StepOutcome::LocalLimitReached,
             }
         }
@@ -272,11 +280,13 @@ fn drive<T: Topology>(
 
         if let Some(max_obs) = config.budget.max_observations {
             if metrics.observations >= max_obs {
+                sink.emit(Event::BudgetExceeded);
                 return StepOutcome::BudgetExceeded;
             }
         }
         if let Some(max_ms) = config.budget.max_millis {
             if start.elapsed().as_millis() as u64 >= max_ms {
+                sink.emit(Event::BudgetExceeded);
                 return StepOutcome::BudgetExceeded;
             }
         }
@@ -287,12 +297,15 @@ fn drive<T: Topology>(
         }
         metrics.observations += 1;
 
-        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node);
+        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node, sink);
         if contradiction.is_some() {
-            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink) {
                 RepairOutcome::Repaired => {}
                 RepairOutcome::Exhausted => return StepOutcome::Exhausted,
-                RepairOutcome::BudgetExceeded => return StepOutcome::BudgetExceeded,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
                 RepairOutcome::LocalLimitReached => return StepOutcome::LocalLimitReached,
             }
         }
@@ -317,6 +330,7 @@ fn drive_all<T: Topology>(
     solutions: &mut Vec<Vec<PatternId>>,
     limit: usize,
     constraints: Option<&ConstraintSet<'_>>,
+    sink: &mut EventSink,
 ) -> StepOutcome {
     let mut local_remaining = None;
     loop {
@@ -327,10 +341,13 @@ fn drive_all<T: Topology>(
                     return StepOutcome::Solved;
                 }
             }
-            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink) {
                 RepairOutcome::Repaired => continue,
                 RepairOutcome::Exhausted => return StepOutcome::Exhausted,
-                RepairOutcome::BudgetExceeded => return StepOutcome::BudgetExceeded,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
                 RepairOutcome::LocalLimitReached => unreachable!("solve_all never sets a local backtrack budget"),
             }
         }
@@ -340,22 +357,27 @@ fn drive_all<T: Topology>(
         };
         if let Some(max_obs) = config.budget.max_observations {
             if metrics.observations >= max_obs {
+                sink.emit(Event::BudgetExceeded);
                 return StepOutcome::BudgetExceeded;
             }
         }
         if let Some(max_ms) = config.budget.max_millis {
             if start.elapsed().as_millis() as u64 >= max_ms {
+                sink.emit(Event::BudgetExceeded);
                 return StepOutcome::BudgetExceeded;
             }
         }
         metrics.observations += 1;
 
-        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node);
+        let contradiction = decide_and_propagate(model, topo, config, rng, domains, queue, trail, metrics, decision_counter, node, sink);
         if contradiction.is_some() {
-            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining) {
+            match backtrack_and_repair(model, topo, &config.budget, domains, queue, trail, metrics, &mut local_remaining, sink) {
                 RepairOutcome::Repaired => {}
                 RepairOutcome::Exhausted => return StepOutcome::Exhausted,
-                RepairOutcome::BudgetExceeded => return StepOutcome::BudgetExceeded,
+                RepairOutcome::BudgetExceeded => {
+                    sink.emit(Event::BudgetExceeded);
+                    return StepOutcome::BudgetExceeded;
+                }
                 RepairOutcome::LocalLimitReached => unreachable!("solve_all never sets a local backtrack budget"),
             }
         }
@@ -458,7 +480,7 @@ fn solve_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &SearchConf
             SearchMode::RestartOnly => config.restart_schedule.backtrack_budget(restarts),
             SearchMode::Backtrack | SearchMode::Backjump => None,
         };
-        let step = drive(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, cancel, local_budget, constraints);
+        let step = drive(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, cancel, local_budget, constraints, &mut sink);
         init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
 
         match step {
@@ -522,14 +544,20 @@ fn solve_all_inner<T: Topology>(model: &CompiledModel, topo: &T, config: &Search
         return (Vec::new(), true);
     }
 
-    let step = drive_all(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, &mut raw_solutions, limit, constraints);
+    let mut sink = EventSink::new(config.diag_level);
+    let step = drive_all(model, topo, config, &mut rng, &mut init.domains, &mut init.queue, &mut init.trail, &mut init.metrics, &mut decision_counter, start, &mut raw_solutions, limit, constraints, &mut sink);
     init.metrics.elapsed_millis = start.elapsed().as_millis() as u64;
 
     let complete = matches!(step, StepOutcome::Exhausted);
     let fingerprint = model.fingerprint();
+    // Every returned solution shares the same cumulative event trace from the whole exhaustive
+    // search (not a solution-specific slice) — slicing per solution would need each `Solution` to
+    // remember its own trail-position range, which isn't worth the bookkeeping until a caller
+    // actually needs per-solution replay for `solve_all`.
+    let events = sink.into_events();
     let solutions: Vec<Solution> = raw_solutions
         .into_iter()
-        .map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: Vec::new() } })
+        .map(|assignment| Solution { assignment, report: RunReport { metrics: init.metrics, model_fingerprint: fingerprint, seed, events: events.clone() } })
         .collect();
     (solutions, complete)
 }
@@ -729,6 +757,46 @@ mod tests {
         let o2 = solve(&model, &topo, &config, 123, None, &[]);
         match (o1, o2) {
             (SolveOutcome::Solved(s1), SolveOutcome::Solved(s2)) => assert_eq!(s1.assignment, s2.assignment),
+            _ => panic!("expected both solves to succeed"),
+        }
+    }
+
+    #[test]
+    fn golden_replay_same_seed_reproduces_the_identical_decision_trace() {
+        // Determinism at the level of the final assignment (`same_seed_is_fully_reproducible`)
+        // is necessary but not sufficient — this checks the exact decision *sequence* two
+        // `DiagLevel::Decisions` solves recorded is byte-identical via `TraceReplay`, catching a
+        // divergence that happened to still land on the same final assignment by coincidence.
+        use crate::diag::TraceReplay;
+        let (model, topo, _arcs) = k_graph(4, 4);
+        let config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
+        let o1 = solve(&model, &topo, &config, 77, None, &[]);
+        let o2 = solve(&model, &topo, &config, 77, None, &[]);
+        match (o1, o2) {
+            (SolveOutcome::Solved(s1), SolveOutcome::Solved(s2)) => {
+                let t1 = TraceReplay::from_report(&s1.report);
+                let t2 = TraceReplay::from_report(&s2.report);
+                assert!(!t1.decisions.is_empty(), "k_graph(4,4) needs at least one real decision");
+                assert!(t1.matches(&t2));
+            }
+            _ => panic!("expected both solves to succeed"),
+        }
+    }
+
+    #[test]
+    fn diag_off_records_no_decision_events_but_summary_and_above_do() {
+        let (model, topo, _arcs) = checkerboard_topology(5);
+        let off_config = SearchConfig { diag_level: DiagLevel::Off, ..Default::default() };
+        let decisions_config = SearchConfig { diag_level: DiagLevel::Decisions, ..Default::default() };
+
+        let off_outcome = solve(&model, &topo, &off_config, 1, None, &[]);
+        let decisions_outcome = solve(&model, &topo, &decisions_config, 1, None, &[]);
+        match (off_outcome, decisions_outcome) {
+            (SolveOutcome::Solved(off_sol), SolveOutcome::Solved(dec_sol)) => {
+                assert!(off_sol.report.events.is_empty());
+                assert!(dec_sol.report.events.iter().any(|e| matches!(e, Event::Observed { .. })));
+                assert!(dec_sol.report.events.iter().any(|e| matches!(e, Event::Solved)));
+            }
             _ => panic!("expected both solves to succeed"),
         }
     }

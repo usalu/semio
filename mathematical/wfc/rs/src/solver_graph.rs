@@ -233,5 +233,52 @@ mod tests {
         let checkpoint = Checkpoint::new(domains, 0xDEAD_BEEF, 1);
         assert!(solver.resume(&checkpoint).is_err());
     }
+
+    // End-to-end constraint wiring: unlike `crate::constraints_card`'s own tests (which exercise
+    // `Constraint::initialize`/`validate_complete` directly), these drive a real
+    // `GraphSolverBuilder::constraint(...)` through `solve()`, proving the `search::solve_with_constraints`
+    // path — initial restriction, per-complete-assignment rejection, and backtrack-and-retry on
+    // rejection — actually wires together end to end.
+    #[test]
+    fn cardinality_constraint_forces_the_unique_matching_checkerboard_coloring() {
+        use crate::constraint::PatternSelector;
+        use crate::constraints_card::{CardinalityConstraint, Scope};
+
+        // checkerboard(5) is a 5-node path with exactly two valid 2-colorings: [B,W,B,W,B] (3
+        // black) and [W,B,W,B,W] (2 black). Neither the constraint's `initialize` (domains start
+        // full, so its possible/required bounds can't detect infeasibility up front) nor a trivial
+        // propagation pass rules either coloring out — only `validate_complete`, invoked per
+        // candidate via `backtrack_and_repair`, can. Requiring exactly 3 black therefore forces the
+        // first coloring and proves the reject-and-backtrack path actually runs.
+        let (model, topo) = checkerboard(5);
+        let black = PatternId(0);
+        let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 3, 3).unwrap();
+        let mut solver = GraphSolverBuilder::new(model, topo).constraint(Box::new(constraint)).build().unwrap();
+        match solver.solve(1) {
+            SolveOutcome::Solved(sol) => {
+                assert_eq!(sol.assignment, vec![PatternId(0), PatternId(1), PatternId(0), PatternId(1), PatternId(0)]);
+                assert_eq!(sol.assignment.iter().filter(|&&p| p == black).count(), 3);
+            }
+            other => panic!("expected Solved, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn cardinality_constraint_beyond_both_colorings_is_unsatisfiable() {
+        use crate::constraint::PatternSelector;
+        use crate::constraints_card::{CardinalityConstraint, Scope};
+
+        // Neither valid coloring of checkerboard(5) has 4+ black nodes (max achievable is 3), so
+        // this must exhaust the full (small) search tree via repeated constraint rejection and
+        // report a proven-unsatisfiable outcome, not merely an initial-domain wipeout.
+        let (model, topo) = checkerboard(5);
+        let black = PatternId(0);
+        let constraint = CardinalityConstraint::new(model.clone(), PatternSelector::Pattern(black), Scope::All, 4, 5).unwrap();
+        let mut solver = GraphSolverBuilder::new(model, topo).constraint(Box::new(constraint)).build().unwrap();
+        match solver.solve(1) {
+            SolveOutcome::Unsatisfiable(report) => assert!(report.proven),
+            other => panic!("expected Unsatisfiable, got {other:?}"),
+        }
+    }
 }
 // #endregion 🔖Tests

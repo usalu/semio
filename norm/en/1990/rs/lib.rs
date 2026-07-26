@@ -414,11 +414,23 @@ pub fn check_design_basis(annex: &dyn NationalAnnex, actions: &ActionSet, resist
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+/// 📊 One variable action category/value pair for `Document.q_k` — a plain, un-tagged
+/// `Vec<QkEntry>` list element (order-preserving: index determines "leading" in the combination
+/// logic), reached only through that list so it needs no keyword of its own.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+pub struct QkEntry {
+    #[dsl(positional)]
+    pub category: String,
+    #[dsl(positional)]
+    pub value: f64,
+}
+
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "en1990", layout = "lines")]
 pub struct Document {
     pub g_k: f64,
-    pub q_k: Vec<(String, f64)>,
+    pub q_k: Vec<QkEntry>,
     pub resistance_kn: f64,
     pub consequence_class: u8,
     pub annex: AnnexChoice,
@@ -428,12 +440,24 @@ pub struct Document {
 
 impl Default for Document {
     fn default() -> Self {
-        Self { g_k: 100.0, q_k: vec![("office".into(), 50.0), ("wind".into(), 30.0)], resistance_kn: 300.0, consequence_class: 2, annex: AnnexChoice::De, seismic_a_ed_kn: 40.0 }
+        Self {
+            g_k: 100.0,
+            q_k: vec![QkEntry { category: "office".into(), value: 50.0 }, QkEntry { category: "wind".into(), value: 30.0 }],
+            resistance_kn: 300.0,
+            consequence_class: 2,
+            annex: AnnexChoice::De,
+            seismic_a_ed_kn: 40.0,
+        }
     }
 }
 
 pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<En1990Family>;
+
+/// 🔁 Convert a `Document`'s `q_k` entries into the plain `(category, value)` pairs `ActionSet` expects.
+fn action_set_from_document(document: &Document) -> ActionSet {
+    ActionSet { g_k: document.g_k, q_k: document.q_k.iter().map(|entry| (entry.category.clone(), entry.value)).collect() }
+}
 
 /// 🧮 Seismic combination per EN 1990 Eq. 6.12b: ΣG_k + A_Ed + Σψ_2·Q_k.
 pub fn combination_6_12b(annex: &dyn NationalAnnex, actions: &ActionSet, seismic_a_ed_kn: f64) -> f64 {
@@ -451,7 +475,7 @@ pub fn check_seismic_situation(annex: &dyn NationalAnnex, actions: &ActionSet, s
 }
 
 pub fn evaluate(document: &Document) -> CheckReport {
-    let actions = ActionSet { g_k: document.g_k, q_k: document.q_k.clone() };
+    let actions = action_set_from_document(document);
     let annex: &dyn NationalAnnex = if document.annex == AnnexChoice::De { &NaDe } else { &NaEn };
     let mut report = CheckReport::default();
     append_combination_set(&mut report, annex, DesignSituation::Persistent, &actions, document.resistance_kn);

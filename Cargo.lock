@@ -6266,6 +6266,7 @@ dependencies = [
 name = "norm_din_4108"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "norm_core",
  "serde",
  "vcs",
@@ -6275,6 +6276,7 @@ dependencies = [
 name = "norm_din_en_16798"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "norm_core",
  "serde",
  "vcs",
@@ -6284,6 +6286,7 @@ dependencies = [
 name = "norm_din_v_18599"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "norm_core",
  "norm_din_4108",
  "norm_din_en_16798",
@@ -6305,6 +6308,7 @@ dependencies = [
 name = "norm_en_1991"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "mathematical_algebra",
  "norm_core",
  "norm_en_1990",
@@ -6330,6 +6334,7 @@ dependencies = [
 name = "norm_en_1993"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fem_core",
  "mathematical_algebra",
  "norm_core",
@@ -6343,6 +6348,7 @@ dependencies = [
 name = "norm_en_1994"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fem_core",
  "mathematical_algebra",
  "norm_core",
@@ -6356,6 +6362,7 @@ dependencies = [
 name = "norm_en_1995"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "fem_core",
  "mathematical_algebra",
  "norm_core",

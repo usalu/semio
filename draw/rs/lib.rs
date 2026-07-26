@@ -2910,36 +2910,25 @@ mod tests {
         assert_eq!(doc.artboard, Some(DrawArtboard { width: 1.0, height: 1.0 }));
     }
 
-    #[test]
-    fn lex_draw_dsl_reports_errors_for_unterminated_string_invalid_number_and_unexpected_character() {
-        assert!(lex_draw_dsl("\"unterminated").unwrap_err().message.contains("unterminated string"));
-        assert!(lex_draw_dsl("-.").unwrap_err().message.contains("invalid number"));
-        assert!(lex_draw_dsl("#").unwrap_err().message.contains("unexpected character"));
-    }
-
-    #[test]
-    fn lex_draw_dsl_handles_escaped_and_literal_characters_inside_strings() {
-        let toks = lex_draw_dsl("\"a\\qb\\nc\"").expect("lex");
-        assert!(matches!(&toks[0].tok, DrawTok::Str(value) if value == "aqb\nc"));
-
-        let toks_with_newline = lex_draw_dsl("\"line1\nline2\"").expect("lex");
-        assert!(matches!(&toks_with_newline[0].tok, DrawTok::Str(value) if value == "line1\nline2"));
-    }
+    // Lexer-level error/escape behavior (unterminated strings, invalid numbers, unexpected
+    // characters, `\n`/literal-newline handling inside strings) is now generic engine behavior —
+    // see `dsl_core`'s own lexer tests (including its 10k-iteration generative escape round trip) —
+    // not something `draw` hand-rolls or needs to re-verify itself.
 
     #[test]
     fn draw_document_parse_dsl_reports_errors_for_missing_camera_and_unknown_layer_kind() {
-        let missing_camera = DrawDocument::parse_dsl("doc test schema=draw.document\nbogus");
-        assert!(missing_camera.is_err());
+        let missing_camera = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\nlayers {\n}\n");
+        assert!(missing_camera.is_err(), "a document missing its required camera block must fail to parse");
 
-        let unknown_layer = DrawDocument::parse_dsl("doc test schema=draw.document\ncamera x=0 y=0 zoom=1\nweird layer-1 \"Weird\"");
-        let err = unknown_layer.unwrap_err();
-        assert!(err.message.contains("unknown layer kind"));
+        let unknown_layer = DrawDocument::parse_dsl("schema=\"draw.document\" id=\"test\"\ncamera {\n  x=0 y=0 zoom=1\n}\nlayers {\n  weird id=\"layer-1\"\n}\n");
+        assert!(unknown_layer.is_err(), "an unrecognized layer keyword must fail to parse");
     }
 
     #[test]
     fn draw_operation_parse_op_reports_error_for_unknown_operation_name() {
+        use vcs::OpText;
         let err = DrawOperation::parse_op("bogusOperation layerId=layer-1").unwrap_err();
-        assert!(err.message.contains("unknown draw operation"));
+        assert!(err.message.contains("unknown operation line"), "unexpected error message: {}", err.message);
     }
     //#endregion 🔖CoverageTests
 }

@@ -16,6 +16,16 @@ pub mod tolerance;
 pub mod predicates;
 #[path = "src/oracle.rs"]
 pub mod oracle;
+#[path = "src/poly.rs"]
+pub mod poly;
+#[path = "src/bezier.rs"]
+pub mod bezier;
+#[path = "src/bspline.rs"]
+pub mod bspline;
+#[path = "src/curve.rs"]
+pub mod curve;
+#[path = "src/curve_ops.rs"]
+pub mod curve_ops;
 // #endregion 🔖NativeModules
 
 use std::f64::consts::TAU;

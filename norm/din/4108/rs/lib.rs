@@ -719,24 +719,33 @@ pub fn check_full_envelope(
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+// No `#[dsl(keyword = ...)]`: reached only through the plain, un-tagged `Vec<LayerDocument>`
+// list on `Document::layers` — same reasoning as `draw`'s `GradientStop`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct LayerDocument {
+    #[dsl(positional)]
     pub thickness_m: f64,
+    #[dsl(positional)]
     pub lambda_w_mk: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "din4108", layout = "lines")]
 pub struct Document {
+    #[dsl(ident)]
     pub category: String,
     pub layers: Vec<LayerDocument>,
     pub climate: ClimateZoneDe,
     pub airtightness_n50: f64,
     pub psi_times_l_sum: f64,
     pub rh_int: f64,
+    #[dsl(ident)]
     pub catalog_id: String,
+    #[dsl(ident)]
     pub material_id: String,
+    #[dsl(ident)]
     pub airtightness_class: String,
     pub t_int_c: f64,
     pub solar_absorptance: f64,
@@ -745,7 +754,9 @@ pub struct Document {
     pub moisture_mu_interior: f64,
     pub envelope_area_m2: f64,
     pub bb2_details_conform: bool,
+    #[dsl(ident)]
     pub application_type: String,
+    #[dsl(ident)]
     pub declared_application_class: String,
 }
 
@@ -831,104 +842,9 @@ impl NormFamily for Din4108Family {
 }
 // #endregion 🔖Session
 
-// #region 🔖Dsl
-/// 📜 Handcrafted `key value`-per-line DSL for the DIN 4108 envelope `Document`: one line per scalar
-/// input, plus one `layer <thickness_m> <lambda_w_mk>` line per wall layer (order-preserving) — the
-/// only collection field, so it is parsed/printed by hand instead of through `dsl_kv`.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "din4108";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let mut layers = Vec::new();
-        let mut scalar_text = String::new();
-        for (index, raw_line) in text.lines().enumerate() {
-            let line_no = index as u32 + 1;
-            let trimmed = raw_line.trim();
-            if trimmed.is_empty() || trimmed.starts_with('#') {
-                continue;
-            }
-            if let Some(rest) = trimmed.strip_prefix("layer ") {
-                let mut parts = rest.split_whitespace();
-                let thickness_m: f64 = parts
-                    .next()
-                    .and_then(|value| value.parse().ok())
-                    .ok_or_else(|| vcs::TextError::new("expected 'layer <thickness_m> <lambda_w_mk>'", vcs::TextSpan::at(line_no, 1)))?;
-                let lambda_w_mk: f64 = parts
-                    .next()
-                    .and_then(|value| value.parse().ok())
-                    .ok_or_else(|| vcs::TextError::new("expected 'layer <thickness_m> <lambda_w_mk>'", vcs::TextSpan::at(line_no, 1)))?;
-                layers.push(LayerDocument { thickness_m, lambda_w_mk });
-            } else {
-                scalar_text.push_str(raw_line);
-                scalar_text.push('\n');
-            }
-        }
-        let fields = norm_core::dsl_kv::parse_lines(&scalar_text)?;
-        Ok(Document {
-            category: norm_core::dsl_kv::scalar(&fields, "category")?,
-            layers,
-            climate: norm_core::dsl_kv::scalar(&fields, "climate")?,
-            airtightness_n50: norm_core::dsl_kv::scalar(&fields, "airtightness_n50")?,
-            psi_times_l_sum: norm_core::dsl_kv::scalar(&fields, "psi_times_l_sum")?,
-            rh_int: norm_core::dsl_kv::scalar(&fields, "rh_int")?,
-            catalog_id: norm_core::dsl_kv::scalar(&fields, "catalog_id")?,
-            material_id: norm_core::dsl_kv::scalar(&fields, "material_id")?,
-            airtightness_class: norm_core::dsl_kv::scalar(&fields, "airtightness_class")?,
-            t_int_c: norm_core::dsl_kv::scalar(&fields, "t_int_c")?,
-            solar_absorptance: norm_core::dsl_kv::scalar(&fields, "solar_absorptance")?,
-            irradiance_w_m2: norm_core::dsl_kv::scalar(&fields, "irradiance_w_m2")?,
-            moisture_mu_exterior: norm_core::dsl_kv::scalar(&fields, "moisture_mu_exterior")?,
-            moisture_mu_interior: norm_core::dsl_kv::scalar(&fields, "moisture_mu_interior")?,
-            envelope_area_m2: norm_core::dsl_kv::scalar(&fields, "envelope_area_m2")?,
-            bb2_details_conform: norm_core::dsl_kv::scalar(&fields, "bb2_details_conform")?,
-            application_type: norm_core::dsl_kv::scalar(&fields, "application_type")?,
-            declared_application_class: norm_core::dsl_kv::scalar(&fields, "declared_application_class")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        let mut out = String::new();
-        out.push_str(&norm_core::dsl_kv::line("category", &self.category));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("climate", &self.climate));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("airtightness_n50", &self.airtightness_n50));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("psi_times_l_sum", &self.psi_times_l_sum));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("rh_int", &self.rh_int));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("catalog_id", &self.catalog_id));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("material_id", &self.material_id));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("airtightness_class", &self.airtightness_class));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("t_int_c", &self.t_int_c));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("solar_absorptance", &self.solar_absorptance));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("irradiance_w_m2", &self.irradiance_w_m2));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("moisture_mu_exterior", &self.moisture_mu_exterior));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("moisture_mu_interior", &self.moisture_mu_interior));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("envelope_area_m2", &self.envelope_area_m2));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("bb2_details_conform", &self.bb2_details_conform));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("application_type", &self.application_type));
-        out.push('\n');
-        out.push_str(&norm_core::dsl_kv::line("declared_application_class", &self.declared_application_class));
-        out.push('\n');
-        for layer in &self.layers {
-            out.push_str(&format!("layer {} {}\n", layer.thickness_m, layer.lambda_w_mk));
-        }
-        out
-    }
-}
-// #endregion 🔖Dsl
+// `impl vcs::DocumentDsl for Document` is now generated by `#[derive(dsl::DslDocument)]` on the
+// type definition above (see the `🔖Session` region), together with `#[derive(dsl::DslRecord)]`
+// on `LayerDocument` for the `layers` collection.
 
 #[cfg(test)]
 mod tests {

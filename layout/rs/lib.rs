@@ -361,6 +361,110 @@ mod document {
         frames
     }
 
+    #[cfg(test)]
+    mod tests {
+        use super::*;
+
+        fn rect_frame(id: &str, visible: Option<bool>) -> Frame {
+            Frame::Rect { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: None, visible, fill: None, stroke: None }
+        }
+
+        #[test]
+        fn frame_helpers_report_id_bounds_kind_and_visibility() {
+            let rect = rect_frame("frame-1", Some(false));
+            assert_eq!(rect.id(), "frame-1");
+            assert_eq!(rect.kind_str(), "rect");
+            assert!(!rect.visible());
+
+            let default_visible = rect_frame("frame-2", None);
+            assert!(default_visible.visible());
+            assert_eq!(default_visible.bounds().width, 10.0);
+
+            let text = Frame::Text { id: "frame-3".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0 }, locked: None, visible: None, story_id: "story-1".into(), thread_next: None, columns: 1, inset: LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }, wrap_mode: "box".into() };
+            assert_eq!(text.kind_str(), "text");
+
+            let image = Frame::Image { id: "frame-4".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 1.0, height: 1.0, rotation: 0.0 }, locked: None, visible: Some(true), link_id: "link-1".into() };
+            assert_eq!(image.kind_str(), "image");
+            assert!(image.visible());
+        }
+
+        fn base_doc() -> LayoutDocument {
+            LayoutDocument {
+                schema: LAYOUT_FIXTURE_SCHEMA.into(),
+                name: "t".into(),
+                camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+                preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+                grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
+                paragraph_styles: Vec::new(),
+                character_styles: Vec::new(),
+                stories: Vec::new(),
+                links: Vec::new(),
+                parent_pages: Vec::new(),
+                spreads: Vec::new(),
+                pages: Vec::new(),
+                print_target: None,
+            }
+        }
+
+        #[test]
+        fn resolve_page_marks_overridden_parent_frames_and_ignores_missing_parent() {
+            let mut doc = base_doc();
+            doc.parent_pages.push(ParentPage {
+                id: "parent-1".into(),
+                name: "Master".into(),
+                width: 100.0,
+                height: 100.0,
+                layer_ids: vec!["layer-1".into()],
+                layers: Vec::new(),
+                frames: vec![rect_frame("frame-a", None), rect_frame("frame-b", None)],
+            });
+
+            let page_with_parent = Page {
+                id: "page-1".into(),
+                name: "P1".into(),
+                spread_id: "spread-1".into(),
+                parent_page_id: Some("parent-1".into()),
+                width: 100.0,
+                height: 100.0,
+                margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                columns: PageColumns { count: 1, gutter: 0.0 },
+                guides: Vec::new(),
+                layer_ids: Vec::new(),
+                layers: Vec::new(),
+                frames: Vec::new(),
+                overrides: vec![PageOverride { object_id: "frame-a".into(), bounds: None, visible: None, locked: None }],
+            };
+            let resolved = resolve_page(&doc, &page_with_parent);
+            assert_eq!(resolved.len(), 2);
+            let a = resolved.iter().find(|r| r.frame.id() == "frame-a").expect("frame-a resolved");
+            assert!(!a.inherited, "overridden parent frame must not be marked inherited");
+            let b = resolved.iter().find(|r| r.frame.id() == "frame-b").expect("frame-b resolved");
+            assert!(b.inherited, "non-overridden parent frame stays inherited");
+
+            let mut page_missing_parent = page_with_parent.clone();
+            page_missing_parent.parent_page_id = Some("no-such-parent".into());
+            assert!(resolve_page(&doc, &page_missing_parent).is_empty());
+
+            let mut page_no_parent = page_with_parent;
+            page_no_parent.parent_page_id = None;
+            page_no_parent.frames = vec![rect_frame("frame-own", None)];
+            let own_only = resolve_page(&doc, &page_no_parent);
+            assert_eq!(own_only.len(), 1);
+            assert!(!own_only[0].inherited);
+        }
+
+        #[test]
+        fn parse_layout_document_rejects_wrong_schema_and_invalid_json() {
+            let wrong_schema = r#"{"schema":"other.schema","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[]}"#;
+            let error = parse_layout_document(wrong_schema).expect_err("wrong schema must fail");
+            assert!(matches!(error, crate::LayoutError::UnexpectedSchema(schema) if schema == "other.schema"));
+
+            let invalid_json = "not json";
+            let error = parse_layout_document(invalid_json).expect_err("invalid json must fail");
+            assert!(matches!(error, crate::LayoutError::Json(_)));
+        }
+    }
+
     // #endregion document
 }
 
@@ -773,6 +877,114 @@ mod engine {
             assert!(list.rects.iter().any(|rect| rect.object_id == "frame-1" && rect.hovered));
             assert!(list.rects.iter().all(|rect| rect.object_id != "frame-1" || rect.hovered));
         }
+
+        #[test]
+        fn scene_and_hit_test_error_when_page_missing() {
+            let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":100,"height":100,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
+            let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
+            let viewport = Viewport { width: 100, height: 100, dpr: 1.0 };
+            let query = SceneQuery { page_id: "missing-page", selected_ids: &[], hovered_id: None, chrome_blueprint: true, camera: &camera, viewport: &viewport };
+            assert!(matches!(build_scene_from_document_json(json, &query, None), Err(crate::LayoutError::PageNotFound(id)) if id == "missing-page"));
+            let hit = hit_test_document_json(json, 0.0, 0.0, &query);
+            assert!(matches!(hit, Err(crate::LayoutError::PageNotFound(id)) if id == "missing-page"));
+        }
+
+        #[test]
+        fn hit_test_returns_none_for_empty_space() {
+            let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["frame-1"]}],"frames":[{"id":"frame-1","layerId":"layer-1","kind":"rect","bounds":{"x":10,"y":10,"w":40,"h":40,"rotation":0},"fill":[1,1,1,1]}],"overrides":[]}]}"#;
+            let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
+            let viewport = Viewport { width: 400, height: 400, dpr: 1.0 };
+            let query = SceneQuery { page_id: "page-1", selected_ids: &[], hovered_id: None, chrome_blueprint: false, camera: &camera, viewport: &viewport };
+            let hit = hit_test_document_json(json, 300.0, 300.0, &query).expect("hit test");
+            assert!(hit.is_none());
+        }
+
+        #[test]
+        fn display_list_hit_test_matches_image_bounds_and_misses_elsewhere() {
+            let list = DisplayList { page_id: "page-1".into(), page_width: 100.0, page_height: 100.0, rects: Vec::new(), text_runs: Vec::new(), images: vec![DisplayImage { object_id: "img-1".into(), x: 10.0, y: 10.0, width: 20.0, height: 20.0, placeholder: false }], guides: Vec::new() };
+            assert_eq!(list.hit_test(15.0, 15.0).as_deref(), Some("img-1"));
+            assert!(list.hit_test(90.0, 90.0).is_none());
+        }
+
+        #[test]
+        fn guides_omitted_for_non_active_page_even_with_chrome_blueprint() {
+            let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":true},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":10,"right":10,"bottom":10,"left":10},"columns":{"count":2,"gutter":4},"guides":[{"x":5,"y":5,"w":1,"h":1}],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
+            let doc = parse_layout_document(json).expect("doc");
+            let page = doc.pages.first().expect("page");
+            let list = build_display_list_for_page(&doc, page, "different-active-page", &[], None, true);
+            assert!(list.guides.is_empty(), "guides must only render for the active blueprint page");
+        }
+
+        #[test]
+        fn baseline_guides_only_emitted_when_grid_snaps() {
+            let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":200,"height":200,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":[],"layers":[],"frames":[],"overrides":[]}]}"#;
+            let doc = parse_layout_document(json).expect("doc");
+            let page = doc.pages.first().expect("page");
+            let list = build_display_list_for_page(&doc, page, "page-1", &[], None, true);
+            assert!(list.guides.iter().all(|guide| guide.kind != "baseline"));
+        }
+
+        #[test]
+        fn image_placeholder_reflects_link_lookup_and_state() {
+            let json = r#"{"schema":"layout.fixture","name":"t","camera":{"x":0,"y":0,"zoom":1},"previewCamera":{"x":0,"y":0,"zoom":1},"grid":{"baselineGrid":12,"baselineOffset":0,"snapToBaseline":false},"paragraphStyles":[],"characterStyles":[],"stories":[],"links":[{"id":"link-missing","path":"a.png","hash":"h","width":1,"height":1,"dpi":72,"state":"missing"},{"id":"link-ready","path":"b.png","hash":"h","width":1,"height":1,"dpi":72,"state":"ready","proxyDataUrl":"data:image/png;base64,AA=="}],"parentPages":[],"spreads":[],"pages":[{"id":"page-1","name":"P","spreadId":"s","width":400,"height":400,"margins":{"top":0,"right":0,"bottom":0,"left":0},"columns":{"count":1,"gutter":0},"guides":[],"layerIds":["layer-1"],"layers":[{"id":"layer-1","name":"Content","visible":true,"locked":false,"objectIds":["img-missing","img-ready","img-unlinked"]}],"frames":[{"id":"img-missing","layerId":"layer-1","kind":"image","bounds":{"x":0,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-missing"},{"id":"img-ready","layerId":"layer-1","kind":"image","bounds":{"x":20,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-ready"},{"id":"img-unlinked","layerId":"layer-1","kind":"image","bounds":{"x":40,"y":0,"w":10,"h":10,"rotation":0},"linkId":"link-gone"}],"overrides":[]}]}"#;
+            let doc = parse_layout_document(json).expect("doc");
+            let page = doc.pages.first().expect("page");
+            let list = build_display_list_for_page(&doc, page, "page-1", &[], None, false);
+            let by_id = |id: &str| list.images.iter().find(|i| i.object_id == id).expect("image present");
+            assert!(by_id("img-missing").placeholder, "missing-state link stays a placeholder");
+            assert!(!by_id("img-ready").placeholder, "ready link with a proxy is not a placeholder");
+            assert!(by_id("img-unlinked").placeholder, "unresolved link falls back to placeholder");
+        }
+
+        #[test]
+        fn layout_story_in_frame_resolves_alignment_variants_and_detects_overset() {
+            let story = TextStory { id: "story-1".into(), content: "Hello layout engine, this line should wrap across several lines of text.".into(), style_runs: Vec::new() };
+            for alignment in ["left", "center", "middle", "right", "justify", "justified", "unrecognized"] {
+                let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: alignment.into() };
+                let (layout, overset) = layout_story_in_frame(&story, &paragraph, 80.0, 10.0);
+                assert!(layout.height() > 0.0, "alignment {alignment} should still measure a positive height");
+                assert!(overset, "narrow/short frame with long content should overset for alignment {alignment}");
+            }
+            let paragraph = ParagraphStyle { id: "p".into(), name: "Body".into(), font_family: "Layout Sans".into(), font_size: 12.0, font_weight: 400, leading: 14.4, tracking: 0.0, alignment: "left".into() };
+            let (_, not_overset) = layout_story_in_frame(&story, &paragraph, 2000.0, 2000.0);
+            assert!(!not_overset);
+        }
+
+        #[test]
+        fn display_list_to_scene_handles_drop_preview_variants_and_rect_styles() {
+            let camera = Camera { x: 0.0, y: 0.0, zoom: 1.0 };
+            let viewport = Viewport { width: 200, height: 200, dpr: 1.0 };
+            let list = DisplayList {
+                page_id: "page-1".into(),
+                page_width: 200.0,
+                page_height: 200.0,
+                rects: vec![
+                    crate::display::DisplayRect { object_id: "r-explicit-stroke".into(), x: 0.0, y: 0.0, width: 10.0, height: 10.0, fill: Some(DisplayColor([1.0, 1.0, 1.0, 1.0])), stroke: Some(DisplayColor([0.0, 0.0, 0.0, 1.0])), inherited: false, selected: true, hovered: false },
+                    crate::display::DisplayRect { object_id: "r-implicit-hover".into(), x: 20.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: false, hovered: true },
+                    crate::display::DisplayRect { object_id: "r-implicit-select".into(), x: 40.0, y: 0.0, width: 10.0, height: 10.0, fill: None, stroke: None, inherited: false, selected: true, hovered: false },
+                ],
+                text_runs: vec![DisplayTextRun { object_id: "text-1".into(), glyphs: vec![DisplayGlyph { glyph_id: 1, font_size: 12.0, x: 0.0, y: 0.0, color: DisplayColor([0.0, 0.0, 0.0, 1.0]) }] }],
+                images: vec![DisplayImage { object_id: "img-1".into(), x: 0.0, y: 60.0, width: 10.0, height: 10.0, placeholder: true }],
+                guides: vec![DisplayGuide { rect: crate::document::LayoutRect { x: 0.0, y: 0.0, width: 10.0, height: 0.0 }, kind: "unrecognized".into() }],
+            };
+            for kind in ["page", "rect", "text", "image", "unrecognized"] {
+                let preview = LayoutDropPreview { kind: kind.into(), x: 5.0, y: 5.0 };
+                let scene = display_list_to_scene(&list, true, &camera, &viewport, Some(&preview));
+                let _ = scene;
+            }
+            let scene = display_list_to_scene(&list, false, &camera, &viewport, None);
+            let _ = scene;
+        }
+
+        #[test]
+        fn screen_to_world_json_returns_a_point_object() {
+            let camera = Camera { x: 100.0, y: 50.0, zoom: 2.0 };
+            let viewport = Viewport { width: 400, height: 300, dpr: 1.0 };
+            let json = screen_to_world_json(&camera, &viewport, 210.0, 160.0);
+            let parsed: serde_json::Value = serde_json::from_str(&json).expect("valid json point");
+            assert!(parsed["x"].is_number());
+            assert!(parsed["y"].is_number());
+        }
     }
     // #endregion engine
 }
@@ -987,6 +1199,38 @@ mod export {
             let bytes = export_package_zip(&json, "[]").expect("package export succeeds");
             assert_eq!(doc.schema, LAYOUT_FIXTURE_SCHEMA);
             assert!(bytes.starts_with(b"PK"));
+        }
+
+        #[test]
+        fn svg_export_contains_rect_and_wraps_a_valid_document() {
+            let doc = sample_document();
+            let svg = export_document_svg(&doc, "page-1").expect("svg export succeeds");
+            assert!(svg.starts_with("<svg"));
+            assert!(svg.contains("<rect"));
+            assert!(svg.ends_with("</svg>"));
+        }
+
+        #[test]
+        fn exports_error_when_page_missing() {
+            let doc = sample_document();
+            assert!(matches!(export_document_svg(&doc, "no-such-page"), Err(crate::LayoutError::PageNotFound(id)) if id == "no-such-page"));
+            assert!(matches!(export_document_pdf(&doc, "no-such-page"), Err(crate::LayoutError::PageNotFound(_))));
+            assert!(matches!(export_document_png_cpu(&doc, "no-such-page"), Err(crate::LayoutError::PageNotFound(_))));
+        }
+
+        #[test]
+        fn package_zip_rejects_invalid_document_json() {
+            let error = export_package_zip("not json", "[]").expect_err("invalid json must fail");
+            assert!(matches!(error, crate::LayoutError::Json(_)));
+        }
+
+        #[test]
+        fn scene_png_from_display_list_writes_a_valid_png() {
+            let doc = sample_document();
+            let page = doc.pages.iter().find(|p| p.id == "page-1").expect("page-1");
+            let list = build_display_list_for_page(&doc, page, "page-1", &[], None, false);
+            let bytes = scene_png_from_display_list(&list).expect("scene png export succeeds");
+            assert!(bytes.starts_with(&[0x89, b'P', b'N', b'G']));
         }
     }
     // #endregion export
@@ -1404,6 +1648,57 @@ mod operations {
             let moved = round_trip(&doc, &operation);
             assert_eq!(moved.camera.x, 5.0);
             assert_eq!(moved.preview_camera.x, 0.0);
+        }
+
+        fn new_text(id: &str) -> Frame {
+            Frame::Text { id: id.into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 20.0, height: 20.0, rotation: 0.0 }, locked: None, visible: None, story_id: "story-1".into(), thread_next: None, columns: 1, inset: crate::document::LayoutRect { x: 0.0, y: 0.0, width: 0.0, height: 0.0 }, wrap_mode: "box".into() }
+        }
+
+        #[test]
+        fn patch_frame_updates_text_fields_and_ignores_fill_on_image_frames() {
+            let doc = sample_doc();
+            let with_text = vcs::apply_operation(&doc, &LayoutOperation::AddFrame { page_id: "page-1".into(), index: 0, frame: new_text("frame-text"), layer_id: None });
+            let patch = LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-text".into(), patch: FramePatch { wrap_mode: Some("column".into()), columns: Some(2), ..Default::default() } };
+            let patched = round_trip(&with_text, &patch);
+            let Frame::Text { wrap_mode, columns, .. } = patched.pages[0].frames.iter().find(|frame| frame.id() == "frame-text").unwrap() else { panic!("expected text frame") };
+            assert_eq!(wrap_mode, "column");
+            assert_eq!(*columns, 2);
+
+            let image_frame = Frame::Image { id: "frame-img".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 5.0, height: 5.0, rotation: 0.0 }, locked: None, visible: None, link_id: "link-1".into() };
+            let with_image = vcs::apply_operation(&doc, &LayoutOperation::AddFrame { page_id: "page-1".into(), index: 0, frame: image_frame, layer_id: None });
+            let image_patch = LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-img".into(), patch: FramePatch { x: Some(3.0), fill: Some(Some([1.0, 0.0, 0.0, 1.0])), ..Default::default() } };
+            let patched_image = round_trip(&with_image, &image_patch);
+            let patched_frame = patched_image.pages[0].frames.iter().find(|frame| frame.id() == "frame-img").unwrap();
+            assert_eq!(patched_frame.bounds().x, 3.0, "bounds still patch on an image frame");
+        }
+
+        #[test]
+        fn add_remove_patch_frame_are_no_ops_when_target_missing() {
+            let doc = sample_doc();
+
+            let missing_page_add = LayoutOperation::AddFrame { page_id: "no-page".into(), index: 0, frame: new_rect("frame-x"), layer_id: None };
+            assert_eq!(vcs::apply_operation(&doc, &missing_page_add), doc, "adding to a missing page must be a no-op");
+
+            let unmatched_layer = LayoutOperation::AddFrame { page_id: "page-1".into(), index: 0, frame: new_rect("frame-y"), layer_id: Some("no-layer".into()) };
+            let result = vcs::apply_operation(&doc, &unmatched_layer);
+            assert!(result.pages[0].frames.iter().any(|frame| frame.id() == "frame-y"));
+            assert!(result.pages[0].layers[0].object_ids.iter().all(|id| id != "frame-y"), "unmatched layer id must not be populated");
+
+            let missing_page_remove = LayoutOperation::RemoveFrame { page_id: "no-page".into(), frame_id: "frame-1".into() };
+            assert_eq!(vcs::apply_operation(&doc, &missing_page_remove), doc);
+            assert!(missing_page_remove.backwards(&doc).is_empty());
+
+            let missing_frame_remove = LayoutOperation::RemoveFrame { page_id: "page-1".into(), frame_id: "no-frame".into() };
+            assert_eq!(vcs::apply_operation(&doc, &missing_frame_remove), doc);
+            assert!(missing_frame_remove.backwards(&doc).is_empty());
+
+            let missing_page_patch = LayoutOperation::PatchFrame { page_id: "no-page".into(), frame_id: "frame-1".into(), patch: FramePatch { x: Some(1.0), ..Default::default() } };
+            assert_eq!(vcs::apply_operation(&doc, &missing_page_patch), doc);
+            assert!(missing_page_patch.backwards(&doc).is_empty());
+
+            let missing_frame_patch = LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "no-frame".into(), patch: FramePatch { x: Some(1.0), ..Default::default() } };
+            assert_eq!(vcs::apply_operation(&doc, &missing_frame_patch), doc);
+            assert!(missing_frame_patch.backwards(&doc).is_empty());
         }
     }
     // #endregion operations
@@ -2877,6 +3172,93 @@ mod dsl {
                 .expect("apply patch page");
             test_support::assert_document_text_round_trip(&store);
             test_support::assert_live_equals_replay(&store);
+        }
+
+        #[test]
+        fn dsl_round_trips_overrides_frame_flags_and_absent_print_target() {
+            let doc = LayoutDocument {
+                schema: LAYOUT_FIXTURE_SCHEMA.into(),
+                name: "Flags".into(),
+                camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+                preview_camera: LayoutCamera { x: 0.0, y: 0.0, zoom: 1.0 },
+                grid: GridSettings { baseline_grid: 12.0, baseline_offset: 0.0, snap_to_baseline: false },
+                paragraph_styles: Vec::new(),
+                character_styles: Vec::new(),
+                stories: Vec::new(),
+                links: Vec::new(),
+                parent_pages: Vec::new(),
+                spreads: Vec::new(),
+                pages: vec![Page {
+                    id: "page-1".into(),
+                    name: "Page".into(),
+                    spread_id: "spread-1".into(),
+                    parent_page_id: None,
+                    width: 100.0,
+                    height: 100.0,
+                    margins: PageMargins { top: 0.0, right: 0.0, bottom: 0.0, left: 0.0 },
+                    columns: PageColumns { count: 1, gutter: 0.0 },
+                    guides: Vec::new(),
+                    layer_ids: vec!["layer-1".into()],
+                    layers: vec![Layer { id: "layer-1".into(), name: "Content".into(), visible: true, locked: false, object_ids: vec!["frame-locked".into(), "frame-unlocked".into()] }],
+                    frames: vec![
+                        Frame::Rect { id: "frame-locked".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: Some(true), visible: Some(false), fill: None, stroke: None },
+                        Frame::Rect { id: "frame-unlocked".into(), layer_id: "layer-1".into(), bounds: LayoutBounds { x: 0.0, y: 0.0, width: 10.0, height: 10.0, rotation: 0.0 }, locked: Some(false), visible: Some(true), fill: None, stroke: None },
+                    ],
+                    overrides: vec![
+                        PageOverride { object_id: "frame-locked".into(), bounds: Some(LayoutBounds { x: 1.0, y: 2.0, width: 3.0, height: 4.0, rotation: 5.0 }), visible: Some(true), locked: Some(false) },
+                        PageOverride { object_id: "frame-unlocked".into(), bounds: None, visible: None, locked: None },
+                    ],
+                }],
+                print_target: None,
+            };
+            test_support::assert_dsl_round_trip(&doc);
+        }
+
+        #[test]
+        fn op_text_round_trips_full_page_and_frame_patch_fields() {
+            let full_page_patch = PagePatch { name: Some("Renamed".into()), width: Some(300.0), height: Some(400.0), margin_top: Some(1.0), margin_right: Some(2.0), margin_bottom: Some(3.0), margin_left: Some(4.0), columns_count: Some(5), columns_gutter: Some(6.0) };
+            test_support::assert_op_line_round_trip(&LayoutOperation::Pages(CollectionOperation::Patch { id: "page-1".into(), patch: full_page_patch }));
+
+            let full_frame_patch = FramePatch { x: Some(1.0), y: Some(2.0), width: Some(3.0), height: Some(4.0), fill: Some(Some([0.1, 0.2, 0.3, 0.4])), stroke: Some(None), wrap_mode: Some("column".into()), columns: Some(3) };
+            test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: full_frame_patch });
+
+            let clearing_frame_patch = FramePatch { fill: Some(None), stroke: Some(Some([0.5, 0.5, 0.5, 1.0])), ..Default::default() };
+            test_support::assert_op_line_round_trip(&LayoutOperation::PatchFrame { page_id: "page-1".into(), frame_id: "frame-1".into(), patch: clearing_frame_patch });
+        }
+
+        #[test]
+        fn parse_dsl_reports_lexer_and_parser_errors() {
+            assert!(LayoutDocument::parse_dsl("doc @").is_err(), "unexpected character must fail lexing");
+            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=\"unterminated").is_err(), "unterminated string literal must fail lexing");
+            assert!(LayoutDocument::parse_dsl("1.2.3").is_err(), "malformed number literal must fail lexing");
+            assert!(LayoutDocument::parse_dsl("doc schema=\"layout.fixture\" name=\"t\"").is_err(), "quoted schema must fail expect_ident");
+            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=unquoted").is_err(), "unquoted name must fail expect_str");
+            assert!(LayoutDocument::parse_dsl("doc schema=layout.fixture name=\"t\" camera x=notanumber y=0 zoom=1").is_err(), "non-numeric camera field must fail expect_num");
+            let bad_bool = "doc schema=layout.fixture name=\"t\" camera x=0 y=0 zoom=1 previewCamera x=0 y=0 zoom=1 grid baselineGrid=12 baselineOffset=0 snapToBaseline=maybe";
+            assert!(LayoutDocument::parse_dsl(bad_bool).is_err(), "non-boolean grid flag must fail expect_bool");
+            assert!(LayoutOperation::parse_op("setCamera blueprint=true camera=1,2,3").is_err(), "unparenthesized tuple must fail expect_tok");
+        }
+
+        #[test]
+        fn parse_frame_value_rejects_unknown_frame_kind() {
+            let tokens = lex_layout_dsl("triangle id=frame-1 layerId=layer-1 bounds=(0,0,1,1,0)").expect("lex succeeds");
+            let mut parser = LayoutDslParser::new(tokens);
+            let error = parse_frame_value(&mut parser).expect_err("unknown frame kind must fail");
+            assert!(error.message.contains("unknown frame kind"));
+        }
+
+        #[test]
+        fn parse_character_style_rejects_invalid_json_payload() {
+            let tokens = lex_layout_dsl("characterStyle json=\"not json\"").expect("lex succeeds");
+            let mut parser = LayoutDslParser::new(tokens);
+            let error = parse_character_style(&mut parser).expect_err("invalid json payload must fail");
+            assert!(error.message.contains("invalid characterStyle json"));
+        }
+
+        #[test]
+        fn op_text_rejects_unknown_operation_name() {
+            let error = LayoutOperation::parse_op("bogusOp id=x").expect_err("unknown op must fail");
+            assert!(error.message.contains("unknown layout operation"));
         }
     }
 }

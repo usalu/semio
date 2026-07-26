@@ -259,11 +259,15 @@ pub fn table_lookup_bilinear(x: f64, y: f64, x_vals: &[f64], y_vals: &[f64], z: 
 
 // #region 🔖DesignSituation
 /// 🏗️ Design situation per EN 1990 Table A1.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum DesignSituation {
+    #[dsl(key = "persistent")]
     Persistent,
+    #[dsl(key = "transient")]
     Transient,
+    #[dsl(key = "accidental")]
     Accidental,
+    #[dsl(key = "seismic")]
     Seismic,
 }
 
@@ -286,15 +290,23 @@ impl ConsequenceClass {
 }
 
 /// 📊 Variable action category per EN 1991-1-1 Table 6.1.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum ImposedCategory {
+    #[dsl(key = "a")]
     A,
+    #[dsl(key = "b")]
     B,
+    #[dsl(key = "c")]
     C,
+    #[dsl(key = "d")]
     D,
+    #[dsl(key = "e")]
     E,
+    #[dsl(key = "f")]
     F,
+    #[dsl(key = "g")]
     G,
+    #[dsl(key = "h")]
     H,
 }
 
@@ -348,11 +360,15 @@ pub enum LoadDuration {
 }
 
 /// 🌡️ Reference climate zone for thermal norms (Germany).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum ClimateZoneDe {
+    #[dsl(key = "zone1")]
     Zone1,
+    #[dsl(key = "zone2")]
     Zone2,
+    #[dsl(key = "zone3")]
     Zone3,
+    #[dsl(key = "zone4")]
     Zone4,
 }
 
@@ -386,14 +402,21 @@ impl ClimateZoneDe {
 }
 
 /// 🏠 Occupancy type for indoor environment norms.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum OccupancyType {
+    #[dsl(key = "residential")]
     Residential,
+    #[dsl(key = "office")]
     Office,
+    #[dsl(key = "classroom")]
     Classroom,
+    #[dsl(key = "retail")]
     Retail,
+    #[dsl(key = "meeting")]
     Meeting,
+    #[dsl(key = "kitchen")]
     Kitchen,
+    #[dsl(key = "corridor")]
     Corridor,
 }
 // #endregion 🔖Shared

@@ -61,6 +61,8 @@ pub mod extract;
 pub mod grid3d;
 #[path = "src/solver_grid3d.rs"]
 pub mod solver_grid3d;
+#[path = "src/serial.rs"]
+pub mod serial;
 // #endregion 🔖Modules
 
 // #region 🔖Exports
@@ -68,7 +70,7 @@ pub use bitset::PatternSet;
 pub use constraint::{AdjacencyView, Constraint, Exactness, PatternSelector};
 pub use constraints_card::{CardinalityConstraint, Scope};
 pub use constraints_conn::{ConnectivityConstraint, ReachabilityConstraint};
-pub use diag::{DiagLevel, Event, EventSink, Metrics};
+pub use diag::{DiagLevel, Event, EventSink, Metrics, TraceReplay};
 pub use domain::{Domain, DomainStore, RestrictResult};
 pub use error::{ConstraintError, ModelError, SolveError, TopologyError};
 pub use extract::{Extract2dConfig, ExtractedModel2d, PatternDecoder2d, Sample2d, extract_2d};
@@ -81,6 +83,7 @@ pub use oracle::{ArcSpec, OracleResult, Violation, check_assignment, enumerate};
 pub use outcome::{ContradictionReport, PartialState, RunReport, Solution, SolveOutcome, UnsatReport};
 pub use sample::ValueSampler;
 pub use search::{Budget, CancelToken, RestartSchedule, SearchConfig, SearchMode};
+pub use serial::{CHECKPOINT_VERSION, CheckpointDoc, PairDoc, PatternDoc, RelationDoc, SOURCE_MODEL_VERSION, SourceModelDoc};
 pub use soft::{Attempt, BestOfNKeep, ScoreFn, SoftConstraint, WeightField, best_of_n};
 pub use solver_grid2d::{Grid2dSolver, Grid2dSolverBuilder};
 pub use solver_grid3d::{Grid3dSolver, Grid3dSolverBuilder};

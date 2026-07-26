@@ -11,6 +11,7 @@ workspace = true
 path = "lib.rs"
 
 [dependencies]
+dsl = { path = "../../../../../dsl/rs" }
 norm_core = { path = "../../../../core/rs" }
 norm_din_4108 = { path = "../../../4108/rs" }
 norm_din_en_16798 = { path = "../../../en/16798/rs" }

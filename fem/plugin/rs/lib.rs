@@ -2139,5 +2139,379 @@ mod tests {
         }
     }
     //#endregion 🔖LoadCaseActions
+
+    //#region 🔖SharedHelpers
+    #[test]
+    fn next_id_retries_past_collisions() {
+        let existing = vec!["n0".to_string(), "n2".to_string()];
+        assert_eq!(next_id(existing.into_iter(), "n"), "n3");
+    }
+
+    #[test]
+    fn hex_to_rgb01_parses_pure_colors() {
+        assert_eq!(hex_to_rgb01("#ffffff"), (1.0, 1.0, 1.0));
+        assert_eq!(hex_to_rgb01("#000000"), (0.0, 0.0, 0.0));
+        assert_eq!(hex_to_rgb01("#ff0000"), (1.0, 0.0, 0.0));
+    }
+
+    #[test]
+    fn von_mises_color_maps_extremes_midpoint_and_clamps() {
+        assert_eq!(von_mises_color(0.0, 0.0, 100.0), VON_MISES_BANDS[0]);
+        assert_eq!(von_mises_color(100.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
+        assert_eq!(von_mises_color(50.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() / 2]);
+        assert_eq!(von_mises_color(-10.0, 0.0, 100.0), VON_MISES_BANDS[0]);
+        assert_eq!(von_mises_color(200.0, 0.0, 100.0), VON_MISES_BANDS[VON_MISES_BANDS.len() - 1]);
+    }
+
+    #[test]
+    fn interpolate_at_value_falls_back_to_midpoint_when_values_equal() {
+        let (point, value) = interpolate_at_value(((0.0, 0.0), 5.0), ((10.0, 20.0), 5.0), 5.0);
+        assert_eq!(point, (5.0, 10.0));
+        assert_eq!(value, 5.0);
+    }
+
+    #[test]
+    fn clip_by_value_empty_polygon_returns_empty() {
+        assert!(clip_by_value(&[], 0.0, true).is_empty());
+    }
+
+    #[test]
+    fn clip_by_value_keeps_only_the_requested_half_plane() {
+        let poly: Vec<ValuedPoint> = vec![((0.0, 0.0), 0.0), ((10.0, 0.0), 10.0), ((0.0, 10.0), 0.0)];
+        let above = clip_by_value(&poly, 5.0, true);
+        assert!(above.len() >= 3 && above.iter().all(|(_, v)| *v >= 5.0 - 1e-9));
+        let below = clip_by_value(&poly, 5.0, false);
+        assert!(below.len() >= 3 && below.iter().all(|(_, v)| *v <= 5.0 + 1e-9));
+    }
+
+    #[test]
+    fn quat_z_to_identity_for_parallel_direction() {
+        assert_eq!(quat_z_to([0.0, 0.0, 1.0]), [0.0, 0.0, 0.0, 1.0]);
+    }
+
+    #[test]
+    fn quat_z_to_handles_antiparallel_direction() {
+        assert_eq!(quat_z_to([0.0, 0.0, -1.0]), [1.0, 0.0, 0.0, 0.0]);
+    }
+
+    #[test]
+    fn fem2d_resolve_load_case_synthesizes_case_when_none_exist() {
+        let projection = fem_2d::empty_fem2d_projection();
+        let (index, load_case) = fem2d_resolve_load_case(&projection, None);
+        assert_eq!(index, 0);
+        assert_eq!(load_case.id, "case-1");
+    }
+
+    #[test]
+    fn fem3d_resolve_load_case_synthesizes_case_when_none_exist() {
+        let projection = fem_3d::empty_fem3d_projection();
+        let (index, load_case) = fem3d_resolve_load_case(&projection, None);
+        assert_eq!(index, 0);
+        assert_eq!(load_case.id, "case-1");
+    }
+
+    #[test]
+    fn fem2d_model_extent_degenerate_model_returns_one() {
+        assert_eq!(fem2d_model_extent(&fem_2d::empty_fem2d_projection()), 1.0);
+    }
+
+    #[test]
+    fn fem3d_model_extent_degenerate_model_returns_one() {
+        assert_eq!(fem3d_model_extent(&fem_3d::empty_fem3d_projection()), 1.0);
+    }
+
+    #[test]
+    fn parse_result_display_unknown_mode_falls_back_to_static() {
+        assert_eq!(parse_result_display(Some(&json!({ "mode": "bogus" }))).mode, DisplayMode::Static);
+    }
+
+    #[test]
+    fn parse_result_display_missing_args_defaults_to_static_with_no_source() {
+        let display = parse_result_display(None);
+        assert_eq!(display.mode, DisplayMode::Static);
+        assert!(display.source_id.is_none());
+    }
+    //#endregion 🔖SharedHelpers
+
+    //#region 🔖UnknownBodyAndGermanLabels
+    #[test]
+    fn render_unknown_body_key_returns_placeholder_text_2d() {
+        let app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let json = serde_json::to_string(&app.render("nonsense", &doc, &ViewState::default())).unwrap();
+        assert!(json.contains("Unknown body: nonsense"));
+    }
+
+    #[test]
+    fn render_unknown_body_key_returns_placeholder_text_3d() {
+        let app = Fem3dPlayApp::default();
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let json = serde_json::to_string(&app.render("nonsense", &doc, &ViewState::default())).unwrap();
+        assert!(json.contains("Unknown body: nonsense"));
+    }
+
+    #[test]
+    fn app_labels_use_german_locale_2d() {
+        let app = Fem2dPlayApp::default();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let labels = app.app_labels(&view_state);
+        assert_eq!(labels.window_kind_labels.get(FEM2D_WINDOW_MODEL).map(String::as_str), Some("Modell"));
+        assert_eq!(labels.action_labels.get("addNode").map(String::as_str), Some("Knoten hinzufügen"));
+    }
+
+    #[test]
+    fn app_labels_use_german_locale_3d() {
+        let app = Fem3dPlayApp::default();
+        let view_state = ViewState { locale: Some("de".into()), ..ViewState::default() };
+        let labels = app.app_labels(&view_state);
+        assert_eq!(labels.window_kind_labels.get(FEM3D_WINDOW_MODEL).map(String::as_str), Some("Modell"));
+        assert_eq!(labels.action_labels.get("addFrame").map(String::as_str), Some("Rahmen hinzufügen"));
+    }
+
+    #[test]
+    fn results_window_buckling_with_no_load_case_shows_placeholder_2d() {
+        let app = Fem2dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) } };
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let json = serde_json::to_string(&app.render(FEM2D_BODY_RESULTS, &doc, &ViewState::default())).unwrap();
+        assert!(json.contains("No load case defined"), "{json}");
+    }
+
+    #[test]
+    fn results_window_buckling_with_no_load_case_shows_placeholder_3d() {
+        let app = Fem3dPlayApp { result_display: ResultDisplay { source_id: None, mode: DisplayMode::Buckling(0) } };
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let json = serde_json::to_string(&app.render(FEM3D_BODY_RESULTS, &doc, &ViewState::default())).unwrap();
+        assert!(json.contains("No load case defined"), "{json}");
+    }
+    //#endregion 🔖UnknownBodyAndGermanLabels
+
+    //#region 🔖MoreStructureAndLoadActions
+    #[test]
+    fn add_bar_and_add_beam_actions_emit_ops_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "start": "n1", "end": "n2", "materialId": "m1", "sectionId": "s1" });
+
+        let emit_bar = app.handle_action("addBar", Some(&args), &doc, &ViewState::default());
+        match &emit_bar.operations[0] {
+            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(element, fem_2d::FemElement::Bar { .. })),
+            _ => panic!("expected SetElement"),
+        }
+
+        let emit_beam = app.handle_action("addBeam", Some(&args), &doc, &ViewState::default());
+        match &emit_beam.operations[0] {
+            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(element, fem_2d::FemElement::Beam { .. })),
+            _ => panic!("expected SetElement"),
+        }
+    }
+
+    #[test]
+    fn add_material_action_emits_op_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = app.handle_action("addMaterial", Some(&json!({ "name": "Steel", "e": 2.1e11 })), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetMaterial { material, .. } => {
+                assert_eq!(material.name, "Steel");
+                assert_eq!(material.e, 2.1e11);
+            }
+            _ => panic!("expected SetMaterial"),
+        }
+    }
+
+    #[test]
+    fn add_material_action_emits_op_3d() {
+        let mut app = Fem3dPlayApp::default();
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "name": "Steel", "e": 2.1e11, "g": 8.1e10 });
+        let emit = app.handle_action("addMaterial", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetMaterial { material, .. } => assert_eq!(material.g, 8.1e10),
+            _ => panic!("expected SetMaterial"),
+        }
+    }
+
+    #[test]
+    fn add_section_action_emits_op_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "name": "HEA200", "area": 0.00538, "iy": 0.0000369 });
+        let emit = app.handle_action("addSection", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetSection { section, .. } => assert_eq!(section.name, "HEA200"),
+            _ => panic!("expected SetSection"),
+        }
+    }
+
+    #[test]
+    fn add_section_action_emits_op_3d() {
+        let mut app = Fem3dPlayApp::default();
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "name": "HEA200", "area": 0.00538, "iy": 0.0000369, "iz": 0.0000133, "j": 0.0000006 });
+        let emit = app.handle_action("addSection", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetSection { section, .. } => assert_eq!(section.j, 0.0000006),
+            _ => panic!("expected SetSection"),
+        }
+    }
+
+    #[test]
+    fn add_support_action_emits_op_with_fixed_dofs_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "nodeId": "n1", "fixed": ["Tx", "Ty"] });
+        let emit = app.handle_action("addSupport", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetSupport { support, .. } => assert_eq!(support.fixed, vec![Dof::Tx, Dof::Ty]),
+            _ => panic!("expected SetSupport"),
+        }
+    }
+
+    #[test]
+    fn add_nodal_load_action_targets_named_case_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let mut projection = fem_2d::empty_fem2d_projection();
+        projection.load_cases.push(fem_2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
+        projection.load_cases.push(fem_2d::FemLoadCase { id: "live".into(), name: "Live".into(), loads: vec![], self_weight: false });
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "nodeId": "n1", "dof": "Ty", "value": -5000.0, "caseId": "live" });
+        let emit = app.handle_action("addNodalLoad", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetLoadCase { index, load_case } => {
+                assert_eq!(*index, 1);
+                assert!(matches!(load_case.loads[0], fem_2d::FemLoad::Nodal { .. }));
+            }
+            _ => panic!("expected SetLoadCase"),
+        }
+    }
+
+    #[test]
+    fn add_member_udl_action_emits_op_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let mut projection = fem_2d::empty_fem2d_projection();
+        projection.load_cases.push(fem_2d::FemLoadCase { id: "dead".into(), name: "Dead".into(), loads: vec![], self_weight: false });
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "elementId": "e1", "wx": 0.0, "wy": -500.0 });
+        let emit = app.handle_action("addMemberUdl", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetLoadCase { load_case, .. } => assert!(matches!(load_case.loads[0], fem_2d::FemLoad::MemberUdl { .. })),
+            _ => panic!("expected SetLoadCase"),
+        }
+    }
+
+    #[test]
+    fn add_frame_action_emits_op_3d() {
+        let mut app = Fem3dPlayApp::default();
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "start": "n1", "end": "n2", "materialId": "m1", "sectionId": "s1", "roll": 0.5 });
+        let emit = app.handle_action("addFrame", Some(&args), &doc, &ViewState::default());
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetElement { element, .. } => match element {
+                fem_3d::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
+                _ => panic!("expected Frame"),
+            },
+            _ => panic!("expected SetElement"),
+        }
+    }
+
+    #[test]
+    fn set_camera_action_amends_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = app.handle_action("setCamera", Some(&json!({ "x": 1.0, "y": 2.0, "zoom": 1.5 })), &doc, &ViewState::default());
+        assert_eq!(emit.coalesce_key.as_deref(), Some("camera"));
+        match &emit.operations[0] {
+            fem_2d::Fem2dOperation::SetCamera { camera } => {
+                assert_eq!(camera.x, 1.0);
+                assert_eq!(camera.zoom, 1.5);
+            }
+            _ => panic!("expected SetCamera"),
+        }
+    }
+
+    #[test]
+    fn set_camera_action_amends_3d() {
+        let mut app = Fem3dPlayApp::default();
+        let projection = fem_3d::empty_fem3d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = app.handle_action("setCamera", Some(&json!({ "json": "{\"x\":1}" })), &doc, &ViewState::default());
+        assert_eq!(emit.coalesce_key.as_deref(), Some("camera"));
+        match &emit.operations[0] {
+            fem_3d::Fem3dOperation::SetCamera { camera } => assert_eq!(camera.json, "{\"x\":1}"),
+            _ => panic!("expected SetCamera"),
+        }
+    }
+
+    #[test]
+    fn remove_selection_covers_nodes_elements_materials_sections_supports_load_cases_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let mut projection = fem_2d::empty_fem2d_projection();
+        projection.nodes.push(fem_2d::FemNode { id: "n1".into(), x: 0.0, y: 0.0 });
+        projection.elements.push(fem_2d::FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n1".into(), material_id: "m1".into(), section_id: "s1".into() });
+        projection.materials.push(fem_2d::FemMaterial { id: "m1".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
+        projection.sections.push(fem_2d::FemSection { id: "s1".into(), name: "Sec".into(), area: 0.01, iy: 0.0001 });
+        projection.supports.push(fem_2d::FemSupport { id: "sup1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx] });
+        projection.load_cases.push(fem_2d::FemLoadCase { id: "case1".into(), name: "Case".into(), loads: vec![], self_weight: false });
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "ids": ["n1", "e1", "m1", "s1", "sup1", "case1"] });
+        let emit = app.handle_action("removeSelection", Some(&args), &doc, &ViewState::default());
+        assert_eq!(emit.operations.len(), 6);
+        assert!(matches!(emit.operations[0], fem_2d::Fem2dOperation::RemoveNode { .. }));
+        assert!(matches!(emit.operations[1], fem_2d::Fem2dOperation::RemoveElement { .. }));
+        assert!(matches!(emit.operations[2], fem_2d::Fem2dOperation::RemoveMaterial { .. }));
+        assert!(matches!(emit.operations[3], fem_2d::Fem2dOperation::RemoveSection { .. }));
+        assert!(matches!(emit.operations[4], fem_2d::Fem2dOperation::RemoveSupport { .. }));
+        assert!(matches!(emit.operations[5], fem_2d::Fem2dOperation::RemoveLoadCase { .. }));
+    }
+
+    #[test]
+    fn add_node_action_missing_args_yields_no_operation_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let emit = app.handle_action("addNode", Some(&json!({ "x": 1.0 })), &doc, &ViewState::default());
+        assert!(emit.operations.is_empty());
+    }
+
+    #[test]
+    fn add_combination_invalid_terms_json_yields_no_operation_2d() {
+        let mut app = Fem2dPlayApp::default();
+        let projection = fem_2d::empty_fem2d_projection();
+        let history = history_view();
+        let doc = DocumentView { projection: &projection, history: &history };
+        let args = json!({ "name": "Bad", "terms": "not-json" });
+        let emit = app.handle_action("addCombination", Some(&args), &doc, &ViewState::default());
+        assert!(emit.operations.is_empty());
+    }
+    //#endregion 🔖MoreStructureAndLoadActions
 }
 //#endregion 🧪Tests

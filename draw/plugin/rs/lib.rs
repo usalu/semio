@@ -2106,6 +2106,7 @@ mod tests {
         testkit::new_app_with_registry::<DrawPlayApp>(create_draw_app)
     }
 
+
     /// 🧰 A view state whose host-owned active utility is `utility` (replaces the deleted document field).
     fn view_with_utility(utility: &str) -> ViewState {
         ViewState { active_utility_id: Some(utility.into()), ..ViewState::default() }

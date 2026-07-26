@@ -16,3 +16,4 @@ serde = { version = "1.0.219", features = ["derive"] }
 mathematical_algebra = { path = "../../../../mathematical/algebra/rs" }
 norm_en_1990 = { path = "../../1990/rs" }
 vcs = { path = "../../../../vcs/rs" }
+dsl = { path = "../../../../dsl/rs" }

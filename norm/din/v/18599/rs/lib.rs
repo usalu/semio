@@ -8,15 +8,18 @@ use serde::{Deserialize, Serialize};
 
 // #region 🔖Shared
 /// 🏢 Building use class for energy reference area factors.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum UseClass {
+    #[dsl(key = "residential")]
     Residential,
+    #[dsl(key = "office")]
     Office,
+    #[dsl(key = "school")]
     School,
 }
 
 /// 📐 Monthly climate data for balancing.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct MonthlyClimate {
     pub theta_e_c: [f64; 12],
     pub g_h_w_m2: [f64; 12],
@@ -67,13 +70,15 @@ fn cooling_degree_hours(climate: &MonthlyClimate, theta_int_cool: f64) -> f64 {
 // #endregion 🔖Shared
 
 /// 📋 Inputs for annual energy balancing.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "din18599", layout = "lines")]
 pub struct BalancingInputs {
     pub use_class: UseClass,
     pub heated_area_m2: f64,
     pub occupants: u32,
     pub h_t: f64,
     pub h_v: f64,
+    #[dsl(block)]
     pub climate: MonthlyClimate,
     pub internal_gains_w_m2: f64,
     pub solar_gains_kwh: f64,
@@ -558,91 +563,10 @@ impl NormFamily for DinV18599Family {
 // #endregion 🔖Session
 
 // #region 🔖Dsl
-
-/// 🏢 `residential`/`office`/`school`.
-impl norm_core::dsl_kv::DslScalar for UseClass {
-    fn print_scalar(&self) -> String {
-        match self {
-            Self::Residential => "residential".into(),
-            Self::Office => "office".into(),
-            Self::School => "school".into(),
-        }
-    }
-    fn parse_scalar(text: &str) -> Result<Self, String> {
-        match text {
-            "residential" => Ok(Self::Residential),
-            "office" => Ok(Self::Office),
-            "school" => Ok(Self::School),
-            other => Err(format!("expected residential/office/school, got '{other}'")),
-        }
-    }
-}
-
-fn format_twelve(values: &[f64; 12]) -> String {
-    values.iter().map(|v| v.to_string()).collect::<Vec<_>>().join(",")
-}
-
-fn parse_twelve(text: &str, key: &str) -> Result<[f64; 12], vcs::TextError> {
-    let parsed: Vec<f64> = text
-        .split(',')
-        .map(|part| part.trim().parse::<f64>().map_err(|_| vcs::TextError::new(format!("field '{key}': expected 12 comma-separated numbers"), vcs::TextSpan::at(1, 1))))
-        .collect::<Result<_, _>>()?;
-    parsed
-        .try_into()
-        .map_err(|_| vcs::TextError::new(format!("field '{key}': expected exactly 12 comma-separated numbers"), vcs::TextSpan::at(1, 1)))
-}
-
-/// 📜 Handcrafted `key value`-per-line DSL for the DIN V 18599 annual-balancing `Document`
-/// (`BalancingInputs`): one line per scalar field, plus two `climate_theta_e_c`/`climate_g_h_w_m2`
-/// lines holding the nested `MonthlyClimate`'s 12 comma-separated monthly values each.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "din18599";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let fields = norm_core::dsl_kv::parse_lines(text)?;
-        let climate = MonthlyClimate {
-            theta_e_c: parse_twelve(norm_core::dsl_kv::field(&fields, "climate_theta_e_c")?, "climate_theta_e_c")?,
-            g_h_w_m2: parse_twelve(norm_core::dsl_kv::field(&fields, "climate_g_h_w_m2")?, "climate_g_h_w_m2")?,
-        };
-        Ok(Document {
-            use_class: norm_core::dsl_kv::scalar(&fields, "use_class")?,
-            heated_area_m2: norm_core::dsl_kv::scalar(&fields, "heated_area_m2")?,
-            occupants: norm_core::dsl_kv::scalar(&fields, "occupants")?,
-            h_t: norm_core::dsl_kv::scalar(&fields, "h_t")?,
-            h_v: norm_core::dsl_kv::scalar(&fields, "h_v")?,
-            climate,
-            internal_gains_w_m2: norm_core::dsl_kv::scalar(&fields, "internal_gains_w_m2")?,
-            solar_gains_kwh: norm_core::dsl_kv::scalar(&fields, "solar_gains_kwh")?,
-            system_losses_kwh: norm_core::dsl_kv::scalar(&fields, "system_losses_kwh")?,
-            renewable_kwh: norm_core::dsl_kv::scalar(&fields, "renewable_kwh")?,
-            annual_limit_kwh: norm_core::dsl_kv::scalar(&fields, "annual_limit_kwh")?,
-            energy_carrier: norm_core::dsl_kv::scalar(&fields, "energy_carrier")?,
-            reference_q_p_kwh: norm_core::dsl_kv::scalar(&fields, "reference_q_p_kwh")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        [
-            norm_core::dsl_kv::line("use_class", &self.use_class),
-            norm_core::dsl_kv::line("heated_area_m2", &self.heated_area_m2),
-            norm_core::dsl_kv::line("occupants", &self.occupants),
-            norm_core::dsl_kv::line("h_t", &self.h_t),
-            norm_core::dsl_kv::line("h_v", &self.h_v),
-            format!("climate_theta_e_c {}", format_twelve(&self.climate.theta_e_c)),
-            format!("climate_g_h_w_m2 {}", format_twelve(&self.climate.g_h_w_m2)),
-            norm_core::dsl_kv::line("internal_gains_w_m2", &self.internal_gains_w_m2),
-            norm_core::dsl_kv::line("solar_gains_kwh", &self.solar_gains_kwh),
-            norm_core::dsl_kv::line("system_losses_kwh", &self.system_losses_kwh),
-            norm_core::dsl_kv::line("renewable_kwh", &self.renewable_kwh),
-            norm_core::dsl_kv::line("annual_limit_kwh", &self.annual_limit_kwh),
-            norm_core::dsl_kv::line("energy_carrier", &self.energy_carrier),
-            norm_core::dsl_kv::line("reference_q_p_kwh", &self.reference_q_p_kwh),
-        ]
-        .join("\n")
-            + "\n"
-    }
-}
-
+// `Document`'s `vcs::DocumentDsl` implementation and `UseClass`'s scalar-tag mapping are now
+// generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslScalar)]` on the type definitions
+// themselves (see `UseClass`, `MonthlyClimate`, and `BalancingInputs` above) — the engine's
+// `dsl_schema` grammar replaces this crate's own hand-rolled `norm_core::dsl_kv`-based printer.
 // #endregion 🔖Dsl
 
 #[cfg(test)]

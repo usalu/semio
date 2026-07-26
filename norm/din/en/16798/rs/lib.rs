@@ -833,11 +833,14 @@ fn parse_chiller_type(chiller_type: &str) -> part_13::ChillerType {
 // #region 🔖Session
 use norm_core::{NormFamily, NormFamilyId, NormHost, SetDocumentOperation};
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "din16798", layout = "lines")]
 pub struct Document {
     pub annex: AnnexChoice,
+    #[dsl(ident)]
     pub occupancy: String,
+    #[dsl(ident)]
     pub comfort_category: String,
     pub t_op_c: f64,
     pub rh_percent: f64,
@@ -848,6 +851,7 @@ pub struct Document {
     pub l_aeq_db: f64,
 
     pub persons: u32,
+    #[dsl(ident)]
     pub ida_class: String,
     pub ventilation_m3_h: f64,
     pub floor_area_m2: f64,
@@ -859,6 +863,7 @@ pub struct Document {
     pub sfp_required_class: u8,
     pub heat_recovery_eta: f64,
     pub heat_recovery_eta_min: f64,
+    #[dsl(ident)]
     pub system_type: String,
     pub years_since_inspection: u32,
     pub humidification_required_kg_h: f64,
@@ -890,6 +895,7 @@ pub struct Document {
     pub cooling_utilization_factor: f64,
     pub cooling_reference_kwh: f64,
 
+    #[dsl(ident)]
     pub chiller_type: String,
     pub eer_actual: f64,
     pub q_c_kwh: f64,
@@ -903,6 +909,7 @@ pub struct Document {
     pub storage_allowance_kwh: f64,
     pub dhw_delivery_c: f64,
 
+    #[dsl(ident)]
     pub duct_class: String,
     pub duct_test_pressure_pa: f64,
     pub duct_leakage_m3_s_m2: f64,
@@ -1067,148 +1074,9 @@ impl NormFamily for DinEn16798Family {
 // #endregion 🔖Session
 
 // #region 🔖Dsl
-/// 📜 Handcrafted `key value`-per-line DSL for the DIN EN 16798 indoor-environment `Document` — every field is a scalar, so this is a thin wrapper over `dsl_kv`.
-impl vcs::DocumentDsl for Document {
-    const EXTENSION: &'static str = "din16798";
-
-    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-        let fields = norm_core::dsl_kv::parse_lines(text)?;
-        Ok(Document {
-            annex: norm_core::dsl_kv::scalar(&fields, "annex")?,
-            occupancy: norm_core::dsl_kv::scalar(&fields, "occupancy")?,
-            comfort_category: norm_core::dsl_kv::scalar(&fields, "comfort_category")?,
-            t_op_c: norm_core::dsl_kv::scalar(&fields, "t_op_c")?,
-            rh_percent: norm_core::dsl_kv::scalar(&fields, "rh_percent")?,
-            air_speed_m_s: norm_core::dsl_kv::scalar(&fields, "air_speed_m_s")?,
-            theta_rm_c: norm_core::dsl_kv::scalar(&fields, "theta_rm_c")?,
-            co2_ppm: norm_core::dsl_kv::scalar(&fields, "co2_ppm")?,
-            df_percent: norm_core::dsl_kv::scalar(&fields, "df_percent")?,
-            l_aeq_db: norm_core::dsl_kv::scalar(&fields, "l_aeq_db")?,
-            persons: norm_core::dsl_kv::scalar(&fields, "persons")?,
-            ida_class: norm_core::dsl_kv::scalar(&fields, "ida_class")?,
-            ventilation_m3_h: norm_core::dsl_kv::scalar(&fields, "ventilation_m3_h")?,
-            floor_area_m2: norm_core::dsl_kv::scalar(&fields, "floor_area_m2")?,
-            bedrooms: norm_core::dsl_kv::scalar(&fields, "bedrooms")?,
-            dwelling_ventilation_m3_h: norm_core::dsl_kv::scalar(&fields, "dwelling_ventilation_m3_h")?,
-            occupants: norm_core::dsl_kv::scalar(&fields, "occupants")?,
-            residential_ventilation_m3_h: norm_core::dsl_kv::scalar(&fields, "residential_ventilation_m3_h")?,
-            sfp_w_m3_s: norm_core::dsl_kv::scalar(&fields, "sfp_w_m3_s")?,
-            sfp_required_class: norm_core::dsl_kv::scalar(&fields, "sfp_required_class")?,
-            heat_recovery_eta: norm_core::dsl_kv::scalar(&fields, "heat_recovery_eta")?,
-            heat_recovery_eta_min: norm_core::dsl_kv::scalar(&fields, "heat_recovery_eta_min")?,
-            system_type: norm_core::dsl_kv::scalar(&fields, "system_type")?,
-            years_since_inspection: norm_core::dsl_kv::scalar(&fields, "years_since_inspection")?,
-            humidification_required_kg_h: norm_core::dsl_kv::scalar(&fields, "humidification_required_kg_h")?,
-            humidification_provided_kg_h: norm_core::dsl_kv::scalar(&fields, "humidification_provided_kg_h")?,
-            fan_q_v_m3_s: norm_core::dsl_kv::scalar(&fields, "fan_q_v_m3_s")?,
-            fan_t_run_h: norm_core::dsl_kv::scalar(&fields, "fan_t_run_h")?,
-            fan_energy_reference_kwh: norm_core::dsl_kv::scalar(&fields, "fan_energy_reference_kwh")?,
-            night_setback_k: norm_core::dsl_kv::scalar(&fields, "night_setback_k")?,
-            hr_m_dot_kg_s: norm_core::dsl_kv::scalar(&fields, "hr_m_dot_kg_s")?,
-            hr_cp_j_kgk: norm_core::dsl_kv::scalar(&fields, "hr_cp_j_kgk")?,
-            hr_delta_t_c: norm_core::dsl_kv::scalar(&fields, "hr_delta_t_c")?,
-            hr_t_h: norm_core::dsl_kv::scalar(&fields, "hr_t_h")?,
-            hr_savings_reference_kwh: norm_core::dsl_kv::scalar(&fields, "hr_savings_reference_kwh")?,
-            n50_h_inv: norm_core::dsl_kv::scalar(&fields, "n50_h_inv")?,
-            volume_m3: norm_core::dsl_kv::scalar(&fields, "volume_m3")?,
-            infiltration_allowance_m3_h: norm_core::dsl_kv::scalar(&fields, "infiltration_allowance_m3_h")?,
-            cellar_area_m2: norm_core::dsl_kv::scalar(&fields, "cellar_area_m2")?,
-            cellar_ventilation_m3_h: norm_core::dsl_kv::scalar(&fields, "cellar_ventilation_m3_h")?,
-            h_tr_w_k: norm_core::dsl_kv::scalar(&fields, "h_tr_w_k")?,
-            h_ve_w_k: norm_core::dsl_kv::scalar(&fields, "h_ve_w_k")?,
-            theta_e_c: norm_core::dsl_kv::scalar(&fields, "theta_e_c")?,
-            theta_set_c: norm_core::dsl_kv::scalar(&fields, "theta_set_c")?,
-            cooling_delta_t_h: norm_core::dsl_kv::scalar(&fields, "cooling_delta_t_h")?,
-            cooling_gains_kwh: norm_core::dsl_kv::scalar(&fields, "cooling_gains_kwh")?,
-            cooling_utilization_factor: norm_core::dsl_kv::scalar(&fields, "cooling_utilization_factor")?,
-            cooling_reference_kwh: norm_core::dsl_kv::scalar(&fields, "cooling_reference_kwh")?,
-            chiller_type: norm_core::dsl_kv::scalar(&fields, "chiller_type")?,
-            eer_actual: norm_core::dsl_kv::scalar(&fields, "eer_actual")?,
-            q_c_kwh: norm_core::dsl_kv::scalar(&fields, "q_c_kwh")?,
-            generation_reference_kwh: norm_core::dsl_kv::scalar(&fields, "generation_reference_kwh")?,
-            data_center_supply_c: norm_core::dsl_kv::scalar(&fields, "data_center_supply_c")?,
-            h_st_w_k: norm_core::dsl_kv::scalar(&fields, "h_st_w_k")?,
-            theta_st_c: norm_core::dsl_kv::scalar(&fields, "theta_st_c")?,
-            theta_amb_c: norm_core::dsl_kv::scalar(&fields, "theta_amb_c")?,
-            storage_t_h: norm_core::dsl_kv::scalar(&fields, "storage_t_h")?,
-            storage_allowance_kwh: norm_core::dsl_kv::scalar(&fields, "storage_allowance_kwh")?,
-            dhw_delivery_c: norm_core::dsl_kv::scalar(&fields, "dhw_delivery_c")?,
-            duct_class: norm_core::dsl_kv::scalar(&fields, "duct_class")?,
-            duct_test_pressure_pa: norm_core::dsl_kv::scalar(&fields, "duct_test_pressure_pa")?,
-            duct_leakage_m3_s_m2: norm_core::dsl_kv::scalar(&fields, "duct_leakage_m3_s_m2")?,
-        })
-    }
-
-    fn print_dsl(&self) -> String {
-        [
-            norm_core::dsl_kv::line("annex", &self.annex),
-            norm_core::dsl_kv::line("occupancy", &self.occupancy),
-            norm_core::dsl_kv::line("comfort_category", &self.comfort_category),
-            norm_core::dsl_kv::line("t_op_c", &self.t_op_c),
-            norm_core::dsl_kv::line("rh_percent", &self.rh_percent),
-            norm_core::dsl_kv::line("air_speed_m_s", &self.air_speed_m_s),
-            norm_core::dsl_kv::line("theta_rm_c", &self.theta_rm_c),
-            norm_core::dsl_kv::line("co2_ppm", &self.co2_ppm),
-            norm_core::dsl_kv::line("df_percent", &self.df_percent),
-            norm_core::dsl_kv::line("l_aeq_db", &self.l_aeq_db),
-            norm_core::dsl_kv::line("persons", &self.persons),
-            norm_core::dsl_kv::line("ida_class", &self.ida_class),
-            norm_core::dsl_kv::line("ventilation_m3_h", &self.ventilation_m3_h),
-            norm_core::dsl_kv::line("floor_area_m2", &self.floor_area_m2),
-            norm_core::dsl_kv::line("bedrooms", &self.bedrooms),
-            norm_core::dsl_kv::line("dwelling_ventilation_m3_h", &self.dwelling_ventilation_m3_h),
-            norm_core::dsl_kv::line("occupants", &self.occupants),
-            norm_core::dsl_kv::line("residential_ventilation_m3_h", &self.residential_ventilation_m3_h),
-            norm_core::dsl_kv::line("sfp_w_m3_s", &self.sfp_w_m3_s),
-            norm_core::dsl_kv::line("sfp_required_class", &self.sfp_required_class),
-            norm_core::dsl_kv::line("heat_recovery_eta", &self.heat_recovery_eta),
-            norm_core::dsl_kv::line("heat_recovery_eta_min", &self.heat_recovery_eta_min),
-            norm_core::dsl_kv::line("system_type", &self.system_type),
-            norm_core::dsl_kv::line("years_since_inspection", &self.years_since_inspection),
-            norm_core::dsl_kv::line("humidification_required_kg_h", &self.humidification_required_kg_h),
-            norm_core::dsl_kv::line("humidification_provided_kg_h", &self.humidification_provided_kg_h),
-            norm_core::dsl_kv::line("fan_q_v_m3_s", &self.fan_q_v_m3_s),
-            norm_core::dsl_kv::line("fan_t_run_h", &self.fan_t_run_h),
-            norm_core::dsl_kv::line("fan_energy_reference_kwh", &self.fan_energy_reference_kwh),
-            norm_core::dsl_kv::line("night_setback_k", &self.night_setback_k),
-            norm_core::dsl_kv::line("hr_m_dot_kg_s", &self.hr_m_dot_kg_s),
-            norm_core::dsl_kv::line("hr_cp_j_kgk", &self.hr_cp_j_kgk),
-            norm_core::dsl_kv::line("hr_delta_t_c", &self.hr_delta_t_c),
-            norm_core::dsl_kv::line("hr_t_h", &self.hr_t_h),
-            norm_core::dsl_kv::line("hr_savings_reference_kwh", &self.hr_savings_reference_kwh),
-            norm_core::dsl_kv::line("n50_h_inv", &self.n50_h_inv),
-            norm_core::dsl_kv::line("volume_m3", &self.volume_m3),
-            norm_core::dsl_kv::line("infiltration_allowance_m3_h", &self.infiltration_allowance_m3_h),
-            norm_core::dsl_kv::line("cellar_area_m2", &self.cellar_area_m2),
-            norm_core::dsl_kv::line("cellar_ventilation_m3_h", &self.cellar_ventilation_m3_h),
-            norm_core::dsl_kv::line("h_tr_w_k", &self.h_tr_w_k),
-            norm_core::dsl_kv::line("h_ve_w_k", &self.h_ve_w_k),
-            norm_core::dsl_kv::line("theta_e_c", &self.theta_e_c),
-            norm_core::dsl_kv::line("theta_set_c", &self.theta_set_c),
-            norm_core::dsl_kv::line("cooling_delta_t_h", &self.cooling_delta_t_h),
-            norm_core::dsl_kv::line("cooling_gains_kwh", &self.cooling_gains_kwh),
-            norm_core::dsl_kv::line("cooling_utilization_factor", &self.cooling_utilization_factor),
-            norm_core::dsl_kv::line("cooling_reference_kwh", &self.cooling_reference_kwh),
-            norm_core::dsl_kv::line("chiller_type", &self.chiller_type),
-            norm_core::dsl_kv::line("eer_actual", &self.eer_actual),
-            norm_core::dsl_kv::line("q_c_kwh", &self.q_c_kwh),
-            norm_core::dsl_kv::line("generation_reference_kwh", &self.generation_reference_kwh),
-            norm_core::dsl_kv::line("data_center_supply_c", &self.data_center_supply_c),
-            norm_core::dsl_kv::line("h_st_w_k", &self.h_st_w_k),
-            norm_core::dsl_kv::line("theta_st_c", &self.theta_st_c),
-            norm_core::dsl_kv::line("theta_amb_c", &self.theta_amb_c),
-            norm_core::dsl_kv::line("storage_t_h", &self.storage_t_h),
-            norm_core::dsl_kv::line("storage_allowance_kwh", &self.storage_allowance_kwh),
-            norm_core::dsl_kv::line("dhw_delivery_c", &self.dhw_delivery_c),
-            norm_core::dsl_kv::line("duct_class", &self.duct_class),
-            norm_core::dsl_kv::line("duct_test_pressure_pa", &self.duct_test_pressure_pa),
-            norm_core::dsl_kv::line("duct_leakage_m3_s_m2", &self.duct_leakage_m3_s_m2),
-        ]
-        .join("\n")
-            + "\n"
-    }
-}
-
+// `Document`'s `vcs::DocumentDsl` impl is now generated by `#[derive(dsl::DslDocument)]` on the
+// type definition above — the engine's `dsl_schema` grammar replaces this crate's own hand-rolled
+// `norm_core::dsl_kv` printer/parser.
 // #endregion 🔖Dsl
 
 #[cfg(test)]

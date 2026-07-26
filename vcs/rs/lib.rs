@@ -693,6 +693,7 @@ fn find_unescaped_trailing_quote(chars: &[char]) -> Option<usize> {
 
 /// @emoji 🧾 One parsed structural line (`@doc`/`@edit`/`@change`/`@checkpoint`/`@alternative`/`@active`):
 /// the `@kind` marker, its `key=value` tokens, and an optional trailing quoted text field.
+#[derive(Debug)]
 struct StructuralLine {
     kind: String,
     fields: HashMap<String, String>,
@@ -4845,5 +4846,395 @@ mod tests {
         );
     }
     //#endregion 🏛️StudioTests
+
+    //#region 🔖TextFormatHelpers
+    #[test]
+    fn split_and_join_ids_round_trip_the_dash_sentinel_and_lists() {
+        assert_eq!(split_ids("-"), Vec::<String>::new());
+        assert_eq!(split_ids("a,b,c"), vec!["a".to_string(), "b".to_string(), "c".to_string()]);
+        assert_eq!(join_ids(&[]), "-");
+        assert_eq!(join_ids(&["a".to_string(), "b".to_string()]), "a,b");
+    }
+
+    #[test]
+    fn escape_and_unescape_id_component_round_trip_delimiter_characters() {
+        let raw = "we:ird,id%with/delims";
+        let escaped = escape_id_component(raw);
+        assert!(!escaped.contains(',') && !escaped.contains(':'), "delimiters must be escaped away: {escaped}");
+        assert_eq!(unescape_id_component(&escaped), raw);
+    }
+
+    #[test]
+    fn print_and_parse_authors_round_trip_including_delimiter_characters_and_dash() {
+        assert_eq!(parse_authors("-"), Vec::new());
+        let authors = vec![
+            Author { id: "a:1,x".into(), name: "Alice, A.".into(), avatar: None },
+            Author { id: "b2".into(), name: "Bob".into(), avatar: None },
+        ];
+        let printed = print_authors(&authors);
+        let parsed = parse_authors(&printed);
+        let expected: Vec<Author> = authors
+            .into_iter()
+            .map(|author| Author { avatar: None, ..author })
+            .collect();
+        assert_eq!(parsed, expected, "author id/name delimiter characters survive the print/parse round trip");
+    }
+
+    #[test]
+    fn find_unescaped_trailing_quote_distinguishes_escaped_from_real_closing_quotes() {
+        let ends_in_escaped_quote: Vec<char> = r#"head \""#.chars().collect();
+        assert_eq!(find_unescaped_trailing_quote(&ends_in_escaped_quote), None, "a lone escaped quote is not a real closing quote");
+
+        let real_quoted: Vec<char> = r#"head "body""#.chars().collect();
+        let open = find_unescaped_trailing_quote(&real_quoted).expect("a genuinely closed quote is found");
+        assert_eq!(real_quoted[open], '"');
+        assert_eq!(real_quoted[open + 1..real_quoted.len() - 1].iter().collect::<String>(), "body");
+
+        let escaped_backslash_then_quote: Vec<char> = r#"head "a\\""#.chars().collect();
+        assert!(
+            find_unescaped_trailing_quote(&escaped_backslash_then_quote).is_some(),
+            "an even number of backslashes before the quote still counts it as unescaped"
+        );
+    }
+
+    #[test]
+    fn parse_structural_line_rejects_a_line_without_leading_at() {
+        let error = parse_structural_line("not a structural line", 3).unwrap_err();
+        assert!(error.message.contains("starting with '@'"), "got {error:?}");
+        assert_eq!(error.span.line, 3);
+    }
+
+    #[test]
+    fn parse_structural_line_rejects_a_token_without_equals() {
+        let error = parse_structural_line("@doc badtoken", 5).unwrap_err();
+        assert!(error.message.contains("key=value"), "got {error:?}");
+        assert_eq!(error.span.line, 5);
+    }
+
+    #[test]
+    fn parse_structural_line_extracts_kind_fields_and_trailing_quoted_text() {
+        let structural = parse_structural_line(r#"@edit id=e1 actor=- "hello \"world\"""#, 1).expect("parses");
+        assert_eq!(structural.kind, "@edit");
+        assert_eq!(structural.fields.get("id").map(String::as_str), Some("e1"));
+        assert_eq!(structural.text.as_deref(), Some(r#"hello "world""#));
+    }
+
+    #[test]
+    fn field_reports_a_missing_key_with_the_line_number() {
+        let fields: HashMap<String, String> = HashMap::new();
+        let error = field(&fields, "id", 7).unwrap_err();
+        assert!(error.message.contains("missing field 'id'"), "got {error:?}");
+        assert_eq!(error.span.line, 7);
+    }
+
+    #[test]
+    fn parse_document_text_rejects_a_structural_line_missing_a_required_field() {
+        let files = DocumentTextFiles {
+            dsl: "n 0\n".to_string(),
+            ops: "@doc schema=demo/v1\n".to_string(),
+        };
+        let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
+        assert!(error.message.contains("missing field 'id'"), "got {error:?}");
+        assert_eq!(error.span.line, 1);
+    }
+
+    #[test]
+    fn parse_document_text_rejects_an_unknown_structural_line_kind() {
+        let files = DocumentTextFiles {
+            dsl: "n 0\n".to_string(),
+            ops: "@doc schema=demo/v1 id=demo\n@bogus id=x\n".to_string(),
+        };
+        let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
+        assert!(error.message.contains("unknown structural line kind"), "got {error:?}");
+        assert_eq!(error.span.line, 2);
+    }
+
+    #[test]
+    fn document_text_round_trips_with_an_active_alternative_and_a_quoted_description() {
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 1 }],
+                description: Some("said \"hi\" and used a \\ backslash".into()),
+            })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "branch \"a\"".into() })
+            .expect("create alternative (auto-commits and activates it)");
+        assert!(store.envelope().active_alternative_id.is_some(), "precondition: an alternative is active");
+        let files = print_document_text(store.envelope()).expect("print document text");
+        assert!(files.ops.contains("@active id="), "an active alternative must print an @active record");
+        test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖TextFormatHelpers
+
+    //#region 🔖CommandErrorPaths
+    #[test]
+    fn apply_with_no_operations_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::Apply { operations: Vec::new(), description: None })
+            .unwrap_err();
+        assert_eq!(error, VcsError::EmptyApply);
+    }
+
+    #[test]
+    fn amend_last_with_no_operations_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::AmendLast { operations: Vec::new(), coalesce_key: None })
+            .unwrap_err();
+        assert_eq!(error, VcsError::EmptyApply);
+    }
+
+    #[test]
+    fn undo_with_nothing_applied_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        assert_eq!(store.dispatch(DocumentVcsCommand::Undo).unwrap_err(), VcsError::NothingToUndo);
+    }
+
+    #[test]
+    fn redo_with_nothing_undone_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        assert_eq!(store.dispatch(DocumentVcsCommand::Redo).unwrap_err(), VcsError::NothingToRedo);
+    }
+
+    #[test]
+    fn checkout_of_an_unknown_checkpoint_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: "nope".into() })
+            .unwrap_err();
+        assert_eq!(error, VcsError::UnknownChange("nope".into()));
+    }
+
+    #[test]
+    fn switch_to_an_unknown_alternative_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: "nope".into() })
+            .unwrap_err();
+        assert_eq!(error, VcsError::UnknownAlternative("nope".into()));
+    }
+
+    #[test]
+    fn switch_to_an_alternative_whose_pinned_checkpoint_is_missing_is_rejected() {
+        let mut envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        envelope.vcs.alternatives.push(Alternative {
+            id: "alt-dangling".into(),
+            name: "dangling".into(),
+            checkpoint_ids: vec!["checkpoint-that-was-never-recorded".into()],
+        });
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::SwitchAlternative { alternative_id: "alt-dangling".into() })
+            .unwrap_err();
+        assert_eq!(error, VcsError::NoCheckpoint, "the alternative's pinned checkpoint id must actually exist");
+    }
+
+    #[test]
+    fn create_alternative_with_no_edits_and_no_checkpoints_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let error = store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "x".into() })
+            .unwrap_err();
+        assert_eq!(error, VcsError::NoCheckpoint, "the auto-commit has nothing pending, so there is still no checkpoint to branch from");
+    }
+
+    #[test]
+    fn compensating_undo_without_a_semantic_command_is_rejected() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .expect("apply");
+        let error = store
+            .dispatch(DocumentVcsCommand::UndoWithPolicy { policy: UndoPolicy::CompensatingAction, semantic_command: None })
+            .unwrap_err();
+        assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
+    }
+
+    #[test]
+    fn materialize_document_projection_rejects_an_unknown_edit_id() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let error = materialize_document_projection(&envelope, &["missing-edit".to_string()]).unwrap_err();
+        assert_eq!(error, VcsError::UnknownEdit("missing-edit".into()));
+    }
+
+    #[test]
+    fn dispatch_json_applies_a_serialized_command_and_projection_json_reflects_it() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        let command_json = serde_json::to_string(&DocumentVcsCommand::Apply {
+            operations: vec![DemoOperation::SetN { n: 7 }],
+            description: None,
+        })
+        .expect("serialize command");
+        store.dispatch_json(&command_json).expect("dispatch json");
+        assert_eq!(store.projection_json().expect("projection json"), serde_json::to_string(&DemoProjection { n: 7 }).unwrap());
+
+        let error = store.dispatch_json("not json").unwrap_err();
+        assert!(matches!(error, VcsError::Deserialize(_)), "got {error:?}");
+    }
+    //#endregion 🔖CommandErrorPaths
+
+    //#region 🔖ReconcileAlternative
+    #[test]
+    fn reconcile_alternative_requires_an_existing_checkpoint() {
+        let mut envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let error = reconcile_alternative(&mut envelope, "reconciled", None, Vec::new()).unwrap_err();
+        assert_eq!(error, VcsError::NoCheckpoint);
+    }
+
+    #[test]
+    fn reconcile_alternative_pins_the_latest_checkpoint_and_optionally_records_a_reconciliation_checkpoint() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("c1".into()), authors: Vec::new() })
+            .expect("commit");
+        let base_checkpoint_id = store.envelope().vcs.checkpoints[0].id.clone();
+
+        let mut without_message = store.envelope().clone();
+        let alt_id = reconcile_alternative(&mut without_message, "no-record", None, Vec::new()).expect("reconcile without message");
+        assert_eq!(without_message.vcs.alternatives.last().unwrap().checkpoint_ids, vec![base_checkpoint_id.clone()]);
+        assert_eq!(without_message.vcs.checkpoints.len(), 1, "no checkpoint_message means no new checkpoint is recorded");
+        assert!(!alt_id.is_empty());
+
+        let mut with_message = store.envelope().clone();
+        let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
+        reconcile_alternative(&mut with_message, "recorded", Some("merged concurrent work".into()), authors.clone())
+            .expect("reconcile with message");
+        assert_eq!(with_message.vcs.checkpoints.len(), 2, "a checkpoint_message appends one reconciliation checkpoint");
+        let recorded_checkpoint = with_message.vcs.checkpoints.last().unwrap();
+        assert_eq!(recorded_checkpoint.parent_id, Some(base_checkpoint_id));
+        assert_eq!(recorded_checkpoint.authors, authors);
+        assert_eq!(recorded_checkpoint.message, Some("reconciled".into()), "the reconciliation checkpoint's own message is fixed, distinct from the change description");
+        assert_eq!(
+            with_message.vcs.changes.last().unwrap().description,
+            Some("merged concurrent work".into()),
+            "the passed checkpoint_message becomes the change's description"
+        );
+    }
+    //#endregion 🔖ReconcileAlternative
+
+    //#region 🔖RemoteSnapshotMerge
+    #[test]
+    fn snapshot_merge_into_a_nonempty_store_adds_only_the_new_remote_edits_and_records() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .expect("local apply");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("local".into()), authors: Vec::new() })
+            .expect("local commit");
+
+        let mut remote_store = DocumentVcsStore::new(store.envelope().clone());
+        remote_store.set_state(store.envelope().clone(), store.applied_edit_ids().to_vec(), Vec::new());
+        remote_store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
+            .expect("remote apply");
+        remote_store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("remote".into()), authors: Vec::new() })
+            .expect("remote commit");
+
+        let (channel, remote_end) = ChannelBackbone::pair("chan");
+        store.attach_backbone(Box::new(channel)).expect("attach");
+        let _ = remote_end.drain().expect("drain attach snapshot");
+        remote_end
+            .push(BackboneMessage::Snapshot { envelope_json: remote_store.envelope_json().expect("remote json") })
+            .expect("push snapshot");
+        store.tick().expect("tick merges the pushed snapshot");
+
+        assert_eq!(store.envelope().vcs.edits.len(), 2, "the shared original edit is deduped, only the new remote edit is added");
+        assert_eq!(store.envelope().vcs.checkpoints.len(), 2, "the remote's new checkpoint is merged in by id");
+        assert_eq!(store.projection().expect("projection").n, 2, "current folds in the newly merged edit's forwards");
+    }
+    //#endregion 🔖RemoteSnapshotMerge
+
+    //#region 🔖StudioMemberCheckoutRouting
+    #[test]
+    fn studio_member_checkout_switches_at_the_alternative_tip_and_falls_back_to_checkout_when_stale() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None })
+            .expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::CreateAlternative { name: "feature".into() })
+            .expect("create alternative (auto-commits since no checkpoint existed yet)");
+        let alt_id = store.envelope().vcs.alternatives[0].id.clone();
+        let tip = store.envelope().vcs.alternatives[0].checkpoint_ids.last().expect("alt has a tip").clone();
+
+        StudioMember::checkout(&mut store, &tip, &alt_id).expect("checkout at the tip routes through SwitchAlternative");
+        assert_eq!(store.envelope().active_alternative_id, Some(alt_id.clone()), "switching to the tip keeps it active");
+
+        store
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None })
+            .expect("apply on branch");
+        store
+            .dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("c2".into()), authors: Vec::new() })
+            .expect("commit c2, advancing the alt's tip past `tip`");
+
+        StudioMember::checkout(&mut store, &tip, &alt_id).expect("checkout of the now-stale tip falls back to CheckoutCheckpoint");
+        assert_eq!(store.projection().expect("projection").n, 1, "restored the old checkpoint's state");
+        assert_eq!(
+            store.envelope().active_alternative_id, None,
+            "the checked-out checkpoint is no longer any alternative's tip, so nothing is active"
+        );
+    }
+    //#endregion 🔖StudioMemberCheckoutRouting
+
+    //#region 🔖BackbonePorts
+    #[test]
+    fn memory_backbone_port_round_trips_and_reports_a_missing_file() {
+        let port = MemoryBackbonePort::new();
+        let error = port.read("file://nowhere").unwrap_err();
+        assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
+        port.write("file://a", "payload-1").expect("write");
+        assert_eq!(port.read("file://a").expect("read"), "payload-1");
+        port.write("file://a", "payload-2").expect("overwrite");
+        assert_eq!(port.read("file://a").expect("read after overwrite"), "payload-2", "write is an upsert");
+    }
+
+    #[test]
+    fn local_storage_backbone_port_falls_back_to_its_in_memory_store() {
+        let port = LocalStorageBackbonePort::new();
+        let error = port.read("local://missing").unwrap_err();
+        assert!(matches!(error, VcsError::Backbone(_)), "got {error:?}");
+        port.write("local://a", "value").expect("write falls back to the in-memory store");
+        assert_eq!(port.read("local://a").expect("read falls back too"), "value");
+
+        let defaulted = LocalStorageBackbonePort::default();
+        assert!(defaulted.read("local://a").is_err(), "Default constructs its own independent fallback store");
+    }
+    //#endregion 🔖BackbonePorts
 }
 //#endregion 🧪Tests

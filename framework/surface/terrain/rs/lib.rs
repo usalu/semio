@@ -540,5 +540,133 @@ mod tests {
         assert_eq!(value["exaggeration"], 1.5);
         assert_eq!(value["tileUrlTemplate"], GIS_3D_TERRAIN_TILE_URL_TEMPLATE);
     }
+
+    #[test]
+    fn pick_zoom_halves_reference_distance_per_level() {
+        assert_eq!(tiles::pick_zoom(400.0), tiles::TERRAIN_TILE_MAX_ZOOM);
+        assert_eq!(tiles::pick_zoom(800.0), tiles::TERRAIN_TILE_MAX_ZOOM - 1);
+        assert_eq!(tiles::pick_zoom(1600.0), tiles::TERRAIN_TILE_MAX_ZOOM - 2);
+    }
+
+    #[test]
+    fn visible_tiles_clamps_at_world_edge() {
+        let rows = tiles::visible_tiles(-179.9, 0.1, 0);
+        assert_eq!(rows, vec![(0, 0, 0)]);
+    }
+
+    #[test]
+    fn decode_terrarium_png_invalid_bytes_returns_error() {
+        let error = decode_terrarium_png(b"not a real png").expect_err("garbage bytes should not decode");
+        assert!(!error.to_string().is_empty());
+    }
+
+    #[test]
+    fn sample_elevation_clamps_out_of_bounds_coordinates() {
+        let mut image = image::RgbaImage::new(2, 2);
+        image.put_pixel(1, 1, image::Rgba([128, 0, 0, 255]));
+        let inside = sample_elevation(&image, 1.0, 1.0);
+        let clamped_high = sample_elevation(&image, 999.0, 999.0);
+        let clamped_low = sample_elevation(&image, -50.0, -50.0);
+        assert_eq!(inside, clamped_high);
+        assert_ne!(inside, clamped_low);
+    }
+
+    #[test]
+    fn normalize3_degenerate_vector_does_not_panic_or_nan() {
+        let (x, y, z) = normalize3(0.0, 0.0, 0.0);
+        assert!(x.is_finite() && y.is_finite() && z.is_finite());
+    }
+
+    #[test]
+    fn upload_elevation_tile_invalid_bytes_returns_false_and_no_mesh() {
+        let mut session = TerrainSessionCore::default();
+        assert!(!session.upload_elevation_tile(5, 1, 1, b"garbage"));
+        assert_eq!(session.terrain_tile_mesh_json(5, 1, 1), "null");
+    }
+
+    #[test]
+    fn evict_terrain_tile_removes_previously_uploaded_tile() {
+        let mut session = TerrainSessionCore::default();
+        let bytes = solid_terrarium_png(50.0);
+        assert!(session.upload_elevation_tile(8, 10, 10, &bytes));
+        assert_ne!(session.terrain_tile_mesh_json(8, 10, 10), "null");
+        session.evict_terrain_tile(8, 10, 10);
+        assert_eq!(session.terrain_tile_mesh_json(8, 10, 10), "null");
+    }
+
+    #[test]
+    fn set_exaggeration_clamps_negative_to_zero() {
+        let mut session = TerrainSessionCore::default();
+        session.set_exaggeration(-3.0);
+        let bytes = solid_terrarium_png(200.0);
+        session.upload_elevation_tile(9, 5, 5, &bytes);
+        let mesh_json = session.terrain_tile_mesh_json(9, 5, 5);
+        let mesh: TerrainTileMeshJson = serde_json::from_str(&mesh_json).expect("valid mesh json");
+        for chunk in mesh.positions.chunks_exact(3) {
+            assert_eq!(chunk[2], 0.0);
+        }
+    }
+
+    #[test]
+    fn visible_terrain_tiles_json_falls_back_to_defaults_on_invalid_camera_json() {
+        let session = TerrainSessionCore::default();
+        let json = session.visible_terrain_tiles_json("not json");
+        let rows: Vec<serde_json::Value> = serde_json::from_str(&json).expect("valid array");
+        assert!(!rows.is_empty());
+    }
+
+    #[test]
+    fn visible_terrain_tiles_json_reflects_camera_distance_in_zoom() {
+        let session = TerrainSessionCore::default();
+        let close_json = session.visible_terrain_tiles_json(r#"{"position":[0,0,100],"target":[0,0,0]}"#);
+        let far_json = session.visible_terrain_tiles_json(r#"{"position":[0,0,1000000],"target":[0,0,0]}"#);
+        let close_rows: Vec<serde_json::Value> = serde_json::from_str(&close_json).expect("valid array");
+        let far_rows: Vec<serde_json::Value> = serde_json::from_str(&far_json).expect("valid array");
+        assert!(close_rows[0]["z"].as_u64().unwrap() > far_rows[0]["z"].as_u64().unwrap());
+    }
+
+    #[test]
+    fn terrain_descriptor_json_defaults_exaggeration_and_positions_when_absent() {
+        let json = r#"{"schema":"gis.terrain","projectOrigin":{"lon":1.0,"lat":2.0}}"#;
+        let descriptor: TerrainDescriptorJson = serde_json::from_str(json).expect("valid descriptor json");
+        assert_eq!(descriptor.exaggeration, 1.0);
+        assert!(descriptor.positions.is_empty());
+    }
+
+    #[test]
+    fn terrain_position_data_omits_none_fields_when_serialized() {
+        let position = TerrainPositionData { id: "p2".to_string(), lon: 1.0, lat: 2.0, label: None, icon: Some("pin".to_string()) };
+        let json = serde_json::to_string(&position).expect("serializes");
+        assert!(!json.contains("label"));
+        assert!(json.contains("\"icon\":\"pin\""));
+    }
+
+    fn gradient_terrarium_png() -> Vec<u8> {
+        let mut image = image::RgbaImage::new(TERRARIUM_TILE_PX, TERRARIUM_TILE_PX);
+        for (px, _py, pixel) in image.enumerate_pixels_mut() {
+            let value = (500.0 + px as f32 * 10.0 + 32768.0).round() as i64;
+            let r = ((value >> 8) & 0xff) as u8;
+            let g = (value - ((r as i64) << 8)).clamp(0, 255) as u8;
+            *pixel = image::Rgba([r, g, 0, 255]);
+        }
+        let mut bytes = Vec::new();
+        image::DynamicImage::ImageRgba8(image).write_to(&mut std::io::Cursor::new(&mut bytes), image::ImageFormat::Png).expect("encode png");
+        bytes
+    }
+
+    #[test]
+    fn sloped_tile_mesh_has_varying_elevation_and_nontrivial_normals() {
+        let mut session = TerrainSessionCore::default();
+        session.set_project_origin(9.7382, 52.3759);
+        let bytes = gradient_terrarium_png();
+        assert!(session.upload_elevation_tile(12, 2000, 1300, &bytes));
+        let mesh_json = session.terrain_tile_mesh_json(12, 2000, 1300);
+        let mesh: TerrainTileMeshJson = serde_json::from_str(&mesh_json).expect("valid mesh json");
+        let min_z = mesh.positions.iter().skip(2).step_by(3).cloned().fold(f32::INFINITY, f32::min);
+        let max_z = mesh.positions.iter().skip(2).step_by(3).cloned().fold(f32::NEG_INFINITY, f32::max);
+        assert!(max_z - min_z > 1.0, "expected sloped tile to have elevation spread, got {min_z}..{max_z}");
+        let has_tilted_normal = mesh.normals.chunks_exact(3).any(|n| n[0].abs() > 1e-3);
+        assert!(has_tilted_normal, "expected at least one non-vertical normal on a sloped tile");
+    }
 }
 //#endregion Tests
