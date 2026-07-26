@@ -16,6 +16,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }
+dsl = { path = "../../../dsl/rs" }
 mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs" }
 nalgebra = { version = "0.33", default-features = false, features = ["std"] }
 parry3d = "0.17"

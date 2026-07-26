@@ -156,22 +156,22 @@ fn pattern_to_match_clause(pattern: &PatternJson) -> String {
     }
 }
 
-fn parse_bindings_json(bindings_json: &str) -> Result<HashMap<String, PropertyValue>, TrinityRewriteError> {
+fn parse_bindings_json(bindings_json: &str) -> Result<BTreeMap<String, PropertyValue>, TrinityRewriteError> {
     if bindings_json.trim().is_empty() {
-        return Ok(HashMap::new());
+        return Ok(BTreeMap::new());
     }
     Ok(serde_json::from_str(bindings_json)?)
 }
 
-fn parameter_defaults(rule: &Rule) -> HashMap<String, PropertyValue> {
-    let mut defaults = HashMap::new();
+fn parameter_defaults(rule: &Rule) -> BTreeMap<String, PropertyValue> {
+    let mut defaults = BTreeMap::new();
     for param in &rule.rhs.parameters {
         defaults.insert(param.name.clone(), param.default.clone());
     }
     defaults
 }
 
-fn effective_bindings(rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> HashMap<String, PropertyValue> {
+fn effective_bindings(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> BTreeMap<String, PropertyValue> {
     let mut merged = parameter_defaults(rule);
     for (key, value) in bindings {
         merged.insert(key.clone(), value.clone());
@@ -179,7 +179,7 @@ fn effective_bindings(rule: &Rule, bindings: &HashMap<String, PropertyValue>) ->
     merged
 }
 
-fn resolve_parameter_value(rule: &Rule, bindings: &HashMap<String, PropertyValue>, value: &PropertyValue) -> PropertyValue {
+fn resolve_parameter_value(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> PropertyValue {
     if let PropertyValue::String(s) = value {
         if let Some(name) = s.strip_prefix('$') {
             if !name.is_empty() {
@@ -197,7 +197,7 @@ fn resolve_parameter_value(rule: &Rule, bindings: &HashMap<String, PropertyValue
     value.clone()
 }
 
-fn assignment_value_jack(rule: &Rule, bindings: &HashMap<String, PropertyValue>, value: &PropertyValue) -> String {
+fn assignment_value_jack(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>, value: &PropertyValue) -> String {
     let resolved = resolve_parameter_value(rule, bindings, value);
     match resolved {
         PropertyValue::Null => "null".into(),
@@ -209,7 +209,7 @@ fn assignment_value_jack(rule: &Rule, bindings: &HashMap<String, PropertyValue>,
 }
 
 /// 🧵 Build the Jack query string for a rewrite rule without executing it.
-pub fn build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> String {
+pub fn build_rule_query(rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> String {
     let effective = effective_bindings(rule, bindings);
     let mut query = format!("MATCH {}", pattern_to_match_clause(&rule.lhs.pattern));
     if let Some(where_clause) = &rule.lhs.where_clause {
@@ -234,7 +234,7 @@ pub fn build_rule_query(rule: &Rule, bindings: &HashMap<String, PropertyValue>) 
 }
 
 /// ♻️ Apply a rewrite rule to a graph.
-pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &HashMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
+pub fn apply_rule(graph: &mut Graph, rule: &Rule, bindings: &BTreeMap<String, PropertyValue>) -> Result<QueryResult, TrinityRewriteError> {
     let query = build_rule_query(rule, bindings);
     let parsed = parse(&query).map_err(TrinityRewriteError::Jack)?;
     let (result, operations) = execute(graph, &parsed).map_err(TrinityRewriteError::Jack)?;
@@ -1352,7 +1352,7 @@ mod tests {
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
             rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
         };
-        apply_rule(&mut g, &rule, &HashMap::new()).unwrap();
+        apply_rule(&mut g, &rule, &BTreeMap::new()).unwrap();
         let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
     }
@@ -1371,12 +1371,12 @@ mod tests {
                 parameters: vec![ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("nakagin-core".into()) }],
             },
         };
-        apply_rule(&mut g, &rule, &HashMap::new()).unwrap();
+        apply_rule(&mut g, &rule, &BTreeMap::new()).unwrap();
         let core = g.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
         assert_eq!(core.properties.get("label"), Some(&PropertyValue::String("nakagin-core".into())));
 
         let mut g2 = nakagin_graph();
-        let mut bindings = HashMap::new();
+        let mut bindings = BTreeMap::new();
         bindings.insert("label".into(), PropertyValue::String("override-core".into()));
         apply_rule(&mut g2, &rule, &bindings).unwrap();
         let core2 = g2.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
@@ -1395,7 +1395,7 @@ mod tests {
             lhs: Lhs { pattern: PatternJson { left_var: "a".into(), left_kind: "Piece".into(), edge_var: None, edge_kind: None, right_var: None, right_kind: None }, where_clause: Some("a.name = 'b'".into()) },
             rhs: Rhs { create: vec![], delete: vec![], set: vec![AssignmentJson { var: "a".into(), prop: "label".into(), value: PropertyValue::String("nakagin-core".into()) }], merge: vec![], parameters: vec![] },
         };
-        apply_rule(&mut g, &rule, &HashMap::new()).unwrap();
+        apply_rule(&mut g, &rule, &BTreeMap::new()).unwrap();
         let fixture_json = g.fixture_json().unwrap();
         let reloaded = Graph::load_json(&fixture_json).unwrap();
         let core = reloaded.node("7dc5b737-3b6b-4068-b315-b7bacc91c2e1").unwrap();
@@ -1519,7 +1519,7 @@ mod tests {
                 parameters: vec![],
             },
         };
-        let query = build_rule_query(&rule, &HashMap::new());
+        let query = build_rule_query(&rule, &BTreeMap::new());
         assert!(query.starts_with("MATCH (a:Piece)-[e:Connection]->(b:Piece) WHERE a.name = 'b'"));
         assert!(query.contains("DELETE e"));
         assert!(query.contains("SET a.label = 'x'"));
@@ -1531,21 +1531,21 @@ mod tests {
     fn resolve_parameter_value_variants() {
         let mut rule = empty_rule();
         rule.rhs.parameters.push(ParameterSpec { name: "label".into(), kind: ParameterKind::String, default: PropertyValue::String("default-label".into()) });
-        let mut bindings = HashMap::new();
+        let mut bindings = BTreeMap::new();
         bindings.insert("label".to_string(), PropertyValue::String("bound-label".into()));
 
         assert_eq!(resolve_parameter_value(&rule, &bindings, &PropertyValue::String("$label".into())), PropertyValue::String("bound-label".into()));
-        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$label".into())), PropertyValue::String("default-label".into()));
-        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$unknown".into())), PropertyValue::String("$unknown".into()));
-        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("plain".into())), PropertyValue::String("plain".into()));
-        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::Number(5.0)), PropertyValue::Number(5.0));
-        assert_eq!(resolve_parameter_value(&rule, &HashMap::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
+        assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::String("$label".into())), PropertyValue::String("default-label".into()));
+        assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::String("$unknown".into())), PropertyValue::String("$unknown".into()));
+        assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::String("plain".into())), PropertyValue::String("plain".into()));
+        assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::Number(5.0)), PropertyValue::Number(5.0));
+        assert_eq!(resolve_parameter_value(&rule, &BTreeMap::new(), &PropertyValue::String("$".into())), PropertyValue::String("$".into()));
     }
 
     #[test]
     fn assignment_value_jack_formats_each_property_variant() {
         let rule = empty_rule();
-        let bindings = HashMap::new();
+        let bindings = BTreeMap::new();
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Null), "null");
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Bool(true)), "true");
         assert_eq!(assignment_value_jack(&rule, &bindings, &PropertyValue::Number(4.5)), "4.5");
@@ -1556,10 +1556,10 @@ mod tests {
 
     #[test]
     fn parse_bindings_json_handles_empty_and_invalid() {
-        assert_eq!(parse_bindings_json("").unwrap(), HashMap::new());
-        assert_eq!(parse_bindings_json("   ").unwrap(), HashMap::new());
+        assert_eq!(parse_bindings_json("").unwrap(), BTreeMap::new());
+        assert_eq!(parse_bindings_json("   ").unwrap(), BTreeMap::new());
         assert!(parse_bindings_json("{not json").is_err());
-        let mut expected = HashMap::new();
+        let mut expected = BTreeMap::new();
         expected.insert("x".to_string(), PropertyValue::Number(1.0));
         assert_eq!(parse_bindings_json("{\"x\":1}").unwrap(), expected);
     }

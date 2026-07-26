@@ -622,7 +622,7 @@ mod tests {
     fn renders_node_graph_scene() {
         let app = MathematicalPlayApp;
         let projection = MathProjection::default();
-        let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None };
+        let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() };
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(MATH_BODY_GRAPH, &doc, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();
@@ -633,7 +633,7 @@ mod tests {
     fn renders_canvas_2d_scene() {
         let app = MathematicalPlayApp;
         let projection = MathProjection::default();
-        let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None };
+        let history = semio_framework_plugin::HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() };
         let doc = DocumentView { projection: &projection, history: &history };
         let node = app.render(MATH_BODY_GEOMETRY, &doc, &ViewState::default());
         let json = serde_json::to_string(&node).unwrap();

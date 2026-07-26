@@ -1446,6 +1446,157 @@ export type IntroductionDemonstration = GeneratedIntroductionDemonstration;
 /** 🗨️ Generated from Rust `DialogDefinition` (`framework/core/rs/lib.rs`) — see `js/generated/manifest.ts`. */
 export type DialogDefinition = GeneratedDialogDefinition;
 
+//#region 🎬Tutorial
+/** 🎬 The framework-owned action id apps dispatch (or the shell auto-injects into the command palette,
+ * with a `tutorialId` Select arg) to (re)start a tutorial — mirrors Rust `START_TUTORIAL_ACTION_ID`.
+ * Distinct from the docs-tooltip `tutorial` link field on `UiLabelLeaf` (`ui/js/react`), a URL into the
+ * manual — this is the interactive recorded-walkthrough mechanism. */
+export const START_TUTORIAL_ACTION_ID = "startTutorial";
+
+/** ⏺️ The framework-owned action id that opens the tutorial recorder chrome — injected into EVERY app
+ * unconditionally (recording needs no app-side declaration). Mirrors Rust `RECORD_TUTORIAL_ACTION_ID`. */
+export const RECORD_TUTORIAL_ACTION_ID = "recordTutorial";
+
+/** ⏱️ Real-time (rate-independent) duration of the camera glide the player performs when the user
+ * presses Play after deviating from an active tutorial's recorded state. Mirrors Rust `TUTORIAL_CONVERGE_MS`. */
+export const TUTORIAL_CONVERGE_MS = 600;
+
+// 🚧 TODO(core-rs): these seven `Tutorial*` types mirror `framework/core/rs/lib.rs`'s `//#region 🔖Tutorial`
+// field-for-field (see that region's doc comments for the authoritative semantics) and are meant to be
+// ts-rs GENERATED like their `Introduction*` neighbors above. Regeneration is blocked right now by an
+// unrelated, pre-existing `typegen`-feature compile break in a concurrent session's work (`IconName` is
+// missing its `TS` derive in `ui/wgpu/rs/lib.rs`, breaking `cargo test --features typegen` workspace-wide).
+// Once that lands, run `bun nx run @semio-tech/framework-core:generate`, delete this hand-written block,
+// and re-add `Tutorial* as GeneratedTutorial*` imports above — names/shapes here were written to match the
+// eventual generated output exactly, so every other file importing from this module is unaffected.
+export type TutorialChapter = { readonly id: string; readonly at: number; readonly title: string; readonly body?: string };
+
+export type TutorialAssetSrc =
+  | { readonly kind: "url"; readonly url: string }
+  | { readonly kind: "blob"; readonly hash: string; readonly size: number; readonly mediaType: string }
+  | { readonly kind: "dataUrl"; readonly data: string };
+
+export type TutorialCaption = { readonly at: number; readonly durationMs: number; readonly text: string };
+
+export type TutorialNarrationCue = {
+  readonly id: string;
+  readonly at: number;
+  readonly durationMs: number;
+  readonly text: string;
+  readonly audio?: TutorialAssetSrc;
+  readonly voice?: string;
+  readonly rate: number;
+  readonly captions: readonly TutorialCaption[];
+};
+
+export type TutorialOverlayRect = { readonly x: number; readonly y: number; readonly width: number; readonly height: number };
+
+export type TutorialVideoCue = {
+  readonly at: number;
+  readonly durationMs: number;
+  readonly src: TutorialAssetSrc;
+  readonly rect: TutorialOverlayRect;
+  readonly muted: boolean;
+  readonly sourceOffsetMs: number;
+};
+
+export type TutorialEventKind =
+  | { readonly kind: "action"; readonly action: string; readonly args?: unknown }
+  | { readonly kind: "command"; readonly command: string; readonly args?: unknown }
+  | { readonly kind: "key"; readonly keys: string };
+
+export type TutorialEvent = { readonly at: number; readonly kind: TutorialEventKind };
+
+/** 🧮 Renderer-neutral restore point for chrome/UI state — see the Rust doc comment on
+ * `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState`. */
+export type TutorialUiSnapshot = {
+  readonly activeModeId?: string;
+  readonly focusedWindowId?: string;
+  readonly activeUtilityByWindowId: Readonly<Record<string, string>>;
+  readonly activeToolId?: string;
+  readonly layout?: WindowLayout;
+  readonly activePanelTabByGroup: Readonly<Record<string, string>>;
+  readonly panelJson?: string;
+  readonly selectionJson?: string;
+  readonly openDialogId?: string;
+  readonly expandedTreeIds: readonly string[];
+  readonly commandPanelOpen: boolean;
+};
+
+export type TutorialUiChange =
+  | { readonly kind: "activeMode"; readonly id: string }
+  | { readonly kind: "focusedWindow"; readonly id?: string }
+  | { readonly kind: "activeUtility"; readonly windowId: string; readonly utilityId?: string }
+  | { readonly kind: "activeTool"; readonly id?: string }
+  | { readonly kind: "layout"; readonly layout: WindowLayout }
+  | { readonly kind: "panelTab"; readonly group: string; readonly tabId?: string }
+  | { readonly kind: "panelState"; readonly panelJson: string }
+  | { readonly kind: "selection"; readonly selectionJson: string }
+  | { readonly kind: "dialog"; readonly id?: string; readonly args?: unknown }
+  | { readonly kind: "treeExpansion"; readonly id: string; readonly expanded: boolean }
+  | { readonly kind: "commandPanel"; readonly open: boolean };
+
+export type TutorialUiSample =
+  | { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot }
+  | { readonly kind: "delta"; readonly changes: readonly TutorialUiChange[] };
+
+export type TutorialUiKeyframe = { readonly at: number; readonly sample: TutorialUiSample };
+
+/** 🖋️ Mirrors `vcs::DocumentVcsCommand` with `Operation = unknown` (opaque per-app operation JSON) — the
+ * SOLE source of document mutation during playback; `TutorialEvent`s are annotational only. */
+export type TutorialDocumentEventKind =
+  | { readonly kind: "edit"; readonly forwards: readonly unknown[]; readonly backwards: readonly unknown[]; readonly description?: string; readonly coalesceKey?: string }
+  | { readonly kind: "undo" }
+  | { readonly kind: "redo" }
+  | { readonly kind: "checkpoint"; readonly message?: string }
+  | { readonly kind: "checkoutCheckpoint"; readonly checkpointId: string }
+  | { readonly kind: "switchAlternative"; readonly alternativeId: string }
+  | { readonly kind: "load"; readonly documentJson: string; readonly previousJson: string };
+
+export type TutorialDocumentEvent = { readonly at: number; readonly kind: TutorialDocumentEventKind };
+
+export type TutorialCameraState =
+  | { readonly kind: "orbit"; readonly position: readonly [number, number, number]; readonly target: readonly [number, number, number]; readonly up: readonly [number, number, number]; readonly fov?: number }
+  | { readonly kind: "canvas"; readonly x: number; readonly y: number; readonly zoom: number };
+
+export type TutorialEasing = "linear" | "easeInOut" | "hold";
+
+export type TutorialCameraKeyframe = { readonly at: number; readonly windowId: string; readonly camera: TutorialCameraState; readonly easing: TutorialEasing };
+
+/** 👻 Reuses the introduction demonstration vocabulary verbatim — see `IntroductionGesture`/`IntroductionPoint`. */
+export type TutorialGestureCue = { readonly at: number; readonly durationMs: number; readonly gesture: IntroductionGesture; readonly cursor?: IntroductionCursor };
+
+export type TutorialTracks = {
+  readonly narration: readonly TutorialNarrationCue[];
+  readonly video: readonly TutorialVideoCue[];
+  readonly events: readonly TutorialEvent[];
+  readonly ui: readonly TutorialUiKeyframe[];
+  readonly document: readonly TutorialDocumentEvent[];
+  readonly camera: readonly TutorialCameraKeyframe[];
+  readonly gestures: readonly TutorialGestureCue[];
+};
+
+export type TutorialBase = {
+  readonly documentJson?: string;
+  readonly exampleId?: string;
+  readonly ui: TutorialUiSnapshot;
+  readonly cameras: readonly TutorialCameraKeyframe[];
+};
+
+/** 🎬 A recorded, timed, replayable walkthrough — the timeline sibling of `IntroductionDefinition`. A
+ * *recording* IS a `TutorialDefinition`; the recorder simply produces a densely-sampled one. */
+export type TutorialDefinition = {
+  readonly id: string;
+  readonly title: string;
+  readonly description?: string;
+  readonly durationMs: number;
+  readonly chapters: readonly TutorialChapter[];
+  readonly base: TutorialBase;
+  readonly tracks: TutorialTracks;
+  readonly recordedAt?: string;
+};
+//#endregion 🎬Tutorial
+
 //#region 🏷️ShellBrand
 /** 🌐 Locales the shell chrome ships a complete translation bundle for — the single source `UiLocale`
  * (`ui/js/react`), `ShellBrandLocks.locale`, and `resolveShellLocks` all derive from. Adding a locale
@@ -1482,6 +1633,8 @@ export type ShellBrand = {
   readonly locks?: ShellBrandLocks;
   readonly defaults?: ShellBrandDefaults;
   readonly introduction?: IntroductionDefinition;
+  /** 🎬 Brand-owned tutorials shown ALONGSIDE the app's own declared ones (never replacing them, unlike `introduction`). */
+  readonly tutorials?: readonly TutorialDefinition[];
   /** 🎓 When true, auto-starts the brand introduction on every window load and never persists a device-local "seen" flag. */
   readonly replayIntroductionOnLoad?: boolean;
   /** 🧊 When true, the shell never reads or writes device-local shell state (dock, panes, named layouts, chrome prefs, introduction seen) — every refresh boots from brand locks/defaults only. */
@@ -1664,6 +1817,9 @@ export type AppDefinition = Omit<GeneratedAppDefinition, "defaultLayout" | "name
   readonly defaultLayout?: WindowLayout;
   readonly namedLayouts: readonly NamedLayout[];
   readonly iconId?: IconName;
+  /** 🎬 TODO(core-rs): fold into `GeneratedAppDefinition.tutorials` once typegen is unblocked (see the
+   * `//#region 🎬Tutorial` TODO above) — same field name/shape. */
+  readonly tutorials: readonly TutorialDefinition[];
 };
 export type AppModeDefinition = GeneratedModeDefinition;
 export type AppWindowOptions = GeneratedWindowOptions;

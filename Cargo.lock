@@ -239,6 +239,7 @@ dependencies = [
 name = "architect_program"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "mathematical_graph",
  "serde",
  "serde_json",
@@ -1102,6 +1103,7 @@ dependencies = [
 name = "cad_document"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "serde",
  "serde_json",
  "vcs",
@@ -1452,6 +1454,7 @@ dependencies = [
  "blake3",
  "chrono",
  "console_error_panic_hook",
+ "dsl",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -2686,6 +2689,7 @@ name = "flow_core"
 version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
+ "dsl",
  "flow_module_bim",
  "flow_module_brep",
  "flow_module_core",
@@ -6496,20 +6500,24 @@ dependencies = [
 name = "norm_iso_16757"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "norm_core",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "vcs",
 ]
 
 [[package]]
 name = "norm_vdi_3805"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "norm_core",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
+ "vcs",
 ]
 
 [[package]]
@@ -7792,6 +7800,7 @@ dependencies = [
 name = "protocol-module-procedural"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "flow_core",
  "flow_module_brep",
  "kernel_3d_engine",
@@ -7848,6 +7857,7 @@ dependencies = [
  "base64 0.22.1",
  "comemo",
  "data-url",
+ "dsl",
  "ecow",
  "fontdb",
  "image",
@@ -7871,6 +7881,7 @@ dependencies = [
 name = "puzzle_3d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "js-sys",
  "mathematical_graph_manifest",
  "nalgebra 0.33.3",
@@ -7887,6 +7898,7 @@ dependencies = [
 name = "puzzle_5d"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "mathematical_graph_manifest",
  "puzzle_3d",
  "serde",
@@ -9089,6 +9101,7 @@ dependencies = [
 name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -9125,6 +9138,7 @@ dependencies = [
  "infinite_cavas",
  "infinite_world",
  "js-sys",
+ "kernel_3d_scene",
  "pollster",
  "puzzle_2d",
  "resvg",
@@ -11352,6 +11366,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vcs"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "dsl_core",
  "js-sys",
  "rusqlite",
@@ -11371,6 +11386,7 @@ dependencies = [
 name = "vcs-plugin"
 version = "0.1.0"
 dependencies = [
+ "dsl",
  "semio-framework-plugin",
  "serde",
  "serde_json",

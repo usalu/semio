@@ -502,6 +502,7 @@ dependencies = [
  "blake3",
  "chrono",
  "console_error_panic_hook",
+ "dsl",
  "futures-channel",
  "futures-lite",
  "futures-util",
@@ -839,6 +840,41 @@ name = "dotenvy"
 version = "0.15.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1aaf95b3e5c8f23aa320147307562d361db0ae0d51242340f558153b4eb2439b"
+
+[[package]]
+name = "dsl"
+version = "0.1.0"
+dependencies = [
+ "dsl_core",
+ "dsl_derive",
+ "dsl_schema",
+ "serde_json",
+]
+
+[[package]]
+name = "dsl_core"
+version = "0.1.0"
+dependencies = [
+ "serde",
+ "thiserror",
+]
+
+[[package]]
+name = "dsl_derive"
+version = "0.1.0"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "syn",
+]
+
+[[package]]
+name = "dsl_schema"
+version = "0.1.0"
+dependencies = [
+ "dsl_core",
+ "serde_json",
+]
 
 [[package]]
 name = "dyn-clone"
@@ -3734,6 +3770,7 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vcs"
 version = "0.1.0"
 dependencies = [
+ "dsl_core",
  "js-sys",
  "rusqlite",
  "semio-framework-core",

@@ -3,7 +3,7 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_operations, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOperation, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_operations, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOperation, Puzzle2dProjection, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
@@ -31,8 +31,16 @@ pub mod d2 {
     const PUZZLE2D_FIXTURE_SCHEMA: &str = "puzzle.2d.fixture";
     const PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID: &str = "concrete-forest";
     const PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID: &str = "nakagin-capsule-tower";
-    const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../2d/example/concrete-forest.2d.json");
-    const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../2d/example/nakagin-capsule-tower.2d.json");
+    const CONCRETE_FOREST_EXAMPLE_DSL: &str = include_str!("../../2d/example/concrete-forest.puzzle2d");
+    const NAKAGIN_EXAMPLE_DSL: &str = include_str!("../../2d/example/nakagin-capsule-tower.puzzle2d");
+    /// 🌉 This app's own `Puzzle2dScene.fixture` (and `DocumentApp::Projection`) stays a bare
+    /// `serde_json::Value` — see `puzzle_2d`'s `🔖ValueBridge` region — so the DSL-text example
+    /// fixtures are parsed once into the typed `Puzzle2dProjection` and re-serialized to the JSON
+    /// string this module's `serde_json::from_str`/`.example(...)` call sites expect.
+    static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+    static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle2dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
     /// 🧰 The three canvas utilities declared to the framework utility bar (host-owned active utility, never a doc field).
     const PUZZLE2D_UTILITY_SELECT: &str = "select";
     const PUZZLE2D_UTILITY_BRUSH: &str = "brush";
@@ -154,8 +162,7 @@ pub mod d2 {
             "schema": PUZZLE2D_FIXTURE_SCHEMA,
             "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
             "nodes": [],
-            "edges": [],
-            "wires": []
+            "edges": []
         })
     }
 
@@ -1709,9 +1716,9 @@ pub mod d2 {
                     envelope.fixture = if example_id.is_empty() {
                         default_empty_fixture()
                     } else if example_id == PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID || example_id == "concrete" {
-                        serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture())
+                        serde_json::from_str(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| default_empty_fixture())
                     } else if example_id == PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID || example_id == "nakagin" {
-                        serde_json::from_str(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| default_empty_fixture())
+                        serde_json::from_str(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| default_empty_fixture())
                     } else {
                         default_empty_fixture()
                     };
@@ -2113,6 +2120,7 @@ pub mod d2 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
+                tutorial_labels: HashMap::new(),
                 group_labels: HashMap::new(),
             }
         }
@@ -2289,8 +2297,8 @@ pub mod d2 {
                 window.options.measures = puzzle2d_window_measures(pane, &envelope, labels);
             }
         }
-        app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON)).unwrap())
-            .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON)).unwrap())
+        app.example(PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID, "Concrete Forest", serde_json::to_string(&example_fixture(CONCRETE_FOREST_EXAMPLE_JSON.as_str())).unwrap())
+            .example(PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID, "Nakagin Capsule Tower", serde_json::to_string(&example_fixture(NAKAGIN_EXAMPLE_JSON.as_str())).unwrap())
             .program("puzzle2d", "Puzzle 2D", "layout")
     }
 
@@ -2727,7 +2735,7 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    use puzzle_3d::{puzzle3d_document_delta_operations, BrushPlacePayload, Puzzle3dOperation, Puzzle3dPrecomputeSession};
+    use puzzle_3d::{puzzle3d_document_delta_operations, BrushPlacePayload, Puzzle3dOperation, Puzzle3dPrecomputeSession, Puzzle3dProjection};
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
@@ -2777,8 +2785,17 @@ pub mod d3 {
     /// 🧭 Window option: arrow tip ends on the vortex point; shaft starts at `point - direction * length`.
     const PUZZLE3D_VORTEX_DIRECTION_INWARDS: &str = "inwards";
 
-    const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../3d/example/concrete-forest.3d.json");
-    const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../3d/example/nakagin-capsule-tower.3d.json");
+    const CONCRETE_FOREST_EXAMPLE_DSL: &str = include_str!("../../3d/example/concrete-forest.puzzle3d");
+    const NAKAGIN_EXAMPLE_DSL: &str = include_str!("../../3d/example/nakagin-capsule-tower.puzzle3d");
+    /// 🌉 This app's own `Puzzle3dScene.fixture: Puzzle3dFixture` (and `DocumentApp::Projection =
+    /// Value`) stays a local structural-twin mirror of `puzzle_3d::Puzzle3dProjection` — see
+    /// `puzzle_3d`'s `🔖ValueBridge` region — so the DSL-text example fixtures are parsed once into
+    /// the typed `puzzle_3d::Puzzle3dProjection` and re-serialized to the JSON string this module's
+    /// `serde_json::from_str::<Puzzle3dFixture>`/`.example(...)` call sites expect.
+    static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+    static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle3dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
     //#endregion 🔖Constants
 
     //#region 🔖Document
@@ -3383,11 +3400,11 @@ pub mod d3 {
     }
 
     fn default_fixture() -> Puzzle3dFixture {
-        serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON).unwrap_or_else(|_| empty_fixture())
+        serde_json::from_str::<Puzzle3dFixture>(CONCRETE_FOREST_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
     }
 
     fn nakagin_fixture() -> Puzzle3dFixture {
-        serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON).unwrap_or_else(|_| empty_fixture())
+        serde_json::from_str::<Puzzle3dFixture>(NAKAGIN_EXAMPLE_JSON.as_str()).unwrap_or_else(|_| empty_fixture())
     }
 
     /// 🧾 Materializes the transient scene from the persisted projection (bare fixture json) and the
@@ -7759,8 +7776,8 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                         .submit_label("Add"),
                 ),
         )
-        .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
-        .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
+        .example(PUZZLE3D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone())
+        .example(PUZZLE3D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone())
         .program("puzzle3d", "Puzzle 3D", "model")
     }
 
@@ -9391,7 +9408,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    use puzzle_5d::{puzzle5d_document_delta_operations, BrushPlacePayload, Puzzle5dOperation, Puzzle5dPrecomputeSession};
+    use puzzle_5d::{puzzle5d_document_delta_operations, BrushPlacePayload, Puzzle5dOperation, Puzzle5dPrecomputeSession, Puzzle5dProjection};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
@@ -9406,6 +9423,7 @@ pub mod d5 {
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, HashMap, HashSet};
     use std::sync::atomic::{AtomicU32, Ordering};
+    use std::sync::LazyLock;
 
     //#region 🔖Constants
     const PUZZLE5D_PLAY_APP_ID: &str = "puzzle5d-play";
@@ -9438,8 +9456,16 @@ pub mod d5 {
     const PUZZLE5D_BOARD_PLACEMENT_GAP: f64 = 16.0;
     const PUZZLE5D_PROXIMITY_RADIUS: f64 = 0.75;
 
-    const CONCRETE_FOREST_EXAMPLE_JSON: &str = include_str!("../../5d/example/concrete-forest.5d.json");
-    const NAKAGIN_EXAMPLE_JSON: &str = include_str!("../../5d/example/nakagin-capsule-tower.5d.json");
+    const CONCRETE_FOREST_EXAMPLE_DSL: &str = include_str!("../../5d/example/concrete-forest.puzzle5d");
+    const NAKAGIN_EXAMPLE_DSL: &str = include_str!("../../5d/example/nakagin-capsule-tower.puzzle5d");
+    /// 🌉 This app's own scratch fixture stays a local structural-twin mirror (`Puzzle5dDocument`) of
+    /// `puzzle_5d::Puzzle5dProjection` — see `puzzle_5d`'s `🔖ValueBridge` region — so the DSL-text
+    /// example fixtures are parsed once into the typed `puzzle_5d::Puzzle5dProjection` and
+    /// re-serialized to the JSON string this module's `document_from_json`/`.example(...)` call sites expect.
+    static CONCRETE_FOREST_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as vcs::DocumentDsl>::parse_dsl(CONCRETE_FOREST_EXAMPLE_DSL).expect("concrete-forest example fixture parses as dsl")).expect("serialize concrete-forest example fixture"));
+    static NAKAGIN_EXAMPLE_JSON: LazyLock<String> =
+        LazyLock::new(|| serde_json::to_string(&<Puzzle5dProjection as vcs::DocumentDsl>::parse_dsl(NAKAGIN_EXAMPLE_DSL).expect("nakagin example fixture parses as dsl")).expect("serialize nakagin example fixture"));
 
     static PUZZLE5D_ID_COUNTER: AtomicU32 = AtomicU32::new(0);
     //#endregion 🔖Constants
@@ -9960,7 +9986,7 @@ pub mod d5 {
     }
 
     fn default_document() -> Puzzle5dDocument {
-        document_from_json(CONCRETE_FOREST_EXAMPLE_JSON)
+        document_from_json(CONCRETE_FOREST_EXAMPLE_JSON.as_str())
     }
 
     /// 🧾 Materializes the transient scene from the persisted projection (bare document json) and the
@@ -11510,7 +11536,7 @@ pub mod d5 {
                     } else if example_id == PUZZLE5D_EXAMPLE_CONCRETE_FOREST || example_id == "concrete" {
                         Some(default_document())
                     } else if example_id == PUZZLE5D_EXAMPLE_NAKAGIN || example_id == "nakagin" {
-                        Some(document_from_json(NAKAGIN_EXAMPLE_JSON))
+                        Some(document_from_json(NAKAGIN_EXAMPLE_JSON.as_str()))
                     } else {
                         None
                     };
@@ -12132,6 +12158,7 @@ pub mod d5 {
                 action_arg_labels: HashMap::new(),
                 dialog_labels: HashMap::new(),
                 introduction_labels: HashMap::new(),
+                tutorial_labels: HashMap::new(),
                 group_labels: HashMap::new(),
             }
         }
@@ -12341,8 +12368,8 @@ pub mod d5 {
                 window_kind.options.measures = puzzle5d_window_measures(window, &envelope, &precompute, manifest_labels);
             }
         }
-        app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON)
-            .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON)
+        app.example(PUZZLE5D_EXAMPLE_CONCRETE_FOREST, "Concrete Forest", CONCRETE_FOREST_EXAMPLE_JSON.clone())
+            .example(PUZZLE5D_EXAMPLE_NAKAGIN, "Nakagin Capsule Tower", NAKAGIN_EXAMPLE_JSON.clone())
             .program("puzzle5d", "Puzzle 5D", "model")
     }
 

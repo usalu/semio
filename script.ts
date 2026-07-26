@@ -1519,6 +1519,37 @@ const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow
 
 /** 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared infra. */
 const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "protocol/", "repo/"];
+
+/**
+ * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
+ * been converted to its own DSL-text extension (e.g. `.puzzle2d`, `.flow`). Tracked here as a documented,
+ * still-open follow-up rather than a silent exception — remove an entry once that technology's fixture
+ * is migrated (see an already-migrated sibling crate's `*_fixture` round-trip test for the pattern).
+ */
+const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([
+  "forms/example/building-component.forms.json",
+  "s/example/demo.s.json",
+  "lowpoly/example/default.lowpoly.json",
+  "gis/2d/example/reuse.graph.gis.json",
+  "infinite/board/port/directed/dag/example/demo.dag.json",
+]);
+
+/** 🛡️Path prefixes exempt from the no-JSON-fixture rule structurally — not a technology document fixture (e.g. `coda/`'s `example/` holds a whole simulated ACC project's run/iteration artifacts, unrelated to the dsl/ migration). */
+const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
+
+/**
+ * 🎫 dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
+ * cannot be seen as a `#[derive(dsl::Dsl...)]` attribute directly on the type (a blanket/generic impl
+ * elsewhere covers them) — accepted as DSL-complete by `policyDslCompletenessBreaches` without a
+ * hand-rolled-impl grep hit under that exact type name.
+ * - `Value` (`serde_json::Value`): blanket `impl DocumentDsl for serde_json::Value` in `vcs/rs/lib.rs`
+ *   (the schema-less escape hatch for a technology whose `DocumentApp::Projection` predates its own
+ *   typed DSL derive — see `puzzle_2d`'s `🔖ValueBridge` region).
+ * - `SetDocumentOperation` (`norm_core::SetDocumentOperation<D>`): one hand-rolled generic
+ *   `impl<D: DocumentDsl> OpText for SetDocumentOperation<D>` in `norm/core/rs/lib.rs`, shared by every
+ *   norm family's `Operation` type instead of a per-family derive.
+ */
+const POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST = new Set<string>(["Value", "SetDocumentOperation"]);
 //#endregion 🔧PolicyAllowlists
 
 //#region 🔧PolicyRuleRegionFormat
@@ -1886,6 +1917,282 @@ function policyAppCouplingBreaches(repoRoot: string, crateDirs: readonly string[
 }
 //#endregion 🔧PolicyRuleAppCoupling
 
+//#region 🔧PolicyRuleNoJsonFixtures
+/** 🔎Repo-wide `.../example/*.json` file paths (repo-relative), skipping the same dirs `policyDiscoverPluginCrateDirs` skips. */
+function policyDiscoverExampleJsonFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (relDir.split("/").pop() === "example" && ent.name.endsWith(".json")) found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 📏dsl/ migration lock-step rule: no example/*.json fixture may exist — every technology's example fixtures moved to its own DSL-text extension (`.puzzle2d`, `.flow`, `.draw`, …); a documented allowlist covers not-yet-migrated technologies. */
+function policyJsonFixtureBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverExampleJsonFiles(repoRoot)) {
+    if (POLICY_JSON_FIXTURE_ALLOWLIST.has(relPath)) continue;
+    if (POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST.some((p) => relPath.startsWith(p))) continue;
+    breaches.push({
+      id: `no-json-fixture-${relPath}`,
+      summary: `"${relPath}" is a JSON example fixture — technologies now use DSL-text fixtures`,
+      kind: "dsl-migration/no-json-fixture",
+      scope: relPath,
+      priority: "high",
+      reason: "The dsl/ derive-engine migration moved every technology's example fixtures from JSON to its own DSL-text extension (e.g. .puzzle2d, .flow, .draw); new */example/*.json files should never be added.",
+      solution: `Convert ${relPath} to its technology's DSL-text extension (see an already-migrated sibling crate's *_fixture round-trip test for the pattern), or if this technology is not yet converted, add it to POLICY_JSON_FIXTURE_ALLOWLIST citing the follow-up ticket.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleNoJsonFixtures
+
+//#region 🔧PolicyRuleOpsGrammar
+/** 🔎Repo-wide `*.ops` file paths (repo-relative). */
+function policyDiscoverOpsFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name.endsWith(".ops")) found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/** 🏷️`.ops` op-log structural line keywords (see `vcs::print_document_text`/`parse_document_text`). */
+const POLICY_OPS_STRUCTURAL_KEYWORDS = ["@doc", "@edit", "@change", "@checkpoint", "@alternative", "@active"];
+
+/**
+ * 📏dsl/ migration lock-step rule: basic `.ops`-file grammar sanity — one structural `@doc`/`@edit`/
+ * `@change`/`@checkpoint`/`@alternative`/`@active` line, or one 2-space-indented op-text line under a
+ * preceding `@edit`, per line; never blank. Forward-looking: no `*.ops` fixture exists in the repo yet
+ * (`FolderTextStorage`'s `.ops` companion file is additive/unwired — see `vcs/rs/lib.rs`), but the check
+ * is ready the day one lands.
+ */
+function policyOpsGrammarBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverOpsFiles(repoRoot)) {
+    const text = readFileSync(join(repoRoot, relPath), "utf8");
+    const rawLines = text.split(/\r?\n/);
+    const lines = rawLines.length > 0 && rawLines[rawLines.length - 1] === "" ? rawLines.slice(0, -1) : rawLines;
+    lines.forEach((line, i) => {
+      const lineNo = i + 1;
+      if (line.trim().length === 0) {
+        breaches.push({
+          id: `ops-grammar-blank-${relPath}-${lineNo}`,
+          summary: `"${relPath}" line ${lineNo} is blank`,
+          kind: "dsl-migration/ops-grammar",
+          scope: relPath,
+          line: lineNo,
+          priority: "medium",
+          reason: "The .ops op-log grammar is one structural @-line or one indented op-text line per line — no blank lines.",
+          solution: `Remove the blank line at ${relPath}:${lineNo}.`,
+        });
+        return;
+      }
+      const isStructural = POLICY_OPS_STRUCTURAL_KEYWORDS.some((kw) => line.startsWith(kw));
+      const isIndentedOp = line.startsWith("  ") && line.trim().length > 0;
+      if (!isStructural && !isIndentedOp) {
+        breaches.push({
+          id: `ops-grammar-line-${relPath}-${lineNo}`,
+          summary: `"${relPath}" line ${lineNo} is neither a structural @-line nor a 2-space-indented op-text line`,
+          kind: "dsl-migration/ops-grammar",
+          scope: relPath,
+          line: lineNo,
+          priority: "medium",
+          reason: "Every .ops line must be a recognized @doc/@edit/@change/@checkpoint/@alternative/@active structural line or a 2-space-indented op-text line under an @edit block.",
+          solution: `Fix ${relPath}:${lineNo} to match the .ops grammar (see vcs::print_document_text/parse_document_text).`,
+        });
+      }
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleOpsGrammar
+
+//#region 🔧PolicyRuleDslCompleteness
+/** 🔎Repo-wide `*.rs` file paths (repo-relative), skipping the same dirs `policyDiscoverPluginCrateDirs` skips. */
+function policyAllRustFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name.endsWith(".rs")) found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+type PolicyDocumentAppUsage = { scope: string; line: number; projectionType: string; operationType: string };
+
+const POLICY_DOCUMENT_APP_IMPL_RE = /impl\s+DocumentApp\s+for\s+\w+\s*\{/g;
+
+/** 🔎Extracts `type Projection = X;` / `type Operation = Y;` (generic args stripped) from every `impl DocumentApp for … { … }` block in one file's content. */
+function policyDocumentAppUsages(scope: string, content: string): PolicyDocumentAppUsage[] {
+  const usages: PolicyDocumentAppUsage[] = [];
+  let m: RegExpExecArray | null;
+  POLICY_DOCUMENT_APP_IMPL_RE.lastIndex = 0;
+  while ((m = POLICY_DOCUMENT_APP_IMPL_RE.exec(content))) {
+    const body = policyExtractFnBody(content, m.index);
+    const projectionMatch = body.match(/type\s+Projection\s*=\s*([\w:<>]+)\s*;/);
+    const operationMatch = body.match(/type\s+Operation\s*=\s*([\w:<>]+)\s*;/);
+    if (!projectionMatch || !operationMatch) continue;
+    usages.push({
+      scope,
+      line: policyLineOfIndex(content, m.index),
+      projectionType: projectionMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
+      operationType: operationMatch[1]!.split("::").pop()!.replace(/<.*$/, ""),
+    });
+  }
+  return usages;
+}
+
+const POLICY_STRUCT_OR_ENUM_DECL_RE = /^\s*(?:pub\s+)?(?:struct|enum)\s+(\w+)\b/gm;
+const POLICY_DSL_DERIVE_RE = /derive\([^)]*\bDsl(?:Document|Ops|Record|Enum|Scalar)\b[^)]*\)/;
+const POLICY_HAND_ROLLED_IMPL_RE = /impl(?:<[^>]*>)?\s+(?:vcs::)?(DocumentDsl|OpText)\s+for\s+(?:vcs::)?(\w+)/g;
+
+/** 🧬One O(total content) pass building every type name that's DSL-complete — via `#[derive(dsl::Dsl…)]` a few lines above its own `struct`/`enum` declaration, or a hand-rolled `impl (vcs::)?DocumentDsl`/`impl (vcs::)?OpText` (an explicit generic impl also counts, e.g. `impl<D> OpText for SetDocumentOperation<D>`) — split by trait since a type may satisfy one but not the other. */
+function policyDslCompleteTypeNames(files: readonly { content: string }[]): { documentDsl: Set<string>; opText: Set<string> } {
+  const documentDsl = new Set<string>();
+  const opText = new Set<string>();
+  for (const { content } of files) {
+    const lines = content.split("\n");
+    let m: RegExpExecArray | null;
+    POLICY_STRUCT_OR_ENUM_DECL_RE.lastIndex = 0;
+    while ((m = POLICY_STRUCT_OR_ENUM_DECL_RE.exec(content))) {
+      const lineNo = policyLineOfIndex(content, m.index);
+      const precedingLines = lines.slice(Math.max(0, lineNo - 6), lineNo - 1).join("\n");
+      if (POLICY_DSL_DERIVE_RE.test(precedingLines)) {
+        documentDsl.add(m[1]!);
+        opText.add(m[1]!);
+      }
+    }
+    POLICY_HAND_ROLLED_IMPL_RE.lastIndex = 0;
+    while ((m = POLICY_HAND_ROLLED_IMPL_RE.exec(content))) {
+      (m[1] === "DocumentDsl" ? documentDsl : opText).add(m[2]!);
+    }
+  }
+  return { documentDsl, opText };
+}
+
+const POLICY_USE_ALIAS_RE = /\b(\w+)\s+as\s+(\w+)\b/g;
+
+/**
+ * 🔎One O(total content) pass building every `RealName as AliasName` rename seen in any `use` item
+ * (e.g. `use raster_core::{RasterProjection as RasterDocument};`) — a technology's block-kind wrapper
+ * commonly re-exports another crate's already-DSL-complete type under a locally-meaningful alias
+ * (`forms`'s `ProtocolSpec as FormSpec`, `raster/plugin`'s `RasterProjection as RasterDocument`), so a
+ * plain per-file struct/impl scan alone would report a false gap on the alias name.
+ */
+function policyTypeAliasMap(files: readonly { content: string }[]): Map<string, string> {
+  const aliasOf = new Map<string, string>();
+  for (const { content } of files) {
+    let m: RegExpExecArray | null;
+    POLICY_USE_ALIAS_RE.lastIndex = 0;
+    while ((m = POLICY_USE_ALIAS_RE.exec(content))) aliasOf.set(m[2]!, m[1]!);
+  }
+  return aliasOf;
+}
+
+/** 🔎Resolves `typeName` through `aliasOf` (`RealName as AliasName` renames) up to a handful of hops, so an alias chain still bottoms out at its real declaration. */
+function policyResolveAlias(aliasOf: ReadonlyMap<string, string>, typeName: string): string {
+  let resolved = typeName;
+  for (let hop = 0; hop < 5; hop++) {
+    const next = aliasOf.get(resolved);
+    if (!next || next === resolved) break;
+    resolved = next;
+  }
+  return resolved;
+}
+
+/**
+ * 📏dsl/ migration lock-step rule: every `impl DocumentApp for X` app's `Projection`/`Operation` type
+ * must be DSL-complete — `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type itself (or
+ * on the real type behind a `RealName as AliasName` import rename), a hand-rolled `impl DocumentDsl`/
+ * `impl OpText`, or a documented generic bridge (see `POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST`).
+ * Advisory/textual — the real compile-time gate is `DocumentApp`'s `Projection: vcs::DocumentDsl` /
+ * `Operation: vcs::OpText` bounds in `framework/plugin/rs/lib.rs`; this catches the same gap without
+ * needing a full `cargo build`. A single pass builds the DSL-complete type-name sets once
+ * (`policyDslCompleteTypeNames`) so checking every app's usage stays O(1) instead of re-scanning the
+ * whole corpus per usage.
+ */
+function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  const paths = policyAllRustFiles(repoRoot);
+  const files = paths.map((relPath) => ({ relPath, content: readFileSync(join(repoRoot, relPath), "utf8") }));
+  const complete = policyDslCompleteTypeNames(files);
+  const aliasOf = policyTypeAliasMap(files);
+
+  for (const { relPath, content } of files) {
+    for (const usage of policyDocumentAppUsages(relPath, content)) {
+      const checks: readonly { label: "Projection" | "Operation"; typeName: string; trait: "DocumentDsl" | "OpText"; completeNames: Set<string> }[] = [
+        { label: "Projection", typeName: usage.projectionType, trait: "DocumentDsl", completeNames: complete.documentDsl },
+        { label: "Operation", typeName: usage.operationType, trait: "OpText", completeNames: complete.opText },
+      ];
+      for (const { label, typeName, trait, completeNames } of checks) {
+        if (POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST.has(typeName)) continue;
+        if (completeNames.has(typeName)) continue;
+        if (completeNames.has(policyResolveAlias(aliasOf, typeName))) continue;
+        breaches.push({
+          id: `dsl-completeness-${relPath}-${usage.line}-${label}`,
+          summary: `"${usage.scope}"'s DocumentApp::${label} = ${typeName} has neither a #[derive(dsl::Dsl...)] nor a hand-rolled impl ${trait}`,
+          kind: "dsl-migration/completeness",
+          scope: relPath,
+          line: usage.line,
+          priority: "high",
+          reason: "Every DocumentApp app's Projection must implement vcs::DocumentDsl and Operation must implement vcs::OpText (compiler-enforced since the Lock step) — via #[derive(dsl::DslDocument)]/#[derive(dsl::DslOps)], a hand-rolled impl, or a documented generic bridge.",
+          solution: `Add #[derive(dsl::DslDocument)] (Projection) / #[derive(dsl::DslOps)] (Operation) to ${typeName}, write a hand-rolled impl ${trait} for ${typeName}, or if it's a genuine generic bridge add it to POLICY_DSL_COMPLETENESS_GENERIC_BRIDGE_ALLOWLIST citing why.`,
+        });
+      }
+    }
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleDslCompleteness
+
 //#region 🔖PolicyExport
 /** ⚖️Runs every Wave 4 rule over every discovered `…/plugin/rs` crate; `framework/plugin/rs` is exempted from the SDK-mechanism rules (it *is* the SDK). */
 export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency", (_l: TechnologyLinter): BreachRecord[] => {
@@ -1912,6 +2219,9 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
 
   breaches.push(...policyCargoArtifactBreaches(repoRoot, crateDirs));
   breaches.push(...policyAppCouplingBreaches(repoRoot, crateDirs));
+  breaches.push(...policyJsonFixtureBreaches(repoRoot));
+  breaches.push(...policyOpsGrammarBreaches(repoRoot));
+  breaches.push(...policyDslCompletenessBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖PolicyExport

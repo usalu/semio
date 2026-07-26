@@ -255,6 +255,27 @@ import {
   celebrateAllElements,
   CELEBRATE_STAMP_DURATION_MS,
   elementIdSelector,
+  TutorialBar,
+  TutorialCaptions,
+  TutorialVideoOverlay,
+  TutorialGhostPointer,
+  registerTutorialCameraDriver,
+  getTutorialCameraDriver,
+  createTutorialClock,
+  useTutorialClock,
+  formatTutorialTime,
+  tutorialCuesBetween,
+  interpolateTutorialCamera,
+  tutorialCameraAt,
+  composeTutorialUi,
+  tutorialSlice,
+  applyTutorialUiChange,
+  validateTutorial,
+  type TutorialClock,
+  type TutorialCameraDriver,
+  type TutorialSlice,
+  type TutorialClockPort,
+  type TutorialChapterMarker,
 } from "@semio-tech/ui-react";
 import { isIconName } from "@semio-tech/ui-asset";
 import {
@@ -397,6 +418,20 @@ import {
   type ShellLocale,
   type ShellTerminology,
   windowElementId,
+  START_TUTORIAL_ACTION_ID,
+  RECORD_TUTORIAL_ACTION_ID,
+  TUTORIAL_CONVERGE_MS,
+  type TutorialDefinition,
+  type TutorialUiSnapshot,
+  type TutorialUiChange,
+  type TutorialEvent,
+  type TutorialDocumentEvent,
+  type TutorialDocumentEventKind,
+  type TutorialCameraState,
+  type TutorialGestureCue,
+  type TutorialVideoCue,
+  type TutorialChapter,
+  type TutorialAssetSrc,
 } from "@semio-tech/framework-core";
 import { createRoot } from "react-dom/client";
 import { type GraphWasmSession, GraphWasmCanvas, type CanvasInputModifiers } from "@semio-tech/infinite-cavas-react-renderer";
@@ -1428,6 +1463,31 @@ type OverlayState = {
   readonly dialog: { readonly dialogId: string; readonly seedArgs?: Readonly<Record<string, unknown>> } | null;
 };
 
+/** 🎥 Playback/recording state of the active `TutorialDefinition` — mutually exclusive with `overlays.introductionStepIndex` (see `SET_TUTORIAL`/`SET_INTRODUCTION_STEP` reducer cases). `playing`/`rate`/`muted`/`captionsOn`/`recording`/`deviated` are all UI-only (never persisted into the tutorial data itself). */
+type TutorialState = {
+  readonly activeTutorialId: string | null;
+  readonly playing: boolean;
+  readonly rate: number;
+  readonly muted: boolean;
+  readonly captionsOn: boolean;
+  readonly recording: boolean;
+  /** 🧲 True while the user has diverged from the recorded state during playback (auto-pauses); pressing play again converges the camera over `TUTORIAL_CONVERGE_MS` before resuming. */
+  readonly deviated: boolean;
+};
+
+/** 🎥 Precomputed, shell-native restore point for `APPLY_TUTORIAL_UI_SNAPSHOT` — every cross-slice lookup (window-kind labels, layout conversion) is resolved by the caller (`applyTutorialUiSnapshotToShell`, which has `session`/`appLabelsOverlay` in scope) so every slice reducer stays pure/local. */
+type TutorialShellUiSnapshot = {
+  readonly activeWindowId: string | null;
+  readonly shellLayout: WindowLayoutNode | null;
+  readonly extraWindowInstances: readonly ExtraWindowInstance[];
+  readonly panelPatches: Partial<Record<Anchor, { readonly visible: boolean; readonly path: readonly string[] }>>;
+  readonly treeOpenStates: Readonly<Record<string, boolean>>;
+  readonly activeUtilityByWindowId: Readonly<Record<string, string | null>>;
+  readonly activeToolId: string | null;
+  readonly openDialogId: string | null;
+  readonly commandPanelOpen: boolean;
+};
+
 type UiPrefsState = {
   readonly uiAppearance: ElementsSurfaceAppearance;
   readonly uiLayout: UiChromeLayout;
@@ -1468,6 +1528,7 @@ export type ShellState = {
   readonly commandPanel: CommandPanelState;
   readonly layout: ShellLayoutState;
   readonly overlays: OverlayState;
+  readonly tutorial: TutorialState;
   readonly uiPrefs: UiPrefsState;
   readonly sync: SyncState;
 };
@@ -1522,6 +1583,14 @@ export type ShellAction =
   | { readonly type: "SET_INTRODUCTION_STEP"; readonly value: Updatable<number | null> }
   | { readonly type: "COMPLETE_INTRODUCTION_INTERACTION"; readonly index: number }
   | { readonly type: "SET_DIALOG"; readonly value: OverlayState["dialog"] }
+  | { readonly type: "SET_TUTORIAL"; readonly value: string | null }
+  | { readonly type: "SET_TUTORIAL_PLAYING"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_TUTORIAL_RATE"; readonly value: number }
+  | { readonly type: "SET_TUTORIAL_MUTED"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_TUTORIAL_CAPTIONS"; readonly value: Updatable<boolean> }
+  | { readonly type: "SET_TUTORIAL_RECORDING"; readonly value: boolean }
+  | { readonly type: "SET_TUTORIAL_DEVIATED"; readonly value: boolean }
+  | { readonly type: "APPLY_TUTORIAL_UI_SNAPSHOT"; readonly snapshot: TutorialShellUiSnapshot }
   | { readonly type: "SET_UI_APPEARANCE"; readonly value: Updatable<ElementsSurfaceAppearance> }
   | { readonly type: "SET_UI_LAYOUT"; readonly value: Updatable<UiChromeLayout> }
   | { readonly type: "SET_UI_DRIVER_ID"; readonly value: Updatable<string> }
@@ -1615,6 +1684,8 @@ function actionPaneReducer(state: ActionPaneState, action: ShellAction): ActionP
     case "SET_ACTIVE_TOOL":
       if (state.activeToolId === action.toolId) return state;
       return { ...state, activeToolId: action.toolId };
+    case "APPLY_TUTORIAL_UI_SNAPSHOT":
+      return { ...state, activeUtilityByWindowId: action.snapshot.activeUtilityByWindowId, activeToolId: action.snapshot.activeToolId };
     default:
       return state;
   }
@@ -1697,6 +1768,16 @@ function shellLayoutReducer(state: ShellLayoutState, action: ShellAction): Shell
       const windowIconsById = { ...state.windowIconsById, [action.windowId]: action.iconId };
       return { ...state, windowIconsById };
     }
+    case "APPLY_TUTORIAL_UI_SNAPSHOT": {
+      const { snapshot } = action;
+      const panels = { ...state.panels };
+      for (const anchor of ANCHORS) {
+        const patch = snapshot.panelPatches[anchor];
+        if (!patch) continue;
+        panels[anchor] = { ...panels[anchor], visible: patch.visible, path: patch.path };
+      }
+      return { ...state, activeWindowId: snapshot.activeWindowId, shellLayout: snapshot.shellLayout, extraWindowInstances: snapshot.extraWindowInstances, treeOpenStates: snapshot.treeOpenStates, panels };
+    }
     default:
       return state;
   }
@@ -1708,14 +1789,25 @@ function overlayReducer(state: OverlayState, action: ShellAction): OverlayState 
       return { ...state, searchOpen: resolveUpdatable(action.value, state.searchOpen) };
     case "SET_FIND_OPEN":
       return { ...state, findOpen: resolveUpdatable(action.value, state.findOpen) };
-    case "SET_INTRODUCTION_STEP":
-      return { ...state, introductionStepIndex: resolveUpdatable(action.value, state.introductionStepIndex), introductionCompletedInteractions: [] };
+    case "SET_INTRODUCTION_STEP": {
+      const nextIndex = resolveUpdatable(action.value, state.introductionStepIndex);
+      return { ...state, introductionStepIndex: nextIndex, introductionCompletedInteractions: [] };
+    }
     case "COMPLETE_INTRODUCTION_INTERACTION":
       return state.introductionCompletedInteractions.includes(action.index)
         ? state
         : { ...state, introductionCompletedInteractions: [...state.introductionCompletedInteractions, action.index] };
+    // 🎥 Starting a tutorial (a non-null id) is mutually exclusive with an active introduction — mirrors
+    // the `SET_INTRODUCTION_STEP` case below clearing the tutorial slice.
+    case "SET_TUTORIAL":
+      return action.value != null && state.introductionStepIndex != null ? { ...state, introductionStepIndex: null, introductionCompletedInteractions: [] } : state;
     case "SET_DIALOG":
       return { ...state, dialog: action.value };
+    // 🎥 `commandPanelOpen`/`openDialogId` restore onto the existing `searchOpen`/`dialog` fields — a
+    // tutorial snapshot's "command panel" IS the shell's command palette (`UISearch`), and a dialog
+    // restore only ever carries the id (seed args are not part of `TutorialUiSnapshot`).
+    case "APPLY_TUTORIAL_UI_SNAPSHOT":
+      return { ...state, dialog: action.snapshot.openDialogId ? { dialogId: action.snapshot.openDialogId } : null, searchOpen: action.snapshot.commandPanelOpen };
     default:
       return state;
   }
@@ -1762,6 +1854,35 @@ function syncReducer(state: SyncState, action: ShellAction): SyncState {
       return state;
   }
 }
+
+/** 🎥 Reducer for the tutorial playback/recording slice — see `TutorialState`. `SET_TUTORIAL` resets every playback-rate/deviation flag (a fresh tutorial never inherits the previous one's rate/deviation); starting an introduction (`SET_INTRODUCTION_STEP` with a non-null value) clears the active tutorial, mirroring `overlayReducer`'s reverse case. */
+function tutorialReducer(state: TutorialState, action: ShellAction): TutorialState {
+  switch (action.type) {
+    case "SET_TUTORIAL":
+      return { activeTutorialId: action.value, playing: false, rate: 1, muted: state.muted, captionsOn: state.captionsOn, recording: false, deviated: false };
+    case "SET_TUTORIAL_PLAYING": {
+      const nextPlaying = resolveUpdatable(action.value, state.playing);
+      return { ...state, playing: nextPlaying, deviated: nextPlaying ? false : state.deviated };
+    }
+    case "SET_TUTORIAL_RATE":
+      return { ...state, rate: action.value };
+    case "SET_TUTORIAL_MUTED":
+      return { ...state, muted: resolveUpdatable(action.value, state.muted) };
+    case "SET_TUTORIAL_CAPTIONS":
+      return { ...state, captionsOn: resolveUpdatable(action.value, state.captionsOn) };
+    case "SET_TUTORIAL_RECORDING":
+      return { ...state, recording: action.value };
+    case "SET_TUTORIAL_DEVIATED":
+      return { ...state, deviated: action.value };
+    // 🎓 Only literal (non-updater) values can be checked here without this slice's own prior value —
+    // every real call site dispatches a literal step index or `null` (never a functional updater), so
+    // this conservatively no-ops on the (currently unused) updater form rather than guessing.
+    case "SET_INTRODUCTION_STEP":
+      return typeof action.value !== "function" && action.value != null && state.activeTutorialId != null ? { ...state, activeTutorialId: null, playing: false, deviated: false } : state;
+    default:
+      return state;
+  }
+}
 //#endregion slice reducers
 
 /** 🧵 Root reducer for `FrameworkOsShell` — fans every action out to its owning slice reducer; slices that ignore an action's type return their input unchanged, so unrelated slices keep referential identity. */
@@ -1774,6 +1895,7 @@ export function shellReducer(state: ShellState, action: ShellAction): ShellState
     commandPanel: commandPanelReducer(state.commandPanel, action),
     layout: shellLayoutReducer(state.layout, action),
     overlays: overlayReducer(state.overlays, action),
+    tutorial: tutorialReducer(state.tutorial, action),
     uiPrefs: uiPrefsReducer(state.uiPrefs, action),
     sync: syncReducer(state.sync, action),
   };
@@ -1815,6 +1937,7 @@ export function initialShellState(_props: {
       windowIconsById: {},
     },
     overlays: { searchOpen: false, findOpen: false, introductionStepIndex: null, introductionCompletedInteractions: [], dialog: null },
+    tutorial: { activeTutorialId: null, playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false },
     uiPrefs: {
       uiAppearance: locks.appearance ?? (ephemeral ? "system" : readStoredUiChromeAppearance()),
       uiLayout: ephemeral ? "desktop" : readStoredUiChromeLayout(),
@@ -3214,6 +3337,138 @@ function resolveIntroductionDefinition(introduction: IntroductionDefinition, ove
   };
 }
 
+//#region 🎥TutorialUiBridge
+/** @emoji 🎥 Captures the shell's current `ShellState` (+ active session) as a renderer-neutral `TutorialUiSnapshot` — the recorder's periodic full-snapshot keyframes and the `TutorialBar`'s "record" path both call this. See the Rust doc comment on `TutorialUiSnapshot` for why this is deliberately NOT a serialization of `ShellState` itself. */
+function captureTutorialUiSnapshot(state: ShellState, session: ActiveSession | null): TutorialUiSnapshot {
+  const activeUtilityByWindowId: Record<string, string> = {};
+  for (const [windowId, utilityId] of Object.entries(state.actionPane.activeUtilityByWindowId)) {
+    if (utilityId) activeUtilityByWindowId[windowId] = utilityId;
+  }
+  const activePanelTabByGroup: Record<string, string> = {};
+  for (const anchor of ANCHORS) {
+    const panelState = state.layout.panels[anchor];
+    const tabId = panelState.path[panelState.path.length - 1];
+    if (panelState.visible && tabId) activePanelTabByGroup[anchor] = tabId;
+  }
+  return {
+    activeModeId: session?.viewState.activeModeId,
+    focusedWindowId: state.layout.activeWindowId ?? undefined,
+    activeUtilityByWindowId,
+    activeToolId: state.actionPane.activeToolId ?? undefined,
+    layout: captureCurrentFrameworkLayout(state.layout.shellLayout, state.layout.extraWindowInstances),
+    activePanelTabByGroup,
+    panelJson: session?.viewState.panelJson,
+    selectionJson: session?.viewState.selectionJson,
+    openDialogId: state.overlays.dialog?.dialogId,
+    expandedTreeIds: Object.entries(state.layout.treeOpenStates).filter(([, open]) => open).map(([id]) => id),
+    commandPanelOpen: state.overlays.searchOpen,
+  };
+}
+
+/** @emoji 🎥 Context every `applyTutorialUiSnapshotToShell`/`applyTutorialUiChangeToShell` call needs beyond `dispatch` itself — resolved once per render by the caller (the director/seek/deviation-converge paths all share it). */
+type TutorialUiBridgeContext = {
+  readonly session: ActiveSession | null;
+  readonly appLabelsOverlay: PluginAppLabelsOverlay;
+};
+
+/** @emoji 🎥 Applies a full `TutorialUiSnapshot` (a `TutorialUiSample::Snapshot`, or the composed target of a seek/deviation-converge) onto the live `ShellState` — snaps every field instantly (camera is the only interpolated track, applied separately by the director). Dispatches the atomic `APPLY_TUTORIAL_UI_SNAPSHOT` for everything resolvable purely from `ShellState`, plus one `SET_SESSION` for the fields that live on `ActiveSession.viewState` (`activeModeId`/`panelJson`/`selectionJson`). */
+function applyTutorialUiSnapshotToShell(dispatch: (action: ShellAction) => void, snapshot: TutorialUiSnapshot, ctx: TutorialUiBridgeContext): void {
+  const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
+  const seed = applyFrameworkLayoutSeed(snapshot.layout, windowKinds, ctx.appLabelsOverlay);
+  const panelPatches: Partial<Record<Anchor, { readonly visible: boolean; readonly path: readonly string[] }>> = {};
+  for (const anchor of ANCHORS) {
+    const tabId = snapshot.activePanelTabByGroup[anchor];
+    panelPatches[anchor] = tabId ? { visible: true, path: [tabId] } : { visible: false, path: [] };
+  }
+  const treeOpenStates: Record<string, boolean> = {};
+  for (const id of snapshot.expandedTreeIds) treeOpenStates[id] = true;
+  dispatch({
+    type: "APPLY_TUTORIAL_UI_SNAPSHOT",
+    snapshot: {
+      activeWindowId: snapshot.focusedWindowId ?? seed.activeWindowId,
+      shellLayout: seed.modeLayout,
+      extraWindowInstances: seed.extraInstances,
+      panelPatches,
+      treeOpenStates,
+      activeUtilityByWindowId: snapshot.activeUtilityByWindowId,
+      activeToolId: snapshot.activeToolId ?? null,
+      openDialogId: snapshot.openDialogId ?? null,
+      commandPanelOpen: snapshot.commandPanelOpen,
+    },
+  });
+  if (ctx.session) {
+    dispatch({
+      type: "SET_SESSION",
+      value: (current) =>
+        current
+          ? {
+              ...current,
+              viewState: {
+                ...current.viewState,
+                activeModeId: snapshot.activeModeId ?? current.viewState.activeModeId,
+                panelJson: snapshot.panelJson ?? current.viewState.panelJson,
+                selectionJson: snapshot.selectionJson ?? current.viewState.selectionJson,
+              },
+            }
+          : current,
+    });
+  }
+}
+
+/** @emoji 🎥 Applies one sparse `TutorialUiChange` (a `TutorialUiSample::Delta` entry, replayed by the director's per-tick `tutorialSlice`) onto the live `ShellState` by dispatching the SAME existing, targeted `ShellAction`s the real UI's own interactions use — never a bespoke tutorial-only mutation channel. */
+function applyTutorialUiChangeToShell(dispatch: (action: ShellAction) => void, change: TutorialUiChange, ctx: TutorialUiBridgeContext): void {
+  switch (change.kind) {
+    case "activeMode":
+      if (!ctx.session) return;
+      dispatch({ type: "SET_SESSION", value: (current) => (current ? { ...current, viewState: { ...current.viewState, activeModeId: change.id } } : current) });
+      return;
+    case "focusedWindow":
+      dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: change.id ?? null });
+      return;
+    case "activeUtility":
+      dispatch({ type: "SET_ACTIVE_UTILITY", windowId: change.windowId, utilityId: change.utilityId ?? null });
+      return;
+    case "activeTool":
+      dispatch({ type: "SET_ACTIVE_TOOL", toolId: change.id ?? null });
+      return;
+    case "layout": {
+      const windowKinds = ctx.session?.app.windowKinds.map((kind) => ({ id: kind.id, label: kind.label })) ?? [];
+      const seed = applyFrameworkLayoutSeed(change.layout, windowKinds, ctx.appLabelsOverlay);
+      dispatch({ type: "SET_SHELL_LAYOUT", value: seed.modeLayout });
+      dispatch({ type: "SET_EXTRA_WINDOW_INSTANCES", value: seed.extraInstances });
+      if (seed.activeWindowId) dispatch({ type: "SET_ACTIVE_WINDOW_ID", value: seed.activeWindowId });
+      return;
+    }
+    case "panelTab": {
+      const anchor = change.group as Anchor;
+      if (!(ANCHORS as readonly string[]).includes(anchor)) return;
+      dispatch({ type: "SET_PANEL_VISIBLE", anchor, value: change.tabId != null });
+      dispatch({ type: "SET_PANEL_PATH", anchor, value: change.tabId ? [change.tabId] : [] });
+      return;
+    }
+    case "panelState":
+      if (!ctx.session) return;
+      dispatch({ type: "SET_SESSION", value: (current) => (current ? { ...current, viewState: { ...current.viewState, panelJson: change.panelJson } } : current) });
+      return;
+    case "selection":
+      if (!ctx.session) return;
+      dispatch({ type: "SET_SESSION", value: (current) => (current ? { ...current, viewState: { ...current.viewState, selectionJson: change.selectionJson } } : current) });
+      return;
+    case "dialog":
+      dispatch({ type: "SET_DIALOG", value: change.id ? { dialogId: change.id, seedArgs: change.args as Record<string, unknown> | undefined } : null });
+      return;
+    case "treeExpansion":
+      dispatch({ type: "SET_TREE_OPEN_STATE", id: change.id, open: change.expanded });
+      return;
+    case "commandPanel":
+      dispatch({ type: "SET_SEARCH_OPEN", value: change.open });
+      return;
+    default:
+      return;
+  }
+}
+//#endregion 🎥TutorialUiBridge
+
 /** @emoji 🗣️ Resolves a terminology id's display name; chrome-known ids get a translated label, app-declared ids fall back to their raw id. */
 function shellTerminologyLabel(id: string): string {
   const isChromeKnown = id === "native" || id === "reuse";
@@ -4134,10 +4389,25 @@ function selectCommandArg(id: string, label: string, options: readonly { readonl
  * locally by the shell (never routed to a plugin). Rebuilt via `useMemo` since the theme and
  * terminology option lists are live state.
  */
-export function buildOsCommands(themeList: readonly UiTheme[], terminologies: readonly string[], hasIntroduction: boolean, locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS, driverList: readonly UiDriver[] = builtinUiDrivers()): CommandDefinition[] {
+export function buildOsCommands(
+  themeList: readonly UiTheme[],
+  terminologies: readonly string[],
+  hasIntroduction: boolean,
+  locks: ResolvedShellLocks = EMPTY_SHELL_LOCKS,
+  driverList: readonly UiDriver[] = builtinUiDrivers(),
+  tutorials: readonly { readonly id: string; readonly title: string }[] = [],
+  tutorialRecorderAvailable = false,
+): CommandDefinition[] {
   const lockedCommandIds = new Set<string>([...(locks.appearance ? ["os.setAppearance"] : []), ...(locks.themeId ? ["os.setThemeId"] : []), ...(locks.locale ? ["os.setLocale"] : []), ...(locks.terminology ? ["os.setTerminology"] : [])]);
   const commands: CommandDefinition[] = [
     ...(hasIntroduction ? [{ id: "os.introduceApp", label: shellLabel("ui.command.introduceApp"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
+    // 🎥 `os.playTutorial` only appears once at least one tutorial is declared (app-own or brand-own);
+    // `os.recordTutorial` is dev/studio-only (see `isTutorialRecorderAvailable`) and needs no declared
+    // tutorial at all — recording an app IS the authoring path for one.
+    ...(tutorials.length > 0
+      ? [{ id: "os.playTutorial", label: shellLabel("ui.command.playTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [selectCommandArg("tutorialId", shellLabel("tutorial.chapter"), tutorials.map((tutorial) => ({ value: tutorial.id, label: tutorial.title })))] }]
+      : []),
+    ...(tutorialRecorderAvailable ? [{ id: "os.recordTutorial", label: shellLabel("ui.command.recordTutorial"), scope: "os" as const, category: "app", inPalette: true, args: [] }] : []),
     {
       id: "os.setAppearance",
       label: shellLabel("ui.command.setAppearance"),
@@ -4696,6 +4966,162 @@ export function useMapContextMenuSpecs(dispatch: (action: string, args?: Record<
   return useCallback((specs: readonly ContextMenuItemSpec[]) => mapContextMenuSpecs(specs, dispatch, keysByActionId), [dispatch, keysByActionId]);
 }
 
+//#region 🎥TutorialOverlayHosts
+/** @emoji 📦 Resolves a `TutorialAssetSrc` to a value usable as an `<video>`/`<audio>` `src` — `Blob` (a
+ * studio `BlobStore` reference) isn't resolvable from this scope (no blob-store bridge here) and returns
+ * `null` with a console warning; `Url`/`DataUrl` resolve directly. */
+function tutorialAssetSrcToUrl(src: TutorialAssetSrc): string | null {
+  if (src.kind === "url") return src.url;
+  if (src.kind === "dataUrl") return src.data;
+  console.warn("[DEBUG] tutorial blob asset src not resolvable in this scope", src.hash);
+  return null;
+}
+
+/** @emoji 💬 Self-subscribes to the tutorial clock (see `useTutorialClock`) so only THIS leaf re-renders every frame — never the whole shell — mirroring `TutorialBar`'s own subscription. */
+const TutorialCaptionsHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly captionsOn: boolean }> = ({ tutorial, clock, captionsOn }) => {
+  const timeMs = useTutorialClock(clock);
+  const cue = tutorialCuesBetween(tutorial.tracks.narration, timeMs)[0] ?? null;
+  return <TutorialCaptions text={cue?.text ?? null} visible={captionsOn} />;
+};
+
+const TUTORIAL_DEFAULT_VIDEO_RECT = { x: 0.72, y: 0.7, width: 0.24, height: 0.24 } as const;
+
+/** @emoji 📹 Self-subscribes to the tutorial clock; resolves the covering `TutorialVideoCue` (if any) and its source-relative local time. */
+const TutorialVideoOverlayHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort; readonly muted: boolean; readonly playing: boolean; readonly rate: number }> = ({
+  tutorial,
+  clock,
+  muted,
+  playing,
+  rate,
+}) => {
+  const timeMs = useTutorialClock(clock);
+  const cue: TutorialVideoCue | null = tutorialCuesBetween(tutorial.tracks.video, timeMs)[0] ?? null;
+  const src = cue ? tutorialAssetSrcToUrl(cue.src) : null;
+  const localTimeMs = cue ? timeMs - cue.at + cue.sourceOffsetMs : 0;
+  return <TutorialVideoOverlay src={src} rect={cue?.rect ?? TUTORIAL_DEFAULT_VIDEO_RECT} muted={muted || (cue?.muted ?? false)} playing={playing} rate={rate} localTimeMs={localTimeMs} />;
+};
+
+/** @emoji 👻 Self-subscribes to the tutorial clock; resolves the covering `TutorialGestureCue` (if any) and progress (0–1) through it, driving `TutorialGhostPointer` off the PLAYHEAD rather than its own internal clock (unlike the introduction demonstration overlay). */
+const TutorialGhostPointerHost: React.FC<{ readonly tutorial: TutorialDefinition; readonly clock: TutorialClockPort }> = ({ tutorial, clock }) => {
+  const timeMs = useTutorialClock(clock);
+  const cue: TutorialGestureCue | null = tutorialCuesBetween(tutorial.tracks.gestures, timeMs)[0] ?? null;
+  const progress = cue ? Math.min(1, Math.max(0, (timeMs - cue.at) / Math.max(cue.durationMs, 1))) : 0;
+  return <TutorialGhostPointer cue={cue} progress={progress} />;
+};
+//#endregion 🎥TutorialOverlayHosts
+
+//#region 🎥TutorialRecorder
+/** @emoji ↔️ Field-by-field structural diff of two `TutorialUiSnapshot`s into the sparse `TutorialUiChange`
+ * alphabet — the recorder's UI-diff effect calls this every `ShellState` change while armed. */
+function diffTutorialUiSnapshot(prev: TutorialUiSnapshot, next: TutorialUiSnapshot): TutorialUiChange[] {
+  const changes: TutorialUiChange[] = [];
+  if (prev.activeModeId !== next.activeModeId && next.activeModeId != null) changes.push({ kind: "activeMode", id: next.activeModeId });
+  if (prev.focusedWindowId !== next.focusedWindowId) changes.push({ kind: "focusedWindow", id: next.focusedWindowId });
+  const utilityWindowIds = new Set([...Object.keys(prev.activeUtilityByWindowId), ...Object.keys(next.activeUtilityByWindowId)]);
+  for (const windowId of utilityWindowIds) {
+    if (prev.activeUtilityByWindowId[windowId] !== next.activeUtilityByWindowId[windowId]) changes.push({ kind: "activeUtility", windowId, utilityId: next.activeUtilityByWindowId[windowId] });
+  }
+  if (prev.activeToolId !== next.activeToolId) changes.push({ kind: "activeTool", id: next.activeToolId });
+  if (next.layout && JSON.stringify(prev.layout) !== JSON.stringify(next.layout)) changes.push({ kind: "layout", layout: next.layout });
+  const groups = new Set([...Object.keys(prev.activePanelTabByGroup), ...Object.keys(next.activePanelTabByGroup)]);
+  for (const group of groups) {
+    if (prev.activePanelTabByGroup[group] !== next.activePanelTabByGroup[group]) changes.push({ kind: "panelTab", group, tabId: next.activePanelTabByGroup[group] });
+  }
+  if (next.panelJson != null && prev.panelJson !== next.panelJson) changes.push({ kind: "panelState", panelJson: next.panelJson });
+  if (next.selectionJson != null && prev.selectionJson !== next.selectionJson) changes.push({ kind: "selection", selectionJson: next.selectionJson });
+  if (prev.openDialogId !== next.openDialogId) changes.push({ kind: "dialog", id: next.openDialogId });
+  const prevTree = new Set(prev.expandedTreeIds);
+  const nextTree = new Set(next.expandedTreeIds);
+  for (const id of nextTree) if (!prevTree.has(id)) changes.push({ kind: "treeExpansion", id, expanded: true });
+  for (const id of prevTree) if (!nextTree.has(id)) changes.push({ kind: "treeExpansion", id, expanded: false });
+  if (prev.commandPanelOpen !== next.commandPanelOpen) changes.push({ kind: "commandPanel", open: next.commandPanelOpen });
+  return changes;
+}
+
+/** @emoji 🎥 Epsilon-equality for two camera poses — the recorder's 10Hz camera sampler skips writing a
+ * new keyframe when the live pose hasn't meaningfully moved since the last sample. */
+function tutorialCameraPoseEquals(a: TutorialCameraState, b: TutorialCameraState): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === "orbit" && b.kind === "orbit") return a.position.every((value, index) => Math.abs(value - b.position[index]) < 1e-4) && a.target.every((value, index) => Math.abs(value - b.target[index]) < 1e-4);
+  if (a.kind === "canvas" && b.kind === "canvas") return Math.abs(a.x - b.x) < 1e-4 && Math.abs(a.y - b.y) < 1e-4 && Math.abs(a.zoom - b.zoom) < 1e-4;
+  return false;
+}
+
+/** @emoji 🎥 Captures a live session into a `TutorialDefinition` — a recording IS a `TutorialDefinition`,
+ * so this class simply accumulates a densely-sampled one (see the Rust core doc comment on
+ * `TutorialDefinition`). Deliberately produces events/UI/camera/document tracks only: webcam/mic capture
+ * (`MediaRecorder`) is an explicit, reported scope cut — see the ticket close-out summary — a text-only
+ * recording is still a fully valid, useful `TutorialDefinition` per the Rust model's own optionality
+ * (narration/video tracks default to empty). Document `Edit` operations are NOT captured (that would
+ * require intercepting the plugin's internal vcs operation stream in per-op form, which isn't exposed to
+ * this shell) — also a reported scope cut; UI/camera/events still replay faithfully. */
+class TutorialRecorder {
+  private readonly startedAtMs: number;
+  private readonly baseUiSnapshot: TutorialUiSnapshot;
+  private readonly baseDocumentJson: string | null;
+  private readonly events: TutorialEvent[] = [];
+  private readonly uiKeyframes: { readonly at: number; readonly sample: { readonly kind: "snapshot"; readonly state: TutorialUiSnapshot } | { readonly kind: "delta"; readonly changes: TutorialUiChange[] } }[] = [];
+  private readonly cameraKeyframes: { readonly at: number; readonly windowId: string; readonly camera: TutorialCameraState; readonly easing: "easeInOut" }[] = [];
+  private readonly chapters: TutorialChapter[] = [];
+  private lastUiSnapshot: TutorialUiSnapshot;
+  private readonly lastCameraByWindow = new Map<string, TutorialCameraState>();
+
+  constructor(baseUiSnapshot: TutorialUiSnapshot, baseDocumentJson: string | null) {
+    this.startedAtMs = performance.now();
+    this.baseUiSnapshot = baseUiSnapshot;
+    this.lastUiSnapshot = baseUiSnapshot;
+    this.baseDocumentJson = baseDocumentJson;
+  }
+
+  private nowMs(): number {
+    return Math.max(0, Math.round(performance.now() - this.startedAtMs));
+  }
+
+  recordEvent(kind: TutorialEvent["kind"]): void {
+    this.events.push({ at: this.nowMs(), kind });
+  }
+
+  recordUiDiff(next: TutorialUiSnapshot): void {
+    const changes = diffTutorialUiSnapshot(this.lastUiSnapshot, next);
+    if (changes.length > 0) this.uiKeyframes.push({ at: this.nowMs(), sample: { kind: "delta", changes } });
+    this.lastUiSnapshot = next;
+  }
+
+  recordSnapshot(state: TutorialUiSnapshot): void {
+    this.uiKeyframes.push({ at: this.nowMs(), sample: { kind: "snapshot", state } });
+    this.lastUiSnapshot = state;
+  }
+
+  sampleCamera(windowId: string, camera: TutorialCameraState): void {
+    const prev = this.lastCameraByWindow.get(windowId);
+    if (prev && tutorialCameraPoseEquals(prev, camera)) return;
+    this.lastCameraByWindow.set(windowId, camera);
+    this.cameraKeyframes.push({ at: this.nowMs(), windowId, camera, easing: "easeInOut" });
+  }
+
+  /** 📖 `ui.tutorial.addChapter` — marks the current elapsed time as a scrub-bar chapter with an
+   * auto-numbered title (no naming-prompt UI in this scope; a recorded tutorial's authored titles can
+   * always be hand-edited in the downloaded JSON afterward). */
+  addChapter(): void {
+    const index = this.chapters.length + 1;
+    this.chapters.push({ id: `chapter-${index}`, at: this.nowMs(), title: `Chapter ${index}` });
+  }
+
+  build(id: string, title: string, exampleId?: string): TutorialDefinition {
+    const durationMs = Math.max(1000, this.nowMs());
+    return {
+      id,
+      title,
+      durationMs,
+      chapters: this.chapters,
+      base: { documentJson: this.baseDocumentJson ?? undefined, exampleId, ui: this.baseUiSnapshot, cameras: [] },
+      tracks: { narration: [], video: [], events: this.events, ui: this.uiKeyframes, document: [], camera: this.cameraKeyframes, gestures: [] },
+      recordedAt: new Date().toISOString(),
+    };
+  }
+}
+//#endregion 🎥TutorialRecorder
+
 export function FrameworkOsShell({
   pluginFilter,
   plugins,
@@ -4736,6 +5162,7 @@ export function FrameworkOsShell({
   const { expandedCommandId, stagedArgsByCommandId: commandStagedArgsByCommandId } = shellState.commandPanel;
   const { panels, dockOverride, panelPathMemory, treeOpenStates, activeWindowId, shellLayout, activeExampleId, mobilePanelPath, mobilePanelVisible, extraWindowInstances, windowTitlesById, windowIconsById } = shellState.layout;
   const { searchOpen, findOpen, introductionStepIndex, introductionCompletedInteractions, dialog: overlayDialog } = shellState.overlays;
+  const { activeTutorialId, playing: tutorialPlaying, rate: tutorialRate, muted: tutorialMuted, captionsOn: tutorialCaptionsOn, recording: tutorialRecording, deviated: tutorialDeviated } = shellState.tutorial;
   const { uiAppearance, uiLayout, uiDriverId, uiCustomDrivers, uiDriverDraft, uiLocale, uiTerminology, uiThemeId, uiCustomThemes, uiThemeDraft } = shellState.uiPrefs;
   const { syncBackboneUri, syncCardKind, syncDraftPath, syncStatusByDocumentId } = shellState.sync;
   const importStudioInputRef = useRef<HTMLInputElement>(null);
@@ -4850,11 +5277,26 @@ export function FrameworkOsShell({
 
   // 🎓 Auto-starts an app's introduction the first time it launches on this device (or every load when
   // the brand opts in); replaying stays available afterward via the shell-owned Introduce App command.
+  // 🎥 Never auto-starts while a tutorial is active (mutual exclusivity) — `activeTutorialId` is declared
+  // just below (the TutorialOrchestration block's state resolution); read via `shellState.tutorial`
+  // directly here rather than the not-yet-declared local to avoid a definition-order dependency.
   useEffect(() => {
-    if (!session || !activeIntroduction) return;
+    if (!session || !activeIntroduction || shellState.tutorial.activeTutorialId != null) return;
     if (!replayIntroductionOnLoad && readStoredIntroductionSeen(introductionSeenKey)) return;
     dispatch({ type: "SET_INTRODUCTION_STEP", value: 0 });
-  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad]);
+  }, [session?.app.id, activeIntroduction, introductionSeenKey, replayIntroductionOnLoad, shellState.tutorial.activeTutorialId]);
+
+  // 🎥 Zero per-app work: any app/brand that declares `tutorials` gets shell support automatically.
+  // Brand-owned tutorials are shown ALONGSIDE the app's own (never replacing them, unlike `introduction`).
+  const activeTutorials = useMemo((): readonly TutorialDefinition[] => [...(brand?.tutorials ?? []), ...(session?.app.tutorials ?? [])], [brand?.tutorials, session?.app.tutorials]);
+  /** ⏺️ The recorder is dev/studio-only — Vite always defines `import.meta.env.DEV`; guarded for non-Vite (e.g. `bun test`) evaluation. */
+  const tutorialRecorderAvailable = useMemo(() => {
+    try {
+      return Boolean((import.meta as unknown as { readonly env?: { readonly DEV?: boolean } }).env?.DEV);
+    } catch {
+      return false;
+    }
+  }, []);
 
   // 🧰 Refs so `refreshUi`/`onAction`/`applyHostEffects` can read the current host-owned active utility and
   // active window without re-creating those callbacks on every utility switch.
@@ -4891,6 +5333,27 @@ export function FrameworkOsShell({
   introductionStepIndexRef.current = introductionStepIndex;
   const introductionCompletedInteractionsRef = useRef(introductionCompletedInteractions);
   introductionCompletedInteractionsRef.current = introductionCompletedInteractions;
+
+  // 🎥 Forward-declared refs so `onAction` (defined below, before the full tutorial orchestration further
+  // down this component) can shell-intercept `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
+  // without a definition-order cycle — mirrors the `onActionRef` pattern used the other way around.
+  // Populated by the TutorialOrchestration block's effect once the real callbacks exist.
+  const startTutorialRef = useRef<(tutorialId: string) => void>(() => {});
+  const stopTutorialRef = useRef<() => void>(() => {});
+  const toggleTutorialRecordingRef = useRef<() => void>(() => {});
+  /** 🧲 True for the duration of any director/seek/converge-driven dispatch — `onAction`'s deviation
+   * check below skips setting `deviated`/auto-pausing for anything stamped while this is true, mirroring
+   * how the introduction mechanism's own interception distinguishes shell-originated from user-originated
+   * activity. Never read during render, only inside event callbacks — a plain mutable ref is correct. */
+  const tutorialDrivenRef = useRef(false);
+  const tutorialPlayingRef = useRef(tutorialPlaying);
+  tutorialPlayingRef.current = tutorialPlaying;
+  const tutorialRecordingRef = useRef(tutorialRecording);
+  tutorialRecordingRef.current = tutorialRecording;
+  /** ⏺️ Non-null while armed — mutated by `toggleTutorialRecording` (defined in the TutorialOrchestration block below), read/appended-to by `onAction`'s recorder tap right below. */
+  const tutorialRecorderRef = useRef<TutorialRecorder | null>(null);
+  const shellStateRef = useRef(shellState);
+  shellStateRef.current = shellState;
 
   /** 🎓 Ends the active introduction — persists the seen flag when configured, and on successful
    * completion (Done / last interaction) fires the tour-finale {@link celebrateAllElements} stamp
@@ -5797,6 +6260,37 @@ export function FrameworkOsShell({
         return;
       }
 
+      // 🎥 Fully shell-intercepted, mirroring `START_INTRODUCTION_ACTION_ID` above: sandboxes the
+      // document and starts tutorial playback from t=0 (real work happens in `startTutorialRef`, wired up
+      // by the TutorialOrchestration block further down this component).
+      if (action.action === START_TUTORIAL_ACTION_ID) {
+        const args = typeof action.args === "object" && action.args != null ? (action.args as { tutorialId?: unknown }) : {};
+        if (typeof args.tutorialId === "string") startTutorialRef.current(args.tutorialId);
+        return;
+      }
+      if (action.action === RECORD_TUTORIAL_ACTION_ID) {
+        toggleTutorialRecordingRef.current();
+        return;
+      }
+
+      // 🎥 Deviation detection: any action NOT stamped by the tutorial director/seek/converge path while
+      // a tutorial is actively playing means the user diverged from the recording — auto-pause and flag
+      // `deviated` so pressing Play again converges instead of resuming blindly mid-drift.
+      if (tutorialPlayingRef.current && !tutorialDrivenRef.current) {
+        dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
+        dispatch({ type: "SET_TUTORIAL_DEVIATED", value: true });
+      }
+
+      // ⏺️ Recorder tap: annotational-only capture (see `TutorialTracks.events` doc comment) — never
+      // re-dispatched on playback. Skips navigation/introduction/tutorial-control actions (noise, or
+      // meaningless to replay) and anything the director itself just dispatched.
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+        const excludedFromRecording = new Set([NOTE_WORLD_NAVIGATION_ACTION_ID, START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID]);
+        if (!excludedFromRecording.has(action.action)) {
+          tutorialRecorderRef.current?.recordEvent({ kind: "action", action: action.action, args: action.args as Record<string, unknown> | undefined });
+        }
+      }
+
       // 🧭 Camera-navigation gesture report from a 3D window's `WorldOrbitGated` (shell-only, never
       // forwarded to the plugin) — completes any pan/zoom/orbit interaction of the active step that
       // targets the window the gesture happened on. Celebrates only `windowId`'s own pane (via
@@ -6015,6 +6509,339 @@ export function FrameworkOsShell({
   // (and any `useMemo` keyed on the dispatcher passed to it) can actually bail.
   const onActionStable = useCallback((action: Parameters<typeof onAction>[0]) => onActionRef.current(action), []);
 
+  //#region 🎥TutorialOrchestration
+  /** ⏱️ Real-time throttle for the director's UI/document/event application (~10Hz) — camera stays
+   * smooth every clock tick regardless (see the `subscribe` callback below). */
+  const TUTORIAL_DIRECTOR_TICK_MS = 90;
+
+  const activeTutorial = useMemo(() => activeTutorials.find((tutorial) => tutorial.id === activeTutorialId) ?? null, [activeTutorials, activeTutorialId]);
+
+  const tutorialClockRef = useRef<TutorialClock | null>(null);
+  if (!tutorialClockRef.current) tutorialClockRef.current = createTutorialClock(activeTutorial?.durationMs ?? 0);
+  const tutorialClock = tutorialClockRef.current;
+  useEffect(() => () => tutorialClockRef.current?.dispose(), []);
+  useEffect(() => {
+    tutorialClock.setDurationMs(activeTutorial?.durationMs ?? 0);
+  }, [activeTutorial?.durationMs, tutorialClock]);
+  useEffect(() => {
+    tutorialClock.setRate(tutorialRate);
+  }, [tutorialRate, tutorialClock]);
+  useEffect(() => {
+    if (tutorialPlaying) tutorialClock.play();
+    else tutorialClock.pause();
+  }, [tutorialPlaying, tutorialClock]);
+
+  const uiBridgeCtxRef = useRef<TutorialUiBridgeContext>({ session, appLabelsOverlay });
+  uiBridgeCtxRef.current = { session, appLabelsOverlay };
+
+  /** ⏱️ Playhead (ms) the director/seek last applied document/UI tracks up to — the "from" side of the
+   * next `tutorialSlice(def, from, to)` call. Reset to 0 on sandbox (re)start. */
+  const tutorialLastAppliedMsRef = useRef(0);
+  /** 🎬 Sandboxed-out live document (full `DocumentVcsEnvelope` JSON), restored on stop/exit. */
+  const tutorialDocumentSnapshotRef = useRef<string | null>(null);
+
+  // 🎬 Sandbox start/stop (design point 3): on activation, snapshot the live document, load `base`, apply
+  // `base.ui`/`base.cameras`, and seek the clock to 0; on deactivation, restore the snapshot.
+  const prevActiveTutorialIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    const previousId = prevActiveTutorialIdRef.current;
+    prevActiveTutorialIdRef.current = activeTutorialId;
+    if (previousId === activeTutorialId || !session) return;
+    const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+    if (!plugin) return;
+    if (activeTutorialId) {
+      const def = activeTutorials.find((tutorial) => tutorial.id === activeTutorialId);
+      if (!def) return;
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        try {
+          if (plugin.readAppDocument) tutorialDocumentSnapshotRef.current = await plugin.readAppDocument(session.instanceId);
+        } catch (snapshotError) {
+          console.error("[DEBUG] tutorial sandbox snapshot failed", snapshotError);
+        }
+        try {
+          if (def.base.documentJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, def.base.documentJson);
+          else if (def.base.exampleId) dispatch({ type: "SET_ACTIVE_EXAMPLE_ID", value: def.base.exampleId });
+        } catch (loadError) {
+          console.error("[DEBUG] tutorial base document load failed", loadError);
+        }
+        applyTutorialUiSnapshotToShell(dispatch, def.base.ui, uiBridgeCtxRef.current);
+        for (const cameraKeyframe of def.base.cameras) getTutorialCameraDriver(cameraKeyframe.windowId)?.set(cameraKeyframe.camera);
+        tutorialLastAppliedMsRef.current = 0;
+        tutorialClock.seek(0);
+        await refreshUi(session, { kind: "full" });
+        tutorialDrivenRef.current = false;
+      })();
+    } else if (previousId) {
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        try {
+          const snapshotJson = tutorialDocumentSnapshotRef.current;
+          if (snapshotJson && plugin.loadAppDocument) await plugin.loadAppDocument(session.instanceId, snapshotJson);
+        } catch (restoreError) {
+          console.error("[DEBUG] tutorial sandbox restore failed", restoreError);
+        }
+        tutorialDocumentSnapshotRef.current = null;
+        await refreshUi(session, { kind: "full" });
+        tutorialDrivenRef.current = false;
+      })();
+    }
+  }, [activeTutorialId, activeTutorials, session, loadedPlugins, tutorialClock, refreshUi]);
+
+  /** 🎬 Applies every entry of one `TutorialSlice` (a director tick or a seek span) onto the live
+   * session — UI changes first, then document-track entries through the plugin bridge: `Edit` via
+   * `applyOperations` (forward/backward per `slice.forward`), `Load` via `loadAppDocument`,
+   * `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` via the SAME History-action
+   * `onAction` funnel the app's own undo/redo buttons dispatch through (never a bespoke channel) — then
+   * pulses any annotational event's target element via the existing `celebrateElements` vocabulary. */
+  const applyTutorialSliceToShell = useCallback(
+    async (slice: TutorialSlice, activeSession: ActiveSession) => {
+      for (const change of slice.uiChanges) applyTutorialUiChangeToShell(dispatch, change, uiBridgeCtxRef.current);
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === activeSession.pluginId)?.handle;
+      let documentTouched = false;
+      for (const documentEvent of slice.document) {
+        const kind: TutorialDocumentEventKind = documentEvent.kind;
+        if (kind.kind === "edit") {
+          documentTouched = true;
+          const operations = slice.forward ? kind.forwards : kind.backwards;
+          if (plugin?.applyOperations) await plugin.applyOperations(activeSession.instanceId, JSON.stringify(operations));
+        } else if (kind.kind === "load") {
+          documentTouched = true;
+          const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
+          if (plugin?.loadAppDocument) await plugin.loadAppDocument(activeSession.instanceId, documentJson);
+        } else if (kind.kind === "undo") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "undo" : "redo" });
+        } else if (kind.kind === "redo") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: slice.forward ? "redo" : "undo" });
+        } else if (kind.kind === "checkpoint") {
+          if (slice.forward) onActionRef.current({ controllerId: activeSession.app.controllerId, action: "commitCheckpoint" });
+        } else if (kind.kind === "checkoutCheckpoint") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "checkoutCheckpoint", args: { checkpointId: kind.checkpointId } });
+        } else if (kind.kind === "switchAlternative") {
+          onActionRef.current({ controllerId: activeSession.app.controllerId, action: "switchAlternative", args: { alternativeId: kind.alternativeId } });
+        }
+      }
+      for (const event of slice.events) {
+        const kind = event.kind;
+        const targetId = kind.kind === "action" ? kind.action : kind.kind === "command" ? kind.command : undefined;
+        if (targetId) celebrateElements(elementIdSelector(targetId));
+      }
+      if (documentTouched) await refreshUi(activeSession, { kind: "full" });
+    },
+    [loadedPlugins, refreshUi],
+  );
+
+  // 🎬 Director: one subscription to the clock's rAF-driven ticks. Camera interpolation applies every
+  // tick (smooth); UI/document/event application throttles to `TUTORIAL_DIRECTOR_TICK_MS`.
+  useEffect(() => {
+    const def = activeTutorial;
+    if (!def || !session) return;
+    let lastHeavyTickAt = 0;
+    const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+    const unsubscribe = tutorialClock.subscribe(() => {
+      const t = tutorialClock.getTimeMs();
+      for (const windowId of cameraWindowIds) {
+        const pose = tutorialCameraAt(def, windowId, t);
+        if (pose) getTutorialCameraDriver(windowId)?.set(pose);
+      }
+      if (!tutorialClock.isPlaying()) return;
+      const now = performance.now();
+      if (now - lastHeavyTickAt < TUTORIAL_DIRECTOR_TICK_MS) return;
+      lastHeavyTickAt = now;
+      const from = tutorialLastAppliedMsRef.current;
+      if (from === t) return;
+      const slice = tutorialSlice(def, from, t);
+      tutorialLastAppliedMsRef.current = t;
+      tutorialDrivenRef.current = true;
+      void applyTutorialSliceToShell(slice, session).finally(() => {
+        tutorialDrivenRef.current = false;
+      });
+    });
+    return unsubscribe;
+  }, [activeTutorial, session, tutorialClock, applyTutorialSliceToShell]);
+
+  /** ✂️ Seek/rebuild (design point 5): composes UI wholesale (never accumulates deltas across a seek —
+   * mirrors the Rust `tutorial_slice` doc comment's own warning), applies the forward/backward document
+   * span crossed since the last applied playhead, sets every camera exactly (no interpolation on a seek),
+   * and moves the clock. */
+  const seekTutorial = useCallback(
+    (ms: number) => {
+      const def = activeTutorial;
+      if (!def || !session) return;
+      const clamped = Math.min(def.durationMs, Math.max(0, ms));
+      const from = tutorialLastAppliedMsRef.current;
+      tutorialDrivenRef.current = true;
+      void (async () => {
+        applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, clamped), uiBridgeCtxRef.current);
+        const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+        const slice = tutorialSlice(def, from, clamped);
+        let documentTouched = false;
+        for (const documentEvent of slice.document) {
+          const kind: TutorialDocumentEventKind = documentEvent.kind;
+          if (kind.kind === "edit") {
+            documentTouched = true;
+            const operations = slice.forward ? kind.forwards : kind.backwards;
+            if (plugin?.applyOperations) await plugin.applyOperations(session.instanceId, JSON.stringify(operations));
+          } else if (kind.kind === "load") {
+            documentTouched = true;
+            const documentJson = slice.forward ? kind.documentJson : kind.previousJson;
+            if (plugin?.loadAppDocument) await plugin.loadAppDocument(session.instanceId, documentJson);
+          }
+          // 🚧 Undo/Redo/Checkpoint/CheckoutCheckpoint/SwitchAlternative crossings mid-seek are an honest
+          // scope cut here (replaying a crossed history op out of its natural live-dispatch order is
+          // ambiguous without more VCS-side infrastructure) — the director's per-tick forward playback
+          // above still applies them correctly; only a large scrub jumping OVER one of these entries misses it.
+        }
+        const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+        for (const windowId of cameraWindowIds) {
+          const pose = tutorialCameraAt(def, windowId, clamped);
+          if (pose) getTutorialCameraDriver(windowId)?.set(pose);
+        }
+        tutorialLastAppliedMsRef.current = clamped;
+        tutorialClock.seek(clamped);
+        if (documentTouched) await refreshUi(session, { kind: "full" });
+        console.log("[DEBUG] tutorial rebuild", { atMs: clamped });
+        tutorialDrivenRef.current = false;
+      })();
+    },
+    [activeTutorial, session, loadedPlugins, tutorialClock, refreshUi],
+  );
+
+  /** ▶️ Play/pause toggle — the deviation-converge path (design point 6): snaps document+UI to the
+   * composed target at the current playhead, tweens the camera over `TUTORIAL_CONVERGE_MS` (real-time,
+   * rate-independent) from each window's LIVE pose to its target pose, then resumes the clock. */
+  const playPauseTutorial = useCallback(() => {
+    if (!activeTutorial) return;
+    if (tutorialPlaying) {
+      dispatch({ type: "SET_TUTORIAL_PLAYING", value: false });
+      return;
+    }
+    if (tutorialDeviated && session) {
+      const def = activeTutorial;
+      const atMs = tutorialClock.getTimeMs();
+      tutorialDrivenRef.current = true;
+      applyTutorialUiSnapshotToShell(dispatch, composeTutorialUi(def, atMs), uiBridgeCtxRef.current);
+      const cameraWindowIds = new Set([...def.base.cameras, ...def.tracks.camera].map((keyframe) => keyframe.windowId));
+      const startPoseByWindow = new Map<string, TutorialCameraState>();
+      for (const windowId of cameraWindowIds) {
+        const live = getTutorialCameraDriver(windowId)?.get();
+        if (live) startPoseByWindow.set(windowId, live);
+      }
+      const startedAt = performance.now();
+      const tween = (now: number) => {
+        const progress = Math.min(1, (now - startedAt) / TUTORIAL_CONVERGE_MS);
+        for (const windowId of cameraWindowIds) {
+          const targetPose = tutorialCameraAt(def, windowId, atMs);
+          if (!targetPose) continue;
+          const driver = getTutorialCameraDriver(windowId);
+          if (!driver) continue;
+          const startPose = startPoseByWindow.get(windowId);
+          if (startPose && startPose.kind === targetPose.kind) {
+            driver.set(interpolateTutorialCamera({ at: 0, windowId, camera: startPose, easing: "linear" }, { at: TUTORIAL_CONVERGE_MS, windowId, camera: targetPose, easing: "linear" }, progress * TUTORIAL_CONVERGE_MS));
+          } else {
+            driver.set(targetPose);
+          }
+        }
+        if (progress < 1) requestAnimationFrame(tween);
+        else {
+          tutorialDrivenRef.current = false;
+          dispatch({ type: "SET_TUTORIAL_DEVIATED", value: false });
+          dispatch({ type: "SET_TUTORIAL_PLAYING", value: true });
+        }
+      };
+      requestAnimationFrame(tween);
+      return;
+    }
+    dispatch({ type: "SET_TUTORIAL_PLAYING", value: true });
+  }, [activeTutorial, tutorialPlaying, tutorialDeviated, session, tutorialClock]);
+
+  const startTutorial = useCallback(
+    (tutorialId: string) => {
+      if (!activeTutorials.some((tutorial) => tutorial.id === tutorialId)) return;
+      dispatch({ type: "SET_TUTORIAL", value: tutorialId });
+    },
+    [activeTutorials],
+  );
+  const stopTutorial = useCallback(() => {
+    dispatch({ type: "SET_TUTORIAL", value: null });
+  }, []);
+
+  /** ⏺️ Arms/disarms `TutorialRecorder` against the LIVE (never sandboxed) document — a recording IS the
+   * user's work. On stop: light `validateTutorial` sanity check, then serialize + trigger a browser
+   * download, matching the repo's existing media-export download pattern. */
+  const toggleTutorialRecording = useCallback(() => {
+    if (!session) return;
+    const recorder = tutorialRecorderRef.current;
+    if (recorder) {
+      tutorialRecorderRef.current = null;
+      const id = `recorded-${session.app.id}-${Date.now()}`;
+      const def = recorder.build(id, `${session.app.id} recording`);
+      const validationError = validateTutorial(def);
+      if (validationError) console.error("[DEBUG] tutorial recording validation failed", validationError);
+      const json = JSON.stringify(def, null, 2);
+      console.log("[DEBUG] tutorial recording", json);
+      downloadMediaExport(`tutorial-${session.app.id}-${Date.now()}.json`, "application/json", json);
+      dispatch({ type: "SET_TUTORIAL_RECORDING", value: false });
+      return;
+    }
+    void (async () => {
+      const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
+      let documentJson: string | null = null;
+      try {
+        if (plugin?.readAppDocument) documentJson = await plugin.readAppDocument(session.instanceId);
+      } catch (captureError) {
+        console.error("[DEBUG] tutorial recorder base capture failed", captureError);
+      }
+      tutorialRecorderRef.current = new TutorialRecorder(captureTutorialUiSnapshot(shellStateRef.current, session), documentJson);
+      dispatch({ type: "SET_TUTORIAL_RECORDING", value: true });
+    })();
+  }, [session, loadedPlugins]);
+
+  useEffect(() => {
+    startTutorialRef.current = startTutorial;
+    stopTutorialRef.current = stopTutorial;
+    toggleTutorialRecordingRef.current = toggleTutorialRecording;
+  }, [startTutorial, stopTutorial, toggleTutorialRecording]);
+
+  // ⏺️ Recorder: UI-state diff on every `ShellState` change (catches panel-tab clicks/tree expands/etc.
+  // that bypass `onAction`), a periodic full-snapshot keyframe every 5s, and a 10Hz epsilon-filtered
+  // camera sampler per registered driver (world drags bypass `onAction` entirely).
+  useEffect(() => {
+    if (!tutorialRecording) return;
+    tutorialRecorderRef.current?.recordUiDiff(captureTutorialUiSnapshot(shellState, session));
+  }, [tutorialRecording, shellState, session]);
+
+  useEffect(() => {
+    if (!tutorialRecording || !session || typeof window === "undefined") return;
+    const interval = window.setInterval(() => {
+      tutorialRecorderRef.current?.recordSnapshot(captureTutorialUiSnapshot(shellStateRef.current, session));
+    }, 5000);
+    return () => window.clearInterval(interval);
+  }, [tutorialRecording, session]);
+
+  useEffect(() => {
+    if (!tutorialRecording || !session || typeof window === "undefined") return;
+    const interval = window.setInterval(() => {
+      const recorder = tutorialRecorderRef.current;
+      if (!recorder) return;
+      for (const instance of sessionWindowInstances(session.app, extraWindowInstancesRef.current)) {
+        const pose = getTutorialCameraDriver(instance.id)?.get();
+        if (pose) recorder.sampleCamera(instance.id, pose);
+      }
+    }, 100);
+    return () => window.clearInterval(interval);
+  }, [tutorialRecording, session]);
+
+  const addTutorialChapter = useCallback(() => {
+    tutorialRecorderRef.current?.addChapter();
+  }, []);
+
+  const tutorialChapterMarkers = useMemo(
+    (): readonly TutorialChapterMarker[] => (activeTutorial ? activeTutorial.chapters.map((chapter) => ({ id: chapter.id, title: chapter.title, atMs: chapter.at })) : []),
+    [activeTutorial],
+  );
+  //#endregion 🎥TutorialOrchestration
+
   const studioSessionActive = studioMode && session?.app.id === hostAppId;
   // 🏠🧳 Once `studioSessionActive` is true, `session.app` *is* the host app, so its own self-declared
   // `controllerId` is the right value — no separate app-identity lookup needed.
@@ -6183,8 +7010,8 @@ export function FrameworkOsShell({
   const uiThemeList = useMemo((): readonly UiTheme[] => [...builtinUiThemes(), ...Object.values(uiCustomThemes)], [uiCustomThemes]);
   const uiDriverList = useMemo((): readonly UiDriver[] => [...builtinUiDrivers(), ...Object.values(uiCustomDrivers)], [uiCustomDrivers]);
   const osCommands = useMemo(
-    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList),
-    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList],
+    () => buildOsCommands(uiThemeList, [UI_TERMINOLOGY_NATIVE, ...(session?.app.terminologies ?? [])], activeIntroduction != null, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable),
+    [uiThemeList, session?.app.terminologies, activeIntroduction, uiLocale, uiTerminology, locks, uiDriverList, activeTutorials, tutorialRecorderAvailable],
   );
 
   const draftThemePatch = useCallback(
@@ -6700,11 +7527,27 @@ export function FrameworkOsShell({
    */
   const onCommand = useCallback(
     (source: ResolvedCommand["source"], commandId: string, args?: Record<string, unknown>) => {
+      // 🎥 Same sandbox-start/recorder-arm side effects `START_TUTORIAL_ACTION_ID`/`RECORD_TUTORIAL_ACTION_ID`
+      // need — routed through the `startTutorialRef`/`toggleTutorialRecordingRef` bridge since they need
+      // more context (plugin bridge, sandbox snapshot) than a bare `dispatch` gives `dispatchOsCommand`.
+      if (source.kind === "os" && commandId === "os.playTutorial") {
+        const tutorialId = typeof args?.tutorialId === "string" ? args.tutorialId : "";
+        if (tutorialId) startTutorialRef.current(tutorialId);
+        return;
+      }
+      if (source.kind === "os" && commandId === "os.recordTutorial") {
+        toggleTutorialRecordingRef.current();
+        return;
+      }
       if (source.kind === "os") {
         dispatchOsCommand(commandId, args, dispatch, dockLayoutStore, dockUiStateStore, locks);
         return;
       }
       if (!session) return;
+      // ⏺️ Recorder tap for plugin/app/mode-scope commands — mirrors `onAction`'s tap above.
+      if (tutorialRecordingRef.current && !tutorialDrivenRef.current) {
+        tutorialRecorderRef.current?.recordEvent({ kind: "command", command: commandId, args });
+      }
       const plugin = loadedPlugins.find((entry) => entry.handle.pluginId === session.pluginId)?.handle;
       if (!plugin?.handleCommand) return;
       const dispatchViewState = injectActiveUtility(session.viewState);
@@ -7696,6 +8539,30 @@ export function FrameworkOsShell({
               mobile={mobile}
               mobilePanel={mobilePanel}
               navbar={<Navbar items={navbarItems} showFullscreenToggle={!mobile} />}
+              subnavbar={
+                activeTutorial ? (
+                  <TutorialBar
+                    title={activeTutorial.title}
+                    durationMs={activeTutorial.durationMs}
+                    playing={tutorialPlaying}
+                    rate={tutorialRate}
+                    muted={tutorialMuted}
+                    captionsOn={tutorialCaptionsOn}
+                    recording={tutorialRecording}
+                    recordAvailable={tutorialRecorderAvailable}
+                    chapters={tutorialChapterMarkers}
+                    clock={tutorialClock}
+                    onPlayPause={playPauseTutorial}
+                    onStop={stopTutorial}
+                    onSeek={seekTutorial}
+                    onRateChange={(value) => dispatch({ type: "SET_TUTORIAL_RATE", value })}
+                    onMutedChange={(value) => dispatch({ type: "SET_TUTORIAL_MUTED", value })}
+                    onCaptionsChange={(value) => dispatch({ type: "SET_TUTORIAL_CAPTIONS", value })}
+                    onRecordToggle={toggleTutorialRecording}
+                    onAddChapter={addTutorialChapter}
+                  />
+                ) : undefined
+              }
               footer={<Footer items={footerItems} />}
               panels={Object.fromEntries(ANCHORS.map((anchor) => [anchor, buildPanelProps(anchor)])) as Record<Anchor, ReturnType<typeof buildPanelProps>>}
               canvas={<ShellRenderErrorBoundary>{canvas}</ShellRenderErrorBoundary>}
@@ -7712,6 +8579,13 @@ export function FrameworkOsShell({
             onStepIndexChange={(value) => dispatch({ type: "SET_INTRODUCTION_STEP", value })}
             onDismiss={dismissIntroduction}
           />
+        )}
+        {activeTutorial && (
+          <>
+            <TutorialCaptionsHost tutorial={activeTutorial} clock={tutorialClock} captionsOn={tutorialCaptionsOn} />
+            <TutorialVideoOverlayHost tutorial={activeTutorial} clock={tutorialClock} muted={tutorialMuted} playing={tutorialPlaying} rate={tutorialRate} />
+            <TutorialGhostPointerHost tutorial={activeTutorial} clock={tutorialClock} />
+          </>
         )}
         {session &&
           overlayDialog &&
@@ -13925,6 +14799,30 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
   }, [node.surfaceId, sceneCameraJson]);
   const cameraState = viewportCamera ?? sceneCamera;
   const cameraSeedKey = world3dViewportCameraSeedKey(sceneCameraJson, detachEpoch);
+
+  // 🎥 Registers this window's live camera get/set for tutorial playback/recording (see
+  // `registerTutorialCameraDriver` — modeled on `registerIntroductionSurfaceResolver`). `get` reads the
+  // CURRENT pose via a ref (never a stale closure) for deviation-then-play convergence; `set` writes a
+  // viewport-owned override and bumps `detachEpoch` so `OrbitControls` reseeds from the new pose instead
+  // of fighting it, exactly like a programmatic view-preset apply already does.
+  const cameraStateRef = useRef(cameraState);
+  cameraStateRef.current = cameraState;
+  useEffect(() => {
+    if (!windowInstanceId) return undefined;
+    const driver: TutorialCameraDriver = {
+      get: () => {
+        const live = cameraStateRef.current;
+        return { kind: "orbit", position: live.position, target: live.target, up: live.up ?? [0, 0, 1], fov: live.fov };
+      },
+      set: (pose) => {
+        if (pose.kind !== "orbit") return;
+        const live = cameraStateRef.current;
+        setViewportCamera({ ...live, position: pose.position, target: pose.target, up: pose.up ?? live.up, fov: pose.fov ?? live.fov });
+        setDetachEpoch((epoch) => epoch + 1);
+      },
+    };
+    return registerTutorialCameraDriver(windowInstanceId, driver);
+  }, [windowInstanceId]);
   const meshes = useMemo(() => parseMeshes(scene?.meshesJson ?? "[]"), [scene?.meshesJson]);
   const selection = useMemo(() => parseSelection(scene?.selectionJson ?? "{}"), [scene?.selectionJson]);
   const vortices = useMemo(() => parseJsonArray<WorldVortexRecord>(scene?.vorticesJson), [scene?.vorticesJson]);

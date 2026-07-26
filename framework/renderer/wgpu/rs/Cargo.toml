@@ -19,6 +19,10 @@ framework_surface_node_graph = { path = "../../../surface/node-graph/rs" }
 framework_editor = { path = "../../../editor/rs" }
 infinite_cavas = { path = "../../../../infinite/cavas/rs" }
 infinite_world = { path = "../../../../infinite/world/rs" }
+# 🎬 Direct dependency (rather than reaching through `infinite_world`, which imports these privately)
+# so the Tutorial track's camera keyframes can convert to/from `OrbitController`/`Camera3d` — see
+# `//#region 🎬Tutorial` in lib.rs.
+kernel_3d_scene = { path = "../../../../kernel/3d/scene/rs" }
 framework_surface_tiled_map = { path = "../../../surface/tiled-map/rs" }
 puzzle_2d = { path = "../../../../puzzle/2d/rs" }
 flow_core = { path = "../../../../flow/core/rs" }

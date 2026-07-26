@@ -633,6 +633,7 @@ pub mod app_home {
                 can_redo: false,
                 active_alternative_id: None,
                 current_checkpoint_id: None,
+                recent_ops: Vec::new(),
             }
         }
 
@@ -3271,6 +3272,7 @@ pub mod app_studio {
                 can_redo: false,
                 active_alternative_id: None,
                 current_checkpoint_id: None,
+                recent_ops: Vec::new(),
             }
         }
 

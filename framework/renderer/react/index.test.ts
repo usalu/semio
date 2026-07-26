@@ -595,6 +595,68 @@ describe("shell store reducer", () => {
     expect(switched.layout.panels["bottom-middle"].path).toEqual(["framework.category.command", "command.category.layout"]);
     expect(switched.commandPanel.expandedCommandId).toBeNull();
   });
+
+  it("tutorial slice: SET_TUTORIAL starts a tutorial, resets rate/deviated, and clears an active introduction (mutual exclusivity)", () => {
+    const introducing = shellReducer(baseState(), { type: "SET_INTRODUCTION_STEP", value: 0 });
+    expect(introducing.overlays.introductionStepIndex).toBe(0);
+    const started = shellReducer(introducing, { type: "SET_TUTORIAL", value: "welcome-tour" });
+    expect(started.tutorial).toEqual({ activeTutorialId: "welcome-tour", playing: false, rate: 1, muted: false, captionsOn: true, recording: false, deviated: false });
+    expect(started.overlays.introductionStepIndex).toBeNull();
+  });
+
+  it("tutorial slice: SET_INTRODUCTION_STEP (non-null) clears an active tutorial (mutual exclusivity, reverse direction)", () => {
+    const started = shellReducer(baseState(), { type: "SET_TUTORIAL", value: "welcome-tour" });
+    const playing = shellReducer(started, { type: "SET_TUTORIAL_PLAYING", value: true });
+    expect(playing.tutorial.playing).toBe(true);
+    const introduced = shellReducer(playing, { type: "SET_INTRODUCTION_STEP", value: 0 });
+    expect(introduced.tutorial.activeTutorialId).toBeNull();
+    expect(introduced.tutorial.playing).toBe(false);
+    expect(introduced.overlays.introductionStepIndex).toBe(0);
+  });
+
+  it("tutorial slice: play/pause resets deviated only when transitioning to playing; rate/muted/captions/recording/deviated update independently", () => {
+    const started = shellReducer(baseState(), { type: "SET_TUTORIAL", value: "welcome-tour" });
+    const deviated = shellReducer(started, { type: "SET_TUTORIAL_DEVIATED", value: true });
+    expect(deviated.tutorial.deviated).toBe(true);
+    const stillPaused = shellReducer(deviated, { type: "SET_TUTORIAL_PLAYING", value: false });
+    expect(stillPaused.tutorial.deviated).toBe(true);
+    const resumed = shellReducer(deviated, { type: "SET_TUTORIAL_PLAYING", value: true });
+    expect(resumed.tutorial.deviated).toBe(false);
+    const rated = shellReducer(resumed, { type: "SET_TUTORIAL_RATE", value: 2 });
+    expect(rated.tutorial.rate).toBe(2);
+    const muted = shellReducer(rated, { type: "SET_TUTORIAL_MUTED", value: true });
+    expect(muted.tutorial.muted).toBe(true);
+    const captionsOff = shellReducer(muted, { type: "SET_TUTORIAL_CAPTIONS", value: false });
+    expect(captionsOff.tutorial.captionsOn).toBe(false);
+    const recording = shellReducer(captionsOff, { type: "SET_TUTORIAL_RECORDING", value: true });
+    expect(recording.tutorial.recording).toBe(true);
+  });
+
+  it("APPLY_TUTORIAL_UI_SNAPSHOT atomically restores layout/panels/tree/utility/tool/dialog/search across their owning slices", () => {
+    const state = baseState();
+    const snapshot = shellReducer(state, {
+      type: "APPLY_TUTORIAL_UI_SNAPSHOT",
+      snapshot: {
+        activeWindowId: "puzzle3d-main",
+        shellLayout: { kind: "window", id: "puzzle3d-main" },
+        extraWindowInstances: [],
+        panelPatches: { "top-left": { visible: true, path: ["catalogue"] } },
+        treeOpenStates: { "catalogue.section": true },
+        activeUtilityByWindowId: { "puzzle3d-main": "transform" },
+        activeToolId: "fill",
+        openDialogId: "addObject",
+        commandPanelOpen: true,
+      },
+    });
+    expect(snapshot.layout.activeWindowId).toBe("puzzle3d-main");
+    expect(snapshot.layout.panels["top-left"]).toMatchObject({ visible: true, path: ["catalogue"] });
+    expect(snapshot.layout.treeOpenStates).toEqual({ "catalogue.section": true });
+    expect(snapshot.actionPane.activeUtilityByWindowId).toEqual({ "puzzle3d-main": "transform" });
+    expect(snapshot.actionPane.activeToolId).toBe("fill");
+    expect(snapshot.overlays.dialog).toEqual({ dialogId: "addObject" });
+    expect(snapshot.overlays.searchOpen).toBe(true);
+    expect(snapshot.pluginRuntime).toBe(state.pluginRuntime);
+  });
 });
 
 // 🐢 Puzzle 2D performance round 2: the per-interaction full-shell refresh cascade was dominated by
@@ -4003,6 +4065,28 @@ describe("Introduce App command", () => {
     const dispatch = vi.fn();
     dispatchOsCommand("os.introduceApp", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
     expect(dispatch).toHaveBeenCalledWith({ type: "SET_INTRODUCTION_STEP", value: 0 });
+  });
+});
+
+describe("Play/Record Tutorial commands", () => {
+  it("os.playTutorial appears only when at least one tutorial is declared, offering each as a Select option", () => {
+    expect(buildOsCommands([], [], false).some((command) => command.id === "os.playTutorial")).toBe(false);
+    const withTutorials = buildOsCommands([], [], false, undefined, undefined, [{ id: "welcome-tour", title: "Welcome Tour" }]);
+    const playTutorial = withTutorials.find((command) => command.id === "os.playTutorial");
+    expect(playTutorial).toMatchObject({ label: "Play Tutorial", scope: "os", category: "app" });
+    expect(playTutorial?.args[0]).toMatchObject({ id: "tutorialId", required: true, control: { kind: "select", options: [{ value: "welcome-tour", label: "Welcome Tour" }] } });
+  });
+
+  it("os.recordTutorial appears only when the recorder is available (dev/studio), independent of declared tutorials", () => {
+    expect(buildOsCommands([], [], false, undefined, undefined, [], false).some((command) => command.id === "os.recordTutorial")).toBe(false);
+    expect(buildOsCommands([], [], false, undefined, undefined, [], true).some((command) => command.id === "os.recordTutorial")).toBe(true);
+  });
+
+  it("os-scope Play/Record Tutorial commands are NOT handled by dispatchOsCommand (routed earlier, through the shell's own startTutorialRef/toggleTutorialRecordingRef bridge)", () => {
+    const dispatch = vi.fn();
+    dispatchOsCommand("os.playTutorial", { tutorialId: "welcome-tour" }, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    dispatchOsCommand("os.recordTutorial", undefined, dispatch, { reset: vi.fn() } as never, { reset: vi.fn() } as never);
+    expect(dispatch).not.toHaveBeenCalled();
   });
 });
 

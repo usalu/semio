@@ -6,9 +6,9 @@ pub mod component {
 
     use crate::plugin_runtime::{
         ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_create_app,
-        plugin_detach_backbone, plugin_document, plugin_handle_action, plugin_handle_command,
-        plugin_ingest_operations, plugin_load_document, plugin_manifest, plugin_produce_media, plugin_refresh_ui,
-        plugin_render_with_document,
+        plugin_detach_backbone, plugin_document, plugin_document_text, plugin_handle_action, plugin_handle_command,
+        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document, plugin_load_document_text,
+        plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
     };
     use wit_bindgen::generate;
 
@@ -19,8 +19,9 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionInvocationJson, CommandInvocationJson, InvocationContextJson, InvocationResponseJson, MediaArtifact, MigrateDocumentInput,
-        MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
+        ActionInvocationJson, CommandInvocationJson, DocumentTextFiles, InvocationContextJson, InvocationResponseJson, MediaArtifact,
+        MigrateDocumentInput, MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson,
+        WindowInputJson, WindowOutputJson,
     };
 
     pub struct ComponentGuest;
@@ -104,6 +105,23 @@ pub mod component {
             plugin_load_document(instance_id, &document_json).map_err(PluginError::Message)
         }
 
+        fn apply_operations_text(instance_id: u32, operations_text: String) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            plugin_ingest_operations_text(instance_id, &operations_text).map_err(PluginError::Message)
+        }
+
+        fn read_app_document_text(instance_id: u32) -> Result<DocumentTextFiles, PluginError> {
+            ensure_plugin_initialized();
+            let files = plugin_document_text(instance_id).map_err(PluginError::Message)?;
+            Ok(DocumentTextFiles { dsl: files.dsl, ops: files.ops })
+        }
+
+        fn load_app_document_text(instance_id: u32, document_text: DocumentTextFiles) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            let files = vcs::DocumentTextFiles { dsl: document_text.dsl, ops: document_text.ops };
+            plugin_load_document_text(instance_id, &files).map_err(PluginError::Message)
+        }
+
         fn attach_backbone(instance_id: u32, uri: String) -> Result<(), PluginError> {
             ensure_plugin_initialized();
             plugin_attach_backbone(instance_id, &uri).map_err(PluginError::Message)
@@ -164,11 +182,13 @@ use semio_framework_core::{
         InverseOperation, KernelOperation, DocumentDiff, DocumentHandle, DocumentVersion, OperationEnvelope, OperationId, Rights,
         ResourceKind, SchemaId, Scope, UndoGroup, UndoPolicy,
     },
-    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
+    set_active_tool_action_definition, set_active_utility_action_definition, start_introduction_action_definition, record_tutorial_action_definition,
+    start_tutorial_action_definition, ActionArgDef, ActionRef, AppDefinition, IconName,
     AppLabelsOverlay, ActionDefinition, ActionKind, CommandDefinition, CommandRef, CommandScope, Contribution, DialogDefinition, ExampleDefinition,
     IntroductionDefinition, IntroductionInteractionKind, Keybinding, MediaForm, MediaPortDirection, MediaPortSpec,
-    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, UtilityDefinition,
-    UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID, START_INTRODUCTION_ACTION_ID,
+    ModeDefinition, Modes, PanelGroup, PanelTabDefinition, PanelTabKind, PluginManifest, ProgramDefinition, ToolDefinition, ToolRef, TutorialDefinition,
+    UtilityDefinition, UtilityRef, ViewState, WindowKindDefinition, WindowKinds, SET_ACTIVE_TOOL_ACTION_ID, SET_ACTIVE_UTILITY_ACTION_ID,
+    START_INTRODUCTION_ACTION_ID, START_TUTORIAL_ACTION_ID, RECORD_TUTORIAL_ACTION_ID,
     UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID,
 };
 use ui_wgpu::{
@@ -183,7 +203,7 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use vcs::{
     build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
-    DocumentVcsStore, HistoryColumn, Operation, StudioConflict,
+    DocumentVcsStore, HistoryColumn, Operation, OpText, StudioConflict,
 };
 
 pub struct ModeSpec {
@@ -288,6 +308,57 @@ fn validate_arg_defs(app_id: &str, owner: &str, args: &[ActionArgDef]) {
     }
 }
 
+/// 🆔 Shared by introduction- and tutorial-step validation: every referenced element id is
+/// grammar-checked always, plus a best-effort semantic check for the id shapes this app itself declares
+/// (utility ids, navbar/footer, panel tabs, window bodies — matched via `element_id_segment` since window
+/// kind ids are camelCased at the stamp site, never compared raw). Anything else grammar-valid is an
+/// escape hatch — an app may legitimately reference a plugin- or framework-owned element it doesn't
+/// declare.
+fn validate_referenced_element_id(
+    app_id: &str,
+    owner: &str,
+    role: &str,
+    id: &str,
+    declared_utility_ids: &HashSet<String>,
+    panel_tab_ids: &HashSet<String>,
+    window_kind_ids: &HashSet<String>,
+) {
+    assert!(
+        is_element_id(id),
+        "app {} {} {} element id {} does not match the UI element id grammar",
+        app_id,
+        owner,
+        role,
+        id
+    );
+    if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
+        return;
+    }
+    if let Some(rest) = id.strip_prefix("framework.panelTab.") {
+        let tab_id = rest.strip_suffix(".firstDraggable").unwrap_or(rest);
+        assert!(panel_tab_ids.contains(tab_id), "app {} {} {} undeclared panel tab {}", app_id, owner, role, tab_id);
+        return;
+    }
+    if let Some(rest) = id.strip_prefix("framework.window.") {
+        let segment = rest.split('.').next().unwrap_or(rest);
+        let declared = window_kind_ids.iter().any(|kind_id| element_id_segment(kind_id) == segment);
+        assert!(declared, "app {} {} {} undeclared window kind for element id {}", app_id, owner, role, id);
+    }
+}
+
+/// 👻 Every `IntroductionPoint` a gesture references (one for click/scroll kinds, two for drag/orbit) —
+/// shared by tutorial gesture-cue validation; only `Element` points are grammar-checked (the other
+/// addressing schemes name windows/entities/curves, not the `ui.*` element-id vocabulary).
+fn introduction_gesture_points(gesture: &semio_framework_core::IntroductionGesture) -> Vec<&semio_framework_core::IntroductionPoint> {
+    use semio_framework_core::IntroductionGesture;
+    match gesture {
+        IntroductionGesture::LeftClick { at } | IntroductionGesture::RightClick { at } | IntroductionGesture::DoubleClick { at } | IntroductionGesture::Scroll { at, .. } => {
+            vec![at]
+        }
+        IntroductionGesture::Drag { from, to, .. } | IntroductionGesture::Orbit { from, to, .. } => vec![from, to],
+    }
+}
+
 pub struct KeybindingSpec {
     pub keys: String,
     pub controller_id: String,
@@ -337,6 +408,7 @@ pub struct AppBuilder {
     terminologies: Vec<String>,
     terminology_documents: std::collections::HashMap<String, Vec<String>>,
     introduction: Option<IntroductionDefinition>,
+    tutorials: Vec<TutorialDefinition>,
     dialogs: Vec<DialogDefinition>,
     resource_kinds: Vec<ResourceKindSpec>,
     media_inputs: Vec<MediaPortSpec>,
@@ -366,6 +438,7 @@ impl AppBuilder {
             terminologies: Vec::new(),
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             resource_kinds: Vec::new(),
             media_inputs: Vec::new(),
@@ -412,6 +485,15 @@ impl AppBuilder {
     /// `build_definition`; declaring one auto-injects the `startIntroduction` action.
     pub fn introduction(mut self, introduction: IntroductionDefinition) -> Self {
         self.introduction = Some(introduction);
+        self
+    }
+
+    /// @emoji 🎬 Declares one recorded, timed tutorial (repeatable — an app may offer several). Every
+    /// track is validated in `build_definition` (`validate_tutorial` plus referenced action/command/
+    /// utility/tool/element ids); declaring at least one auto-injects the `startTutorial` action. The
+    /// `recordTutorial` action is injected unconditionally (see `record_tutorial_action_definition`).
+    pub fn tutorial(mut self, tutorial: TutorialDefinition) -> Self {
+        self.tutorials.push(tutorial);
         self
     }
 
@@ -821,6 +903,12 @@ impl AppBuilder {
         if self.introduction.is_some() && declared_action_ids.insert(START_INTRODUCTION_ACTION_ID.to_string()) {
             actions.push(start_introduction_action_definition());
         }
+        if !self.tutorials.is_empty() && declared_action_ids.insert(START_TUTORIAL_ACTION_ID.to_string()) {
+            actions.push(start_tutorial_action_definition(&self.tutorials));
+        }
+        if declared_action_ids.insert(RECORD_TUTORIAL_ACTION_ID.to_string()) {
+            actions.push(record_tutorial_action_definition());
+        }
         let mut bound_keys: HashSet<String> = self.keybindings.iter().map(|binding| binding.keys.clone()).collect();
         let mut keybindings: Vec<Keybinding> = self
             .keybindings
@@ -968,47 +1056,16 @@ impl AppBuilder {
                     self.id,
                     step.id
                 );
-                // 🆔 Every `introduce`/`show` target is grammar-checked always, plus a best-effort semantic
-                // check for the id shapes this app itself declares (utility ids, navbar/footer, panel tabs,
-                // window bodies — matched via `element_id_segment` since window kind ids are camelCased at
-                // the stamp site, never compared raw). Anything else grammar-valid is an escape hatch — an
-                // app may legitimately introduce a plugin- or framework-owned element it doesn't declare.
                 let validate_element_id = |id: &str, role: &str| {
-                    assert!(
-                        is_element_id(id),
-                        "app {} introduction step {} {} element id {} does not match the UI element id grammar",
-                        self.id,
-                        step.id,
+                    validate_referenced_element_id(
+                        &self.id,
+                        &format!("introduction step {}", step.id),
                         role,
-                        id
-                    );
-                    if declared_utility_ids.contains(id) || id == UI_NAVBAR_ELEMENT_ID || id == UI_FOOTER_ELEMENT_ID {
-                        return;
-                    }
-                    if let Some(rest) = id.strip_prefix("framework.panelTab.") {
-                        let tab_id = rest.strip_suffix(".firstDraggable").unwrap_or(rest);
-                        assert!(
-                            panel_tab_ids.contains(tab_id),
-                            "app {} introduction step {} {} undeclared panel tab {}",
-                            self.id,
-                            step.id,
-                            role,
-                            tab_id
-                        );
-                        return;
-                    }
-                    if let Some(rest) = id.strip_prefix("framework.window.") {
-                        let segment = rest.split('.').next().unwrap_or(rest);
-                        let declared = window_kind_ids.iter().any(|kind_id| element_id_segment(kind_id) == segment);
-                        assert!(
-                            declared,
-                            "app {} introduction step {} {} undeclared window kind for element id {}",
-                            self.id,
-                            step.id,
-                            role,
-                            id
-                        );
-                    }
+                        id,
+                        &declared_utility_ids,
+                        &panel_tab_ids,
+                        &window_kind_ids,
+                    )
                 };
                 if let Some(id) = &step.introduce {
                     validate_element_id(id, "introduce");
@@ -1056,6 +1113,78 @@ impl AppBuilder {
                             step.id,
                             window_kind_id
                         ),
+                    }
+                }
+            }
+        }
+        let mut tutorial_ids = HashSet::new();
+        for tutorial in &self.tutorials {
+            assert!(!tutorial.id.trim().is_empty(), "app {} tutorial id must be non-empty", self.id);
+            assert!(tutorial_ids.insert(tutorial.id.clone()), "app {} duplicate tutorial id {}", self.id, tutorial.id);
+            if let Err(reason) = semio_framework_core::validate_tutorial(tutorial) {
+                panic!("app {} tutorial {} failed validation: {}", self.id, tutorial.id, reason);
+            }
+            let owner = format!("tutorial {}", tutorial.id);
+            let mut ui_changes: Vec<&semio_framework_core::TutorialUiChange> = Vec::new();
+            for keyframe in &tutorial.tracks.ui {
+                if let semio_framework_core::TutorialUiSample::Delta { changes } = &keyframe.sample {
+                    ui_changes.extend(changes.iter());
+                }
+            }
+            for change in ui_changes {
+                match change {
+                    semio_framework_core::TutorialUiChange::ActiveUtility { utility_id: Some(utility_id), .. } => assert!(
+                        declared_utility_ids.contains(utility_id),
+                        "app {} {} references undeclared utility {}",
+                        self.id,
+                        owner,
+                        utility_id
+                    ),
+                    semio_framework_core::TutorialUiChange::ActiveTool { id: Some(tool_id) } => assert!(
+                        declared_tool_ids.contains(tool_id),
+                        "app {} {} references undeclared tool {}",
+                        self.id,
+                        owner,
+                        tool_id
+                    ),
+                    _ => {}
+                }
+            }
+            for utility_id in tutorial.base.ui.active_utility_by_window_id.values() {
+                assert!(
+                    declared_utility_ids.contains(utility_id),
+                    "app {} {} base.ui references undeclared utility {}",
+                    self.id,
+                    owner,
+                    utility_id
+                );
+            }
+            if let Some(tool_id) = &tutorial.base.ui.active_tool_id {
+                assert!(declared_tool_ids.contains(tool_id), "app {} {} base.ui references undeclared tool {}", self.id, owner, tool_id);
+            }
+            for event in &tutorial.tracks.events {
+                match &event.kind {
+                    semio_framework_core::TutorialEventKind::Action { action, .. } => assert!(
+                        declared_action_ids.contains(action),
+                        "app {} {} event references undeclared action {}",
+                        self.id,
+                        owner,
+                        action
+                    ),
+                    semio_framework_core::TutorialEventKind::Command { command, .. } => assert!(
+                        declared_command_scopes.contains_key(command),
+                        "app {} {} event references undeclared command {}",
+                        self.id,
+                        owner,
+                        command
+                    ),
+                    semio_framework_core::TutorialEventKind::Key { .. } => {}
+                }
+            }
+            for gesture_cue in &tutorial.tracks.gestures {
+                for point in introduction_gesture_points(&gesture_cue.gesture) {
+                    if let semio_framework_core::IntroductionPoint::Element { id, .. } = point {
+                        validate_referenced_element_id(&self.id, &owner, "gesture", id, &declared_utility_ids, &panel_tab_ids, &window_kind_ids);
                     }
                 }
             }
@@ -1174,6 +1303,7 @@ impl AppBuilder {
             terminologies: self.terminologies,
             terminology_documents: self.terminology_documents,
             introduction: self.introduction,
+            tutorials: self.tutorials,
             dialogs: self.dialogs,
             media_inputs: self.media_inputs,
             media_outputs: self.media_outputs,
@@ -1395,7 +1525,7 @@ mod panel_kit_tests {
         assert_eq!(tree.sections.len(), 2);
         assert_eq!(tree.sections[0].items.len(), 1);
         assert_eq!(tree.sections[1].items[0].label, "(none)");
-        assert_eq!(tree.selected_ids, Some(vec!["ns-play-document.widget.w1".to_string()]));
+        assert!(tree.sections[0].items[0].presence.selected, "the .selected(...) id must be stamped as selected presence on its matching item");
     }
 }
 //#endregion 🔖PanelKit
@@ -1947,7 +2077,8 @@ mod testkit_tests {
     use serde_json::Value;
     use vcs::{Operation, OperationDiff};
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "testkit-dummy")]
     struct DummyProjection {
         count: i32,
     }
@@ -1969,9 +2100,10 @@ mod testkit_tests {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     enum DummyOperation {
+        #[dsl(key = "set-count")]
         SetCount { value: i32 },
     }
 
@@ -2527,6 +2659,126 @@ mod app_builder_tests {
         assert_eq!(introduction.steps.len(), 5);
     }
 
+    fn minimal_tutorial(id: &str) -> semio_framework_core::TutorialDefinition {
+        use semio_framework_core::{TutorialBase, TutorialDefinition, TutorialTracks, TutorialUiSnapshot};
+        TutorialDefinition {
+            id: id.into(),
+            title: "Tutorial".into(),
+            description: None,
+            duration_ms: 10_000,
+            chapters: vec![],
+            base: TutorialBase { document_json: None, example_id: None, ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            tracks: TutorialTracks::default(),
+            recorded_at: None,
+        }
+    }
+
+    #[test]
+    fn declaring_tutorial_injects_start_tutorial_action() {
+        use semio_framework_core::{ActionKind, START_TUTORIAL_ACTION_ID};
+        let definition = minimal_app("tutorial-app").tutorial(minimal_tutorial("welcome-tour")).build_definition();
+        let start_tutorial = definition.actions.iter().find(|action| action.id == START_TUTORIAL_ACTION_ID).expect("startTutorial injected");
+        assert_eq!(start_tutorial.kind, ActionKind::View);
+        assert!(!start_tutorial.in_palette, "the shell-owned Play Tutorial command owns palette discovery");
+    }
+
+    #[test]
+    fn no_tutorial_means_no_start_tutorial_action_but_record_is_always_injected() {
+        use semio_framework_core::{RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID};
+        let definition = minimal_app("no-tutorial-app").build_definition();
+        assert!(!definition.actions.iter().any(|action| action.id == START_TUTORIAL_ACTION_ID));
+        assert!(
+            definition.actions.iter().any(|action| action.id == RECORD_TUTORIAL_ACTION_ID),
+            "recordTutorial is injected unconditionally — recording needs no app declaration"
+        );
+    }
+
+    #[test]
+    fn build_definition_rejects_tutorial_failing_structural_validation() {
+        let result = std::panic::catch_unwind(|| {
+            let mut tutorial = minimal_tutorial("out-of-range-tour");
+            tutorial.duration_ms = 100;
+            tutorial.chapters.push(semio_framework_core::TutorialChapter { id: "late".into(), at: 999_999, title: "Late".into(), body: None });
+            minimal_app("bad-structural-tutorial-app").tutorial(tutorial).build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_duplicate_tutorial_ids() {
+        let result = std::panic::catch_unwind(|| {
+            minimal_app("dupe-tutorial-app")
+                .tutorial(minimal_tutorial("tour"))
+                .tutorial(minimal_tutorial("tour"))
+                .build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_tutorial_event_referencing_undeclared_action() {
+        use semio_framework_core::{TutorialEvent, TutorialEventKind};
+        let result = std::panic::catch_unwind(|| {
+            let mut tutorial = minimal_tutorial("bad-event-tour");
+            tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "missingAction".into(), args: None } }];
+            minimal_app("bad-tutorial-event-app").tutorial(tutorial).build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_tutorial_ui_change_referencing_undeclared_utility() {
+        use semio_framework_core::{TutorialUiChange, TutorialUiKeyframe, TutorialUiSample};
+        let result = std::panic::catch_unwind(|| {
+            let mut tutorial = minimal_tutorial("bad-ui-change-tour");
+            tutorial.tracks.ui = vec![TutorialUiKeyframe {
+                at: 10,
+                sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("missing".into()) }] },
+            }];
+            minimal_app("bad-tutorial-ui-app").tutorial(tutorial).build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_rejects_tutorial_gesture_targeting_malformed_element_id() {
+        use semio_framework_core::{IntroductionGesture, IntroductionPoint, TutorialGestureCue};
+        let result = std::panic::catch_unwind(|| {
+            let mut tutorial = minimal_tutorial("bad-gesture-tour");
+            tutorial.tracks.gestures = vec![TutorialGestureCue {
+                at: 10,
+                duration_ms: 200,
+                gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: "not-camel-case".into(), offset: None } },
+                cursor: None,
+            }];
+            minimal_app("bad-tutorial-gesture-app").tutorial(tutorial).build_definition()
+        });
+        assert!(result.is_err());
+    }
+
+    #[test]
+    fn build_definition_accepts_tutorial_with_declared_action_utility_and_gesture_targets() {
+        use semio_framework_core::{
+            window_element_id, IntroductionGesture, IntroductionPoint, TutorialEvent, TutorialEventKind, TutorialGestureCue, TutorialUiChange,
+            TutorialUiKeyframe, TutorialUiSample,
+        };
+        let mut tutorial = minimal_tutorial("good-tour");
+        tutorial.tracks.events = vec![TutorialEvent { at: 10, kind: TutorialEventKind::Action { action: "addLayer".into(), args: None } }];
+        tutorial.tracks.ui = vec![TutorialUiKeyframe {
+            at: 20,
+            sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveUtility { window_id: "main".into(), utility_id: Some("brush".into()) }] },
+        }];
+        tutorial.tracks.gestures =
+            vec![TutorialGestureCue { at: 30, duration_ms: 200, gesture: IntroductionGesture::LeftClick { at: IntroductionPoint::Element { id: window_element_id("main"), offset: None } }, cursor: None }];
+        let definition = minimal_app("good-tutorial-app")
+            .operation("addLayer", "Add Layer")
+            .utility_simple("brush", "Brush", IconName::Paintbrush)
+            .tutorial(tutorial)
+            .build_definition();
+        assert_eq!(definition.tutorials.len(), 1);
+        assert_eq!(definition.tutorials[0].id, "good-tour");
+    }
+
     #[test]
     fn declaring_dialog_appends_to_definition() {
         use semio_framework_core::{ActionRef, DialogDefinition};
@@ -2732,6 +2984,10 @@ pub struct DocumentView<'a, P> {
     pub history: &'a HistoryView,
 }
 
+/// @emoji 🔢 Cap on {@link HistoryView::recent_ops} — enough for a compact recent-activity list without
+/// unbounded growth on a long-lived document.
+const HISTORY_VIEW_RECENT_OPS_LIMIT: usize = 20;
+
 /// @emoji 📜 Checkpoint/alternative history summary exposed to apps — the swimlane columns plus the
 /// undo/redo availability and the current checkout position. Built once per store generation.
 #[derive(Clone, Debug, PartialEq)]
@@ -2741,6 +2997,12 @@ pub struct HistoryView {
     pub can_redo: bool,
     pub active_alternative_id: Option<String>,
     pub current_checkpoint_id: Option<String>,
+    /// @emoji 📜 The most recent applied operations' printed op-text lines (via `vcs::OpText::print_op`),
+    /// newest first, capped at {@link HISTORY_VIEW_RECENT_OPS_LIMIT} — a text-DSL timeline surface can
+    /// show these directly instead of/alongside the JSON envelope. Empty for every hand-built test
+    /// fixture `HistoryView` across the workspace (only {@link VcsDocumentApp::build_history_view}
+    /// populates it from a real store).
+    pub recent_ops: Vec<String>,
 }
 
 /// @emoji 📤 What a typed `DocumentApp::handle_action` emits: zero-or-more typed operations (applied
@@ -2867,8 +3129,8 @@ macro_rules! app_action_enum {
 /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
-    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send;
-    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send;
+    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + vcs::DocumentDsl;
+    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + vcs::OpText;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -3049,6 +3311,23 @@ pub trait PluginApp: Send {
     fn ingest_operations(&mut self, operations_json: &str) -> Result<(), String>;
     fn document_json(&self) -> Result<String, String>;
     fn load_document(&mut self, document_json: &str) -> Result<(), String>;
+    /// @emoji 📜 Text-DSL counterpart to {@link Self::ingest_operations}: applies one already-authored
+    /// `Self::Operation` per non-blank line (via `vcs::OpText::parse_op`) as a fresh local edit — unlike
+    /// the JSON path (which ingests already-caused remote `OperationEnvelope`s into the causal DAG
+    /// via `store.ingest_remote`, preserving their original ids/deps), each parsed line here goes
+    /// through the normal `DocumentVcsCommand::Apply` path (a fresh id/timestamp, a real computed
+    /// inverse) — the natural mapping for hand-authored or externally-generated op-text, which carries
+    /// no envelope metadata of its own.
+    fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), String>;
+    /// @emoji 📜 Text-DSL counterpart to {@link Self::document_json}: the whole document as
+    /// {@link vcs::DocumentTextFiles} (the `dsl` initial-projection text plus the full `ops` op-log
+    /// text) via `vcs::print_document_text` — returned as the established two-file struct rather than
+    /// a single concatenated string, since that struct (not an ad hoc delimiter format) is already the
+    /// canonical text representation everywhere else in this codebase (`FolderTextStorage`,
+    /// `parse_document_text`).
+    fn document_text(&self) -> Result<vcs::DocumentTextFiles, String>;
+    /// @emoji 📜 Text-DSL counterpart to {@link Self::load_document}.
+    fn load_document_text(&mut self, files: &vcs::DocumentTextFiles) -> Result<(), String>;
     fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String>;
     fn detach_backbone(&mut self);
     fn render(
@@ -3236,6 +3515,16 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             can_redo: !self.store.redo_edit_ids().is_empty(),
             active_alternative_id: self.store.envelope().active_alternative_id.clone(),
             current_checkpoint_id: self.store.current_checkpoint_id().map(str::to_string),
+            recent_ops: self
+                .store
+                .envelope()
+                .vcs
+                .edits
+                .iter()
+                .rev()
+                .flat_map(|edit| edit.forwards.iter().rev().map(OpText::print_op))
+                .take(HISTORY_VIEW_RECENT_OPS_LIMIT)
+                .collect(),
         }
     }
 
@@ -3527,6 +3816,36 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
             serde_json::from_str(document_json).map_err(|error| error.to_string())?;
         let applied: Vec<String> = envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
         self.store.set_envelope(envelope, applied);
+        self.cache = None;
+        Ok(())
+    }
+
+    fn ingest_operations_text(&mut self, operations_text: &str) -> Result<(), String> {
+        let operations: Vec<A::Operation> = operations_text
+            .lines()
+            .map(str::trim)
+            .filter(|line| !line.is_empty())
+            .map(|line| A::Operation::parse_op(line).map_err(|error| error.to_string()))
+            .collect::<Result<Vec<_>, _>>()?;
+        if operations.is_empty() {
+            return Ok(());
+        }
+        self.store
+            .dispatch(DocumentVcsCommand::Apply { operations, description: None })
+            .map_err(|error| error.to_string())?;
+        self.cache = None;
+        Ok(())
+    }
+
+    fn document_text(&self) -> Result<vcs::DocumentTextFiles, String> {
+        vcs::print_document_text(self.store.envelope()).map_err(|error| error.to_string())
+    }
+
+    fn load_document_text(&mut self, files: &vcs::DocumentTextFiles) -> Result<(), String> {
+        let parsed: vcs::ParsedDocumentText<A::Projection, A::Operation> =
+            vcs::parse_document_text(&files.dsl, &files.ops).map_err(|error| error.to_string())?;
+        let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        self.store.set_envelope(parsed.envelope, applied);
         self.cache = None;
         Ok(())
     }
@@ -3982,6 +4301,31 @@ pub fn plugin_load_document(instance_id: u32, document_json: &str) -> Result<(),
     })
 }
 
+/// @emoji 📜 Text-DSL counterpart of {@link plugin_ingest_operations}: one already-authored operation
+/// per non-blank op-text line instead of a JSON `OperationEnvelope` array.
+pub fn plugin_ingest_operations_text(instance_id: u32, operations_text: &str) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.ingest_operations_text(operations_text)
+    })
+}
+
+/// @emoji 📜 Text-DSL counterpart of {@link plugin_document}.
+pub fn plugin_document_text(instance_id: u32) -> Result<vcs::DocumentTextFiles, String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.document_text()
+    })
+}
+
+/// @emoji 📜 Text-DSL counterpart of {@link plugin_load_document}.
+pub fn plugin_load_document_text(instance_id: u32, files: &vcs::DocumentTextFiles) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.load_document_text(files)
+    })
+}
+
 /// @emoji 🔗 Attaches a backbone channel by URI. The URI is resolved to a `vcs::PortBackbone`
 /// (a pure queue relayed across the wasm sandbox to the host); the host owns the real IO endpoint.
 pub fn plugin_attach_backbone(instance_id: u32, uri: &str) -> Result<(), String> {
@@ -4313,14 +4657,15 @@ mod semio_plugin_macro_tests {
     use crate::app::{
         ActionEmit, ActionMeta, App, AppActionRegistry, DocumentApp, DocumentView, PluginApp, VcsDocumentApp,
     };
-    use crate::{ui_text, SurfaceKind, UiNode, ViewState};
+    use crate::{ui_text, IconName, SurfaceKind, UiNode, ViewState};
     use semio_framework_core::kernel::{AppEvent, HostEffect};
     use semio_framework_core::ActionArgDef;
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Value};
     use vcs::{Backbone, BackboneMessage, MemoryBackbone, Operation, OperationDiff};
 
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "testkit-macro")]
     struct TestProjection {
         count: i32,
         label: String,
@@ -4350,10 +4695,12 @@ mod semio_plugin_macro_tests {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation", rename_all = "camelCase")]
     enum TestOperation {
+        #[dsl(key = "set-count")]
         SetCount { value: i32 },
+        #[dsl(key = "set-label")]
         SetLabel { value: String },
     }
 
@@ -5551,9 +5898,10 @@ mod tests {
     fn projection_spec_json_projects_only_active_kind_fields() {
         let p = WorldProjectionConfig { kind: "oblique".into(), oblique_variant: "cabinet".into(), oblique_angle: 45.0, oblique_depth: 0.5, ..WorldProjectionConfig::default() };
         let spec = world3d_projection_spec_json(&p);
-        assert_eq!(spec.get("kind").and_then(Value::as_str), Some("oblique"));
-        assert_eq!(spec.get("depthScale").and_then(Value::as_f64), Some(0.5));
-        assert!(spec.get("axonometricVariant").is_none());
+        let mode = spec.get("mode").expect("mode object");
+        assert_eq!(mode.get("kind").and_then(Value::as_str), Some("oblique"));
+        assert_eq!(mode.get("depthScale").and_then(Value::as_f64), Some(0.5));
+        assert!(mode.get("axonometricVariant").is_none());
     }
 
     #[test]

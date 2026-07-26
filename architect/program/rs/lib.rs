@@ -1204,11 +1204,31 @@ mod kernel {
             Some(self.cmp(other))
         }
     }
+
+    /// @emoji 🔗 Hand-written (not derived): `EntityId` is a tuple struct — `#[derive(dsl::DslRecord)]`
+    /// only supports named fields, and `#[derive(dsl::DslScalar)]` only unit-variant enums — so its
+    /// `dsl::DslField` binding is written directly, bridging straight to `Shape::Text` like `String`'s
+    /// own blanket impl does.
+    impl dsl::DslField for EntityId {
+        fn shape() -> dsl::Shape {
+            dsl::Shape::Text
+        }
+        fn to_value(&self) -> dsl::FieldValue {
+            dsl::FieldValue::Text(self.0.clone())
+        }
+        fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+            match value {
+                dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
+                dsl::FieldValue::Ident(s) => Ok(EntityId(s.clone())),
+                other => Err(format!("expected Text, found {other:?}")),
+            }
+        }
+    }
     // #endregion
 
     // #region 🔖Priority
     /// @emoji 🎚️ Relative importance band for requirements, relationships, and entities.
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, PartialOrd, Ord, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum Priority {
         Mandatory,
@@ -1223,7 +1243,7 @@ mod kernel {
 
     // #region 🔖LifecycleStatus
     /// @emoji 🔄 Lifecycle and workflow status for register entities.
-    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum LifecycleStatus {
         #[default]
@@ -1247,7 +1267,7 @@ mod kernel {
 
     // #region 🔖Ownership
     /// @emoji 👥 Ownership and authority roles attached to an entity header.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Ownership {
         pub owner_id: Option<EntityId>,
@@ -1259,7 +1279,7 @@ mod kernel {
 
     // #region 🔖Text
     /// @emoji 📝 Rich or plain text payload with optional format hint.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TextField {
         pub text: String,
@@ -1274,7 +1294,7 @@ mod kernel {
     }
 
     /// @emoji 🏷️ Tagged free-text note on an entity.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TaggedNote {
         pub tag: String,
@@ -1282,7 +1302,7 @@ mod kernel {
     }
 
     /// @emoji 🕒 Created/updated audit timestamps on an entity header.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TimestampMeta {
         pub created: String,
@@ -1303,7 +1323,7 @@ mod kernel {
 
     // #region 🔖EntityHeader
     /// @emoji 📋 Common header shared by all register entities via serde flatten.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct EntityHeader {
         pub id: EntityId,
@@ -1329,7 +1349,7 @@ mod kernel {
 
     // #region 🔖QuantitySpec
     /// @emoji 📐 Numeric quantity with min/max/target bands and unit.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct QuantitySpec {
         #[serde(skip_serializing_if = "Option::is_none")]
@@ -1358,7 +1378,7 @@ mod kernel {
 
     // #region 🔖Trace
     /// @emoji 🔗 Semantic trace link between two entities for auditability.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum TraceKind {
         ObjectiveToRequirement,
@@ -1384,7 +1404,7 @@ mod kernel {
     }
 
     /// @emoji 🧭 Directed trace edge stored in the program trace register.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TraceLink {
         pub id: EntityId,
@@ -1566,6 +1586,30 @@ mod operations {
         ClearAdjacency { id: EntityId },
         SetProgram { program: Box<Program> },
     }
+
+    //#region 🔖OpText
+    /// @emoji 📝 Hand-written (not `#[derive(dsl::DslOps)]`): every collection-register variant here
+    /// wraps `vcs::CollectionOperation<EntityId, T, TPatch>` — a type foreign to this crate (defined
+    /// in `vcs`), so the orphan rule blocks `impl dsl::DslField for CollectionOperation<..>` from
+    /// this crate, which is exactly what the derive's single-field tuple-variant delegation needs.
+    /// Restructuring `ProgramOperation`'s ~65 variants into per-register named-field shapes (mirroring
+    /// `fem2d`'s `Fem2dOperation::SetNode { index, node }`/`RemoveNode { id }`) would ripple into every
+    /// `architect-plugin` construction/match site already keyed on `ProgramOperation::X(CollectionOperation::Y{..})`
+    /// (21+ call sites, several macro-generated) — out of this ticket's scope, and `architect-plugin`
+    /// isn't part of it. A compact JSON-line encoding satisfies `OpText`'s actual law (`parse_op(print_op(op))
+    /// == op`, one physical line — compact JSON never emits a raw `\n`, only the escaped `\\n`) without
+    /// touching any of that call-site surface, mirroring the same escape-hatch spirit the dsl engine's own
+    /// `serde_json::Value`/`Shape::Value` binding already uses for genuinely untyped fields.
+    impl vcs::OpText for ProgramOperation {
+        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+            serde_json::from_str(line.trim()).map_err(|e| vcs::TextError::new(format!("invalid program operation: {e}"), vcs::TextSpan::at(1, 1)))
+        }
+
+        fn print_op(&self) -> String {
+            serde_json::to_string(self).expect("ProgramOperation always serializes")
+        }
+    }
+    //#endregion 🔖OpText
 
     /// @emoji 🩹 Inverse patch carrier for trace link collection operations.
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -1828,6 +1872,7 @@ mod operations {
         use super::*;
         use crate::kernel::*;
         use crate::program::{empty_program, sample_program};
+        use vcs::OpText;
 
         #[test]
         fn update_meta_round_trips_undo() {
@@ -2729,6 +2774,73 @@ mod operations {
             apply_program_operation(&mut program, &undo);
             assert!(program.workshops.is_empty());
         }
+
+        // #region 🔖OpText
+        #[test]
+        fn update_meta_op_text_round_trips() {
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("Clinic".into()), ..Default::default() } });
+        }
+
+        #[test]
+        fn add_stakeholder_op_text_round_trips() {
+            let stakeholder = Stakeholder {
+                header: EntityHeader::new(EntityId::new_serial("stakeholder"), "Nurse Lead"),
+                role: "Clinical".into(),
+                organization: "Sample Health".into(),
+                department: None,
+                contact_email: None,
+                contact_phone: None,
+                influence: InfluenceLevel::Medium,
+                interest: InfluenceLevel::High,
+                engagement: EngagementLevel::Supportive,
+                expectations: Vec::new(),
+                concerns: Vec::new(),
+                requirement_ids: Vec::new(),
+                decision_authority: false,
+                communication_preferences: Vec::new(),
+                reporting_frequency: None,
+                involvement_phases: Vec::new(),
+                availability: None,
+                representative_of: None,
+                delegated_to: None,
+                relationship_to_client: None,
+                power_interest_notes: Vec::new(),
+                stakeholder_type: "Internal".into(),
+                influence_strategy: None,
+                communication_channels: Vec::new(),
+                success_metrics: Vec::new(),
+            };
+            let operation = ProgramOperation::Stakeholders(CollectionOperation::Add { index: 0, item: stakeholder });
+            vcs::test_support::assert_op_line_round_trip(&operation);
+        }
+
+        #[test]
+        fn remove_and_move_op_text_round_trip() {
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Remove { id: EntityId::new_serial("stakeholder") }));
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::Stakeholders(CollectionOperation::Move { id: EntityId::new_serial("stakeholder"), to_index: 2 }));
+        }
+
+        #[test]
+        fn set_adjacency_and_clear_adjacency_op_text_round_trip() {
+            let program = sample_program();
+            let adjacency = program.adjacencies[0].clone();
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::SetAdjacency { adjacency });
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::ClearAdjacency { id: EntityId::new_serial("adjacency") });
+        }
+
+        #[test]
+        fn set_program_op_text_round_trips() {
+            vcs::test_support::assert_op_line_round_trip(&ProgramOperation::SetProgram { program: Box::new(sample_program()) });
+        }
+
+        #[test]
+        fn op_text_print_op_is_always_one_line() {
+            let printed = ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("multi\nline\ntitle".into()), ..Default::default() } }.print_op();
+            assert!(!printed.contains('\n'), "print_op must be one line, got: {printed:?}");
+            let parsed = <ProgramOperation as vcs::OpText>::parse_op(&printed).expect("parse_op");
+            assert_eq!(parsed, ProgramOperation::UpdateMeta { patch: ProgramMetaPatch { title: Some("multi\nline\ntitle".into()), ..Default::default() } });
+        }
+        // #endregion 🔖OpText
     }
 }
 
@@ -2952,13 +3064,16 @@ mod program {
     use crate::kernel::*;
     use crate::registers::*;
     use serde::{Deserialize, Serialize};
+    #[cfg(test)]
+    use vcs::DocumentDsl;
 
     /// @emoji 📜 Persisted architect program document schema identifier.
     pub const ARCHITECT_PROGRAM_SCHEMA: &str = "architect.program";
 
     // #region 🔖Program
     /// @emoji 🗂️ Full architectural program document with every typed register collection.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "architect", layout = "lines")]
     #[serde(rename_all = "camelCase")]
     pub struct Program {
         pub schema: String,
@@ -3329,6 +3444,25 @@ mod program {
             assert_eq!(decoded.elements.len(), 2);
             assert_eq!(decoded.adjacencies.len(), 1);
         }
+
+        // #region 🔖DslDocument
+        #[test]
+        fn empty_program_dsl_round_trips() {
+            vcs::test_support::assert_dsl_round_trip(&empty_program());
+        }
+
+        #[test]
+        fn sample_program_dsl_round_trips() {
+            vcs::test_support::assert_dsl_round_trip(&sample_program());
+        }
+
+        #[test]
+        fn sample_program_dsl_text_is_parseable_and_reflects_registers() {
+            let printed = sample_program().print_dsl();
+            assert!(printed.contains("Sample Clinic"), "printed dsl text must contain program title: {printed}");
+            assert!(printed.contains("REC"), "printed dsl text must contain the reception element code: {printed}");
+        }
+        // #endregion 🔖DslDocument
     }
 }
 
@@ -3386,7 +3520,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SharedEnums
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum InfluenceLevel {
         Low,
@@ -3395,7 +3529,7 @@ mod registers {
         Critical,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum EngagementLevel {
         Unaware,
@@ -3405,7 +3539,7 @@ mod registers {
         Leading,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum UserCategory {
         Primary,
@@ -3417,7 +3551,7 @@ mod registers {
         Public,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum ProgramElementKind {
         Building,
@@ -3435,7 +3569,7 @@ mod registers {
         Other,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum FunctionKind {
         Primary,
@@ -3454,7 +3588,7 @@ mod registers {
         Circulation,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum FlowKind {
         People,
@@ -3467,7 +3601,7 @@ mod registers {
         Vehicle,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum PrivacyKind {
         Public,
@@ -3479,7 +3613,7 @@ mod registers {
         Anonymous,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum SafetyDomain {
         LifeSafety,
@@ -3494,7 +3628,7 @@ mod registers {
         Environmental,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum SecurityControlKind {
         AccessControl,
@@ -3509,7 +3643,7 @@ mod registers {
         KeyManagement,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum StorageClass {
         General,
@@ -3524,7 +3658,7 @@ mod registers {
         Flammable,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum EnvironmentalParameter {
         Temperature,
@@ -3539,7 +3673,7 @@ mod registers {
         Iaq,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum HumanFactorAspect {
         Ergonomics,
@@ -3554,7 +3688,7 @@ mod registers {
         Stress,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum AccessMode {
         Unrestricted,
@@ -3567,7 +3701,7 @@ mod registers {
         EmergencyOnly,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum RelationshipKind {
         Contains,
@@ -3596,7 +3730,7 @@ mod registers {
         SharedResource,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum AdjacencyKind {
         Required,
@@ -3605,7 +3739,7 @@ mod registers {
         Prohibited,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum ConnectionKind {
         Direct,
@@ -3615,7 +3749,7 @@ mod registers {
         None,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum SeparationKind {
         Acoustic,
@@ -3630,7 +3764,7 @@ mod registers {
         InfectionControl,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum FlowDirection {
         OneWay,
@@ -3639,7 +3773,7 @@ mod registers {
         Restricted,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum AccessLevel {
         Public,
@@ -3650,7 +3784,7 @@ mod registers {
         EmergencyOnly,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum RiskLevel {
         Negligible,
@@ -3660,7 +3794,7 @@ mod registers {
         Critical,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum ConflictKind {
         Adjacency,
@@ -3674,7 +3808,7 @@ mod registers {
         Priority,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum RequirementKind {
         Functional,
@@ -3687,7 +3821,7 @@ mod registers {
         Sustainability,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum ValidationStatus {
         Pending,
@@ -3697,7 +3831,7 @@ mod registers {
         Deferred,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum AnalysisKind {
         Gap,
@@ -3722,7 +3856,7 @@ mod registers {
         RelationshipAnalysis,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum ReportKind {
         ExecutiveSummary,
@@ -3748,7 +3882,7 @@ mod registers {
         ScenarioSummary,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum IssueSeverity {
         Cosmetic,
@@ -3758,7 +3892,7 @@ mod registers {
         Blocker,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum AuditAction {
         Created,
@@ -3773,7 +3907,7 @@ mod registers {
         Archived,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum CostBasis {
         Capital,
@@ -3783,7 +3917,7 @@ mod registers {
         Maintenance,
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslScalar)]
     #[serde(rename_all = "camelCase")]
     pub enum DeliveryPhase {
         Concept,
@@ -3798,7 +3932,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ProgramMeta
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ProgramMeta {
         pub schema: String,
@@ -3862,7 +3996,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ProjectDefinition
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ProjectDefinition {
         pub id: EntityId,
@@ -3968,7 +4102,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Stakeholder
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Stakeholder {
         #[serde(flatten)]
@@ -4079,7 +4213,7 @@ mod registers {
     // #endregion
 
     // #region 🔖UserProfile
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct UserProfile {
         #[serde(flatten)]
@@ -4190,7 +4324,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Activity
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Activity {
         #[serde(flatten)]
@@ -4301,7 +4435,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Function
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Function {
         #[serde(flatten)]
@@ -4406,7 +4540,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ProgramElement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ProgramElement {
         #[serde(flatten)]
@@ -4520,7 +4654,7 @@ mod registers {
     // #endregion
 
     // #region 🔖QuantityRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct QuantityRequirement {
         #[serde(flatten)]
@@ -4619,7 +4753,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Relationship
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Relationship {
         #[serde(flatten)]
@@ -4730,7 +4864,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Adjacency
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Adjacency {
         #[serde(flatten)]
@@ -4829,7 +4963,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Process
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Process {
         #[serde(flatten)]
@@ -4937,7 +5071,7 @@ mod registers {
     // #endregion
 
     // #region 🔖FlowRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct FlowRequirement {
         #[serde(flatten)]
@@ -5039,7 +5173,7 @@ mod registers {
     // #endregion
 
     // #region 🔖AccessRule
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct AccessRule {
         #[serde(flatten)]
@@ -5138,7 +5272,7 @@ mod registers {
     // #endregion
 
     // #region 🔖OperationalRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OperationalRequirement {
         #[serde(flatten)]
@@ -5249,7 +5383,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Equipment
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Equipment {
         #[serde(flatten)]
@@ -5360,7 +5494,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Resource
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Resource {
         #[serde(flatten)]
@@ -5468,7 +5602,7 @@ mod registers {
     // #endregion
 
     // #region 🔖StorageRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct StorageRequirement {
         #[serde(flatten)]
@@ -5567,7 +5701,7 @@ mod registers {
     // #endregion
 
     // #region 🔖EnvironmentalRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct EnvironmentalRequirement {
         #[serde(flatten)]
@@ -5669,7 +5803,7 @@ mod registers {
     // #endregion
 
     // #region 🔖HumanFactorRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct HumanFactorRequirement {
         #[serde(flatten)]
@@ -5771,7 +5905,7 @@ mod registers {
     // #endregion
 
     // #region 🔖AccessibilityRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct AccessibilityRequirement {
         #[serde(flatten)]
@@ -5876,7 +6010,7 @@ mod registers {
     // #endregion
 
     // #region 🔖PrivacyRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct PrivacyRequirement {
         #[serde(flatten)]
@@ -5975,7 +6109,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SafetyRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct SafetyRequirement {
         #[serde(flatten)]
@@ -6074,7 +6208,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SecurityRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct SecurityRequirement {
         #[serde(flatten)]
@@ -6173,7 +6307,7 @@ mod registers {
     // #endregion
 
     // #region 🔖RegulatoryRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct RegulatoryRequirement {
         #[serde(flatten)]
@@ -6269,7 +6403,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SiteContext
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct SiteContext {
         #[serde(flatten)]
@@ -6368,7 +6502,7 @@ mod registers {
     // #endregion
 
     // #region 🔖OrganizationalRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OrganizationalRequirement {
         #[serde(flatten)]
@@ -6464,7 +6598,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ServiceRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ServiceRequirement {
         #[serde(flatten)]
@@ -6560,7 +6694,7 @@ mod registers {
     // #endregion
 
     // #region 🔖InfrastructureRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct InfrastructureRequirement {
         #[serde(flatten)]
@@ -6656,7 +6790,7 @@ mod registers {
     // #endregion
 
     // #region 🔖InformationRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct InformationRequirement {
         #[serde(flatten)]
@@ -6752,7 +6886,7 @@ mod registers {
     // #endregion
 
     // #region 🔖CommunicationRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct CommunicationRequirement {
         #[serde(flatten)]
@@ -6848,7 +6982,7 @@ mod registers {
     // #endregion
 
     // #region 🔖WayfindingRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct WayfindingRequirement {
         #[serde(flatten)]
@@ -6944,7 +7078,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ScheduleRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ScheduleRequirement {
         #[serde(flatten)]
@@ -7043,7 +7177,7 @@ mod registers {
     // #endregion
 
     // #region 🔖FlexibilityRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct FlexibilityRequirement {
         #[serde(flatten)]
@@ -7136,7 +7270,7 @@ mod registers {
     // #endregion
 
     // #region 🔖GrowthPlan
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct GrowthPlan {
         #[serde(flatten)]
@@ -7232,7 +7366,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SustainabilityRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct SustainabilityRequirement {
         #[serde(flatten)]
@@ -7331,7 +7465,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ResilienceRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ResilienceRequirement {
         #[serde(flatten)]
@@ -7427,7 +7561,7 @@ mod registers {
     // #endregion
 
     // #region 🔖CostRequirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct CostRequirement {
         #[serde(flatten)]
@@ -7523,7 +7657,7 @@ mod registers {
     // #endregion
 
     // #region 🔖DeliveryConstraint
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct DeliveryConstraint {
         #[serde(flatten)]
@@ -7622,7 +7756,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Risk
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Risk {
         #[serde(flatten)]
@@ -7718,7 +7852,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Conflict
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Conflict {
         #[serde(flatten)]
@@ -7814,7 +7948,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Requirement
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Requirement {
         #[serde(flatten)]
@@ -7913,7 +8047,7 @@ mod registers {
     // #endregion
 
     // #region 🔖PriorityRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct PriorityRecord {
         #[serde(flatten)]
@@ -8009,7 +8143,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Scenario
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Scenario {
         #[serde(flatten)]
@@ -8105,7 +8239,7 @@ mod registers {
     // #endregion
 
     // #region 🔖OptionEvaluation
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct OptionEvaluation {
         #[serde(flatten)]
@@ -8201,7 +8335,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Decision
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Decision {
         #[serde(flatten)]
@@ -8297,7 +8431,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ValidationRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ValidationRecord {
         #[serde(flatten)]
@@ -8393,7 +8527,7 @@ mod registers {
     // #endregion
 
     // #region 🔖PerformanceCriterion
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct PerformanceCriterion {
         #[serde(flatten)]
@@ -8489,7 +8623,7 @@ mod registers {
     // #endregion
 
     // #region 🔖QualityRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct QualityRecord {
         #[serde(flatten)]
@@ -8585,7 +8719,7 @@ mod registers {
     // #endregion
 
     // #region 🔖DocumentRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct DocumentRecord {
         #[serde(flatten)]
@@ -8681,7 +8815,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ChangeRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ChangeRecord {
         #[serde(flatten)]
@@ -8777,7 +8911,7 @@ mod registers {
     // #endregion
 
     // #region 🔖CollaborationRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct CollaborationRecord {
         #[serde(flatten)]
@@ -8870,7 +9004,7 @@ mod registers {
     // #endregion
 
     // #region 🔖AnalysisRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct AnalysisRecord {
         #[serde(flatten)]
@@ -8963,7 +9097,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ReportRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ReportRecord {
         #[serde(flatten)]
@@ -9056,7 +9190,7 @@ mod registers {
     // #endregion
 
     // #region 🔖SearchFilter
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct SearchFilter {
         #[serde(flatten)]
@@ -9152,7 +9286,7 @@ mod registers {
     // #endregion
 
     // #region 🔖StatusRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct StatusRecord {
         #[serde(flatten)]
@@ -9245,7 +9379,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Workshop
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Workshop {
         #[serde(flatten)]
@@ -9341,7 +9475,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Survey
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Survey {
         #[serde(flatten)]
@@ -9437,7 +9571,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Issue
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Issue {
         #[serde(flatten)]
@@ -9533,7 +9667,7 @@ mod registers {
     // #endregion
 
     // #region 🔖AuditEvent
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct AuditEvent {
         #[serde(flatten)]
@@ -9626,7 +9760,7 @@ mod registers {
     // #endregion
 
     // #region 🔖TemplateRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct TemplateRecord {
         #[serde(flatten)]
@@ -9722,7 +9856,7 @@ mod registers {
     // #endregion
 
     // #region 🔖KnowledgeRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct KnowledgeRecord {
         #[serde(flatten)]
@@ -9815,7 +9949,7 @@ mod registers {
     // #endregion
 
     // #region 🔖BenchmarkRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct BenchmarkRecord {
         #[serde(flatten)]
@@ -9911,7 +10045,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Assumption
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Assumption {
         #[serde(flatten)]
@@ -10007,7 +10141,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ConstraintRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ConstraintRecord {
         #[serde(flatten)]
@@ -10109,7 +10243,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ComplianceRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ComplianceRecord {
         #[serde(flatten)]
@@ -10211,7 +10345,7 @@ mod registers {
     // #endregion
 
     // #region 🔖ApprovalRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct ApprovalRecord {
         #[serde(flatten)]
@@ -10307,7 +10441,7 @@ mod registers {
     // #endregion
 
     // #region 🔖MeetingRecord
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct MeetingRecord {
         #[serde(flatten)]
@@ -10406,7 +10540,7 @@ mod registers {
     // #endregion
 
     // #region 🔖Governance
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     #[serde(rename_all = "camelCase")]
     pub struct Governance {
         pub id: EntityId,

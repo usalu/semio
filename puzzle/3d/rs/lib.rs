@@ -1846,8 +1846,9 @@ mod tests {
     /// 🔗 Keeps the example fixture's scene-authored kind catalog in sync with the compile-time `puzzle3d-default` manifest.
     #[test]
     fn concrete_forest_kind_catalog_matches_puzzle3d_default_manifest() {
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/concrete-forest.3d.json")).unwrap();
-        let catalogs: KindCatalogBundle = serde_json::from_value(fixture["meta"]["kindCatalogs"].clone()).unwrap();
+        use vcs::DocumentDsl;
+        let fixture = Puzzle3dProjection::parse_dsl(include_str!("../example/concrete-forest.puzzle3d")).unwrap();
+        let catalogs: KindCatalogBundle = serde_json::from_value(serde_json::to_value(&fixture.meta.kind_catalogs).unwrap()).unwrap();
         let manifest = mathematical_graph_manifest::manifest_by_id("puzzle3d-default").expect("puzzle3d-default manifest must be registered");
         let wire_kind_ids: std::collections::BTreeSet<_> = manifest.wire_kinds.iter().map(|row| row.id.as_str()).collect();
         let edge_kind_ids: std::collections::BTreeSet<_> = manifest.edge_kinds.iter().map(|row| row.id.as_str()).collect();
@@ -3018,216 +3019,780 @@ impl Puzzle3dPrecomputeSession {
 }
 
 //#region 🔖DocumentVcs
-// 🧩 Puzzle 3d document VCS on `vcs`: granular JSON-document operations over the bare fixture
-// projection (objects/attractions/targetVolumes/references keyed by id, camera + scalar fields)
-// with a whole-document fallback, so disjoint edits converge instead of clobbering.
+// 🧩 Puzzle 3d document VCS on `vcs`: a typed fixture projection (schema/domain/camera/meta/
+// objects/attractions/targetVolumes/references) with granular per-collection operations and a
+// whole-document fallback, so disjoint edits converge instead of clobbering. Mirrors `puzzle_2d`'s
+// `Puzzle2dOperation` shape; ground truth for field shapes is `puzzle/3d/example/*.3d.json` plus
+// `puzzle-plugin`'s own (until now duplicated) `Puzzle3dFixture`/`Puzzle3dObject`/… local mirror.
 #[cfg(any(test, all(target_arch = "wasm32", not(target_env = "p2"))))]
 use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
+#[cfg(test)]
+use vcs::DocumentDsl;
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
 pub const PUZZLE_3D_SCHEMA: &str = "puzzle.3d";
 
-/// 🧩 The puzzle-3d projection is the bare fixture json (schema/camera/objects/attractions/…).
-pub type Puzzle3dProjection = serde_json::Value;
-pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
-pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dProjection, Puzzle3dOperation>;
-
-/// 🔧 One granular mutation of a JSON puzzle document. `UpsertItem`/`RemoveItem` address an element
-/// of a top-level id-keyed array so disjoint edits converge; `SetField` writes a scalar/object field
-/// (`camera`, …); `ReplaceDocument` swaps the whole document (example load, engine fill, layout).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum Puzzle3dOperation {
-    /// 📍 `index` only matters when `item`'s id is absent from the collection (a fresh insert): it then
-    /// inserts at that position instead of appending, so undoing a `RemoveItem`/updating over a fresh
-    /// insert restores the original array order rather than shuffling the item to the end.
-    UpsertItem {
-        collection: String,
-        item: serde_json::Value,
-        #[serde(default, skip_serializing_if = "Option::is_none")]
-        index: Option<usize>,
-    },
-    RemoveItem {
-        collection: String,
-        id: String,
-    },
-    SetField {
-        key: String,
-        value: serde_json::Value,
-    },
-    ReplaceDocument {
-        document: serde_json::Value,
-    },
+// #region 🔖Document
+/// 📐 The world-3d viewport camera: orbit position/target/zoom, optional up vector, and an optional
+/// (freeform — see `framework_plugin::WorldProjectionConfig`, an app-layer preset this headless
+/// document crate does not depend on) projection preset.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCamera {
+    #[serde(default)]
+    pub position: [f64; 3],
+    #[serde(default)]
+    pub target: [f64; 3],
+    #[serde(default = "puzzle3d_one_f64")]
+    pub zoom: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub up: Option<[f64; 3]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub projection: Option<serde_json::Value>,
 }
 
-/// 🧮 An ordered list of granular operations replayed over the projection; coalesced edits concatenate.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct Puzzle3dDiff {
-    pub operations: Vec<Puzzle3dOperation>,
+fn puzzle3d_one_f64() -> f64 {
+    1.0
 }
 
-fn puzzle3d_item_id(item: &serde_json::Value) -> Option<&str> {
-    item.get("id").and_then(|value| value.as_str())
-}
-
-fn puzzle3d_item_index(document: &serde_json::Value, collection: &str, id: &str) -> Option<usize> {
-    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().position(|entry| puzzle3d_item_id(entry) == Some(id)))
-}
-
-fn apply_puzzle3d_operation(document: &mut serde_json::Value, operation: &Puzzle3dOperation) {
-    match operation {
-        Puzzle3dOperation::UpsertItem { collection, item, index } => {
-            let Some(object) = document.as_object_mut() else {
-                return;
-            };
-            let array = object.entry(collection.clone()).or_insert_with(|| serde_json::Value::Array(Vec::new()));
-            let Some(array) = array.as_array_mut() else {
-                return;
-            };
-            if let Some(id) = puzzle3d_item_id(item).map(str::to_string) {
-                if let Some(slot) = array.iter_mut().find(|entry| puzzle3d_item_id(entry) == Some(id.as_str())) {
-                    *slot = item.clone();
-                    return;
-                }
-            }
-            let at = index.map(|at| at.min(array.len())).unwrap_or(array.len());
-            array.insert(at, item.clone());
-        }
-        Puzzle3dOperation::RemoveItem { collection, id } => {
-            if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
-                array.retain(|entry| puzzle3d_item_id(entry) != Some(id.as_str()));
-            }
-        }
-        Puzzle3dOperation::SetField { key, value } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert(key.clone(), value.clone());
-            }
-        }
-        Puzzle3dOperation::ReplaceDocument { document: next } => *document = next.clone(),
+impl Default for Puzzle3dCamera {
+    fn default() -> Self {
+        Self { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], zoom: 1.0, up: None, projection: None }
     }
 }
 
-fn puzzle3d_find_item<'a>(document: &'a serde_json::Value, collection: &str, id: &str) -> Option<&'a serde_json::Value> {
-    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().find(|entry| puzzle3d_item_id(entry) == Some(id)))
+/// 🔘 One vortex on an object's rim — `vortex_kind` gates attraction compatibility, `position`/
+/// `direction` place and orient it, `radius` sizes its brush-fill collision.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dVortex {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub vortex_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default)]
+    pub position: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub direction: Option<[f64; 3]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
+    #[serde(default)]
+    pub hidden: bool,
+    #[serde(default)]
+    pub locked: bool,
+}
+
+/// 🧱 One placed object — `origin`/`orientation`/`scale` (a freeform Vec3-or-scalar, see
+/// `vec3_scale`) pose it, `vortices` are its rim attraction ports.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dObject {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub label: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub object_kind: Option<String>,
+    #[serde(default)]
+    pub origin: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<[f64; 4]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<serde_json::Value>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mesh_url: Option<String>,
+    #[serde(default)]
+    pub vortices: Vec<Puzzle3dVortex>,
+    #[serde(default)]
+    pub hidden: bool,
+    #[serde(default)]
+    pub locked: bool,
+}
+
+/// 🔗 One attraction between two full vortex ids (`object_id:vortex_id`), with the gap/shift/rise/
+/// rotation/turn/tilt offsets `compute_brush_placement_pose` resolves into a world pose.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dAttraction {
+    #[serde(default)]
+    pub id: String,
+    pub attracting: String,
+    pub attracted: String,
+    #[serde(default)]
+    pub gap: f64,
+    #[serde(default)]
+    pub shift: f64,
+    #[serde(default)]
+    pub rise: f64,
+    #[serde(default)]
+    pub rotation: f64,
+    #[serde(default)]
+    pub turn: f64,
+    #[serde(default)]
+    pub tilt: f64,
+}
+
+/// 🧊 A persisted oriented box constraining fill placement (Volume Brush voxels or Transform-gumball
+/// edited volumes).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dTargetVolume {
+    pub id: String,
+    #[serde(default)]
+    pub origin: [f64; 3],
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub orientation: Option<[f64; 4]>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<serde_json::Value>,
+    #[serde(default)]
+    pub hidden: bool,
+    #[serde(default)]
+    pub locked: bool,
+}
+
+/// 🌐 Where a reference image/media's bytes live and what kind of media it is.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dReferenceSource {
+    #[serde(default)]
+    pub url: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub media_kind: Option<String>,
+}
+
+/// 🖼️ A reference plane pinned in world space at `origin`, `width_world` meters wide.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dReference {
+    pub id: String,
+    #[serde(default)]
+    pub source: Puzzle3dReferenceSource,
+    #[serde(default)]
+    pub origin: [f64; 3],
+    #[serde(default)]
+    pub width_world: f64,
+    #[serde(default)]
+    pub locked: bool,
+    #[serde(default)]
+    pub hidden: bool,
+}
+
+/// 🔗 How specifically two vortex/cable kinds are allowed to attract (mirrors `KindCompatEntry`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dKindCompatibility {
+    pub source: String,
+    pub target: String,
+    #[serde(default)]
+    pub bidirectional: bool,
+    #[serde(default)]
+    pub important: bool,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub specificity: Option<String>,
+}
+
+/// 🌱 One rim-vortex template on a `Puzzle3dCatalogObjectKind` (no `label`/`hidden`/`locked` — those
+/// are only per-instance `Puzzle3dVortex` fields, not catalog template fields).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCatalogVortexTemplate {
+    pub vortex_kind: String,
+    pub position: [f64; 3],
+    pub direction: [f64; 3],
+    pub radius: f64,
+}
+
+/// 🧱 One object-kind catalog row (mirrors this crate's internal `ObjectKind`, extended with the
+/// fixture-observed `label`/`name` display fields).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCatalogObjectKind {
+    pub id: String,
+    pub label: String,
+    pub name: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub mesh_url: Option<String>,
+    #[serde(default)]
+    pub vortices: Vec<Puzzle3dCatalogVortexTemplate>,
+}
+
+/// 🔘 One vortex-kind catalog row (mirrors `VortexKindCatalog`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCatalogVortexKind {
+    pub id: String,
+    pub label: String,
+    pub name: String,
+    pub color: String,
+    pub default_cable_kind: String,
+}
+
+/// 🧵 One cable-kind catalog row (mirrors `CableKindCatalog`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCatalogCableKind {
+    pub id: String,
+    pub label: String,
+    pub name: String,
+    pub default_attraction_kind: String,
+}
+
+/// 🔗 One attraction-kind catalog row.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dCatalogAttractionKind {
+    pub id: String,
+    pub label: String,
+    pub name: String,
+}
+
+/// 🗂️ The compile-time-catalog side of a self-contained fixture export: object/vortex/cable/
+/// attraction kind rows — see `puzzle/3d/manifest/*.manifest.json` for the same schema at the
+/// manifest layer.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dKindCatalogs {
+    #[serde(default)]
+    pub objects: Vec<Puzzle3dCatalogObjectKind>,
+    #[serde(default)]
+    pub vortices: Vec<Puzzle3dCatalogVortexKind>,
+    #[serde(default)]
+    pub cables: Vec<Puzzle3dCatalogCableKind>,
+    #[serde(default)]
+    pub attractions: Vec<Puzzle3dCatalogAttractionKind>,
+}
+
+/// 🗂️ Fixture-carried metadata: the explicit link-compatibility table (typed — a well-understood
+/// small structured list, matching this crate's own `KindCompatEntry`) plus the object/vortex/cable/
+/// attraction kind catalog bundle (typed — see `Puzzle3dKindCatalogs`).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dMeta {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_catalogs: Option<Puzzle3dKindCatalogs>,
+    #[serde(default)]
+    pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
+}
+
+/// 🧩 The puzzle-3d projection: a typed fixture document (schema/domain/camera/meta/objects/
+/// attractions/targetVolumes/references) — see `puzzle/3d/example/*.3d.json` for real-world shapes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase")]
+#[dsl(extension = "puzzle3d", layout = "lines")]
+pub struct Puzzle3dProjection {
+    pub schema: String,
+    #[serde(default)]
+    pub domain: String,
+    #[dsl(block)]
+    #[serde(default)]
+    pub camera: Puzzle3dCamera,
+    #[dsl(block)]
+    #[serde(default)]
+    pub meta: Puzzle3dMeta,
+    #[serde(default)]
+    pub objects: Vec<Puzzle3dObject>,
+    #[serde(default)]
+    pub attractions: Vec<Puzzle3dAttraction>,
+    #[serde(default)]
+    pub target_volumes: Vec<Puzzle3dTargetVolume>,
+    #[serde(default)]
+    pub references: Vec<Puzzle3dReference>,
+}
+
+impl Default for Puzzle3dProjection {
+    fn default() -> Self {
+        Self { schema: PUZZLE_3D_SCHEMA.to_string(), domain: "architecture".to_string(), camera: Puzzle3dCamera::default(), meta: Puzzle3dMeta::default(), objects: Vec::new(), attractions: Vec::new(), target_volumes: Vec::new(), references: Vec::new() }
+    }
+}
+
+pub type Puzzle3dEnvelope = DocumentVcsEnvelope<Puzzle3dProjection, Puzzle3dOperation>;
+pub type Puzzle3dStore = DocumentVcsStore<Puzzle3dProjection, Puzzle3dOperation>;
+
+pub fn empty_puzzle3d_projection() -> Puzzle3dProjection {
+    Puzzle3dProjection::default()
+}
+// #endregion 🔖Document
+
+// #region 🔖Collections
+/// 🪪 Stable-id accessor shared by every id-keyed document collection entry.
+trait Puzzle3dHasId {
+    fn id(&self) -> &str;
+}
+impl Puzzle3dHasId for Puzzle3dObject {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+impl Puzzle3dHasId for Puzzle3dAttraction {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+impl Puzzle3dHasId for Puzzle3dTargetVolume {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+impl Puzzle3dHasId for Puzzle3dReference {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dObjectsDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle3dObject)>,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dAttractionsDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle3dAttraction)>,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dTargetVolumesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle3dTargetVolume)>,
+}
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dReferencesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle3dReference)>,
+}
+
+fn apply_puzzle3d_collection_diff<T: Puzzle3dHasId + Clone>(items: &mut Vec<T>, removed: &[String], set: &[(usize, T)]) {
+    for id in removed {
+        items.retain(|item| item.id() != id);
+    }
+    for (index, item) in set {
+        if let Some(pos) = items.iter().position(|entry| entry.id() == item.id()) {
+            items[pos] = item.clone();
+        } else {
+            items.insert((*index).min(items.len()), item.clone());
+        }
+    }
+}
+
+fn puzzle3d_index_of<T: Puzzle3dHasId>(items: &[T], id: &str) -> Option<usize> {
+    items.iter().position(|item| item.id() == id)
+}
+// #endregion 🔖Collections
+
+// #region 🔖Operations
+/// 🩹 Sparse puzzle-3d diff over every id-keyed collection plus the scalar camera/meta.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle3dDiff {
+    /// 🌍 Whole-document replacement (example load, engine fill, layout); wins over every field below.
+    pub document: Option<Puzzle3dProjection>,
+    pub objects: Puzzle3dObjectsDiff,
+    pub attractions: Puzzle3dAttractionsDiff,
+    pub target_volumes: Puzzle3dTargetVolumesDiff,
+    pub references: Puzzle3dReferencesDiff,
+    pub camera: Option<Puzzle3dCamera>,
+    pub meta: Option<Puzzle3dMeta>,
+}
+
+fn puzzle3d_diff_absorb(diff: &mut Puzzle3dDiff, other: Puzzle3dDiff) {
+    if other.document.is_some() {
+        *diff = Puzzle3dDiff { document: other.document, ..Default::default() };
+        return;
+    }
+    diff.objects.removed.extend(other.objects.removed);
+    diff.objects.set.extend(other.objects.set);
+    diff.attractions.removed.extend(other.attractions.removed);
+    diff.attractions.set.extend(other.attractions.set);
+    diff.target_volumes.removed.extend(other.target_volumes.removed);
+    diff.target_volumes.set.extend(other.target_volumes.set);
+    diff.references.removed.extend(other.references.removed);
+    diff.references.set.extend(other.references.set);
+    if other.camera.is_some() {
+        diff.camera = other.camera;
+    }
+    if other.meta.is_some() {
+        diff.meta = other.meta;
+    }
 }
 
 impl OperationDiff<Puzzle3dProjection> for Puzzle3dDiff {
     fn apply(&self, projection: &Puzzle3dProjection) -> Puzzle3dProjection {
+        if let Some(document) = &self.document {
+            return document.clone();
+        }
         let mut next = projection.clone();
-        for operation in &self.operations {
-            apply_puzzle3d_operation(&mut next, operation);
+        apply_puzzle3d_collection_diff(&mut next.objects, &self.objects.removed, &self.objects.set);
+        apply_puzzle3d_collection_diff(&mut next.attractions, &self.attractions.removed, &self.attractions.set);
+        apply_puzzle3d_collection_diff(&mut next.target_volumes, &self.target_volumes.removed, &self.target_volumes.set);
+        apply_puzzle3d_collection_diff(&mut next.references, &self.references.removed, &self.references.set);
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(meta) = &self.meta {
+            next.meta = meta.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.operations.extend(other.operations);
+        puzzle3d_diff_absorb(self, other);
     }
+}
+
+/// 🧮 Puzzle-3d operation: id-keyed collection edits plus scalar camera/meta, each with a true
+/// inverse computed from the pre-operation projection, and a whole-document replace for example loads.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum Puzzle3dOperation {
+    #[dsl(key = "setObject")]
+    SetObject { index: usize, #[dsl(block)] object: Puzzle3dObject },
+    #[dsl(key = "removeObject")]
+    RemoveObject { id: String },
+    #[dsl(key = "setAttraction")]
+    SetAttraction { index: usize, #[dsl(block)] attraction: Puzzle3dAttraction },
+    #[dsl(key = "removeAttraction")]
+    RemoveAttraction { id: String },
+    #[dsl(key = "setTargetVolume")]
+    SetTargetVolume { index: usize, #[dsl(block)] target_volume: Puzzle3dTargetVolume },
+    #[dsl(key = "removeTargetVolume")]
+    RemoveTargetVolume { id: String },
+    #[dsl(key = "setReference")]
+    SetReference { index: usize, #[dsl(block)] reference: Puzzle3dReference },
+    #[dsl(key = "removeReference")]
+    RemoveReference { id: String },
+    #[dsl(key = "setCamera")]
+    SetCamera { #[dsl(block)] camera: Puzzle3dCamera },
+    #[dsl(key = "setMeta")]
+    SetMeta { #[dsl(block)] meta: Puzzle3dMeta },
+    /// 🌍 Replaces the whole document (example import / reset / engine fill).
+    #[dsl(key = "setDocument")]
+    SetDocument { #[dsl(block)] document: Puzzle3dProjection },
+}
+
+fn puzzle3d_operation_diff(operation: &Puzzle3dOperation) -> Puzzle3dDiff {
+    let mut diff = Puzzle3dDiff::default();
+    match operation {
+        Puzzle3dOperation::SetObject { index, object } => diff.objects.set.push((*index, object.clone())),
+        Puzzle3dOperation::RemoveObject { id } => diff.objects.removed.push(id.clone()),
+        Puzzle3dOperation::SetAttraction { index, attraction } => diff.attractions.set.push((*index, attraction.clone())),
+        Puzzle3dOperation::RemoveAttraction { id } => diff.attractions.removed.push(id.clone()),
+        Puzzle3dOperation::SetTargetVolume { index, target_volume } => diff.target_volumes.set.push((*index, target_volume.clone())),
+        Puzzle3dOperation::RemoveTargetVolume { id } => diff.target_volumes.removed.push(id.clone()),
+        Puzzle3dOperation::SetReference { index, reference } => diff.references.set.push((*index, reference.clone())),
+        Puzzle3dOperation::RemoveReference { id } => diff.references.removed.push(id.clone()),
+        Puzzle3dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
+        Puzzle3dOperation::SetMeta { meta } => diff.meta = Some(meta.clone()),
+        Puzzle3dOperation::SetDocument { document } => diff.document = Some(document.clone()),
+    }
+    diff
 }
 
 impl Operation<Puzzle3dProjection> for Puzzle3dOperation {
     type Diff = Puzzle3dDiff;
 
     fn diff(&self, _projection: &Puzzle3dProjection) -> Puzzle3dDiff {
-        Puzzle3dDiff { operations: vec![self.clone()] }
+        puzzle3d_operation_diff(self)
     }
 
     fn backwards(&self, projection: &Puzzle3dProjection) -> Vec<Self> {
         match self {
-            Puzzle3dOperation::UpsertItem { collection, item, .. } => {
-                let id = puzzle3d_item_id(item).unwrap_or_default();
-                match puzzle3d_find_item(projection, collection, id) {
-                    Some(previous) => vec![Puzzle3dOperation::UpsertItem { collection: collection.clone(), item: previous.clone(), index: puzzle3d_item_index(projection, collection, id) }],
-                    None => vec![Puzzle3dOperation::RemoveItem { collection: collection.clone(), id: id.to_string() }],
-                }
-            }
-            Puzzle3dOperation::RemoveItem { collection, id } => match puzzle3d_find_item(projection, collection, id) {
-                Some(previous) => vec![Puzzle3dOperation::UpsertItem { collection: collection.clone(), item: previous.clone(), index: puzzle3d_item_index(projection, collection, id) }],
-                None => Vec::new(),
+            Puzzle3dOperation::SetObject { object, .. } => match puzzle3d_index_of(&projection.objects, &object.id) {
+                Some(index) => vec![Puzzle3dOperation::SetObject { index, object: projection.objects[index].clone() }],
+                None => vec![Puzzle3dOperation::RemoveObject { id: object.id.clone() }],
             },
-            Puzzle3dOperation::SetField { key, .. } => vec![Puzzle3dOperation::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(serde_json::Value::Null) }],
-            Puzzle3dOperation::ReplaceDocument { .. } => vec![Puzzle3dOperation::ReplaceDocument { document: projection.clone() }],
+            Puzzle3dOperation::RemoveObject { id } => puzzle3d_index_of(&projection.objects, id).map(|index| vec![Puzzle3dOperation::SetObject { index, object: projection.objects[index].clone() }]).unwrap_or_default(),
+            Puzzle3dOperation::SetAttraction { attraction, .. } => match puzzle3d_index_of(&projection.attractions, &attraction.id) {
+                Some(index) => vec![Puzzle3dOperation::SetAttraction { index, attraction: projection.attractions[index].clone() }],
+                None => vec![Puzzle3dOperation::RemoveAttraction { id: attraction.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveAttraction { id } => puzzle3d_index_of(&projection.attractions, id).map(|index| vec![Puzzle3dOperation::SetAttraction { index, attraction: projection.attractions[index].clone() }]).unwrap_or_default(),
+            Puzzle3dOperation::SetTargetVolume { target_volume, .. } => match puzzle3d_index_of(&projection.target_volumes, &target_volume.id) {
+                Some(index) => vec![Puzzle3dOperation::SetTargetVolume { index, target_volume: projection.target_volumes[index].clone() }],
+                None => vec![Puzzle3dOperation::RemoveTargetVolume { id: target_volume.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveTargetVolume { id } => {
+                puzzle3d_index_of(&projection.target_volumes, id).map(|index| vec![Puzzle3dOperation::SetTargetVolume { index, target_volume: projection.target_volumes[index].clone() }]).unwrap_or_default()
+            }
+            Puzzle3dOperation::SetReference { reference, .. } => match puzzle3d_index_of(&projection.references, &reference.id) {
+                Some(index) => vec![Puzzle3dOperation::SetReference { index, reference: projection.references[index].clone() }],
+                None => vec![Puzzle3dOperation::RemoveReference { id: reference.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveReference { id } => puzzle3d_index_of(&projection.references, id).map(|index| vec![Puzzle3dOperation::SetReference { index, reference: projection.references[index].clone() }]).unwrap_or_default(),
+            Puzzle3dOperation::SetCamera { .. } => vec![Puzzle3dOperation::SetCamera { camera: projection.camera.clone() }],
+            Puzzle3dOperation::SetMeta { .. } => vec![Puzzle3dOperation::SetMeta { meta: projection.meta.clone() }],
+            Puzzle3dOperation::SetDocument { .. } => vec![Puzzle3dOperation::SetDocument { document: projection.clone() }],
+        }
+    }
+}
+// #endregion 🔖Operations
+
+// #region 🔖ValueBridge
+// 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
+// `serde_json::Value` scratch fixture (out of scope for this ticket). Bridging `Puzzle3dOperation`/
+// `Puzzle3dDiff` onto that `Value` boundary too keeps `puzzle3d_document_delta_operations` and the
+// plugin's `DocumentApp::Projection = Value` compiling unchanged — mirrors `puzzle_2d`'s bridge.
+fn puzzle3d_value_item_id(item: &serde_json::Value) -> Option<&str> {
+    item.get("id").and_then(|value| value.as_str())
+}
+
+fn puzzle3d_upsert_value_item(document: &mut serde_json::Value, collection: &str, index: usize, item: serde_json::Value) {
+    let Some(object) = document.as_object_mut() else {
+        return;
+    };
+    let array = object.entry(collection.to_string()).or_insert_with(|| serde_json::Value::Array(Vec::new()));
+    let Some(array) = array.as_array_mut() else {
+        return;
+    };
+    if let Some(id) = puzzle3d_value_item_id(&item).map(str::to_string) {
+        if let Some(slot) = array.iter_mut().find(|entry| puzzle3d_value_item_id(entry) == Some(id.as_str())) {
+            *slot = item;
+            return;
+        }
+    }
+    array.insert(index.min(array.len()), item);
+}
+
+fn puzzle3d_remove_value_item(document: &mut serde_json::Value, collection: &str, id: &str) {
+    if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
+        array.retain(|entry| puzzle3d_value_item_id(entry) != Some(id));
+    }
+}
+
+fn apply_puzzle3d_operation_to_value(document: &mut serde_json::Value, operation: &Puzzle3dOperation) {
+    match operation {
+        Puzzle3dOperation::SetObject { index, object } => puzzle3d_upsert_value_item(document, "objects", *index, serde_json::to_value(object).unwrap_or(serde_json::Value::Null)),
+        Puzzle3dOperation::RemoveObject { id } => puzzle3d_remove_value_item(document, "objects", id),
+        Puzzle3dOperation::SetAttraction { index, attraction } => puzzle3d_upsert_value_item(document, "attractions", *index, serde_json::to_value(attraction).unwrap_or(serde_json::Value::Null)),
+        Puzzle3dOperation::RemoveAttraction { id } => puzzle3d_remove_value_item(document, "attractions", id),
+        Puzzle3dOperation::SetTargetVolume { index, target_volume } => puzzle3d_upsert_value_item(document, "targetVolumes", *index, serde_json::to_value(target_volume).unwrap_or(serde_json::Value::Null)),
+        Puzzle3dOperation::RemoveTargetVolume { id } => puzzle3d_remove_value_item(document, "targetVolumes", id),
+        Puzzle3dOperation::SetReference { index, reference } => puzzle3d_upsert_value_item(document, "references", *index, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null)),
+        Puzzle3dOperation::RemoveReference { id } => puzzle3d_remove_value_item(document, "references", id),
+        Puzzle3dOperation::SetCamera { camera } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(serde_json::Value::Null));
+            }
+        }
+        Puzzle3dOperation::SetMeta { meta } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
+            }
+        }
+        Puzzle3dOperation::SetDocument { document: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+    }
+}
+
+fn puzzle3d_value_collection<'a>(document: &'a serde_json::Value, collection: &str) -> &'a [serde_json::Value] {
+    document.get(collection).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[])
+}
+
+fn puzzle3d_value_item_index<T: serde::de::DeserializeOwned>(document: &serde_json::Value, collection: &str, id: &str) -> Option<(usize, T)> {
+    let items = puzzle3d_value_collection(document, collection);
+    let index = items.iter().position(|entry| puzzle3d_value_item_id(entry) == Some(id))?;
+    serde_json::from_value(items[index].clone()).ok().map(|item| (index, item))
+}
+
+impl OperationDiff<serde_json::Value> for Puzzle3dDiff {
+    fn apply(&self, projection: &serde_json::Value) -> serde_json::Value {
+        if let Some(document) = &self.document {
+            return serde_json::to_value(document).unwrap_or_else(|_| projection.clone());
+        }
+        let mut next = projection.clone();
+        for id in &self.objects.removed {
+            puzzle3d_remove_value_item(&mut next, "objects", id);
+        }
+        for (index, object) in &self.objects.set {
+            puzzle3d_upsert_value_item(&mut next, "objects", *index, serde_json::to_value(object).unwrap_or(serde_json::Value::Null));
+        }
+        for id in &self.attractions.removed {
+            puzzle3d_remove_value_item(&mut next, "attractions", id);
+        }
+        for (index, attraction) in &self.attractions.set {
+            puzzle3d_upsert_value_item(&mut next, "attractions", *index, serde_json::to_value(attraction).unwrap_or(serde_json::Value::Null));
+        }
+        for id in &self.target_volumes.removed {
+            puzzle3d_remove_value_item(&mut next, "targetVolumes", id);
+        }
+        for (index, target_volume) in &self.target_volumes.set {
+            puzzle3d_upsert_value_item(&mut next, "targetVolumes", *index, serde_json::to_value(target_volume).unwrap_or(serde_json::Value::Null));
+        }
+        for id in &self.references.removed {
+            puzzle3d_remove_value_item(&mut next, "references", id);
+        }
+        for (index, reference) in &self.references.set {
+            puzzle3d_upsert_value_item(&mut next, "references", *index, serde_json::to_value(reference).unwrap_or(serde_json::Value::Null));
+        }
+        if let Some(camera) = &self.camera {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(serde_json::Value::Null));
+            }
+        }
+        if let Some(meta) = &self.meta {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(serde_json::Value::Null));
+            }
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        puzzle3d_diff_absorb(self, other);
+    }
+}
+
+impl Operation<serde_json::Value> for Puzzle3dOperation {
+    type Diff = Puzzle3dDiff;
+
+    fn diff(&self, _projection: &serde_json::Value) -> Puzzle3dDiff {
+        puzzle3d_operation_diff(self)
+    }
+
+    fn backwards(&self, projection: &serde_json::Value) -> Vec<Self> {
+        match self {
+            Puzzle3dOperation::SetObject { object, .. } => match puzzle3d_value_item_index::<Puzzle3dObject>(projection, "objects", &object.id) {
+                Some((index, previous)) => vec![Puzzle3dOperation::SetObject { index, object: previous }],
+                None => vec![Puzzle3dOperation::RemoveObject { id: object.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveObject { id } => puzzle3d_value_item_index::<Puzzle3dObject>(projection, "objects", id).map(|(index, previous)| vec![Puzzle3dOperation::SetObject { index, object: previous }]).unwrap_or_default(),
+            Puzzle3dOperation::SetAttraction { attraction, .. } => match puzzle3d_value_item_index::<Puzzle3dAttraction>(projection, "attractions", &attraction.id) {
+                Some((index, previous)) => vec![Puzzle3dOperation::SetAttraction { index, attraction: previous }],
+                None => vec![Puzzle3dOperation::RemoveAttraction { id: attraction.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveAttraction { id } => {
+                puzzle3d_value_item_index::<Puzzle3dAttraction>(projection, "attractions", id).map(|(index, previous)| vec![Puzzle3dOperation::SetAttraction { index, attraction: previous }]).unwrap_or_default()
+            }
+            Puzzle3dOperation::SetTargetVolume { target_volume, .. } => match puzzle3d_value_item_index::<Puzzle3dTargetVolume>(projection, "targetVolumes", &target_volume.id) {
+                Some((index, previous)) => vec![Puzzle3dOperation::SetTargetVolume { index, target_volume: previous }],
+                None => vec![Puzzle3dOperation::RemoveTargetVolume { id: target_volume.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveTargetVolume { id } => {
+                puzzle3d_value_item_index::<Puzzle3dTargetVolume>(projection, "targetVolumes", id).map(|(index, previous)| vec![Puzzle3dOperation::SetTargetVolume { index, target_volume: previous }]).unwrap_or_default()
+            }
+            Puzzle3dOperation::SetReference { reference, .. } => match puzzle3d_value_item_index::<Puzzle3dReference>(projection, "references", &reference.id) {
+                Some((index, previous)) => vec![Puzzle3dOperation::SetReference { index, reference: previous }],
+                None => vec![Puzzle3dOperation::RemoveReference { id: reference.id.clone() }],
+            },
+            Puzzle3dOperation::RemoveReference { id } => {
+                puzzle3d_value_item_index::<Puzzle3dReference>(projection, "references", id).map(|(index, previous)| vec![Puzzle3dOperation::SetReference { index, reference: previous }]).unwrap_or_default()
+            }
+            Puzzle3dOperation::SetCamera { .. } => {
+                let camera: Puzzle3dCamera = projection.get("camera").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                vec![Puzzle3dOperation::SetCamera { camera }]
+            }
+            Puzzle3dOperation::SetMeta { .. } => {
+                let meta: Puzzle3dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                vec![Puzzle3dOperation::SetMeta { meta }]
+            }
+            Puzzle3dOperation::SetDocument { .. } => vec![Puzzle3dOperation::SetDocument { document: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
 
-fn puzzle3d_is_id_keyed_array(value: Option<&serde_json::Value>) -> bool {
-    value.and_then(|value| value.as_array()).is_some_and(|array| array.iter().all(|entry| puzzle3d_item_id(entry).is_some()))
-}
-
-fn puzzle3d_collect_collection_delta(collection: &str, before: &[serde_json::Value], after: &[serde_json::Value], operations: &mut Vec<Puzzle3dOperation>) {
-    let before_by_id: std::collections::HashMap<&str, &serde_json::Value> = before.iter().filter_map(|entry| puzzle3d_item_id(entry).map(|id| (id, entry))).collect();
+/// 🧮 Collects the sparse `set`/`removed` delta for one id-keyed `Value` array collection into typed
+/// entries. Returns `false` (caller falls back to `SetDocument`) whenever an entry is missing an
+/// `id` or fails to deserialize into `T`.
+fn puzzle3d_collect_value_collection_delta<T>(before: &[serde_json::Value], after: &[serde_json::Value], set: &mut Vec<(usize, T)>, removed: &mut Vec<String>) -> bool
+where
+    T: serde::de::DeserializeOwned,
+{
+    let before_by_id: std::collections::HashMap<&str, &serde_json::Value> = before.iter().filter_map(|entry| puzzle3d_value_item_id(entry).map(|id| (id, entry))).collect();
     let mut after_ids: std::collections::HashSet<&str> = std::collections::HashSet::with_capacity(after.len());
-    for entry in after {
-        let id = puzzle3d_item_id(entry).unwrap_or_default();
+    for (index, entry) in after.iter().enumerate() {
+        let Some(id) = puzzle3d_value_item_id(entry) else {
+            return false;
+        };
         after_ids.insert(id);
         if before_by_id.get(id).copied() != Some(entry) {
-            operations.push(Puzzle3dOperation::UpsertItem { collection: collection.to_string(), item: entry.clone(), index: None });
+            let Ok(item) = serde_json::from_value::<T>(entry.clone()) else {
+                return false;
+            };
+            set.push((index, item));
         }
     }
     for entry in before {
-        let id = puzzle3d_item_id(entry).unwrap_or_default();
+        let Some(id) = puzzle3d_value_item_id(entry) else {
+            return false;
+        };
         if !after_ids.contains(id) {
-            operations.push(Puzzle3dOperation::RemoveItem { collection: collection.to_string(), id: id.to_string() });
+            removed.push(id.to_string());
         }
     }
+    true
 }
 
-/// 🧮 Computes the granular operation sequence turning `before` into `after`, falling back to a single
-/// `ReplaceDocument` whenever the granular replay would not reproduce `after` exactly.
+/// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
+/// fixture JSON `puzzle-plugin` mutates). Falls back to a single `SetDocument` whenever the granular
+/// replay would not reproduce `after` exactly.
 pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &serde_json::Value) -> Vec<Puzzle3dOperation> {
     if before == after {
         return Vec::new();
     }
-    let operations = match (before.as_object(), after.as_object()) {
-        (Some(before_object), Some(after_object)) => {
-            let mut keys: Vec<&String> = before_object.keys().chain(after_object.keys()).collect();
-            keys.sort();
-            keys.dedup();
-            let mut operations = Vec::new();
-            for key in keys {
-                let before_value = before_object.get(key);
-                let after_value = after_object.get(key);
-                if before_value == after_value {
-                    continue;
-                }
-                match after_value {
-                    Some(after_value) if puzzle3d_is_id_keyed_array(before_value) && puzzle3d_is_id_keyed_array(Some(after_value)) => {
-                        let before_array = before_value.and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
-                        puzzle3d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut operations);
-                    }
-                    Some(after_value) => operations.push(Puzzle3dOperation::SetField { key: key.clone(), value: after_value.clone() }),
-                    None => operations.push(Puzzle3dOperation::SetField { key: key.clone(), value: serde_json::Value::Null }),
-                }
-            }
-            operations
-        }
-        _ => vec![Puzzle3dOperation::ReplaceDocument { document: after.clone() }],
+    let fallback = |after: &serde_json::Value| vec![Puzzle3dOperation::SetDocument { document: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
+        return fallback(after);
     };
+    const KNOWN_KEYS: [&str; 8] = ["schema", "domain", "camera", "meta", "objects", "attractions", "targetVolumes", "references"];
+    if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
+        return fallback(after);
+    }
+    if before_object.get("schema") != after_object.get("schema") || before_object.get("domain") != after_object.get("domain") {
+        return fallback(after);
+    }
+    let mut operations = Vec::new();
+    macro_rules! collect_collection {
+        ($key:literal, $set_op:expr, $remove_op:expr, $ty:ty) => {{
+            let before_items = before_object.get($key).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+            let after_items = after_object.get($key).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+            if before_items != after_items {
+                let mut set = Vec::new();
+                let mut removed = Vec::new();
+                if !puzzle3d_collect_value_collection_delta::<$ty>(before_items, after_items, &mut set, &mut removed) {
+                    return fallback(after);
+                }
+                operations.extend(removed.into_iter().map($remove_op));
+                operations.extend(set.into_iter().map($set_op));
+            }
+        }};
+    }
+    collect_collection!("objects", |(index, object)| Puzzle3dOperation::SetObject { index, object }, |id| Puzzle3dOperation::RemoveObject { id }, Puzzle3dObject);
+    collect_collection!("attractions", |(index, attraction)| Puzzle3dOperation::SetAttraction { index, attraction }, |id| Puzzle3dOperation::RemoveAttraction { id }, Puzzle3dAttraction);
+    collect_collection!("targetVolumes", |(index, target_volume)| Puzzle3dOperation::SetTargetVolume { index, target_volume }, |id| Puzzle3dOperation::RemoveTargetVolume { id }, Puzzle3dTargetVolume);
+    collect_collection!("references", |(index, reference)| Puzzle3dOperation::SetReference { index, reference }, |id| Puzzle3dOperation::RemoveReference { id }, Puzzle3dReference);
+    let before_camera = before_object.get("camera");
+    let after_camera = after_object.get("camera");
+    if before_camera != after_camera {
+        let Some(camera) = after_camera.and_then(|value| serde_json::from_value::<Puzzle3dCamera>(value.clone()).ok()) else {
+            return fallback(after);
+        };
+        operations.push(Puzzle3dOperation::SetCamera { camera });
+    }
+    let before_meta = before_object.get("meta");
+    let after_meta = after_object.get("meta");
+    if before_meta != after_meta {
+        let meta = match after_meta {
+            Some(value) => match serde_json::from_value::<Puzzle3dMeta>(value.clone()) {
+                Ok(meta) => meta,
+                Err(_) => return fallback(after),
+            },
+            None => Puzzle3dMeta::default(),
+        };
+        operations.push(Puzzle3dOperation::SetMeta { meta });
+    }
     let mut replay = before.clone();
     for operation in &operations {
-        apply_puzzle3d_operation(&mut replay, operation);
+        apply_puzzle3d_operation_to_value(&mut replay, operation);
     }
     if &replay == after {
         operations
     } else {
-        vec![Puzzle3dOperation::ReplaceDocument { document: after.clone() }]
+        fallback(after)
     }
 }
-
-pub fn empty_puzzle3d_projection() -> serde_json::Value {
-    serde_json::json!({
-        "schema": PUZZLE_3D_SCHEMA,
-        "domain": "architecture",
-        "camera": {},
-        "meta": {},
-        "objects": [],
-        "attractions": [],
-        "targetVolumes": [],
-        "references": []
-    })
-}
+// #endregion 🔖ValueBridge
+// #endregion 🔖DocumentVcs
 
 //#region 🔖WasmBridge
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
@@ -3285,26 +3850,34 @@ mod puzzle3d_vcs_tests {
     #[test]
     fn puzzle3d_document_vcs_replays_granular_operations() {
         let mut store = Puzzle3dStore::new(create_document_vcs_envelope(PUZZLE_3D_SCHEMA, "puzzle3d", empty_puzzle3d_projection(), None));
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![Puzzle3dOperation::UpsertItem { collection: "objects".into(), item: serde_json::json!({ "id": "o1", "origin": [0.0, 0.0, 0.0] }), index: None }], description: None }).expect("apply");
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![Puzzle3dOperation::SetObject { index: 0, object: Puzzle3dObject { id: "o1".into(), label: None, object_kind: None, origin: [0.0, 0.0, 0.0], orientation: None, scale: None, mesh_url: None, vortices: Vec::new(), hidden: false, locked: false } }],
+                description: None,
+            })
+            .expect("apply");
         let projection = store.projection().expect("projection");
-        assert_eq!(projection.get("objects").and_then(|value| value.as_array()).map(Vec::len), Some(1));
+        assert_eq!(projection.objects.len(), 1);
+        assert_eq!(projection.objects[0].id, "o1");
     }
 
     #[test]
     fn puzzle3d_delta_ops_round_trip_and_stay_granular() {
-        let before = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 1.0 }, "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0] }, { "id": "o2", "origin": [1.0, 0.0, 0.0] }], "attractions": [] });
-        let after = serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "camera": { "zoom": 2.0 }, "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0] }, { "id": "o3", "origin": [2.0, 0.0, 0.0] }], "attractions": [] });
+        let before =
+            serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": { "position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "zoom": 1.0 }, "objects": [{ "id": "o1", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o2", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
+        let after =
+            serde_json::json!({ "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": { "position": [0.0, 0.0, 0.0], "target": [0.0, 0.0, 0.0], "zoom": 2.0 }, "objects": [{ "id": "o2", "origin": [9.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }, { "id": "o3", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false }], "attractions": [] });
         let operations = puzzle3d_document_delta_operations(&before, &after);
-        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dOperation::ReplaceDocument { .. })));
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle3dOperation::SetDocument { .. })));
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {
-            inverses.extend(operation.backwards(&forward));
-            forward = operation.diff(&forward).apply(&forward);
+            inverses.extend(Operation::<serde_json::Value>::backwards(operation, &forward));
+            forward = Operation::<serde_json::Value>::diff(operation, &forward).apply(&forward);
         }
         assert_eq!(forward, after);
         for inverse in inverses.iter().rev() {
-            forward = inverse.diff(&forward).apply(&forward);
+            forward = Operation::<serde_json::Value>::diff(inverse, &forward).apply(&forward);
         }
         assert_eq!(forward, before);
     }
@@ -3315,33 +3888,33 @@ mod puzzle3d_vcs_tests {
     #[test]
     fn puzzle3d_collection_delta_only_touches_changed_entries() {
         let before = serde_json::json!({
-            "schema": PUZZLE_3D_SCHEMA, "camera": {}, "attractions": [],
+            "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": {}, "attractions": [],
             "objects": [
-                { "id": "unchanged", "origin": [0.0, 0.0, 0.0] },
-                { "id": "updated", "origin": [1.0, 0.0, 0.0] },
-                { "id": "removed", "origin": [2.0, 0.0, 0.0] },
+                { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "updated", "origin": [1.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "removed", "origin": [2.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
             ],
         });
         let after = serde_json::json!({
-            "schema": PUZZLE_3D_SCHEMA, "camera": {}, "attractions": [],
+            "schema": PUZZLE_3D_SCHEMA, "domain": "architecture", "camera": {}, "attractions": [],
             "objects": [
-                { "id": "unchanged", "origin": [0.0, 0.0, 0.0] },
-                { "id": "updated", "origin": [1.0, 5.0, 0.0] },
-                { "id": "added", "origin": [3.0, 0.0, 0.0] },
+                { "id": "unchanged", "origin": [0.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "updated", "origin": [1.0, 5.0, 0.0], "vortices": [], "hidden": false, "locked": false },
+                { "id": "added", "origin": [3.0, 0.0, 0.0], "vortices": [], "hidden": false, "locked": false },
             ],
         });
         let operations = puzzle3d_document_delta_operations(&before, &after);
         let upserted_ids: Vec<&str> = operations
             .iter()
             .filter_map(|operation| match operation {
-                Puzzle3dOperation::UpsertItem { item, .. } => item.get("id").and_then(|value| value.as_str()),
+                Puzzle3dOperation::SetObject { object, .. } => Some(object.id.as_str()),
                 _ => None,
             })
             .collect();
         let removed_ids: Vec<&str> = operations
             .iter()
             .filter_map(|operation| match operation {
-                Puzzle3dOperation::RemoveItem { id, .. } => Some(id.as_str()),
+                Puzzle3dOperation::RemoveObject { id } => Some(id.as_str()),
                 _ => None,
             })
             .collect();
@@ -3351,9 +3924,50 @@ mod puzzle3d_vcs_tests {
         assert_eq!(removed_ids, vec!["removed"]);
         let mut forward = before.clone();
         for operation in &operations {
-            forward = operation.diff(&forward).apply(&forward);
+            forward = Operation::<serde_json::Value>::diff(operation, &forward).apply(&forward);
         }
         assert_eq!(forward, after);
+    }
+
+    /// 📜 A representative in-memory projection (camera pan, one object with two vortices, one
+    /// attraction, a target volume, a reference plane, and a link-compatibility rule) round-trips
+    /// through `print_dsl`/`parse_dsl` exactly.
+    #[test]
+    fn puzzle3d_projection_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&empty_puzzle3d_projection());
+        let mut projection = empty_puzzle3d_projection();
+        projection.camera = Puzzle3dCamera { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0, up: Some([0.0, 0.0, 1.0]), projection: None };
+        projection.objects.push(Puzzle3dObject {
+            id: "seed-left-001".into(),
+            label: Some("Seed Left".into()),
+            object_kind: Some("Hexagonal Cut Concrete Forest Left".into()),
+            origin: [0.0, 0.0, 0.0],
+            orientation: Some([0.0, 0.0, 0.0, 1.0]),
+            scale: None,
+            mesh_url: Some("/mesh/hexagonal-cut-concrete-forest-left.glb".into()),
+            vortices: vec![
+                Puzzle3dVortex { id: "seed-left-001:v0".into(), vortex_kind: Some("b-l".into()), label: Some("v0".into()), position: [0.36, 0.0, 0.0], direction: Some([1.0, 0.0, 0.0]), radius: Some(0.36), hidden: false, locked: false },
+                Puzzle3dVortex { id: "seed-left-001:v1".into(), vortex_kind: Some("b-l-m".into()), label: Some("v1".into()), position: [0.0, 0.36, 0.0], direction: None, radius: None, hidden: true, locked: true },
+            ],
+            hidden: false,
+            locked: false,
+        });
+        projection.attractions.push(Puzzle3dAttraction { id: "a1".into(), attracting: "seed-left-001:v0".into(), attracted: "seed-right-001:v0".into(), gap: 0.02, shift: 0.0, rise: 0.0, rotation: 0.0, turn: 0.0, tilt: 0.0 });
+        projection.target_volumes.push(Puzzle3dTargetVolume { id: "tv1".into(), origin: [1.0, 2.0, 3.0], orientation: None, scale: None, hidden: false, locked: false });
+        projection.references.push(Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) }, origin: [0.0, 0.0, 0.0], width_world: 12.0, locked: false, hidden: false });
+        projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
+        vcs::test_support::assert_dsl_round_trip(&projection);
+    }
+
+    /// 📜 Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
+    /// 🎫convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle3d` DSL text and round-trip
+    /// through `print_dsl`/`parse_dsl` exactly.
+    #[test]
+    fn puzzle3d_example_fixtures_parse_and_round_trip_as_dsl() {
+        for dsl_text in [include_str!("../example/concrete-forest.puzzle3d"), include_str!("../example/nakagin-capsule-tower.puzzle3d")] {
+            let projection = Puzzle3dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
+            vcs::test_support::assert_dsl_round_trip(&projection);
+        }
     }
 }
 // #endregion 🔖DocumentVcs

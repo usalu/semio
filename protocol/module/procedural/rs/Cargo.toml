@@ -25,5 +25,6 @@ flow_module_brep = { path = "../../../../flow/module/brep/rs", default-features 
 kernel_3d_engine = { path = "../../../../kernel/3d/brep/engine/rs", features = ["parallel"] }
 semio-framework-plugin = { path = "../../../../framework/plugin/rs" }
 semio-framework-core = { path = "../../../../framework/core/rs" }
+dsl = { path = "../../../../dsl/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"

@@ -606,7 +606,7 @@ impl DocumentApp for Fem2dPlayApp {
                     } else {
                         fem_2d::FemElement::Beam { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() }
                     };
-                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetElement { index, element: Box::new(element) }]);
                 }
             }
             "addMaterial" => {
@@ -630,6 +630,7 @@ impl DocumentApp for Fem2dPlayApp {
             "addSupport" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(Value::as_str) {
                     let fixed: Vec<Dof> = args.and_then(|v| v.get("fixed")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+                    let fixed: Vec<fem_2d::FemDof> = fixed.into_iter().map(Into::into).collect();
                     let id = next_id(doc.projection.supports.iter().map(|s| s.id.clone()), "sup");
                     let index = doc.projection.supports.len();
                     return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetSupport { index, support: fem_2d::FemSupport { id, node_id: node_id.into(), fixed } }]);
@@ -638,7 +639,7 @@ impl DocumentApp for Fem2dPlayApp {
             "addNodalLoad" => {
                 if let (Some(node_id), Some(dof), Some(value)) = (
                     args.and_then(|v| v.get("nodeId")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<Dof>(v.clone()).ok()),
+                    args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<fem_2d::FemDof>(v.clone()).ok()),
                     args.and_then(|v| v.get("value")).and_then(Value::as_f64),
                 ) {
                     let case_id = args.and_then(|v| v.get("caseId")).and_then(Value::as_str);
@@ -697,6 +698,7 @@ impl DocumentApp for Fem2dPlayApp {
             "addCombination" => {
                 if let (Some(name), Some(terms_json)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("terms")).and_then(Value::as_str)) {
                     if let Ok(terms) = serde_json::from_str::<Vec<(String, f64)>>(terms_json) {
+                        let terms: Vec<fem_2d::FemCombinationTerm> = terms.into_iter().map(|(case_id, factor)| fem_2d::FemCombinationTerm { case_id, factor }).collect();
                         let id = next_id(doc.projection.combinations.iter().map(|c| c.id.clone()), "c");
                         let index = doc.projection.combinations.len();
                         return ActionEmit::operations(vec![fem_2d::Fem2dOperation::SetCombination { index, combination: fem_2d::FemCombination { id, name: name.into(), terms } }]);
@@ -796,6 +798,7 @@ impl DocumentApp for Fem2dPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            tutorial_labels: HashMap::new(),
             group_labels: HashMap::new(),
         }
     }
@@ -1222,7 +1225,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let id = next_id(doc.projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                     let index = doc.projection.elements.len();
                     let element = fem_3d::FemElement::Bar { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into() };
-                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element: Box::new(element) }]);
                 }
             }
             "addFrame" => {
@@ -1236,7 +1239,7 @@ impl DocumentApp for Fem3dPlayApp {
                     let id = next_id(doc.projection.elements.iter().map(|e| fem3d_element_id(e).to_string()), "e");
                     let index = doc.projection.elements.len();
                     let element = fem_3d::FemElement::Frame { id, start: start.into(), end: end.into(), material_id: material_id.into(), section_id: section_id.into(), roll };
-                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element }]);
+                    return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetElement { index, element: Box::new(element) }]);
                 }
             }
             "addMaterial" => {
@@ -1266,6 +1269,7 @@ impl DocumentApp for Fem3dPlayApp {
             "addSupport" => {
                 if let Some(node_id) = args.and_then(|v| v.get("nodeId")).and_then(Value::as_str) {
                     let fixed: Vec<Dof> = args.and_then(|v| v.get("fixed")).and_then(|v| serde_json::from_value(v.clone()).ok()).unwrap_or_default();
+                    let fixed: Vec<fem_3d::FemDof> = fixed.into_iter().map(Into::into).collect();
                     let id = next_id(doc.projection.supports.iter().map(|s| s.id.clone()), "sup");
                     let index = doc.projection.supports.len();
                     return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetSupport { index, support: fem_3d::FemSupport { id, node_id: node_id.into(), fixed } }]);
@@ -1274,7 +1278,7 @@ impl DocumentApp for Fem3dPlayApp {
             "addNodalLoad" => {
                 if let (Some(node_id), Some(dof), Some(value)) = (
                     args.and_then(|v| v.get("nodeId")).and_then(Value::as_str),
-                    args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<Dof>(v.clone()).ok()),
+                    args.and_then(|v| v.get("dof")).and_then(|v| serde_json::from_value::<fem_3d::FemDof>(v.clone()).ok()),
                     args.and_then(|v| v.get("value")).and_then(Value::as_f64),
                 ) {
                     let case_id = args.and_then(|v| v.get("caseId")).and_then(Value::as_str);
@@ -1336,6 +1340,7 @@ impl DocumentApp for Fem3dPlayApp {
             "addCombination" => {
                 if let (Some(name), Some(terms_json)) = (args.and_then(|v| v.get("name")).and_then(Value::as_str), args.and_then(|v| v.get("terms")).and_then(Value::as_str)) {
                     if let Ok(terms) = serde_json::from_str::<Vec<(String, f64)>>(terms_json) {
+                        let terms: std::collections::BTreeMap<String, f64> = terms.into_iter().collect();
                         let id = next_id(doc.projection.combinations.iter().map(|c| c.id.clone()), "c");
                         let index = doc.projection.combinations.len();
                         return ActionEmit::operations(vec![fem_3d::Fem3dOperation::SetCombination { index, combination: fem_3d::FemCombination { id, name: name.into(), terms } }]);
@@ -1431,6 +1436,7 @@ impl DocumentApp for Fem3dPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            tutorial_labels: HashMap::new(),
             group_labels: HashMap::new(),
         }
     }
@@ -1653,7 +1659,7 @@ mod tests {
     use semio_framework_plugin::HistoryView;
 
     fn history_view() -> HistoryView {
-        HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None }
+        HistoryView { columns: Vec::new(), can_undo: false, can_redo: false, active_alternative_id: None, current_checkpoint_id: None, recent_ops: Vec::new() }
     }
 
     //#region 🔖RendersScenes
@@ -2033,7 +2039,7 @@ mod tests {
         let mut app_2d = Fem2dPlayApp::default();
         let mut projection_2d = fem_2d::empty_fem2d_projection();
         projection_2d.regions.push(fem_2d::FemRegion { id: "r1".into(), name: "R".into(), outline: vec![[0.0, 0.0], [1.0, 0.0], [1.0, 1.0], [0.0, 1.0]], holes: vec![], thickness: 0.02, material_id: "steel".into(), mesh_size: 0.5 });
-        projection_2d.combinations.push(fem_2d::FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![("dead".into(), 1.35)] });
+        projection_2d.combinations.push(fem_2d::FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![fem_2d::FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }] });
         let history = history_view();
         let doc_2d = DocumentView { projection: &projection_2d, history: &history };
         let emit_2d = app_2d.handle_action("removeSelection", Some(&json!({ "ids": ["r1", "uls"] })), &doc_2d, &ViewState::default());
@@ -2068,7 +2074,7 @@ mod tests {
 
         let emit_combo = app.handle_action("addCombination", Some(&json!({ "name": "ULS", "terms": "[[\"dead\",1.35]]" })), &doc, &ViewState::default());
         match &emit_combo.operations[0] {
-            fem_2d::Fem2dOperation::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![("dead".to_string(), 1.35)]),
+            fem_2d::Fem2dOperation::SetCombination { combination, .. } => assert_eq!(combination.terms, vec![fem_2d::FemCombinationTerm { case_id: "dead".to_string(), factor: 1.35 }]),
             _ => panic!("expected SetCombination"),
         }
     }
@@ -2304,13 +2310,13 @@ mod tests {
 
         let emit_bar = app.handle_action("addBar", Some(&args), &doc, &ViewState::default());
         match &emit_bar.operations[0] {
-            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(element, fem_2d::FemElement::Bar { .. })),
+            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem_2d::FemElement::Bar { .. })),
             _ => panic!("expected SetElement"),
         }
 
         let emit_beam = app.handle_action("addBeam", Some(&args), &doc, &ViewState::default());
         match &emit_beam.operations[0] {
-            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(element, fem_2d::FemElement::Beam { .. })),
+            fem_2d::Fem2dOperation::SetElement { element, .. } => assert!(matches!(**element, fem_2d::FemElement::Beam { .. })),
             _ => panic!("expected SetElement"),
         }
     }
@@ -2382,7 +2388,7 @@ mod tests {
         let args = json!({ "nodeId": "n1", "fixed": ["Tx", "Ty"] });
         let emit = app.handle_action("addSupport", Some(&args), &doc, &ViewState::default());
         match &emit.operations[0] {
-            fem_2d::Fem2dOperation::SetSupport { support, .. } => assert_eq!(support.fixed, vec![Dof::Tx, Dof::Ty]),
+            fem_2d::Fem2dOperation::SetSupport { support, .. } => assert_eq!(support.fixed, vec![fem_2d::FemDof::Tx, fem_2d::FemDof::Ty]),
             _ => panic!("expected SetSupport"),
         }
     }
@@ -2430,7 +2436,7 @@ mod tests {
         let args = json!({ "start": "n1", "end": "n2", "materialId": "m1", "sectionId": "s1", "roll": 0.5 });
         let emit = app.handle_action("addFrame", Some(&args), &doc, &ViewState::default());
         match &emit.operations[0] {
-            fem_3d::Fem3dOperation::SetElement { element, .. } => match element {
+            fem_3d::Fem3dOperation::SetElement { element, .. } => match element.as_ref() {
                 fem_3d::FemElement::Frame { roll, .. } => assert_eq!(*roll, 0.5),
                 _ => panic!("expected Frame"),
             },
@@ -2477,7 +2483,7 @@ mod tests {
         projection.elements.push(fem_2d::FemElement::Bar { id: "e1".into(), start: "n1".into(), end: "n1".into(), material_id: "m1".into(), section_id: "s1".into() });
         projection.materials.push(fem_2d::FemMaterial { id: "m1".into(), name: "Steel".into(), e: 2.1e11, nu: 0.3, rho: 7850.0 });
         projection.sections.push(fem_2d::FemSection { id: "s1".into(), name: "Sec".into(), area: 0.01, iy: 0.0001 });
-        projection.supports.push(fem_2d::FemSupport { id: "sup1".into(), node_id: "n1".into(), fixed: vec![Dof::Tx] });
+        projection.supports.push(fem_2d::FemSupport { id: "sup1".into(), node_id: "n1".into(), fixed: vec![fem_2d::FemDof::Tx] });
         projection.load_cases.push(fem_2d::FemLoadCase { id: "case1".into(), name: "Case".into(), loads: vec![], self_weight: false });
         let history = history_view();
         let doc = DocumentView { projection: &projection, history: &history };

@@ -86,8 +86,9 @@ fn module_labels(view_state: &ViewState) -> &'static ModuleLabels {
 //#endregion 🔖Terminology
 
 //#region 🔖Payload
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "procmodule")]
 struct ModuleRenderPayload {
     #[serde(default)]
     fixture_slug: String,
@@ -114,10 +115,14 @@ fn default_payload() -> ModuleRenderPayload {
 /// transient render/params payload (not a collaboratively-edited structure), so its single operation
 /// swaps the payload wholesale — export/import stash their results on `params` and re-emit it. The VCS
 /// store still records the pre-operation payload as a true inverse, so undo works.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum ModulePayloadOperation {
-    SetPayload { payload: ModuleRenderPayload },
+    #[dsl(key = "set-payload")]
+    SetPayload {
+        #[dsl(block)]
+        payload: ModuleRenderPayload,
+    },
 }
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
@@ -584,8 +589,8 @@ fn create_module_app() -> App {
         App::builder(MODULE_APP_ID, "Protocol Module Procedural")
             .document(["semio", "forms"])
             .mode("edit", "Edit")
-            .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph)
-            .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d)
+            .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
+            .window_kind(MODULE_WINDOW_PREVIEW, "Preview", BODY_PREVIEW, SurfaceKind::World3d, "preview")
             .default_layout(create_default_layout(
                 &[MODULE_WINDOW_PARAMS.into(), MODULE_WINDOW_PREVIEW.into()],
                 "row",
@@ -766,5 +771,17 @@ mod tests {
         assert!(json.contains("Keine prozeduralen Parameter."));
         assert!(!json.contains("No procedural parameters."));
     }
+
+    //#region 🔖DslAndOpText
+    #[test]
+    fn module_render_payload_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&default_payload());
+    }
+
+    #[test]
+    fn module_payload_operation_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&ModulePayloadOperation::SetPayload { payload: default_payload() });
+    }
+    //#endregion 🔖DslAndOpText
 }
 //#endregion 🧪Tests

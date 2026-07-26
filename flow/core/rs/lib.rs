@@ -61,7 +61,7 @@ fn export_widget_display_meta(format: &str) -> (String, String, String) {
 }
 
 /// 📍 Persisted node position on the canvas.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct WidgetLayout {
     pub x: f64,
     pub y: f64,
@@ -149,7 +149,7 @@ pub struct FlowChannelRef {
     pub channel: String,
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CameraJson {
     pub x: f64,
     pub y: f64,
@@ -164,14 +164,16 @@ fn default_to_port() -> String {
     String::new()
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct SynapseSpec {
     pub id: String,
     pub from: String,
     pub to: String,
+    #[dsl(key = "fromPort")]
     #[serde(default = "default_from_port")]
     pub from_port: String,
+    #[dsl(key = "toPort")]
     #[serde(default = "default_to_port")]
     pub to_port: String,
 }
@@ -1639,15 +1641,6 @@ fn is_global_eval_error_json(json: &str) -> bool {
 }
 // #endregion 🔖ChannelEval
 
-// #region History
-#[derive(Default)]
-struct FlowHistory {
-    past: Vec<FlowFixture>,
-    future: Vec<FlowFixture>,
-    pending: Option<FlowFixture>,
-}
-// #endregion History
-
 // #region ⚠️ Errors
 /// 🧯 `FlowHost`'s error type — wraps JSON codec failures, the `dag` crate's own `DagError`, and
 /// this crate's own graph-editing validation failures. Every variant's Display text is byte-for-byte
@@ -1735,7 +1728,16 @@ pub struct FlowHost {
     viewport_dpr: f64,
     pan_anchor: Option<(f64, f64, f64, f64)>,
     ghost_node: Option<dag::DagNodeSpec>,
-    history: FlowHistory,
+    /// ↩️ Undo/redo, backed by the standard `vcs::DocumentVcsStore<FlowFixture, FlowOperation>`
+    /// mechanism (see the `impl FlowHost`'s `🔖History` region) instead of a hand-rolled snapshot stack.
+    history_store: FlowStore,
+    /// 🚩 Armed by `begin_change`/`begin_gesture` for a discrete mutation not yet flushed into
+    /// `history_store` — lets `can_undo` reflect it immediately, mirroring how the old snapshot stack's
+    /// `begin_change` pushed synchronously instead of lazily.
+    pending_change: bool,
+    /// 🖐️ `true` while a coalescing gesture (drag, inline note edit) is in progress — guards
+    /// `begin_change` from checkpointing mid-gesture; see `begin_gesture`/`commit_gesture_history`.
+    gesture_active: bool,
 }
 
 impl Default for FlowHost {
@@ -1754,6 +1756,10 @@ impl FlowHost {
     /// keep per-node memoization alive across those reconstructions instead of discarding it.
     pub fn from_fixture_with_cache(mut fixture: FlowFixture, neural_cache: std::sync::Arc<NeuralCache>) -> Self {
         dedupe_fixture_widgets(&mut fixture);
+        // 🌱 A throwaway placeholder, same as `dag` below — `rebuild_dag` (via `sync_from_dag`)
+        // settles auto-computed layout onto `self.fixture` before the real undo/redo baseline is
+        // captured, so a fresh host never starts with a spurious undoable step.
+        let history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", FlowFixture::default(), None));
         let mut host = Self {
             fixture,
             dag: DagHost::from_fixture(DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: 0.0, y: 0.0, zoom: 1.0 }, nodes: vec![], edges: vec![] }),
@@ -1773,9 +1779,12 @@ impl FlowHost {
             viewport_dpr: 1.0,
             pan_anchor: None,
             ghost_node: None,
-            history: FlowHistory::default(),
+            history_store,
+            pending_change: false,
+            gesture_active: false,
         };
         host.rebuild_dag();
+        host.history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", host.fixture.clone(), None));
         host
     }
 
@@ -1803,10 +1812,14 @@ impl FlowHost {
         self.previous_channels = None;
         self.pan_anchor = None;
         self.ghost_node = None;
-        if reset_history {
-            self.history = FlowHistory::default();
-        }
         self.rebuild_dag();
+        if reset_history {
+            // 🌱 Captured AFTER `rebuild_dag` (see `from_fixture_with_cache`'s matching comment) so the
+            // new undo/redo baseline is the settled, auto-laid-out fixture, not the raw input.
+            self.history_store = FlowStore::new(create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "flow-host", self.fixture.clone(), None));
+            self.pending_change = false;
+            self.gesture_active = false;
+        }
     }
 
     pub fn parse_fixture_json(json: &str) -> Result<FlowFixture, FlowCoreError> {
@@ -2268,7 +2281,7 @@ impl FlowHost {
         }
         self.clear_ghost_widget();
         self.dag.set_viewport(self.viewport_w, self.viewport_h, self.viewport_dpr);
-        self.history.pending = Some(self.fixture.clone());
+        self.begin_gesture();
         self.dag.pointer_down_screen(sx, sy, button, shift, ctrl_or_meta, alt, false);
         if let Some((side, widget_id, index)) = self.dag.take_pending_port_insert() {
             match side {
@@ -2805,7 +2818,7 @@ impl FlowHost {
 
     /// ✏️ Begins inline note editing for a widget at a world-space click.
     pub fn begin_note_edit(&mut self, widget_id: &str, world_x: f64, world_y: f64) {
-        self.history.pending = Some(self.fixture.clone());
+        self.begin_gesture();
         self.dag.begin_note_edit(widget_id, world_x, world_y);
     }
 
@@ -3200,56 +3213,84 @@ impl FlowHost {
         a.widgets != b.widgets || a.synapses != b.synapses || a.layout != b.layout
     }
 
-    pub fn begin_change(&mut self) {
-        if self.history.pending.is_none() {
-            self.history.past.push(self.fixture.clone());
-            self.history.future.clear();
+    /// 🧾 Flushes an armed-but-not-yet-recorded discrete mutation into `history_store` as one
+    /// invertible `FlowOperation::SetFixture` edit — the standard `vcs::DocumentVcsStore`/`Operation`/
+    /// `OperationDiff` mechanism (see `🔖Operations`) driving undo/redo here instead of the old
+    /// hand-rolled `Vec<FlowFixture>` snapshot stack. Unconditional once armed (no `content_changed`
+    /// gate), mirroring the old stack's unconditional `past.push` on a discrete `begin_change` — only
+    /// the gesture-coalescing path (`commit_gesture_history`) skips a no-op edit.
+    fn flush_pending_change(&mut self) {
+        if self.pending_change {
+            self.pending_change = false;
+            let _ = self.history_store.dispatch(DocumentVcsCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
         }
     }
 
+    /// ↩️ Arms a checkpoint for the mutation about to happen, unless a gesture (`begin_gesture`) is
+    /// currently coalescing several mutations into one.
+    pub fn begin_change(&mut self) {
+        if !self.gesture_active {
+            self.flush_pending_change();
+            self.pending_change = true;
+        }
+    }
+
+    /// 🖐️ Starts a coalescing gesture (drag, inline note edit): flushes anything already armed first,
+    /// then suppresses further `begin_change` checkpoints until `commit_gesture_history`.
+    fn begin_gesture(&mut self) {
+        self.flush_pending_change();
+        self.gesture_active = true;
+    }
+
     fn commit_gesture_history(&mut self) {
-        if let Some(pre) = self.history.pending.take() {
-            if Self::content_changed(&pre, &self.fixture) {
-                self.history.past.push(pre);
-                self.history.future.clear();
+        if self.gesture_active {
+            self.gesture_active = false;
+            let committed = self.history_store.projection().unwrap_or_else(|_| self.fixture.clone());
+            if Self::content_changed(&committed, &self.fixture) {
+                let _ = self.history_store.dispatch(DocumentVcsCommand::Apply { operations: vec![FlowOperation::SetFixture { fixture: self.fixture.clone() }], description: None });
             }
         }
     }
 
     /// ↩️ Restores the previous fixture content snapshot, keeping the current camera.
     pub fn undo(&mut self) -> bool {
-        let Some(prev) = self.history.past.pop() else {
+        self.flush_pending_change();
+        let camera = self.fixture.camera.clone();
+        if self.history_store.dispatch(DocumentVcsCommand::Undo).is_err() {
+            return false;
+        }
+        let Ok(mut restored) = self.history_store.projection() else {
             return false;
         };
-        let camera = self.fixture.camera.clone();
-        self.history.future.push(self.fixture.clone());
-        self.fixture = prev;
-        self.fixture.camera = camera;
+        restored.camera = camera;
+        self.fixture = restored;
         self.rebuild_dag();
         true
     }
 
     /// ↪️ Re-applies a fixture content snapshot undone earlier, keeping the current camera.
     pub fn redo(&mut self) -> bool {
-        let Some(next) = self.history.future.pop() else {
+        let camera = self.fixture.camera.clone();
+        if self.history_store.dispatch(DocumentVcsCommand::Redo).is_err() {
+            return false;
+        }
+        let Ok(mut restored) = self.history_store.projection() else {
             return false;
         };
-        let camera = self.fixture.camera.clone();
-        self.history.past.push(self.fixture.clone());
-        self.fixture = next;
-        self.fixture.camera = camera;
+        restored.camera = camera;
+        self.fixture = restored;
         self.rebuild_dag();
         true
     }
 
     /// ↩️ Whether a content undo step is available.
     pub fn can_undo(&self) -> bool {
-        !self.history.past.is_empty()
+        self.pending_change || !self.history_store.applied_edit_ids().is_empty()
     }
 
     /// ↪️ Whether a content redo step is available.
     pub fn can_redo(&self) -> bool {
-        !self.history.future.is_empty()
+        !self.history_store.redo_edit_ids().is_empty()
     }
     // #endregion History
 }
@@ -4029,9 +4070,10 @@ pub fn dwg_decode_mesh_json(data_base64: &str) -> String {
 // #endregion 🔖WasmSession
 
 // #region 🔖DocumentVcs
-#[cfg(any(test, target_arch = "wasm32"))]
+// 🧾 `create_document_vcs_envelope`/`DocumentVcsCommand` are unconditional (not test/wasm-only)
+// because `FlowHost`'s own undo/redo (see `impl FlowHost`'s `🔖History` region) dispatches through
+// them in every build.
 use vcs::create_document_vcs_envelope;
-#[cfg(test)]
 use vcs::DocumentVcsCommand;
 use vcs::{collection_diff_from_operation, invert_collection_operation, CollectionDiff, CollectionOperation, DocumentVcsEnvelope, DocumentVcsStore, Identified, Operation, OperationDiff, Patchable};
 
@@ -4110,10 +4152,11 @@ fn absorb_flow_collection_diff<TId: Clone, TItem: Clone, TPatch: Clone>(target: 
 
 //#region 🔖Operations
 /// 📍 One node-layout assignment inside a `SetLayout` operation; `None` removes the entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
 pub struct FlowLayoutEntry {
     pub id: String,
+    #[dsl(block)]
     pub layout: Option<WidgetLayout>,
 }
 
@@ -4251,6 +4294,385 @@ pub fn flow_fixture_operations(before: &FlowFixture, after: &FlowFixture) -> Vec
     operations
 }
 //#endregion 🔖Operations
+
+//#region 🔖Dsl
+/// 🌱 `Value`/`Atom`/`Dictionary`/`Tree`/`Neuron`/`Synapse` are all defined in `neural_engine`
+/// (a foreign crate out of scope for this conversion), so none of them can carry a
+/// `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires the impl target type to live in
+/// the crate that also owns the trait or the type, and neither is true here. `ValueDsl`/`TreeDsl`/
+/// `NeuronNodeDsl` below are local structural twins that the real types convert to/from right at the
+/// `parse_dsl`/`print_dsl`/`parse_op`/`print_op` boundary — mirroring `imperative_core::ValueDsl`'s
+/// identical fix for the same foreign-`Dictionary`/`Value`/`Atom` problem one-for-one (same crate,
+/// same shapes).
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct ValueDsl {
+    /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
+    #[dsl(key = "null")]
+    null: Option<bool>,
+    #[dsl(key = "bool")]
+    boolean: Option<bool>,
+    #[dsl(key = "int")]
+    integer: Option<i64>,
+    #[dsl(key = "decimal")]
+    decimal: Option<f64>,
+    #[dsl(key = "text")]
+    text: Option<String>,
+    #[dsl(key = "dict")]
+    dictionary: Option<BTreeMap<String, ValueDsl>>,
+}
+
+fn value_to_value_dsl(value: &NeuralValue) -> ValueDsl {
+    let mut dsl_value = ValueDsl { null: None, boolean: None, integer: None, decimal: None, text: None, dictionary: None };
+    match value {
+        NeuralValue::Atom(Atom::Null) => dsl_value.null = Some(true),
+        NeuralValue::Atom(Atom::Boolean(b)) => dsl_value.boolean = Some(*b),
+        NeuralValue::Atom(Atom::Integer(i)) => dsl_value.integer = Some(*i),
+        NeuralValue::Atom(Atom::Decimal(d)) => dsl_value.decimal = Some(*d),
+        NeuralValue::Atom(Atom::String(s)) => dsl_value.text = Some(s.clone()),
+        NeuralValue::Dictionary(dict) => dsl_value.dictionary = Some(dictionary_to_value_dsl_map(dict)),
+    }
+    dsl_value
+}
+
+fn value_dsl_to_value(dsl_value: &ValueDsl) -> NeuralValue {
+    if dsl_value.null.is_some() {
+        return NeuralValue::Atom(Atom::Null);
+    }
+    if let Some(b) = dsl_value.boolean {
+        return NeuralValue::Atom(Atom::Boolean(b));
+    }
+    if let Some(i) = dsl_value.integer {
+        return NeuralValue::Atom(Atom::Integer(i));
+    }
+    if let Some(d) = dsl_value.decimal {
+        return NeuralValue::Atom(Atom::Decimal(d));
+    }
+    if let Some(s) = &dsl_value.text {
+        return NeuralValue::Atom(Atom::String(s.clone()));
+    }
+    match &dsl_value.dictionary {
+        Some(entries) => NeuralValue::Dictionary(value_dsl_map_to_dictionary(entries)),
+        None => NeuralValue::Atom(Atom::Null),
+    }
+}
+
+fn dictionary_to_value_dsl_map(dict: &Dictionary) -> BTreeMap<String, ValueDsl> {
+    dict.keys().map(|key| (key.clone(), value_to_value_dsl(dict.get(key).expect("key came from dict.keys()")))).collect()
+}
+
+fn value_dsl_map_to_dictionary(entries: &BTreeMap<String, ValueDsl>) -> Dictionary {
+    entries.iter().fold(Dictionary::new(), |dict, (key, value)| dict.insert(key.clone(), value_dsl_to_value(value)))
+}
+
+/// 📦 `None` when `dict` is empty, mirroring `imperative_core`'s identical printer convention —
+/// omits an empty dictionary section rather than printing empty braces.
+fn dictionary_to_option_dsl_map(dict: &Dictionary) -> Option<BTreeMap<String, ValueDsl>> {
+    (!dict.is_empty()).then(|| dictionary_to_value_dsl_map(dict))
+}
+
+fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> Dictionary {
+    entries.map(|entries| value_dsl_map_to_dictionary(&entries)).unwrap_or_default()
+}
+
+/// 🔢 `BTreeSet<String>` has no blanket `dsl::DslField` impl (only `Vec`/`BTreeMap`/arrays do) — a
+/// sorted `Vec<String>` is a lossless, order-independent stand-in at the DSL-text boundary since the
+/// real field is reconstructed as a set on the way back in.
+fn btree_set_to_vec(set: &BTreeSet<String>) -> Vec<String> {
+    set.iter().cloned().collect()
+}
+
+fn vec_to_btree_set(items: Vec<String>) -> BTreeSet<String> {
+    items.into_iter().collect()
+}
+
+/// 🌳 Local twin of `neural::Tree` — mutually recursive with `NeuronNodeDsl` exactly like
+/// `imperative_core::PathDsl`/`StepNodeDsl`, so `neurons` goes through `NeuronNodeDsl`'s
+/// `dsl::DslVariants` lazy `fn() -> RecordSpec` pointer instead of `TreeDsl` and `NeuronNodeDsl`
+/// eagerly recursing into each other just to construct the schema.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct TreeDsl {
+    #[dsl(statements, block)]
+    neurons: Vec<NeuronNodeDsl>,
+    synapses: Vec<SynapseSpec>,
+}
+
+/// 🔵 Local twin of `neural::Neuron` — a one-variant `dsl::DslEnum` (not a plain `DslRecord`) purely
+/// for the mutual-recursion reason documented on `TreeDsl`.
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+enum NeuronNodeDsl {
+    #[dsl(key = "neuron")]
+    Neuron {
+        id: String,
+        kind: String,
+        params: Option<BTreeMap<String, ValueDsl>>,
+        #[dsl(block)]
+        tree: Option<TreeDsl>,
+    },
+}
+
+fn tree_to_tree_dsl(tree: &Tree) -> TreeDsl {
+    TreeDsl {
+        neurons: tree.neurons.iter().map(neuron_to_neuron_node_dsl).collect(),
+        synapses: tree.synapses.iter().map(|synapse| SynapseSpec { id: synapse.id.clone(), from: synapse.from.clone(), to: synapse.to.clone(), from_port: synapse.from_port.clone(), to_port: synapse.to_port.clone() }).collect(),
+    }
+}
+
+fn tree_dsl_to_tree(tree: TreeDsl) -> Tree {
+    Tree {
+        neurons: tree.neurons.into_iter().map(neuron_node_dsl_to_neuron).collect(),
+        synapses: tree.synapses.into_iter().map(|spec| Synapse { id: spec.id, from: spec.from, to: spec.to, from_port: spec.from_port, to_port: spec.to_port }).collect(),
+    }
+}
+
+fn neuron_to_neuron_node_dsl(neuron: &Neuron) -> NeuronNodeDsl {
+    NeuronNodeDsl::Neuron { id: neuron.id.clone(), kind: neuron.kind.clone(), params: dictionary_to_option_dsl_map(&neuron.params), tree: neuron.tree.as_deref().map(tree_to_tree_dsl) }
+}
+
+fn neuron_node_dsl_to_neuron(node: NeuronNodeDsl) -> Neuron {
+    let NeuronNodeDsl::Neuron { id, kind, params, tree } = node;
+    Neuron { id, kind, params: option_dsl_map_to_dictionary(params), tree: tree.map(|tree| Box::new(tree_dsl_to_tree(tree))) }
+}
+
+/// 🎛️ Local twin of `Widget` — a tagged `dsl::DslEnum` mirroring its serde `kind` tags one-for-one.
+/// `Cluster`'s `flow: FlowGui` is deliberately printed via the engine's `serde_json::Value` escape
+/// hatch (untyped but byte-for-byte round-tripping JSON), not its own nested DSL grammar: `FlowGui`/
+/// `FlowNodeGui`/`NodeChrome`/`FlowPreviewGui` are GUI-only view state (see each type's own doc
+/// comment) that never feeds neural evaluation — `tree_from_fixture`'s `Cluster` handling reads only
+/// `tree`, never `flow` — the same "derived read-view, not a DSL-typed field" reasoning `FlowDocument`
+/// itself gets relative to `FlowFixture`, just one level further in.
+#[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
+enum WidgetDsl {
+    #[dsl(key = "neuron")]
+    Neuron {
+        id: String,
+        #[dsl(key = "neuronKind")]
+        neuron_kind: String,
+        params: Option<BTreeMap<String, ValueDsl>>,
+        #[dsl(key = "inputPorts")]
+        input_ports: Vec<String>,
+        #[dsl(key = "outputPorts")]
+        output_ports: Vec<String>,
+        preview: bool,
+    },
+    #[dsl(key = "inputSlider")]
+    InputSlider { id: String, value: f64, min: f64, max: f64, step: f64 },
+    #[dsl(key = "inputNote")]
+    InputNote { id: String, text: String },
+    #[dsl(key = "inputImage")]
+    InputImage { id: String, src: String },
+    #[dsl(key = "variable")]
+    Variable { id: String, name: String, schema: String },
+    #[dsl(key = "outputPreview")]
+    OutputPreview {
+        id: String,
+        preview: Option<BTreeMap<String, ValueDsl>>,
+        expanded: Vec<String>,
+    },
+    #[dsl(key = "outputAction")]
+    OutputAction { id: String, action: String },
+    #[dsl(key = "outputExport")]
+    OutputExport { id: String, format: String },
+    #[dsl(key = "cluster")]
+    Cluster {
+        id: String,
+        name: String,
+        #[dsl(block)]
+        tree: TreeDsl,
+        flow: serde_json::Value,
+    },
+}
+
+/// 🌉 `#[derive(dsl::DslEnum)]` only gives `WidgetDsl` a `dsl::DslVariants` binding, not
+/// `dsl::DslField` — so it can't sit directly in a plain (non-`Vec`) field on its own.
+/// `FlowOperationDsl`'s `WidgetsAdd.item`/`WidgetsPatch.patch` are REQUIRED, never-collection single
+/// values; this hand impl reuses the exact same "exactly one tagged statement" idiom
+/// `process_3d::SolidSpec` uses for the identical shape, so those fields stay a bare `WidgetDsl`
+/// rather than a `Box<WidgetDsl>`.
+impl dsl::DslField for WidgetDsl {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Statements(<WidgetDsl as dsl::DslVariants>::variants())
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Statements(vec![<WidgetDsl as dsl::DslVariants>::to_named_record(self)])
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Statements(items) if items.len() == 1 => <WidgetDsl as dsl::DslVariants>::from_named_record(&items[0].0, &items[0].1).map_err(|e| e.message),
+            other => Err(format!("expected exactly 1 tagged widget value, found {other:?}")),
+        }
+    }
+}
+
+fn widget_to_widget_dsl(widget: &Widget) -> WidgetDsl {
+    match widget {
+        Widget::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
+            WidgetDsl::Neuron { id: id.clone(), neuron_kind: neuron_kind.clone(), params: dictionary_to_option_dsl_map(params), input_ports: input_ports.clone(), output_ports: output_ports.clone(), preview: *preview }
+        }
+        Widget::InputSlider { id, value, min, max, step } => WidgetDsl::InputSlider { id: id.clone(), value: *value, min: *min, max: *max, step: *step },
+        Widget::InputNote { id, text } => WidgetDsl::InputNote { id: id.clone(), text: text.clone() },
+        Widget::InputImage { id, src } => WidgetDsl::InputImage { id: id.clone(), src: src.clone() },
+        Widget::Variable { id, name, schema } => WidgetDsl::Variable { id: id.clone(), name: name.clone(), schema: schema.clone() },
+        Widget::OutputPreview { id, preview, expanded } => WidgetDsl::OutputPreview { id: id.clone(), preview: dictionary_to_option_dsl_map(preview), expanded: btree_set_to_vec(expanded) },
+        Widget::OutputAction { id, action } => WidgetDsl::OutputAction { id: id.clone(), action: action.clone() },
+        Widget::OutputExport { id, format } => WidgetDsl::OutputExport { id: id.clone(), format: format.clone() },
+        Widget::Cluster { id, name, tree, flow } => WidgetDsl::Cluster { id: id.clone(), name: name.clone(), tree: tree_to_tree_dsl(tree), flow: serde_json::to_value(flow).unwrap_or(serde_json::Value::Null) },
+    }
+}
+
+fn widget_dsl_to_widget(widget: WidgetDsl) -> Widget {
+    match widget {
+        WidgetDsl::Neuron { id, neuron_kind, params, input_ports, output_ports, preview } => {
+            Widget::Neuron { id, neuron_kind, params: option_dsl_map_to_dictionary(params), input_ports, output_ports, preview }
+        }
+        WidgetDsl::InputSlider { id, value, min, max, step } => Widget::InputSlider { id, value, min, max, step },
+        WidgetDsl::InputNote { id, text } => Widget::InputNote { id, text },
+        WidgetDsl::InputImage { id, src } => Widget::InputImage { id, src },
+        WidgetDsl::Variable { id, name, schema } => Widget::Variable { id, name, schema },
+        WidgetDsl::OutputPreview { id, preview, expanded } => Widget::OutputPreview { id, preview: option_dsl_map_to_dictionary(preview), expanded: vec_to_btree_set(expanded) },
+        WidgetDsl::OutputAction { id, action } => Widget::OutputAction { id, action },
+        WidgetDsl::OutputExport { id, format } => Widget::OutputExport { id, format },
+        WidgetDsl::Cluster { id, name, tree, flow } => Widget::Cluster { id, name, tree: tree_dsl_to_tree(tree), flow: serde_json::from_value(flow).unwrap_or_default() },
+    }
+}
+
+/// 📄 Local mirror of `FlowFixture` — see this region's opening doc comment for why `widgets:
+/// Vec<Widget>` (which embeds foreign `Dictionary`/`Tree` types) can't stay as-is under a direct
+/// `#[derive(dsl::DslDocument)]`. `FlowDocument` (the derived read-view built by
+/// `FlowFixture::to_document()`) deliberately does NOT get this treatment — it's a computed
+/// projection for rendering, never itself round-tripped through DSL text.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "flow")]
+#[dsl(layout = "lines")]
+struct FlowFixtureDsl {
+    schema: String,
+    #[dsl(block)]
+    camera: CameraJson,
+    #[dsl(statements, block)]
+    widgets: Vec<WidgetDsl>,
+    synapses: Vec<SynapseSpec>,
+    layout: BTreeMap<String, WidgetLayout>,
+}
+
+fn flow_fixture_to_dsl(fixture: &FlowFixture) -> FlowFixtureDsl {
+    FlowFixtureDsl { schema: fixture.schema.clone(), camera: fixture.camera.clone(), widgets: fixture.widgets.iter().map(widget_to_widget_dsl).collect(), synapses: fixture.synapses.clone(), layout: fixture.layout.clone() }
+}
+
+fn flow_fixture_dsl_to_fixture(fixture: FlowFixtureDsl) -> FlowFixture {
+    FlowFixture { schema: fixture.schema, camera: fixture.camera, widgets: fixture.widgets.into_iter().map(widget_dsl_to_widget).collect(), synapses: fixture.synapses, layout: fixture.layout }
+}
+
+impl vcs::DocumentDsl for FlowFixture {
+    const EXTENSION: &'static str = "flow";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        Ok(flow_fixture_dsl_to_fixture(<FlowFixtureDsl as vcs::DocumentDsl>::parse_dsl(text)?))
+    }
+
+    fn print_dsl(&self) -> String {
+        <FlowFixtureDsl as vcs::DocumentDsl>::print_dsl(&flow_fixture_to_dsl(self))
+    }
+}
+//#endregion 🔖Dsl
+
+//#region 🔖OpText
+/// ✂️ Local DSL-only mirror of `FlowOperation` — `vcs::CollectionOperation<K,V,P>` is declared in the
+/// `vcs` crate (foreign type), so it cannot itself gain a `dsl::DslField`/`dsl::DslVariants` binding
+/// here (orphan rule). This twin flattens the `Widgets`/`Synapses { collection }` wrappers into their
+/// own keyworded variants — mirroring `imperative_core::ImperativeOperationDsl`'s/
+/// `process_3d::Process3dOperationDsl`'s identical fix for the same foreign-`CollectionOperation`
+/// problem — and converts at the `vcs::OpText` boundary only; `FlowOperation` itself, and every
+/// consumer matching on it (`flow_fixture_operations`, `flow/plugin`), is completely untouched.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum FlowOperationDsl {
+    #[dsl(key = "widgets-add")]
+    WidgetsAdd {
+        index: usize,
+        #[dsl(block)]
+        item: WidgetDsl,
+    },
+    #[dsl(key = "widgets-remove")]
+    WidgetsRemove { id: String },
+    #[dsl(key = "widgets-move")]
+    WidgetsMove {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    #[dsl(key = "widgets-patch")]
+    WidgetsPatch {
+        id: String,
+        #[dsl(block)]
+        patch: WidgetDsl,
+    },
+    #[dsl(key = "synapses-add")]
+    SynapsesAdd {
+        index: usize,
+        #[dsl(block)]
+        item: SynapseSpec,
+    },
+    #[dsl(key = "synapses-remove")]
+    SynapsesRemove { id: String },
+    #[dsl(key = "synapses-move")]
+    SynapsesMove {
+        id: String,
+        #[dsl(key = "to")]
+        to_index: usize,
+    },
+    #[dsl(key = "synapses-patch")]
+    SynapsesPatch {
+        id: String,
+        #[dsl(block)]
+        patch: SynapseSpec,
+    },
+    #[dsl(key = "layout")]
+    SetLayout { entries: Vec<FlowLayoutEntry> },
+    #[dsl(key = "fixture")]
+    SetFixture {
+        #[dsl(block)]
+        fixture: FlowFixtureDsl,
+    },
+}
+
+fn flow_operation_to_dsl(operation: &FlowOperation) -> FlowOperationDsl {
+    match operation {
+        FlowOperation::Widgets(CollectionOperation::Add { index, item }) => FlowOperationDsl::WidgetsAdd { index: *index, item: widget_to_widget_dsl(item) },
+        FlowOperation::Widgets(CollectionOperation::Remove { id }) => FlowOperationDsl::WidgetsRemove { id: id.clone() },
+        FlowOperation::Widgets(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::WidgetsMove { id: id.clone(), to_index: *to_index },
+        FlowOperation::Widgets(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::WidgetsPatch { id: id.clone(), patch: widget_to_widget_dsl(patch) },
+        FlowOperation::Synapses(CollectionOperation::Add { index, item }) => FlowOperationDsl::SynapsesAdd { index: *index, item: item.clone() },
+        FlowOperation::Synapses(CollectionOperation::Remove { id }) => FlowOperationDsl::SynapsesRemove { id: id.clone() },
+        FlowOperation::Synapses(CollectionOperation::Move { id, to_index }) => FlowOperationDsl::SynapsesMove { id: id.clone(), to_index: *to_index },
+        FlowOperation::Synapses(CollectionOperation::Patch { id, patch }) => FlowOperationDsl::SynapsesPatch { id: id.clone(), patch: patch.clone() },
+        FlowOperation::SetLayout { entries } => FlowOperationDsl::SetLayout { entries: entries.clone() },
+        FlowOperation::SetFixture { fixture } => FlowOperationDsl::SetFixture { fixture: flow_fixture_to_dsl(fixture) },
+    }
+}
+
+fn flow_operation_from_dsl(operation: FlowOperationDsl) -> FlowOperation {
+    match operation {
+        FlowOperationDsl::WidgetsAdd { index, item } => FlowOperation::Widgets(CollectionOperation::Add { index, item: widget_dsl_to_widget(item) }),
+        FlowOperationDsl::WidgetsRemove { id } => FlowOperation::Widgets(CollectionOperation::Remove { id }),
+        FlowOperationDsl::WidgetsMove { id, to_index } => FlowOperation::Widgets(CollectionOperation::Move { id, to_index }),
+        FlowOperationDsl::WidgetsPatch { id, patch } => FlowOperation::Widgets(CollectionOperation::Patch { id, patch: widget_dsl_to_widget(patch) }),
+        FlowOperationDsl::SynapsesAdd { index, item } => FlowOperation::Synapses(CollectionOperation::Add { index, item }),
+        FlowOperationDsl::SynapsesRemove { id } => FlowOperation::Synapses(CollectionOperation::Remove { id }),
+        FlowOperationDsl::SynapsesMove { id, to_index } => FlowOperation::Synapses(CollectionOperation::Move { id, to_index }),
+        FlowOperationDsl::SynapsesPatch { id, patch } => FlowOperation::Synapses(CollectionOperation::Patch { id, patch }),
+        FlowOperationDsl::SetLayout { entries } => FlowOperation::SetLayout { entries },
+        FlowOperationDsl::SetFixture { fixture } => FlowOperation::SetFixture { fixture: flow_fixture_dsl_to_fixture(fixture) },
+    }
+}
+
+impl vcs::OpText for FlowOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        Ok(flow_operation_from_dsl(<FlowOperationDsl as vcs::OpText>::parse_op(line)?))
+    }
+
+    fn print_op(&self) -> String {
+        <FlowOperationDsl as vcs::OpText>::print_op(&flow_operation_to_dsl(self))
+    }
+}
+//#endregion 🔖OpText
 
 pub type FlowEnvelope = DocumentVcsEnvelope<FlowFixture, FlowOperation>;
 pub type FlowStore = DocumentVcsStore<FlowFixture, FlowOperation>;
@@ -4581,6 +5003,75 @@ mod flow_vcs_tests {
         }
         assert_eq!(store.envelope().vcs.edits.len(), 1, "coalesced drag must produce exactly one edit");
         assert_eq!(store.projection().expect("projection").layout.get("slider"), Some(&WidgetLayout { x: 0.0, y: 30.0 }));
+    }
+
+    /// 📜 Exercises every `Widget` variant (including `Cluster`'s nested `Tree`/`flow` payload,
+    /// `Dictionary`-bearing `params`/`preview`, and `BTreeSet` `expanded`) through the `dsl::` derive
+    /// layer — the ground-truth proof for the `🔖Dsl` region built on top of `FlowFixture`.
+    #[test]
+    fn flow_fixture_dsl_round_trips_including_cluster_widget() {
+        let mut fixture = FlowFixture::default();
+        fixture.widgets.push(Widget::Cluster {
+            id: "cluster-1".into(),
+            name: "Cluster One".into(),
+            tree: Tree {
+                neurons: vec![
+                    Neuron { id: "inner-in".into(), kind: "core.number".into(), params: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(1.0))), tree: None },
+                    Neuron {
+                        id: "inner-add".into(),
+                        kind: "math.add".into(),
+                        params: Dictionary::new().insert("count", NeuralValue::Atom(Atom::Integer(2))),
+                        tree: Some(Box::new(Tree { neurons: vec![Neuron::with_kind("nested", "core.text", Dictionary::new().insert("value", NeuralValue::Atom(Atom::String("deep".into()))))], synapses: vec![] })),
+                    },
+                ],
+                synapses: vec![Synapse { id: "inner-s1".into(), from: "inner-in".into(), to: "inner-add".into(), from_port: "number".into(), to_port: "a".into() }],
+            },
+            flow: FlowGui { camera: CameraJson { x: 1.0, y: 2.0, zoom: 1.5 }, nodes: BTreeMap::new(), previews: Vec::new() },
+        });
+        fixture.widgets.push(Widget::OutputPreview {
+            id: "preview2".into(),
+            preview: Dictionary::new().insert("value", NeuralValue::Atom(Atom::Decimal(3.5))),
+            expanded: BTreeSet::from(["a".to_string(), "b".to_string()]),
+        });
+        vcs::test_support::assert_dsl_round_trip(&fixture);
+    }
+
+    /// 📜 Exercises `vcs::OpText` for every `FlowOperation` variant — the ground-truth proof for the
+    /// `🔖OpText` region's `FlowOperationDsl` twin.
+    #[test]
+    fn flow_operation_op_text_round_trips_every_variant() {
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Remove { id: "w1".into() }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Move { id: "w1".into(), to_index: 2 }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Widgets(CollectionOperation::Patch { id: "w1".into(), patch: sample_widget("w1") }));
+        let synapse = SynapseSpec { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "y".into() };
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Add { index: 0, item: synapse.clone() }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Remove { id: "s1".into() }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Move { id: "s1".into(), to_index: 1 }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::Synapses(CollectionOperation::Patch { id: "s1".into(), patch: synapse }));
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: Some(WidgetLayout { x: 1.0, y: 2.0 }) }] });
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetLayout { entries: vec![FlowLayoutEntry { id: "w1".into(), layout: None }] });
+        vcs::test_support::assert_op_line_round_trip(&FlowOperation::SetFixture { fixture: FlowFixture::default() });
+    }
+
+    /// 📜 `vcs::test_support::assert_store_roundtrip` over a real `DocumentVcsStore<FlowFixture,
+    /// FlowOperation>` — proves the `Operation`/`OperationDiff` (`🔖Operations`) and `OpText`
+    /// (`🔖OpText`) layers compose correctly end to end, matching every other converted crate's test.
+    #[test]
+    fn flow_fixture_satisfies_vcs_test_support_store_roundtrip() {
+        let document = FlowFixture::default();
+        let operation = FlowOperation::Widgets(CollectionOperation::Add { index: 0, item: sample_widget("w1") });
+        vcs::test_support::assert_store_roundtrip(document, operation);
+    }
+
+    /// 📜 `flow/example/default.flow` is the handcrafted `.flow` DSL-text migration of what used to
+    /// be `default.flow.json` (see this crate's ticket history) — this is the permanent proof that
+    /// the checked-in fixture still parses and round trips, not a one-time migration script.
+    #[test]
+    fn default_flow_example_dsl_round_trips() {
+        let text = include_str!("../../example/default.flow");
+        let fixture = <FlowFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.flow must parse");
+        vcs::test_support::assert_dsl_round_trip(&fixture);
     }
 }
 // #endregion 🔖DocumentVcs
@@ -5246,7 +5737,7 @@ mod tests {
     fn flow_fixture_with_synapses_builds_dag_edges_and_ports() {
         let mut host = host_with_test_bridge();
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
-        host.replace_fixture(FlowHost::parse_fixture_json(include_str!("../../example/default.flow.json")).expect("fixture"));
+        host.replace_fixture(<FlowFixture as vcs::DocumentDsl>::parse_dsl(include_str!("../../example/default.flow")).expect("fixture"));
         assert!(!host.dag.fixture.edges.is_empty(), "synapses should become dag edges");
         let add = host.dag.fixture.nodes.iter().find(|node| node.id == "add").expect("add node");
         assert_eq!(add.inputs().len(), 2);
@@ -5286,19 +5777,34 @@ mod tests {
         assert!(matches!(node.kind, DagNodeKind::Export { .. }));
     }
 
+    /// ↩️ Exercises the standard `vcs::DocumentVcsStore<FlowFixture, FlowOperation>` undo/redo
+    /// mechanism directly (the same one `FlowHost::undo`/`redo` are built on) — add a widget, undo,
+    /// confirm it's gone, redo, confirm it's back — in place of the old test's direct assertions on a
+    /// hand-rolled `Vec<FlowFixture>` snapshot stack.
     #[test]
     fn undo_redo_add_widget() {
         let mut host = host_with_test_bridge();
-        let count_before = host.fixture.widgets.len();
+        let fixture_before = host.fixture.clone();
+        let count_before = fixture_before.widgets.len();
         let id = host.add_widget(r#"{"kind":"inputNote","text":"undo me"}"#, 42.0, 42.0).unwrap();
         assert_eq!(host.fixture.widgets.len(), count_before + 1);
-        assert!(host.can_undo());
-        assert!(host.undo());
-        assert_eq!(host.fixture.widgets.len(), count_before);
-        assert!(!host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
-        assert!(host.can_redo());
-        assert!(host.redo());
-        assert!(host.fixture.widgets.iter().any(|w| widget_id_for(w) == id));
+
+        let operations = flow_fixture_operations(&fixture_before, &host.fixture);
+        assert!(!operations.is_empty(), "add_widget must diff into vcs operations");
+
+        let envelope: FlowEnvelope = create_document_vcs_envelope(FLOW_DOCUMENT_SCHEMA, "test", fixture_before, None);
+        let mut store = FlowStore::new(envelope);
+        store.dispatch(DocumentVcsCommand::Apply { operations, description: None }).expect("apply add-widget operations");
+        assert_eq!(store.projection().expect("projection").widgets.len(), count_before + 1);
+
+        store.dispatch(DocumentVcsCommand::Undo).expect("undo");
+        let after_undo = store.projection().expect("projection");
+        assert_eq!(after_undo.widgets.len(), count_before);
+        assert!(!after_undo.widgets.iter().any(|w| widget_id_for(w) == id));
+
+        store.dispatch(DocumentVcsCommand::Redo).expect("redo");
+        let after_redo = store.projection().expect("projection");
+        assert!(after_redo.widgets.iter().any(|w| widget_id_for(w) == id));
     }
 
     #[test]

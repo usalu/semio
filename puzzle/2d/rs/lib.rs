@@ -567,192 +567,591 @@ impl BoardSession {
 // #endregion 🔖WasmSession
 
 // #region 🔖DocumentVcs
-// 🧩 Puzzle 2d document VCS on `vcs`: granular JSON-document operations over the bare fixture
-// projection (nodes/edges keyed by id, camera + scalar fields) with a whole-document fallback, so
-// disjoint edits converge instead of clobbering. See `shooting::ShootingOperation` for the typed analogue.
+// 🧩 Puzzle 2d document VCS on `vcs`: a typed fixture projection (schema/camera/nodes/edges/meta)
+// with granular per-collection operations and a whole-document fallback, so disjoint edits converge
+// instead of clobbering. See `fem_2d::Fem2dOperation` for the sibling typed pattern this mirrors.
 use serde::{Deserialize, Serialize};
 use serde_json::Value;
 use vcs::{Operation, OperationDiff};
 
 pub const PUZZLE_2D_SCHEMA: &str = "puzzle.2d.fixture";
 
-/// 🧩 The puzzle-2d projection is the bare fixture json (schema/camera/nodes/edges/…).
-pub type Puzzle2dProjection = Value;
-pub type Puzzle2dEnvelope = vcs::DocumentVcsEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
-pub type Puzzle2dStore = vcs::DocumentVcsStore<Puzzle2dProjection, Puzzle2dOperation>;
-
-/// 🔧 One granular mutation of a JSON puzzle document. `UpsertItem`/`RemoveItem` address an element
-/// of a top-level id-keyed array (`nodes`, `edges`, …) so disjoint edits converge; `SetField` writes
-/// a scalar/object field (`camera`, …); `ReplaceDocument` swaps the whole document (example load,
-/// engine fill, layout — the `shooting::ShootingOperation::SetFixture` analogue).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(tag = "operation", rename_all = "camelCase")]
-pub enum Puzzle2dOperation {
-    UpsertItem { collection: String, item: Value },
-    RemoveItem { collection: String, id: String },
-    SetField { key: String, value: Value },
-    ReplaceDocument { document: Value },
+// #region 🔖Document
+/// 🎥 The canvas camera (pan/zoom) for a puzzle 2d fixture.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dCamera {
+    pub x: f64,
+    pub y: f64,
+    pub zoom: f64,
 }
 
-/// 🧮 An ordered list of granular operations replayed over the projection; coalesced edits concatenate.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct Puzzle2dDiff {
-    pub operations: Vec<Puzzle2dOperation>,
-}
-
-fn puzzle2d_item_id(item: &Value) -> Option<&str> {
-    item.get("id").and_then(|value| value.as_str())
-}
-
-fn apply_puzzle2d_operation(document: &mut Value, operation: &Puzzle2dOperation) {
-    match operation {
-        Puzzle2dOperation::UpsertItem { collection, item } => {
-            let Some(object) = document.as_object_mut() else {
-                return;
-            };
-            let array = object.entry(collection.clone()).or_insert_with(|| Value::Array(Vec::new()));
-            let Some(array) = array.as_array_mut() else {
-                return;
-            };
-            if let Some(id) = puzzle2d_item_id(item).map(str::to_string) {
-                if let Some(slot) = array.iter_mut().find(|entry| puzzle2d_item_id(entry) == Some(id.as_str())) {
-                    *slot = item.clone();
-                    return;
-                }
-            }
-            array.push(item.clone());
-        }
-        Puzzle2dOperation::RemoveItem { collection, id } => {
-            if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
-                array.retain(|entry| puzzle2d_item_id(entry) != Some(id.as_str()));
-            }
-        }
-        Puzzle2dOperation::SetField { key, value } => {
-            if let Some(object) = document.as_object_mut() {
-                object.insert(key.clone(), value.clone());
-            }
-        }
-        Puzzle2dOperation::ReplaceDocument { document: next } => *document = next.clone(),
+impl Default for Puzzle2dCamera {
+    fn default() -> Self {
+        Self { x: 0.0, y: 0.0, zoom: 1.0 }
     }
 }
 
-fn puzzle2d_find_item<'a>(document: &'a Value, collection: &str, id: &str) -> Option<&'a Value> {
-    document.get(collection).and_then(|value| value.as_array()).and_then(|array| array.iter().find(|entry| puzzle2d_item_id(entry) == Some(id)))
+/// 🔘 One port on a node's rim — `handle_kind` gates link compatibility, `angle`/`radius` place it.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dHandle {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub handle_kind: Option<String>,
+    pub angle: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub color: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+}
+
+/// 🔵 One node — `shape: "circle"` (default, radius-sized) or `"rectangle"` (width/height-sized);
+/// `handles` are its rim ports. Mirrors `infinite_board_port_directed::scene_json::FixtureJson`'s
+/// per-node fields, the canonical parser this fixture format round-trips through.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dNode {
+    pub id: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub node_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub shape: Option<String>,
+    pub x: f64,
+    pub y: f64,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub radius: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub width: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub height: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub text: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub icon_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub root: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub scale: Option<f64>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+    #[serde(default)]
+    pub handles: Vec<Puzzle2dHandle>,
+}
+
+/// ➡️ One directed link between two handle ids.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dEdge {
+    pub id: String,
+    pub source: String,
+    pub target: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub edge_kind: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub source_tip: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub target_tip: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub visible: Option<bool>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub locked: Option<bool>,
+}
+
+/// 🔗 How specifically two handle/wire kinds are allowed to link — `vortex` is a ported-graph alias
+/// for `handle` (see `infinite_board_port_directed_normal::parse_compat_specificity`).
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
+#[serde(rename_all = "lowercase")]
+pub enum Puzzle2dCompatSpecificity {
+    #[dsl(key = "general")]
+    General,
+    #[dsl(key = "node")]
+    Node,
+    #[dsl(key = "edge")]
+    Edge,
+    #[dsl(key = "handle")]
+    Handle,
+    #[dsl(key = "wire")]
+    Wire,
+    #[dsl(key = "vortex")]
+    Vortex,
+}
+
+/// 🧩 One allowed (or, unidirectional, one-way-allowed) link pair between two handle/wire kind ids.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dKindCompatibility {
+    #[serde(default)]
+    pub bidirectional: bool,
+    pub specificity: Puzzle2dCompatSpecificity,
+    pub source: String,
+    pub target: String,
+}
+
+/// 🗂️ Fixture-carried metadata: the manifest this fixture's kinds resolve against, its explicit
+/// link-compatibility table, and (rarely) a self-contained `kindCatalogs` payload for fixtures
+/// exported standalone — that catalog shape is genuinely freeform (handle/wire/edge kind rows vary
+/// per manifest), so it stays untyped rather than duplicating the manifest schema here.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dMeta {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub manifest_id: Option<String>,
+    #[serde(default)]
+    pub kind_compatibility: Vec<Puzzle2dKindCompatibility>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    pub kind_catalogs: Option<serde_json::Value>,
+}
+
+/// 🧩 The puzzle-2d projection: a typed fixture document (schema/camera/nodes/edges/meta) — see
+/// `infinite_board_port_directed::scene_json::FixtureJson` for the canonical parser it round-trips
+/// through and the two example fixtures under `puzzle/2d/example/` for real-world shapes.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[serde(rename_all = "camelCase")]
+#[dsl(extension = "puzzle2d", layout = "lines")]
+pub struct Puzzle2dProjection {
+    pub schema: String,
+    #[dsl(block)]
+    pub camera: Puzzle2dCamera,
+    #[serde(default)]
+    pub nodes: Vec<Puzzle2dNode>,
+    #[serde(default)]
+    pub edges: Vec<Puzzle2dEdge>,
+    #[serde(default)]
+    #[dsl(block)]
+    pub meta: Puzzle2dMeta,
+}
+
+impl Default for Puzzle2dProjection {
+    fn default() -> Self {
+        Self { schema: PUZZLE_2D_SCHEMA.to_string(), camera: Puzzle2dCamera::default(), nodes: Vec::new(), edges: Vec::new(), meta: Puzzle2dMeta::default() }
+    }
+}
+
+pub type Puzzle2dEnvelope = vcs::DocumentVcsEnvelope<Puzzle2dProjection, Puzzle2dOperation>;
+pub type Puzzle2dStore = vcs::DocumentVcsStore<Puzzle2dProjection, Puzzle2dOperation>;
+
+pub fn empty_puzzle2d_projection() -> Puzzle2dProjection {
+    Puzzle2dProjection::default()
+}
+// #endregion 🔖Document
+
+// #region 🔖Collections
+/// 🪪 Stable-id accessor shared by every id-keyed document collection entry.
+trait Puzzle2dHasId {
+    fn id(&self) -> &str;
+}
+
+impl Puzzle2dHasId for Puzzle2dNode {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+impl Puzzle2dHasId for Puzzle2dEdge {
+    fn id(&self) -> &str {
+        &self.id
+    }
+}
+
+/// 🩹 Sparse id-keyed collection diff — removals plus id-or-index `set`s (replace when the id
+/// already exists, else insert at the recorded index).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dNodesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle2dNode)>,
+}
+
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dEdgesDiff {
+    pub removed: Vec<String>,
+    pub set: Vec<(usize, Puzzle2dEdge)>,
+}
+
+fn apply_puzzle2d_collection_diff<T: Puzzle2dHasId + Clone>(items: &mut Vec<T>, removed: &[String], set: &[(usize, T)]) {
+    for id in removed {
+        items.retain(|item| item.id() != id);
+    }
+    for (index, item) in set {
+        if let Some(pos) = items.iter().position(|entry| entry.id() == item.id()) {
+            items[pos] = item.clone();
+        } else {
+            items.insert((*index).min(items.len()), item.clone());
+        }
+    }
+}
+
+fn puzzle2d_index_of<T: Puzzle2dHasId>(items: &[T], id: &str) -> Option<usize> {
+    items.iter().position(|item| item.id() == id)
+}
+// #endregion 🔖Collections
+
+// #region 🔖Operations
+/// 🩹 Sparse puzzle-2d diff over both id-keyed collections plus the scalar camera/meta.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[serde(rename_all = "camelCase")]
+pub struct Puzzle2dDiff {
+    /// 🌍 Whole-document replacement (example load, engine fill, layout); wins over every field below.
+    pub document: Option<Puzzle2dProjection>,
+    pub nodes: Puzzle2dNodesDiff,
+    pub edges: Puzzle2dEdgesDiff,
+    pub camera: Option<Puzzle2dCamera>,
+    pub meta: Option<Puzzle2dMeta>,
+}
+
+fn puzzle2d_diff_absorb(diff: &mut Puzzle2dDiff, other: Puzzle2dDiff) {
+    if other.document.is_some() {
+        *diff = Puzzle2dDiff { document: other.document, ..Default::default() };
+        return;
+    }
+    diff.nodes.removed.extend(other.nodes.removed);
+    diff.nodes.set.extend(other.nodes.set);
+    diff.edges.removed.extend(other.edges.removed);
+    diff.edges.set.extend(other.edges.set);
+    if other.camera.is_some() {
+        diff.camera = other.camera;
+    }
+    if other.meta.is_some() {
+        diff.meta = other.meta;
+    }
 }
 
 impl OperationDiff<Puzzle2dProjection> for Puzzle2dDiff {
     fn apply(&self, projection: &Puzzle2dProjection) -> Puzzle2dProjection {
+        if let Some(document) = &self.document {
+            return document.clone();
+        }
         let mut next = projection.clone();
-        for operation in &self.operations {
-            apply_puzzle2d_operation(&mut next, operation);
+        apply_puzzle2d_collection_diff(&mut next.nodes, &self.nodes.removed, &self.nodes.set);
+        apply_puzzle2d_collection_diff(&mut next.edges, &self.edges.removed, &self.edges.set);
+        if let Some(camera) = &self.camera {
+            next.camera = camera.clone();
+        }
+        if let Some(meta) = &self.meta {
+            next.meta = meta.clone();
         }
         next
     }
 
     fn absorb(&mut self, other: Self) {
-        self.operations.extend(other.operations);
+        puzzle2d_diff_absorb(self, other);
     }
+}
+
+/// 🧮 Puzzle-2d operation: id-keyed node/edge edits plus scalar camera/meta, each with a true inverse
+/// computed from the pre-operation projection, and a whole-document replace for example loads.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+#[serde(tag = "operation", rename_all = "camelCase")]
+pub enum Puzzle2dOperation {
+    #[dsl(key = "setNode")]
+    SetNode { index: usize, #[dsl(block)] node: Puzzle2dNode },
+    #[dsl(key = "removeNode")]
+    RemoveNode { id: String },
+    #[dsl(key = "setEdge")]
+    SetEdge { index: usize, #[dsl(block)] edge: Puzzle2dEdge },
+    #[dsl(key = "removeEdge")]
+    RemoveEdge { id: String },
+    #[dsl(key = "setCamera")]
+    SetCamera { #[dsl(block)] camera: Puzzle2dCamera },
+    #[dsl(key = "setMeta")]
+    SetMeta { #[dsl(block)] meta: Puzzle2dMeta },
+    /// 🌍 Replaces the whole document (example import / reset / engine fill).
+    #[dsl(key = "setDocument")]
+    SetDocument { #[dsl(block)] document: Puzzle2dProjection },
+}
+
+fn puzzle2d_operation_diff(operation: &Puzzle2dOperation) -> Puzzle2dDiff {
+    let mut diff = Puzzle2dDiff::default();
+    match operation {
+        Puzzle2dOperation::SetNode { index, node } => diff.nodes.set.push((*index, node.clone())),
+        Puzzle2dOperation::RemoveNode { id } => diff.nodes.removed.push(id.clone()),
+        Puzzle2dOperation::SetEdge { index, edge } => diff.edges.set.push((*index, edge.clone())),
+        Puzzle2dOperation::RemoveEdge { id } => diff.edges.removed.push(id.clone()),
+        Puzzle2dOperation::SetCamera { camera } => diff.camera = Some(camera.clone()),
+        Puzzle2dOperation::SetMeta { meta } => diff.meta = Some(meta.clone()),
+        Puzzle2dOperation::SetDocument { document } => diff.document = Some(document.clone()),
+    }
+    diff
 }
 
 impl Operation<Puzzle2dProjection> for Puzzle2dOperation {
     type Diff = Puzzle2dDiff;
 
     fn diff(&self, _projection: &Puzzle2dProjection) -> Puzzle2dDiff {
-        Puzzle2dDiff { operations: vec![self.clone()] }
+        puzzle2d_operation_diff(self)
     }
 
     fn backwards(&self, projection: &Puzzle2dProjection) -> Vec<Self> {
         match self {
-            Puzzle2dOperation::UpsertItem { collection, item } => {
-                let id = puzzle2d_item_id(item).unwrap_or_default();
-                match puzzle2d_find_item(projection, collection, id) {
-                    Some(previous) => vec![Puzzle2dOperation::UpsertItem { collection: collection.clone(), item: previous.clone() }],
-                    None => vec![Puzzle2dOperation::RemoveItem { collection: collection.clone(), id: id.to_string() }],
-                }
-            }
-            Puzzle2dOperation::RemoveItem { collection, id } => match puzzle2d_find_item(projection, collection, id) {
-                Some(previous) => vec![Puzzle2dOperation::UpsertItem { collection: collection.clone(), item: previous.clone() }],
-                None => Vec::new(),
+            Puzzle2dOperation::SetNode { node, .. } => match puzzle2d_index_of(&projection.nodes, &node.id) {
+                Some(index) => vec![Puzzle2dOperation::SetNode { index, node: projection.nodes[index].clone() }],
+                None => vec![Puzzle2dOperation::RemoveNode { id: node.id.clone() }],
             },
-            Puzzle2dOperation::SetField { key, .. } => vec![Puzzle2dOperation::SetField { key: key.clone(), value: projection.get(key).cloned().unwrap_or(Value::Null) }],
-            Puzzle2dOperation::ReplaceDocument { .. } => vec![Puzzle2dOperation::ReplaceDocument { document: projection.clone() }],
+            Puzzle2dOperation::RemoveNode { id } => puzzle2d_index_of(&projection.nodes, id).map(|index| vec![Puzzle2dOperation::SetNode { index, node: projection.nodes[index].clone() }]).unwrap_or_default(),
+            Puzzle2dOperation::SetEdge { edge, .. } => match puzzle2d_index_of(&projection.edges, &edge.id) {
+                Some(index) => vec![Puzzle2dOperation::SetEdge { index, edge: projection.edges[index].clone() }],
+                None => vec![Puzzle2dOperation::RemoveEdge { id: edge.id.clone() }],
+            },
+            Puzzle2dOperation::RemoveEdge { id } => puzzle2d_index_of(&projection.edges, id).map(|index| vec![Puzzle2dOperation::SetEdge { index, edge: projection.edges[index].clone() }]).unwrap_or_default(),
+            Puzzle2dOperation::SetCamera { .. } => vec![Puzzle2dOperation::SetCamera { camera: projection.camera.clone() }],
+            Puzzle2dOperation::SetMeta { .. } => vec![Puzzle2dOperation::SetMeta { meta: projection.meta.clone() }],
+            Puzzle2dOperation::SetDocument { .. } => vec![Puzzle2dOperation::SetDocument { document: projection.clone() }],
+        }
+    }
+}
+// #endregion 🔖Operations
+
+// #region 🔖ValueBridge
+// 🌉 `puzzle-plugin`'s scene-mutation helpers predate this typed projection and stay on a bare
+// `serde_json::Value` scratch fixture (out of scope for this ticket — see
+// `.repo/🎫/…/convertpuzzle2d3d5dtotypeddslderiveengine`). Bridging `Puzzle2dOperation`/`Puzzle2dDiff`
+// onto that `Value` boundary too keeps `puzzle2d_document_delta_operations(&Value, &Value)` and the
+// plugin's `DocumentApp::Projection = Value` compiling unchanged: `apply` serializes the typed
+// payload back to JSON and splices it into the id-keyed array/field exactly like the pre-migration
+// untyped operation did.
+fn puzzle2d_value_item_id(item: &Value) -> Option<&str> {
+    item.get("id").and_then(|value| value.as_str())
+}
+
+/// 🩹 Replaces the id-matching entry in place, else inserts at `index` (clamped to the current
+/// length) — matching `apply_puzzle2d_collection_diff`'s insert-at-recorded-index semantics on the
+/// typed projection, so undo/redo restores the original array position on this `Value` bridge too.
+fn puzzle2d_upsert_value_item(document: &mut Value, collection: &str, index: usize, item: Value) {
+    let Some(object) = document.as_object_mut() else {
+        return;
+    };
+    let array = object.entry(collection.to_string()).or_insert_with(|| Value::Array(Vec::new()));
+    let Some(array) = array.as_array_mut() else {
+        return;
+    };
+    if let Some(id) = puzzle2d_value_item_id(&item).map(str::to_string) {
+        if let Some(slot) = array.iter_mut().find(|entry| puzzle2d_value_item_id(entry) == Some(id.as_str())) {
+            *slot = item;
+            return;
+        }
+    }
+    array.insert(index.min(array.len()), item);
+}
+
+fn puzzle2d_remove_value_item(document: &mut Value, collection: &str, id: &str) {
+    if let Some(array) = document.get_mut(collection).and_then(|value| value.as_array_mut()) {
+        array.retain(|entry| puzzle2d_value_item_id(entry) != Some(id));
+    }
+}
+
+fn apply_puzzle2d_operation_to_value(document: &mut Value, operation: &Puzzle2dOperation) {
+    match operation {
+        Puzzle2dOperation::SetNode { index, node } => puzzle2d_upsert_value_item(document, "nodes", *index, serde_json::to_value(node).unwrap_or(Value::Null)),
+        Puzzle2dOperation::RemoveNode { id } => puzzle2d_remove_value_item(document, "nodes", id),
+        Puzzle2dOperation::SetEdge { index, edge } => puzzle2d_upsert_value_item(document, "edges", *index, serde_json::to_value(edge).unwrap_or(Value::Null)),
+        Puzzle2dOperation::RemoveEdge { id } => puzzle2d_remove_value_item(document, "edges", id),
+        Puzzle2dOperation::SetCamera { camera } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(Value::Null));
+            }
+        }
+        Puzzle2dOperation::SetMeta { meta } => {
+            if let Some(object) = document.as_object_mut() {
+                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
+            }
+        }
+        Puzzle2dOperation::SetDocument { document: next } => *document = serde_json::to_value(next).unwrap_or_else(|_| document.clone()),
+    }
+}
+
+fn puzzle2d_value_collection<'a>(document: &'a Value, collection: &str) -> &'a [Value] {
+    document.get(collection).and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[])
+}
+
+fn puzzle2d_value_item_index<T: serde::de::DeserializeOwned>(document: &Value, collection: &str, id: &str) -> Option<(usize, T)> {
+    let items = puzzle2d_value_collection(document, collection);
+    let index = items.iter().position(|entry| puzzle2d_value_item_id(entry) == Some(id))?;
+    serde_json::from_value(items[index].clone()).ok().map(|item| (index, item))
+}
+
+impl OperationDiff<Value> for Puzzle2dDiff {
+    fn apply(&self, projection: &Value) -> Value {
+        if let Some(document) = &self.document {
+            return serde_json::to_value(document).unwrap_or_else(|_| projection.clone());
+        }
+        let mut next = projection.clone();
+        for id in &self.nodes.removed {
+            puzzle2d_remove_value_item(&mut next, "nodes", id);
+        }
+        for (index, node) in &self.nodes.set {
+            puzzle2d_upsert_value_item(&mut next, "nodes", *index, serde_json::to_value(node).unwrap_or(Value::Null));
+        }
+        for id in &self.edges.removed {
+            puzzle2d_remove_value_item(&mut next, "edges", id);
+        }
+        for (index, edge) in &self.edges.set {
+            puzzle2d_upsert_value_item(&mut next, "edges", *index, serde_json::to_value(edge).unwrap_or(Value::Null));
+        }
+        if let Some(camera) = &self.camera {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("camera".to_string(), serde_json::to_value(camera).unwrap_or(Value::Null));
+            }
+        }
+        if let Some(meta) = &self.meta {
+            if let Some(object) = next.as_object_mut() {
+                object.insert("meta".to_string(), serde_json::to_value(meta).unwrap_or(Value::Null));
+            }
+        }
+        next
+    }
+
+    fn absorb(&mut self, other: Self) {
+        puzzle2d_diff_absorb(self, other);
+    }
+}
+
+impl Operation<Value> for Puzzle2dOperation {
+    type Diff = Puzzle2dDiff;
+
+    fn diff(&self, _projection: &Value) -> Puzzle2dDiff {
+        puzzle2d_operation_diff(self)
+    }
+
+    fn backwards(&self, projection: &Value) -> Vec<Self> {
+        match self {
+            Puzzle2dOperation::SetNode { node, .. } => match puzzle2d_value_item_index::<Puzzle2dNode>(projection, "nodes", &node.id) {
+                Some((index, previous)) => vec![Puzzle2dOperation::SetNode { index, node: previous }],
+                None => vec![Puzzle2dOperation::RemoveNode { id: node.id.clone() }],
+            },
+            Puzzle2dOperation::RemoveNode { id } => puzzle2d_value_item_index::<Puzzle2dNode>(projection, "nodes", id).map(|(index, previous)| vec![Puzzle2dOperation::SetNode { index, node: previous }]).unwrap_or_default(),
+            Puzzle2dOperation::SetEdge { edge, .. } => match puzzle2d_value_item_index::<Puzzle2dEdge>(projection, "edges", &edge.id) {
+                Some((index, previous)) => vec![Puzzle2dOperation::SetEdge { index, edge: previous }],
+                None => vec![Puzzle2dOperation::RemoveEdge { id: edge.id.clone() }],
+            },
+            Puzzle2dOperation::RemoveEdge { id } => puzzle2d_value_item_index::<Puzzle2dEdge>(projection, "edges", id).map(|(index, previous)| vec![Puzzle2dOperation::SetEdge { index, edge: previous }]).unwrap_or_default(),
+            Puzzle2dOperation::SetCamera { .. } => {
+                let camera: Puzzle2dCamera = projection.get("camera").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                vec![Puzzle2dOperation::SetCamera { camera }]
+            }
+            Puzzle2dOperation::SetMeta { .. } => {
+                let meta: Puzzle2dMeta = projection.get("meta").and_then(|value| serde_json::from_value(value.clone()).ok()).unwrap_or_default();
+                vec![Puzzle2dOperation::SetMeta { meta }]
+            }
+            Puzzle2dOperation::SetDocument { .. } => vec![Puzzle2dOperation::SetDocument { document: serde_json::from_value(projection.clone()).unwrap_or_default() }],
         }
     }
 }
 
-fn puzzle2d_is_id_keyed_array(value: Option<&Value>) -> bool {
-    value.and_then(|value| value.as_array()).is_some_and(|array| array.iter().all(|entry| puzzle2d_item_id(entry).is_some()))
-}
-
-fn puzzle2d_collect_collection_delta(collection: &str, before: &[Value], after: &[Value], operations: &mut Vec<Puzzle2dOperation>) {
-    for entry in after {
-        let id = puzzle2d_item_id(entry).unwrap_or_default();
-        if before.iter().find(|candidate| puzzle2d_item_id(candidate) == Some(id)) != Some(entry) {
-            operations.push(Puzzle2dOperation::UpsertItem { collection: collection.to_string(), item: entry.clone() });
+/// 🧮 Collects the sparse `set`/`removed` delta for one id-keyed `Value` array collection into typed
+/// entries. Returns `false` (caller falls back to `SetDocument`) whenever an entry is missing an
+/// `id` or fails to deserialize into `T` — the granular path only ever fires when it's exact.
+fn puzzle2d_collect_value_collection_delta<T>(before: &[Value], after: &[Value], set: &mut Vec<(usize, T)>, removed: &mut Vec<String>) -> bool
+where
+    T: serde::de::DeserializeOwned,
+{
+    for (index, entry) in after.iter().enumerate() {
+        let Some(id) = puzzle2d_value_item_id(entry) else {
+            return false;
+        };
+        if before.iter().find(|candidate| puzzle2d_value_item_id(candidate) == Some(id)) != Some(entry) {
+            let Ok(item) = serde_json::from_value::<T>(entry.clone()) else {
+                return false;
+            };
+            set.push((index, item));
         }
     }
     for entry in before {
-        let id = puzzle2d_item_id(entry).unwrap_or_default();
-        if !after.iter().any(|candidate| puzzle2d_item_id(candidate) == Some(id)) {
-            operations.push(Puzzle2dOperation::RemoveItem { collection: collection.to_string(), id: id.to_string() });
+        let Some(id) = puzzle2d_value_item_id(entry) else {
+            return false;
+        };
+        if !after.iter().any(|candidate| puzzle2d_value_item_id(candidate) == Some(id)) {
+            removed.push(id.to_string());
         }
     }
+    true
 }
 
-/// 🧮 Computes the granular operation sequence turning `before` into `after`. Top-level id-keyed arrays diff
-/// per element id; other fields become `SetField`. Falls back to a single `ReplaceDocument` whenever
-/// the granular replay would not reproduce `after` exactly (reorders, id-less arrays, structural
-/// changes) — so the emitted operations are always exact while staying granular for the common edits.
+/// 🧮 Computes the granular typed operation sequence turning `before` into `after` (both the bare
+/// fixture JSON `puzzle-plugin` mutates). Node/edge arrays diff per element id; camera/meta become
+/// `SetCamera`/`SetMeta`. Falls back to a single `SetDocument` whenever the granular replay would not
+/// reproduce `after` exactly (reorders, id-less entries, malformed entries, unrecognized top-level
+/// keys, schema changes) — so the emitted operations are always exact while staying granular for the
+/// common edits.
 pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<Puzzle2dOperation> {
     if before == after {
         return Vec::new();
     }
-    let operations = match (before.as_object(), after.as_object()) {
-        (Some(before_object), Some(after_object)) => {
-            let mut keys: Vec<&String> = before_object.keys().chain(after_object.keys()).collect();
-            keys.sort();
-            keys.dedup();
-            let mut operations = Vec::new();
-            for key in keys {
-                let before_value = before_object.get(key);
-                let after_value = after_object.get(key);
-                if before_value == after_value {
-                    continue;
-                }
-                match after_value {
-                    Some(after_value) if puzzle2d_is_id_keyed_array(before_value) && puzzle2d_is_id_keyed_array(Some(after_value)) => {
-                        let before_array = before_value.and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
-                        puzzle2d_collect_collection_delta(key, before_array, after_value.as_array().map(Vec::as_slice).unwrap_or(&[]), &mut operations);
-                    }
-                    Some(after_value) => operations.push(Puzzle2dOperation::SetField { key: key.clone(), value: after_value.clone() }),
-                    None => operations.push(Puzzle2dOperation::SetField { key: key.clone(), value: Value::Null }),
-                }
-            }
-            operations
-        }
-        _ => vec![Puzzle2dOperation::ReplaceDocument { document: after.clone() }],
+    let fallback = |after: &Value| vec![Puzzle2dOperation::SetDocument { document: serde_json::from_value(after.clone()).unwrap_or_default() }];
+    let (Some(before_object), Some(after_object)) = (before.as_object(), after.as_object()) else {
+        return fallback(after);
     };
+    const KNOWN_KEYS: [&str; 5] = ["schema", "camera", "nodes", "edges", "meta"];
+    if before_object.keys().chain(after_object.keys()).any(|key| !KNOWN_KEYS.contains(&key.as_str())) {
+        return fallback(after);
+    }
+    if before_object.get("schema") != after_object.get("schema") {
+        return fallback(after);
+    }
+    let mut operations = Vec::new();
+    let before_nodes = before_object.get("nodes").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    let after_nodes = after_object.get("nodes").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    if before_nodes != after_nodes {
+        let mut set = Vec::new();
+        let mut removed = Vec::new();
+        if !puzzle2d_collect_value_collection_delta::<Puzzle2dNode>(before_nodes, after_nodes, &mut set, &mut removed) {
+            return fallback(after);
+        }
+        operations.extend(removed.into_iter().map(|id| Puzzle2dOperation::RemoveNode { id }));
+        operations.extend(set.into_iter().map(|(index, node)| Puzzle2dOperation::SetNode { index, node }));
+    }
+    let before_edges = before_object.get("edges").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    let after_edges = after_object.get("edges").and_then(|value| value.as_array()).map(Vec::as_slice).unwrap_or(&[]);
+    if before_edges != after_edges {
+        let mut set = Vec::new();
+        let mut removed = Vec::new();
+        if !puzzle2d_collect_value_collection_delta::<Puzzle2dEdge>(before_edges, after_edges, &mut set, &mut removed) {
+            return fallback(after);
+        }
+        operations.extend(removed.into_iter().map(|id| Puzzle2dOperation::RemoveEdge { id }));
+        operations.extend(set.into_iter().map(|(index, edge)| Puzzle2dOperation::SetEdge { index, edge }));
+    }
+    let before_camera = before_object.get("camera");
+    let after_camera = after_object.get("camera");
+    if before_camera != after_camera {
+        let Some(camera) = after_camera.and_then(|value| serde_json::from_value::<Puzzle2dCamera>(value.clone()).ok()) else {
+            return fallback(after);
+        };
+        operations.push(Puzzle2dOperation::SetCamera { camera });
+    }
+    let before_meta = before_object.get("meta");
+    let after_meta = after_object.get("meta");
+    if before_meta != after_meta {
+        let meta = match after_meta {
+            Some(value) => match serde_json::from_value::<Puzzle2dMeta>(value.clone()) {
+                Ok(meta) => meta,
+                Err(_) => return fallback(after),
+            },
+            None => Puzzle2dMeta::default(),
+        };
+        operations.push(Puzzle2dOperation::SetMeta { meta });
+    }
     let mut replay = before.clone();
     for operation in &operations {
-        apply_puzzle2d_operation(&mut replay, operation);
+        apply_puzzle2d_operation_to_value(&mut replay, operation);
     }
     if &replay == after {
         operations
     } else {
-        vec![Puzzle2dOperation::ReplaceDocument { document: after.clone() }]
+        fallback(after)
     }
 }
-
-pub fn empty_puzzle2d_projection() -> Value {
-    serde_json::json!({
-        "schema": PUZZLE_2D_SCHEMA,
-        "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 },
-        "nodes": [],
-        "edges": [],
-        "wires": []
-    })
-}
+// #endregion 🔖ValueBridge
 // #endregion 🔖DocumentVcs
 
 // #region 🔖Tests
@@ -3503,7 +3902,8 @@ mod host_tests {
         let mut h = BoardHost::new();
         h.set_suggestion_offset(80.0);
         h.set_brush_node_size(40.0);
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/nakagin-capsule-tower.2d.json")).unwrap();
+        use vcs::DocumentDsl;
+        let fixture: serde_json::Value = serde_json::to_value(crate::Puzzle2dProjection::parse_dsl(include_str!("../example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -3594,7 +3994,8 @@ mod host_tests {
         h.set_active_utility("brush");
         h.set_suggestion_offset(40.0);
         h.set_brush_node_size(40.0);
-        let fixture: serde_json::Value = serde_json::from_str(include_str!("../example/nakagin-capsule-tower.2d.json")).unwrap();
+        use vcs::DocumentDsl;
+        let fixture: serde_json::Value = serde_json::to_value(crate::Puzzle2dProjection::parse_dsl(include_str!("../example/nakagin-capsule-tower.puzzle2d")).unwrap()).unwrap();
         let compat_str = fixture.get("meta").and_then(|m| m.get("kindCompatibility")).map(|v| v.to_string()).unwrap_or_else(|| "[]".to_string());
         h.set_handle_link_compat_from_json(&compat_str).unwrap();
         let catalogs_str = fixture
@@ -4618,43 +5019,113 @@ mod force_graph_tests {
 
     #[test]
     fn puzzle2d_document_vcs_replays_granular_operations() {
-        use crate::{empty_puzzle2d_projection, Puzzle2dOperation, Puzzle2dStore, PUZZLE_2D_SCHEMA};
+        use crate::{empty_puzzle2d_projection, Puzzle2dNode, Puzzle2dOperation, Puzzle2dStore, PUZZLE_2D_SCHEMA};
         use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
         let mut store = Puzzle2dStore::new(create_document_vcs_envelope(PUZZLE_2D_SCHEMA, "puzzle2d", empty_puzzle2d_projection(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![Puzzle2dOperation::UpsertItem { collection: "nodes".into(), item: json!({ "id": "n1", "x": 0.0 }) }],
+                operations: vec![Puzzle2dOperation::SetNode {
+                    index: 0,
+                    node: Puzzle2dNode { id: "n1".into(), node_kind: None, shape: None, x: 0.0, y: 0.0, radius: None, width: None, height: None, text: None, icon_kind: None, root: None, scale: None, visible: None, locked: None, handles: Vec::new() },
+                }],
                 description: None,
             })
             .expect("apply");
         let projection = store.projection().expect("projection");
-        assert_eq!(projection.get("nodes").and_then(|value| value.as_array()).map(Vec::len), Some(1));
+        assert_eq!(projection.nodes.len(), 1);
+        assert_eq!(projection.nodes[0].id, "n1");
     }
 
     #[test]
     fn puzzle2d_delta_ops_are_granular_and_round_trip() {
         use crate::{puzzle2d_document_delta_operations, Puzzle2dOperation, PUZZLE_2D_SCHEMA};
+        use serde_json::Value;
         use vcs::{Operation, OperationDiff};
 
-        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n1", "x": 0.0 }, { "id": "n2", "x": 10.0 }], "edges": [] });
+        let before = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n1", "x": 0.0, "y": 0.0, "handles": [] }, { "id": "n2", "x": 10.0, "y": 0.0, "handles": [] }], "edges": [] });
         // Move n2, add n3, remove n1, pan the camera — a disjoint mix of granular edits.
-        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n2", "x": 99.0 }, { "id": "n3", "x": 1.0 }], "edges": [] });
+        let after = json!({ "schema": PUZZLE_2D_SCHEMA, "camera": { "x": 5.0, "y": 0.0, "zoom": 1.0 }, "nodes": [{ "id": "n2", "x": 99.0, "y": 0.0, "handles": [] }, { "id": "n3", "x": 1.0, "y": 0.0, "handles": [] }], "edges": [] });
         let operations = puzzle2d_document_delta_operations(&before, &after);
-        assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::UpsertItem { .. })));
-        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::ReplaceDocument { .. })), "granular delta must not fall back to whole-document replace here");
-        // Forward replay reproduces `after`, and each operation's backwards restores `before`.
+        assert!(operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetNode { .. })));
+        assert!(!operations.iter().any(|operation| matches!(operation, Puzzle2dOperation::SetDocument { .. })), "granular delta must not fall back to whole-document replace here");
+        // Forward replay (over the bare Value fixture, mirroring how `puzzle-plugin` applies these) reproduces
+        // `after`, and each operation's backwards restores `before`.
         let mut forward = before.clone();
         let mut inverses = Vec::new();
         for operation in &operations {
-            inverses.extend(operation.backwards(&forward));
-            forward = operation.diff(&forward).apply(&forward);
+            inverses.extend(Operation::<Value>::backwards(operation, &forward));
+            forward = Operation::<Value>::diff(operation, &forward).apply(&forward);
         }
         assert_eq!(forward, after);
         for inverse in inverses.iter().rev() {
-            forward = inverse.diff(&forward).apply(&forward);
+            forward = Operation::<Value>::diff(inverse, &forward).apply(&forward);
         }
         assert_eq!(forward, before, "backwards operations must restore the pre-edit document");
+    }
+
+    #[test]
+    fn puzzle2d_projection_dsl_round_trips() {
+        use crate::{empty_puzzle2d_projection, Puzzle2dCamera, Puzzle2dCompatSpecificity, Puzzle2dEdge, Puzzle2dHandle, Puzzle2dKindCompatibility, Puzzle2dMeta, Puzzle2dNode};
+
+        vcs::test_support::assert_dsl_round_trip(&empty_puzzle2d_projection());
+        let mut with_content = empty_puzzle2d_projection();
+        with_content.camera = Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 };
+        with_content.nodes.push(Puzzle2dNode {
+            id: "n1".into(),
+            node_kind: Some("seed".into()),
+            shape: Some("circle".into()),
+            x: 1.0,
+            y: 2.0,
+            radius: Some(24.0),
+            width: None,
+            height: None,
+            text: Some("Seed".into()),
+            icon_kind: None,
+            root: None,
+            scale: None,
+            visible: None,
+            locked: None,
+            handles: vec![Puzzle2dHandle { id: "n1:v0".into(), handle_kind: Some("b-l".into()), angle: 0.0, radius: Some(3.0), color: None, icon_kind: None, scale: None, visible: None, locked: None }],
+        });
+        with_content.nodes.push(Puzzle2dNode {
+            id: "n2".into(),
+            node_kind: Some("seed".into()),
+            shape: Some("rectangle".into()),
+            x: 30.0,
+            y: 40.0,
+            radius: None,
+            width: Some(48.0),
+            height: Some(24.0),
+            text: None,
+            icon_kind: Some("door".into()),
+            root: Some(true),
+            scale: Some(1.5),
+            visible: Some(false),
+            locked: Some(true),
+            handles: Vec::new(),
+        });
+        with_content.edges.push(Puzzle2dEdge { id: "e1".into(), source: "n1:v0".into(), target: "n2".into(), edge_kind: Some("edge.link".into()), source_tip: None, target_tip: Some("arrow".into()), visible: None, locked: None });
+        with_content.meta = Puzzle2dMeta {
+            manifest_id: Some("concrete-forest".into()),
+            kind_compatibility: vec![Puzzle2dKindCompatibility { bidirectional: true, specificity: Puzzle2dCompatSpecificity::Vortex, source: "b-l".into(), target: "b-l".into() }],
+            kind_catalogs: None,
+        };
+        vcs::test_support::assert_dsl_round_trip(&with_content);
+    }
+
+    /// 📜 Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
+    /// 🎫convertpuzzle2d3d5dtotypeddslderiveengine) parse as `.puzzle2d` DSL text and round-trip
+    /// through `print_dsl`/`parse_dsl` exactly.
+    #[test]
+    fn puzzle2d_example_fixtures_parse_and_round_trip_as_dsl() {
+        use crate::Puzzle2dProjection;
+        use vcs::DocumentDsl;
+
+        for dsl_text in [include_str!("../example/concrete-forest.puzzle2d"), include_str!("../example/nakagin-capsule-tower.puzzle2d")] {
+            let projection = Puzzle2dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
+            vcs::test_support::assert_dsl_round_trip(&projection);
+        }
     }
 }
 

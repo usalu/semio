@@ -117,8 +117,23 @@ enum FieldKind {
     IdentString,
 }
 
+/// @emoji 🪆 Strips `macro_rules!`-introduced invisible-delimiter `Type::Group` wrappers so a type
+/// captured through a `:ty` metavariable — then re-emitted through another technology-local
+/// declarative macro (e.g. an `entity_input!`-style struct-generating macro) before ever reaching
+/// this derive — still structurally matches `Type::Path` here exactly like directly-written source.
+/// Without this, `Option<T>`/`Vec<T>`/`Box<T>`/`BTreeMap<..>` fields declared through such a wrapping
+/// macro silently fall through to plain `FieldKind::Scalar` instead of being classified as
+/// optional/list/map, since the wrapper hides the outer `Path` segment from a bare `matches!`.
+fn strip_groups(ty: &Type) -> &Type {
+    let mut ty = ty;
+    while let Type::Group(group) = ty {
+        ty = &group.elem;
+    }
+    ty
+}
+
 fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
-    let Type::Path(path) = ty else { return None };
+    let Type::Path(path) = strip_groups(ty) else { return None };
     let segment = path.path.segments.last()?;
     if segment.ident != wrapper {
         return None;
@@ -131,14 +146,14 @@ fn inner_of(ty: &Type, wrapper: &str) -> Option<Type> {
 }
 
 fn is_vec_u8(ty: &Type) -> bool {
-    inner_of(ty, "Vec").is_some_and(|inner| matches!(&inner, Type::Path(p) if p.path.is_ident("u8")))
+    inner_of(ty, "Vec").is_some_and(|inner| matches!(strip_groups(&inner), Type::Path(p) if p.path.is_ident("u8")))
 }
 
 /// @emoji 🗺️ Extracts `V` from `BTreeMap<String, V>` — `None` for any other type, including a
 /// `BTreeMap` keyed by something other than `String` (the engine's `Shape::Map` is string-keyed
 /// only, matching every hand-rolled `{ key=value }` grammar it replaces).
 fn btreemap_string_value(ty: &Type) -> Option<Type> {
-    let Type::Path(path) = ty else { return None };
+    let Type::Path(path) = strip_groups(ty) else { return None };
     let segment = path.path.segments.last()?;
     if segment.ident != "BTreeMap" {
         return None;
@@ -153,7 +168,7 @@ fn btreemap_string_value(ty: &Type) -> Option<Type> {
         })
         .collect();
     let [key, value] = types.as_slice() else { return None };
-    matches!(key, Type::Path(p) if p.path.is_ident("String")).then(|| (*value).clone())
+    matches!(strip_groups(key), Type::Path(p) if p.path.is_ident("String")).then(|| (*value).clone())
 }
 
 fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
@@ -184,7 +199,7 @@ fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
         }
         return (FieldKind::VecList(Box::new(inner.clone())), inner);
     }
-    if attrs.ident && matches!(ty, Type::Path(p) if p.path.is_ident("String")) {
+    if attrs.ident && matches!(strip_groups(ty), Type::Path(p) if p.path.is_ident("String")) {
         return (FieldKind::IdentString, ty.clone());
     }
     (FieldKind::Scalar, ty.clone())

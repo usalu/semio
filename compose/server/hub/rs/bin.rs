@@ -2202,7 +2202,7 @@ mod persistence {
                 let operation = change.get("operation").and_then(|v| v.as_str()).unwrap_or("");
                 let entity_kind = change.get("entity_kind").and_then(|v| v.as_str()).unwrap_or("");
                 let entity_id = change.get("entity_id").and_then(|v| v.as_str()).unwrap_or("");
-                match operator {
+                match operation {
                     "Created" => {
                         let snapshot = change.get("snapshot").cloned().unwrap_or(serde_json::json!({}));
                         let mut entity = snapshot.clone();

@@ -1382,6 +1382,7 @@ pub mod host {
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
                     resource_kinds: Vec::new(),
+                    tutorials: Vec::new(),
                 }],
                 programs: vec![],
                 capabilities: vec![],
@@ -1434,6 +1435,7 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 resource_kinds: Vec::new(),
+                tutorials: Vec::new(),
             };
             let note_app = AppDefinition {
                 id: "note-play".into(),
@@ -1473,6 +1475,7 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 resource_kinds: Vec::new(),
+                tutorials: Vec::new(),
             };
             host.load_plugin(LoadedPlugin {
                 plugin_id: "draw".into(),
@@ -1535,6 +1538,7 @@ pub mod host {
                 media_inputs: Vec::new(),
                 media_outputs: Vec::new(),
                 resource_kinds: Vec::new(),
+                tutorials: Vec::new(),
             };
             host.load_plugin(LoadedPlugin {
                 plugin_id: "draw".into(),
@@ -1648,6 +1652,7 @@ pub mod host {
                     media_inputs: Vec::new(),
                     media_outputs: Vec::new(),
                     resource_kinds: Vec::new(),
+                    tutorials: Vec::new(),
                 }],
                 programs: vec![],
                 capabilities: vec![],
@@ -2050,8 +2055,13 @@ pub mod backbone {
     const STUDIO_FOLDER_DOCUMENT_ID: &str = "studio";
 
     enum StudioPortKind {
+        /// @emoji 🗃️ A single document's text blob addressed by an arbitrary `file://` path — stores
+        /// the raw payload in `FolderTextStorage`'s `.dsl` slot (same single-blob-overwrite semantics
+        /// the deleted `FileJsonStorage` used, just relocated to `<folder>/<document_id>.<extension>`
+        /// derived from the path itself); the sibling `.ops` file is written empty since this port
+        /// is payload-typed (`&str`), not a concrete `Projection`/`Operation`.
         #[cfg(not(target_arch = "wasm32"))]
-        File(String, vcs::FileJsonStorage),
+        File { uri: String, storage: vcs::FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
         Folder(String, vcs::FolderSqliteStorage),
     }
@@ -2065,7 +2075,11 @@ pub mod backbone {
         #[cfg(not(target_arch = "wasm32"))]
         pub fn file(file_path: &str) -> Result<Self, VcsError> {
             let uri = format!("file://{file_path}");
-            Ok(Self { kind: Some(StudioPortKind::File(uri, vcs::FileJsonStorage::new(std::path::PathBuf::from(file_path)))), memory: MemoryBackbonePort::new() })
+            let path = std::path::Path::new(file_path);
+            let extension = path.extension().and_then(|ext| ext.to_str()).unwrap_or("txt").to_string();
+            let document_id = path.file_stem().and_then(|stem| stem.to_str()).unwrap_or("document").to_string();
+            let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| std::path::PathBuf::from("."));
+            Ok(Self { kind: Some(StudioPortKind::File { uri, storage: vcs::FolderTextStorage::new(folder), document_id, extension }), memory: MemoryBackbonePort::new() })
         }
 
         #[cfg(not(target_arch = "wasm32"))]
@@ -2080,8 +2094,8 @@ pub mod backbone {
             if let Some(kind) = &self.kind {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::File(file_uri, storage) if uri == file_uri => {
-                        return storage.read()?.ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
+                    StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
+                        return storage.read(document_id, extension)?.map(|files| files.dsl).ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
@@ -2097,8 +2111,8 @@ pub mod backbone {
             if let Some(kind) = &self.kind {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
-                    StudioPortKind::File(file_uri, storage) if uri == file_uri => {
-                        return storage.write(payload);
+                    StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
+                        return storage.write(document_id, extension, &vcs::DocumentTextFiles { dsl: payload.to_string(), ops: String::new() });
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
@@ -4974,6 +4988,7 @@ pub mod registry {
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
             resource_kinds: Vec::new(),
+            tutorials: Vec::new(),
         })
     }
 

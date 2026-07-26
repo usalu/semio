@@ -10,7 +10,7 @@ use semio_framework_plugin::{SurfaceKind,
     ui_external_slot, ui_image, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text,
     ui_inspector_mixed_toggle, ui_inspector_readonly_field, ui_stack_vertical, ui_text, ActionArgDef, ActionArgOption,
     ActionDefinition, ActionKind, ActionEmit, App, AppLabelsOverlay, AppLabelsOverlayExt, BlockPaletteEntry, Contribution,
-    DocumentApp, DocumentView, HostEffect, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
+    DocumentApp, DocumentView, HostEffect, IconName, MediaClass, MediaForm, MediaType, OsMediaCapability, PanelGroup, PanelTreeBuilder, ResourceKindSpec, ActionDescriptor,
     UiButtonNode, UiFieldNode, UiInputNode, UiInspectorFieldGroup, UiNode, UiNumberStepperNode, UiPresence,
     UiSelectItem, UiSelectNode, UiSliderNode, UiStackNode, UiTextNode, UiToggleNode, UiTreeItemNode,
     ViewState,
@@ -615,8 +615,8 @@ fn patch_building_component_param(spec: &FormSpec, question_id: &str, param_key:
     })
 }
 
-fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> Vec<(String, String, String)> {
-    let mut kinds: Vec<(String, String, String)> = FORM_BUILTIN_KINDS
+fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabels) -> Vec<(String, String, IconName)> {
+    let mut kinds: Vec<(String, String, IconName)> = FORM_BUILTIN_KINDS
         .iter()
         .map(|kind| {
             let (label, icon): (&str, &str) = match *kind {

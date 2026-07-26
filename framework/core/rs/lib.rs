@@ -3111,6 +3111,7 @@ mod tests {
             terminologies: Vec::new(),
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
@@ -3160,6 +3161,7 @@ mod tests {
             terminologies: Vec::new(),
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
@@ -4292,6 +4294,754 @@ impl IntroductionDemonstration {
 }
 //#endregion 🔖Introduction
 
+//#region 🔖Tutorial
+/// @emoji 🎬 A recorded, timed, replayable walkthrough — the timeline sibling of the step-gated
+/// `IntroductionDefinition`. Where an introduction gates progression on the user performing an
+/// interaction, a tutorial plays a multi-track recording (narration, video overlay, UI state, document
+/// edits, camera, ghost-cursor gestures) against a sandboxed copy of the document while the user watches,
+/// scrubs, or deviates and converges back. A *recording* IS a `TutorialDefinition` — the recorder simply
+/// produces a densely-sampled one; nothing distinguishes a hand-authored tutorial from a captured one.
+/// Distinct from the docs-tooltip `tutorial` link field in `ui/js/react`'s `UiLabelLeaf` (a URL into the
+/// manual) — this is the interactive playback mechanism.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialDefinition {
+    pub id: String,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub description: Option<String>,
+    /// ⏱️ Total timeline length in milliseconds; every track entry's `at` (+ duration) must fit within.
+    pub duration_ms: u64,
+    /// 📖 Scrub-bar markers, sorted ascending by `at`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub chapters: Vec<TutorialChapter>,
+    /// 🎬 Starting conditions the player restores into its sandbox before t=0.
+    pub base: TutorialBase,
+    pub tracks: TutorialTracks,
+    /// 🧾 Recorder provenance (ISO 8601 timestamp); `None` means hand-authored.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub recorded_at: Option<String>,
+}
+
+impl TutorialDefinition {
+    /// @emoji 📂 Deserializes a `TutorialDefinition` from its JSON wire format — the constructor apps use
+    /// to load a hand-authored or recorded tutorial (e.g. via `include_str!`) into `.tutorial(...)`.
+    pub fn from_json(json: &str) -> Result<Self, serde_json::Error> {
+        serde_json::from_str(json)
+    }
+}
+
+/// @emoji 📖 One scrub-bar marker in a `TutorialDefinition`'s timeline.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialChapter {
+    pub id: String,
+    pub at: u64,
+    pub title: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub body: Option<String>,
+}
+
+/// @emoji 🎬 What must be true at t=0: the document the tutorial sandboxes and the initial UI/camera
+/// state. The player snapshots the user's live document, loads this in its place, and restores the
+/// snapshot on exit — a tutorial can never touch real work.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialBase {
+    /// 📂 Full `DocumentVcsEnvelope` JSON to sandbox-load; `None` falls back to `example_id`, and both
+    /// `None` falls back to the app's default/empty document.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub document_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub example_id: Option<String>,
+    pub ui: TutorialUiSnapshot,
+    /// 🎥 Initial camera per window instance (every entry's `at` is `0`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub cameras: Vec<TutorialCameraKeyframe>,
+}
+
+/// @emoji 🎞️ The seven parallel tracks of a `TutorialDefinition`'s timeline; every entry's `at` is a
+/// millisecond offset from tutorial start, and each `Vec` is sorted ascending by `at`
+/// (`validate_tutorial` enforces this).
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialTracks {
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub narration: Vec<TutorialNarrationCue>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub video: Vec<TutorialVideoCue>,
+    /// 🏷️ Annotational only — drives affordance pulses and scrub-bar tick marks; playback never
+    /// re-dispatches these into a plugin (see `TutorialEventKind`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub events: Vec<TutorialEvent>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub ui: Vec<TutorialUiKeyframe>,
+    /// 🖋️ The sole source of document mutation during playback — see `TutorialDocumentEventKind`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub document: Vec<TutorialDocumentEvent>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub camera: Vec<TutorialCameraKeyframe>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub gestures: Vec<TutorialGestureCue>,
+}
+
+/// @emoji 📦 Where a tutorial media asset's bytes live. `Blob` is wire-identical to `vcs::BlobRef`
+/// (content-addressed Blake3 hash + size + media type) — `framework/core` does not depend on
+/// `semio-vcs`, so the shape is mirrored rather than reused; conversion between the two is
+/// field-for-field.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialAssetSrc {
+    /// 🌐 Static asset route (a brand's `assetsDir` or the shared `ui/asset` mount).
+    Url { url: String },
+    /// 🗄️ Content-addressed blob in the studio's `BlobStore`.
+    Blob { hash: String, size: u64, media_type: String },
+    /// 🧵 Inline data URL — the recorder's default before a save destination is chosen.
+    DataUrl { data: String },
+}
+
+fn tutorial_narration_default_rate() -> f64 {
+    1.0
+}
+
+fn tutorial_rate_is_default(rate: &f64) -> bool {
+    (*rate - 1.0).abs() < f64::EPSILON
+}
+
+/// @emoji 🎙️ One voiceover cue: `text` is both the TTS script and the caption fallback; `audio`
+/// overrides TTS with a recorded take. The timeline is always the master clock — a still-speaking TTS
+/// utterance is cancelled at the next cue's `at`; audio assets are seeked and rate-matched to the
+/// playhead instead of played independently.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialNarrationCue {
+    pub id: String,
+    pub at: u64,
+    /// ⏱️ Audio duration when `audio` is set (recorder-measured); a rough TTS estimate otherwise — used
+    /// for scrub-bar layout only, never to gate playback.
+    pub duration_ms: u64,
+    pub text: String,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub audio: Option<TutorialAssetSrc>,
+    /// 🗣️ Web Speech API voice-name hint; ignored once `audio` is set.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub voice: Option<String>,
+    /// 🎚️ TTS/audio rate multiplier layered under the player's own playback-rate control.
+    #[serde(default = "tutorial_narration_default_rate", skip_serializing_if = "tutorial_rate_is_default")]
+    pub rate: f64,
+    /// 💬 Timed caption sub-segments (offsets relative to this cue's `at`); empty means `text` is shown
+    /// whole for the cue's `duration_ms`.
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub captions: Vec<TutorialCaption>,
+}
+
+/// @emoji 💬 One timed caption sub-segment of a `TutorialNarrationCue`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialCaption {
+    pub at: u64,
+    pub duration_ms: u64,
+    pub text: String,
+}
+
+/// @emoji 🖼️ Normalized 0–1 viewport rect for a `TutorialVideoCue` overlay.
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialOverlayRect {
+    pub x: f64,
+    pub y: f64,
+    pub width: f64,
+    pub height: f64,
+}
+
+impl Default for TutorialOverlayRect {
+    /// 📌 Bottom-right picture-in-picture, ~16:9.
+    fn default() -> Self {
+        Self { x: 0.72, y: 0.70, width: 0.24, height: 0.24 }
+    }
+}
+
+/// @emoji 📹 A timed video overlay — e.g. a presenter webcam picture-in-picture, or an authored clip.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialVideoCue {
+    pub at: u64,
+    pub duration_ms: u64,
+    pub src: TutorialAssetSrc,
+    #[serde(default)]
+    pub rect: TutorialOverlayRect,
+    /// 🔇 True when narration carries the audio (a webcam take recorded muted).
+    #[serde(default)]
+    pub muted: bool,
+    /// ⏩ Seek offset into the source at cue start.
+    #[serde(default)]
+    pub source_offset_ms: u64,
+}
+
+/// @emoji 🏷️ One recorded action/command/keypress, annotational only — see `TutorialTracks::events`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialEvent {
+    pub at: u64,
+    pub kind: TutorialEventKind,
+}
+
+/// @emoji 🏷️ What one `TutorialEvent` annotates.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialEventKind {
+    /// 📇 An `AppDefinition.actions` dispatch, with its effective args.
+    Action {
+        action: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+        args: Option<serde_json::Value>,
+    },
+    /// 🎛️ A `CommandDefinition` dispatch.
+    Command {
+        command: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+        args: Option<serde_json::Value>,
+    },
+    /// ⌨️ A keybinding press, display-only over the action it triggered.
+    Key { keys: String },
+}
+
+/// @emoji 🧮 One UI-state track entry: either a full restore-point snapshot (a valid seek anchor) or a
+/// sparse list of changes since the previous sample.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialUiKeyframe {
+    pub at: u64,
+    pub sample: TutorialUiSample,
+}
+
+/// @emoji 🧮 See `TutorialUiKeyframe`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialUiSample {
+    Snapshot { state: TutorialUiSnapshot },
+    Delta { changes: Vec<TutorialUiChange> },
+}
+
+/// @emoji 🧮 Renderer-neutral restore point for chrome/UI state — a superset of `ViewState` plus the
+/// dock/panel/dialog state neither shell serializes today. Deliberately NOT a serialization of either
+/// shell's internal store: each shell implements its own `captureUiSnapshot`/`applyUiSnapshot` against
+/// this shape. Locale/terminology are excluded on purpose — a tutorial plays in the viewer's own locale.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialUiSnapshot {
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub active_mode_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub focused_window_id: Option<String>,
+    /// 🧰 Mirrors `ViewState.active_utility_by_window_id`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub active_utility_by_window_id: std::collections::HashMap<String, String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub active_tool_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub layout: Option<WindowLayout>,
+    /// 📑 Active tab id per panel group; groups absent from the map are collapsed/closed.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub active_panel_tab_by_group: std::collections::HashMap<String, String>,
+    /// 🗂️ Opaque plugin vocabulary, verbatim `ViewState.panel_json`/`selection_json`.
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub panel_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub selection_json: Option<String>,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub open_dialog_id: Option<String>,
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub expanded_tree_ids: Vec<String>,
+    #[serde(default)]
+    pub command_panel_open: bool,
+}
+
+/// @emoji 🩹 One typed, sparse UI-state change — the alphabet `compose_tutorial_ui` replays over a prior
+/// `TutorialUiSnapshot` to reconstruct state at any timeline offset without shipping a full snapshot at
+/// every sample.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialUiChange {
+    ActiveMode {
+        id: String,
+    },
+    FocusedWindow {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+    },
+    /// 🧰 `utility_id: None` deactivates — mirrors `SetActiveUtility` semantics.
+    ActiveUtility {
+        window_id: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        utility_id: Option<String>,
+    },
+    ActiveTool {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+    },
+    Layout {
+        layout: WindowLayout,
+    },
+    /// 📑 `tab_id: None` collapses/closes the group.
+    PanelTab {
+        group: String,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        tab_id: Option<String>,
+    },
+    PanelState {
+        panel_json: String,
+    },
+    Selection {
+        selection_json: String,
+    },
+    Dialog {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        id: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional, type = "unknown"))]
+        args: Option<serde_json::Value>,
+    },
+    TreeExpansion {
+        id: String,
+        expanded: bool,
+    },
+    CommandPanel {
+        open: bool,
+    },
+}
+
+/// @emoji 🖋️ One document-track entry — mirrors `vcs::DocumentVcsCommand` with `Operation =
+/// serde_json::Value` (opaque per-app operation JSON, already the wire shape of every `KernelOperation`
+/// diff). This is the SOLE source of document mutation during playback: recorded `TutorialEvent`s are
+/// annotational only, never re-dispatched, because re-dispatching a plugin action is non-deterministic
+/// (fresh ids/timestamps) and would double-apply against this track.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialDocumentEvent {
+    pub at: u64,
+    pub kind: TutorialDocumentEventKind,
+}
+
+/// @emoji 🖋️ See `TutorialDocumentEvent`. `Edit` carries both `forwards` and `backwards` operations
+/// verbatim from the vcs edit that produced it — the source of exact bidirectional scrubbing.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialDocumentEventKind {
+    Edit {
+        #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
+        forwards: Vec<serde_json::Value>,
+        #[cfg_attr(feature = "typegen", ts(type = "unknown[]"))]
+        backwards: Vec<serde_json::Value>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        description: Option<String>,
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        coalesce_key: Option<String>,
+    },
+    Undo,
+    Redo,
+    Checkpoint {
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        message: Option<String>,
+    },
+    CheckoutCheckpoint {
+        checkpoint_id: String,
+    },
+    SwitchAlternative {
+        alternative_id: String,
+    },
+    /// 📂 Wholesale document replacement (e.g. a mid-tutorial example switch) — full
+    /// `DocumentVcsEnvelope` JSON in both directions.
+    Load {
+        document_json: String,
+        previous_json: String,
+    },
+}
+
+fn tutorial_camera_up_z() -> [f64; 3] {
+    [0.0, 0.0, 1.0]
+}
+
+/// @emoji 🎥 One camera track keyframe for a specific window instance.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialCameraKeyframe {
+    pub at: u64,
+    /// 🪟 Window *instance* id (matches `ViewWindowInstance.id`).
+    pub window_id: String,
+    pub camera: TutorialCameraState,
+    /// 🪄 Easing INTO this keyframe from the previous one on the same window.
+    #[serde(default)]
+    pub easing: TutorialEasing,
+}
+
+/// @emoji 🎥 A camera pose — `Orbit` mirrors `World3dScene.camera_json`/`OrbitController`, `Canvas`
+/// mirrors `Canvas2dScene`'s `cameraX`/`cameraY`/`zoom`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase", rename_all_fields = "camelCase", tag = "kind")]
+pub enum TutorialCameraState {
+    Orbit {
+        position: [f64; 3],
+        target: [f64; 3],
+        #[serde(default = "tutorial_camera_up_z")]
+        up: [f64; 3],
+        #[serde(default, skip_serializing_if = "Option::is_none")]
+        #[cfg_attr(feature = "typegen", ts(optional))]
+        fov: Option<f64>,
+    },
+    Canvas {
+        x: f64,
+        y: f64,
+        zoom: f64,
+    },
+}
+
+/// @emoji 🪄 Interpolation curve into a `TutorialCameraKeyframe` from its predecessor on the same window.
+#[derive(Clone, Copy, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub enum TutorialEasing {
+    Linear,
+    #[default]
+    EaseInOut,
+    /// 📌 No interpolation — hold the previous pose until this keyframe, then snap.
+    Hold,
+}
+
+/// @emoji 👻 One ghost-cursor gesture cue, reusing the introduction demonstration vocabulary verbatim —
+/// both shells already resolve/render `IntroductionGesture`/`IntroductionPoint`/`IntroductionCursor`.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[cfg_attr(feature = "typegen", derive(ts_rs::TS))]
+#[serde(rename_all = "camelCase")]
+pub struct TutorialGestureCue {
+    pub at: u64,
+    pub duration_ms: u64,
+    pub gesture: IntroductionGesture,
+    #[serde(default, skip_serializing_if = "Option::is_none")]
+    #[cfg_attr(feature = "typegen", ts(optional))]
+    pub cursor: Option<IntroductionCursor>,
+}
+
+/// @emoji 🎬 The framework-owned action id apps dispatch to (re)start a tutorial — auto-injected as a
+/// fully shell-intercepted View action into any `AppDefinition` that declares one (mirrors
+/// `START_INTRODUCTION_ACTION_ID`). Distinct from an introduction: a tutorial takes a required
+/// `tutorialId` argument since an app may declare more than one.
+pub const START_TUTORIAL_ACTION_ID: &str = "startTutorial";
+
+/// @emoji 🎬 The framework-injected `startTutorial` View action: fully shell-intercepted, it sandboxes
+/// the live document, loads the selected tutorial's `base`, and starts playback from t=0.
+pub fn start_tutorial_action_definition(tutorials: &[TutorialDefinition]) -> ActionDefinition {
+    let options = tutorials.iter().map(|t| ActionArgOption::new(t.id.clone(), t.title.clone())).collect();
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(START_TUTORIAL_ACTION_ID, "Play Tutorial", ActionKind::View)
+    }
+    .with_args([ActionArgDef::select("tutorialId", "Tutorial", options).required()])
+}
+
+/// @emoji ⏺️ The framework-owned action id that opens the tutorial recorder chrome — auto-injected into
+/// EVERY `AppDefinition` (recording needs no app-side declaration at all).
+pub const RECORD_TUTORIAL_ACTION_ID: &str = "recordTutorial";
+
+/// @emoji ⏺️ The framework-injected `recordTutorial` View action: fully shell-intercepted, arms the
+/// recorder against the live document (never a sandboxed copy — a recording IS the user's work).
+pub fn record_tutorial_action_definition() -> ActionDefinition {
+    ActionDefinition {
+        in_palette: false,
+        ..ActionDefinition::new(RECORD_TUTORIAL_ACTION_ID, "Record Tutorial", ActionKind::View)
+    }
+}
+
+/// ⏱️ Real-time (not timeline-time, not rate-scaled) duration of the camera glide the player performs
+/// when the user presses Play after deviating from an active tutorial's recorded state.
+pub const TUTORIAL_CONVERGE_MS: u64 = 600;
+
+//#region 🔖TutorialEngine
+/// @emoji ✅ Structural validation shared by the plugin builder and both recorders before save: every
+/// track sorted ascending by `at`, every entry within `[0, durationMs]`, chapter/narration-cue ids
+/// unique, `base.cameras` all at `at == 0`. Does NOT check that referenced action/command/element ids
+/// exist — the plugin builder's validation (which has the full `AppDefinition` in scope) does that.
+pub fn validate_tutorial(def: &TutorialDefinition) -> Result<(), String> {
+    fn sorted_by_at<T>(label: &str, items: &[T], at: impl Fn(&T) -> u64, duration_ms: u64) -> Result<(), String> {
+        let mut last: Option<u64> = None;
+        for item in items {
+            let at = at(item);
+            if at > duration_ms {
+                return Err(format!("tutorial track `{label}` has an entry at {at}ms beyond durationMs {duration_ms}"));
+            }
+            if let Some(last) = last {
+                if at < last {
+                    return Err(format!("tutorial track `{label}` is not sorted ascending by `at` ({last}ms then {at}ms)"));
+                }
+            }
+            last = Some(at);
+        }
+        Ok(())
+    }
+
+    sorted_by_at("chapters", &def.chapters, |c| c.at, def.duration_ms)?;
+    sorted_by_at("narration", &def.tracks.narration, |c| c.at, def.duration_ms)?;
+    sorted_by_at("video", &def.tracks.video, |c| c.at, def.duration_ms)?;
+    sorted_by_at("events", &def.tracks.events, |e| e.at, def.duration_ms)?;
+    sorted_by_at("ui", &def.tracks.ui, |k| k.at, def.duration_ms)?;
+    sorted_by_at("document", &def.tracks.document, |e| e.at, def.duration_ms)?;
+    sorted_by_at("camera", &def.tracks.camera, |k| k.at, def.duration_ms)?;
+    sorted_by_at("gestures", &def.tracks.gestures, |c| c.at, def.duration_ms)?;
+
+    let mut chapter_ids = std::collections::HashSet::new();
+    for chapter in &def.chapters {
+        if !chapter_ids.insert(chapter.id.as_str()) {
+            return Err(format!("duplicate tutorial chapter id `{}`", chapter.id));
+        }
+    }
+    let mut cue_ids = std::collections::HashSet::new();
+    for cue in &def.tracks.narration {
+        if !cue_ids.insert(cue.id.as_str()) {
+            return Err(format!("duplicate tutorial narration cue id `{}`", cue.id));
+        }
+    }
+    for camera in &def.base.cameras {
+        if camera.at != 0 {
+            return Err(format!("tutorial base camera keyframe for window `{}` must have at == 0", camera.window_id));
+        }
+    }
+    Ok(())
+}
+
+fn tutorial_ease_in_out(t: f64) -> f64 {
+    if t < 0.5 {
+        2.0 * t * t
+    } else {
+        1.0 - (-2.0 * t + 2.0).powi(2) / 2.0
+    }
+}
+
+fn tutorial_lerp3(a: [f64; 3], b: [f64; 3], t: f64) -> [f64; 3] {
+    [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t]
+}
+
+/// @emoji 🎥 Interpolates between two camera keyframes at timeline offset `at_ms` (clamped into
+/// `[prev.at, next.at]`). Position/target/up/fov lerp componentwise; `Canvas.zoom` interpolates in log
+/// space so zooming reads as constant visual speed. `next.easing` governs the curve; `Hold` snaps to
+/// `prev` until `next.at`, then jumps. Mismatched camera kinds between the two keyframes (`Orbit` vs
+/// `Canvas` on the same window) never interpolate — the result snaps to whichever side `t` is closer to.
+pub fn interpolate_tutorial_camera(prev: &TutorialCameraKeyframe, next: &TutorialCameraKeyframe, at_ms: f64) -> TutorialCameraState {
+    let span = (next.at as f64 - prev.at as f64).max(1.0);
+    let raw = ((at_ms - prev.at as f64) / span).clamp(0.0, 1.0);
+    let t = match next.easing {
+        TutorialEasing::Linear => raw,
+        TutorialEasing::EaseInOut => tutorial_ease_in_out(raw),
+        TutorialEasing::Hold => {
+            if raw >= 1.0 {
+                1.0
+            } else {
+                0.0
+            }
+        }
+    };
+    match (&prev.camera, &next.camera) {
+        (
+            TutorialCameraState::Orbit { position: p0, target: t0, up: u0, fov: f0 },
+            TutorialCameraState::Orbit { position: p1, target: t1, up: u1, fov: f1 },
+        ) => TutorialCameraState::Orbit {
+            position: tutorial_lerp3(*p0, *p1, t),
+            target: tutorial_lerp3(*t0, *t1, t),
+            up: tutorial_lerp3(*u0, *u1, t),
+            fov: match (f0, f1) {
+                (Some(a), Some(b)) => Some(a + (b - a) * t),
+                (Some(a), None) => Some(*a),
+                (None, Some(b)) => Some(*b),
+                (None, None) => None,
+            },
+        },
+        (TutorialCameraState::Canvas { x: x0, y: y0, zoom: z0 }, TutorialCameraState::Canvas { x: x1, y: y1, zoom: z1 }) => {
+            TutorialCameraState::Canvas { x: x0 + (x1 - x0) * t, y: y0 + (y1 - y0) * t, zoom: (z0.ln() + (z1.ln() - z0.ln()) * t).exp() }
+        }
+        _ => {
+            if t < 0.5 {
+                prev.camera.clone()
+            } else {
+                next.camera.clone()
+            }
+        }
+    }
+}
+
+/// @emoji 🎥 Finds the camera pose for `window_id` at `at_ms`: exact if `at_ms` lands on or before the
+/// first keyframe (falling back to `base.cameras`), interpolated between the bracketing pair otherwise,
+/// held at the last pose past the final keyframe. `None` when the window has no camera keyframes at all.
+pub fn tutorial_camera_at(def: &TutorialDefinition, window_id: &str, at_ms: f64) -> Option<TutorialCameraState> {
+    let keyframes: Vec<&TutorialCameraKeyframe> =
+        def.base.cameras.iter().chain(def.tracks.camera.iter()).filter(|k| k.window_id == window_id).collect();
+    let first = keyframes.first()?;
+    if at_ms <= first.at as f64 {
+        return Some(first.camera.clone());
+    }
+    for pair in keyframes.windows(2) {
+        let (prev, next) = (pair[0], pair[1]);
+        if at_ms <= next.at as f64 {
+            return Some(interpolate_tutorial_camera(prev, next, at_ms));
+        }
+    }
+    Some(keyframes.last().unwrap().camera.clone())
+}
+
+/// @emoji 🩹 Applies one `TutorialUiChange` onto a `TutorialUiSnapshot` in place — the pure core both
+/// `compose_tutorial_ui` and each shell's live director share.
+pub fn apply_tutorial_ui_change(state: &mut TutorialUiSnapshot, change: &TutorialUiChange) {
+    match change {
+        TutorialUiChange::ActiveMode { id } => state.active_mode_id = Some(id.clone()),
+        TutorialUiChange::FocusedWindow { id } => state.focused_window_id = id.clone(),
+        TutorialUiChange::ActiveUtility { window_id, utility_id } => match utility_id {
+            Some(id) => {
+                state.active_utility_by_window_id.insert(window_id.clone(), id.clone());
+            }
+            None => {
+                state.active_utility_by_window_id.remove(window_id);
+            }
+        },
+        TutorialUiChange::ActiveTool { id } => state.active_tool_id = id.clone(),
+        TutorialUiChange::Layout { layout } => state.layout = Some(layout.clone()),
+        TutorialUiChange::PanelTab { group, tab_id } => match tab_id {
+            Some(id) => {
+                state.active_panel_tab_by_group.insert(group.clone(), id.clone());
+            }
+            None => {
+                state.active_panel_tab_by_group.remove(group);
+            }
+        },
+        TutorialUiChange::PanelState { panel_json } => state.panel_json = Some(panel_json.clone()),
+        TutorialUiChange::Selection { selection_json } => state.selection_json = Some(selection_json.clone()),
+        TutorialUiChange::Dialog { id, .. } => state.open_dialog_id = id.clone(),
+        TutorialUiChange::TreeExpansion { id, expanded } => {
+            if *expanded {
+                if !state.expanded_tree_ids.iter().any(|existing| existing == id) {
+                    state.expanded_tree_ids.push(id.clone());
+                }
+            } else {
+                state.expanded_tree_ids.retain(|existing| existing != id);
+            }
+        }
+        TutorialUiChange::CommandPanel { open } => state.command_panel_open = *open,
+    }
+}
+
+/// @emoji 🧮 Reconstructs the full `TutorialUiSnapshot` at `at_ms`: starts from `base.ui`, then the
+/// latest `Snapshot` sample with `at <= at_ms` (if any, replacing the base), then replays every `Delta`
+/// sample after that snapshot up to and including `at_ms`, in order. This is the one place seeking (and
+/// the deviation-then-play converge step) source their target UI state.
+pub fn compose_tutorial_ui(def: &TutorialDefinition, at_ms: f64) -> TutorialUiSnapshot {
+    let mut state = def.base.ui.clone();
+    let mut deltas: Vec<&TutorialUiChange> = Vec::new();
+    for keyframe in &def.tracks.ui {
+        if keyframe.at as f64 > at_ms {
+            break;
+        }
+        match &keyframe.sample {
+            TutorialUiSample::Snapshot { state: snapshot } => {
+                state = snapshot.clone();
+                deltas.clear();
+            }
+            TutorialUiSample::Delta { changes } => {
+                deltas.extend(changes.iter());
+            }
+        }
+    }
+    for change in deltas {
+        apply_tutorial_ui_change(&mut state, change);
+    }
+    state
+}
+
+/// @emoji ✂️ Everything a live director's tick from `from_ms` to `to_ms` must apply: annotational
+/// events, document edits, and UI deltas within the half-open interval on the crossing direction (empty
+/// when `from_ms == to_ms`). Backward direction (scrubbing left) reverses entry order so callers apply
+/// each `TutorialDocumentEventKind::Edit`'s `backwards` ops from most-recent to least-recent. Plain Rust
+/// struct (not ts-rs mirrored) — the TS port lives in `framework/renderer/react/index.tsx` and is pinned
+/// to this one via shared golden fixtures, not a wasm call per frame.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct TutorialSlice {
+    pub forward: bool,
+    pub events: Vec<TutorialEvent>,
+    pub document: Vec<TutorialDocumentEvent>,
+    pub ui_changes: Vec<TutorialUiChange>,
+}
+
+/// @emoji ✂️ Computes the `TutorialSlice` for advancing the playhead from `from_ms` to `to_ms` (`to_ms`
+/// may be less than `from_ms` when scrubbing backward).
+///
+/// 🐢 A `TutorialUiSample::Snapshot` crossed mid-slice is intentionally NOT flattened into deltas here:
+/// recomposing state across a snapshot boundary is exactly what `compose_tutorial_ui` already does
+/// correctly and cheaply. This function is for the live per-tick advance, which never spans a snapshot
+/// in practice (ticks run far more often than the multi-second snapshot cadence); any caller that jumps
+/// across a snapshot boundary (a seek/scrub) should call `compose_tutorial_ui` wholesale instead of
+/// accumulating through this slice.
+pub fn tutorial_slice(def: &TutorialDefinition, from_ms: f64, to_ms: f64) -> TutorialSlice {
+    let forward = to_ms >= from_ms;
+    let (lo, hi) = if forward { (from_ms, to_ms) } else { (to_ms, from_ms) };
+    let in_range = |at: u64| (at as f64) > lo && (at as f64) <= hi;
+
+    let mut events: Vec<TutorialEvent> = def.tracks.events.iter().filter(|e| in_range(e.at)).cloned().collect();
+    let mut document: Vec<TutorialDocumentEvent> = def.tracks.document.iter().filter(|e| in_range(e.at)).cloned().collect();
+    let mut ui_changes: Vec<TutorialUiChange> = Vec::new();
+    for keyframe in def.tracks.ui.iter().filter(|k| in_range(k.at)) {
+        if let TutorialUiSample::Delta { changes } = &keyframe.sample {
+            ui_changes.extend(changes.iter().cloned());
+        }
+    }
+    if !forward {
+        events.reverse();
+        document.reverse();
+        ui_changes.reverse();
+    }
+    TutorialSlice { forward, events, document, ui_changes }
+}
+//#endregion 🔖TutorialEngine
+//#endregion 🔖Tutorial
+
 //#region 🔖Dialog
 /// @emoji 🗨️ A declared modal form dialog: a glass veil covers the screen and an info box (styled
 /// identically to the introduction walkthrough box, see `ui_react`'s `GLASS_OVERLAY_BOX_CLASS`)
@@ -4653,6 +5403,10 @@ pub struct AppDefinition {
     #[serde(skip_serializing_if = "Option::is_none")]
     #[cfg_attr(feature = "typegen", ts(optional))]
     pub introduction: Option<IntroductionDefinition>,
+    /// 🎬 Recorded, timed walkthroughs this app declares — see `TutorialDefinition`. A brand's own
+    /// `tutorials` (if any) are shown alongside these, never replacing them (unlike `introduction`).
+    #[serde(default, skip_serializing_if = "Vec::is_empty")]
+    pub tutorials: Vec<TutorialDefinition>,
     /// 🗨️ The modal form dialogs this app can open via `HostEffect::OpenDialog`.
     #[serde(default, skip_serializing_if = "Vec::is_empty")]
     pub dialogs: Vec<DialogDefinition>,
@@ -4980,6 +5734,10 @@ pub struct AppLabelsOverlay {
     /// 🗣️ Locale-aware overrides for `IntroductionDefinition` text, keyed `"intro.title"` / `"intro.step.{stepId}.title"` / `".body"`.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub introduction_labels: std::collections::HashMap<String, String>,
+    /// 🗣️ Locale-aware overrides for `TutorialDefinition` text, keyed `"tutorial.{id}.title"` /
+    /// `".description"` / `".chapter.{chapterId}.title"` / `".body"` / `".cue.{cueId}.text"`.
+    #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
+    pub tutorial_labels: std::collections::HashMap<String, String>,
     /// 🗣️ Locale-aware overrides for `UtilityDefinition.group` collection labels (ribbon group headers, e.g. "transform"), keyed by group id.
     #[serde(default, skip_serializing_if = "std::collections::HashMap::is_empty")]
     pub group_labels: std::collections::HashMap<String, String>,
@@ -5974,6 +6732,11 @@ mod app_document_tests {
         Modes, NonEmptyVec, PanelGroup, PanelTabDefinition, PanelTabKind, ToolRef, UtilityDefinition, UtilityRef, WindowKindDefinition, WindowKinds,
         SET_ACTIVE_UTILITY_ACTION_ID, UI_NAVBAR_ELEMENT_ID, UI_FOOTER_ELEMENT_ID, window_element_id, panel_tab_element_id,
         panel_tab_first_draggable_element_id,
+        compose_tutorial_ui, interpolate_tutorial_camera, record_tutorial_action_definition, start_tutorial_action_definition,
+        tutorial_camera_at, tutorial_slice, validate_tutorial, TutorialAssetSrc, TutorialBase, TutorialCameraKeyframe, TutorialCameraState,
+        TutorialChapter, TutorialDefinition, TutorialDocumentEvent, TutorialDocumentEventKind, TutorialEasing, TutorialEvent, TutorialEventKind,
+        TutorialNarrationCue, TutorialTracks, TutorialUiChange, TutorialUiKeyframe, TutorialUiSample, TutorialUiSnapshot,
+        RECORD_TUTORIAL_ACTION_ID, START_TUTORIAL_ACTION_ID,
     };
     use crate::ui::kernel::HostEffect;
     use serde_json::json;
@@ -6077,6 +6840,7 @@ mod app_document_tests {
             terminologies: Vec::new(),
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
@@ -6570,6 +7334,312 @@ mod app_document_tests {
         assert_eq!(round, with_demos);
     }
 
+    //#region 🔖TutorialTests
+    fn minimal_tutorial() -> TutorialDefinition {
+        TutorialDefinition {
+            id: "welcome-tour".into(),
+            title: "Welcome Tour".into(),
+            description: None,
+            duration_ms: 10_000,
+            chapters: vec![TutorialChapter { id: "start".into(), at: 0, title: "Start".into(), body: None }],
+            base: TutorialBase { document_json: None, example_id: Some("concrete-forest".into()), ui: TutorialUiSnapshot::default(), cameras: vec![] },
+            tracks: TutorialTracks::default(),
+            recorded_at: None,
+        }
+    }
+
+    #[test]
+    fn tutorial_definition_serde_defaults() {
+        let json = r#"{"id":"t","title":"T","durationMs":1000,"base":{"ui":{}},"tracks":{}}"#;
+        let def: TutorialDefinition = serde_json::from_str(json).unwrap();
+        assert!(def.description.is_none());
+        assert!(def.chapters.is_empty());
+        assert!(def.tracks.narration.is_empty());
+        assert!(def.tracks.document.is_empty());
+        assert!(def.base.cameras.is_empty());
+        let round = serde_json::to_string(&def).unwrap();
+        let round: TutorialDefinition = serde_json::from_str(&round).unwrap();
+        assert_eq!(round, def);
+    }
+
+    #[test]
+    fn tutorial_asset_src_round_trips_tagged_camel_case() {
+        for asset in [
+            TutorialAssetSrc::Url { url: "https://example.test/clip.webm".into() },
+            TutorialAssetSrc::Blob { hash: "abc123".into(), size: 42, media_type: "video/webm".into() },
+            TutorialAssetSrc::DataUrl { data: "data:audio/webm;base64,AA==".into() },
+        ] {
+            let json = serde_json::to_string(&asset).unwrap();
+            assert!(json.contains("\"kind\":"), "{json}");
+            let round: TutorialAssetSrc = serde_json::from_str(&json).unwrap();
+            assert_eq!(round, asset);
+        }
+        let json = serde_json::to_string(&TutorialAssetSrc::Blob { hash: "abc".into(), size: 1, media_type: "video/webm".into() }).unwrap();
+        assert!(json.contains("\"mediaType\""), "field must be camelCase: {json}");
+    }
+
+    #[test]
+    fn tutorial_event_kind_round_trips_tagged_camel_case() {
+        let action = TutorialEventKind::Action { action: "addObjectKind".into(), args: Some(serde_json::json!({"kindId": "beam"})) };
+        let json = serde_json::to_string(&action).unwrap();
+        assert!(json.contains("\"kind\":\"action\""), "{json}");
+        let round: TutorialEventKind = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, action);
+
+        let key = TutorialEventKind::Key { keys: "mod+z".into() };
+        let json = serde_json::to_string(&key).unwrap();
+        let round: TutorialEventKind = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, key);
+    }
+
+    #[test]
+    fn tutorial_ui_change_round_trips_tagged_camel_case() {
+        let change = TutorialUiChange::ActiveUtility { window_id: "puzzle3d-main".into(), utility_id: Some("transform".into()) };
+        let json = serde_json::to_string(&change).unwrap();
+        assert!(json.contains("\"windowId\":\"puzzle3d-main\""), "field must be camelCase: {json}");
+        assert!(json.contains("\"utilityId\":\"transform\""), "field must be camelCase: {json}");
+        let round: TutorialUiChange = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, change);
+
+        let tree = TutorialUiChange::TreeExpansion { id: "puzzle3d-play-kinds.objects".into(), expanded: true };
+        let json = serde_json::to_string(&tree).unwrap();
+        let round: TutorialUiChange = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, tree);
+    }
+
+    #[test]
+    fn tutorial_document_event_kind_round_trips_tagged_camel_case() {
+        let edit = TutorialDocumentEventKind::Edit {
+            forwards: vec![serde_json::json!({"op": "translate"})],
+            backwards: vec![serde_json::json!({"op": "translate", "inverse": true})],
+            description: Some("Move object".into()),
+            coalesce_key: Some("camera".into()),
+        };
+        let json = serde_json::to_string(&edit).unwrap();
+        assert!(json.contains("\"kind\":\"edit\""), "{json}");
+        assert!(json.contains("\"coalesceKey\":\"camera\""), "field must be camelCase: {json}");
+        let round: TutorialDocumentEventKind = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, edit);
+
+        let undo = TutorialDocumentEventKind::Undo;
+        let json = serde_json::to_string(&undo).unwrap();
+        assert_eq!(json, r#"{"kind":"undo"}"#);
+    }
+
+    #[test]
+    fn tutorial_camera_state_round_trips_tagged_camel_case() {
+        let orbit = TutorialCameraState::Orbit { position: [1.0, 2.0, 3.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(50.0) };
+        let json = serde_json::to_string(&orbit).unwrap();
+        assert!(json.contains("\"kind\":\"orbit\""), "{json}");
+        let round: TutorialCameraState = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, orbit);
+
+        let canvas = TutorialCameraState::Canvas { x: 1.0, y: 2.0, zoom: 3.0 };
+        let json = serde_json::to_string(&canvas).unwrap();
+        assert!(json.contains("\"kind\":\"canvas\""), "{json}");
+        let round: TutorialCameraState = serde_json::from_str(&json).unwrap();
+        assert_eq!(round, canvas);
+    }
+
+    #[test]
+    fn validate_tutorial_rejects_unsorted_and_out_of_range_tracks() {
+        let mut def = minimal_tutorial();
+        def.tracks.narration = vec![
+            TutorialNarrationCue { id: "b".into(), at: 500, duration_ms: 100, text: "b".into(), audio: None, voice: None, rate: 1.0, captions: vec![] },
+            TutorialNarrationCue { id: "a".into(), at: 100, duration_ms: 100, text: "a".into(), audio: None, voice: None, rate: 1.0, captions: vec![] },
+        ];
+        assert!(validate_tutorial(&def).is_err(), "unsorted narration must be rejected");
+
+        let mut def = minimal_tutorial();
+        def.tracks.narration =
+            vec![TutorialNarrationCue { id: "a".into(), at: 999_999, duration_ms: 100, text: "a".into(), audio: None, voice: None, rate: 1.0, captions: vec![] }];
+        assert!(validate_tutorial(&def).is_err(), "entry beyond durationMs must be rejected");
+
+        let mut def = minimal_tutorial();
+        def.chapters.push(TutorialChapter { id: "start".into(), at: 0, title: "Dup".into(), body: None });
+        assert!(validate_tutorial(&def).is_err(), "duplicate chapter id must be rejected");
+
+        let mut def = minimal_tutorial();
+        def.base.cameras.push(TutorialCameraKeyframe {
+            at: 5,
+            window_id: "w".into(),
+            camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 },
+            easing: TutorialEasing::default(),
+        });
+        assert!(validate_tutorial(&def).is_err(), "base camera keyframe must be at == 0");
+
+        assert!(validate_tutorial(&minimal_tutorial()).is_ok());
+    }
+
+    #[test]
+    fn tutorial_camera_interpolation_lerps_position_and_target() {
+        let prev = TutorialCameraKeyframe {
+            at: 0,
+            window_id: "w".into(),
+            camera: TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(40.0) },
+            easing: TutorialEasing::Linear,
+        };
+        let next = TutorialCameraKeyframe {
+            at: 1000,
+            window_id: "w".into(),
+            camera: TutorialCameraState::Orbit { position: [10.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(60.0) },
+            easing: TutorialEasing::Linear,
+        };
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
+        match mid {
+            TutorialCameraState::Orbit { position, fov, .. } => {
+                assert!((position[0] - 5.0).abs() < 1e-9, "expected midpoint lerp, got {position:?}");
+                assert_eq!(fov, Some(50.0));
+            }
+            other => panic!("expected Orbit, got {other:?}"),
+        }
+        let start = interpolate_tutorial_camera(&prev, &next, 0.0);
+        assert_eq!(start, prev.camera);
+        let end = interpolate_tutorial_camera(&prev, &next, 1000.0);
+        assert_eq!(end, next.camera);
+    }
+
+    #[test]
+    fn tutorial_camera_interpolation_zooms_in_log_space() {
+        let prev =
+            TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear };
+        let next =
+            TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Linear };
+        let mid = interpolate_tutorial_camera(&prev, &next, 500.0);
+        match mid {
+            TutorialCameraState::Canvas { zoom, .. } => assert!((zoom - 2.0).abs() < 1e-9, "log-space midpoint of 1..4 is 2, got {zoom}"),
+            other => panic!("expected Canvas, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn tutorial_camera_interpolation_hold_snaps_at_keyframe() {
+        let prev = TutorialCameraKeyframe { at: 0, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Hold };
+        let next = TutorialCameraKeyframe { at: 1000, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 4.0 }, easing: TutorialEasing::Hold };
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 999.0), prev.camera);
+        assert_eq!(interpolate_tutorial_camera(&prev, &next, 1000.0), next.camera);
+    }
+
+    #[test]
+    fn tutorial_camera_at_holds_first_pose_before_first_keyframe_and_last_pose_after() {
+        let mut def = minimal_tutorial();
+        def.tracks.camera = vec![
+            TutorialCameraKeyframe { at: 100, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }, easing: TutorialEasing::Linear },
+            TutorialCameraKeyframe { at: 900, window_id: "w".into(), camera: TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }, easing: TutorialEasing::Linear },
+        ];
+        assert_eq!(tutorial_camera_at(&def, "w", 0.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }));
+        assert_eq!(tutorial_camera_at(&def, "w", 10_000.0), Some(TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 9.0 }));
+        assert_eq!(tutorial_camera_at(&def, "other-window", 500.0), None);
+    }
+
+    #[test]
+    fn compose_tutorial_ui_applies_snapshot_then_deltas() {
+        let mut def = minimal_tutorial();
+        def.base.ui.active_tool_id = Some("fill".into());
+        def.tracks.ui = vec![
+            TutorialUiKeyframe {
+                at: 100,
+                sample: TutorialUiSample::Snapshot { state: TutorialUiSnapshot { active_mode_id: Some("edit".into()), ..Default::default() } },
+            },
+            TutorialUiKeyframe { at: 200, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("brush".into()) }] } },
+            TutorialUiKeyframe {
+                at: 300,
+                sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::PanelTab { group: "top-left".into(), tab_id: Some("catalogue".into()) }] },
+            },
+        ];
+        // Before any sample: the base snapshot alone.
+        let at_0 = compose_tutorial_ui(&def, 0.0);
+        assert_eq!(at_0.active_tool_id, Some("fill".into()));
+        assert_eq!(at_0.active_mode_id, None);
+        // After the snapshot but before its deltas.
+        let at_100 = compose_tutorial_ui(&def, 100.0);
+        assert_eq!(at_100.active_mode_id, Some("edit".into()));
+        assert_eq!(at_100.active_tool_id, None, "snapshot replaces the base wholesale");
+        // After one delta.
+        let at_200 = compose_tutorial_ui(&def, 250.0);
+        assert_eq!(at_200.active_tool_id, Some("brush".into()));
+        // After both deltas.
+        let at_300 = compose_tutorial_ui(&def, 300.0);
+        assert_eq!(at_300.active_tool_id, Some("brush".into()));
+        assert_eq!(at_300.active_panel_tab_by_group.get("top-left"), Some(&"catalogue".to_string()));
+    }
+
+    #[test]
+    fn tutorial_slice_forward_and_reverse_cross_document_events() {
+        let mut def = minimal_tutorial();
+        def.tracks.document = vec![
+            TutorialDocumentEvent {
+                at: 100,
+                kind: TutorialDocumentEventKind::Edit {
+                    forwards: vec![serde_json::json!({"op": "add", "id": "a"})],
+                    backwards: vec![serde_json::json!({"op": "remove", "id": "a"})],
+                    description: None,
+                    coalesce_key: None,
+                },
+            },
+            TutorialDocumentEvent {
+                at: 200,
+                kind: TutorialDocumentEventKind::Edit {
+                    forwards: vec![serde_json::json!({"op": "add", "id": "b"})],
+                    backwards: vec![serde_json::json!({"op": "remove", "id": "b"})],
+                    description: None,
+                    coalesce_key: None,
+                },
+            },
+        ];
+        let forward = tutorial_slice(&def, 0.0, 250.0);
+        assert!(forward.forward);
+        assert_eq!(forward.document.len(), 2);
+        let TutorialDocumentEventKind::Edit { forwards, .. } = &forward.document[0].kind else { panic!("expected Edit") };
+        assert_eq!(forwards[0]["id"], "a", "forward order applies oldest-first");
+
+        let backward = tutorial_slice(&def, 250.0, 0.0);
+        assert!(!backward.forward);
+        assert_eq!(backward.document.len(), 2);
+        let TutorialDocumentEventKind::Edit { backwards, .. } = &backward.document[0].kind else { panic!("expected Edit") };
+        assert_eq!(backwards[0]["id"], "b", "backward order unwinds newest-first");
+
+        let empty = tutorial_slice(&def, 250.0, 250.0);
+        assert!(empty.document.is_empty());
+    }
+
+    #[test]
+    fn tutorial_slice_partitions_events_document_and_ui_by_track() {
+        let mut def = minimal_tutorial();
+        def.tracks.events = vec![TutorialEvent { at: 50, kind: TutorialEventKind::Action { action: "setFillCount".into(), args: None } }];
+        def.tracks.ui =
+            vec![TutorialUiKeyframe { at: 50, sample: TutorialUiSample::Delta { changes: vec![TutorialUiChange::ActiveTool { id: Some("fill".into()) }] } }];
+        let slice = tutorial_slice(&def, 0.0, 100.0);
+        assert_eq!(slice.events.len(), 1);
+        assert_eq!(slice.ui_changes.len(), 1);
+        assert!(slice.document.is_empty());
+    }
+
+    #[test]
+    fn start_tutorial_action_definition_offers_declared_tutorials_as_select_options() {
+        let action = start_tutorial_action_definition(std::slice::from_ref(&minimal_tutorial()));
+        assert_eq!(action.id, START_TUTORIAL_ACTION_ID);
+        assert!(!action.in_palette, "shell owns palette discovery via the dedicated Play Tutorial command");
+        assert_eq!(action.args.len(), 1);
+        assert!(action.args[0].required);
+        match &action.args[0].control {
+            ActionArgControl::Select { options } => {
+                assert_eq!(options.len(), 1);
+                assert_eq!(options[0].value, "welcome-tour");
+            }
+            other => panic!("expected Select control, got {other:?}"),
+        }
+    }
+
+    #[test]
+    fn record_tutorial_action_definition_is_shell_intercepted_and_out_of_palette() {
+        let action = record_tutorial_action_definition();
+        assert_eq!(action.id, RECORD_TUTORIAL_ACTION_ID);
+        assert!(!action.in_palette);
+        assert_eq!(action.kind, ActionKind::View);
+    }
+    //#endregion 🔖TutorialTests
+
     #[test]
     fn dialog_definition_round_trips_camel_case_with_defaults() {
         let dialog = DialogDefinition::new("confirm-delete", "Delete?", ActionRef::new("deleteSelection"));
@@ -6851,6 +7921,27 @@ mod app_document_tests {
         crate::ui::IntroductionGesture::export().unwrap();
         crate::ui::IntroductionCursor::export().unwrap();
         crate::ui::IntroductionDemonstration::export().unwrap();
+        crate::ui::TutorialDefinition::export().unwrap();
+        crate::ui::TutorialChapter::export().unwrap();
+        crate::ui::TutorialBase::export().unwrap();
+        crate::ui::TutorialTracks::export().unwrap();
+        crate::ui::TutorialAssetSrc::export().unwrap();
+        crate::ui::TutorialNarrationCue::export().unwrap();
+        crate::ui::TutorialCaption::export().unwrap();
+        crate::ui::TutorialOverlayRect::export().unwrap();
+        crate::ui::TutorialVideoCue::export().unwrap();
+        crate::ui::TutorialEvent::export().unwrap();
+        crate::ui::TutorialEventKind::export().unwrap();
+        crate::ui::TutorialUiKeyframe::export().unwrap();
+        crate::ui::TutorialUiSample::export().unwrap();
+        crate::ui::TutorialUiSnapshot::export().unwrap();
+        crate::ui::TutorialUiChange::export().unwrap();
+        crate::ui::TutorialDocumentEvent::export().unwrap();
+        crate::ui::TutorialDocumentEventKind::export().unwrap();
+        crate::ui::TutorialCameraKeyframe::export().unwrap();
+        crate::ui::TutorialCameraState::export().unwrap();
+        crate::ui::TutorialEasing::export().unwrap();
+        crate::ui::TutorialGestureCue::export().unwrap();
         crate::ui::DialogDefinition::export().unwrap();
         crate::ui::AppDefinition::export().unwrap();
         crate::ui::ProgramDefinition::export().unwrap();

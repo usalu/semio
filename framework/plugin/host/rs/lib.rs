@@ -310,6 +310,33 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
+    /// @emoji 📜 Text-DSL counterpart of {@link Self::apply_operations}.
+    pub fn apply_operations_text(&self, instance_id: u32, operations_text: &str) -> Result<(), PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_apply_operations_text(&mut *store, instance_id, operations_text).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// @emoji 📜 Text-DSL counterpart of {@link Self::read_app_document}.
+    pub fn read_app_document_text(&self, instance_id: u32) -> Result<semio::framework::types::DocumentTextFiles, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_read_app_document_text(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// @emoji 📜 Text-DSL counterpart of {@link Self::load_app_document}.
+    pub fn load_app_document_text(&self, instance_id: u32, document_text: semio::framework::types::DocumentTextFiles) -> Result<(), PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_load_app_document_text(&mut *store, instance_id, &document_text).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
     /// @emoji 🔗 Asks the plugin to attach a backbone by uri (resolved to a `PortBackbone` inside the
     /// sandbox, relayed to the endpoint registered here via {@link register_host_backbone}).
     pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), PluginHostError> {

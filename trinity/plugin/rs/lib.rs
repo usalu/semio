@@ -1436,7 +1436,7 @@ pub mod app_rewrite {
     use trinity_ram::{Camera, Graph, GraphFixture, Node, PortDirection, PropertyValue};
     use trinity_rewrite::{
         apply_rule, build_rule_query, rule_query_json, trinity_lod_scale_json,
-        AssignmentJson, Lhs, ParameterKind, ParameterSpec, Rhs, Rule,
+        AssignmentJson, Lhs, LayoutPoint, ParameterKind, ParameterSpec, Rhs, Rule,
         PatternJson, RewriteRuleOperation, RewriteRuleState, REWRITE_RULE_SCHEMA,
     };
     use vcs::DocumentDsl;
@@ -1551,8 +1551,8 @@ pub mod app_rewrite {
             before_fixture_json: nakagin_fixture_json(),
             lhs_json: DEFAULT_LHS_JSON.into(),
             rhs_json: DEFAULT_RHS_JSON.into(),
-            parameter_bindings: HashMap::new(),
-            rule_layout: HashMap::new(),
+            parameter_bindings: BTreeMap::new(),
+            rule_layout: BTreeMap::new(),
         };
         state.parameter_bindings = default_parameter_bindings(&state.rhs_json);
         state
@@ -1570,9 +1570,9 @@ pub mod app_rewrite {
         GraphFixture::from_json(json).ok()
     }
 
-    fn default_parameter_bindings(rhs_json: &str) -> HashMap<String, PropertyValue> {
+    fn default_parameter_bindings(rhs_json: &str) -> BTreeMap<String, PropertyValue> {
         let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
-            return HashMap::new();
+            return BTreeMap::new();
         };
         rhs.parameters
             .iter()
@@ -1683,7 +1683,7 @@ pub mod app_rewrite {
         }
     }
 
-    fn apply_semantic_layout_edit(rule_layout: &mut HashMap<String, (f64, f64)>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
+    fn apply_semantic_layout_edit(rule_layout: &mut BTreeMap<String, LayoutPoint>, current_fixture_json: &str, edited_fixture_json: &str) -> bool {
         let (Some(current), Some(edited)) = (parse_fixture_json(current_fixture_json), parse_fixture_json(edited_fixture_json)) else {
             return false;
         };
@@ -1693,7 +1693,7 @@ pub mod app_rewrite {
                 continue;
             };
             if (prev.x - node.x).abs() > 1e-6 || (prev.y - node.y).abs() > 1e-6 {
-                rule_layout.insert(node.id.clone(), (node.x, node.y));
+                rule_layout.insert(node.id.clone(), LayoutPoint { x: node.x, y: node.y });
                 changed = true;
             }
         }
@@ -1897,8 +1897,8 @@ pub mod app_rewrite {
         Graph::from_fixture(fixture).ok()?.fixture_json().ok()
     }
 
-    fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &HashMap<String, (f64, f64)>) -> Node {
-        let (x, y) = rule_layout.get(id).copied().unwrap_or((x, y));
+    fn semantic_rule_node(id: &str, kind: &str, name: &str, x: f64, y: f64, rule_layout: &BTreeMap<String, LayoutPoint>) -> Node {
+        let (x, y) = rule_layout.get(id).map(|point| (point.x, point.y)).unwrap_or((x, y));
         Node {
             id: id.into(),
             name: name.into(),
@@ -1912,7 +1912,7 @@ pub mod app_rewrite {
         }
     }
 
-    fn lhs_semantic_graph_fixture(lhs: &Lhs, rule_layout: &HashMap<String, (f64, f64)>) -> GraphFixture {
+    fn lhs_semantic_graph_fixture(lhs: &Lhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> GraphFixture {
         let mut nodes = vec![semantic_rule_node(
             "lhs-match",
             "rewrite.match",
@@ -1944,7 +1944,7 @@ pub mod app_rewrite {
         }
     }
 
-    fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &HashMap<String, (f64, f64)>) -> GraphFixture {
+    fn rhs_semantic_graph_fixture(rhs: &Rhs, rule_layout: &BTreeMap<String, LayoutPoint>) -> GraphFixture {
         let mut nodes = Vec::new();
         let edges = Vec::new();
         let mut y = 0.0;
@@ -2020,7 +2020,7 @@ pub mod app_rewrite {
         }
     }
 
-    fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
+    fn lhs_graph_fixture_json(lhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
         let Ok(lhs) = serde_json::from_str::<Lhs>(lhs_json) else {
             return nakagin_fixture_json();
         };
@@ -2030,7 +2030,7 @@ pub mod app_rewrite {
             .unwrap_or_else(nakagin_fixture_json)
     }
 
-    fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &HashMap<String, (f64, f64)>) -> String {
+    fn rhs_graph_fixture_json(rhs_json: &str, rule_layout: &BTreeMap<String, LayoutPoint>) -> String {
         let Ok(rhs) = serde_json::from_str::<Rhs>(rhs_json) else {
             return nakagin_fixture_json();
         };

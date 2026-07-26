@@ -16,6 +16,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }
+dsl = { path = "../../../dsl/rs" }
 puzzle_3d = { path = "../../3d/rs" }
 mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

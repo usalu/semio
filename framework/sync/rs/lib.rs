@@ -385,17 +385,25 @@ mod native_actor {
         read: WsRead,
     }
 
-    /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single blob.
+    /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single
+    /// text-backed blob. `Text` stores the actor's whole-envelope JSON in `FolderTextStorage`'s `.dsl`
+    /// slot (the same single-blob-overwrite semantics the deleted `FileJsonStorage` used, just now
+    /// addressed by `<folder>/<document_id>.<extension>` instead of an arbitrary path) — this actor
+    /// stays `serde_json::Value`-typed end to end (it drains/relays generic backbone messages, never a
+    /// concrete `Projection`/`Operation`), so it cannot itself call `DocumentDsl::print_dsl`/
+    /// `OpText::print_op` to populate the sibling `.ops` file; that companion file is written empty and
+    /// is not yet read back. Per-operation DSL/op-text persistence would require threading a concrete
+    /// technology type through this actor, which is out of scope here.
     enum FolderEndpoint {
         Sqlite { storage: vcs::FolderSqliteStorage, document_id: String, schema: String },
-        Json { storage: vcs::FileJsonStorage },
+        Text { storage: vcs::FolderTextStorage, document_id: String, extension: String },
     }
 
     impl FolderEndpoint {
         fn read(&self) -> Option<String> {
             match self {
                 FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).ok().flatten(),
-                FolderEndpoint::Json { storage } => storage.read().ok().flatten(),
+                FolderEndpoint::Text { storage, document_id, extension } => storage.read(document_id, extension).ok().flatten().map(|files| files.dsl),
             }
         }
 
@@ -404,8 +412,8 @@ mod native_actor {
                 FolderEndpoint::Sqlite { storage, document_id, schema } => {
                     let _ = storage.write(document_id, schema, json);
                 }
-                FolderEndpoint::Json { storage } => {
-                    let _ = storage.write(json);
+                FolderEndpoint::Text { storage, document_id, extension } => {
+                    let _ = storage.write(document_id, extension, &vcs::DocumentTextFiles { dsl: json.to_string(), ops: String::new() });
                 }
             }
         }
@@ -852,18 +860,23 @@ mod native_actor {
         //#endregion 🔖Deliver
     }
 
+    /// @emoji 🔀 A binding path with a file extension addresses one document's text blob directly
+    /// (`Text`, generalizing the deleted single-file `FileJsonStorage` beyond `.json`); an extensionless
+    /// directory path is the canonical multi-document sqlite store (`Sqlite`).
     fn build_folder_endpoint(path: &std::path::Path, document_id: &str, schema: &str) -> FolderEndpoint {
-        if path.extension().and_then(|ext| ext.to_str()) == Some("json") {
-            FolderEndpoint::Json { storage: vcs::FileJsonStorage::new(path.to_path_buf()) }
-        } else {
-            FolderEndpoint::Sqlite { storage: vcs::FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() }
+        match path.extension().and_then(|ext| ext.to_str()) {
+            Some(extension) => {
+                let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
+                FolderEndpoint::Text { storage: vcs::FolderTextStorage::new(folder), document_id: document_id.to_string(), extension: extension.to_string() }
+            }
+            None => FolderEndpoint::Sqlite { storage: vcs::FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
         }
     }
 
-    /// @emoji 📍 The on-disk path a folder binding writes to: the `*.json` blob itself, or the
-    /// multi-document sqlite db under `<folder>/.semio/documents.db`.
+    /// @emoji 📍 The on-disk path a folder binding writes to: the `<document_id>.<extension>` text blob
+    /// itself, or the multi-document sqlite db under `<folder>/.semio/documents.db`.
     fn folder_watch_path_for(path: &Path) -> PathBuf {
-        if path.extension().and_then(|ext| ext.to_str()) == Some("json") {
+        if path.extension().is_some() {
             path.to_path_buf()
         } else {
             path.join(".semio").join("documents.db")
@@ -1194,7 +1207,7 @@ pub fn load_fixtures(dir: &std::path::Path) -> Vec<ActorFixture> {
 mod tests {
     use super::*;
     use serde::{Deserialize, Serialize};
-    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit, Edit, OperationDiff};
+    use vcs::{create_document_vcs_envelope, operation_envelope_from_edit, Edit, Operation, OperationDiff};
 
     #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
     struct DemoProjection {

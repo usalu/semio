@@ -87,6 +87,21 @@ import {
   panelTabFirstDraggableElementId,
   pickMostSpecificCanvasTarget,
   sortCanvasPickTargetsGeneralFirst,
+  START_TUTORIAL_ACTION_ID,
+  RECORD_TUTORIAL_ACTION_ID,
+  TUTORIAL_CONVERGE_MS,
+  type TutorialDefinition,
+  type TutorialChapter,
+  type TutorialUiSnapshot,
+  type TutorialUiChange,
+  type TutorialCameraKeyframe,
+  type TutorialCameraState,
+  type TutorialEasing,
+  type TutorialEvent,
+  type TutorialDocumentEvent,
+  type TutorialGestureCue,
+  type TutorialOverlayRect,
+  type WindowLayout,
 } from "@semio-tech/framework-core";
 import * as dagre from "dagre";
 import { format, formatDistanceToNow } from "date-fns";
@@ -3063,6 +3078,8 @@ export type UiTranslationSchema = {
     };
     readonly command: {
       readonly introduceApp: UiLabelValue;
+      readonly playTutorial: UiLabelValue;
+      readonly recordTutorial: UiLabelValue;
       readonly setAppearance: UiLabelValue;
       readonly setTheme: UiLabelValue;
       readonly setLayout: UiLabelValue;
@@ -3271,6 +3288,18 @@ export type UiTranslationSchema = {
     readonly back: UiLabelValue;
     readonly next: UiLabelValue;
     readonly done: UiLabelValue;
+  };
+  readonly tutorial: {
+    readonly play: UiLabelValue;
+    readonly pause: UiLabelValue;
+    readonly stop: UiLabelValue;
+    readonly rate: UiLabelValue;
+    readonly mute: UiLabelValue;
+    readonly captions: UiLabelValue;
+    readonly record: UiLabelValue;
+    readonly recording: UiLabelValue;
+    readonly addChapter: UiLabelValue;
+    readonly chapter: UiLabelValue;
   };
 };
 
@@ -3680,6 +3709,8 @@ export const uiChromeTranslationBundles = {
         },
         command: {
           introduceApp: { label: { normal: "App vorstellen", beginner: "App vorstellen" } },
+          playTutorial: { label: { normal: "Tutorial abspielen", beginner: "Tutorial abspielen" } },
+          recordTutorial: { label: { normal: "Tutorial aufnehmen", beginner: "Tutorial aufnehmen" } },
           setAppearance: { label: { normal: "Erscheinungsbild festlegen", beginner: "Erscheinungsbild festlegen" } },
           setTheme: { label: { normal: "Thema festlegen", beginner: "Thema festlegen" } },
           setLayout: { label: { normal: "Layout festlegen", beginner: "Layout festlegen" } },
@@ -3978,6 +4009,18 @@ export const uiChromeTranslationBundles = {
         back: { label: { normal: "Zurück", beginner: "Zurück" } },
         next: { label: { normal: "Weiter", beginner: "Weiter" } },
         done: { label: { normal: "Fertig", beginner: "Fertig" } },
+      },
+      tutorial: {
+        play: { label: { normal: "Abspielen", beginner: "Abspielen" } },
+        pause: { label: { normal: "Pause", beginner: "Pause" } },
+        stop: { label: { normal: "Tutorial beenden", beginner: "Tutorial beenden" } },
+        rate: { label: { normal: "Geschwindigkeit", beginner: "Geschwindigkeit" } },
+        mute: { label: { normal: "Ton aus", beginner: "Ton aus" } },
+        captions: { label: { normal: "Untertitel", beginner: "Untertitel" } },
+        record: { label: { normal: "Aufnehmen", beginner: "Aufnehmen" } },
+        recording: { label: { normal: "Aufnahme läuft", beginner: "Aufnahme läuft" } },
+        addChapter: { label: { normal: "Kapitel setzen", beginner: "Kapitel setzen" } },
+        chapter: { label: { normal: "Kapitel", beginner: "Kapitel" } },
       },
     } satisfies UiTranslationSchema,
   },
@@ -4279,6 +4322,8 @@ export const uiChromeTranslationBundles = {
         },
         command: {
           introduceApp: { label: { normal: "Introduce App", beginner: "Introduce App" } },
+          playTutorial: { label: { normal: "Play Tutorial", beginner: "Play Tutorial" } },
+          recordTutorial: { label: { normal: "Record Tutorial", beginner: "Record Tutorial" } },
           setAppearance: { label: { normal: "Set Appearance", beginner: "Set Appearance" } },
           setTheme: { label: { normal: "Set Theme", beginner: "Set Theme" } },
           setLayout: { label: { normal: "Set Layout", beginner: "Set Layout" } },
@@ -4577,6 +4622,18 @@ export const uiChromeTranslationBundles = {
         back: { label: { normal: "Back", beginner: "Back" } },
         next: { label: { normal: "Next", beginner: "Next" } },
         done: { label: { normal: "Done", beginner: "Done" } },
+      },
+      tutorial: {
+        play: { label: { normal: "Play", beginner: "Play" } },
+        pause: { label: { normal: "Pause", beginner: "Pause" } },
+        stop: { label: { normal: "Stop Tutorial", beginner: "Stop Tutorial" } },
+        rate: { label: { normal: "Speed", beginner: "Speed" } },
+        mute: { label: { normal: "Mute", beginner: "Mute" } },
+        captions: { label: { normal: "Captions", beginner: "Captions" } },
+        record: { label: { normal: "Record", beginner: "Record" } },
+        recording: { label: { normal: "Recording", beginner: "Recording" } },
+        addChapter: { label: { normal: "Add Chapter", beginner: "Add Chapter" } },
+        chapter: { label: { normal: "Chapter", beginner: "Chapter" } },
       },
     } satisfies UiTranslationSchema,
   },
@@ -6534,6 +6591,538 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   );
 };
 // #endregion 🎓Introduction
+
+// #region 🎥Tutorial
+//#region 🎬TutorialEngine
+/** @emoji ⏱️ Formats a millisecond offset as `mm:ss` (floored to the second, never negative). */
+export function formatTutorialTime(ms: number): string {
+  const totalSeconds = Math.max(0, Math.floor(ms / 1000));
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${minutes}:${String(seconds).padStart(2, "0")}`;
+}
+
+/** @emoji ✂️ Every cue whose `[at, at + durationMs)` window covers `atMs` — shared by narration/video/gesture track lookups. */
+export function tutorialCuesBetween<T extends { readonly at: number; readonly durationMs: number }>(cues: readonly T[], atMs: number): readonly T[] {
+  return cues.filter((cue) => atMs >= cue.at && atMs < cue.at + cue.durationMs);
+}
+
+function tutorialEaseInOut(t: number): number {
+  return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+}
+
+function tutorialLerp3(a: readonly [number, number, number], b: readonly [number, number, number], t: number): readonly [number, number, number] {
+  return [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+}
+
+/** @emoji 🎥 TS port of Rust `interpolate_tutorial_camera` — same semantics (log-space zoom, ease-in-out/linear/hold curves, mismatched-kind snap). Keep in lockstep with `framework/core/rs/lib.rs`'s `//#region 🔖TutorialEngine`. */
+export function interpolateTutorialCamera(prev: TutorialCameraKeyframe, next: TutorialCameraKeyframe, atMs: number): TutorialCameraState {
+  const span = Math.max(next.at - prev.at, 1);
+  const raw = Math.min(1, Math.max(0, (atMs - prev.at) / span));
+  const t = next.easing === "linear" ? raw : next.easing === "hold" ? (raw >= 1 ? 1 : 0) : tutorialEaseInOut(raw);
+  const prevCamera = prev.camera;
+  const nextCamera = next.camera;
+  if (prevCamera.kind === "orbit" && nextCamera.kind === "orbit") {
+    const fov = prevCamera.fov != null && nextCamera.fov != null ? prevCamera.fov + (nextCamera.fov - prevCamera.fov) * t : (prevCamera.fov ?? nextCamera.fov);
+    return { kind: "orbit", position: tutorialLerp3(prevCamera.position, nextCamera.position, t), target: tutorialLerp3(prevCamera.target, nextCamera.target, t), up: tutorialLerp3(prevCamera.up, nextCamera.up, t), fov };
+  }
+  if (prevCamera.kind === "canvas" && nextCamera.kind === "canvas") {
+    return {
+      kind: "canvas",
+      x: prevCamera.x + (nextCamera.x - prevCamera.x) * t,
+      y: prevCamera.y + (nextCamera.y - prevCamera.y) * t,
+      zoom: Math.exp(Math.log(prevCamera.zoom) + (Math.log(nextCamera.zoom) - Math.log(prevCamera.zoom)) * t),
+    };
+  }
+  return t < 0.5 ? prevCamera : nextCamera;
+}
+
+/** @emoji 🎥 TS port of Rust `tutorial_camera_at`. */
+export function tutorialCameraAt(def: TutorialDefinition, windowId: string, atMs: number): TutorialCameraState | undefined {
+  const keyframes = [...def.base.cameras, ...def.tracks.camera].filter((keyframe) => keyframe.windowId === windowId);
+  const first = keyframes[0];
+  if (!first) return undefined;
+  if (atMs <= first.at) return first.camera;
+  for (let index = 0; index < keyframes.length - 1; index++) {
+    const prev = keyframes[index];
+    const next = keyframes[index + 1];
+    if (atMs <= next.at) return interpolateTutorialCamera(prev, next, atMs);
+  }
+  return keyframes[keyframes.length - 1].camera;
+}
+
+/** @emoji 🩹 TS port of Rust `apply_tutorial_ui_change` — immutable (returns a new snapshot) rather than in-place, since TS callers never hold a live `&mut`. */
+export function applyTutorialUiChange(state: TutorialUiSnapshot, change: TutorialUiChange): TutorialUiSnapshot {
+  switch (change.kind) {
+    case "activeMode":
+      return { ...state, activeModeId: change.id };
+    case "focusedWindow":
+      return { ...state, focusedWindowId: change.id };
+    case "activeUtility": {
+      const next = { ...state.activeUtilityByWindowId };
+      if (change.utilityId) next[change.windowId] = change.utilityId;
+      else delete next[change.windowId];
+      return { ...state, activeUtilityByWindowId: next };
+    }
+    case "activeTool":
+      return { ...state, activeToolId: change.id };
+    case "layout":
+      return { ...state, layout: change.layout };
+    case "panelTab": {
+      const next = { ...state.activePanelTabByGroup };
+      if (change.tabId) next[change.group] = change.tabId;
+      else delete next[change.group];
+      return { ...state, activePanelTabByGroup: next };
+    }
+    case "panelState":
+      return { ...state, panelJson: change.panelJson };
+    case "selection":
+      return { ...state, selectionJson: change.selectionJson };
+    case "dialog":
+      return { ...state, openDialogId: change.id };
+    case "treeExpansion": {
+      const has = state.expandedTreeIds.includes(change.id);
+      if (change.expanded) return has ? state : { ...state, expandedTreeIds: [...state.expandedTreeIds, change.id] };
+      return has ? { ...state, expandedTreeIds: state.expandedTreeIds.filter((id) => id !== change.id) } : state;
+    }
+    case "commandPanel":
+      return { ...state, commandPanelOpen: change.open };
+    default:
+      return state;
+  }
+}
+
+/** @emoji 🧮 TS port of Rust `compose_tutorial_ui`. */
+export function composeTutorialUi(def: TutorialDefinition, atMs: number): TutorialUiSnapshot {
+  let state = def.base.ui;
+  let deltas: TutorialUiChange[] = [];
+  for (const keyframe of def.tracks.ui) {
+    if (keyframe.at > atMs) break;
+    if (keyframe.sample.kind === "snapshot") {
+      state = keyframe.sample.state;
+      deltas = [];
+    } else {
+      deltas = [...deltas, ...keyframe.sample.changes];
+    }
+  }
+  for (const change of deltas) state = applyTutorialUiChange(state, change);
+  return state;
+}
+
+/** @emoji ✂️ TS mirror of Rust `TutorialSlice` — see `tutorialSlice` below. */
+export type TutorialSlice = {
+  readonly forward: boolean;
+  readonly events: readonly TutorialEvent[];
+  readonly document: readonly TutorialDocumentEvent[];
+  readonly uiChanges: readonly TutorialUiChange[];
+};
+
+/** @emoji ✂️ TS port of Rust `tutorial_slice` — same directionality contract (forward: oldest→newest;
+ * backward: newest→oldest so `Edit.backwards` unwind in the right order). Never spans a
+ * `TutorialUiSample::Snapshot` boundary correctly on its own — a seek/scrub must call
+ * {@link composeTutorialUi} wholesale instead, exactly like the Rust doc comment warns. */
+export function tutorialSlice(def: TutorialDefinition, fromMs: number, toMs: number): TutorialSlice {
+  const forward = toMs >= fromMs;
+  const lo = Math.min(fromMs, toMs);
+  const hi = Math.max(fromMs, toMs);
+  const inRange = (at: number) => at > lo && at <= hi;
+  let events = def.tracks.events.filter((event) => inRange(event.at));
+  let document = def.tracks.document.filter((event) => inRange(event.at));
+  let uiChanges: TutorialUiChange[] = [];
+  for (const keyframe of def.tracks.ui) {
+    if (!inRange(keyframe.at)) continue;
+    if (keyframe.sample.kind === "delta") uiChanges = [...uiChanges, ...keyframe.sample.changes];
+  }
+  if (!forward) {
+    events = [...events].reverse();
+    document = [...document].reverse();
+    uiChanges = [...uiChanges].reverse();
+  }
+  return { forward, events, document, uiChanges };
+}
+
+/** @emoji ✅ TS port of Rust `validate_tutorial` — light structural sanity check shared by the recorder before download; does not validate referenced action/command/element ids (no `AppDefinition` in scope here). Returns the first error found, or `null`. */
+export function validateTutorial(def: TutorialDefinition): string | null {
+  const sortedByAt = <T,>(label: string, items: readonly T[], at: (item: T) => number): string | null => {
+    let last: number | null = null;
+    for (const item of items) {
+      const value = at(item);
+      if (value > def.durationMs) return `tutorial track \`${label}\` has an entry at ${value}ms beyond durationMs ${def.durationMs}`;
+      if (last != null && value < last) return `tutorial track \`${label}\` is not sorted ascending by \`at\` (${last}ms then ${value}ms)`;
+      last = value;
+    }
+    return null;
+  };
+  const checks: readonly (() => string | null)[] = [
+    () => sortedByAt("chapters", def.chapters, (c) => c.at),
+    () => sortedByAt("narration", def.tracks.narration, (c) => c.at),
+    () => sortedByAt("video", def.tracks.video, (c) => c.at),
+    () => sortedByAt("events", def.tracks.events, (e) => e.at),
+    () => sortedByAt("ui", def.tracks.ui, (k) => k.at),
+    () => sortedByAt("document", def.tracks.document, (e) => e.at),
+    () => sortedByAt("camera", def.tracks.camera, (k) => k.at),
+    () => sortedByAt("gestures", def.tracks.gestures, (c) => c.at),
+  ];
+  for (const check of checks) {
+    const error = check();
+    if (error) return error;
+  }
+  const chapterIds = new Set<string>();
+  for (const chapter of def.chapters) {
+    if (chapterIds.has(chapter.id)) return `duplicate tutorial chapter id \`${chapter.id}\``;
+    chapterIds.add(chapter.id);
+  }
+  const cueIds = new Set<string>();
+  for (const cue of def.tracks.narration) {
+    if (cueIds.has(cue.id)) return `duplicate tutorial narration cue id \`${cue.id}\``;
+    cueIds.add(cue.id);
+  }
+  for (const camera of def.base.cameras) {
+    if (camera.at !== 0) return `tutorial base camera keyframe for window \`${camera.windowId}\` must have at == 0`;
+  }
+  return null;
+}
+//#endregion 🎬TutorialEngine
+
+//#region 🎬TutorialClock
+/** @emoji ⏱️ The minimal read+subscribe surface {@link TutorialBar}/{@link TutorialCaptions}/{@link TutorialVideoOverlay}/{@link TutorialGhostPointer} need — lets every per-frame time consumer self-subscribe via `useSyncExternalStore` instead of the whole shell re-rendering on every tick. */
+export type TutorialClockPort = {
+  readonly getTimeMs: () => number;
+  readonly subscribe: (callback: () => void) => () => void;
+};
+
+/** @emoji ⏱️ Full imperative control surface for a `TutorialClockPort` — owned by the shell orchestration (director), read by the UI kit. */
+export type TutorialClock = TutorialClockPort & {
+  readonly play: () => void;
+  readonly pause: () => void;
+  readonly seek: (ms: number) => void;
+  readonly setRate: (rate: number) => void;
+  readonly setDurationMs: (durationMs: number) => void;
+  readonly isPlaying: () => boolean;
+  readonly getRate: () => number;
+  readonly dispose: () => void;
+};
+
+/** @emoji ⏱️ Creates a tiny external store driven by `requestAnimationFrame`: `t += dtWallClock * rate` while playing, auto-pausing at `durationMs`. Not a React hook itself — subscribe via {@link useTutorialClock} (or any `useSyncExternalStore`) for the reactive read. */
+export function createTutorialClock(durationMs: number): TutorialClock {
+  let tMs = 0;
+  let rate = 1;
+  let playing = false;
+  let duration = Math.max(0, durationMs);
+  let lastFrameAt: number | null = null;
+  let rafHandle: number | null = null;
+  const subscribers = new Set<() => void>();
+  const notify = () => subscribers.forEach((callback) => callback());
+  const tick = (now: number) => {
+    if (!playing) {
+      rafHandle = null;
+      return;
+    }
+    const dt = lastFrameAt == null ? 0 : now - lastFrameAt;
+    lastFrameAt = now;
+    tMs = Math.min(duration, Math.max(0, tMs + dt * rate));
+    if (tMs >= duration) playing = false;
+    notify();
+    rafHandle = playing ? requestAnimationFrame(tick) : null;
+  };
+  return {
+    getTimeMs: () => tMs,
+    subscribe: (callback) => {
+      subscribers.add(callback);
+      return () => subscribers.delete(callback);
+    },
+    play: () => {
+      if (playing || duration <= 0) return;
+      playing = true;
+      lastFrameAt = null;
+      if (rafHandle == null) rafHandle = requestAnimationFrame(tick);
+      notify();
+    },
+    pause: () => {
+      if (!playing) return;
+      playing = false;
+      if (rafHandle != null) {
+        cancelAnimationFrame(rafHandle);
+        rafHandle = null;
+      }
+      notify();
+    },
+    seek: (ms) => {
+      tMs = Math.min(duration, Math.max(0, ms));
+      lastFrameAt = playing ? performance.now() : null;
+      notify();
+    },
+    setRate: (nextRate) => {
+      rate = nextRate;
+      notify();
+    },
+    setDurationMs: (nextDuration) => {
+      duration = Math.max(0, nextDuration);
+      tMs = Math.min(tMs, duration);
+      notify();
+    },
+    isPlaying: () => playing,
+    getRate: () => rate,
+    dispose: () => {
+      if (rafHandle != null) cancelAnimationFrame(rafHandle);
+      subscribers.clear();
+    },
+  };
+}
+
+/** @emoji ⏱️ Subscribes the calling component to a {@link TutorialClockPort}'s per-frame time — only this component re-renders on tick, never the whole shell. */
+export function useTutorialClock(clock: TutorialClockPort): number {
+  return reactHostPort.useSyncExternalStore(clock.subscribe, clock.getTimeMs, clock.getTimeMs);
+}
+//#endregion 🎬TutorialClock
+
+//#region 🎬TutorialCameraDriver
+/** @emoji 🎥 A live 3D/2D window's imperative camera bridge for tutorial playback — modeled exactly on {@link registerIntroductionSurfaceResolver}. `get` reads the surface's current live pose (for deviation-then-play convergence); `set` writes a pose during playback/seek. */
+export type TutorialCameraDriver = {
+  readonly get: () => TutorialCameraState | null;
+  readonly set: (camera: TutorialCameraState) => void;
+};
+
+const tutorialCameraDrivers = new Map<string, TutorialCameraDriver>();
+
+/** @emoji 🎥 Registers the tutorial camera driver for window instance `windowId` — call from the window's own host component (e.g. `World3dHost`), unregister on unmount via the returned disposer. */
+export function registerTutorialCameraDriver(windowId: string, driver: TutorialCameraDriver): () => void {
+  tutorialCameraDrivers.set(windowId, driver);
+  return () => {
+    if (tutorialCameraDrivers.get(windowId) === driver) tutorialCameraDrivers.delete(windowId);
+  };
+}
+
+/** @emoji 🎥 Looks up a registered {@link TutorialCameraDriver}, or `undefined` if that window hasn't mounted/registered one yet. */
+export function getTutorialCameraDriver(windowId: string): TutorialCameraDriver | undefined {
+  return tutorialCameraDrivers.get(windowId);
+}
+//#endregion 🎬TutorialCameraDriver
+
+//#region 🎬TutorialBar
+const TUTORIAL_RATES = [0.5, 1, 1.5, 2] as const;
+
+/** @emoji ⏭️ Cycles through the fixed rate ladder (0.5→1→1.5→2→0.5→…). */
+function nextTutorialRate(rate: number): number {
+  const index = TUTORIAL_RATES.indexOf(rate as (typeof TUTORIAL_RATES)[number]);
+  return TUTORIAL_RATES[(index === -1 ? 0 : index + 1) % TUTORIAL_RATES.length];
+}
+
+export type TutorialChapterMarker = { readonly id: string; readonly title: string; readonly atMs: number };
+
+export type TutorialBarProps = {
+  readonly title: string;
+  readonly durationMs: number;
+  readonly playing: boolean;
+  readonly rate: number;
+  readonly muted: boolean;
+  readonly captionsOn: boolean;
+  readonly recording: boolean;
+  readonly recordAvailable: boolean;
+  readonly chapters: readonly TutorialChapterMarker[];
+  readonly clock: TutorialClockPort;
+  readonly onPlayPause: () => void;
+  readonly onStop: () => void;
+  readonly onSeek: (ms: number) => void;
+  readonly onRateChange: (rate: number) => void;
+  readonly onMutedChange: (muted: boolean) => void;
+  readonly onCaptionsChange: (captionsOn: boolean) => void;
+  readonly onRecordToggle: () => void;
+  readonly onAddChapter: () => void;
+};
+
+/** @emoji 🎥 Navbar-style timeline/controls row shown as {@link LayoutProps.subnavbar} whenever a tutorial is active — markup mirrors `Navbar`/`Footer` (`id="ui.tutorial.bar"`, `data-slot="tutorial-bar"`, `data-ui-reveal-region`, `data-elevation-root`). Only this component subscribes to the per-frame `clock` (see {@link useTutorialClock}), so the 60fps scrubber/time readout never re-renders the rest of the shell. */
+export const TutorialBar: React.FC<TutorialBarProps> = ({
+  title,
+  durationMs,
+  playing,
+  rate,
+  muted,
+  captionsOn,
+  recording,
+  recordAvailable,
+  chapters,
+  clock,
+  onPlayPause,
+  onStop,
+  onSeek,
+  onRateChange,
+  onMutedChange,
+  onCaptionsChange,
+  onRecordToggle,
+  onAddChapter,
+}) => {
+  const level = useLevel();
+  const bgClass = getLevelBgClass(level);
+  const timeMs = useTutorialClock(clock);
+  const playLabel = useLabel("tutorial.play");
+  const pauseLabel = useLabel("tutorial.pause");
+  const stopLabel = useLabel("tutorial.stop");
+  const muteLabel = useLabel("tutorial.mute");
+  const captionsLabel = useLabel("tutorial.captions");
+  const recordLabel = useLabel("tutorial.record");
+  const recordingLabel = useLabel("tutorial.recording");
+  const addChapterLabel = useLabel("tutorial.addChapter");
+
+  return (
+    <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        <Button id="ui.tutorial.play" icon={playing ? "pause" : "play"} text={playing ? pauseLabel : playLabel} onClick={onPlayPause} />
+        <Button id="ui.tutorial.stop" icon="square" text={stopLabel} onClick={onStop} />
+        <span id="ui.tutorial.time" data-slot="tutorial-time" className="shrink-0 whitespace-nowrap px-single text-xs tabular-nums text-muted-foreground">
+          {formatTutorialTime(timeMs)} / {formatTutorialTime(durationMs)}
+        </span>
+        <div className="relative min-w-0 flex-1 px-single">
+          <Slider id="ui.tutorial.scrubber" min={0} max={Math.max(durationMs, 1)} value={[timeMs]} onValueChange={(values) => onSeek(values[0] ?? 0)} showValue={false} />
+          {chapters.map((chapter) => (
+            <button
+              key={chapter.id}
+              id={`ui.tutorial.chapter.${chapter.id}`}
+              type="button"
+              data-slot="tutorial-chapter-tick"
+              title={chapter.title}
+              className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
+              style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
+              onClick={() => onSeek(chapter.atMs)}
+            />
+          ))}
+        </div>
+        <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
+        <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
+        <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
+        {recordAvailable && (
+          <>
+            <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
+            {recording && (
+              <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
+                {recordingLabel}
+              </span>
+            )}
+          </>
+        )}
+        <Button id="ui.tutorial.addChapter" icon="plus" text={addChapterLabel} onClick={onAddChapter} />
+        <span className="min-w-0 flex-1 truncate px-single text-right text-xs text-muted-foreground">{title}</span>
+      </div>
+    </nav>
+  );
+};
+//#endregion 🎬TutorialBar
+
+//#region 🎬TutorialCaptions
+export type TutorialCaptionsProps = {
+  readonly text: string | null;
+  readonly visible: boolean;
+};
+
+/** @emoji 💬 Bottom-center glass strip showing the active narration cue's caption text — hidden entirely when `visible` is false (captions toggled off) or no cue currently covers the playhead. Reuses {@link GLASS_OVERLAY_BOX_CLASS}'s panel glass tier, positioned bottom-center instead of anchored. */
+export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
+  if (!visible || !text) return null;
+  return (
+    <div id="ui.tutorial.captions.text" data-slot="tutorial-captions" className={cn(GLASS_OVERLAY_BOX_CLASS, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
+      {text}
+    </div>
+  );
+};
+//#endregion 🎬TutorialCaptions
+
+//#region 🎬TutorialVideoOverlay
+export type TutorialVideoOverlayProps = {
+  readonly src: string | null;
+  readonly rect: TutorialOverlayRect;
+  readonly muted: boolean;
+  readonly playing: boolean;
+  readonly rate: number;
+  /** ⏱️ Offset (ms) into THIS cue's own source — the overlay resyncs `video.currentTime` to this whenever it drifts. */
+  readonly localTimeMs: number;
+};
+
+/** @emoji 📹 Fixed `<video>` positioned via the active cue's normalized {@link TutorialOverlayRect}, resynced to the playhead every render (hard reseek past a 300ms drift, matching the plan's tolerance) rather than played independently. */
+export const TutorialVideoOverlay: React.FC<TutorialVideoOverlayProps> = ({ src, rect, muted, playing, rate, localTimeMs }) => {
+  const videoRef = reactHostPort.useRef<HTMLVideoElement | null>(null);
+  reactHostPort.useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    video.muted = muted;
+    video.playbackRate = rate;
+    const targetSeconds = localTimeMs / 1000;
+    if (Math.abs(video.currentTime - targetSeconds) > 0.3) video.currentTime = targetSeconds;
+    if (playing) void video.play().catch(() => {});
+    else video.pause();
+  }, [muted, rate, playing, localTimeMs]);
+  if (!src) return null;
+  return (
+    <video
+      id="ui.tutorial.video"
+      ref={videoRef}
+      data-slot="tutorial-video-overlay"
+      src={src}
+      className="pointer-events-none fixed z-tutorial rounded-lg object-cover shadow-lg"
+      style={{ left: `${rect.x * 100}%`, top: `${rect.y * 100}%`, width: `${rect.width * 100}%`, height: `${rect.height * 100}%` }}
+      muted={muted}
+      playsInline
+    />
+  );
+};
+//#endregion 🎬TutorialVideoOverlay
+
+//#region 🎬TutorialGhostPointer
+export type TutorialGhostPointerProps = {
+  /** 🎬 The gesture cue currently covering the playhead, or `null` between cues. */
+  readonly cue: TutorialGestureCue | null;
+  /** 📈 0–1 progress through `cue`'s own `durationMs`, driven by the tutorial playhead (never the ghost pointer's own clock, unlike `IntroductionDemonstrationOverlay`). */
+  readonly progress: number;
+};
+
+/** @emoji 👻 Tutorial-playback ghost cursor — a lean, parallel implementation of `IntroductionDemonstrationOverlay`'s point resolution (reuses {@link resolveIntroductionPoint}/{@link introductionDemoArcPoint}/{@link introductionDemoResolveVisual} verbatim rather than re-deriving them) driven by the tutorial playhead's `progress` instead of its own internal rAF phase machine — click-family/scroll gestures render statically at their point, `drag` lerps linearly from→to, `orbit` bulges along the same quadratic arc the introduction overlay uses. */
+export const TutorialGhostPointer: React.FC<TutorialGhostPointerProps> = ({ cue, progress }) => {
+  const [point, setPoint] = reactHostPort.useState<{ readonly x: number; readonly y: number } | null>(null);
+
+  reactHostPort.useEffect(() => {
+    if (!cue) {
+      setPoint(null);
+      return;
+    }
+    const gesture = cue.gesture;
+    let next: { readonly x: number; readonly y: number } | null = null;
+    switch (gesture.kind) {
+      case "leftClick":
+      case "rightClick":
+      case "doubleClick":
+      case "scroll":
+        next = resolveIntroductionPoint(gesture.at);
+        break;
+      case "drag": {
+        const from = resolveIntroductionPoint(gesture.from);
+        const to = resolveIntroductionPoint(gesture.to);
+        next = from && to ? { x: from.x + (to.x - from.x) * progress, y: from.y + (to.y - from.y) * progress } : (from ?? to ?? null);
+        break;
+      }
+      case "orbit": {
+        const from = resolveIntroductionPoint(gesture.from);
+        const to = resolveIntroductionPoint(gesture.to);
+        next = from && to ? introductionDemoArcPoint(from, to, progress) : (from ?? to ?? null);
+        break;
+      }
+      default:
+        next = null;
+    }
+    setPoint(next);
+  }, [cue, progress]);
+
+  if (!cue || !point) return null;
+  const glyph = cue.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[cue.gesture.kind];
+  return (
+    <div
+      id="ui.tutorial.ghostPointer"
+      data-slot="tutorial-ghost-pointer"
+      aria-hidden
+      className="pointer-events-none fixed z-tutorial size-double -translate-x-1/2 -translate-y-1/2 bg-contain bg-no-repeat opacity-90"
+      style={{ left: point.x, top: point.y, backgroundImage: `var(--cursor-ghost-${glyph})` }}
+    />
+  );
+};
+//#endregion 🎬TutorialGhostPointer
+// #endregion 🎥Tutorial
 
 // #region 🗨️Dialog
 export type UIDialogProps = {
@@ -9380,6 +9969,8 @@ export { Footer };
  **/
 export interface LayoutProps {
   navbar?: React.ReactNode;
+  /** @emoji 🎥 Optional chrome row directly under `navbar`, above the canvas/panels row (e.g. {@link TutorialBar}) — `flex-shrink-0` like `navbar`/`footer`, never affecting the middle column's z-index invariant below. */
+  subnavbar?: React.ReactNode;
   footer?: React.ReactNode;
   /** @emoji 🧭 Per-anchor panel config — panels float over the navbar/footer/canvas, keyed by which anchor they grow from. */
   panels?: Partial<Record<Anchor, Omit<PanelProps, "anchor">>>;
@@ -9389,11 +9980,12 @@ export interface LayoutProps {
   className?: string;
 }
 
-const Layout: React.FC<LayoutProps> = ({ navbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
+const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
       <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
         {navbar && <div className="flex-shrink-0">{navbar}</div>}
+        {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
         {mobile ? (
           <div className="flex flex-col flex-1 min-h-0">
             {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
@@ -35906,6 +36498,208 @@ if (treeVitest) {
       ];
       const markup = renderToStaticMarkup(<HistoryTable id="test.history.table" columns={columns} />);
       expect(markup).toContain("checkpoint");
+    });
+  });
+
+  describe("tutorial engine", () => {
+    const minimalTutorial = (): TutorialDefinition => ({
+      id: "welcome-tour",
+      title: "Welcome Tour",
+      durationMs: 10_000,
+      chapters: [{ id: "start", at: 0, title: "Start" }],
+      base: { exampleId: "concrete-forest", ui: { activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false }, cameras: [] },
+      tracks: { narration: [], video: [], events: [], ui: [], document: [], camera: [], gestures: [] },
+    });
+
+    it("formatTutorialTime formats mm:ss and floors sub-second/negative offsets", () => {
+      expect(formatTutorialTime(0)).toBe("0:00");
+      expect(formatTutorialTime(1_500)).toBe("0:01");
+      expect(formatTutorialTime(65_000)).toBe("1:05");
+      expect(formatTutorialTime(-100)).toBe("0:00");
+    });
+
+    it("tutorialCuesBetween returns only cues whose [at, at+durationMs) window covers atMs", () => {
+      const cues = [
+        { at: 0, durationMs: 100 },
+        { at: 100, durationMs: 50 },
+      ];
+      expect(tutorialCuesBetween(cues, 50)).toEqual([cues[0]]);
+      expect(tutorialCuesBetween(cues, 100)).toEqual([cues[1]]);
+      expect(tutorialCuesBetween(cues, 200)).toEqual([]);
+    });
+
+    it("interpolateTutorialCamera lerps position/target and clamps to endpoints", () => {
+      const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "orbit", position: [0, 0, 0], target: [0, 0, 0], up: [0, 0, 1], fov: 40 }, easing: "linear" };
+      const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "orbit", position: [10, 0, 0], target: [0, 0, 0], up: [0, 0, 1], fov: 60 }, easing: "linear" };
+      const mid = interpolateTutorialCamera(prev, next, 500);
+      expect(mid.kind).toBe("orbit");
+      if (mid.kind === "orbit") {
+        expect(mid.position[0]).toBeCloseTo(5, 9);
+        expect(mid.fov).toBe(50);
+      }
+      expect(interpolateTutorialCamera(prev, next, 0)).toEqual(prev.camera);
+      expect(interpolateTutorialCamera(prev, next, 1000)).toEqual(next.camera);
+    });
+
+    it("interpolateTutorialCamera zooms canvas cameras in log space", () => {
+      const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 1 }, easing: "linear" };
+      const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 4 }, easing: "linear" };
+      const mid = interpolateTutorialCamera(prev, next, 500);
+      expect(mid.kind).toBe("canvas");
+      if (mid.kind === "canvas") expect(mid.zoom).toBeCloseTo(2, 9);
+    });
+
+    it("interpolateTutorialCamera holds the previous pose until the keyframe, then snaps", () => {
+      const prev: TutorialCameraKeyframe = { at: 0, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 1 }, easing: "hold" };
+      const next: TutorialCameraKeyframe = { at: 1000, windowId: "w", camera: { kind: "canvas", x: 0, y: 0, zoom: 4 }, easing: "hold" };
+      expect(interpolateTutorialCamera(prev, next, 999)).toEqual(prev.camera);
+      expect(interpolateTutorialCamera(prev, next, 1000)).toEqual(next.camera);
+    });
+
+    it("tutorialCameraAt holds the first pose before the first keyframe and the last pose after", () => {
+      const def = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, camera: [
+        { at: 100, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const },
+        { at: 900, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 9 }, easing: "linear" as const },
+      ] } };
+      expect(tutorialCameraAt(def, "w", 0)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 1 });
+      expect(tutorialCameraAt(def, "w", 10_000)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 9 });
+      expect(tutorialCameraAt(def, "other-window", 500)).toBeUndefined();
+    });
+
+    it("composeTutorialUi applies the latest snapshot then replays deltas after it", () => {
+      const base = minimalTutorial();
+      const def: TutorialDefinition = {
+        ...base,
+        base: { ...base.base, ui: { ...base.base.ui, activeToolId: "fill" } },
+        tracks: {
+          ...base.tracks,
+          ui: [
+            { at: 100, sample: { kind: "snapshot", state: { activeModeId: "edit", activeUtilityByWindowId: {}, activePanelTabByGroup: {}, expandedTreeIds: [], commandPanelOpen: false } } },
+            { at: 200, sample: { kind: "delta", changes: [{ kind: "activeTool", id: "brush" }] } },
+            { at: 300, sample: { kind: "delta", changes: [{ kind: "panelTab", group: "top-left", tabId: "catalogue" }] } },
+          ],
+        },
+      };
+      expect(composeTutorialUi(def, 0).activeToolId).toBe("fill");
+      const at100 = composeTutorialUi(def, 100);
+      expect(at100.activeModeId).toBe("edit");
+      expect(at100.activeToolId).toBeUndefined();
+      expect(composeTutorialUi(def, 250).activeToolId).toBe("brush");
+      const at300 = composeTutorialUi(def, 300);
+      expect(at300.activeToolId).toBe("brush");
+      expect(at300.activePanelTabByGroup["top-left"]).toBe("catalogue");
+    });
+
+    it("tutorialSlice crosses document events forward oldest-first and backward newest-first", () => {
+      const base = minimalTutorial();
+      const def: TutorialDefinition = {
+        ...base,
+        tracks: {
+          ...base.tracks,
+          document: [
+            { at: 100, kind: { kind: "edit", forwards: [{ op: "add", id: "a" }], backwards: [{ op: "remove", id: "a" }] } },
+            { at: 200, kind: { kind: "edit", forwards: [{ op: "add", id: "b" }], backwards: [{ op: "remove", id: "b" }] } },
+          ],
+        },
+      };
+      const forward = tutorialSlice(def, 0, 250);
+      expect(forward.forward).toBe(true);
+      expect(forward.document).toHaveLength(2);
+      expect((forward.document[0].kind as { forwards: readonly { id: string }[] }).forwards[0].id).toBe("a");
+
+      const backward = tutorialSlice(def, 250, 0);
+      expect(backward.forward).toBe(false);
+      expect(backward.document).toHaveLength(2);
+      expect((backward.document[0].kind as { backwards: readonly { id: string }[] }).backwards[0].id).toBe("b");
+
+      expect(tutorialSlice(def, 250, 250).document).toHaveLength(0);
+    });
+
+    it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {
+      const unsorted = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, narration: [
+        { id: "b", at: 500, durationMs: 100, text: "b", rate: 1, captions: [] },
+        { id: "a", at: 100, durationMs: 100, text: "a", rate: 1, captions: [] },
+      ] } };
+      expect(validateTutorial(unsorted)).not.toBeNull();
+
+      const outOfRange = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, narration: [{ id: "a", at: 999_999, durationMs: 100, text: "a", rate: 1, captions: [] }] } };
+      expect(validateTutorial(outOfRange)).not.toBeNull();
+
+      const dupChapters = { ...minimalTutorial(), chapters: [...minimalTutorial().chapters, { id: "start", at: 0, title: "Dup" }] };
+      expect(validateTutorial(dupChapters)).not.toBeNull();
+
+      const badBaseCamera = { ...minimalTutorial(), base: { ...minimalTutorial().base, cameras: [{ at: 5, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const }] } };
+      expect(validateTutorial(badBaseCamera)).not.toBeNull();
+
+      expect(validateTutorial(minimalTutorial())).toBeNull();
+    });
+  });
+
+  describe("TutorialBar", () => {
+    it("renders its element ids and chapter ticks", () => {
+      const clock: TutorialClockPort = { getTimeMs: () => 1000, subscribe: () => () => {} };
+      const markup = renderToStaticMarkup(
+        <TutorialBar
+          title="Welcome Tour"
+          durationMs={10_000}
+          playing={false}
+          rate={1}
+          muted={false}
+          captionsOn
+          recording
+          recordAvailable
+          chapters={[{ id: "start", title: "Start", atMs: 0 }]}
+          clock={clock}
+          onPlayPause={() => {}}
+          onStop={() => {}}
+          onSeek={() => {}}
+          onRateChange={() => {}}
+          onMutedChange={() => {}}
+          onCaptionsChange={() => {}}
+          onRecordToggle={() => {}}
+          onAddChapter={() => {}}
+        />,
+      );
+      expect(markup).toContain('id="ui.tutorial.bar"');
+      expect(markup).toContain('id="ui.tutorial.play"');
+      expect(markup).toContain('id="ui.tutorial.stop"');
+      expect(markup).toContain('id="ui.tutorial.scrubber"');
+      expect(markup).toContain('id="ui.tutorial.chapter.start"');
+      expect(markup).toContain('id="ui.tutorial.record"');
+      expect(markup).toContain('id="ui.tutorial.recordingIndicator"');
+    });
+  });
+
+  describe("TutorialClock", () => {
+    it("seek/setRate/play/pause update state synchronously (rAF ticking itself is not exercised here)", () => {
+      const clock = createTutorialClock(1000);
+      expect(clock.getTimeMs()).toBe(0);
+      expect(clock.isPlaying()).toBe(false);
+      clock.seek(400);
+      expect(clock.getTimeMs()).toBe(400);
+      clock.setRate(2);
+      expect(clock.getRate()).toBe(2);
+      clock.play();
+      expect(clock.isPlaying()).toBe(true);
+      clock.pause();
+      expect(clock.isPlaying()).toBe(false);
+      clock.seek(-50);
+      expect(clock.getTimeMs()).toBe(0);
+      clock.seek(5000);
+      expect(clock.getTimeMs()).toBe(1000);
+      clock.dispose();
+    });
+
+    it("notifies subscribers on seek/rate/play/pause", () => {
+      const clock = createTutorialClock(1000);
+      const listener = vi.fn();
+      const unsubscribe = clock.subscribe(listener);
+      clock.seek(100);
+      clock.setRate(1.5);
+      expect(listener).toHaveBeenCalledTimes(2);
+      unsubscribe();
+      clock.seek(200);
+      expect(listener).toHaveBeenCalledTimes(2);
     });
   });
 }

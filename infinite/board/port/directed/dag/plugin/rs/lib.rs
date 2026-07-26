@@ -910,6 +910,7 @@ impl DocumentApp for DagPlayApp {
             action_arg_labels: HashMap::new(),
             dialog_labels: HashMap::new(),
             introduction_labels: HashMap::new(),
+            tutorial_labels: HashMap::new(),
             group_labels: HashMap::new(),
         }
     }

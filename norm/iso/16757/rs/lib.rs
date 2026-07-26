@@ -4,7 +4,7 @@ use norm_core::{
     AnnexChoice, CheckReport, CheckResult, ClauseId, NormError, NormFamily, NormFamilyId, NormHost, Quantity, QuantityKind, SetDocumentOperation,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{HashMap, HashSet};
+use std::collections::{BTreeMap, HashMap, HashSet};
 
 pub use norm_core::NationalAnnex;
 
@@ -13,22 +13,40 @@ pub use norm_core::NationalAnnex;
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct CatalogueId(pub String);
 
+/// 🔗 Hand `DslField` bridge for `CatalogueId`: a tuple ("newtype") struct has no named fields for
+/// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
+/// changing its public tuple shape (used pervasively as `.0` across this crate).
+impl dsl::DslField for CatalogueId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(CatalogueId(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
 /// 🆔 Dictionary identifier with version.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslRecord)]
 pub struct DictionaryRef {
     pub id: String,
     pub version: String,
 }
 
 /// 🌐 Locale-tagged text.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct LocalizedText {
     pub locale: String,
     pub text: String,
 }
 
 /// 📝 Preferred and alternative names.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Names {
     pub preferred: LocalizedText,
     pub short_name: Option<String>,
@@ -36,7 +54,7 @@ pub struct Names {
 }
 
 /// 📊 Physical dimension signature for unit compatibility.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslRecord)]
 pub struct DimensionSignature {
     pub length: i8,
     pub mass: i8,
@@ -55,7 +73,7 @@ impl DimensionSignature {
 }
 
 /// 📐 Catalogue unit with canonical SI display.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogueUnit {
     pub symbol: String,
     pub dimension: DimensionSignature,
@@ -80,16 +98,62 @@ pub enum CatalogueValue {
     List { items: Vec<CatalogueValue> },
 }
 
+/// 🔗 Hand `DslField` bridge for `CatalogueValue`: a deeply serde-tagged data enum that is also
+/// embedded as a `BTreeMap`/`Vec` VALUE type in several places (`shared_property_values`,
+/// `parameter_values`, `part_number_inputs`), which mechanically requires `DslField` (map/list
+/// values bind through `DslField`, not `DslVariants`) — `#[derive(dsl::DslEnum)]` only produces
+/// `DslVariants`, so it can't satisfy those sites. Binds through `Shape::Value` (the engine's
+/// existing serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
+impl dsl::DslField for CatalogueValue {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Value
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        let json = serde_json::to_value(self).expect("CatalogueValue always serializes to JSON");
+        dsl::FieldValue::Value(dsl::DslValue::from(json))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(dsl_value) => {
+                let json = renormalize_whole_number_floats(serde_json::Value::from(dsl_value.clone()));
+                serde_json::from_value(json).map_err(|e| e.to_string())
+            }
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
+/// 🔧 `dsl::DslValue`'s `Number` variant is f64-only (no int/float distinction, per its own doc
+/// comment) — round-tripping a value with an actual `i64` field (e.g. `CatalogueValue::Integer`)
+/// through the `Shape::Value` bridge turns `50` into `50.0`, which `serde_json::from_value::<T>`
+/// then rejects for an `i64` field ("invalid type: floating point `50`, expected i64"). Recursively
+/// re-tags any whole-number JSON float back to a JSON integer before deserializing, so integer
+/// fields still parse correctly on the far side of that bridge.
+fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(n) => match n.as_f64() {
+            Some(f) if f.fract() == 0.0 && f.abs() < i64::MAX as f64 => serde_json::Value::Number((f as i64).into()),
+            _ => serde_json::Value::Number(n),
+        },
+        serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+        serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+        other => other,
+    }
+}
+
 /// ∅ Value availability states.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum NullState {
+    #[dsl(key = "unavailable")]
     Unavailable,
+    #[dsl(key = "unknown")]
     Unknown,
+    #[dsl(key = "notApplicable")]
     NotApplicable,
 }
 
 /// 🔢 Cardinality constraint.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Cardinality {
     pub min: u32,
     pub max: Option<u32>,
@@ -121,13 +185,13 @@ pub struct CatalogueReference {
 }
 
 /// 🧩 Lossless extension bag for unknown fields.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ExtensionBag {
-    pub fields: HashMap<String, serde_json::Value>,
+    pub fields: BTreeMap<String, serde_json::Value>,
 }
 
 /// 📅 Lifecycle metadata.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Lifecycle {
     pub revision: String,
     pub status: String,
@@ -141,14 +205,14 @@ pub mod part_1 {
     use super::*;
 
     /// 🏭 Manufacturer metadata.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Manufacturer {
         pub id: String,
         pub names: Names,
     }
 
     /// 📦 Product group declaration.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ProductGroup {
         pub id: String,
         pub names: Names,
@@ -156,7 +220,7 @@ pub mod part_1 {
     }
 
     /// 🏷️ Product class in a hierarchy.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ProductClass {
         pub id: String,
         pub group_id: String,
@@ -167,17 +231,17 @@ pub mod part_1 {
     }
 
     /// 📚 Product series sharing geometry and properties.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ProductSeries {
         pub id: String,
         pub class_id: String,
         pub names: Names,
-        pub shared_property_values: HashMap<String, CatalogueValue>,
+        pub shared_property_values: BTreeMap<String, CatalogueValue>,
         pub geometry_id: Option<String>,
     }
 
     /// 🔧 Variant parameter domain.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ParameterDomain {
         pub parameter_id: String,
         pub allowed_values: Vec<CatalogueValue>,
@@ -185,7 +249,7 @@ pub mod part_1 {
     }
 
     /// 🧮 Property definition.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PropertyDefinition {
         pub id: String,
         pub names: Names,
@@ -197,16 +261,20 @@ pub mod part_1 {
     }
 
     /// 📊 Property kind per Part 1 §5.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum PropertyKind {
+        #[dsl(key = "static")]
         Static,
+        #[dsl(key = "dynamic")]
         Dynamic,
+        #[dsl(key = "selection")]
         Selection,
+        #[dsl(key = "external")]
         External,
     }
 
     /// 📋 Property value on a product or variant.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PropertyValue {
         pub definition_id: String,
         pub value: CatalogueValue,
@@ -214,17 +282,17 @@ pub mod part_1 {
     }
 
     /// 🧩 Product variant with parameters.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ProductVariant {
         pub id: String,
-        pub parameter_values: HashMap<String, CatalogueValue>,
+        pub parameter_values: BTreeMap<String, CatalogueValue>,
         pub property_values: Vec<PropertyValue>,
         pub article_number: Option<String>,
         pub geometry_id: Option<String>,
     }
 
     /// 📦 Catalogue product (generic or resolved).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Product {
         pub id: String,
         pub series_id: String,
@@ -235,7 +303,7 @@ pub mod part_1 {
     }
 
     /// 🔍 Product index for selection.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ProductIndex {
         pub id: String,
         pub product_id: String,
@@ -244,7 +312,7 @@ pub mod part_1 {
     }
 
     /// 🔗 Accessory relationship.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct AccessoryRelationship {
         pub accessory_product_id: String,
         pub required: bool,
@@ -253,7 +321,7 @@ pub mod part_1 {
     }
 
     /// 🧱 Composition relationship (`hasPart`).
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct CompositionRelationship {
         pub component_product_id: String,
         pub quantity: u32,
@@ -267,7 +335,7 @@ pub mod part_1 {
     }
 
     /// 📄 Descriptive media object.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct DescriptiveObject {
         pub id: String,
         pub media_type: String,
@@ -277,7 +345,7 @@ pub mod part_1 {
     }
 
     /// 📚 Full catalogue document.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Catalogue {
         pub id: CatalogueId,
         pub metadata: CatalogueMetadata,
@@ -289,14 +357,14 @@ pub mod part_1 {
         pub products: Vec<Product>,
         pub product_indexes: Vec<ProductIndex>,
         pub property_definitions: Vec<PropertyDefinition>,
-        pub accessories: HashMap<String, Vec<AccessoryRelationship>>,
-        pub compositions: HashMap<String, Vec<CompositionRelationship>>,
+        pub accessories: BTreeMap<String, Vec<AccessoryRelationship>>,
+        pub compositions: BTreeMap<String, Vec<CompositionRelationship>>,
         pub descriptive_objects: Vec<DescriptiveObject>,
         pub extensions: ExtensionBag,
     }
 
     /// 📋 Catalogue metadata.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct CatalogueMetadata {
         pub names: Names,
         pub lifecycle: Lifecycle,
@@ -304,17 +372,22 @@ pub mod part_1 {
     }
 
     /// 📑 Supported ISO 16757 edition profile.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum EditionProfile {
+        #[dsl(key = "part1_2015")]
         Part1_2015,
+        #[dsl(key = "part2_2016")]
         Part2_2016,
+        #[dsl(key = "part4_2025")]
         Part4_2025,
+        #[dsl(key = "part5_2025")]
         Part5_2025,
+        #[dsl(key = "fullPublished")]
         FullPublished,
     }
 
     /// 🎯 Selection constraint on a property.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct SelectionConstraint {
         pub property_id: String,
         pub operator: ConstraintOperator,
@@ -322,17 +395,22 @@ pub mod part_1 {
     }
 
     /// ⚖️ Constraint operator.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum ConstraintOperator {
+        #[dsl(key = "equal")]
         Equal,
+        #[dsl(key = "notEqual")]
         NotEqual,
+        #[dsl(key = "lessThan")]
         LessThan,
+        #[dsl(key = "greaterThan")]
         GreaterThan,
+        #[dsl(key = "inRange")]
         InRange,
     }
 
     /// 🔎 Selection request.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct SelectionRequest {
         pub class_id: String,
         pub constraints: Vec<SelectionConstraint>,
@@ -502,17 +580,22 @@ pub mod part_2 {
     use super::*;
 
     /// 📐 Space classification per Part 2 §5.3.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum SpaceKind {
+        #[dsl(key = "overall")]
         Overall,
+        #[dsl(key = "operation")]
         Operation,
+        #[dsl(key = "access")]
         Access,
+        #[dsl(key = "placementTransportation")]
         PlacementTransportation,
+        #[dsl(key = "installation")]
         Installation,
     }
 
     /// 🔌 Port medium and direction.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PortDefinition {
         pub id: String,
         pub medium: String,
@@ -522,7 +605,7 @@ pub mod part_2 {
     }
 
     /// 📦 Axis-aligned bounding box.
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct BoundingBox {
         pub min: [f64; 3],
         pub max: [f64; 3],
@@ -551,51 +634,72 @@ pub mod part_2 {
     }
 
     /// 🧱 CSG primitive kind registry entry.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct PrimitiveKind {
         pub id: String,
         pub parameters: Vec<String>,
     }
 
-    /// 🌳 Geometry node in a CSG tree.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    /// 🌳 Geometry node in a CSG tree — recursive `#[derive(dsl::DslEnum)]`: `Transform.child` is
+    /// `#[dsl(statements)] Box<GeometryNode>` (exactly one nested tagged value) and
+    /// `Boolean.children` is `#[dsl(statements, block)] Vec<GeometryNode>` (a nested tagged
+    /// collection), both recursing back into this same enum's own `DslVariants` impl.
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
     #[serde(tag = "node", rename_all = "camelCase")]
     pub enum GeometryNode {
-        Primitive { kind: String, parameters: HashMap<String, f64> },
-        Transform { translation: [f64; 3], rotation_deg: [f64; 3], child: Box<GeometryNode> },
-        Boolean { operator: BooleanOperator, children: Vec<GeometryNode> },
+        #[dsl(key = "primitive")]
+        Primitive { kind: String, parameters: BTreeMap<String, f64> },
+        #[dsl(key = "transform")]
+        Transform {
+            translation: [f64; 3],
+            rotation_deg: [f64; 3],
+            #[dsl(statements)]
+            child: Box<GeometryNode>,
+        },
+        #[dsl(key = "boolean")]
+        Boolean {
+            operator: BooleanOperator,
+            #[dsl(statements, block)]
+            children: Vec<GeometryNode>,
+        },
+        #[dsl(key = "reference")]
         Reference { geometry_id: String },
     }
 
     /// ➕ Boolean CSG operator.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum BooleanOperator {
+        #[dsl(key = "union")]
         Union,
+        #[dsl(key = "intersection")]
         Intersection,
+        #[dsl(key = "difference")]
         Difference,
     }
 
     /// 🏗️ Complete geometry object.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct GeometryObject {
         pub id: String,
+        #[dsl(statements, block)]
         pub shape: Option<GeometryNode>,
+        #[dsl(statements, block)]
         pub symbolic: Option<GeometryNode>,
         pub spaces: Vec<SpaceEnvelope>,
         pub surfaces: Vec<SurfaceDefinition>,
         pub ports: Vec<PortDefinition>,
-        pub parameter_bindings: HashMap<String, String>,
+        pub parameter_bindings: BTreeMap<String, String>,
     }
 
     /// 📦 Space envelope with kind.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct SpaceEnvelope {
         pub kind: SpaceKind,
         pub bounds: BoundingBox,
     }
 
     /// 🎨 Semantic surface.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct SurfaceDefinition {
         pub id: String,
         pub purpose: String,
@@ -603,9 +707,9 @@ pub mod part_2 {
     }
 
     /// 📚 Geometry catalogue index.
-    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct GeometryCatalogue {
-        pub objects: HashMap<String, GeometryObject>,
+        pub objects: BTreeMap<String, GeometryObject>,
         pub primitive_registry: Vec<PrimitiveKind>,
     }
 
@@ -622,7 +726,7 @@ pub mod part_2 {
     pub fn substitute_parameters(node: &GeometryNode, values: &HashMap<String, f64>) -> GeometryNode {
         match node {
             GeometryNode::Primitive { kind, parameters } => {
-                let mut resolved = HashMap::new();
+                let mut resolved = BTreeMap::new();
                 for (key, value) in parameters {
                     resolved.insert(key.clone(), *values.get(key).unwrap_or(value));
                 }
@@ -734,22 +838,32 @@ pub mod part_4 {
     use super::*;
 
     /// 🏷️ Dictionary subject kind.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
     pub enum SubjectKind {
+        #[dsl(key = "productGroup")]
         ProductGroup,
+        #[dsl(key = "productClass")]
         ProductClass,
+        #[dsl(key = "productSpecialization")]
         ProductSpecialization,
+        #[dsl(key = "catalogueMetadata")]
         CatalogueMetadata,
+        #[dsl(key = "manufacturerMetadata")]
         ManufacturerMetadata,
+        #[dsl(key = "propertyBlock")]
         PropertyBlock,
+        #[dsl(key = "port")]
         Port,
+        #[dsl(key = "inlet")]
         Inlet,
+        #[dsl(key = "outlet")]
         Outlet,
+        #[dsl(key = "inOutlet")]
         InOutlet,
     }
 
     /// 📖 Dictionary subject.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Subject {
         pub id: String,
         pub kind: SubjectKind,
@@ -759,17 +873,22 @@ pub mod part_4 {
     }
 
     /// 🔗 Relationship kind per Part 4 §4.4.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum RelationshipKind {
+        #[dsl(key = "isSubtypeOf")]
         IsSubtypeOf,
+        #[dsl(key = "hasPart")]
         HasPart,
+        #[dsl(key = "hasBlock")]
         HasBlock,
+        #[dsl(key = "isDependentOn")]
         IsDependentOn,
+        #[dsl(key = "isSubkindOf")]
         IsSubkindOf,
     }
 
     /// 🔗 Typed relationship.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Relationship {
         pub id: String,
         pub kind: RelationshipKind,
@@ -779,7 +898,7 @@ pub mod part_4 {
     }
 
     /// 📊 Dictionary property definition.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct DictionaryProperty {
         pub id: String,
         pub names: Names,
@@ -791,7 +910,7 @@ pub mod part_4 {
     }
 
     /// ✅ Controlled value list.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ControlledValueList {
         pub id: String,
         pub values: Vec<String>,
@@ -799,7 +918,7 @@ pub mod part_4 {
     }
 
     /// 🎯 Value constraint on a property.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ValueConstraint {
         pub min: Option<f64>,
         pub max: Option<f64>,
@@ -807,7 +926,7 @@ pub mod part_4 {
     }
 
     /// 📚 Data dictionary snapshot.
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct Dictionary {
         pub reference: DictionaryRef,
         pub subjects: Vec<Subject>,
@@ -911,12 +1030,17 @@ pub mod part_5 {
     use std::time::{Duration, Instant};
 
     /// 🔄 Exchange process stage.
-    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
     pub enum ExchangeProcess {
+        #[dsl(key = "createFromDictionary")]
         CreateFromDictionary,
+        #[dsl(key = "provideCatalogue")]
         ProvideCatalogue,
+        #[dsl(key = "determineProduct")]
         DetermineProduct,
+        #[dsl(key = "integrateIntoSystem")]
         IntegrateIntoSystem,
+        #[dsl(key = "exchangeSystemModel")]
         ExchangeSystemModel,
     }
 
@@ -925,8 +1049,30 @@ pub mod part_5 {
     #[serde(tag = "kind", rename_all = "camelCase")]
     pub enum PartNumberRule {
         Literal { value: String },
-        Table { rows: Vec<HashMap<String, String>>, output_column: String },
+        Table { rows: Vec<BTreeMap<String, String>>, output_column: String },
         Script { function_id: String, source: String },
+    }
+
+    /// 🔗 Hand `DslField` bridge for `PartNumberRule`: embedded as a BARE (non-`Vec`/`Option`/`Box`)
+    /// field on `Document`, so `#[dsl(statements)]` has no effect (the derive only recognizes that
+    /// attribute on `Box<T>`/`Vec<T>`/`Option<T>` wrappers) — binding through `Shape::Value` avoids
+    /// changing `Document.part_number_rule`'s plain-enum public shape just for the DSL boundary.
+    impl dsl::DslField for PartNumberRule {
+        fn shape() -> dsl::Shape {
+            dsl::Shape::Value
+        }
+        fn to_value(&self) -> dsl::FieldValue {
+            let json = serde_json::to_value(self).expect("PartNumberRule always serializes to JSON");
+            dsl::FieldValue::Value(dsl::DslValue::from(json))
+        }
+        fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+            match value {
+                dsl::FieldValue::Value(dsl_value) => {
+                    serde_json::from_value(serde_json::Value::from(dsl_value.clone())).map_err(|e| e.to_string())
+                }
+                other => Err(format!("expected Value, found {other:?}")),
+            }
+        }
     }
 
     /// 📄 External media reference.
@@ -960,7 +1106,7 @@ pub mod part_5 {
     }
 
     /// 🧮 Script execution limits.
-    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
     pub struct ScriptLimits {
         pub max_steps: u32,
         pub max_recursion: u32,
@@ -1084,7 +1230,7 @@ pub mod part_5 {
         }
     }
 
-    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &HashMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
+    pub fn calculate_part_number(rule: &PartNumberRule, inputs: &BTreeMap<String, CatalogueValue>, runtime: &dyn ScriptRuntime) -> Result<String, NormError> {
         match rule {
             PartNumberRule::Literal { value } => Ok(value.clone()),
             PartNumberRule::Table { rows, output_column } => {
@@ -1215,16 +1361,20 @@ pub mod io {
 // #endregion Io
 
 // #region Session
+/// 🏷️ Canonical DSL file extension for ISO 16757 documents.
+pub const ISO16757_EXTENSION: &str = "iso16757";
+
 /// 📋 ISO 16757 evaluation session document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "iso16757", layout = "lines")]
 pub struct Document {
     pub catalogue: part_1::Catalogue,
     pub dictionary: part_4::Dictionary,
     pub geometry: part_2::GeometryCatalogue,
     pub selection: part_1::SelectionRequest,
     pub part_number_rule: part_5::PartNumberRule,
-    pub part_number_inputs: HashMap<String, CatalogueValue>,
+    pub part_number_inputs: BTreeMap<String, CatalogueValue>,
     pub script_limits: part_5::ScriptLimits,
     pub exchange_process: part_5::ExchangeProcess,
 }
@@ -1272,14 +1422,14 @@ impl Document {
             meta_subjects: Vec::new(),
         };
         let geometry_id: String = "geom.valve.50".into();
-        let mut geometry_objects = HashMap::new();
+        let mut geometry_objects = BTreeMap::new();
         geometry_objects.insert(
             geometry_id.clone(),
             part_2::GeometryObject {
                 id: geometry_id.clone(),
                 shape: Some(part_2::GeometryNode::Primitive {
                     kind: "box".into(),
-                    parameters: HashMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]),
+                    parameters: BTreeMap::from([("width".into(), 0.15), ("height".into(), 0.20), ("depth".into(), 0.10)]),
                 }),
                 symbolic: None,
                 spaces: vec![part_2::SpaceEnvelope { kind: part_2::SpaceKind::Installation, bounds: part_2::BoundingBox::from_size(0.30, 0.30, 0.30) }],
@@ -1291,7 +1441,7 @@ impl Document {
                     direction: [1.0, 0.0, 0.0],
                     port_type: "inlet".into(),
                 }],
-                parameter_bindings: HashMap::from([("width".into(), "prop.dn".into())]),
+                parameter_bindings: BTreeMap::from([("width".into(), "prop.dn".into())]),
             },
         );
         let catalogue = part_1::Catalogue {
@@ -1343,7 +1493,7 @@ impl Document {
                     short_name: None,
                     alternatives: Vec::new(),
                 },
-                shared_property_values: HashMap::new(),
+                shared_property_values: BTreeMap::new(),
                 geometry_id: Some(geometry_id.clone()),
             }],
             products: vec![part_1::Product {
@@ -1361,7 +1511,7 @@ impl Document {
                 }],
                 variants: vec![part_1::ProductVariant {
                     id: "variant.50".into(),
-                    parameter_values: HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
+                    parameter_values: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
                     property_values: vec![part_1::PropertyValue {
                         definition_id: "prop.dn".into(),
                         value: CatalogueValue::Decimal { value: 50.0 },
@@ -1391,8 +1541,8 @@ impl Document {
                 kind: part_1::PropertyKind::Static,
                 dictionary_property_id: Some("prop.dn".into()),
             }],
-            accessories: HashMap::new(),
-            compositions: HashMap::new(),
+            accessories: BTreeMap::new(),
+            compositions: BTreeMap::new(),
             descriptive_objects: Vec::new(),
             extensions: ExtensionBag::default(),
         };
@@ -1410,15 +1560,28 @@ impl Document {
                 series_id: Some("series.cv".into()),
             },
             part_number_rule: part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() },
-            part_number_inputs: HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
+            part_number_inputs: BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]),
             script_limits: part_5::ScriptLimits::default(),
             exchange_process: part_5::ExchangeProcess::DetermineProduct,
         }
     }
 }
 
+/// 🧬 `SetDocumentOperation<Document>` (whole-document replace) already implements both
+/// `vcs::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+/// `vcs::DocumentDsl`), `vcs::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
+/// OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
+/// sufficient choice per the migration cheat sheet: this reference/lookup-table document has no
+/// existing interactive editor driving fine-grained field-level edits, so reusing this generic
+/// pair (rather than hand-deriving a redundant one-variant `#[derive(dsl::DslOps)]` enum that would
+/// duplicate exactly this shape) keeps every norm family crate's Operation layer DRY.
 pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Iso16757Family>;
+
+/// 📦 VCS envelope/store aliases for the ISO 16757 document, now that `Document`/`Operation` both
+/// satisfy `vcs::DocumentDsl`/`vcs::OpText`.
+pub type Iso16757Envelope = vcs::DocumentVcsEnvelope<Document, Operation>;
+pub type Iso16757Store = vcs::DocumentVcsStore<Document, Operation>;
 
 fn clause(part: &str, section: &str) -> ClauseId {
     ClauseId::new("ISO 16757", part, section)
@@ -1709,7 +1872,7 @@ mod tests {
     fn part_number_script_is_deterministic() {
         let runtime = part_5::DefaultScriptRuntime;
         let rule = part_5::PartNumberRule::Script { function_id: "partno".into(), source: "dn * 10 + 50".into() };
-        let inputs = HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
+        let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
         let part_no = part_5::calculate_part_number(&rule, &inputs, &runtime).expect("part number");
         assert_eq!(part_no, "550");
     }
@@ -1821,7 +1984,7 @@ mod tests {
             id: "series.other".into(),
             class_id: "class.valve".into(),
             names: doc.catalogue.product_series[0].names.clone(),
-            shared_property_values: HashMap::new(),
+            shared_property_values: BTreeMap::new(),
             geometry_id: None,
         };
         let other_product = part_1::Product {
@@ -1831,7 +1994,7 @@ mod tests {
             parameter_domains: Vec::new(),
             variants: vec![part_1::ProductVariant {
                 id: "variant.other".into(),
-                parameter_values: HashMap::new(),
+                parameter_values: BTreeMap::new(),
                 property_values: vec![part_1::PropertyValue {
                     definition_id: "prop.dn".into(),
                     value: CatalogueValue::Decimal { value: 50.0 },
@@ -1958,7 +2121,7 @@ mod tests {
 
     #[test]
     fn substitute_parameters_recurses_through_node_kinds() {
-        let primitive = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: HashMap::from([("width".into(), 1.0)]) };
+        let primitive = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0)]) };
         let transform = part_2::GeometryNode::Transform { translation: [1.0, 0.0, 0.0], rotation_deg: [0.0, 0.0, 0.0], child: Box::new(primitive.clone()) };
         let boolean = part_2::GeometryNode::Boolean { operator: part_2::BooleanOperator::Union, children: vec![primitive.clone(), transform.clone()] };
         let reference = part_2::GeometryNode::Reference { geometry_id: "geom.x".into() };
@@ -1988,10 +2151,10 @@ mod tests {
     #[test]
     fn evaluate_bounding_box_error_paths() {
         let catalogue = part_2::GeometryCatalogue::default();
-        let missing_width = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: HashMap::new() };
+        let missing_width = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::new() };
         assert!(matches!(part_2::evaluate_bounding_box(&missing_width, &catalogue), Err(NormError::IncompleteInput { field }) if field == "width"));
 
-        let unknown_kind = part_2::GeometryNode::Primitive { kind: "cone".into(), parameters: HashMap::new() };
+        let unknown_kind = part_2::GeometryNode::Primitive { kind: "cone".into(), parameters: BTreeMap::new() };
         assert!(matches!(part_2::evaluate_bounding_box(&unknown_kind, &catalogue), Err(NormError::OutOfScope { .. })));
 
         let empty_boolean = part_2::GeometryNode::Boolean { operator: part_2::BooleanOperator::Union, children: Vec::new() };
@@ -2004,36 +2167,36 @@ mod tests {
     #[test]
     fn evaluate_bounding_box_cylinder_sphere_boolean_transform() {
         let catalogue = part_2::GeometryCatalogue::default();
-        let cylinder = part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: HashMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
+        let cylinder = part_2::GeometryNode::Primitive { kind: "cylinder".into(), parameters: BTreeMap::from([("radius".into(), 1.0), ("height".into(), 2.0)]) };
         let bbox = part_2::evaluate_bounding_box(&cylinder, &catalogue).expect("cylinder bbox");
         assert_eq!(bbox.max, [2.0, 2.0, 2.0]);
 
-        let sphere = part_2::GeometryNode::Primitive { kind: "sphere".into(), parameters: HashMap::from([("radius".into(), 1.5)]) };
+        let sphere = part_2::GeometryNode::Primitive { kind: "sphere".into(), parameters: BTreeMap::from([("radius".into(), 1.5)]) };
         let bbox = part_2::evaluate_bounding_box(&sphere, &catalogue).expect("sphere bbox");
         assert_eq!(bbox.max, [3.0, 3.0, 3.0]);
 
-        let a = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: HashMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) };
+        let a = part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) };
         let b = part_2::GeometryNode::Transform {
             translation: [5.0, 5.0, 5.0],
             rotation_deg: [0.0, 0.0, 0.0],
-            child: Box::new(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: HashMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
+            child: Box::new(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
         };
         let boolean = part_2::GeometryNode::Boolean { operator: part_2::BooleanOperator::Union, children: vec![a, b] };
         let bbox = part_2::evaluate_bounding_box(&boolean, &catalogue).expect("boolean bbox");
         assert_eq!(bbox.min, [0.0, 0.0, 0.0]);
         assert_eq!(bbox.max, [6.0, 6.0, 6.0]);
 
-        let mut objects = HashMap::new();
+        let mut objects = BTreeMap::new();
         objects.insert(
             "geom.ref".to_string(),
             part_2::GeometryObject {
                 id: "geom.ref".into(),
-                shape: Some(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: HashMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
+                shape: Some(part_2::GeometryNode::Primitive { kind: "box".into(), parameters: BTreeMap::from([("width".into(), 1.0), ("height".into(), 1.0), ("depth".into(), 1.0)]) }),
                 symbolic: None,
                 spaces: Vec::new(),
                 surfaces: Vec::new(),
                 ports: Vec::new(),
-                parameter_bindings: HashMap::new(),
+                parameter_bindings: BTreeMap::new(),
             },
         );
         let ref_catalogue = part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
@@ -2044,7 +2207,7 @@ mod tests {
 
     #[test]
     fn validate_geometry_graph_self_reference_and_cycle() {
-        let mut objects = HashMap::new();
+        let mut objects = BTreeMap::new();
         let self_ref = part_2::GeometryObject {
             id: "geom.self".into(),
             shape: Some(part_2::GeometryNode::Reference { geometry_id: "geom.self".into() }),
@@ -2052,7 +2215,7 @@ mod tests {
             spaces: Vec::new(),
             surfaces: Vec::new(),
             ports: Vec::new(),
-            parameter_bindings: HashMap::new(),
+            parameter_bindings: BTreeMap::new(),
         };
         objects.insert("geom.self".to_string(), self_ref.clone());
         let catalogue = part_2::GeometryCatalogue { objects, primitive_registry: Vec::new() };
@@ -2061,7 +2224,7 @@ mod tests {
         assert!(issues.iter().any(|i| i.contains("self-reference")));
         assert!(visited.is_empty());
 
-        let mut objects = HashMap::new();
+        let mut objects = BTreeMap::new();
         let a = part_2::GeometryObject {
             id: "geom.a".into(),
             shape: Some(part_2::GeometryNode::Reference { geometry_id: "geom.b".into() }),
@@ -2069,7 +2232,7 @@ mod tests {
             spaces: Vec::new(),
             surfaces: Vec::new(),
             ports: Vec::new(),
-            parameter_bindings: HashMap::new(),
+            parameter_bindings: BTreeMap::new(),
         };
         let b = part_2::GeometryObject {
             id: "geom.b".into(),
@@ -2078,7 +2241,7 @@ mod tests {
             spaces: Vec::new(),
             surfaces: Vec::new(),
             ports: Vec::new(),
-            parameter_bindings: HashMap::new(),
+            parameter_bindings: BTreeMap::new(),
         };
         objects.insert("geom.a".to_string(), a.clone());
         objects.insert("geom.b".to_string(), b);
@@ -2097,7 +2260,7 @@ mod tests {
             spaces: Vec::new(),
             surfaces: Vec::new(),
             ports: Vec::new(),
-            parameter_bindings: HashMap::from([("width".into(), String::new())]),
+            parameter_bindings: BTreeMap::from([("width".into(), String::new())]),
         };
         let catalogue = part_2::GeometryCatalogue::default();
         let mut visited = HashSet::new();
@@ -2198,17 +2361,17 @@ mod tests {
     #[test]
     fn calculate_part_number_table_rule_paths() {
         let runtime = part_5::DefaultScriptRuntime;
-        let rows = vec![HashMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
+        let rows = vec![BTreeMap::from([("dn".to_string(), "50".to_string()), ("code".to_string(), "CV50".to_string())])];
         let rule = part_5::PartNumberRule::Table { rows: rows.clone(), output_column: "code".into() };
-        let inputs = HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
+        let inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 50.0 })]);
         assert_eq!(part_5::calculate_part_number(&rule, &inputs, &runtime).expect("match"), "CV50");
 
-        let no_match_inputs = HashMap::from([("dn".into(), CatalogueValue::Decimal { value: 999.0 })]);
+        let no_match_inputs = BTreeMap::from([("dn".into(), CatalogueValue::Decimal { value: 999.0 })]);
         let err = part_5::calculate_part_number(&rule, &no_match_inputs, &runtime).unwrap_err();
         assert!(matches!(err, NormError::InvalidValue { field, .. } if field == "part_number_table"));
 
         let missing_output_rule = part_5::PartNumberRule::Table {
-            rows: vec![HashMap::from([("dn".to_string(), "50".to_string())])],
+            rows: vec![BTreeMap::from([("dn".to_string(), "50".to_string())])],
             output_column: "code".into(),
         };
         let err = part_5::calculate_part_number(&missing_output_rule, &inputs, &runtime).unwrap_err();
@@ -2270,4 +2433,40 @@ mod tests {
         let json = io::dictionary_to_json(&doc.dictionary).expect("json");
         assert!(json.contains("hvac-dict"));
     }
+
+    // #region 🔖DslTests
+    #[test]
+    fn document_dsl_round_trips_the_reference_fixture() {
+        vcs::test_support::assert_dsl_round_trip(&Document::reference_fixture());
+    }
+
+    #[test]
+    fn set_document_operation_op_text_round_trips_for_iso16757() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: Document::reference_fixture() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_a_vcs_store() {
+        let envelope = vcs::create_document_vcs_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
+        let mut store = Iso16757Store::new(envelope);
+        let mut mutated = Document::reference_fixture();
+        mutated.exchange_process = part_5::ExchangeProcess::ProvideCatalogue;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+
+    #[test]
+    fn catalogue_value_integer_variant_round_trips_through_the_dsl_field_bridge() {
+        // ⚡ Regression: `CatalogueValue`'s `Shape::Value` bridge goes through `dsl::DslValue::Number`
+        // (f64-only, no int/float distinction), which used to turn `Integer { value: 50 }` into a
+        // JSON float `50.0` that `serde_json::from_value` then rejected for the `i64` field. Not
+        // exercised by the reference fixture (it only uses `Decimal`), so covered directly here.
+        let value = CatalogueValue::Integer { value: 50 };
+        let printed = <CatalogueValue as dsl::DslField>::to_value(&value);
+        let parsed = <CatalogueValue as dsl::DslField>::from_value(&printed).expect("integer variant must round trip");
+        assert_eq!(parsed, value);
+    }
+    // #endregion 🔖DslTests
 }

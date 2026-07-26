@@ -5,10 +5,23 @@ use norm_core::{
     QuantityKind, SetDocumentOperation,
 };
 use serde::{Deserialize, Serialize};
-use std::collections::{BTreeMap, BTreeSet, HashMap};
+use std::collections::{BTreeMap, BTreeSet};
 
+/// 🧬 `SetDocumentOperation<Document>` (whole-document replace) already implements both
+/// `vcs::Operation<Document>` and, now that `Document` derives `dsl::DslDocument` (i.e.
+/// `vcs::DocumentDsl`), `vcs::OpText` too — see `norm_core`'s generic `impl<D: DocumentDsl + ...>
+/// OpText for SetDocumentOperation<D>`. A coarse, whole-value-replace operation is the legitimate,
+/// sufficient choice per the migration cheat sheet: this reference/lookup-table document has no
+/// existing interactive editor driving fine-grained field-level edits, so reusing this generic
+/// pair (rather than hand-deriving a redundant one-variant `#[derive(dsl::DslOps)]` enum that would
+/// duplicate exactly this shape) keeps every norm family crate's Operation layer DRY.
 pub type Operation = SetDocumentOperation<Document>;
 pub type Host = NormHost<Vdi3805Family>;
+
+/// 📦 VCS envelope/store aliases for the VDI 3805 document, now that `Document`/`Operation` both
+/// satisfy `vcs::DocumentDsl`/`vcs::OpText`.
+pub type Vdi3805Envelope = vcs::DocumentVcsEnvelope<Document, Operation>;
+pub type Vdi3805Store = vcs::DocumentVcsStore<Document, Operation>;
 
 const FAMILY: &str = "VDI 3805";
 const ANNEX: AnnexChoice = AnnexChoice::De;
@@ -53,7 +66,7 @@ fn fail_check(part: &str, section: &str, message: impl Into<String>) -> CheckRes
 
 // #region Shared
 /// 🌐 Locale-tagged text.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct LocalizedText {
     pub de: String,
     pub en: String,
@@ -65,21 +78,119 @@ impl LocalizedText {
     }
 }
 
+/// 🔒 A `QuantityKind` tag mirroring `norm_core::QuantityKind`'s 19 variants, kept locally: the DSL
+/// engine's `DslField` binding can only be derived for a type/trait pair with a local half (orphan
+/// rule), and `norm_core::QuantityKind` doesn't derive `dsl::DslScalar` itself. Converted at the
+/// `VdiUnit` boundary via `From`.
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslScalar)]
+pub enum VdiQuantityKind {
+    #[dsl(key = "dimensionless")]
+    Dimensionless,
+    #[dsl(key = "length")]
+    Length,
+    #[dsl(key = "area")]
+    Area,
+    #[dsl(key = "volume")]
+    Volume,
+    #[dsl(key = "mass")]
+    Mass,
+    #[dsl(key = "time")]
+    Time,
+    #[dsl(key = "temperature")]
+    Temperature,
+    #[dsl(key = "force")]
+    Force,
+    #[dsl(key = "pressure")]
+    Pressure,
+    #[dsl(key = "stress")]
+    Stress,
+    #[dsl(key = "moment")]
+    Moment,
+    #[dsl(key = "energy")]
+    Energy,
+    #[dsl(key = "power")]
+    Power,
+    #[dsl(key = "thermalConductivity")]
+    ThermalConductivity,
+    #[dsl(key = "thermalResistance")]
+    ThermalResistance,
+    #[dsl(key = "heatTransferCoefficient")]
+    HeatTransferCoefficient,
+    #[dsl(key = "airPermeability")]
+    AirPermeability,
+    #[dsl(key = "ventilationRate")]
+    VentilationRate,
+    #[dsl(key = "acceleration")]
+    Acceleration,
+}
+
+impl From<VdiQuantityKind> for QuantityKind {
+    fn from(value: VdiQuantityKind) -> Self {
+        match value {
+            VdiQuantityKind::Dimensionless => QuantityKind::Dimensionless,
+            VdiQuantityKind::Length => QuantityKind::Length,
+            VdiQuantityKind::Area => QuantityKind::Area,
+            VdiQuantityKind::Volume => QuantityKind::Volume,
+            VdiQuantityKind::Mass => QuantityKind::Mass,
+            VdiQuantityKind::Time => QuantityKind::Time,
+            VdiQuantityKind::Temperature => QuantityKind::Temperature,
+            VdiQuantityKind::Force => QuantityKind::Force,
+            VdiQuantityKind::Pressure => QuantityKind::Pressure,
+            VdiQuantityKind::Stress => QuantityKind::Stress,
+            VdiQuantityKind::Moment => QuantityKind::Moment,
+            VdiQuantityKind::Energy => QuantityKind::Energy,
+            VdiQuantityKind::Power => QuantityKind::Power,
+            VdiQuantityKind::ThermalConductivity => QuantityKind::ThermalConductivity,
+            VdiQuantityKind::ThermalResistance => QuantityKind::ThermalResistance,
+            VdiQuantityKind::HeatTransferCoefficient => QuantityKind::HeatTransferCoefficient,
+            VdiQuantityKind::AirPermeability => QuantityKind::AirPermeability,
+            VdiQuantityKind::VentilationRate => QuantityKind::VentilationRate,
+            VdiQuantityKind::Acceleration => QuantityKind::Acceleration,
+        }
+    }
+}
+
+impl From<QuantityKind> for VdiQuantityKind {
+    fn from(value: QuantityKind) -> Self {
+        match value {
+            QuantityKind::Dimensionless => VdiQuantityKind::Dimensionless,
+            QuantityKind::Length => VdiQuantityKind::Length,
+            QuantityKind::Area => VdiQuantityKind::Area,
+            QuantityKind::Volume => VdiQuantityKind::Volume,
+            QuantityKind::Mass => VdiQuantityKind::Mass,
+            QuantityKind::Time => VdiQuantityKind::Time,
+            QuantityKind::Temperature => VdiQuantityKind::Temperature,
+            QuantityKind::Force => VdiQuantityKind::Force,
+            QuantityKind::Pressure => VdiQuantityKind::Pressure,
+            QuantityKind::Stress => VdiQuantityKind::Stress,
+            QuantityKind::Moment => VdiQuantityKind::Moment,
+            QuantityKind::Energy => VdiQuantityKind::Energy,
+            QuantityKind::Power => VdiQuantityKind::Power,
+            QuantityKind::ThermalConductivity => VdiQuantityKind::ThermalConductivity,
+            QuantityKind::ThermalResistance => VdiQuantityKind::ThermalResistance,
+            QuantityKind::HeatTransferCoefficient => VdiQuantityKind::HeatTransferCoefficient,
+            QuantityKind::AirPermeability => VdiQuantityKind::AirPermeability,
+            QuantityKind::VentilationRate => VdiQuantityKind::VentilationRate,
+            QuantityKind::Acceleration => VdiQuantityKind::Acceleration,
+        }
+    }
+}
+
 /// 📐 VDI 3805 unit with absolute vs delta semantics.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct VdiUnit {
     pub symbol: String,
-    pub kind: QuantityKind,
+    pub kind: VdiQuantityKind,
     pub delta: bool,
     pub si_factor: f64,
 }
 
 impl VdiUnit {
-    pub fn absolute(symbol: impl Into<String>, kind: QuantityKind, si_factor: f64) -> Self {
+    pub fn absolute(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
         Self { symbol: symbol.into(), kind, delta: false, si_factor }
     }
 
-    pub fn delta(symbol: impl Into<String>, kind: QuantityKind, si_factor: f64) -> Self {
+    pub fn delta(symbol: impl Into<String>, kind: VdiQuantityKind, si_factor: f64) -> Self {
         Self { symbol: symbol.into(), kind, delta: true, si_factor }
     }
 }
@@ -98,14 +209,56 @@ pub enum VdiValue {
     Null,
 }
 
+/// 🔗 Hand `DslField` bridge for `VdiValue`: a deeply serde-tagged data enum embedded as a
+/// `BTreeMap` VALUE type (`Configuration.parameters`), which mechanically requires `DslField` (map
+/// values bind through `DslField`, not `DslVariants`) — `#[derive(dsl::DslEnum)]` only produces
+/// `DslVariants`, so it can't satisfy that site. Binds through `Shape::Value` (the engine's existing
+/// serde_json escape hatch), reusing the `Serialize`/`Deserialize` this type already has.
+impl dsl::DslField for VdiValue {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Value
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        let json = serde_json::to_value(self).expect("VdiValue always serializes to JSON");
+        dsl::FieldValue::Value(dsl::DslValue::from(json))
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Value(dsl_value) => {
+                let json = renormalize_whole_number_floats(serde_json::Value::from(dsl_value.clone()));
+                serde_json::from_value(json).map_err(|e| e.to_string())
+            }
+            other => Err(format!("expected Value, found {other:?}")),
+        }
+    }
+}
+
+/// 🔧 `dsl::DslValue`'s `Number` variant is f64-only (no int/float distinction, per its own doc
+/// comment) — round-tripping a value with an actual `i64` field (e.g. `VdiValue::Integer`) through
+/// the `Shape::Value` bridge turns `50` into `50.0`, which `serde_json::from_value::<T>` then
+/// rejects for an `i64` field ("invalid type: floating point `50`, expected i64"). Recursively
+/// re-tags any whole-number JSON float back to a JSON integer before deserializing, so integer
+/// fields still parse correctly on the far side of that bridge.
+fn renormalize_whole_number_floats(value: serde_json::Value) -> serde_json::Value {
+    match value {
+        serde_json::Value::Number(n) => match n.as_f64() {
+            Some(f) if f.fract() == 0.0 && f.abs() < i64::MAX as f64 => serde_json::Value::Number((f as i64).into()),
+            _ => serde_json::Value::Number(n),
+        },
+        serde_json::Value::Array(items) => serde_json::Value::Array(items.into_iter().map(renormalize_whole_number_floats).collect()),
+        serde_json::Value::Object(map) => serde_json::Value::Object(map.into_iter().map(|(k, v)| (k, renormalize_whole_number_floats(v))).collect()),
+        other => other,
+    }
+}
+
 /// 🧩 Lossless extension bag for unknown fields.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ExtensionBag {
-    pub fields: HashMap<String, serde_json::Value>,
+    pub fields: BTreeMap<String, serde_json::Value>,
 }
 
 /// 🆔 Product identity within a manufacturer catalogue.
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ProductIdentity {
     pub manufacturer_code: String,
     pub product_group: String,
@@ -113,7 +266,7 @@ pub struct ProductIdentity {
 }
 
 /// 🏭 Manufacturer file header and payload references.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ManufacturerFile {
     pub header_version: String,
     pub manufacturer: String,
@@ -125,7 +278,7 @@ pub struct ManufacturerFile {
 }
 
 /// 🔗 Accessory relationship between products.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct AccessoryLink {
     pub accessory_id: String,
     pub required: bool,
@@ -133,14 +286,14 @@ pub struct AccessoryLink {
 }
 
 /// 🧱 Composition relationship (`hasPart`).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CompositionLink {
     pub component_id: String,
     pub quantity: u32,
 }
 
 /// 🔒 Security limits for untrusted manufacturer files.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct SecurityLimits {
     pub max_file_bytes: usize,
     pub max_records: usize,
@@ -183,8 +336,26 @@ impl SheetId {
     }
 }
 
+/// 🔗 Hand `DslField` bridge for `SheetId`: a tuple ("newtype") struct has no named fields for
+/// `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::UInt` instead of
+/// changing its public tuple shape (used pervasively as `.0` across this crate).
+impl dsl::DslField for SheetId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::UInt
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::UInt(self.0 as u64)
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::UInt(v) => Ok(SheetId(*v as u16)),
+            other => Err(format!("expected UInt, found {other:?}")),
+        }
+    }
+}
+
 /// 📅 Edition identifier (year + month).
-#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, PartialOrd, Ord, Hash, Serialize, Deserialize, dsl::DslRecord)]
 pub struct EditionId {
     pub year: u16,
     pub month: u8,
@@ -1468,7 +1639,7 @@ impl SchemaRegistry {
 
 // #region Part1
 /// 🏗️ Parsed building-system number (Anlagenkennzeichen).
-#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct BuildingSystemNumber {
     pub system_code: String,
     pub subsystem: String,
@@ -1503,6 +1674,24 @@ impl BuildingSystemNumber {
 /// 📇 Record family identifier (010…970.41).
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 pub struct RecordFamilyId(pub String);
+
+/// 🔗 Hand `DslField` bridge for `RecordFamilyId`: a tuple ("newtype") struct has no named fields
+/// for `#[derive(dsl::DslRecord)]` to enumerate, so it binds directly as `Shape::Text` instead of
+/// changing its public tuple shape (used pervasively as `.0` across this crate).
+impl dsl::DslField for RecordFamilyId {
+    fn shape() -> dsl::Shape {
+        dsl::Shape::Text
+    }
+    fn to_value(&self) -> dsl::FieldValue {
+        dsl::FieldValue::Text(self.0.clone())
+    }
+    fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+        match value {
+            dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(RecordFamilyId(s.clone())),
+            other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
 
 impl RecordFamilyId {
     pub const R010: &'static str = "010";
@@ -1624,7 +1813,7 @@ impl RecordFamilyId {
 }
 
 /// 📄 One semicolon-delimited native record.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct NativeRecord {
     pub family: RecordFamilyId,
     pub fields: Vec<String>,
@@ -1632,16 +1821,16 @@ pub struct NativeRecord {
 }
 
 /// ⚙️ Product configuration block.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct Configuration {
     pub id: String,
-    pub parameters: HashMap<String, VdiValue>,
+    pub parameters: BTreeMap<String, VdiValue>,
     pub geometry_ref: Option<String>,
     pub function_refs: Vec<String>,
 }
 
 /// 📦 Catalogue product in Part 1 hierarchy.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogueProduct {
     pub identity: ProductIdentity,
     pub title: LocalizedText,
@@ -1654,7 +1843,7 @@ pub struct CatalogueProduct {
 }
 
 /// 📚 Manufacturer catalogue document (Part 1).
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ManufacturerCatalog {
     pub file: ManufacturerFile,
     pub products: Vec<CatalogueProduct>,
@@ -1707,7 +1896,7 @@ pub fn parse_native_text(text: &str, limits: SecurityLimits) -> Result<Manufactu
                 records: Vec::new(),
                 configuration: Configuration {
                     id: format!("cfg.{}", article_number),
-                    parameters: HashMap::new(),
+                    parameters: BTreeMap::new(),
                     geometry_ref: None,
                     function_refs: Vec::new(),
                 },
@@ -1802,7 +1991,7 @@ pub fn validate_structure(catalog: &ManufacturerCatalog) -> Vec<Diagnostic> {
 
 // #region Geometry
 /// 📦 Axis-aligned bounding box [m].
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct BoundingBox {
     pub min_x: f64,
     pub min_y: f64,
@@ -1832,7 +2021,7 @@ impl BoundingBox {
 }
 
 /// 🔌 Connection point on product geometry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ConnectionPoint {
     pub id: String,
     pub medium: String,
@@ -1842,12 +2031,12 @@ pub struct ConnectionPoint {
 }
 
 /// 🧊 Parametric geometry definition.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct ParametricGeometry {
     pub id: String,
     pub bbox: BoundingBox,
     pub connections: Vec<ConnectionPoint>,
-    pub parameters: HashMap<String, f64>,
+    pub parameters: BTreeMap<String, f64>,
 }
 
 impl ParametricGeometry {
@@ -1871,14 +2060,14 @@ impl ParametricGeometry {
 
 // #region Functions
 /// 📈 Characteristic curve point.
-#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CurvePoint {
     pub x: f64,
     pub y: f64,
 }
 
 /// 📉 Characteristic curve with linear interpolation.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CharacteristicCurve {
     pub id: String,
     pub x_unit: VdiUnit,
@@ -1923,7 +2112,7 @@ pub fn linear_map(x: f64, x0: f64, x1: f64, y0: f64, y1: f64) -> f64 {
 
 // #region Catalog
 /// 🔍 Product index entry.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogIndexEntry {
     pub product_id: String,
     pub sheet: SheetId,
@@ -1932,7 +2121,7 @@ pub struct CatalogIndexEntry {
 }
 
 /// 📚 Searchable catalogue index.
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 pub struct CatalogIndex {
     pub entries: Vec<CatalogIndexEntry>,
 }
@@ -2108,7 +2297,7 @@ macro_rules! define_vdi_part {
 
             pub fn check(document: &Document) -> CheckResult {
                 let product = document.catalog.product_for_sheet(SheetId($num));
-                let profile = document.edition_profile.get(&$num).copied().unwrap_or(EditionProfileChoice::Current);
+                let profile = document.edition_profile.get(stringify!($num)).copied().unwrap_or(EditionProfileChoice::Current);
                 if product.is_none() {
                     return pass_check(stringify!($num), "metadata", format!("sheet {} metadata reachable (no product)", $num));
                 }
@@ -2259,18 +2448,24 @@ define_vdi_part!(part_100, 100, multi_profile);
 
 // #region Session
 /// 📅 Edition profile selection for multi-profile sheets.
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 pub enum EditionProfileChoice {
+    #[dsl(key = "legacy")]
     Legacy,
+    #[dsl(key = "current")]
     Current,
 }
 
+/// 🏷️ Canonical DSL file extension for VDI 3805 documents.
+pub const VDI3805_EXTENSION: &str = "vdi3805";
+
 /// 📋 VDI 3805 evaluation document.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+#[dsl(extension = "vdi3805", layout = "lines")]
 pub struct Document {
     pub manufacturer_file: ManufacturerFile,
     pub catalog: ManufacturerCatalog,
-    pub edition_profile: BTreeMap<u16, EditionProfileChoice>,
+    pub edition_profile: BTreeMap<String, EditionProfileChoice>,
     pub correction_as_of: EditionId,
     pub strict_mode: bool,
     pub index: CatalogIndex,
@@ -2301,11 +2496,11 @@ pub fn reference_fixture() -> Document {
         record_count: 3,
         extensions: ExtensionBag::default(),
     };
-    let mut parameters = HashMap::new();
+    let mut parameters = BTreeMap::new();
     parameters.insert("dn".into(), VdiValue::Integer { value: 50 });
     parameters.insert("kvs".into(), VdiValue::Decimal {
         value: 4.5,
-        unit: Some(VdiUnit::absolute("m3/h", QuantityKind::Volume, 1.0)),
+        unit: Some(VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0)),
     });
     let product = CatalogueProduct {
         identity: ProductIdentity {
@@ -2364,15 +2559,15 @@ pub fn reference_fixture() -> Document {
                     diameter_mm: Some(50.0),
                 },
             ],
-            parameters: HashMap::from([("scale".into(), 1.0)]),
+            parameters: BTreeMap::from([("scale".into(), 1.0)]),
         },
     )]);
     let curves = BTreeMap::from([(
         "curve.kvs".into(),
         CharacteristicCurve {
             id: "curve.kvs".into(),
-            x_unit: VdiUnit::delta("%", QuantityKind::Dimensionless, 0.01),
-            y_unit: VdiUnit::absolute("m3/h", QuantityKind::Volume, 1.0),
+            x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01),
+            y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0),
             points: vec![
                 CurvePoint { x: 0.0, y: 0.0 },
                 CurvePoint { x: 100.0, y: 4.5 },
@@ -2828,8 +3023,8 @@ mod tests {
     fn characteristic_curve_interpolate_handles_edges() {
         let empty = CharacteristicCurve {
             id: "empty".into(),
-            x_unit: VdiUnit::delta("%", QuantityKind::Dimensionless, 0.01),
-            y_unit: VdiUnit::absolute("m3/h", QuantityKind::Volume, 1.0),
+            x_unit: VdiUnit::delta("%", VdiQuantityKind::Dimensionless, 0.01),
+            y_unit: VdiUnit::absolute("m3/h", VdiQuantityKind::Volume, 1.0),
             points: Vec::new(),
         };
         assert_eq!(empty.interpolate(10.0), 0.0);
@@ -2976,5 +3171,29 @@ mod tests {
         assert!(doc.catalog.product_for_sheet(SheetId(2)).is_some());
         assert!(doc.catalog.product_for_sheet(SheetId(3)).is_none());
     }
+
+    // #region 🔖DslTests
+    #[test]
+    fn document_dsl_round_trips_the_reference_fixture() {
+        vcs::test_support::assert_dsl_round_trip(&reference_fixture());
+    }
+
+    #[test]
+    fn set_document_operation_op_text_round_trips_for_vdi3805() {
+        vcs::test_support::assert_op_line_round_trip(&Operation::SetDocument { document: reference_fixture() });
+    }
+
+    #[test]
+    fn document_text_round_trips_through_a_vcs_store() {
+        let envelope = vcs::create_document_vcs_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
+        let mut store = Vdi3805Store::new(envelope);
+        let mut mutated = reference_fixture();
+        mutated.strict_mode = true;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .expect("apply");
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    // #endregion 🔖DslTests
 }
 

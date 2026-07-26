@@ -24,8 +24,9 @@ const VCS_DEMO_SCHEMA: &str = "vcs.demo";
 //#endregion 🔖Constants
 
 //#region 🔖Types
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
+#[dsl(extension = "vcsdemo")]
 struct VcsDemoProjection {
     schema: String,
     title: String,
@@ -35,14 +36,20 @@ struct VcsDemoProjection {
     tags: Vec<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum VcsDemoOperation {
+    #[dsl(key = "set-counter")]
     SetCounter { counter: i64 },
+    #[dsl(key = "set-title")]
     SetTitle { title: String },
+    #[dsl(key = "set-notes")]
     SetNotes { notes: String },
+    #[dsl(key = "set-status")]
     SetStatus { status: String },
+    #[dsl(key = "add-tag")]
     AddTag { tag: String },
+    #[dsl(key = "remove-tag")]
     RemoveTag { tag: String },
 }
 
@@ -988,5 +995,19 @@ mod tests {
         let envelope = seeded_envelope(&app);
         assert!(envelope.active_alternative_id.is_some(), "createAlternative must set an active alternative");
     }
+
+    //#region 🔖DslAndOpText
+    #[test]
+    fn vcs_demo_projection_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&empty_vcs_demo_projection());
+    }
+
+    #[test]
+    fn vcs_demo_operation_op_text_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetCounter { counter: 3 });
+        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::SetTitle { title: "Untitled".into() });
+        vcs::test_support::assert_op_line_round_trip(&VcsDemoOperation::AddTag { tag: "draft".into() });
+    }
+    //#endregion 🔖DslAndOpText
 }
 //#endregion 🧪Tests

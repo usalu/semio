@@ -1945,6 +1945,7 @@ mod tests {
             terminologies: vec![],
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
@@ -16393,6 +16394,14 @@ pub struct ShellState {
     pub window_content_rects: HashMap<String, Rect>,
     /// 🪟 Last-rendered dock-stack silhouette per active window id (tabs + gap cutout + controls + body).
     pub window_silhouettes: HashMap<String, WindowSilhouette>,
+    /// 🎬 Active tutorial playback/recording runtime, if any — see `//#region 🎬Tutorial` (below
+    /// `ShellChrome`) for `TutorialRuntime`'s full shape, lifecycle, and the player/recorder it drives.
+    pub tutorial: Option<TutorialRuntime>,
+    /// 🎬 Document-track operations queued by a tutorial tick/seek this frame, drained and applied
+    /// asynchronously right after `render_chrome` returns (mirrors how `AppRuntime::frame` already defers
+    /// `scene_events`/wheel actions through `spawn_app_task` for the same reason: the plugin bridge's
+    /// `apply_operations`/`handle_action` calls are async, but chrome rendering isn't).
+    pub tutorial_pending_document_ops: Vec<TutorialPendingDocOp>,
 }
 //#endregion ShellTypes
 
@@ -16686,6 +16695,8 @@ impl ShellState {
             contributor_instances: HashMap::new(),
             window_content_rects: HashMap::new(),
             window_silhouettes: HashMap::new(),
+            tutorial: None,
+            tutorial_pending_document_ops: Vec::new(),
         };
         state.load_persisted_panel_layout();
         state
@@ -17989,6 +18000,26 @@ impl ShellState {
     }
 
     pub async fn dispatch_action(&mut self, action: ActionDescriptor) -> Result<(), String> {
+        // 🎬 Tutorial interception — fully short-circuits (mirrors `SET_ACTIVE_UTILITY_ACTION_ID`'s own
+        // interception further down): both `startTutorial`/`recordTutorial` are framework-injected View
+        // actions with no plugin-side handler at all (see `framework/plugin/rs`'s auto-injection).
+        if action.action == semio_framework_core::START_TUTORIAL_ACTION_ID {
+            if let Some(tutorial_id) = action.args.as_ref().and_then(|args| args.get("tutorialId")).and_then(|v| v.as_str()) {
+                self.tutorial_start(tutorial_id);
+            }
+            return Ok(());
+        }
+        if action.action == semio_framework_core::RECORD_TUTORIAL_ACTION_ID {
+            self.tutorial_start_recording();
+            return Ok(());
+        }
+        // 🎬 Deviation detection + recorder tap — every OTHER real dispatch funnels through here exactly
+        // once, before any of this function's own side effects, and skips itself while the tutorial
+        // player's own history-action replay is mid-flight (`tutorial_flush_pending_document_ops`'s
+        // `TutorialDispatchGuard`).
+        if !tutorial_dispatch_is_internal() {
+            self.tutorial_note_real_dispatch(&action);
+        }
         if action.controller_id == "framework" {
             match action.action.as_str() {
                 "setAppearance" => {
@@ -22274,6 +22305,7 @@ mod command_registry_tests {
             terminologies: vec!["de".into()],
             terminology_documents: std::collections::HashMap::new(),
             introduction: None,
+            tutorials: Vec::new(),
             dialogs: Vec::new(),
             media_inputs: Vec::new(),
             media_outputs: Vec::new(),
@@ -22958,6 +22990,1177 @@ fn engagement_ghost_accept_on_click(
 }
 //#endregion 🔖ChromeOverlaysAndTour
 
+//#region 🎬Tutorial
+// 🎬 The wgpu-shell half of the Tutorial mechanism (sibling of `//#region 🔖ChromeOverlaysAndTour`'s
+// introduction tour, above) — see `framework/core/rs/lib.rs`'s `//#region 🔖Tutorial` for the shared
+// data model and pure engine fns (`tutorial_slice`/`compose_tutorial_ui`/`interpolate_tutorial_camera`/
+// `tutorial_camera_at`/`apply_tutorial_ui_change`) this region calls directly rather than reimplementing.
+// The React shell's own half lives in `framework/renderer/react/index.tsx`; both are built against the
+// same core model but neither coordinates with the other beyond that shared semantics.
+
+/// 🎬 Live playback/recording state machine for `ShellState.tutorial`. `Deviated` is a distinct mode
+/// (not just "paused") so the player remembers to converge the camera on resume (Design Decision 6).
+#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+pub enum TutorialMode {
+    Playing,
+    Paused,
+    Recording,
+    Deviated,
+}
+
+/// 🎥 A real-time (not timeline-time, not rate-scaled) camera glide from a live/deviated pose to the
+/// recorded pose at the playhead the user pressed Play at — `TUTORIAL_CONVERGE_MS` long (Design
+/// Decision 5). Reuses `interpolate_tutorial_camera` under the hood (see `tutorial_converge_pose`)
+/// rather than reimplementing easing.
+#[derive(Clone, Debug)]
+pub struct TutorialCameraConverge {
+    from: semio_framework_core::TutorialCameraState,
+    to: semio_framework_core::TutorialCameraState,
+    started_wall_ms: f64,
+}
+
+/// 🎬 The active tutorial's full runtime state: the definition itself (recording IS a `TutorialDefinition`
+/// — Design Decision 1), playback position/rate, the sandbox snapshot to restore on exit, and (for the
+/// recorder) the bookkeeping needed to sample cameras/UI only on meaningful change.
+#[derive(Clone)]
+pub struct TutorialRuntime {
+    pub definition: semio_framework_core::TutorialDefinition,
+    pub mode: TutorialMode,
+    pub playhead_ms: f64,
+    pub rate: f32,
+    /// ✂️ The playhead document/UI state was last synced to — `tutorial_slice(applied_ms, playhead_ms)`
+    /// drives each tick's incremental apply; a seek instead jumps this straight to the target.
+    applied_ms: f64,
+    /// 📸 The live document/UI as they stood the moment the tutorial sandboxed them — restored on exit
+    /// (Design Decision 3). `None` for a recording, which is never sandboxed.
+    pre_sandbox_document_json: Option<String>,
+    pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot,
+    last_tick_wall_ms: f64,
+    /// 🎥 Active per-window convergence tweens (Deviated → Playing) — see `TutorialCameraConverge`.
+    converge: HashMap<String, TutorialCameraConverge>,
+    recorder_last_camera_wall_ms: HashMap<String, f64>,
+    recorder_last_camera_pose: HashMap<String, semio_framework_core::TutorialCameraState>,
+    recorder_last_ui: semio_framework_core::TutorialUiSnapshot,
+    recorder_last_ui_sample_wall_ms: f64,
+}
+
+/// 🎬 One document-track application queued by a tick/seek this frame — see
+/// `ShellState::tutorial_pending_document_ops`'s own doc comment for why this has to be deferred rather
+/// than applied inline (the plugin bridge's document calls are async, chrome rendering isn't).
+#[derive(Clone, Debug)]
+pub enum TutorialPendingDocOp {
+    LoadDocumentJson(String),
+    ApplyOperations(Vec<String>),
+    /// 🖋️ `Undo`/`Redo`/`Checkpoint`/`CheckoutCheckpoint`/`SwitchAlternative` all replay as a bare
+    /// generic action dispatch (`"undo"`/`"redo"`/… against the session's `controller_id`) — the same
+    /// convention `framework/plugin/rs`'s own `handle_action("undo", …)` test helpers already use, and
+    /// the only "history action" mechanism reachable from here without inventing a second one.
+    HistoryAction { action_id: String, args: Option<serde_json::Value> },
+}
+
+thread_local! {
+    /// 🔒 Set for the duration of the tutorial player's own replayed dispatches (history actions during
+    /// document-track application) so `dispatch_action`'s deviation-detection/recorder-tap hook can tell
+    /// a tutorial-originated dispatch from a real user one — mirrors this file's own `CHROME_*` thread-
+    /// local idiom (see `//#region 🔖ChromeOverlaysAndTour`).
+    static TUTORIAL_DISPATCH_GUARD: std::cell::Cell<bool> = std::cell::Cell::new(false);
+}
+
+fn tutorial_dispatch_is_internal() -> bool {
+    TUTORIAL_DISPATCH_GUARD.with(|cell| cell.get())
+}
+
+/// 🔒 RAII guard arming `TUTORIAL_DISPATCH_GUARD` for its scope; always construct via `arm()`.
+struct TutorialDispatchGuard;
+
+impl TutorialDispatchGuard {
+    fn arm() -> Self {
+        TUTORIAL_DISPATCH_GUARD.with(|cell| cell.set(true));
+        Self
+    }
+}
+
+impl Drop for TutorialDispatchGuard {
+    fn drop(&mut self) {
+        TUTORIAL_DISPATCH_GUARD.with(|cell| cell.set(false));
+    }
+}
+
+/// 🎬 Reuses the navbar's own height token for the tutorial control bar (item 2's "reuse the existing
+/// navbar height theme token" — no second style constant introduced).
+fn tutorial_bar_height(theme: &Theme) -> f32 {
+    theme.navbar_height
+}
+
+//#region 🎥CameraConversion
+/// 🎥 `OrbitController` → `TutorialCameraState::Orbit`. `fov` is in **degrees**, matching
+/// `World3dScene.camera_json`'s own wire format (`infinite_world`'s `WorldCameraRecord.fov` — see that
+/// crate's `camera.fov.unwrap_or(45.0) as f32 * PI / 180.0` conversion the other way), not
+/// `OrbitController.fov_y`'s radians.
+fn orbit_to_tutorial_camera(orbit: &kernel_3d_scene::OrbitController) -> semio_framework_core::TutorialCameraState {
+    let camera = orbit.to_camera();
+    semio_framework_core::TutorialCameraState::Orbit {
+        position: [camera.position.x as f64, camera.position.y as f64, camera.position.z as f64],
+        target: [camera.target.x as f64, camera.target.y as f64, camera.target.z as f64],
+        up: [camera.up.x as f64, camera.up.y as f64, camera.up.z as f64],
+        fov: Some((camera.fov_y as f64).to_degrees()),
+    }
+}
+
+/// 🎥 `TutorialCameraState` → `OrbitController`. `Canvas` (the 2D infinite-canvas camera kind) has no
+/// orbit-controller equivalent — `None` (see the ticket's own scope note on 2D camera tracks).
+fn tutorial_camera_to_orbit(state: &semio_framework_core::TutorialCameraState) -> Option<kernel_3d_scene::OrbitController> {
+    match state {
+        semio_framework_core::TutorialCameraState::Orbit { position, target, up, fov } => {
+            Some(kernel_3d_scene::OrbitController::from_camera(&kernel_3d_scene::Camera3d {
+                position: kernel_3d_scene::Vec3::new(position[0] as f32, position[1] as f32, position[2] as f32),
+                target: kernel_3d_scene::Vec3::new(target[0] as f32, target[1] as f32, target[2] as f32),
+                up: kernel_3d_scene::Vec3::new(up[0] as f32, up[1] as f32, up[2] as f32),
+                fov_y: (fov.unwrap_or(45.0) as f32).to_radians(),
+                near: 0.1,
+                far: 1000.0,
+            }))
+        }
+        semio_framework_core::TutorialCameraState::Canvas { .. } => None,
+    }
+}
+
+fn tutorial_capture_camera_pose(state: &ShellState, window_id: &str) -> Option<semio_framework_core::TutorialCameraState> {
+    state
+        .world3d_states
+        .get(window_id)
+        .or_else(|| state.icon_render_states.get(window_id))
+        .map(|world| orbit_to_tutorial_camera(&world.orbit))
+}
+
+fn tutorial_apply_camera_pose(state: &mut ShellState, window_id: &str, pose: &semio_framework_core::TutorialCameraState) {
+    let Some(orbit) = tutorial_camera_to_orbit(pose) else {
+        return;
+    };
+    if let Some(world) = state.world3d_states.get_mut(window_id) {
+        world.orbit = orbit.clone();
+    }
+    if let Some(world) = state.icon_render_states.get_mut(window_id) {
+        world.orbit = orbit;
+    }
+}
+
+/// 🎥 Unique window ids across both `base.cameras` and `tracks.camera`, in first-seen order.
+fn tutorial_camera_window_ids(def: &semio_framework_core::TutorialDefinition) -> Vec<String> {
+    let mut ids: Vec<String> = Vec::new();
+    for keyframe in def.base.cameras.iter().chain(def.tracks.camera.iter()) {
+        if !ids.contains(&keyframe.window_id) {
+            ids.push(keyframe.window_id.clone());
+        }
+    }
+    ids
+}
+
+fn tutorial_camera_pose_close(a: &semio_framework_core::TutorialCameraState, b: &semio_framework_core::TutorialCameraState, epsilon: f64) -> bool {
+    use semio_framework_core::TutorialCameraState::*;
+    match (a, b) {
+        (Orbit { position: p0, target: t0, .. }, Orbit { position: p1, target: t1, .. }) => {
+            let dist = |x: [f64; 3], y: [f64; 3]| ((x[0] - y[0]).powi(2) + (x[1] - y[1]).powi(2) + (x[2] - y[2]).powi(2)).sqrt();
+            dist(*p0, *p1) < epsilon && dist(*t0, *t1) < epsilon
+        }
+        (Canvas { x: x0, y: y0, zoom: z0 }, Canvas { x: x1, y: y1, zoom: z1 }) => (x0 - x1).abs() < epsilon && (y0 - y1).abs() < epsilon && (z0 - z1).abs() < epsilon,
+        _ => false,
+    }
+}
+
+/// 🎥 Resolves the real-time convergence tween's pose at `elapsed_ms` since it started, by reusing
+/// `interpolate_tutorial_camera` over two synthetic keyframes at `0`/`TUTORIAL_CONVERGE_MS` — rather than
+/// reimplementing easing for this one caller.
+fn tutorial_converge_pose(tween: &TutorialCameraConverge, elapsed_ms: f64) -> semio_framework_core::TutorialCameraState {
+    let from_keyframe = semio_framework_core::TutorialCameraKeyframe {
+        at: 0,
+        window_id: String::new(),
+        camera: tween.from.clone(),
+        easing: semio_framework_core::TutorialEasing::Hold,
+    };
+    let to_keyframe = semio_framework_core::TutorialCameraKeyframe {
+        at: semio_framework_core::TUTORIAL_CONVERGE_MS,
+        window_id: String::new(),
+        camera: tween.to.clone(),
+        easing: semio_framework_core::TutorialEasing::EaseInOut,
+    };
+    semio_framework_core::interpolate_tutorial_camera(&from_keyframe, &to_keyframe, elapsed_ms)
+}
+//#endregion 🎥CameraConversion
+
+//#region 🧮UiSnapshot
+/// 🧮 `ShellState` → `TutorialUiSnapshot` (Design Decision 4). Fields with no home in this shell's state
+/// today (`activeToolId` has one — `ViewState.active_tool_id`; `expandedTreeIds` does not) are noted
+/// inline rather than inventing new cross-cutting state to fill them.
+fn tutorial_capture_ui_snapshot(state: &ShellState) -> semio_framework_core::TutorialUiSnapshot {
+    let mut active_panel_tab_by_group: HashMap<String, String> = HashMap::new();
+    if state.left_panel_open {
+        if let Some(tab) = &state.active_left_tab {
+            let group = match state.active_left_kind {
+                LeftPanelKind::Workbench => "workbench",
+                LeftPanelKind::Display => "display",
+            };
+            active_panel_tab_by_group.insert(group.into(), tab.clone());
+        }
+    }
+    if state.right_panel_open {
+        if let Some(tab) = &state.active_right_tab {
+            let group = match state.active_right_kind {
+                RightPanelKind::Details => "details",
+                RightPanelKind::Settings => "settings",
+            };
+            active_panel_tab_by_group.insert(group.into(), tab.clone());
+        }
+    }
+    let command_panel_open = state.right_panel_open
+        && state.active_right_kind == RightPanelKind::Settings
+        && state.active_right_tab.as_deref() == Some(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID);
+    semio_framework_core::TutorialUiSnapshot {
+        active_mode_id: state.session.as_ref().and_then(|s| s.view_state.active_mode_id.clone()),
+        focused_window_id: state.active_window_id.clone(),
+        active_utility_by_window_id: state.active_utility_by_window.clone(),
+        active_tool_id: state.session.as_ref().and_then(|s| s.view_state.active_tool_id.clone()),
+        layout: Some(state.dock.to_window_layout()),
+        active_panel_tab_by_group,
+        panel_json: state.session.as_ref().and_then(|s| s.view_state.panel_json.clone()),
+        selection_json: state.session.as_ref().and_then(|s| s.view_state.selection_json.clone()),
+        open_dialog_id: chrome_dialog_top_id(),
+        // 🚧 No generic hierarchical "expanded tree ids" state exists on `ShellState` today — the closest
+        // analog (`collapsed_sections`) is a flat per-accordion-id map with inverted (collapsed, not
+        // expanded) boolean semantics and no notion of a tree, so round-tripping through it would silently
+        // perturb unrelated accordion sections. Left unmapped (best-effort no-op) rather than inventing
+        // new cross-cutting tree-expansion state.
+        expanded_tree_ids: Vec::new(),
+        command_panel_open,
+    }
+}
+
+/// 🧮 `TutorialUiSnapshot` → `ShellState`, applied as a snap (single field writes — Design Decision 5).
+fn tutorial_apply_ui_snapshot(state: &mut ShellState, snapshot: &semio_framework_core::TutorialUiSnapshot) {
+    if let Some(session) = state.session.as_mut() {
+        session.view_state.active_mode_id = snapshot.active_mode_id.clone();
+        session.view_state.active_tool_id = snapshot.active_tool_id.clone();
+        session.view_state.panel_json = snapshot.panel_json.clone();
+        session.view_state.selection_json = snapshot.selection_json.clone();
+    }
+    state.active_window_id = snapshot.focused_window_id.clone();
+    state.active_utility_by_window = snapshot.active_utility_by_window_id.clone();
+    if let Some(layout) = &snapshot.layout {
+        state.dock.apply_layout_diff(layout);
+    }
+    let workbench = snapshot.active_panel_tab_by_group.get("workbench");
+    let display = snapshot.active_panel_tab_by_group.get("display");
+    if let Some(tab) = workbench.or(display) {
+        state.left_panel_open = true;
+        state.active_left_kind = if workbench.is_some() { LeftPanelKind::Workbench } else { LeftPanelKind::Display };
+        state.active_left_tab = Some(tab.clone());
+    } else {
+        state.left_panel_open = false;
+    }
+    let details = snapshot.active_panel_tab_by_group.get("details");
+    let settings = snapshot.active_panel_tab_by_group.get("settings");
+    if let Some(tab) = details.or(settings) {
+        state.right_panel_open = true;
+        state.active_right_kind = if details.is_some() { RightPanelKind::Details } else { RightPanelKind::Settings };
+        state.active_right_tab = Some(tab.clone());
+    } else {
+        state.right_panel_open = false;
+    }
+    if snapshot.open_dialog_id.is_none() {
+        CHROME_DIALOG_STACK.with(|cell| cell.borrow_mut().clear());
+    }
+    if snapshot.command_panel_open {
+        state.right_panel_open = true;
+        state.active_right_kind = RightPanelKind::Settings;
+        state.active_right_tab = Some(FRAMEWORK_SETTINGS_COMMANDS_TAB_ID.into());
+    }
+}
+
+/// 🩹 Applies one `TutorialUiChange` live — composed from `tutorial_capture_ui_snapshot` +
+/// `apply_tutorial_ui_change` (core) + `tutorial_apply_ui_snapshot` rather than duplicating the change's
+/// own per-field switch a second time.
+fn tutorial_apply_ui_change_to_shell(state: &mut ShellState, change: &semio_framework_core::TutorialUiChange) {
+    let mut snapshot = tutorial_capture_ui_snapshot(state);
+    semio_framework_core::apply_tutorial_ui_change(&mut snapshot, change);
+    tutorial_apply_ui_snapshot(state, &snapshot);
+}
+
+fn chrome_dialog_top_id() -> Option<String> {
+    CHROME_DIALOG_STACK.with(|cell| cell.borrow().last().map(|dialog| dialog.id.clone()))
+}
+//#endregion 🧮UiSnapshot
+
+//#region 👻GestureOverlay
+/// 👻 Resolves an `IntroductionPoint` to a viewport pixel, reusing this shell's existing per-frame rect
+/// registries (`resolve_element_rect`, `window_content_rects`). `Scene`/`Canvas`/`Entity`/`Curve`/`Domain`
+/// need a per-window world→screen projection resolver that doesn't exist as reusable cross-cutting infra
+/// here (each 3D/2D surface picks/projects ad hoc at its own interaction call sites) — scoped out rather
+/// than inventing new resolver plumbing.
+fn tutorial_resolve_gesture_point(state: &ShellState, point: &semio_framework_core::IntroductionPoint) -> Option<(f32, f32)> {
+    use semio_framework_core::IntroductionPoint as P;
+    match point {
+        P::Screen { x, y } => Some((*x as f32, *y as f32)),
+        P::ScreenNormalized { x, y } => Some((*x as f32 * state.screen_w, *y as f32 * state.screen_h)),
+        P::Element { id, offset } => {
+            let rect = resolve_element_rect(id)?;
+            let [ox, oy] = offset.unwrap_or([0.5, 0.5]);
+            Some((rect.x + rect.w * ox as f32, rect.y + rect.h * oy as f32))
+        }
+        P::Window { id, x, y } => {
+            let rect = state.window_content_rects.get(id)?;
+            Some((rect.x + *x as f32, rect.y + *y as f32))
+        }
+        P::WindowNormalized { id, x, y } => {
+            let rect = state.window_content_rects.get(id)?;
+            Some((rect.x + rect.w * (*x as f32), rect.y + rect.h * (*y as f32)))
+        }
+        P::Scene { .. } | P::Canvas { .. } | P::Entity { .. } | P::Curve { .. } | P::Domain { .. } => None,
+    }
+}
+
+fn tutorial_gesture_endpoints(
+    gesture: &semio_framework_core::IntroductionGesture,
+) -> (semio_framework_core::IntroductionPoint, semio_framework_core::IntroductionPoint) {
+    use semio_framework_core::IntroductionGesture as G;
+    match gesture {
+        G::LeftClick { at } | G::RightClick { at } | G::DoubleClick { at } => (at.clone(), at.clone()),
+        G::Scroll { at, .. } => (at.clone(), at.clone()),
+        G::Drag { from, to, .. } | G::Orbit { from, to, .. } => (from.clone(), to.clone()),
+    }
+}
+
+/// 👻 Paints a simple ghost-cursor dot at the active `TutorialGestureCue`'s interpolated position (linear
+/// by playhead progress within the cue) — the minimal demonstration painter neither this shell nor its
+/// introduction mechanism had before (verified: no `demonstration`/ghost-cursor renderer existed here).
+fn render_tutorial_gesture_overlay(state: &ShellState, overlay: &mut DrawList, theme: &Theme) {
+    let Some(runtime) = state.tutorial.as_ref() else {
+        return;
+    };
+    if !matches!(runtime.mode, TutorialMode::Playing | TutorialMode::Paused | TutorialMode::Deviated) {
+        return;
+    }
+    let playhead = runtime.playhead_ms;
+    let Some(cue) = runtime.definition.tracks.gestures.iter().find(|cue| {
+        let at = cue.at as f64;
+        playhead >= at && playhead <= at + cue.duration_ms as f64
+    }) else {
+        return;
+    };
+    let (from, to) = tutorial_gesture_endpoints(&cue.gesture);
+    let Some((fx, fy)) = tutorial_resolve_gesture_point(state, &from) else {
+        return;
+    };
+    let (tx, ty) = tutorial_resolve_gesture_point(state, &to).unwrap_or((fx, fy));
+    let t = if cue.duration_ms == 0 {
+        1.0
+    } else {
+        ((playhead - cue.at as f64) / cue.duration_ms as f64).clamp(0.0, 1.0) as f32
+    };
+    let x = fx + (tx - fx) * t;
+    let y = fy + (ty - fy) * t;
+    let size = 18.0;
+    overlay.push_rounded([x - size * 0.5, y - size * 0.5, size, size], theme.selected, size * 0.5);
+    let inner = size - 6.0;
+    overlay.push_rounded([x - inner * 0.5, y - inner * 0.5, inner, inner], theme.background, inner * 0.5);
+}
+//#endregion 👻GestureOverlay
+
+//#region 📅Provenance
+/// 📅 Howard Hinnant's `civil_from_days` algorithm (http://howardhinnant.github.io/date_algorithms.html)
+/// — days-since-1970-01-01 → proleptic-Gregorian `(year, month, day)`, dependency-free (no date crate in
+/// this crate's `Cargo.toml`) for the recorder's `recordedAt` provenance stamp.
+fn tutorial_civil_from_days(z: i64) -> (i64, u32, u32) {
+    let z = z + 719468;
+    let era = if z >= 0 { z } else { z - 146096 } / 146097;
+    let doe = (z - era * 146097) as u64;
+    let yoe = (doe - doe / 1460 + doe / 36524 - doe / 146096) / 365;
+    let y = yoe as i64 + era * 400;
+    let doy = doe - (365 * yoe + yoe / 4 - yoe / 100);
+    let mp = (5 * doy + 2) / 153;
+    let d = (doy - (153 * mp + 2) / 5 + 1) as u32;
+    let m = if mp < 10 { mp + 3 } else { mp - 9 } as u32;
+    (if m <= 2 { y + 1 } else { y }, m, d)
+}
+
+fn tutorial_recorded_at_iso() -> String {
+    let total_secs = (chrome_now_ms() / 1000.0).floor() as i64;
+    let days = total_secs.div_euclid(86400);
+    let secs_of_day = total_secs.rem_euclid(86400);
+    let (hour, minute, second) = (secs_of_day / 3600, (secs_of_day % 3600) / 60, secs_of_day % 60);
+    let (year, month, day) = tutorial_civil_from_days(days);
+    format!("{year:04}-{month:02}-{day:02}T{hour:02}:{minute:02}:{second:02}Z")
+}
+
+/// 💾 Reuses the existing "download a file from the browser"/"save file" mechanism (`download_media_export`,
+/// already used for GLB/OBJ/image exports) rather than inventing a second one for tutorial recordings.
+fn tutorial_save_recording(tutorial_id: &str, json: &str) {
+    download_media_export(&format!("{tutorial_id}.tutorial.json"), "application/json", json, None);
+}
+//#endregion 📅Provenance
+
+//#region ✂️PendingDocOps
+/// ✂️ One `TutorialDocumentEvent` → the pending op(s) needed to apply it in `direction` — `forward` uses
+/// `Edit::forwards`/dispatches the named history action as-is; backward uses `Edit::backwards`/inverts
+/// the history action (undo↔redo) per `TutorialDocumentEventKind::Edit`'s own doc comment on exact
+/// bidirectional scrubbing.
+fn tutorial_pending_op_for_edit(entry: &semio_framework_core::TutorialDocumentEvent, forward: bool) -> TutorialPendingDocOp {
+    use semio_framework_core::TutorialDocumentEventKind as K;
+    match &entry.kind {
+        K::Edit { forwards, backwards, .. } => {
+            let ops = if forward { forwards } else { backwards };
+            TutorialPendingDocOp::ApplyOperations(ops.iter().filter_map(|v| serde_json::to_string(v).ok()).collect())
+        }
+        K::Undo => TutorialPendingDocOp::HistoryAction { action_id: (if forward { "undo" } else { "redo" }).into(), args: None },
+        K::Redo => TutorialPendingDocOp::HistoryAction { action_id: (if forward { "redo" } else { "undo" }).into(), args: None },
+        K::Checkpoint { message } => {
+            TutorialPendingDocOp::HistoryAction { action_id: "checkpoint".into(), args: message.as_ref().map(|m| serde_json::json!({ "message": m })) }
+        }
+        K::CheckoutCheckpoint { checkpoint_id } => {
+            TutorialPendingDocOp::HistoryAction { action_id: "checkoutCheckpoint".into(), args: Some(serde_json::json!({ "checkpointId": checkpoint_id })) }
+        }
+        K::SwitchAlternative { alternative_id } => {
+            TutorialPendingDocOp::HistoryAction { action_id: "switchAlternative".into(), args: Some(serde_json::json!({ "alternativeId": alternative_id })) }
+        }
+        K::Load { document_json, previous_json } => TutorialPendingDocOp::LoadDocumentJson(if forward { document_json.clone() } else { previous_json.clone() }),
+    }
+}
+//#endregion ✂️PendingDocOps
+
+//#region 🎬PureHelpers
+/// ⏱️ Pure playhead-advance math (per-tick real-time `dt` scaled by the UI-only `rate` — Design
+/// Decision 6): factored out of `tutorial_tick` for unit testing.
+fn tutorial_advance_playhead(playhead_ms: f64, dt_ms: f64, rate: f32) -> f64 {
+    playhead_ms + dt_ms * rate as f64
+}
+
+/// 🎚️ Pure scrub-bar progress (0–1) for a given playhead/duration — `0.0` for a zero-length timeline
+/// (the in-progress recording case) rather than dividing by zero.
+fn tutorial_scrub_progress(playhead_ms: f64, duration_ms: u64) -> f32 {
+    if duration_ms == 0 {
+        0.0
+    } else {
+        (playhead_ms / duration_ms as f64).clamp(0.0, 1.0) as f32
+    }
+}
+
+/// 🎚️ Pure scrub-bar hit math: pointer x within `track` → target playhead ms.
+fn tutorial_scrub_target_ms(pointer_x: f32, track: Rect, duration_ms: u64) -> f64 {
+    let t = ((pointer_x - track.x) / track.w.max(1.0)).clamp(0.0, 1.0);
+    t as f64 * duration_ms as f64
+}
+//#endregion 🎬PureHelpers
+
+impl ShellState {
+    //#region 🎬Lifecycle
+    /// 🎬 Starts (or restarts) `tutorial_id` for the active app: sandboxes the live document behind
+    /// `base`, snaps UI/camera to `base`, and begins playback from `t=0` (Design Decisions 2/3).
+    pub fn tutorial_start(&mut self, tutorial_id: &str) {
+        let Some(session) = self.session.clone() else {
+            return;
+        };
+        let Some(definition) = session.app.tutorials.iter().find(|t| t.id == tutorial_id).cloned() else {
+            return;
+        };
+        // 🎬 Introductions and tutorials are mutually exclusive (Design Decision 8).
+        chrome_skip_introduction();
+        let pre_sandbox_ui = tutorial_capture_ui_snapshot(self);
+        // 🚧 `last_envelope_json` is this shell's own best-effort stand-in for "the live document's full
+        // `DocumentVcsEnvelope` JSON" — there is no other reachable accessor for it from here.
+        let pre_sandbox_document_json = self.last_envelope_json.clone();
+        if let Some(document_json) = definition.base.document_json.clone() {
+            self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentJson(document_json));
+        } else if let Some(example_id) = definition.base.example_id.as_ref() {
+            // 🚧 No "load example by id" plugin-bridge primitive is reachable from here without
+            // duplicating `apply_shell_uri`'s example-switch machinery — scoped out; the tutorial plays
+            // over whichever document is already loaded instead of sandboxing a fresh example copy.
+            eprintln!("[DEBUG] tutorial base.exampleId `{example_id}` sandbox load not wired (no base.documentJson) — playing over the live document");
+        }
+        tutorial_apply_ui_snapshot(self, &definition.base.ui);
+        for keyframe in &definition.base.cameras {
+            tutorial_apply_camera_pose(self, &keyframe.window_id, &keyframe.camera);
+        }
+        self.tutorial = Some(TutorialRuntime {
+            definition,
+            mode: TutorialMode::Playing,
+            playhead_ms: 0.0,
+            rate: 1.0,
+            applied_ms: 0.0,
+            pre_sandbox_document_json,
+            pre_sandbox_ui,
+            last_tick_wall_ms: chrome_now_ms(),
+            converge: HashMap::new(),
+            recorder_last_camera_wall_ms: HashMap::new(),
+            recorder_last_camera_pose: HashMap::new(),
+            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui_sample_wall_ms: 0.0,
+        });
+    }
+
+    /// ⏺️ Arms the recorder against the LIVE document (never sandboxed — a recording IS the user's work,
+    /// Design Decision 2/3's sandbox note). Skips webcam/mic capture entirely (explicitly out of scope).
+    pub fn tutorial_start_recording(&mut self) {
+        if self.tutorial.is_some() {
+            return;
+        }
+        chrome_skip_introduction();
+        let ui = tutorial_capture_ui_snapshot(self);
+        let mut cameras = Vec::new();
+        for (window_id, world) in &self.world3d_states {
+            cameras.push(semio_framework_core::TutorialCameraKeyframe {
+                at: 0,
+                window_id: window_id.clone(),
+                camera: orbit_to_tutorial_camera(&world.orbit),
+                easing: semio_framework_core::TutorialEasing::Hold,
+            });
+        }
+        let now = chrome_now_ms();
+        let definition = semio_framework_core::TutorialDefinition {
+            id: format!("recording-{}", tutorial_recorded_at_iso().replace(['-', ':'], "")),
+            title: "Recording".into(),
+            description: None,
+            duration_ms: 0,
+            chapters: Vec::new(),
+            base: semio_framework_core::TutorialBase { document_json: self.last_envelope_json.clone(), example_id: self.active_example_id.clone(), ui: ui.clone(), cameras },
+            tracks: semio_framework_core::TutorialTracks::default(),
+            recorded_at: None,
+        };
+        self.tutorial = Some(TutorialRuntime {
+            definition,
+            mode: TutorialMode::Recording,
+            playhead_ms: 0.0,
+            rate: 1.0,
+            applied_ms: 0.0,
+            pre_sandbox_document_json: None,
+            pre_sandbox_ui: ui.clone(),
+            last_tick_wall_ms: now,
+            converge: HashMap::new(),
+            recorder_last_camera_wall_ms: HashMap::new(),
+            recorder_last_camera_pose: HashMap::new(),
+            recorder_last_ui: ui,
+            recorder_last_ui_sample_wall_ms: now,
+        });
+    }
+
+    /// 🛑 Ends playback (restoring the sandboxed document/UI, Design Decision 3) or, if recording, ends
+    /// the take and serializes it (Design Decision 7: JSON via the existing download/save mechanism).
+    pub fn tutorial_stop(&mut self) {
+        let Some(runtime) = self.tutorial.take() else {
+            return;
+        };
+        match runtime.mode {
+            TutorialMode::Recording => {
+                let mut definition = runtime.definition;
+                definition.duration_ms = runtime.playhead_ms.max(0.0) as u64;
+                definition.recorded_at = Some(tutorial_recorded_at_iso());
+                match serde_json::to_string_pretty(&definition) {
+                    Ok(json) => tutorial_save_recording(&definition.id, &json),
+                    Err(err) => eprintln!("[DEBUG] tutorial recording serialize failed: {err}"),
+                }
+            }
+            _ => {
+                tutorial_apply_ui_snapshot(self, &runtime.pre_sandbox_ui);
+                if let Some(document_json) = runtime.pre_sandbox_document_json {
+                    self.tutorial_pending_document_ops.push(TutorialPendingDocOp::LoadDocumentJson(document_json));
+                }
+            }
+        }
+    }
+
+    pub fn tutorial_toggle_play_pause(&mut self) {
+        let Some(runtime) = self.tutorial.clone() else {
+            return;
+        };
+        match runtime.mode {
+            TutorialMode::Playing => {
+                if let Some(r) = self.tutorial.as_mut() {
+                    r.mode = TutorialMode::Paused;
+                }
+            }
+            TutorialMode::Paused => {
+                if let Some(r) = self.tutorial.as_mut() {
+                    r.mode = TutorialMode::Playing;
+                    r.last_tick_wall_ms = chrome_now_ms();
+                }
+            }
+            // 🪄 Deviation → Play: snap UI+document to the composed state at the current playhead, then
+            // start a real-time camera convergence tween per window (Design Decision 5/6).
+            TutorialMode::Deviated => {
+                let target_ms = runtime.playhead_ms;
+                let ui_state = semio_framework_core::compose_tutorial_ui(&runtime.definition, target_ms);
+                tutorial_apply_ui_snapshot(self, &ui_state);
+                let slice = semio_framework_core::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
+                for entry in &slice.document {
+                    self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
+                }
+                let now = chrome_now_ms();
+                let mut converge = HashMap::new();
+                for window_id in tutorial_camera_window_ids(&runtime.definition) {
+                    if let Some(to) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
+                        if let Some(from) = tutorial_capture_camera_pose(self, &window_id) {
+                            converge.insert(window_id, TutorialCameraConverge { from, to, started_wall_ms: now });
+                        }
+                    }
+                }
+                if let Some(r) = self.tutorial.as_mut() {
+                    r.mode = TutorialMode::Playing;
+                    r.applied_ms = target_ms;
+                    r.last_tick_wall_ms = now;
+                    r.converge = converge;
+                }
+            }
+            TutorialMode::Recording => {}
+        }
+    }
+
+    /// ⏩ Seeks to `target_ms`: UI applies wholesale via `compose_tutorial_ui`, document track entries
+    /// apply forward/backward via `tutorial_slice` since the last-applied playhead, camera sets exactly
+    /// via `tutorial_camera_at` (Design Decision item 5 of "what to implement").
+    pub fn tutorial_seek(&mut self, target_ms: f64) {
+        let Some(runtime) = self.tutorial.clone() else {
+            return;
+        };
+        if runtime.mode == TutorialMode::Recording {
+            return;
+        }
+        let target_ms = target_ms.clamp(0.0, runtime.definition.duration_ms as f64);
+        let ui_state = semio_framework_core::compose_tutorial_ui(&runtime.definition, target_ms);
+        tutorial_apply_ui_snapshot(self, &ui_state);
+        let slice = semio_framework_core::tutorial_slice(&runtime.definition, runtime.applied_ms, target_ms);
+        for entry in &slice.document {
+            self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
+        }
+        for window_id in tutorial_camera_window_ids(&runtime.definition) {
+            if let Some(pose) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, target_ms) {
+                tutorial_apply_camera_pose(self, &window_id, &pose);
+            }
+        }
+        if let Some(r) = self.tutorial.as_mut() {
+            r.playhead_ms = target_ms;
+            r.applied_ms = target_ms;
+            r.converge.clear();
+            if r.mode == TutorialMode::Deviated {
+                r.mode = TutorialMode::Paused;
+            }
+        }
+    }
+
+    /// 🎬 Per-frame tick — advances the playhead (Playing), samples the recorder (Recording), applies
+    /// annotational-free document/UI deltas since the last applied playhead, resolves active camera
+    /// convergence tweens, and otherwise drives the camera track exactly via `tutorial_camera_at`.
+    pub fn tutorial_tick(&mut self, now_wall_ms: f64) {
+        let Some(mut runtime) = self.tutorial.clone() else {
+            return;
+        };
+        let dt_wall_ms = (now_wall_ms - runtime.last_tick_wall_ms).max(0.0);
+        runtime.last_tick_wall_ms = now_wall_ms;
+
+        if runtime.mode == TutorialMode::Recording {
+            runtime.playhead_ms = tutorial_advance_playhead(runtime.playhead_ms, dt_wall_ms, 1.0);
+            runtime.definition.duration_ms = runtime.playhead_ms.max(0.0) as u64;
+            tutorial_recorder_sample(self, &mut runtime, now_wall_ms);
+            self.tutorial = Some(runtime);
+            return;
+        }
+
+        if runtime.mode == TutorialMode::Playing {
+            let from_ms = runtime.applied_ms;
+            let total_ms = runtime.definition.duration_ms as f64;
+            let mut to_ms = tutorial_advance_playhead(runtime.playhead_ms, dt_wall_ms, runtime.rate);
+            let auto_paused = to_ms >= total_ms;
+            if auto_paused {
+                to_ms = total_ms;
+            }
+            runtime.playhead_ms = to_ms;
+            let slice = semio_framework_core::tutorial_slice(&runtime.definition, from_ms, to_ms);
+            for change in &slice.ui_changes {
+                tutorial_apply_ui_change_to_shell(self, change);
+            }
+            for entry in &slice.document {
+                self.tutorial_pending_document_ops.push(tutorial_pending_op_for_edit(entry, slice.forward));
+            }
+            runtime.applied_ms = to_ms;
+            if auto_paused {
+                runtime.mode = TutorialMode::Paused;
+            }
+        }
+
+        // 🎥 Convergence tweens win over the recorded pose while active; once a window's tween completes
+        // it falls through to `tutorial_camera_at` at the live playhead next tick.
+        let mut converged: Vec<String> = Vec::new();
+        for (window_id, tween) in runtime.converge.iter() {
+            let elapsed_ms = (now_wall_ms - tween.started_wall_ms).max(0.0);
+            let pose = tutorial_converge_pose(tween, elapsed_ms.min(semio_framework_core::TUTORIAL_CONVERGE_MS as f64));
+            tutorial_apply_camera_pose(self, window_id, &pose);
+            if elapsed_ms >= semio_framework_core::TUTORIAL_CONVERGE_MS as f64 {
+                converged.push(window_id.clone());
+            }
+        }
+        for window_id in converged {
+            runtime.converge.remove(&window_id);
+        }
+        if matches!(runtime.mode, TutorialMode::Playing | TutorialMode::Paused) {
+            for window_id in tutorial_camera_window_ids(&runtime.definition) {
+                if runtime.converge.contains_key(&window_id) {
+                    continue;
+                }
+                if let Some(pose) = semio_framework_core::tutorial_camera_at(&runtime.definition, &window_id, runtime.playhead_ms) {
+                    tutorial_apply_camera_pose(self, &window_id, &pose);
+                }
+            }
+        }
+
+        self.tutorial = Some(runtime);
+    }
+
+    /// 🎬 Deviation detection (Playing → Deviated on any real dispatch, Design Decision 6) + the
+    /// recorder's annotational event tap (Design Decision 7) — called once at the very top of
+    /// `dispatch_action` for every dispatch NOT already filtered as tutorial-internal.
+    fn tutorial_note_real_dispatch(&mut self, action: &ActionDescriptor) {
+        let Some(runtime) = self.tutorial.as_mut() else {
+            return;
+        };
+        match runtime.mode {
+            TutorialMode::Playing => {
+                runtime.mode = TutorialMode::Deviated;
+            }
+            TutorialMode::Recording => {
+                // 🎥 Camera changes are sampled directly from the orbit controller (`tutorial_recorder_sample`),
+                // never re-recorded as an annotational event too.
+                if action.action == "setCamera" {
+                    return;
+                }
+                let at = runtime.playhead_ms.max(0.0) as u64;
+                runtime.definition.tracks.events.push(semio_framework_core::TutorialEvent {
+                    at,
+                    kind: semio_framework_core::TutorialEventKind::Action { action: action.action.clone(), args: action.args.clone() },
+                });
+            }
+            TutorialMode::Paused | TutorialMode::Deviated => {}
+        }
+    }
+
+    /// 🎬 Drains `tutorial_pending_document_ops` (queued by a tick/seek this frame) and applies each
+    /// through the existing plugin-bridge document mechanisms — the async counterpart to the sync
+    /// tick/seek above, called from `AppRuntime::frame` right after `render_chrome` (mirrors how `frame`
+    /// already defers `scene_events` the same way, for the same sync/async split).
+    pub async fn tutorial_flush_pending_document_ops(&mut self) {
+        if self.tutorial_pending_document_ops.is_empty() {
+            return;
+        }
+        let ops = std::mem::take(&mut self.tutorial_pending_document_ops);
+        let _guard = TutorialDispatchGuard::arm();
+        for op in ops {
+            match op {
+                TutorialPendingDocOp::LoadDocumentJson(json) => {
+                    if let Some(session) = self.session.clone() {
+                        if let Some(plugin) = self.plugins.iter().find(|p| p.plugin_id == session.plugin_id) {
+                            if let Err(err) = plugin.load_app_document(session.instance_id, &json) {
+                                eprintln!("[DEBUG] tutorial load document failed: {err}");
+                            }
+                        }
+                    }
+                }
+                TutorialPendingDocOp::ApplyOperations(operations) => {
+                    if let Err(err) = self.apply_operations(&operations).await {
+                        eprintln!("[DEBUG] tutorial apply operations failed: {err}");
+                    }
+                }
+                TutorialPendingDocOp::HistoryAction { action_id, args } => {
+                    if let Some(session) = self.session.clone() {
+                        let descriptor = ActionDescriptor { controller_id: session.app.controller_id.clone(), action: action_id, args };
+                        if let Err(err) = self.dispatch_action(descriptor).await {
+                            eprintln!("[DEBUG] tutorial history action failed: {err}");
+                        }
+                    }
+                }
+            }
+        }
+    }
+    //#endregion 🎬Lifecycle
+
+    //#region 🎬Chrome
+    /// 🎬 The tutorial control bar (play/pause, stop, scrubber, time, rate) — rendered right after
+    /// `render_navbar` in the chrome pass, reusing its own `ChromeGroupItem`/`render_chrome_group`
+    /// button plumbing and `chrome_clicked_this_frame` click-edge detection.
+    fn render_tutorial_bar(&mut self, draw: &mut DrawList, atlas: &mut FontAtlas, icons: &IconAtlas, input: &mut InputState<ActionDescriptor>, theme: &Theme, width: f32) {
+        if self.tutorial.is_none() {
+            return;
+        }
+        let bar_h = tutorial_bar_height(theme);
+        let y = theme.navbar_height;
+        draw.push_solid([0.0, y, width, bar_h], theme.navbar);
+        draw.push_solid([0.0, y + bar_h - theme.stroke_hairline, width, theme.stroke_hairline], theme.border_normal);
+
+        let (mode, playhead_ms, duration_ms, rate) = {
+            let runtime = self.tutorial.as_ref().unwrap();
+            (runtime.mode, runtime.playhead_ms, runtime.definition.duration_ms, runtime.rate)
+        };
+        let btn_h = theme.control_height;
+        let btn_y = y + (bar_h - btn_h) * 0.5;
+        let mut x = theme.padding_standard;
+
+        if mode != TutorialMode::Recording {
+            let playing = mode == TutorialMode::Playing;
+            let play_item =
+                ChromeGroupItem { control_id: "shell.tutorial.playPause", icon_id: Some(if playing { "pause" } else { "play" }), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
+            let play_w = measure_chrome_group_item(atlas, theme, &play_item).max(btn_h);
+            let play_rect = Rect::new(x, btn_y, play_w, btn_h);
+            chrome_register_tooltip(play_item.control_id, if playing { "Pause" } else { "Play" });
+            render_chrome_group(draw, atlas, icons, input, theme, play_rect, &[play_item], true);
+            if chrome_clicked_this_frame() && play_rect.contains(input.pointer_x, input.pointer_y) {
+                self.tutorial_toggle_play_pause();
+            }
+            x += play_w + theme.gap_standard;
+        }
+
+        let stop_item = ChromeGroupItem { control_id: "shell.tutorial.stop", icon_id: Some("square"), label: None, active: false, disabled: false, kind: HitKind::NavbarItem };
+        let stop_w = measure_chrome_group_item(atlas, theme, &stop_item).max(btn_h);
+        let stop_rect = Rect::new(x, btn_y, stop_w, btn_h);
+        chrome_register_tooltip(stop_item.control_id, if mode == TutorialMode::Recording { "Stop recording" } else { "Stop tutorial" });
+        render_chrome_group(draw, atlas, icons, input, theme, stop_rect, &[stop_item], true);
+        if chrome_clicked_this_frame() && stop_rect.contains(input.pointer_x, input.pointer_y) {
+            self.tutorial_stop();
+            return;
+        }
+        x += stop_w + theme.gap_standard;
+
+        let cur_s = (playhead_ms / 1000.0).max(0.0) as u64;
+        let time_label = if mode == TutorialMode::Recording {
+            format!("REC {}:{:02}", cur_s / 60, cur_s % 60)
+        } else {
+            let total_s = duration_ms / 1000;
+            format!("{}:{:02} / {}:{:02}", cur_s / 60, cur_s % 60, total_s / 60, total_s % 60)
+        };
+        chrome_text(draw, atlas, input, theme, &time_label, x, btn_y + (btn_h + theme.font_size_small) * 0.5 - 1.0, theme.font_size_small, theme.text);
+        x += atlas.measure_text(&time_label, theme.font_size_small).0 + theme.gap_standard * 2.0;
+
+        let mut rx = width - theme.padding_standard;
+        if mode != TutorialMode::Recording {
+            const RATES: [(f32, &str, &str); 4] =
+                [(2.0, "2x", "shell.tutorial.rate.2"), (1.5, "1.5x", "shell.tutorial.rate.1_5"), (1.0, "1x", "shell.tutorial.rate.1"), (0.5, "0.5x", "shell.tutorial.rate.0_5")];
+            for (value, label, control_id) in RATES {
+                let item = ChromeGroupItem { control_id, icon_id: None, label: Some(label), active: (rate - value).abs() < 0.01, disabled: false, kind: HitKind::Toggle };
+                let item_w = measure_chrome_group_item(atlas, theme, &item);
+                rx -= item_w;
+                let item_rect = Rect::new(rx, btn_y, item_w, btn_h);
+                render_chrome_group(draw, atlas, icons, input, theme, item_rect, &[item], true);
+                if chrome_clicked_this_frame() && item_rect.contains(input.pointer_x, input.pointer_y) {
+                    if let Some(r) = self.tutorial.as_mut() {
+                        r.rate = value;
+                    }
+                }
+            }
+            rx -= theme.gap_standard;
+        }
+
+        let scrubber_rect = Rect::new(x, btn_y, (rx - x).max(24.0), btn_h);
+        let track_y = btn_y + btn_h * 0.5 - 2.0;
+        draw.push_rounded([scrubber_rect.x, track_y, scrubber_rect.w, 4.0], theme.border_normal, 2.0);
+        let progress = tutorial_scrub_progress(playhead_ms, duration_ms);
+        let knob_x = scrubber_rect.x + scrubber_rect.w * progress;
+        draw.push_rounded([knob_x - 6.0, btn_y + btn_h * 0.5 - 6.0, 12.0, 12.0], theme.selected, 6.0);
+        input.register_hit(HitTarget { rect: scrubber_rect, event: None, control_id: Some("shell.tutorial.scrubber".into()), kind: HitKind::Slider, drag_axis: None, drag_data: None });
+        if mode != TutorialMode::Recording && input.pointer_down && scrubber_rect.contains(input.pointer_x, input.pointer_y) {
+            let target_ms = tutorial_scrub_target_ms(input.pointer_x, scrubber_rect, duration_ms);
+            self.tutorial_seek(target_ms);
+        }
+    }
+    //#endregion 🎬Chrome
+}
+
+/// 🎥 Recorder-only sampling: the active window's camera on meaningful change (not every frame), and a
+/// periodic full UI snapshot (Design Decision 7's "minimal recorder" scope).
+fn tutorial_recorder_sample(state: &mut ShellState, runtime: &mut TutorialRuntime, now_wall_ms: f64) {
+    const CAMERA_SAMPLE_MIN_INTERVAL_MS: f64 = 150.0;
+    const CAMERA_MOVE_EPSILON: f64 = 0.01;
+    const UI_SAMPLE_INTERVAL_MS: f64 = 2000.0;
+
+    if let Some(window_id) = state.active_window_id.clone() {
+        if let Some(pose) = tutorial_capture_camera_pose(state, &window_id) {
+            let last_sample_ms = runtime.recorder_last_camera_wall_ms.get(&window_id).copied().unwrap_or(f64::NEG_INFINITY);
+            let changed = runtime
+                .recorder_last_camera_pose
+                .get(&window_id)
+                .map(|prev| !tutorial_camera_pose_close(prev, &pose, CAMERA_MOVE_EPSILON))
+                .unwrap_or(true);
+            if changed && now_wall_ms - last_sample_ms >= CAMERA_SAMPLE_MIN_INTERVAL_MS {
+                runtime.definition.tracks.camera.push(semio_framework_core::TutorialCameraKeyframe {
+                    at: runtime.playhead_ms.max(0.0) as u64,
+                    window_id: window_id.clone(),
+                    camera: pose.clone(),
+                    easing: semio_framework_core::TutorialEasing::EaseInOut,
+                });
+                runtime.recorder_last_camera_wall_ms.insert(window_id.clone(), now_wall_ms);
+                runtime.recorder_last_camera_pose.insert(window_id, pose);
+            }
+        }
+    }
+    if now_wall_ms - runtime.recorder_last_ui_sample_wall_ms >= UI_SAMPLE_INTERVAL_MS {
+        let snapshot = tutorial_capture_ui_snapshot(state);
+        if snapshot != runtime.recorder_last_ui {
+            runtime.definition.tracks.ui.push(semio_framework_core::TutorialUiKeyframe {
+                at: runtime.playhead_ms.max(0.0) as u64,
+                sample: semio_framework_core::TutorialUiSample::Snapshot { state: snapshot.clone() },
+            });
+            runtime.recorder_last_ui = snapshot;
+        }
+        runtime.recorder_last_ui_sample_wall_ms = now_wall_ms;
+    }
+}
+
+#[cfg(test)]
+mod tutorial_tests {
+    use super::*;
+
+    fn shell() -> ShellState {
+        ShellState::new(Vec::new(), String::new())
+    }
+
+    //#region PureMathTests
+    #[test]
+    fn advance_playhead_scales_by_rate() {
+        assert_eq!(tutorial_advance_playhead(1000.0, 500.0, 2.0), 2000.0);
+        assert_eq!(tutorial_advance_playhead(1000.0, 500.0, 0.5), 1250.0);
+        assert_eq!(tutorial_advance_playhead(1000.0, 0.0, 1.0), 1000.0);
+    }
+
+    #[test]
+    fn scrub_progress_clamps_and_avoids_divide_by_zero() {
+        assert_eq!(tutorial_scrub_progress(0.0, 0), 0.0);
+        assert_eq!(tutorial_scrub_progress(500.0, 1000), 0.5);
+        assert_eq!(tutorial_scrub_progress(5000.0, 1000), 1.0);
+        assert_eq!(tutorial_scrub_progress(-5.0, 1000), 0.0);
+    }
+
+    #[test]
+    fn scrub_target_ms_maps_pointer_position_to_playhead() {
+        let track = Rect::new(100.0, 0.0, 200.0, 20.0);
+        assert_eq!(tutorial_scrub_target_ms(100.0, track, 1000), 0.0);
+        assert_eq!(tutorial_scrub_target_ms(200.0, track, 1000), 500.0);
+        assert_eq!(tutorial_scrub_target_ms(300.0, track, 1000), 1000.0);
+        assert_eq!(tutorial_scrub_target_ms(50.0, track, 1000), 0.0);
+        assert_eq!(tutorial_scrub_target_ms(9999.0, track, 1000), 1000.0);
+    }
+    //#endregion PureMathTests
+
+    //#region CameraConversionTests
+    #[test]
+    fn orbit_camera_round_trips_through_tutorial_camera_state() {
+        let orbit = kernel_3d_scene::OrbitController { target: kernel_3d_scene::Vec3::new(1.0, 2.0, 3.0), distance: 10.0, yaw: 0.4, pitch: 0.2, fov_y: 45.0_f32.to_radians() };
+        let tutorial_camera = orbit_to_tutorial_camera(&orbit);
+        let round_tripped = tutorial_camera_to_orbit(&tutorial_camera).expect("orbit camera state converts back");
+        let original_pose = orbit.to_camera();
+        let round_tripped_pose = round_tripped.to_camera();
+        assert!((original_pose.position.x - round_tripped_pose.position.x).abs() < 0.01);
+        assert!((original_pose.position.y - round_tripped_pose.position.y).abs() < 0.01);
+        assert!((original_pose.position.z - round_tripped_pose.position.z).abs() < 0.01);
+        assert!((original_pose.fov_y - round_tripped_pose.fov_y).abs() < 0.001);
+    }
+
+    #[test]
+    fn canvas_camera_state_has_no_orbit_equivalent() {
+        assert!(tutorial_camera_to_orbit(&semio_framework_core::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 }).is_none());
+    }
+
+    #[test]
+    fn camera_pose_close_only_compares_matching_kinds() {
+        let orbit_a = semio_framework_core::TutorialCameraState::Orbit { position: [0.0, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
+        let orbit_b = semio_framework_core::TutorialCameraState::Orbit { position: [0.0001, 0.0, 0.0], target: [0.0, 0.0, 0.0], up: [0.0, 0.0, 1.0], fov: Some(45.0) };
+        let canvas = semio_framework_core::TutorialCameraState::Canvas { x: 0.0, y: 0.0, zoom: 1.0 };
+        assert!(tutorial_camera_pose_close(&orbit_a, &orbit_b, 0.01));
+        assert!(!tutorial_camera_pose_close(&orbit_a, &canvas, 0.01));
+    }
+    //#endregion CameraConversionTests
+
+    //#region UiSnapshotTests
+    #[test]
+    fn ui_snapshot_round_trips_panel_tabs_and_focus() {
+        let mut state = shell();
+        state.active_window_id = Some("window-a".into());
+        state.left_panel_open = true;
+        state.active_left_kind = LeftPanelKind::Display;
+        state.active_left_tab = Some("tab-x".into());
+        state.right_panel_open = true;
+        state.active_right_kind = RightPanelKind::Settings;
+        state.active_right_tab = Some("tab-y".into());
+
+        let snapshot = tutorial_capture_ui_snapshot(&state);
+        assert_eq!(snapshot.focused_window_id.as_deref(), Some("window-a"));
+        assert_eq!(snapshot.active_panel_tab_by_group.get("display").map(String::as_str), Some("tab-x"));
+        assert_eq!(snapshot.active_panel_tab_by_group.get("settings").map(String::as_str), Some("tab-y"));
+
+        let mut fresh = shell();
+        tutorial_apply_ui_snapshot(&mut fresh, &snapshot);
+        assert_eq!(fresh.active_window_id.as_deref(), Some("window-a"));
+        assert!(fresh.left_panel_open);
+        assert_eq!(fresh.active_left_kind, LeftPanelKind::Display);
+        assert_eq!(fresh.active_left_tab.as_deref(), Some("tab-x"));
+        assert!(fresh.right_panel_open);
+        assert_eq!(fresh.active_right_kind, RightPanelKind::Settings);
+        assert_eq!(fresh.active_right_tab.as_deref(), Some("tab-y"));
+    }
+
+    #[test]
+    fn ui_snapshot_absent_panel_tabs_close_the_panel() {
+        let mut state = shell();
+        state.left_panel_open = true;
+        state.active_left_tab = Some("tab-x".into());
+        state.right_panel_open = true;
+        state.active_right_tab = Some("tab-y".into());
+        let empty_snapshot = semio_framework_core::TutorialUiSnapshot::default();
+        tutorial_apply_ui_snapshot(&mut state, &empty_snapshot);
+        assert!(!state.left_panel_open);
+        assert!(!state.right_panel_open);
+    }
+
+    #[test]
+    fn ui_change_applies_live_against_shell_state() {
+        let mut state = shell();
+        let change = semio_framework_core::TutorialUiChange::ActiveUtility { window_id: "window-a".into(), utility_id: Some("select".into()) };
+        tutorial_apply_ui_change_to_shell(&mut state, &change);
+        assert_eq!(state.active_utility_by_window.get("window-a").map(String::as_str), Some("select"));
+    }
+    //#endregion UiSnapshotTests
+
+    //#region GesturePointTests
+    #[test]
+    fn gesture_point_resolves_screen_and_normalized() {
+        let mut state = shell();
+        state.screen_w = 1000.0;
+        state.screen_h = 500.0;
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Screen { x: 42.0, y: 7.0 }), Some((42.0, 7.0)));
+        assert_eq!(
+            tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::ScreenNormalized { x: 0.5, y: 0.25 }),
+            Some((500.0, 125.0))
+        );
+    }
+
+    #[test]
+    fn gesture_point_resolves_window_local() {
+        let mut state = shell();
+        state.window_content_rects.insert("window-a".into(), Rect::new(100.0, 50.0, 400.0, 300.0));
+        assert_eq!(
+            tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Window { id: "window-a".into(), x: 10.0, y: 20.0 }),
+            Some((110.0, 70.0))
+        );
+        assert_eq!(
+            tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::WindowNormalized { id: "window-a".into(), x: 0.5, y: 0.5 }),
+            Some((300.0, 200.0))
+        );
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Window { id: "missing".into(), x: 0.0, y: 0.0 }), None);
+    }
+
+    #[test]
+    fn gesture_point_scopes_out_scene_and_entity_kinds() {
+        let state = shell();
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::Scene { id: "w".into(), position: [0.0, 0.0, 0.0] }), None);
+        assert_eq!(tutorial_resolve_gesture_point(&state, &semio_framework_core::IntroductionPoint::any_entity("w", "vortex")), None);
+    }
+    //#endregion GesturePointTests
+
+    //#region LifecycleTests
+    #[test]
+    fn seek_clamps_to_duration_and_updates_playhead() {
+        let mut state = shell();
+        let definition = semio_framework_core::TutorialDefinition {
+            id: "t1".into(),
+            title: "Test".into(),
+            description: None,
+            duration_ms: 1000,
+            chapters: Vec::new(),
+            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework_core::TutorialTracks::default(),
+            recorded_at: None,
+        };
+        state.tutorial = Some(TutorialRuntime {
+            definition,
+            mode: TutorialMode::Paused,
+            playhead_ms: 0.0,
+            rate: 1.0,
+            applied_ms: 0.0,
+            pre_sandbox_document_json: None,
+            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            last_tick_wall_ms: 0.0,
+            converge: HashMap::new(),
+            recorder_last_camera_wall_ms: HashMap::new(),
+            recorder_last_camera_pose: HashMap::new(),
+            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui_sample_wall_ms: 0.0,
+        });
+        state.tutorial_seek(5000.0);
+        assert_eq!(state.tutorial.as_ref().unwrap().playhead_ms, 1000.0);
+    }
+
+    #[test]
+    fn note_real_dispatch_deviates_a_playing_tutorial() {
+        let mut state = shell();
+        let definition = semio_framework_core::TutorialDefinition {
+            id: "t1".into(),
+            title: "Test".into(),
+            description: None,
+            duration_ms: 1000,
+            chapters: Vec::new(),
+            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework_core::TutorialTracks::default(),
+            recorded_at: None,
+        };
+        state.tutorial = Some(TutorialRuntime {
+            definition,
+            mode: TutorialMode::Playing,
+            playhead_ms: 0.0,
+            rate: 1.0,
+            applied_ms: 0.0,
+            pre_sandbox_document_json: None,
+            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            last_tick_wall_ms: 0.0,
+            converge: HashMap::new(),
+            recorder_last_camera_wall_ms: HashMap::new(),
+            recorder_last_camera_pose: HashMap::new(),
+            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui_sample_wall_ms: 0.0,
+        });
+        state.tutorial_note_real_dispatch(&ActionDescriptor { controller_id: "app".into(), action: "someAction".into(), args: None });
+        assert_eq!(state.tutorial.as_ref().unwrap().mode, TutorialMode::Deviated);
+    }
+
+    #[test]
+    fn recorder_records_annotational_events_but_skips_set_camera() {
+        let mut state = shell();
+        let definition = semio_framework_core::TutorialDefinition {
+            id: "rec".into(),
+            title: "Recording".into(),
+            description: None,
+            duration_ms: 0,
+            chapters: Vec::new(),
+            base: semio_framework_core::TutorialBase { document_json: None, example_id: None, ui: semio_framework_core::TutorialUiSnapshot::default(), cameras: Vec::new() },
+            tracks: semio_framework_core::TutorialTracks::default(),
+            recorded_at: None,
+        };
+        state.tutorial = Some(TutorialRuntime {
+            definition,
+            mode: TutorialMode::Recording,
+            playhead_ms: 250.0,
+            rate: 1.0,
+            applied_ms: 0.0,
+            pre_sandbox_document_json: None,
+            pre_sandbox_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            last_tick_wall_ms: 0.0,
+            converge: HashMap::new(),
+            recorder_last_camera_wall_ms: HashMap::new(),
+            recorder_last_camera_pose: HashMap::new(),
+            recorder_last_ui: semio_framework_core::TutorialUiSnapshot::default(),
+            recorder_last_ui_sample_wall_ms: 0.0,
+        });
+        state.tutorial_note_real_dispatch(&ActionDescriptor { controller_id: "app".into(), action: "setCamera".into(), args: None });
+        state.tutorial_note_real_dispatch(&ActionDescriptor { controller_id: "app".into(), action: "doSomething".into(), args: None });
+        let events = &state.tutorial.as_ref().unwrap().definition.tracks.events;
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].at, 250);
+    }
+    //#endregion LifecycleTests
+}
+//#endregion 🎬Tutorial
+
 impl ShellState {
     pub fn render_chrome(
         &mut self,
@@ -23010,11 +24213,13 @@ impl ShellState {
         }
         with_chrome_sink(draw, &mut overlay_slot, |chrome, _select_overlay| {
             self.render_navbar(chrome, atlas, icons, input, theme, w);
+            self.render_tutorial_bar(chrome, atlas, icons, input, theme, w);
             self.render_footer(chrome, atlas, icons, input, theme, w, h);
         });
         if let Some(overlay) = overlay_slot.as_deref_mut() {
             self.render_overlay(overlay, atlas, input, theme, w, h);
             self.render_tree_drag_overlay(overlay, input, theme);
+            render_tutorial_gesture_overlay(self, overlay, theme);
         }
         if let Some(error) = &self.error {
             let scroll_offsets = &mut self.scroll_offsets;
@@ -23045,12 +24250,24 @@ impl ShellState {
     }
 
     fn body_rect(&self, theme: &Theme) -> Rect {
+        let top = theme.navbar_height + self.tutorial_bar_reserve(theme);
         Rect::new(
             0.0,
-            theme.navbar_height,
+            top,
             self.screen_w,
-            self.screen_h - theme.navbar_height - theme.footer_height,
+            self.screen_h - top - theme.footer_height,
         )
+    }
+
+    /// 🎬 Extra vertical space the tutorial control bar reserves below the navbar while a tutorial is
+    /// active — `0.0` otherwise, so `body_rect`/the canvas layout are byte-identical to before this
+    /// region existed whenever no tutorial is running.
+    fn tutorial_bar_reserve(&self, theme: &Theme) -> f32 {
+        if self.tutorial.is_some() {
+            tutorial_bar_height(theme)
+        } else {
+            0.0
+        }
     }
 
     fn shell_uri(&self) -> String {
@@ -23232,7 +24449,7 @@ impl ShellState {
     }
 
     fn render_navbar(
-        &self,
+        &mut self,
         draw: &mut DrawList,
         atlas: &mut FontAtlas,
         icons: &IconAtlas,
@@ -23357,9 +24574,39 @@ impl ShellState {
             chrome_register_tooltip(tour_item.control_id, "Start introduction");
             render_chrome_group(draw, atlas, icons, input, theme, tour_rect, &[tour_item], true);
             if !chrome_dialog_open() && chrome_clicked_this_frame() && tour_rect.contains(input.pointer_x, input.pointer_y) {
+                // 🎬 Introductions and tutorials are mutually exclusive (Design Decision 8) — starting one
+                // clears the other.
+                self.tutorial_stop();
                 chrome_start_introduction();
             }
             rx -= theme.gap_standard;
+        }
+        // 🎬 "Play Tutorial" trigger, beside the introduction trigger above — same "simple direct trigger
+        // point" pattern (chrome-owned click, not routed through `ActionDescriptor`/`dispatch_action`),
+        // shown only when the active app declares at least one tutorial. Multiple declared tutorials are
+        // still fully reachable through the generic Action rail / command palette — the auto-injected
+        // `startTutorial` action already carries a `tutorialId` select arg per declared tutorial — this
+        // navbar shortcut always starts the first one rather than inventing a second picker UI here.
+        if self.tutorial.is_none() {
+            if let Some(tutorial_id) = self.session.as_ref().and_then(|s| s.app.tutorials.first().map(|t| t.id.clone())) {
+                let play_item = ChromeGroupItem {
+                    control_id: "shell.tutorial.trigger",
+                    icon_id: Some("play-circle"),
+                    label: None,
+                    active: false,
+                    disabled: false,
+                    kind: HitKind::NavbarItem,
+                };
+                let play_w = measure_chrome_group_item(atlas, theme, &play_item);
+                rx -= play_w;
+                let play_rect = Rect::new(rx, btn_y, play_w, btn_h);
+                chrome_register_tooltip(play_item.control_id, "Play tutorial");
+                render_chrome_group(draw, atlas, icons, input, theme, play_rect, &[play_item], true);
+                if !chrome_dialog_open() && chrome_clicked_this_frame() && play_rect.contains(input.pointer_x, input.pointer_y) {
+                    self.tutorial_start(&tutorial_id);
+                }
+                rx -= theme.gap_standard;
+            }
         }
         let mut toggle_items: Vec<ChromeGroupItem<'_>> = Vec::new();
         if self.has_display_tabs() {
@@ -28726,6 +29973,11 @@ impl AppRuntime {
                 self.gpu.upload_icon_atlas(&self.icons);
             }
         });
+        // 🎬 Tutorial tick — advances the playhead/recorder and applies UI/camera synchronously; any
+        // resulting document-track operations are queued onto `shell.tutorial_pending_document_ops` and
+        // flushed asynchronously below (the plugin bridge's document calls are async, chrome rendering
+        // isn't — same reason `scene_events` gets deferred through `spawn_app_task` just after).
+        self.shell.tutorial_tick(app_now_ms());
         self.shell.render_chrome(
             &mut self.draw,
             &mut self.overlay,
@@ -28742,6 +29994,16 @@ impl AppRuntime {
                 if let Some(runtime) = runtime.upgrade() {
                     if let Ok(mut app) = runtime.try_borrow_mut() {
                         app.dispatch_actions(scene_events).await;
+                    }
+                }
+            });
+        }
+        if !self.shell.tutorial_pending_document_ops.is_empty() {
+            let runtime = self.self_weak.clone();
+            spawn_app_task(async move {
+                if let Some(runtime) = runtime.upgrade() {
+                    if let Ok(mut app) = runtime.try_borrow_mut() {
+                        app.shell.tutorial_flush_pending_document_ops().await;
                     }
                 }
             });

@@ -2666,7 +2666,7 @@ fn cad_document_pane_objects(source_json: &str, model_index: usize) -> Vec<CadOb
     cad_document_pane_bundle(source_json, model_index).0
 }
 
-fn forest_references_for_model_definitions(reference_z: f64) -> HashMap<String, Vec<CadReference>> {
+fn forest_references_for_model_definitions(reference_z: f64) -> std::collections::BTreeMap<String, Vec<CadReference>> {
     CadPaneId::all()
         .into_iter()
         .map(|pane| {
@@ -2894,7 +2894,7 @@ fn default_document() -> CadScene {
         building_geometry: None,
         energy_geometry: None,
         structure_classic_geometry: None,
-        references_by_model_definition_id: HashMap::new(),
+        references_by_model_definition_id: std::collections::BTreeMap::new(),
         active_model_definition_id: CAD_MODEL_DEFINITION_SHAPE.into(),
     }
 }
@@ -6023,6 +6023,7 @@ mod tests {
             can_redo: false,
             active_alternative_id: None,
             current_checkpoint_id: None,
+            recent_ops: Vec::new(),
         }
     }
 

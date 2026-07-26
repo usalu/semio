@@ -1,5 +1,15 @@
 //! 🗄️ Generic document VCS engine — Operation/Edit/Change/Checkpoint/Alternative, materialize-by-replay, backbone.
 
+// The `dsl::DslDocument`/`dsl::DslOps` derive macros emit `::vcs::DocumentDsl`/`::vcs::OpText` paths
+// (see `dsl/derive/rs/lib.rs`), which only resolve for crates that depend on `vcs` as an external
+// crate — every real consumer, but NOT this crate's own in-crate `🔖Dsl`/`🔖OpText` test fixtures
+// below (a crate is never its own dependency). `extern crate self as vcs;` is the same fix `dsl/rs/lib.rs`
+// uses for its own in-crate derive tests: it makes `::vcs` resolve to this crate even when the derive
+// is exercised in-crate. Only needed for the in-crate tests, so it's cfg-gated to avoid an
+// "unused extern crate" warning in ordinary (non-test) builds.
+#[cfg(test)]
+extern crate self as vcs;
+
 use semio_framework_core::{
     ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
     MergeStrategyKind, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
@@ -225,6 +235,25 @@ pub trait DocumentDsl: Sized {
 pub trait OpText: Sized {
     fn parse_op(line: &str) -> Result<Self, TextError>;
     fn print_op(&self) -> String;
+}
+
+/// @emoji 🌱 Schema-less escape hatch for a whole document that is genuinely untyped (a bare JSON
+/// scratch projection, predating this technology's typed DSL derive — see e.g. `puzzle_2d`'s own
+/// `🔖ValueBridge` region for why `puzzle-plugin`'s `DocumentApp::Projection` stays `serde_json::Value`
+/// rather than its crate's typed `Puzzle2dProjection`). Mirrors `dsl::DslField for serde_json::Value`'s
+/// same rationale one level up: `print_dsl`/`parse_dsl` round-trip through plain JSON text instead of
+/// the `dsl_schema` grammar, so a `Value`-projection document can still satisfy `DocumentApp`'s
+/// `Projection: DocumentDsl` bound without a full typed-projection migration.
+impl DocumentDsl for serde_json::Value {
+    const EXTENSION: &'static str = "json";
+
+    fn parse_dsl(text: &str) -> Result<Self, TextError> {
+        serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(self).unwrap_or_default()
+    }
 }
 //#endregion 🔖Text
 
@@ -2308,39 +2337,6 @@ impl ChannelBackboneRemote {
     }
 }
 
-/// @emoji 🗃️ Pure single-blob file persistence (`file://x.json`) — read/write a whole envelope JSON.
-/// No `Backbone` impl: the `framework/sync` actor layer drives this from its own thread; this crate
-/// only owns the file format. `file://` is an export/import format; `folder://` is the canonical
-/// local store.
-#[cfg(not(target_arch = "wasm32"))]
-pub struct FileJsonStorage {
-    path: std::path::PathBuf,
-}
-
-#[cfg(not(target_arch = "wasm32"))]
-impl FileJsonStorage {
-    pub fn new(path: std::path::PathBuf) -> Self {
-        Self { path }
-    }
-
-    /// @emoji 📖 Reads the stored envelope JSON, or `None` if the file does not exist yet.
-    pub fn read(&self) -> Result<Option<String>, VcsError> {
-        match std::fs::read_to_string(&self.path) {
-            Ok(json) => Ok(Some(json)),
-            Err(err) if err.kind() == std::io::ErrorKind::NotFound => Ok(None),
-            Err(err) => Err(VcsError::Backbone(err.to_string())),
-        }
-    }
-
-    /// @emoji ✍️ Writes the whole envelope JSON, creating parent directories as needed.
-    pub fn write(&self, envelope_json: &str) -> Result<(), VcsError> {
-        if let Some(parent) = self.path.parent() {
-            std::fs::create_dir_all(parent).map_err(|e| VcsError::Backbone(e.to_string()))?;
-        }
-        std::fs::write(&self.path, envelope_json).map_err(|e| VcsError::Backbone(e.to_string()))
-    }
-}
-
 /// @emoji 🗄️ Pure multi-document sqlite persistence (`folder://`), the canonical local store. Rows
 /// are keyed by document id: `document(id, schema, json, updated_at)` — a single folder holds every
 /// open document's envelope. No `Backbone` impl: the `framework/sync` actor layer drives this from
@@ -3207,7 +3203,8 @@ pub mod test_support {
 mod tests {
     use super::*;
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+    #[dsl(extension = "demo")]
     struct DemoProjection {
         n: i32,
     }
@@ -3231,9 +3228,10 @@ mod tests {
         }
     }
 
-    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+    #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
     #[serde(tag = "operation")]
     enum DemoOperation {
+        #[dsl(key = "set-n")]
         SetN { n: i32 },
     }
 
@@ -3711,21 +3709,6 @@ mod tests {
             store.tick().expect("tick after set_state with no live backbone is a no-operation") == false,
             "set_state must not resurrect IO from a stale backbone descriptor either"
         );
-    }
-
-    #[test]
-    fn file_json_storage_round_trips_a_blob() {
-        let dir = tempfile::tempdir().expect("tempdir");
-        let storage = FileJsonStorage::new(dir.path().join("demo.json"));
-        assert_eq!(storage.read().expect("read empty"), None, "absent file reads as None");
-        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 1 }, None);
-        storage
-            .write(&serde_json::to_string(&envelope).expect("json"))
-            .expect("write");
-        let loaded: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
-            serde_json::from_str(&storage.read().expect("read").expect("some")).expect("parse");
-        assert_eq!(loaded.id, "demo");
     }
 
     #[test]
@@ -4294,49 +4277,10 @@ mod tests {
         test_support::assert_store_roundtrip(DemoProjection { n: 4 }, DemoOperation::SetN { n: 9 });
     }
 
-    //#region 🔖Dsl
-    impl DocumentDsl for DemoProjection {
-        const EXTENSION: &'static str = "demo";
-
-        fn parse_dsl(text: &str) -> Result<Self, TextError> {
-            let trimmed = text.trim();
-            let value = trimmed
-                .strip_prefix("n ")
-                .ok_or_else(|| TextError::new("expected 'n <value>'", TextSpan::at(1, 1)))?;
-            let n: i32 = value
-                .trim()
-                .parse()
-                .map_err(|_| TextError::new(format!("expected integer, got '{value}'"), TextSpan::at(1, 3)))?;
-            Ok(DemoProjection { n })
-        }
-
-        fn print_dsl(&self) -> String {
-            format!("n {}\n", self.n)
-        }
-    }
-    //#endregion 🔖Dsl
-
-    //#region 🔖OpText
-    impl OpText for DemoOperation {
-        fn parse_op(line: &str) -> Result<Self, TextError> {
-            let value = line
-                .trim()
-                .strip_prefix("set-n ")
-                .ok_or_else(|| TextError::new("expected 'set-n <value>'", TextSpan::at(1, 1)))?;
-            let n: i32 = value
-                .trim()
-                .parse()
-                .map_err(|_| TextError::new(format!("expected integer, got '{value}'"), TextSpan::at(1, 7)))?;
-            Ok(DemoOperation::SetN { n })
-        }
-
-        fn print_op(&self) -> String {
-            match self {
-                DemoOperation::SetN { n } => format!("set-n {n}"),
-            }
-        }
-    }
-    //#endregion 🔖OpText
+    // `DemoProjection`'s `vcs::DocumentDsl` impl and `DemoOperation`'s `vcs::OpText` impl are now
+    // generated by `#[derive(dsl::DslDocument)]`/`#[derive(dsl::DslOps)]` on the type definitions
+    // themselves (see `DemoProjection`/`DemoOperation` above) — the `dsl_schema` grammar replaces
+    // this crate's own hand-rolled `"n <value>"`/`"set-n <value>"` printer/parser.
 
     #[test]
     fn demo_dsl_round_trips() {
@@ -4361,7 +4305,7 @@ mod tests {
         let edit = store.envelope().vcs.edits.last().expect("edit");
         let printed = print_edit_lines(edit).expect("print edit lines");
         assert!(printed.starts_with("@edit id="));
-        assert!(printed.contains("\n  set-n 1\n"));
+        assert!(printed.contains("\n  set-n n=1\n"));
     }
 
     #[test]
@@ -4390,7 +4334,7 @@ mod tests {
     #[test]
     fn parse_document_text_rejects_invalid_op_line_with_span() {
         let files = DocumentTextFiles {
-            dsl: "n 0\n".to_string(),
+            dsl: "n=0\n".to_string(),
             ops: "@doc schema=demo/v1 id=demo\n@edit id=e1 actor=- started=1 finished=- key=- \"-\"\n  not-an-op\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
@@ -4930,7 +4874,7 @@ mod tests {
     #[test]
     fn parse_document_text_rejects_a_structural_line_missing_a_required_field() {
         let files = DocumentTextFiles {
-            dsl: "n 0\n".to_string(),
+            dsl: "n=0\n".to_string(),
             ops: "@doc schema=demo/v1\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();
@@ -4941,7 +4885,7 @@ mod tests {
     #[test]
     fn parse_document_text_rejects_an_unknown_structural_line_kind() {
         let files = DocumentTextFiles {
-            dsl: "n 0\n".to_string(),
+            dsl: "n=0\n".to_string(),
             ops: "@doc schema=demo/v1 id=demo\n@bogus id=x\n".to_string(),
         };
         let error = parse_document_text::<DemoProjection, DemoOperation>(&files.dsl, &files.ops).unwrap_err();

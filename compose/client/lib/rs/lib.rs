@@ -199,7 +199,7 @@ macro_rules! entity_input {
         }
     ) => {
         $(#[$sm])*
-        #[derive(Clone, Debug, Default, PartialEq, async_graphql::InputObject)]
+        #[derive(Clone, Debug, Default, PartialEq, async_graphql::InputObject, dsl::DslRecord)]
         #[graphql(name = $gql)]
         $vis struct $Name {
             $($(#[$fm])* $fvis $field : $ftype),*
@@ -706,6 +706,28 @@ pub mod id {
             Value::String(self.0.clone())
         }
     }
+
+    //#region 🔖Dsl
+    /// @emoji 🧬 `Id` is a bare `pub String` newtype with no `serde`/derive machinery of its own (it's
+    /// a GraphQL custom scalar, not a `dsl::Dsl*`-derivable record/enum), so it gets a small hand
+    /// `dsl::DslField` bridge — binds as `Shape::Text`, mirroring `String`'s own blanket impl — rather
+    /// than a derive, exactly like the `HashMap`/`Box` bridges other converted crates hand-write at
+    /// their derive engine boundary.
+    impl dsl::DslField for Id {
+        fn shape() -> dsl::Shape {
+            dsl::Shape::Text
+        }
+        fn to_value(&self) -> dsl::FieldValue {
+            dsl::FieldValue::Text(self.0.clone())
+        }
+        fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
+            match value {
+                dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(Self(s.clone())),
+                other => Err(format!("expected Text, found {other:?}")),
+            }
+        }
+    }
+    //#endregion 🔖Dsl
 }
 
 //#endregion 🆔 id
@@ -826,7 +848,7 @@ pub mod geom {
     //! 📐 Geometry: wire [`VectorInput`], [`PositionInput`], … for GraphQL kit inputs; canonical live weak entities live in [`entity`] as `Arc` graph nodes with one Rust kind per SDL weak entity.
     use crate::external_adapters::async_graphql::InputObject;
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "VectorInput")]
     pub struct VectorInput {
         pub x: f64,
@@ -834,7 +856,7 @@ pub mod geom {
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "PointInput")]
     pub struct PointInput {
         pub x: f64,
@@ -842,27 +864,29 @@ pub mod geom {
         pub z: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "CoordinateInput")]
     pub struct CoordinateInput {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "OffsetInput")]
     pub struct OffsetInput {
         pub u: f64,
         pub v: f64,
     }
 
-    #[derive(Clone, Copy, Debug, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "PlaneInput")]
     pub struct PlaneInput {
         pub origin: PointInput,
         #[graphql(name = "xAxis")]
+        #[dsl(key = "xAxis")]
         pub x_axis: VectorInput,
         #[graphql(name = "yAxis")]
+        #[dsl(key = "yAxis")]
         pub y_axis: VectorInput,
     }
 
@@ -873,7 +897,7 @@ pub mod geom {
         }
     }
 
-    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject)]
+    #[derive(Clone, Copy, Debug, Default, PartialEq, InputObject, dsl::DslRecord)]
     #[graphql(name = "PositionInput")]
     pub struct PositionInput {
         pub center: CoordinateInput,
@@ -7796,6 +7820,28 @@ pub mod vcs {
         #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
         pub struct KitSnapshot(pub Value);
 
+        //#region 🔖Dsl
+        /// @emoji 🌱 `KitSnapshot` is a deliberate schema-less bridge — the real, richly-typed kit
+        /// state only exists as the live `Arc<RwLock<..>>` `Kit` entity graph (see `crate::kit::Kit`);
+        /// there is no plain serializable "whole kit" struct anywhere in this crate to derive
+        /// `dsl::DslDocument` on; the wire boundary this VCS store actually replays against is, by
+        /// design, `crate::kit_backbone::initial_kit_projection_value`'s JSON `Value`. This mirrors
+        /// `vcs::DocumentDsl for serde_json::Value`'s own escape-hatch rationale one level up (same
+        /// justification `puzzle-plugin`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/`Puzzle5dPlayApp` use
+        /// for keeping `Projection = serde_json::Value` rather than retrofitting a typed projection).
+        impl vcs::DocumentDsl for KitSnapshot {
+            const EXTENSION: &'static str = "kit";
+
+            fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+                Ok(KitSnapshot(<Value as vcs::DocumentDsl>::parse_dsl(text)?))
+            }
+
+            fn print_dsl(&self) -> String {
+                <Value as vcs::DocumentDsl>::print_dsl(&self.0)
+            }
+        }
+        //#endregion 🔖Dsl
+
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
         pub struct ComposeKitDiff(pub Value);
 
@@ -7831,6 +7877,25 @@ pub mod vcs {
                 Self { kind: operation.kind().to_string(), input: crate::kit_backbone::kit_operation_step_input_json(operation) }
             }
         }
+
+        //#region 🔖OpText
+        /// @emoji 🌱 Same schema-less rationale as `KitSnapshot`'s `DocumentDsl` above: `input` is a
+        /// dynamically-shaped `Value` keyed by `kind`, resolved back through
+        /// `kit_backbone::kit_operation_from_stored`, not a fixed per-kind Rust shape — a single-line
+        /// compact JSON object is this wire type's own natural one-line text form (never contains a
+        /// raw `\n`: `serde_json` escapes embedded newlines inside string values as `\n`, satisfying
+        /// `OpText::print_op`'s one-line law). The richly-typed per-kind operation text format lives
+        /// one level up, on the real `operation::Operation` enum (`operation::ComposeOperationDsl`).
+        impl vcs::OpText for ComposeWireOperation {
+            fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+                crate::external_adapters::serde_json::from_str(line).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+            }
+
+            fn print_op(&self) -> String {
+                crate::external_adapters::serde_json::to_string(self).unwrap_or_default()
+            }
+        }
+        //#endregion 🔖OpText
 
         impl VcsOperation<KitSnapshot> for ComposeWireOperation {
             type Diff = ComposeKitDiff;
@@ -10518,6 +10583,252 @@ pub mod operation {
             attributes: Some(quality.attributes.read().await.iter().map(|attribute| crate::meta::AttributeInput { key: attribute.key.clone(), value: Some(attribute.value.clone()), definition: attribute.definition.clone() }).collect()),
         }
     }
+    //#region 🔖OpText
+    // 🧬 `.compose` operation-log DSL via the `dsl::` derive engine — every persisted `Operation` line
+    // goes through a flat local mirror (`ComposeOperationDsl`) rather than deriving `dsl::DslOps`
+    // directly on `Operation` itself: `Operation`'s own `{ scope: Scope, input: Input }` shape reuses
+    // two generic polymorphic enums across all 25 kinds (the "normalized operation contract" above),
+    // but `Scope`/`Input` variants aren't themselves `dsl::DslField` (a `dsl::DslEnum`/`DslOps`-derived
+    // tagged enum only implements `DslVariants`, not the plain-field `DslField` a `scope: Scope` field
+    // would need unless boxed through `#[dsl(statements)]`). Flattening each of the 25 real operation
+    // kinds into its own concrete field set — exactly mirroring `imperative/core/rs`'s
+    // `ImperativeOperationDsl`/`infinite/board/port/directed/dag`'s `DagOperationDsl` precedent — reads
+    // far better as `.compose` op-log text than a nested `scope=... input=...` nesting would, and keeps
+    // `Scope`/`Input` themselves completely untouched (still whatever shape `Operation::to_diff`/
+    // `to_backwards` need them to be).
+    #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+    pub enum ComposeOperationDsl {
+        #[dsl(key = "renameKit")]
+        RenameKit { name: String },
+        #[dsl(key = "changeDescription")]
+        ChangeDescription { entity_id: Id, description: Option<String> },
+        #[dsl(key = "changeIcon")]
+        ChangeIcon { entity_id: Id, icon: Option<String> },
+        #[dsl(key = "changeImage")]
+        ChangeImage { entity_id: Id, image: Option<String> },
+        #[dsl(key = "createTag")]
+        CreateTag { owner_id: Id, tag_id: Id, attribute_ids: Vec<Id>, tag: TagInput },
+        #[dsl(key = "createTags")]
+        CreateTags { owner_id: Id, tag_ids: Vec<Id>, attribute_ids: Vec<Vec<Id>>, tags: Vec<TagInput> },
+        #[dsl(key = "deleteTag")]
+        DeleteTag { tag_id: Id },
+        #[dsl(key = "deleteTags")]
+        DeleteTags { tag_ids: Vec<Id> },
+        #[dsl(key = "renameTag")]
+        RenameTag { tag_id: Id, name: String },
+        #[dsl(key = "createConcept")]
+        CreateConcept { owner_id: Id, concept_id: Id, attribute_ids: Vec<Id>, concept: ConceptInput },
+        #[dsl(key = "deleteConcept")]
+        DeleteConcept { concept_id: Id },
+        #[dsl(key = "createQuality")]
+        CreateQuality { owner_id: Id, quality_id: Id, attribute_ids: Vec<Id>, benchmark_ids: Vec<Id>, quality: QualityInput },
+        #[dsl(key = "deleteQuality")]
+        DeleteQuality { quality_id: Id },
+        #[dsl(key = "createDesign")]
+        CreateDesign { owner_id: Id, design_id: Id, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String> },
+        #[dsl(key = "createType")]
+        CreateType { owner_id: Id, type_id: Id, name: String, description: Option<String>, icon: Option<String>, image: Option<String>, unit: Option<String> },
+        #[dsl(key = "deleteDesign")]
+        DeleteDesign { design_id: Id },
+        #[dsl(key = "deleteType")]
+        DeleteType { type_id: Id },
+        #[dsl(key = "createFixedPiece")]
+        CreateFixedPiece { design_id: Id, piece_id: Id, blueprint_id: Id, attribute_ids: Vec<Id>, position: PositionInput, name: Option<String>, description: Option<String> },
+        #[dsl(key = "deletePieceInDesign")]
+        DeletePieceInDesign { design_id: Id, piece_id: Id },
+        #[dsl(key = "dragPieceInDesign")]
+        DragPieceInDesign { design_id: Id, piece_id: Id, offset: OffsetInput },
+        #[dsl(key = "dragPiecesInDesign")]
+        DragPiecesInDesign { design_id: Id, piece_ids: Vec<Id>, offset: OffsetInput },
+        #[dsl(key = "fixPieceInDesign")]
+        FixPieceInDesign { design_id: Id, piece_id: Id },
+        #[dsl(key = "createFolder")]
+        CreateFolder { owner_id: Id, folder_id: Id, name: String, path: String, description: Option<String>, icon: Option<String>, parent_folder_id: Option<Id> },
+        #[dsl(key = "deleteFolder")]
+        DeleteFolder { entity_id: Id },
+        #[dsl(key = "moveToFolder")]
+        MoveToFolder { entity_id: Id, folder_id: Option<Id> },
+    }
+
+    /// @emoji 🧬 `Operation` → `ComposeOperationDsl`. Panics (via `unreachable!`) on a scope/input
+    /// pairing that violates the normalized-operation-contract invariant — every real construction
+    /// site (`kit_backbone::kit_operation_from_stored` and every GraphQL mutation resolver) always
+    /// pairs each `Operation` kind with its one fixed `Scope`/`Input` shape, so a mismatch here can
+    /// only mean a construction-site bug elsewhere, not a legitimately-absent value to degrade to.
+    fn compose_operation_to_dsl(op: &Operation) -> ComposeOperationDsl {
+        match op {
+            Operation::RenameKit { scope, input } => {
+                let Scope::Kit = scope else { unreachable!("RenameKit must carry Scope::Kit") };
+                let Input::Name { name } = input else { unreachable!("RenameKit must carry Input::Name") };
+                ComposeOperationDsl::RenameKit { name: name.clone() }
+            }
+            Operation::ChangeDescription { scope, input } => {
+                let Scope::Entity { entity_id } = scope else { unreachable!("ChangeDescription must carry Scope::Entity") };
+                let Input::Description { description } = input else { unreachable!("ChangeDescription must carry Input::Description") };
+                ComposeOperationDsl::ChangeDescription { entity_id: entity_id.clone(), description: description.clone() }
+            }
+            Operation::ChangeIcon { scope, input } => {
+                let Scope::Entity { entity_id } = scope else { unreachable!("ChangeIcon must carry Scope::Entity") };
+                let Input::Icon { icon } = input else { unreachable!("ChangeIcon must carry Input::Icon") };
+                ComposeOperationDsl::ChangeIcon { entity_id: entity_id.clone(), icon: icon.clone() }
+            }
+            Operation::ChangeImage { scope, input } => {
+                let Scope::Entity { entity_id } = scope else { unreachable!("ChangeImage must carry Scope::Entity") };
+                let Input::Image { image } = input else { unreachable!("ChangeImage must carry Input::Image") };
+                ComposeOperationDsl::ChangeImage { entity_id: entity_id.clone(), image: image.clone() }
+            }
+            Operation::CreateTag { scope, input } => {
+                let Scope::CreateTag { owner_id, tag_id, attribute_ids } = scope else { unreachable!("CreateTag must carry Scope::CreateTag") };
+                let Input::Tag { tag } = input else { unreachable!("CreateTag must carry Input::Tag") };
+                ComposeOperationDsl::CreateTag { owner_id: owner_id.clone(), tag_id: tag_id.clone(), attribute_ids: attribute_ids.clone(), tag: tag.clone() }
+            }
+            Operation::CreateTags { scope, input } => {
+                let Scope::CreateTags { owner_id, tag_ids, attribute_ids } = scope else { unreachable!("CreateTags must carry Scope::CreateTags") };
+                let Input::Tags { tags } = input else { unreachable!("CreateTags must carry Input::Tags") };
+                ComposeOperationDsl::CreateTags { owner_id: owner_id.clone(), tag_ids: tag_ids.clone(), attribute_ids: attribute_ids.clone(), tags: tags.clone() }
+            }
+            Operation::DeleteTag { scope, .. } => {
+                let Scope::Tag { tag_id } = scope else { unreachable!("DeleteTag must carry Scope::Tag") };
+                ComposeOperationDsl::DeleteTag { tag_id: tag_id.clone() }
+            }
+            Operation::DeleteTags { scope, .. } => {
+                let Scope::Tags { tag_ids } = scope else { unreachable!("DeleteTags must carry Scope::Tags") };
+                ComposeOperationDsl::DeleteTags { tag_ids: tag_ids.clone() }
+            }
+            Operation::RenameTag { scope, input } => {
+                let Scope::Tag { tag_id } = scope else { unreachable!("RenameTag must carry Scope::Tag") };
+                let Input::Name { name } = input else { unreachable!("RenameTag must carry Input::Name") };
+                ComposeOperationDsl::RenameTag { tag_id: tag_id.clone(), name: name.clone() }
+            }
+            Operation::CreateConcept { scope, input } => {
+                let Scope::CreateConcept { owner_id, concept_id, attribute_ids } = scope else { unreachable!("CreateConcept must carry Scope::CreateConcept") };
+                let Input::Concept { concept } = input else { unreachable!("CreateConcept must carry Input::Concept") };
+                ComposeOperationDsl::CreateConcept { owner_id: owner_id.clone(), concept_id: concept_id.clone(), attribute_ids: attribute_ids.clone(), concept: concept.clone() }
+            }
+            Operation::DeleteConcept { scope, .. } => {
+                let Scope::Concept { concept_id } = scope else { unreachable!("DeleteConcept must carry Scope::Concept") };
+                ComposeOperationDsl::DeleteConcept { concept_id: concept_id.clone() }
+            }
+            Operation::CreateQuality { scope, input } => {
+                let Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids } = scope else { unreachable!("CreateQuality must carry Scope::CreateQuality") };
+                let Input::Quality { quality } = input else { unreachable!("CreateQuality must carry Input::Quality") };
+                ComposeOperationDsl::CreateQuality { owner_id: owner_id.clone(), quality_id: quality_id.clone(), attribute_ids: attribute_ids.clone(), benchmark_ids: benchmark_ids.clone(), quality: quality.clone() }
+            }
+            Operation::DeleteQuality { scope, .. } => {
+                let Scope::Quality { quality_id } = scope else { unreachable!("DeleteQuality must carry Scope::Quality") };
+                ComposeOperationDsl::DeleteQuality { quality_id: quality_id.clone() }
+            }
+            Operation::CreateDesign { scope, input } => {
+                let Scope::CreateDesign { owner_id, design_id } = scope else { unreachable!("CreateDesign must carry Scope::CreateDesign") };
+                let Input::EntityScalars { name, description, icon, image, unit } = input else { unreachable!("CreateDesign must carry Input::EntityScalars") };
+                ComposeOperationDsl::CreateDesign { owner_id: owner_id.clone(), design_id: design_id.clone(), name: name.clone(), description: description.clone(), icon: icon.clone(), image: image.clone(), unit: unit.clone() }
+            }
+            Operation::CreateType { scope, input } => {
+                let Scope::CreateType { owner_id, type_id } = scope else { unreachable!("CreateType must carry Scope::CreateType") };
+                let Input::EntityScalars { name, description, icon, image, unit } = input else { unreachable!("CreateType must carry Input::EntityScalars") };
+                ComposeOperationDsl::CreateType { owner_id: owner_id.clone(), type_id: type_id.clone(), name: name.clone(), description: description.clone(), icon: icon.clone(), image: image.clone(), unit: unit.clone() }
+            }
+            Operation::DeleteDesign { scope, .. } => {
+                let Scope::Design { design_id } = scope else { unreachable!("DeleteDesign must carry Scope::Design") };
+                ComposeOperationDsl::DeleteDesign { design_id: design_id.clone() }
+            }
+            Operation::DeleteType { scope, .. } => {
+                let Scope::Type { type_id } = scope else { unreachable!("DeleteType must carry Scope::Type") };
+                ComposeOperationDsl::DeleteType { type_id: type_id.clone() }
+            }
+            Operation::CreateFixedPiece { scope, input } => {
+                let Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids } = scope else { unreachable!("CreateFixedPiece must carry Scope::CreateFixedPiece") };
+                let Input::FixedPiece { position, name, description } = input else { unreachable!("CreateFixedPiece must carry Input::FixedPiece") };
+                ComposeOperationDsl::CreateFixedPiece { design_id: design_id.clone(), piece_id: piece_id.clone(), blueprint_id: blueprint_id.clone(), attribute_ids: attribute_ids.clone(), position: *position, name: name.clone(), description: description.clone() }
+            }
+            Operation::DeletePieceInDesign { scope, .. } => {
+                let Scope::PieceInDesign { design_id, piece_id } = scope else { unreachable!("DeletePieceInDesign must carry Scope::PieceInDesign") };
+                ComposeOperationDsl::DeletePieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }
+            }
+            Operation::DragPieceInDesign { scope, input } => {
+                let Scope::PieceInDesign { design_id, piece_id } = scope else { unreachable!("DragPieceInDesign must carry Scope::PieceInDesign") };
+                let Input::Offset { offset } = input else { unreachable!("DragPieceInDesign must carry Input::Offset") };
+                ComposeOperationDsl::DragPieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone(), offset: *offset }
+            }
+            Operation::DragPiecesInDesign { scope, input } => {
+                let Scope::PiecesInDesign { design_id, piece_ids } = scope else { unreachable!("DragPiecesInDesign must carry Scope::PiecesInDesign") };
+                let Input::Offset { offset } = input else { unreachable!("DragPiecesInDesign must carry Input::Offset") };
+                ComposeOperationDsl::DragPiecesInDesign { design_id: design_id.clone(), piece_ids: piece_ids.clone(), offset: *offset }
+            }
+            Operation::FixPieceInDesign { scope, .. } => {
+                let Scope::PieceInDesign { design_id, piece_id } = scope else { unreachable!("FixPieceInDesign must carry Scope::PieceInDesign") };
+                ComposeOperationDsl::FixPieceInDesign { design_id: design_id.clone(), piece_id: piece_id.clone() }
+            }
+            Operation::CreateFolder { scope, input } => {
+                let Scope::CreateFolder { owner_id, folder_id } = scope else { unreachable!("CreateFolder must carry Scope::CreateFolder") };
+                let Input::CreateFolder { name, path, description, icon, parent_folder_id } = input else { unreachable!("CreateFolder must carry Input::CreateFolder") };
+                ComposeOperationDsl::CreateFolder { owner_id: owner_id.clone(), folder_id: folder_id.clone(), name: name.clone(), path: path.clone(), description: description.clone(), icon: icon.clone(), parent_folder_id: parent_folder_id.clone() }
+            }
+            Operation::DeleteFolder { scope, .. } => {
+                let Scope::Entity { entity_id } = scope else { unreachable!("DeleteFolder must carry Scope::Entity") };
+                ComposeOperationDsl::DeleteFolder { entity_id: entity_id.clone() }
+            }
+            Operation::MoveToFolder { scope, input } => {
+                let Scope::Entity { entity_id } = scope else { unreachable!("MoveToFolder must carry Scope::Entity") };
+                let Input::MoveToFolder { folder_id } = input else { unreachable!("MoveToFolder must carry Input::MoveToFolder") };
+                ComposeOperationDsl::MoveToFolder { entity_id: entity_id.clone(), folder_id: folder_id.clone() }
+            }
+        }
+    }
+
+    /// @emoji 🧬 `ComposeOperationDsl` → `Operation`, rebuilding whichever `Scope`/`Input` pairing the
+    /// operation kind expects.
+    fn compose_operation_from_dsl(mirror: ComposeOperationDsl) -> Operation {
+        match mirror {
+            ComposeOperationDsl::RenameKit { name } => Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name } },
+            ComposeOperationDsl::ChangeDescription { entity_id, description } => Operation::ChangeDescription { scope: Scope::Entity { entity_id }, input: Input::Description { description } },
+            ComposeOperationDsl::ChangeIcon { entity_id, icon } => Operation::ChangeIcon { scope: Scope::Entity { entity_id }, input: Input::Icon { icon } },
+            ComposeOperationDsl::ChangeImage { entity_id, image } => Operation::ChangeImage { scope: Scope::Entity { entity_id }, input: Input::Image { image } },
+            ComposeOperationDsl::CreateTag { owner_id, tag_id, attribute_ids, tag } => Operation::CreateTag { scope: Scope::CreateTag { owner_id, tag_id, attribute_ids }, input: Input::Tag { tag } },
+            ComposeOperationDsl::CreateTags { owner_id, tag_ids, attribute_ids, tags } => Operation::CreateTags { scope: Scope::CreateTags { owner_id, tag_ids, attribute_ids }, input: Input::Tags { tags } },
+            ComposeOperationDsl::DeleteTag { tag_id } => Operation::DeleteTag { scope: Scope::Tag { tag_id }, input: Input::None },
+            ComposeOperationDsl::DeleteTags { tag_ids } => Operation::DeleteTags { scope: Scope::Tags { tag_ids }, input: Input::None },
+            ComposeOperationDsl::RenameTag { tag_id, name } => Operation::RenameTag { scope: Scope::Tag { tag_id }, input: Input::Name { name } },
+            ComposeOperationDsl::CreateConcept { owner_id, concept_id, attribute_ids, concept } => Operation::CreateConcept { scope: Scope::CreateConcept { owner_id, concept_id, attribute_ids }, input: Input::Concept { concept } },
+            ComposeOperationDsl::DeleteConcept { concept_id } => Operation::DeleteConcept { scope: Scope::Concept { concept_id }, input: Input::None },
+            ComposeOperationDsl::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids, quality } => {
+                Operation::CreateQuality { scope: Scope::CreateQuality { owner_id, quality_id, attribute_ids, benchmark_ids }, input: Input::Quality { quality } }
+            }
+            ComposeOperationDsl::DeleteQuality { quality_id } => Operation::DeleteQuality { scope: Scope::Quality { quality_id }, input: Input::None },
+            ComposeOperationDsl::CreateDesign { owner_id, design_id, name, description, icon, image, unit } => {
+                Operation::CreateDesign { scope: Scope::CreateDesign { owner_id, design_id }, input: Input::EntityScalars { name, description, icon, image, unit } }
+            }
+            ComposeOperationDsl::CreateType { owner_id, type_id, name, description, icon, image, unit } => {
+                Operation::CreateType { scope: Scope::CreateType { owner_id, type_id }, input: Input::EntityScalars { name, description, icon, image, unit } }
+            }
+            ComposeOperationDsl::DeleteDesign { design_id } => Operation::DeleteDesign { scope: Scope::Design { design_id }, input: Input::None },
+            ComposeOperationDsl::DeleteType { type_id } => Operation::DeleteType { scope: Scope::Type { type_id }, input: Input::None },
+            ComposeOperationDsl::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids, position, name, description } => {
+                Operation::CreateFixedPiece { scope: Scope::CreateFixedPiece { design_id, piece_id, blueprint_id, attribute_ids }, input: Input::FixedPiece { position, name, description } }
+            }
+            ComposeOperationDsl::DeletePieceInDesign { design_id, piece_id } => Operation::DeletePieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::None },
+            ComposeOperationDsl::DragPieceInDesign { design_id, piece_id, offset } => Operation::DragPieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::Offset { offset } },
+            ComposeOperationDsl::DragPiecesInDesign { design_id, piece_ids, offset } => Operation::DragPiecesInDesign { scope: Scope::PiecesInDesign { design_id, piece_ids }, input: Input::Offset { offset } },
+            ComposeOperationDsl::FixPieceInDesign { design_id, piece_id } => Operation::FixPieceInDesign { scope: Scope::PieceInDesign { design_id, piece_id }, input: Input::None },
+            ComposeOperationDsl::CreateFolder { owner_id, folder_id, name, path, description, icon, parent_folder_id } => {
+                Operation::CreateFolder { scope: Scope::CreateFolder { owner_id, folder_id }, input: Input::CreateFolder { name, path, description, icon, parent_folder_id } }
+            }
+            ComposeOperationDsl::DeleteFolder { entity_id } => Operation::DeleteFolder { scope: Scope::Entity { entity_id }, input: Input::None },
+            ComposeOperationDsl::MoveToFolder { entity_id, folder_id } => Operation::MoveToFolder { scope: Scope::Entity { entity_id }, input: Input::MoveToFolder { folder_id } },
+        }
+    }
+
+    impl vcs::OpText for Operation {
+        fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+            Ok(compose_operation_from_dsl(<ComposeOperationDsl as vcs::OpText>::parse_op(line)?))
+        }
+
+        fn print_op(&self) -> String {
+            <ComposeOperationDsl as vcs::OpText>::print_op(&compose_operation_to_dsl(self))
+        }
+    }
+    //#endregion 🔖OpText
+
     //#endregion 🧭 normalized operation contract
 
     //#region 🧾 inputs
@@ -19176,6 +19487,7 @@ mod tests {
     use crate::external_adapters::serde_json::json;
 
     use crate::gql::AppSchema;
+    use crate::id::Id;
 
     /// @emoji 🗄️ `vcs` integration — compose shares generic typed document VCS primitives with s technologies.
     #[test]
@@ -19232,6 +19544,91 @@ mod tests {
         let replayed = materialize_document_projection(store.envelope(), store.applied_edit_ids()).expect("materialize");
         assert_eq!(replayed.id, "patched");
     }
+
+    //#region 🔖DslTests
+    /// @emoji 🧬 One `operation::Operation` value per representative kind, chosen to exercise every
+    /// `FieldKind` the `dsl::` derive engine's `ComposeOperationDsl` mirror carries: bare scalars
+    /// (`RenameKit`), `Option<String>` (`ChangeDescription`), an `Id` scalar bridge plus a nested
+    /// `dsl::DslRecord`-derived `TagInput` with its own `Option<Vec<AttributeInput>>` (`CreateTag`),
+    /// `Vec<Id>` + `Vec<Vec<Id>>` + `Vec<TagInput>` (`CreateTags`), a multi-field `EntityScalars`
+    /// payload (`CreateDesign`), a `PositionInput` record (`CreateFixedPiece`), an `OffsetInput`
+    /// record over a `Vec<Id>` scope (`DragPiecesInDesign`), and `Option<Id>` (`MoveToFolder`).
+    fn representative_operations() -> Vec<crate::operation::Operation> {
+        use crate::meta::{AttributeInput, TagInput};
+        use crate::operation::{Input, Operation, Scope};
+
+        vec![
+            Operation::RenameKit { scope: Scope::Kit, input: Input::Name { name: "Renamed Kit".into() } },
+            Operation::ChangeDescription { scope: Scope::Entity { entity_id: Id::from("entity-1") }, input: Input::Description { description: Some("a description".into()) } },
+            Operation::ChangeDescription { scope: Scope::Entity { entity_id: Id::from("entity-2") }, input: Input::Description { description: None } },
+            Operation::CreateTag {
+                scope: Scope::CreateTag { owner_id: Id::from("owner-1"), tag_id: Id::from("tag-1"), attribute_ids: vec![Id::from("attr-1")] },
+                input: Input::Tag { tag: TagInput { name: "structural".into(), description: Some("load-bearing".into()), icon: None, order: Some(1), attributes: Some(vec![AttributeInput { key: "k".into(), value: Some("v".into()), definition: None }]) } },
+            },
+            Operation::CreateTags {
+                scope: Scope::CreateTags { owner_id: Id::from("owner-2"), tag_ids: vec![Id::from("tag-2"), Id::from("tag-3")], attribute_ids: vec![vec![], vec![Id::from("attr-2")]] },
+                input: Input::Tags { tags: vec![TagInput { name: "a".into(), description: None, icon: None, order: None, attributes: None }, TagInput { name: "b".into(), description: None, icon: Some("icon".into()), order: None, attributes: None }] },
+            },
+            Operation::CreateDesign {
+                scope: Scope::CreateDesign { owner_id: Id::from("owner-3"), design_id: Id::from("design-1") },
+                input: Input::EntityScalars { name: "My Design".into(), description: Some("desc".into()), icon: None, image: Some("img.png".into()), unit: Some("m".into()) },
+            },
+            Operation::CreateFixedPiece {
+                scope: Scope::CreateFixedPiece { design_id: Id::from("design-2"), piece_id: Id::from("piece-1"), blueprint_id: Id::from("blueprint-1"), attribute_ids: vec![] },
+                input: Input::FixedPiece {
+                    position: crate::geom::PositionInput { center: crate::geom::CoordinateInput { u: 1.0, v: 2.0 }, plane: crate::geom::PlaneInput::default() },
+                    name: Some("Piece".into()),
+                    description: None,
+                },
+            },
+            Operation::DragPiecesInDesign {
+                scope: Scope::PiecesInDesign { design_id: Id::from("design-3"), piece_ids: vec![Id::from("piece-2"), Id::from("piece-3")] },
+                input: Input::Offset { offset: crate::geom::OffsetInput { u: 0.5, v: -0.5 } },
+            },
+            Operation::CreateFolder {
+                scope: Scope::CreateFolder { owner_id: Id::from("owner-4"), folder_id: Id::from("folder-1") },
+                input: Input::CreateFolder { name: "Docs".into(), path: "/docs".into(), description: None, icon: None, parent_folder_id: Some(Id::from("folder-0")) },
+            },
+            Operation::MoveToFolder { scope: Scope::Entity { entity_id: Id::from("entity-3") }, input: Input::MoveToFolder { folder_id: None } },
+            Operation::MoveToFolder { scope: Scope::Entity { entity_id: Id::from("entity-4") }, input: Input::MoveToFolder { folder_id: Some(Id::from("folder-2")) } },
+        ]
+    }
+
+    #[test]
+    fn compose_operation_dsl_round_trips_representative_kinds() {
+        for operation in representative_operations() {
+            vcs::test_support::assert_op_line_round_trip(&operation);
+        }
+    }
+
+    #[test]
+    fn compose_wire_operation_op_text_round_trips() {
+        for operation in representative_operations() {
+            let wire = crate::vcs::kit_vcs::ComposeWireOperation::from_operation(&operation);
+            vcs::test_support::assert_op_line_round_trip(&wire);
+        }
+    }
+
+    #[test]
+    fn kit_snapshot_dsl_round_trips() {
+        let empty = crate::vcs::kit_vcs::KitSnapshot(json!({}));
+        vcs::test_support::assert_dsl_round_trip(&empty);
+
+        let populated = crate::vcs::kit_vcs::KitSnapshot(json!({
+            "name": "Kitchen Sink Kit",
+            "version": "1.0.0",
+            "description": "line one\nline two — with a ' quote and a % sign",
+            "types": [],
+        }));
+        vcs::test_support::assert_dsl_round_trip(&populated);
+    }
+
+    #[test]
+    fn kit_snapshot_store_document_text_round_trip() {
+        let store = crate::vcs::kit_vcs::create_kit_snapshot_store(&Id::from("ws-dsl-test"), json!({}));
+        vcs::test_support::assert_document_text_round_trip(&store);
+    }
+    //#endregion 🔖DslTests
 
     /// @emoji 📜 Collects `(kind, name)` for top-level GraphQL declarations (first line of each declaration block).
     fn collect_schema_decl_keys(sdl: &str) -> BTreeSet<(String, String)> {

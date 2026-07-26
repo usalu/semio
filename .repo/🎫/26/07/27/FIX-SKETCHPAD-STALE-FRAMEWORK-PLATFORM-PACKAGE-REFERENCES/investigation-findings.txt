@@ -1,0 +1,35 @@
+Investigation findings — stale @semio-tech/framework-platform-core / @semio-tech/framework-platform-renderer-react references in compose/client/lib/sketchpad
+
+Files with broken references (grepped, not from stale survey line numbers):
+- compose/client/lib/sketchpad/js/index.ts (3 import statements, ~lines 64, 17471, 17524)
+- compose/client/lib/sketchpad/js/boot.tsx (2 imports, lines 8-9)
+- compose/client/lib/sketchpad/doc/js/index.tsx (1 import, line 14)
+- compose/client/lib/sketchpad/js/pw-loader.mjs (2 alias entries, lines 19-20) — NOT in original survey, found via grep
+- compose/client/lib/sketchpad/js/tsconfig.json (2 path mappings, lines 19-20)
+- compose/client/lib/sketchpad/js/vitest.config.ts (1 alias, line 17)
+
+Root cause:
+node_modules/@semio-tech/{framework-platform-core,framework-platform-renderer-react} are bun workspace symlinks dated 2026-06-23 pointing at framework/product/platform/{core,renderer/react}. Those directories were deleted in commit 5ecbe3dbfb ("Rust kernel and WASM Component plugin OS replace TS meta-framework", 2026-07-04), which removed ~110k lines of TS framework/platform+playground+os-renderer code repo-wide and replaced the entire product architecture with a Rust/WASM plugin host (bootFrameworkOs/FrameworkOsShell in framework/renderer/react, consuming declarative UiTree; framework/product/os/core is now just a thin JS backbone/sync protocol shim + legacy osBaselineResource/mergeOsProgramDefinition/registerAppVcsHandler shim explicitly kept alive only for compose-sketchpad's sake per its own header comment).
+
+This is NOT a pure rename. Grepped the entire live tree (excluding node_modules, .claude/worktrees, .repo/🎫 backups) for every symbol sketchpad imports from the old packages:
+  ActionBus, Component, Controller, ObservableCell, Panel, Platform (class), PluginHost, Store,
+  PlatformTopologyStore, PlatformTopologyPayload, platformTopologyStoreId, PLATFORM_TOPOLOGY_STORE_PREFIX,
+  VirtualFileSystemController, build*WindowBody, virtualFileSystem*, create*Layout, registerPlatformComponent,
+  registerCornerPanelBody, registerWindowBody, ComponentKind, PanelModel, PlatformSpec, PlatformDefinition,
+  PluginManifest, PluginModule, Puzzle2dModel, Puzzle5dModel, SideTabSpec, UiNode/UiSectionNode/UiTreeItemNode/
+  UiTreeNode, WindowBodyViewContext, uiDeclarativeSectionsToTree, uiInspectorStepperField, uiInspectorVec3Group,
+  getPlatformControllerById, WindowKindRuntime, AppRuntime, AppInstanceHostComponent, AppRendererContribution,
+  OsProgramContribution, UiPanelHostSurfaceNode, mountReactApp, PlatformShell, PlatformViewWithHistory,
+  registerUiPanelSurfaceHost, mountPlatform
+Zero matches anywhere in the live tree except as imports inside sketchpad's own files. None were moved/renamed under framework/product/os/core, framework/renderer/react, or anywhere else — they were deleted outright as part of the architecture replacement.
+
+Confirmed via git log --stat 5ecbe3dbfb: the commit explicitly deleted TS framework platform/playground/os-renderer code (~110k lines removed) and replaced technology apps (cad, draw, flow, etc.) with Rust plugin crates + a single framework/renderer/react UiTree interpreter. compose/client/lib/sketchpad was never part of that migration wave — its 17,647-line index.ts (and boot.tsx) still use the pre-migration imperative Platform/ActionBus/Controller/Store/Panel/PluginHost object model wholesale, not just in a few import lines.
+
+Precedent: ticket 26/07/16/FIX-DUPLICATE-TOP-LEVEL-DECLARATIONS-IN-SKETCHPAD-INDEX already hit this exact symlink-to-nonexistent-directory issue and explicitly deferred it: "Left unfixed as out of scope for this ticket."
+
+Also discovered: compose/client/lib/sketchpad/js/tsconfig.json's own "@semio-tech/framework-core" path mapping is independently stale too (points at framework/core/index.ts, but the real entry is framework/core/js/index.ts per that package's package.json "exports"). And running `bun x tsc --noEmit -p compose/client/lib/sketchpad/js/tsconfig.json` exits 0 with no output — not because the code is fine, but because the extended base config (compose/client/lib/js/tsconfig.json) has "include": ["index.ts", "kit-store.worker.ts"] resolved relative to that base directory, so it never actually type-checks sketchpad's own index.ts/boot.tsx at all. There is no working standalone typecheck entrypoint for this package currently.
+
+Why a plain rename was not applied:
+Renaming the 6 files' import specifiers from the old package names to @semio-tech/framework-os-core / @semio-tech/framework-renderer-react would fix module resolution but leave ~50 imported symbols undefined (the new packages don't export them under any name), which would fail typecheck/build/runtime immediately after. A real fix requires either (a) porting compose-sketchpad's entire index.ts onto the new declarative Rust/WASM plugin + UiTree architecture (comparable in size/scope to the per-technology migrations done in commit 5ecbe3dbfb for cad/draw/flow/etc.), or (b) an explicit architectural decision to keep compose-sketchpad on a standalone imperative UI runtime and reintroduce/rebuild those primitives as sketchpad-local code (not a "compat layer" for the deleted framework, a real owned implementation) — both are product/architecture decisions and multi-day efforts outside a single "TS import rename" ticket's scope, and directly contradict CLAUDE.md's "no legacy support / no compatibility layers" rule if done as a shim.
+
+No source files were modified. Recommend this be re-scoped as its own ticket (likely paired with the concurrent compose Rust-engine migration in compose/client/lib/rs/lib.rs, since that agent may be defining the new home for compose's app-hosting surface) to decide and execute the real port.
