@@ -6323,9 +6323,11 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * current step's `introduce`/`show` elements elevate above it (see `useIntroductionElevation`) and stay
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
- * for the current step; the box silhouette itself always uses the same introduced highlight + thickness
- * pulse as stamped targets; each blank-line body paragraph emphasizes only while the pointer is on
- * that paragraph — see `[data-slot="introduction-body-paragraph"]:hover` in `ui.css`).
+ * for the current step; the box silhouette starts with the introduced highlight + thickness pulse, then
+ * follows the shared surface-active lifecycle — click activates (primary stroke), click outside returns
+ * to normal and never re-enters the introduced pulse for this step; each blank-line body paragraph
+ * emphasizes only while the pointer is on that paragraph — see `[data-slot="introduction-body-paragraph"]:hover`
+ * in `ui.css`).
  * Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step
  * plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if
  * it has one, otherwise — for a purely informational step whose only way forward is the Next/Done
@@ -6354,6 +6356,10 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const [viewport, setViewport] = reactHostPort.useState(() => ({ width: window.innerWidth, height: window.innerHeight }));
   const [boxSize, setBoxSize] = reactHostPort.useState({ width: 320, height: 160 });
   const boxRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(boxRef);
+  // 🎯 Once the step chrome is activated the introduced pulse is gone for this step — active while
+  // selected, then normal after a background click (same lifecycle as panels/panes/windows).
+  const [introductionActivated, setIntroductionActivated] = reactHostPort.useState(false);
   // 🫳 User-dragged absolute position — `null` keeps auto/`placement` until the top-center handle moves the box;
   // reset on every step so each card starts at its authored placement again.
   const [dragPosition, setDragPosition] = reactHostPort.useState<IntroductionInfoBoxPosition | null>(null);
@@ -6362,6 +6368,10 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   dragPositionRef.current = dragPosition;
   const dragLayoutRef = reactHostPort.useRef({ placement: { top: 0, left: 0 }, boxSize, viewport });
   const dragSessionRef = reactHostPort.useRef<{ startTop: number; startLeft: number; pointerX: number; pointerY: number } | null>(null);
+
+  reactHostPort.useEffect(() => {
+    if (surfaceActive) setIntroductionActivated(true);
+  }, [surfaceActive]);
 
   reactHostPort.useEffect(() => {
     const root = document.documentElement;
@@ -6389,6 +6399,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
     setDragPosition(null);
     setDragging(false);
     dragSessionRef.current = null;
+    setIntroductionActivated(false);
   }, [stepIndex]);
 
   const skipLabel = useLabel("introduction.skip");
@@ -6483,8 +6494,9 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         ref={boxRef}
         stackSlot="introduction-info-box"
         stackDataAttrs={dragging ? { "data-dragging": "true" } : undefined}
-        active={false}
-        borderKind="introduced"
+        stackBindProps={surfaceActiveProps}
+        active={surfaceActive}
+        borderKind={introductionActivated ? undefined : "introduced"}
         level="dialog"
         className="pointer-events-auto fixed z-tutorial max-w-sm bg-transparent"
         style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
@@ -6925,7 +6937,9 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   onRecordToggle,
   onAddChapter,
 }) => {
-  const bgClass = surfaceClass;
+  const parent = useSurface();
+  const paints = shellFloorPaints(parent);
+  const bgClass = shellFloorFillClass(parent);
   const timeMs = useTutorialClock(clock);
   const playLabel = useLabel("tutorial.play");
   const pauseLabel = useLabel("tutorial.pause");
@@ -6936,47 +6950,51 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   const recordingLabel = useLabel("tutorial.recording");
   const addChapterLabel = useLabel("tutorial.addChapter");
 
+  const body = (
+    <>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        <Button id="ui.tutorial.play" icon={playing ? "pause" : "play"} text={playing ? pauseLabel : playLabel} onClick={onPlayPause} />
+        <Button id="ui.tutorial.stop" icon="square" text={stopLabel} onClick={onStop} />
+        <span id="ui.tutorial.time" data-slot="tutorial-time" className="shrink-0 whitespace-nowrap px-single text-xs tabular-nums text-muted-foreground">
+          {formatTutorialTime(timeMs)} / {formatTutorialTime(durationMs)}
+        </span>
+        <div className="relative min-w-0 flex-1 px-single">
+          <Slider id="ui.tutorial.scrubber" min={0} max={Math.max(durationMs, 1)} value={[timeMs]} onValueChange={(values) => onSeek(values[0] ?? 0)} showValue={false} />
+          {chapters.map((chapter) => (
+            <button
+              key={chapter.id}
+              id={`ui.tutorial.chapter.${chapter.id}`}
+              type="button"
+              data-slot="tutorial-chapter-tick"
+              title={chapter.title}
+              className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
+              style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
+              onClick={() => onSeek(chapter.atMs)}
+            />
+          ))}
+        </div>
+        <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
+        <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
+        <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
+        {recordAvailable && (
+          <>
+            <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
+            {recording && (
+              <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
+                {recordingLabel}
+              </span>
+            )}
+          </>
+        )}
+        <Button id="ui.tutorial.addChapter" icon="plus" text={addChapterLabel} onClick={onAddChapter} />
+        <span className="min-w-0 flex-1 truncate px-single text-right text-xs text-muted-foreground">{title}</span>
+      </div>
+    </>
+  );
+
   return (
     <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-level="base" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
-      <SurfaceScope level="base" fill="surface">
-        <div className="p-single flex gap-single items-center min-w-0 h-full">
-          <Button id="ui.tutorial.play" icon={playing ? "pause" : "play"} text={playing ? pauseLabel : playLabel} onClick={onPlayPause} />
-          <Button id="ui.tutorial.stop" icon="square" text={stopLabel} onClick={onStop} />
-          <span id="ui.tutorial.time" data-slot="tutorial-time" className="shrink-0 whitespace-nowrap px-single text-xs tabular-nums text-muted-foreground">
-            {formatTutorialTime(timeMs)} / {formatTutorialTime(durationMs)}
-          </span>
-          <div className="relative min-w-0 flex-1 px-single">
-            <Slider id="ui.tutorial.scrubber" min={0} max={Math.max(durationMs, 1)} value={[timeMs]} onValueChange={(values) => onSeek(values[0] ?? 0)} showValue={false} />
-            {chapters.map((chapter) => (
-              <button
-                key={chapter.id}
-                id={`ui.tutorial.chapter.${chapter.id}`}
-                type="button"
-                data-slot="tutorial-chapter-tick"
-                title={chapter.title}
-                className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
-                style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
-                onClick={() => onSeek(chapter.atMs)}
-              />
-            ))}
-          </div>
-          <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
-          <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
-          <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
-          {recordAvailable && (
-            <>
-              <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
-              {recording && (
-                <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
-                  {recordingLabel}
-                </span>
-              )}
-            </>
-          )}
-          <Button id="ui.tutorial.addChapter" icon="plus" text={addChapterLabel} onClick={onAddChapter} />
-          <span className="min-w-0 flex-1 truncate px-single text-right text-xs text-muted-foreground">{title}</span>
-        </div>
-      </SurfaceScope>
+      {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );
 };
@@ -7193,6 +7211,18 @@ export function getLevelZClass(level: Level): string {
 
 /** @emoji 🎨 Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in ui.css). */
 export const surfaceClass = "ui-surface";
+
+/** @emoji 🎨 Whether a base-floor chrome row (navbar/footer/canvas/mode-body) must paint its own
+ * {@link surfaceClass}, or stay transparent so Layout's one continuous base surface shows through.
+ * Nested same-level paints are the "navbar ≠ canvas ≠ footer" bug class — one base floor, one fill. */
+export function shellFloorPaints(parent: SurfaceScopeValue | null): boolean {
+  return !(parent?.level === "base" && parent.fill !== "none");
+}
+
+/** @emoji 🎨 Fill class for base-floor chrome — {@link surfaceClass} when standalone, transparent on Layout's painted base. */
+export function shellFloorFillClass(parent: SurfaceScopeValue | null): string {
+  return shellFloorPaints(parent) ? surfaceClass : "bg-transparent";
+}
 
 /** @emoji 🎨 Per-level glass fill (blur + alpha) — used identically by a level's body AND its
  * attached chrome (title caps, ribbons, tab bars, rails); there is deliberately no separate
@@ -8905,13 +8935,13 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   };
 }
 
-/** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on the tabbar. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
+/** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
 /** @emoji 📏 Active stack reuses the same transparent cell; outline color comes from the silhouette SVG. */
 export const windowCapFrameActiveClass = windowCapFrameClass;
 
-/** @emoji 🪟 Gap cutout is frosted via the parent tabbar glass, not a second ribbon. */
+/** @emoji 🪟 Gap cutout stays clear — never glass — so the base/canvas floor shows through the U-notch. */
 export const windowGapFrameClass = "border-0 bg-transparent";
 
 /** @emoji 🪟 Active gap — same transparent cell; silhouette SVG paints the notch baseline. */
@@ -8956,7 +8986,7 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
 }
 
 /** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
- * shows the window-level tabbar glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
+ * shows the chip-cell glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
 export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
 /** @emoji 📏 Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
@@ -8983,25 +9013,32 @@ export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 /** @emoji 📏 Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
 export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
-/** @emoji 📏 Maximize/controls glass cell — transparent; tabbar owns the ribbon. */
+/** @emoji 📏 Maximize/controls glass cell — host stamps {@link glassClass}; fill must not span the U-gap. */
 export const windowControlsCapClass = "relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 /** @emoji 📏 Active controls cap — same transparent cell; silhouette SVG carries the active stroke. */
 export const windowControlsCapActiveClass = windowControlsCapClass;
 
-/** @emoji 📏 Multi-tab controls cap — same transparent cell on the shared tabbar glass. */
+/** @emoji 📏 Multi-tab controls cap — chip glass only; U-gap stays a clear punch-through. */
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 //#region 🪟WindowChrome
 
-/** @emoji 🎯 Tracks which panel/pane surface last received pointer or focus — exclusive active stroke without `:focus-within` CSS. */
+/** @emoji 🎯 Tracks which panel, pane, window stack, or introduction step last received pointer or focus — exclusive active stroke without `:focus-within` CSS. Activating a root clears its `data-introduced` stamps so the primary active stroke can win. */
 const surfaceActiveRoots = new Set<HTMLElement>();
 let surfaceActiveRoot: HTMLElement | null = null;
 const surfaceActiveSubscribers = new Set<() => void>();
 let surfaceActiveListenersInstalled = false;
 
+/** @emoji 🎯 Drops introduction stamps on an activated surface so the pulse cannot outrank the active stroke. */
+function clearIntroducedStamps(root: HTMLElement): void {
+  if (root.getAttribute("data-introduced") === "true") root.removeAttribute("data-introduced");
+  root.querySelectorAll('[data-introduced="true"]').forEach((el) => el.removeAttribute("data-introduced"));
+}
+
 function setSurfaceActiveRoot(next: HTMLElement | null): void {
   if (surfaceActiveRoot === next) return;
+  if (next) clearIntroducedStamps(next);
   surfaceActiveRoot = next;
   surfaceActiveSubscribers.forEach((notify) => notify());
 }
@@ -9038,7 +9075,7 @@ export interface SurfaceActiveBindProps {
   readonly onFocusCapture: (event: React.FocusEvent) => void;
 }
 
-/** @emoji 🎯 True when this surface root was the last panel/pane to receive pointer or keyboard focus. */
+/** @emoji 🎯 True when this surface root was the last panel, pane, window stack, or introduction step to receive pointer or keyboard focus. */
 export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
   const [, bump] = reactHostPort.useState(0);
   reactHostPort.useLayoutEffect(() => {
@@ -9051,7 +9088,11 @@ export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): read
     return () => {
       surfaceActiveRoots.delete(element);
       surfaceActiveSubscribers.delete(notify);
-      if (surfaceActiveRoot === element) setSurfaceActiveRoot(null);
+      // 🎯 Effect re-runs every commit (ref may attach late). Defer the clear so a same-commit
+      // re-register can reclaim the root before we drop the active stroke.
+      queueMicrotask(() => {
+        if (surfaceActiveRoot === element && !surfaceActiveRoots.has(element)) setSurfaceActiveRoot(null);
+      });
     };
   });
   const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
@@ -9108,8 +9149,9 @@ export interface WindowChromeProps {
   readonly footerGapProps?: React.HTMLAttributes<HTMLDivElement>;
   readonly footerRef?: React.Ref<HTMLDivElement>;
   readonly introduceTarget?: Element | null;
-  /** 🎓 Force silhouette border kind (e.g. introduction steps always pulse like `data-introduced`). */
+  /** 🎓 Force silhouette border kind (e.g. introduction steps pulse like `data-introduced` until activated). */
   readonly borderKind?: WindowSilhouetteBorderKind;
+  readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
 }
 
@@ -9208,6 +9250,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       footerRef,
       introduceTarget,
       borderKind,
+      stackBindProps,
       stackDataAttrs,
     },
     ref,
@@ -9256,6 +9299,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         data-active={active ? "true" : undefined}
         className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", stackClassName, className)}
         style={style}
+        {...stackBindProps}
         {...stackDataAttrs}
       >
         <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} borderKind={borderKind} />
@@ -10113,25 +10157,30 @@ export interface FooterProps {
 
 /** @emoji 🪟 Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay) but anchored to the bottom edge with the border on top instead of the bottom. */
 const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
-  const bgClass = surfaceClass;
+  const parent = useSurface();
+  const paints = shellFloorPaints(parent);
+  const bgClass = shellFloorFillClass(parent);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
-  return (
-    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <SurfaceScope level="base" fill="surface">
-        <div className="p-single flex gap-single items-center min-w-0 h-full">
-          {normalItems.map((item, index) => (
-            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-              {item.content}
-            </div>
-          ))}
-        </div>
-        {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+  const body = (
+    <>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        {normalItems.map((item, index) => (
+          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+            {item.content}
           </div>
         ))}
-      </SurfaceScope>
+      </div>
+      {centeredItems.map((item, index) => (
+        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+        </div>
+      ))}
+    </>
+  );
+  return (
+    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </footer>
   );
 };
@@ -10163,36 +10212,39 @@ export interface LayoutProps {
 const Layout: React.FC<LayoutProps> = ({ navbar, subnavbar, footer, panels, mobilePanel, canvas, mobile = false, className = "" }) => (
   <UiMobileProvider mobile={mobile}>
     <GhostProvider>
-      <div className={cn("relative flex flex-col overflow-hidden", mobile ? "h-full w-full" : "h-screen w-screen", className)}>
-        {navbar && <div className="flex-shrink-0">{navbar}</div>}
-        {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
-        {mobile ? (
-          <div className="flex flex-col flex-1 min-h-0">
-            {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
-            {/* 📱 The canvas stays mounted (never unmounted) while the mobile panel covers it, so the WASM/3D
-                world keeps its context instead of replugging on every toggle — it just stops being visible. */}
-            <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden")}>{canvas}</div>
-          </div>
-        ) : (
-          // Positioned within this region (relative, between navbar and footer), not the whole display — panels
-          // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
-          // the same way a window's options rail overlays its own canvas.
-          <div className="flex flex-1 min-h-0 relative">
-            {/* 🎓 No z-index here (was z-0): trapping this column in its own stacking context would make
-                windows unreachable by [data-introduction-elevated] — a window can only rise above the
-                fullscreen introduction veil if it participates in the root stacking context. */}
-            <div className="flex flex-col flex-1 min-w-0 relative">
-              <div className="flex flex-1 min-h-0 relative">
-                <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
-              </div>
+      {/* 🎨 One continuous base floor for navbar + canvas + footer — chrome rows stay transparent over this paint. */}
+      <div data-slot="layout" data-level="base" className={cn("relative flex flex-col overflow-hidden", surfaceClass, mobile ? "h-full w-full" : "h-screen w-screen", className)}>
+        <SurfaceScope level="base" fill="surface">
+          {navbar && <div className="flex-shrink-0">{navbar}</div>}
+          {subnavbar && <div className="flex-shrink-0">{subnavbar}</div>}
+          {mobile ? (
+            <div className="flex flex-col flex-1 min-h-0">
+              {mobilePanel && mobilePanel.visible && <MobilePanel {...mobilePanel} />}
+              {/* 📱 The canvas stays mounted (never unmounted) while the mobile panel covers it, so the WASM/3D
+                  world keeps its context instead of replugging on every toggle — it just stops being visible. */}
+              <div className={cn("flex-1 min-w-0 min-h-0 relative", mobilePanel?.visible && "hidden")}>{canvas}</div>
             </div>
-            {ANCHORS.map((anchor) => {
-              const panelProps = panels?.[anchor];
-              return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
-            })}
-          </div>
-        )}
-        {footer && <div className="flex-shrink-0">{footer}</div>}
+          ) : (
+            // Positioned within this region (relative, between navbar and footer), not the whole display — panels
+            // open below the navbar / above the footer instead of floating over them, while still overlaying canvas
+            // the same way a window's options rail overlays its own canvas.
+            <div className="flex flex-1 min-h-0 relative">
+              {/* 🎓 No z-index here (was z-0): trapping this column in its own stacking context would make
+                  windows unreachable by [data-introduction-elevated] — a window can only rise above the
+                  fullscreen introduction veil if it participates in the root stacking context. */}
+              <div className="flex flex-col flex-1 min-w-0 relative">
+                <div className="flex flex-1 min-h-0 relative">
+                  <div className="flex-1 min-w-0 min-h-0 relative">{canvas}</div>
+                </div>
+              </div>
+              {ANCHORS.map((anchor) => {
+                const panelProps = panels?.[anchor];
+                return panelProps ? <Panel key={anchor} {...panelProps} anchor={anchor} /> : null;
+              })}
+            </div>
+          )}
+          {footer && <div className="flex-shrink-0">{footer}</div>}
+        </SurfaceScope>
       </div>
     </GhostProvider>
   </UiMobileProvider>
@@ -14730,30 +14782,35 @@ export interface NavbarProps {
  * Navbar holds the data fields for a Navbar record.
  **/
 function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
-  const bgClass = surfaceClass;
+  const parent = useSurface();
+  const paints = shellFloorPaints(parent);
+  const bgClass = shellFloorFillClass(parent);
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
-  return (
-    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <SurfaceScope level="base" fill="surface">
-        <div className="p-single flex gap-single items-center min-w-0 h-full">
-          {normalItems.map((item, index) => (
-            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-              {item.content}
-            </div>
-          ))}
-          {showFullscreenToggle ? (
-            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
-              <NavbarFullscreenToggle />
-            </div>
-          ) : null}
-        </div>
-        {centeredItems.map((item, index) => (
-          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+  const body = (
+    <>
+      <div className="p-single flex gap-single items-center min-w-0 h-full">
+        {normalItems.map((item, index) => (
+          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+            {item.content}
           </div>
         ))}
-      </SurfaceScope>
+        {showFullscreenToggle ? (
+          <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
+            <NavbarFullscreenToggle />
+          </div>
+        ) : null}
+      </div>
+      {centeredItems.map((item, index) => (
+        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
+        </div>
+      ))}
+    </>
+  );
+  return (
+    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      {paints ? <SurfaceScope level="base" fill="surface">{body}</SurfaceScope> : body}
     </nav>
   );
 }
@@ -26036,9 +26093,11 @@ VirtualFileSystem.displayName = "VirtualFileSystem";
  * Container component for canvas window layout.
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
+  const parent = useSurface();
+  const bgClass = shellFloorFillClass(parent);
   return (
     <LevelProvider level="base">
-      <div id={id} data-slot="canvas" data-level="base" className={cn("box-border h-full w-full p-single", surfaceClass)}>
+      <div id={id} data-slot="canvas" data-level="base" className={cn("box-border h-full w-full p-single", bgClass)}>
         {children}
       </div>
     </LevelProvider>
@@ -26950,7 +27009,15 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   };
 
   const controlsCap = (
-    <div data-slot="mode-dock-controls-cap" data-window-silhouette-chip data-dock="top" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
+    <div
+      data-slot="mode-dock-controls-cap"
+      data-window-silhouette-chip
+      data-dock="top"
+      className={cn(
+        perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass,
+        glassClass,
+      )}
+    >
       {showMaximize ? (
         <button
           type="button"
@@ -27000,19 +27067,22 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           ref={ref}
           data-slot="mode-dock-tabbar"
           data-ui-reveal-region="window-cap"
-          className={cn("grid min-h-medium min-w-0 items-stretch", glassClass, modeDragActive && dropZoneReadyClass)}
+          className={cn("grid min-h-medium min-w-0 items-stretch bg-transparent", modeDragActive && dropZoneReadyClass)}
           style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
         >
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
-              <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
+              <div key={`ghost-${tab.id}`} className={cn("relative z-20 flex min-h-medium items-stretch justify-self-start", glassClass)} style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
                 {renderGhostTab(tab)}
               </div>
             ) : (
               <div
                 key={tab.id}
                 data-slot={activeId === tab.id && stackGloballyActive ? "mode-dock-tab-active-cell" : "mode-dock-tab-cell"}
-                className={cn("relative flex min-h-medium items-stretch justify-self-start overflow-visible", activeId === tab.id && stackGloballyActive ? "z-10" : "z-20")}
+                className={cn(
+                  "relative flex min-h-medium items-stretch justify-self-start overflow-visible",
+                  activeId === tab.id && stackGloballyActive ? "z-10" : cn("z-20", glassClass),
+                )}
                 style={{ gridColumn: displayChromeGrid.tabCol(index) }}
               >
                 {renderTab(
@@ -27022,7 +27092,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
               </div>
             ),
           )}
-          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch" style={{ gridColumn: displayChromeGrid.gapCol }}>
+          <div className="relative z-0 flex min-h-medium min-w-0 items-stretch bg-transparent" style={{ gridColumn: displayChromeGrid.gapCol }}>
             {tabGap}
           </div>
           <div className="relative z-10 flex min-h-medium items-stretch justify-self-end" style={{ gridColumn: displayChromeGrid.controlsCol }}>
@@ -27037,8 +27107,8 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", glassClass)}>
-      <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
+    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
+      <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, glassClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
             tab.preview === "ghost" ? (
@@ -27076,7 +27146,13 @@ interface ModeDockStackProps {
 
 const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsById, activeWindowId, mobile = false }) => {
   const dock = reactHostPort.useContext(ModeDockContext);
+  const stackRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [stackEl, setStackEl] = reactHostPort.useState<HTMLDivElement | null>(null);
+  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(stackRef);
+  const setStackNode = reactHostPort.useCallback((element: HTMLDivElement | null) => {
+    stackRef.current = element;
+    setStackEl(element);
+  }, []);
   const tabBarRef = reactHostPort.useRef<HTMLDivElement>(null);
   const bodyRef = reactHostPort.useRef<HTMLDivElement>(null);
   const activeId = node.activeId ?? node.children[0]?.id;
@@ -27092,6 +27168,8 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   }, [dock, stackPath, node.children.length]);
 
   const activeDescriptor = activeId ? windowsById.get(activeId) : undefined;
+  // 🪟 Layout focus (command routing / tab fills) stays on `activeWindowId`. The silhouette primary
+  // stroke only follows surface selection — same click/focus lifecycle as panels and panes.
   const stackGloballyActive = Boolean(activeId && activeWindowId === activeId);
   const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
@@ -27116,8 +27194,8 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <SurfaceScope level="window">
-      <div ref={setStackEl} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
-        <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
+      <div ref={setStackNode} {...surfaceActiveProps} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={surfaceActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
+        <ModeDockStackSilhouetteBorder stack={stackEl} active={surfaceActive} />
         {chromeGrid ? (
           <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
         ) : (
@@ -27188,6 +27266,8 @@ function renderModeDockNode(node: WindowLayoutAxisNode | WindowLayoutStackNode, 
 
 /** @emoji 🪟 Golden-Layout-style docking mode shell with tab stacks, drag-dock, resize, maximize, and close. */
 const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChange, onWindowClose, layout, onLayoutChange, onTemplateDrop, children, className = "", mobile = false }) => {
+  const parentSurface = useSurface();
+  const modeBodyFillClass = shellFloorFillClass(parentSurface);
   const windowsById = reactHostPort.useMemo(() => new Map(windows.map((window) => [window.id, window])), [windows]);
   const windowsKey = reactHostPort.useMemo(() => windows.map((window) => window.id).join("|"), [windows]);
   const layoutKey = reactHostPort.useMemo(() => JSON.stringify(layout ?? null), [layout]);
@@ -27696,7 +27776,7 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
           ref={modeBodyRef}
           data-slot="mode-body"
           data-level="base"
-          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", surfaceClass, MODE_CANVAS_INSET_CLASS)}
+          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", modeBodyFillClass, MODE_CANVAS_INSET_CLASS)}
           onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
           onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
         >
@@ -28822,6 +28902,61 @@ if (import.meta.vitest) {
         expect(path).toBeTruthy();
         expect(path?.getAttribute("stroke")).toBe("var(--introduced-border-color, var(--color-secondary))");
         expect(path?.getAttribute("class") || "").toContain("window-silhouette-border-introduced");
+      } finally {
+        rectSpy.mockRestore();
+      }
+    });
+
+    it("introduction step activates on click then returns to normal after a background click", async () => {
+      const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue({
+        x: 0,
+        y: 0,
+        top: 40,
+        left: 40,
+        bottom: 200,
+        right: 360,
+        width: 320,
+        height: 160,
+        toJSON: () => ({}),
+      } as DOMRect);
+      try {
+        const { container } = render(
+          <UIIntroduction
+            introduction={{
+              title: "Welcome",
+              steps: [
+                {
+                  id: "welcome",
+                  title: "Welcome",
+                  body: "Introduction body",
+                  introduce: null,
+                  show: [],
+                  placement: "center",
+                  interactions: [],
+                  ordered: false,
+                  logos: [],
+                  demonstrations: [],
+                },
+              ],
+            }}
+            stepIndex={0}
+            onStepIndexChange={vi.fn()}
+            onDismiss={vi.fn()}
+          />,
+        );
+        const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+        const border = () => stack.querySelector('[data-slot="window-chrome-silhouette-border"]');
+        expect(border()?.getAttribute("data-kind")).toBe("introduced");
+        fireEvent.pointerDown(stack.querySelector('[data-slot="window-chrome-body"]')!);
+        await waitFor(() => {
+          expect(stack.getAttribute("data-active")).toBe("true");
+          expect(border()?.getAttribute("data-kind")).toBe("active");
+        });
+        fireEvent.pointerDown(document.body);
+        await waitFor(() => {
+          expect(stack.getAttribute("data-active")).toBeNull();
+          expect(border()?.getAttribute("data-kind")).toBe("normal");
+        });
       } finally {
         rectSpy.mockRestore();
       }
@@ -30484,6 +30619,50 @@ if (import.meta.vitest) {
       expect(warnSpy).not.toHaveBeenCalled();
       warnSpy.mockRestore();
     });
+
+    it("shellFloorPaints/shellFloorFillClass defer opaque fill only on an already-painted base floor", () => {
+      expect(shellFloorPaints(null)).toBe(true);
+      expect(shellFloorFillClass(null)).toBe(surfaceClass);
+      expect(shellFloorPaints({ level: "base", fill: "surface" })).toBe(false);
+      expect(shellFloorFillClass({ level: "base", fill: "surface" })).toBe("bg-transparent");
+      expect(shellFloorPaints({ level: "base", fill: "none" })).toBe(true);
+      expect(shellFloorPaints({ level: "window", fill: "surface" })).toBe(true);
+    });
+
+    it("Layout paints one continuous base floor; navbar, footer, canvas, and mode-body stay transparent over it", () => {
+      const { container } = render(
+        <Layout
+          navbar={<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />}
+          footer={<Footer items={[{ key: "f", content: "Foot" }]} />}
+          canvas={
+            <Mode windows={[{ id: "w", title: "W", iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />
+          }
+        />,
+      );
+      const layout = container.querySelector('[data-slot="layout"]');
+      expect(layout?.getAttribute("data-level")).toBe("base");
+      expect(layout?.className).toContain("ui-surface");
+      const navbar = container.querySelector('[data-slot="navbar"]');
+      expect(navbar?.getAttribute("data-level")).toBe("base");
+      expect(navbar?.className).toContain("bg-transparent");
+      expect(navbar?.className).not.toContain("ui-surface");
+      const footer = container.querySelector('[data-slot="footer"]');
+      expect(footer?.getAttribute("data-level")).toBe("base");
+      expect(footer?.className).toContain("bg-transparent");
+      expect(footer?.className).not.toContain("ui-surface");
+      const modeBody = container.querySelector('[data-slot="mode-body"]');
+      expect(modeBody?.getAttribute("data-level")).toBe("base");
+      expect(modeBody?.className).toContain("bg-transparent");
+      expect(modeBody?.className).not.toContain("ui-surface");
+    });
+
+    it("Navbar, Footer, Canvas, and Mode-body paint ui-surface at base when used standalone outside Layout", () => {
+      expect(renderToStaticMarkup(<Navbar items={[{ key: "n", content: "Nav" }]} showFullscreenToggle={false} />)).toContain("ui-surface");
+      expect(renderToStaticMarkup(<Footer items={[{ key: "f", content: "Foot" }]} />)).toContain("ui-surface");
+      expect(renderToStaticMarkup(<Canvas>c</Canvas>)).toContain("ui-surface");
+      const { container } = render(<Mode windows={[{ id: "w", title: "W", iconId: "app-window", children: <div>Body</div> }]} activeWindowId="w" onActiveWindowChange={() => {}} />);
+      expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
+    });
   });
 
   describe("ContextMenu", () => {
@@ -31686,7 +31865,7 @@ if (import.meta.vitest) {
       });
     });
 
-    it("Mode lays out all windows and marks the active one", () => {
+    it("Mode lays out all windows and marks the active one", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -31719,7 +31898,10 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
@@ -31733,19 +31915,25 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
-      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
-      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
-      expect(activeStack?.className).toContain("z-window");
-      expect(inactiveStack?.className).toContain("z-window");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
+      const layoutActiveStack = container.querySelector('[data-slot="window"][data-active="true"]')?.closest('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const layoutInactiveStack = [...container.querySelectorAll('[data-slot="mode-dock-stack"]')].find((stack) => !stack.querySelector('[data-slot="window"][data-active="true"]')) as HTMLElement;
+      expect(layoutActiveStack?.className).toContain("z-window");
+      expect(layoutInactiveStack?.className).toContain("z-window");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      fireEvent.pointerDown(layoutActiveStack.querySelector('[data-slot="mode-dock-stack-body"]')!);
+      await waitFor(() => {
+        expect(layoutActiveStack.getAttribute("data-active")).toBe("true");
+        expect(layoutActiveStack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
+      expect(layoutInactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).toContain("border-0");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("border-0");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-tab-cap-corner"]')).toBeNull();
+      expect(layoutActiveStack?.querySelector('[data-slot="mode-dock-controls-cap-corner"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("border-emphasized");
     });
 
@@ -31780,7 +31968,7 @@ if (import.meta.vitest) {
       expect(panel?.style.zIndex).toBe("");
     });
 
-    it("Mode clears multi-tab active chrome on inactive stacks", () => {
+    it("Mode clears multi-tab active chrome on inactive stacks", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-lg">
           <Mode
@@ -31816,8 +32004,8 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      const inactiveStack = container.querySelector('[data-slot="mode-dock-stack"]:not([data-active="true"])');
-      const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
+      const activeStack = container.querySelector('[data-slot="window"][data-active="true"]')?.closest('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const inactiveStack = [...container.querySelectorAll('[data-slot="mode-dock-stack"]')].find((stack) => !stack.querySelector('[data-slot="window"][data-active="true"]')) as HTMLElement;
       const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
       const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
       expect(inactiveStackTab?.className).not.toContain("border-normal");
@@ -31829,12 +32017,22 @@ if (import.meta.vitest) {
       expect(activeStackTab?.className).toContain("border-0");
       expect(inactiveStackTab?.className).toContain("text-element");
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-cell"]')?.className).toContain("ui-glass");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tab-cell"]')?.className).toContain("ui-glass");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      fireEvent.pointerDown(activeStack.querySelector('[data-slot="mode-dock-stack-body"]')!);
+      await waitFor(() => {
+        expect(activeStack.getAttribute("data-active")).toBe("true");
+        expect(activeStack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
       expect(activeStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeTruthy();
@@ -31947,7 +32145,7 @@ if (import.meta.vitest) {
       expect(corners.every((node) => node.className.includes("cursor-move"))).toBe(true);
     });
 
-    it("Mode tab stack shows only the active window body", () => {
+    it("Mode tab stack shows only the active window body", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -31990,10 +32188,18 @@ if (import.meta.vitest) {
       expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).not.toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cell"]')?.className).toContain("ui-glass");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
-      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      fireEvent.pointerDown(container.querySelector('[data-slot="mode-dock-stack-body"]')!);
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-active")).toBe("true");
+        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
       const tabOrder = () => [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
       expect(tabOrder()).toEqual(["a", "b"]);
       fireEvent.click(screen.getByText("Beta"));
@@ -32003,7 +32209,7 @@ if (import.meta.vitest) {
       expect(tabOrder()).toEqual(["a", "b"]);
     });
 
-    it("Mode tab stack places body under active tab and gap only", () => {
+    it("Mode tab stack places body under active tab and gap only", async () => {
       const { container } = render(
         <div className="h-layout-story w-layout-story-md">
           <Mode
@@ -32062,7 +32268,12 @@ if (import.meta.vitest) {
       expect(stackBody?.className).toContain("border-0");
       expect(stackBody?.getAttribute("data-level")).toBe("base");
       expect(stackBody?.className).toContain("ui-surface");
-      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      fireEvent.pointerDown(stackBody!);
+      await waitFor(() => {
+        expect(container.querySelector('[data-slot="mode-dock-stack"]')?.getAttribute("data-active")).toBe("true");
+        expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
     });
 
     it("Mode close removes a tab and collapses an emptied stack", () => {
@@ -36701,6 +36912,34 @@ if (treeVitest) {
       });
       fireEvent.click(paneContainer.querySelector('[data-slot="pane-fold"]')!);
       expect(onFoldToggle).toHaveBeenCalled();
+    });
+
+    it("activating a surface clears its introduced stamps so the active stroke can win", async () => {
+      const { fireEvent, render, waitFor } = await import("@testing-library/react");
+      const { container } = render(
+        <div className="h-layout-story w-layout-story-md">
+          <Mode
+            windows={[{ id: "main", title: "Main", iconId: "app-window", children: <div id="framework.window.main">Main Body</div> }]}
+            layout={{ kind: "stack", children: [{ kind: "window", id: "main" }], activeId: "main" }}
+            activeWindowId="main"
+            onActiveWindowChange={() => {}}
+          />
+        </div>,
+      );
+      const stack = container.querySelector('[data-slot="mode-dock-stack"]') as HTMLElement;
+      const scroll = container.querySelector("#framework\\.window\\.main") as HTMLElement;
+      scroll.setAttribute("data-introduced", "true");
+      expect(resolveWindowSilhouetteBorderKind(stack.querySelector('[data-slot="window"]'))).toBe("introduced");
+      stack.setAttribute("data-silhouette-remeasure", "introduced");
+      await waitFor(() => {
+        expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("introduced");
+      });
+      fireEvent.pointerDown(stack.querySelector('[data-slot="mode-dock-stack-body"]')!);
+      await waitFor(() => {
+        expect(scroll.getAttribute("data-introduced")).toBeNull();
+        expect(stack.getAttribute("data-active")).toBe("true");
+        expect(stack.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
     });
 
     it("panel window-variant tabs use mode-dock pill chrome and reserve a U-gap", () => {

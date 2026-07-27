@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern shellFloorPaints|Layout paints one continuous|paint ui-surface at base when used standalone|Layout on mobile|Mode renders|normal shell edges on panel
+
+> bun ./script.ts test --testNamePattern "shellFloorPaints|Layout paints one continuous|paint ui-surface at base when used standalone|Layout on mobile|Mode renders|normal shell edges on panel"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  6 passed | 464 skipped (470)
+   Start at  18:41:27
+   Duration  4.97s (transform 2.41s, setup 165ms, import 3.91s, tests 252ms, environment 400ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

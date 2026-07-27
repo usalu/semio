@@ -15,3 +15,6 @@ path = "lib.rs"
 pack_core = { path = "../../../pack/core/rs" }
 thiserror = "2.0.12"
 serde = { version = "1", features = ["derive"] }
+
+[dev-dependencies]
+serde_json = "1.0.140"

@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern two side-by-side stacks|Mode dock-stack silhouette|uses normal shell edges
+
+> bun ./script.ts test --testNamePattern "two side-by-side stacks|Mode dock-stack silhouette|uses normal shell edges"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  2 passed | 468 skipped (470)
+   Start at  18:41:41
+   Duration  4.51s (transform 2.56s, setup 217ms, import 3.62s, tests 86ms, environment 297ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

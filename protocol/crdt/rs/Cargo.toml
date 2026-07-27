@@ -14,3 +14,6 @@ path = "lib.rs"
 [dependencies]
 protocol_core = { path = "../../core/rs" }
 protocol_command = { path = "../../command/rs" }
+
+[dev-dependencies]
+serde = { version = "1", features = ["derive"] }

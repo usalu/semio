@@ -1,0 +1,88 @@
+Wave CW2 — protocol_command implementation report
+==================================================
+
+Crate: protocol/command/rs (package protocol_command)
+Contract: .repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md
+          ## Amendment -> ### protocol_command section (frozen signatures)
+Cross-cutting context read: .repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md
+
+What was implemented
+---------------------
+Replaced the stub lib.rs with a full single-file implementation, organized in the exact region
+order from the contract:
+
+- //#region 🔖Operation
+  - OperationDiff<P>, Operation<P> traits — signatures match the contract exactly, including the
+    two new defaulted methods (conflict_rule, state_class) and the reconcile signature change
+    (now &self, returns (P, Vec<ReconcileReport>) instead of vcs::StudioConflict).
+  - ReconcileReport, ReconcileSeverity types.
+- //#region 🔖OpText — OpText trait, verbatim per contract (print_op/parse_op, dsl_core::TextError).
+- //#region 🔖Meta — OperationMeta, Edit<Op>, field shapes exactly as specified, with
+  #[serde(rename_all = "camelCase")] and skip_serializing_if attributes carried over from vcs's
+  original OperationMeta/Edit (a documented choice — the contract fixes field shapes but not serde
+  attributes; preserving vcs's wire behavior avoids a silent JSON-shape break for any consumer that
+  round-trips these types across the vcs -> protocol_command move).
+- //#region 🔖Collection — Identified<TId>, Patchable<TPatch> (split into apply_patch +
+  diff_patch per the frozen contract, which differs from vcs's current single
+  apply_patch(&mut self, &TPatch) -> TPatch), ItemPatch, CollectionDiff, CollectionOperation (Add
+  now carries its own `id` field, Move's target field is named `to` — both per the frozen
+  contract's literal signature, which differs from vcs's current Add{index,item}/Move{id,to_index}
+  shape), apply_collection_operation, invert_collection_operation, collection_diff_from_operation.
+- //#region 🔖Descriptor — OperationDescriptor, register_operation_descriptor,
+  operation_descriptor, mirroring vcs::CodecRegistry's OnceLock<RwLock<HashMap>> pattern.
+- //#region 🔖Upcast — OperationUpcaster<Op> trait, verbatim.
+- //#region 🔖Events — OperationEvent, verbatim.
+- //#region 🔖Outcome — CommandOutcome<Diff>, verbatim.
+- //#region 🧪Tests — 14 inline #[test] fns (no quick/long/exhaustive tiers needed, nothing slow):
+  Operation/OperationDiff apply+backwards+absorb laws and default-method stability; OpText
+  round-trip + error path; OperationMeta and Edit<Op> serde round-trips; CollectionOperation
+  apply/invert round-trip for all four kinds (Add/Remove/Move/Patch) plus collection_diff_from_
+  operation projection for all four kinds; OperationDescriptor fingerprint determinism +
+  field-sensitivity + a golden hex pin; register/lookup of the descriptor registry;
+  OperationUpcaster idempotence law; CommandOutcome::default() emptiness; OperationEvent serde
+  round-trip.
+
+Deviations from / choices within the contract (all "your choice" seams, documented inline too)
+-------------------------------------------------------------------------------------------------
+1. OperationDescriptor::fingerprint computation: the contract only fixes the struct's field shapes
+   ("blake3 over the descriptor's canonical bytes"), not the encoding. Chose canonical-JSON
+   (serde_json::to_vec over a private Canonical{id, schema_version, state_class, conflict_rule}
+   struct) hashed with blake3. Added OperationDescriptor::new(...) as the one constructor that
+   computes it, since the contract shows only the struct + registry fns, no constructor. Pinned
+   with a golden hex test (fingerprint of SchemaId("note.append")/SchemaVersion(1)/Persistent/
+   Merge(TextSequence) == 8c6c0b22512540811343d8caa8d147f48e936728105861c4360bb202f626d517).
+2. OperationDescriptor derives only Clone/Debug/PartialEq (contract shows the struct with no derive
+   attribute at all) — Clone is required for the registry's get().cloned() lookup pattern that
+   mirrors vcs::CodecRegistry exactly.
+3. Patchable<TPatch>'s diff_patch(&self, other: &Self) -> Option<TPatch> direction: chosen to mean
+   "the patch that turns self into other" (consistent with Operation::diff(&self, base)'s "self
+   relative to an argument" convention). invert_collection_operation composes
+   after.diff_patch(&prior) to recover the same inverse-patch behavior vcs's single-method
+   apply_patch used to return directly. Documented inline at the trait definition.
+4. CollectionOperation/ReconcileReport/OperationMeta/Edit/etc. use exactly the derives the contract
+   lists literally (no added Eq beyond what vcs's originals had for CollectionDiff/ItemPatch, which
+   the contract says are "identical to vcs's today").
+5. No apply_operation/absorb_diff free functions were added — the amendment's protocol_command
+   block does not list them (they existed in vcs's original 🔖Operation region but are superseded
+   by direct diff()/apply() calls); omitted to avoid adding API surface the frozen contract doesn't
+   specify.
+6. Cargo.toml was NOT touched — the pre-existing one already matched the contract's dependency list
+   (protocol_core, dsl_core, serde, serde_json, blake3) exactly.
+
+Build/test status
+------------------
+- cargo build -p protocol_command                              -> PASS (no warnings)
+- cargo build -p protocol_command --target wasm32-unknown-unknown -> PASS (wasm32-clean, as required)
+- cargo test -p protocol_command                                -> PASS, 14/14 tests green, 0 failed
+- cargo clippy -p protocol_command --all-targets                -> PASS, 0 warnings
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/protocol/command/rs/lib.rs (replaced stub with full implementation)
+
+Files intentionally NOT touched
+--------------------------------
+- /Users/ueli/Documents/semio/protocol/command/rs/Cargo.toml (already correct)
+- /Users/ueli/Documents/semio/protocol/command/rs/project.json, script.ts (owned by scaffolding wave)
+- root Cargo.toml, .vscode/launch.json (owned by closing wave)
+- protocol_core (already implemented by another wave agent; read-only reference here)

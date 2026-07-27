@@ -1,0 +1,12 @@
+
+> nx run @semio-tech/framework-renderer-react:lint
+
+> bun ./script.ts lint
+
+framework-renderer-react: region/host-contract lint passed
+
+
+
+ NX   Successfully ran target lint for project @semio-tech/framework-renderer-react
+
+

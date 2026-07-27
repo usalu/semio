@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern=Mode |WindowChrome|shellFloor|U-cutout|silhouette|mode-dock
+
+> bun ./script.ts test --testNamePattern="Mode |WindowChrome|shellFloor|U-cutout|silhouette|mode-dock"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  30 passed | 440 skipped (470)
+   Start at  18:44:25
+   Duration  5.62s (transform 2.60s, setup 195ms, import 4.09s, tests 703ms, environment 454ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

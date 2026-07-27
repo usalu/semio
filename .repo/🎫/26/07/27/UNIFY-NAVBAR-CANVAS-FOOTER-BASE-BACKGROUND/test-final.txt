@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/ui-react:test --testNamePattern Mode lays out all windows|Navbar, Footer, Canvas|Layout paints one continuous|shellFloorPaints
+
+> bun ./script.ts test --testNamePattern "Mode lays out all windows|Navbar, Footer, Canvas|Layout paints one continuous|shellFloorPaints"
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
+
+
+ Test Files  1 passed (1)
+      Tests  4 passed | 466 skipped (470)
+   Start at  18:42:48
+   Duration  4.27s (transform 2.03s, setup 195ms, import 3.23s, tests 221ms, environment 385ms)
+
+
+
+
+ NX   Successfully ran target test for project @semio-tech/ui-react
+
+

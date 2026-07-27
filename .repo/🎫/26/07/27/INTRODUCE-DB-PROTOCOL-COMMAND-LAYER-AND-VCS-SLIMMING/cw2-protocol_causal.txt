@@ -1,0 +1,141 @@
+Wave CW2 — protocol_causal implementation report
+==================================================
+
+Crate: protocol/causal/rs (package protocol_causal)
+Contract: .repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md
+          ## Amendment -> ### protocol_causal section (frozen signatures)
+Cross-cutting context read: .repo/🎫/26/07/27/INTRODUCE-DB-PROTOCOL-COMMAND-LAYER-AND-VCS-SLIMMING/contract.md
+Ground truth read: protocol/core/rs/lib.rs, protocol/command/rs/lib.rs (both already implemented and
+verified building clean by prior wave agents), framework/core/rs/lib.rs 🔖Sync region (L6119-6573,
+OperationEnvelope/DocumentDiff/InverseOperation/OpDag + its original op_dag_tests), vcs/rs/lib.rs
+operation_envelope_from_edit (L2139-2181).
+
+What was implemented
+---------------------
+Replaced the stub lib.rs with a full single-file implementation, organized in the exact region
+order from the contract:
+
+- //#region 🔖Envelope — OperationEnvelope, DocumentDiff, InverseOperation. Field shapes exactly as
+  the frozen contract's code block (NOT the framework-core originals — the contract's shapes are a
+  simplified redesign: no schema_version/payload_hash on the envelope, InverseOperation collapsed to
+  just {schema, inverse_diff} instead of the original's {target_operation, inverse_diff: DocumentDiff,
+  base_version, dependencies, undo_policy}). Implemented literally per the contract's struct
+  definitions, per the task instruction to implement strictly against the frozen signature block.
+- //#region 🔖OpDag — OpDag/InsertResult/OpDagError/insert/ready/drain_applied_envelopes/seed_applied,
+  ported verbatim from framework/core's algorithm with field names adapted to the new envelope shape
+  (id -> operation_id, deps -> dependencies). Two contract-mandated signature changes from the
+  original: OpDagError::Duplicate is now a unit variant (was Duplicate(String)); seed_applied takes a
+  single protocol_core::OperationId (was impl IntoIterator<Item = String>); ready() returns
+  Vec<protocol_core::OperationId> (was Vec<&OperationEnvelope>).
+- //#region 🔖Frontier — FrontierSummary (document_id/head_edit_ordinal/head_edit_id/last_commit_seq/
+  chain_hash, no `alternatives` field — this is the causal/runtime twin, deliberately distinct from
+  protocol_history's durable-log FrontierSummary per the contract's explicit note), FrontierComparison,
+  frontier_delta.
+- //#region 🔖Transform — TransformOutcome<Op>, OperationTransform<P>: protocol_command::Operation<P>.
+  New trait, no prior vcs/framework-core equivalent to port from.
+- //#region 🔖Bridge — operation_envelope_from_edit<P, Op: protocol_command::Operation<P>>(edit,
+  document_id) -> Vec<OperationEnvelope>, per the contract's exact signature (see deviations below for
+  how this maps onto vcs's original single-envelope, whole-edit-serializing implementation).
+- //#region 🧪Tests — 20 inline #[test] fns, with a `mod quick` submodule under 🔖OpDag housing the
+  amendment's "OpDag permutation-convergence (quick tier)" requirement: envelope/frontier serde round
+  trips; OpDag's 5 original framework-core scenarios ported to the new field names (pending-until-deps,
+  causal-order drain, duplicate-pending error, already-applied no-error, seed_applied unblocking);
+  3 topological-order convergence tests on a hand-built 4-node diamond DAG (A; B,C dep A; D dep B,C) —
+  two genuinely-topological orderings both converge to the full applied set, plus one test proving a
+  non-topological order ("d" before "c") is correctly rejected as Pending rather than silently
+  accepted, before converging once "c" arrives; TransformOutcome Unchanged/Transformed/Conflict cases
+  on a dummy CausalAddOp; operation_envelope_from_edit with explicit operation_meta (verifies id/actor/
+  deps/timestamp/diff-payload/inverse-payload all come from meta) and without any meta at all
+  (verifies the Op-trait-then-structural-default fallback chain, including the Null inverse when
+  backwards is shorter than forwards).
+
+Deviations from / choices within the contract (all "your choice" seams, documented inline too)
+-------------------------------------------------------------------------------------------------
+1. operation_envelope_from_edit is the biggest genuine ambiguity in this crate's section. The
+   contract's signature (`fn(edit: &Edit<Op>, document_id: &DocumentId) -> Vec<OperationEnvelope>`)
+   is materially different from vcs's original (`fn(envelope: &DocumentVcsEnvelope<P, Operation>,
+   edit: &Edit<Operation>, deps: Vec<OperationId>) -> Result<OperationEnvelope, VcsError>`, one
+   envelope per whole Edit, payload = serde_json::to_value(the whole edit)): no vcs envelope, no
+   `deps` parameter, and a Vec return. Resolved as: one OperationEnvelope per `edit.forwards[i]`,
+   since only per-op iteration lets `Op: protocol_command::Operation<P>`'s own trait methods
+   (operation_id/dependencies/author_id/timestamp) supply metadata without a base `P` in scope. Each
+   envelope's fields are built with a documented fallback chain: `edit.operation_meta[i]` (the
+   richer, already-computed per-op metadata a live appender fills in) first, then the `Op` trait
+   method, then a structural default (`"{edit.id}#{i}"` for the id, `edit.actor` or `"unknown"` for
+   the actor, `HybridLogicalTimestamp::new(0, 0)` for the timestamp) — so the function is total even
+   for a bare Edit with an empty operation_meta vec. `diff.payload` = the forward op serialized raw
+   (serde_json::to_value(op)); `inverse.inverse_diff` = the corresponding `edit.backwards[i]`
+   serialized, or `Value::Null` if backwards is shorter (mirrors protocol_history::HistoryEdit's own
+   documented note that backward op count may differ from forward). `diff.schema`/`inverse.schema`
+   use `std::any::type_name::<Op>()` — the only stable per-Op-type tag available with no
+   OperationDescriptor/SchemaId lookup in scope inside a fully generic bridge fn; a caller wanting a
+   real SchemaId should overwrite the field after the call. All four choices are commented inline at
+   the fn definition and covered by both test cases (with-meta and without-meta).
+2. OpDagError has no `thiserror` derive (this crate's Cargo.toml, matching the contract's stated
+   dep list, has no thiserror dependency — only protocol_core, protocol_command, serde, serde_json).
+   Hand-rolled `impl Display` + `impl std::error::Error` instead, kept minimal since the contract
+   only fixes the enum shape (`Duplicate`, no payload).
+3. OpDag's `insert` preserves a pre-existing framework-core quirk verbatim rather than fixing it,
+   per the contract's explicit "No behavior change" instruction for this port: a dependency is
+   treated as "not blocking" for the *newly-inserted* envelope's own Applied/Pending classification
+   once it is merely *known* to the dag (present in `envelopes`, e.g. via an earlier Pending insert),
+   not only once it is actually `applied`. This can in principle let an envelope classify as Applied
+   before every ancestor is genuinely applied, if envelopes are inserted in a scrambled (non-
+   topological) order with certain shapes (verified this by hand-tracing a 3-node chain A<-B<-D
+   inserted as [B, D, A]). It never manifests for insertions performed in true topological order,
+   which is exactly what this crate's own `quick` convergence tests exercise; documented at the
+   `OpDag` struct and the `insert` method, and flagged here rather than silently patched, since
+   silently changing OpDag's behavior was explicitly out of scope for a verbatim port.
+4. FrontierSummary/frontier_delta have no prior implementation anywhere in the repo to port from
+   (grepped; only protocol_history's structurally-similar-but-distinct twin exists, in another
+   agent's not-yet-implemented section) — the contract fixes the enum/struct shapes only, not the
+   comparison algorithm. Implemented: identical (ordinal, head_edit_id, chain_hash) -> Equal; a
+   strictly greater/lesser head_edit_ordinal alone -> Ahead/Behind (a bare summary carries no
+   ancestry chain beyond its tip, so ordinal order is the only signal available at this layer);
+   equal ordinal with differing head_edit_id/chain_hash -> Diverged, with common_edit_count
+   conservatively reported as `min(local.head_edit_ordinal, remote.head_edit_ordinal)` since a
+   summary-only comparison cannot walk history for the true common ancestor. Documented inline;
+   covered by 4 tests (Equal/Ahead/Behind/Diverged) plus a serde round-trip.
+5. Cargo.toml was NOT touched — the pre-existing scaffolded one (protocol_core, protocol_command,
+   serde, serde_json path/version deps) already matched the contract's dependency list exactly.
+
+Build/test status
+------------------
+- cargo build -p protocol_causal                                -> PASS (no warnings)
+- cargo build -p protocol_causal --target wasm32-unknown-unknown -> PASS (wasm32-unknown-unknown is
+  installed locally; crate is wasm32-clean as required — no std::io, no native-only APIs)
+- cargo test -p protocol_causal                                  -> PASS, 20/20 tests green, 0 failed
+- cargo clippy -p protocol_causal --all-targets                  -> PASS, 0 warnings (fixed two
+  map().unwrap_or_else()-style lints and a needless-pass-by-value-shaped one during cleanup)
+
+Notes for the next crate's implementer (protocol_crdt / protocol_wire)
+-------------------------------------------------------------------------
+- protocol_wire's ClientFrame::Hello/FrontierAdvertise and ServerFrame::Welcome/Commands/Ack all
+  reference `protocol_causal::FrontierSummary` and `protocol_causal::OperationEnvelope` — both are
+  now available at their exact contract shapes; `OperationEnvelope`/`DocumentDiff`/`InverseOperation`
+  derive Serialize/Deserialize/Clone/Debug/PartialEq (no custom serde attributes — the contract's
+  code block for this section didn't specify `rename_all` unlike protocol_command's Edit/OperationMeta,
+  so none was added; if protocol_wire's binary codec wants camelCase JSON parity with those it should
+  add its own transcoding, not expect it from this crate).
+- protocol_crdt's `merge_concurrent_diffs` takes `existing_meta`/`incoming_meta:
+  &protocol_command::OperationMeta` (not this crate's types) — protocol_causal is not itself a
+  dependency of protocol_crdt per the contract's dep list, so no interaction there.
+- The facade (protocol/rs) re-exports `protocol_causal::FrontierSummary`/`frontier_delta` under the
+  aliases `RuntimeFrontierSummary`/`runtime_frontier_delta` to avoid colliding with
+  `protocol_history::FrontierSummary`/`frontier_delta` — nothing to do here, just confirming the
+  types this crate exports are named plainly (`FrontierSummary`, `frontier_delta`) and the aliasing
+  is the facade's job.
+- `OperationTransform<P>: protocol_command::Operation<P>` is a pure trait addition with zero impls in
+  this crate (by design — no CRDT-aware technology exists yet); protocol_crdt's merge functions do not
+  implement or require it, so there's no cross-crate wiring left to do for it.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/protocol/causal/rs/lib.rs (replaced stub with full implementation)
+
+Files intentionally NOT touched
+--------------------------------
+- /Users/ueli/Documents/semio/protocol/causal/rs/Cargo.toml (already correct)
+- /Users/ueli/Documents/semio/protocol/causal/rs/project.json, script.ts (owned by scaffolding wave)
+- root Cargo.toml, .vscode/launch.json (owned by closing wave)
+- protocol_core, protocol_command (already implemented by other wave agents; read-only reference here)

@@ -1,0 +1,108 @@
+Wave: CW2
+Crate: protocol_format (protocol/format/rs)
+Status: DONE — build green, tests green (25/25), clippy clean (no warnings, --all-targets)
+
+Files touched
+-------------
+- protocol/format/rs/lib.rs  — replaced the stub with the full implementation (single file,
+  regions matching the frozen contract's prose sections: 🔖Header, 🔖Frame, 🔖Commit, 🔖Writer,
+  🔖Recovery, 🔖Crypto, 🧪Tests).
+- protocol/format/rs/Cargo.toml — NOT modified; the existing deps (protocol_core, pack_core,
+  pack_format with default "deflate" feature, blake3) were exactly what was needed.
+
+What was implemented
+---------------------
+Strictly against contract.md's `## protocol_format` section (original ticket, not the amendment —
+the amendment only adds new sibling crates, no changes to protocol_format itself):
+
+- 32-byte header: magic `[0x89,S,P,R,0x0D,0x0A,0x1A,0x0A]`, version, required/optional flags,
+  CRC-32C self-check, 8 reserved bytes. Built/validated internally (private `build_header_bytes`/
+  `validate_header`) — no public Header type, since nothing in the contract's public signature
+  block (SprWriter/recover/FrameCursor/RecoveryReport) needs one; `SprWriter::begin` writes it,
+  `recover` validates it as step 1. Unknown required flags and bad magic/crc/version reuse
+  `pack_core::PackError` variants wrapped in `ProtocolError::Pack` (`UnknownRequiredFlags`,
+  `BadMagic`, `ChecksumMismatch`, `UnsupportedVersion`) — all directly constructible, so the
+  contract's anticipated protocol_core-amendment fallback was NOT needed.
+- Uniform record frame grammar (body_len varint, kind, flags, [raw_len varint], payload, crc32c,
+  back_len) exactly per the byte layout, including the "skip-unknown" critical-bit convention.
+- `RecordFrame<'a>` / `FrameCursor<'a>` / `ReverseFrameCursor<'a>` — zero-copy, no self-referential
+  types. `RecordFrame::frame_len()` is recomputed from its public fields rather than cached (no
+  hidden struct fields, so the struct matches the contract's 5-field literal exactly).
+- Commit frame (`REC_COMMIT`, fixed 75-byte total frame) with the exact chain algorithm:
+  `chain_0 = blake3(header)`, `chain_n = blake3(chain_{n-1} || digest_1..digest_k)`, where each
+  `digest_i` is `blake3` of the record's WHOLE on-disk frame bytes.
+- `SprWriter<S: PackSink>`: `begin`/`position`/`write_record`/`commit`/`into_sink`, exactly the
+  given signatures. One reusable scratch `Vec<u8>` field, cleared and reused every `write_record`/
+  `commit` call.
+- `recover<S: PackSource>`: header validate -> O(commits) fast path (reverse-probe the last 75
+  bytes for a commit frame reaching exactly EOF, then walk `prev_commit_offset` back to
+  `commit_seq == 1`, re-validating every commit frame's CRC/critical-bit/sequence link without
+  touching any intervening non-commit record) -> forward-scan fallback from offset 32 tracking
+  `last_valid_end`/`last_commit_end`, stopping at the first invalid/truncated frame. `RecoveryMode`
+  (`LastCommit` default) / `VerificationLevel` (`Standard` default) per contract.
+- `Blake3Hasher` implementing `protocol_core::RecordHasher`.
+
+Deviations / design choices ("your choice" clauses and real gaps)
+-------------------------------------------------------------------
+1. Frame CRC computation builds one contiguous scratch buffer and issues a single
+   `PackSink::write_all` per record, matching `pack_format::encode_segment`'s proven pattern (the
+   contract's own cited living example) instead of the prose's literal "at most two calls (prefix,
+   then payload, then trailer)" — that phrasing is internally inconsistent (names three pieces,
+   caps at two), and `pack_core::crc32c` only accepts one contiguous slice with no incremental
+   variant to stream a CRC across a caller-owned payload slice without a buffer of its own. The
+   scratch `Vec<u8>` is still reused call-to-call (capacity retained), so this keeps the spirit of
+   "one reusable scratch buffer, minimal reallocation" while staying correct and simple. Documented
+   inline at `encode_frame_into`.
+2. `RecoveryReport::bytes_recovered` is defined as the absolute count of trusted bytes from the
+   start of the file (i.e. the offset a caller should truncate/slice to), not "bytes of record
+   payload only" — the contract doesn't define this precisely; this reading is the most directly
+   useful for callers (`&bytes[..bytes_recovered]` is always the trusted span) and is what
+   `protocol_io::HistoryFile::open_append`'s "truncates to the recovery point" description implies.
+3. `ReverseFrameCursor::at_end` takes no `start_offset` (matches the contract's given signature
+   exactly) and therefore has no way to know where a leading file header ends. Documented that it
+   must be given a pure record-stream span (e.g. `&file[HEADER_SIZE..]`, or an inflated
+   `REC_SEALED` batch) — `prev_frame` returns `None` exactly at `pos == 0`. A caller walking a whole
+   file backward either slices the header off first or stops once a frame's `offset` reaches the
+   known `HEADER_SIZE`. This is not a deviation from the contract's signature, just a documented
+   consequence of it (discovered via a failing test, fixed by correcting the test's usage, not the
+   API).
+4. Did NOT add public helpers for the `REC_SEALED` payload's inner byte layout (codec/raw_len/
+   compressed-frames) — the contract only describes it in prose, no Rust signature block. It's
+   fully buildable by a downstream crate (protocol_io, a different wave/crate) using only already-
+   public primitives (`SprWriter::write_record` for the outer frame, `pack_format::DeflateCodec`
+   for the inner compression, `FrameCursor::new` over the inflated buffer) — so no new API surface
+   was needed from this crate.
+5. Did NOT add a `verify_chain`-style helper for "Full verification recomputes the full chain" —
+   the contract's `VerificationLevel` enum is defined here (as required) but no function signature
+   consuming it is given for protocol_format. Downstream crates have everything needed to
+   recompute the chain themselves (`FrameCursor` + `RecordFrame::offset`/`frame_len()` to slice full
+   frame bytes + `Blake3Hasher`), so no new public API was added to avoid overlapping with
+   protocol_history/protocol_materialize's own scope.
+6. Did NOT implement "unknown-critical-kind -> error" dispatch inside `FrameCursor`/
+   `ReverseFrameCursor` — this crate never learns which kinds are semantically "known" (it only
+   special-cases `REC_COMMIT` structurally, for the chain). Cursors surface every structurally
+   valid frame uniformly regardless of `kind`; `UnknownCriticalRecord` is left for
+   `protocol_history`'s typed decode loop, which owns the notion of "known kinds." Documented at
+   the top of the module and exercised by
+   `cursor_surfaces_unrecognized_extension_kind_transparently`.
+7. Public consts added beyond the contract's literal code block (all low-risk, additive, mirroring
+   `pack_format`'s own precedent): `MAGIC`, `HEADER_SIZE`, `FORMAT_VERSION_MAJOR/MINOR`,
+   `COMMIT_FRAME_LEN`. No other new public API.
+
+Build / test verification
+--------------------------
+$ cargo build -p protocol_format         -> Finished, no errors.
+$ cargo test -p protocol_format          -> 25/25 tests passed, 0 failed.
+$ cargo clippy -p protocol_format --all-targets -> 0 warnings.
+
+Tests cover (per the ticket's required coverage list): header round-trip (4 tests), frame
+round-trip + frame_len bookkeeping + compressed-frame round-trip (7 tests), forward/reverse cursor
+symmetry and CRC/back_len tamper detection (4 tests), commit-chain verification by hand
+recomputing chain_1 from raw frame bytes on a hand-built file + multi-commit prev_commit_offset
+linking (2 tests), skip-unknown/extension-kind transparency (1 test), recover: fast path (clean
+file + multi-commit chain to genesis), forward-scan torn-tail truncation to last commit,
+LastValidRecord vs LastCommit divergence, header-only file, sub-header-length rejection, and
+truncation-at-every-byte fuzz (never panics, never over-reports) (8 tests), Blake3Hasher trait impl
+(1 test), writer flag validation + position tracking (2 tests).
+
+No changes made outside protocol/format/rs/lib.rs. No git commands run.

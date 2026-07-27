@@ -7947,6 +7947,7 @@ version = "0.1.0"
 dependencies = [
  "pack_core",
  "serde",
+ "serde_json",
  "thiserror 2.0.18",
 ]
 
@@ -7956,6 +7957,7 @@ version = "0.1.0"
 dependencies = [
  "protocol_command",
  "protocol_core",
+ "serde",
 ]
 
 [[package]]

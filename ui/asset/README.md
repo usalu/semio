@@ -23,10 +23,13 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `arrow-up`
 - `award`
 - `bar-chart-3`
+- `beam`
 - `bell`
 - `book-open`
 - `box`
+- `building`
 - `cad-shape`
+- `calendar`
 - `calendar-days`
 - `camera`
 - `check`
@@ -46,6 +49,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `combine`
 - `component`
 - `copy`
+- `cpu`
 - `crosshair`
 - `cylinder`
 - `dag`
@@ -54,8 +58,10 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `document-report`
 - `download`
 - `draw`
+- `edit`
 - `edit-3`
 - `eraser`
+- `export`
 - `external-link`
 - `eye`
 - `eye-off`
@@ -78,6 +84,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `focus`
 - `folder`
 - `folder-open`
+- `folder-plus`
 - `forms`
 - `gis2d`
 - `gis3d`
@@ -94,6 +101,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `hand`
 - `hard-drive`
 - `hash`
+- `help-circle`
 - `hexagon`
 - `home`
 - `hud-overlay`
@@ -101,6 +109,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `image-plus`
 - `image-up`
 - `imperative`
+- `import`
 - `info`
 - `landmark`
 - `lasso`
@@ -112,6 +121,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `link`
 - `link-2-off`
 - `list`
+- `list-checks`
 - `list-ordered`
 - `list-tree`
 - `loader-2`
@@ -139,6 +149,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `note-math`
 - `paint-bucket`
 - `paintbrush`
+- `palette`
 - `panel-catalogue`
 - `panel-inspection`
 - `panel-left`
@@ -147,8 +158,10 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `panel-top`
 - `pause`
 - `pen-tool`
+- `pencil`
 - `pipette`
 - `play`
+- `play-circle`
 - `plug`
 - `plus`
 - `preview`
@@ -184,6 +197,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `s`
 - `save`
 - `scaling`
+- `scan`
 - `scene-3d`
 - `scissors`
 - `search`
@@ -196,6 +210,8 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `sigma`
 - `skip-back`
 - `skip-forward`
+- `slab`
+- `sliders-horizontal`
 - `smartphone`
 - `smile`
 - `sparkles`
@@ -205,6 +221,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `square-arrow-up-left`
 - `square-arrow-up-right`
 - `square-dashed`
+- `sticky-note`
 - `sun`
 - `table-2`
 - `tablet`
@@ -212,7 +229,9 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `terrain-3d`
 - `text-cursor`
 - `text-search`
+- `toggle-left`
 - `transform-3d`
+- `trash`
 - `trash-2`
 - `triangle`
 - `triangle-alert`
@@ -220,6 +239,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `trinity-lhs`
 - `trinity-rewrite`
 - `trinity-rhs`
+- `type`
 - `typography`
 - `undo`
 - `undo-2`
@@ -227,6 +247,7 @@ Add or edit SVGs under `icon/`, then run **build ui assets** (`bun ./script.ts g
 - `user`
 - `users`
 - `volume-brush`
+- `window`
 - `workbench`
 - `workflow`
 - `wrench`

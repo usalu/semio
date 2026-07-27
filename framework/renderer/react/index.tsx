@@ -8548,8 +8548,8 @@ export function FrameworkOsShell({
     <SetWindowIconContext.Provider value={setWindowIcon}>
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <UIFindProvider>
-      <LevelProvider level="window">
-        <div className={cn("flex h-screen min-h-0 w-screen flex-col", surfaceClass)} data-level="window">
+      <LevelProvider level="base">
+        <div className="flex h-screen min-h-0 w-screen flex-col bg-transparent" data-level="base">
           <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
             <Layout
               mobile={mobile}

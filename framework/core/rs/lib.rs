@@ -7834,6 +7834,7 @@ mod app_document_tests {
     #[test]
     fn exports_typescript_bindings() {
         use ts_rs::TS;
+        ui_wgpu::IconName::export().unwrap();
         ui_wgpu::ActionDescriptor::export().unwrap();
         ui_wgpu::WindowLayoutWindowNode::export().unwrap();
         ui_wgpu::WindowLayoutStackNode::export().unwrap();

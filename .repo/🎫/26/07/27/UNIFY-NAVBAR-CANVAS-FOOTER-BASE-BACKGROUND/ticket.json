@@ -1,0 +1,16 @@
+{
+  "title": "Unify Navbar Canvas Footer Base Background",
+  "emoji": "🎨",
+  "status": "closed",
+  "description": "The navbar, canvas, and footer all sit on the same level (base) and must share the same background color consistently everywhere. Root cause: ProductShell stamps data-level=window + ui-surface while Navbar/Footer/TutorialBar/Mode-body/Canvas stamp data-level=base + ui-surface, so gaps and nesting produce mismatched fills. Fix: one continuous base-level painted surface for the shell floor (Layout owns the paint), ProductShell becomes base/transparent, navbar/footer/tutorial-bar/canvas/mode-body stay data-level=base but do not re-paint when already inside a painted base Surface (useSurface), so one level = one appearance. Follow-up: ModeDockTabBar full-row ui-glass still filled the U-cutout with window chrome — move glass to chips/controls only.",
+  "summary": "Unified navbar/canvas/footer onto one Layout-owned base floor (shellFloorPaints/shellFloorFillClass; ProductShell transparent base host). Then fixed the remaining U-cutout defect: ModeDockTabBar stamped ui-glass on the full tabbar so the transparent gap still showed window-level glass; glass now lives only on tab chips and the controls cap (matching WindowChrome), so the U-notch reveals the base/canvas floor. Updated ModeDock vitest assertions; 30 related ui-react tests passed. Note: ticket MCP CallMcpTool failed (process client not registered); ticket folder managed manually.",
+  "goal": "🎯r2602",
+  "sessions": [],
+  "files": [
+    "ui/js/react/index.tsx",
+    "framework/renderer/react/index.tsx",
+    ".repo/🎫/26/07/27/UNIFY-NAVBAR-CANVAS-FOOTER-BASE-BACKGROUND/u-cutout-fix.md",
+    ".repo/🎫/26/07/27/UNIFY-NAVBAR-CANVAS-FOOTER-BASE-BACKGROUND/test-u-cutout.txt",
+    ".repo/🎫/26/07/27/UNIFY-NAVBAR-CANVAS-FOOTER-BASE-BACKGROUND/test-mode-chrome.txt"
+  ]
+}
