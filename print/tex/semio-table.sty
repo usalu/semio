@@ -243,7 +243,11 @@
     }%
   }%
   \\%
-  \noalign{\vskip\z@}%
+  % Weld the title bar onto the following column-header row: pull back the
+  % header row's \extrarowheight top padding and strut depth so the title bar
+  % sits flush on the header border (matching the tcolorbox tables), instead
+  % of leaving a gap that also inflates the page count.
+  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
 }
 
 \newcommand{\semio@table@long@continuation@chrome}[1]{%

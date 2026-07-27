@@ -2148,6 +2148,14 @@
   \SemioSans\fontsize{\semio@chrome@font@chip}{\semio@chrome@font@chip}\selectfont
 }
 
+% 🔠 Section/appendix heading bars use a larger font than the small chrome
+% chip font (navbar, footer, table captions keep the 7.2pt chip size). The
+% title-bar height is em-based, so it scales with this font automatically.
+\providecommand{\semio@chrome@font@heading}{14pt}
+\newcommand{\semio@heading@bar@font}{%
+  \SemioSans\fontsize{\semio@chrome@font@heading}{\semio@chrome@font@heading}\selectfont
+}
+
 \newcommand{\semio@heading@cap@nofill@vbox}[1]{%
   \if\relax\detokenize{#1}\relax
     \vbox to \semio@chrome@titlebar@height{%
@@ -2172,7 +2180,7 @@
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
-    \semio@heading@chip@font\color{#2}%
+    \semio@heading@bar@font\color{#2}%
     \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
     \endgroup
   }%
@@ -2221,7 +2229,7 @@
 
 \newcommand{\semio@heading@chip}[3]{%
   \semio@window@cap{#1}{#3}{%
-    \semio@heading@chip@font\color{#2}%
+    \semio@heading@bar@font\color{#2}%
   }%
 }
 
