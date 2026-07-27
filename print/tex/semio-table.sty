@@ -8,6 +8,10 @@
 \RequirePackage{expl3}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
+% Fallback defs (semio-tokens.sty is generated and does not carry these);
+% \providecommand is idempotent if semio-window.sty already defined them.
+\providecommand{\semio@spacing@table@outer}{0.85em}
+\providecommand{\semio@spacing@par}{0.5em}
 
 \ExplSyntaxOn
 \seq_new:N \l_semio_table_row_seq
@@ -140,9 +144,14 @@
   \global\semio@table@row@startedfalse
   \arrayrulecolor{semio-chrome-border-normal}%
   \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
-  \setlength{\tabcolsep}{\semio@spacing@single}%
-  \setlength{\extrarowheight}{\semio@spacing@single}%
-  \renewcommand{\arraystretch}{1}%
+  % 🔲 Roomier cells (~2×): horizontal via \tabcolsep (colspecs subtract
+  % \tabcolsep, so table width is preserved), vertical via \extrarowheight
+  % (top air) + \arraystretch (bottom air). \parskip is neutralised so a
+  % multi-line cell doesn't inherit the body paragraph gap.
+  \setlength{\tabcolsep}{\semio@spacing@double}%
+  \setlength{\extrarowheight}{\semio@spacing@double}%
+  \renewcommand{\arraystretch}{1.3}%
+  \setlength{\parskip}{\z@}%
 }
 
 \newcommand{\semio@table@colspec@two}{@{}T{\dimexpr0.5\linewidth-\tabcolsep\relax}T{\dimexpr0.5\linewidth-\tabcolsep\relax}@{}}
@@ -151,12 +160,17 @@
 
 \newlength{\semio@table@long@inner@w}
 \newbox\semio@table@long@pad@box
+% Per-column inner padding for long tables (each column gets this much air on
+% both sides → 2× between adjacent columns). Column p-widths are reduced by
+% 2× this, so the total still equals \semio@table@long@inner@w (no overflow).
+\newlength{\semio@table@long@cellpad}
 
 \newcommand{\semio@table@long@inner@w@set}{%
   \setbox\semio@table@long@pad@box=\hbox{\hspace{\semio@chrome@padding}}%
   \setlength{\semio@table@long@inner@w}{%
     \dimexpr\linewidth-2\wd\semio@table@long@pad@box-2\arrayrulewidth\relax
   }%
+  \setlength{\semio@table@long@cellpad}{\semio@chrome@padding}%
 }
 
 \newcommand{\semio@table@setup@long}{%
@@ -165,9 +179,9 @@
   \setlength{\extrarowheight}{\semio@spacing@single}%
 }
 
-\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.78\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.10\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
+\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
 
-\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w\relax}@{}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w\relax}@{}@{\hspace{\semio@chrome@padding}}|}
+\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
 
 \newcommand{\semio@table@colspec@register}{@{}T{\dimexpr0.12\linewidth-\tabcolsep\relax}T{\dimexpr0.78\linewidth-\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{}}
 
@@ -297,8 +311,8 @@
   \semio@table@long@title@chrome@prepare
   \nointerlineskip
   \raggedright
-  \setlength{\LTpre}{0pt}%
-  \setlength{\LTpost}{0pt}%
+  \setlength{\LTpre}{\semio@spacing@table@outer}%
+  \setlength{\LTpost}{\semio@spacing@table@outer}%
   \setlength{\LTleft}{0pt}%
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
@@ -410,7 +424,7 @@
   \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
   \clist_map_inline:nn {#1} {
     \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-      >{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr##1\semio@table@long@inner@w\relax}@{}
+      @{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}
     }
   }
   \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }

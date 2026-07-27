@@ -41,10 +41,23 @@
   \use:c { semio@chrome@heading@set } { \SemioFrontmatterTitle }
 }
 
+% 📄 Recto-clear: for print binding every mainmatter/appendix start is forced
+% onto a recto page, inserting a blank verso. Digital-only deliverables don't
+% want those interior blanks — \SemioOpenAny{true} reduces this to a plain
+% \clearpage (default stays recto so print workflows are unchanged).
+\bool_new:N \g_semio_open_any_bool
+\bool_gset_false:N \g_semio_open_any_bool
+\NewDocumentCommand{\SemioOpenAny}{m}{
+  \str_if_eq:nnTF {#1} {true}
+    { \bool_gset_true:N \g_semio_open_any_bool }
+    { \bool_gset_false:N \g_semio_open_any_bool }
+}
 \cs_new_protected:Npn \semio_clear_to_recto: {
   \clearpage
-  \legacy_if:nT { @twoside } {
-    \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+  \bool_if:NF \g_semio_open_any_bool {
+    \legacy_if:nT { @twoside } {
+      \int_if_even:nT { \value{page} } { \null\thispagestyle{empty}\newpage }
+    }
   }
 }
 

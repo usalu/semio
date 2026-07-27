@@ -25,6 +25,11 @@
 \providecommand{\semio@chrome@font@body}{9.6pt}
 \providecommand{\semio@chrome@icon@scale}{1}
 \providecommand{\semio@chrome@icon@scale@footer}{1}
+% Layout spacing (defined here, not in the generated semio-tokens.sty):
+% \semio@spacing@par  = gap after body paragraphs (\parskip)
+% \semio@spacing@table@outer = air above/below tables
+\providecommand{\semio@spacing@par}{0.5em}
+\providecommand{\semio@spacing@table@outer}{0.85em}
 
 \ExplSyntaxOn
 
@@ -723,8 +728,8 @@
     left=\semio@chrome@padding,
     right=\semio@chrome@padding,
     bottom=\semio@chrome@padding,
-    before~skip=0pt,
-    after~skip=\semio@block@sep@skip,
+    before~skip=\semio@spacing@table@outer,
+    after~skip=\semio@spacing@table@outer,
     parbox=false,
     % 🪟 Repeat the header chip row (title chip + hierarchy chip, see
     % \semio@window@header@repeat) on every continuation page-part of a
@@ -1745,7 +1750,7 @@
   \ExplSyntaxOff
   \makeatletter
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
-  \setlength { \parskip } { \semio@block@sep@skip }
+  \setlength { \parskip } { \semio@spacing@par }
   \setlength { \parindent } { 0pt }
   \ifcsname chapterheadstartvskip\endcsname
     \renewcommand*{\chapterheadstartvskip}{}%
@@ -2053,15 +2058,36 @@
 \newlength{\semio@window@cap@w}
 \newlength{\semio@window@cap@body@h}
 
+% 🔲 Effective cap-box height. The nominal \semio@chrome@titlebar@height (1.4em)
+% resolves against the *ambient* body font, so an enlarged chip font (e.g. 14pt
+% headings) leaves the borders sitting on the letters. \semio@window@cap@titleh
+% is instead the max of that nominal height and the *measured* slot content plus
+% symmetric vertical padding, so the box grows with its text and the letters
+% keep clear air above and below. body@h@set seeds it (before the slot exists);
+% metrics@set recomputes it from the boxed slot.
+\newlength{\semio@window@cap@titleh}
 \newcommand{\semio@window@cap@body@h@set}{%
+  \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
   \setlength{\semio@window@cap@body@h}{%
-    \dimexpr\semio@chrome@titlebar@height-\semio@stroke@hairline\relax
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
+}
+\newcommand{\semio@window@cap@metrics@set}{%
+  \setlength{\semio@window@cap@titleh}{%
+    \dimexpr\ht\semio@window@cap@slot+\dp\semio@window@cap@slot
+      +\semio@chrome@padding+\semio@chrome@padding+\semio@chrome@padding\relax
+  }%
+  \ifdim\semio@window@cap@titleh<\dimexpr\semio@chrome@titlebar@height\relax
+    \setlength{\semio@window@cap@titleh}{\dimexpr\semio@chrome@titlebar@height\relax}%
+  \fi
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
   }%
 }
 
 \newcommand{\semio@window@stroke@v}[1]{%
   \color{#1}%
-  \rule{\semio@stroke@hairline}{\semio@chrome@titlebar@height}%
+  \rule{\semio@stroke@hairline}{\semio@window@cap@titleh}%
 }
 
 \newcommand{\semio@window@stroke@h}[2]{%
@@ -2070,7 +2096,7 @@
 }
 
 \newcommand{\semio@window@cap@raise}[1]{%
-  \raisebox{0pt}[\dimexpr\semio@chrome@titlebar@height\relax][0pt]{#1}%
+  \raisebox{0pt}[\semio@window@cap@titleh][0pt]{#1}%
 }
 
 \newcommand{\semio@window@cap@paint}[3]{%
@@ -2098,7 +2124,7 @@
 }
 
 \newcommand{\semio@window@cap@muted@vbox}[1]{%
-  \vbox to \semio@chrome@titlebar@height{%
+  \vbox to \semio@window@cap@titleh{%
     \nointerlineskip
     \hbox{\semio@window@stroke@h{semio-chrome-border-normal}{\semio@window@cap@w}}%
     \nointerlineskip
@@ -2107,7 +2133,7 @@
 }
 
 \newcommand{\semio@window@cap@accent@vbox}[1]{%
-  \vbox to \semio@chrome@titlebar@height{%
+  \vbox to \semio@window@cap@titleh{%
     \nointerlineskip
     \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
     \nointerlineskip
@@ -2124,6 +2150,7 @@
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+    \semio@window@cap@metrics@set
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
     \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
@@ -2158,14 +2185,14 @@
 
 \newcommand{\semio@heading@cap@nofill@vbox}[1]{%
   \if\relax\detokenize{#1}\relax
-    \vbox to \semio@chrome@titlebar@height{%
+    \vbox to \semio@window@cap@titleh{%
       \vfil
       \nointerlineskip
       \hbox to \semio@window@cap@w{\hfil\usebox{\semio@window@cap@slot}\hfil}%
       \vfil
     }%
   \else
-    \vbox to \semio@chrome@titlebar@height{%
+    \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
       \hbox{\semio@window@stroke@h{#1}{\semio@window@cap@w}}%
       \nointerlineskip
@@ -2185,6 +2212,7 @@
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+    \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@heading@cap@nofill@vbox{#3}}%
 }
 
@@ -2204,11 +2232,12 @@
   \semio@window@cap@body@h@set
   \sbox{\semio@window@cap@slot}{%
     \begingroup
-    \semio@heading@chip@font\color{semio-chrome-text-normal}%
+    \semio@heading@bar@font\color{semio-chrome-text-normal}%
     \hspace{\semio@chrome@padding}#1\hspace{\semio@chrome@padding}%
     \endgroup
   }%
   \setlength{\semio@window@cap@w}{\wd\semio@window@cap@slot}%
+    \semio@window@cap@metrics@set
   \semio@window@cap@raise{\semio@window@cap@muted@vbox{semio-chrome-canvas}}%
 }
 
@@ -2550,9 +2579,11 @@
 
 %region Header gap — transparent cutout between/after chips, closed only by the baseline stroke; {@link https://github.com/usalu/semio/issues/1965}
 \newcommand{\semio@window@header@gap@paint}[1]{%
-  \semio@window@cap@body@h@set
+  % Reuse the measured cap height from the adjacent chips (do NOT reset it to
+  % the nominal titlebar height) so the connecting stroke lines up with the
+  % enlarged title/number boxes.
   \semio@window@cap@raise{%
-    \vbox to \semio@chrome@titlebar@height{%
+    \vbox to \semio@window@cap@titleh{%
       \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
       \nointerlineskip
       \hbox to \dimexpr\semio@window@gap@w\relax{%
@@ -2565,7 +2596,7 @@
 \newcommand{\semio@window@header@gap@paint@nofill}[1]{%
   \if\relax\detokenize{#1}\relax
     \semio@window@cap@raise{%
-      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@chrome@titlebar@height}}%
+      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@titleh}}%
     }%
   \else
     \semio@window@header@gap@paint{#1}%
