@@ -2372,6 +2372,10 @@
 
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
+  % 🧲 Keep the heading bar with its first lines of content so it never sits
+  % orphaned at the foot of a page (reserves the bar + ~3 body lines; if that
+  % much space isn't left, the heading moves to the next page as one unit).
+  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip\relax}%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
   \fi
