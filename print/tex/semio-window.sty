@@ -3007,6 +3007,16 @@
 \newsavebox{\semio@chrome@bar@edge@box}
 \newsavebox{\semio@chrome@bar@center@box}
 
+% LR-2.11: reusable project-card keep-together space test. Reserves the card
+% heading bar + its fixed 30mm arrangement + the start of the following
+% component table, so a card that cannot fit in the remaining space breaks to a
+% fresh page as one unit instead of stranding the heading/image on one page and
+% the table alone on the next (P.K.67). Public (no @) so appendix content files
+% can call it where \semio@... names are not letters.
+\newcommand{\SemioCardKeep}{%
+  \needspace{\dimexpr\semio@chrome@titlebar@height+30mm+6\baselineskip\relax}%
+}
+
 %region PageParity
 \newcommand{\Ifsemiochromemirrored}[2]{%
   \if@twoside\ifodd\value{page}#2\else#1\fi\else#2\fi
