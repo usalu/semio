@@ -1518,7 +1518,7 @@ const POLICY_TREE_ITEM_REDEFINITION_ALLOWLIST = new Set<string>(["puzzle/plugin/
 const POLICY_SHARED_DOMAIN_CRATE_ALLOWLIST = new Set<string>(["flow_core", "flow_module_draw", "flow_module_brep", "trinity_jack", "trinity_ram", "mathematical_graph_drawing", "mathematical_geometry", "infinite_board_port_directed", "infinite_board_port_directed_dag"]);
 
 /** 🛡️Path prefixes (repo-relative) always allowed as plugin/rs dependency targets: generic shared infra. */
-const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "protocol/", "repo/"];
+const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "playbook/", "repo/"];
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: technologies whose example/*.json fixture has not yet
@@ -1542,62 +1542,7 @@ const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
  * agents add the pack-equivalence assertions beside each technology's existing DSL round-trip tests and
  * remove that file from this list; wave 3 verifies it has shrunk to empty.
  */
-const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([
-  "animate/present/rs/lib.rs",
-  "architect/program/rs/lib.rs",
-  "cad/rs/lib.rs",
-  "compose/client/lib/rs/lib.rs",
-  "draw/rs/lib.rs",
-  "dsl/rs/lib.rs",
-  "fem/2d/rs/lib.rs",
-  "fem/3d/rs/lib.rs",
-  "flow/core/rs/lib.rs",
-  "forms/rs/lib.rs",
-  "framework/product/os/core/rs/lib.rs",
-  "gis/plugin/rs/lib.rs",
-  "imperative/core/rs/lib.rs",
-  "infinite/board/port/directed/dag/rs/lib.rs",
-  "layout/rs/lib.rs",
-  "lowpoly/core/rs/lib.rs",
-  "mathematical/plugin/rs/lib.rs",
-  "norm/core/rs/lib.rs",
-  "norm/din/4108/rs/lib.rs",
-  "norm/din/en/16798/rs/lib.rs",
-  "norm/din/v/18599/rs/lib.rs",
-  "norm/en/1990/rs/lib.rs",
-  "norm/en/1991/rs/lib.rs",
-  "norm/en/1992/rs/lib.rs",
-  "norm/en/1993/rs/lib.rs",
-  "norm/en/1994/rs/lib.rs",
-  "norm/en/1995/rs/lib.rs",
-  "norm/en/1996/rs/lib.rs",
-  "norm/en/1997/rs/lib.rs",
-  "norm/en/1998/rs/lib.rs",
-  "norm/en/1999/rs/lib.rs",
-  "norm/iso/16757/rs/lib.rs",
-  "norm/vdi/3805/rs/lib.rs",
-  "note/plugin/rs/lib.rs",
-  "procedural/2d/rs/lib.rs",
-  "procedural/3d/rs/lib.rs",
-  "process/3d/rs/lib.rs",
-  "protocol/module/procedural/rs/lib.rs",
-  "protocol/rs/lib.rs",
-  "puzzle/2d/rs/lib.rs",
-  "puzzle/3d/rs/lib.rs",
-  "puzzle/5d/rs/lib.rs",
-  "raster/plugin/rs/lib.rs",
-  "reasoning/mindmap/rs/lib.rs",
-  "remodel/rs/lib.rs",
-  "s/plugin/rs/lib.rs",
-  "s/rs/lib.rs",
-  "sequence/core/rs/lib.rs",
-  "shooting/rs/lib.rs",
-  "sourcing/curate/rs/lib.rs",
-  "trinity/ram/rs/lib.rs",
-  "trinity/rewrite/engine/rs/lib.rs",
-  "vcs/plugin/rs/lib.rs",
-  "writer/rs/lib.rs",
-]);
+const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([]);
 
 /**
  * 🎫 dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
@@ -2186,7 +2131,7 @@ const POLICY_USE_ALIAS_RE = /\b(\w+)\s+as\s+(\w+)\b/g;
  * 🔎One O(total content) pass building every `RealName as AliasName` rename seen in any `use` item
  * (e.g. `use raster_core::{RasterProjection as RasterDocument};`) — a technology's block-kind wrapper
  * commonly re-exports another crate's already-DSL-complete type under a locally-meaningful alias
- * (`forms`'s `ProtocolSpec as FormSpec`, `raster/plugin`'s `RasterProjection as RasterDocument`), so a
+ * (`forms`'s `PlaybookSpec as FormSpec`, `raster/plugin`'s `RasterProjection as RasterDocument`), so a
  * plain per-file struct/impl scan alone would report a false gap on the alias name.
  */
 function policyTypeAliasMap(files: readonly { content: string }[]): Map<string, string> {

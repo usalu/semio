@@ -66,8 +66,8 @@ function boardGraphFromFixture(fixtureJson: string): { nodes: BoardNode[]; edges
     const target = readString(obj.target);
     if (!id || !source || !target) continue;
     const kind = readString(obj.edgeKind) ?? readString(obj.edge_kind) ?? readString(obj.kind) ?? "";
-    const sourceNodeId = handleToNode.get(source) ?? source.split(":")[0] ?? source;
-    const targetNodeId = handleToNode.get(target) ?? target.split(":")[0] ?? target;
+    const sourceNodeId = handleToNode.get(source) ?? source.split("@")[0] ?? source;
+    const targetNodeId = handleToNode.get(target) ?? target.split("@")[0] ?? target;
     edges.push({ id, kind, sourceNodeId, targetNodeId });
   }
   return { nodes, edges, raw };
@@ -252,17 +252,20 @@ function formatWireProperties(properties: Readonly<Record<string, unknown>> | un
   return ` { ${inner} }`;
 }
 
+// 🩹 Priority order mirrors the Rust reference (`mathematical_graph_dsl::wire::split_endpoint`,
+// `mathematical/graph/dsl/rs/lib.rs`): `@` is the unified port sigil and wins over the legacy `:`/`.`
+// forms still accepted here for backward-reading of older wire-literal text.
 function splitWireEndpoint(endpoint: string): { readonly node: string; readonly port: string } {
+  if (endpoint.includes("@")) {
+    const [node, port] = endpoint.split("@");
+    return { node: node ?? endpoint, port: port ?? "out" };
+  }
   if (endpoint.includes(":")) {
     const [node, port] = endpoint.split(":");
     return { node: node ?? endpoint, port: port ?? "out" };
   }
   if (endpoint.includes(".")) {
     const [node, port] = endpoint.split(".");
-    return { node: node ?? endpoint, port: port ?? "out" };
-  }
-  if (endpoint.includes("@")) {
-    const [node, port] = endpoint.split("@");
     return { node: node ?? endpoint, port: port ?? "out" };
   }
   return { node: endpoint, port: "out" };

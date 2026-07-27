@@ -239,9 +239,9 @@
       "port": 6558
     },
     {
-      "name": "protocol-react-dev",
+      "name": "playbook-react-dev",
       "runtimeExecutable": "bun",
-      "runtimeArgs": ["run", "dev:protocol"],
+      "runtimeArgs": ["run", "dev:playbook"],
       "env": {
         "S_OS_PORT": "16078",
         "SEMIO_RENDERER": "react"

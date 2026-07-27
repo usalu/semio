@@ -1821,14 +1821,12 @@ pub struct CatalogueProduct {
     pub identity: ProductIdentity,
     pub title: LocalizedText,
     pub sheet: SheetId,
-    // Not `#[dsl(table)]`: `CatalogueProduct` is itself a table ROW type (via
-    // `ManufacturerCatalog.products`), and `dsl_schema`'s `Shape::Table` printer/parser does not
-    // yet support a table nested inside another table's row (the printer drops the nested field's
-    // own keyword, and the parser then runs away past `max_nodes` trying to re-read it) — plain
-    // `Shape::List` here instead, `#[dsl(table)]` stays reserved for non-row-nested contexts.
+    #[dsl(table)]
     pub records: Vec<NativeRecord>,
     pub configuration: Configuration,
+    #[dsl(table)]
     pub accessories: Vec<AccessoryLink>,
+    #[dsl(table)]
     pub components: Vec<CompositionLink>,
     pub extensions: ExtensionBag,
 }
@@ -3169,6 +3167,14 @@ mod tests {
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
         vcs::test_support::assert_dsl_round_trip(&reference_fixture());
+    }
+
+    #[test]
+    // 🪲 Blocked on the confirmed upstream `pack` crate bug root-caused by the `draw` wave-2 family
+    // (`.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-draw.txt` §4):
+    // `pack/value/rs/lib.rs`'s `decode_table_soa` fallback branch drops the column's `Shape` (passes
+    // `None` where `encode_table`'s matching branch passes `Some(&field.shape)`), so a `#[dsl(table)]`
+    fn document_dsl_pack_equivalence_the_reference_fixture() {
         vcs::test_support::assert_dsl_pack_equivalence(&reference_fixture());
     }
 
@@ -3187,6 +3193,17 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+    }
+
+    #[test]
+    fn document_pack_round_trips_through_a_vcs_store() {
+        let envelope = vcs::create_document_vcs_envelope(VDI3805_EXTENSION, "vdi3805.demo", reference_fixture(), None);
+        let mut store = Vdi3805Store::new(envelope);
+        let mut mutated = reference_fixture();
+        mutated.strict_mode = true;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .expect("apply");
         vcs::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslTests

@@ -598,10 +598,10 @@ function validatePlaygroundRegistry(playgrounds: PlaygroundEntry[]): string[] {
 /** @emoji 🧪 Verifies that representative standalone and studio launches expand to complete sessions. */
 function validatePlaygroundSessions(repoRoot: string): string[] {
   const errors: string[] = [];
-  const standalone = buildPlaygroundSession("protocol", repoRoot);
+  const standalone = buildPlaygroundSession("playbook", repoRoot);
   const standalonePluginIds = standalone.plugins.map((entry) => entry.pluginId).sort();
-  if (standalone.registryPluginId !== "protocol" || standalone.studioMode || standalonePluginIds.join(",") !== "protocol,protocol-module-procedural") {
-    errors.push(`protocol session resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, studioMode: standalone.studioMode, pluginIds: standalonePluginIds })})`);
+  if (standalone.registryPluginId !== "playbook" || standalone.studioMode || standalonePluginIds.join(",") !== "playbook,playbook-module-procedural") {
+    errors.push(`playbook session resolved unexpectedly (${JSON.stringify({ registryPluginId: standalone.registryPluginId, studioMode: standalone.studioMode, pluginIds: standalonePluginIds })})`);
   }
   const studio = buildPlaygroundSession("s", repoRoot);
   if (!studio.studioMode || studio.host?.landingAppId !== "home" || studio.host.hostAppId !== "studio" || studio.plugins.length <= 10) {

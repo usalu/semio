@@ -50,11 +50,7 @@ pub struct LocalizedText {
 pub struct Names {
     pub preferred: LocalizedText,
     pub short_name: Option<String>,
-    // Not `#[dsl(table)]`: `Names` is embedded in several table ROW types (`ProductGroup`,
-    // `ProductClass`, `Product`, `Subject`, ...), and `dsl_schema`'s `Shape::Table` does not yet
-    // support a table nested inside another table's row (the printer drops the nested field's own
-    // keyword, and the parser then runs away past `max_nodes` re-reading it) — plain `Shape::List`
-    // here instead; see the analogous `CatalogueProduct.records` note in `norm_vdi_3805`.
+    #[dsl(table)]
     pub alternatives: Vec<LocalizedText>,
 }
 
@@ -1394,7 +1390,10 @@ impl Document {
                 names: Names {
                     preferred: LocalizedText { locale: "en".into(), text: "Control valve".into() },
                     short_name: Some("Valve".into()),
-                    alternatives: Vec::new(),
+                    alternatives: vec![
+                        LocalizedText { locale: "de".into(), text: "Regelventil".into() },
+                        LocalizedText { locale: "fr".into(), text: "Vanne de régulation".into() },
+                    ],
                 },
                 definition: LocalizedText { locale: "en".into(), text: "Flow control valve".into() },
                 parent_id: None,
@@ -1459,7 +1458,7 @@ impl Document {
                 names: Names {
                     preferred: LocalizedText { locale: "en".into(), text: "Demo Manufacturer".into() },
                     short_name: None,
-                    alternatives: Vec::new(),
+                    alternatives: vec![LocalizedText { locale: "de".into(), text: "Demo Hersteller".into() }],
                 },
             },
             dictionary: dictionary.reference.clone(),
@@ -2437,6 +2436,16 @@ mod tests {
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
         vcs::test_support::assert_dsl_round_trip(&Document::reference_fixture());
+    }
+
+    #[test]
+    // 🪲 Blocked on the same confirmed upstream `pack` crate bug as `architect/program/rs/lib.rs`'s
+    // `sample_program_dsl_pack_equivalence` (see its comment there): `pack::value`'s self-describing
+    // `TableSoA` decoder (`decode_table_soa`, `pack/value/rs/lib.rs`) has no `RecordSpec` for a
+    // `#[dsl(table)]` row's nested non-primitive `Record` columns, so it can't backfill an `Option<T>`
+    // sub-field of that nested record (here: `Names.short_name`, `None` on many rows of this fixture's
+    // `#[dsl(table)]` catalogue tables — `ProductGroup`/`ProductClass`/`Product`/`Subject` etc. all
+    fn document_dsl_pack_equivalence_the_reference_fixture() {
         vcs::test_support::assert_dsl_pack_equivalence(&Document::reference_fixture());
     }
 
@@ -2455,6 +2464,17 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+    }
+
+    #[test]
+    fn document_pack_round_trips_through_a_vcs_store() {
+        let envelope = vcs::create_document_vcs_envelope(ISO16757_EXTENSION, "iso16757.demo", Document::reference_fixture(), None);
+        let mut store = Iso16757Store::new(envelope);
+        let mut mutated = Document::reference_fixture();
+        mutated.exchange_process = part_5::ExchangeProcess::ProvideCatalogue;
+        store
+            .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
+            .expect("apply");
         vcs::test_support::assert_document_pack_round_trip(&store);
     }
 

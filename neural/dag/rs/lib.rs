@@ -111,7 +111,7 @@ pub fn wire_rows_from_dag_fixture_json(json: &str) -> Result<(Vec<WireNode>, Vec
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    if let Some((node, port)) = endpoint.rsplit_once(':') {
+    if let Some((node, port)) = endpoint.rsplit_once('@') {
         return (node.to_string(), port.to_string());
     }
     (endpoint.to_string(), "out".into())

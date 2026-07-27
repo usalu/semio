@@ -2669,7 +2669,7 @@ name = "flow-plugin"
 version = "0.1.0"
 dependencies = [
  "flow_core",
- "protocol",
+ "playbook",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -2698,7 +2698,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "neural_dag",
  "neural_engine",
- "protocol",
+ "playbook",
  "semio-framework-core",
  "serde",
  "serde-wasm-bindgen",
@@ -3007,7 +3007,7 @@ dependencies = [
 name = "forms"
 version = "0.1.0"
 dependencies = [
- "protocol",
+ "playbook",
  "serde",
  "serde_json",
  "vcs",
@@ -3018,7 +3018,7 @@ name = "forms-plugin"
 version = "0.1.0"
 dependencies = [
  "forms",
- "protocol",
+ "playbook",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
@@ -7586,6 +7586,45 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "b4596b6d070b27117e987119b4dac604f3c58cfb0b191112e24771b2faeac1a6"
 
 [[package]]
+name = "playbook"
+version = "0.1.0"
+dependencies = [
+ "dsl",
+ "serde",
+ "serde_json",
+ "ui_wgpu",
+ "vcs",
+ "wasm-bindgen",
+]
+
+[[package]]
+name = "playbook-module-procedural"
+version = "0.1.0"
+dependencies = [
+ "dsl",
+ "flow_core",
+ "flow_module_brep",
+ "kernel_3d_engine",
+ "playbook",
+ "semio-framework-core",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
+name = "playbook-plugin"
+version = "0.1.0"
+dependencies = [
+ "playbook",
+ "semio-framework-plugin",
+ "serde",
+ "serde_json",
+ "vcs",
+]
+
+[[package]]
 name = "plist"
 version = "1.9.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -7764,9 +7803,9 @@ dependencies = [
  "flow_module_draw",
  "kernel_3d_engine",
  "kernel_3d_scene",
+ "playbook",
  "procedural_2d",
  "procedural_3d",
- "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -7783,7 +7822,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "flow_core",
- "protocol",
+ "playbook",
  "serde",
  "serde_json",
  "vcs",
@@ -7796,7 +7835,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "flow_core",
- "protocol",
+ "playbook",
  "serde",
  "serde_json",
  "vcs",
@@ -7863,39 +7902,121 @@ dependencies = [
 name = "protocol"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "serde",
- "serde_json",
- "ui_wgpu",
- "vcs",
- "wasm-bindgen",
+ "protocol_causal",
+ "protocol_command",
+ "protocol_core",
+ "protocol_crdt",
+ "protocol_format",
+ "protocol_history",
+ "protocol_io",
+ "protocol_materialize",
+ "protocol_wire",
 ]
 
 [[package]]
-name = "protocol-module-procedural"
+name = "protocol_causal"
 version = "0.1.0"
 dependencies = [
- "dsl",
- "flow_core",
- "flow_module_brep",
- "kernel_3d_engine",
- "protocol",
- "semio-framework-core",
- "semio-framework-plugin",
+ "protocol_command",
+ "protocol_core",
  "serde",
  "serde_json",
- "vcs",
 ]
 
 [[package]]
-name = "protocol-plugin"
+name = "protocol_cli"
 version = "0.1.0"
 dependencies = [
  "protocol",
- "semio-framework-plugin",
+]
+
+[[package]]
+name = "protocol_command"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "dsl_core",
+ "protocol_core",
  "serde",
  "serde_json",
- "vcs",
+]
+
+[[package]]
+name = "protocol_core"
+version = "0.1.0"
+dependencies = [
+ "pack_core",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "protocol_crdt"
+version = "0.1.0"
+dependencies = [
+ "protocol_command",
+ "protocol_core",
+]
+
+[[package]]
+name = "protocol_format"
+version = "0.1.0"
+dependencies = [
+ "blake3",
+ "pack_core",
+ "pack_format",
+ "protocol_core",
+]
+
+[[package]]
+name = "protocol_history"
+version = "0.1.0"
+dependencies = [
+ "dsl_core",
+ "dsl_schema",
+ "pack_core",
+ "protocol_core",
+ "protocol_format",
+]
+
+[[package]]
+name = "protocol_io"
+version = "0.1.0"
+dependencies = [
+ "pack_core",
+ "pack_io",
+ "protocol_core",
+ "protocol_format",
+ "protocol_history",
+]
+
+[[package]]
+name = "protocol_materialize"
+version = "0.1.0"
+dependencies = [
+ "protocol_core",
+ "protocol_format",
+ "protocol_history",
+]
+
+[[package]]
+name = "protocol_testkit"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "pack_testkit",
+ "protocol",
+]
+
+[[package]]
+name = "protocol_wire"
+version = "0.1.0"
+dependencies = [
+ "protocol_causal",
+ "protocol_command",
+ "protocol_core",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]

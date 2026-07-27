@@ -6753,7 +6753,10 @@
    per-level fill; ui-glass is the per-level glass fill — used identically by a level's body AND
    its attached chrome (title caps, ribbons, tab bars, rails), since one level must always render
    as one single appearance, never two; ui-veil is the fullscreen scrim whose host must carry
-   data-level="dialog" for correct tint. */
+   data-level="dialog" for correct tint. In the React layer (ui/js/react/index.tsx), `cn()` extends
+   Tailwind-merge's `bg-color` class group with these three names so composing one alongside a
+   `bg-*` utility (e.g. `bg-transparent`) is a deterministic last-wins conflict, never two classes
+   silently coexisting with the CSS-declaration-order winner picked by accident. */
 @utility ui-surface {
   background-color: var(--surface-bg);
 }

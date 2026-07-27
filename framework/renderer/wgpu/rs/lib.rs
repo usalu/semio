@@ -9664,7 +9664,7 @@ mod table_tests {
 //#endregion TableTests
 
 //#region BlockList
-/// 🧩 Mirrors `protocol::ProtocolBlock`'s renderer-relevant fields — a typed block inside a
+/// 🧩 Mirrors `playbook::PlaybookBlock`'s renderer-relevant fields — a typed block inside a
 /// [`BlockListScene`] step. Unknown/extra JSON fields (the block-kind-specific property editor
 /// fields owned by the host app) are ignored by `serde` since this crate never edits them.
 #[derive(Deserialize)]
@@ -9676,7 +9676,7 @@ struct BlockListBlockJson {
     description: Option<String>,
 }
 
-/// 🧩 Mirrors `protocol::ProtocolStep`'s renderer-relevant fields.
+/// 🧩 Mirrors `playbook::PlaybookStep`'s renderer-relevant fields.
 #[derive(Deserialize)]
 struct BlockListStepJson {
     id: String,
@@ -9700,8 +9700,8 @@ struct BlockListPaletteEntryJson {
 /// 🧩 Renders the strict-list Blockly-like block-list builder ([`SurfaceKind::BlockList`]):
 /// steps stacked vertically (each with its ordered blocks) plus a palette rail for inserting new
 /// blocks, mirroring `block-list-host.tsx`'s layout and action verbs (`addStep`/`removeStep`/
-/// `moveStep`/`addBlock`/`removeBlock`/`moveBlock`, see `protocol::builder_kit` and
-/// `protocol-plugin`'s `handle_action`). Reordering dispatches `moveStep`/`moveBlock` from
+/// `moveStep`/`addBlock`/`removeBlock`/`moveBlock`, see `playbook::builder_kit` and
+/// `playbook-plugin`'s `handle_action`). Reordering dispatches `moveStep`/`moveBlock` from
 /// move-up/move-down hit targets rather than free-form pointer drag (unlike the React host's
 /// dnd-kit drag-and-drop): this renderer's click-dispatch model (see `render_table`'s row/header
 /// hits) has no established cross-frame drag-position-tracking primitive for list reordering, and

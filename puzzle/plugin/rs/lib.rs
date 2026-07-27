@@ -955,7 +955,7 @@ pub mod d2 {
     }
 
     fn fixture_endpoint_xy(fixture: &Value, endpoint_id: &str) -> Option<(f64, f64)> {
-        if let Some((node_id, handle_id)) = endpoint_id.split_once(':') {
+        if let Some((node_id, handle_id)) = endpoint_id.split_once('@') {
             let node = fixture_nodes(fixture).iter().find(|node| node.get("id").and_then(|value| value.as_str()) == Some(node_id))?;
             let cx = node.get("x").and_then(|value| value.as_f64())?;
             let cy = node.get("y").and_then(|value| value.as_f64())?;

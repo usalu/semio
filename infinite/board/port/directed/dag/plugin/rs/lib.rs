@@ -92,7 +92,7 @@ fn dag_action(action: &str, args: Option<Value>) -> ActionDescriptor {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
 fn document_to_media_graph(document: &DagDocument) -> (String, String) {
@@ -106,8 +106,8 @@ fn document_to_media_graph(document: &DagDocument) -> (String, String) {
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
     let edges: Vec<MediaGraphEdgeRecord> = document
@@ -208,7 +208,7 @@ fn connect_edge(document: &DagDocument, source_node_id: &str, source_port_id: &s
         return Err(DagPlayError::CycleDetected);
     }
     let edge_id = format!("e{}", document.edges.iter().filter_map(|edge| edge.id.strip_prefix('e').and_then(|suffix| suffix.parse::<u64>().ok())).max().unwrap_or(0) + 1);
-    Ok(DagFixtureEdge { id: edge_id, source: format!("{source_node_id}:{source_port_id}"), target: format!("{target_node_id}:{target_port_id}"), ..Default::default() })
+    Ok(DagFixtureEdge { id: edge_id, source: format!("{source_node_id}@{source_port_id}"), target: format!("{target_node_id}@{target_port_id}"), ..Default::default() })
 }
 
 /// 🗑️ Operations removing `node_ids` and every edge touching them, for delete-node / delete-selection.
@@ -793,8 +793,8 @@ impl DocumentApp for DagPlayApp {
                                 let (from_node, from_port) = split_endpoint(&edge.source);
                                 let (to_node, to_port) = split_endpoint(&edge.target);
                                 DagFixtureEdge {
-                                    source: if from_node == old_id { format!("{trimmed}:{from_port}") } else { edge.source.clone() },
-                                    target: if to_node == old_id { format!("{trimmed}:{to_port}") } else { edge.target.clone() },
+                                    source: if from_node == old_id { format!("{trimmed}@{from_port}") } else { edge.source.clone() },
+                                    target: if to_node == old_id { format!("{trimmed}@{to_port}") } else { edge.target.clone() },
                                     ..edge.clone()
                                 }
                             })

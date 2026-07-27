@@ -34,7 +34,7 @@ mathematical_graph_manifest = { path = "../../../mathematical/graph/manifest/rs"
 infinite_board_port_directed_dag = { path = "../../../infinite/board/port/directed/dag/rs" }
 infinite_cavas = { path = "../../../infinite/cavas/rs" }
 ui_styling = { path = "../../../ui/styling/rs" }
-protocol = { path = "../../../protocol/rs" }
+playbook = { path = "../../../playbook/rs" }
 serde = { version = "1.0.219", features = ["derive"] }
 serde_json = "1.0.140"
 base64 = "0.22"

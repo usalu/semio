@@ -1,0 +1,18 @@
+[package]
+name = "protocol_cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol CLI — inspect, verify, hash, log, compile/decompile, diff, compact, repair, upgrade"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+[[bin]]
+name = "protocol"
+path = "lib.rs"
+
+[dependencies]
+protocol = { path = "../../rs" }

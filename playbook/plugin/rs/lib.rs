@@ -1,10 +1,10 @@
-//! 🧩 Protocol plugin — standalone strict-list, Blockly-like builder app bundled as a hot-swappable
+//! 🧩 Playbook plugin — standalone strict-list, Blockly-like builder app bundled as a hot-swappable
 //! WASM component. Independently launchable/testable without going through `forms`.
 
-use protocol::{
-    add_block_operation, add_step_operation, empty_protocol_projection, move_block_operation, move_step_operation, remove_block_operation,
-    remove_step_operation, render_protocol_builder, update_protocol_title_operation, ProtocolBlock, ProtocolBuilderConfig,
-    ProtocolOperation, ProtocolSpec, PROTOCOL_BUILDER_LABELS_EN, PROTOCOL_BUILTIN_KINDS, PROTOCOL_DOCUMENT_SCHEMA,
+use playbook::{
+    add_block_operation, add_step_operation, empty_playbook_projection, move_block_operation, move_step_operation, remove_block_operation,
+    remove_step_operation, render_playbook_builder, update_playbook_title_operation, PlaybookBlock, PlaybookBuilderConfig,
+    PlaybookOperation, PlaybookSpec, PLAYBOOK_BUILDER_LABELS_EN, PLAYBOOK_BUILTIN_KINDS, PLAYBOOK_DOCUMENT_SCHEMA,
 };
 use semio_framework_plugin::{
     app_labels, create_default_layout, is_de_locale, localized_label_map, resolve_labels, ui_text, ActionArgDef,
@@ -14,18 +14,18 @@ use semio_framework_plugin::{
 use serde_json::Value;
 
 //#region 🔖Constants
-const PROTOCOL_PLAY_PLUGIN_ID: &str = "protocol-play";
-const PROTOCOL_PLAY_APP_ID: &str = "protocol-play";
-const PROTOCOL_PLAY_CONTROLLER_ID: &str = "protocol-play";
-const PROTOCOL_PLAY_SURFACE_BUILDER: &str = "protocol.play.builder";
-const PROTOCOL_PLAY_BODY_BUILDER: &str = "protocol.play.builder";
-const PROTOCOL_PLAY_WINDOW_BUILDER: &str = "protocol-builder";
+const PLAYBOOK_PLAY_PLUGIN_ID: &str = "playbook-play";
+const PLAYBOOK_PLAY_APP_ID: &str = "playbook-play";
+const PLAYBOOK_PLAY_CONTROLLER_ID: &str = "playbook-play";
+const PLAYBOOK_PLAY_SURFACE_BUILDER: &str = "playbook.play.builder";
+const PLAYBOOK_PLAY_BODY_BUILDER: &str = "playbook.play.builder";
+const PLAYBOOK_PLAY_WINDOW_BUILDER: &str = "playbook-builder";
 //#endregion 🔖Constants
 
 //#region 🔖DocumentHelpers
 /// 🧱 A blank block of the requested kind — every optional field defaulted, ready to be edited.
-fn default_block(id: String, kind: &str) -> ProtocolBlock {
-    ProtocolBlock {
+fn default_block(id: String, kind: &str) -> PlaybookBlock {
+    PlaybookBlock {
         id,
         label: kind.into(),
         kind: kind.into(),
@@ -51,9 +51,9 @@ fn default_block(id: String, kind: &str) -> ProtocolBlock {
 //#endregion 🔖DocumentHelpers
 
 //#region 🔖Terminology
-/// 🗣️ Complete UI label set for the protocol-play app; one field per label makes every locale combination compile-checked.
+/// 🗣️ Complete UI label set for the playbook-play app; one field per label makes every locale combination compile-checked.
 app_labels! {
-    struct ProtocolPlayLabels {
+    struct PlaybookPlayLabels {
         window_builder: &'static str = en: "Builder", de: "Builder";
         mode_builder: &'static str = en: "Builder", de: "Builder";
         kind_arg: &'static str = en: "Kind", de: "Art";
@@ -62,10 +62,10 @@ app_labels! {
 //#endregion 🔖Terminology
 
 //#region 🔖CommandLabels
-/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_protocol_play_app`'s
+/// 🗣️ (action id) -> localized label for every operation/view-action declared in `create_playbook_play_app`'s
 /// static manifest — the manifest itself has no `view_state`/locale parameter, so this overlay is how the command
 /// palette and Actions rail get a translated label without threading locale through the whole builder chain.
-fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
+fn playbook_play_action_labels(is_de: bool) -> std::collections::HashMap<String, String> {
     localized_label_map(is_de, &[
         ("addStep", "Add Step", "Schritt hinzufügen"),
         ("removeStep", "Remove Step", "Schritt entfernen"),
@@ -73,23 +73,23 @@ fn protocol_play_action_labels(is_de: bool) -> std::collections::HashMap<String,
         ("addBlock", "Add Block", "Baustein hinzufügen"),
         ("removeBlock", "Remove Block", "Baustein entfernen"),
         ("moveBlock", "Move Block", "Baustein verschieben"),
-        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
+        ("updatePlaybook", "Update Playbook", "Playbook aktualisieren"),
         ("setSelection", "Set Selection", "Auswahl festlegen"),
     ])
 }
 //#endregion 🔖CommandLabels
 
 //#region 🔖Render
-fn protocol_builder_config() -> ProtocolBuilderConfig {
-    ProtocolBuilderConfig {
-        action_namespace: "protocol-builder",
-        controller_id: PROTOCOL_PLAY_CONTROLLER_ID,
-        labels: PROTOCOL_BUILDER_LABELS_EN,
+fn playbook_builder_config() -> PlaybookBuilderConfig {
+    PlaybookBuilderConfig {
+        action_namespace: "playbook-builder",
+        controller_id: PLAYBOOK_PLAY_CONTROLLER_ID,
+        labels: PLAYBOOK_BUILDER_LABELS_EN,
     }
 }
 
 fn builtin_palette() -> Vec<BlockPaletteEntry> {
-    PROTOCOL_BUILTIN_KINDS
+    PLAYBOOK_BUILTIN_KINDS
         .iter()
         .map(|kind| BlockPaletteEntry {
             block_kind: (*kind).into(),
@@ -99,48 +99,48 @@ fn builtin_palette() -> Vec<BlockPaletteEntry> {
         .collect()
 }
 
-fn render_builder(spec: &ProtocolSpec, selected_id: Option<&str>) -> UiNode {
-    render_protocol_builder(
-        PROTOCOL_PLAY_SURFACE_BUILDER,
+fn render_builder(spec: &PlaybookSpec, selected_id: Option<&str>) -> UiNode {
+    render_playbook_builder(
+        PLAYBOOK_PLAY_SURFACE_BUILDER,
         spec,
         &builtin_palette(),
         selected_id,
-        &protocol_builder_config(),
+        &playbook_builder_config(),
     )
 }
 //#endregion 🔖Render
 
-//#region 🔖ProtocolPlayApp
+//#region 🔖PlaybookPlayApp
 /// 🎛️ Ephemeral view state (the current block/step selection) — lives in the app struct, never in the
 /// document, so selecting an element never pollutes undo history.
 #[derive(Default)]
-struct ProtocolPlayApp {
+struct PlaybookPlayApp {
     selected_ids: Vec<String>,
 }
 
-impl DocumentApp for ProtocolPlayApp {
-    type Projection = ProtocolSpec;
-    type Operation = ProtocolOperation;
+impl DocumentApp for PlaybookPlayApp {
+    type Projection = PlaybookSpec;
+    type Operation = PlaybookOperation;
 
     fn app_id(&self) -> &str {
-        PROTOCOL_PLAY_APP_ID
+        PLAYBOOK_PLAY_APP_ID
     }
 
     fn document_schema(&self) -> &str {
-        PROTOCOL_DOCUMENT_SCHEMA
+        PLAYBOOK_DOCUMENT_SCHEMA
     }
 
-    fn initial_projection(&self) -> ProtocolSpec {
-        empty_protocol_projection()
+    fn initial_projection(&self) -> PlaybookSpec {
+        empty_playbook_projection()
     }
 
     fn handle_action(
         &mut self,
         action: &str,
         args: Option<&Value>,
-        doc: &DocumentView<'_, ProtocolSpec>,
+        doc: &DocumentView<'_, PlaybookSpec>,
         _view_state: &ViewState,
-    ) -> ActionEmit<ProtocolOperation> {
+    ) -> ActionEmit<PlaybookOperation> {
         let spec = doc.projection;
         match action {
             "setSelection" => {
@@ -201,79 +201,79 @@ impl DocumentApp for ProtocolPlayApp {
                 };
                 ActionEmit::operations(vec![move_block_operation(block_id, from_step_id, to_step_id, index)])
             }
-            "updateProtocol" => {
+            "updatePlaybook" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 ActionEmit::amend(
-                    vec![update_protocol_title_operation(Some(title.to_string()).filter(|title| !title.is_empty()))],
-                    "protocol.title",
+                    vec![update_playbook_title_operation(Some(title.to_string()).filter(|title| !title.is_empty()))],
+                    "playbook.title",
                 )
             }
             _ => ActionEmit::default(),
         }
     }
 
-    fn render(&self, body_key: &str, doc: &DocumentView<'_, ProtocolSpec>, _view_state: &ViewState) -> UiNode {
+    fn render(&self, body_key: &str, doc: &DocumentView<'_, PlaybookSpec>, _view_state: &ViewState) -> UiNode {
         match body_key {
-            PROTOCOL_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.first().map(String::as_str)),
+            PLAYBOOK_PLAY_BODY_BUILDER => render_builder(doc.projection, self.selected_ids.first().map(String::as_str)),
             _ => ui_text(format!("Unknown body: {body_key}")),
         }
     }
 
     fn app_labels(&self, view_state: &ViewState) -> AppLabelsOverlay {
-        let labels = resolve_labels::<ProtocolPlayLabels>(view_state);
+        let labels = resolve_labels::<PlaybookPlayLabels>(view_state);
         let is_de = is_de_locale(view_state);
         AppLabelsOverlay::default()
-            .window_kind_label(PROTOCOL_PLAY_WINDOW_BUILDER, labels.window_builder)
+            .window_kind_label(PLAYBOOK_PLAY_WINDOW_BUILDER, labels.window_builder)
             .mode_label("builder", labels.mode_builder)
-            .action_labels(protocol_play_action_labels(is_de))
+            .action_labels(playbook_play_action_labels(is_de))
             .action_arg_label("addBlock.kind", labels.kind_arg)
     }
 }
-//#endregion 🔖ProtocolPlayApp
+//#endregion 🔖PlaybookPlayApp
 
 //#region 🔖Manifest
-fn create_protocol_play_app() -> App {
+fn create_playbook_play_app() -> App {
     App::from_builder(
-        App::builder(PROTOCOL_PLAY_APP_ID, "Protocol")
-            .document(["semio", "protocol"])
+        App::builder(PLAYBOOK_PLAY_APP_ID, "Playbook")
+            .document(["semio", "playbook"])
             .mode("builder", "Builder")
             .default_mode_id("builder")
-            .window_kind(PROTOCOL_PLAY_WINDOW_BUILDER, "Builder", PROTOCOL_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
-            .default_layout(create_default_layout(&[PROTOCOL_PLAY_WINDOW_BUILDER.into()], "row", None, None))
+            .window_kind(PLAYBOOK_PLAY_WINDOW_BUILDER, "Builder", PLAYBOOK_PLAY_BODY_BUILDER, SurfaceKind::BlockList, "clipboard-list")
+            .default_layout(create_default_layout(&[PLAYBOOK_PLAY_WINDOW_BUILDER.into()], "row", None, None))
             .operation("addStep", "Add Step")
             .operation("removeStep", "Remove Step")
             .operation("moveStep", "Move Step")
             .operation("addBlock", "Add Block")
             .operation("removeBlock", "Remove Block")
             .operation("moveBlock", "Move Block")
-            .operation("updateProtocol", "Update Protocol")
+            .operation("updatePlaybook", "Update Playbook")
             .view_action("setSelection", "Set Selection")
             // 📝 Staged argument form for the panel-visible create action (block kind is a choice).
             .action_args("addBlock", vec![
                 ActionArgDef::select(
                     "kind",
                     "Kind",
-                    PROTOCOL_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
+                    PLAYBOOK_BUILTIN_KINDS.iter().map(|kind| ActionArgOption::new(*kind, *kind)).collect(),
                 )
                 .default_value("text"),
             ]),
     )
 }
 
-/// 🗂️ Registers `ProtocolSpec`'s pack<->dsl codec under its real `document_schema()` string so
+/// 🗂️ Registers `PlaybookSpec`'s pack<->dsl codec under its real `document_schema()` string so
 /// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
-/// protocol documents without depending on this crate's concrete `Projection`/`Operation` types.
-fn register_protocol_play_exports() {
-    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ProtocolPlayApp>(PROTOCOL_DOCUMENT_SCHEMA);
+/// playbook documents without depending on this crate's concrete `Projection`/`Operation` types.
+fn register_playbook_play_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<PlaybookPlayApp>(PLAYBOOK_DOCUMENT_SCHEMA);
 }
 
-fn protocol_play_bundle() -> PluginBundle {
-    register_protocol_play_exports();
-    PluginBundle::new(PROTOCOL_PLAY_PLUGIN_ID, "Protocol", "0.1.0")
-        .register_document_app(create_protocol_play_app(), ProtocolPlayApp::default)
+fn playbook_play_bundle() -> PluginBundle {
+    register_playbook_play_exports();
+    PluginBundle::new(PLAYBOOK_PLAY_PLUGIN_ID, "Playbook", "0.1.0")
+        .register_document_app(create_playbook_play_app(), PlaybookPlayApp::default)
 }
 
-semio_framework_plugin::plugin_exports!(protocol_play_bundle);
+semio_framework_plugin::plugin_exports!(playbook_play_bundle);
 //#endregion 🔖Manifest
 
 //#region 🧪Tests
@@ -285,7 +285,7 @@ mod tests {
 
     #[test]
     fn add_block_materializes_declared_kind_default() {
-        let mut app = testkit::new_app_with_registry::<ProtocolPlayApp>(create_protocol_play_app);
+        let mut app = testkit::new_app_with_registry::<PlaybookPlayApp>(create_playbook_play_app);
         app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         // addBlock fired with no args: the declared `kind` default ("text") must be materialized host-side.
         app.handle_action("addBlock", None, &ViewState::default(), &testkit::meta("local")).expect("add block");
@@ -294,23 +294,23 @@ mod tests {
     }
 
     #[test]
-    fn protocol_play_app_declares_builder_window() {
-        let app = create_protocol_play_app();
+    fn playbook_play_app_declares_builder_window() {
+        let app = create_playbook_play_app();
         assert_eq!(app.definition.window_kinds.len(), 1);
-        assert_eq!(app.definition.window_kinds[0].id, PROTOCOL_PLAY_WINDOW_BUILDER);
-        assert_eq!(app.definition.window_kinds[0].body_key, PROTOCOL_PLAY_BODY_BUILDER);
+        assert_eq!(app.definition.window_kinds[0].id, PLAYBOOK_PLAY_WINDOW_BUILDER);
+        assert_eq!(app.definition.window_kinds[0].body_key, PLAYBOOK_PLAY_BODY_BUILDER);
     }
 
     #[test]
     fn add_step_action_grows_projection() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
         app.handle_action("addStep", None, &ViewState::default(), &testkit::meta("local")).expect("add step");
         assert_eq!(app.projection().expect("materialize projection").steps.len(), 2);
     }
 
     #[test]
     fn add_block_action_appends_and_selects_block() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
         let result = app
             .handle_action("addBlock", Some(&json!({ "kind": "text" })), &ViewState::default(), &testkit::meta("local"))
             .expect("add block");
@@ -318,14 +318,14 @@ mod tests {
         let projection = app.projection().expect("materialize projection");
         assert_eq!(projection.steps[0].blocks.len(), 1);
         assert_eq!(projection.steps[0].blocks[0].kind, "text");
-        let node = app.render(PROTOCOL_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
+        let node = app.render(PLAYBOOK_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
         let json = serde_json::to_string(&node).unwrap();
         assert!(json.contains(&projection.steps[0].blocks[0].id));
     }
 
     #[test]
     fn set_selection_is_a_view_action_without_operations() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
         let result = app
             .handle_action("setSelection", Some(&json!({ "ids": ["block-1"] })), &ViewState::default(), &testkit::meta("local"))
             .expect("set selection");
@@ -333,15 +333,15 @@ mod tests {
     }
 
     #[test]
-    fn render_builder_emits_protocol_list_component_scene() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
-        let node = app.render(PROTOCOL_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
+    fn render_builder_emits_playbook_list_component_scene() {
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
+        let node = app.render(PLAYBOOK_PLAY_BODY_BUILDER, None, &ViewState::default()).expect("render");
         assert!(matches!(node, UiNode::ComponentScene(_)));
     }
 
     #[test]
     fn undo_redo_round_trip_through_the_wrapper() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
         testkit::assert_undo_redo_round_trip(
             &mut app,
             "addStep",
@@ -353,10 +353,10 @@ mod tests {
     }
 
     #[test]
-    fn update_protocol_title_coalesces_into_one_undo_step() {
-        let mut app = testkit::new_app::<ProtocolPlayApp>();
+    fn update_playbook_title_coalesces_into_one_undo_step() {
+        let mut app = testkit::new_app::<PlaybookPlayApp>();
         for title in ["R", "Re", "Recipe"] {
-            app.handle_action("updateProtocol", Some(&json!({ "value": title })), &ViewState::default(), &testkit::meta("local")).expect("type title");
+            app.handle_action("updatePlaybook", Some(&json!({ "value": title })), &ViewState::default(), &testkit::meta("local")).expect("type title");
         }
         assert_eq!(app.projection().expect("materialize projection").title.as_deref(), Some("Recipe"));
         app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
@@ -369,8 +369,8 @@ mod tests {
     /// `setDocument` snapshots, where one side's write would clobber the other's.
     #[test]
     fn two_instances_converge_disjoint_edits_via_backbone() {
-        testkit::assert_two_instances_converge::<ProtocolPlayApp, (usize, usize)>(
-            "mem://protocol-convergence",
+        testkit::assert_two_instances_converge::<PlaybookPlayApp, (usize, usize)>(
+            "mem://playbook-convergence",
             ("addStep", None),
             ("addBlock", Some(&json!({ "kind": "number" }))),
             |app| {

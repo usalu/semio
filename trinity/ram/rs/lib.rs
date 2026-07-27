@@ -961,6 +961,10 @@ fn port_dsl_to_port(port: PortDsl) -> Port {
 
 /// 🧩 Local mirror of `Node` — needed only because `Node.ports: Vec<Port>` transitively carries
 /// `Port`'s foreign `direction` field; every other `Node` field is already DSL-ready directly.
+/// `ports` is itself `#[dsl(table)]`: `NodeDsl` is the row type of `GraphFixtureDsl.nodes`'s own
+/// `#[dsl(table)]` column, so a table-shaped `ports` here is a table-within-a-table-row — the
+/// engine now prints/parses that nested case as a braced-row AoS list (`parse_table_list`/
+/// `print_table_list` in `dsl_schema`), so this is no longer the engine limitation it used to be.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct NodeDsl {
     id: String,
@@ -971,6 +975,7 @@ struct NodeDsl {
     width: f64,
     height: f64,
     properties: PropertyBag,
+    #[dsl(table)]
     ports: Vec<PortDsl>,
 }
 

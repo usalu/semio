@@ -1815,7 +1815,7 @@ pub fn bilingual(en: &str, de: &str, is_de: bool) -> String {
 
 /// 🗣️ Builds an (id -> localized label) map from `(id, en, de)` triples — replaces the per-crate
 /// hand-rolled action/utility label-map builder functions (e.g. `flow_action_labels`,
-/// `protocol_play_action_labels`).
+/// `playbook_play_action_labels`).
 pub fn localized_label_map(is_de: bool, entries: &[(&str, &str, &str)]) -> HashMap<String, String> {
     entries.iter().map(|(id, en, de)| ((*id).to_string(), (if is_de { *de } else { *en }).to_string())).collect()
 }
@@ -1999,7 +1999,7 @@ pub fn assert_undo_redo_round_trip<A, P>(
 
 /// 🧪 `action_a`/`action_b` are applied to two `paired_apps` instances, a neutral history action
 /// (`commitCheckpoint`) pumps each side's inbound operations, then `probe` must agree on both — the repeated
-/// two-instance-convergence test body (see `protocol-plugin`'s
+/// two-instance-convergence test body (see `playbook-plugin`'s
 /// `two_instances_converge_disjoint_edits_via_backbone` for the original, app-specific version).
 pub fn assert_two_instances_converge<A, P>(
     channel: &str,

@@ -417,16 +417,20 @@ fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<Field
             Ok(FieldValue::Map(entries))
         }
         Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1)?)),
-        // Reached directly whenever a `Table` shape is parsed via the generic `key=` dispatch
-        // (the AoS-verbose alternate input, `name= [ key=val ... ]`) or nested inside another
-        // shape — both are structurally identical to `List(Record)`, so delegate to that arm
-        // rather than duplicating it. The bare SoA form (`name [col:TYPE ...] { rows }`) is
-        // recognized earlier, in `parse_record_body`, and calls `parse_table_soa` directly since
-        // its grammar (a header, then count-delimited rows) isn't reachable through `parse_shape`.
+        // Reached whenever a `Table` shape is parsed via the generic `key=` dispatch (the
+        // AoS-verbose alternate input, `name=[ {row} {row} ... ]`) or nested inside another shape
+        // (a table row's own column, a list element). Delegates to `parse_table_list`, NOT to
+        // plain `List(Record)`: a table row type is commonly declared with no keyword of its own
+        // (a header already gives every row its column order, so SoA rows don't need one), and a
+        // bare `Shape::Record` with no keyword and no brace has nothing marking where one row's
+        // fields end and the next row's begin — the exact ambiguity `parse_table_cell` guards
+        // against for table COLUMNS applies identically to table ROWS printed as a bare list. The
+        // bare SoA form (`name [col:TYPE ...] { rows }`) is recognized earlier, in
+        // `parse_record_body`, and calls `parse_table_soa` directly since its grammar (a header,
+        // then count-delimited rows) isn't reachable through `parse_shape` at all.
         Shape::Table(spec_fn) => {
             validate_table_columns(&spec_fn())?;
-            let list_shape = Shape::List(Box::new(Shape::Record(*spec_fn)));
-            parse_shape(cursor, &list_shape, depth)
+            parse_table_list(cursor, *spec_fn, depth)
         }
         Shape::Wire => Ok(FieldValue::Wire(parse_wire(cursor)?)),
     }
@@ -754,6 +758,43 @@ fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<
         return Ok(FieldValue::Record(record));
     }
     parse_shape(cursor, shape, depth)
+}
+
+/// @emoji 📋 The AoS-list form for a `Table` value reached anywhere other than a record's own
+/// leading keyword-prefixed field: `[ {row-fields} {row-fields} ... ]`. Each row is brace-wrapped
+/// for the same reason a `Shape::Record` table COLUMN is (`parse_table_cell` above) — a table row
+/// type is commonly declared with no keyword of its own (a header already gives every row its
+/// column order, so SoA rows don't need one), so without a bracket of its own, one row's absent
+/// field could let its parse run on into the next row's same-named token exactly like the
+/// column-vs-column case. Bracing every row here removes that ambiguity regardless of whether the
+/// row type happens to declare a keyword or not.
+fn parse_table_list(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
+    cursor.expect(TokenKind::LBracket)?;
+    let mut items = Vec::new();
+    while cursor.peek().kind != TokenKind::RBracket {
+        cursor.expect(TokenKind::LBrace)?;
+        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
+        cursor.expect(TokenKind::RBrace)?;
+        items.push(FieldValue::Record(record));
+        cursor.limits.check_nodes(items.len(), cursor.span())?;
+    }
+    cursor.expect(TokenKind::RBracket)?;
+    Ok(FieldValue::List(items))
+}
+
+/// @emoji 📋 Prints the braced AoS-list form `parse_table_list` reads back. Ordinary `[ ]` spacing
+/// (a space just inside, per the general list rule — NOT the header's own tight-glued exception).
+fn print_table_list(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
+    writer.atom("[");
+    for item in items {
+        let FieldValue::Record(record) = item else { continue };
+        writer.atom("{");
+        writer.glue();
+        print_record(record, &spec_fn(), writer);
+        writer.glue();
+        writer.atom("}");
+    }
+    writer.atom("]");
 }
 //#endregion 🔖Table
 
@@ -1107,12 +1148,10 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
         // A `Table` reached here (NOT via `print_record`'s own keyed-field dispatch, which calls
         // `print_table` directly) is nested inside another shape — a table row's own column, a
         // list element, ... — where the bare `key [col:TYPE ...] {rows}` form has no bracket of
-        // its own to mark where it ends. Render the bracketed AoS list instead, matching what
-        // `parse_shape`'s own `Shape::Table` arm parses in every one of these same contexts.
-        (FieldValue::List(_), Shape::Table(spec_fn)) => {
-            let list_shape = Shape::List(Box::new(Shape::Record(*spec_fn)));
-            print_shape(value, &list_shape, writer);
-        }
+        // its own to mark where it ends. Render the braced-row AoS list instead (see
+        // `print_table_list`), matching what `parse_shape`'s own `Shape::Table` arm parses in
+        // every one of these same contexts.
+        (FieldValue::List(items), Shape::Table(spec_fn)) => print_table_list(*spec_fn, items, writer),
         (FieldValue::List(items), Shape::List(elem)) => {
             writer.atom("[");
             for item in items {
@@ -1707,7 +1746,7 @@ mod tests {
     #[test]
     fn table_accepts_verbose_aos_input_and_canonicalizes_to_soa_output() {
         let spec = table_doc_spec();
-        let aos_text = "scene nodes=[ id=a x=1 y=2  id=b x=3 y=4 ]";
+        let aos_text = "scene nodes=[ {id=a x=1 y=2} {id=b x=3 y=4} ]";
         let value = parse(aos_text, &spec, &ParseOptions::default()).expect("parse AoS-verbose");
         let printed = print(&value, &spec, JoinMode::Document);
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "AoS input must canonicalize to the SoA header on print: {printed}");
@@ -1742,6 +1781,77 @@ mod tests {
         let spec = bad_table_doc_spec();
         let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default());
         assert!(result.is_err(), "an unbounded Tuple column must be rejected, not silently accepted");
+    }
+
+    // --- regression: a table row whose own field is ITSELF a `#[dsl(table)]` (nested SoA output
+    // used to break the parser's row-boundary counting; see `print_table_list`/`parse_table_list`) ---
+    fn nested_inner_row_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "val", Shape::Float).optional()])
+    }
+    fn nested_outer_row_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text), FieldSpec::new(1, "children", Shape::Table(nested_inner_row_spec))])
+    }
+    fn nested_table_doc_spec() -> RecordSpec {
+        RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "items", Shape::Table(nested_outer_row_spec))])
+    }
+
+    #[test]
+    fn table_row_containing_its_own_table_field_round_trips_without_desync() {
+        let spec = nested_table_doc_spec();
+        let text = "doc items [id:TEXT children:TABLE] { p1 [ {id=c1 val=1.5} {id=c2} ]  p2 [ {id=c3 val=2} ] }";
+        assert_round_trip(text, &spec);
+        assert_document_inline_agree(text, &spec);
+
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse nested table");
+        let FieldValue::List(outer_rows) = value.get(0).unwrap() else { panic!("expected outer table (List)") };
+        assert_eq!(outer_rows.len(), 2);
+        let FieldValue::Record(row0) = &outer_rows[0] else { panic!("expected outer Record row") };
+        let FieldValue::List(inner_rows) = row0.get(1).unwrap() else { panic!("expected nested table (List)") };
+        assert_eq!(inner_rows.len(), 2, "the inner table's own row count must not desync from its header");
+        let FieldValue::Record(inner_row1) = &inner_rows[1] else { panic!("expected inner Record row") };
+        assert_eq!(inner_row1.get(1), Some(&FieldValue::Absent), "the second inner row's absent 'val' must round trip as Absent, not corrupt later parsing");
+    }
+
+    // --- regression: a table row with 2+ columns of the exact same nested `DslRecord` type (the
+    // greedy same-key consumption bug: an unset field on column N used to silently eat a later
+    // column's same-named present value; see `print_table_cell`/`parse_table_cell`) ---
+    fn quantity_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "target", Shape::Float).optional(), FieldSpec::new(1, "actual", Shape::Float).optional()])
+    }
+    fn duplicate_type_row_spec() -> RecordSpec {
+        RecordSpec::new(
+            None,
+            RecordLayout::Inline,
+            vec![
+                FieldSpec::new(0, "id", Shape::Text),
+                FieldSpec::new(1, "area", Shape::Record(quantity_spec)),
+                FieldSpec::new(2, "volume", Shape::Record(quantity_spec)),
+            ],
+        )
+    }
+    fn duplicate_type_table_doc_spec() -> RecordSpec {
+        RecordSpec::new(Some("doc"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(duplicate_type_row_spec))])
+    }
+
+    #[test]
+    fn table_row_with_two_columns_of_the_same_record_type_does_not_cross_contaminate() {
+        let spec = duplicate_type_table_doc_spec();
+        // `area`'s `target` is left absent (never printed) while `volume`'s `target=4` is present
+        // right after it — the exact shape of the reported corruption, since both columns share
+        // the identical field name.
+        let text = "doc rows [id:TEXT area:REC volume:REC] { r1 {actual=3} {target=4 actual=1} }";
+        assert_round_trip(text, &spec);
+        assert_document_inline_agree(text, &spec);
+
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse duplicate-type columns");
+        let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected table (List)") };
+        let FieldValue::Record(row0) = &rows[0] else { panic!("expected Record row") };
+        let FieldValue::Record(area) = row0.get(1).unwrap() else { panic!("expected area Record") };
+        let FieldValue::Record(volume) = row0.get(2).unwrap() else { panic!("expected volume Record") };
+        assert_eq!(area.get(0), Some(&FieldValue::Absent), "area.target must stay absent, not stolen from volume's column");
+        assert_eq!(area.get(1), Some(&FieldValue::Float(3.0)), "area.actual must be area's own value");
+        assert_eq!(volume.get(0), Some(&FieldValue::Float(4.0)), "volume.target must not be consumed by area's parse");
+        assert_eq!(volume.get(1), Some(&FieldValue::Float(1.0)), "volume.actual must be volume's own value");
     }
 
     // --- idempotent canonicalization ---

@@ -75,3 +75,38 @@ current working-tree changes was my own). Manually reapplied the one hunk via th
 `stash@{0}` is still sitting in the local stash list, untouched, in case anyone wants to inspect
 it (read-only) before it's eventually cleaned up — I did not drop it to avoid any further git
 history mutation.
+
+RESOLVED — verified by a follow-up session (picked up via the spawned task_e3a52284 prompt):
+  pack/value/rs/lib.rs's decode_table_soa fallback arm was found already threading the column
+  shape through (`let field_shape = element_spec.as_ref().and_then(|s| s.fields.iter().find(|f|
+  f.id == field_id)).map(|f| &f.shape);` then `decode_value(reader, field_shape, ctx, depth + 1)`)
+  — landed by whoever picked up the sibling task_2decfb30 ("losing nested RecordSpec for Option
+  fields"). Same root asymmetry, same fallback arm, one fix covers both: decode_table_soa now
+  takes `spec_fn: Option<fn() -> RecordSpec>` from its caller (decode_value's TAG_TABLE_SOA arm
+  passes `table_spec_of(shape)`), builds `element_spec` once, and looks up each column's real
+  `Shape` by field_id instead of hardcoding `None`.
+
+  Added the Tuple-specific regression this file's COVERAGE GAP section asked for — pack_value's
+  own suite only had a nested-Record table-column test, no Tuple one — as
+  `table_soa_tuple_column_round_trips_as_tuple_not_list` in pack/value/rs/lib.rs's `mod tests`
+  (new `table_row_with_tuple_spec()` fixture: a `Shape::Tuple(Float, Some(5))` column, matching
+  `CameraCalibration.distortion: [f32; 5]` exactly — homogeneous-numeric so it exercises the
+  TAG_PACKED_F64 packed path, the one that carries no tuple-vs-list marker of its own).
+
+  Verified:
+    cargo test -p pack_value        -> 13 passed (was 12; new test included), 0 failed
+    cargo test -p remodel_document  -> 32 passed, 0 failed
+      tests::populated_scene_roundtrips_through_dsl ... ok  (was FAILED with the schema error above)
+  This fixture also exercises GroundControlPoint.world_position ([1.0,2.0,3.0], non-default) and
+  CameraPosePreview.rotation_wxyz/translation inside results.trajectory.poses (non-default in the
+  second pose) — both pass too, so the fix's blast radius across this file's other
+  fixed-array-in-table fields is confirmed, not just asserted. RigExtrinsic in this fixture is
+  left at `::default()` (all-zero/identity) so it doesn't independently exercise the bug, but it's
+  the exact same code path as the other three, all of which are now covered.
+
+  No remodel/** or other per-app changes were needed — the fix is entirely in shared pack_value
+  infra, so every wave-2 family with a fixed-array-in-table field is fixed uniformly by this one
+  change. Did not run a full `cargo test --workspace` sweep (large multi-hour surface, 24 families);
+  scoped verification to pack_value + remodel_document since those are what this file's repro and
+  fix directly touch. Left `stash@{0}` untouched per the incident note above — not this session's
+  concern.

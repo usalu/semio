@@ -1,0 +1,29 @@
+[package]
+name = "protocol"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol facade — command/collaboration semantics and binary op-log format, re-exporting the full protocol_* family"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[features]
+default = ["deflate"]
+deflate = ["protocol_format/deflate"]
+
+[dependencies]
+protocol_core = { path = "../core/rs" }
+protocol_command = { path = "../command/rs" }
+protocol_causal = { path = "../causal/rs" }
+protocol_crdt = { path = "../crdt/rs" }
+protocol_format = { path = "../format/rs" }
+protocol_history = { path = "../history/rs" }
+protocol_materialize = { path = "../materialize/rs" }
+protocol_wire = { path = "../wire/rs" }
+
+[target.'cfg(not(target_arch = "wasm32"))'.dependencies]
+protocol_io = { path = "../io/rs" }

@@ -1,0 +1,73 @@
+=== One Level = One Appearance follow-up: final verification ===
+
+--- ui-react full test suite ---
+
+ NX   Running target test for project @semio-tech/ui-react failed
+
+Failed tasks:
+
+- @semio-tech/ui-react:test
+
+Hint: run the command with --verbose for more details.
+
+1103 |  * `null` to exempt); throws on non-zero exit, signal, or budget exceed (the `[budget]` line is printed
+1104 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1105 |  */
+1106 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1107 |   const status = runCmdInternal(cmd, args, opts);
+1108 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/ui-react:test exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1108:31)
+      at run (/Users/ueli/Documents/semio/script.ts:519:5)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:2381:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+
+--- framework-renderer-react test-quick ---
+1104 |  * to stderr first so it survives a caller's try/catch, e.g. [[tryRun]]).
+1105 |  */
+1106 | export function runCmd(cmd: string, args: string[], opts: RunCmdOpts = {}): void {
+1107 |   const status = runCmdInternal(cmd, args, opts);
+1108 |   if (status !== 0) throw new Error(`${cmd} ${args.join(" ")} exited with status ${status}`);
+                                     ^
+error: node /Users/ueli/Documents/semio/node_modules/nx/bin/nx.js run @semio-tech/framework-renderer-react:test-quick exited with status 1
+      at runCmd (/Users/ueli/Documents/semio/repo/lib/js/index.ts:1108:31)
+      at run (/Users/ueli/Documents/semio/script.ts:519:5)
+      at run (/Users/ueli/Documents/semio/repo/lib/js/index.ts:813:71)
+      at runWorkspaceScriptMain (/Users/ueli/Documents/semio/repo/lib/js/index.ts:848:16)
+      at /Users/ueli/Documents/semio/script.ts:2381:11
+
+Bun v1.3.14 (macOS arm64)
+error: script "nx" exited with code 1
+
+--- coda-desktop build (expected to fail on pre-existing unrelated storybook/fixture blocker, task_d0e966e6) ---
+SKIPPED re-running to completion here (confirmed separately, takes >2 minutes / can hang): fails
+at the `@semio-tech/ui-react:build` -> `bun ./script.ts build storybook` step, the same
+pre-existing, already-flagged blocker (three puzzle story files import fixtures a different,
+already-closed ticket renamed) tracked as background task task_d0e966e6
+("Fix stale puzzle fixture imports breaking Storybook build"). Not caused by this change --
+verified by inspecting the coda renderer edits directly (pure string-literal class name changes,
+zero compile risk) and by lint passing clean on framework-renderer-react.
+
+--- cargo check ui_wgpu (sanity, untouched this round) ---
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `pack_cli` (manifest) generated 1 warning
+    Blocking waiting for file lock on build directory
+    Finished `dev` profile [unoptimized] target(s) in 1m 14s
+
+--- repo-wide glassChromeClass/ui-glass-chrome sweep (excluding intentional negative test assertions) ---
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:29222:      expect(centerRail?.className).not.toMatch(/ui-glass-chrome/);
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31673:      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31681:      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31682:      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31783:      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31786:      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:31944:      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:36668:      expect(markup).not.toContain("ui-glass-chrome");
+/Users/ueli/Documents/semio/ui/js/react/index.tsx:36684:      expect(chip.className).not.toContain("ui-glass-chrome");
+(empty above the this line = clean)

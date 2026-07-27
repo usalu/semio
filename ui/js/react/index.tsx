@@ -7194,11 +7194,10 @@ export function getLevelZClass(level: Level): string {
 /** @emoji 🎨 Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in ui.css). */
 export const surfaceClass = "ui-surface";
 
-/** @emoji 🎨 Per-level glass fill (blur + alpha). */
+/** @emoji 🎨 Per-level glass fill (blur + alpha) — used identically by a level's body AND its
+ * attached chrome (title caps, ribbons, tab bars, rails); there is deliberately no separate
+ * "chrome" variant, since one level must always render as one single appearance. */
 export const glassClass = "ui-glass";
-
-/** @emoji 🎨 Attached chrome (title caps, ribbons, tab bars, rails) — same {@link glassClass} fill as the level body so one level always renders as one appearance. */
-export const glassChromeClass = glassClass;
 
 /** @emoji 🎨 Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
 export const veilClass = "ui-veil";
@@ -7395,7 +7394,7 @@ export function panelAnchorTabBarClass(_direction: "up" | "down"): string {
 /** @emoji 📑 Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
-/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's tabs (see {@link PanelChromeTabBar}) — frosted panel chrome living inline in the navbar/footer instead of on the floating panel. */
+/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's folded tabs (see {@link PanelChromeTabBar}) — frosted panel chrome living inline in the navbar/footer while the floating panel is closed. */
 export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border rounded-sm", borderNormalClass, glassClass);
 
 //#region 🫳DragAffordance
@@ -7449,7 +7448,7 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 //#endregion 🫳DragAffordance
 
 /** @emoji 📑 Shared panel/mobile panel tab bar variant. */
-/** @emoji 📑 `"chrome"` hosts the SAME root row (full DnD) inline in the navbar/footer chrome instead of on the floating panel — see {@link PanelChromeTabBar}. */
+/** @emoji 📑 `"chrome"` parks the folded root row (full DnD) inline in the navbar/footer; while open the floating panel owns the strip — see {@link PanelChromeTabBar}. */
 export type PanelTabBarVariant = "panel" | "mobile" | "chrome";
 
 /** @emoji 🧭 Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
@@ -7551,6 +7550,30 @@ export function anchorPositionStyle(anchor: Anchor): React.CSSProperties {
     style.transform = style.transform ? `${style.transform} translateY(-50%)` : "translateY(-50%)";
   } else {
     style[vertical] = "var(--spacing-single)";
+  }
+  return style;
+}
+
+/**
+ * @emoji 🧭 Open chrome-hosted {@link Panel} position — pulls the window-chrome cap into the navbar/footer
+ * band where {@link PanelChromeTabBar} parked the folded toggles, so opening unfolds in place instead of
+ * jumping the chips into the canvas. Navbar/footer are `h-large` with centered `h-medium` items; the offset
+ * aligns the panel's `min-h-medium` cap to that centered row. Max height grows by the same overhang so the
+ * body still fills the canvas region.
+ * @see {@link anchorPositionStyle}
+ */
+export function chromeHostedOpenPanelPositionStyle(anchor: Anchor): React.CSSProperties {
+  const style = anchorPositionStyle(anchor);
+  const vertical = anchorVertical(anchor);
+  // 📍 From the middle-region edge back to the centered h-medium row inside h-large shell chrome.
+  const intoShellChrome = "calc(-1 * (var(--size-large) + var(--size-medium)) / 2)";
+  const maxHeightWithChrome = "calc(100% + (var(--size-large) + var(--size-medium)) / 2)";
+  if (vertical === "top") {
+    style.top = intoShellChrome;
+    style.maxHeight = maxHeightWithChrome;
+  } else if (vertical === "bottom") {
+    style.bottom = intoShellChrome;
+    style.maxHeight = maxHeightWithChrome;
   }
   return style;
 }
@@ -8046,7 +8069,7 @@ export interface PanelTabBarProps {
   readonly onActivePathChange: (path: readonly string[]) => void;
   /** @emoji 🎀 Stacking direction for nested rows — `"up"` for bottom panels (rows grow toward the display center), `"down"` otherwise. */
   readonly direction?: "up" | "down";
-  /** @emoji 🗜️ Skips rows above this depth without skipping the descent through them — pairs with a `"chrome"`-hosted root row rendered elsewhere (see {@link PanelChromeTabBar}) so the floating panel picks up at depth 1. */
+  /** @emoji 🗜️ Skips rows above this depth without skipping the descent through them — used when a host intentionally starts mid-tree (e.g. a secondary strip that continues after another bar already showed shallower rows). */
   readonly startDepth?: number;
   /** @emoji 🗜️ Stops after this many emitted rows — `1` is the generalization of the old "root row only" (a folded {@link Panel}'s button group, or a chrome-hosted bar, both of which only ever show one row). */
   readonly maxRows?: number;
@@ -8535,17 +8558,22 @@ export interface PanelChromeTabBarProps extends PanelTabSelectionOptions {
 }
 
 /**
- * 🎛️ Hosts an anchor's root tab row inline in the navbar/footer chrome instead of on the floating panel — the
- * SAME {@link PanelTabBar} mechanism (progressive reveal, drill-down memory, drag-and-drop) as a panel-hosted
- * bar, just placed elsewhere. Renders nothing at rest once `tabs` is empty; becomes a drop target only while a
- * dock drag is in flight, mirroring {@link PanelEmptyDockZone}'s empty-anchor behavior. Pair with `Panel`'s
- * `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled selection props to both — chrome
- * hosting requires controlled state so the two hosts never fork.
+ * 🎛️ Hosts an anchor's root tab row inline in the navbar/footer chrome while the floating panel is
+ * folded — the SAME {@link PanelTabBar} mechanism (progressive reveal, drill-down memory, drag-and-drop)
+ * as a panel-hosted bar, just placed elsewhere. When the panel is open (`visible`), this renders nothing:
+ * the floating {@link Panel}'s {@link WindowChrome} owns the tabs as its left chips (same row as fold,
+ * U-cutout between), matching window stacks. Renders nothing at rest once `tabs` is empty; becomes a drop
+ * target only while a dock drag is in flight, mirroring {@link PanelEmptyDockZone}'s empty-anchor behavior.
+ * Pair with `Panel`'s `tabBarHost="chrome"` for the matching anchor, and pass the SAME controlled selection
+ * props to both — chrome hosting requires controlled state so the two hosts never fork.
  **/
 export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, className = "", ...selection }) => {
   const dock = usePanelDockContext();
   const { resolvedPath, handlePathChange } = usePanelTabSelection(selection);
   const { tabs, visible } = selection;
+
+  // 🪟 Open panel owns the window-chrome tab chips — keep navbar/footer clear of a duplicate root row.
+  if (visible) return null;
 
   if (tabs.length === 0) {
     if (!dock?.dragTabId) return null;
@@ -19758,11 +19786,13 @@ export interface PanelProps {
   zIndex?: 10 | 20 | 30 | 40;
   className?: string;
   /**
-   * @emoji 🎛 Where this anchor's root tab row renders — `"panel"` (default) draws it on the floating panel
-   * itself; `"chrome"` renders only depth ≥ 1 rows here (or nothing while closed/empty) because the root row
-   * instead lives in a sibling {@link PanelChromeTabBar} placed in the navbar/footer. Pair the two by passing
-   * the SAME controlled `visible`/`activeTabPath`/`pathMemory` (+ their `on*Change`) to both — chrome hosting
-   * requires controlled selection state so the panel and its chrome bar never fork.
+   * @emoji 🎛 Where this anchor's folded root tab row lives — `"panel"` (default) keeps the chip-only
+   * folded bar on the floating panel; `"chrome"` parks the folded root row in a sibling
+   * {@link PanelChromeTabBar} in the navbar/footer. While open, the floating panel hosts the full tab
+   * strip as {@link WindowChrome} left chips (same row as fold, U-cutout between) and is positioned via
+   * {@link chromeHostedOpenPanelPositionStyle} so that cap stays in the shell chrome band (unfold in
+   * place). Pair the two by passing the SAME controlled `visible`/`activeTabPath`/`pathMemory` (+ their
+   * `on*Change`) to both.
    */
   tabBarHost?: "panel" | "chrome";
 }
@@ -20001,11 +20031,13 @@ const Panel: React.FC<PanelProps> = ({
 
   // Positioned within the region between navbar and footer (Layout's middle flex row), not the whole display — spacing is relative to that region's edges only, like a window's options rail over its canvas.
   // Height hugs content up to that same region bound (`maxHeight`, not a fixed `bottom`) — taller content scrolls internally instead of forcing the box to fill the region. A corner or edge-middle panel grows in one horizontal direction and is resizable only on its inner (canvas-facing) edge; a top/bottom-middle panel is centered and grows both ways, resizable from either edge.
+  // Chrome-hosted open: pull the cap into the navbar/footer band so tabs stay where the folded {@link PanelChromeTabBar} was (unfold in place); stack above shell chrome so the overlapping cap is visible.
   const positionStyle = {
-    ...anchorPositionStyle(anchor),
+    ...(isChromeHosted && visible ? chromeHostedOpenPanelPositionStyle(anchor) : anchorPositionStyle(anchor)),
     width: visible ? `${size}px` : undefined,
     ...(zIndex !== undefined ? { zIndex } : {}),
   };
+  const panelZClass = isChromeHosted && visible ? "z-navbar" : getLevelZClass("panel");
   const panelFoldControl =
     visible && onVisibleChange
       ? {
@@ -20032,7 +20064,7 @@ const Panel: React.FC<PanelProps> = ({
           data-anchor={anchor}
           data-panel-visible="false"
           data-panel-empty="true"
-          className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground w-fit", getLevelZClass("panel"), isBottom ? "flex-col-reverse" : "flex-col", className)}
+          className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground w-fit", panelZClass, isBottom ? "flex-col-reverse" : "flex-col", className)}
           style={{ ...positionStyle, width: undefined }}
         >
           <PanelEmptyDockZone anchor={anchor} />
@@ -20054,10 +20086,11 @@ const Panel: React.FC<PanelProps> = ({
         data-slot="panel"
         data-anchor={anchor}
         data-panel-visible={visible ? "true" : "false"}
+        data-panel-chrome-hosted={isChromeHosted ? "true" : undefined}
         data-active-tab-id={activeNode?.id}
         id={visible && activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
-        className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground", getLevelZClass("panel"), isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
+        className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground", panelZClass, isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
@@ -20072,13 +20105,7 @@ const Panel: React.FC<PanelProps> = ({
                 bodySlot="panel-content"
                 bodyRef={panelContentRef}
                 close={panelFoldControl}
-                titleChips={
-                  isChromeHosted ? (
-                    <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
-                  ) : (
-                    <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} showActiveColor={visible} />
-                  )
-                }
+                titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} showActiveColor={visible} />}
                 body={
                   <Scrollable className="relative flex-1 min-h-0">
                     {activeTabTrees && activeNode ? (
@@ -28612,6 +28639,42 @@ if (import.meta.vitest) {
       expect(onDismiss).toHaveBeenCalledWith(false);
     });
 
+    // 🪜 D2 regression: the title chip, close cell, body, and footer chips of one introduction step
+    // are all `data-level="dialog"` and must render the exact same fill — the bug report was three
+    // different backgrounds (opaque title chip / fully transparent close cell / glass body) inside
+    // this one WindowChrome.
+    it("renders the title chip, close cell, body, and footer chips as one uniform dialog-level glass surface", () => {
+      const steps: IntroductionStepDefinition[] = [
+        { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        { id: "second", title: "Second", body: "Step two.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+      ];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      expect(stack.getAttribute("data-level")).toBe("dialog");
+
+      const titleChip = container.querySelector('[data-slot="introduction-info-box-chip"]') as HTMLElement;
+      const stepChip = container.querySelector('[data-slot="introduction-step-chip"]') as HTMLElement;
+      expect(titleChip.className).not.toContain("ui-surface");
+      expect(stepChip.className).not.toContain("ui-surface");
+
+      const chipCap = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
+      const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
+      const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
+      const footerLeft = container.querySelector('[data-slot="window-chrome-footer-left"]') as HTMLElement;
+      const footerCenterChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]') as HTMLElement;
+      const footerRight = container.querySelector('[data-slot="window-chrome-footer-right"]') as HTMLElement;
+      for (const cell of [chipCap, controls, body, footerLeft, footerCenterChip, footerRight]) {
+        expect(cell).toBeTruthy();
+        expect(cell.className).toContain("ui-glass");
+        expect(cell.className).not.toContain("ui-surface");
+        expect(cell.className).not.toContain("bg-transparent");
+      }
+
+      const gap = container.querySelector('[data-slot="window-chrome-gap"]') as HTMLElement;
+      expect(gap.className).not.toContain("ui-glass");
+      expect(gap.className).not.toContain("ui-surface");
+    });
+
     it("stamps an introduced element and clears it on step change", async () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "footer", title: "Footer", body: "This is the footer.", introduce: "ui.footer", show: [], placement: "auto", interactions: [], ordered: false, logos: [], demonstrations: [] },
@@ -30351,6 +30414,76 @@ if (import.meta.vitest) {
       expect(chip.className).toContain("ui-glass");
       expect(screen.getByTestId("dialog-body")).toBeTruthy();
     });
+
+    // 🪜 D1 regression: `ui-surface`/`ui-glass`/`ui-veil` are the only per-level fills — cn() must
+    // merge them like any other bg-color utility (mutually exclusive, last-in-cn wins, both
+    // directions), never silently keeping a stray `bg-transparent`/`bg-active-base` alongside one.
+    it("cn() treats ui-surface/ui-glass/ui-veil as bg-color-group utilities: last one wins, both directions", () => {
+      expect(cn("bg-transparent", glassClass)).toBe(glassClass);
+      expect(cn(glassClass, "bg-transparent")).toBe("bg-transparent");
+      expect(cn(surfaceClass, "bg-active-base")).toBe("bg-active-base");
+      expect(cn("bg-active-base", surfaceClass)).toBe(surfaceClass);
+      expect(cn(surfaceClass, glassClass)).toBe(glassClass);
+      // modifier'd utilities (hover:/data-[...]:) are a distinct conflict key — never dropped by a fill
+      expect(cn(surfaceClass, "hover:bg-hover-interactive-fill")).toBe(`${surfaceClass} hover:bg-hover-interactive-fill`);
+    });
+
+    // 🪟 D2 regression: the introduction/context-menu title chip must never re-paint an opaque fill
+    // over the already-painted chip-cap cell it sits inside (the "3 different backgrounds" bug).
+    it("windowChromeTitleChipClass never carries an opaque level fill of its own", () => {
+      expect(windowChromeTitleChipClass).not.toContain("ui-surface");
+      expect(windowChromeTitleChipClass).toContain("bg-transparent");
+    });
+
+    it("useSurface resolves the nearest Surface/SurfaceScope, or null outside any", () => {
+      const ProbeSurface: React.FC = () => {
+        const surface = useSurface();
+        return <span data-testid="probe-surface" data-level={surface?.level ?? "none"} data-fill={surface?.fill ?? "none"} />;
+      };
+      const { container: outside } = render(<ProbeSurface />);
+      expect(outside.querySelector('[data-testid="probe-surface"]')?.getAttribute("data-level")).toBe("none");
+
+      const { container: inside } = render(
+        <Surface level="panel" fill="glass">
+          <ProbeSurface />
+        </Surface>,
+      );
+      const probe = inside.querySelector('[data-testid="probe-surface"]');
+      expect(probe?.getAttribute("data-level")).toBe("panel");
+      expect(probe?.getAttribute("data-fill")).toBe("glass");
+    });
+
+    it("Surface warns (dev-only) when nested inside an ancestor Surface painting the same level, never when levels differ or fill is none", () => {
+      const warnSpy = vi.spyOn(console, "warn").mockImplementation(() => undefined);
+      render(
+        <Surface level="panel" fill="glass">
+          <Surface level="panel" fill="surface">
+            <span />
+          </Surface>
+        </Surface>,
+      );
+      expect(warnSpy).toHaveBeenCalledTimes(1);
+      warnSpy.mockClear();
+
+      render(
+        <Surface level="panel" fill="glass">
+          <Surface level="pane" fill="glass">
+            <span />
+          </Surface>
+        </Surface>,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+
+      render(
+        <Surface level="panel" fill="glass">
+          <Surface level="panel" fill="none">
+            <span />
+          </Surface>
+        </Surface>,
+      );
+      expect(warnSpy).not.toHaveBeenCalled();
+      warnSpy.mockRestore();
+    });
   });
 
   describe("ContextMenu", () => {
@@ -30418,6 +30551,9 @@ if (import.meta.vitest) {
         expect(gap.className).not.toContain("ui-glass");
         expect(stack.querySelector('[class*="ui-glass"][class*="absolute"][class*="inset-0"]')).toBeNull();
         expect(chip?.className).toContain("ui-glass");
+        // 🪜 D2 regression: the interior title chip must be transparent, not a second opaque fill.
+        const titleChip = stack?.querySelector('[data-slot="context-menu-title-chip"]') as HTMLElement;
+        expect(titleChip?.className).not.toContain("ui-surface");
       });
     });
 
@@ -30770,7 +30906,7 @@ if (import.meta.vitest) {
       expect(onActiveTabPathChange).not.toHaveBeenCalled();
     });
 
-    it('Panel with tabBarHost="chrome" renders nothing while closed and only depth ≥ 1 rows once open, leaving the root row to its sibling PanelChromeTabBar', () => {
+    it('Panel with tabBarHost="chrome" renders nothing while closed and hosts the full tab strip on WindowChrome once open', () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
         {
@@ -30781,17 +30917,42 @@ if (import.meta.vitest) {
           children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } }), singleTreeLeaf({ id: "leaf-b", icon: StubIcon, name: "Leaf B", tree: { sections: [] } })],
         },
       ];
-      const { container, rerender } = render(<Panel anchor="top-left" tabBarHost="chrome" visible={false} tabs={tabs} activeTabPath={["root-a", "leaf-a"]} />);
+      const { container, rerender } = render(<Panel anchor="top-left" tabBarHost="chrome" visible={false} tabs={tabs} activeTabPath={["root-a", "leaf-a"]} onVisibleChange={() => undefined} />);
       expect(container.querySelector('[data-slot="panel"]')).toBeNull();
 
-      rerender(<Panel anchor="top-left" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["root-a", "leaf-a"]} />);
-      expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
-      expect(screen.queryByText("Root A")).toBeNull();
+      rerender(<Panel anchor="top-left" tabBarHost="chrome" visible tabs={tabs} activeTabPath={["root-a", "leaf-a"]} onVisibleChange={() => undefined} />);
+      const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
+      expect(panel).toBeTruthy();
+      expect(panel.getAttribute("data-panel-chrome-hosted")).toBe("true");
+      expect(panel.className).toContain("z-navbar");
+      expect(panel.style.top).toContain("size-large");
+      expect(panel.style.top).toContain("size-medium");
+      expect(panel.style.top).not.toContain("spacing-single");
+      expect(container.querySelector('[data-slot="window-chrome-stack"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-cap"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
+      expect(screen.getByText("Root A")).toBeTruthy();
       expect(screen.getByText("Leaf A")).toBeTruthy();
       expect(screen.getByText("Leaf B")).toBeTruthy();
+      expect(container.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
     });
 
-    it('Panel with tabBarHost="chrome" at top-middle and bottom-middle expands with glass panel level and nested rows', () => {
+    it("chromeHostedOpenPanelPositionStyle pulls top/bottom caps into the shell chrome band and leaves side-middle canvas insets alone", () => {
+      const top = chromeHostedOpenPanelPositionStyle("top-left");
+      expect(top.top).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
+      expect(top.left).toBe("var(--spacing-single)");
+      expect(top.maxHeight).toBe("calc(100% + (var(--size-large) + var(--size-medium)) / 2)");
+
+      const bottom = chromeHostedOpenPanelPositionStyle("bottom-right");
+      expect(bottom.bottom).toBe("calc(-1 * (var(--size-large) + var(--size-medium)) / 2)");
+      expect(bottom.right).toBe("var(--spacing-single)");
+
+      const side = chromeHostedOpenPanelPositionStyle("left-middle");
+      expect(side.top).toBe("50%");
+      expect(side.left).toBe("var(--spacing-single)");
+    });
+
+    it('Panel with tabBarHost="chrome" at top-middle and bottom-middle expands with glass panel level and root chips on the chrome cap', () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [{ kind: "branch", id: "root", icon: StubIcon, name: "Command", children: [singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Palette", tree: { sections: [] } })] }];
       for (const anchor of ["top-middle", "bottom-middle"] as const) {
@@ -30799,8 +30960,8 @@ if (import.meta.vitest) {
         const panel = container.querySelector('[data-slot="panel"]');
         expect(panel?.getAttribute("data-level")).toBe("panel");
         expect(panel?.querySelector(".ui-glass")).toBeTruthy();
+        expect(screen.getByText("Command")).toBeTruthy();
         expect(screen.getByText("Palette")).toBeTruthy();
-        expect(screen.queryByText("Command")).toBeNull();
         unmount();
       }
     });
@@ -34372,33 +34533,36 @@ if (treeVitest) {
       fireEvent.pointerUp(document);
     });
 
-    it("GhostProvider keeps navbar/footer PanelChromeTabBar toggles visible while canvas ghost dims open panels including borders", async () => {
+    it("GhostProvider keeps folded navbar/footer PanelChromeTabBar toggles visible while canvas ghost dims open panels including borders", async () => {
       const { fireEvent, render } = await import("@testing-library/react");
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const { container } = render(
         <GhostProvider>
-          <PanelChromeTabBar anchor="bottom-middle" tabs={tabs} visible={false} />
+          <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} />
+          <PanelChromeTabBar anchor="bottom-middle" tabs={tabs} visible />
           <Panel anchor="bottom-middle" tabBarHost="chrome" visible tabs={tabs} size={300} minSize={100} maxSize={1000} />
           <GhostRegionShell>
             <div id="canvas" />
           </GhostRegionShell>
         </GhostProvider>,
       );
-      const chromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"]') as HTMLElement;
+      const foldedChromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"][data-anchor="top-left"]') as HTMLElement;
+      const openChromeBar = container.querySelector('[data-slot="panel-chrome-tab-bar"][data-anchor="bottom-middle"]');
       const panel = container.querySelector('[data-slot="panel"]') as HTMLElement;
       const canvas = container.querySelector("#canvas") as HTMLElement;
-      expect(chromeBar).toBeTruthy();
+      expect(foldedChromeBar).toBeTruthy();
+      expect(openChromeBar).toBeNull();
       expect(panel).toBeTruthy();
-      expect(panel.querySelector('[data-slot="window-chrome-body"]')?.hasAttribute("data-dim")).toBe(true);
       expect(panel.querySelector('[data-slot="panel-content"]')?.hasAttribute("data-dim")).toBe(true);
+      expect(panel.querySelector('[data-slot="window-chrome-cap"]')?.hasAttribute("data-dim")).toBe(true);
 
       fireEvent.pointerDown(canvas, { button: 0, clientX: 10, clientY: 10 });
       fireEvent.pointerMove(document, { clientX: 40, clientY: 10 });
 
       expect(panel.getAttribute("data-ghost")).toBe("true");
-      expect(chromeBar.hasAttribute("data-ghost")).toBe(false);
-      expect(chromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(false);
+      expect(foldedChromeBar.hasAttribute("data-ghost")).toBe(false);
+      expect(foldedChromeBar.querySelector('[data-slot="panel-tabs"]')?.hasAttribute("data-dim")).toBe(false);
       fireEvent.pointerUp(document);
     });
 
@@ -36189,13 +36353,15 @@ if (treeVitest) {
       ];
       let visible = false;
       let path: readonly string[] = ["framework.category.workbench", "framework.panel.document"];
-      const { container } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
+      const { container, rerender } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
       expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
       expect(screen.getByText("Workbench")).toBeTruthy();
       expect(screen.queryByText("Document")).toBeNull();
       fireEvent.click(screen.getByText("Workbench"));
       expect(visible).toBe(true);
       expect(path).toEqual(["framework.category.workbench", "framework.panel.document"]);
+      rerender(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
+      expect(container.querySelector('[data-slot="panel-chrome-tab-bar"]')).toBeNull();
     });
 
     it("PanelChromeTabBar at middle anchors uses panel level and glass chrome styling", () => {

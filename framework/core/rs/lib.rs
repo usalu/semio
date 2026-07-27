@@ -5215,7 +5215,7 @@ impl<T: Clone> From<NonEmptyVec<T>> for Vec<T> {
     }
 }
 
-/// 🚫 Every app has at least one mode — `protocol/module/procedural` and any other single-purpose app
+/// 🚫 Every app has at least one mode — `playbook/module/procedural` and any other single-purpose app
 /// must declare an explicit mode (e.g. `"default"`) instead of the zero-mode state the type system
 /// now makes unrepresentable.
 pub type Modes = NonEmptyVec<ModeDefinition>;
@@ -5586,7 +5586,7 @@ pub struct ExampleDefinition {
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum Contribution {
     /// 🧩 A module contributing an extension block kind to a block-list (Blockly-like) builder host app.
-    ProtocolBlockKind {
+    PlaybookBlockKind {
         #[cfg_attr(feature = "typegen", ts(rename = "appId"))]
         app_id: String,
         #[cfg_attr(feature = "typegen", ts(rename = "blockKind"))]

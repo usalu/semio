@@ -1,0 +1,16 @@
+[package]
+name = "protocol_crdt"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol CRDT merge strategies — LWW, ordered-sequence, text-sequence, tombstoned-graph-set, content-addressed-blob"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../core/rs" }
+protocol_command = { path = "../../command/rs" }

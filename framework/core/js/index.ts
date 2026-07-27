@@ -735,14 +735,14 @@ export type GraphTimelineScene = {
   readonly columnsJson: string;
 };
 
-/** 🧩 A palette entry for a block kind insertable into a {@link BlockListScene}, contributed either by the host app's own built-ins or by a `protocolBlockKind` module contribution. */
+/** 🧩 A palette entry for a block kind insertable into a {@link BlockListScene}, contributed either by the host app's own built-ins or by a `playbookBlockKind` module contribution. */
 export type BlockPaletteEntry = {
   readonly blockKind: string;
   readonly label: string;
   readonly iconId: IconName;
 };
 
-/** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `ProtocolStep[]` array, `paletteJson` is a `BlockPaletteEntry[]` array of the block kinds available to insert. */
+/** 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `stepsJson` is a `PlaybookStep[]` array, `paletteJson` is a `BlockPaletteEntry[]` array of the block kinds available to insert. */
 export type BlockListScene = {
   readonly stepsJson: string;
   readonly paletteJson: string;
@@ -1720,7 +1720,7 @@ export function normalizeAppLabelsOverlay(raw: Partial<PluginAppLabelsOverlay> |
 
 export type PluginContribution =
   | {
-      readonly kind: "protocolBlockKind";
+      readonly kind: "playbookBlockKind";
       readonly appId: string;
       readonly blockKind: string;
       readonly label: string;

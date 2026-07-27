@@ -1,21 +1,21 @@
-//! 🧩 Protocol document domain + typed VCS on `vcs`.
+//! 🧩 Playbook document domain + typed VCS on `vcs`.
 //!
 //! A strict, ordered list of steps containing typed blocks — a Blockly-like
 //! visual editor for generating code/data that is list-based, not canvas-based.
-//! Block `kind`s beyond [`PROTOCOL_BUILTIN_KINDS`] are module-contributed
-//! (see `Contribution::ProtocolBlockKind` in `semio-framework-core`).
+//! Block `kind`s beyond [`PLAYBOOK_BUILTIN_KINDS`] are module-contributed
+//! (see `Contribution::PlaybookBlockKind` in `semio-framework-core`).
 
 use serde::{Deserialize, Serialize};
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
 
-pub const PROTOCOL_DOCUMENT_SCHEMA: &str = "protocol.program";
+pub const PLAYBOOK_DOCUMENT_SCHEMA: &str = "playbook.program";
 
 pub use builder_kit::{
-    add_block_operation, add_step_operation, build_palette, build_protocol_list_scene, move_block_operation, move_step_operation, protocol_builder_action, remove_block_operation, remove_step_operation, render_protocol_builder, update_protocol_title_operation, ProtocolBuilderConfig,
-    ProtocolBuilderLabels, PROTOCOL_BUILDER_LABELS_EN,
+    add_block_operation, add_step_operation, build_palette, build_playbook_list_scene, move_block_operation, move_step_operation, playbook_builder_action, remove_block_operation, remove_step_operation, render_playbook_builder, update_playbook_title_operation, PlaybookBuilderConfig,
+    PlaybookBuilderLabels, PLAYBOOK_BUILDER_LABELS_EN,
 };
 /// 🧬 Flattens `generation_forms`/`builder_kit` onto the crate root so callers keep the flat
-/// `protocol::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
+/// `playbook::*` import surface (mirrors how `semio-framework-plugin` flattened these before the move).
 pub use generation_forms::{
     add_generation, apply_generation_operation, generation_operations, handle_generation_action, initial_generation_values, invert_generation_operation, remove_generation, rename_generation, render_generation_form_body, render_generation_preview_text,
     render_generations_tree, select_generation, selected_generation, selected_generation_mut, update_generation_values, FormGeneration, GenerationOperation, GenerationPlayState,
@@ -24,17 +24,17 @@ pub use generation_forms::{
 //#region 🔖Domain
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolStep {
+pub struct PlaybookStep {
     pub id: String,
     pub title: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
-    pub blocks: Vec<ProtocolBlock>,
+    pub blocks: Vec<PlaybookBlock>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolBlock {
+pub struct PlaybookBlock {
     pub id: String,
     pub label: String,
     pub kind: String,
@@ -57,9 +57,9 @@ pub struct ProtocolBlock {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub text: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub options: Option<Vec<ProtocolBlockOption>>,
+    pub options: Option<Vec<PlaybookBlockOption>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub fields: Option<Vec<ProtocolVectorField>>,
+    pub fields: Option<Vec<PlaybookVectorField>>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub schema: Option<String>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
@@ -72,12 +72,12 @@ pub struct ProtocolBlock {
     pub params: Option<serde_json::Value>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[dsl(statements, block)]
-    pub condition: Option<ProtocolExpr>,
+    pub condition: Option<PlaybookExpr>,
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolVectorField {
+pub struct PlaybookVectorField {
     pub key: String,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub label: Option<String>,
@@ -87,7 +87,7 @@ pub struct ProtocolVectorField {
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolBlockOption {
+pub struct PlaybookBlockOption {
     #[serde(alias = "id")]
     pub value: String,
     pub label: String,
@@ -95,74 +95,74 @@ pub struct ProtocolBlockOption {
 
 /// 🧮 Recursive boolean/comparison expression tree, self-referential via `Box` (`Eq`/`Truthy`) and
 /// `Vec` (`And`/`Or`) — the dsl:: engine's lazy `fn() -> RecordSpec` internals handle both forms of
-/// recursion natively, so this derives like any other `DslEnum`. `Box<ProtocolExpr>` has no direct
+/// recursion natively, so this derives like any other `DslEnum`. `Box<PlaybookExpr>` has no direct
 /// `DslField` impl (only named `DslRecord`/`DslScalar`/`DslEnum` types do), so every `Box`/`Vec<Self>`
 /// field routes through `#[dsl(statements, block)]` (tagged-variant dispatch, wrapped in its own
 /// `{ }` so `Eq`'s two boxed fields don't collide as two bare "the record's one Statements field").
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum ProtocolExpr {
+pub enum PlaybookExpr {
     Const { value: serde_json::Value },
     Var { name: String },
     Eq {
         #[dsl(statements, block)]
-        left: Box<ProtocolExpr>,
+        left: Box<PlaybookExpr>,
         #[dsl(statements, block)]
-        right: Box<ProtocolExpr>,
+        right: Box<PlaybookExpr>,
     },
     And {
         #[dsl(statements, block)]
-        items: Vec<ProtocolExpr>,
+        items: Vec<PlaybookExpr>,
     },
     Or {
         #[dsl(statements, block)]
-        items: Vec<ProtocolExpr>,
+        items: Vec<PlaybookExpr>,
     },
     Truthy {
         #[dsl(statements, block)]
-        expr: Box<ProtocolExpr>,
+        expr: Box<PlaybookExpr>,
     },
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-pub struct ProtocolValidationError {
+pub struct PlaybookValidationError {
     pub block_id: String,
     pub message: String,
 }
 
-pub const PROTOCOL_BUILTIN_KINDS: &[&str] = &["text", "longText", "number", "slider", "boolean", "single", "multi", "date", "color", "vector", "note", "image", "file"];
+pub const PLAYBOOK_BUILTIN_KINDS: &[&str] = &["text", "longText", "number", "slider", "boolean", "single", "multi", "date", "color", "vector", "note", "image", "file"];
 
 pub fn is_extension_block_kind(kind: &str) -> bool {
-    !PROTOCOL_BUILTIN_KINDS.contains(&kind)
+    !PLAYBOOK_BUILTIN_KINDS.contains(&kind)
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "protocol", layout = "lines")]
-pub struct ProtocolSpec {
+#[dsl(extension = "playbook", layout = "lines")]
+pub struct PlaybookSpec {
     pub schema: String,
     pub id: String,
     pub version: String,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub title: Option<String>,
-    pub steps: Vec<ProtocolStep>,
+    pub steps: Vec<PlaybookStep>,
 }
 
-pub type ProtocolEnvelope = DocumentVcsEnvelope<ProtocolSpec, ProtocolOperation>;
-pub type ProtocolStore = DocumentVcsStore<ProtocolSpec, ProtocolOperation>;
+pub type PlaybookEnvelope = DocumentVcsEnvelope<PlaybookSpec, PlaybookOperation>;
+pub type PlaybookStore = DocumentVcsStore<PlaybookSpec, PlaybookOperation>;
 
-pub fn empty_protocol_projection() -> ProtocolSpec {
-    ProtocolSpec { schema: PROTOCOL_DOCUMENT_SCHEMA.into(), id: "protocol".into(), version: "1".into(), title: None, steps: vec![ProtocolStep { id: "s".into(), title: "Steps".into(), description: None, blocks: Vec::new() }] }
+pub fn empty_playbook_projection() -> PlaybookSpec {
+    PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "playbook".into(), version: "1".into(), title: None, steps: vec![PlaybookStep { id: "s".into(), title: "Steps".into(), description: None, blocks: Vec::new() }] }
 }
 //#endregion 🔖Domain
 
 //#region 🔖Runtime
-pub fn flatten_protocol_blocks(spec: &ProtocolSpec) -> Vec<&ProtocolBlock> {
+pub fn flatten_playbook_blocks(spec: &PlaybookSpec) -> Vec<&PlaybookBlock> {
     spec.steps.iter().flat_map(|step| step.blocks.iter()).collect()
 }
 
-pub fn find_block_location<'a>(spec: &'a ProtocolSpec, block_id: &str) -> Option<(&'a ProtocolStep, usize, &'a ProtocolBlock)> {
+pub fn find_block_location<'a>(spec: &'a PlaybookSpec, block_id: &str) -> Option<(&'a PlaybookStep, usize, &'a PlaybookBlock)> {
     for step in &spec.steps {
         if let Some(index) = step.blocks.iter().position(|block| block.id == block_id) {
             return Some((step, index, &step.blocks[index]));
@@ -171,22 +171,22 @@ pub fn find_block_location<'a>(spec: &'a ProtocolSpec, block_id: &str) -> Option
     None
 }
 
-pub fn eval_protocol_expr(expr: &ProtocolExpr, values: &serde_json::Map<String, serde_json::Value>) -> serde_json::Value {
+pub fn eval_playbook_expr(expr: &PlaybookExpr, values: &serde_json::Map<String, serde_json::Value>) -> serde_json::Value {
     match expr {
-        ProtocolExpr::Const { value } => value.clone(),
-        ProtocolExpr::Var { name } => values.get(name).cloned().unwrap_or(serde_json::Value::Null),
-        ProtocolExpr::Eq { left, right } => serde_json::Value::Bool(eval_protocol_expr(left, values) == eval_protocol_expr(right, values)),
-        ProtocolExpr::And { items } => serde_json::Value::Bool(items.iter().all(|item| eval_protocol_expr(item, values).as_bool().unwrap_or(false))),
-        ProtocolExpr::Or { items } => serde_json::Value::Bool(items.iter().any(|item| eval_protocol_expr(item, values).as_bool().unwrap_or(false))),
-        ProtocolExpr::Truthy { expr } => serde_json::Value::Bool(eval_protocol_expr(expr, values).as_bool().unwrap_or(false)),
+        PlaybookExpr::Const { value } => value.clone(),
+        PlaybookExpr::Var { name } => values.get(name).cloned().unwrap_or(serde_json::Value::Null),
+        PlaybookExpr::Eq { left, right } => serde_json::Value::Bool(eval_playbook_expr(left, values) == eval_playbook_expr(right, values)),
+        PlaybookExpr::And { items } => serde_json::Value::Bool(items.iter().all(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
+        PlaybookExpr::Or { items } => serde_json::Value::Bool(items.iter().any(|item| eval_playbook_expr(item, values).as_bool().unwrap_or(false))),
+        PlaybookExpr::Truthy { expr } => serde_json::Value::Bool(eval_playbook_expr(expr, values).as_bool().unwrap_or(false)),
     }
 }
 
-pub fn is_block_visible(block: &ProtocolBlock, values: &serde_json::Map<String, serde_json::Value>) -> bool {
-    block.condition.as_ref().map(|expr| eval_protocol_expr(expr, values).as_bool().unwrap_or(false)).unwrap_or(true)
+pub fn is_block_visible(block: &PlaybookBlock, values: &serde_json::Map<String, serde_json::Value>) -> bool {
+    block.condition.as_ref().map(|expr| eval_playbook_expr(expr, values).as_bool().unwrap_or(false)).unwrap_or(true)
 }
 
-pub fn default_value_for_block(block: &ProtocolBlock) -> serde_json::Value {
+pub fn default_value_for_block(block: &PlaybookBlock) -> serde_json::Value {
     match block.kind.as_str() {
         "text" | "longText" => block.default.clone().unwrap_or(serde_json::Value::String(String::new())),
         "number" | "slider" => block.default.clone().or_else(|| block.min.map(|value| serde_json::json!(value))).unwrap_or(serde_json::json!(0)),
@@ -204,11 +204,11 @@ pub fn default_value_for_block(block: &ProtocolBlock) -> serde_json::Value {
     }
 }
 
-pub fn visible_blocks<'a>(step: &'a ProtocolStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<&'a ProtocolBlock> {
+pub fn visible_blocks<'a>(step: &'a PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<&'a PlaybookBlock> {
     step.blocks.iter().filter(|block| is_block_visible(block, values)).collect()
 }
 
-pub fn step_errors(step: &ProtocolStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<ProtocolValidationError> {
+pub fn step_errors(step: &PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> Vec<PlaybookValidationError> {
     let mut errors = Vec::new();
     for block in visible_blocks(step, values) {
         if block.kind == "note" || block.kind == "image" {
@@ -221,7 +221,7 @@ pub fn step_errors(step: &ProtocolStep, values: &serde_json::Map<String, serde_j
         if is_extension_block_kind(&block.kind) {
             let empty = value.is_none_or(|value| !value.is_object() || value.as_object().is_none_or(|obj| obj.is_empty()));
             if empty {
-                errors.push(ProtocolValidationError { block_id: block.id.clone(), message: format!("{} is required", block.label) });
+                errors.push(PlaybookValidationError { block_id: block.id.clone(), message: format!("{} is required", block.label) });
             }
             continue;
         }
@@ -232,19 +232,19 @@ pub fn step_errors(step: &ProtocolStep, values: &serde_json::Map<String, serde_j
             _ => false,
         };
         if missing {
-            errors.push(ProtocolValidationError { block_id: block.id.clone(), message: format!("{} is required", block.label) });
+            errors.push(PlaybookValidationError { block_id: block.id.clone(), message: format!("{} is required", block.label) });
         }
     }
     errors
 }
 
-pub fn can_advance(step: &ProtocolStep, values: &serde_json::Map<String, serde_json::Value>) -> bool {
+pub fn can_advance(step: &PlaybookStep, values: &serde_json::Map<String, serde_json::Value>) -> bool {
     step_errors(step, values).is_empty()
 }
 
-pub fn initial_values(spec: &ProtocolSpec, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
+pub fn initial_values(spec: &PlaybookSpec, overrides: &serde_json::Map<String, serde_json::Value>) -> serde_json::Map<String, serde_json::Value> {
     let mut values = serde_json::Map::new();
-    for block in flatten_protocol_blocks(spec) {
+    for block in flatten_playbook_blocks(spec) {
         values.insert(block.id.clone(), default_value_for_block(block));
     }
     for (key, value) in overrides {
@@ -259,10 +259,10 @@ pub fn initial_values(spec: &ProtocolSpec, overrides: &serde_json::Map<String, s
 //#region 🔖Operations
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
-pub enum ProtocolOperation {
+pub enum PlaybookOperation {
     AddStep {
         #[dsl(block)]
-        step: ProtocolStep,
+        step: PlaybookStep,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
@@ -276,7 +276,7 @@ pub enum ProtocolOperation {
     AddBlock {
         step_id: String,
         #[dsl(block)]
-        block: ProtocolBlock,
+        block: PlaybookBlock,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
@@ -293,13 +293,13 @@ pub enum ProtocolOperation {
     UpdateBlock {
         step_id: String,
         #[dsl(block)]
-        block: ProtocolBlock,
+        block: PlaybookBlock,
     },
     UpdateStep {
         #[dsl(block)]
-        step: ProtocolStep,
+        step: PlaybookStep,
     },
-    UpdateProtocol {
+    UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
     },
@@ -307,11 +307,11 @@ pub enum ProtocolOperation {
 
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "kind", rename_all = "camelCase")]
-pub enum ProtocolDiff {
+pub enum PlaybookDiff {
     #[default]
     Empty,
     AddStep {
-        step: ProtocolStep,
+        step: PlaybookStep,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
@@ -324,7 +324,7 @@ pub enum ProtocolDiff {
     },
     AddBlock {
         step_id: String,
-        block: ProtocolBlock,
+        block: PlaybookBlock,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
@@ -340,112 +340,112 @@ pub enum ProtocolDiff {
     },
     UpdateBlock {
         step_id: String,
-        block: ProtocolBlock,
+        block: PlaybookBlock,
     },
     UpdateStep {
-        step: ProtocolStep,
+        step: PlaybookStep,
     },
-    UpdateProtocol {
+    UpdatePlaybook {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
     },
 }
 
-impl OperationDiff<ProtocolSpec> for ProtocolDiff {
-    fn apply(&self, projection: &ProtocolSpec) -> ProtocolSpec {
+impl OperationDiff<PlaybookSpec> for PlaybookDiff {
+    fn apply(&self, projection: &PlaybookSpec) -> PlaybookSpec {
         let operation = match self {
-            ProtocolDiff::Empty => return projection.clone(),
-            ProtocolDiff::AddStep { step, index } => ProtocolOperation::AddStep { step: step.clone(), index: *index },
-            ProtocolDiff::RemoveStep { step_id } => ProtocolOperation::RemoveStep { step_id: step_id.clone() },
-            ProtocolDiff::MoveStep { step_id, index } => ProtocolOperation::MoveStep { step_id: step_id.clone(), index: *index },
-            ProtocolDiff::AddBlock { step_id, block, index } => ProtocolOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            ProtocolDiff::RemoveBlock { step_id, block_id } => ProtocolOperation::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            ProtocolDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolOperation::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            ProtocolDiff::UpdateBlock { step_id, block } => ProtocolOperation::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            ProtocolDiff::UpdateStep { step } => ProtocolOperation::UpdateStep { step: step.clone() },
-            ProtocolDiff::UpdateProtocol { title } => ProtocolOperation::UpdateProtocol { title: title.clone() },
+            PlaybookDiff::Empty => return projection.clone(),
+            PlaybookDiff::AddStep { step, index } => PlaybookOperation::AddStep { step: step.clone(), index: *index },
+            PlaybookDiff::RemoveStep { step_id } => PlaybookOperation::RemoveStep { step_id: step_id.clone() },
+            PlaybookDiff::MoveStep { step_id, index } => PlaybookOperation::MoveStep { step_id: step_id.clone(), index: *index },
+            PlaybookDiff::AddBlock { step_id, block, index } => PlaybookOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            PlaybookDiff::RemoveBlock { step_id, block_id } => PlaybookOperation::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            PlaybookDiff::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookOperation::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            PlaybookDiff::UpdateBlock { step_id, block } => PlaybookOperation::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            PlaybookDiff::UpdateStep { step } => PlaybookOperation::UpdateStep { step: step.clone() },
+            PlaybookDiff::UpdatePlaybook { title } => PlaybookOperation::UpdatePlaybook { title: title.clone() },
         };
-        apply_protocol_edit_operation(projection, &operation)
+        apply_playbook_edit_operation(projection, &operation)
     }
 
     fn absorb(&mut self, other: Self) {
-        if !matches!(other, ProtocolDiff::Empty) {
+        if !matches!(other, PlaybookDiff::Empty) {
             *self = other;
         }
     }
 }
 
-impl Operation<ProtocolSpec> for ProtocolOperation {
-    type Diff = ProtocolDiff;
+impl Operation<PlaybookSpec> for PlaybookOperation {
+    type Diff = PlaybookDiff;
 
-    fn diff(&self, _projection: &ProtocolSpec) -> ProtocolDiff {
+    fn diff(&self, _projection: &PlaybookSpec) -> PlaybookDiff {
         match self {
-            ProtocolOperation::AddStep { step, index } => ProtocolDiff::AddStep { step: step.clone(), index: *index },
-            ProtocolOperation::RemoveStep { step_id } => ProtocolDiff::RemoveStep { step_id: step_id.clone() },
-            ProtocolOperation::MoveStep { step_id, index } => ProtocolDiff::MoveStep { step_id: step_id.clone(), index: *index },
-            ProtocolOperation::AddBlock { step_id, block, index } => ProtocolDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
-            ProtocolOperation::RemoveBlock { step_id, block_id } => ProtocolDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
-            ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => ProtocolDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
-            ProtocolOperation::UpdateBlock { step_id, block } => ProtocolDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
-            ProtocolOperation::UpdateStep { step } => ProtocolDiff::UpdateStep { step: step.clone() },
-            ProtocolOperation::UpdateProtocol { title } => ProtocolDiff::UpdateProtocol { title: title.clone() },
+            PlaybookOperation::AddStep { step, index } => PlaybookDiff::AddStep { step: step.clone(), index: *index },
+            PlaybookOperation::RemoveStep { step_id } => PlaybookDiff::RemoveStep { step_id: step_id.clone() },
+            PlaybookOperation::MoveStep { step_id, index } => PlaybookDiff::MoveStep { step_id: step_id.clone(), index: *index },
+            PlaybookOperation::AddBlock { step_id, block, index } => PlaybookDiff::AddBlock { step_id: step_id.clone(), block: block.clone(), index: *index },
+            PlaybookOperation::RemoveBlock { step_id, block_id } => PlaybookDiff::RemoveBlock { step_id: step_id.clone(), block_id: block_id.clone() },
+            PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => PlaybookDiff::MoveBlock { block_id: block_id.clone(), from_step_id: from_step_id.clone(), to_step_id: to_step_id.clone(), index: *index },
+            PlaybookOperation::UpdateBlock { step_id, block } => PlaybookDiff::UpdateBlock { step_id: step_id.clone(), block: block.clone() },
+            PlaybookOperation::UpdateStep { step } => PlaybookDiff::UpdateStep { step: step.clone() },
+            PlaybookOperation::UpdatePlaybook { title } => PlaybookDiff::UpdatePlaybook { title: title.clone() },
         }
     }
 
-    fn backwards(&self, projection: &ProtocolSpec) -> Vec<Self> {
+    fn backwards(&self, projection: &PlaybookSpec) -> Vec<Self> {
         match self {
-            ProtocolOperation::AddStep { step, .. } => vec![ProtocolOperation::RemoveStep { step_id: step.id.clone() }],
-            ProtocolOperation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![ProtocolOperation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
-            ProtocolOperation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![ProtocolOperation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
-            ProtocolOperation::AddBlock { step_id, block, index: _ } => vec![ProtocolOperation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
-            ProtocolOperation::RemoveBlock { step_id, block_id } => {
+            PlaybookOperation::AddStep { step, .. } => vec![PlaybookOperation::RemoveStep { step_id: step.id.clone() }],
+            PlaybookOperation::RemoveStep { step_id } => projection.steps.iter().find(|s| s.id == *step_id).map(|step| vec![PlaybookOperation::AddStep { step: step.clone(), index: None }]).unwrap_or_default(),
+            PlaybookOperation::MoveStep { step_id, .. } => projection.steps.iter().position(|s| s.id == *step_id).map(|index| vec![PlaybookOperation::MoveStep { step_id: step_id.clone(), index }]).unwrap_or_default(),
+            PlaybookOperation::AddBlock { step_id, block, index: _ } => vec![PlaybookOperation::RemoveBlock { step_id: step_id.clone(), block_id: block.id.clone() }],
+            PlaybookOperation::RemoveBlock { step_id, block_id } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(block) = step.blocks.iter().find(|b| b.id == *block_id) {
-                            return vec![ProtocolOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
+                            return vec![PlaybookOperation::AddBlock { step_id: step_id.clone(), block: block.clone(), index: None }];
                         }
                     }
                 }
                 Vec::new()
             }
-            ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+            PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
                 for step in &projection.steps {
                     if step.id == *from_step_id {
                         if let Some(pos) = step.blocks.iter().position(|b| b.id == *block_id) {
-                            return vec![ProtocolOperation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
+                            return vec![PlaybookOperation::MoveBlock { block_id: block_id.clone(), from_step_id: to_step_id.clone(), to_step_id: from_step_id.clone(), index: pos }];
                         }
                     }
                 }
                 let _ = index;
                 Vec::new()
             }
-            ProtocolOperation::UpdateBlock { step_id, block } => {
+            PlaybookOperation::UpdateBlock { step_id, block } => {
                 for step in &projection.steps {
                     if step.id == *step_id {
                         if let Some(prev) = step.blocks.iter().find(|b| b.id == block.id) {
-                            return vec![ProtocolOperation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
+                            return vec![PlaybookOperation::UpdateBlock { step_id: step_id.clone(), block: prev.clone() }];
                         }
                     }
                 }
                 Vec::new()
             }
-            ProtocolOperation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![ProtocolOperation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
-            ProtocolOperation::UpdateProtocol { .. } => vec![ProtocolOperation::UpdateProtocol { title: projection.title.clone() }],
+            PlaybookOperation::UpdateStep { step } => projection.steps.iter().find(|s| s.id == step.id).map(|prev| vec![PlaybookOperation::UpdateStep { step: prev.clone() }]).unwrap_or_default(),
+            PlaybookOperation::UpdatePlaybook { .. } => vec![PlaybookOperation::UpdatePlaybook { title: projection.title.clone() }],
         }
     }
 }
 
-pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOperation) -> ProtocolSpec {
+pub fn apply_playbook_edit_operation(spec: &PlaybookSpec, operation: &PlaybookOperation) -> PlaybookSpec {
     let mut next = spec.clone();
     match operation {
-        ProtocolOperation::AddStep { step, index } => {
+        PlaybookOperation::AddStep { step, index } => {
             let at = index.unwrap_or(next.steps.len());
             next.steps.insert(at.min(next.steps.len()), step.clone());
         }
-        ProtocolOperation::RemoveStep { step_id } => {
+        PlaybookOperation::RemoveStep { step_id } => {
             next.steps.retain(|step| step.id != *step_id);
         }
-        ProtocolOperation::MoveStep { step_id, index } => {
+        PlaybookOperation::MoveStep { step_id, index } => {
             let from = next.steps.iter().position(|step| step.id == *step_id);
             if let Some(from) = from {
                 let step = next.steps.remove(from);
@@ -453,7 +453,7 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
                 next.steps.insert(at, step);
             }
         }
-        ProtocolOperation::AddBlock { step_id, block, index } => {
+        PlaybookOperation::AddBlock { step_id, block, index } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     let at = index.unwrap_or(step.blocks.len());
@@ -461,15 +461,15 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
                 }
             }
         }
-        ProtocolOperation::RemoveBlock { step_id, block_id } => {
+        PlaybookOperation::RemoveBlock { step_id, block_id } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     step.blocks.retain(|block| block.id != *block_id);
                 }
             }
         }
-        ProtocolOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
-            let mut moving: Option<ProtocolBlock> = None;
+        PlaybookOperation::MoveBlock { block_id, from_step_id, to_step_id, index } => {
+            let mut moving: Option<PlaybookBlock> = None;
             for step in &mut next.steps {
                 if step.id == *from_step_id {
                     if let Some(pos) = step.blocks.iter().position(|b| b.id == *block_id) {
@@ -486,7 +486,7 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
                 }
             }
         }
-        ProtocolOperation::UpdateBlock { step_id, block } => {
+        PlaybookOperation::UpdateBlock { step_id, block } => {
             for step in &mut next.steps {
                 if step.id == *step_id {
                     for entry in &mut step.blocks {
@@ -497,14 +497,14 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
                 }
             }
         }
-        ProtocolOperation::UpdateStep { step } => {
+        PlaybookOperation::UpdateStep { step } => {
             for entry in &mut next.steps {
                 if entry.id == step.id {
                     *entry = step.clone();
                 }
             }
         }
-        ProtocolOperation::UpdateProtocol { title } => {
+        PlaybookOperation::UpdatePlaybook { title } => {
             next.title = title.clone();
         }
     }
@@ -513,18 +513,18 @@ pub fn apply_protocol_edit_operation(spec: &ProtocolSpec, operation: &ProtocolOp
 //#endregion 🔖Operations
 
 //#region 🔖Dsl
-// 🧬 `vcs::DocumentDsl` for `ProtocolSpec` and `vcs::OpText` for `ProtocolOperation` are both
+// 🧬 `vcs::DocumentDsl` for `PlaybookSpec` and `vcs::OpText` for `PlaybookOperation` are both
 // generated by the `dsl::DslDocument`/`dsl::DslOps` derives on their struct/enum definitions
-// above (see {@link ProtocolSpec} and {@link ProtocolOperation}) — no hand-rolled parser module.
+// above (see {@link PlaybookSpec} and {@link PlaybookOperation}) — no hand-rolled parser module.
 //#endregion 🔖Dsl
 
 //#region 🔖GenerationForms
 pub mod generation_forms {
-    //! 🧬 Shared Generate-mode state, CRUD, and declarative UI helpers for answering a `ProtocolSpec` as
+    //! 🧬 Shared Generate-mode state, CRUD, and declarative UI helpers for answering a `PlaybookSpec` as
     //! a set of named "generations" (parameter presets) — moved here (from `semio-framework-plugin`) since
-    //! it is typed end-to-end on `ProtocolSpec`/`ProtocolBlock`, i.e. protocol-domain code, not SDK code.
+    //! it is typed end-to-end on `PlaybookSpec`/`PlaybookBlock`, i.e. playbook-domain code, not SDK code.
 
-    use super::{default_value_for_block, flatten_protocol_blocks, is_block_visible, ProtocolBlock, ProtocolSpec};
+    use super::{default_value_for_block, flatten_playbook_blocks, is_block_visible, PlaybookBlock, PlaybookSpec};
     use serde::{Deserialize, Serialize};
     use serde_json::{json, Map, Value};
     use ui_wgpu::{
@@ -562,15 +562,15 @@ pub mod generation_forms {
         format!("Generation {}", generations.len() + 1)
     }
 
-    pub fn initial_generation_values(spec: &ProtocolSpec) -> Map<String, Value> {
+    pub fn initial_generation_values(spec: &PlaybookSpec) -> Map<String, Value> {
         let mut values = Map::new();
-        for question in flatten_protocol_blocks(spec) {
+        for question in flatten_playbook_blocks(spec) {
             values.insert(question.id.clone(), default_value_for_block(question));
         }
         values
     }
 
-    pub fn add_generation(state: &mut GenerationPlayState, spec: &ProtocolSpec) -> String {
+    pub fn add_generation(state: &mut GenerationPlayState, spec: &PlaybookSpec) -> String {
         let id = next_generation_id(&state.generations);
         let name = next_generation_name(&state.generations);
         state.generations.push(FormGeneration { id: id.clone(), name, values: initial_generation_values(spec) });
@@ -613,7 +613,7 @@ pub mod generation_forms {
         }
     }
 
-    pub fn handle_generation_action(action: &str, args: Option<&Value>, state: &mut GenerationPlayState, spec: &ProtocolSpec, controller_id: &str) -> bool {
+    pub fn handle_generation_action(action: &str, args: Option<&Value>, state: &mut GenerationPlayState, spec: &PlaybookSpec, controller_id: &str) -> bool {
         match action {
             "addGeneration" => {
                 add_generation(state, spec);
@@ -670,7 +670,7 @@ pub mod generation_forms {
     /// @emoji 🎛️ Maps a Generate-mode action id to the document operations it produces, or `None` for
     /// non-document (view) actions like `selectGeneration`. Pure — reads `state`/`spec` but mutates
     /// nothing; the caller applies the returned operations through its store.
-    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &ProtocolSpec) -> Option<Vec<GenerationOperation>> {
+    pub fn generation_operations(action: &str, args: Option<&Value>, state: &GenerationPlayState, spec: &PlaybookSpec) -> Option<Vec<GenerationOperation>> {
         let arg_str = |key: &str| args.and_then(|value| value.get(key)).and_then(Value::as_str).map(str::to_string);
         match action {
             "addGeneration" => Some(vec![GenerationOperation::Add { generation: FormGeneration { id: next_generation_id(&state.generations), name: next_generation_name(&state.generations), values: initial_generation_values(spec) } }]),
@@ -815,7 +815,7 @@ pub mod generation_forms {
         })
     }
 
-    fn render_question_field(question: &ProtocolBlock, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
+    fn render_question_field(question: &PlaybookBlock, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> Option<UiNode> {
         if !is_block_visible(question, values) {
             return None;
         }
@@ -937,7 +937,7 @@ pub mod generation_forms {
         Some(UiNode::Field(UiFieldNode { id: field_id, label: question.label.clone(), child: Box::new(ui_wgpu::ui_control_to_node(child)), description: None, required: None, error: None, presence: UiPresence::default() }))
     }
 
-    pub fn render_generation_form_body(form_spec: &ProtocolSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
+    pub fn render_generation_form_body(form_spec: &PlaybookSpec, values: &Map<String, Value>, controller_id: &str, patch_action: &str, generation_id: &str) -> UiNode {
         let mut children = Vec::new();
         for step in &form_spec.steps {
             if !step.blocks.is_empty() {
@@ -963,19 +963,19 @@ pub mod generation_forms {
     #[cfg(test)]
     mod generation_forms_tests {
         use super::*;
-        use crate::{ProtocolBlock, ProtocolStep, PROTOCOL_DOCUMENT_SCHEMA};
+        use crate::{PlaybookBlock, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
-        fn sample_spec() -> ProtocolSpec {
-            ProtocolSpec {
-                schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
+        fn sample_spec() -> PlaybookSpec {
+            PlaybookSpec {
+                schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
                 id: "sample".into(),
                 version: "1".into(),
                 title: None,
-                steps: vec![ProtocolStep {
+                steps: vec![PlaybookStep {
                     id: "s".into(),
                     title: "Inputs".into(),
                     description: None,
-                    blocks: vec![ProtocolBlock {
+                    blocks: vec![PlaybookBlock {
                         id: "width".into(),
                         label: "Width".into(),
                         kind: "slider".into(),
@@ -1026,17 +1026,17 @@ pub mod generation_forms {
 //#region 🔖BuilderKit
 pub mod builder_kit {
     //! 🧩 Shared strict-list, Blockly-like builder engine: generic step/block CRUD operation-builders and
-    //! [`BlockListScene`] rendering, reused by `protocol-plugin` (standalone) and `forms-plugin`
+    //! [`BlockListScene`] rendering, reused by `playbook-plugin` (standalone) and `forms-plugin`
     //! (embedded Blueprint mode). Block-kind-specific property editing stays with the host app. Moved
-    //! here (from `semio-framework-plugin`) since it is entirely protocol-domain code.
+    //! here (from `semio-framework-plugin`) since it is entirely playbook-domain code.
 
-    use super::{ProtocolBlock, ProtocolOperation, ProtocolSpec, ProtocolStep};
+    use super::{PlaybookBlock, PlaybookOperation, PlaybookSpec, PlaybookStep};
     use serde_json::Value;
     use ui_wgpu::{ActionDescriptor, BlockListScene, BlockPaletteEntry, IconName, SurfaceKind, UiComponentSceneNode, UiNode, UiPresence};
 
     //#region 🔖Config
     #[derive(Clone, Debug)]
-    pub struct ProtocolBuilderLabels {
+    pub struct PlaybookBuilderLabels {
         pub add_step: &'static str,
         pub remove_step: &'static str,
         pub move_up: &'static str,
@@ -1044,68 +1044,68 @@ pub mod builder_kit {
         pub add_block: &'static str,
     }
 
-    pub const PROTOCOL_BUILDER_LABELS_EN: ProtocolBuilderLabels = ProtocolBuilderLabels { add_step: "Add Step", remove_step: "Remove Step", move_up: "Move Up", move_down: "Move Down", add_block: "Add Block" };
+    pub const PLAYBOOK_BUILDER_LABELS_EN: PlaybookBuilderLabels = PlaybookBuilderLabels { add_step: "Add Step", remove_step: "Remove Step", move_up: "Move Up", move_down: "Move Down", add_block: "Add Block" };
 
     /// 🧩 Configures the generic strict-list builder for a host app: an action-namespace prefix
     /// (used for element/surface ids so multiple embeddings don't collide), and its labels.
     #[derive(Clone, Debug)]
-    pub struct ProtocolBuilderConfig {
+    pub struct PlaybookBuilderConfig {
         pub action_namespace: &'static str,
         pub controller_id: &'static str,
-        pub labels: ProtocolBuilderLabels,
+        pub labels: PlaybookBuilderLabels,
     }
     //#endregion 🔖Config
 
     //#region 🔖OpBuilders
-    pub fn add_step_operation(spec: &ProtocolSpec, step_id: String) -> ProtocolOperation {
-        ProtocolOperation::AddStep { step: ProtocolStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
+    pub fn add_step_operation(spec: &PlaybookSpec, step_id: String) -> PlaybookOperation {
+        PlaybookOperation::AddStep { step: PlaybookStep { id: step_id, title: format!("Step {}", spec.steps.len() + 1), description: None, blocks: Vec::new() }, index: None }
     }
 
-    pub fn remove_step_operation(step_id: &str) -> ProtocolOperation {
-        ProtocolOperation::RemoveStep { step_id: step_id.into() }
+    pub fn remove_step_operation(step_id: &str) -> PlaybookOperation {
+        PlaybookOperation::RemoveStep { step_id: step_id.into() }
     }
 
-    pub fn move_step_operation(step_id: &str, index: usize) -> ProtocolOperation {
-        ProtocolOperation::MoveStep { step_id: step_id.into(), index }
+    pub fn move_step_operation(step_id: &str, index: usize) -> PlaybookOperation {
+        PlaybookOperation::MoveStep { step_id: step_id.into(), index }
     }
 
-    pub fn add_block_operation(step_id: &str, block: ProtocolBlock, index: Option<usize>) -> ProtocolOperation {
-        ProtocolOperation::AddBlock { step_id: step_id.into(), block, index }
+    pub fn add_block_operation(step_id: &str, block: PlaybookBlock, index: Option<usize>) -> PlaybookOperation {
+        PlaybookOperation::AddBlock { step_id: step_id.into(), block, index }
     }
 
-    pub fn remove_block_operation(step_id: &str, block_id: &str) -> ProtocolOperation {
-        ProtocolOperation::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
+    pub fn remove_block_operation(step_id: &str, block_id: &str) -> PlaybookOperation {
+        PlaybookOperation::RemoveBlock { step_id: step_id.into(), block_id: block_id.into() }
     }
 
-    pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> ProtocolOperation {
-        ProtocolOperation::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
+    pub fn move_block_operation(block_id: &str, from_step_id: &str, to_step_id: &str, index: usize) -> PlaybookOperation {
+        PlaybookOperation::MoveBlock { block_id: block_id.into(), from_step_id: from_step_id.into(), to_step_id: to_step_id.into(), index }
     }
 
-    pub fn update_protocol_title_operation(title: Option<String>) -> ProtocolOperation {
-        ProtocolOperation::UpdateProtocol { title }
+    pub fn update_playbook_title_operation(title: Option<String>) -> PlaybookOperation {
+        PlaybookOperation::UpdatePlaybook { title }
     }
     //#endregion 🔖OpBuilders
 
     //#region 🔖Render
-    pub fn protocol_builder_action(config: &ProtocolBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
+    pub fn playbook_builder_action(config: &PlaybookBuilderConfig, action: &str, args: Option<Value>) -> ActionDescriptor {
         ActionDescriptor { controller_id: config.controller_id.into(), action: action.into(), args }
     }
 
     /// 🧩 Builds the palette of insertable block kinds from a host app's built-in kinds plus any
-    /// `Contribution::ProtocolBlockKind` modules already resolved by the caller into label/icon pairs.
+    /// `Contribution::PlaybookBlockKind` modules already resolved by the caller into label/icon pairs.
     pub fn build_palette(builtin: &[(&str, &str, &str)], extensions: &[(String, String, String)]) -> Vec<BlockPaletteEntry> {
         let mut entries: Vec<BlockPaletteEntry> = builtin.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: (*kind).into(), label: (*label).into(), icon_id: (*icon_id).into() }).collect();
         entries.extend(extensions.iter().map(|(kind, label, icon_id)| BlockPaletteEntry { block_kind: kind.clone(), label: label.clone(), icon_id: IconName::from(icon_id.as_str()) }));
         entries
     }
 
-    pub fn build_protocol_list_scene(spec: &ProtocolSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>) -> BlockListScene {
+    pub fn build_playbook_list_scene(spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>) -> BlockListScene {
         BlockListScene { steps_json: serde_json::to_string(&spec.steps).unwrap_or_else(|_| "[]".into()), palette_json: serde_json::to_string(palette).unwrap_or_else(|_| "[]".into()), selected_id: selected_id.map(String::from), dragging_id: None }
     }
 
     /// 🧩 Renders the strict-list Blockly-like builder as a [`SurfaceKind::BlockList`] component
     /// scene, handed off to the dedicated `block-list-host.tsx` React host for drag-and-drop.
-    pub fn render_protocol_builder(surface_id: &str, spec: &ProtocolSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>, config: &ProtocolBuilderConfig) -> UiNode {
+    pub fn render_playbook_builder(surface_id: &str, spec: &PlaybookSpec, palette: &[BlockPaletteEntry], selected_id: Option<&str>, config: &PlaybookBuilderConfig) -> UiNode {
         UiNode::ComponentScene(UiComponentSceneNode {
             surface_id: surface_id.into(),
             controller_id: config.controller_id.into(),
@@ -1127,7 +1127,7 @@ pub mod builder_kit {
             graph_timeline: None,
             diff_view: None,
             event_feed: None,
-            block_list: Some(build_protocol_list_scene(spec, palette, selected_id)),
+            block_list: Some(build_playbook_list_scene(spec, palette, selected_id)),
         })
     }
     //#endregion 🔖Render
@@ -1135,24 +1135,24 @@ pub mod builder_kit {
     #[cfg(test)]
     mod builder_kit_tests {
         use super::*;
-        use crate::empty_protocol_projection;
+        use crate::empty_playbook_projection;
 
-        fn sample_config() -> ProtocolBuilderConfig {
-            ProtocolBuilderConfig { action_namespace: "protocol-play", controller_id: "protocol-play", labels: PROTOCOL_BUILDER_LABELS_EN }
+        fn sample_config() -> PlaybookBuilderConfig {
+            PlaybookBuilderConfig { action_namespace: "playbook-play", controller_id: "playbook-play", labels: PLAYBOOK_BUILDER_LABELS_EN }
         }
 
         #[test]
         fn add_step_op_names_step_by_position() {
-            let spec = empty_protocol_projection();
+            let spec = empty_playbook_projection();
             let operation = add_step_operation(&spec, "step-2".into());
-            assert_eq!(operation, ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
+            assert_eq!(operation, PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Step 2".into(), description: None, blocks: Vec::new() }, index: None });
         }
 
         #[test]
-        fn render_protocol_builder_emits_block_list_component_scene() {
-            let spec = empty_protocol_projection();
+        fn render_playbook_builder_emits_block_list_component_scene() {
+            let spec = empty_playbook_projection();
             let config = sample_config();
-            let node = render_protocol_builder("surface", &spec, &[], None, &config);
+            let node = render_playbook_builder("surface", &spec, &[], None, &config);
             let json = serde_json::to_string(&node).unwrap();
             assert!(json.contains("\"componentKind\":\"block-list\""));
             assert!(json.contains("\"blockList\""));
@@ -1170,20 +1170,20 @@ mod wasm_bridge {
     use wasm_bindgen::prelude::*;
 
     #[wasm_bindgen]
-    pub struct ProtocolDocumentVcs {
-        store: RefCell<ProtocolStore>,
+    pub struct PlaybookDocumentVcs {
+        store: RefCell<PlaybookStore>,
     }
 
     #[wasm_bindgen]
-    impl ProtocolDocumentVcs {
+    impl PlaybookDocumentVcs {
         #[wasm_bindgen(constructor)]
-        pub fn new(envelope_json: Option<String>) -> Result<ProtocolDocumentVcs, JsValue> {
+        pub fn new(envelope_json: Option<String>) -> Result<PlaybookDocumentVcs, JsValue> {
             let store = match envelope_json {
                 Some(json) => {
-                    let envelope: ProtocolEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
-                    ProtocolStore::new(envelope)
+                    let envelope: PlaybookEnvelope = serde_json::from_str(&json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+                    PlaybookStore::new(envelope)
                 }
-                None => ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None)),
+                None => PlaybookStore::new(create_document_vcs_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None)),
             };
             Ok(Self { store: RefCell::new(store) })
         }
@@ -1218,31 +1218,31 @@ mod tests {
     use vcs::{create_document_vcs_envelope, DocumentVcsCommand};
 
     #[test]
-    fn protocol_document_vcs_materializes() {
-        let store = ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None));
+    fn playbook_document_vcs_materializes() {
+        let store = PlaybookStore::new(create_document_vcs_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
         let projection = store.projection().expect("projection");
-        assert_eq!(projection.schema, PROTOCOL_DOCUMENT_SCHEMA);
+        assert_eq!(projection.schema, PLAYBOOK_DOCUMENT_SCHEMA);
     }
 
     #[test]
-    fn update_protocol_op_sets_and_reverts_title() {
-        let spec = empty_protocol_projection();
-        let operation = ProtocolOperation::UpdateProtocol { title: Some("Renamed".into()) };
-        let next = apply_protocol_edit_operation(&spec, &operation);
+    fn update_playbook_op_sets_and_reverts_title() {
+        let spec = empty_playbook_projection();
+        let operation = PlaybookOperation::UpdatePlaybook { title: Some("Renamed".into()) };
+        let next = apply_playbook_edit_operation(&spec, &operation);
         assert_eq!(next.title.as_deref(), Some("Renamed"));
         let inverse = operation.backwards(&spec);
-        assert_eq!(inverse, vec![ProtocolOperation::UpdateProtocol { title: spec.title.clone() }]);
-        let reverted = inverse.iter().fold(next.clone(), |current, operation| apply_protocol_edit_operation(&current, operation));
+        assert_eq!(inverse, vec![PlaybookOperation::UpdatePlaybook { title: spec.title.clone() }]);
+        let reverted = inverse.iter().fold(next.clone(), |current, operation| apply_playbook_edit_operation(&current, operation));
         assert_eq!(reverted.title, spec.title);
         assert_eq!(operation.diff(&spec).apply(&spec).title.as_deref(), Some("Renamed"));
     }
 
     #[test]
     fn add_step_op_replays() {
-        let mut store = ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None));
-        let step = ProtocolStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
+        let mut store = PlaybookStore::new(create_document_vcs_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
+        let step = PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() };
         let backwards = store.projection().expect("projection");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![PlaybookOperation::AddStep { step: step.clone(), index: None }], description: None }).expect("apply");
         assert_eq!(store.projection().expect("projection").steps.len(), 2);
         let _ = backwards;
     }
@@ -1260,7 +1260,7 @@ mod tests {
             "unit":"people",
             "condition":{"kind":"truthy","expr":{"kind":"var","name":"show-team-size"}}
         }"#;
-        let block: ProtocolBlock = serde_json::from_str(json).expect("block json");
+        let block: PlaybookBlock = serde_json::from_str(json).expect("block json");
         assert_eq!(block.min, Some(1.0));
         assert_eq!(block.unit.as_deref(), Some("people"));
         assert!(block.required.unwrap_or(false));
@@ -1268,12 +1268,12 @@ mod tests {
 
     #[test]
     fn conditional_visibility_filters_blocks() {
-        let step = ProtocolStep {
+        let step = PlaybookStep {
             id: "s".into(),
             title: "Step".into(),
             description: None,
             blocks: vec![
-                ProtocolBlock {
+                PlaybookBlock {
                     id: "show".into(),
                     label: "Show".into(),
                     kind: "boolean".into(),
@@ -1295,7 +1295,7 @@ mod tests {
                     params: None,
                     condition: None,
                 },
-                ProtocolBlock {
+                PlaybookBlock {
                     id: "team-size".into(),
                     label: "Team size".into(),
                     kind: "slider".into(),
@@ -1315,7 +1315,7 @@ mod tests {
                     accept: None,
                     fixture_slug: None,
                     params: None,
-                    condition: Some(ProtocolExpr::Truthy { expr: Box::new(ProtocolExpr::Var { name: "show".into() }) }),
+                    condition: Some(PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "show".into() }) }),
                 },
             ],
         };
@@ -1327,8 +1327,8 @@ mod tests {
     }
 
     //#region 🔖DslAndOpText
-    fn minimal_block(id: &str, kind: &str) -> ProtocolBlock {
-        ProtocolBlock {
+    fn minimal_block(id: &str, kind: &str) -> PlaybookBlock {
+        PlaybookBlock {
             id: id.into(),
             label: format!("Label {id}"),
             kind: kind.into(),
@@ -1353,9 +1353,9 @@ mod tests {
     }
 
     /// 🧱 A block with EVERY optional property populated (including nested `options`/`fields` and a
-    /// deeply nested `condition` exercising every `ProtocolExpr` variant) — the DSL round-trip fixture.
-    fn fully_populated_block() -> ProtocolBlock {
-        ProtocolBlock {
+    /// deeply nested `condition` exercising every `PlaybookExpr` variant) — the DSL round-trip fixture.
+    fn fully_populated_block() -> PlaybookBlock {
+        PlaybookBlock {
             id: "b-full".into(),
             label: "Team Size".into(),
             kind: "slider".into(),
@@ -1372,40 +1372,40 @@ mod tests {
             step: Some(1.0),
             unit: Some("people".into()),
             text: Some("Some note text\nwith a newline".into()),
-            options: Some(vec![ProtocolBlockOption { value: "red".into(), label: "Red".into() }, ProtocolBlockOption { value: "blue".into(), label: "Blue".into() }]),
-            fields: Some(vec![ProtocolVectorField { key: "x".into(), label: Some("X".into()), value: Some(1.5) }, ProtocolVectorField { key: "y".into(), label: None, value: None }]),
+            options: Some(vec![PlaybookBlockOption { value: "red".into(), label: "Red".into() }, PlaybookBlockOption { value: "blue".into(), label: "Blue".into() }]),
+            fields: Some(vec![PlaybookVectorField { key: "x".into(), label: Some("X".into()), value: Some(1.5) }, PlaybookVectorField { key: "y".into(), label: None, value: None }]),
             schema: Some("solid.step".into()),
             src: Some("https://example.com/img.png".into()),
             accept: Some("image/*".into()),
             fixture_slug: Some("hexagonal-mushroom-column".into()),
             params: Some(serde_json::json!({ "height": 6.0, "nested": { "a": [1.0, 2.0, "three\"quoted"] } })),
-            condition: Some(ProtocolExpr::And {
+            condition: Some(PlaybookExpr::And {
                 items: vec![
-                    ProtocolExpr::Truthy { expr: Box::new(ProtocolExpr::Var { name: "show-team-size".into() }) },
-                    ProtocolExpr::Eq { left: Box::new(ProtocolExpr::Var { name: "mode".into() }), right: Box::new(ProtocolExpr::Const { value: serde_json::json!("advanced") }) },
-                    ProtocolExpr::Or { items: vec![ProtocolExpr::Var { name: "a".into() }, ProtocolExpr::Var { name: "b".into() }] },
+                    PlaybookExpr::Truthy { expr: Box::new(PlaybookExpr::Var { name: "show-team-size".into() }) },
+                    PlaybookExpr::Eq { left: Box::new(PlaybookExpr::Var { name: "mode".into() }), right: Box::new(PlaybookExpr::Const { value: serde_json::json!("advanced") }) },
+                    PlaybookExpr::Or { items: vec![PlaybookExpr::Var { name: "a".into() }, PlaybookExpr::Var { name: "b".into() }] },
                 ],
             }),
         }
     }
 
-    fn sample_spec() -> ProtocolSpec {
-        ProtocolSpec {
-            schema: PROTOCOL_DOCUMENT_SCHEMA.into(),
+    fn sample_spec() -> PlaybookSpec {
+        PlaybookSpec {
+            schema: PLAYBOOK_DOCUMENT_SCHEMA.into(),
             id: "recipe".into(),
             version: "1".into(),
             title: Some("Recipe".into()),
             steps: vec![
-                ProtocolStep { id: "s1".into(), title: "Basics".into(), description: Some("First step".into()), blocks: vec![minimal_block("b1", "text"), fully_populated_block()] },
-                ProtocolStep { id: "s2".into(), title: "Review".into(), description: None, blocks: Vec::new() },
+                PlaybookStep { id: "s1".into(), title: "Basics".into(), description: Some("First step".into()), blocks: vec![minimal_block("b1", "text"), fully_populated_block()] },
+                PlaybookStep { id: "s2".into(), title: "Review".into(), description: None, blocks: Vec::new() },
             ],
         }
     }
 
     #[test]
-    fn empty_protocol_projection_dsl_round_trips() {
-        vcs::test_support::assert_dsl_round_trip(&empty_protocol_projection());
-        vcs::test_support::assert_dsl_pack_equivalence(&empty_protocol_projection());
+    fn empty_playbook_projection_dsl_round_trips() {
+        vcs::test_support::assert_dsl_round_trip(&empty_playbook_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_playbook_projection());
     }
 
     #[test]
@@ -1416,65 +1416,65 @@ mod tests {
 
     #[test]
     fn add_step_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Review".into(), description: Some("desc".into()), blocks: vec![minimal_block("b1", "text")] }, index: Some(1) });
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddStep { step: ProtocolStep { id: "step-3".into(), title: "Final".into(), description: None, blocks: Vec::new() }, index: None });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: Some("desc".into()), blocks: vec![minimal_block("b1", "text")] }, index: Some(1) });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::AddStep { step: PlaybookStep { id: "step-3".into(), title: "Final".into(), description: None, blocks: Vec::new() }, index: None });
     }
 
     #[test]
     fn remove_step_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::RemoveStep { step_id: "s1".into() });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::RemoveStep { step_id: "s1".into() });
     }
 
     #[test]
     fn move_step_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::MoveStep { step_id: "s1".into(), index: 2 });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::MoveStep { step_id: "s1".into(), index: 2 });
     }
 
     #[test]
     fn add_block_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddBlock { step_id: "s1".into(), block: fully_populated_block(), index: Some(0) });
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::AddBlock { step_id: "s1".into(), block: minimal_block("b2", "boolean"), index: None });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::AddBlock { step_id: "s1".into(), block: fully_populated_block(), index: Some(0) });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::AddBlock { step_id: "s1".into(), block: minimal_block("b2", "boolean"), index: None });
     }
 
     #[test]
     fn remove_block_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::RemoveBlock { step_id: "s1".into(), block_id: "b1".into() });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::RemoveBlock { step_id: "s1".into(), block_id: "b1".into() });
     }
 
     #[test]
     fn move_block_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::MoveBlock { block_id: "b1".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 3 });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::MoveBlock { block_id: "b1".into(), from_step_id: "s1".into(), to_step_id: "s2".into(), index: 3 });
     }
 
     #[test]
     fn update_block_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateBlock { step_id: "s1".into(), block: fully_populated_block() });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdateBlock { step_id: "s1".into(), block: fully_populated_block() });
     }
 
     #[test]
     fn update_step_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateStep { step: ProtocolStep { id: "s1".into(), title: "Basics".into(), description: Some("d".into()), blocks: vec![fully_populated_block()] } });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdateStep { step: PlaybookStep { id: "s1".into(), title: "Basics".into(), description: Some("d".into()), blocks: vec![fully_populated_block()] } });
     }
 
     #[test]
-    fn update_protocol_op_round_trips() {
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateProtocol { title: Some("Renamed".into()) });
-        vcs::test_support::assert_op_line_round_trip(&ProtocolOperation::UpdateProtocol { title: None });
+    fn update_playbook_op_round_trips() {
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdatePlaybook { title: Some("Renamed".into()) });
+        vcs::test_support::assert_op_line_round_trip(&PlaybookOperation::UpdatePlaybook { title: None });
     }
 
     #[test]
     fn document_text_round_trips_after_applied_operations() {
-        let mut store = ProtocolStore::new(create_document_vcs_envelope(PROTOCOL_DOCUMENT_SCHEMA, "protocol", empty_protocol_projection(), None));
+        let mut store = PlaybookStore::new(create_document_vcs_envelope(PLAYBOOK_DOCUMENT_SCHEMA, "playbook", empty_playbook_projection(), None));
         store
             .dispatch(DocumentVcsCommand::Apply {
-                operations: vec![ProtocolOperation::AddStep { step: ProtocolStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }],
+                operations: vec![PlaybookOperation::AddStep { step: PlaybookStep { id: "step-2".into(), title: "Review".into(), description: None, blocks: Vec::new() }, index: None }],
                 description: None,
             })
             .expect("add step");
         store
-            .dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None })
+            .dispatch(DocumentVcsCommand::Apply { operations: vec![PlaybookOperation::AddBlock { step_id: "step-2".into(), block: fully_populated_block(), index: None }], description: None })
             .expect("add block");
-        store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::UpdateProtocol { title: Some("Recipe".into()) }], description: None }).expect("update title");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![PlaybookOperation::UpdatePlaybook { title: Some("Recipe".into()) }], description: None }).expect("update title");
         vcs::test_support::assert_document_text_round_trip(&store);
         vcs::test_support::assert_document_pack_round_trip(&store);
     }

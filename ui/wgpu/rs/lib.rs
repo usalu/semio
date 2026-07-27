@@ -3119,7 +3119,7 @@ pub struct EventFeedScene {
 }
 
 /** @emoji 🧩 A palette entry for a block kind insertable into a [`BlockListScene`], contributed
- * either by the host app's own built-ins or by a `Contribution::ProtocolBlockKind` module. */
+ * either by the host app's own built-ins or by a `Contribution::PlaybookBlockKind` module. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct BlockPaletteEntry {
@@ -3129,7 +3129,7 @@ pub struct BlockPaletteEntry {
 }
 
 /** @emoji 🧩 A strict, ordered list of steps/blocks for the Blockly-like list editor. `steps_json`
- * is a `ProtocolStep[]` array (see `protocol::ProtocolStep`), `palette_json` is a
+ * is a `PlaybookStep[]` array (see `playbook::PlaybookStep`), `palette_json` is a
  * `BlockPaletteEntry[]` array of the block kinds available to insert. */
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]

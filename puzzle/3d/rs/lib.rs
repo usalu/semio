@@ -4034,17 +4034,7 @@ mod puzzle3d_vcs_tests {
         projection.references.push(Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) }, origin: [0.0, 0.0, 0.0], width_world: 12.0, locked: false, hidden: false });
         projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
         vcs::test_support::assert_dsl_round_trip(&projection);
-        // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: it panics
-        // ("pack decode failed: schema error: expected a 3-item Tuple, found List([...])") because
-        // this fixture's `#[dsl(table)]` `objects`/`vortices` rows carry fixed-size-array fields
-        // (`Puzzle3dObject.origin: [f64; 3]`, `Puzzle3dVortex.position: [f64; 3]`, etc.) —
-        // `pack/value/rs`'s `decode_table_soa` drops the column's `Shape` in its fallback branch
-        // (encode_table passes it, decode doesn't), so a fixed-size tuple round-trips back as a
-        // generic `List` and `__dsl_from_record` rejects it. Root-caused by the `draw` wave-2
-        // family (`.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-draw.txt`
-        // §4); `pack/**` is outside this family's allowed directories, so not fixed here.
-        // `assert_dsl_pack_equivalence(&empty_puzzle3d_projection())` above already covers this
-        // document kind (it PASSES: empty tables never hit the bug).
+        vcs::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
@@ -4055,10 +4045,7 @@ mod puzzle3d_vcs_tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle3d"), include_str!("../example/nakagin-capsule-tower.puzzle3d")] {
             let projection = Puzzle3dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
-            // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: both real
-            // fixtures have `#[dsl(table)]` object/vortex rows with fixed-size-array fields,
-            // hitting the same `pack/value/rs` `decode_table_soa` shape-dropping bug documented
-            // above in `puzzle3d_projection_dsl_round_trips`.
+            vcs::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 }

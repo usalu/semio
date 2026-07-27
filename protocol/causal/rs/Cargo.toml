@@ -1,0 +1,18 @@
+[package]
+name = "protocol_causal"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol causal layer — OperationEnvelope, OpDag, frontier summaries, transform hook"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+protocol_core = { path = "../../core/rs" }
+protocol_command = { path = "../../command/rs" }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"

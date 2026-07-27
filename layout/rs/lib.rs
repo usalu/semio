@@ -222,6 +222,7 @@ mod document {
         pub id: String,
         pub content: String,
         #[serde(rename = "styleRuns")]
+        #[dsl(table)]
         pub style_runs: Vec<TextStyleRun>,
     }
 

@@ -7,7 +7,7 @@ pub mod app_2d {
     use flow_module_draw::render_scene_json;
     use procedural_2d::{procedural2d_fixture_operations, Procedural2dDocument, Procedural2dOperation, PROCEDURAL_2D_SCHEMA};
     use vcs::DocumentDsl;
-    use protocol::{
+    use playbook::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationPlayState,
     };
@@ -138,7 +138,7 @@ pub mod app_2d {
 
     fn split_endpoint(endpoint: &str) -> (String, String) {
         endpoint
-            .split_once(':')
+            .split_once('@')
             .map(|(node, port)| (node.to_string(), port.to_string()))
             .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
     }
@@ -191,7 +191,7 @@ pub mod app_2d {
                     .iter()
                     .filter(|port| port.visible)
                     .map(|port| MediaGraphPortRecord {
-                        id: format!("{}:{}", node.id, port.id),
+                        id: format!("{}@{}", node.id, port.id),
                         label: Some(port.label.clone()),
                     })
                     .collect(),
@@ -200,7 +200,7 @@ pub mod app_2d {
                     .iter()
                     .filter(|port| port.visible)
                     .map(|port| MediaGraphPortRecord {
-                        id: format!("{}:{}", node.id, port.id),
+                        id: format!("{}@{}", node.id, port.id),
                         label: Some(port.label.clone()),
                     })
                     .collect(),
@@ -1311,7 +1311,7 @@ pub mod app_3d {
     use flow_module_brep::tessellate_geometry_json;
     use procedural_3d::{procedural3d_fixture_operations, Procedural3dDocument, Procedural3dOperation, PROCEDURAL_3D_SCHEMA};
     use vcs::DocumentDsl;
-    use protocol::{
+    use playbook::{
         apply_generation_operation, generation_operations, render_generation_form_body, render_generation_preview_text,
         render_generations_tree, select_generation, selected_generation, GenerationOperation, GenerationPlayState,
     };
@@ -1736,7 +1736,7 @@ pub mod app_3d {
 
     fn split_endpoint(endpoint: &str) -> (String, String) {
         endpoint
-            .split_once(':')
+            .split_once('@')
             .map(|(node, port)| (node.to_string(), port.to_string()))
             .unwrap_or_else(|| (endpoint.to_string(), "out".into()))
     }
@@ -1754,11 +1754,11 @@ pub mod app_3d {
                     "width": node.width,
                     "height": node.height,
                     "inputs": node.inputs().iter().filter(|port| port.visible).map(|port| json!({
-                        "id": format!("{}:{}", node.id, port.id),
+                        "id": format!("{}@{}", node.id, port.id),
                         "label": port.label,
                     })).collect::<Vec<_>>(),
                     "outputs": node.outputs().iter().filter(|port| port.visible).map(|port| json!({
-                        "id": format!("{}:{}", node.id, port.id),
+                        "id": format!("{}@{}", node.id, port.id),
                         "label": port.label,
                     })).collect::<Vec<_>>(),
                 })

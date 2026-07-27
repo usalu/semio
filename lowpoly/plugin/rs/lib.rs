@@ -1082,7 +1082,7 @@ fn lowpoly_window_engagement(view: LowpolyView, active_utility: &str, labels: &L
             WindowEngagementOption {
                 id: "lowpoly.opt.show-edges".into(),
                 label: Some(labels.show_edges.into()),
-                icon_id: Some("git-commit-horizontal".into()),
+                icon_id: Some("grid-3x3".into()),
                 pressed: Some(runtime.show_edges),
                 disabled: None,
                 action: Some(lowpoly_action("toggleShowEdges", None)),
@@ -1175,7 +1175,7 @@ fn lowpoly_window_measures(runtime: &LowpolyPlayRuntime, labels: &LowpolyLabels)
     vec![
         WindowMeasure::Toggle {
             id: "lowpoly-measure-show-edges".into(),
-            icon_id: "git-commit-horizontal".into(),
+            icon_id: "grid-3x3".into(),
             label: Some(labels.show_edges.into()),
             pressed: runtime.show_edges,
             text: None,
@@ -1241,7 +1241,7 @@ fn lowpoly_select_measures_group(runtime: &LowpolyPlayRuntime, labels: &LowpolyL
             },
             WindowMeasure::Toggle {
                 id: "lowpoly-select-mode-default".into(),
-                icon_id: "cursor".into(),
+                icon_id: "mouse-pointer".into(),
                 label: Some(labels.selective.into()),
                 pressed: runtime.selection_mode_default == "default",
                 text: None,
@@ -1265,7 +1265,7 @@ fn lowpoly_select_measures_group(runtime: &LowpolyPlayRuntime, labels: &LowpolyL
             },
             WindowMeasure::Toggle {
                 id: "lowpoly-select-mode-invertive".into(),
-                icon_id: "refresh-cw".into(),
+                icon_id: "arrow-right-left".into(),
                 label: Some(labels.invertive.into()),
                 pressed: runtime.selection_mode_default == "invertive",
                 text: None,

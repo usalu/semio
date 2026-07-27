@@ -90,7 +90,7 @@ pub enum NodeGraphError {
 
 fn port_label(port: &GraphPortRecord) -> String {
     port.label.clone().unwrap_or_else(|| {
-        let segments: Vec<_> = port.id.split(':').collect();
+        let segments: Vec<_> = port.id.split('@').collect();
         segments.last().map(|s| (*s).to_string()).unwrap_or_else(|| port.id.clone())
     })
 }
@@ -152,7 +152,7 @@ pub fn fixture_from_node_graph_json(nodes_json: &str, edges_json: &str, viewport
         schema: "dag.fixture".into(),
         camera: DagCamera { x: viewport.x, y: viewport.y, zoom: viewport.zoom },
         nodes: nodes.iter().map(node_record_to_spec).collect(),
-        edges: edges.iter().map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}:{}", edge.source_node_id, edge.source_port_id), target: format!("{}:{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
+        edges: edges.iter().map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.source_node_id, edge.source_port_id), target: format!("{}@{}", edge.target_node_id, edge.target_port_id), ..Default::default() }).collect(),
     })
 }
 
@@ -697,20 +697,20 @@ mod tests {
 
     //#region 🔖PortHelpers
     #[test]
-    fn port_label_uses_last_colon_segment_when_label_missing() {
-        let port = GraphPortRecord { id: "node:channel:foo".into(), label: None, ..Default::default() };
+    fn port_label_uses_last_at_segment_when_label_missing() {
+        let port = GraphPortRecord { id: "node@channel@foo".into(), label: None, ..Default::default() };
         assert_eq!(port_label(&port), "foo");
     }
 
     #[test]
-    fn port_label_falls_back_to_full_id_without_colon() {
+    fn port_label_falls_back_to_full_id_without_at() {
         let port = GraphPortRecord { id: "solo".into(), label: None, ..Default::default() };
         assert_eq!(port_label(&port), "solo");
     }
 
     #[test]
     fn port_label_prefers_explicit_label() {
-        let port = GraphPortRecord { id: "node:out".into(), label: Some("Output".into()), ..Default::default() };
+        let port = GraphPortRecord { id: "node@out".into(), label: Some("Output".into()), ..Default::default() };
         assert_eq!(port_label(&port), "Output");
     }
 
@@ -794,8 +794,8 @@ mod tests {
         let edges = r#"[{"id":"e1","sourceNodeId":"a","sourcePortId":"out","targetNodeId":"b","targetPortId":"in"}]"#;
         let fixture = fixture_from_node_graph_json(nodes, edges, "").expect("fixture");
         assert_eq!(fixture.edges.len(), 1);
-        assert_eq!(fixture.edges[0].source, "a:out");
-        assert_eq!(fixture.edges[0].target, "b:in");
+        assert_eq!(fixture.edges[0].source, "a@out");
+        assert_eq!(fixture.edges[0].target, "b@in");
     }
 
     #[test]

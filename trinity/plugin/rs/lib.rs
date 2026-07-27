@@ -1849,8 +1849,8 @@ pub mod app_rewrite {
                         if let Some(mut fixture) = parse_fixture_json(&state.before_fixture_json) {
                             fixture.nodes.retain(|node| !ids.contains(&node.id));
                             fixture.edges.retain(|edge| {
-                                let from = edge.source.split(':').next().unwrap_or(&edge.source);
-                                let to = edge.target.split(':').next().unwrap_or(&edge.target);
+                                let from = trinity_ram::port_node_id(&edge.source).unwrap_or(&edge.source);
+                                let to = trinity_ram::port_node_id(&edge.target).unwrap_or(&edge.target);
                                 !ids.iter().any(|id| id == from || id == to)
                             });
                             if let Ok(json) = Graph::from_fixture(fixture).and_then(|graph| graph.fixture_json()) {

@@ -775,7 +775,7 @@ fn widget_to_dag_node(widget: &Widget, index: usize, layout: &BTreeMap<String, W
 }
 
 fn parse_port_endpoint(endpoint: &str, default_port: &str) -> (String, String) {
-    if let Some((widget_id, port_id)) = endpoint.split_once(':') {
+    if let Some((widget_id, port_id)) = endpoint.split_once('@') {
         return (widget_id.to_string(), port_id.to_string());
     }
     (endpoint.to_string(), default_port.to_string())
@@ -2751,7 +2751,7 @@ impl FlowHost {
             .synapses
             .iter()
             .filter(|syn| !would_create_cycle(&existing.iter().filter(|(a, b)| !(a == &syn.from && b == &syn.to)).cloned().collect::<Vec<_>>(), &syn.from, &syn.to))
-            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}:{}", syn.from, syn.from_port), target: format!("{}:{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
+            .map(|syn| DagFixtureEdge { id: syn.id.clone(), source: format!("{}@{}", syn.from, syn.from_port), target: format!("{}@{}", syn.to, syn.to_port), route_style: EdgeRouteStyle::default(), properties: PropertyBag::new() })
             .collect();
         DagFixture { schema: "dag.fixture".into(), camera: dag::DagCamera { x: self.fixture.camera.x, y: self.fixture.camera.y, zoom: self.fixture.camera.zoom }, nodes, edges }
     }
@@ -4754,7 +4754,7 @@ mod flow_vcs_wasm {
 // #region 🔖FormsBridge
 pub mod forms_bridge {
     use super::{FlowFixture, Widget};
-    use protocol::{ProtocolBlock, ProtocolBlockOption, ProtocolSpec, ProtocolStep, PROTOCOL_DOCUMENT_SCHEMA};
+    use playbook::{PlaybookBlock, PlaybookBlockOption, PlaybookSpec, PlaybookStep, PLAYBOOK_DOCUMENT_SCHEMA};
 
     fn humanize_widget_label(id: &str) -> String {
         let mut words = Vec::new();
@@ -4782,7 +4782,7 @@ pub mod forms_bridge {
         words.join(" ")
     }
 
-    /// 🔀 Schema aliases treated as a single-choice question when generating a protocol block (anything else is free text).
+    /// 🔀 Schema aliases treated as a single-choice question when generating a playbook block (anything else is free text).
     enum SchemaQuestionFamily {
         Choice,
     }
@@ -4803,9 +4803,9 @@ pub mod forms_bridge {
         }
     }
 
-    fn widget_to_protocol_block(widget: &Widget) -> Option<ProtocolBlock> {
+    fn widget_to_playbook_block(widget: &Widget) -> Option<PlaybookBlock> {
         match widget {
-            Widget::InputSlider { id, value, min, max, step, .. } => Some(ProtocolBlock {
+            Widget::InputSlider { id, value, min, max, step, .. } => Some(PlaybookBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "slider".into(),
@@ -4827,7 +4827,7 @@ pub mod forms_bridge {
                 params: None,
                 condition: None,
             }),
-            Widget::InputNote { id, text, .. } => Some(ProtocolBlock {
+            Widget::InputNote { id, text, .. } => Some(PlaybookBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "note".into(),
@@ -4849,7 +4849,7 @@ pub mod forms_bridge {
                 params: None,
                 condition: None,
             }),
-            Widget::InputImage { id, src, .. } => Some(ProtocolBlock {
+            Widget::InputImage { id, src, .. } => Some(PlaybookBlock {
                 id: id.clone(),
                 label: humanize_widget_label(id),
                 kind: "image".into(),
@@ -4873,8 +4873,8 @@ pub mod forms_bridge {
             }),
             Widget::Variable { id, name, schema, .. } => {
                 let kind = variable_question_kind(schema);
-                let options = if kind == "single" { Some(vec![ProtocolBlockOption { value: schema.clone(), label: humanize_widget_label(schema) }]) } else { None };
-                Some(ProtocolBlock {
+                let options = if kind == "single" { Some(vec![PlaybookBlockOption { value: schema.clone(), label: humanize_widget_label(schema) }]) } else { None };
+                Some(PlaybookBlock {
                     id: id.clone(),
                     label: humanize_widget_label(name),
                     kind: kind.into(),
@@ -4901,9 +4901,9 @@ pub mod forms_bridge {
         }
     }
 
-    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> ProtocolSpec {
-        let blocks: Vec<ProtocolBlock> = fixture.widgets.iter().filter_map(widget_to_protocol_block).collect();
-        ProtocolSpec { schema: PROTOCOL_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![ProtocolStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
+    pub fn flow_fixture_to_form_spec(fixture: &FlowFixture) -> PlaybookSpec {
+        let blocks: Vec<PlaybookBlock> = fixture.widgets.iter().filter_map(widget_to_playbook_block).collect();
+        PlaybookSpec { schema: PLAYBOOK_DOCUMENT_SCHEMA.into(), id: "flow-generate".into(), version: "1".into(), title: Some("Generate".into()), steps: vec![PlaybookStep { id: "inputs".into(), title: "Inputs".into(), description: None, blocks }] }
     }
 
     /// 🏷️ Widget "kind" tags recognized when patching a single generation value into a raw fixture-JSON widget.

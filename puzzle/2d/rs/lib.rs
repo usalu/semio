@@ -5177,16 +5177,7 @@ mod force_graph_tests {
             kind_catalogs: None,
         };
         vcs::test_support::assert_dsl_round_trip(&with_content);
-        // 🚧 `assert_dsl_pack_equivalence(&with_content)` deliberately NOT added here: it panics
-        // ("pack decode failed: schema error: missing field 'color' at 1:1") on this specific
-        // fixture because it has `#[dsl(table)]` rows (`nodes`/`handles`) with `Option` columns
-        // that are sometimes `None` (e.g. `Puzzle2dHandle.color`) — the same
-        // `pack/value/rs`'s `decode_table_soa` shape-dropping bug root-caused by the `draw` wave-2
-        // family (see `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-draw.txt`
-        // §4 and `wave2-puzzle-compose.txt` in the same ticket folder). `pack/**` is outside this
-        // family's allowed directories, so not fixed here.
-        // `assert_dsl_pack_equivalence(&empty_puzzle2d_projection())` above already covers this
-        // document kind (it PASSES: no table rows means no `Option` column to hit the bug).
+        vcs::test_support::assert_dsl_pack_equivalence(&with_content);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
@@ -5200,11 +5191,7 @@ mod force_graph_tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle2d"), include_str!("../example/nakagin-capsule-tower.puzzle2d")] {
             let projection = Puzzle2dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
-            // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: both real
-            // fixtures have `#[dsl(table)]` node/handle rows with `Option` columns sometimes
-            // `None`, hitting the same `pack/value/rs` `decode_table_soa` shape-dropping bug
-            // documented above in `puzzle2d_projection_dsl_round_trips` (and root-caused by the
-            // `draw` wave-2 family, `wave2-draw.txt` §4 in this ticket folder).
+            vcs::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 }

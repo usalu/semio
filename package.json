@@ -138,7 +138,7 @@
     "dev:sourcing": "bun ./script.ts dev sourcing",
     "dev:shooting": "bun ./script.ts dev shooting",
     "dev:forms": "bun ./script.ts dev forms",
-    "dev:protocol": "bun ./script.ts dev protocol",
+    "dev:playbook": "bun ./script.ts dev playbook",
     "dev:raster": "bun ./script.ts dev raster",
     "dev:draw": "bun ./script.ts dev draw",
     "dev:note": "bun ./script.ts dev note",

@@ -50,6 +50,6 @@ attractions [id:TEXT attracting:TEXT attracted:TEXT gap:NUM shift:NUM rise:NUM r
 target-volumes [id:TEXT origin:TUPLE orientation:TUPLE scale:VAL hidden:BOOL locked:BOOL] {
 }
 references [id:TEXT source:REC origin:TUPLE width-world:NUM locked:BOOL hidden:BOOL] {
-  ref-masterarbeit url="/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg" media-kind=image 7,0,0.01 50 true false
-  ref-rathaus-ahlen url="/infinite-fixture/rathaus-ahlen-grundriss.png" media-kind=image 7,0,0.01 50 true true
+  ref-masterarbeit {url="/infinite-fixture/abbau-aufbau-masterarbeit-grundriss.jpg" media-kind=image} 7,0,0.01 50 true false
+  ref-rathaus-ahlen {url="/infinite-fixture/rathaus-ahlen-grundriss.png" media-kind=image} 7,0,0.01 50 true true
 }

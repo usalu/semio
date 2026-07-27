@@ -85,7 +85,7 @@ fn host_from_fixture(fixture: &SequenceFixture) -> SequenceHost {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
+    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "next".into()))
 }
 
 fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
@@ -99,8 +99,8 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
     let edges: Vec<MediaGraphEdgeRecord> = fixture

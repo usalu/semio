@@ -1,0 +1,13 @@
+{
+  "title": "Introduce Db, Protocol Command Layer And Vcs Slimming",
+  "emoji": "🗄️",
+  "status": "open",
+  "description": "Introduce a new `db` server-database technology integrating `pack` (immutable binary documents), a new `protocol` technology (command/collaboration semantics + binary formats, extracted from vcs/framework-core, merged with the existing open PROTOCOL-BINARY-OP-LOG-LAYER contract), and a slimmed `vcs` (version-graph semantics only). Rebuild os-hub and compose-hub on db with a redesigned binary wire protocol (protocol_wire); refactor framework/sync, framework/plugin, framework/core, and all ~40 app plugin crates onto the new protocol traits. Full feature-complete db: WAL (reusing protocol's .spr container), pack-based snapshots, persistent diff-state overlays, projections, query engine, indexes, ephemeral previews, conflict resolution, replica sync, cluster leases/fencing/replication, security, compaction/GC, observability, CLI, testkit, benchmarks. Storage backends for db and the hub identity directory must be swappable: filesystem (default), sqlite, postgres, neo4j. Executed via a parallel-agent Workflow campaign (CW0-CW9) per the approved plan at /Users/ueli/.claude/plans/introduce-a-new-technology-cuddly-rabbit.md. This ticket covers CW0: opening the ticket, amending the PROTOCOL-BINARY-OP-LOG-LAYER contract with the semantics-layer crates, and writing the campaign contract.md that freezes crate lists, trait signatures, WAL record kinds, wire frames, and region names before fan-out.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2366"
+  },
+  "goal": "🎯r2602",
+  "sessions": [
+    "⚪c83b51098fcd418ba32115b3ace18151"
+  ]
+}

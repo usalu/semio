@@ -2,7 +2,7 @@
 
 use flow_core::neural::{Atom, Dictionary, Value as NeuralValue};
 use flow_core::{CameraJson, FlowFixture, SynapseSpec, Widget, WidgetLayout};
-use protocol::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
+use playbook::{apply_generation_operation, invert_generation_operation, FormGeneration, GenerationOperation, GenerationPlayState};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
 use vcs::{DocumentVcsEnvelope, DocumentVcsStore, Operation, OperationDiff};
@@ -259,7 +259,7 @@ pub fn procedural3d_fixture_operations(before: &FlowFixture, after: &FlowFixture
 //#region 🔖Dsl
 //#region 🔖DslMirror
 /// 🔒 `FlowFixture`/`Widget`/`SynapseSpec`/`WidgetLayout`/`CameraJson` (from `flow_core`) and
-/// `GenerationPlayState`/`FormGeneration`/`GenerationOperation` (from `protocol`) are all foreign to
+/// `GenerationPlayState`/`FormGeneration`/`GenerationOperation` (from `playbook`) are all foreign to
 /// this crate, so none can carry a `#[derive(dsl::Dsl...)]` themselves — Rust's orphan rule requires
 /// the impl target type to live in the crate that also owns the trait or the type, and neither is
 /// true here. The `*Dsl` types below are LOCAL structural twins the real types convert to/from right
@@ -464,7 +464,7 @@ fn widget_from_dsl(widget: WidgetDsl) -> Result<Widget, vcs::TextError> {
     })
 }
 
-/// 🧬 Local twin of `protocol::FormGeneration` — `values` is already a `serde_json::Map`/`Value` pair
+/// 🧬 Local twin of `playbook::FormGeneration` — `values` is already a `serde_json::Map`/`Value` pair
 /// in the real type, so it binds directly through the engine's `Shape::Value` bridge with no
 /// intermediate conversion.
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
@@ -742,7 +742,7 @@ mod tests {
     #[test]
     fn generation_op_round_trips() {
         let before = empty_procedural3d_projection();
-        let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         let after = round_trip(&before, &Procedural3dOperation::Generation(GenerationOperation::Add { generation }));
         assert_eq!(after.generation.generations.len(), 1);
     }
@@ -967,22 +967,7 @@ mod tests {
         let text = include_str!("../example/sphere-cut-with-torus.procedural3d");
         let projection = Procedural3dDocument::parse_dsl(text).expect("parse sphere-cut-with-torus.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
-        // 🪲 NOT `assert_dsl_pack_equivalence` here (unlike every sibling fixture test in this file):
-        // this is the only fixture whose `output-preview`'s `#[dsl(table)]` `preview: Vec<DictEntryDsl>`
-        // has non-empty rows, and `DictEntryDsl.value`'s `#[dsl(block)]` `ValueDsl` (six mutually-exclusive
-        // `Option` fields) then hits a confirmed pre-existing pack-crate bug: `pack/value/rs`'s
-        // `decode_table_soa` fallback column branch (`_ => decode_value(reader, None, ctx, depth + 1)`,
-        // near line 1115) decodes a table row's non-primitive column value with `spec: None` — unlike the
-        // row-level codec's own `decode_record_fields` (line ~696), which backfills every spec-declared
-        // but wire-omitted field as `FieldValue::Absent`, this self-describing path has no `RecordSpec` to
-        // backfill from, so a genuinely-absent optional field (e.g. `null`) is never inserted at all, and
-        // `ValueDsl::__dsl_from_record`'s `record.get(id).ok_or_else(...)` then fails with `missing field
-        // 'null'` on decode. Reproduced directly: `P::decode_pack(&projection.encode_pack())` panics with
-        // exactly that message for this fixture. Out of this crate's directory scope to fix (`pack/**` is
-        // off-limits per the PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS wave-2 family rules) — see
-        // `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-procedural.txt` for the full
-        // writeup. Add this call back once `decode_table_soa`'s fallback branch is fixed to backfill
-        // spec-declared-but-absent nested fields the same way the row-level codec already does.
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -995,7 +980,7 @@ mod tests {
         // always comes back float-backed — this is the known, accepted engine limitation, not a bug
         // in this crate's mirror/conversion code.
         values.insert("count".into(), serde_json::json!(3.0));
-        projection.generation.generations.push(protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
+        projection.generation.generations.push(playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values });
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);
@@ -1083,7 +1068,7 @@ mod tests {
 
     #[test]
     fn op_text_round_trip_generation() {
-        let generation = protocol::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
+        let generation = playbook::FormGeneration { id: "generation-1".into(), name: "Generation 1".into(), values: serde_json::Map::new() };
         test_support::assert_op_line_round_trip(&Procedural3dOperation::Generation(GenerationOperation::Add { generation }));
     }
     //#endregion 🔖OpTextTests

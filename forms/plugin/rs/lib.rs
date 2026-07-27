@@ -167,7 +167,7 @@ struct FormsPlayRuntime {
 
 //#region 🔖DocumentHelpers
 /// 🌱 The forms app's default document — the building-component fixture, seeded from its derive-
-/// generated `.forms` DSL text (see `protocol::ProtocolSpec`'s `dsl::DslDocument` derive). Used as
+/// generated `.forms` DSL text (see `playbook::PlaybookSpec`'s `dsl::DslDocument` derive). Used as
 /// `DocumentApp::initial_projection`.
 fn building_component_spec() -> FormSpec {
     <FormSpec as vcs::DocumentDsl>::parse_dsl(BUILDING_COMPONENT_EXAMPLE_TEXT).unwrap_or_else(|_| empty_forms_projection())
@@ -202,7 +202,7 @@ fn replace_spec_operations(current: &FormSpec, next: &FormSpec) -> Vec<FormOpera
         .map(|step| FormOperation::RemoveStep { step_id: step.id.clone() })
         .collect();
     if next.title != current.title {
-        operations.push(FormOperation::UpdateProtocol { title: next.title.clone() });
+        operations.push(FormOperation::UpdatePlaybook { title: next.title.clone() });
     }
     for step in &next.steps {
         operations.push(FormOperation::AddStep { step: step.clone(), index: None });
@@ -282,7 +282,7 @@ fn find_question_kind_contribution<'a>(
     kind: &str,
 ) -> Option<(&'a str, &'a Contribution)> {
     contributions.iter().find_map(|entry| {
-        if let Contribution::ProtocolBlockKind { block_kind, .. } = &entry.contribution {
+        if let Contribution::PlaybookBlockKind { block_kind, .. } = &entry.contribution {
             if block_kind == kind {
                 return Some((entry.plugin_id.as_str(), &entry.contribution));
             }
@@ -326,7 +326,7 @@ fn render_extension_question(
     let Some((plugin_id, contribution)) = find_question_kind_contribution(contributions, &question.kind) else {
         return ui_text(format!("Extension unavailable: {}", question.kind));
     };
-    let Contribution::ProtocolBlockKind {
+    let Contribution::PlaybookBlockKind {
         app_id,
         params_body_key,
         preview_body_key,
@@ -640,7 +640,7 @@ fn catalogue_kinds(contributions: &[PluginContributionEntry], labels: &FormsLabe
         })
         .collect();
     for entry in contributions {
-        if let Contribution::ProtocolBlockKind {
+        if let Contribution::PlaybookBlockKind {
             block_kind,
             label,
             icon_id,
@@ -735,7 +735,7 @@ fn forms_action_labels(is_de: bool) -> HashMap<String, String> {
         ("removeStep", "Remove Step", "Schritt entfernen"),
         ("patchStep", "Patch Step", "Schritt aktualisieren"),
         ("updateForm", "Update Form", "Formular aktualisieren"),
-        ("updateProtocol", "Update Protocol", "Protokoll aktualisieren"),
+        ("updatePlaybook", "Update Playbook", "Playbook aktualisieren"),
         ("dropQuestionKind", "Drop Question Kind", "Frageart ablegen"),
         ("setActiveExample", "Set Active Example", "Aktives Beispiel festlegen"),
         ("setSpecJson", "Set Spec JSON", "Spezifikations-JSON festlegen"),
@@ -1244,11 +1244,11 @@ fn build_inspector_tree(
 
 //#region 🔖Render
 //#region 🔖Builder
-fn forms_protocol_builder_config() -> protocol::ProtocolBuilderConfig {
-    protocol::ProtocolBuilderConfig {
+fn forms_playbook_builder_config() -> playbook::PlaybookBuilderConfig {
+    playbook::PlaybookBuilderConfig {
         action_namespace: "forms-blueprint",
         controller_id: FORMS_PLAY_CONTROLLER_ID,
-        labels: protocol::PROTOCOL_BUILDER_LABELS_EN,
+        labels: playbook::PLAYBOOK_BUILDER_LABELS_EN,
     }
 }
 
@@ -1261,8 +1261,8 @@ fn render_blueprint_builder(spec: &FormSpec, runtime: &FormsPlayRuntime, contrib
             icon_id,
         })
         .collect();
-    let config = forms_protocol_builder_config();
-    protocol::render_protocol_builder(
+    let config = forms_playbook_builder_config();
+    playbook::render_playbook_builder(
         FORMS_PLAY_SURFACE_BLUEPRINT,
         spec,
         &palette,
@@ -1756,11 +1756,11 @@ impl DocumentApp for FormsPlayApp {
                 self.runtime.try_values.clear();
                 ActionEmit::operations(vec![FormOperation::MoveStep { step_id: step_id.into(), index }])
             }
-            "updateForm" | "updateProtocol" => {
+            "updateForm" | "updatePlaybook" => {
                 let title = args.and_then(|value| value.get("value")).and_then(|value| value.as_str()).unwrap_or("");
                 ActionEmit::amend(
-                    vec![FormOperation::UpdateProtocol { title: Some(title.to_string()).filter(|title| !title.is_empty()) }],
-                    "update-protocol",
+                    vec![FormOperation::UpdatePlaybook { title: Some(title.to_string()).filter(|title| !title.is_empty()) }],
+                    "update-playbook",
                 )
             }
             "addQuestion" | "addBlock" => {
@@ -2068,7 +2068,7 @@ fn create_forms_app() -> App {
             .operation("removeStep", "Remove Step")
             .operation("patchStep", "Patch Step")
             .operation("updateForm", "Update Form")
-            .operation("updateProtocol", "Update Protocol")
+            .operation("updatePlaybook", "Update Playbook")
             .operation("dropQuestionKind", "Drop Question Kind")
             .operation("setActiveExample", "Set Active Example")
             // 🛠️ Dev-only whole-spec import — kept out of the command palette, staged JSON form.
@@ -2355,7 +2355,7 @@ mod tests {
     fn building_component_contributions() -> Vec<PluginContributionEntry> {
         vec![PluginContributionEntry {
             plugin_id: "forms-module-procedural".into(),
-            contribution: Contribution::ProtocolBlockKind {
+            contribution: Contribution::PlaybookBlockKind {
                 app_id: "forms-module-procedural".into(),
                 block_kind: "buildingComponent".into(),
                 label: "Building Component".into(),

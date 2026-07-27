@@ -1,8 +1,8 @@
-//! 🧩 Protocol procedural block-kind module — flow-backed building component params + live 3D preview.
+//! 🧩 Playbook procedural block-kind module — flow-backed building component params + live 3D preview.
 
 use flow_core::{flow_neuron_kind_infos_json, forms_bridge::flow_fixture_to_form_spec, FlowFixture, FlowHost, Widget};
 use flow_module_brep::{export_solid_json, import_solid_json, tessellate_geometry_json};
-use protocol::{visible_blocks, ProtocolBlock};
+use playbook::{visible_blocks, PlaybookBlock};
 use semio_framework_core::mesh_from_indexed;
 use semio_framework_plugin::{
     build_world_3d_scene, create_default_layout, mesh_from_kind, ui_stack_vertical, ui_text, world3d_default_camera, world3d_scene, world3d_selection_json, ActionArgDef, ActionArgOption, ActionDescriptor, ActionEmit, App, Contribution, DocumentApp,
@@ -13,14 +13,14 @@ use serde_json::{json, Map, Value};
 use vcs::{Operation, OperationDiff};
 
 //#region 🔖Constants
-const MODULE_PLUGIN_ID: &str = "protocol-module-procedural";
-const MODULE_APP_ID: &str = "protocol-module-procedural";
-const MODULE_DOCUMENT_SCHEMA: &str = "protocol.module.procedural.payload";
+const MODULE_PLUGIN_ID: &str = "playbook-module-procedural";
+const MODULE_APP_ID: &str = "playbook-module-procedural";
+const MODULE_DOCUMENT_SCHEMA: &str = "playbook.module.procedural.payload";
 const BODY_PARAMS: &str = "params";
 const BODY_PREVIEW: &str = "preview";
-const MODULE_WINDOW_PARAMS: &str = "protocol-module-procedural-params";
-const MODULE_WINDOW_PREVIEW: &str = "protocol-module-procedural-preview";
-const PREVIEW_SURFACE: &str = "protocol.module.procedural.preview";
+const MODULE_WINDOW_PARAMS: &str = "playbook-module-procedural-params";
+const MODULE_WINDOW_PREVIEW: &str = "playbook-module-procedural-preview";
+const PREVIEW_SURFACE: &str = "playbook.module.procedural.preview";
 const PREVIEW_FALLBACK_MESH_KIND: &str = "box";
 const ACTION_EXPORT_SOLID: &str = "exportSolidGeometry";
 const ACTION_IMPORT_SOLID: &str = "importSolidGeometry";
@@ -388,7 +388,7 @@ fn handle_import_solid(payload: &mut ModuleRenderPayload, args: Option<&Value>) 
 
 fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
-        id: Some(format!("protocol-module.export.{format}")),
+        id: Some(format!("playbook-module.export.{format}")),
         icon_id: "export".into(),
         label: format!("Export {}", format.to_uppercase()),
         action: module_action(payload, ACTION_EXPORT_SOLID, json!({ "format": format })),
@@ -399,7 +399,7 @@ fn export_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
 
 fn import_solid_button(payload: &ModuleRenderPayload, format: &str) -> UiNode {
     UiNode::Button(UiButtonNode {
-        id: Some(format!("protocol-module.import.{format}")),
+        id: Some(format!("playbook-module.import.{format}")),
         icon_id: "import".into(),
         label: format!("Import {}", format.to_uppercase()),
         action: module_action(payload, ACTION_IMPORT_SOLID, json!({ "format": format })),
@@ -420,7 +420,7 @@ fn render_media_export_buttons(payload: &ModuleRenderPayload) -> Vec<UiNode> {
 //#endregion 🔖MediaExport
 
 //#region 🔖Params
-fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
+fn render_question_control(question: &PlaybookBlock, value: &Value, payload: &ModuleRenderPayload) -> UiNode {
     let key = &question.id;
     let patch_field = if payload.surface == "blueprint" { "param" } else { "tryParam" };
     let patch_cmd = |param_key: &str| {
@@ -437,10 +437,10 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
     };
     match question.kind.as_str() {
         "text" | "longText" => UiNode::Field(UiFieldNode {
-            id: format!("protocol-module.{key}"),
+            id: format!("playbook-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("protocol-module.{key}.input"),
+                id: format!("playbook-module.{key}.input"),
                 input_kind: question.kind.clone(),
                 value: json_string_value(value),
                 placeholder: question.placeholder.clone(),
@@ -458,10 +458,10 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
             presence: UiPresence::default(),
         }),
         "number" => UiNode::Field(UiFieldNode {
-            id: format!("protocol-module.{key}"),
+            id: format!("playbook-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Input(UiInputNode {
-                id: format!("protocol-module.{key}.input"),
+                id: format!("playbook-module.{key}.input"),
                 input_kind: "number".into(),
                 value: json_string_value(value),
                 placeholder: question.placeholder.clone(),
@@ -479,10 +479,10 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
             presence: UiPresence::default(),
         }),
         "slider" => UiNode::Field(UiFieldNode {
-            id: format!("protocol-module.{key}"),
+            id: format!("playbook-module.{key}"),
             label: question.label.clone(),
             child: Box::new(UiNode::Slider(UiSliderNode {
-                id: format!("protocol-module.{key}.slider"),
+                id: format!("playbook-module.{key}.slider"),
                 value: json_f64_value(value),
                 min: question.min.unwrap_or(0.0),
                 max: question.max.unwrap_or(100.0),
@@ -497,9 +497,9 @@ fn render_question_control(question: &ProtocolBlock, value: &Value, payload: &Mo
             presence: UiPresence::default(),
         }),
         "boolean" => UiNode::Field(UiFieldNode {
-            id: format!("protocol-module.{key}"),
+            id: format!("playbook-module.{key}"),
             label: question.label.clone(),
-            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("protocol-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) })),
+            child: Box::new(UiNode::Toggle(UiToggleNode { id: format!("playbook-module.{key}.toggle"), icon_id: "check".into(), text: None, on_change: patch_cmd(key), presence: UiPresence::selected(value.as_bool().unwrap_or(false)) })),
             description: None,
             required: None,
             error: None,
@@ -585,7 +585,7 @@ impl DocumentApp for ModuleApp {
 
 fn create_module_app() -> App {
     App::from_builder(
-        App::builder(MODULE_APP_ID, "Protocol Module Procedural")
+        App::builder(MODULE_APP_ID, "Playbook Module Procedural")
             .document(["semio", "forms"])
             .mode("edit", "Edit")
             .window_kind(MODULE_WINDOW_PARAMS, "Params", BODY_PARAMS, SurfaceKind::NodeGraph, "clipboard-list")
@@ -622,8 +622,8 @@ fn register_module_exports() {
 
 fn module_bundle() -> PluginBundle {
     register_module_exports();
-    PluginBundle::new(MODULE_PLUGIN_ID, "Protocol Module Procedural", "0.1.0")
-        .contributes(Contribution::ProtocolBlockKind {
+    PluginBundle::new(MODULE_PLUGIN_ID, "Playbook Module Procedural", "0.1.0")
+        .contributes(Contribution::PlaybookBlockKind {
             app_id: MODULE_APP_ID.into(),
             block_kind: "buildingComponent".into(),
             label: "Building Component".into(),
@@ -671,8 +671,8 @@ mod tests {
         let bundle = module_bundle();
         let manifest = bundle.manifest();
         assert_eq!(manifest.contributions.len(), 1);
-        let Contribution::ProtocolBlockKind { block_kind, params_body_key, preview_body_key, .. } = &manifest.contributions[0] else {
-            panic!("expected a ProtocolBlockKind contribution");
+        let Contribution::PlaybookBlockKind { block_kind, params_body_key, preview_body_key, .. } = &manifest.contributions[0] else {
+            panic!("expected a PlaybookBlockKind contribution");
         };
         assert_eq!(block_kind, "buildingComponent");
         assert_eq!(params_body_key, BODY_PARAMS);

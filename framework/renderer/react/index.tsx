@@ -123,7 +123,6 @@ import {
   iconRenderPort,
   surfaceClass,
   glassClass,
-  glassChromeClass,
   insertWindowAtDropZone,
   interactiveActiveFillClass,
   interactiveHoverFillClass,
@@ -986,7 +985,7 @@ function UiStackHost({ node, context, path }: { readonly node: UiStackNode; read
         node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
         node.padding === "none" ? "p-0" : "p-double",
         `semio-ui-stack semio-ui-stack--${node.direction}`,
-        activate && cn(borderElementClass, "border cursor-pointer rounded-md", surfaceClass),
+        activate && cn(borderElementClass, "border cursor-pointer rounded-md"),
         node.selected && "ring-primary border-primary ring-1",
       )}
       data-ui-path={path}
@@ -1178,7 +1177,7 @@ export type PluginManifest = {
   readonly programs: readonly { readonly programId: string; readonly appId: string; readonly label: string; readonly document: readonly string[]; readonly yields: string }[];
   readonly examples: readonly { readonly id: string; readonly label: string; readonly documentJson: string; readonly appId: string }[];
   readonly contributions?: readonly {
-    readonly kind: "protocolBlockKind";
+    readonly kind: "playbookBlockKind";
     readonly appId: string;
     readonly blockKind: string;
     readonly label: string;
@@ -1987,7 +1986,7 @@ const FRAMEWORK_CATEGORY_COMMAND_ID = "framework.category.command";
  * bottom-middle, ordered left of the Command branch (mirrors Command's own bundling on the same anchor). */
 const FRAMEWORK_CATEGORY_TOOL_ID = "framework.category.tool";
 
-/** @emoji 🎛️ The four corner/top-middle/bottom-middle anchors' root tab row renders inline in navbar/footer chrome (via {@link PanelChromeTabBar}) instead of on the floating panel — the single source of truth `buildPanelSelectionProps`/`buildPanelProps` key off of. The two side-middle anchors have no navbar/footer slot to host into, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar. */
+/** @emoji 🎛️ Corner/top-middle/bottom-middle anchors park their *folded* root tab row in navbar/footer chrome (via {@link PanelChromeTabBar}); while open, the floating {@link Panel} hosts the full strip on its {@link WindowChrome}. The two side-middle anchors have no navbar/footer slot, so they're absent here and fall back to `"panel"` (see the `?..:"panel"` read site), carrying their own tab bar when folded too. */
 const PANEL_TAB_BAR_HOSTS: Partial<Record<Anchor, "navbar" | "footer">> = {
   "top-left": "navbar",
   "top-middle": "navbar",
@@ -15785,7 +15784,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
             <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
             {computing ? (
-              <div className={cn("pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded px-2 py-1 text-xs shadow-sm", glassChromeClass)} data-level="pane" role="status" aria-busy="true">
+              <div className={cn("pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded px-2 py-1 text-xs shadow-sm", glassClass)} data-level="pane" role="status" aria-busy="true">
                 <Spinner size="small" />
                 <span>{shellLabel("ui.common.loading")}</span>
               </div>
@@ -16348,7 +16347,16 @@ function FlowSpotlight({
 
 function portLabel(port: MediaGraphPort): string {
   if (port.label) return port.label;
-  const segments = port.id.split(":");
+  const segments = port.id.split("@");
+  return segments[segments.length - 1] ?? port.id;
+}
+
+// 🩹 `port.id` is the wire-level `nodeId@portId` key (see `MediaGraphPortRecord`), but React Flow's
+// `Handle id` must match `sourceHandle`/`targetHandle`, which carry the bare port id (`MediaGraphEdgeRecord.
+// sourcePortId`/`targetPortId`) — strip the node-id prefix here so per-port anchoring and onConnect's
+// round-trip back to `sourcePortId`/`targetPortId` both resolve against the same bare id.
+function portHandleId(port: MediaGraphPort): string {
+  const segments = port.id.split("@");
   return segments[segments.length - 1] ?? port.id;
 }
 
@@ -16426,13 +16434,13 @@ function MediaGraphDiagramNode({ data }: NodeProps<MediaGraphNodeData>) {
             <div key={`${input?.id ?? "in"}:${output?.id ?? "out"}:${rowIndex}`} className="relative h-[18px]">
               {input ? (
                 <>
-                  <Handle id={input.id} type="target" position={Position.Left} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
+                  <Handle id={portHandleId(input)} type="target" position={Position.Left} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
                   <span className="pl-3 text-muted-foreground">{portLabel(input)}</span>
                 </>
               ) : null}
               {output ? (
                 <>
-                  <Handle id={output.id} type="source" position={Position.Right} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
+                  <Handle id={portHandleId(output)} type="source" position={Position.Right} className="!size-2 !border-panel !bg-foreground" style={{ top }} />
                   <span className="absolute right-3 top-0 text-right text-muted-foreground">{portLabel(output)}</span>
                 </>
               ) : null}
@@ -16903,7 +16911,7 @@ const useClient = () => {
 function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
   if (peers.length === 0) return null;
   return (
-    <div className={cn("pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 px-2 py-1 text-xs shadow-sm", glassChromeClass)} data-level="pane">
+    <div className={cn("pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 px-2 py-1 text-xs shadow-sm", glassClass)} data-level="pane">
       {peers.map((peer) => (
         <div key={peer.clientId} className="flex items-center justify-between gap-2 text-muted-foreground">
           <span className="truncate font-medium text-foreground">{peer.name}</span>
@@ -17467,7 +17475,7 @@ export function alignModeToDag(mode: string): string {
 
 export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: DagSelectionBounds; readonly onAlign: (mode: string) => void }) {
   return (
-    <div className={cn("pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border p-0.5 shadow-sm", glassChromeClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
+    <div className={cn("pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border p-0.5 shadow-sm", glassClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
       {ALIGN_MODES.map((mode) => (
         <button key={mode.id} type="button" className="size-5 rounded text-xs hover:bg-active-base" aria-label={mode.id} onPointerDown={(event) => event.stopPropagation()} onClick={() => onAlign(mode.id)}>
           {mode.label}
@@ -18719,7 +18727,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
       >
         {renameDraft ? (
           <input
-            className={cn("pointer-events-auto absolute z-50 min-w-[12rem] rounded border border-border px-2 py-1 font-mono text-xs text-foreground shadow-md", glassChromeClass)}
+            className={cn("pointer-events-auto absolute z-50 min-w-[12rem] rounded border border-border px-2 py-1 font-mono text-xs text-foreground shadow-md", glassClass)}
             data-level="pane"
             style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}
             value={renameDraft.text}
@@ -19639,7 +19647,7 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
     <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
       <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
-        <div className="absolute inset-0 flex items-center justify-center ui-surface text-xs text-muted-foreground">
+        <div className="absolute inset-0 flex items-center justify-center text-xs text-muted-foreground">
           {canvasUnavailableLabel}: {attachError}
         </div>
       ) : null}

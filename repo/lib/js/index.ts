@@ -1193,9 +1193,9 @@ export const COVERAGE_EXCLUDE_REASONS: Readonly<Record<string, string>> = {
 function coverageGlobToRegExp(glob: string): RegExp {
   const escaped = glob
     .replace(/[.+^${}()|[\]\\]/g, "\\$&")
-    .replace(/\*\*/g, " ")
+    .replace(/\*\*/g, "\x00")
     .replace(/\*/g, "[^/]*")
-    .replace(/ /g, ".*");
+    .replace(/\x00/g, ".*");
   return new RegExp(`^${escaped}$`);
 }
 

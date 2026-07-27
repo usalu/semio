@@ -1186,7 +1186,7 @@ fn resolve_layout_node_id(handle_to_node: &HashMap<String, String>, key: &str, n
     if node_ids.contains(key) {
         return key.to_string();
     }
-    if let Some(base) = key.split(':').next() {
+    if let Some(base) = key.split('@').next() {
         if node_ids.contains(base) {
             return base.to_string();
         }
@@ -1871,7 +1871,7 @@ impl Default for DagFixture {
 }
 
 fn split_dag_endpoint(endpoint: &str) -> (String, String) {
-    if let Some((node, port)) = endpoint.rsplit_once(':') {
+    if let Some((node, port)) = endpoint.rsplit_once('@') {
         return (node.to_string(), port.to_string());
     }
     (endpoint.to_string(), "out".into())
@@ -2100,7 +2100,7 @@ impl DagHost {
             return None;
         }
         let key = self.handle_key_map.get(&target)?;
-        let (node_id, port_id) = key.split_once(':')?;
+        let (node_id, port_id) = key.split_once('@')?;
         let node = self.fixture.nodes.iter().find(|entry| entry.id == node_id)?;
         let direction = if node.inputs().iter().any(|port| port.id == port_id) {
             "in"
@@ -2156,7 +2156,7 @@ impl DagHost {
                     "edge" => self.edge_id_map.get(&target.id).cloned().map(|id| Row { domain: target.domain, id, generality: target.generality, label: None }),
                     "handle" => self.decode_channel_ref(target.id).map(|channel| Row {
                         domain: "handle".into(),
-                        id: format!("{}:{}", channel.widget_id, channel.port),
+                        id: format!("{}@{}", channel.widget_id, channel.port),
                         generality: target.generality,
                         label: Some(format!("{} · {}", channel.widget_id, channel.port)),
                     }),
@@ -2269,7 +2269,7 @@ impl DagHost {
     }
 
     /// @emoji 🎯 Screen-space geometry (canvas-local px) for a live entity in the shell's pick-target
-    /// grammar (`domain`: `"node"` | `"handle"` | `"edge"`; `id`: a node's widget id, `"widgetId:port"`
+    /// grammar (`domain`: `"node"` | `"handle"` | `"edge"`; `id`: a node's widget id, `"widgetId@port"`
     /// for a handle, or a mirrored edge id — `"*"` picks whichever matching entity's screen anchor is
     /// nearest the viewport center) — powers introduction-demonstration semantic targeting
     /// (`IntroductionPoint::Entity`/`Curve`). Never errors: an unresolved domain/id returns
@@ -2340,14 +2340,14 @@ impl DagHost {
                     }
                     nearest_center_screen(&all)
                 } else {
-                    id.split_once(':').and_then(|(widget_id, port)| handle_world_bounds(widget_id, port))
+                    id.split_once('@').and_then(|(widget_id, port)| handle_world_bounds(widget_id, port))
                 }
             }
             "edge" => {
                 let edge = if id == "*" { self.fixture.edges.first() } else { self.fixture.edges.iter().find(|edge| edge.id == id) };
                 let Some(edge) = edge else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some((source_widget, source_port)) = edge.source.split_once(':') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
-                let Some((target_widget, target_port)) = edge.target.split_once(':') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some((source_widget, source_port)) = edge.source.split_once('@') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
+                let Some((target_widget, target_port)) = edge.target.split_once('@') else { return serde_json::to_string(&unresolved).unwrap_or_default() };
                 let Some(source_bounds) = handle_world_bounds(source_widget, source_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
                 let Some(target_bounds) = handle_world_bounds(target_widget, target_port) else { return serde_json::to_string(&unresolved).unwrap_or_default() };
                 let (_, source_center) = world_rect_to_screen(source_bounds.0, source_bounds.1, source_bounds.2, source_bounds.3);
@@ -2942,7 +2942,7 @@ impl DagHost {
                 let in_a = io_node_rect_port_angle_for_node(node, port_idx, true);
                 let hid = next_handle;
                 next_handle += 1;
-                let public_key = format!("{}:{}", node.id, port.id);
+                let public_key = format!("{}@{}", node.id, port.id);
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, true), hid);
                 self.handle_key_map.insert(hid, public_key);
                 self.handle_port_shape.insert(hid, port.shape);
@@ -2957,7 +2957,7 @@ impl DagHost {
                 let out_a = io_node_rect_port_angle_for_node(node, port_idx, false);
                 let hid = next_handle;
                 next_handle += 1;
-                let public_key = format!("{}:{}", node.id, port.id);
+                let public_key = format!("{}@{}", node.id, port.id);
                 handle_map.insert(Self::dag_port_handle_key(&node.id, &port.id, false), hid);
                 self.handle_key_map.insert(hid, public_key);
                 self.handle_port_shape.insert(hid, port.shape);
@@ -2974,14 +2974,14 @@ impl DagHost {
             .edges
             .iter()
             .filter_map(|e| {
-                let src = e.source.split(':').next()?.to_string();
-                let tgt = e.target.split(':').next()?.to_string();
+                let src = e.source.split('@').next()?.to_string();
+                let tgt = e.target.split('@').next()?.to_string();
                 Some((src, tgt))
             })
             .collect();
         let mut eid: u64 = 100;
         for edge in &self.fixture.edges {
-            if would_create_cycle(&existing, edge.source.split(':').next().unwrap_or(""), edge.target.split(':').next().unwrap_or("")) {
+            if would_create_cycle(&existing, edge.source.split('@').next().unwrap_or(""), edge.target.split('@').next().unwrap_or("")) {
                 continue;
             }
             let (source_node, source_port) = Self::dag_port_endpoint_parts(&edge.source);
@@ -3004,7 +3004,7 @@ impl DagHost {
     }
 
     fn dag_port_endpoint_parts(endpoint: &str) -> (String, String) {
-        endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), String::new()))
+        endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), String::new()))
     }
 
     fn dag_port_handle_key(node_id: &str, port_id: &str, input: bool) -> String {
@@ -3117,7 +3117,7 @@ impl DagHost {
     }
 
     fn handle_id_for_port(&self, node_id: &str, port_id: &str) -> Option<HandleId> {
-        let key = format!("{node_id}:{port_id}");
+        let key = format!("{node_id}@{port_id}");
         self.handle_key_map.iter().find(|(_, k)| k.as_str() == key).map(|(&hid, _)| hid)
     }
 
@@ -5204,7 +5204,7 @@ mod tests {
                 ),
                 DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b:out".into(), target: "c:in".into(), ..Default::default() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
         });
         host.set_selection(&["b".to_string()]);
         host.delete_selected();
@@ -5240,7 +5240,7 @@ mod tests {
                 ),
                 DagNodeSpec::computation("c".into(), "C".into(), "C".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 700.0, 300.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b:out".into(), target: "c:in".into(), ..Default::default() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "b@out".into(), target: "c@in".into(), ..Default::default() }],
         });
         let edge_id = *host.engine.edges.keys().next().expect("edge");
         host.engine.selection.edge_ids.insert(edge_id);
@@ -5261,7 +5261,7 @@ mod tests {
                 DagNodeSpec::computation("a".into(), "A".into(), "A".into(), "emoji:🔷".into(), vec![], vec![IoPortSpec { id: "out".into(), label: "out".into(), ..Default::default() }], false, false, 500.0, 500.0, 160.0, 56.0),
                 DagNodeSpec::computation("b".into(), "B".into(), "B".into(), "emoji:🔷".into(), vec![IoPortSpec { id: "in".into(), label: "in".into(), ..Default::default() }], vec![], false, false, 500.0, 500.0, 160.0, 56.0),
             ],
-            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() }],
         });
         host.reorganize(&DagLayoutOptions::default()).unwrap();
         let a = host.fixture.nodes.iter().find(|n| n.id == "a").expect("a");
@@ -5663,15 +5663,15 @@ mod tests {
     fn dag_host_entity_screen_json_resolves_handle_by_widget_and_port() {
         let mut host = DagHost::default_demo();
         host.set_viewport(800, 600, 1.0);
-        let input_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale:in")).unwrap();
+        let input_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale@in")).unwrap();
         assert_eq!(input_json["visible"], true);
-        let output_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "combine:b")).unwrap();
+        let output_json: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "combine@b")).unwrap();
         assert_eq!(output_json["visible"], true);
-        // 🐢 A malformed id (no ":port") or a port that doesn't exist on the node must degrade to
+        // 🐢 A malformed id (no "@port") or a port that doesn't exist on the node must degrade to
         // unresolved, never panic.
         let malformed: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale")).unwrap();
         assert_eq!(malformed["visible"], false);
-        let missing_port: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale:nope")).unwrap();
+        let missing_port: serde_json::Value = serde_json::from_str(&host.entity_screen_json("handle", "scale@nope")).unwrap();
         assert_eq!(missing_port["visible"], false);
     }
 
@@ -5804,8 +5804,8 @@ mod tests {
     fn dag_host_reconnects_edge_endpoint() {
         let mut host = DagHost::default_demo();
         host.set_viewport(1280, 800, 1.0);
-        let in_w = handle_world(&host, "combine:b");
-        let out_w = handle_world(&host, "scale:out");
+        let in_w = handle_world(&host, "combine@b");
+        let out_w = handle_world(&host, "scale@out");
         let (in_sx, in_sy) = world_to_screen_px(&host, in_w);
         let (out_sx, out_sy) = world_to_screen_px(&host, out_w);
         host.pointer_down(in_sx, in_sy, false);
@@ -5813,7 +5813,7 @@ mod tests {
         host.pointer_move(out_sx, out_sy);
         host.pointer_up(out_sx, out_sy);
         let e3 = host.fixture.edges.iter().find(|e| e.id == "e3").expect("e3");
-        assert_eq!(e3.source, "scale:out");
+        assert_eq!(e3.source, "scale@out");
     }
 
     #[test]
@@ -5843,7 +5843,7 @@ mod tests {
         host.pointer_move_screen(sx + 200.0, sy, false, false, false);
         assert!(host.engine.render_snapshot().pending_edge.is_some(), "proximity drag should preview edge");
         host.pointer_up_screen(sx + 200.0, sy, false, false, false);
-        assert!(host.fixture.edges.iter().any(|edge| edge.source == "src:out" && edge.target == "tgt:in"), "proximity drag should commit edge");
+        assert!(host.fixture.edges.iter().any(|edge| edge.source == "src@out" && edge.target == "tgt@in"), "proximity drag should commit edge");
     }
 
     #[test]
@@ -5862,7 +5862,7 @@ mod tests {
                 DagNodeSpec::computation("torus".into(), "Torus".into(), "Torus".into(), "emoji:🍩".into(), vec![], outputs.clone(), false, false, 0.0, 60.0, src_w, src_h),
                 DagNodeSpec::computation("cut".into(), "Cut".into(), "Cut".into(), "emoji:✂️".into(), inputs, outputs, false, false, 240.0, 0.0, cut_w, cut_h),
             ],
-            edges: vec![DagFixtureEdge { id: "e1".into(), source: "sphere:out".into(), target: "cut:a".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "torus:out".into(), target: "cut:b".into(), ..Default::default() }],
+            edges: vec![DagFixtureEdge { id: "e1".into(), source: "sphere@out".into(), target: "cut@a".into(), ..Default::default() }, DagFixtureEdge { id: "e2".into(), source: "torus@out".into(), target: "cut@b".into(), ..Default::default() }],
         });
         assert_eq!(host.engine.edges.len(), 2, "fixture edges should load into engine");
         host.set_viewport(1280, 800, 1.0);
@@ -5919,8 +5919,8 @@ mod tests {
                 ),
             ],
             edges: vec![
-                DagFixtureEdge { id: "e100".into(), source: "extrude:solid".into(), target: "brep:brep".into(), ..Default::default() },
-                DagFixtureEdge { id: "e101".into(), source: "brep:brep".into(), target: "get:list".into(), ..Default::default() },
+                DagFixtureEdge { id: "e100".into(), source: "extrude@solid".into(), target: "brep@brep".into(), ..Default::default() },
+                DagFixtureEdge { id: "e101".into(), source: "brep@brep".into(), target: "get@list".into(), ..Default::default() },
             ],
         });
         host.sync_edges_from_engine();
@@ -5930,8 +5930,8 @@ mod tests {
         let outgoing_source = host.engine.handles.get(&outgoing.source).expect("outgoing source handle");
         assert_eq!(incoming_target.role, HandleRole::Target);
         assert_eq!(outgoing_source.role, HandleRole::Source);
-        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e100").map(|edge| edge.target.as_str()), Some("brep:brep"));
-        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e101").map(|edge| edge.source.as_str()), Some("brep:brep"));
+        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e100").map(|edge| edge.target.as_str()), Some("brep@brep"));
+        assert_eq!(host.fixture.edges.iter().find(|edge| edge.id == "e101").map(|edge| edge.source.as_str()), Some("brep@brep"));
     }
 
     #[test]
@@ -5972,7 +5972,7 @@ mod tests {
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
         let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
-        let handle = handle_world(&host, "combine:b");
+        let handle = handle_world(&host, "combine@b");
         for lod in ["minimap", "overview", "compact"] {
             host.set_forced_draw_lod_label(lod);
             assert!(!host.draw_lod_for_frame().allows_connection_hit_picking(), "{lod}");
@@ -5997,7 +5997,7 @@ mod tests {
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(combine, port_idx).expect("row bounds");
         let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
-        let handle = handle_world(&host, "combine:b");
+        let handle = handle_world(&host, "combine@b");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_down(sx, sy, false);
@@ -6081,7 +6081,7 @@ mod tests {
         let port_idx = scale.outputs().iter().position(|p| p.id == "out").expect("port out");
         let (x0, y0, x1, y1) = output_port_row_hit_bounds(scale, port_idx).expect("row bounds");
         let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
-        let handle = handle_world(&host, "scale:out");
+        let handle = handle_world(&host, "scale@out");
         assert!((row_center.x - handle.x).abs() > 4.0, "row center should sit away from the painted handle anchor");
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_down(sx, sy, false);
@@ -6101,7 +6101,7 @@ mod tests {
         let port_idx = combine.inputs().iter().position(|p| p.id == "b").expect("port b");
         let (x0, y0, x1, y1) = input_port_row_hit_bounds(&combine, port_idx).expect("row bounds");
         let row_center = cavas::Point::new((x0 + x1) * 0.5, (y0 + y1) * 0.5);
-        let handle = handle_world(&host, "combine:b");
+        let handle = handle_world(&host, "combine@b");
         assert!((row_center.x - handle.x).abs() > 4.0);
         let (sx, sy) = world_to_screen_px(&host, row_center);
         host.pointer_down(sx, sy, false);
@@ -7516,7 +7516,7 @@ mod dag_vcs_tests {
     fn edge_add_remove_round_trip() {
         let mut document = empty_dag_document();
         document.nodes = vec![sample_node("a"), sample_node("b")];
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
         let added = round_trip(&document, &DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
         assert_eq!(added.edges.len(), 1);
         let removed = round_trip(&added, &DagOperation::Edges(CollectionOperation::Remove { id: "e1".into() }));
@@ -7543,8 +7543,8 @@ mod dag_vcs_tests {
             DagNodeSpec { id: "app".into(), name: "App".into(), x: 0.0, y: 560.0, kind: DagNodeKind::AppInstance { instance_id: "inst-1".into(), program_id: "prog-1".into(), app_id: "note".into(), icon: "emoji:📦".into(), inputs: vec![], outputs: vec![port("out", "Out")] }, ..Default::default() },
         ];
         let edges = vec![
-            DagFixtureEdge { id: "e1".into(), source: "slider:out".into(), target: "comp:in".into(), ..Default::default() },
-            DagFixtureEdge { id: "e2".into(), source: "comp:out".into(), target: "screen:in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
+            DagFixtureEdge { id: "e1".into(), source: "slider@out".into(), target: "comp@in".into(), ..Default::default() },
+            DagFixtureEdge { id: "e2".into(), source: "comp@out".into(), target: "screen@in".into(), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::from([("weight".to_string(), PropertyValue::Number(2.0))]) },
         ];
         DagDocument { schema: DAG_DOCUMENT_SCHEMA.into(), nodes, edges }
     }
@@ -7592,7 +7592,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_edges_add() {
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
         vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Add { index: 0, item: edge }));
     }
 
@@ -7608,7 +7608,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_edges_patch() {
-        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a:out".into()), target: None } }));
+        vcs::test_support::assert_op_line_round_trip(&DagOperation::Edges(CollectionOperation::Patch { id: "e1".into(), patch: DagEdgePatch { source: Some("a@out".into()), target: None } }));
     }
 
     #[test]
@@ -7618,7 +7618,7 @@ mod dag_vcs_tests {
 
     #[test]
     fn op_text_round_trips_set_edges() {
-        let edge = DagFixtureEdge { id: "e1".into(), source: "a:out".into(), target: "b:in".into(), ..Default::default() };
+        let edge = DagFixtureEdge { id: "e1".into(), source: "a@out".into(), target: "b@in".into(), ..Default::default() };
         vcs::test_support::assert_op_line_round_trip(&DagOperation::SetEdges { edges: vec![edge] });
     }
 

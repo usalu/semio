@@ -1,0 +1,17 @@
+[package]
+name = "protocol_core"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol command/collaboration-semantics foundation — ids, HLC, errors, limits, record kinds, scalar codecs, crypto traits"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+pack_core = { path = "../../../pack/core/rs" }
+thiserror = "2.0.12"
+serde = { version = "1", features = ["derive"] }

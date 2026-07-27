@@ -491,8 +491,8 @@ impl SequenceHost {
             .edges
             .iter()
             .filter_map(|dag_edge| {
-                let from = dag_edge.source.split(':').next()?;
-                let to = dag_edge.target.split(':').next()?;
+                let from = dag_edge.source.split('@').next()?;
+                let to = dag_edge.target.split('@').next()?;
                 if from == to {
                     return None;
                 }
@@ -656,7 +656,7 @@ impl SequenceHost {
             .iter()
             .filter(|edge| visible_ids.contains(&edge.from) && visible_ids.contains(&edge.to))
             .filter(|edge| !would_create_cycle(&existing, &edge.from, &edge.to))
-            .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}:{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}:{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
+            .map(|edge| DagFixtureEdge { id: edge.id.clone(), source: format!("{}@{}", edge.from, FLOW_OUTPUT_PORT), target: format!("{}@{}", edge.to, FLOW_INPUT_PORT), route_style: EdgeRouteStyle::SharpSz, properties: PropertyBag::new() })
             .collect();
         DagFixture { schema: "dag.fixture".into(), camera: self.fixture.camera.clone().into(), nodes, edges }
     }

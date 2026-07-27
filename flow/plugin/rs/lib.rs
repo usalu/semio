@@ -6,7 +6,7 @@ use flow_core::{
     forms_bridge::{apply_generation_values_to_fixture, flow_fixture_to_form_spec},
     CameraJson, FlowEvalDriver, FlowFixture, FlowHost, FlowOperation, Widget, FLOW_DOCUMENT_SCHEMA, FLOW_LOD_MODE_AUTOMATIC,
 };
-use protocol::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
+use playbook::{handle_generation_action, render_generation_form_body, render_generation_preview_text, render_generations_tree, selected_generation, GenerationPlayState};
 use semio_framework_plugin::{
     build_node_graph_scene, build_text_editor_scene, create_default_layout, create_named_layout, is_de_locale, localized_label_map, resolve_labels, tree_item_desc, tree_item_with_action, tree_item_with_action_draggable,
     ui_declarative_sections_to_tree, ui_inspector_groups_to_tree, ui_inspector_mixed_number, ui_inspector_mixed_text, ui_inspector_readonly_field, ui_text, ActionArgDef, ActionArgOption, ActionDefinition, ActionDescriptor, ActionEmit, ActionKind,
@@ -205,7 +205,7 @@ fn sync_host_selection(host: &mut FlowHost, selected: &[String]) {
 }
 
 fn split_endpoint(endpoint: &str) -> (String, String) {
-    endpoint.split_once(':').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
+    endpoint.split_once('@').map(|(node, port)| (node.to_string(), port.to_string())).unwrap_or_else(|| (endpoint.to_string(), "out".into()))
 }
 
 fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
@@ -219,8 +219,8 @@ fn fixture_to_media_graph(fixture: &DagFixture) -> (String, String) {
             y: node.y,
             width: node.width,
             height: node.height,
-            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
-            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}:{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            inputs: node.inputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
+            outputs: node.outputs().iter().filter(|port| port.visible).map(|port| MediaGraphPortRecord { id: format!("{}@{}", node.id, port.id), label: Some(port.label.clone()) }).collect(),
         })
         .collect();
     let edges: Vec<MediaGraphEdgeRecord> = fixture

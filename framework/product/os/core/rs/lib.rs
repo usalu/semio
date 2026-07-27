@@ -1594,8 +1594,8 @@ pub mod host {
         #[test]
         fn contributions_track_plugin_load_and_hot_swap() {
             let mut host = PluginHost::new();
-            let contribution = Contribution::ProtocolBlockKind {
-                app_id: "protocol-module-procedural".into(),
+            let contribution = Contribution::PlaybookBlockKind {
+                app_id: "playbook-module-procedural".into(),
                 block_kind: "buildingComponent".into(),
                 label: "Building Component".into(),
                 icon_id: "building".into(),
@@ -1604,10 +1604,10 @@ pub mod host {
                 preview_body_key: "preview".into(),
             };
             host.load_plugin(LoadedPlugin {
-                plugin_id: "protocol-module-procedural".into(),
+                plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
-                    plugin_id: "protocol-module-procedural".into(),
-                    label: "Protocol Module Procedural".into(),
+                    plugin_id: "playbook-module-procedural".into(),
+                    label: "Playbook Module Procedural".into(),
                     version: "0.1.0".into(),
                     apps: vec![],
                     programs: vec![],
@@ -1616,15 +1616,15 @@ pub mod host {
                     examples: vec![],
                     commands: vec![],
                 },
-                artifact_uri: "plugin://protocol-module-procedural".into(),
+                artifact_uri: "plugin://playbook-module-procedural".into(),
             });
             assert_eq!(host.contributions().len(), 1);
-            assert_eq!(host.contributions()[0].plugin_id, "protocol-module-procedural");
+            assert_eq!(host.contributions()[0].plugin_id, "playbook-module-procedural");
             host.hot_swap_plugin(LoadedPlugin {
-                plugin_id: "protocol-module-procedural".into(),
+                plugin_id: "playbook-module-procedural".into(),
                 manifest: PluginManifest {
-                    plugin_id: "protocol-module-procedural".into(),
-                    label: "Protocol Module Procedural".into(),
+                    plugin_id: "playbook-module-procedural".into(),
+                    label: "Playbook Module Procedural".into(),
                     version: "0.2.0".into(),
                     apps: vec![],
                     programs: vec![],
@@ -1633,7 +1633,7 @@ pub mod host {
                     examples: vec![],
                     commands: vec![],
                 },
-                artifact_uri: "plugin://protocol-module-procedural".into(),
+                artifact_uri: "plugin://playbook-module-procedural".into(),
             });
             assert!(host.contributions().is_empty());
         }

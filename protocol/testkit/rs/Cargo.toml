@@ -1,0 +1,23 @@
+[package]
+name = "protocol_testkit"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Protocol testkit — seeded generators, law assertions, corruption fuzzing, benchmarks"
+
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[[bench]]
+name = "protocol"
+harness = false
+
+[dependencies]
+protocol = { path = "../../rs" }
+pack_testkit = { path = "../../../pack/testkit/rs" }
+
+[dev-dependencies]
+criterion = { version = "0.5", default-features = false, features = ["html_reports"] }

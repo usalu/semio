@@ -1,0 +1,146 @@
+WAVE 2 — family: s-shome-sstudio
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+(a) SStudioProjection (s/rs/lib.rs) — the standalone `s_studio` CQRS crate.
+    Schema: S_STUDIO_SCHEMA = "s.studio" (s/rs/lib.rs).
+    No DocumentApp impl exists anywhere in the repo for this type (`s_studio` has zero dependents —
+    confirmed via `Cargo.toml`/path grep; `s/plugin/rs` does NOT depend on it). Codec registration
+    (step 1) is therefore N/A — nothing to register it *for*. Test-law calls only (step 2).
+
+(b) SHomeDocument (s/plugin/rs/lib.rs, mod app_home) via HomeApp.
+    App type:  HomeApp
+    Schema:    "s.home" (HomeApp::document_schema())
+    Codec registration: s/plugin/rs/lib.rs, new `register_s_exports()` fn (called at the top of
+      `bundle()`, since this crate has no `semio_plugin!`-macro `setup:` hook — it hand-builds its
+      `PluginBundle` with two `.register_document_app` calls):
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_home::HomeApp>("s.home");
+
+(c) OsProjection (framework/product/os/core/rs/lib.rs) via StudioApp (s/plugin/rs/lib.rs, mod
+    app_studio) — "the OS document" referenced in the family note.
+    App type:  StudioApp
+    Schema:    OS_STUDIO_SCHEMA = "s.studio" (framework/product/os/core/rs/lib.rs)
+    Codec registration: same `register_s_exports()`:
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_studio::StudioApp>(OS_STUDIO_SCHEMA);
+    NOTE: SStudioProjection (a) and OsProjection (c) both use the literal schema string "s.studio" but
+    are unrelated types in unrelated crates — (a) is dead/orphaned, (c) is the live one actually wired
+    to the plugin. Flagging for wave 3 in case this collision matters for the codec registry (schema
+    string is the only registry key) — no live conflict today since (a) never registers a codec.
+
+2. TEST-LAW CALLS ADDED
+--------------------------------------------------------------------------------
+s/rs/lib.rs (mod tests):
+  - studio_dsl_round_trips_empty_and_sample_projections: added
+    assert_dsl_pack_equivalence(&default_studio_projection()) and
+    assert_dsl_pack_equivalence(&sample_studio_projection()) next to the existing assert_dsl_round_trip
+    pair. PASSES.
+  - studio_document_text_round_trips_through_the_store: added
+    assert_document_pack_round_trip(&store) next to assert_document_text_round_trip. PASSES.
+
+s/plugin/rs/lib.rs (mod app_home::tests):
+  - home_dsl_round_trips_default_and_populated_documents: added 2x assert_dsl_pack_equivalence next to
+    the existing 2x assert_dsl_round_trip (SHomeDocument gen 0 / gen 42). PASSES.
+  - home_document_text_round_trips_through_the_store: added assert_document_pack_round_trip next to
+    assert_document_text_round_trip. PASSES.
+
+s/plugin/rs/lib.rs (mod app_studio::tests):
+  - demo_document_dsl_text_round_trips: added assert_dsl_pack_equivalence(&projection) next to
+    assert_dsl_round_trip (fixture: the real bundled `s/example/demo.s`, parsed via
+    demo_studio_projection(), an OsProjection). PASSES.
+
+framework/product/os/core/rs/lib.rs (mod host::tests — TEST REGION ONLY, per special extra scope A):
+  - dsl_round_trips_default_projection: added assert_dsl_pack_equivalence(&default_os_projection()).
+    PASSES.
+  - dsl_round_trips_projection_with_media_graph_and_parameters: added
+    assert_dsl_pack_equivalence(&sample_os_projection()). PASSES.
+  - document_text_round_trips_store_with_applied_operation: added
+    assert_document_pack_round_trip(&store). PASSES.
+  No non-test code in this file was touched.
+
+3. FIXTURES
+--------------------------------------------------------------------------------
+s/example/demo.s.json: already gone by the time this session started — only s/example/demo.s (DSL
+text) exists, and s/plugin/rs/lib.rs's DEMO_STUDIO_DSL already `include_str!`s it and parses it via
+`<OsProjection as vcs::DocumentDsl>::parse_dsl`. Nothing to convert.
+
+4. SPECIAL EXTRA SCOPE (B) — StudioApp::handle_action wiring
+--------------------------------------------------------------------------------
+Added to s/plugin/rs/lib.rs, mod app_studio, StudioApp::handle_action, mirroring exportMedia/
+importMedia/importMediaPayload's shape exactly:
+  - "exportStudioPack": resolves the current studio's OsDocument via
+    `super::app_home::resolve_studio_document(&runtime_studio_id(&self.runtime))`, calls
+    `export_os_studio_pack`, pushes two HostEffect::DownloadMediaExport (base64 `.pack`, plain-text
+    `.ops`).
+  - "exportStudioDsl": same document resolution, calls `export_os_studio_dsl`, pushes one plain-text
+    HostEffect::DownloadMediaExport (`.os`).
+  - "importStudioPack": returns HostEffect::RequestFileOpen { accept: ".pack", read_as: Some("dataUrl"),
+    import_action: "importStudioPackPayload", multiple: false }.
+  - "importStudioPackPayload": strips the data-URL prefix, base64-decodes, calls
+    `import_os_studio_from_pack(&bytes, "", super::app_home::catalog_port())`. Ops is passed as "" —
+    a single `.pack` file carries no separate ops sidecar (unlike exportStudioPack's two-file output),
+    so the import yields the document's bare initial projection with no replayed edit history, exactly
+    like the pre-existing JSON `importStudio` action's semantics.
+
+Supporting edits (same file):
+  - `export_os_studio_dsl`/`export_os_studio_pack`/`import_os_studio_from_pack` are NOT in
+    framework/product/os/core/rs/lib.rs's crate-root `pub use host::{...}` re-export list (that file's
+    non-test code is out of this family's scope, so I could not add them there). Reached instead via
+    `use semio_framework_os::host::{export_os_studio_dsl, export_os_studio_pack,
+    import_os_studio_from_pack};` — `pub mod host` makes every `pub fn` inside it reachable this way
+    regardless of the root re-export list. Flagging for wave 3 / os-core's owner: adding these three to
+    the `pub use host::{...}` list would be the cleaner long-term fix.
+  - `app_home::catalog_port()` changed from private to `pub(crate)` so `app_studio`'s
+    importStudioPackPayload arm can obtain a backbone port (mirrors `resolve_studio_document`'s
+    existing `pub(crate)` visibility for the same cross-module reason).
+  - 4 new action-id labels added to `s_studio_action_labels` (en/de) and 4 new
+    `.shell_action(...)`/`.action_with(...)` registrations added to `create_studio_app()`'s builder
+    chain, alongside exportMedia/importMedia/importMediaPayload's — exportStudioPack, exportStudioDsl,
+    importStudioPack, importStudioPackPayload. Left unscoped (not added to any `window_kind_actions`
+    list), like openStudio/goHome — these operate on the whole studio document, not a windowed
+    selection.
+
+5. SPECIAL EXTRA SCOPE (C) — framework/renderer/react/index.tsx
+--------------------------------------------------------------------------------
+The ONE narrow edit made in that file: the `importStudioInputRef` hidden `<input>`'s `onChange` now
+branches on `file.name.toLowerCase().endsWith(".pack")` — `.pack` files are read via `FileReader.
+readAsDataURL` and dispatched as `{ action: "importStudioPackPayload", args: { payload } }`; everything
+else keeps the original `file.text()` -> `{ action: "importStudio", args: { json } }` path unchanged.
+No other line in that file was touched.
+
+6. PACK-COMPLETENESS LINT ALLOWLIST — now satisfied, wave 3 can remove these 3 lines from root
+   script.ts's POLICY_PACK_COMPLETENESS_ALLOWLIST
+--------------------------------------------------------------------------------
+  s/rs/lib.rs
+  s/plugin/rs/lib.rs
+  framework/product/os/core/rs/lib.rs
+
+7. FINAL VERIFICATION
+--------------------------------------------------------------------------------
+cargo test -p s_studio: 5 passed, 0 failed. GREEN.
+cargo test -p s-plugin: 50 passed, 0 failed. GREEN.
+cargo check -p semio-framework-os --tests: clean (only pre-existing `-W unused-qualifications` style
+  lints, unrelated to this ticket).
+cargo test -p semio-framework-os --lib: 54 passed, 1 failed. The 1 failure
+  (host::tests::contributions_track_plugin_load_and_hot_swap) panics at
+  ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1380 "invalid catalog icon name" — the
+  identical pre-existing/unrelated icon-catalog lookup panic already documented by the draw family's
+  wave2-draw.txt as concurrent `ui/**` session churn (outside every wave-2 family's allowed
+  directories, not caused by or fixable within this family's scope). All 3 of my new
+  assert_dsl_pack_equivalence/assert_document_pack_round_trip calls in this crate are in the "ok" set.
+
+Files touched (all under s/**, plus the two narrow exceptions explicitly granted by this family's
+scope note, plus this ticket's .txt scratch note):
+  s/rs/lib.rs                            — 2x assert_dsl_pack_equivalence, 1x
+                                            assert_document_pack_round_trip.
+  s/plugin/rs/lib.rs                     — register_s_exports() (new) + call site in bundle();
+                                            catalog_port() visibility -> pub(crate); 2x
+                                            assert_dsl_pack_equivalence (home), 1x
+                                            assert_document_pack_round_trip (home), 1x
+                                            assert_dsl_pack_equivalence (studio, demo fixture); 4 new
+                                            StudioApp::handle_action arms; 4 new action labels + 4 new
+                                            action registrations.
+  framework/product/os/core/rs/lib.rs    — TEST REGION ONLY: 2x assert_dsl_pack_equivalence, 1x
+                                            assert_document_pack_round_trip. No non-test code touched.
+  framework/renderer/react/index.tsx     — ONE onChange branch on the importStudioInputRef hidden
+                                            input, nothing else touched.

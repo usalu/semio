@@ -2161,13 +2161,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩protocol⚛️react",
+      "name": "🛠️dev🧩playbook⚛️react",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:protocol",
+      "command": "bun run dev:playbook",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROTOCOL_PLAY_PORT": "6078",
+        "PLAYBOOK_PLAY_PORT": "6078",
         "SEMIO_RENDERER": "react"
       },
       "presentation": {
@@ -2181,13 +2181,13 @@
       }
     },
     {
-      "name": "🛠️dev🧩protocol🧊wgpu🌐wasm",
+      "name": "🛠️dev🧩playbook🧊wgpu🌐wasm",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun run dev:protocol",
+      "command": "bun run dev:playbook",
       "cwd": "${workspaceFolder}",
       "env": {
-        "PROTOCOL_PLAY_PORT": "6178",
+        "PLAYBOOK_PLAY_PORT": "6178",
         "SEMIO_RENDERER": "wgpu"
       },
       "presentation": {
@@ -2201,10 +2201,10 @@
       }
     },
     {
-      "name": "🛠️dev🧩protocol🧊wgpu🖥️native",
+      "name": "🛠️dev🧩playbook🧊wgpu🖥️native",
       "type": "node-terminal",
       "request": "launch",
-      "command": "bun ./framework/renderer/wgpu/script.ts native protocol",
+      "command": "bun ./framework/renderer/wgpu/script.ts native playbook",
       "cwd": "${workspaceFolder}",
       "presentation": {
         "group": "3_dev",
@@ -3023,6 +3023,138 @@
       "presentation": {
         "group": "3_dev",
         "order": 391.9
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-core-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.901
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-command",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-command-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.902
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-causal",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-causal-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.903
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-crdt",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-crdt-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.904
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-format",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-format-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.905
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-history",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-history-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.906
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-materialize",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-materialize-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.907
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-io",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-io-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.908
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-wire",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-wire-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.909
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.91
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-testkit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-testkit-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.911
+      }
+    },
+    {
+      "name": "🧪test🎞️protocol-cli",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/protocol-cli-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.912
       }
     },
     {

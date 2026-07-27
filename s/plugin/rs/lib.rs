@@ -1295,8 +1295,8 @@ pub mod app_studio {
             .iter()
             .map(|edge| DagFixtureEdge {
                 id: edge.id.clone(),
-                source: format!("{}:{}", edge.source_node_id, edge.source_port_id),
-                target: format!("{}:{}", edge.target_node_id, edge.target_port_id),
+                source: format!("{}@{}", edge.source_node_id, edge.source_port_id),
+                target: format!("{}@{}", edge.target_node_id, edge.target_port_id),
                 ..Default::default()
             })
             .collect();

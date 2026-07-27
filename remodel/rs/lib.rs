@@ -182,6 +182,7 @@ pub struct MediaStream {
     pub camera_id: Option<String>,
     pub sync_offset_ms: f64,
     pub fps_hint: f64,
+    #[dsl(table)]
     pub frames: Vec<FrameRef>,
     #[dsl(block)]
     pub source: Option<VideoSource>,
@@ -252,6 +253,7 @@ pub struct GroundControlPoint {
     pub id: String,
     pub name: String,
     pub world_position: [f64; 3],
+    #[dsl(table)]
     pub observations: Vec<GcpObservation>,
 }
 

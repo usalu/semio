@@ -3086,9 +3086,11 @@ mod program {
         pub activities: Vec<Activity>,
         #[dsl(table)]
         pub functions: Vec<Function>,
+        #[dsl(table)]
         pub elements: Vec<ProgramElement>,
         #[dsl(table)]
         pub quantities: Vec<QuantityRequirement>,
+        #[dsl(table)]
         pub relationships: Vec<Relationship>,
         #[dsl(table)]
         pub adjacencies: Vec<Adjacency>,
@@ -3124,6 +3126,7 @@ mod program {
         pub site_context: Vec<SiteContext>,
         #[dsl(table)]
         pub organizational: Vec<OrganizationalRequirement>,
+        #[dsl(table)]
         pub services: Vec<ServiceRequirement>,
         #[dsl(table)]
         pub infrastructure: Vec<InfrastructureRequirement>,
@@ -3137,6 +3140,7 @@ mod program {
         pub schedules: Vec<ScheduleRequirement>,
         #[dsl(table)]
         pub flexibility: Vec<FlexibilityRequirement>,
+        #[dsl(table)]
         pub growth: Vec<GrowthPlan>,
         #[dsl(table)]
         pub sustainability: Vec<SustainabilityRequirement>,
@@ -3148,13 +3152,17 @@ mod program {
         pub delivery: Vec<DeliveryConstraint>,
         #[dsl(table)]
         pub risks: Vec<Risk>,
+        #[dsl(table)]
         pub conflicts: Vec<Conflict>,
+        #[dsl(table)]
         pub requirements: Vec<Requirement>,
         #[dsl(table)]
         pub priorities: Vec<PriorityRecord>,
+        #[dsl(table)]
         pub scenarios: Vec<Scenario>,
         #[dsl(table)]
         pub options: Vec<OptionEvaluation>,
+        #[dsl(table)]
         pub decisions: Vec<Decision>,
         #[dsl(table)]
         pub validations: Vec<ValidationRecord>,
@@ -3164,7 +3172,9 @@ mod program {
         pub quality: Vec<QualityRecord>,
         #[dsl(table)]
         pub documents: Vec<DocumentRecord>,
+        #[dsl(table)]
         pub assumptions: Vec<Assumption>,
+        #[dsl(table)]
         pub constraints: Vec<ConstraintRecord>,
         #[dsl(table)]
         pub compliance_records: Vec<ComplianceRecord>,
@@ -3172,6 +3182,7 @@ mod program {
         pub approvals: Vec<ApprovalRecord>,
         #[dsl(table)]
         pub meetings: Vec<MeetingRecord>,
+        #[dsl(table)]
         pub changes: Vec<ChangeRecord>,
         #[dsl(table)]
         pub collaboration: Vec<CollaborationRecord>,
@@ -3187,11 +3198,13 @@ mod program {
         pub workshops: Vec<Workshop>,
         #[dsl(table)]
         pub surveys: Vec<Survey>,
+        #[dsl(table)]
         pub issues: Vec<Issue>,
         #[dsl(table)]
         pub audit_events: Vec<AuditEvent>,
         #[dsl(table)]
         pub templates: Vec<TemplateRecord>,
+        #[dsl(table)]
         pub knowledge: Vec<KnowledgeRecord>,
         #[dsl(table)]
         pub benchmarks: Vec<BenchmarkRecord>,
@@ -3512,14 +3525,6 @@ mod program {
         #[test]
         // 🪲 Blocked on a confirmed upstream `pack` crate bug, NOT an architect defect: table
         // rows (`#[dsl(table)] Vec<Stakeholder>` etc.) decode via `pack::value`'s self-describing
-        // `TableSoA` path, which has no `RecordSpec` for non-primitive (nested `Record`) columns
-        // and so can't backfill an `Option<T>` sub-field of a nested record (e.g. `Stakeholder.
-        // header.description: Option<TextField>`, `None` in this fixture) as `Absent` when the
-        // encoder omitted it for compaction — surfaces as "missing field 'description'" on
-        // decode. Root cause + fix location: pack/value/rs/lib.rs `decode_table_soa`'s fallback
-        // branch (`decode_value(reader, None, ..)` needs the column's real shape, not `None`).
-        // See .repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-architect.txt.
-        #[ignore = "pack::value::decode_table_soa loses nested RecordSpec for Option sub-fields of a table row's nested record column — upstream pack bug, see wave2-architect.txt"]
         fn sample_program_dsl_pack_equivalence() {
             vcs::test_support::assert_dsl_pack_equivalence(&sample_program());
         }

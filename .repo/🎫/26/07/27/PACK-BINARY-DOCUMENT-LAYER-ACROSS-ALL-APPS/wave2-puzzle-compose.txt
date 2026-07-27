@@ -1,0 +1,184 @@
+WAVE 2 — family: puzzle-compose
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+Typed projections (derive dsl::DslDocument -> DocumentPack automatically, per wave1):
+  - Puzzle2dProjection    (puzzle/2d/rs/lib.rs)  schema (const PUZZLE_2D_SCHEMA)   = "puzzle.2d"
+  - Puzzle3dProjection    (puzzle/3d/rs/lib.rs)  schema (const PUZZLE_3D_SCHEMA)   = "puzzle.3d"
+  - Puzzle5dProjection    (puzzle/5d/rs/lib.rs)  schema (const PUZZLE_5D_SCHEMA)   = "puzzle.5d"
+
+Value-bridge kinds (hand-implemented vcs::DocumentDsl + vcs::DocumentPack, delegating to
+serde_json::Value, mirroring compose's KitSnapshot pattern):
+  - Puzzle2dPlayProjection via Puzzle2dPlayApp (puzzle/plugin/rs/lib.rs, mod d2)
+      schema (App::document_schema() -> PUZZLE2D_FIXTURE_SCHEMA) = "puzzle.2d.fixture"
+  - Puzzle3dPlayProjection via Puzzle3dPlayApp (puzzle/plugin/rs/lib.rs, mod d3)
+      schema (App::document_schema() -> PUZZLE3D_FIXTURE_SCHEMA) = "puzzle.3d.fixture"
+  - Puzzle5dPlayProjection via Puzzle5dPlayApp (puzzle/plugin/rs/lib.rs, mod d5)
+      schema (App::document_schema() -> PUZZLE5D_SCHEMA) = "puzzle.5d"
+  - KitSnapshot via compose's kit_vcs module (compose/client/lib/rs/lib.rs)
+      schema (const KIT_SNAPSHOT_SCHEMA) = "compose.kit"
+
+NOTE: the `Puzzle{2d,3d,5d}PlayProjection` newtypes and their `vcs::DocumentDsl` impls already
+existed on disk before this session started — added live by a concurrent session working the
+separate `26/07/27/UNIFIED-TOKEN-EFFICIENT-DSL-SYNTAX-ACROSS-ALL-TECHNOLOGIES` ticket (confirmed via
+that ticket's own `wave3-final-status.md`, which documents adding them as fallout of deleting
+`impl DocumentDsl for serde_json::Value`, then ALSO adding `impl vcs::DocumentPack for
+Puzzle{2d,3d,5d}PlayProjection` mid-session once this ticket's `DocumentPack` bound landed on
+`DocumentApp::Projection` concurrently). This wave's own work on those three types was limited to (2)
+below — registering their codecs and adding pack-law test coverage; the DocumentDsl/DocumentPack impls
+themselves were not written by this session.
+
+2. CODEC REGISTRATION
+--------------------------------------------------------------------------------
+puzzle/plugin/rs/lib.rs — added one call at the top of each existing native setup fn:
+  register_puzzle2d_exports(): register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA)
+  register_puzzle3d_exports(): register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA)
+  register_puzzle5d_exports(): register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA)
+  (all three already wired via `setup: register_puzzle_exports` in the `semio_plugin!` manifest.)
+
+compose/client/lib/rs/lib.rs — compose has NO framework/plugin-style native setup hook (it is not a
+DocumentApp/plugin-bundle crate; confirmed no such infra exists anywhere in compose). Added a small
+local registration instead, gated by std::sync::Once, called from create_kit_snapshot_store (the sole
+constructor of KitSnapshotStore):
+  static KIT_SNAPSHOT_CODEC_REGISTERED: std::sync::Once
+  fn register_kit_snapshot_codec() { ...call_once(|| vcs::register_document_codec(
+      vcs::DocumentCodec::of::<KitSnapshot, ComposeWireOperation>(KIT_SNAPSHOT_SCHEMA))); }
+
+Typed Puzzle2d/3d/5dProjection kinds need no separate registration call in this family's scope (no
+existing DocumentApp/plugin wraps them directly under puzzle/2d,3d,5d — only puzzle-plugin's Play
+apps, already covered above via the Value-bridge Projection types).
+
+3. TEST-LAW CALLS ADDED
+--------------------------------------------------------------------------------
+puzzle/2d/rs/lib.rs, puzzle/3d/rs/lib.rs, puzzle/5d/rs/lib.rs: added assert_dsl_pack_equivalence(...)
+beside every existing assert_dsl_round_trip(...) call for the empty-projection fixture (PASSES in all
+three). The with-content/representative-projection and real-example-fixture calls were deliberately
+NOT added — see §4 blocker; each has an inline comment explaining why and pointing back here.
+
+compose/client/lib/rs/lib.rs (kit_snapshot_dsl_round_trips / kit_snapshot_store_document_text_round_trip):
+  added assert_dsl_pack_equivalence(&empty)/assert_dsl_pack_equivalence(&populated) and
+  assert_document_pack_round_trip(&store). ALL PASS (KitSnapshot's pure Value-bridge shape never hits
+  the table-column bug below, since it has no #[dsl(table)] fields at all).
+
+puzzle/plugin/rs/lib.rs: no pre-existing assert_dsl_round_trip/assert_document_text_round_trip calls
+existed for the three Play projections (per the brief's "at least one call per kind" instruction),
+added one new #[test] per kind reusing the existing app-under-test fixtures (concrete_forest_app() /
+testkit::new_app::<...>()):
+  d2::tests::puzzle2d_play_projection_pack_round_trips  (assert_dsl_pack_equivalence)
+  d3::tests::puzzle3d_play_projection_pack_round_trips  (assert_dsl_pack_equivalence)
+  d5::tests::puzzle5d_play_projection_pack_round_trips  (assert_dsl_pack_equivalence)
+All three PASS (the Value-bridge types delegate straight through serde_json::Value's own
+DocumentPack, which has no table-column codec path to hit the bug below).
+
+4. BLOCKER FOUND — OUT OF SCOPE, NEEDS A pack/** FIX (same root cause the draw family already found)
+--------------------------------------------------------------------------------
+Confirmed (not just reasoned about) that puzzle_2d/puzzle_3d/puzzle_5d's typed projections hit the
+exact same pack/value/rs decode_table_soa shape-dropping bug the draw wave-2 family root-caused
+(wave2-draw.txt §4): any #[dsl(table)] row with an Option column (plain scalar OR fixed-size array)
+fails on decode with either "missing field 'x'" or "expected an N-item Tuple, found List(...)".
+Isolated per-family with 3 probes (comment out the failing call, run just the surviving one):
+  - puzzle_2d: with_content projection (Puzzle2dNode.handles rows, e.g. Puzzle2dHandle.color:
+    Option<String>) -> "missing field 'color'". empty_puzzle2d_projection() alone PASSES.
+  - puzzle_3d: representative projection (Puzzle3dObject.origin: [f64;3] table column) -> "expected a
+    3-item Tuple, found List(...)". empty_puzzle3d_projection() alone PASSES.
+  - puzzle_5d: representative projection (Puzzle5dPart.parts rows, nested part_2d/part_3d Option
+    columns) -> "missing field 'width'". empty_puzzle5d_projection() alone PASSES.
+pack/** is outside this family's allowed directories, so not fixed here — see wave2-draw.txt §4 for
+the suggested one-line fix (decode_table_soa's fallback branch dropping the column Shape) and root
+cause detail, which applies verbatim to all three of these kinds too.
+
+5. SEPARATE PRE-EXISTING BUG FOUND AND FIXED (in-scope, DSL text layer, NOT pack — fixture staleness)
+--------------------------------------------------------------------------------
+Independent of §4: puzzle/3d/example/concrete-forest.puzzle3d and BOTH puzzle/5d/example/*.puzzle5d
+fixtures failed to even *parse* as DSL text ("expected LBrace, found Ident 'x'"/'url'") — nothing to
+do with pack. Root cause: `Puzzle3dReference.source: Puzzle3dReferenceSource` and
+`Puzzle5dPart.part_2d`/`part_3d` are nested-record fields NOT marked `#[dsl(block)]`, and the current
+derive/grammar requires such nested-record *table columns* to be written as `{ key=value ... }`
+(distinct from a LIST's inline `key=value` cells, which stay bare) — but these three checked-in
+fixture files still used the old bare-inline form (pre-existing on disk, unrelated to any change in
+this session; confirmed via `git status`/mtimes that dsl/core, dsl/derive, and these fixture files had
+zero pending changes before this fix). Since the fixture files themselves are inside puzzle/** (this
+family's own directories, not pack/**/dsl/**), fixed them directly:
+  - Verified the exact expected wrapped format via a temporary #[test] (print_dsl on an equivalent
+    in-memory value), then added/removed only that temporary test — no net diff from it.
+  - puzzle/3d/example/concrete-forest.puzzle3d: wrapped the 2 `references` rows' `source` cell in
+    `{ url=... media-kind=... }`.
+  - puzzle/5d/example/concrete-forest.puzzle5d (1 row) and
+    puzzle/5d/example/nakagin-capsule-tower.puzzle5d (180 rows, mechanically transformed via a
+    one-off Python script run once, output verified against the temporary-test's expected format):
+    wrapped each `parts` row's `part-2d`/`part-3d` cells in `{ ... }`. Grip-list inner `grip-2d=`/
+    `grip-3d=` cells (inside `[ ]`, a different code path) were untouched — verified via the same
+    probe that those stay bare.
+  - Both `puzzle3d_example_fixtures_parse_and_round_trip_as_dsl` and
+    `puzzle5d_example_fixtures_parse_and_round_trip_as_dsl` now PASS end to end (parse + DSL round
+    trip). This also un-poisoned puzzle-plugin's shared LazyLock example cache
+    (CONCRETE_FOREST_EXAMPLE_JSON), fixing 75 previously-cascading test failures there (see §6).
+
+6. FINAL cargo test STATUS
+--------------------------------------------------------------------------------
+`cargo test -p puzzle_2d -p puzzle_3d -p puzzle_5d -p puzzle-plugin -p compose --lib`:
+  puzzle_3d:      64 passed, 0 failed.                                            GREEN
+  puzzle_5d:       5 passed, 0 failed.                                            GREEN
+  puzzle-plugin: 108 passed, 0 failed.                                            GREEN
+  puzzle_2d:     119 passed, 2 failed — pre-existing, unrelated (confirmed byte-for-byte against
+                 the separate UNIFIED-TOKEN-EFFICIENT-DSL-SYNTAX-ACROSS-ALL-TECHNOLOGIES ticket's own
+                 wave3-final-status.md, which documents these same 2 failures before this session):
+                   host_tests::puzzle2d_default_manifest_satisfies_board_host_validation
+                     (InvalidHandleKindColor("var(--muted-foreground)") — CSS var color parsing)
+                   host_tests::board_host_fill_base_core_rectangular_excludes_cylindric_tambour
+                     (brush-fill placement count assertion)
+  compose:        59 passed, 12 failed — pre-existing, unrelated (same exact 12 GraphQL kit-mutation
+                 round-trip test names, confirmed against the same wave3-final-status.md snapshot):
+                   create_concept/create_design/create_quality/create_tag/create_type_on_kit_graphql_
+                   roundtrip, delete_tag_mutation_returns_response_payload,
+                   kit_store_bundle_serialize_hydrate_round_trip_via_graphql,
+                   kit_virtual_file_system_create_folder_and_move_design,
+                   long::create_fixed_piece_end_to_end, long::mutation_visible_without_resnapshotting,
+                   no_deep_clone_on_traversal, normalized_create_fixed_piece_replay_reuses_scoped_piece_id
+                 compose's own kit_snapshot_dsl_round_trips/kit_snapshot_store_document_text_round_trip
+                 (this ticket's actual target tests) both PASS.
+
+`cargo check -p puzzle_2d -p puzzle_3d -p puzzle_5d -p puzzle-plugin -p compose`: clean, only
+pre-existing warnings (unused_qualifications, dead_code — none introduced by this session's diff).
+
+NOTE on repo-wide instability during this session: at one point mid-session `protocol/rs/Cargo.toml`
+vanished entirely (a concurrent ticket, `26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER`, renaming that crate
+live) breaking every cargo invocation workspace-wide for several minutes; unrelated to this family,
+resolved itself by the time of the final verification run above.
+
+7. FIXTURES
+--------------------------------------------------------------------------------
+No JSON->DSL conversions needed (family note: none known/expected). Two DSL-text fixtures repaired
+(not converted, no format change) per §5 above:
+  puzzle/3d/example/concrete-forest.puzzle3d       (2 rows re-braced)
+  puzzle/5d/example/concrete-forest.puzzle5d       (1 row re-braced)
+  puzzle/5d/example/nakagin-capsule-tower.puzzle5d (180 rows re-braced)
+compose/fixture/*.compose.json left untouched (deliberate Value-bridge fixtures, per family note).
+
+8. PACK-COMPLETENESS LINT ALLOWLIST (root script.ts POLICY_PACK_COMPLETENESS_ALLOWLIST)
+--------------------------------------------------------------------------------
+All 4 of this family's entries now call assert_dsl_pack_equivalence(/assert_document_pack_round_trip(
+at least once (string-containment check only — script.ts confirms POLICY_PACK_COMPLETENESS_ALLOWLIST
+is a plain `.includes()` scan, not a pass/fail check), so wave 3 can remove all 4:
+  compose/client/lib/rs/lib.rs
+  puzzle/2d/rs/lib.rs
+  puzzle/3d/rs/lib.rs
+  puzzle/5d/rs/lib.rs
+(puzzle/plugin/rs/lib.rs was never in the allowlist — it never had a DSL round-trip test to begin
+with, so the lint never flagged it; it now also has 3 assert_dsl_pack_equivalence( calls of its own,
+FYI for any future scan.)
+
+9. FILES TOUCHED
+--------------------------------------------------------------------------------
+  puzzle/2d/rs/lib.rs             — 1 assert_dsl_pack_equivalence call + 2 explanatory comments.
+  puzzle/3d/rs/lib.rs             — 1 assert_dsl_pack_equivalence call + 2 explanatory comments.
+  puzzle/5d/rs/lib.rs             — 1 assert_dsl_pack_equivalence call + 2 explanatory comments.
+  puzzle/3d/example/concrete-forest.puzzle3d       — 2 rows re-braced (§5).
+  puzzle/5d/example/concrete-forest.puzzle5d       — 1 row re-braced (§5).
+  puzzle/5d/example/nakagin-capsule-tower.puzzle5d — 180 rows re-braced (§5).
+  puzzle/plugin/rs/lib.rs         — 3 register_document_codec_for_app calls + 3 new pack-law tests.
+  compose/client/lib/rs/lib.rs    — DocumentPack impl for KitSnapshot, Once-gated codec registration
+                                     call wired into create_kit_snapshot_store, 3 pack-law calls added
+                                     to existing tests.
+  .repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-puzzle-compose.txt — this file.

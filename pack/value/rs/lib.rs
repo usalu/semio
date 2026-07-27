@@ -742,7 +742,7 @@ fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut De
         TAG_MAP => decode_map(reader, map_inner_shape(shape), ctx, depth),
         TAG_VALUE => Ok(FieldValue::Value(decode_dsl_value(reader, ctx, depth + 1)?)),
         TAG_WIRE => Ok(FieldValue::Wire(decode_wire(reader, ctx, depth + 1)?)),
-        TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, ctx, depth)?)),
+        TAG_TABLE_SOA => Ok(FieldValue::List(decode_table_soa(reader, table_spec_of(shape), ctx, depth)?)),
         TAG_PACKED_F64 => decode_packed_f64_body(reader, is_tuple_shape(shape)),
         TAG_PACKED_VARINT => decode_packed_varint_body(reader, elem_shape_of(shape).or(shape.filter(|s| !matches!(s, Shape::Tuple(_, _)))), is_tuple_shape(shape)),
         TAG_NULL => Err(PackError::Malformed { what: "wire_tag", offset: reader.position() as u64, detail: "TAG_NULL is only valid inside a DslValue".to_string() }),
@@ -1038,9 +1038,13 @@ fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[Fiel
 
 /// @emoji 📖 Decodes `TableSoA` fully self-describing — `field_id`/`presence`/`elem_tag` are
 /// stored per column on the wire, so no `RecordSpec` is ever required to reconstruct the rows
-/// (this is what lets an unknown `Table`-shaped field still round-trip).
-fn decode_table_soa(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
+/// (this is what lets an unknown `Table`-shaped field still round-trip). When the caller DOES
+/// know the table's element `RecordSpec` (`spec_fn` is `Some`), it is threaded into the
+/// fallback (non-primitive) column branch so a nested `Record` column's own `Absent` sub-fields
+/// get backfilled correctly instead of merely reflecting what was present on the wire.
+fn decode_table_soa(reader: &mut ByteReader<'_>, spec_fn: Option<fn() -> RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
+    let element_spec = spec_fn.map(|f| f());
     let row_count_raw = reader.read_varint_u64()?;
     ctx.check_items(row_count_raw)?;
     let col_count = reader.read_varint_u64()?;
@@ -1110,9 +1114,10 @@ fn decode_table_soa(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u1
                 }
             }
             _ => {
+                let field_shape = element_spec.as_ref().and_then(|s| s.fields.iter().find(|f| f.id == field_id)).map(|f| &f.shape);
                 for (i, p) in present.iter().enumerate() {
                     if *p {
-                        let v = decode_value(reader, None, ctx, depth + 1)?;
+                        let v = decode_value(reader, field_shape, ctx, depth + 1)?;
                         rows[i].fields.insert(field_id, v);
                     }
                 }
@@ -1332,6 +1337,22 @@ mod tests {
         )
     }
 
+    fn header_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "name", Shape::Text), FieldSpec::new(2, "description", Shape::Text).optional()])
+    }
+
+    fn table_row_with_nested_record_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "header", Shape::Record(header_spec))])
+    }
+
+    fn table_row_with_tuple_spec() -> RecordSpec {
+        RecordSpec::new(
+            None,
+            RecordLayout::Inline,
+            vec![FieldSpec::new(1, "id", Shape::UInt), FieldSpec::new(2, "distortion", Shape::Tuple(Box::new(Shape::Float), Some(5)))],
+        )
+    }
+
     fn stmt_foo_spec() -> RecordSpec {
         RecordSpec::new(Some("foo"), RecordLayout::Lines, vec![FieldSpec::new(1, "x", Shape::Int)])
     }
@@ -1534,6 +1555,60 @@ mod tests {
         assert_eq!(r1.get(2), Some(&FieldValue::Absent));
         assert_eq!(r1.get(4), Some(&FieldValue::Absent));
         assert_eq!(r1.get(3), Some(&FieldValue::Float(-9.5)));
+    }
+
+    /// @emoji 🪟 Regression for a `TableSoA` column whose element type is a nested (non-Option)
+    /// `Record` with its own `Option` sub-field left absent — `decode_table_soa`'s fallback branch
+    /// must thread the known column shape through so `decode_record_fields` still backfills that
+    /// sub-field as `Absent` instead of leaving it missing from the decoded `RecordValue` map.
+    #[test]
+    fn table_soa_nested_record_column_backfills_absent_option_subfield() {
+        let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_nested_record_spec))]);
+        let mut header_fields = HashMap::new();
+        header_fields.insert(1, FieldValue::Text("Stakeholder A".to_string()));
+        // "description" (field 2, Option<Text>) is intentionally omitted from the fixture — it
+        // encodes as `Absent` and canonical-mode compaction drops it from the wire entirely.
+        let mut row = HashMap::new();
+        row.insert(1, FieldValue::UInt(1));
+        row.insert(2, FieldValue::Record(RecordValue { fields: header_fields }));
+        let mut fields = HashMap::new();
+        fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
+        let record = RecordValue { fields };
+
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let Some(FieldValue::List(rows)) = decoded.get(1) else { panic!("expected table rows") };
+        let FieldValue::Record(row0) = &rows[0] else { panic!("row0 not a record") };
+        let Some(FieldValue::Record(header)) = row0.get(2) else { panic!("expected header record") };
+        assert_eq!(header.get(1), Some(&FieldValue::Text("Stakeholder A".to_string())));
+        assert_eq!(header.get(2), Some(&FieldValue::Absent), "nested record's Option sub-field must backfill to Absent, not be missing");
+    }
+
+    /// @emoji 🎯 Regression for a `TableSoA` column whose element type is a fixed-size `Tuple`
+    /// (e.g. a `[f32; 5]` lens-distortion field) — because every element is the same numeric
+    /// kind, `encode_seq` collapses it to the packed `TAG_PACKED_F64` wire form, which carries no
+    /// tuple-vs-list marker of its own. `decode_table_soa`'s fallback branch must thread the
+    /// known column `Shape::Tuple` through so `decode_value` reconstructs a `FieldValue::Tuple`,
+    /// not a `FieldValue::List` — a `List` fails `[T; N]`'s `DslField::from_value` downstream.
+    #[test]
+    fn table_soa_tuple_column_round_trips_as_tuple_not_list() {
+        let spec = RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(1, "rows", Shape::Table(table_row_with_tuple_spec))]);
+        let mut row = HashMap::new();
+        row.insert(1, FieldValue::UInt(1));
+        row.insert(2, FieldValue::Tuple(vec![FieldValue::Float(0.1), FieldValue::Float(0.2), FieldValue::Float(0.3), FieldValue::Float(0.4), FieldValue::Float(0.5)]));
+        let mut fields = HashMap::new();
+        fields.insert(1, FieldValue::List(vec![FieldValue::Record(RecordValue { fields: row })]));
+        let record = RecordValue { fields };
+
+        let bytes = encode_document(&spec, &record, &EncodeOptions::default()).expect("encode");
+        let (decoded, _) = decode_document(&bytes, &spec, &DecodeOptions::default()).expect("decode");
+        let Some(FieldValue::List(rows)) = decoded.get(1) else { panic!("expected table rows") };
+        let FieldValue::Record(row0) = &rows[0] else { panic!("row0 not a record") };
+        assert_eq!(
+            row0.get(2),
+            Some(&FieldValue::Tuple(vec![FieldValue::Float(0.1), FieldValue::Float(0.2), FieldValue::Float(0.3), FieldValue::Float(0.4), FieldValue::Float(0.5)])),
+            "tuple-shaped table column must decode as FieldValue::Tuple, not FieldValue::List"
+        );
     }
 
     #[test]

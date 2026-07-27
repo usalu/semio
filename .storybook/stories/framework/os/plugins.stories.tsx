@@ -41,10 +41,10 @@ export const Lowpoly: Story = { args: { plugin: "lowpoly" } satisfies OsBootHost
 export const Mathematical: Story = { args: { plugin: "mathematical" } satisfies OsBootHostProps };
 export const Norm: Story = { args: { plugin: "norm" } satisfies OsBootHostProps };
 export const Note: Story = { args: { plugin: "note" } satisfies OsBootHostProps };
+export const Playbook: Story = { args: { plugin: "playbook" } satisfies OsBootHostProps };
+export const PlaybookModuleProcedural: Story = { args: { plugin: "playbook-module-procedural" } satisfies OsBootHostProps };
 export const Procedural: Story = { args: { plugin: "procedural" } satisfies OsBootHostProps };
 export const Process: Story = { args: { plugin: "process" } satisfies OsBootHostProps };
-export const Protocol: Story = { args: { plugin: "protocol" } satisfies OsBootHostProps };
-export const ProtocolModuleProcedural: Story = { args: { plugin: "protocol-module-procedural" } satisfies OsBootHostProps };
 export const Puzzle: Story = { args: { plugin: "puzzle" } satisfies OsBootHostProps };
 export const Raster: Story = { args: { plugin: "raster" } satisfies OsBootHostProps };
 export const ReasoningMindmap: Story = { args: { plugin: "reasoning-mindmap" } satisfies OsBootHostProps };
@@ -62,7 +62,7 @@ export const Writer: Story = { args: { plugin: "writer" } satisfies OsBootHostPr
 // #endregion 🔖PluginMatrix
 
 // #region 🔖CoverageAssertion
-/** @emoji 🔤 `pluginId` (kebab-case, e.g. `"protocol-module-procedural"`) → the PascalCase export name used above. */
+/** @emoji 🔤 `pluginId` (kebab-case, e.g. `"playbook-module-procedural"`) → the PascalCase export name used above. */
 function toPascalCase(pluginId: string): string {
   return pluginId
     .split("-")
@@ -86,10 +86,10 @@ const EXPORTED_STORIES: Record<string, Story> = {
   Mathematical,
   Norm,
   Note,
+  Playbook,
+  PlaybookModuleProcedural,
   Procedural,
   Process,
-  Protocol,
-  ProtocolModuleProcedural,
   Puzzle,
   Raster,
   ReasoningMindmap,
