@@ -243,41 +243,37 @@ mod run_bytes_base64 {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum LowpolyOperation {
-    #[dsl(key = "objects.add")]
     ObjectsAdd {
         index: usize,
         #[dsl(block)]
         item: LowpolyObject,
     },
-    #[dsl(key = "objects.remove")]
     ObjectsRemove { id: String },
-    #[dsl(key = "objects.move")]
     ObjectsMove { id: String, to_index: usize },
-    #[dsl(key = "objects.patch")]
     ObjectsPatch {
         id: String,
         #[dsl(block)]
         patch: LowpolyObjectPatch,
     },
-    #[dsl(key = "addPaintLayer")]
     AddPaintLayer {
         object_id: String,
         index: usize,
         #[dsl(block)]
         layer: LowpolyPaintLayer,
     },
-    #[dsl(key = "removePaintLayer")]
     RemovePaintLayer { object_id: String, index: usize },
-    #[dsl(key = "patchPaintLayer")]
     PatchPaintLayer {
         object_id: String,
         index: usize,
         #[dsl(block)]
         patch: LowpolyPaintLayerPatch,
     },
-    #[dsl(key = "paintStroke")]
-    PaintStroke { object_id: String, layer_index: usize, runs: Vec<PixelRun> },
-    #[dsl(key = "setProjection")]
+    PaintStroke {
+        object_id: String,
+        layer_index: usize,
+        #[dsl(table)]
+        runs: Vec<PixelRun>,
+    },
     SetProjection {
         #[dsl(block)]
         projection: LowpolyProjection,
@@ -903,16 +899,6 @@ pub fn pixel_runs_from_diff(before: &[u8], after: &[u8]) -> Vec<PixelRun> {
 #[cfg(test)]
 mod tests {
     use super::*;
-
-    #[test]
-    fn print_default_projection_json_for_example_asset() {
-        if std::env::var("LOWPOLY_WRITE_DEFAULT_FIXTURE").ok().as_deref() != Some("1") {
-            return;
-        }
-        let projection = default_projection();
-        let path = std::path::Path::new(env!("CARGO_MANIFEST_DIR")).join("../../example/default.lowpoly.json");
-        std::fs::write(path, serde_json::to_string(&projection).expect("projection json")).expect("write default.lowpoly.json");
-    }
 
     #[test]
     fn default_projection_has_concrete_forest_left_object() {
@@ -1567,7 +1553,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth_shading=notabool mesh_json=\"{}\" paint_layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=notabool mesh-json=\"{}\" paint-layers=[] ]";
         let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
         assert!(result.is_err());
     }
@@ -1581,7 +1567,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_rejects_malformed_value_inside_a_nested_block() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth_shading=false mesh_json=\"{}\" paint_layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o\" name=\"O\" transform { position=notanumber,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
         let result = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text);
         assert!(result.is_err());
     }
@@ -1596,7 +1582,7 @@ mod tests {
 
     #[test]
     fn dsl_parse_handles_escaped_characters_in_quoted_strings() {
-        let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth_shading=false mesh_json=\"{}\" paint_layers=[] ]";
+        let text = "schema=\"lowpoly.document\" objects=[ id=\"o1\" name=\"Quote \\\" and \\\\ and newline\\ndone\" transform { position=0,0,0 rotation=0,0,0 scale=1,1,1 } smooth-shading=false mesh-json=\"{}\" paint-layers=[] ]";
         let projection = <LowpolyProjection as vcs::DocumentDsl>::parse_dsl(text).expect("escapes must decode");
         assert_eq!(projection.objects[0].name, "Quote \" and \\ and newline\ndone");
     }

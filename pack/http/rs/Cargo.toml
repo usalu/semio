@@ -18,5 +18,8 @@ pack_async = { path = "../../async/rs" }
 async-trait = "0.1"
 ureq = { version = "2", optional = true }
 
+[dev-dependencies]
+futures-lite = "2"
+
 [features]
 ureq = ["dep:ureq"]

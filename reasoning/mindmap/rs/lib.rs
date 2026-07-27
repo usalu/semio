@@ -180,17 +180,11 @@ fn apply_step(wires: &mut Value, board: &mut Value, step: &MindmapWiresStep) {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum MindmapWiresOperation {
-    #[dsl(key = "add-node")]
     AddNode { node: Value },
-    #[dsl(key = "remove-node")]
     RemoveNode { node_id: String },
-    #[dsl(key = "patch-node")]
     PatchNode { node_id: String, patch: Map<String, Value> },
-    #[dsl(key = "add-relationship")]
     AddRelationship { edge: Value, relationship: Value },
-    #[dsl(key = "remove-edge")]
     RemoveEdge { edge_id: String },
-    #[dsl(key = "replace-document")]
     ReplaceDocument { wires_fixture: Value, board_fixture: Value },
 }
 
@@ -300,6 +294,17 @@ pub type MindmapWiresStore = vcs::DocumentVcsStore<MindmapWiresDocument, Mindmap
 /// local mirror type or hand-rolled tokenizer needed. This region intentionally holds no additional
 /// code; the generated `impl vcs::DocumentDsl for MindmapWiresDocument`/`impl vcs::OpText for
 /// MindmapWiresOperation` live entirely in the derive expansion.
+///
+/// 🕸️ The unified `a:Kind@port->b@port` wire syntax (`dsl::Wire`/`Shape::Wire`) does NOT apply here:
+/// edges live inside the opaque `board_fixture`/`wires_fixture` `Value` trees (plain JSON objects with
+/// `source`/`target` string fields), not as typed Rust fields a `#[dsl(...)]` attribute could target —
+/// that's the whole point of keeping this crate free of board-engine schema types (see the struct doc
+/// above). Introducing a wire-literal encoding for those JSON edges would mean hand-rolling a bespoke
+/// sub-printer for one field shape inside the generic `Shape::Value` escape hatch, and the same
+/// `source`/`target` JSON shape is shared by every other generic board/map fixture in the repo
+/// (`reasoning.mindmap.fixture`, tiled-map, puzzle boards, ...) — a structural, cross-crate schema
+/// change out of scope for this pass. `metabolism.wires` is confirmed to round-trip unchanged under
+/// the unified engine (see `dsl_round_trip_metabolism_fixture` below).
 //#endregion 🔖Dsl
 
 // #region 🧪Tests

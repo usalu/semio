@@ -1,7 +1,8 @@
-stock= [ ]
+stock=[ ]
 filters {
-  query="" module_ids= [ ] typology_path= [ ] min_availability=0
+  query="" min-availability=0 module-ids=[ ] typology-path=[ ]
 }
-curated= [ ]
 runtime {
+}
+curated [object-id:TEXT count:UINT] {
 }

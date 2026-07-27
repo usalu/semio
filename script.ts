@@ -1526,9 +1526,7 @@ const POLICY_ALWAYS_ALLOWED_DEP_PREFIXES = ["framework/", "ui/", "vcs/", "protoc
  * still-open follow-up rather than a silent exception — remove an entry once that technology's fixture
  * is migrated (see an already-migrated sibling crate's `*_fixture` round-trip test for the pattern).
  */
-const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([
-  "lowpoly/example/default.lowpoly.json",
-]);
+const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([]);
 
 /** 🛡️Path prefixes exempt from the no-JSON-fixture rule structurally — not a technology document fixture (e.g. `coda/`'s `example/` holds a whole simulated ACC project's run/iteration artifacts, unrelated to the dsl/ migration). */
 const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];

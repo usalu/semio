@@ -15,3 +15,4 @@ path = "lib.rs"
 pack = { path = "../../rs" }
 dsl_schema = { path = "../../../dsl/schema/rs" }
 dsl_core = { path = "../../../dsl/core/rs" }
+blake3 = "1"

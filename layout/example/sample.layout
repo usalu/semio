@@ -81,10 +81,8 @@ overrides [object-id:TEXT bounds:BLOCK visible:BOOL locked:BOOL] {
 paragraph-styles [id:TEXT name:TEXT font-family:TEXT font-size:NUM font-weight:UINT leading:NUM tracking:NUM alignment:TEXT] {
   paragraph.body Body "Layout Sans" 12 400 14.4 0 left
 }
-stories [id:TEXT content:TEXT style-runs:TABLE] {
-  story-1 "Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." [start:UINT end:UINT paragraph-style-id:TEXT character-style-id:TEXT] {
-    0 120 paragraph.body _
-  }
+stories [id:TEXT content:TEXT style-runs:LIST] {
+  story-1 "Layout aggregates content from across the semio stack into exportable documents. This frame threads into the second column when overflow occurs." [ start=0 end=120 paragraph-style-id=paragraph.body ]
 }
 links [id:TEXT path:TEXT hash:TEXT width:UINT height:UINT dpi:UINT color-profile:TEXT state:TEXT proxy-data-url:TEXT] {
   link-missing assets/site-plan.png "sha256:missing" 1200 800 72 RGB missing _

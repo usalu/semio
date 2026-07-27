@@ -127,9 +127,7 @@ pub struct ImageAsset {
 #[serde(rename_all = "kebab-case")]
 pub enum MediaKind {
     #[default]
-    #[dsl(key = "image-sequence")]
     ImageSequence,
-    #[dsl(key = "video")]
     Video,
 }
 
@@ -139,18 +137,12 @@ pub enum MediaKind {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum VideoCodec {
-    #[dsl(key = "avc")]
     Avc,
-    #[dsl(key = "hevc")]
     Hevc,
-    #[dsl(key = "vp9")]
     Vp9,
-    #[dsl(key = "av1")]
     Av1,
-    #[dsl(key = "mjpeg")]
     Mjpeg,
     #[default]
-    #[dsl(key = "unknown")]
     Unknown,
 }
 
@@ -239,7 +231,9 @@ impl Default for RigExtrinsic {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CalibrationState {
+    #[dsl(table)]
     pub cameras: Vec<CameraCalibration>,
+    #[dsl(table)]
     pub rig: Vec<RigExtrinsic>,
 }
 
@@ -283,11 +277,8 @@ impl Default for IngestParams {
 #[serde(rename_all = "kebab-case")]
 pub enum FeatureDetector {
     #[default]
-    #[dsl(key = "orb")]
     Orb,
-    #[dsl(key = "akaze")]
     Akaze,
-    #[dsl(key = "harris")]
     Harris,
 }
 
@@ -310,9 +301,7 @@ impl Default for FeatureParams {
 #[serde(rename_all = "kebab-case")]
 pub enum MatcherKind {
     #[default]
-    #[dsl(key = "brute-force")]
     BruteForce,
-    #[dsl(key = "kd-tree")]
     KdTree,
 }
 
@@ -343,12 +332,9 @@ impl Default for MatchParams {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum RobustLossKind {
-    #[dsl(key = "l2")]
     L2,
     #[default]
-    #[dsl(key = "huber")]
     Huber,
-    #[dsl(key = "cauchy")]
     Cauchy,
 }
 
@@ -379,12 +365,9 @@ impl Default for SfmParams {
 #[derive(Clone, Copy, Debug, Default, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum DenseResolution {
-    #[dsl(key = "low")]
     Low,
     #[default]
-    #[dsl(key = "medium")]
     Medium,
-    #[dsl(key = "high")]
     High,
 }
 
@@ -521,41 +504,23 @@ pub struct ReconstructionParams {
 #[serde(rename_all = "kebab-case")]
 pub enum ReconstructionStage {
     #[default]
-    #[dsl(key = "idle")]
     Idle,
-    #[dsl(key = "ingesting")]
     Ingesting,
-    #[dsl(key = "calibrating")]
     Calibrating,
-    #[dsl(key = "extracting-features")]
     ExtractingFeatures,
-    #[dsl(key = "matching-features")]
     MatchingFeatures,
-    #[dsl(key = "estimating-poses")]
     EstimatingPoses,
-    #[dsl(key = "bundle-adjusting")]
     BundleAdjusting,
-    #[dsl(key = "georeferencing")]
     Georeferencing,
-    #[dsl(key = "dense-stereo")]
     DenseStereo,
-    #[dsl(key = "fusing-volume")]
     FusingVolume,
-    #[dsl(key = "extracting-surface")]
     ExtractingSurface,
-    #[dsl(key = "cleaning-mesh")]
     CleaningMesh,
-    #[dsl(key = "texturing")]
     Texturing,
-    #[dsl(key = "tracking-motion")]
     TrackingMotion,
-    #[dsl(key = "deriving-geo-products")]
     DerivingGeoProducts,
-    #[dsl(key = "reporting-qc")]
     ReportingQc,
-    #[dsl(key = "done")]
     Done,
-    #[dsl(key = "failed")]
     Failed,
 }
 
@@ -591,6 +556,7 @@ pub struct ReconstructionJob {
     pub stage_cursor: u32,
     pub started_at_ms: Option<f64>,
     pub error: Option<String>,
+    #[dsl(table)]
     pub camera_poses_preview: Vec<CameraPosePreview>,
     pub sparse_point_cloud_preview: PackedF32,
 }
@@ -599,11 +565,8 @@ pub struct ReconstructionJob {
 #[serde(rename_all = "kebab-case")]
 pub enum MeshSource {
     #[default]
-    #[dsl(key = "placeholder")]
     Placeholder,
-    #[dsl(key = "reconstructed")]
     Reconstructed,
-    #[dsl(key = "imported")]
     Imported,
 }
 
@@ -699,19 +662,12 @@ struct MeshDataTwin {
     colors: PackedF32,
     indices: PackedU32,
     uvs: PackedF32,
-    #[dsl(key = "faceIds")]
     face_ids: PackedU32,
-    #[dsl(key = "vertexIds")]
     vertex_ids: PackedU32,
-    #[dsl(key = "edgePositions")]
     edge_positions: PackedF32,
-    #[dsl(key = "edgeIds")]
     edge_ids: PackedU32,
-    #[dsl(key = "edgeUvs")]
     edge_uvs: PackedF32,
-    #[dsl(key = "edgeIsSeam")]
     edge_is_seam: PackedU8,
-    #[dsl(key = "paintTexture")]
     paint_texture_base64: Option<String>,
 }
 
@@ -765,7 +721,7 @@ impl RemodelMesh {
             dsl::RecordLayout::Inline,
             vec![
                 dsl::FieldSpec::new(0, "source", <MeshSource as dsl::DslField>::shape()),
-                dsl::FieldSpec::new(1, "textureAssetId", <String as dsl::DslField>::shape()).optional(),
+                dsl::FieldSpec::new(1, "texture-asset-id", <String as dsl::DslField>::shape()).optional(),
                 dsl::FieldSpec::new(2, "geometry", dsl::Shape::Block(Box::new(<MeshDataTwin as dsl::DslField>::shape()))),
                 dsl::FieldSpec::new(3, "watertight", dsl::Shape::Block(Box::new(<WatertightReportSnapshot as dsl::DslField>::shape()))).optional(),
             ],
@@ -799,7 +755,7 @@ impl RemodelMesh {
             <MeshSource as dsl::DslField>::from_value(value).map_err(dsl::__rt::field_error)?
         };
         let texture_asset_id = {
-            let value = record.get(1).ok_or_else(|| dsl::__rt::field_error("missing field 'textureAssetId'"))?;
+            let value = record.get(1).ok_or_else(|| dsl::__rt::field_error("missing field 'texture-asset-id'"))?;
             match value {
                 dsl::FieldValue::Absent => None,
                 other => Some(<String as dsl::DslField>::from_value(other).map_err(dsl::__rt::field_error)?),
@@ -887,6 +843,7 @@ pub struct DenseCloud {
 #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
 #[serde(rename_all = "camelCase", default)]
 pub struct CameraTrajectory {
+    #[dsl(table)]
     pub poses: Vec<CameraPosePreview>,
 }
 
@@ -894,9 +851,7 @@ pub struct CameraTrajectory {
 #[serde(rename_all = "kebab-case")]
 pub enum TrackClass {
     #[default]
-    #[dsl(key = "static")]
     Static,
-    #[dsl(key = "moving")]
     Moving,
 }
 
@@ -953,6 +908,7 @@ pub struct ReconstructionResults {
     pub mesh: RemodelMesh,
     #[dsl(block)]
     pub trajectory: Option<CameraTrajectory>,
+    #[dsl(table)]
     pub tracks: Vec<MotionTrackSummary>,
     #[dsl(block)]
     pub geo: Option<GeoProducts>,
@@ -971,6 +927,7 @@ pub struct RemodelScene {
     pub schema: String,
     pub id: String,
     #[serde(default)]
+    #[dsl(table)]
     pub streams: Vec<MediaStream>,
     #[serde(default)]
     pub assets: BTreeMap<String, ImageAsset>,
@@ -981,6 +938,7 @@ pub struct RemodelScene {
     #[dsl(block)]
     pub params: ReconstructionParams,
     #[serde(default)]
+    #[dsl(table)]
     pub gcps: Vec<GroundControlPoint>,
     #[serde(default)]
     #[dsl(block)]
@@ -1020,78 +978,63 @@ pub fn default_remodel_scene() -> RemodelScene {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum RemodelOperation {
-    #[dsl(key = "setStreams")]
     SetStreams {
         streams: Vec<MediaStream>,
     },
-    #[dsl(key = "setAsset")]
     SetAsset {
         key: String,
         #[serde(default)]
         #[dsl(block)]
         value: Option<ImageAsset>,
     },
-    #[dsl(key = "setCalibration")]
     SetCalibration {
         #[dsl(block)]
         calibration: CalibrationState,
     },
-    #[dsl(key = "setGcps")]
     SetGcps {
         gcps: Vec<GroundControlPoint>,
     },
-    #[dsl(key = "setIngestParams")]
     SetIngestParams {
         #[dsl(block)]
         params: IngestParams,
     },
-    #[dsl(key = "setFeatureParams")]
     SetFeatureParams {
         #[dsl(block)]
         params: FeatureParams,
     },
-    #[dsl(key = "setMatchParams")]
     SetMatchParams {
         #[dsl(block)]
         params: MatchParams,
     },
-    #[dsl(key = "setSfmParams")]
     SetSfmParams {
         #[dsl(block)]
         params: SfmParams,
     },
-    #[dsl(key = "setDenseParams")]
     SetDenseParams {
         #[dsl(block)]
         params: DenseParams,
     },
-    #[dsl(key = "setMeshParams")]
     SetMeshParams {
         #[dsl(block)]
         params: MeshParams,
     },
-    #[dsl(key = "setMotionParams")]
     SetMotionParams {
         #[dsl(block)]
         params: MotionParams,
     },
-    #[dsl(key = "setGeoParams")]
     SetGeoParams {
         #[dsl(block)]
         params: GeoParams,
     },
-    #[dsl(key = "setJob")]
     SetJob {
         #[dsl(block)]
         job: ReconstructionJob,
     },
-    #[dsl(key = "setSparse")]
     SetSparse {
         #[serde(default)]
         #[dsl(block)]
         sparse: Option<SparseCloud>,
     },
-    #[dsl(key = "setDense")]
     SetDense {
         #[serde(default)]
         #[dsl(block)]
@@ -1100,28 +1043,23 @@ pub enum RemodelOperation {
     /// 📦 Boxed: `RemodelMesh` (a full `MeshData` plus an optional watertight snapshot) is far larger
     /// than any sibling variant, and `clippy::large_enum_variant` flags the resulting size disparity
     /// across `RemodelOperation`/`RemodelDiff` — boxing keeps every other variant cheap to move.
-    #[dsl(key = "setMeshResult")]
     SetMeshResult {
         #[dsl(block)]
         mesh: Box<RemodelMesh>,
     },
-    #[dsl(key = "setTrajectory")]
     SetTrajectory {
         #[serde(default)]
         #[dsl(block)]
         trajectory: Option<CameraTrajectory>,
     },
-    #[dsl(key = "setTracks")]
     SetTracks {
         tracks: Vec<MotionTrackSummary>,
     },
-    #[dsl(key = "setGeoProducts")]
     SetGeoProducts {
         #[serde(default)]
         #[dsl(block)]
         geo: Option<GeoProducts>,
     },
-    #[dsl(key = "setQc")]
     SetQc {
         #[serde(default)]
         #[dsl(block)]

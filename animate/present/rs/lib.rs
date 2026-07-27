@@ -402,6 +402,7 @@ pub struct PresentDeck {
     pub schema: String,
     #[dsl(block)]
     pub source: FigureTileSource,
+    #[dsl(table)]
     pub tiles: Vec<FigureTileDraft>,
 }
 
@@ -698,30 +699,26 @@ impl Operation<PresentDeck> for PresentOperation {
 /// outside `impl vcs::OpText for PresentOperation` ever names it.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum PresentOperationDsl {
-    #[dsl(key = "tilesAdd")]
     TilesAdd {
         index: usize,
         #[dsl(block)]
         item: FigureTileDraft,
     },
-    #[dsl(key = "tilesRemove")]
     TilesRemove { id: String },
-    #[dsl(key = "tilesMove")]
     TilesMove { id: String, to_index: usize },
-    #[dsl(key = "tilesPatch")]
     TilesPatch {
         id: String,
         #[dsl(block)]
         patch: FigureTileDraftPatch,
     },
-    #[dsl(key = "setSource")]
     SetSource {
         #[dsl(block)]
         source: FigureTileSource,
     },
-    #[dsl(key = "setTiles")]
-    SetTiles { tiles: Vec<FigureTileDraft> },
-    #[dsl(key = "setDeck")]
+    SetTiles {
+        #[dsl(table)]
+        tiles: Vec<FigureTileDraft>,
+    },
     SetDeck {
         #[dsl(block)]
         deck: PresentDeck,

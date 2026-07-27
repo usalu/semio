@@ -52,7 +52,7 @@ fn one_f64() -> f64 {
 }
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
-#[dsl(keyword = "savedCamera")]
+#[dsl(keyword = "saved-camera")]
 #[serde(rename_all = "camelCase")]
 pub struct ShootingSavedCamera {
     pub id: String,
@@ -660,19 +660,22 @@ impl Operation<ShootingFixture> for ShootingOperation {
 /// prints/parses byte-identically whether reached through `ShootingAssetNode` or on its own.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum ShootingAssetNode {
-    #[dsl(key = "asset")]
     Asset(ShootingAsset),
 }
 
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum ShootingShotNode {
-    #[dsl(key = "shot")]
     Shot(ShootingShot),
 }
 
+/// 🔡 The variant key must stay textually in sync with `ShootingSavedCamera`'s own
+/// `#[dsl(keyword = "saved-camera")]` — this newtype delegates its `RecordSpec` entirely to the
+/// wrapped type (see the doc comment above), so the `Shape::Statements` dispatcher's outer tag
+/// (this key) and `parse_record_body`'s inner leading-keyword check (the struct's `keyword`) must
+/// agree, or parsing that variant would require two different tokens where only one is written.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum ShootingSavedCameraNode {
-    #[dsl(key = "savedCamera")]
+    #[dsl(key = "saved-camera")]
     SavedCamera(ShootingSavedCamera),
 }
 
@@ -692,12 +695,12 @@ struct ShootingFixtureDsl {
     camera: ShootingCamera,
     #[dsl(block)]
     scene: ShootingSceneLighting,
-    #[dsl(statements, block)]
-    assets: Vec<ShootingAssetNode>,
-    #[dsl(statements, block)]
-    shots: Vec<ShootingShotNode>,
-    #[dsl(statements, block)]
-    saved_cameras: Vec<ShootingSavedCameraNode>,
+    #[dsl(table)]
+    assets: Vec<ShootingAsset>,
+    #[dsl(table)]
+    shots: Vec<ShootingShot>,
+    #[dsl(table)]
+    saved_cameras: Vec<ShootingSavedCamera>,
 }
 
 fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
@@ -707,20 +710,20 @@ fn shooting_fixture_to_dsl(fixture: &ShootingFixture) -> ShootingFixtureDsl {
         active_asset_id: fixture.active_asset_id.clone(),
         camera: fixture.camera.clone(),
         scene: fixture.scene.clone(),
-        assets: fixture.assets.iter().cloned().map(ShootingAssetNode::Asset).collect(),
-        shots: fixture.shots.iter().cloned().map(ShootingShotNode::Shot).collect(),
-        saved_cameras: fixture.saved_cameras.iter().cloned().map(ShootingSavedCameraNode::SavedCamera).collect(),
+        assets: fixture.assets.clone(),
+        shots: fixture.shots.clone(),
+        saved_cameras: fixture.saved_cameras.clone(),
     }
 }
 
 fn shooting_fixture_from_dsl(dsl_fixture: ShootingFixtureDsl) -> ShootingFixture {
     ShootingFixture {
         schema: dsl_fixture.schema,
-        assets: dsl_fixture.assets.into_iter().map(|ShootingAssetNode::Asset(asset)| asset).collect(),
+        assets: dsl_fixture.assets,
         camera: dsl_fixture.camera,
-        saved_cameras: dsl_fixture.saved_cameras.into_iter().map(|ShootingSavedCameraNode::SavedCamera(entry)| entry).collect(),
+        saved_cameras: dsl_fixture.saved_cameras,
         scene: dsl_fixture.scene,
-        shots: dsl_fixture.shots.into_iter().map(|ShootingShotNode::Shot(shot)| shot).collect(),
+        shots: dsl_fixture.shots,
         active_shot_id: dsl_fixture.active_shot_id,
         active_asset_id: dsl_fixture.active_asset_id,
     }
@@ -750,61 +753,49 @@ impl vcs::DocumentDsl for ShootingFixture {
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 #[allow(clippy::large_enum_variant, reason = "mirror-only enum used solely at the print_op/parse_op boundary, never stored or passed around")]
 enum ShootingOperationDsl {
-    #[dsl(key = "assets-add")]
     AssetsAdd {
         index: usize,
         #[dsl(statements)]
         item: Box<ShootingAssetNode>,
     },
-    #[dsl(key = "assets-remove")]
     AssetsRemove { id: String },
-    #[dsl(key = "assets-move")]
     AssetsMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "assets-patch")]
     AssetsPatch {
         id: String,
         #[dsl(block)]
         patch: ShootingAssetPatch,
     },
-    #[dsl(key = "shots-add")]
     ShotsAdd {
         index: usize,
         #[dsl(statements)]
         item: Box<ShootingShotNode>,
     },
-    #[dsl(key = "shots-remove")]
     ShotsRemove { id: String },
-    #[dsl(key = "shots-move")]
     ShotsMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "shots-patch")]
     ShotsPatch {
         id: String,
         #[dsl(block)]
         patch: ShootingShotPatch,
     },
-    #[dsl(key = "savedCameras-add")]
     SavedCamerasAdd {
         index: usize,
         #[dsl(statements)]
         item: Box<ShootingSavedCameraNode>,
     },
-    #[dsl(key = "savedCameras-remove")]
     SavedCamerasRemove { id: String },
-    #[dsl(key = "savedCameras-move")]
     SavedCamerasMove {
         id: String,
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "savedCameras-patch")]
     SavedCamerasPatch {
         id: String,
         #[dsl(block)]

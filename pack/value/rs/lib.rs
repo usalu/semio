@@ -11,14 +11,8 @@
 //! byte layout this module implements against.
 
 use dsl_schema::{DslValue, FieldSpec, FieldValue, RecordSpec, RecordValue, Shape, WireNode, WireValue};
-use pack_core::{ByteReader, ChunkId, CodecId, PackError, PackLimits, read_varint_u64 as _unused_read_varint_u64, write_varint_i64, write_varint_u64};
+use pack_core::{ByteReader, ChunkId, CodecId, PackError, PackLimits, write_varint_i64, write_varint_u64};
 use std::collections::{HashMap, HashSet};
-
-// `read_varint_u64` (free fn) is re-exported by `pack_core` but this crate only ever reads
-// through `ByteReader::read_varint_u64`; keep the import (renamed) so a future direct use isn't
-// blocked by an unused-import lint, without pretending we call the free fn today.
-#[allow(unused_imports)]
-use pack_core::read_varint_u64;
 
 //#region 🔖Tags
 /// @emoji 🕳️ `FieldValue::Absent` — never written at record-field granularity (canonical mode
@@ -161,7 +155,7 @@ struct EncCtx<'a> {
 
 /// @emoji 📖 Encodes a string using the precomputed interning decision: `TAG_STR` + symref if
 /// `s` made it into the symbol table, else `TAG_STR_INLINE` + length-prefixed UTF-8 bytes.
-fn encode_string(ctx: &mut EncCtx, s: &str, out: &mut Vec<u8>) {
+fn encode_string(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) {
     if let Some(&idx) = ctx.symbol_index.get(s) {
         out.push(TAG_STR);
         write_varint_u64(out, idx);
@@ -180,7 +174,7 @@ fn encode_string_inline(s: &str, out: &mut Vec<u8>) {
 
 /// @emoji 🔗 Writes a bare symref varint with NO leading tag — the wire rule for `Statements`
 /// keywords and `TableSoA` `Str` columns, both of which are unconditionally interned.
-fn write_symref_forced(ctx: &mut EncCtx, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn write_symref_forced(ctx: &mut EncCtx<'_>, s: &str, out: &mut Vec<u8>) -> Result<(), PackError> {
     let idx = *ctx
         .symbol_index
         .get(s)
@@ -342,7 +336,7 @@ fn walk_dsl_value_for_symbols(counts: &mut HashMap<String, u64>, v: &DslValue) {
 /// genuinely schema-less context (an unrecognized `Statements` variant, a shape/value mismatch);
 /// fields are then encoded generically. `options.preserve_unknown == false` drops fields whose id
 /// isn't found in `spec` instead of encoding them.
-fn encode_record_fields(ctx: &mut EncCtx, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
+fn encode_record_fields(ctx: &mut EncCtx<'_>, spec: Option<&RecordSpec>, record: &RecordValue, depth: u16) -> Result<Vec<u8>, PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let preserve_unknown = ctx.options.preserve_unknown;
     let mut ids: Vec<u16> = record
@@ -370,7 +364,7 @@ fn encode_record_fields(ctx: &mut EncCtx, spec: Option<&RecordSpec>, record: &Re
 /// encodes the value generically from its runtime `FieldValue` variant alone — the path used for
 /// field ids absent from the caller's `RecordSpec`, which is what makes unknown-field
 /// preservation possible without ever having seen their original schema.
-fn encode_value(ctx: &mut EncCtx, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_value(ctx: &mut EncCtx<'_>, shape: Option<&Shape>, value: &FieldValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     match value {
         FieldValue::Absent => out.push(TAG_ABSENT),
@@ -428,7 +422,7 @@ fn encode_value(ctx: &mut EncCtx, shape: Option<&Shape>, value: &FieldValue, dep
 /// @emoji 🧱 Encodes a `Bytes64` payload direct (`TAG_BYTES`) or, once it reaches
 /// `options.chunk_threshold`, split into `options.chunk_size`-sized chunks written through the
 /// live `PackWriter` (`TAG_BYTES_CHUNKED` + the resulting `ChunkId`s).
-fn encode_bytes(ctx: &mut EncCtx, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_bytes(ctx: &mut EncCtx<'_>, bytes: &[u8], out: &mut Vec<u8>) -> Result<(), PackError> {
     if (bytes.len() as u64) >= ctx.options.chunk_threshold {
         let chunk_size = ctx.options.chunk_size.max(1) as usize;
         let mut ids = Vec::new();
@@ -450,7 +444,7 @@ fn encode_bytes(ctx: &mut EncCtx, bytes: &[u8], out: &mut Vec<u8>) -> Result<(),
 
 /// @emoji 📚 Encodes a `Tuple`/`List` sequence: the mandatory packed `0x15`/`0x16` form when
 /// every element is the same numeric kind, else the plain self-describing `0x0B`/`0x0C` form.
-fn encode_seq(ctx: &mut EncCtx, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_seq(ctx: &mut EncCtx<'_>, items: &[FieldValue], elem_shape: Option<&Shape>, is_tuple: bool, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     if let Some(kind) = homogeneous_numeric_kind(items) {
         match kind {
             NumKind::F64 => {
@@ -488,7 +482,7 @@ fn encode_seq(ctx: &mut EncCtx, items: &[FieldValue], elem_shape: Option<&Shape>
 
 /// @emoji 🗺️ Encodes `Map`/object entries sorted by key bytes (canonical, always — not just when
 /// `options.canonical`, per the purity LAW), each key using the conditional interning rule.
-fn encode_map(ctx: &mut EncCtx, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_map(ctx: &mut EncCtx<'_>, entries: &[(String, FieldValue)], inner_shape: Option<&Shape>, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     out.push(TAG_MAP);
     let mut sorted: Vec<&(String, FieldValue)> = entries.iter().filter(|(_, v)| !matches!(v, FieldValue::Absent)).collect();
@@ -503,7 +497,7 @@ fn encode_map(ctx: &mut EncCtx, entries: &[(String, FieldValue)], inner_shape: O
 
 /// @emoji 📜 Encodes `Statements`: `count, (keyword symref, Record-payload)*`. The keyword is
 /// always a bare forced symref (never a self-describing string tag) per the wire contract.
-fn encode_statements(ctx: &mut EncCtx, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_statements(ctx: &mut EncCtx<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, items: &[(String, RecordValue)], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     out.push(TAG_STATEMENTS);
     write_varint_u64(out, items.len() as u64);
@@ -519,7 +513,7 @@ fn encode_statements(ctx: &mut EncCtx, variants: Option<&Vec<(String, fn() -> Re
 /// @emoji 🌱 Encodes a `DslValue` using the same self-describing tag set recursively; object
 /// entries sorted by key bytes with keys FORCED inline (`encode_string_inline`, never a symref) —
 /// the one deliberate carve-out from the general conditional-interning rule.
-fn encode_dsl_value(ctx: &mut EncCtx, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_dsl_value(ctx: &mut EncCtx<'_>, v: &DslValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     match v {
         DslValue::Null => out.push(TAG_NULL),
@@ -553,7 +547,7 @@ fn encode_dsl_value(ctx: &mut EncCtx, v: &DslValue, depth: u16, out: &mut Vec<u8
 /// @emoji 🕸️ Encodes a `Wire` literal. Wire sub-format (presence bitmask + node layout) is this
 /// crate's own choice — the contract pins only the outer `0x13` tag and the constituent parts
 /// (`from`, optional `to`, `props`); everything here just needs to round-trip, which it does.
-fn encode_wire(ctx: &mut EncCtx, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_wire(ctx: &mut EncCtx<'_>, w: &WireValue, depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let mut presence = 0u8;
     if w.edge.is_some() {
@@ -573,7 +567,7 @@ fn encode_wire(ctx: &mut EncCtx, w: &WireValue, depth: u16, out: &mut Vec<u8>) -
     Ok(())
 }
 
-fn encode_wire_node(ctx: &mut EncCtx, node: &WireNode, out: &mut Vec<u8>) {
+fn encode_wire_node(ctx: &mut EncCtx<'_>, node: &WireNode, out: &mut Vec<u8>) {
     let mut presence = 0u8;
     if node.kind.is_some() {
         presence |= 0b01;
@@ -613,7 +607,7 @@ impl DecCtx<'_> {
     }
 }
 
-fn resolve_symref(ctx: &DecCtx, symref: u64) -> Result<String, PackError> {
+fn resolve_symref(ctx: &DecCtx<'_>, symref: u64) -> Result<String, PackError> {
     ctx.pack_file.symbol(symref).map(str::to_string)
 }
 
@@ -627,20 +621,20 @@ fn read_len_prefixed_bytes<'b>(reader: &mut ByteReader<'b>, limits: &PackLimits)
     reader.read_bytes(len as usize)
 }
 
-fn read_inline_string(reader: &mut ByteReader, ctx: &DecCtx) -> Result<String, PackError> {
+fn read_inline_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
     let bytes = read_len_prefixed_bytes(reader, &ctx.limits)?;
     std::str::from_utf8(bytes)
         .map(str::to_string)
         .map_err(|_| PackError::Malformed { what: "text", offset: reader.position() as u64, detail: "invalid utf8".to_string() })
 }
 
-fn read_inline_bytes(reader: &mut ByteReader, ctx: &DecCtx) -> Result<Vec<u8>, PackError> {
+fn read_inline_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
     Ok(read_len_prefixed_bytes(reader, &ctx.limits)?.to_vec())
 }
 
 /// @emoji 🧱 Reads `count` chunk ids and concatenates their decoded (and, per `verification`,
 /// integrity-checked) content via the open `PackFile`'s chunk table.
-fn read_chunked_bytes(reader: &mut ByteReader, ctx: &DecCtx) -> Result<Vec<u8>, PackError> {
+fn read_chunked_bytes(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<Vec<u8>, PackError> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
     let mut out = Vec::new();
@@ -658,7 +652,7 @@ fn read_chunked_bytes(reader: &mut ByteReader, ctx: &DecCtx) -> Result<Vec<u8>, 
 /// @emoji 📖 Reads one self-describing string value (`TAG_STR` or `TAG_STR_INLINE`) — used for
 /// `Map`/object keys and `DslValue::String`, where the tag itself (not any external shape) is
 /// what disambiguates interned vs inline.
-fn decode_string(reader: &mut ByteReader, ctx: &DecCtx) -> Result<String, PackError> {
+fn decode_string(reader: &mut ByteReader<'_>, ctx: &DecCtx<'_>) -> Result<String, PackError> {
     let tag = reader.read_u8()?;
     match tag {
         TAG_STR => {
@@ -675,7 +669,7 @@ fn decode_string(reader: &mut ByteReader, ctx: &DecCtx) -> Result<String, PackEr
 /// `ctx.unknown_field_ids`; when `ctx.preserve_unknown` is `false` it is still consumed (to stay
 /// byte-aligned) but dropped from the returned `RecordValue`. Every `spec` field not seen on the
 /// wire is inserted as `Absent` — the decode-side half of canonical mode's "omit `Absent`" rule.
-fn decode_record_fields(reader: &mut ByteReader, spec: Option<&RecordSpec>, ctx: &mut DecCtx, depth: u16) -> Result<RecordValue, PackError> {
+fn decode_record_fields(reader: &mut ByteReader<'_>, spec: Option<&RecordSpec>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<RecordValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -710,7 +704,7 @@ fn decode_record_fields(reader: &mut ByteReader, spec: Option<&RecordSpec>, ctx:
 /// `PackedVarint` payloads as `UInt`/`Enum` where the shape says so; `None` decodes generically
 /// straight from the wire tag — every tag is self-describing enough for this to always succeed,
 /// which is what makes unknown-field decode possible without the original schema.
-fn decode_value(reader: &mut ByteReader, shape: Option<&Shape>, ctx: &mut DecCtx, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_value(reader: &mut ByteReader<'_>, shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
     match tag {
@@ -757,7 +751,7 @@ fn decode_value(reader: &mut ByteReader, shape: Option<&Shape>, ctx: &mut DecCtx
 }
 
 /// @emoji 📚 Decodes a plain (non-packed) `Tuple`/`List` body: `count, values*`.
-fn decode_seq_body(reader: &mut ByteReader, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_seq_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
@@ -767,7 +761,7 @@ fn decode_seq_body(reader: &mut ByteReader, elem_shape: Option<&Shape>, is_tuple
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_packed_f64_body(reader: &mut ByteReader, is_tuple: bool) -> Result<FieldValue, PackError> {
+fn decode_packed_f64_body(reader: &mut ByteReader<'_>, is_tuple: bool) -> Result<FieldValue, PackError> {
     let count = reader.read_varint_u64()?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
@@ -780,7 +774,7 @@ fn decode_packed_f64_body(reader: &mut ByteReader, is_tuple: bool) -> Result<Fie
 /// `Tuple(..)` element shape, when known) picks the reconstruction type; unknown context always
 /// defaults to `Int`, which is also what makes an unknown field's homogeneous-`Int` list
 /// re-encode to the exact same bytes (round-trip preserved even without the original schema).
-fn decode_packed_varint_body(reader: &mut ByteReader, elem_shape: Option<&Shape>, is_tuple: bool) -> Result<FieldValue, PackError> {
+fn decode_packed_varint_body(reader: &mut ByteReader<'_>, elem_shape: Option<&Shape>, is_tuple: bool) -> Result<FieldValue, PackError> {
     let count = reader.read_varint_u64()?;
     let mut items = Vec::with_capacity(count.min(4096) as usize);
     for _ in 0..count {
@@ -805,7 +799,7 @@ fn decode_packed_varint_body(reader: &mut ByteReader, elem_shape: Option<&Shape>
     Ok(if is_tuple { FieldValue::Tuple(items) } else { FieldValue::List(items) })
 }
 
-fn decode_map(reader: &mut ByteReader, inner_shape: Option<&Shape>, ctx: &mut DecCtx, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_map(reader: &mut ByteReader<'_>, inner_shape: Option<&Shape>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -818,7 +812,7 @@ fn decode_map(reader: &mut ByteReader, inner_shape: Option<&Shape>, ctx: &mut De
     Ok(FieldValue::Map(entries))
 }
 
-fn decode_statements(reader: &mut ByteReader, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, ctx: &mut DecCtx, depth: u16) -> Result<FieldValue, PackError> {
+fn decode_statements(reader: &mut ByteReader<'_>, variants: Option<&Vec<(String, fn() -> RecordSpec)>>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<FieldValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let count = reader.read_varint_u64()?;
     ctx.check_items(count)?;
@@ -833,7 +827,7 @@ fn decode_statements(reader: &mut ByteReader, variants: Option<&Vec<(String, fn(
     Ok(FieldValue::Statements(items))
 }
 
-fn decode_dsl_value(reader: &mut ByteReader, ctx: &mut DecCtx, depth: u16) -> Result<DslValue, PackError> {
+fn decode_dsl_value(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<DslValue, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let tag = reader.read_u8()?;
     match tag {
@@ -870,7 +864,7 @@ fn decode_dsl_value(reader: &mut ByteReader, ctx: &mut DecCtx, depth: u16) -> Re
     }
 }
 
-fn decode_wire(reader: &mut ByteReader, ctx: &mut DecCtx, depth: u16) -> Result<WireValue, PackError> {
+fn decode_wire(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<WireValue, PackError> {
     let presence = reader.read_u8()?;
     let from = decode_wire_node(reader, ctx)?;
     let edge = if presence & 0b01 != 0 {
@@ -884,7 +878,7 @@ fn decode_wire(reader: &mut ByteReader, ctx: &mut DecCtx, depth: u16) -> Result<
     Ok(WireValue { from, edge, properties })
 }
 
-fn decode_wire_node(reader: &mut ByteReader, ctx: &mut DecCtx) -> Result<WireNode, PackError> {
+fn decode_wire_node(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>) -> Result<WireNode, PackError> {
     let presence = reader.read_u8()?;
     let id = decode_string(reader, ctx)?;
     let kind = if presence & 0b01 != 0 { Some(decode_string(reader, ctx)?) } else { None };
@@ -923,7 +917,7 @@ fn elem_tag_for_shape(shape: &Shape) -> u8 {
 /// bitmap unconditionally (simpler than compacting individual bits). `Text` columns are always
 /// interned (forced symrefs, matching `build_symbols`'s pre-pass); every other shape falls back to
 /// self-describing per-present-row values.
-fn encode_table(ctx: &mut EncCtx, spec_fn: fn() -> RecordSpec, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
+fn encode_table(ctx: &mut EncCtx<'_>, spec_fn: fn() -> RecordSpec, items: &[FieldValue], depth: u16, out: &mut Vec<u8>) -> Result<(), PackError> {
     check_depth(ctx.options.limits.max_depth, depth)?;
     let element_spec = spec_fn();
     let mut columns: Vec<&FieldSpec> = element_spec.fields.iter().collect();
@@ -1045,7 +1039,7 @@ fn encode_table(ctx: &mut EncCtx, spec_fn: fn() -> RecordSpec, items: &[FieldVal
 /// @emoji 📖 Decodes `TableSoA` fully self-describing — `field_id`/`presence`/`elem_tag` are
 /// stored per column on the wire, so no `RecordSpec` is ever required to reconstruct the rows
 /// (this is what lets an unknown `Table`-shaped field still round-trip).
-fn decode_table_soa(reader: &mut ByteReader, ctx: &mut DecCtx, depth: u16) -> Result<Vec<FieldValue>, PackError> {
+fn decode_table_soa(reader: &mut ByteReader<'_>, ctx: &mut DecCtx<'_>, depth: u16) -> Result<Vec<FieldValue>, PackError> {
     check_depth(ctx.limits.max_depth, depth)?;
     let row_count_raw = reader.read_varint_u64()?;
     ctx.check_items(row_count_raw)?;
@@ -1396,10 +1390,13 @@ mod tests {
             12,
             FieldValue::Statements(vec![("foo".to_string(), RecordValue { fields: foo_fields }), ("bar".to_string(), RecordValue { fields: bar_fields })]),
         );
-        fields.insert(13, FieldValue::Map(vec![("zzz".to_string(), FieldValue::Int(1)), ("aaa".to_string(), FieldValue::Int(2))]));
+        // `Map`/`DslValue::Object` are `Vec`-backed so `PartialEq` is order-sensitive; since
+        // canonical encoding always sorts entries by key bytes, these fixtures are pre-sorted
+        // ("aaa" < "zzz", "arr" < "k") so the round-trip equality check below holds exactly.
+        fields.insert(13, FieldValue::Map(vec![("aaa".to_string(), FieldValue::Int(2)), ("zzz".to_string(), FieldValue::Int(1))]));
         fields.insert(
             14,
-            FieldValue::Value(DslValue::Object(vec![("k".to_string(), DslValue::Number(1.0)), ("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null]))])),
+            FieldValue::Value(DslValue::Object(vec![("arr".to_string(), DslValue::Array(vec![DslValue::Bool(true), DslValue::Null])), ("k".to_string(), DslValue::Number(1.0))])),
         );
         let table_rows: Vec<FieldValue> = (0..3)
             .map(|i| {

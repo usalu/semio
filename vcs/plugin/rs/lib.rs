@@ -39,17 +39,11 @@ struct VcsDemoProjection {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum VcsDemoOperation {
-    #[dsl(key = "set-counter")]
     SetCounter { counter: i64 },
-    #[dsl(key = "set-title")]
     SetTitle { title: String },
-    #[dsl(key = "set-notes")]
     SetNotes { notes: String },
-    #[dsl(key = "set-status")]
     SetStatus { status: String },
-    #[dsl(key = "add-tag")]
     AddTag { tag: String },
-    #[dsl(key = "remove-tag")]
     RemoveTag { tag: String },
 }
 

@@ -5301,14 +5301,14 @@ interface PanelGhostRootProps extends React.HTMLAttributes<HTMLDivElement> {
 }
 
 /** @emoji 👻 Panel shell marked as a ghost region; dims when {@link GhostProvider} session is active. */
-function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRootProps) {
+const PanelGhostRoot = reactHostPort.forwardRef<HTMLDivElement, PanelGhostRootProps>(function PanelGhostRoot({ children, className, style, ...props }, ref) {
   const level = useLevel();
   return (
-    <GhostRegionShell clickThroughWhenGhost data-level={level} data-elevation-root="" className={className} style={style} {...props}>
+    <GhostRegionShell ref={ref} clickThroughWhenGhost data-level={level} data-elevation-root="" className={className} style={style} {...props}>
       {children}
     </GhostRegionShell>
   );
-}
+});
 
 // #endregion 🔤Interaction Context
 
@@ -7276,8 +7276,11 @@ export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
 export const canvasViewportClass = cn("relative h-full min-h-0 w-full min-w-0 outline-none", surfaceClass);
 
-/** @emoji 📑 Panel tab strip base — sits above {@link shellChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` spans the divider across the row, while `ui-scrollbar-hidden` preserves the fixed control height when overflowing tabs remain horizontally scrollable. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
-const panelTabBarBaseClass = "ui-scrollbar-hidden relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+/** @emoji 📑 Panel tab strip scroll row — `ui-scrollbar-hidden` preserves fixed control height when overflowing tabs scroll horizontally. */
+const panelTabBarScrollClass = "ui-scrollbar-hidden relative z-40 flex min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
+
+/** @emoji 📑 Panel tab strip base — `w-full` spans chrome/mobile dividers across the row; floating panel caps omit it so the U-gap opens after the last tab. */
+const panelTabBarBaseClass = cn(panelTabBarScrollClass, "w-full");
 
 /** @emoji 📑 Panel tab strip with its divider on the content-facing side. */
 export const panelTabBarClass = cn(panelTabBarBaseClass, borderNormalBottomClass);
@@ -7298,9 +7301,9 @@ export const panelTabButtonClass = cn(
   hoverExcludingHandleTextEmphasizedClass,
 );
 
-/** @emoji 📑 Panel tab strip — divider sits on the content-facing side: bottom anchors grow "up" (tabs anchor at the screen edge, content above), so their divider flips to the top. */
-export function panelAnchorTabBarClass(direction: "up" | "down"): string {
-  return cn(panelTabBarBaseClass, direction === "up" ? borderNormalTopClass : borderNormalBottomClass, "h-medium");
+/** @emoji 📑 Floating panel tab strip inside {@link WindowChrome} — hugs tabs; silhouette + per-tab pills own every stroke. */
+export function panelAnchorTabBarClass(_direction: "up" | "down"): string {
+  return cn(panelTabBarScrollClass, "h-medium");
 }
 
 /** @emoji 📑 Panel tab button padding. */
@@ -7777,21 +7780,26 @@ const panelTabInsertPreviewClass = "w-0.5 self-stretch rounded-full bg-accent sh
 /** @emoji 📑 One tab button; a child component (not inlined in {@link PanelTabRow}'s `.map`) so it can call driver-aware hooks per tab. */
 const PanelTabButton: React.FC<{
   readonly tab: PanelTabNode;
+  readonly variant: PanelTabBarVariant;
   readonly buttonClass: string;
   readonly tabSlot: string;
   readonly isActive: boolean;
   readonly showActiveColor: boolean;
+  readonly stackIndex: number;
+  readonly stackSize: number;
   readonly isDragSource: boolean;
   readonly isChildDropTarget: boolean;
   readonly isUnitDropReady: boolean;
   readonly anchor?: Anchor;
   readonly dock: PanelDockContextValue | null;
   readonly onSelect: (tabId: string) => void;
-}> = ({ tab, buttonClass, tabSlot, isActive, showActiveColor, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect }) => {
+}> = ({ tab, variant, buttonClass, tabSlot, isActive, showActiveColor, stackIndex, stackSize, isDragSource, isChildDropTarget, isUnitDropReady, anchor, dock, onSelect }) => {
   const Icon = tab.icon;
   const inlineText = useControlInlineText(tab.id, tab.name);
   const surfaceDrag = useUiDriverDragSurface();
   const draggable = Boolean(anchor && dock);
+  const windowTabChrome = variant === "panel";
+  const inactiveTabChromeClass = windowTabChrome && stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
   return (
     <ChromeControlHint id={tab.id} text={tab.name}>
       <button
@@ -7824,12 +7832,29 @@ const PanelTabButton: React.FC<{
               }
             : undefined
         }
-        className={cn(buttonClass, isActive && showActiveColor && panelTabActiveClass, isDragSource && "opacity-40", isChildDropTarget && "ring-2 ring-accent", isUnitDropReady && dropZoneReadyClass)}
+        className={cn(
+          windowTabChrome ? modeDockTabClassName : buttonClass,
+          windowTabChrome && !isActive && inactiveTabChromeClass,
+          windowTabChrome && isActive && showActiveColor && modeDockActiveTabClass,
+          !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
+          isDragSource && "opacity-40",
+          isChildDropTarget && "ring-2 ring-accent",
+          isUnitDropReady && dropZoneReadyClass,
+        )}
       >
-        <span className={panelTabIconSlotClass}>
-          <Icon size={12} />
-        </span>
-        {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+        {windowTabChrome ? (
+          <div className={modeDockTabLabelClassName}>
+            <Icon size={12} className="shrink-0" />
+            {inlineText !== undefined ? <span className="truncate">{inlineText}</span> : null}
+          </div>
+        ) : (
+          <>
+            <span className={panelTabIconSlotClass}>
+              <Icon size={12} />
+            </span>
+            {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
+          </>
+        )}
         {draggable && !surfaceDrag ? <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
       </button>
     </ChromeControlHint>
@@ -7902,10 +7927,13 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
             {dropInsertIndex === index ? <div data-slot="panel-tab-insert-preview" aria-hidden className={panelTabInsertPreviewClass} /> : null}
             <PanelTabButton
               tab={tab}
+              variant={variant}
               buttonClass={buttonClass}
               tabSlot={tabSlot}
               isActive={isActive}
               showActiveColor={showActiveColor}
+              stackIndex={index}
+              stackSize={sortedTabs.length}
               isDragSource={isDragSource}
               isChildDropTarget={isChildDropTarget}
               isUnitDropReady={isUnitDropReady}
@@ -8471,29 +8499,37 @@ export function panelResizeEdgeAccentClass(resizeSide: "left" | "right", active:
   }
 }
 
-/** @emoji 🪟 One bottom footer chip span (stack-local x coordinates) for {@link windowSilhouettePath}. */
-export interface WindowSilhouetteBottomChip {
+/** @emoji 🪟 One chip span (stack-local x coordinates) on a silhouette edge. */
+export interface WindowSilhouetteChip {
   readonly left: number;
   readonly right: number;
 }
 
-/** @emoji 🪟 Measured dock-stack outline used by {@link windowSilhouettePath} / the SVG border overlay. */
+/** @emoji 🪟 One docked edge of a window silhouette (top or bottom cap). */
+export interface WindowSilhouetteEdge {
+  readonly depth: number;
+  readonly chips: readonly WindowSilhouetteChip[];
+}
+
+/** @emoji 🪟 Measured window-chrome outline used by {@link windowSilhouettePath} / the SVG border overlay. */
 export interface WindowSilhouetteMetrics {
   readonly width: number;
   readonly height: number;
-  readonly tabsWidth: number;
-  readonly controlsWidth: number;
-  readonly capHeight: number;
-  /** @deprecated Prefer {@link WindowSilhouetteMetrics.bottomChips}. */
-  readonly bottomLeftWidth?: number;
-  /** @deprecated Prefer {@link WindowSilhouetteMetrics.bottomChips}. */
-  readonly bottomRightWidth?: number;
-  readonly bottomCapHeight?: number;
-  readonly bottomChips?: readonly WindowSilhouetteBottomChip[];
+  readonly top: WindowSilhouetteEdge;
+  readonly bottom: WindowSilhouetteEdge;
 }
 
+/** @emoji 🪟 One vertex on the closed silhouette outline. */
+export interface WindowSilhouettePoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+/** @emoji 🪟 All border effects the silhouette SVG can paint. */
+export const WINDOW_SILHOUETTE_BORDER_KINDS = ["celebrated", "introduced", "loading", "waiting", "active", "normal"] as const;
+
 /** @emoji 🪟 Which border effect the dock-stack silhouette overlay should paint. */
-export type WindowSilhouetteBorderKind = "celebrated" | "introduced" | "loading" | "waiting" | "active" | "normal";
+export type WindowSilhouetteBorderKind = (typeof WINDOW_SILHOUETTE_BORDER_KINDS)[number];
 
 /** @emoji 🪟 Whether an introduced stamp is the window chrome body itself (kind/instance scroll surface or
  * `[data-slot="window"]`), not a nested utility/action/tree row inside the pane. Window silhouette pulse
@@ -8540,61 +8576,191 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
  * clip edge of `overflow: hidden` ancestors (resizable panels / mode body), so those sides vanish. */
 export const WINDOW_SILHOUETTE_PATH_INSET = 1;
 
-/** @emoji 🪟 Appends the bottom edge wrapping outside each footer chip; gaps between chips stay open upward into the body (mirror of the top cap). */
-export function appendWindowSilhouetteBottomPath(path: string, chips: readonly WindowSilhouetteBottomChip[], x0: number, x1: number, y1: number, bottomCap: number): string {
-  if (chips.length === 0 || bottomCap <= 0) return `${path} V${y1} H${x0} Z`;
-  const sorted = [...chips].sort((a, b) => a.left - b.left);
-  const notchTop = y1 - bottomCap;
-  let result = `${path} V${y1}`;
-  for (let i = sorted.length - 1; i >= 0; i--) {
-    const chip = sorted[i]!;
-    const isRightmost = i === sorted.length - 1;
-    if (isRightmost && chip.right < x1) {
-      result += ` V${notchTop}`;
-      result += ` H${chip.right}`;
-      result += ` V${y1}`;
-    }
-    result += ` H${chip.left}`;
-    result += ` V${notchTop}`;
-    if (i > 0) {
-      result += ` H${sorted[i - 1]!.right}`;
-      result += ` V${y1}`;
-    } else {
-      result += ` H${x0}`;
+/** @emoji 🪟 Sub-pixel tolerance when clamping and merging measured chip spans. */
+export const WINDOW_SILHOUETTE_CHIP_EPSILON = 0.5;
+
+/** @emoji 🪟 Clamps chip spans into the silhouette box, drops empty spans, and merges overlaps. */
+export function normalizeWindowSilhouetteChips(chips: readonly WindowSilhouetteChip[], x0: number, x1: number): WindowSilhouetteChip[] {
+  const normalized = chips
+    .map((chip) => ({
+      left: Math.max(x0, Math.min(chip.left, x1)),
+      right: Math.max(x0, Math.min(chip.right, x1)),
+    }))
+    .filter((chip) => chip.right - chip.left > WINDOW_SILHOUETTE_CHIP_EPSILON)
+    .sort((a, b) => a.left - b.left);
+  const merged: WindowSilhouetteChip[] = [];
+  for (const chip of normalized) {
+    const last = merged[merged.length - 1];
+    if (!last || chip.left > last.right + WINDOW_SILHOUETTE_CHIP_EPSILON) merged.push({ ...chip });
+    else last.right = Math.max(last.right, chip.right);
+  }
+  return merged;
+}
+
+/** @emoji 🪟 Walks one docked edge left-to-right; absent chip slots stay on the outer baseline. */
+export function windowSilhouetteEdgePoints(edge: WindowSilhouetteEdge, x0: number, x1: number, outer: number, inner: number): WindowSilhouettePoint[] {
+  const chips = normalizeWindowSilhouetteChips(edge.chips, x0, x1);
+  if (edge.depth <= WINDOW_SILHOUETTE_CHIP_EPSILON || chips.length === 0) return [{ x: x0, y: outer }, { x: x1, y: outer }];
+  let x = x0;
+  let y = outer;
+  const points: WindowSilhouettePoint[] = [{ x, y }];
+  const push = (nextX: number, nextY: number) => {
+    if (Math.abs(nextX - x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(nextY - y) <= WINDOW_SILHOUETTE_CHIP_EPSILON) return;
+    points.push({ x: nextX, y: nextY });
+    x = nextX;
+    y = nextY;
+  };
+  for (let i = 0; i < chips.length; i++) {
+    const chip = chips[i]!;
+    const hasNext = i < chips.length - 1;
+    if (x < chip.right) push(chip.right, outer);
+    const needsInnerTail = hasNext || chip.right < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON;
+    if (!needsInnerTail) continue;
+    push(chip.right, inner);
+    if (hasNext) {
+      const nextLeft = chips[i + 1]!.left;
+      if (chip.right < nextLeft - WINDOW_SILHOUETTE_CHIP_EPSILON) push(nextLeft, inner);
+      push(nextLeft, outer);
+    } else if (chip.right < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON) {
+      push(x1, inner);
     }
   }
-  return `${result} Z`;
+  if (x < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(y - outer) <= WINDOW_SILHOUETTE_CHIP_EPSILON) push(x1, outer);
+  return points;
 }
 
-function resolveWindowSilhouetteBottomChips(metrics: WindowSilhouetteMetrics, x0: number, x1: number, inset: number): WindowSilhouetteBottomChip[] {
-  if (metrics.bottomChips?.length) return [...metrics.bottomChips].sort((a, b) => a.left - b.left);
-  const chips: WindowSilhouetteBottomChip[] = [];
-  const hasBottomLeft = (metrics.bottomLeftWidth ?? 0) > inset;
-  const hasBottomRight = (metrics.bottomRightWidth ?? 0) > 0;
-  if (hasBottomLeft) chips.push({ left: x0, right: metrics.bottomLeftWidth! });
-  if (hasBottomRight) chips.push({ left: x1 - metrics.bottomRightWidth!, right: x1 });
-  return chips;
+/** @emoji 🪟 Walks one docked edge right-to-left; absent chip slots stay on the outer baseline. */
+export function windowSilhouetteEdgePointsRtl(edge: WindowSilhouetteEdge, x0: number, x1: number, outer: number, inner: number): WindowSilhouettePoint[] {
+  const chips = normalizeWindowSilhouetteChips(edge.chips, x0, x1);
+  if (edge.depth <= WINDOW_SILHOUETTE_CHIP_EPSILON || chips.length === 0) return [{ x: x1, y: outer }, { x: x0, y: outer }];
+  let x = x1;
+  let y = outer;
+  const points: WindowSilhouettePoint[] = [{ x, y }];
+  const push = (nextX: number, nextY: number) => {
+    if (Math.abs(nextX - x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(nextY - y) <= WINDOW_SILHOUETTE_CHIP_EPSILON) return;
+    points.push({ x: nextX, y: nextY });
+    x = nextX;
+    y = nextY;
+  };
+  for (let i = chips.length - 1; i >= 0; i--) {
+    const chip = chips[i]!;
+    const hasPrev = i > 0;
+    if (x > chip.right) push(chip.right, y);
+    const needsInnerTail = edge.depth > WINDOW_SILHOUETTE_CHIP_EPSILON;
+    if (!needsInnerTail) continue;
+    push(chip.right, inner);
+    if (chip.right > chip.left + WINDOW_SILHOUETTE_CHIP_EPSILON) push(chip.left, inner);
+    if (hasPrev) push(chip.left, outer);
+    else if (chip.left > x0 + WINDOW_SILHOUETTE_CHIP_EPSILON) push(x0, inner);
+  }
+  if (x > x0 + WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(y - outer) <= WINDOW_SILHOUETTE_CHIP_EPSILON) push(x0, outer);
+  return points;
 }
 
-/** @emoji 🪟 Closed SVG path for the dock-stack outer silhouette (tabs + gap cutout + controls + body).
- * Inset by {@link WINDOW_SILHOUETTE_PATH_INSET} so a centered hairline stroke stays inside clipped stacks. */
-export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): string {
+/** @emoji 🪟 Builds the closed silhouette outline (top LTR, right connector, bottom RTL, left connector). */
+export function windowSilhouetteOutline(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
   const w = Math.max(inset * 2, metrics.width);
   const h = Math.max(inset * 2, metrics.height);
-  const tabs = Math.max(inset, Math.min(metrics.tabsWidth, w - inset));
-  const controls = Math.max(0, Math.min(metrics.controlsWidth, Math.max(0, w - tabs - inset)));
-  const cap = Math.max(inset, Math.min(metrics.capHeight, h - inset));
-  const gapEnd = Math.max(tabs, w - controls - inset);
-  const bottomLeft = Math.max(inset, Math.min(metrics.bottomLeftWidth ?? 0, w - inset));
-  const bottomRight = Math.max(0, Math.min(metrics.bottomRightWidth ?? 0, Math.max(0, w - bottomLeft - inset)));
-  const bottomCap = Math.max(0, Math.min(metrics.bottomCapHeight ?? 0, h - inset));
   const x0 = inset;
   const y0 = inset;
   const x1 = w - inset;
   const y1 = h - inset;
+  const topInner = Math.max(y0, Math.min(y0 + metrics.top.depth, y1));
+  const bottomInner = Math.max(y0, Math.min(y1 - metrics.bottom.depth, y1));
+  const top = windowSilhouetteEdgePoints(metrics.top, x0, x1, y0, topInner);
+  const topEnd = top[top.length - 1] ?? { x: x1, y: y0 };
+  const bottomSeed: WindowSilhouettePoint[] = topEnd.x === x1 && topEnd.y === y1 ? [] : [{ x: x1, y: y1 }];
+  const bottom = windowSilhouetteEdgePointsRtl(metrics.bottom, x0, x1, y1, bottomInner);
+  return simplifyWindowSilhouetteOutline([...top, ...bottomSeed, ...bottom]);
+}
 
-  const path = `M${x0},${y0} H${tabs} V${cap} H${gapEnd} V${y0} H${x1}`;
-  return appendWindowSilhouetteBottomPath(path, resolveWindowSilhouetteBottomChips(metrics, x0, x1, inset), x0, x1, y1, bottomCap);
+/** @emoji 🪟 Drops zero-length segments and collinear vertices from a closed outline loop. */
+export function simplifyWindowSilhouetteOutline(points: readonly WindowSilhouettePoint[]): WindowSilhouettePoint[] {
+  if (points.length <= 2) return [...points];
+  const deduped: WindowSilhouettePoint[] = [];
+  for (const point of points) {
+    const last = deduped[deduped.length - 1];
+    if (!last || Math.abs(last.x - point.x) > WINDOW_SILHOUETTE_CHIP_EPSILON || Math.abs(last.y - point.y) > WINDOW_SILHOUETTE_CHIP_EPSILON) deduped.push(point);
+  }
+  if (deduped.length <= 2) return deduped;
+  const simplified: WindowSilhouettePoint[] = [];
+  const count = deduped.length;
+  for (let i = 0; i < count; i++) {
+    const prev = deduped[(i - 1 + count) % count]!;
+    const curr = deduped[i]!;
+    const next = deduped[(i + 1) % count]!;
+    const horizontal = Math.abs(prev.y - curr.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(curr.y - next.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON;
+    const vertical = Math.abs(prev.x - curr.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(curr.x - next.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON;
+    if (horizontal || vertical) continue;
+    simplified.push(curr);
+  }
+  return simplified.length > 0 ? simplified : [...deduped];
+}
+
+/** @emoji 🪟 Returns broken outline invariants — empty when the path is clean. */
+export function windowSilhouetteOutlineViolations(points: readonly WindowSilhouettePoint[], bounds?: { readonly x0: number; readonly y0: number; readonly x1: number; readonly y1: number }): string[] {
+  if (points.length < 3) return ["outline requires at least three vertices"];
+  const violations: string[] = [];
+  const count = points.length;
+  for (let i = 0; i < count; i++) {
+    const prev = points[(i - 1 + count) % count]!;
+    const curr = points[i]!;
+    const next = points[(i + 1) % count]!;
+    const dx = curr.x - prev.x;
+    const dy = curr.y - prev.y;
+    if (Math.abs(dx) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(dy) <= WINDOW_SILHOUETTE_CHIP_EPSILON) violations.push(`zero-length segment at vertex ${i}`);
+    if (Math.abs(dx) > WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(dy) > WINDOW_SILHOUETTE_CHIP_EPSILON) violations.push(`non-axis-aligned segment at vertex ${i}`);
+    const ndx = next.x - curr.x;
+    const ndy = next.y - curr.y;
+    if (Math.abs(dx) > WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(ndx) > WINDOW_SILHOUETTE_CHIP_EPSILON && Math.sign(dx) !== Math.sign(ndx)) violations.push(`horizontal reversal at vertex ${i}`);
+    if (Math.abs(dy) > WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(ndy) > WINDOW_SILHOUETTE_CHIP_EPSILON && Math.sign(dy) !== Math.sign(ndy)) violations.push(`vertical reversal at vertex ${i}`);
+    const horizontal = Math.abs(prev.y - curr.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(curr.y - next.y) <= WINDOW_SILHOUETTE_CHIP_EPSILON;
+    const vertical = Math.abs(prev.x - curr.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(curr.x - next.x) <= WINDOW_SILHOUETTE_CHIP_EPSILON;
+    if (horizontal || vertical) violations.push(`collinear vertex at ${i}`);
+    if (bounds) {
+      if (curr.x < bounds.x0 - WINDOW_SILHOUETTE_CHIP_EPSILON || curr.x > bounds.x1 + WINDOW_SILHOUETTE_CHIP_EPSILON || curr.y < bounds.y0 - WINDOW_SILHOUETTE_CHIP_EPSILON || curr.y > bounds.y1 + WINDOW_SILHOUETTE_CHIP_EPSILON) {
+        violations.push(`vertex ${i} outside bounds`);
+      }
+    }
+  }
+  return violations;
+}
+
+/** @emoji 🪟 Serializes a closed outline to an axis-aligned SVG path. */
+export function windowSilhouettePathFromOutline(points: readonly WindowSilhouettePoint[]): string {
+  if (points.length === 0) return "";
+  const parts: string[] = [`M${points[0]!.x},${points[0]!.y}`];
+  for (let i = 1; i < points.length; i++) {
+    const prev = points[i - 1]!;
+    const curr = points[i]!;
+    if (Math.abs(curr.x - prev.x) > WINDOW_SILHOUETTE_CHIP_EPSILON) parts.push(`H${curr.x}`);
+    if (Math.abs(curr.y - prev.y) > WINDOW_SILHOUETTE_CHIP_EPSILON) parts.push(`V${curr.y}`);
+  }
+  parts.push("Z");
+  return parts.join(" ");
+}
+
+/** @emoji 🪟 Closed SVG path for the window outer silhouette. */
+export function windowSilhouettePath(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): string {
+  return windowSilhouettePathFromOutline(windowSilhouetteOutline(metrics, inset));
+}
+
+/** @emoji 🪟 Maps a silhouette border kind to stroke classes and color tokens. */
+export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): { readonly className: string; readonly stroke: string } {
+  switch (kind) {
+    case "celebrated":
+      return { className: "window-silhouette-border window-silhouette-border-celebrated-mask", stroke: "white" };
+    case "introduced":
+      return { className: "window-silhouette-border window-silhouette-border-introduced", stroke: "var(--introduced-border-color, var(--color-secondary))" };
+    case "loading":
+      return { className: "window-silhouette-border window-silhouette-border-loading", stroke: "var(--loading-border-color, var(--border-normal-color))" };
+    case "waiting":
+      return { className: "window-silhouette-border window-silhouette-border-waiting", stroke: "var(--waiting-border-color, var(--border-normal-color))" };
+    case "active":
+      return { className: "window-silhouette-border window-silhouette-border-active", stroke: "var(--active-base)" };
+    case "normal":
+      return { className: "window-silhouette-border window-silhouette-border-normal", stroke: "var(--border-normal-color)" };
+  }
 }
 
 const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
@@ -8617,25 +8783,32 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   const tabBar = stack.querySelector<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR);
   const gapRect = gap?.getBoundingClientRect();
   const controlsRect = controls?.getBoundingClientRect();
-  const tabsWidth = gapRect ? Math.max(0, gapRect.left - stackRect.left) : 0;
-  const controlsWidth = controlsRect ? Math.max(0, stackRect.right - controlsRect.left) : 0;
-  const capHeight = tabBar?.getBoundingClientRect().height || gapRect?.height || controlsRect?.height || 0;
+  const tabBarRect = tabBar?.getBoundingClientRect();
+  const topChips: WindowSilhouetteChip[] = [];
+  if (gapRect && gapRect.left - stackRect.left > WINDOW_SILHOUETTE_CHIP_EPSILON) topChips.push({ left: 0, right: gapRect.left - stackRect.left });
+  if (controlsRect && stackRect.right - controlsRect.left > WINDOW_SILHOUETTE_CHIP_EPSILON) topChips.push({ left: controlsRect.left - stackRect.left, right: width });
+  const topDepth = tabBarRect?.height || gapRect?.height || controlsRect?.height || 0;
   const footer = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_SELECTOR);
   const footerLeft = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_LEFT_SELECTOR);
   const footerCenter = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_CENTER_SELECTOR);
   const footerRight = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_RIGHT_SELECTOR);
+  const bottomChips: WindowSilhouetteChip[] = [];
+  let bottomDepth = 0;
   if (footer && (footerLeft || footerCenter || footerRight)) {
     const footerLeftRect = footerLeft?.getBoundingClientRect();
     const footerCenterRect = footerCenter?.getBoundingClientRect();
     const footerRightRect = footerRight?.getBoundingClientRect();
-    const bottomChips: WindowSilhouetteBottomChip[] = [];
     if (footerLeftRect) bottomChips.push({ left: footerLeftRect.left - stackRect.left, right: footerLeftRect.right - stackRect.left });
     if (footerCenterRect) bottomChips.push({ left: footerCenterRect.left - stackRect.left, right: footerCenterRect.right - stackRect.left });
     if (footerRightRect) bottomChips.push({ left: footerRightRect.left - stackRect.left, right: footerRightRect.right - stackRect.left });
-    const bottomCapHeight = Math.max(footerLeftRect?.height ?? 0, footerCenterRect?.height ?? 0, footerRightRect?.height ?? 0);
-    return { width, height, tabsWidth, controlsWidth, capHeight, bottomCapHeight, bottomChips };
+    bottomDepth = Math.max(footerLeftRect?.height ?? 0, footerCenterRect?.height ?? 0, footerRightRect?.height ?? 0);
   }
-  return { width, height, tabsWidth, controlsWidth, capHeight };
+  return {
+    width,
+    height,
+    top: { depth: topDepth, chips: topChips },
+    bottom: { depth: bottomDepth, chips: bottomChips },
+  };
 }
 
 /** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on the tabbar. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
@@ -8689,10 +8862,10 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
 }
 
 /** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline (window level, inherited from the ancestor {@link ModeDockStack} `data-level="window"` stamp). */
-export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass}`, surfaceClass);
+export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, surfaceClass);
 
-/** @emoji 📏 Inactive tab before gap — no bottom stroke; gap owns the horizontal segment before controls. */
-export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass}`, surfaceClass);
+/** @emoji 📏 Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
+export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, surfaceClass);
 
 /** @emoji 🪟 Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
@@ -8709,9 +8882,6 @@ export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercas
 /** @emoji 📏 Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** @emoji 📑 Active side-panel tab — primary fill + emphasized icon. */
-export const panelTabActiveClass = interactiveActiveFillClass;
-
 /** @emoji 📏 Stack-active tab fill — outline owned by the stack silhouette SVG. */
 export const modeDockActiveTabClass = `relative z-20 box-border min-h-medium shrink-0 border-0 ${modeDockActiveTabFillClass}`;
 
@@ -8725,6 +8895,82 @@ export const windowControlsCapActiveClass = windowControlsCapClass;
 export const windowControlsCapActiveSplitClass = "relative flex shrink-0 items-stretch border-0 bg-transparent text-element";
 
 //#region 🪟WindowChrome
+
+/** @emoji 🎯 Tracks which panel/pane surface last received pointer or focus — exclusive active stroke without `:focus-within` CSS. */
+const surfaceActiveRoots = new Set<HTMLElement>();
+let surfaceActiveRoot: HTMLElement | null = null;
+const surfaceActiveSubscribers = new Set<() => void>();
+let surfaceActiveListenersInstalled = false;
+
+function setSurfaceActiveRoot(next: HTMLElement | null): void {
+  if (surfaceActiveRoot === next) return;
+  surfaceActiveRoot = next;
+  surfaceActiveSubscribers.forEach((notify) => notify());
+}
+
+function resolveSurfaceActiveRoot(target: Node): HTMLElement | null {
+  let node: Node | null = target instanceof Element ? target : target.parentElement;
+  let match: HTMLElement | null = null;
+  while (node instanceof HTMLElement) {
+    if (surfaceActiveRoots.has(node)) match = node;
+    node = node.parentElement;
+  }
+  return match;
+}
+
+function installSurfaceActiveDocumentListeners(): void {
+  if (surfaceActiveListenersInstalled || typeof document === "undefined") return;
+  surfaceActiveListenersInstalled = true;
+  const onPointerDown = (event: Event): void => {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    setSurfaceActiveRoot(resolveSurfaceActiveRoot(target));
+  };
+  const onFocusIn = (event: Event): void => {
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    setSurfaceActiveRoot(resolveSurfaceActiveRoot(target));
+  };
+  document.addEventListener("pointerdown", onPointerDown);
+  document.addEventListener("focusin", onFocusIn);
+}
+
+export interface SurfaceActiveBindProps {
+  readonly onPointerDownCapture: () => void;
+  readonly onFocusCapture: (event: React.FocusEvent) => void;
+}
+
+/** @emoji 🎯 True when this surface root was the last panel/pane to receive pointer or keyboard focus. */
+export function useSurfaceActive(ref: React.RefObject<HTMLElement | null>): readonly [boolean, SurfaceActiveBindProps] {
+  const [, bump] = reactHostPort.useState(0);
+  reactHostPort.useLayoutEffect(() => {
+    installSurfaceActiveDocumentListeners();
+    const element = ref.current;
+    if (!element) return;
+    surfaceActiveRoots.add(element);
+    const notify = (): void => bump((value) => value + 1);
+    surfaceActiveSubscribers.add(notify);
+    return () => {
+      surfaceActiveRoots.delete(element);
+      surfaceActiveSubscribers.delete(notify);
+      if (surfaceActiveRoot === element) setSurfaceActiveRoot(null);
+    };
+  });
+  const bind = reactHostPort.useMemo<SurfaceActiveBindProps>(
+    () => ({
+      onPointerDownCapture: () => {
+        const root = ref.current;
+        if (root) setSurfaceActiveRoot(root);
+      },
+      onFocusCapture: (event: React.FocusEvent) => {
+        const root = ref.current;
+        if (root?.contains(event.target as Node)) setSurfaceActiveRoot(root);
+      },
+    }),
+    [ref],
+  );
+  return [ref.current !== null && surfaceActiveRoot === ref.current, bind] as const;
+}
 
 /** @emoji 🪟 Optional right-cap control on {@link WindowChrome} (enlarge / close). */
 export interface WindowChromeControlAction {
@@ -8807,16 +9053,17 @@ const WindowChromeSilhouetteBorder: React.FC<{
   void epoch;
 
   if (!metrics) {
-    return <div data-slot={silhouetteSlot} data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
+    return <div data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
   const path = windowSilhouettePath(metrics);
+  const paint = windowSilhouetteBorderPaint(resolvedKind);
   if (resolvedKind === "celebrated") {
     return (
-      <svg data-slot={silhouetteSlot} data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+      <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
         <defs>
           <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
             <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
-            <path d={path} fill="none" stroke="white" strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className="window-silhouette-border window-silhouette-border-celebrated-mask" />
+            <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
           </mask>
         </defs>
         <foreignObject x={0} y={0} width={metrics.width} height={metrics.height} mask={`url(#${celebrateMaskId})`}>
@@ -8825,33 +9072,9 @@ const WindowChromeSilhouetteBorder: React.FC<{
       </svg>
     );
   }
-  const stroke =
-    resolvedKind === "introduced"
-      ? "var(--introduced-border-color, var(--color-secondary))"
-      : resolvedKind === "loading"
-        ? "var(--loading-border-color, var(--border-normal-color))"
-        : resolvedKind === "waiting"
-          ? "var(--waiting-border-color, var(--border-normal-color))"
-          : resolvedKind === "active"
-            ? "var(--active-base)"
-            : "var(--border-normal-color)";
   return (
-    <svg data-slot={silhouetteSlot} data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
-      <path
-        d={path}
-        fill="none"
-        stroke={stroke}
-        strokeLinejoin="miter"
-        vectorEffect="non-scaling-stroke"
-        className={cn(
-          "window-silhouette-border",
-          resolvedKind === "introduced" && "window-silhouette-border-introduced",
-          resolvedKind === "loading" && "window-silhouette-border-loading",
-          resolvedKind === "waiting" && "window-silhouette-border-waiting",
-          resolvedKind === "active" && "window-silhouette-border-active",
-          resolvedKind === "normal" && "window-silhouette-border-normal",
-        )}
-      />
+    <svg data-slot={silhouetteSlot} data-window-silhouette-border data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
+      <path d={path} fill="none" stroke={paint.stroke} strokeLinejoin="miter" vectorEffect="non-scaling-stroke" className={paint.className} />
     </svg>
   );
 };
@@ -8909,8 +9132,8 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
 
     if (chipOnly) {
       return wrapLevel(
-        <div ref={setStackRef} data-slot={stackSlot} data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
-          <div data-slot="window-chrome-chip-cap" data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+        <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top" data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
         </div>,
@@ -8927,6 +9150,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       <div
         ref={setStackRef}
         data-slot={stackSlot}
+        data-window-silhouette
         data-level={level}
         data-active={active ? "true" : undefined}
         className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", stackClassName, className)}
@@ -8935,12 +9159,12 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       >
         <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} borderKind={borderKind} />
         <div ref={capRef} data-slot="window-chrome-cap" data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-          <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
-          <div data-slot="window-chrome-gap" aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
+          <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
           {enlarge || close ? (
-            <div data-slot="window-chrome-controls" className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
+            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="top" className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
               {enlarge ? (
                 <button
                   type="button"
@@ -8974,21 +9198,21 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         {hasFooter ? (
           footerCenterChips ? (
             <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative z-[2] grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent">
-              <div data-slot="window-chrome-footer-gap-left" {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
+              <div data-slot="window-chrome-footer-gap-left" data-window-silhouette-gap {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
                 {footerLeftChips ? (
-                  <div data-slot="window-chrome-footer-left" className={cn("pointer-events-auto", footerChipClass)}>
+                  <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerLeftChips}
                   </div>
                 ) : null}
               </div>
               <div data-slot="window-chrome-footer-center" className={cn(footerGapClass, "flex justify-center justify-self-center")}>
-                <div data-slot="window-chrome-footer-center-chip" className={cn("pointer-events-auto", footerChipClass)}>
+                <div data-slot="window-chrome-footer-center-chip" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
                   {footerCenterChips}
                 </div>
               </div>
-              <div data-slot="window-chrome-footer-gap-right" aria-hidden={footerRightChips ? undefined : true} className={cn(footerGapClass, "justify-self-end")}>
+              <div data-slot="window-chrome-footer-gap-right" data-window-silhouette-gap aria-hidden={footerRightChips ? undefined : true} className={cn(footerGapClass, "justify-self-end")}>
                 {footerRightChips ? (
-                  <div data-slot="window-chrome-footer-right" className={cn("pointer-events-auto", footerChipClass)}>
+                  <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("pointer-events-auto", footerChipClass)}>
                     {footerRightChips}
                   </div>
                 ) : null}
@@ -9002,13 +9226,13 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
               className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent", footerLeftChips && !footerRightChips && "justify-start", footerRightChips && !footerLeftChips && "justify-end")}
             >
               {footerLeftChips ? (
-                <div data-slot="window-chrome-footer-left" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                <div data-slot="window-chrome-footer-left" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerLeftChips}
                 </div>
               ) : null}
-              {hasFooterGap ? <div data-slot="window-chrome-footer-gap" aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} /> : null}
+              {hasFooterGap ? <div data-slot="window-chrome-footer-gap" data-window-silhouette-gap aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} /> : null}
               {footerRightChips ? (
-                <div data-slot="window-chrome-footer-right" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+                <div data-slot="window-chrome-footer-right" data-window-silhouette-chip data-dock="bottom" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerRightChips}
                 </div>
               ) : null}
@@ -19648,11 +19872,14 @@ const Panel: React.FC<PanelProps> = ({
   treeContentRevision,
   minSize = 200,
   maxSize = 600,
-  zIndex = 20,
+  zIndex,
   className = "",
   tabBarHost = "panel",
 }) => {
   const dock = usePanelDockContext();
+  const collapseLabel = useLabel("ui.common.collapse");
+  const panelRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(panelRootRef);
   const [hoveredSide, setHoveredSide] = reactHostPort.useState<"left" | "right" | null>(null);
   const [resizingSide, setResizingSide] = reactHostPort.useState<"left" | "right" | null>(null);
   const sizeRef = reactHostPort.useRef(size);
@@ -19677,8 +19904,18 @@ const Panel: React.FC<PanelProps> = ({
   const positionStyle = {
     ...anchorPositionStyle(anchor),
     width: visible ? `${size}px` : undefined,
-    zIndex,
+    ...(zIndex !== undefined ? { zIndex } : {}),
   };
+  const panelFoldControl =
+    visible && onVisibleChange
+      ? {
+          id: `framework.panel.${anchor}.fold`,
+          slot: "panel-fold",
+          icon: <CloseIcon className="size-small" />,
+          label: collapseLabel,
+          onClick: () => onVisibleChange(false),
+        }
+      : undefined;
 
   // 🎯 An anchor with no tabs renders nothing at rest. Panel-hosted: it becomes a drop target only while a dock
   // drag is in flight, so a tab can be dragged into an otherwise-empty anchor. Chrome-hosted: the sibling
@@ -19689,11 +19926,13 @@ const Panel: React.FC<PanelProps> = ({
     return (
       <LevelProvider level="panel">
         <PanelGhostRoot
+          ref={panelRootRef}
+          {...surfaceActiveProps}
           data-slot="panel"
           data-anchor={anchor}
           data-panel-visible="false"
           data-panel-empty="true"
-          className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground w-fit", isBottom ? "flex-col-reverse" : "flex-col", className)}
+          className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground w-fit", getLevelZClass("panel"), isBottom ? "flex-col-reverse" : "flex-col", className)}
           style={{ ...positionStyle, width: undefined }}
         >
           <PanelEmptyDockZone anchor={anchor} />
@@ -19710,13 +19949,15 @@ const Panel: React.FC<PanelProps> = ({
   return (
     <LevelProvider level="panel">
       <PanelGhostRoot
+        ref={panelRootRef}
+        {...surfaceActiveProps}
         data-slot="panel"
         data-anchor={anchor}
         data-panel-visible={visible ? "true" : "false"}
         data-active-tab-id={activeNode?.id}
         id={visible && activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         dir={flow.inline === "rtl" ? "rtl" : undefined}
-        className={cn("absolute min-w-0 overflow-hidden flex box-border text-foreground", isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
+        className={cn("absolute min-w-0 overflow-visible flex box-border text-foreground", getLevelZClass("panel"), isBottom ? "flex-col-reverse" : "flex-col", !visible && "w-fit", className)}
         style={positionStyle}
       >
         <FlowProvider inline={flow.inline} block={flow.block}>
@@ -19724,12 +19965,13 @@ const Panel: React.FC<PanelProps> = ({
             <>
               <WindowChrome
                 stackSlot="window-chrome-stack"
-                active
+                active={surfaceActive}
                 level="panel"
                 stackClassName={cn("w-full flex-1 min-h-0 bg-transparent", isBottom && "flex-col-reverse")}
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
                 bodyRef={panelContentRef}
+                close={panelFoldControl}
                 titleChips={
                   isChromeHosted ? (
                     <PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} startDepth={1} showActiveColor={visible} />
@@ -19944,12 +20186,15 @@ export const Pane: React.FC<PaneProps> = ({
   maxSize = PANE_DEFAULT_MAX_SIZE,
   resizable = false,
   order = 0,
-  zIndex = 20,
+  zIndex,
   className = "",
   children,
 }) => {
   const host = usePaneHostContext();
   const mobile = useUiMobile();
+  const collapseLabel = useLabel("ui.common.collapse");
+  const paneRootRef = reactHostPort.useRef<HTMLDivElement>(null);
+  const [surfaceActive, surfaceActiveProps] = useSurfaceActive(paneRootRef);
   const effectiveFolded = mobile ? false : folded;
   const flow = flowFromAnchor(anchor);
   const horizontal = anchorHorizontal(anchor);
@@ -19977,13 +20222,30 @@ export const Pane: React.FC<PaneProps> = ({
   });
 
   // 📱 Panes are fixed on mobile — no drag handle, no resize, no fold; width tracks content instead of a persisted size.
-  const positionStyle: React.CSSProperties = { ...anchorPositionStyle(anchor), order, zIndex, width: !mobile && !effectiveFolded && size ? `${size}px` : undefined };
+  const positionStyle: React.CSSProperties = {
+    ...anchorPositionStyle(anchor),
+    order,
+    ...(zIndex !== undefined ? { zIndex } : {}),
+    width: !mobile && !effectiveFolded && size ? `${size}px` : undefined,
+  };
+  const paneFoldControl =
+    !mobile && !effectiveFolded && onFoldToggle
+      ? {
+          id: childElementId(id, "pane", "fold-control"),
+          slot: "pane-fold",
+          icon: <CloseIcon className="size-small" />,
+          label: collapseLabel,
+          onClick: onFoldToggle,
+        }
+      : undefined;
   const resizeSides: readonly ("left" | "right")[] = horizontal === "middle" ? ["left", "right"] : [horizontal === "left" ? "right" : "left"];
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
 
   return (
     <LevelProvider level="pane">
       <div
+        ref={paneRootRef}
+        {...surfaceActiveProps}
         data-slot="pane"
         data-level="pane"
         data-anchor={anchor}
@@ -19991,6 +20253,7 @@ export const Pane: React.FC<PaneProps> = ({
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
           "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
+          getLevelZClass("pane"),
           flow.block === "up" ? "flex-col-reverse" : "flex-col",
           horizontal === "middle" ? "items-center" : "items-start",
           !effectiveFolded && "w-fit",
@@ -20002,11 +20265,12 @@ export const Pane: React.FC<PaneProps> = ({
           <WindowChrome
             stackSlot="window-chrome-stack"
             chipOnly={effectiveFolded}
-            active={!effectiveFolded}
+            active={!effectiveFolded && surfaceActive}
             level="pane"
             stackClassName={cn("bg-transparent", !effectiveFolded && "w-full")}
             bodyClassName="overflow-y-auto p-single"
             bodySlot="pane-body"
+            close={paneFoldControl}
             titleChips={
               <WindowPaneChromeToggle
                 id={childElementId(id, "pane", "fold")}
@@ -26559,7 +26823,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   };
 
   const controlsCap = (
-    <div data-slot="mode-dock-controls-cap" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
+    <div data-slot="mode-dock-controls-cap" data-window-silhouette-chip data-dock="top" className={cn(perTabActiveChrome ? (stackGloballyActive ? windowControlsCapActiveSplitClass : windowControlsCapClass) : stackGloballyActive ? windowControlsCapActiveClass : windowControlsCapClass)}>
       {showMaximize ? (
         <button
           type="button"
@@ -26588,6 +26852,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   const tabGap = (
     <div
       data-slot="mode-dock-tab-gap"
+      data-window-silhouette-gap
       className={cn("relative min-h-medium min-w-0 flex-1 cursor-grab active:cursor-grabbing", perTabActiveChrome ? "z-0" : "z-[1]", gapFrameClass)}
       onPointerUp={(event) => {
         if (event.button !== 0) return;
@@ -26646,7 +26911,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
 
   return (
     <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", glassChromeClass)}>
-      <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
+      <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
             tab.preview === "ghost" ? (
@@ -26724,7 +26989,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
     <LevelProvider level="window">
-      <div ref={setStackEl} data-slot="mode-dock-stack" data-level="window" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
+      <div ref={setStackEl} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
         <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
         {chromeGrid ? (
           <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
@@ -27740,6 +28005,11 @@ if (import.meta.vitest) {
       expect(css).toMatch(/\.window-silhouette-border-loading[\s\S]*?stroke-dashoffset:\s*var\(--loading-border-dashoffset\)/);
       expect(css).toMatch(/\.window-silhouette-border-celebrated-mask[\s\S]*?stroke-width:\s*var\(--celebrate-border-padding\)/);
       expect(css).not.toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?animation:\s*celebrate-border-spin/);
+      expect(css).toContain("[data-window-silhouette]");
+      expect(css).toContain("[data-window-silhouette-border]");
+      expect(css).toContain("[data-window-silhouette-gap]");
+      expect(css).toContain("[data-window-silhouette-chip]");
+      expect(css).not.toMatch(/\[data-slot="mode-dock-stack"\]\s*\[data-slot="window"\]\[data-introduced="true"\]/);
     });
   });
 
@@ -28060,13 +28330,25 @@ if (import.meta.vitest) {
       mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
-      expect(measureWindowSilhouetteMetrics(stack)).toEqual({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 });
+      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        width: 200,
+        height: 100,
+        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        bottom: { depth: 0, chips: [] },
+      });
       stack.setAttribute("data-silhouette-remeasure", "1");
       await waitFor(() => {
         const border = container.querySelector('[data-slot="mode-dock-silhouette-border"]');
         expect(border?.hasAttribute("data-pending")).toBe(false);
         expect(border?.getAttribute("data-kind")).toBe("introduced");
-        expect(border?.querySelector("path")?.getAttribute("d")).toBe(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }));
+        expect(border?.querySelector("path")?.getAttribute("d")).toBe(
+          windowSilhouettePath({
+            width: 200,
+            height: 100,
+            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+            bottom: { depth: 0, chips: [] },
+          }),
+        );
       });
     });
 
@@ -28389,8 +28671,8 @@ if (import.meta.vitest) {
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
       expect(css).toContain('[data-slot="introduction-info-box"]');
       expect(css).toContain('[data-slot="dialog-box"]');
-      expect(css).toContain("window-chrome-silhouette-border");
-      expect(css).toContain('[data-slot="introduction-info-box"]');
+      expect(css).toContain("data-window-silhouette-border");
+      expect(css).toContain('[data-window-silhouette]');
       expect(css).toContain(':not([data-active="true"]):hover');
       expect(css).toContain("stroke: var(--border-emphasized-color)");
       expect(css).toContain("window-silhouette-border-introduced");
@@ -28401,6 +28683,60 @@ if (import.meta.vitest) {
       expect(GLASS_OVERLAY_BOX_CLASS).not.toMatch(/(?:^|\s)border(?:\s|$)/);
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-emphasized");
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
+    });
+
+    it("skips the bottom-right silhouette notch when the introduction next chip is absent", async () => {
+      const steps: IntroductionStepDefinition[] = [
+        { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        {
+          id: "second",
+          title: "Second",
+          body: "Complete the step.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [],
+          ordered: false,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: 0,
+          height: 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-left"]'), { left: 0, right: 50, width: 50, height: 24, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
+      stack.setAttribute("data-silhouette-remeasure", "intro");
+      await waitFor(() => {
+        const path = stack.querySelector('[data-slot="window-chrome-silhouette-border"] path')?.getAttribute("d");
+        expect(path).toBe(
+          windowSilhouettePath({
+            width: 200,
+            height: 100,
+            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+            bottom: { depth: 24, chips: [{ left: 0, right: 50 }, { left: 80, right: 120 }] },
+          }),
+        );
+        expect(path).not.toMatch(/V99 V\d+/);
+      });
     });
 
     it("emphasizes only the introduction body paragraph under the pointer", async () => {
@@ -29920,8 +30256,8 @@ if (import.meta.vitest) {
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
-      expect(css).toContain('[data-slot="window-chrome-gap"]');
-      expect(css).toMatch(/\[data-slot="window-chrome-gap"\][\s\S]*backdrop-filter:\s*none/);
+      expect(css).toContain('[data-window-silhouette-gap]');
+      expect(css).toMatch(/\[data-window-silhouette-gap\][\s\S]*backdrop-filter:\s*none/);
       render(
         <ContextMenu items={[{ id: "demo", label: "Demo action" }]} title="Actions">
           <button type="button">Target</button>
@@ -30208,7 +30544,8 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("ui-scrollbar-hidden");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className).toContain("z-40");
       expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("px-single");
-      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).toContain("w-full");
+      expect(container.querySelector('[data-slot="panel-tabs"]')?.className?.split(" ")).not.toContain("w-full");
+      expect(container.querySelector('[data-slot="window-chrome-gap"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
     });
 
@@ -30229,12 +30566,14 @@ if (import.meta.vitest) {
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const { container: topContainer } = render(<Panel anchor="top-left" visible={false} tabs={tabs} />);
       const topTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(topTabs?.className).toContain("border-b");
+      expect(topTabs?.className).not.toContain("border-b");
       expect(topTabs?.className).not.toContain("border-t");
+      const chromeMarkup = renderToStaticMarkup(<PanelTabBar variant="chrome" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => {}} />);
+      expect(chromeMarkup).toContain("border");
       const { container: bottomContainer } = render(<Panel anchor="bottom-left" visible={false} tabs={tabs} />);
       const bottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
-      expect(bottomTabs?.className).toContain("border-t");
       expect(bottomTabs?.className).not.toContain("border-b");
+      expect(bottomTabs?.className).not.toContain("border-t");
     });
 
     it("Panel keeps its tab button group mounted when folded, but drops content — the tabs are the panel's only chrome", () => {
@@ -30794,8 +31133,8 @@ if (import.meta.vitest) {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
       const tabMarkup = renderToStaticMarkup(<PanelTabBar variant="panel" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => undefined} />);
-      expect(tabMarkup.indexOf(panelTabIconSlotClass)).toBeGreaterThanOrEqual(0);
-      expect(tabMarkup.indexOf(panelTabIconSlotClass)).toBeLessThan(tabMarkup.indexOf(">Tab A<"));
+      expect(tabMarkup).toContain(modeDockTabLabelClassName);
+      expect(tabMarkup.indexOf('data-icon')).toBeLessThan(tabMarkup.indexOf(">Tab A<"));
     });
 
     it("mirrors flow-relative alignment onto logical classes (tree label, navbar trailing slot)", () => {
@@ -30844,49 +31183,103 @@ if (import.meta.vitest) {
     });
 
     it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H1 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 V76 H0 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H139 V75 H50 V99 H1 V75 H1 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 0, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 0, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 V76 H50 V100 H0 V76 H0 Z");
+      const dockTop = (titleRight = 60, controlsLeft = 160, depth = 24): WindowSilhouetteEdge => ({
+        depth,
+        chips: [
+          { left: 0, right: titleRight },
+          { left: controlsLeft, right: 200 },
+        ],
+      });
+      const metrics = (top: WindowSilhouetteEdge, bottom: WindowSilhouetteEdge = { depth: 0, chips: [] }): WindowSilhouetteMetrics => ({
+        width: 200,
+        height: 100,
+        top,
+        bottom,
+      });
+      expect(windowSilhouettePath(metrics(dockTop()), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop()))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H1 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H140 V100 H50 V76 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }))).toBe("M1,1 H60 V25 H160 V1 H199 V75 H140 V99 H50 V75 H1 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H50 V76 H0 Z");
       expect(
         windowSilhouettePath(
-          {
-            width: 200,
-            height: 100,
-            tabsWidth: 60,
-            controlsWidth: 40,
-            capHeight: 24,
-            bottomCapHeight: 24,
-            bottomChips: [
+          metrics(dockTop(), {
+            depth: 24,
+            chips: [
               { left: 0, right: 50 },
               { left: 80, right: 120 },
               { left: 140, right: 200 },
             ],
-          },
+          }),
           0,
         ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H50 V100 H0 V76 H0 Z");
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V76 H140 V100 H120 V76 H80 V100 H50 V76 H0 Z");
       expect(
         windowSilhouettePath(
-          {
-            width: 200,
-            height: 100,
-            tabsWidth: 60,
-            controlsWidth: 40,
-            capHeight: 24,
-            bottomCapHeight: 24,
-            bottomChips: [
+          metrics(dockTop(), {
+            depth: 24,
+            chips: [
               { left: 0, right: 50 },
               { left: 80, right: 120 },
             ],
-          },
+          }),
           0,
         ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 V76 H120 V100 H80 V76 H50 V100 H0 V76 H0 Z");
-      // 🪟 Right/bottom centerlines stay ≥ half a hairline inside the box so overflow clip can't eat them.
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H120 V76 H80 V100 H50 V76 H0 Z");
+      expect(windowSilhouettePath(metrics({ depth: 24, chips: [{ left: 0, right: 60 }] }), 0)).toBe("M0,0 H60 V24 H200 V100 H0 Z");
+      expect(windowSilhouettePath(metrics({ depth: 0, chips: [] }), 0)).toBe("M0,0 H200 V100 H0 Z");
       expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
+    });
+
+    it("windowSilhouetteOutlineViolations stays empty across absent chip slots", () => {
+      const footerSlots = [
+        { left: false, center: false, right: false },
+        { left: true, center: false, right: false },
+        { left: false, center: true, right: false },
+        { left: false, center: false, right: true },
+        { left: true, center: true, right: false },
+        { left: true, center: false, right: true },
+        { left: false, center: true, right: true },
+        { left: true, center: true, right: true },
+      ] as const;
+      const titleModes = [
+        { title: true, controls: true },
+        { title: true, controls: false },
+        { title: false, controls: true },
+      ] as const;
+      for (const titleMode of titleModes) {
+        for (const footer of footerSlots) {
+          const topChips: WindowSilhouetteChip[] = [];
+          if (titleMode.title) topChips.push({ left: 0, right: 60 });
+          if (titleMode.controls) topChips.push({ left: 160, right: 200 });
+          const bottomChips: WindowSilhouetteChip[] = [];
+          if (footer.left) bottomChips.push({ left: 0, right: 50 });
+          if (footer.center) bottomChips.push({ left: 80, right: 120 });
+          if (footer.right) bottomChips.push({ left: 140, right: 200 });
+          const outline = windowSilhouetteOutline({
+            width: 200,
+            height: 100,
+            top: { depth: topChips.length > 0 ? 24 : 0, chips: topChips },
+            bottom: { depth: bottomChips.length > 0 ? 24 : 0, chips: bottomChips },
+          });
+          expect(windowSilhouetteOutlineViolations(outline, { x0: 0, y0: 0, x1: 200, y1: 100 })).toEqual([]);
+        }
+      }
+    });
+
+    it("windowSilhouetteBorderPaint shares one path across every border kind", () => {
+      const metrics: WindowSilhouetteMetrics = {
+        width: 200,
+        height: 100,
+        top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        bottom: { depth: 24, chips: [{ left: 0, right: 50 }, { left: 80, right: 120 }] },
+      };
+      const path = windowSilhouettePath(metrics, 0);
+      for (const kind of WINDOW_SILHOUETTE_BORDER_KINDS) {
+        expect(windowSilhouetteBorderPaint(kind).className).toContain("window-silhouette-border");
+        expect(windowSilhouettePath(metrics, 0)).toBe(path);
+      }
     });
 
     it("resolveWindowSilhouetteBorderKind prefers introduced over loading/waiting and falls back to active/normal", () => {
@@ -31064,7 +31457,8 @@ if (import.meta.vitest) {
       const panel = container.querySelector('[data-slot="panel"]') as HTMLElement | null;
       expect(stack?.className).toContain("z-window");
       expect(stack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.className).toContain("z-[40]");
-      expect(panel?.style.zIndex).toBe("20");
+      expect(panel?.className).toContain("z-panel");
+      expect(panel?.style.zIndex).toBe("");
     });
 
     it("Mode clears multi-tab active chrome on inactive stacks", () => {
@@ -31107,7 +31501,8 @@ if (import.meta.vitest) {
       const activeStack = container.querySelector('[data-slot="mode-dock-stack"][data-active="true"]');
       const inactiveStackTab = inactiveStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
       const activeStackTab = activeStack?.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]');
-      expect(inactiveStackTab?.className).toContain("border-normal");
+      expect(inactiveStackTab?.className).not.toContain("border-normal");
+      expect(inactiveStackTab?.className).not.toContain("!border-normal");
       expect(inactiveStackTab?.className).not.toContain("border-emphasized");
       expect(inactiveStackTab?.className).not.toContain("border-active-base");
       expect(activeStackTab?.className).toContain("bg-active-base");
@@ -31267,7 +31662,8 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("border-0");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-stack-active="true"]')?.className).toContain("z-20");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("z-30");
-      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).toContain("border-normal");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).not.toContain("border-normal");
+      expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).not.toContain("!border-normal");
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="b"]')?.className).not.toContain("border-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="mode-dock-chrome-column"] [data-slot="mode-dock-stack-body"]')).toBeTruthy();
@@ -31334,7 +31730,8 @@ if (import.meta.vitest) {
       expect(gapCell?.className).toContain("flex");
       expect(gapCell?.className).toContain("items-stretch");
       const inactiveTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="shape"]');
-      expect(inactiveTab?.className).toContain("border-normal");
+      expect(inactiveTab?.className).not.toContain("border-normal");
+      expect(inactiveTab?.className).not.toContain("!border-normal");
       expect(inactiveTab?.className).not.toContain("border-emphasized");
       expect(inactiveTab?.className).not.toContain("border-active-base");
       const activeTab = chromeColumn?.querySelector('[data-slot="mode-dock-tab"][data-window-id="energy"]');
@@ -33228,7 +33625,7 @@ if (import.meta.vitest) {
         );
         const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
         host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-        const handle = container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]') as HTMLElement;
+        const handle = container.querySelector('[data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]') as HTMLElement;
         fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
         fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
         expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
@@ -33271,8 +33668,8 @@ if (import.meta.vitest) {
         );
         const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
         host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-        expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
-        expect(container.querySelector('[data-slot="pane-chrome"]')?.textContent).not.toContain("Drag");
+        expect(container.querySelector('[data-slot="window-pane-chrome-toggle"] [data-slot="drag-handle"]')).toBeNull();
+        expect(container.querySelector('[data-slot="window-pane-chrome-toggle"]')?.textContent).not.toContain("Drag");
         const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
         fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
         fireEvent.pointerMove(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
@@ -35935,15 +36332,68 @@ if (treeVitest) {
       expect(css).not.toMatch(/\[data-slot="navbar"\]:focus-within::after/);
       expect(css).not.toMatch(/\[data-slot="footer"\]:focus-within::before/);
       expect(css).toContain("background-color: var(--border-emphasized-color)");
-      expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\],\s*\[data-slot="introduction-info-box"\][\s\S]*?window-chrome-silhouette-border/);
+      expect(css).toMatch(/\[data-window-silhouette\]:not\(\[data-active="true"\]\):hover \[data-window-silhouette-border\]\[data-kind="normal"\] path/);
+      expect(css).toMatch(/:is\(\[data-slot="panel"\]\[data-panel="mobilePanel"\]\):hover\s*\[data-slot="chrome-frame"\]/);
+      expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):hover\s*\[data-slot="chrome-frame"\]/);
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
-      expect(css).toContain('[data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path');
       expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
       expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
     });
 
+    it("panel and pane silhouettes stay normal until the surface receives focus and expose fold controls", async () => {
+      const { fireEvent, render, waitFor } = await import("@testing-library/react");
+      const tabs = [
+        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
+        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
+      ];
+      const onVisibleChange = vi.fn();
+      const onFoldToggle = vi.fn();
+      const { container: panelContainer } = render(<Panel anchor="top-left" visible onVisibleChange={onVisibleChange} tabs={tabs} activeTabPath={["tab-a"]} />);
+      const panelStack = panelContainer.querySelector('[data-slot="panel"] [data-slot="window-chrome-stack"]') as HTMLElement;
+      expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(panelContainer.querySelector('[data-slot="panel-fold"]')).toBeTruthy();
+      fireEvent.pointerDown(panelStack.querySelector('[data-slot="panel-tab-button"]')!);
+      await waitFor(() => {
+        expect(panelStack.getAttribute("data-active")).toBe("true");
+        expect(panelStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
+      fireEvent.click(panelContainer.querySelector('[data-slot="panel-fold"]')!);
+      expect(onVisibleChange).toHaveBeenCalledWith(false);
+
+      const { container: paneContainer } = render(
+        <PaneHost>
+          <Pane id="focus-pane" anchor="top-right" icon="box" label="Pane" onFoldToggle={onFoldToggle}>
+            <div>Pane body</div>
+          </Pane>
+        </PaneHost>,
+      );
+      const paneStack = paneContainer.querySelector('[data-slot="pane"] [data-slot="window-chrome-stack"]') as HTMLElement;
+      expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
+      expect(paneContainer.querySelector('[data-slot="pane-fold"]')).toBeTruthy();
+      fireEvent.pointerDown(paneStack.querySelector('[data-slot="pane-body"]')!);
+      await waitFor(() => {
+        expect(paneStack.getAttribute("data-active")).toBe("true");
+        expect(paneStack.querySelector('[data-slot="window-chrome-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
+      });
+      fireEvent.click(paneContainer.querySelector('[data-slot="pane-fold"]')!);
+      expect(onFoldToggle).toHaveBeenCalled();
+    });
+
+    it("panel window-variant tabs use mode-dock pill chrome and reserve a U-gap", () => {
+      const tabs = [
+        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
+        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
+      ];
+      const markup = renderToStaticMarkup(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+      expect(markup).toContain("bg-active-base");
+      expect(markup).toContain("border-0");
+      expect(markup).toContain('data-window-silhouette');
+      expect(markup).toContain('data-slot="window-chrome-gap"');
+      expect(markup).not.toContain("border-e");
+    });
+
     it("pane and panel chrome toggles keep the drag handle inside data-hover-scope so parent hover can emphasize it", () => {
-      const paneMarkup = renderToStaticMarkup(<WindowPaneChromeToggle id="ui.pane.toggle.hover" icon={WINDOW_PANE_MEASURES_ICON} label="Options" />);
+      const paneMarkup = renderToStaticMarkup(<WindowPaneChromeToggle id="ui.pane.toggle.hover" icon={WINDOW_PANE_MEASURES_ICON} label="Options" dragPointerProps={{ onPointerDown: () => {} }} />);
       expect(paneMarkup).toContain("data-hover-scope");
       expect(paneMarkup).toContain('data-slot="drag-handle"');
       expect(paneMarkup).toMatch(/data-hover-scope[\s\S]*data-slot="drag-handle"/);

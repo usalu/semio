@@ -673,17 +673,11 @@ pub struct Puzzle2dEdge {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "lowercase")]
 pub enum Puzzle2dCompatSpecificity {
-    #[dsl(key = "general")]
     General,
-    #[dsl(key = "node")]
     Node,
-    #[dsl(key = "edge")]
     Edge,
-    #[dsl(key = "handle")]
     Handle,
-    #[dsl(key = "wire")]
     Wire,
-    #[dsl(key = "vortex")]
     Vortex,
 }
 
@@ -708,6 +702,7 @@ pub struct Puzzle2dMeta {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub manifest_id: Option<String>,
     #[serde(default)]
+    #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle2dKindCompatibility>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<serde_json::Value>,
@@ -724,8 +719,10 @@ pub struct Puzzle2dProjection {
     #[dsl(block)]
     pub camera: Puzzle2dCamera,
     #[serde(default)]
+    #[dsl(table)]
     pub nodes: Vec<Puzzle2dNode>,
     #[serde(default)]
+    #[dsl(table)]
     pub edges: Vec<Puzzle2dEdge>,
     #[serde(default)]
     #[dsl(block)]
@@ -5125,26 +5122,6 @@ mod force_graph_tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle2d"), include_str!("../example/nakagin-capsule-tower.puzzle2d")] {
             let projection = Puzzle2dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
-        }
-    }
-
-    // TEMP DEBUG PROBE — delete before finishing.
-    #[test]
-    fn zzz_probe_minimal() {
-        use crate::Puzzle2dProjection;
-        use vcs::DocumentDsl;
-        let text = r#"schema="puzzle.2d.fixture"
-camera {
-  x=0 y=0 zoom=1
-}
-nodes= [ id="n1" node-kind="Kind A" x=1 y=2 handles= [ id="n1@v0" handle-kind="b-l" angle=1 radius=1 id="n1@v1" handle-kind="b-l" angle=2 radius=1 ] ] edges= [ ]
-meta {
-  kind-compatibility= [ ]
-}
-"#;
-        match Puzzle2dProjection::parse_dsl(text) {
-            Ok(p) => eprintln!("[DEBUG] minimal OK: {} nodes, {} edges, node0.handles={}", p.nodes.len(), p.edges.len(), p.nodes.first().map(|n| n.handles.len()).unwrap_or(0)),
-            Err(e) => eprintln!("[DEBUG] minimal ERR: {:?}", e),
         }
     }
 }

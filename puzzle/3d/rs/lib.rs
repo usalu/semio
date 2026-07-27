@@ -3253,12 +3253,16 @@ pub struct Puzzle3dCatalogAttractionKind {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle3dKindCatalogs {
     #[serde(default)]
+    #[dsl(table)]
     pub objects: Vec<Puzzle3dCatalogObjectKind>,
     #[serde(default)]
+    #[dsl(table)]
     pub vortices: Vec<Puzzle3dCatalogVortexKind>,
     #[serde(default)]
+    #[dsl(table)]
     pub cables: Vec<Puzzle3dCatalogCableKind>,
     #[serde(default)]
+    #[dsl(table)]
     pub attractions: Vec<Puzzle3dCatalogAttractionKind>,
 }
 
@@ -3271,6 +3275,7 @@ pub struct Puzzle3dMeta {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle3dKindCatalogs>,
     #[serde(default)]
+    #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle3dKindCompatibility>,
 }
 
@@ -3290,12 +3295,16 @@ pub struct Puzzle3dProjection {
     #[serde(default)]
     pub meta: Puzzle3dMeta,
     #[serde(default)]
+    #[dsl(table)]
     pub objects: Vec<Puzzle3dObject>,
     #[serde(default)]
+    #[dsl(table)]
     pub attractions: Vec<Puzzle3dAttraction>,
     #[serde(default)]
+    #[dsl(table)]
     pub target_volumes: Vec<Puzzle3dTargetVolume>,
     #[serde(default)]
+    #[dsl(table)]
     pub references: Vec<Puzzle3dReference>,
 }
 

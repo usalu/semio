@@ -1,0 +1,77 @@
+pack (facade) — wave 0 implementation summary
+================================================
+
+File: /Users/ueli/Documents/semio/pack/rs/lib.rs
+File: /Users/ueli/Documents/semio/pack/rs/Cargo.toml (added [features] section)
+
+What was implemented
+---------------------
+Single-file facade crate per the "## pack (facade)" contract section, re-exporting the FULL
+public surface (not just the contract's illustrative subset) of all seven sibling crates, plus
+the three top-level convenience functions.
+
+Regions:
+- //#region 🔖Reexports
+  - 🔖Core:    ByteRange, ByteReader, ByteWriter, ChunkId, CodecId, CompressionCodec, ContentHash,
+               all KIND_* consts, NoCompression, PackError, PackLimits, PackSink, PackSource,
+               SegmentKind, crc32c, varint fns.
+  - 🔖Format:  MAGIC/HEADER_SIZE/FORMAT_VERSION_*/FOOTER_*/REQUIRED_*/OPTIONAL_* consts, Header,
+               Footer, Manifest, PackFile, PackWriter, Superblock, VerificationLevel,
+               WriteOptions, RecoveryReport, encode_symbols, read_footer_only, recover, and
+               DeflateCodec (cfg-gated on this crate's own `deflate` feature, default-on,
+               forwarding to `pack_format/deflate`).
+  - 🔖Value:   DecodeOptions, DecodeReport, EncodeOptions, schema_hash.
+  - 🔖Io:      FilePackSink, FilePackSource, StreamingPackWriter, recover_file, write_atomic —
+               all `#[cfg(not(target_arch = "wasm32"))]` per contract.
+  - 🔖Async:   AsyncPackSource, BoundedDemand, CancellationToken, DemandPermit, LoadPriority,
+               ReadRequest, ReadScheduler.
+  - 🔖Http:    ChunkLruCache, HttpPackSource, RangeRequest, RangeResponse, RangeTransport,
+               RetryPolicy, and UreqRangeTransport (cfg-gated on this crate's own `ureq`
+               feature, off by default, forwarding to `pack_http/ureq`, keeping wasm builds
+               lean per the contract).
+  - 🔖Index:   FieldIndexBuilder, FieldIndexEntry, FieldIndexReader, FieldPath.
+- //#region 🔖Encode: encode_document/decode_document (thin forwards onto pack_value) and
+  content_hash (thin forward onto pack_format::read_footer_only).
+- //#region 🧪Tests: builds a 3-field dsl_schema::RecordSpec (Shape::Text, Shape::UInt,
+  Shape::Bool) + matching RecordValue by hand, round-trips it through
+  pack::encode_document/decode_document (asserting decoded fields, no unknown_field_ids, no
+  schema_drift), and separately asserts encode_document is byte-identical across two calls and
+  pack::content_hash is stable across both encodes.
+
+Reconciliation vs. contract's illustrative re-export list
+-----------------------------------------------------------
+The contract's `## pack (facade)` code sketch lists only a subset of each sibling's public
+items (e.g. omits pack_format's flag/magic constants, encode_symbols/recover/read_footer_only,
+DeflateCodec; omits pack_io's recover_file; omits pack_async's ReadRequest/BoundedDemand/
+DemandPermit — the last two of which are structurally required to actually call
+`ReadScheduler::read`/`BoundedDemand::acquire` from a `pack`-only dependent; omits pack_http's
+RetryPolicy/UreqRangeTransport). Per the task instructions ("re-export the full public surface"),
+this implementation re-exports every top-level `pub` item each sibling crate actually exports,
+using the sibling lib.rs files as source of truth. No sibling crate was missing anything the
+contract promised — all reconciliation was "contract's list was a subset of the real surface",
+handled by re-exporting more, not less.
+
+Added two facade-owned Cargo features (not in the contract, needed to make the extra reexports
+compile safely):
+- `deflate` (default-on) — forwards to `pack_format/deflate`, gates the `DeflateCodec` reexport.
+- `ureq` (off by default) — forwards to `pack_http/ureq`, gates the `UreqRangeTransport` reexport.
+
+Verification performed
+------------------------
+- `cargo check -p pack` — clean (no warnings in this crate).
+- `cargo test -p pack` — 2/2 tests pass:
+  - tests::facade_encode_document_decode_document_round_trip
+  - tests::facade_content_hash_is_stable_across_two_encodes
+- `cargo check -p pack --target wasm32-unknown-unknown` — clean (proves the wasm32-cfg-gating
+  of pack_io reexports and the crate's dsl_schema-touching signatures all compile for wasm32).
+- `cargo check -p pack --no-default-features` — clean.
+- `cargo check -p pack --features ureq` — clean.
+- `cargo clippy -p pack --all-targets` — no warnings attributed to pack/rs/lib.rs (the only
+  clippy warnings in the run are pre-existing, in pack_async and pack_value, out of scope).
+
+All run from /Users/ueli/Documents/semio as instructed.
+
+Nothing outside /Users/ueli/Documents/semio/pack/rs/{lib.rs,Cargo.toml} and this ticket folder
+was touched. Did not add to workspace [workspace] members, did not create project.json/
+script.ts, did not touch .vscode/launch.json, per contract's "Workspace-wide requirements".
+No git commands were run.

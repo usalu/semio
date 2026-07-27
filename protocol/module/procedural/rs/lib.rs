@@ -118,7 +118,6 @@ fn default_payload() -> ModuleRenderPayload {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum ModulePayloadOperation {
-    #[dsl(key = "set-payload")]
     SetPayload {
         #[dsl(block)]
         payload: ModuleRenderPayload,

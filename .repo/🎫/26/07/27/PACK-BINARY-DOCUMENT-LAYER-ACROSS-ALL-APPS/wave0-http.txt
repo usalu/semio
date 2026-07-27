@@ -1,0 +1,151 @@
+pack_http — wave 0 implementation summary
+==========================================
+
+Crate: pack/http/rs (package pack_http)
+Files touched: pack/http/rs/lib.rs (full implementation, replaced placeholder)
+               pack/http/rs/Cargo.toml (added `[dev-dependencies] futures-lite = "2"` for tests'
+               `block_on`; the ureq dep/feature and pack_core/pack_format/pack_async path deps
+               were already scaffolded and untouched otherwise)
+No other files touched. Did not touch project.json/script.ts (already scaffolded). Did not touch
+the root Cargo.toml workspace members list (pack/http/rs already listed).
+
+What was implemented (regions, matching contract.md's "## pack_http" section verbatim for all
+public signatures):
+
+//#region 🔖Transport
+- `RangeRequest { url: String, range: pack_core::ByteRange, if_range_etag: Option<String> }`
+- `RangeResponse { bytes: Vec<u8>, etag: Option<String>, total_len: Option<u64>, range_satisfied: bool }`
+- `RangeTransport` trait via `#[async_trait::async_trait]`, `Send + Sync`, one method
+  `async fn fetch_range(&self, request: RangeRequest) -> Result<RangeResponse, pack_core::PackError>`.
+  This is the injection seam: no concrete HTTP client type appears anywhere in the public API —
+  grep confirms `ureq` is referenced only inside the `#[cfg(feature = "ureq")] mod ureq_transport`
+  region.
+
+//#region 🔖Source
+- `RetryPolicy { max_retries: u32, initial_backoff: Duration, max_backoff: Duration }` with
+  `Default` (3 retries, 50ms initial, 2s cap) — additive vs. the contract sketch ("retry policy"
+  was named but left unspecified in the struct comment), exposed via `with_retry_policy` so
+  callers/tests can tune it.
+- `HttpPackSource<T: RangeTransport>` does NOT hold the transport/url directly. Per the
+  contract's explicit note "coalesces via an internal pack_async::ReadScheduler", it instead
+  wraps `pack_async::ReadScheduler<InnerSource<T>>`, where `InnerSource<T>` (private) owns
+  `url`/`transport`/`retry_policy` and is itself the thing that implements
+  `pack_async::AsyncPackSource` and performs the retrying, etag-revalidating physical fetch in
+  its `read_at`. `HttpPackSource::read_at` builds a `pack_async::ReadRequest` (priority
+  `Requested`) and a throwaway `pack_async::CancellationToken`, then delegates to
+  `self.scheduler.read(...)` — this is what gives `HttpPackSource` request coalescing/dedup for
+  free from `pack_async`'s `ReadScheduler` rather than reimplementing it.
+- Problem this raised: `pack_async::ReadScheduler` has no accessor back to its wrapped source
+  (fields are private, no getter), but `AsyncPackSource::len()` must be answerable synchronously
+  from `HttpPackSource` itself. Fixed with a `SharedState { last_etag: Mutex<Option<String>>,
+  known_len: AtomicU64 }` behind an `Arc`, held by both `HttpPackSource` (for `len()`) and
+  `InnerSource` (which is the only thing that ever writes into it, from observed
+  `RangeResponse.etag`/`total_len`). `LEN_UNKNOWN = u64::MAX` sentinel since `AtomicU64` has no
+  `Option`.
+- Retry/backoff: `InnerSource::fetch_with_retry` treats any `PackError::Io(_)` returned by the
+  transport as transient (that's the only variant a transport failure can plausibly map to in
+  the contract-fixed `PackError` enum — no dedicated `Transient`/`Network` variant exists) and
+  retries up to `retry_policy.max_retries` times with exponentially doubling backoff
+  (`initial_backoff * 2^attempt`, capped at `max_backoff`), via a small hand-rolled
+  runtime-neutral `sleep()` future (busy-poll + short thread sleep between polls, same pattern
+  `pack_async`'s own `CancelWatch` uses — no tokio, no new async-runtime dependency).
+- Etag revalidation: every fetch reads the last-seen etag from `SharedState` and forwards it as
+  `if_range_etag` on the *next* request; every response's `etag` (if present) overwrites
+  `SharedState.last_etag` for the one after that.
+- `read_at` truncates/validates: if the transport returns fewer bytes than requested, returns
+  `PackError::Truncated`; otherwise slices to exactly `len` bytes (defensive even though
+  `RangeResponse.range_satisfied` is available for callers who want stricter Range-header
+  compliance checks — that flag is threaded through untouched for now, no caller in this crate
+  currently branches on it beyond what `fetch_with_retry`/`read_at` need).
+
+//#region 🔖Cache
+- `ChunkLruCache::new(capacity_bytes) / get(&ContentHash) -> Option<Vec<u8>> / put(ContentHash,
+  Vec<u8>)` matching the contract signatures exactly, plus additive `size_bytes()`/`len()`/
+  `is_empty()` for tests and callers who want introspection.
+- Implementation: `HashMap<ContentHash, usize>` index into a `Vec<Option<LruSlot>>` arena, with
+  each `LruSlot` carrying manual `prev`/`next` `usize` links (a hand-rolled intrusive doubly-
+  linked list, `NONE = usize::MAX` sentinel) for O(1) recency reordering on `get`/`put` and O(1)
+  LRU eviction from the tail. Vacated arena slots are recycled via a `free: Vec<usize>` stack so
+  repeated churn doesn't grow the arena unbounded. No external `lru` crate, no `unsafe`. The
+  whole mutable state (`LruState`) sits behind one `Mutex` so the public API can take `&self`
+  (matching the contract's `get`/`put` signatures) while still supporting concurrent callers.
+  Eviction on `put` loops until `size_bytes <= capacity_bytes`, but always keeps at least the
+  just-inserted/updated entry (never evicts down to zero even for an entry larger than the whole
+  capacity) — `put` is infallible, matching its signature.
+
+//#region 🔖Ureq (feature `ureq`, off by default)
+- `UreqRangeTransport` wraps a `ureq::Agent`, implements `RangeTransport`. `fetch_range` runs the
+  blocking `ureq` call (`Range`/`If-Range` headers set from the request) on a dedicated
+  `std::thread::spawn` so the `async fn` itself never blocks a caller's executor thread; parses
+  `ETag` and `Content-Range: bytes start-end/total` response headers for `etag`/`total_len`,
+  treats HTTP 206 as `range_satisfied: true`.
+- `[features] ureq = ["dep:ureq"]`, off by default — confirmed the crate's default-feature build
+  never pulls in `ureq` (grep of the default `cargo tree -p pack_http` / the earlier successful
+  `cargo test -p pack_http` without `--features ureq` shows no `ureq`/`rustls`/`ring` in the
+  compiled set).
+
+//#region 🧪Tests (inline `#[cfg(test)] mod tests`, flat `#[test]` fns — nothing here is slow
+enough to warrant quick/long/exhaustive submodules):
+Transport (all against a `FakeTransport` in-memory `RangeTransport` test double — no real
+network calls anywhere in the test suite):
+1. successful_range_fetch_returns_exact_slice — exact byte slice + `len()` reflects `total_len`
+   observed from the fake response.
+2. etag_is_forwarded_as_if_range_on_the_next_fetch_for_revalidation — two sequential (not
+   concurrent) `read_at` calls; asserts the first request carries no `if_range_etag` and the
+   second carries the etag observed from the first response. (Sequential, not concurrent, is
+   deliberate: it's what proves revalidation without `ReadScheduler`'s coalescing conflating the
+   two into one physical fetch — coalescing only folds together requests that are concurrently
+   in flight.)
+3. transient_failure_is_retried_and_eventually_succeeds — `FakeTransport` scripted to fail
+   twice (`PackError::Io`) then succeed; asserts the final result is correct and exactly 3 calls
+   were made (2 failures + 1 success).
+4. exhausting_retries_surfaces_the_transient_error — `FakeTransport` scripted to fail more times
+   than `max_retries` allows; asserts the error propagates and exactly `max_retries + 1` calls
+   were made.
+Cache:
+5. cache_get_put_roundtrip
+6. cache_evicts_least_recently_used_under_capacity_pressure — 3×10-byte entries at a 30-byte
+   cap, then a 4th push forces eviction of the least-recently-used (first-inserted) entry.
+7. cache_get_promotes_entry_to_most_recently_used — `get`ing an entry before the next `put`
+   changes which entry is evicted, proving `get` promotes recency.
+8. cache_put_overwriting_existing_key_updates_size_accounting — re-`put`ting an existing key
+   with a smaller payload updates `size_bytes()` correctly (no double-counting/leak).
+
+Test-double design note: `FakeTransport` is `#[derive(Clone)]` with every field behind `Arc`
+(`Arc<Vec<u8>>`, `Arc<str>`, `Arc<AtomicU32>`, `Arc<Mutex<Vec<RangeRequest>>>`) so a test can
+hand one clone to `HttpPackSource::new` (which consumes `T: RangeTransport` by value, and — now
+that it wraps `ReadScheduler<InnerSource<T>>` — no longer exposes the transport back out) while
+keeping a second clone (`inspector`) around afterward to assert on `call_count`/`requests_seen`.
+
+Verification actually run (from /Users/ueli/Documents/semio):
+- `cargo check -p pack_http` — clean, zero warnings from this crate (only a pre-existing,
+  unrelated `pack_cli` manifest warning about dual lib/bin targets, outside this crate).
+- `cargo clippy -p pack_http --all-targets` (default features) and
+  `cargo clippy -p pack_http --all-targets --features ureq` — both clean for this crate; the
+  only warning printed in either run is a pre-existing `clippy::len_without_is_empty` on
+  `pack_async::AsyncPackSource` itself (pack_async's trait, not this crate — `AsyncPackSource`
+  is contract-fixed and can't be changed here).
+- `cargo test -p pack_http` (default features, no `ureq`) — 8/8 passed. Re-ran 5 more times in a
+  loop to check for flakiness in the timing-sensitive retry/backoff tests — green every time
+  (`RetryPolicy` in those tests uses 1ms initial/5-20ms max backoff so real elapsed time is
+  negligible and doesn't require faking a clock).
+- `cargo test -p pack_http --features ureq` — compiles clean and the same 8/8 tests pass (the
+  `ureq`-gated `UreqRangeTransport` isn't itself exercised by a test — no real network calls are
+  made anywhere in this crate's test suite — but its compilation under the feature flag was
+  verified, so per the task instructions this is reported rather than treated as blocking; no
+  compilation issues were hit, ureq pulled in cleanly in this sandbox).
+
+Cross-crate notes for downstream agents:
+- `HttpPackSource<T>` no longer exposes its `RangeTransport` or URL after construction (they're
+  owned by the private `InnerSource<T>` living inside its internal `ReadScheduler`). Anything
+  that needs to inspect transport-level state after construction should keep its own handle to
+  the transport before handing it to `HttpPackSource::new`/`with_retry_policy` (see the
+  `FakeTransport`/`inspector` pattern in the tests above).
+- `ChunkLruCache` is keyed by `pack_core::ContentHash` only (not `(url, range)` as the contract's
+  comment mentions as an alternative) — this matches the concrete `get`/`put` signatures the
+  contract fixes (`&ContentHash` / `ContentHash`), so `(url, range)`-keying would require a
+  different public API than what's specified; callers needing that keying scheme can hash
+  `(url, range)` themselves into a `ContentHash`-shaped key before calling `put`/`get`.
+- `PackError::Io(_)` is pack_http's convention for "the transport failure was transient, retry
+  it" — any `RangeTransport` impl that wants a permanent failure to NOT be retried should return
+  a different `PackError` variant (e.g. `Malformed`/`LimitExceeded`) instead of `Io`.

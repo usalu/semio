@@ -4,55 +4,56 @@
     {
       "name": "e2e_filter_nakagin_design",
       "tier": "e2e",
-      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name",
+      "query": "MATCH (d:Design) WHERE d.name = \"Nakagin Capsule Tower\" RETURN d.name",
       "expect": {
-        "columns": ["name"],
+        "columns": ["d.name"],
         "minRows": 1,
         "maxRows": 1,
-        "rowContains": [{ "name": "Nakagin Capsule Tower" }]
+        "rowContains": [{ "d.name": "Nakagin Capsule Tower" }]
       }
     },
     {
       "name": "e2e_list_all_design_names",
       "tier": "e2e",
-      "query": "MATCH (d:Design) RETURN d.name AS name",
+      "query": "MATCH (d:Design) RETURN d.name",
       "expect": {
-        "columns": ["name"],
+        "columns": ["d.name"],
         "minRows": 2,
-        "valuesInclude": { "name": ["Nakagin Capsule Tower", "Other Pavilion"] }
+        "valuesInclude": { "d.name": ["Nakagin Capsule Tower", "Other Pavilion"] }
       }
     },
     {
       "name": "e2e_match_type_by_name",
       "tier": "e2e",
-      "query": "MATCH (t:Type) WHERE t.name = 'KindBeta' RETURN t.name AS name",
+      "query": "MATCH (t:Type) WHERE t.name = \"KindBeta\" RETURN t.name",
       "expect": {
-        "columns": ["name"],
+        "columns": ["t.name"],
         "minRows": 1,
-        "rowContains": [{ "name": "KindBeta" }]
+        "rowContains": [{ "t.name": "KindBeta" }]
       }
     },
     {
-      "name": "e2e_return_limit_one_design",
+      "name": "e2e_filter_designs_excluding_other_pavilion",
       "tier": "e2e",
-      "query": "MATCH (d:Design) RETURN d.name AS name LIMIT 1",
+      "query": "MATCH (d:Design) WHERE d.name != \"Other Pavilion\" RETURN d.name",
       "expect": {
-        "columns": ["name"],
+        "columns": ["d.name"],
         "minRows": 1,
-        "maxRows": 1
+        "maxRows": 1,
+        "rowContains": [{ "d.name": "Nakagin Capsule Tower" }]
       }
     },
     {
       "name": "e2e_call_session_end",
       "tier": "e2e",
       "runtime": "empty",
-      "query": "CALL session.end() YIELD ok",
+      "query": "CALL sessionEnd() RETURN result",
       "expect": { "minRows": 1 }
     },
     {
       "name": "memory_two_designs_where_ne",
       "tier": "memory",
-      "query": "MATCH (d:Design) WHERE d.name != 'Other Pavilion' RETURN d.name AS name",
+      "query": "MATCH (d:Design) WHERE d.name != \"Other Pavilion\" RETURN d.name",
       "graphqlResponses": [
         {
           "data": {
@@ -94,16 +95,16 @@
         }
       ],
       "expect": {
-        "columns": ["name"],
+        "columns": ["d.name"],
         "minRows": 1,
-        "valuesInclude": { "name": ["Nakagin Capsule Tower"] },
-        "valuesExclude": { "name": ["Other Pavilion"] }
+        "valuesInclude": { "d.name": ["Nakagin Capsule Tower"] },
+        "valuesExclude": { "d.name": ["Other Pavilion"] }
       }
     },
     {
       "name": "memory_types_multi_row",
       "tier": "memory",
-      "query": "MATCH (t:Type) RETURN t.name AS name",
+      "query": "MATCH (t:Type) RETURN t.name",
       "graphqlResponses": [
         {
           "data": {
@@ -130,15 +131,15 @@
         }
       ],
       "expect": {
-        "columns": ["name"],
+        "columns": ["t.name"],
         "minRows": 3,
-        "valuesInclude": { "name": ["KindAlpha", "KindBeta", "KindGamma"] }
+        "valuesInclude": { "t.name": ["KindAlpha", "KindBeta", "KindGamma"] }
       }
     },
     {
       "name": "memory_call_session_end",
       "tier": "memory",
-      "query": "CALL session.end() YIELD ok",
+      "query": "CALL sessionEnd() RETURN result",
       "graphqlResponses": [
         {
           "data": {
@@ -153,32 +154,32 @@
     {
       "name": "memory_call_subscription_session",
       "tier": "memory",
-      "query": "CALL subscription.session() YIELD session.id AS id",
+      "query": "CALL subscriptionSession() RETURN result",
       "graphqlResponses": [{ "data": { "session": { "id": "s1", "hash": "h1" } } }],
       "expect": { "minRows": 1 }
     },
     {
-      "name": "plan_design_node_props_filter",
+      "name": "plan_design_where_filter",
       "tier": "plan",
-      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}) RETURN d.name AS name",
+      "query": "MATCH (d:Design) WHERE d.name = \"Nakagin Capsule Tower\" RETURN d.name",
       "expect": { "minFilterSteps": 1 }
     },
     {
       "name": "plan_design_and_type_patterns",
       "tier": "plan",
-      "query": "MATCH (d:Design {name: 'Nakagin Capsule Tower'}), (t:Type {name: 'KindBeta'}) RETURN d.name AS dn, t.name AS tn",
+      "query": "MATCH (d:Design), (t:Type) WHERE d.name = \"Nakagin Capsule Tower\" AND t.name = \"KindBeta\" RETURN d.name, t.name",
       "expect": { "minGraphQlSteps": 2 }
     },
     {
-      "name": "plan_nakagin_multipattern_join",
+      "name": "plan_nakagin_shared_design_join",
       "tier": "plan",
-      "query": "MATCH (pi:Piece)-[:HAS]->(b:Blueprint)-[:IS]->(t:Type)-[:HAS]->(cr:Connector),(cr)<-[:REFERENCES]-(s:Side)<-[:HAS {parent: true}]-(cn:Connection)<-[:HAS]-(d:Design {name: 'Nakagin Capsule Tower'}) RETURN pi",
-      "expect": { "minGraphQlSteps": 1, "joinVars": ["cr"] }
+      "query": "MATCH (d:Design)--[:HAS]->(pi:Piece), (d:Design)--[:HAS]->(cn:Connection) WHERE d.name = \"Nakagin Capsule Tower\" RETURN pi",
+      "expect": { "minGraphQlSteps": 2, "joinVars": ["d"] }
     },
     {
-      "name": "parse_rel_parent_props",
+      "name": "parse_parent_predicate_pattern",
       "tier": "parse",
-      "query": "MATCH (s:Side)<-[:HAS {parent: true}]-(cn:Connection) RETURN s",
+      "query": "MATCH (cn:Connection)--[:PARENT]->(s:Side) RETURN s",
       "expect": { "hasReturn": true }
     }
   ]

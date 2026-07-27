@@ -20,3 +20,8 @@ pack_async = { path = "../async/rs" }
 pack_http = { path = "../http/rs" }
 pack_index = { path = "../index/rs" }
 dsl_schema = { path = "../../dsl/schema/rs" }
+
+[features]
+default = ["deflate"]
+deflate = ["pack_format/deflate"]
+ureq = ["pack_http/ureq"]

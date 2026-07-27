@@ -1,4 +1,8 @@
-//! @emoji 🏛️ `architect` — Cypher-inspired compose query language: parse, plan GraphQL, execute via `Transport`.
+//! @emoji 🏛️ `architect` — compose query language: Jack (mathematical_graph_dsl) is the parsing
+//! front end, this crate owns only the GraphQL planner/executor that lowers Jack's AST into
+//! `Transport` calls. See `plans/every-dsl-must-be-crispy-shell.md` (Wave 2 / P9) for the
+//! repo-wide unified-DSL-syntax rationale: Architect used to carry its own hand-rolled `nom`
+//! lexer/parser/AST; that is gone now, replaced by `mathematical_graph_dsl::parse`.
 
 #![allow(clippy::too_many_lines, reason = "planner/wasm_api export match arms enumerate every AST/Step variant inline; splitting them up would scatter one concept across helper fns for no clarity gain")]
 
@@ -13,6 +17,13 @@ pub use transport::{MemoryTransport, OpKind, Transport, TransportError};
 
 #[cfg(target_arch = "wasm32")]
 pub use wasm_api::{architect_compile, architect_run};
+
+/// 🌉 `mathematical_graph_manifest::PropertyValue` (Jack literal values) <-> `serde_json::Value`
+/// (GraphQL/row values) — `PropertyValue` is `#[serde(untagged)]`, so this is exactly its JSON
+/// shape; shared by `schema::call_variables`, `executor`'s `WHERE` comparisons, and `wasm_api`.
+fn property_value_to_json(value: &mathematical_graph_manifest::PropertyValue) -> serde_json::Value {
+    serde_json::to_value(value).unwrap_or(serde_json::Value::Null)
+}
 
 //#region 🔖Errors
 mod errors {
@@ -33,420 +44,10 @@ mod errors {
 }
 //#endregion 🔖Errors
 
-//#region 🔖Ast
-mod ast {
-    use serde::{Deserialize, Serialize};
-    use std::collections::BTreeMap;
-
-    /// @emoji 🌳 Parsed architect statement.
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct Query {
-        pub clauses: Vec<Clause>,
-        pub return_clause: Option<ReturnClause>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
-    pub enum Clause {
-        Match(MatchClause),
-        With(WithClause),
-        Unwind(UnwindClause),
-        Call(CallClause),
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct MatchClause {
-        pub patterns: Vec<Pattern>,
-        pub where_expr: Option<Expr>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct WithClause {
-        pub projections: Vec<ProjectionItem>,
-        pub where_expr: Option<Expr>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct UnwindClause {
-        pub source: Expr,
-        pub alias: String,
-        pub where_expr: Option<Expr>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct CallClause {
-        pub action_id: String,
-        pub args: BTreeMap<String, serde_json::Value>,
-        pub yield_items: Vec<YieldItem>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct ReturnClause {
-        pub projections: Vec<ProjectionItem>,
-        pub order_by: Option<Expr>,
-        pub limit: Option<usize>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct ProjectionItem {
-        pub expr: Expr,
-        pub alias: Option<String>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct YieldItem {
-        pub key: String,
-        pub alias: Option<String>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct Pattern {
-        pub elements: Vec<PatternElement>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
-    pub enum PatternElement {
-        Node(NodePattern),
-        Rel(RelPattern),
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct NodePattern {
-        pub var_name: Option<String>,
-        pub label: Option<String>,
-        pub props: BTreeMap<String, serde_json::Value>,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    pub struct RelPattern {
-        pub types: Vec<String>,
-        pub direction: RelDirection,
-        pub props: BTreeMap<String, serde_json::Value>,
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-    #[serde(rename_all = "camelCase")]
-    pub enum RelDirection {
-        Out,
-        In,
-        Undirected,
-    }
-
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
-    pub enum Expr {
-        Const(serde_json::Value),
-        Var { name: String },
-        Field { object: Box<Expr>, name: String },
-        BinaryOperator { operator: BinaryOperator, left: Box<Expr>, right: Box<Expr> },
-        UnaryNeg(Box<Expr>),
-        And(Vec<Expr>),
-        Or(Vec<Expr>),
-    }
-
-    #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
-    pub enum BinaryOperator {
-        Eq,
-        Ne,
-        Lt,
-        Le,
-        Gt,
-        Ge,
-        Add,
-        Sub,
-        Mul,
-        Div,
-    }
-}
-//#endregion 🔖Ast
-
-//#region 🔖Parser
-mod parser {
-    use super::ast::*;
-    use super::errors::ArchitectError;
-    use nom::branch::alt;
-    use nom::bytes::complete::{tag, tag_no_case};
-    use nom::character::complete::{alphanumeric1, char, digit1, multispace0};
-    use nom::combinator::{cut, map, opt, recognize};
-    use nom::multi::{many0, many1, separated_list0, separated_list1};
-    use nom::sequence::{delimited, pair, preceded};
-    use nom::{IResult, Parser};
-    use std::collections::BTreeMap;
-
-    fn ws<'a, O, P>(p: P) -> impl FnMut(&'a str) -> IResult<&'a str, O>
-    where
-        P: Parser<&'a str, O, nom::error::Error<&'a str>>,
-    {
-        preceded(multispace0, p)
-    }
-
-    fn kw<'a>(s: &'static str) -> impl FnMut(&'a str) -> IResult<&'a str, &'a str> {
-        ws(tag_no_case(s))
-    }
-
-    fn ident(input: &str) -> IResult<&str, &str> {
-        ws(recognize(pair(alt((alphanumeric1, tag("_"))), many0(alt((alphanumeric1, tag("_")))))))(input)
-    }
-
-    fn string_lit(input: &str) -> IResult<&str, String> {
-        let (rest, inner) = ws(alt((
-            delimited(char('"'), recognize(many0(alt((tag("\\\""), tag("\\\\"), nom::bytes::complete::is_not("\"\\"))))), char('"')),
-            delimited(char('\''), recognize(many0(alt((tag("\\'"), tag("\\\\"), nom::bytes::complete::is_not("'\\"))))), char('\'')),
-        )))(input)?;
-        let unescaped = if inner.contains('\\') { inner.replace("\\'", "'").replace("\\\"", "\"") } else { inner.to_string() };
-        Ok((rest, unescaped))
-    }
-
-    fn number_lit(input: &str) -> IResult<&str, serde_json::Value> {
-        map(ws(recognize(pair(opt(char('-')), alt((recognize(pair(digit1, pair(tag("."), digit1))), digit1))))), |s: &str| {
-            if s.contains('.') {
-                serde_json::Value::from(s.parse::<f64>().unwrap_or(0.0))
-            } else {
-                serde_json::Value::from(s.parse::<i64>().unwrap_or(0))
-            }
-        })(input)
-    }
-
-    fn literal_value(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((map(tag_no_case("true"), |_| serde_json::Value::Bool(true)), map(tag_no_case("false"), |_| serde_json::Value::Bool(false)), map(string_lit, serde_json::Value::String), number_lit))(input)
-    }
-
-    fn object_literal(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
-        let (rest, _) = ws(char('{'))(input)?;
-        let (rest, pairs) = separated_list0(ws(char(',')), pair(ident, preceded(ws(char(':')), value_literal)))(rest)?;
-        let (rest, _) = ws(char('}'))(rest)?;
-        Ok((rest, pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()))
-    }
-
-    fn value_literal(input: &str) -> IResult<&str, serde_json::Value> {
-        alt((literal_value, map(delimited(ws(char('[')), separated_list0(ws(char(',')), value_literal), ws(char(']'))), serde_json::Value::Array), map(object_literal, |m| serde_json::Value::Object(m.into_iter().collect()))))(input)
-    }
-
-    fn primary_expr(input: &str) -> IResult<&str, Expr> {
-        alt((
-            map(delimited(ws(char('(')), cut(expr), ws(char(')'))), |e| e),
-            map(literal_value, Expr::Const),
-            map(separated_list1(ws(char('.')), ident), |parts: Vec<&str>| {
-                let mut it = parts.into_iter();
-                let first = it.next().unwrap_or("_");
-                let mut cur = Expr::Var { name: first.to_string() };
-                for p in it {
-                    cur = Expr::Field { object: Box::new(cur), name: p.to_string() };
-                }
-                cur
-            }),
-        ))(input)
-    }
-
-    fn unary_expr(input: &str) -> IResult<&str, Expr> {
-        alt((map(preceded(ws(char('-')), cut(unary_expr)), |e| Expr::UnaryNeg(Box::new(e))), primary_expr))(input)
-    }
-
-    fn mul_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, first) = unary_expr(input)?;
-        let (rest, tail) = many0(pair(ws(alt((char('*'), char('/')))), cut(unary_expr)))(rest)?;
-        let mut cur = first;
-        for (operator, rhs) in tail {
-            cur = Expr::BinaryOperator { operator: if operator == '*' { BinaryOperator::Mul } else { BinaryOperator::Div }, left: Box::new(cur), right: Box::new(rhs) };
-        }
-        Ok((rest, cur))
-    }
-
-    fn add_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, first) = mul_expr(input)?;
-        let (rest, tail) = many0(pair(ws(alt((char('+'), char('-')))), cut(mul_expr)))(rest)?;
-        let mut cur = first;
-        for (operator, rhs) in tail {
-            cur = Expr::BinaryOperator { operator: if operator == '+' { BinaryOperator::Add } else { BinaryOperator::Sub }, left: Box::new(cur), right: Box::new(rhs) };
-        }
-        Ok((rest, cur))
-    }
-
-    fn cmp_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, left) = add_expr(input)?;
-        let (rest, op_rhs) = opt(pair(ws(alt((tag("=="), tag("!="), tag("<="), tag(">="), tag("="), tag("<"), tag(">")))), cut(add_expr)))(rest)?;
-        if let Some((operator, right)) = op_rhs {
-            let binary_operator = match operator {
-                "==" | "=" => BinaryOperator::Eq,
-                "!=" => BinaryOperator::Ne,
-                "<=" => BinaryOperator::Le,
-                ">=" => BinaryOperator::Ge,
-                "<" => BinaryOperator::Lt,
-                ">" => BinaryOperator::Gt,
-                _ => BinaryOperator::Eq,
-            };
-            return Ok((rest, Expr::BinaryOperator { operator: binary_operator, left: Box::new(left), right: Box::new(right) }));
-        }
-        Ok((rest, left))
-    }
-
-    fn and_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, mut parts) = separated_list1(kw("AND"), cmp_expr)(input)?;
-        if parts.len() == 1 {
-            Ok((rest, parts.pop().expect("len()==1 checked above")))
-        } else {
-            Ok((rest, Expr::And(parts)))
-        }
-    }
-
-    fn or_expr(input: &str) -> IResult<&str, Expr> {
-        let (rest, mut parts) = separated_list1(kw("OR"), and_expr)(input)?;
-        if parts.len() == 1 {
-            Ok((rest, parts.pop().expect("len()==1 checked above")))
-        } else {
-            Ok((rest, Expr::Or(parts)))
-        }
-    }
-
-    fn expr(input: &str) -> IResult<&str, Expr> {
-        or_expr(input)
-    }
-
-    fn prop_map(input: &str) -> IResult<&str, BTreeMap<String, serde_json::Value>> {
-        let (rest, _) = ws(char('{'))(input)?;
-        let (rest, pairs) = separated_list0(ws(char(',')), pair(ident, preceded(ws(char(':')), alt((literal_value, map(ident, |s: &str| serde_json::Value::String(s.to_string())))))))(rest)?;
-        let (rest, _) = ws(char('}'))(rest)?;
-        Ok((rest, pairs.into_iter().map(|(k, v)| (k.to_string(), v)).collect()))
-    }
-
-    fn node_pattern(input: &str) -> IResult<&str, NodePattern> {
-        let (rest, _) = ws(char('('))(input)?;
-        let (rest, var_name) = opt(ident)(rest)?;
-        let (rest, label) = opt(preceded(ws(char(':')), ident))(rest)?;
-        let (rest, props) = opt(prop_map)(rest)?;
-        let (rest, _) = ws(char(')'))(rest)?;
-        Ok((rest, NodePattern { var_name: var_name.map(str::to_string), label: label.map(str::to_string), props: props.unwrap_or_default() }))
-    }
-
-    fn rel_types(input: &str) -> IResult<&str, (Vec<String>, BTreeMap<String, serde_json::Value>)> {
-        let (rest, _) = ws(char('['))(input)?;
-        let (rest, _) = opt(ws(char(':')))(rest)?;
-        let (rest, first) = opt(ident)(rest)?;
-        let (rest, more) = many0(preceded(ws(char('|')), ident))(rest)?;
-        let (rest, props) = if rest.trim_start().starts_with('{') { map(prop_map, Some)(rest)? } else { (rest, None) };
-        let (rest, _) = ws(char(']'))(rest)?;
-        let mut types = Vec::new();
-        if let Some(t) = first {
-            types.push(t.to_string());
-        }
-        for t in more {
-            types.push(t.to_string());
-        }
-        Ok((rest, (types, props.unwrap_or_default())))
-    }
-
-    fn rel_pattern(input: &str) -> IResult<&str, RelPattern> {
-        let (rest, inbound) = opt(ws(char('<')))(input)?;
-        let (rest, _) = ws(char('-'))(rest)?;
-        let (rest, types_props) = rel_types(rest)?;
-        let (rest, dash2) = opt(ws(char('-')))(rest)?;
-        let (rest, outbound) = opt(ws(char('>')))(rest)?;
-        let direction = match (inbound.is_some(), dash2.is_some(), outbound.is_some()) {
-            (true, _, true) | (false, true, false) => RelDirection::Undirected,
-            (true, _, false) => RelDirection::In,
-            (false, _, true) | (false, false, false) => RelDirection::Out,
-        };
-        Ok((rest, RelPattern { types: types_props.0, direction, props: types_props.1 }))
-    }
-
-    fn pattern(input: &str) -> IResult<&str, Pattern> {
-        let (rest, first) = node_pattern(input)?;
-        let mut elements = vec![PatternElement::Node(first)];
-        let mut rest = rest;
-        loop {
-            let trimmed = rest.trim_start();
-            if trimmed.starts_with('-') || trimmed.starts_with('<') {
-                let (r, rel) = rel_pattern(rest)?;
-                let (r, node) = cut(node_pattern)(r)?;
-                elements.push(PatternElement::Rel(rel));
-                elements.push(PatternElement::Node(node));
-                rest = r;
-            } else {
-                break;
-            }
-        }
-        Ok((rest, Pattern { elements }))
-    }
-
-    fn pattern_list(input: &str) -> IResult<&str, Vec<Pattern>> {
-        separated_list1(ws(char(',')), pattern)(input)
-    }
-
-    fn projection_list(input: &str) -> IResult<&str, Vec<ProjectionItem>> {
-        separated_list1(ws(char(',')), map(pair(expr, opt(preceded(kw("AS"), cut(ident)))), |(e, alias)| ProjectionItem { expr: e, alias: alias.map(str::to_string) }))(input)
-    }
-
-    fn yield_clause(input: &str) -> IResult<&str, Vec<YieldItem>> {
-        let (rest, _) = kw("YIELD")(input)?;
-        separated_list1(ws(char(',')), map(pair(separated_list1(ws(char('.')), ident), opt(preceded(kw("AS"), cut(ident)))), |(parts, alias)| YieldItem { key: parts.join("."), alias: alias.map(str::to_string) }))(rest)
-    }
-
-    fn match_clause(input: &str) -> IResult<&str, MatchClause> {
-        let (rest, _) = kw("MATCH")(input)?;
-        let (rest, patterns) = cut(pattern_list)(rest)?;
-        let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((rest, MatchClause { patterns, where_expr }))
-    }
-
-    fn with_clause(input: &str) -> IResult<&str, WithClause> {
-        let (rest, _) = kw("WITH")(input)?;
-        let (rest, projections) = cut(projection_list)(rest)?;
-        let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((rest, WithClause { projections, where_expr }))
-    }
-
-    fn call_clause(input: &str) -> IResult<&str, CallClause> {
-        let (rest, _) = kw("CALL")(input)?;
-        let (rest, parts) = cut(separated_list1(ws(char('.')), ident))(rest)?;
-        let (rest, args) = delimited(ws(char('(')), opt(object_literal), ws(char(')')))(rest)?;
-        let (rest, yield_items) = opt(yield_clause)(rest)?;
-        Ok((rest, CallClause { action_id: parts.join("."), args: args.unwrap_or_default(), yield_items: yield_items.unwrap_or_default() }))
-    }
-
-    fn unwind_clause(input: &str) -> IResult<&str, UnwindClause> {
-        let (rest, _) = kw("UNWIND")(input)?;
-        let (rest, source) = cut(expr)(rest)?;
-        let (rest, _) = kw("AS")(rest)?;
-        let (rest, alias) = cut(ident)(rest)?;
-        let (rest, where_expr) = opt(preceded(kw("WHERE"), cut(expr)))(rest)?;
-        Ok((rest, UnwindClause { source, alias: alias.to_string(), where_expr }))
-    }
-
-    fn return_clause(input: &str) -> IResult<&str, ReturnClause> {
-        let (rest, _) = kw("RETURN")(input)?;
-        let (rest, projections) = cut(projection_list)(rest)?;
-        let (rest, order_by) = opt(preceded(pair(kw("ORDER"), kw("BY")), cut(expr)))(rest)?;
-        let (rest, limit) = opt(preceded(kw("LIMIT"), map(ws(digit1), |s: &str| s.parse::<usize>().unwrap_or(0))))(rest)?;
-        Ok((rest, ReturnClause { projections, order_by, limit }))
-    }
-
-    fn clause(input: &str) -> IResult<&str, Clause> {
-        alt((map(call_clause, Clause::Call), map(unwind_clause, Clause::Unwind), map(with_clause, Clause::With), map(match_clause, Clause::Match)))(input)
-    }
-
-    fn query(input: &str) -> IResult<&str, Query> {
-        let (rest, clauses) = many1(clause)(input)?;
-        let (rest, return_clause) = opt(return_clause)(rest)?;
-        let (rest, _) = multispace0(rest)?;
-        Ok((rest, Query { clauses, return_clause }))
-    }
-
-    /// @emoji 🔍 Parse architect source into `Query`.
-    pub fn parse_query(text: &str) -> Result<Query, ArchitectError> {
-        match query(text) {
-            Ok(("", ast)) => Ok(ast),
-            Ok((rem, _)) => Err(ArchitectError::Parse(format!("trailing input: {rem:?}"))),
-            Err(e) => Err(ArchitectError::Parse(format!("{e}"))),
-        }
-    }
-}
-//#endregion 🔖Parser
-
 //#region 🔖Schema
 mod schema {
-    use super::ast::{NodePattern, RelPattern};
-    use std::collections::BTreeMap;
+    use mathematical_graph_dsl as jack;
+    use mathematical_graph_manifest::PropertyValue;
 
     /// @emoji 🏷️ GraphQL object label in architect patterns.
     #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -526,13 +127,18 @@ mod schema {
         }
     }
 
-    /// @emoji 🔗 Architect relationship predicate.
+    /// @emoji 🔗 Architect relationship predicate. `Parent`/`Child` replace the old boolean
+    /// `{parent: true/false}` edge-property disambiguation — Jack's pattern grammar carries no
+    /// property-map literal, so the two `Connection -> Side` edges are told apart by predicate
+    /// keyword instead (`[:PARENT]` / `[:CHILD]`).
     #[derive(Debug, Clone, Copy, PartialEq, Eq)]
     pub enum Predicate {
         Has,
         Is,
         References,
         Owns,
+        Parent,
+        Child,
     }
 
     impl Predicate {
@@ -542,6 +148,8 @@ mod schema {
                 "IS" => Self::Is,
                 "REFERENCES" => Self::References,
                 "OWNS" => Self::Owns,
+                "PARENT" => Self::Parent,
+                "CHILD" => Self::Child,
                 _ => return None,
             })
         }
@@ -553,11 +161,6 @@ mod schema {
         Many,
     }
 
-    #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-    pub enum EdgeProp {
-        Parent(bool),
-    }
-
     #[derive(Debug, Clone, Copy)]
     pub struct EdgeDef {
         pub from: Label,
@@ -565,31 +168,26 @@ mod schema {
         pub to: Label,
         pub field: &'static str,
         pub cardinality: Cardinality,
-        pub _fragment: Option<&'static str>,
-        pub edge_props: &'static [(&'static str, EdgeProp)],
     }
 
     pub const EDGES: &[EdgeDef] = &[
-        EdgeDef { from: Label::Piece, pred: Predicate::Has, to: Label::Blueprint, field: "blueprint", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Type, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Type"), edge_props: &[] },
-        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Design, field: "__typename", cardinality: Cardinality::One, _fragment: Some("... on Design"), edge_props: &[] },
-        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Connector, field: "hasConnectors", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Port, field: "hasPorts", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Connector, pred: Predicate::Is, to: Label::Port, field: "port", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Side, pred: Predicate::References, to: Label::Connector, field: "connector", cardinality: Cardinality::One, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "parent", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(true))] },
-        EdgeDef { from: Label::Connection, pred: Predicate::Has, to: Label::Side, field: "child", cardinality: Cardinality::One, _fragment: None, edge_props: &[("parent", EdgeProp::Parent(false))] },
-        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Connection, field: "hasConnections", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Piece, field: "hasPieces", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Design, field: "hasDesigns", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
-        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "hasTypes", cardinality: Cardinality::Many, _fragment: None, edge_props: &[] },
+        EdgeDef { from: Label::Piece, pred: Predicate::Has, to: Label::Blueprint, field: "blueprint", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Type, field: "__typename", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Blueprint, pred: Predicate::Is, to: Label::Design, field: "__typename", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Connector, field: "hasConnectors", cardinality: Cardinality::Many },
+        EdgeDef { from: Label::Type, pred: Predicate::Has, to: Label::Port, field: "hasPorts", cardinality: Cardinality::Many },
+        EdgeDef { from: Label::Connector, pred: Predicate::Is, to: Label::Port, field: "port", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Side, pred: Predicate::References, to: Label::Connector, field: "connector", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Connection, pred: Predicate::Parent, to: Label::Side, field: "parent", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Connection, pred: Predicate::Child, to: Label::Side, field: "child", cardinality: Cardinality::One },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Connection, field: "hasConnections", cardinality: Cardinality::Many },
+        EdgeDef { from: Label::Design, pred: Predicate::Has, to: Label::Piece, field: "hasPieces", cardinality: Cardinality::Many },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Design, field: "hasDesigns", cardinality: Cardinality::Many },
+        EdgeDef { from: Label::Kit, pred: Predicate::Has, to: Label::Type, field: "hasTypes", cardinality: Cardinality::Many },
     ];
 
-    pub fn resolve_edge(from: Label, pred: Predicate, to: Label, rel: &RelPattern, forward: bool) -> Result<EdgeDef, super::ArchitectError> {
-        let mut matches: Vec<EdgeDef> = EDGES.iter().copied().filter(|e| e.from == from && e.pred == pred && e.to == to && edge_props_match(e, rel)).collect();
-        if !forward {
-            matches = EDGES.iter().copied().filter(|e| e.from == to && e.pred == pred && e.to == from && edge_props_match(e, rel)).collect();
-        }
+    pub fn resolve_edge(from: Label, pred: Predicate, to: Label) -> Result<EdgeDef, super::ArchitectError> {
+        let matches: Vec<EdgeDef> = EDGES.iter().copied().filter(|e| e.from == from && e.pred == pred && e.to == to).collect();
         match matches.len() {
             0 => Err(super::ArchitectError::Plan(format!("no edge {from:?}-{pred:?}->{to:?}"))),
             1 => Ok(matches[0]),
@@ -597,29 +195,12 @@ mod schema {
         }
     }
 
-    fn edge_props_match(edge: &EdgeDef, rel: &RelPattern) -> bool {
-        if rel.props.is_empty() {
-            return edge.edge_props.is_empty() || edge.edge_props.iter().all(|(_, p)| matches!(p, EdgeProp::Parent(false)));
-        }
-        for (k, v) in &rel.props {
-            if k == "parent" {
-                let want = v.as_bool().unwrap_or_else(|| v.as_str().map(|s| s.eq_ignore_ascii_case("true")).unwrap_or(false));
-                let ok = edge.edge_props.iter().any(|(name, p)| name == &"parent" && matches!(p, EdgeProp::Parent(g) if *g == want));
-                if !ok {
-                    return false;
-                }
-            }
-        }
-        true
+    pub fn node_label(node: &jack::PatternNode) -> Result<Label, super::ArchitectError> {
+        Label::parse(&node.kind).ok_or_else(|| super::ArchitectError::Plan(format!("unknown label {}", node.kind)))
     }
 
-    pub fn node_label(node: &NodePattern) -> Result<Label, super::ArchitectError> {
-        let lab = node.label.as_deref().ok_or_else(|| super::ArchitectError::Plan("pattern node requires a label".to_string()))?;
-        Label::parse(lab).ok_or_else(|| super::ArchitectError::Plan(format!("unknown label {lab}")))
-    }
-
-    pub fn rel_predicate(rel: &RelPattern) -> Result<Predicate, super::ArchitectError> {
-        let t = rel.types.first().ok_or_else(|| super::ArchitectError::Plan("relationship requires a predicate".to_string()))?;
+    pub fn rel_predicate(kind: Option<&str>) -> Result<Predicate, super::ArchitectError> {
+        let t = kind.ok_or_else(|| super::ArchitectError::Plan("relationship requires a predicate".to_string()))?;
         Predicate::parse(t).ok_or_else(|| super::ArchitectError::Plan(format!("unknown predicate {t}")))
     }
 
@@ -637,46 +218,58 @@ mod schema {
         }
     }
 
-    /// @emoji 📞 Static `CALL` target (mutation or subscription).
+    /// @emoji 📞 Static `CALL` target (mutation or subscription). Jack's `CALL <ident>(...)`
+    /// grammar takes a single, un-dotted identifier (no `session.end`-style path), so targets are
+    /// named with flat camelCase idents instead of the old dotted `path: &[&str]`.
     #[derive(Debug, Clone, Copy)]
     pub struct CallTarget {
-        pub path: &'static [&'static str],
+        pub name: &'static str,
         pub kind: super::transport::OpKind,
         pub gql: &'static str,
     }
 
     pub const CALL_TARGETS: &[CallTarget] = &[
-        CallTarget { path: &["session", "start"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($input: String) { session { start } }" },
-        CallTarget { path: &["session", "end"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall { session { end { ok errors { message } } } }" },
-        CallTarget { path: &["subscription", "session"], kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { session { id hash } }" },
-        CallTarget { path: &["subscription", "operation"], kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { operation { id hash } }" },
+        CallTarget { name: "sessionStart", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($input: String) { session { start } }" },
+        CallTarget { name: "sessionEnd", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall { session { end { ok errors { message } } } }" },
+        CallTarget { name: "subscriptionSession", kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { session { id hash } }" },
+        CallTarget { name: "subscriptionOperation", kind: super::transport::OpKind::Subscription, gql: "subscription ArchitectSub { operation { id hash } }" },
         CallTarget {
-            path: &["session", "store", "installProjection"],
+            name: "installProjection",
             kind: super::transport::OpKind::Mutation,
             gql: "mutation ArchitectCall($storeId: ID!, $json: String!) { session { store(id: $storeId) { installProjection(json: $json) { ok errors { message } } } } }",
         },
         CallTarget {
-            path: &["session", "store", "theKit", "startNewChange"],
+            name: "startNewChange",
             kind: super::transport::OpKind::Mutation,
             gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { startNewChange { ok errors { message } } } } } }",
         },
-        CallTarget { path: &["session", "store", "theKit", "save"], kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }" },
+        CallTarget { name: "saveKit", kind: super::transport::OpKind::Mutation, gql: "mutation ArchitectCall($storeId: ID!) { session { store(id: $storeId) { theKit { save { ok errors { message } } } } } }" },
     ];
 
-    pub fn resolve_call(action_id: &str) -> Result<CallTarget, super::ArchitectError> {
-        let parts: Vec<&str> = action_id.split('.').collect();
-        CALL_TARGETS.iter().copied().find(|t| t.path.len() == parts.len() && t.path.iter().zip(&parts).all(|(a, b)| a == b)).ok_or_else(|| super::ArchitectError::Plan(format!("unknown CALL target {action_id}")))
+    pub fn resolve_call(name: &str) -> Result<CallTarget, super::ArchitectError> {
+        CALL_TARGETS.iter().copied().find(|t| t.name == name).ok_or_else(|| super::ArchitectError::Plan(format!("unknown CALL target {name}")))
     }
 
-    pub fn call_variables(action_id: &str, args: &BTreeMap<String, serde_json::Value>) -> serde_json::Value {
+    /// @emoji 🎛️ Maps a `CALL name(args...)`'s positional `PropertyValue` args onto the named
+    /// GraphQL variables its target document expects — positional-by-convention since Jack's
+    /// `CALL` grammar has no keyed/object-literal argument syntax.
+    pub fn call_variables(name: &str, args: &[PropertyValue]) -> serde_json::Value {
         let mut vars = serde_json::Map::new();
-        if action_id.starts_with("session.store") {
-            if let Some(v) = args.get("store").or_else(|| args.get("storeId")) {
-                vars.insert("storeId".into(), v.clone());
+        match name {
+            "installProjection" => {
+                if let Some(store) = args.first() {
+                    vars.insert("storeId".into(), super::property_value_to_json(store));
+                }
+                if let Some(json) = args.get(1) {
+                    vars.insert("json".into(), super::property_value_to_json(json));
+                }
             }
-            if let Some(v) = args.get("json") {
-                vars.insert("json".into(), v.clone());
+            "startNewChange" | "saveKit" => {
+                if let Some(store) = args.first() {
+                    vars.insert("storeId".into(), super::property_value_to_json(store));
+                }
             }
+            _ => {}
         }
         serde_json::Value::Object(vars)
     }
@@ -850,53 +443,47 @@ mod transport {
 
 //#region 🔖Planner
 mod planner {
-    use super::ast::*;
     use super::errors::ArchitectError;
     use super::schema::{self, Label};
     use super::transport::OpKind;
-    use serde::{Deserialize, Serialize};
+    use mathematical_graph_dsl as jack;
     use serde_json::{json, Value};
     use std::collections::{BTreeMap, BTreeSet};
 
-    /// @emoji 🧭 Planned execution steps for an architect query.
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    /// @emoji 🧭 Planned execution steps for an architect query, lowered from Jack's `Query`.
+    #[derive(Debug, Clone, PartialEq)]
     pub struct OpPlan {
         pub steps: Vec<Step>,
-        pub return_clause: Option<ReturnClause>,
+        pub return_items: Option<Vec<jack::ReturnItem>>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
+    #[derive(Debug, Clone, PartialEq)]
     pub enum Step {
         GraphQl { operator: OpKind, document: String, variables: Value, bind: BindSpec },
         Join { on_var: String, key: String },
-        Filter { expr: Expr },
-        Unwind { source_var: String, alias: String, where_expr: Option<Expr> },
-        Project { projections: Vec<ProjectionItem>, where_expr: Option<Expr> },
-        Order { expr: Expr },
-        Limit { n: usize },
-        Call { operator: OpKind, document: String, variables: Value, yield_items: Vec<YieldItem> },
+        Filter { expr: jack::Expr },
+        Unwind { source_var: String, source_prop: Option<String>, alias: String },
+        Project { items: Vec<jack::ReturnItem> },
+        Call { operator: OpKind, document: String, variables: Value },
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct BindSpec {
         pub anchor_var: String,
         pub anchor_label: String,
         pub paths: BTreeMap<String, JsonPath>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+    #[derive(Debug, Clone, PartialEq)]
     pub struct JsonPath {
         pub segments: Vec<PathSeg>,
     }
 
-    #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
-    #[serde(tag = "kind", rename_all = "camelCase")]
+    #[derive(Debug, Clone, PartialEq)]
     pub enum PathSeg {
         Field { name: String },
         ConnectionEdges,
         ConnectionNode,
-        Fragment { name: String },
     }
 
     struct PatternPlan {
@@ -904,26 +491,28 @@ mod planner {
         bind: BindSpec,
     }
 
-    /// @emoji 🧭 Lower `Query` AST to `OpPlan`.
-    pub fn plan_query(q: &Query) -> Result<OpPlan, ArchitectError> {
+    /// @emoji 🧭 Lower Jack's `Query` into an `OpPlan`. Jack's `MATCH` clause carries no nested
+    /// `WHERE`/multi-hop chaining of its own (each `Pattern` is at most one node-edge-node hop,
+    /// and `WHERE` always shows up as its own following `Clause`), so a long relationship chain is
+    /// simply written as several comma-separated single-hop patterns sharing var names — the
+    /// existing shared-var `Join` detection below already handles stitching them back together.
+    pub fn plan_query(q: &jack::Query) -> Result<OpPlan, ArchitectError> {
         let mut steps = Vec::new();
         let mut emitted_patterns: BTreeSet<String> = BTreeSet::new();
         let mut join_vars: BTreeSet<String> = BTreeSet::new();
+        let mut return_items = None;
 
         for clause in &q.clauses {
             match clause {
-                Clause::Match(m) => {
+                jack::Clause::Match(patterns) => {
                     let mut shared: BTreeMap<String, usize> = BTreeMap::new();
-                    for pat in &m.patterns {
-                        for el in &pat.elements {
-                            if let PatternElement::Node(n) = el {
-                                if let Some(v) = &n.var_name {
-                                    *shared.entry(v.clone()).or_default() += 1;
-                                }
-                            }
+                    for pat in patterns {
+                        *shared.entry(pat.nodes[0].var.clone()).or_default() += 1;
+                        if let Some(edge) = &pat.edge {
+                            *shared.entry(edge.right.var.clone()).or_default() += 1;
                         }
                     }
-                    for pat in &m.patterns {
+                    for pat in patterns {
                         let plan = plan_pattern(pat)?;
                         if emitted_patterns.insert(plan.document.clone()) {
                             steps.push(Step::GraphQl { operator: OpKind::Query, document: plan.document, variables: json!({}), bind: plan.bind });
@@ -934,111 +523,58 @@ mod planner {
                             steps.push(Step::Join { on_var: var.clone(), key: "id".into() });
                         }
                     }
-                    for pat in &m.patterns {
-                        for el in &pat.elements {
-                            let PatternElement::Node(node) = el else { continue };
-                            let Some(var) = node.var_name.as_ref() else { continue };
-                            if let Some(expr) = node_props_filter_expr(var, &node.props) {
-                                steps.push(Step::Filter { expr });
-                            }
-                        }
-                    }
-                    if let Some(w) = &m.where_expr {
-                        steps.push(Step::Filter { expr: w.clone() });
-                    }
                 }
-                Clause::With(w) => {
-                    steps.push(Step::Project { projections: w.projections.clone(), where_expr: w.where_expr.clone() });
-                }
-                Clause::Unwind(u) => {
-                    let source_var = match &u.source {
-                        Expr::Var { name } => name.clone(),
-                        other => {
-                            return Err(ArchitectError::Plan(format!("UNWIND expects a variable, got {other:?}")));
-                        }
+                jack::Clause::Where(expr) => steps.push(Step::Filter { expr: expr.clone() }),
+                jack::Clause::With(items) => steps.push(Step::Project { items: items.clone() }),
+                jack::Clause::Unwind(u) => {
+                    let (source_var, source_prop) = match &u.source {
+                        jack::ReturnItem::Var(v) => (v.clone(), None),
+                        jack::ReturnItem::Property { var, prop } => (var.clone(), Some(prop.clone())),
                     };
-                    steps.push(Step::Unwind { source_var, alias: u.alias.clone(), where_expr: u.where_expr.clone() });
+                    steps.push(Step::Unwind { source_var, source_prop, alias: u.var.clone() });
                 }
-                Clause::Call(c) => {
-                    let target = schema::resolve_call(&c.action_id)?;
-                    steps.push(Step::Call { operator: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.action_id, &c.args), yield_items: c.yield_items.clone() });
+                jack::Clause::Call(c) => {
+                    let target = schema::resolve_call(&c.name)?;
+                    steps.push(Step::Call { operator: target.kind, document: target.gql.to_string(), variables: schema::call_variables(&c.name, &c.args) });
+                }
+                jack::Clause::Return(items) => return_items = Some(items.clone()),
+                jack::Clause::Create(_) | jack::Clause::Delete(_) | jack::Clause::Set(_) | jack::Clause::Merge(_) => {
+                    return Err(ArchitectError::Plan("mutating jack clauses are not supported by architect".into()));
                 }
             }
         }
 
-        if let Some(ret) = &q.return_clause {
-            if let Some(order_by) = &ret.order_by {
-                steps.push(Step::Order { expr: order_by.clone() });
-            }
-            if let Some(n) = ret.limit {
-                steps.push(Step::Limit { n });
-            }
-        }
-
-        Ok(OpPlan { steps, return_clause: q.return_clause.clone() })
+        Ok(OpPlan { steps, return_items })
     }
 
-    fn plan_pattern(pat: &Pattern) -> Result<PatternPlan, ArchitectError> {
-        let nodes: Vec<&NodePattern> = pat
-            .elements
-            .iter()
-            .filter_map(|e| match e {
-                PatternElement::Node(n) => Some(n),
-                _ => None,
-            })
-            .collect();
-        if nodes.is_empty() {
-            return Err(ArchitectError::Plan("empty pattern".into()));
-        }
-        let anchor = nodes.iter().min_by_key(|n| selectivity(n)).ok_or_else(|| ArchitectError::Plan("no anchor".into()))?;
-        let anchor_var = anchor.var_name.clone().unwrap_or_else(|| "__anchor".into());
+    fn plan_pattern(pat: &jack::Pattern) -> Result<PatternPlan, ArchitectError> {
+        let left = &pat.nodes[0];
+        let right = pat.edge.as_ref().map(|e| &e.right);
+        let anchor_is_left = match right {
+            None => true,
+            Some(r) => selectivity(left) <= selectivity(r),
+        };
+        let anchor = if anchor_is_left { left } else { right.expect("right present whenever !anchor_is_left") };
         let anchor_label = schema::node_label(anchor)?;
 
-        let (document, paths) = build_graphql_document(pat, anchor_var.as_str(), anchor_label)?;
-        let bind = BindSpec { anchor_var: anchor_var.clone(), anchor_label: anchor_label.gql_name().to_string(), paths };
+        let (document, paths) = build_graphql_document(pat, anchor_is_left, anchor_label)?;
+        let bind = BindSpec { anchor_var: anchor.var.clone(), anchor_label: anchor_label.gql_name().to_string(), paths };
         Ok(PatternPlan { document, bind })
     }
 
-    fn node_props_filter_expr(var: &str, props: &BTreeMap<String, serde_json::Value>) -> Option<Expr> {
-        if props.is_empty() {
-            return None;
-        }
-        let mut conjuncts = Vec::new();
-        for (key, val) in props {
-            let lhs = Expr::Field { object: Box::new(Expr::Var { name: var.to_string() }), name: key.clone() };
-            let rhs = match val {
-                serde_json::Value::String(s) => Expr::Const(serde_json::Value::String(s.clone())),
-                serde_json::Value::Bool(b) => Expr::Const(serde_json::Value::Bool(*b)),
-                serde_json::Value::Number(n) => Expr::Const(serde_json::Value::Number(n.clone())),
-                _ => continue,
-            };
-            conjuncts.push(Expr::BinaryOperator { operator: BinaryOperator::Eq, left: Box::new(lhs), right: Box::new(rhs) });
-        }
-        match conjuncts.len() {
-            0 => None,
-            1 => Some(conjuncts.pop().expect("len()==1 checked above")),
-            _ => Some(Expr::And(conjuncts)),
-        }
-    }
-
-    fn selectivity(n: &NodePattern) -> u8 {
+    fn selectivity(n: &jack::PatternNode) -> u8 {
         let mut score = 20u8;
-        if let Some(lab) = &n.label {
-            if let Some(l) = Label::parse(lab) {
-                if matches!(l, Label::Kit | Label::Design | Label::Type) {
-                    score = score.saturating_sub(8);
-                } else {
-                    score = score.saturating_add(12);
-                }
+        if let Some(l) = Label::parse(&n.kind) {
+            if matches!(l, Label::Kit | Label::Design | Label::Type) {
+                score = score.saturating_sub(8);
+            } else {
+                score = score.saturating_add(12);
             }
-        }
-        if !n.props.is_empty() {
-            score = score.saturating_sub(4);
         }
         score
     }
 
-    fn build_graphql_document(pat: &Pattern, anchor_var: &str, anchor_label: Label) -> Result<(String, BTreeMap<String, JsonPath>), ArchitectError> {
+    fn build_graphql_document(pat: &jack::Pattern, anchor_is_left: bool, anchor_label: Label) -> Result<(String, BTreeMap<String, JsonPath>), ArchitectError> {
         let mut paths: BTreeMap<String, JsonPath> = BTreeMap::new();
         let mut anchor_path = vec![
             PathSeg::Field { name: "session".into() },
@@ -1067,30 +603,36 @@ mod planner {
             }
         }
 
-        paths.insert(anchor_var.to_string(), JsonPath { segments: anchor_path.clone() });
-
-        for el in &pat.elements {
-            if let PatternElement::Node(node) = el {
-                if let Some(v) = &node.var_name {
-                    paths.entry(v.clone()).or_insert(JsonPath { segments: anchor_path.clone() });
-                }
+        let anchor_var = if anchor_is_left { pat.nodes[0].var.clone() } else { pat.edge.as_ref().expect("edge present whenever !anchor_is_left").right.var.clone() };
+        paths.insert(anchor_var, JsonPath { segments: anchor_path.clone() });
+        // 🩹 the non-anchor side of a hop (if any) is bound to the SAME anchor row rather than its
+        // own nested entity — this crate never returns fields of the "many" side of a hop directly
+        // (see `build_nested_selection`'s cardinality-aware embedding below), only uses it for
+        // `WHERE`/`Join` purposes, so a precise per-row extraction isn't needed here.
+        if anchor_is_left {
+            if let Some(edge) = &pat.edge {
+                paths.entry(edge.right.var.clone()).or_insert(JsonPath { segments: anchor_path.clone() });
             }
+        } else {
+            paths.entry(pat.nodes[0].var.clone()).or_insert(JsonPath { segments: anchor_path.clone() });
         }
+
+        let selection = if anchor_is_left { build_nested_selection(anchor_label, pat.edge.as_ref()) } else { build_nested_selection(anchor_label, None) };
 
         let mut body = String::from("query ArchitectMatch {\n  session {\n    stores {\n      edges {\n        node {\n          wip {\n            theKit {\n              kit {\n");
         match anchor_label {
             Label::Design => {
                 body.push_str("                hasDesigns {\n                  edges {\n                    node {\n");
-                body.push_str(&build_nested_selection(pat, anchor_label, 1));
+                body.push_str(&selection);
                 body.push_str("                    }\n                  }\n                }\n");
             }
             Label::Type => {
                 body.push_str("                hasTypes {\n                  edges {\n                    node {\n");
-                body.push_str(&build_nested_selection(pat, anchor_label, 1));
+                body.push_str(&selection);
                 body.push_str("                    }\n                  }\n                }\n");
             }
             Label::Kit => {
-                body.push_str(&build_nested_selection(pat, anchor_label, 0));
+                body.push_str(&selection);
             }
             _ => {}
         }
@@ -1098,87 +640,40 @@ mod planner {
         Ok((body, paths))
     }
 
-    fn build_nested_selection(pat: &Pattern, anchor_label: Label, start_idx: usize) -> String {
+    fn build_nested_selection(anchor_label: Label, edge: Option<&jack::PatternEdge>) -> String {
         let mut out = String::new();
         let scalars = schema::entity_scalar_fields(anchor_label).join(" ");
         out.push_str(&format!("                      {scalars}\n"));
-        let elements: Vec<_> = pat.elements.iter().collect();
-        let mut i = start_idx;
-        while i < elements.len() {
-            if let PatternElement::Node(node) = elements[i] {
-                if i + 1 < elements.len() {
-                    if let PatternElement::Rel(rel) = elements[i + 1] {
-                        if i + 2 < elements.len() {
-                            if let PatternElement::Node(next) = elements[i + 2] {
-                                if let (Some(from), Some(to)) = (node.label.as_ref().and_then(|l| Label::parse(l)), next.label.as_ref().and_then(|l| Label::parse(l))) {
-                                    if let Ok(pred) = schema::rel_predicate(rel) {
-                                        let forward = !matches!(rel.direction, RelDirection::In);
-                                        if let Ok(edge) = schema::resolve_edge(from, pred, to, rel, forward) {
-                                            if edge.field == "__typename" {
-                                                if to == Label::Type {
-                                                    out.push_str("                      ... on Type { id hash name connectors { edges { node { id hash name port { id hash label code } } } } }\n");
-                                                } else if to == Label::Design {
-                                                    out.push_str("                      ... on Design { id hash name }\n");
-                                                }
-                                            } else if edge.cardinality == schema::Cardinality::Many {
-                                                let child_scalars = schema::entity_scalar_fields(to).join(" ");
-                                                out.push_str(&format!("                      {} {{ edges {{ node {{ {child_scalars} {} }} }} }}\n", edge.field, build_rel_tail(&elements, i + 2, to)));
-                                            } else {
-                                                let child_scalars = schema::entity_scalar_fields(to).join(" ");
-                                                out.push_str(&format!("                      {} {{ {child_scalars} {} }}\n", edge.field, build_rel_tail(&elements, i + 2, to)));
-                                            }
-                                        }
-                                    }
-                                }
-                                i += 2;
-                                continue;
-                            }
-                        }
-                    }
-                }
+        let Some(edge) = edge else { return out };
+        let Ok(to_label) = schema::node_label(&edge.right) else { return out };
+        let Ok(pred) = schema::rel_predicate(edge.kind.as_deref()) else { return out };
+        let Ok(edge_def) = schema::resolve_edge(anchor_label, pred, to_label) else { return out };
+        if edge_def.field == "__typename" {
+            if to_label == Label::Type {
+                out.push_str("                      ... on Type { id hash name connectors { edges { node { id hash name port { id hash label code } } } } }\n");
+            } else if to_label == Label::Design {
+                out.push_str("                      ... on Design { id hash name }\n");
             }
-            i += 1;
+        } else if edge_def.cardinality == schema::Cardinality::Many {
+            let child_scalars = schema::entity_scalar_fields(to_label).join(" ");
+            out.push_str(&format!("                      {} {{ edges {{ node {{ {child_scalars} }} }} }}\n", edge_def.field));
+        } else {
+            let child_scalars = schema::entity_scalar_fields(to_label).join(" ");
+            out.push_str(&format!("                      {} {{ {child_scalars} }}\n", edge_def.field));
         }
         out
-    }
-
-    fn build_rel_tail(elements: &[&PatternElement], from_idx: usize, from_label: Label) -> String {
-        let mut s = String::new();
-        let mut i = from_idx + 1;
-        while i < elements.len() {
-            if let PatternElement::Rel(rel) = elements[i] {
-                if i + 1 < elements.len() {
-                    if let PatternElement::Node(next) = elements[i + 1] {
-                        if let (Ok(pred), Some(to_lab)) = (schema::rel_predicate(rel), next.label.as_ref().and_then(|l| Label::parse(l))) {
-                            let forward = !matches!(rel.direction, RelDirection::In);
-                            if let Ok(edge) = schema::resolve_edge(from_label, pred, to_lab, rel, forward) {
-                                let child_scalars = schema::entity_scalar_fields(to_lab).join(" ");
-                                if edge.cardinality == schema::Cardinality::Many {
-                                    s.push_str(&format!("{} {{ edges {{ node {{ {child_scalars} }} }} }} ", edge.field));
-                                } else {
-                                    s.push_str(&format!("{} {{ {child_scalars} }} ", edge.field));
-                                }
-                            }
-                        }
-                        i += 2;
-                        continue;
-                    }
-                }
-            }
-            i += 1;
-        }
-        s
     }
 }
 //#endregion 🔖Planner
 
 //#region 🔖Executor
 mod executor {
-    use super::ast::*;
     use super::errors::ArchitectError;
     use super::planner::{JsonPath, OpPlan, PathSeg, Step};
     use super::transport::{OpKind, Transport};
     use futures_util::{stream, StreamExt};
+    use mathematical_graph_dsl as jack;
+    use mathematical_graph_manifest::PropertyValue;
     use serde_json::Value;
     use std::collections::BTreeMap;
     use std::pin::Pin;
@@ -1201,7 +696,7 @@ mod executor {
             for step in &plan.steps {
                 env.apply(step, transport).await?;
             }
-            env.finish(plan.return_clause.as_ref())
+            Ok(env.finish(plan.return_items.as_deref()))
         }
 
         pub async fn run_subscription(plan: &OpPlan, transport: &dyn Transport) -> Result<Pin<Box<dyn futures_util::Stream<Item = Result<QueryResult, ArchitectError>> + Send>>, ArchitectError> {
@@ -1212,14 +707,13 @@ mod executor {
             let mut env = BindEnv::default();
             for step in &plan.steps {
                 match step {
-                    Step::Call { operator: OpKind::Subscription, document, variables, yield_items } => {
+                    Step::Call { operator: OpKind::Subscription, document, variables, .. } => {
                         let mut sub_stream = transport.subscribe(document, variables.clone()).await?;
-                        let yield_items = yield_items.clone();
-                        let ret = plan.return_clause.clone();
+                        let ret = plan.return_items.clone();
                         let first = sub_stream.next().await.ok_or_else(|| ArchitectError::Execute("empty subscription stream".into()))??;
                         env.rows.clear();
-                        env.ingest_call_yield(&first, &yield_items);
-                        let once = stream::once(async move { env.finish(ret.as_ref()) });
+                        env.ingest_call_result(&first);
+                        let once = stream::once(async move { Ok(env.finish(ret.as_deref())) });
                         return Ok(Box::pin(once));
                     }
                     other => env.apply(other, transport).await?,
@@ -1252,96 +746,88 @@ mod executor {
                 Step::Filter { expr } => {
                     self.rows.retain(|row| eval_bool(expr, row));
                 }
-                Step::Unwind { source_var, alias, where_expr } => {
+                Step::Unwind { source_var, source_prop, alias } => {
                     let mut next = Vec::new();
                     for row in &self.rows {
-                        let Some(v) = row.get(source_var) else { continue };
-                        let items = v.as_array().cloned().unwrap_or_else(|| vec![v.clone()]);
+                        let Some(base) = row.get(source_var) else { continue };
+                        let v = match source_prop {
+                            Some(p) => base.get(p).cloned().unwrap_or(Value::Null),
+                            None => base.clone(),
+                        };
+                        let items = v.as_array().cloned().unwrap_or_else(|| vec![v]);
                         for item in items {
                             let mut r = row.clone();
                             r.insert(alias.clone(), item);
-                            if let Some(w) = where_expr {
-                                if !eval_bool(w, &r) {
-                                    continue;
-                                }
-                            }
                             next.push(r);
                         }
                     }
                     self.rows = next;
                 }
-                Step::Project { projections, where_expr } => {
+                Step::Project { items } => {
                     let mut next = Vec::new();
                     for row in &self.rows {
                         let mut r = Row::new();
-                        for p in projections {
-                            let v = eval_expr(&p.expr, row)?;
-                            let key = p.alias.clone().unwrap_or_else(|| expr_key(&p.expr));
-                            r.insert(key, v);
-                        }
-                        if let Some(w) = where_expr {
-                            if !eval_bool(w, &r) {
-                                continue;
-                            }
+                        for item in items {
+                            r.insert(item_key(item), resolve_item(item, row));
                         }
                         next.push(r);
                     }
                     self.rows = next;
                 }
-                Step::Order { expr } => {
-                    self.rows.sort_by(|a, b| {
-                        let av = eval_expr(expr, a).ok().map(sort_key);
-                        let bv = eval_expr(expr, b).ok().map(sort_key);
-                        av.cmp(&bv)
-                    });
-                }
-                Step::Limit { n } => {
-                    self.rows.truncate(*n);
-                }
-                Step::Call { operator, document, variables, yield_items } => {
+                Step::Call { operator, document, variables } => {
                     if *operator == OpKind::Subscription {
                         return Ok(());
                     }
                     let data = transport.execute(*operator, document, variables.clone()).await?;
-                    self.ingest_call_yield(&data, yield_items);
+                    self.ingest_call_result(&data);
                 }
             }
             Ok(())
         }
 
-        fn ingest_call_yield(&mut self, data: &Value, yield_items: &[YieldItem]) {
+        /// 🪝 `CALL` binds the whole (unwrapped) response payload to a single conventional `result`
+        /// row/var — Jack's `CALL` grammar has no `YIELD` clause, so per-field extraction is done by
+        /// `RETURN result.<field>` (one property-access level) instead of `YIELD <field> AS ...`.
+        fn ingest_call_result(&mut self, data: &Value) {
             let mut row = Row::new();
-            if yield_items.is_empty() {
-                row.insert("result".into(), data.clone());
-            } else {
-                for y in yield_items {
-                    let key = y.alias.clone().unwrap_or_else(|| y.key.clone());
-                    let val = resolve_yield(data, &y.key);
-                    row.insert(key, val);
-                }
-            }
+            row.insert("result".into(), data.clone());
             self.rows = vec![row];
         }
 
-        fn finish(&self, ret: Option<&ReturnClause>) -> Result<QueryResult, ArchitectError> {
-            let Some(ret) = ret else {
-                return Ok(QueryResult { columns: vec![], rows: self.rows.iter().map(|r| Value::Object(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect())).collect() });
+        fn finish(&self, items: Option<&[jack::ReturnItem]>) -> QueryResult {
+            let Some(items) = items else {
+                return QueryResult { columns: vec![], rows: self.rows.iter().map(|r| Value::Object(r.iter().map(|(k, v)| (k.clone(), v.clone())).collect())).collect() };
             };
             let mut columns = Vec::new();
             let mut rows = Vec::new();
             for row in &self.rows {
                 let mut out = Row::new();
-                for p in &ret.projections {
-                    let v = eval_expr(&p.expr, row)?;
-                    let key = p.alias.clone().unwrap_or_else(|| expr_key(&p.expr));
+                for item in items {
+                    let key = item_key(item);
                     if !columns.contains(&key) {
                         columns.push(key.clone());
                     }
-                    out.insert(key, v);
+                    out.insert(key, resolve_item(item, row));
                 }
                 rows.push(Value::Object(out.into_iter().collect()));
             }
-            Ok(QueryResult { columns, rows })
+            QueryResult { columns, rows }
+        }
+    }
+
+    /// 🔑 `RETURN`/`WITH` column key for a Jack `ReturnItem` — Jack has no `AS` aliasing on return
+    /// items, so the key is always derived from the item itself (`var` or `var.prop`).
+    fn item_key(item: &jack::ReturnItem) -> String {
+        match item {
+            jack::ReturnItem::Var(v) => v.clone(),
+            jack::ReturnItem::Property { var, prop } => format!("{var}.{prop}"),
+        }
+    }
+
+    fn resolve_item(item: &jack::ReturnItem, row: &Row) -> Value {
+        match item {
+            jack::ReturnItem::Var(v) => row.get(v).cloned().unwrap_or(Value::Null),
+            jack::ReturnItem::Property { var, prop } => row.get(var).and_then(|v| v.get(prop)).cloned().unwrap_or(Value::Null),
         }
     }
 
@@ -1391,10 +877,6 @@ mod executor {
                         if let Some(node) = v.get("node") {
                             next.push(node.clone());
                         }
-                    }
-                    PathSeg::Fragment { name } => {
-                        let _ = name;
-                        next.push(v.clone());
                     }
                 }
             }
@@ -1450,71 +932,18 @@ mod executor {
         out
     }
 
-    fn resolve_yield(data: &Value, key: &str) -> Value {
-        let root = data.get("data").unwrap_or(data);
-        let mut cur = root.clone();
-        for part in key.split('.') {
-            cur = cur.get(part).cloned().unwrap_or(Value::Null);
-        }
-        cur
-    }
-
-    fn expr_key(e: &Expr) -> String {
-        match e {
-            Expr::Var { name } => name.clone(),
-            Expr::Field { object, name } => format!("{}.{}", expr_key(object), name),
-            _ => "_".into(),
+    fn eval_bool(expr: &jack::Expr, row: &Row) -> bool {
+        match expr {
+            jack::Expr::Eq { var, prop, value } => field_eq(row, var, prop, value),
+            jack::Expr::Ne { var, prop, value } => !field_eq(row, var, prop, value),
+            jack::Expr::And(a, b) => eval_bool(a, row) && eval_bool(b, row),
+            jack::Expr::Or(a, b) => eval_bool(a, row) || eval_bool(b, row),
         }
     }
 
-    fn eval_bool(expr: &Expr, row: &Row) -> bool {
-        match eval_expr(expr, row) {
-            Ok(Value::Bool(b)) => b,
-            Ok(Value::Null) => false,
-            Ok(_) => true,
-            Err(_) => false,
-        }
-    }
-
-    fn sort_key(v: Value) -> String {
-        match v {
-            Value::String(s) => s,
-            Value::Number(n) => n.to_string(),
-            other => other.to_string(),
-        }
-    }
-
-    fn eval_expr(expr: &Expr, row: &Row) -> Result<Value, ArchitectError> {
-        Ok(match expr {
-            Expr::Const(v) => v.clone(),
-            Expr::Var { name } => row.get(name).cloned().unwrap_or(Value::Null),
-            Expr::Field { object, name } => {
-                let base = eval_expr(object, row)?;
-                base.get(name).cloned().unwrap_or(Value::Null)
-            }
-            Expr::UnaryNeg(inner) => {
-                let v = eval_expr(inner, row)?;
-                json_num(-json_as_f64(&v)?)
-            }
-            Expr::BinaryOperator { operator, left, right } => {
-                let l = eval_expr(left, row)?;
-                let r = eval_expr(right, row)?;
-                match operator {
-                    BinaryOperator::Eq => Value::Bool(json_eq(&l, &r)),
-                    BinaryOperator::Ne => Value::Bool(!json_eq(&l, &r)),
-                    BinaryOperator::Lt => Value::Bool(json_as_f64(&l)? < json_as_f64(&r)?),
-                    BinaryOperator::Le => Value::Bool(json_as_f64(&l)? <= json_as_f64(&r)?),
-                    BinaryOperator::Gt => Value::Bool(json_as_f64(&l)? > json_as_f64(&r)?),
-                    BinaryOperator::Ge => Value::Bool(json_as_f64(&l)? >= json_as_f64(&r)?),
-                    BinaryOperator::Add => json_num(json_as_f64(&l)? + json_as_f64(&r)?),
-                    BinaryOperator::Sub => json_num(json_as_f64(&l)? - json_as_f64(&r)?),
-                    BinaryOperator::Mul => json_num(json_as_f64(&l)? * json_as_f64(&r)?),
-                    BinaryOperator::Div => json_num(json_as_f64(&l)? / json_as_f64(&r)?),
-                }
-            }
-            Expr::And(xs) => Value::Bool(xs.iter().all(|x| eval_expr(x, row).ok().and_then(|v| v.as_bool()).unwrap_or(false))),
-            Expr::Or(xs) => Value::Bool(xs.iter().any(|x| eval_expr(x, row).ok().and_then(|v| v.as_bool()).unwrap_or(false))),
-        })
+    fn field_eq(row: &Row, var: &str, prop: &str, value: &PropertyValue) -> bool {
+        let Some(actual) = row.get(var).and_then(|v| v.get(prop)) else { return false };
+        json_eq(actual, &super::property_value_to_json(value))
     }
 
     fn json_eq(a: &Value, b: &Value) -> bool {
@@ -1524,38 +953,26 @@ mod executor {
             _ => a == b,
         }
     }
-
-    fn json_as_f64(v: &Value) -> Result<f64, ArchitectError> {
-        match v {
-            Value::Number(n) => Ok(n.as_f64().unwrap_or(0.0)),
-            Value::String(s) => s.parse().map_err(|_| ArchitectError::Execute(format!("not numeric: {s}"))),
-            _ => Ok(0.0),
-        }
-    }
-
-    fn json_num(n: f64) -> Value {
-        serde_json::Number::from_f64(n).map(Value::Number).unwrap_or(Value::Null)
-    }
 }
 //#endregion 🔖Executor
 
 //#region 🔖Api
 mod api {
-    use super::ast::Query;
     use super::errors::ArchitectError;
     use super::executor::{Executor, QueryResult};
-    use super::parser::parse_query;
     use super::planner::{plan_query, OpPlan};
     use super::transport::Transport;
     use futures_util::StreamExt;
+    use mathematical_graph_dsl as jack;
 
-    /// @emoji 🔍 Parse architect source.
-    pub fn parse(text: &str) -> Result<Query, ArchitectError> {
-        parse_query(text)
+    /// 🔍 Parse architect source — literally Jack's own parser (`mathematical_graph_dsl::parse`);
+    /// architect no longer carries any lexer/parser/AST of its own.
+    pub fn parse(text: &str) -> Result<jack::Query, ArchitectError> {
+        jack::parse(text).map_err(|e| ArchitectError::Parse(e.to_string()))
     }
 
-    /// @emoji 🧭 Plan architect AST.
-    pub fn plan(ast: &Query) -> Result<OpPlan, ArchitectError> {
+    /// @emoji 🧭 Plan Jack's AST.
+    pub fn plan(ast: &jack::Query) -> Result<OpPlan, ArchitectError> {
         plan_query(ast)
     }
 
@@ -1583,42 +1000,31 @@ mod api {
 #[cfg(target_arch = "wasm32")]
 mod wasm_api {
     use super::api;
-    use super::ast::{Expr, ProjectionItem, ReturnClause};
     use super::planner::{OpPlan, PathSeg, Step};
     use super::transport::JsTransport;
+    use mathematical_graph_dsl as jack;
+    use mathematical_graph_manifest::PropertyValue;
     use serde_json::{json, Value};
     use wasm_bindgen::prelude::*;
 
-    fn export_expr(expr: &Expr) -> Value {
+    fn export_property_value(v: &PropertyValue) -> Value {
+        super::property_value_to_json(v)
+    }
+
+    fn export_expr(expr: &jack::Expr) -> Value {
         match expr {
-            Expr::Const(v) => json!({ "kind": "const", "value": v }),
-            Expr::Var { name } => json!({ "kind": "var", "name": name }),
-            Expr::Field { object, name } => json!({ "kind": "field", "name": name, "object": export_expr(object) }),
-            Expr::UnaryNeg(inner) => json!({ "kind": "neg", "expr": export_expr(inner) }),
-            Expr::BinaryOperator { operation, left, right } => json!({
-                "kind": "binaryOperator",
-                "operation": format!("{operation:?}"),
-                "left": export_expr(left),
-                "right": export_expr(right),
-            }),
-            Expr::And(xs) => json!({ "kind": "and", "exprs": xs.iter().map(export_expr).collect::<Vec<_>>() }),
-            Expr::Or(xs) => json!({ "kind": "or", "exprs": xs.iter().map(export_expr).collect::<Vec<_>>() }),
+            jack::Expr::Eq { var, prop, value } => json!({ "kind": "eq", "var": var, "prop": prop, "value": export_property_value(value) }),
+            jack::Expr::Ne { var, prop, value } => json!({ "kind": "ne", "var": var, "prop": prop, "value": export_property_value(value) }),
+            jack::Expr::And(left, right) => json!({ "kind": "and", "left": export_expr(left), "right": export_expr(right) }),
+            jack::Expr::Or(left, right) => json!({ "kind": "or", "left": export_expr(left), "right": export_expr(right) }),
         }
     }
 
-    fn export_projection(p: &ProjectionItem) -> Value {
-        json!({
-            "expr": export_expr(&p.expr),
-            "alias": p.alias,
-        })
-    }
-
-    fn export_return(ret: &ReturnClause) -> Value {
-        json!({
-            "projections": ret.projections.iter().map(export_projection).collect::<Vec<_>>(),
-            "orderBy": ret.order_by.as_ref().map(export_expr),
-            "limit": ret.limit,
-        })
+    fn export_return_item(item: &jack::ReturnItem) -> Value {
+        match item {
+            jack::ReturnItem::Var(name) => json!({ "kind": "var", "name": name }),
+            jack::ReturnItem::Property { var, prop } => json!({ "kind": "property", "var": var, "prop": prop }),
+        }
     }
 
     fn export_path_seg(seg: &PathSeg) -> Value {
@@ -1626,24 +1032,24 @@ mod wasm_api {
             PathSeg::Field { name } => json!({ "kind": "field", "name": name }),
             PathSeg::ConnectionEdges => json!({ "kind": "connectionEdges" }),
             PathSeg::ConnectionNode => json!({ "kind": "connectionNode" }),
-            PathSeg::Fragment { name } => json!({ "kind": "fragment", "name": name }),
         }
     }
 
-    /// @emoji 📤 Wasm-safe `OpPlan` JSON without deep `serde` recursion on `Expr`.
+    /// @emoji 📤 Wasm-safe `OpPlan` JSON, built by hand rather than via `serde` derive since Jack's
+    /// `Expr`/`ReturnItem` (reused directly, no architect-owned mirror) don't implement `Serialize`.
     fn export_plan(plan: &OpPlan) -> Value {
         let steps: Vec<Value> = plan
             .steps
             .iter()
             .map(|step| match step {
-                Step::GraphQl { operation, document, variables, bind } => {
+                Step::GraphQl { operator, document, variables, bind } => {
                     let mut paths = serde_json::Map::new();
                     for (k, p) in &bind.paths {
                         paths.insert(k.clone(), Value::Array(p.segments.iter().map(export_path_seg).collect()));
                     }
                     json!({
                         "kind": "graphQl",
-                        "operation": format!("{operation:?}"),
+                        "operator": format!("{operator:?}"),
                         "document": document,
                         "variables": variables,
                         "bind": {
@@ -1655,31 +1061,27 @@ mod wasm_api {
                 }
                 Step::Join { on_var, key } => json!({ "kind": "join", "onVar": on_var, "key": key }),
                 Step::Filter { expr } => json!({ "kind": "filter", "expr": export_expr(expr) }),
-                Step::Unwind { source_var, alias, where_expr } => json!({
+                Step::Unwind { source_var, source_prop, alias } => json!({
                     "kind": "unwind",
                     "sourceVar": source_var,
+                    "sourceProp": source_prop,
                     "alias": alias,
-                    "whereExpr": where_expr.as_ref().map(export_expr),
                 }),
-                Step::Project { projections, where_expr } => json!({
+                Step::Project { items } => json!({
                     "kind": "project",
-                    "projections": projections.iter().map(export_projection).collect::<Vec<_>>(),
-                    "whereExpr": where_expr.as_ref().map(export_expr),
+                    "items": items.iter().map(export_return_item).collect::<Vec<_>>(),
                 }),
-                Step::Order { expr } => json!({ "kind": "order", "expr": export_expr(expr) }),
-                Step::Limit { n } => json!({ "kind": "limit", "n": n }),
-                Step::Call { operation, document, variables, yield_items } => json!({
+                Step::Call { operator, document, variables } => json!({
                     "kind": "call",
-                    "operation": format!("{operation:?}"),
+                    "operator": format!("{operator:?}"),
                     "document": document,
                     "variables": variables,
-                    "yieldItems": yield_items.iter().map(|y| json!({ "key": y.key, "alias": y.alias })).collect::<Vec<_>>(),
                 }),
             })
             .collect();
         json!({
             "steps": steps,
-            "returnClause": plan.return_clause.as_ref().map(export_return),
+            "returnItems": plan.return_items.as_ref().map(|items| items.iter().map(export_return_item).collect::<Vec<_>>()),
         })
     }
 
@@ -1708,7 +1110,8 @@ mod wasm_api {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use std::collections::{BTreeMap, HashMap};
+    use mathematical_graph_dsl as jack;
+    use std::collections::HashMap;
     use std::path::PathBuf;
 
     //#region 🧪architect_cases
@@ -1752,7 +1155,7 @@ mod tests {
         if let Some(rows) = expect.get("rowContains").and_then(|v| v.as_array()) {
             for want in rows {
                 let obj = want.as_object().expect("rowContains object");
-                let hit = result.rows.iter().any(|row| obj.iter().all(|(k, v)| row.get(k).map(|a| a == v).unwrap_or(false)));
+                let hit = result.rows.iter().any(|row| obj.iter().all(|(k, v)| row.get(k).is_some_and(|a| a == v)));
                 assert!(hit, "case {case_name} rowContains {want}");
             }
         }
@@ -1844,8 +1247,8 @@ mod tests {
         let kit = architect_harness_kit();
         assert_eq!(kit["name"].as_str(), Some("Architect Harness"));
         let topos = kit["typologies"]["items"].as_array().expect("typologies items");
-        let total_designs: usize = topos.iter().map(|t| t["designs"]["items"].as_array().map(Vec::len).unwrap_or(0)).sum();
-        let total_types: usize = topos.iter().map(|t| t["types"]["items"].as_array().map(Vec::len).unwrap_or(0)).sum();
+        let total_designs: usize = topos.iter().map(|t| t["designs"]["items"].as_array().map_or(0, Vec::len)).sum();
+        let total_types: usize = topos.iter().map(|t| t["types"]["items"].as_array().map_or(0, Vec::len)).sum();
         assert_eq!(total_designs, 2, "total designs across typologies");
         assert_eq!(total_types, 3, "total types across typologies");
     }
@@ -1857,7 +1260,7 @@ mod tests {
             let name = case["name"].as_str().unwrap();
             let q = parse(case["query"].as_str().unwrap()).expect("parse");
             if case["expect"].get("hasReturn").and_then(|v| v.as_bool()) == Some(true) {
-                assert!(q.return_clause.is_some(), "case {name}");
+                assert!(q.clauses.iter().any(|c| matches!(c, jack::Clause::Return(_))), "case {name}");
             }
         }
         for case in cases_for_tier(&doc, "plan") {
@@ -1903,88 +1306,82 @@ mod tests {
     }
     //#endregion 🧪architect_cases
 
+    //#region 🧪unified_jack_syntax_round_trips
+    // 🌱 Architect's `parse()` is literally `mathematical_graph_dsl::parse` now — these tests
+    // verify that identity directly, and that Jack's own formatter/parser pair (shared with every
+    // other Jack consumer in the repo) round-trips the query shapes architect relies on.
+    #[test]
+    fn unified_jack_syntax_parse_is_identical_to_jack_parse() {
+        let src = "MATCH (d:Design) WHERE d.name = \"Nakagin Capsule Tower\" RETURN d.name";
+        assert_eq!(parse(src).expect("architect parse"), jack::parse(src).expect("jack parse"));
+    }
+
+    #[test]
+    fn unified_jack_syntax_round_trips_through_shared_formatter() {
+        let src = "MATCH (d:Design)--[:HAS]->(p:Piece) WHERE d.name = \"Nakagin Capsule Tower\" RETURN d.name, p.name";
+        let formatted = jack::format(src).expect("format");
+        let reparsed = jack::parse(&formatted).expect("reparse formatted");
+        assert_eq!(parse(src).expect("parse original"), reparsed, "formatting must not change the parsed AST");
+    }
+
+    #[test]
+    fn unified_jack_syntax_call_and_unwind_round_trip() {
+        let src = "CALL installProjection(\"s1\", \"{}\") RETURN result";
+        let formatted = jack::format(src).expect("format");
+        assert_eq!(parse(src).expect("parse"), jack::parse(&formatted).expect("reparse"));
+
+        let unwind_src = "MATCH (d:Design) UNWIND d.name AS n RETURN n";
+        let formatted_unwind = jack::format(unwind_src).expect("format");
+        assert_eq!(parse(unwind_src).expect("parse"), jack::parse(&formatted_unwind).expect("reparse"));
+    }
+    //#endregion 🧪unified_jack_syntax_round_trips
+
     //#region 🧪unit_coverage
     #[test]
     fn parser_escaped_string_literal_unescapes_embedded_quote() {
-        let q = parse(r#"MATCH (d:Design {name: "a\"b"}) RETURN d"#).expect("parse");
-        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
-        let ast::PatternElement::Node(n) = &m.patterns[0].elements[0] else { panic!("expected node") };
-        assert_eq!(n.props.get("name").and_then(|v| v.as_str()), Some("a\"b"));
+        let q = parse(r#"MATCH (d:Design) WHERE d.name = "a\"b" RETURN d"#).expect("parse");
+        let jack::Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match clause") };
+        assert_eq!(patterns[0].nodes[0].kind, "Design");
+        let jack::Clause::Where(jack::Expr::Eq { value, .. }) = &q.clauses[1] else { panic!("expected where eq") };
+        assert_eq!(value.as_str(), Some("a\"b"));
     }
 
     #[test]
-    fn parser_number_literal_negative_and_float_values() {
-        let q = parse("MATCH (t:Type) WHERE t.x = -1.5 RETURN t.x AS x").expect("parse");
-        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
-        let Some(where_expr) = &m.where_expr else { panic!("expected where expr") };
-        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Eq, right, .. } = where_expr else { panic!("expected eq expr") };
-        let ast::Expr::UnaryNeg(inner) = &**right else { panic!("expected unary neg") };
-        assert_eq!(&**inner, &ast::Expr::Const(serde_json::Value::from(1.5)));
-    }
-
-    // 🚧 parser_call_args_support_array_and_nested_object_literals / parser_boolean_literal_true_false_in_node_props
-    // removed here — both caught genuine, unimplemented parser gaps (CALL arg array/nested-object literals
-    // don't parse at all; `true`/`false` in node props parse as the strings "true"/"false", not JSON bools).
-    // See .repo/🎫/26/07/26/NINETY-FIVE-PERCENT-EXHAUSTIVE-TEST-COVERAGE follow-up task for detail — re-add
-    // both tests verbatim once the grammar supports them.
-
-    #[test]
-    fn parser_arithmetic_operator_precedence_mul_before_add() {
-        let q = parse("MATCH (t:Type) RETURN t.x + t.y * 2 AS v").expect("parse");
-        let ret = q.return_clause.expect("return clause");
-        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Add, right, .. } = &ret.projections[0].expr else { panic!("expected add at top") };
-        let ast::Expr::BinaryOperator { operator: ast::BinaryOperator::Mul, .. } = &**right else { panic!("expected mul on rhs") };
+    fn parser_negative_number_literal_in_where() {
+        let q = parse("MATCH (t:Type) WHERE t.x = -1.5 RETURN t.x").expect("parse");
+        let jack::Clause::Where(jack::Expr::Eq { value, .. }) = &q.clauses[1] else { panic!("expected where eq") };
+        assert_eq!(value.as_f64(), Some(-1.5));
     }
 
     #[test]
-    fn parser_comparison_operators_map_to_binary_operator_variants() {
-        let cases = [
-            ("<", ast::BinaryOperator::Lt),
-            ("<=", ast::BinaryOperator::Le),
-            (">", ast::BinaryOperator::Gt),
-            (">=", ast::BinaryOperator::Ge),
-            ("==", ast::BinaryOperator::Eq),
-            ("!=", ast::BinaryOperator::Ne),
-        ];
-        for (op, expected) in cases {
-            let q = parse(&format!("MATCH (t:Type) WHERE t.x {op} 1 RETURN t")).expect("parse");
-            let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
-            let ast::Expr::BinaryOperator { operator, .. } = m.where_expr.as_ref().expect("where expr") else { panic!("expected binary op") };
-            assert_eq!(*operator, expected, "operator {op}");
-        }
+    fn parser_and_binds_predicates_together() {
+        let q = parse("MATCH (t:Type) WHERE t.a = 1 AND t.b = 2 RETURN t").expect("parse");
+        let jack::Clause::Where(expr) = &q.clauses[1] else { panic!("expected where") };
+        assert!(matches!(expr, jack::Expr::And(_, _)));
     }
 
     #[test]
-    fn parser_and_binds_tighter_than_or() {
-        let q = parse("MATCH (t:Type) WHERE t.a = 1 AND t.b = 2 OR t.c = 3 RETURN t").expect("parse");
-        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
-        let ast::Expr::Or(parts) = m.where_expr.as_ref().expect("where expr") else { panic!("expected or") };
-        assert_eq!(parts.len(), 2);
-        assert!(matches!(parts[0], ast::Expr::And(_)));
-    }
-
-    #[test]
-    fn parser_undirected_relationship_with_multiple_types() {
-        let q = parse("MATCH (a:Type)-[:HAS|OWNS]-(b:Connector) RETURN a").expect("parse");
-        let ast::Clause::Match(m) = &q.clauses[0] else { panic!("expected match clause") };
-        let ast::PatternElement::Rel(rel) = &m.patterns[0].elements[1] else { panic!("expected rel") };
-        assert_eq!(rel.direction, ast::RelDirection::Undirected);
-        assert_eq!(rel.types, vec!["HAS".to_string(), "OWNS".to_string()]);
+    fn parser_undirected_relationship() {
+        let q = parse("MATCH (a:Type)--[:HAS]--(b:Connector) RETURN a").expect("parse");
+        let jack::Clause::Match(patterns) = &q.clauses[0] else { panic!("expected match clause") };
+        let edge = patterns[0].edge.as_ref().expect("expected edge");
+        assert!(!edge.directed, "-- both sides must parse as undirected");
+        assert_eq!(edge.kind.as_deref(), Some("HAS"));
     }
 
     #[test]
     fn parser_rejects_trailing_input_after_query() {
         let err = parse("MATCH (n:Type) RETURN n EXTRA_JUNK").unwrap_err();
         let ArchitectError::Parse(msg) = err else { panic!("expected parse error") };
-        assert!(msg.contains("trailing input"), "message: {msg}");
+        assert!(msg.contains("EXTRA_JUNK") || msg.to_ascii_lowercase().contains("expected"), "message: {msg}");
     }
 
     #[test]
-    fn parser_call_clause_without_yield_has_empty_yield_items() {
-        let q = parse("CALL session.end()").expect("parse");
-        let ast::Clause::Call(c) = &q.clauses[0] else { panic!("expected call clause") };
-        assert!(c.yield_items.is_empty());
-        assert_eq!(c.action_id, "session.end");
+    fn parser_call_clause_with_positional_args() {
+        let q = parse("CALL installProjection(\"s1\", \"{}\")").expect("parse");
+        let jack::Clause::Call(c) = &q.clauses[0] else { panic!("expected call clause") };
+        assert_eq!(c.name, "installProjection");
+        assert_eq!(c.args.len(), 2);
     }
 
     #[test]
@@ -1996,24 +1393,16 @@ mod tests {
     }
 
     #[test]
-    fn planner_errors_when_node_pattern_missing_label() {
-        let q = parse("MATCH (n) RETURN n").expect("parse");
+    fn planner_errors_when_anchor_label_not_session_root() {
+        let q = parse("MATCH (p:Piece) RETURN p").expect("parse");
         let err = plan(&q).unwrap_err();
         let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
-        assert!(msg.contains("requires a label"), "message: {msg}");
-    }
-
-    #[test]
-    fn planner_errors_when_unwind_source_is_not_a_variable() {
-        let q = parse("MATCH (t:Type) UNWIND 1 AS x RETURN x").expect("parse");
-        let err = plan(&q).unwrap_err();
-        let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
-        assert!(msg.contains("UNWIND expects a variable"), "message: {msg}");
+        assert!(msg.contains("must be Kit, Design, or Type"), "message: {msg}");
     }
 
     #[test]
     fn planner_call_step_resolves_store_alias_and_json_variables() {
-        let q = parse(r#"CALL session.store.installProjection({store: "s1", json: "{}"}) YIELD ok"#).expect("parse");
+        let q = parse(r#"CALL installProjection("s1", "{}")"#).expect("parse");
         let p = plan(&q).expect("plan");
         let planner::Step::Call { variables, .. } = &p.steps[0] else { panic!("expected call step") };
         assert_eq!(variables.get("storeId").and_then(|v| v.as_str()), Some("s1"));
@@ -2024,47 +1413,37 @@ mod tests {
     fn schema_predicate_parse_is_case_insensitive_and_rejects_unknown() {
         assert_eq!(schema::Predicate::parse("has"), Some(schema::Predicate::Has));
         assert_eq!(schema::Predicate::parse("Owns"), Some(schema::Predicate::Owns));
+        assert_eq!(schema::Predicate::parse("parent"), Some(schema::Predicate::Parent));
         assert_eq!(schema::Predicate::parse("bogus"), None);
     }
 
     #[test]
     fn schema_resolve_edge_errors_for_unknown_predicate_combo() {
-        let rel = ast::RelPattern { types: vec!["OWNS".into()], direction: ast::RelDirection::Out, props: BTreeMap::new() };
-        let err = schema::resolve_edge(schema::Label::Kit, schema::Predicate::Owns, schema::Label::Design, &rel, true).unwrap_err();
+        let err = schema::resolve_edge(schema::Label::Kit, schema::Predicate::Owns, schema::Label::Design).unwrap_err();
         let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
         assert!(msg.contains("no edge"), "message: {msg}");
     }
 
     #[test]
-    fn schema_resolve_edge_matches_parent_prop_as_string_true_false() {
-        let mut props_true = BTreeMap::new();
-        props_true.insert("parent".to_string(), serde_json::Value::String("true".into()));
-        let rel_true = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: props_true };
-        let parent_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Has, schema::Label::Side, &rel_true, true).expect("parent edge");
+    fn schema_resolve_edge_parent_and_child_are_distinct_predicates() {
+        let parent_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Parent, schema::Label::Side).expect("parent edge");
         assert_eq!(parent_edge.field, "parent");
-
-        let mut props_false = BTreeMap::new();
-        props_false.insert("parent".to_string(), serde_json::Value::String("FALSE".into()));
-        let rel_false = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: props_false };
-        let child_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Has, schema::Label::Side, &rel_false, true).expect("child edge");
+        let child_edge = schema::resolve_edge(schema::Label::Connection, schema::Predicate::Child, schema::Label::Side).expect("child edge");
         assert_eq!(child_edge.field, "child");
     }
 
     #[test]
     fn schema_node_label_and_rel_predicate_success_and_error_paths() {
-        let labeled = ast::NodePattern { var_name: Some("d".into()), label: Some("Design".into()), props: BTreeMap::new() };
+        let labeled = jack::PatternNode { var: "d".into(), kind: "Design".into(), port: None };
         assert_eq!(schema::node_label(&labeled).unwrap(), schema::Label::Design);
 
-        let unlabeled = ast::NodePattern { var_name: Some("d".into()), label: None, props: BTreeMap::new() };
-        let err = schema::node_label(&unlabeled).unwrap_err();
+        let unknown = jack::PatternNode { var: "d".into(), kind: "Bogus".into(), port: None };
+        let err = schema::node_label(&unknown).unwrap_err();
         let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
-        assert!(msg.contains("requires a label"));
+        assert!(msg.contains("unknown label"));
 
-        let rel = ast::RelPattern { types: vec!["HAS".into()], direction: ast::RelDirection::Out, props: BTreeMap::new() };
-        assert_eq!(schema::rel_predicate(&rel).unwrap(), schema::Predicate::Has);
-
-        let empty_rel = ast::RelPattern { types: vec![], direction: ast::RelDirection::Out, props: BTreeMap::new() };
-        let err = schema::rel_predicate(&empty_rel).unwrap_err();
+        assert_eq!(schema::rel_predicate(Some("HAS")).unwrap(), schema::Predicate::Has);
+        let err = schema::rel_predicate(None).unwrap_err();
         let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
         assert!(msg.contains("requires a predicate"));
     }
@@ -2077,22 +1456,20 @@ mod tests {
 
     #[test]
     fn schema_resolve_call_errors_for_unknown_target() {
-        let err = schema::resolve_call("nope.nope").unwrap_err();
+        let err = schema::resolve_call("nope").unwrap_err();
         let ArchitectError::Plan(msg) = err else { panic!("expected plan error") };
         assert!(msg.contains("unknown CALL target"));
     }
 
     #[test]
     fn schema_call_variables_empty_for_non_store_action() {
-        let mut args = BTreeMap::new();
-        args.insert("ok".to_string(), serde_json::Value::Bool(true));
-        let vars = schema::call_variables("session.end", &args);
+        let vars = schema::call_variables("sessionEnd", &[]);
         assert_eq!(vars, serde_json::json!({}));
     }
 
     #[tokio::test]
     async fn executor_cartesian_merge_combines_independent_patterns() {
-        let query = "MATCH (d:Design), (t:Type) RETURN d.name AS dn, t.name AS tn";
+        let query = "MATCH (d:Design), (t:Type) RETURN d.name, t.name";
         let op_plan = compile(query).expect("compile");
         let design_payload = serde_json::json!({
             "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
@@ -2116,45 +1493,24 @@ mod tests {
         let transport = MemoryTransport::new(responses);
         let result = run(query, &transport).await.expect("run");
         assert_eq!(result.rows.len(), 6);
-        assert_eq!(result.columns, vec!["dn".to_string(), "tn".to_string()]);
+        assert_eq!(result.columns, vec!["d.name".to_string(), "t.name".to_string()]);
     }
 
     #[tokio::test]
-    async fn executor_order_by_and_limit_apply_to_return_rows() {
-        let query = "MATCH (t:Type) RETURN t.name AS name ORDER BY t.name LIMIT 2";
-        let op_plan = compile(query).expect("compile");
-        let payload = serde_json::json!({
-            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
-                "hasTypes": { "edges": [
-                    { "node": { "id": "t1", "hash": "h1", "name": "Gamma" } },
-                    { "node": { "id": "t2", "hash": "h2", "name": "Alpha" } },
-                    { "node": { "id": "t3", "hash": "h3", "name": "Beta" } }
-                ] }
-            } } } } } ] } } }
-        });
-        let mut responses = HashMap::new();
-        register_canned_steps(&op_plan, &[payload], &mut responses);
-        let transport = MemoryTransport::new(responses);
-        let result = run(query, &transport).await.expect("run");
-        let names: Vec<_> = result.rows.iter().filter_map(|r| r.get("name").and_then(|v| v.as_str())).collect();
-        assert_eq!(names, vec!["Alpha", "Beta"]);
-    }
-
-    #[tokio::test]
-    async fn executor_unwind_flattens_array_value_with_where_filter() {
-        let query = "CALL session.end() UNWIND result AS x WHERE x > 1 RETURN x AS x";
+    async fn executor_unwind_flattens_array_value() {
+        let query = "CALL sessionEnd() UNWIND result.items AS x RETURN x";
         let op_plan = compile(query).expect("compile");
         let mut responses = HashMap::new();
-        register_canned_steps(&op_plan, &[serde_json::json!([1, 2, 3])], &mut responses);
+        register_canned_steps(&op_plan, &[serde_json::json!({"items": [1, 2, 3]})], &mut responses);
         let transport = MemoryTransport::new(responses);
         let result = run(query, &transport).await.expect("run");
         let xs: Vec<_> = result.rows.iter().filter_map(|r| r.get("x").and_then(|v| v.as_i64())).collect();
-        assert_eq!(xs, vec![2, 3]);
+        assert_eq!(xs, vec![1, 2, 3]);
     }
 
     #[tokio::test]
     async fn executor_unwind_wraps_non_array_value_as_single_item() {
-        let query = "CALL session.end() UNWIND result AS x RETURN x AS x";
+        let query = "CALL sessionEnd() UNWIND result AS x RETURN x";
         let op_plan = compile(query).expect("compile");
         let mut responses = HashMap::new();
         register_canned_steps(&op_plan, &[serde_json::json!("solo")], &mut responses);
@@ -2165,55 +1521,39 @@ mod tests {
     }
 
     #[tokio::test]
-    async fn executor_return_projection_arithmetic_error_propagates_not_numeric() {
-        let query = "MATCH (d:Design) RETURN d.name + 1 AS bad";
+    async fn executor_call_result_binds_whole_payload_under_result_var() {
+        let query = "CALL sessionEnd() RETURN result";
         let op_plan = compile(query).expect("compile");
-        let payload = serde_json::json!({
-            "data": { "session": { "stores": { "edges": [ { "node": { "wip": { "theKit": { "kit": {
-                "hasDesigns": { "edges": [ { "node": { "id": "d1", "hash": "h1", "name": "NotANumber" } } ] }
-            } } } } } ] } } }
-        });
+        let payload = serde_json::json!({"data": {"session": {"end": {"ok": true}}}});
         let mut responses = HashMap::new();
-        register_canned_steps(&op_plan, &[payload], &mut responses);
+        register_canned_steps(&op_plan, std::slice::from_ref(&payload), &mut responses);
         let transport = MemoryTransport::new(responses);
-        let err = run(query, &transport).await.unwrap_err();
-        let ArchitectError::Execute(msg) = err else { panic!("expected execute error") };
-        assert!(msg.contains("not numeric"), "message: {msg}");
+        let result = run(query, &transport).await.expect("run");
+        assert_eq!(result.rows[0].get("result"), Some(&payload));
     }
 
     #[tokio::test]
-    async fn executor_ingest_call_yield_without_yield_items_uses_result_key() {
-        let query = "CALL session.end() RETURN result AS r";
+    async fn executor_call_result_property_access_reaches_one_level_deep() {
+        let query = "CALL sessionEnd() RETURN result.data";
         let op_plan = compile(query).expect("compile");
         let mut responses = HashMap::new();
-        register_canned_steps(&op_plan, &[serde_json::json!({"ok": true})], &mut responses);
+        register_canned_steps(&op_plan, &[serde_json::json!({"data": {"ok": true}})], &mut responses);
         let transport = MemoryTransport::new(responses);
         let result = run(query, &transport).await.expect("run");
-        assert_eq!(result.rows[0].get("r"), Some(&serde_json::json!({"ok": true})));
-    }
-
-    #[tokio::test]
-    async fn executor_call_yield_resolves_dotted_key_and_null_for_missing() {
-        let query = "CALL session.end() YIELD session.missing AS m";
-        let op_plan = compile(query).expect("compile");
-        let mut responses = HashMap::new();
-        register_canned_steps(&op_plan, &[serde_json::json!({"data": {"session": {"end": {"ok": true}}}})], &mut responses);
-        let transport = MemoryTransport::new(responses);
-        let result = run(query, &transport).await.expect("run");
-        assert_eq!(result.rows[0].get("m"), Some(&serde_json::Value::Null));
+        assert_eq!(result.rows[0].get("result.data"), Some(&serde_json::json!({"ok": true})));
     }
 
     #[tokio::test]
     async fn executor_memory_transport_missing_canned_response_errors() {
         let transport = MemoryTransport::new(HashMap::new());
-        let err = run("MATCH (t:Type) RETURN t.name AS name", &transport).await.unwrap_err();
+        let err = run("MATCH (t:Type) RETURN t.name", &transport).await.unwrap_err();
         let ArchitectError::Transport(TransportError::Msg(msg)) = err else { panic!("expected transport error") };
         assert!(msg.contains("no canned response"), "message: {msg}");
     }
 
     #[tokio::test]
     async fn executor_run_subscription_errors_when_plan_has_no_subscription_call() {
-        let op_plan = compile("MATCH (t:Type) RETURN t.name AS name").expect("compile");
+        let op_plan = compile("MATCH (t:Type) RETURN t.name").expect("compile");
         let transport = MemoryTransport::new(HashMap::new());
         let err = match Executor::run_subscription(&op_plan, &transport).await {
             Ok(_) => panic!("expected execute error"),
@@ -2225,13 +1565,13 @@ mod tests {
 
     #[tokio::test]
     async fn api_run_dispatches_subscription_operation_call() {
-        let query = "CALL subscription.operation() YIELD operation.id AS id";
+        let query = "CALL subscriptionOperation() RETURN result";
         let op_plan = compile(query).expect("compile");
         let mut responses = HashMap::new();
         register_canned_steps(&op_plan, &[serde_json::json!({"data": {"operation": {"id": "op1", "hash": "h1"}}})], &mut responses);
         let transport = MemoryTransport::new(responses);
         let result = run(query, &transport).await.expect("run");
-        assert_eq!(result.rows[0].get("id").and_then(|v| v.as_str()), Some("op1"));
+        assert_eq!(result.rows[0].get("result").and_then(|v| v.get("data")).and_then(|v| v.get("operation")).and_then(|v| v.get("id")).and_then(|v| v.as_str()), Some("op1"));
     }
 
     #[test]

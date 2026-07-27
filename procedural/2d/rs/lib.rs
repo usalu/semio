@@ -1048,7 +1048,7 @@ mod tests {
     #[test]
     fn dsl_parse_rejects_malformed_text() {
         let error = Procedural2dDocument::parse_dsl("schema=\"flow.fixture").unwrap_err();
-        assert!(error.message.contains("found Error"), "unexpected error: {}", error.message);
+        assert!(error.message.contains("unterminated string literal"), "unexpected error: {}", error.message);
     }
 
     #[test]
@@ -1064,30 +1064,26 @@ mod tests {
         assert!(error.message.contains("expected Record, found Absent"), "unexpected error: {}", error.message);
     }
 
+    /// 🌱 A bare (unquoted) value is now legitimately accepted for any `Shape::Text` field (the
+    /// unified syntax law's "bare-preferred" strings) — this asserts the genuinely-still-rejected
+    /// shape mismatch instead: a raw number token, which is neither `Ident` nor `Text`.
     #[test]
     fn dsl_parse_rejects_unquoted_value_for_string_field() {
-        let text = "schema=flow.fixture\ncamera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+        let text = "schema=123\ncamera { x=0 y=0 zoom=1 }\nwidgets { }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected Text"), "unexpected error: {}", error.message);
     }
 
     #[test]
-    fn dsl_parse_rejects_quoted_value_for_ident_field() {
-        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuronKind=\"math.add\" preview=true inputPorts= [ ] outputPorts= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
-        let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
-        assert!(error.message.contains("expected Ident"), "unexpected error: {}", error.message);
-    }
-
-    #[test]
     fn dsl_parse_rejects_non_numeric_value_for_number_field() {
-        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { inputSlider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { input-slider id=\"s\" value=abc min=0 max=1 step=1 }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected a float"), "unexpected error: {}", error.message);
     }
 
     #[test]
     fn dsl_parse_rejects_invalid_bool_value() {
-        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuronKind=math.add preview=maybe inputPorts= [ ] outputPorts= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
+        let text = "schema=\"flow.fixture\"\ncamera { x=0 y=0 zoom=1 }\nwidgets { neuron id=\"n\" neuron-kind=math.add preview=maybe input-ports= [ ] output-ports= [ ] params= [ ] }\nsynapses= [ ]\nlayout= { }\ngenerations= [ ]\n";
         let error = Procedural2dDocument::parse_dsl(text).unwrap_err();
         assert!(error.message.contains("expected 'true' or 'false'"), "unexpected error: {}", error.message);
     }

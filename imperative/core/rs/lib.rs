@@ -134,15 +134,12 @@ fn prune_empty_slot(document: &mut ImperativeDocument, path_ref: &PathRef) {
 #[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
 struct ValueDsl {
     /// 🕳️ Presence-only flag (the payload is never inspected) — `Atom::Null`'s tag.
-    #[dsl(key = "null")]
     null: Option<bool>,
     #[dsl(key = "bool")]
     boolean: Option<bool>,
     #[dsl(key = "int")]
     integer: Option<i64>,
-    #[dsl(key = "decimal")]
     decimal: Option<f64>,
-    #[dsl(key = "text")]
     text: Option<String>,
     #[dsl(key = "dict")]
     dictionary: Option<BTreeMap<String, ValueDsl>>,
@@ -207,15 +204,11 @@ fn option_dsl_map_to_dictionary(entries: Option<BTreeMap<String, ValueDsl>>) -> 
 /// pointer indirection keeps that finite instead of recursing forever just to construct the schema.
 #[derive(Clone, Debug, PartialEq, dsl::DslEnum)]
 enum StepNodeDsl {
-    #[dsl(key = "step")]
     Step {
         #[dsl(positional)]
         id: String,
-        #[dsl(ident)]
         kind: String,
-        #[dsl(key = "params")]
         params: Option<BTreeMap<String, ValueDsl>>,
-        #[dsl(key = "bodies")]
         bodies: BTreeMap<String, PathDsl>,
     },
 }
@@ -255,7 +248,6 @@ fn path_dsl_to_path(path_dsl: PathDsl) -> Path {
 #[dsl(layout = "lines")]
 struct ImperativeDocumentDsl {
     schema: String,
-    #[dsl(key = "seed")]
     seed: Option<BTreeMap<String, ValueDsl>>,
     #[dsl(statements, block)]
     steps: Vec<StepNodeDsl>,
@@ -285,15 +277,13 @@ impl vcs::DocumentDsl for ImperativeDocument {
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-/// ✂️ Local mirror of `ImperativeOperation` — flattens `PathRef` into bare `owner`/`slot` fields
-/// (both plain, always-quoted `Option<String>`s — `#[dsl(ident)]` doesn't currently compose with
-/// `Option<T>` in the derive, so a quoted `owner="step-if"` is what this crate settles for) since a
-/// `vcs::Operation` grammar is a genuinely tagged enum (`#[derive(dsl::DslOps)]` requires an enum),
-/// not the single generic-struct shape `ImperativeOperation`/`vcs::CollectionOperation` use at the
-/// Rust level.
+/// ✂️ Local mirror of `ImperativeOperation` — flattens `PathRef` into bare `owner`/`slot`
+/// `Option<String>` fields (printed bare when the value lexes as a bare ident, per the engine's
+/// default `Shape::Text` behavior — no per-field opt-in needed) since a `vcs::Operation` grammar is
+/// a genuinely tagged enum (`#[derive(dsl::DslOps)]` requires an enum), not the single generic-struct
+/// shape `ImperativeOperation`/`vcs::CollectionOperation` use at the Rust level.
 #[derive(Clone, Debug, PartialEq, dsl::DslOps)]
 enum ImperativeOperationDsl {
-    #[dsl(key = "add")]
     Add {
         owner: Option<String>,
         slot: Option<String>,
@@ -301,9 +291,7 @@ enum ImperativeOperationDsl {
         #[dsl(statements)]
         item: Box<StepNodeDsl>,
     },
-    #[dsl(key = "remove")]
     Remove { owner: Option<String>, slot: Option<String>, id: String },
-    #[dsl(key = "move")]
     Move {
         owner: Option<String>,
         slot: Option<String>,
@@ -311,7 +299,6 @@ enum ImperativeOperationDsl {
         #[dsl(key = "to")]
         to_index: usize,
     },
-    #[dsl(key = "patch")]
     Patch { owner: Option<String>, slot: Option<String>, id: String, patch: BTreeMap<String, ValueDsl> },
 }
 
@@ -845,8 +832,8 @@ mod tests {
             collection: vcs::CollectionOperation::Add { index: 0, item: step("step-nested", "log.print") },
         };
         let printed = <ImperativeOperation as vcs::OpText>::print_op(&operation);
-        assert!(printed.contains("owner=\"step-if\""), "printed: {printed}");
-        assert!(printed.contains("slot=\"then\""), "printed: {printed}");
+        assert!(printed.contains("owner=step-if"), "printed: {printed}");
+        assert!(printed.contains("slot=then"), "printed: {printed}");
         let parsed = <ImperativeOperation as vcs::OpText>::parse_op(&printed).expect("round trips");
         assert_eq!(parsed, operation);
     }

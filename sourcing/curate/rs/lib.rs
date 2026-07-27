@@ -59,13 +59,9 @@ pub fn typology_flatten(root: &TypologyNode) -> Vec<(Vec<String>, String)> {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum GeometryRecipe {
-    #[dsl(key = "box")]
     Box { width: f64, height: f64, depth: f64 },
-    #[dsl(key = "frame")]
     Frame { width: f64, height: f64, depth: f64, profile: f64 },
-    #[dsl(key = "slab")]
     Slab { width: f64, depth: f64, thickness: f64 },
-    #[dsl(key = "mesh")]
     Mesh { positions: Vec<f32>, normals: Vec<f32>, indices: Vec<u32> },
 }
 
@@ -174,9 +170,7 @@ pub struct ObjectKind {
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "camelCase")]
 pub enum SortDirection {
-    #[dsl(key = "asc")]
     Asc,
-    #[dsl(key = "desc")]
     Desc,
 }
 
@@ -231,6 +225,7 @@ pub struct CurateDocument {
     #[dsl(block)]
     pub filters: Filters,
     #[serde(default)]
+    #[dsl(table)]
     pub curated: Vec<CuratedItem>,
     #[serde(default)]
     #[dsl(block)]
@@ -290,7 +285,6 @@ impl CurateDocument {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum SourcingOperation {
-    #[dsl(key = "setDocument")]
     SetDocument {
         #[dsl(block)]
         document: CurateDocument,

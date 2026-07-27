@@ -17,3 +17,4 @@ path = "lib.rs"
 
 [dependencies]
 pack = { path = "../../rs" }
+dsl_schema = { path = "../../../dsl/schema/rs" }

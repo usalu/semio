@@ -344,12 +344,16 @@ pub struct Puzzle5dCatalogRope {
 #[serde(rename_all = "camelCase")]
 pub struct Puzzle5dKindCatalogs {
     #[serde(default)]
+    #[dsl(table)]
     pub parts: Vec<Puzzle5dCatalogPart>,
     #[serde(default)]
+    #[dsl(table)]
     pub grips: Vec<Puzzle5dCatalogGrip>,
     #[serde(default)]
+    #[dsl(table)]
     pub fasteners: Vec<Puzzle5dCatalogFastener>,
     #[serde(default)]
+    #[dsl(table)]
     pub ropes: Vec<Puzzle5dCatalogRope>,
 }
 
@@ -377,10 +381,13 @@ pub struct Puzzle5dProjection {
     #[serde(default, skip_serializing_if = "Option::is_none")]
     pub kind_catalogs: Option<Puzzle5dKindCatalogs>,
     #[serde(default)]
+    #[dsl(table)]
     pub kind_compatibility: Vec<Puzzle5dKindCompatibility>,
     #[serde(default)]
+    #[dsl(table)]
     pub parts: Vec<Puzzle5dPart>,
     #[serde(default)]
+    #[dsl(table)]
     pub fasteners: Vec<Puzzle5dFastener>,
 }
 

@@ -1247,10 +1247,9 @@
   mask-composite: exclude;
 }
 
-/* 🪟 Docked windows: the silhouette SVG on [data-slot="mode-dock-stack"] owns the celebrate ring for
-   window-chrome; suppress only the window body stamp, matching the introduced/loading/waiting rules. */
-[data-slot="mode-dock-stack"] [data-slot="window"][data-celebrated="true"]::after,
-[data-slot="mode-dock-stack"] [id^="framework.window."][data-celebrated="true"]:not([id*=".action."])::after {
+/* 🪟 Window silhouettes: the SVG border owns every outer stroke — suppress rectangular body rings. */
+[data-window-silhouette] [data-slot="window"][data-celebrated="true"]::after,
+[data-window-silhouette] [id^="framework.window."][data-celebrated="true"]:not([id*=".action."])::after {
   content: none !important;
   animation: none !important;
 }
@@ -1272,18 +1271,16 @@
   box-shadow: inset 0 0 0 var(--introduced-border-width) var(--introduced-border-color, var(--color-secondary));
 }
 
-/* 🪟 Docked windows: rectangular body rings are wrong for *window-chrome* introduce targets — the
-   silhouette SVG on `[data-slot="mode-dock-stack"]` owns those. Suppress only the window body stamp
-   (scroll surface `framework.window.{segment}` / `[data-slot="window"]`), not nested introduce targets
-   such as a utility toggle (`transform`) that must keep their own inset pulse. Action-row ids
-   (`framework.window.{segment}.action.*`) are nested targets and keep their pulse. */
-[data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
-[data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+/* 🪟 Window silhouettes: rectangular body rings are wrong for window-chrome introduce targets — the
+   silhouette SVG owns those. Suppress only the window body stamp (scroll surface / `[data-slot="window"]`),
+   not nested introduce targets such as a utility toggle. Action-row ids keep their pulse. */
+[data-window-silhouette] [data-slot="window"][data-introduced="true"],
+[data-window-silhouette] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
   box-shadow: none !important;
 }
 
-[data-slot="mode-dock-stack"] [data-slot="window"].border-loading::after,
-[data-slot="mode-dock-stack"] [data-slot="window"].border-waiting::after {
+[data-window-silhouette] [data-slot="window"].border-loading::after,
+[data-window-silhouette] [data-slot="window"].border-waiting::after {
   content: none !important;
   display: none !important;
 }
@@ -1354,8 +1351,8 @@
     box-shadow: inset 0 0 0 var(--stroke-default) var(--introduced-border-color, var(--color-secondary));
   }
 
-  [data-slot="mode-dock-stack"] [data-slot="window"][data-introduced="true"],
-  [data-slot="mode-dock-stack"] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
+  [data-window-silhouette] [data-slot="window"][data-introduced="true"],
+  [data-window-silhouette] [id^="framework.window."][data-introduced="true"]:not([id*=".action."]) {
     box-shadow: none !important;
   }
 
@@ -6798,18 +6795,11 @@
   transition: border-color 120ms ease;
 }
 
-:is([data-slot="panel"], [data-slot="pane"]):hover [data-slot="chrome-frame"] {
+:is([data-slot="panel"][data-panel="mobilePanel"]):hover [data-slot="chrome-frame"] {
   border-color: var(--border-emphasized-color) !important;
 }
 
-:is([data-slot="panel"], [data-slot="pane"], [data-slot="introduction-info-box"], [data-slot="context-menu-content"], [data-slot="window-chrome-stack"]):not([data-active="true"]):hover
-  [data-slot="window-chrome-silhouette-border"][data-kind="normal"]
-  path {
-  stroke: var(--border-emphasized-color) !important;
-  transition: stroke 120ms ease;
-}
-
-[data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path {
+[data-window-silhouette]:not([data-active="true"]):hover [data-window-silhouette-border][data-kind="normal"] path {
   stroke: var(--border-emphasized-color) !important;
   transition: stroke 120ms ease;
 }
@@ -6822,16 +6812,39 @@
 }
 
 /* 🪟 U-gap must punch through — never inherit cap/body glass or a stack rectangle fill. */
-[data-slot="window-chrome-gap"],
-[data-slot="mode-dock-tab-gap"],
-[data-slot="window-chrome-footer-gap"],
-[data-slot="window-chrome-footer-gap-left"],
-[data-slot="window-chrome-footer-gap-right"] {
+[data-window-silhouette-gap] {
   background: transparent !important;
   background-color: transparent !important;
   -webkit-backdrop-filter: none !important;
   backdrop-filter: none !important;
   box-shadow: none !important;
+}
+
+/* 🪟 Docked chips: inner separator only — the silhouette SVG owns every outer stroke. */
+[data-window-silhouette-chip][data-dock="top"] {
+  border-width: 0;
+  border-style: none;
+  box-shadow: inset 0 calc(-1 * var(--stroke-hairline)) 0 0 var(--border-normal-color);
+}
+
+[data-window-silhouette-chip][data-dock="bottom"] {
+  border-width: 0;
+  border-style: none;
+  box-shadow: inset 0 var(--stroke-hairline) 0 0 var(--border-normal-color);
+}
+
+[data-window-silhouette-chip][data-dock="top"] + [data-window-silhouette-chip][data-dock="top"] {
+  box-shadow:
+    inset var(--stroke-hairline) 0 0 0 var(--border-normal-color),
+    inset 0 calc(-1 * var(--stroke-hairline)) 0 0 var(--border-normal-color);
+}
+
+[data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"] + [data-slot="mode-dock-tab"] {
+  box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
+}
+
+[data-slot="panel-tabs"] > [data-slot="panel-tab-button"] + [data-slot="panel-tab-button"] {
+  box-shadow: inset var(--stroke-hairline) 0 0 0 var(--border-normal-color);
 }
 
 [data-slot="window-chrome-stack"],

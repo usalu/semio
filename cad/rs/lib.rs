@@ -12,13 +12,9 @@ pub const CAD_PLAY_DOCUMENT_SCHEMA: &str = "cad.document";
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Serialize, Deserialize, dsl::DslScalar)]
 #[serde(rename_all = "kebab-case")]
 pub enum CadPaneId {
-    #[dsl(key = "shape")]
     Shape,
-    #[dsl(key = "building")]
     Building,
-    #[dsl(key = "energy")]
     Energy,
-    #[dsl(key = "structure-classic")]
     StructureClassic,
 }
 
@@ -252,16 +248,21 @@ pub struct CadScene {
     #[dsl(block)]
     pub camera_structure_classic: CadCamera,
     #[serde(default)]
+    #[dsl(table)]
     pub objects: Vec<CadObject>,
     #[serde(default)]
+    #[dsl(table)]
     pub building_objects: Vec<CadObject>,
     #[serde(default)]
+    #[dsl(table)]
     pub energy_objects: Vec<CadObject>,
     #[serde(default)]
+    #[dsl(table)]
     pub structure_classic_objects: Vec<CadObject>,
     #[serde(default)]
     pub references_by_model_definition_id: BTreeMap<String, Vec<CadReference>>,
     #[serde(default)]
+    #[dsl(table)]
     pub nodes: Vec<CadNode>,
     #[serde(default, skip_serializing_if = "Option::is_none")]
     #[dsl(block)]
@@ -441,35 +442,20 @@ impl dsl::DslField for Box<CadScene> {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum CadOperation {
-    #[dsl(key = "addObject")]
     AddObject { pane: CadPaneId, #[dsl(block)] object: CadObject },
-    #[dsl(key = "removeObject")]
     RemoveObject { pane: CadPaneId, object_id: String },
-    #[dsl(key = "patchObject")]
     PatchObject { pane: CadPaneId, object_id: String, #[dsl(block)] patch: CadObjectPatch },
-    #[dsl(key = "translateObjects")]
     TranslateObjects { object_ids: Vec<String>, dx: f64, dy: f64, dz: f64 },
-    #[dsl(key = "rotateObjects")]
     RotateObjects { object_ids: Vec<String>, ax: f64, ay: f64, az: f64, angle: f64 },
-    #[dsl(key = "scaleObjects")]
     ScaleObjects { object_ids: Vec<String>, sx: f64, sy: f64, sz: f64 },
-    #[dsl(key = "setPaneObjects")]
     SetPaneObjects { pane: CadPaneId, objects: Vec<CadObject> },
-    #[dsl(key = "addNode")]
     AddNode { #[dsl(block)] node: CadNode },
-    #[dsl(key = "removeNode")]
     RemoveNode { node_id: String },
-    #[dsl(key = "renameNode")]
     RenameNode { node_id: String, label: String },
-    #[dsl(key = "patchReference")]
     PatchReference { model_definition_id: String, reference_id: String, #[dsl(block)] patch: CadReferencePatch },
-    #[dsl(key = "setReferences")]
     SetReferences { model_definition_id: String, references: Vec<CadReference> },
-    #[dsl(key = "setActiveModelDefinition")]
     SetActiveModelDefinition { model_definition_id: String },
-    #[dsl(key = "setCamera")]
     SetCamera { pane: CadPaneId, #[dsl(block)] camera: CadCamera },
-    #[dsl(key = "setScene")]
     SetScene { #[dsl(block)] scene: Box<CadScene> },
 }
 

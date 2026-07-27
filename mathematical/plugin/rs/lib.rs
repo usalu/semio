@@ -26,7 +26,10 @@ struct MathNode {
     y: f64,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+/// 🔌 JSON-facing edge — plain `source`/`target` id strings, unchanged for the JS frontend's
+/// `nodeGraphEdit`/`setDocument` payloads. The DSL-facing shape is `MathEdgeDsl` (see `🔖Dsl`),
+/// which folds these into one `dsl::Wire` literal per the unified syntax law for graph edges.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct MathEdge {
     id: String,
@@ -49,13 +52,13 @@ impl Default for MathCamera {
 }
 
 /// 🕸️ Graph playground state: quadrant toggle, retained layout, and the active algorithm overlay.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslRecord)]
+/// JSON-facing only now — see `MathGraphDsl` in `🔖Dsl` for the DSL-facing twin.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 struct MathGraph {
     directed: bool,
     nodes: Vec<MathNode>,
     edges: Vec<MathEdge>,
-    #[dsl(block)]
     camera: MathCamera,
     algorithm: String,
     #[serde(default)]
@@ -120,13 +123,14 @@ impl Default for MathGeometry {
     }
 }
 
-#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize, dsl::DslDocument)]
+/// 📄 JSON-facing document projection — DSL text round-trips through `MathProjectionDsl` (see
+/// `🔖Dsl`), a manual `vcs::DocumentDsl` impl instead of the direct derive, since `MathGraph`'s
+/// edges need the `dsl::Wire` shape that a plain-`String` `MathEdge` can't itself carry alongside
+/// `Serialize`/`Deserialize`.
+#[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
-#[dsl(extension = "mathematical", layout = "lines")]
 struct MathProjection {
-    #[dsl(block)]
     graph: MathGraph,
-    #[dsl(block)]
     geometry: MathGeometry,
 }
 //#endregion 🔖Document
@@ -164,19 +168,12 @@ impl OperationDiff<MathProjection> for MathDiff {
 }
 
 /// 📤 Coarse-grained operations: each replaces one top-level projection slice; `backwards` snapshots the pre-state.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
+/// JSON-facing only — DSL op-line text round-trips through `MathOperationDsl` (see `🔖OpText`).
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 enum MathOperation {
-    #[dsl(key = "setGraph")]
-    SetGraph {
-        #[dsl(block)]
-        graph: MathGraph,
-    },
-    #[dsl(key = "setGeometry")]
-    SetGeometry {
-        #[dsl(block)]
-        geometry: MathGeometry,
-    },
+    SetGraph { graph: MathGraph },
+    SetGeometry { geometry: MathGeometry },
 }
 
 impl Operation<MathProjection> for MathOperation {
@@ -199,16 +196,140 @@ impl Operation<MathProjection> for MathOperation {
 //#endregion 🔖Operation
 
 //#region 🔖Dsl
-// `impl vcs::DocumentDsl for MathProjection` is emitted automatically by the
-// `#[derive(dsl::DslDocument)]` on `MathProjection` itself (see `🔖Document`) — no manual impl
-// needed here. The former hand-rolled `mod math_text` lexer/parser/printer has been removed now
-// that `MathProjection`'s round trip is proven purely against inline-constructed fixtures (see
-// `🔖DslTests`), the crate never having shipped an external `.mathematical` fixture file.
+// The crate never having shipped an external `.mathematical` fixture file, this stays proven
+// purely against inline-constructed fixtures (see `🔖DslTests`).
+
+/// 🔌 DSL-only mirror of `MathEdge` — folds `source`/`target` into one unified `dsl::Wire` literal
+/// (`source->target`) instead of two separate string fields, per the unified syntax law for graph
+/// edges/connections. Converts at the `vcs::DocumentDsl`/`vcs::OpText` boundary only
+/// (`math_edge_to_dsl`/`math_edge_from_dsl`); `MathEdge` itself (JSON shape, `algorithm_overlay`,
+/// `media_graph_json`, the `nodeGraphEdit` action) is completely untouched.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct MathEdgeDsl {
+    id: String,
+    wire: dsl::Wire,
+}
+
+fn math_edge_to_dsl(edge: &MathEdge, directed: bool) -> MathEdgeDsl {
+    let from = dsl::WireNode { id: edge.source.clone(), kind: None, port: None };
+    let to = dsl::WireNode { id: edge.target.clone(), kind: None, port: None };
+    MathEdgeDsl { id: edge.id.clone(), wire: dsl::Wire(dsl::WireValue { from, edge: Some((directed, to)), properties: dsl::DslValue::Object(Vec::new()) }) }
+}
+
+fn math_edge_from_dsl(edge: MathEdgeDsl) -> Result<MathEdge, String> {
+    let dsl::WireValue { from, edge: link, .. } = edge.wire.0;
+    let (_directed, to) = link.ok_or_else(|| "graph edge wire literal must have a target".to_string())?;
+    Ok(MathEdge { id: edge.id, source: from.id, target: to.id })
+}
+
+/// 🕸️ DSL-only mirror of `MathGraph` — `nodes`/`edges` print as SoA tables, `edges` wire-typed via
+/// `MathEdgeDsl`.
+#[derive(Clone, Debug, PartialEq, dsl::DslRecord)]
+struct MathGraphDsl {
+    directed: bool,
+    #[dsl(table)]
+    nodes: Vec<MathNode>,
+    #[dsl(table)]
+    edges: Vec<MathEdgeDsl>,
+    #[dsl(block)]
+    camera: MathCamera,
+    algorithm: String,
+    algorithm_seed: Option<String>,
+}
+
+fn math_graph_to_dsl(graph: &MathGraph) -> MathGraphDsl {
+    MathGraphDsl {
+        directed: graph.directed,
+        nodes: graph.nodes.clone(),
+        edges: graph.edges.iter().map(|edge| math_edge_to_dsl(edge, graph.directed)).collect(),
+        camera: graph.camera.clone(),
+        algorithm: graph.algorithm.clone(),
+        algorithm_seed: graph.algorithm_seed.clone(),
+    }
+}
+
+fn math_graph_from_dsl(graph: MathGraphDsl) -> Result<MathGraph, String> {
+    Ok(MathGraph {
+        directed: graph.directed,
+        nodes: graph.nodes,
+        edges: graph.edges.into_iter().map(math_edge_from_dsl).collect::<Result<Vec<_>, _>>()?,
+        camera: graph.camera,
+        algorithm: graph.algorithm,
+        algorithm_seed: graph.algorithm_seed,
+    })
+}
+
+/// 📄 DSL-only mirror of `MathProjection` — the actual `#[derive(dsl::DslDocument)]` root.
+#[derive(Clone, Debug, PartialEq, dsl::DslDocument)]
+#[dsl(extension = "mathematical", layout = "lines")]
+struct MathProjectionDsl {
+    #[dsl(block)]
+    graph: MathGraphDsl,
+    #[dsl(block)]
+    geometry: MathGeometry,
+}
+
+fn math_projection_to_dsl(projection: &MathProjection) -> MathProjectionDsl {
+    MathProjectionDsl { graph: math_graph_to_dsl(&projection.graph), geometry: projection.geometry.clone() }
+}
+
+fn math_projection_from_dsl(projection: MathProjectionDsl) -> Result<MathProjection, String> {
+    Ok(MathProjection { graph: math_graph_from_dsl(projection.graph)?, geometry: projection.geometry })
+}
+
+impl DocumentDsl for MathProjection {
+    const EXTENSION: &'static str = "mathematical";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        let dsl_projection = <MathProjectionDsl as DocumentDsl>::parse_dsl(text)?;
+        math_projection_from_dsl(dsl_projection).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        <MathProjectionDsl as DocumentDsl>::print_dsl(&math_projection_to_dsl(self))
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
-// `impl vcs::OpText for MathOperation` is emitted automatically by the `#[derive(dsl::DslOps)]`
-// on `MathOperation` itself (see `🔖Operation`) — no manual impl needed here.
+/// ⚡ DSL-only mirror of `MathOperation` — `SetGraph`/`SetGeometry` auto-kebab to
+/// `set-graph`/`set-geometry` with no `#[dsl(key)]` override needed.
+#[derive(Clone, Debug, PartialEq, dsl::DslOps)]
+enum MathOperationDsl {
+    SetGraph {
+        #[dsl(block)]
+        graph: MathGraphDsl,
+    },
+    SetGeometry {
+        #[dsl(block)]
+        geometry: MathGeometry,
+    },
+}
+
+fn math_operation_to_dsl(operation: &MathOperation) -> MathOperationDsl {
+    match operation {
+        MathOperation::SetGraph { graph } => MathOperationDsl::SetGraph { graph: math_graph_to_dsl(graph) },
+        MathOperation::SetGeometry { geometry } => MathOperationDsl::SetGeometry { geometry: geometry.clone() },
+    }
+}
+
+fn math_operation_from_dsl(operation: MathOperationDsl) -> Result<MathOperation, String> {
+    Ok(match operation {
+        MathOperationDsl::SetGraph { graph } => MathOperation::SetGraph { graph: math_graph_from_dsl(graph)? },
+        MathOperationDsl::SetGeometry { geometry } => MathOperation::SetGeometry { geometry },
+    })
+}
+
+impl vcs::OpText for MathOperation {
+    fn parse_op(line: &str) -> Result<Self, vcs::TextError> {
+        let dsl_operation = <MathOperationDsl as vcs::OpText>::parse_op(line)?;
+        math_operation_from_dsl(dsl_operation).map_err(|message| vcs::TextError::new(message, vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_op(&self) -> String {
+        <MathOperationDsl as vcs::OpText>::print_op(&math_operation_to_dsl(self))
+    }
+}
 //#endregion 🔖OpText
 
 //#region 🔖GraphAlgorithms

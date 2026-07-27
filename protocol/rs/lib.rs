@@ -102,28 +102,22 @@ pub struct ProtocolBlockOption {
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslEnum)]
 #[serde(tag = "kind", rename_all = "camelCase")]
 pub enum ProtocolExpr {
-    #[dsl(key = "const")]
     Const { value: serde_json::Value },
-    #[dsl(key = "var")]
     Var { name: String },
-    #[dsl(key = "eq")]
     Eq {
         #[dsl(statements, block)]
         left: Box<ProtocolExpr>,
         #[dsl(statements, block)]
         right: Box<ProtocolExpr>,
     },
-    #[dsl(key = "and")]
     And {
         #[dsl(statements, block)]
         items: Vec<ProtocolExpr>,
     },
-    #[dsl(key = "or")]
     Or {
         #[dsl(statements, block)]
         items: Vec<ProtocolExpr>,
     },
-    #[dsl(key = "truthy")]
     Truthy {
         #[dsl(statements, block)]
         expr: Box<ProtocolExpr>,
@@ -266,23 +260,19 @@ pub fn initial_values(spec: &ProtocolSpec, overrides: &serde_json::Map<String, s
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize, dsl::DslOps)]
 #[serde(tag = "operation", rename_all = "camelCase")]
 pub enum ProtocolOperation {
-    #[dsl(key = "addStep")]
     AddStep {
         #[dsl(block)]
         step: ProtocolStep,
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
-    #[dsl(key = "removeStep")]
     RemoveStep {
         step_id: String,
     },
-    #[dsl(key = "moveStep")]
     MoveStep {
         step_id: String,
         index: usize,
     },
-    #[dsl(key = "addBlock")]
     AddBlock {
         step_id: String,
         #[dsl(block)]
@@ -290,30 +280,25 @@ pub enum ProtocolOperation {
         #[serde(skip_serializing_if = "Option::is_none")]
         index: Option<usize>,
     },
-    #[dsl(key = "removeBlock")]
     RemoveBlock {
         step_id: String,
         block_id: String,
     },
-    #[dsl(key = "moveBlock")]
     MoveBlock {
         block_id: String,
         from_step_id: String,
         to_step_id: String,
         index: usize,
     },
-    #[dsl(key = "updateBlock")]
     UpdateBlock {
         step_id: String,
         #[dsl(block)]
         block: ProtocolBlock,
     },
-    #[dsl(key = "updateStep")]
     UpdateStep {
         #[dsl(block)]
         step: ProtocolStep,
     },
-    #[dsl(key = "updateProtocol")]
     UpdateProtocol {
         #[serde(skip_serializing_if = "Option::is_none")]
         title: Option<String>,
