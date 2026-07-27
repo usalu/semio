@@ -8727,6 +8727,7 @@ export async function createGraphSession(): Promise<GraphWasmSession> {
 //#region FlowSession
 export type FlowWasmSession = GraphWasmSession & {
   loadFixtureJson(json: string): void;
+  resyncFixtureJson?(json: string): void;
   fixtureJson(): string;
   syncFromSceneJson?(json: string): void;
   setSelection(json: string): void;
@@ -17423,15 +17424,24 @@ export function GraphSliderOverlays({
 }) {
   const camera = parseDagOverlayCamera(stateJson);
   const sliders = parseDagSliderOverlays(stateJson);
+  const zoom = camera.zoom > 0 ? camera.zoom : 1;
   if (sliders.length === 0) return null;
   return (
     <div className="pointer-events-none absolute inset-0 z-45">
       {sliders.map((slider) => {
         const screen = dagWorldToScreen(camera, logicalW, logicalH, slider.x, slider.y);
-        const w = slider.w * camera.zoom;
-        const h = Math.max(slider.h * camera.zoom, 16);
+        // 🎚️ Lay out in world units and scale the whole control (track + knob tokens) with zoom —
+        // multiplying only the box left the CSS thumb (`size-small`) and track (`h-single`) fixed.
+        const w = slider.w;
+        const h = Math.max(slider.h, 16 / zoom);
         return (
-          <div key={slider.widgetId} className="pointer-events-auto absolute flex items-center" style={{ left: screen.x - w / 2, top: screen.y - h / 2, width: w, height: h }} onPointerDown={(event) => event.stopPropagation()}>
+          <div
+            key={slider.widgetId}
+            className="pointer-events-auto absolute flex items-center"
+            data-graph-slider-zoom={zoom}
+            style={{ left: screen.x, top: screen.y, width: w, height: h, transform: `translate(-50%, -50%) scale(${zoom})`, transformOrigin: "center" }}
+            onPointerDown={(event) => event.stopPropagation()}
+          >
             <Slider
               className="h-full w-full min-w-0"
               max={slider.max}
@@ -17517,18 +17527,21 @@ function applyNodeGraphHoverFromScene(session: FlowWasmSession, hoverJson: strin
   }
 }
 
-function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
+function syncFlowSessionEvalFromScene(session: FlowWasmSession, scene: NodeGraphScene): void {
+  if (scene.evalJson) session.applyEvalOutputsJson(scene.evalJson);
+  if (scene.computingJson) session.setComputingProgress(scene.computingJson);
+}
+
+function syncFlowSessionStructureFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
   if (scene.operatorsJson) session.setNeuronKindInfosJson(scene.operatorsJson);
-  if (scene.fixtureJson) session.loadFixtureJson(scene.fixtureJson);
+  if (scene.fixtureJson) {
+    if (session.resyncFixtureJson) session.resyncFixtureJson(scene.fixtureJson);
+    else session.loadFixtureJson(scene.fixtureJson);
+  }
   if (scene.selectionJson) session.setSelection(scene.selectionJson);
   applyNodeGraphHoverFromScene(session, scene.hoverJson);
   if (scene.previewOffJson) session.setPreviewOff(scene.previewOffJson);
   if (scene.catalogueJson) session.setCatalogueJson(scene.catalogueJson);
-  // 🧵 Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
-  // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
-  // immediately wiped by this call on the same sync pass.
-  if (scene.evalJson) session.applyEvalOutputsJson(scene.evalJson);
-  if (scene.computingJson) session.setComputingProgress(scene.computingJson);
   if (scene.lodJson) {
     try {
       const lod = JSON.parse(scene.lodJson) as { readonly automatic?: boolean; readonly forcedLabel?: string };
@@ -17545,6 +17558,14 @@ function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScen
   } catch {
     /* ignore */
   }
+}
+
+function syncFlowSessionFromScene(session: FlowWasmSession, scene: NodeGraphScene, applyCamera: boolean): void {
+  syncFlowSessionStructureFromScene(session, scene, applyCamera);
+  // 🧵 Apply results from the plugin's off-main-thread `flowEvalTick` chain BEFORE computingJson —
+  // applyEvalOutputsJson clears computing chrome, so applying computingJson first would have it
+  // immediately wiped by this call on the same sync pass.
+  syncFlowSessionEvalFromScene(session, scene);
 }
 //#endregion Sync
 
@@ -17597,11 +17618,6 @@ export function FlowGraphCanvasHost({
     return registerIntroductionSurfaceResolver(windowElementId(windowInstanceId), dagIntroductionResolver(sessionRef, containerRef));
   }, [windowInstanceId]);
 
-  useEffect(() => {
-    console.log("[DEBUG] FlowGraphCanvasHost mounted", { surfaceId, controllerId });
-    return () => console.log("[DEBUG] FlowGraphCanvasHost UNMOUNTED", { surfaceId, controllerId });
-  }, [surfaceId, controllerId]);
-
   const dispatch = useCallback(
     (action: string, args?: Record<string, unknown>) => {
       onAction({ controllerId, action, args: { surfaceId, ...args } });
@@ -17630,7 +17646,6 @@ export function FlowGraphCanvasHost({
     if (!session) return;
     try {
       const fixtureJson = session.fixtureJson();
-      console.log("[DEBUG] commitFixture: dispatching setFixture, isGestureActive=", isGestureActiveRef.current, "len=", fixtureJson.length);
       dispatch(nodeGraphActions.edit, { operations: [{ operation: "setFixture", fixtureJson }] });
     } catch {
       /* session not ready */
@@ -17666,20 +17681,8 @@ export function FlowGraphCanvasHost({
   }, [commitFixture]);
 
   const handleGesturePointerDown = useCallback(() => {
-    console.log("[DEBUG] gesture pointerDown: isGestureActiveRef -> true");
     isGestureActiveRef.current = true;
   }, []);
-
-  const handleGesturePointerUp = useCallback(() => {
-    console.log("[DEBUG] gesture pointerUp: isGestureActiveRef -> false, firing final commitFixture");
-    isGestureActiveRef.current = false;
-    if (pendingCommitTimeoutRef.current != null) {
-      clearTimeout(pendingCommitTimeoutRef.current);
-      pendingCommitTimeoutRef.current = null;
-    }
-    lastCommitAtRef.current = Date.now();
-    commitFixture();
-  }, [commitFixture]);
 
   useEffect(() => {
     return () => {
@@ -17715,6 +17718,26 @@ export function FlowGraphCanvasHost({
     setSelectionBounds(parseDagSelectionUnionBoundsScreen(session.selectionUnionBoundsScreenJson()));
     setMarquee(computeDagMarqueeOverlay(session.selectionPreviewPointsJson(), session.selectionPreviewCrossing(), session.selectionPreviewMethod?.()));
   }, []);
+
+  const handleGesturePointerUp = useCallback(() => {
+    isGestureActiveRef.current = false;
+    if (pendingCommitTimeoutRef.current != null) {
+      clearTimeout(pendingCommitTimeoutRef.current);
+      pendingCommitTimeoutRef.current = null;
+    }
+    const session = sessionRef.current;
+    if (session) {
+      syncFlowSessionFromScene(session, sceneRef.current, false);
+      try {
+        session.renderFrame();
+      } catch {
+        /* gpu not ready */
+      }
+      paintOverlays();
+    }
+    lastCommitAtRef.current = Date.now();
+    commitFixture();
+  }, [commitFixture, paintOverlays]);
 
   const emitInteractionState = useCallback(() => {
     const session = sessionRef.current;
@@ -17761,12 +17784,10 @@ export function FlowGraphCanvasHost({
     let raf = 0;
     let cancelled = false;
     let cleanupAttached: (() => void) | undefined;
-    console.log("[DEBUG] attachCanvas effect: attaching (should log ONCE per session)");
     session
       .attachCanvas(canvas, Math.round(rect.width), Math.round(rect.height), dpr)
       .then(() => {
         if (cancelled) return;
-        console.log("[DEBUG] attachCanvas effect: attached OK, applying initial camera");
         syncFlowSessionFromScene(session, sceneRef.current, true);
         syncSessionCanvasTheme(session);
         const resize = () => {
@@ -17789,12 +17810,10 @@ export function FlowGraphCanvasHost({
           if (raf) cancelAnimationFrame(raf);
         };
       })
-      .catch((err) => {
+      .catch(() => {
         /* already attached (e.g. a stale re-run) or transient failure; nothing to clean up */
-        console.log("[DEBUG] attachCanvas effect: attach FAILED/REJECTED", err);
       });
     return () => {
-      console.log("[DEBUG] attachCanvas effect: cleanup running (effect re-run or unmount)");
       cancelled = true;
       cleanupAttached?.();
     };
@@ -17803,14 +17822,11 @@ export function FlowGraphCanvasHost({
   useEffect(() => {
     const session = sessionRef.current;
     if (!session || !sessionReady) return;
-    // Skip while a gesture (e.g. slider drag) is active: an in-flight commit's response landing
-    // mid-gesture would otherwise reload the fixture and visibly revert the live local edit.
     if (isGestureActiveRef.current) {
-      console.log("[DEBUG] resync effect: SKIPPED (gesture active), sceneSignature len=", sceneSignature.length);
-      return;
+      syncFlowSessionEvalFromScene(session, scene);
+    } else {
+      syncFlowSessionFromScene(session, scene, false);
     }
-    console.log("[DEBUG] resync effect: APPLYING syncFlowSessionFromScene, sceneSignature len=", sceneSignature.length, "fixtureJson len=", scene.fixtureJson?.length);
-    syncFlowSessionFromScene(session, scene, false);
     session.renderFrame();
     paintOverlays();
   }, [sceneSignature, paintOverlays, scene, sessionReady]);
@@ -18143,7 +18159,6 @@ export function FlowGraphCanvasHost({
         logicalH={containerSize.h}
         editable={editable}
         onSliderChange={(widgetId, value) => {
-          console.log("[DEBUG] onSliderChange (TS handler fired)", widgetId, value, "isGestureActive=", isGestureActiveRef.current);
           sessionRef.current?.setSliderValue(widgetId, value);
           commitFixtureThrottled();
           paintOverlays();

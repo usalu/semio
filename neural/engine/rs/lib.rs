@@ -1234,7 +1234,7 @@ fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
 /// 🧬 Per-neuron structural/adjacency fingerprint, keyed once by id in [`TreeSnapshot`] instead
 /// of duplicated across parallel maps — cuts id clones on [`TreeSnapshot::capture`] from four
 /// per neuron down to one.
-#[derive(Default)]
+#[derive(Clone, Default)]
 struct NeuronSnapshot {
     key: u64,
     incoming: u64,
@@ -1244,7 +1244,7 @@ struct NeuronSnapshot {
 
 /// 📸 Structural fingerprint of a tree+seeds pair, used by [`compute_dirty_set`] to diff two
 /// evaluations without re-hashing or re-walking neurons that provably didn't change.
-#[derive(Default)]
+#[derive(Clone, Default)]
 pub struct TreeSnapshot {
     neurons: HashMap<String, NeuronSnapshot>,
     seed_keys: HashMap<String, u64>,
@@ -1329,6 +1329,11 @@ pub fn compute_dirty_set(previous: Option<&TreeSnapshot>, current: &TreeSnapshot
 // #endregion 🔖DirtyPropagation
 
 // #region 🔖Evaluator
+/// ⏳ Topo-ordered neuron ids still needing work when a budgeted walk stops at `from_index`.
+fn budgeted_remaining_from(order: &[String], from_index: usize, dirty: &HashSet<String>) -> Vec<String> {
+    order[from_index..].iter().filter(|id| dirty.is_empty() || dirty.contains(*id)).cloned().collect()
+}
+
 /// 📡 Resolved neuron inputs and outputs from one evaluation pass.
 #[derive(Clone, Debug, Default, PartialEq)]
 pub struct EvalChannels {
@@ -1449,7 +1454,7 @@ impl<'a> Evaluator<'a> {
             // cluster is conservatively always charged as a miss.
             if let Some(sub_tree) = neuron.tree.as_deref() {
                 if spent >= budget {
-                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: order[index..].to_vec() });
+                    return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty) });
                 }
                 let out = self.evaluate_cluster_sequential(sub_tree, &input, operator_infos, dispatch, cache)?;
                 outputs.insert(neuron_id.clone(), out);
@@ -1459,7 +1464,7 @@ impl<'a> Evaluator<'a> {
             let merged = input.merge(&neuron.params);
             let is_miss = !cache.contains(node_hash(&neuron.kind, &merged));
             if is_miss && spent >= budget {
-                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: order[index..].to_vec() });
+                return Ok(BudgetedEval { channels: EvalChannels { outputs, inputs }, remaining: budgeted_remaining_from(&order, index, dirty) });
             }
             let out = evaluate_cached_output(cache, &neuron.kind, &merged, || dispatch(&neuron.kind, &merged));
             outputs.insert(neuron_id.clone(), out);
@@ -2311,6 +2316,37 @@ mod tests {
         cache.begin_epoch();
         evaluator.evaluate_channels_cached(&tree_changed, &HashMap::new(), &HashMap::new(), &dispatch, &cache, &HashSet::new(), None).unwrap();
         assert_eq!(calls.load(Ordering::Relaxed), 5);
+    }
+
+    #[test]
+    fn evaluate_channels_budgeted_remaining_excludes_clean_branches() {
+        use std::sync::atomic::{AtomicUsize, Ordering};
+        let tree = Tree {
+            neurons: vec![
+                Neuron::with_kind("a", "echo", number_dictionary(2.0)),
+                Neuron::with_kind("b", "double", Dictionary::new()),
+                Neuron::with_kind("c", "echo", number_dictionary(9.0)),
+            ],
+            synapses: vec![
+                Synapse { id: "s1".into(), from: "a".into(), to: "b".into(), from_port: "x".into(), to_port: "number".into() },
+            ],
+        };
+        let mut reg = Registry::new();
+        reg.register_schema(number_schema());
+        reg.register_operator(echo_info(), vec![OperatorImpl { schemas: vec![], operation: Box::new(Echo) }], &[]);
+        reg.register_operator(double_info(), vec![OperatorImpl { schemas: vec!["number".into()], operation: Box::new(Double) }], &["number"]);
+        let evaluator = Evaluator::new(&reg);
+        let cache = NeuralCache::new();
+        let calls = AtomicUsize::new(0);
+        let mut dispatch = |kind: &str, input: &Dictionary| {
+            calls.fetch_add(1, Ordering::Relaxed);
+            reg.dispatch(kind, input)
+        };
+        let dirty: std::collections::HashSet<String> = ["b".to_string()].into_iter().collect();
+        cache.begin_epoch();
+        let result = evaluator.evaluate_channels_budgeted(&tree, &HashMap::new(), &HashMap::new(), &mut dispatch, &cache, &dirty, None, 0).unwrap();
+        assert_eq!(calls.load(Ordering::Relaxed), 0);
+        assert_eq!(result.remaining, vec!["b".to_string()], "clean branch node \"c\" must not appear in remaining");
     }
 
     #[test]

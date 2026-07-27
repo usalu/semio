@@ -7996,6 +7996,7 @@ dependencies = [
 name = "protocol_materialize"
 version = "0.1.0"
 dependencies = [
+ "pack_core",
  "protocol_core",
  "protocol_format",
  "protocol_history",

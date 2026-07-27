@@ -15,3 +15,4 @@ path = "lib.rs"
 protocol_core = { path = "../../core/rs" }
 protocol_format = { path = "../../format/rs" }
 protocol_history = { path = "../../history/rs" }
+pack_core = { path = "../../../pack/core/rs" }

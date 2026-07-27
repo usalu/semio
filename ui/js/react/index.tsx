@@ -1717,58 +1717,6 @@ function renderContextMenuLeading(item: ContextMenuItem): React.ReactNode {
   );
 }
 
-/**
- * 🧩 Recursively renders {@link ContextMenuItem} rows for Radix dropdown menu surfaces (right-click host).
- **/
-export function renderContextMenuItems(items: readonly ContextMenuItem[] | undefined, onClose?: () => void): React.ReactNode {
-  if (!items?.length) {
-    return null;
-  }
-  const rows: React.ReactNode[] = [];
-  for (const item of items) {
-    if (item.separator) {
-      rows.push(<DropdownMenuPrimitive.Separator key={`${item.id}-sep`} className="h-px bg-border my-single" />);
-      continue;
-    }
-    if (item.children?.length) {
-      rows.push(
-        <DropdownMenuPrimitive.Sub key={item.id}>
-          <DropdownMenuPrimitive.SubTrigger disabled={item.disabled} className={contextMenuItemClassName(item)}>
-            {renderContextMenuLeading(item)}
-            <span className="truncate">{item.label ?? item.id}</span>
-            <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
-          </DropdownMenuPrimitive.SubTrigger>
-          <DropdownMenuPrimitive.Portal>
-            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className="z-menu border-0 bg-transparent p-0 shadow-none">
-              <ContextMenuChrome title={item.label ?? item.id}>{renderContextMenuItems(item.children, onClose)}</ContextMenuChrome>
-            </DropdownMenuPrimitive.SubContent>
-          </DropdownMenuPrimitive.Portal>
-        </DropdownMenuPrimitive.Sub>,
-      );
-      continue;
-    }
-    rows.push(
-      <DropdownMenuPrimitive.Item
-        key={item.id}
-        disabled={item.disabled}
-        className={contextMenuItemClassName(item)}
-        data-selected={item.checked ? "true" : undefined}
-        onSelect={(event) => {
-          item.onSelect?.(event as unknown as Event);
-          onClose?.();
-        }}
-        onPointerEnter={() => item.onHover?.()}
-        onPointerLeave={() => item.onHoverEnd?.()}
-      >
-        {renderContextMenuLeading(item)}
-        <span className="truncate">{item.label ?? item.id}</span>
-        {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
-      </DropdownMenuPrimitive.Item>,
-    );
-  }
-  return <>{rows}</>;
-}
-
 type DOMListenerTarget = Pick<EventTarget, "addEventListener" | "removeEventListener">;
 
 function createDOMEventBinding() {
@@ -1802,26 +1750,6 @@ function renderPortalInto(children: React.ReactNode, container: Element | Docume
   return container ? createPortal(children, container) : null;
 }
 
-function renderContextMenuTrigger(point: { x: number; y: number } | null): React.ReactNode {
-  const trigger = (
-    <DropdownMenuPrimitive.Trigger asChild>
-      <span
-        aria-hidden
-        style={{
-          height: 1,
-          left: point?.x ?? 0,
-          opacity: 0,
-          pointerEvents: "none",
-          position: "fixed",
-          top: point?.y ?? 0,
-          width: 1,
-        }}
-      />
-    </DropdownMenuPrimitive.Trigger>
-  );
-  return renderPortalInto(trigger, getDocumentBody()) ?? trigger;
-}
-
 export interface ContextMenuProps {
   items?: readonly ContextMenuItem[];
   children: React.ReactNode;
@@ -1835,8 +1763,6 @@ export interface ContextMenuProps {
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
   const [point, setPoint] = reactHostPort.useState<{ x: number; y: number } | null>(null);
-  const flow = useFlow();
-  const close = reactHostPort.useCallback(() => setOpen(false), []);
   const hasItems = !!items?.length;
   const host = (
     <div
@@ -1857,31 +1783,17 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title
     return host;
   }
   return (
-    <DropdownMenuPrimitive.Root dir={flow.inline === "rtl" ? "rtl" : undefined} modal={false} onOpenChange={setOpen} open={open}>
+    <>
       {host}
-      {renderContextMenuTrigger(point)}
-      <DropdownMenuPrimitive.Portal>
-        <DropdownMenuPrimitive.Content
-          align="start"
-          avoidCollisions={false}
-          className="z-menu border-0 bg-transparent p-0 shadow-none"
-          data-slot="context-menu-content"
-          onCloseAutoFocus={(event) => event.preventDefault()}
-          side="bottom"
-          sideOffset={0}
-          style={point ? { left: point.x, position: "fixed", top: point.y } : undefined}
-        >
-          <ContextMenuChrome title={title}>{renderContextMenuItems(items, close)}</ContextMenuChrome>
-        </DropdownMenuPrimitive.Content>
-      </DropdownMenuPrimitive.Portal>
-    </DropdownMenuPrimitive.Root>
+      <ContextMenuController open={open} position={point} items={items} onOpenChange={setOpen} title={title} />
+    </>
   );
 };
 
 export interface ContextMenuControllerProps {
   open: boolean;
   position: { x: number; y: number } | null;
-  items: ContextMenuItem[];
+  items: readonly ContextMenuItem[];
   onOpenChange: (open: boolean) => void;
   /** @emoji 🪟 Title chip on the window-chrome cap row. */
   title?: string;
@@ -1896,7 +1808,9 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
       <button aria-disabled={item.disabled} className={contextMenuItemClassName(item)} data-disabled={item.disabled ? "" : undefined} data-selected={item.checked ? "true" : undefined} disabled={item.disabled} role="menuitem" type="button">
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
-        <span className={contextMenuShortcutClassName}>›</span>
+        <span aria-hidden className={contextMenuShortcutClassName}>
+          ›
+        </span>
       </button>
       {open && item.children?.length ? (
         <ContextMenuChrome className="absolute start-full top-0 ms-tiny" title={item.label ?? item.id}>
@@ -1907,7 +1821,7 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
   );
 }
 
-function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => void): React.ReactNode {
+function renderFixedContextMenuItems(items: readonly ContextMenuItem[], onClose: () => void): React.ReactNode {
   return items.map((item) => {
     if (item.separator) {
       return <div key={`${item.id}-sep`} className="h-px bg-border my-single" role="separator" />;
@@ -1936,7 +1850,11 @@ function renderFixedContextMenuItems(items: ContextMenuItem[], onClose: () => vo
       >
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
-        {item.shortcut ? <span className={contextMenuShortcutClassName}>{item.shortcut}</span> : null}
+        {item.shortcut ? (
+          <span aria-hidden className={contextMenuShortcutClassName}>
+            {item.shortcut}
+          </span>
+        ) : null}
       </button>
     );
   });
@@ -30690,6 +30608,22 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(screen.getByRole("menuitem", { name: "Demo action" })).toBeTruthy();
       });
+    });
+
+    it("anchors the outer window chrome top-left at the pointer coordinates", async () => {
+      render(
+        <ContextMenu items={[{ id: "demo", label: "Demo action" }]}>
+          <button type="button">Target</button>
+        </ContextMenu>,
+      );
+      fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }), { clientX: 123, clientY: 87 });
+      const menu = await waitFor(() => screen.getByRole("menu"));
+      const chrome = menu.closest<HTMLElement>('[data-window-silhouette][data-slot="context-menu-content"]');
+      console.log("[DEBUG] context menu anchor", { left: chrome?.style.left, parent: chrome?.parentElement?.tagName, position: chrome?.style.position, top: chrome?.style.top });
+      expect(chrome?.parentElement).toBe(document.body);
+      expect(chrome?.style.position).toBe("fixed");
+      expect(chrome?.style.left).toBe("123px");
+      expect(chrome?.style.top).toBe("87px");
     });
 
     it("wraps context menu rows in window chrome with a title chip and no enlarge control", async () => {

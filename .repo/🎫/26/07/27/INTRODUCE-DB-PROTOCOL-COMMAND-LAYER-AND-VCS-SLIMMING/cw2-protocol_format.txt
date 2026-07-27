@@ -106,3 +106,49 @@ truncation-at-every-byte fuzz (never panics, never over-reports) (8 tests), Blak
 (1 test), writer flag validation + position tracking (2 tests).
 
 No changes made outside protocol/format/rs/lib.rs. No git commands run.
+
+---
+
+Follow-up review pass (separate CW2 agent, same ticket)
+---------------------------------------------------------
+Assigned the same crate independently; on starting found the implementation above already landed
+in protocol/format/rs/lib.rs, building and passing 25/25 tests. Per repo convention (concurrent
+devs, edit-don't-overwrite), reviewed it against the frozen contract instead of replacing it.
+
+Verdict: implementation is correct and matches the byte layout precisely. Verified independently:
+header layout/CRC/flags, frame grammar (body_len/kind/flags/[raw_len]/payload/crc32c/back_len),
+75-byte REC_COMMIT frame and the chain_0=blake3(header), chain_n=blake3(chain_{n-1}||digests)
+algorithm, FrameCursor/ReverseFrameCursor zero-copy behavior, SprWriter's scratch-buffer reuse, and
+recover()'s fast-path/forward-scan split. All deviations listed above (items 1-7) are reasonable
+and, notably, none are exercised by protocol_testkit's law-fn list in the amendment section, so none
+are load-bearing for cross-crate byte-compat.
+
+One real gap found: `CommitPayload`/`COMMIT_PAYLOAD_LEN`/`parse_commit_payload` were private, and
+there was no public way to read header fields at all. Both are needed downstream with no
+alternative: protocol_history::FrontierSummary carries `last_commit_seq`/`chain_hash`, which can
+only come from decoding a REC_COMMIT frame's payload; protocol_io/protocol_cli need header
+required_flags/optional_flags/version for HistoryFile/inspect/verify. Without exposing this crate's
+byte offsets, a downstream crate would have had to reimplement the 64-byte commit payload and
+32-byte header parsing itself — exactly the byte-for-byte duplication risk this ticket exists to
+avoid.
+
+Minimal additive fix applied (no existing behavior/signatures changed):
+- `CommitPayload` struct and its 5 fields made `pub`; `COMMIT_PAYLOAD_LEN` made `pub`;
+  `parse_commit_payload` made `pub` (name unchanged, only visibility).
+- New `pub struct Header { version_major, version_minor, required_flags, optional_flags }` and
+  `pub fn read_header<S: PackSource>(source: &S) -> Result<Header, ProtocolError>`, built on top of
+  the existing private `validate_header` (reads the header twice — validate then decode — accepted
+  given it's 32 bytes and this isn't a hot path; avoided touching the working private fn).
+- 4 new inline tests: `read_header_exposes_decoded_fields_to_downstream_crates`,
+  `read_header_propagates_validation_failures`, and
+  `parse_commit_payload_is_public_for_downstream_frontier_summaries` (plus the pre-existing suite
+  unchanged). Test count: 25 -> 28, still 0 failed.
+
+Verification (re-run after the fix):
+$ cargo build -p protocol_format                        -> Finished, no errors.
+$ cargo test -p protocol_format                          -> 28/28 tests passed, 0 failed.
+$ cargo clippy -p protocol_format --all-targets           -> 0 warnings.
+$ cargo build -p protocol_format --target wasm32-unknown-unknown -> Finished, no errors (target was
+  already installed; crate is wasm32-clean as required).
+
+No changes outside protocol/format/rs/lib.rs and this progress note. No git commands run.

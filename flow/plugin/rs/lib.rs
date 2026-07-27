@@ -183,6 +183,7 @@ fn host_from_fixture(fixture: &FlowFixture, runtime: &FlowPlayRuntime) -> FlowHo
     let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), flow_play_neural_cache());
     seed_host_catalogue(&mut host, &runtime.catalogue_sections_json);
     apply_canvas_options(&mut host, runtime);
+    runtime.eval_driver.install_baseline_into(&mut host);
     host
 }
 
@@ -1328,14 +1329,9 @@ impl DocumentApp for FlowPlayApp {
         }
     }
 
-    /// 🧵 Keeps a `flowEvalTick` chain going after every mutation while the "auto-evaluate" extension
-    /// is on; otherwise only continues a chain the user already started explicitly (never spontaneously
-    /// arms one — evaluation here stays opt-in unless that extension is enabled).
+    /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
+    /// covers every mutation path (edits, undo/redo, example load, remote operations) in one place.
     fn pending_effects(&mut self, doc: &DocumentView<'_, FlowFixture>, _view_state: &ViewState) -> Vec<HostEffect> {
-        let auto_evaluate = self.runtime.extension_enabled.get("auto-evaluate").copied().unwrap_or(false);
-        if !auto_evaluate && !self.runtime.eval_driver.pending() {
-            return Vec::new();
-        }
         let host = host_from_fixture(doc.projection, &self.runtime);
         if self.runtime.eval_driver.sync(&host) {
             vec![HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]

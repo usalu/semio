@@ -1,0 +1,10 @@
+{
+  "title": "Fix Flow Slider Knob Zoom Scaling",
+  "emoji": "🎚",
+  "status": "open",
+  "description": "flow: There is a bug that the slider knob is not scaling with the zoom level as the other elements are. Fix so the slider knob scales with canvas zoom like the track and other node elements.",
+  "goal": "🎯r2602🎯runningsketchpad🎯runningsketchpadapps",
+  "sessions": [
+    "⚪0a147690421b472893bd539d2d69fec5"
+  ]
+}

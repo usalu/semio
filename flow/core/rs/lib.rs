@@ -1373,6 +1373,28 @@ fn outputs_from_channel_eval_json(json: &str) -> HashMap<String, Dictionary> {
     outputs
 }
 
+fn inputs_from_channel_eval_json(json: &str) -> HashMap<String, Dictionary> {
+    let Ok(parsed) = serde_json::from_str::<serde_json::Map<String, serde_json::Value>>(json) else {
+        return HashMap::new();
+    };
+    let mut inputs = HashMap::new();
+    for (widget_id, entry) in parsed {
+        let Some(in_ports) = entry.get("in").and_then(|value| value.as_object()) else {
+            continue;
+        };
+        let mut dict = Dictionary::new();
+        for (key, val) in in_ports {
+            if let Ok(value) = serde_json::from_value::<NeuralValue>(val.clone()) {
+                dict = dict.insert(key.clone(), value);
+            }
+        }
+        if !dict.is_empty() {
+            inputs.insert(widget_id, dict);
+        }
+    }
+    inputs
+}
+
 fn preview_dict_from_connection(src: &Dictionary, from_port: &str, to_port: &str) -> Dictionary {
     let payload = if from_port.is_empty() {
         src.clone()
@@ -1788,26 +1810,33 @@ impl FlowHost {
 
     /// 📥 Replaces fixture content while keeping catalogue, operator metadata, eval bridge, and the live camera.
     pub fn replace_fixture(&mut self, fixture: FlowFixture) {
-        self.apply_fixture(fixture, true);
+        self.apply_fixture(fixture, true, false);
+    }
+
+    /// 📥 Scene resync: reloads fixture layout/content without discarding eval baseline or cached outputs.
+    pub fn resync_fixture_from_scene(&mut self, fixture: FlowFixture) {
+        self.apply_fixture(fixture, false, true);
     }
 
     /// 📥 Replaces fixture content without clearing undo/redo history.
     pub fn set_fixture_preserving_history(&mut self, fixture: FlowFixture) {
-        self.apply_fixture(fixture, false);
+        self.apply_fixture(fixture, false, false);
     }
 
-    fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool) {
+    fn apply_fixture(&mut self, mut fixture: FlowFixture, reset_history: bool, preserve_eval: bool) {
         dedupe_fixture_widgets(&mut fixture);
         // 🎥 Camera is ephemeral view state (same as undo/redo) — never snap the live pan/zoom when a
         // scene resync reloads fixture content (hover, eval tick, remote operations, …).
         let camera = self.fixture.camera.clone();
         fixture.camera = camera;
         self.fixture = fixture;
-        self.outputs.clear();
-        self.export_payloads.clear();
-        self.last_eval_json.clear();
-        self.previous_snapshot = None;
-        self.previous_channels = None;
+        if !preserve_eval {
+            self.outputs.clear();
+            self.export_payloads.clear();
+            self.last_eval_json.clear();
+            self.previous_snapshot = None;
+            self.previous_channels = None;
+        }
         self.pan_anchor = None;
         self.ghost_node = None;
         self.rebuild_dag();
@@ -1864,10 +1893,38 @@ impl FlowHost {
         }
         self.last_eval_json = json.to_string();
         let outputs = outputs_from_channel_eval_json(json);
+        let inputs = inputs_from_channel_eval_json(json);
         self.outputs = outputs.clone();
         self.apply_preview_outputs(&outputs);
         self.apply_export_outputs(&outputs);
+        let tree = self.build_tree();
+        let seeds = self.build_seeds();
+        self.previous_snapshot = Some(TreeSnapshot::capture(&tree, &seeds));
+        self.previous_channels = Some(EvalChannels { outputs, inputs });
         self.dag.clear_computing();
+    }
+
+    /// 🧵 Installs a durable eval baseline from an off-thread driver onto this ephemeral host.
+    pub fn install_eval_baseline(&mut self, snapshot: Option<TreeSnapshot>, channels: Option<EvalChannels>) {
+        self.previous_snapshot = snapshot;
+        self.previous_channels = channels;
+    }
+
+    /// 🧵 Captures this host's eval baseline for persistence on a durable driver.
+    pub fn eval_baseline(&self) -> (Option<TreeSnapshot>, Option<EvalChannels>) {
+        (self.previous_snapshot.clone(), self.previous_channels.clone())
+    }
+
+    /// ⚙️ Probes pending nodes and paints active/stale computing chrome on the DAG canvas.
+    pub fn refresh_computing_chrome_from_pending(&mut self) {
+        let remaining = self.pending_eval_widget_ids();
+        if remaining.is_empty() {
+            self.dag.clear_computing();
+            return;
+        }
+        let active = remaining.first().map(|id| id.as_str());
+        let stale = remaining.get(1..).unwrap_or(&[]).to_vec();
+        self.dag.set_computing_progress(active, &stale);
     }
 
     /// ⚙️ Marks one actively computing widget and downstream widgets as stale.
@@ -2795,6 +2852,7 @@ impl FlowHost {
             }
         }
         self.sync_dag_display_from_widgets();
+        self.refresh_computing_chrome_from_pending();
     }
 
     pub fn slider_overlay_state_json(&self) -> Result<String, FlowCoreError> {
@@ -2812,6 +2870,7 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         self.dag.fit_note_sizes();
+        self.refresh_computing_chrome_from_pending();
     }
 
     /// ✏️ Begins inline note editing for a widget at a world-space click.
@@ -2912,6 +2971,7 @@ impl FlowHost {
         }
         self.sync_dag_display_from_widgets();
         self.dag.fit_preview_sizes();
+        self.refresh_computing_chrome_from_pending();
     }
 
     pub fn preview_text(&self) -> String {
@@ -3307,6 +3367,10 @@ pub struct FlowEvalDriver {
     eval_json: String,
     #[serde(default)]
     computing_json: Option<String>,
+    #[serde(skip)]
+    previous_snapshot: Option<TreeSnapshot>,
+    #[serde(skip)]
+    previous_channels: Option<EvalChannels>,
     /// Guards against `sync` re-arming a chain that's already ticking — never persisted, an
     /// in-progress chain doesn't survive a process restart anyway.
     #[serde(skip)]
@@ -3318,6 +3382,18 @@ fn flow_eval_computing_progress_json(remaining: &[String]) -> String {
 }
 
 impl FlowEvalDriver {
+    /// 🧵 Restores the last converged eval baseline onto a freshly built ephemeral host.
+    pub fn install_baseline_into(&self, host: &mut FlowHost) {
+        host.install_eval_baseline(self.previous_snapshot.clone(), self.previous_channels.clone());
+    }
+
+    /// 🧵 Persists the eval baseline from a host after a tick or convergence.
+    pub fn capture_baseline_from(&mut self, host: &FlowHost) {
+        let (snapshot, channels) = host.eval_baseline();
+        self.previous_snapshot = snapshot;
+        self.previous_channels = channels;
+    }
+
     /// 🔁 Probes `host` for pending work (cheap — reuses `FlowHost`'s own dirty-set diffing) and
     /// reports whether a `flowEvalTick` chain needs to be (re)armed. Safe to call on every
     /// mutation/refresh; a no-operation when nothing changed or a chain is already running.
@@ -3341,6 +3417,9 @@ impl FlowEvalDriver {
         let remaining = host.evaluate_step(1);
         self.eval_json = host.last_eval_json.clone();
         self.computing_json = if remaining.is_empty() { None } else { Some(flow_eval_computing_progress_json(&remaining)) };
+        if remaining.is_empty() {
+            self.capture_baseline_from(host);
+        }
         self.tick_scheduled = !remaining.is_empty();
         self.tick_scheduled
     }
@@ -3356,6 +3435,8 @@ impl FlowEvalDriver {
         self.eval_json = eval_json;
         self.computing_json = None;
         self.tick_scheduled = false;
+        self.previous_snapshot = None;
+        self.previous_channels = None;
     }
 
     pub fn computing_json(&self) -> Option<&str> {
@@ -3477,6 +3558,14 @@ impl FlowSession {
         let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
         let mut inner = self.state.borrow_mut();
         inner.host.replace_fixture(fixture);
+        Ok(())
+    }
+
+    #[wasm_bindgen(js_name = resyncFixtureJson)]
+    pub fn resync_fixture_json(&self, json: &str) -> Result<(), JsValue> {
+        let fixture = FlowHost::parse_fixture_json(json).map_err(|e| JsValue::from_str(&e.to_string()))?;
+        let mut inner = self.state.borrow_mut();
+        inner.host.resync_fixture_from_scene(fixture);
         Ok(())
     }
 
@@ -5285,7 +5374,48 @@ mod tests {
         host.set_slider_value("slider", 9.0);
         let pending = host.pending_eval_widget_ids();
         assert!(pending.contains(&"add".to_string()), "the widget downstream of the changed slider is pending");
+        assert!(!pending.contains(&"slider".to_string()), "the seed slider itself is not a pending neuron");
         assert_eq!(host.preview_text(), before, "a probe must never actually compute anything");
+    }
+
+    #[test]
+    fn set_slider_value_marks_downstream_computing_chrome() {
+        let mut host = host_with_test_bridge();
+        host.set_slider_value("slider", 7.0);
+        let pending = host.pending_eval_widget_ids();
+        assert!(!pending.is_empty(), "slider change must flag downstream nodes as pending");
+        host.refresh_computing_chrome_from_pending();
+        let remaining = host.pending_eval_widget_ids();
+        assert_eq!(remaining.first().map(String::as_str), pending.first().map(String::as_str));
+    }
+
+    #[test]
+    fn apply_eval_outputs_json_establishes_baseline_for_dirty_probe() {
+        let mut host = host_with_test_bridge();
+        let eval_json = host.last_eval_json.clone();
+        let mut fresh = FlowHost::default();
+        fresh.set_eval_bridge_fn(Box::new(test_math_bridge));
+        fresh.set_neuron_kind_infos_json(&test_kind_infos_json());
+        fresh.apply_eval_outputs_json(&eval_json);
+        fresh.set_slider_value("slider", 4.0);
+        let pending = fresh.pending_eval_widget_ids();
+        assert_eq!(pending, vec!["add".to_string(), "preview".to_string()]);
+    }
+
+    #[test]
+    fn eval_driver_round_trips_baseline_across_ephemeral_hosts() {
+        let mut driver = FlowEvalDriver::default();
+        let mut host = host_with_test_bridge();
+        driver.capture_baseline_from(&host);
+        host.set_slider_value("slider", 8.0);
+        let mut replay = FlowHost::default();
+        replay.set_eval_bridge_fn(Box::new(test_math_bridge));
+        replay.set_neuron_kind_infos_json(&test_kind_infos_json());
+        replay.replace_fixture(host.fixture.clone());
+        driver.install_baseline_into(&mut replay);
+        let pending = replay.pending_eval_widget_ids();
+        assert!(pending.contains(&"add".to_string()));
+        assert!(!pending.contains(&"slider".to_string()));
     }
 
     /// 🧵 Builds a two-computable-node chain (`add` -> `pass`, replacing `add`'s direct link to

@@ -1459,6 +1459,37 @@ describe("framework renderer hosts", () => {
     expect(markup).not.toContain('data-slot="slider-row"');
   });
 
+  it("scales graph slider overlay chrome with canvas zoom so the knob matches other elements", () => {
+    const markup = renderToStaticMarkup(
+      createElement(GraphSliderOverlays, {
+        stateJson: JSON.stringify({
+          camera: { x: 0, y: 0, zoom: 2 },
+          sliders: [
+            {
+              widgetId: "slider_2",
+              value: 2.2,
+              min: 0,
+              max: 10,
+              step: 0.1,
+              x: 100,
+              y: 50,
+              w: 120,
+              h: 8,
+            },
+          ],
+        }),
+        logicalW: 800,
+        logicalH: 600,
+        editable: true,
+        onSliderChange: () => {},
+      }),
+    );
+    expect(markup).toContain('data-graph-slider-zoom="2"');
+    expect(markup).toContain("translate(-50%, -50%) scale(2)");
+    expect(markup).toContain("width:120px");
+    expect(markup).toContain('data-slot="slider-thumb"');
+  });
+
   it("renders canvas 2d host with infinite canvas session", () => {
     const markup = renderToStaticMarkup(
       createElement(Canvas2dHost, {

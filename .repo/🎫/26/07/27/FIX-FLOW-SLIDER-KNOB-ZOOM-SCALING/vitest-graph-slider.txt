@@ -1,0 +1,4 @@
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+[budget] /Users/ueli/.bun/bin/bun /Users/ueli/Documents/semio/node_modules/vitest/vitest.mjs run --config vitest.config.ts --passWithNoTests -- -t graph slider exceeded 15000ms — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).

@@ -119,8 +119,15 @@ pub mod app_2d {
     }
 
     fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+        host_from_fixture_with_driver(fixture, None)
+    }
+
+    fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&FlowEvalDriver>) -> FlowHost {
         let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural2d_neural_cache());
         host.set_neuron_kind_infos_json(&flow_neuron_kind_infos_json());
+        if let Some(driver) = driver {
+            driver.install_baseline_into(&mut host);
+        }
         host
     }
 
@@ -810,7 +817,7 @@ pub mod app_2d {
                     ActionEmit::default()
                 }
                 "flowEvalTick" => {
-                    let mut host = host_from_fixture(fixture);
+                    let mut host = host_from_fixture_with_driver(fixture, Some(&self.runtime.eval_driver));
                     let more = self.runtime.eval_driver.tick(&mut host);
                     ActionEmit { effects: if more { vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }] } else { Vec::new() }, ..ActionEmit::default() }
                 }
@@ -942,7 +949,7 @@ pub mod app_2d {
         /// covers every mutation path (edits, undo/redo, remote operations) in one place instead of each
         /// action re-checking. `FlowEvalDriver::sync` is cheap when nothing changed.
         fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural2dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
-            let host = host_from_fixture(&doc.projection.fixture);
+            let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&self.runtime.eval_driver));
             if self.runtime.eval_driver.sync(&host) {
                 vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
@@ -1729,8 +1736,15 @@ pub mod app_3d {
     //#endregion 🔖GumballTransforms
 
     fn host_from_fixture(fixture: &FlowFixture) -> FlowHost {
+        host_from_fixture_with_driver(fixture, None)
+    }
+
+    fn host_from_fixture_with_driver(fixture: &FlowFixture, driver: Option<&FlowEvalDriver>) -> FlowHost {
         let mut host = FlowHost::from_fixture_with_cache(fixture.clone(), procedural_neural_cache());
         host.set_neuron_kind_infos_json(&flow_core::flow_neuron_kind_infos_json());
+        if let Some(driver) = driver {
+            driver.install_baseline_into(&mut host);
+        }
         host
     }
 
@@ -2690,7 +2704,7 @@ pub mod app_3d {
                 // until the fixture's dirty set is empty, then refreshes the mesh preview caches once
                 // (cheap: every node hit the shared `procedural_neural_cache()` during ticking).
                 "flowEvalTick" => {
-                    let mut host = host_from_fixture(fixture);
+                    let mut host = host_from_fixture_with_driver(fixture, Some(&self.runtime.eval_driver));
                     let more = self.runtime.eval_driver.tick(&mut host);
                     if !more {
                         refresh_all_caches(&mut self.runtime, fixture, &doc.projection.generation);
@@ -2707,7 +2721,7 @@ pub mod app_3d {
         /// 🧵 Arms a `flowEvalTick` chain whenever the main fixture has pending (uncomputed) nodes —
         /// covers every mutation path (edits, undo/redo, example load, remote operations) in one place.
         fn pending_effects(&mut self, doc: &DocumentView<'_, Procedural3dDocument>, _view_state: &ViewState) -> Vec<semio_framework_core::kernel::HostEffect> {
-            let host = host_from_fixture(&doc.projection.fixture);
+            let host = host_from_fixture_with_driver(&doc.projection.fixture, Some(&self.runtime.eval_driver));
             if self.runtime.eval_driver.sync(&host) {
                 vec![semio_framework_core::kernel::HostEffect::DispatchAction { action: "flowEvalTick".into(), args: None, delay_ms: 0 }]
             } else {
@@ -3298,6 +3312,19 @@ pub mod app_3d {
             assert!(main_graph(&mut app).computing_json.is_some(), "pending nodes must be reported before the chain runs");
             drain_flow_eval_ticks(&mut app);
             assert!(main_graph(&mut app).computing_json.is_none(), "computing chrome clears once the chain converges");
+            app.handle_action(
+                "patchFlowWidgets",
+                Some(&json!({ "widgetIds": ["slider_2"], "field": "value", "value": 4.5 })),
+                &ViewState::default(),
+                &meta("local"),
+            )
+            .expect("patch slider");
+            assert!(!app.pending_effects(&ViewState::default()).is_empty(), "slider mutation must re-arm evaluation");
+            let computing = main_graph(&mut app).computing_json.expect("computing chrome after slider edit");
+            assert!(
+                computing.contains("brep_prim3d_sphere_3") || computing.contains("brep_bool_cut_5"),
+                "downstream sphere/cut branch must be marked computing, got {computing}"
+            );
         }
 
         #[test]

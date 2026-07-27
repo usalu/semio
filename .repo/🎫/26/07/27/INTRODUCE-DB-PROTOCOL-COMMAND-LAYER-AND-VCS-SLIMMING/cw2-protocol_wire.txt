@@ -1,0 +1,94 @@
+CW2 — protocol_wire implementation report
+==========================================
+
+Scope: protocol/wire/rs (package protocol_wire). Cargo.toml + project.json + script.ts were
+already scaffolded (correct deps matching the frozen contract: protocol_core, protocol_causal,
+protocol_command, serde, serde_json). Only lib.rs was a stub; I implemented it fully.
+
+What was implemented (regions match the contract's region names exactly):
+- 🔖Lane: `Lane { Command = 0, Preview = 1 }` with private to_byte/from_byte helpers.
+- 🔖ClientFrame: `ClientFrame` enum with all 7 variants exactly as specified (Hello, Commands,
+  FrontierAdvertise, PreviewPublish, Presence, CreditGrant, Bye), field-for-field per contract,
+  using protocol_causal::{OperationEnvelope, FrontierSummary} and protocol_core::ActorId.
+- 🔖ServerFrame: `Bootstrap`, `ApplyOutcome`, `AckStage`, `ServerFrame` (9 variants: Welcome,
+  SnapshotChunk, SnapshotDone, Commands, Ack, Preview, Presence, CreditGrant, Error) exactly as
+  specified.
+- 🔖Codec: encode_client_frame/decode_client_frame/encode_server_frame/decode_server_frame.
+
+Deviation taken (explicitly permitted by the contract's 🔖Codec note):
+  Byte layout is `lane: u8` + varint-u64 body length + serde_json bytes, NOT a fully hand-rolled
+  binary encoding. Rationale documented in the module-level docstring: ClientFrame/ServerFrame
+  carry deeply nested, already-schema-erased serde_json::Value payloads (inside
+  protocol_causal::DocumentDiff/InverseOperation, ClientFrame::Presence, ServerFrame::Error, ...)
+  plus Vec<OperationEnvelope> batches — hand-rolling a hashed field-by-field binary layout for this
+  shape would just re-derive what serde_json already does for opaque JSON payloads, with no
+  round-trip benefit. The frame *types* are implemented byte-for-byte/field-for-field per the
+  frozen contract; only the wire encoding exercises the contract's declared "one degree of
+  freedom".
+
+  Sub-deviation: protocol_wire's Cargo.toml (per the frozen `Deps:` line) does NOT path-dep on
+  pack_core, and protocol_core does not re-export pack_core::ByteWriter/ByteReader at its top
+  level (only used internally inside protocol_core::scalar). So rather than adding an
+  undocumented pack_core dependency, I hand-rolled two tiny private LEB128 varint helpers
+  (write_varint_u64/read_varint_u64) directly in protocol_wire/lib.rs — a deliberate, documented
+  duplication of pack_core's well-known varint algorithm, not a new format. This is called out in
+  the module docstring.
+
+  Errors from the codec (empty frame, unknown lane byte, truncated body, invalid JSON, overlong
+  varint) all map to protocol_core::ProtocolError::Malformed { what, offset, detail } — no new
+  ProtocolError variant was needed.
+
+Tests (inline //#region 🧪Tests, mod tests, no quick/long/exhaustive split needed — no slow
+tests): 23 tests total, all passing.
+  - 🔖Lane: byte round-trip + unknown-byte rejection.
+  - 🔖ClientFrame: one round-trip test per variant (8 tests, including two Hello variants with/
+    without all Options populated).
+  - 🔖ServerFrame: one round-trip test per variant, with Welcome swept across all 4 Bootstrap
+    variants and Ack swept across all 3 ApplyOutcome variants nested inside AckStage::Applied (9
+    tests covering ServerFrame + its 2 nested enums).
+  - 🔖Codec: decode_client_frame/decode_server_frame error-path tests (empty bytes, unknown lane
+    byte, truncated body, malformed JSON body) + a lane-byte-only-differs-body-identical sanity
+    check.
+  LAW satisfied: decode(encode(frame)) == frame for every ClientFrame/ServerFrame variant and
+  every nested Bootstrap/ApplyOutcome/AckStage variant, per the amendment's testing note.
+
+Build/test results (all commands run from /Users/ueli/Documents/semio):
+  cargo build -p protocol_wire                          -> success (only pre-existing unrelated
+                                                             warnings about pack_cli/protocol_cli
+                                                             dual lib+bin targets)
+  cargo test -p protocol_wire                            -> 23 passed; 0 failed
+  cargo clippy -p protocol_wire --all-targets            -> 0 errors; 2 warnings, both
+                                                             clippy::large_enum_variant on
+                                                             ApplyOutcome/AckStage (the
+                                                             Transformed/Applied variants embed a
+                                                             full OperationEnvelope). Not fixed:
+                                                             boxing would change the frozen
+                                                             contract's exact enum shape, and
+                                                             workspace lints are warn-level by
+                                                             design (never deny in the manifest per
+                                                             the repo-wide clean-refactor campaign
+                                                             convention) — left as a warning.
+  cargo build -p protocol_wire --target wasm32-unknown-unknown -> success (target was already
+                                                             installed via rustup; wire types and
+                                                             codec have zero non-wasm-safe code, no
+                                                             cfg gating was needed).
+
+Files touched: only /Users/ueli/Documents/semio/protocol/wire/rs/lib.rs (full implementation,
+replacing the stub). Cargo.toml/project.json/script.ts were pre-existing and untouched — already
+correct against the contract. No other files anywhere in the repo were touched.
+
+Notes for the closing/integration agent:
+- protocol_wire does not actually use protocol_command anywhere in its own code (the frame types
+  only reference protocol_core and protocol_causal types) even though the frozen contract's
+  `Deps:` line lists protocol_command. Left the dependency in Cargo.toml as specified since scope
+  discipline says not to touch it beyond what's needed and the contract explicitly lists it —
+  it's inert/unused today, presumably reserved for a future frame variant or for a facade-level
+  re-export convenience. This produces no build warning under this workspace's lint set (no
+  unused_crate_dependencies lint enabled).
+- The facade crate (protocol/rs) will need `pub use protocol_wire::{Lane, ClientFrame, ServerFrame,
+  Bootstrap, ApplyOutcome, AckStage, encode_client_frame, decode_client_frame, encode_server_frame,
+  decode_server_frame};` per the contract's facade re-exports section — I did not touch protocol/rs
+  (out of my scope).
+- protocol_testkit's planned `assert_wire_frame_round_trip` law fn can just call
+  `protocol_wire::{encode,decode}_{client,server}_frame` directly; no protocol_wire-side
+  scaffolding is needed for that beyond what's already public here.
