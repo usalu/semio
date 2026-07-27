@@ -2410,8 +2410,15 @@
 
 \def\semio@heading@style@outline@marker{outline}%
 
+% LR-topspace: tunable extra breathing room above every display heading
+% (section / subsection / subsubsection / paragraph / appendix). Applied in the
+% shared dispatch below via \addvspace, which merges with the block-before glue
+% (no double gap) and is dropped at the top of a page (leading headings aren't
+% pushed down). Adjust this one length to taste.
+\providecommand{\semio@heading@topskip}{1em}
 \newcommand{\semio@koma@heading@lines}[5]{%
   \semio@block@before
+  \addvspace{\semio@heading@topskip}% LR-topspace: a bit more air above headings
   % 🧲 Keep the heading bar with its first lines of content so it never sits
   % orphaned at the foot of a page (reserves the bar + ~3 body lines; if that
   % much space isn't left, the heading moves to the next page as one unit).
