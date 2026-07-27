@@ -1204,17 +1204,8 @@
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_keep_with_body:
-  % 🩹 Windowed tables draw their title INSIDE the tabular (as a bordered first
-  % row joined to the column header by a continuous rule — see
-  % \semio@table@window@title@row), not as an external floating chip. So for the
-  % `semiotable` kind we skip the muted chip + its stroke gap and instead arm the
-  % pending-title flag consumed by the first \SemioTableHeaderRow.
-  \str_if_eq:nnTF {#1} { semiotable }
-    { \bool_gset_true:N \g_semio_table_window_title_pending_bool }
-    {
-      \semio_window_header_muted_use:
-      \semio_window_vskip_stroke_hairline:
-    }
+  \semio_window_header_muted_use:
+  \semio_window_vskip_stroke_hairline:
   % 🩹 A "kind" window (Table, Figure, Photo, ...) never checked
   % \l_semio_window_in_item_bool the way the generic \Window does (compare
   % \semio_window_generic_begin: below, which passes breakable=false when
