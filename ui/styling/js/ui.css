@@ -6251,10 +6251,12 @@
 [data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
 [data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
 [data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
+[data-slot="navbar"] [data-slot="panel-tab-button"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:not(:disabled),
 [data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:not(:disabled),
-:is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"])[data-state="on"]:not(:disabled) {
+[data-slot="footer"] [data-slot="panel-tab-button"][data-state="on"]:not(:disabled),
+:is([data-slot="toggle-group-item"], [data-slot="button-group-item"], [data-slot="action-group-item"], [data-slot="panel-tab-button"])[data-state="on"]:not(:disabled) {
   background-color: var(--active-base);
   border-color: var(--active-base) !important;
   color: var(--border-emphasized-color);
@@ -6263,9 +6265,11 @@
 [data-slot="navbar"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
 [data-slot="navbar"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
 [data-slot="navbar"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="navbar"] [data-slot="panel-tab-button"][data-state="on"]:hover:not(:disabled),
 [data-slot="footer"] [data-slot="toggle-group-item"][data-state="on"]:hover:not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"][data-state="on"]:hover:not(:disabled),
-[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled) {
+[data-slot="footer"] [data-slot="action-group-item"][data-state="on"]:hover:not(:disabled),
+[data-slot="footer"] [data-slot="panel-tab-button"][data-state="on"]:hover:not(:disabled) {
   background-color: color-mix(in oklab, var(--active-base) 90%, black);
   color: var(--border-emphasized-color);
 }
@@ -6278,9 +6282,11 @@
 [data-slot="navbar"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="navbar"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="navbar"] [data-slot="panel-tab-button"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-slot="toggle-group-item"]:hover:not([data-state="on"]):not(:disabled),
 [data-slot="footer"] [data-slot="button-group-item"]:hover:not([data-state="on"]):not(:disabled),
-[data-slot="footer"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled) {
+[data-slot="footer"] [data-slot="action-group-item"]:hover:not([data-state="on"]):not(:disabled),
+[data-slot="footer"] [data-slot="panel-tab-button"]:hover:not([data-state="on"]):not(:disabled) {
   background-color: var(--hover-interactive-fill);
   color: var(--border-emphasized-color);
 }

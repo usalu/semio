@@ -1,0 +1,16 @@
+[package]
+name = "db_conflict"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db conflict detection — touched-region intersection, bloom filters, command-kind matrix, protocol-declared resolution"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_state = { path = "../../state/rs" }
+protocol = { path = "../../../protocol/rs" }

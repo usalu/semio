@@ -1,0 +1,23 @@
+{
+  "title": "Get Dashboard Running End to End",
+  "emoji": "🚀",
+  "status": "closed",
+  "description": "Get the dashboard running end to end. Build fails because ui/tui Theme still references removed ChromePalette fields after the 6-level UI surface system. Fix TUI theme, rebuild repo_cli, confirm dashboard runs.",
+  "summary": "Unblocked the semio TUI dashboard end to end. Root cause: ui/tui Theme still mapped the pre-6-level ChromePalette fields (canvas/window/panel/hover_window/hover_panel/temporary), so cargo build -p repo_cli failed and bun ./repo/cli/rs/script.ts run could not produce the binary. Migrated Theme/Surface/Role onto the unified 6-level palette (level_base→level_menu + hover_interactive_fill), pointed ChromeState::Canvas at Surface::Base, and cleaned unused Duration qualifications. Also fixed string_array_field so TOML string arrays no longer inject the interstitial \", \" token (assets_blocks_parse_all_kinds). Verified: ui_tui 77/77, repo_cli 13/13, release build succeeds, PTY smoke paints navbar/dev/build windows with Plugin/React/Wgpu/Examples and quits on q.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [],
+  "note": "ticket MCP CallMcpTool failed (process client not registered); ticket folder managed manually.",
+  "files": [
+    "ui/tui/rs/lib.rs",
+    "repo/cli/rs/lib.rs",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/ticket.json",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/build.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/ui_tui-test.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/theme-test.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/repo_cli-test.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/repo_cli-test2.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/catalog.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/dashboard-e2e.log",
+    ".repo/🎫/26/07/27/GET-DASHBOARD-RUNNING-END-TO-END/dashboard-e2e.plain.txt"
+  ]
+}

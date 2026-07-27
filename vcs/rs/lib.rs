@@ -12,8 +12,7 @@ extern crate self as vcs;
 
 use dsl::{DslOps, DslRecord};
 use semio_framework_core::{
-    ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation,
-    MergeStrategyKind, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
+    ActorId, DocumentDiff, DocumentId, DocumentVersion, HybridLogicalTimestamp, InverseOperation, OperationEnvelope, OperationId, PayloadHash, SchemaId, SchemaVersion, UndoPolicy,
 };
 #[cfg(not(target_arch = "wasm32"))]
 use semio_framework_hash::hash_bytes;
@@ -23,6 +22,41 @@ use std::collections::{HashMap, HashSet, VecDeque};
 use std::sync::atomic::{AtomicU64, Ordering};
 use std::sync::{Arc, Mutex};
 use thiserror::Error;
+
+//#region 🚧TEMPORARY protocol shim
+// 🚧 TEMPORARY shim for the CW3 kernel cut-over — deleted at CW8 once every ~40 dependent crate
+// imports protocol:: directly. `Operation`/`OperationDiff`/`OpText`/`OperationMeta`/`Edit`/
+// `merge_concurrent_diffs` moved to `protocol_command`/`protocol_crdt`, re-exported here under
+// their original names so every existing `vcs::Operation`/`vcs::OpText`/etc reference across the
+// ~40 dependent crates keeps resolving unchanged, and so bare (unqualified) uses inside this crate
+// itself keep compiling too. `Edit`/`OperationMeta` moved verbatim (identical field shape, same
+// `#[serde(rename_all = "camelCase")]`); `Operation`/`OperationDiff`/`OpText` moved with only
+// additive defaulted methods + id-newtype-typed return values (verified empirically: none of this
+// crate's own three real impls — `StudioHistoryOperation`/`DemoOperation`/`TimestampedOperation` —
+// override anything but `diff`/`backwards`/`timestamp`, all unaffected); `merge_concurrent_diffs`
+// has a genuinely different signature but zero external callers exist (grepped repo-wide).
+//
+// NOT shimmed this wave (see each item's own removal-site comment for the full justification —
+// summary: the frozen contract's new shape is real and correct, but re-exporting it here would
+// break confirmed, extensive PRODUCTION usage across many app crates outside this wave's scope,
+// which is squarely CW7's "app fan-out" job, not a same-shape drop-in this wave can silently absorb):
+// - `operation_envelope_from_edit` — `vcs` keeps its OWN function of that name (unchanged 3-arg/
+//   whole-edit-per-envelope shape): `framework/sync`'s hub wire protocol (outside this wave's
+//   ownership, reserved for CW5) calls it directly with the old signature and constructs
+//   `OperationEnvelope`/`DocumentDiff`/`InverseOperation` in the old `semio_framework_core` shape
+//   throughout; protocol_causal's version has an incompatible per-operation (not per-edit) shape.
+// - `Identified`/`Patchable`/`CollectionOperation`/`CollectionDiff`/`ItemPatch`/
+//   `apply_collection_operation`/`invert_collection_operation`/`collection_diff_from_operation` —
+//   the frozen contract's `CollectionOperation` shape genuinely changed (`Add` gained an `id` field
+//   and `index` renamed `at`; `Move`'s `to_index` renamed `to`) — confirmed via grep to be
+//   constructed/pattern-matched by field name in ~20 live production crates (`imperative/core`,
+//   `imperative/plugin`, `layout/plugin`, `layout/rs`, `architect/program`, `architect/plugin`,
+//   `trinity/plugin`, `sequence/core`, `infinite/board/*`, `gis/plugin`, `shooting/*`,
+//   `process/plugin`, `process/3d`, `flow/core`, `animate/present`, `animate/plugin`,
+//   `lowpoly/core`, `kernel/3d/brep` — not an exhaustive list). Shimming the new shape would break
+//   every one of them; kept as vcs's own unchanged local definitions instead.
+pub use protocol::{merge_concurrent_diffs, Edit, Operation, OperationDiff, OperationMeta, OpText, ReconcileReport, ReconcileSeverity};
+//#endregion 🚧TEMPORARY protocol shim
 
 static ID_COUNTER: AtomicU64 = AtomicU64::new(0);
 
@@ -54,43 +88,8 @@ pub struct Author {
     pub avatar: Option<String>,
 }
 
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct OperationMeta {
-    pub operation_id: String,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub dependencies: Vec<String>,
-    pub base_version: u64,
-    pub author_id: String,
-    pub timestamp: HybridLogicalTimestamp,
-    pub undo_policy: UndoPolicy,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub payload_hash: Option<String>,
-}
-
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
-#[serde(rename_all = "camelCase")]
-pub struct Edit<Operation> {
-    pub id: String,
-    /// @emoji 🖋️ Authoring actor id. Local edits carry the dispatching actor; ingested edits carry
-    /// the incoming {@link OperationEnvelope}'s actor. Drives {@link UndoPolicy} (foreign edits are never
-    /// undone locally). `None` means unauthored/legacy and is treated as local.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub actor: Option<String>,
-    pub forwards: Vec<Operation>,
-    pub backwards: Vec<Operation>,
-    #[serde(default, skip_serializing_if = "Vec::is_empty")]
-    pub operation_meta: Vec<OperationMeta>,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub description: Option<String>,
-    /// @emoji 🪢 Gesture identity used by `AmendLast` to absorb follow-up operations into this edit.
-    #[serde(default, skip_serializing_if = "Option::is_none")]
-    pub coalesce_key: Option<String>,
-    pub sequence_number: i32,
-    pub started_at: String,
-    #[serde(skip_serializing_if = "Option::is_none")]
-    pub finished_at: Option<String>,
-}
+// 🎞️ CW3 kernel cut-over: `OperationMeta`/`Edit` moved verbatim to `protocol_command` (identical
+// field shape/serde attrs), re-exported via the `🚧TEMPORARY protocol shim` above.
 
 #[derive(Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
@@ -229,14 +228,8 @@ pub trait DocumentDsl: Sized {
     fn print_dsl(&self) -> String;
 }
 
-/// @emoji ⚡ Handcrafted ONE-LINE textual representation of an operation, implemented once per
-/// technology next to its `Operation` enum. LAWS: `print_op` output never contains `\n` (enforced by
-/// {@link print_edit_lines} and `test_support::assert_op_line_round_trip`); `Op::parse_op` recovers an
-/// equal operation from `op.print_op()`.
-pub trait OpText: Sized {
-    fn parse_op(line: &str) -> Result<Self, TextError>;
-    fn print_op(&self) -> String;
-}
+// 🎞️ CW3 kernel cut-over: `OpText` moved (method order flipped, behavior unchanged) to
+// `protocol_command`, re-exported via the `🚧TEMPORARY protocol shim` near the top of this file.
 
 //#endregion 🔖Text
 
@@ -604,54 +597,10 @@ where
 //#endregion 🔖CollectionOperation
 
 //#region 🔖Operation
-/// @emoji 📦 Centralized projection mutation — one `apply` per technology.
-pub trait OperationDiff<P>: Clone + Default + Serialize + DeserializeOwned {
-    fn apply(&self, projection: &P) -> P;
-    fn absorb(&mut self, other: Self);
-}
-
-/// @emoji 🔁 Stored operation: emits a diff and computes backwards from pre-state.
-pub trait Operation<P>: Clone + Serialize + DeserializeOwned {
-    type Diff: OperationDiff<P>;
-    fn diff(&self, projection: &P) -> Self::Diff;
-    fn backwards(&self, projection: &P) -> Vec<Self>;
-    fn operation_id(&self) -> Option<String> {
-        None
-    }
-    fn dependencies(&self) -> Vec<String> {
-        Vec::new()
-    }
-    fn base_version(&self) -> u64 {
-        0
-    }
-    fn author_id(&self) -> Option<String> {
-        None
-    }
-    fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
-        None
-    }
-    fn undo_policy(&self) -> UndoPolicy {
-        UndoPolicy::ExactBaseOnly
-    }
-    fn merge_strategy(&self) -> MergeStrategyKind {
-        MergeStrategyKind::LwwRegister
-    }
-    /// @emoji 🤝 Post-materialization reconciliation pass (e.g. cross-document studio graph checks).
-    /// Defaults to a no-operation so every existing document kind keeps its exact prior behavior; a
-    /// technology opts in by overriding this to inspect `projection` and report {@link StudioConflict}s.
-    /// Takes `projection` by value (rather than adding a `P: Clone` bound to this trait) since the
-    /// only caller already owns a freshly materialized projection.
-    fn reconcile(projection: P) -> (P, Vec<StudioConflict>) {
-        (projection, Vec::new())
-    }
-    /// @emoji 🛂 Pre-apply validation against the current projection. Defaults to `Ok`, so no existing
-    /// technology needs to override this. {@link parse_document_text} calls it for every op-log line
-    /// before applying, so a corrupt or stale log fails to LOAD with a line number, instead of a
-    /// diff/apply panic deep inside a technology's `OperationDiff::apply`.
-    fn validate(&self, _projection: &P) -> Result<(), String> {
-        Ok(())
-    }
-}
+// 🎞️ CW3 kernel cut-over: `Operation`/`OperationDiff` moved to `protocol_command` (only additive
+// defaulted methods + id-newtype-typed return values + `reconcile` becoming an instance method —
+// see the shim block's comment near the top of this file), re-exported via the
+// `🚧TEMPORARY protocol shim`.
 
 pub fn apply_operation<P, Operation>(projection: &P, operation: &Operation) -> P
 where
@@ -669,21 +618,71 @@ where
 //#endregion 🔖Operation
 
 //#region 🔖MergeStrategy
-pub fn merge_concurrent_diffs<P, Operation>(
-    _projection: &P,
-    strategy: MergeStrategyKind,
-    existing: &mut Operation::Diff,
-    incoming: Operation::Diff,
-) where
-    Operation: crate::Operation<P>,
-{
-    match strategy {
-        MergeStrategyKind::LwwRegister | MergeStrategyKind::OrderedSequence
-        | MergeStrategyKind::TextSequence | MergeStrategyKind::TombstonedGraphSet
-        | MergeStrategyKind::ContentAddressedBlob => {
-            existing.absorb(incoming);
-        }
+// 🎞️ CW3 kernel cut-over: `merge_concurrent_diffs` moved (real per-`MergeStrategyKind` dispatch,
+// replacing this fn's blind `absorb()` collapse) to `protocol_crdt`, re-exported via the
+// `🚧TEMPORARY protocol shim` near the top of this file — zero external callers existed (grepped
+// repo-wide), so the signature change is invisible outside this crate's own (now-deleted) def.
+
+/// @emoji 🔒 Content-addressed checkpoint id: `ck-<hex16(blake3(parent_id || ordered_change_content_
+/// hashes || message || authors || timestamp))>`, replacing the old fully-random counter-string
+/// scheme (`create_document_vcs_id("checkpoint")`) — two peers that independently commit the
+/// identical checkpoint content (same parent, same changes in the same order, same message/authors/
+/// timestamp) now converge on the identical id instead of minting two different ones. `changes` must
+/// already contain every entry `change_ids` references (including one freshly created by this same
+/// commit, if any) — callers push a new `Change` before calling this.
+fn content_addressed_checkpoint_id(parent_id: Option<&str>, change_ids: &[String], changes: &[Change], message: Option<&str>, authors: &[Author], timestamp: &str) -> String {
+    let mut input = Vec::new();
+    input.extend_from_slice(parent_id.unwrap_or("").as_bytes());
+    input.push(0);
+    for change_id in change_ids {
+        let change_hash = changes
+            .iter()
+            .find(|change| change.id == *change_id)
+            .map(|change| *blake3::hash(&serde_json::to_vec(change).unwrap_or_default()).as_bytes())
+            .unwrap_or([0u8; 32]);
+        input.extend_from_slice(&change_hash);
     }
+    input.push(0);
+    input.extend_from_slice(message.unwrap_or("").as_bytes());
+    input.push(0);
+    for author in authors {
+        input.extend_from_slice(author.id.as_bytes());
+        input.push(0);
+    }
+    input.push(0);
+    input.extend_from_slice(timestamp.as_bytes());
+    let digest = *blake3::hash(&input).as_bytes();
+    let hex16: String = digest[..8].iter().map(|byte| format!("{byte:02x}")).collect();
+    format!("ck-{hex16}")
+}
+
+/// @emoji 🌳 Walks `checkpoint_id`'s ancestor chain via `parent_id` back to the root, nearest-first
+/// (`checkpoint_id` itself is the first entry). Cycle-guarded (a malformed/adversarial parent chain
+/// stops instead of looping forever) — every well-formed chain built by `reconcile_alternative`/
+/// `CommitCheckpoint` is already acyclic, this is defense in depth, not a documented invariant break.
+fn checkpoint_ancestors<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, checkpoint_id: &str) -> Vec<String> {
+    let mut chain = Vec::new();
+    let mut seen = HashSet::new();
+    let mut current = Some(checkpoint_id.to_string());
+    while let Some(id) = current {
+        if !seen.insert(id.clone()) {
+            break;
+        }
+        let parent = envelope.vcs.checkpoints.iter().find(|checkpoint| checkpoint.id == id).and_then(|checkpoint| checkpoint.parent_id.clone());
+        chain.push(id);
+        current = parent;
+    }
+    chain
+}
+
+/// @emoji 🌳 The merge-base of checkpoints `a` and `b`: the nearest checkpoint common to both
+/// ancestor chains (via `parent_id`), or `None` if their histories share no common ancestor.
+/// Supports branch-merge tooling that needs to know "everything since the fork point" on either
+/// side. `b`'s chain is walked nearest-to-farthest so the FIRST hit in `a`'s ancestor set is the
+/// nearest (not merely *a*) common ancestor.
+pub fn merge_base<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>, a: &str, b: &str) -> Option<String> {
+    let ancestors_a: HashSet<String> = checkpoint_ancestors(envelope, a).into_iter().collect();
+    checkpoint_ancestors(envelope, b).into_iter().find(|id| ancestors_a.contains(id))
 }
 
 pub fn reconcile_alternative<P, Operation>(
@@ -719,16 +718,20 @@ where
             saved_at: now_iso(),
         };
         let parent = envelope.vcs.checkpoints.last();
+        let parent_id = parent.map(|checkpoint| checkpoint.id.clone());
         let mut change_ids = parent.map(|checkpoint| checkpoint.change_ids.clone()).unwrap_or_default();
         change_ids.push(change.id.clone());
         envelope.vcs.changes.push(change);
+        let timestamp = now_iso();
+        let checkpoint_message = Some("reconciled".to_string());
+        let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &envelope.vcs.changes, checkpoint_message.as_deref(), &authors, &timestamp);
         envelope.vcs.checkpoints.push(Checkpoint {
-            id: create_document_vcs_id("checkpoint"),
+            id,
             change_ids,
-            parent_id: parent.map(|checkpoint| checkpoint.id.clone()),
+            parent_id,
             authors,
-            message: Some("reconciled".into()),
-            timestamp: now_iso(),
+            message: checkpoint_message,
+            timestamp,
         });
     }
     Ok(alternative_id)
@@ -785,6 +788,29 @@ where
     materialize_document_projection_with_conflicts(envelope, applied_edit_ids).map(|(projection, _conflicts)| projection)
 }
 
+/// @emoji 🤝 Adapts `protocol_command::Operation::reconcile`'s new instance-based signature (`&self`,
+/// was a per-TYPE associated fn taking no instance at all) to the once-per-materialization call this
+/// crate's replay/store paths always performed: runs the LAST applied operation's `reconcile` hook
+/// against `projection`, or passes `projection` through unchanged (matching the trait's own no-op
+/// default) if no operation has ever been applied yet. Every real `Operation` impl in this crate
+/// (`StudioHistoryOperation`/`DemoOperation`/`TimestampedOperation`) inherits the default no-op
+/// `reconcile`, which ignores `self` entirely and only inspects `projection` — so which specific
+/// operation instance triggers the call is immaterial for every one of them; a technology that
+/// overrides `reconcile` to do real cross-document/graph validation (see
+/// `framework/product/os/core`'s `OsOperation`) is documented as inspecting the resulting
+/// `projection`, not `self`, for the same reason. Maps `protocol::ReconcileReport` to this crate's
+/// own `StudioConflict` at this edge — `protocol_command` deliberately doesn't know about studio
+/// types (see its `Operation::reconcile` doc comment).
+fn reconcile_with_last<P, Op: Operation<P>>(last_operation: Option<&Op>, projection: P) -> (P, Vec<StudioConflict>) {
+    match last_operation {
+        Some(operation) => {
+            let (projection, reports) = operation.reconcile(projection);
+            (projection, reports.into_iter().map(StudioConflict::from).collect())
+        }
+        None => (projection, Vec::new()),
+    }
+}
+
 /// @emoji 🤝 Same replay as {@link materialize_document_projection}, additionally surfacing whatever
 /// {@link Operation::reconcile} reports for the resulting projection. Kept as a twin function (rather
 /// than changing `materialize_document_projection`'s signature) so every existing caller across the
@@ -799,6 +825,7 @@ where
     Operation: crate::Operation<P>,
 {
     let mut projection = envelope.vcs.initial_projection.clone();
+    let mut last_operation: Option<&Operation> = None;
     for edit_id in applied_edit_ids {
         let edit = envelope
             .vcs
@@ -808,9 +835,10 @@ where
             .ok_or_else(|| VcsError::UnknownEdit(edit_id.clone()))?;
         for operation in &edit.forwards {
             projection = apply_operation(&projection, operation);
+            last_operation = Some(operation);
         }
     }
-    Ok(Operation::reconcile(projection))
+    Ok(reconcile_with_last(last_operation, projection))
 }
 
 fn now_iso() -> String {
@@ -837,7 +865,7 @@ where
     Operation: Clone,
     P: Clone,
 {
-    let committed: std::collections::HashSet<String> = envelope
+    let committed: HashSet<String> = envelope
         .vcs
         .changes
         .iter()
@@ -1103,11 +1131,11 @@ where
                 back.reverse();
                 backwards.extend(back);
                 operation_meta.push(OperationMeta {
-                    operation_id: operation.operation_id().unwrap_or_else(|| create_document_vcs_id("operation")),
+                    operation_id: Some(operation.operation_id().unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
                     dependencies: operation.dependencies(),
-                    base_version: operation.base_version(),
-                    author_id: operation.author_id().unwrap_or_else(|| "local".into()),
-                    timestamp: operation.timestamp().unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                    base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
+                    author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
+                    timestamp: operation.timestamp().unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
                     undo_policy: operation.undo_policy(),
                     payload_hash: None,
                 });
@@ -1187,7 +1215,8 @@ where
         backbone: None,
         active_alternative_id,
     };
-    let (projection, _conflicts) = Operation::reconcile(projection);
+    let last_operation = envelope.vcs.edits.last().and_then(|edit| edit.forwards.last());
+    let (projection, _conflicts) = reconcile_with_last(last_operation, projection);
     Ok(ParsedDocumentText { envelope, projection })
 }
 
@@ -1388,7 +1417,7 @@ where
 /// @emoji 🖋️ Derives an edit's authoring actor from its per-operation metadata (the author of its
 /// first operation), so a local edit records who produced it for later `UndoPolicy` classification.
 fn edit_actor_from_meta(operation_meta: &[OperationMeta]) -> Option<String> {
-    operation_meta.first().map(|meta| meta.author_id.clone())
+    operation_meta.first().and_then(|meta| meta.author_id.clone()).map(|actor_id| actor_id.0)
 }
 
 impl<P, Operation> DocumentVcsStore<P, Operation>
@@ -1538,13 +1567,20 @@ where
     /// `current` fold. Always `Ok` in practice (kept as `Result` for API stability); O(1) instead of a
     /// full replay. See the `current` field doc for the maintenance invariant.
     pub fn projection(&self) -> Result<P, VcsError> {
-        Ok(Operation::reconcile(self.current.clone()).0)
+        Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()).0)
     }
 
     /// @emoji 🤝 `current` reconciled, plus whatever conflicts {@link Operation::reconcile} reports.
     /// O(1) instead of a full replay — see {@link projection}.
     pub fn projection_with_conflicts(&self) -> Result<(P, Vec<StudioConflict>), VcsError> {
-        Ok(Operation::reconcile(self.current.clone()))
+        Ok(reconcile_with_last(self.last_applied_operation(), self.current.clone()))
+    }
+
+    /// @emoji 🎞️ The last-applied edit's last forward operation — the instance `reconcile_with_last`
+    /// runs `Operation::reconcile` against (see that fn's doc comment for why any single instance is
+    /// equivalent to the old per-TYPE associated-fn call for every technology in this repo today).
+    fn last_applied_operation(&self) -> Option<&Operation> {
+        self.applied_edit_ids.last().and_then(|edit_id| self.envelope.vcs.edits.iter().find(|edit| edit.id == *edit_id)).and_then(|edit| edit.forwards.last())
     }
 
     /// @emoji 🔂 Full raw fold of `initial_projection` over every `forwards` op in `applied_edit_ids`
@@ -1670,16 +1706,20 @@ where
                 let mut change_ids = parent.map(|cp| cp.change_ids.clone()).unwrap_or_default();
                 let parent_id = parent.map(|cp| cp.id.clone());
                 change_ids.push(change.id.clone());
+                // 🎞️ CW3: the new change is pushed BEFORE computing the checkpoint id (was after),
+                // so `content_addressed_checkpoint_id` can hash its actual content, not a placeholder.
+                self.envelope.vcs.changes.push(change);
+                let timestamp = now_iso();
+                let id = content_addressed_checkpoint_id(parent_id.as_deref(), &change_ids, &self.envelope.vcs.changes, message.as_deref(), &authors, &timestamp);
                 let checkpoint = Checkpoint {
-                    id: create_document_vcs_id("checkpoint"),
+                    id,
                     change_ids,
                     parent_id,
                     authors,
                     message,
-                    timestamp: now_iso(),
+                    timestamp,
                 };
                 let checkpoint_id = checkpoint.id.clone();
-                self.envelope.vcs.changes.push(change);
                 self.envelope.vcs.checkpoints.push(checkpoint);
                 if let Some(alternative_id) = self.envelope.active_alternative_id.clone() {
                     if let Some(alternative) = self
@@ -1873,19 +1913,21 @@ where
             back.reverse();
             backwards.extend(back);
             operation_meta.push(OperationMeta {
-                operation_id: operation
+                operation_id: Some(operation
                     .operation_id()
-                    .unwrap_or_else(|| create_document_vcs_id("operation")),
+                    .unwrap_or_else(|| OperationId(create_document_vcs_id("operation")))),
                 dependencies: operation.dependencies(),
-                base_version: operation.base_version(),
-                author_id: operation.author_id().unwrap_or_else(|| "local".into()),
+                base_version: operation.base_version().map(|version| version.0).unwrap_or(0),
+                author_id: Some(operation.author_id().unwrap_or_else(|| ActorId("local".into()))),
                 timestamp: operation
                     .timestamp()
-                    .unwrap_or_else(|| HybridLogicalTimestamp::new(0, now_ms())),
+                    .unwrap_or_else(|| protocol::HybridLogicalTimestamp::new(0, now_ms())),
                 undo_policy: operation.undo_policy(),
-                payload_hash: Some(semio_framework_hash::hash_bytes(
-                    &serde_json::to_vec(&operation).unwrap_or_default(),
-                )),
+                // 🎞️ CW3: direct blake3 (same primitive `pack_core::ContentHash` uses) replaces the
+                // old `semio_framework_hash::hash_bytes` String hash — `protocol_core::PayloadHash` is
+                // now `[u8; 32]`, not a hex string. NOT `pack::content_hash`, which reads a pack
+                // FILE's footer rather than hashing arbitrary bytes.
+                payload_hash: Some(protocol::PayloadHash(*blake3::hash(&serde_json::to_vec(&operation).unwrap_or_default()).as_bytes())),
             });
             projection = apply_operation(&projection, &operation);
             forwards.push(operation);
@@ -1976,7 +2018,7 @@ where
         self.tail_undo_cache = None;
         // 🤝 Tail reconciliation hook: remote ingestion is the one path where this store's projection
         // can diverge from what a local `Apply` alone would produce, so refresh conflicts here.
-        let (_, conflicts) = Operation::reconcile(self.current.clone());
+        let (_, conflicts) = reconcile_with_last(self.last_applied_operation(), self.current.clone());
         self.conflicts = conflicts;
         self.bump();
         Ok(())
@@ -2145,17 +2187,23 @@ where
     Operation: Serialize,
 {
     let payload = serde_json::to_value(edit).map_err(|e| VcsError::Serialize(e.to_string()))?;
-    let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+    let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
     let author_id = edit
         .operation_meta
         .last()
-        .map(|meta| meta.author_id.clone())
+        .and_then(|meta| meta.author_id.clone())
+        .map(|actor_id| actor_id.0)
         .unwrap_or_else(|| "local".into());
-    let undo_policy = edit
-        .operation_meta
-        .last()
-        .map(|meta| meta.undo_policy)
-        .unwrap_or(UndoPolicy::ExactBaseOnly);
+    // 🎞️ CW3: `OperationMeta.undo_policy` is now `protocol::UndoPolicy` (the moved struct's field
+    // type), while this envelope's `InverseOperation.undo_policy` stays `semio_framework_core`'s own
+    // (kept local this wave — see the kernel cut-over note on `framework/core`'s `UndoPolicy`); both
+    // enums share identical variants, so this is a plain, lossless re-tag, not a real conversion.
+    let undo_policy = match edit.operation_meta.last().map(|meta| meta.undo_policy) {
+        Some(protocol::UndoPolicy::ExactBaseOnly) | None => UndoPolicy::ExactBaseOnly,
+        Some(protocol::UndoPolicy::TransformAgainstConcurrent) => UndoPolicy::TransformAgainstConcurrent,
+        Some(protocol::UndoPolicy::SemanticUndo) => UndoPolicy::SemanticUndo,
+        Some(protocol::UndoPolicy::CompensatingAction) => UndoPolicy::CompensatingAction,
+    };
     Ok(OperationEnvelope {
         id: OperationId(edit.id.clone()),
         actor: ActorId(author_id),
@@ -2196,6 +2244,28 @@ pub struct StudioConflict {
     pub kind: String,
     pub uri: String,
     pub message: String,
+}
+
+/// @emoji 🎞️ Maps `protocol_command::Operation::reconcile`'s new `Vec<ReconcileReport>` result onto
+/// this crate's own conflict type — see `reconcile_with_last`'s doc comment for why the mapping
+/// happens at this edge rather than `protocol_command` knowing about `StudioConflict` directly.
+/// `kind: report.id` verbatim (NOT prefixed with severity) — a technology's own `reconcile` override
+/// (e.g. `framework/product/os/core`'s `OsOperation`) round-trips its own `StudioConflict.kind`
+/// through `ReconcileReport.id` on the way in (see that crate's `reconcile` wrapper), and callers
+/// pattern-match `StudioConflict.kind` against exact strings (e.g. `"media-graph/edge-orphaned"`) —
+/// mangling it here would silently break every such exact-match call site. `severity` has no
+/// `StudioConflict` field to land in, so it is dropped (a real, structural information loss inherent
+/// to `ReconcileReport`'s frozen shape, not fixable at this edge). `ReconcileReport` also has no
+/// URI-shaped field (it targets a schema-opaque `id`, not a studio member resource), so `uri` is
+/// left empty for any report that didn't originate from a `StudioConflict` round-trip.
+impl From<ReconcileReport> for StudioConflict {
+    fn from(report: ReconcileReport) -> Self {
+        StudioConflict {
+            kind: report.id,
+            uri: String::new(),
+            message: report.message,
+        }
+    }
 }
 
 /// @emoji 📨 Wire message exchanged over an attached backbone channel.
@@ -2825,8 +2895,10 @@ pub trait StudioMember {
     fn current_alternative_id(&self) -> Option<String>;
     fn checkout(&mut self, checkpoint_id: &str, alternative_id: &str) -> Result<(), VcsError>;
     fn create_alternative(&mut self, name: String) -> Result<String, VcsError>;
-    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
-    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp>;
+    // 🎞️ CW3: `protocol::HybridLogicalTimestamp` (not `semio_framework_core`'s local one) — these
+    // read `OperationMeta.timestamp`, which is the moved struct's field, typed against protocol_core.
+    fn last_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp>;
+    fn last_undone_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp>;
     fn undo(&mut self) -> Result<(), VcsError>;
     fn redo(&mut self) -> Result<(), VcsError>;
     /// @emoji 🪄 Downcast escape hatch: a studio host UI (or a test) needs the concrete
@@ -2893,7 +2965,7 @@ where
         self.envelope().active_alternative_id.clone().ok_or(VcsError::NoCheckpoint)
     }
 
-    fn last_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+    fn last_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
         self.applied_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -2908,7 +2980,7 @@ where
         })
     }
 
-    fn last_undone_local_edit_timestamp(&self) -> Option<HybridLogicalTimestamp> {
+    fn last_undone_local_edit_timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
         self.redo_edit_ids().iter().rev().find_map(|edit_id| {
             if !self.edit_is_local(edit_id) {
                 return None;
@@ -4817,9 +4889,9 @@ mod tests {
             }]
         }
 
-        fn timestamp(&self) -> Option<HybridLogicalTimestamp> {
+        fn timestamp(&self) -> Option<protocol::HybridLogicalTimestamp> {
             match self {
-                TimestampedOperation::SetN { physical_ms, .. } => Some(HybridLogicalTimestamp::new(0, *physical_ms)),
+                TimestampedOperation::SetN { physical_ms, .. } => Some(protocol::HybridLogicalTimestamp::new(0, *physical_ms)),
             }
         }
     }
@@ -5105,7 +5177,7 @@ mod tests {
     #[test]
     fn default_reconcile_hook_is_a_no_op_for_existing_document_kinds() {
         let projection = DemoProjection { n: 4 };
-        let (reconciled, conflicts) = DemoOperation::reconcile(projection.clone());
+        let (reconciled, conflicts) = DemoOperation::SetN { n: 4 }.reconcile(projection.clone());
         assert_eq!(reconciled, projection, "default reconcile leaves the projection untouched");
         assert!(conflicts.is_empty(), "default reconcile reports no conflicts");
 
@@ -5440,6 +5512,80 @@ mod tests {
         );
     }
     //#endregion 🔖ReconcileAlternative
+
+    //#region 🔖ContentAddressedCheckpointAndMergeBase
+    #[test]
+    fn content_addressed_checkpoint_id_is_deterministic_and_content_sensitive() {
+        let root_change = Change { id: "change-root".into(), edit_ids: vec!["edit-1".into()], description: Some("root".into()), saved_at: "2026-07-27T00:00:00Z".into() };
+        let changes = vec![root_change];
+        let change_ids = vec!["change-root".to_string()];
+        let authors = vec![Author { id: "a1".into(), name: "Alice".into(), avatar: None }];
+
+        let id_a = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+        let id_b = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+        assert_eq!(id_a, id_b, "identical inputs converge on the identical id");
+        assert!(id_a.starts_with("ck-"), "got {id_a}");
+
+        let id_different_message = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("other message"), &authors, "2026-07-27T00:00:01Z");
+        assert_ne!(id_a, id_different_message, "a different message must change the id");
+
+        let id_different_parent = content_addressed_checkpoint_id(Some("ck-parent"), &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:01Z");
+        assert_ne!(id_a, id_different_parent, "a different parent must change the id");
+
+        let id_different_timestamp = content_addressed_checkpoint_id(None, &change_ids, &changes, Some("root"), &authors, "2026-07-27T00:00:02Z");
+        assert_ne!(id_a, id_different_timestamp, "a different timestamp must change the id");
+    }
+
+    #[test]
+    fn commit_checkpoint_mints_distinct_content_addressed_ids_for_distinct_commits() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply 1");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("first".into()), authors: Vec::new() }).expect("commit 1");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply 2");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("second".into()), authors: Vec::new() }).expect("commit 2");
+
+        let ids: Vec<&str> = store.envelope().vcs.checkpoints.iter().map(|checkpoint| checkpoint.id.as_str()).collect();
+        assert_eq!(ids.len(), 2);
+        assert_ne!(ids[0], ids[1], "two distinct commits must mint two distinct checkpoint ids");
+        assert!(ids.iter().all(|id| id.starts_with("ck-")));
+    }
+
+    #[test]
+    fn merge_base_finds_the_nearest_common_ancestor_across_a_fork() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply root");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit root");
+        let root_id = store.envelope().vcs.checkpoints[0].id.clone();
+
+        store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-a".into() }).expect("create feature-a");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 2 }], description: None }).expect("apply a");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("a1".into()), authors: Vec::new() }).expect("commit a1");
+        let a1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
+
+        store.dispatch(DocumentVcsCommand::CheckoutCheckpoint { checkpoint_id: root_id.clone() }).expect("checkout root");
+        store.dispatch(DocumentVcsCommand::CreateAlternative { name: "feature-b".into() }).expect("create feature-b");
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 3 }], description: None }).expect("apply b");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("b1".into()), authors: Vec::new() }).expect("commit b1");
+        let b1_id = store.envelope().vcs.checkpoints.last().unwrap().id.clone();
+
+        assert_eq!(merge_base(store.envelope(), &a1_id, &b1_id), Some(root_id.clone()), "a1 and b1 forked at root");
+        assert_eq!(merge_base(store.envelope(), &a1_id, &root_id), Some(root_id.clone()), "root is its own descendant's merge-base");
+        assert_eq!(merge_base(store.envelope(), &root_id, &root_id), Some(root_id), "a checkpoint is its own merge-base");
+    }
+
+    #[test]
+    fn merge_base_is_none_for_a_dangling_unknown_checkpoint_id() {
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store.dispatch(DocumentVcsCommand::Apply { operations: vec![DemoOperation::SetN { n: 1 }], description: None }).expect("apply");
+        store.dispatch(DocumentVcsCommand::CommitCheckpoint { message: Some("root".into()), authors: Vec::new() }).expect("commit");
+        let root_id = store.envelope().vcs.checkpoints[0].id.clone();
+
+        assert_eq!(merge_base(store.envelope(), &root_id, "unknown-checkpoint"), None, "an id absent from the checkpoint list shares no ancestry with anything");
+    }
+    //#endregion 🔖ContentAddressedCheckpointAndMergeBase
 
     //#region 🔖RemoteSnapshotMerge
     #[test]

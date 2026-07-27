@@ -1,0 +1,27 @@
+[package]
+name = "db_document"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db document authority actor — command pipeline, materialize, transactions/batches, inverse undo, effect outbox, live-query notify"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_actor = { path = "../../actor/rs" }
+db_state = { path = "../../state/rs" }
+db_wal = { path = "../../wal/rs" }
+db_storage = { path = "../../storage/rs" }
+db_snapshot = { path = "../../snapshot/rs" }
+db_index = { path = "../../index/rs" }
+db_conflict = { path = "../../conflict/rs" }
+db_projection = { path = "../../projection/rs" }
+db_query = { path = "../../query/rs" }
+db_preview = { path = "../../preview/rs" }
+db_security = { path = "../../security/rs" }
+protocol = { path = "../../../protocol/rs" }
+pack = { path = "../../../pack/rs" }

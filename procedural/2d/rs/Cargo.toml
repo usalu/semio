@@ -16,6 +16,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }
+protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 flow_core = { path = "../../../flow/core/rs" }
 playbook = { path = "../../../playbook/rs" }

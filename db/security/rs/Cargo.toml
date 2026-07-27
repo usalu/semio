@@ -1,0 +1,15 @@
+[package]
+name = "db_security"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db security — authn/authz, signatures, replay protection, audit, redaction, DoS budgets, tenant isolation"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+protocol = { path = "../../../protocol/rs" }

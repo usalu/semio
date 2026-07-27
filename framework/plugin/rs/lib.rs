@@ -215,7 +215,7 @@ use serde_json::Value;
 use std::collections::{HashMap, HashSet};
 use vcs::{
     build_history_columns, create_document_vcs_envelope, DocumentVcsCommand, DocumentVcsEnvelope,
-    DocumentVcsStore, HistoryColumn, Operation, OpText, StudioConflict,
+    DocumentVcsStore, HistoryColumn, OpText, StudioConflict,
 };
 
 pub struct ModeSpec {
@@ -418,7 +418,7 @@ pub struct AppBuilder {
     named_layouts: Vec<NamedLayout>,
     default_layout: Option<WindowLayout>,
     terminologies: Vec<String>,
-    terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    terminology_documents: HashMap<String, Vec<String>>,
     introduction: Option<IntroductionDefinition>,
     tutorials: Vec<TutorialDefinition>,
     dialogs: Vec<DialogDefinition>,
@@ -448,7 +448,7 @@ impl AppBuilder {
             named_layouts: Vec::new(),
             default_layout: None,
             terminologies: Vec::new(),
-            terminology_documents: std::collections::HashMap::new(),
+            terminology_documents: HashMap::new(),
             introduction: None,
             tutorials: Vec::new(),
             dialogs: Vec::new(),
@@ -3142,7 +3142,11 @@ macro_rules! app_action_enum {
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
     type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + vcs::DocumentDsl + vcs::DocumentPack;
-    type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + vcs::OpText;
+    // 🎞️ CW3 kernel cut-over: bound now references `protocol::Operation`/`protocol::OpText` directly
+    // (the new canonical home — see `vcs/rs/lib.rs`'s `🚧TEMPORARY protocol shim`) rather than
+    // through vcs's temporary re-export, since this file is small/contained and fully owned this
+    // wave. `VcsDocumentApp` keeps its name and behavior; only this bound's source module changed.
+    type Operation: ::protocol::Operation<Self::Projection> + PartialEq + Send + ::protocol::OpText;
 
     fn app_id(&self) -> &str;
     fn document_schema(&self) -> &str;
@@ -3624,16 +3628,27 @@ impl<A: DocumentApp> VcsDocumentApp<A> {
             let inverse_payload = serde_json::json!({ "backwards": backwards });
             for (index, forward) in forwards.iter().enumerate() {
                 let entry = operation_meta.get(index);
-                let operation_id = OperationId(
-                    entry
-                        .map(|meta| meta.operation_id.clone())
-                        .unwrap_or_else(|| format!("{}:{index}", invocation_id.0)),
-                );
-                let base_version = DocumentVersion(entry.map(|meta| meta.base_version).unwrap_or(0));
-                let undo_policy = entry.map(|meta| meta.undo_policy).unwrap_or(UndoPolicy::ExactBaseOnly);
-                let author = ActorId(entry.map(|meta| meta.author_id.clone()).unwrap_or_else(|| meta.actor.clone()));
+                // 🎞️ CW3 kernel cut-over: `operation_meta` entries are now `protocol::OperationMeta`
+                // (moved struct — `vcs`'s temporary shim), whose `operation_id`/`author_id` are
+                // `Option<protocol::{OperationId,ActorId}>` (were required `String`) and whose
+                // `undo_policy`/`timestamp` are `protocol::{UndoPolicy,HybridLogicalTimestamp}` —
+                // distinct types from this kernel's own `semio_framework_core::{UndoPolicy,
+                // HybridLogicalTimestamp}` (kept unmoved this wave, see `framework/core`'s kernel
+                // cut-over note), so both are converted at this edge.
+                let operation_id = entry
+                    .and_then(|entry_meta| entry_meta.operation_id.clone())
+                    .unwrap_or_else(|| OperationId(format!("{}:{index}", invocation_id.0)));
+                let base_version = DocumentVersion(entry.map(|entry_meta| entry_meta.base_version).unwrap_or(0));
+                let undo_policy = match entry.map(|entry_meta| entry_meta.undo_policy) {
+                    Some(::protocol::UndoPolicy::ExactBaseOnly) | None => UndoPolicy::ExactBaseOnly,
+                    Some(::protocol::UndoPolicy::TransformAgainstConcurrent) => UndoPolicy::TransformAgainstConcurrent,
+                    Some(::protocol::UndoPolicy::SemanticUndo) => UndoPolicy::SemanticUndo,
+                    Some(::protocol::UndoPolicy::CompensatingAction) => UndoPolicy::CompensatingAction,
+                };
+                let author = entry.and_then(|entry_meta| entry_meta.author_id.clone()).unwrap_or_else(|| ActorId(meta.actor.clone()));
                 let timestamp = entry
-                    .map(|meta| meta.timestamp.clone())
+                    .map(|entry_meta| entry_meta.timestamp)
+                    .map(|t| HybridLogicalTimestamp { actor: t.actor, physical_ms: t.physical_ms, logical: t.logical })
                     .unwrap_or_else(|| HybridLogicalTimestamp::new(0, 0));
                 operations.push(KernelOperation {
                     id: operation_id.clone(),
@@ -4255,9 +4270,9 @@ pub fn plugin_handle_action(
     action_json: &str,
     context_json: &str,
 ) -> Result<InvocationResult, String> {
-    let action: serde_json::Value =
+    let action: Value =
         serde_json::from_str(action_json).map_err(|error| error.to_string())?;
-    let context: serde_json::Value =
+    let context: Value =
         serde_json::from_str(context_json).map_err(|error| error.to_string())?;
     let view_state: ViewState = context
         .get("viewState")
@@ -4285,9 +4300,9 @@ pub fn plugin_handle_command(
     command_json: &str,
     context_json: &str,
 ) -> Result<InvocationResult, String> {
-    let command: serde_json::Value =
+    let command: Value =
         serde_json::from_str(command_json).map_err(|error| error.to_string())?;
-    let context: serde_json::Value =
+    let context: Value =
         serde_json::from_str(context_json).map_err(|error| error.to_string())?;
     let view_state: ViewState = context
         .get("viewState")

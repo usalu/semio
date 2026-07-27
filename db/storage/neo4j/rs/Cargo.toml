@@ -1,0 +1,17 @@
+[package]
+name = "db_storage_neo4j"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db storage backend over neo4j"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../../core/rs" }
+db_storage = { path = "../../../storage/rs" }
+neo4rs = "0.8"
+tokio = { version = "1", features = ["rt", "rt-multi-thread"] }

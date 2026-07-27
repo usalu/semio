@@ -1,0 +1,17 @@
+[package]
+name = "db_projection"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db projections — projection classes, DAG deps, incremental apply, frontier tracking, historical + preview-augmented"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_state = { path = "../../state/rs" }
+db_index = { path = "../../index/rs" }
+protocol = { path = "../../../protocol/rs" }

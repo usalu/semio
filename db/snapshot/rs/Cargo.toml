@@ -1,0 +1,17 @@
+[package]
+name = "db_snapshot"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db snapshots — pack files with pages in KIND_CHUNK, descriptor in KIND_SNAPSHOT, incremental generations via footer chaining"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_state = { path = "../../state/rs" }
+db_storage = { path = "../../storage/rs" }
+pack = { path = "../../../pack/rs" }

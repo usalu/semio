@@ -88,13 +88,15 @@ pub mod theme {
     /// 🎨 An 8-bit truecolor triple.
     pub type Rgb = [u8; 3];
 
-    /// 🪟 The four nested semio chrome surfaces (base → canvas → window → panel).
+    /// 🪟 The six nested semio chrome surfaces (base → window → pane → panel → dialog → menu).
     #[derive(Clone, Copy, Debug, PartialEq, Eq)]
     pub enum Surface {
         Base,
-        Canvas,
         Window,
+        Pane,
         Panel,
+        Dialog,
+        Menu,
     }
 
     /// 🏷️ A semantic foreground/border/state role, resolved against the active palette.
@@ -109,9 +111,7 @@ pub mod theme {
         BorderNormal,
         BorderEmphasized,
         BorderElement,
-        HoverWindow,
-        HoverPanel,
-        Temporary,
+        HoverInteractive,
     }
 
     fn rgb(channel: [f32; 4]) -> Rgb {
@@ -122,10 +122,12 @@ pub mod theme {
     /// 🖌️ A resolved semio theme: every chrome color precomputed once as 8-bit truecolor.
     pub struct Theme {
         pub appearance: AppearanceName,
-        base: Rgb,
-        canvas: Rgb,
-        window: Rgb,
-        panel: Rgb,
+        level_base: Rgb,
+        level_window: Rgb,
+        level_pane: Rgb,
+        level_panel: Rgb,
+        level_dialog: Rgb,
+        level_menu: Rgb,
         foreground: Rgb,
         muted_foreground: Rgb,
         accent: Rgb,
@@ -135,9 +137,7 @@ pub mod theme {
         border_normal: Rgb,
         border_emphasized: Rgb,
         border_element: Rgb,
-        hover_window: Rgb,
-        hover_panel: Rgb,
-        temporary: Rgb,
+        hover_interactive: Rgb,
     }
 
     impl Theme {
@@ -145,10 +145,12 @@ pub mod theme {
             let p: &ChromePalette = appearance.chrome();
             Self {
                 appearance,
-                base: rgb(p.base),
-                canvas: rgb(p.canvas),
-                window: rgb(p.window),
-                panel: rgb(p.panel),
+                level_base: rgb(p.level_base),
+                level_window: rgb(p.level_window),
+                level_pane: rgb(p.level_pane),
+                level_panel: rgb(p.level_panel),
+                level_dialog: rgb(p.level_dialog),
+                level_menu: rgb(p.level_menu),
                 foreground: rgb(p.foreground),
                 muted_foreground: rgb(p.muted_foreground),
                 accent: rgb(p.accent),
@@ -158,18 +160,18 @@ pub mod theme {
                 border_normal: rgb(p.border_normal),
                 border_emphasized: rgb(p.border_emphasized),
                 border_element: rgb(p.border_element),
-                hover_window: rgb(p.hover_window),
-                hover_panel: rgb(p.hover_panel),
-                temporary: rgb(p.temporary),
+                hover_interactive: rgb(p.hover_interactive_fill),
             }
         }
 
         pub fn surface(&self, surface: Surface) -> Rgb {
             match surface {
-                Surface::Base => self.base,
-                Surface::Canvas => self.canvas,
-                Surface::Window => self.window,
-                Surface::Panel => self.panel,
+                Surface::Base => self.level_base,
+                Surface::Window => self.level_window,
+                Surface::Pane => self.level_pane,
+                Surface::Panel => self.level_panel,
+                Surface::Dialog => self.level_dialog,
+                Surface::Menu => self.level_menu,
             }
         }
 
@@ -184,9 +186,7 @@ pub mod theme {
                 Role::BorderNormal => self.border_normal,
                 Role::BorderEmphasized => self.border_emphasized,
                 Role::BorderElement => self.border_element,
-                Role::HoverWindow => self.hover_window,
-                Role::HoverPanel => self.hover_panel,
-                Role::Temporary => self.temporary,
+                Role::HoverInteractive => self.hover_interactive,
             }
         }
 
@@ -1982,7 +1982,7 @@ pub mod chrome {
                 ChromeState::Navbar(n) => paint_navbar(n, theme, rect, buf),
                 ChromeState::Footer(f) => paint_footer(f, theme, rect, buf),
                 ChromeState::Canvas => {
-                    buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), theme.surface(Surface::Canvas)));
+                    buf.fill_rect(rect, Cell::blank(theme.role(Role::Foreground), theme.surface(Surface::Base)));
                 }
                 ChromeState::Window(w) => paint_window(w, theme, rect, buf),
             }
@@ -2504,7 +2504,7 @@ pub mod backend {
                 std::io::stdout().flush().map_err(|e| err(e.to_string()))
             }
 
-            fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+            fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
                 let mut pfd = libc::pollfd { fd: self.fd, events: libc::POLLIN, revents: 0 };
                 let ready = unsafe { libc::poll(&mut pfd, 1, timeout.as_millis() as i32) };
                 let mut events = Vec::new();
@@ -2613,7 +2613,7 @@ pub mod backend {
                 self.write_raw(patch.0.as_bytes())
             }
 
-            fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+            fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
                 let mut events = Vec::new();
                 let wait = unsafe { WaitForSingleObject(self.stdin, timeout.as_millis() as u32) };
                 if wait == 0 {
@@ -3100,10 +3100,16 @@ mod tests {
 
     #[test]
     fn theme_light_and_dark_differ() {
-        use crate::theme::Surface;
+        use crate::theme::{Role, Surface};
         let light = Theme::new(AppearanceName::Light);
         let dark = Theme::new(AppearanceName::Dark);
         assert_ne!(light.surface(Surface::Base), dark.surface(Surface::Base));
+        for surface in [Surface::Base, Surface::Window, Surface::Pane, Surface::Panel, Surface::Dialog, Surface::Menu] {
+            let _ = light.surface(surface);
+            let _ = dark.surface(surface);
+        }
+        assert_ne!(light.surface(Surface::Base), light.surface(Surface::Menu));
+        let _ = light.role(Role::HoverInteractive);
     }
 
     #[test]

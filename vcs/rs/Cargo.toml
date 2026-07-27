@@ -24,6 +24,14 @@ dsl = { path = "../../dsl/rs" }
 pack = { path = "../../pack/rs" }
 semio-framework-core = { path = "../../framework/core/rs" }
 semio-framework-hash = { path = "../../framework/hash/rs" }
+# 🎞️ CW3 kernel cut-over: Operation/OperationDiff/OpText/OperationMeta/Edit/collection-kit/
+# merge_concurrent_diffs now canonically live in `protocol` (protocol_command/protocol_crdt);
+# vcs re-exports them as a temporary shim (see the `🚧TEMPORARY` block near the top of lib.rs).
+protocol = { path = "../../protocol/rs" }
+# 🎞️ CW3: content-addressed checkpoint ids + `OperationMeta.payload_hash` — `pack::content_hash`
+# reads a pack FILE's footer (wrong tool for hashing arbitrary bytes), so this crate hashes directly
+# with blake3 (the same primitive `pack_core::ContentHash`/`protocol_format::Blake3Hasher` use).
+blake3 = "1"
 
 [target.'cfg(target_arch = "wasm32")'.dependencies]
 js-sys = "0.3.83"

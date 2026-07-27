@@ -1,0 +1,17 @@
+[package]
+name = "db_wal"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db write-ahead log — reuses protocol's .spr container, db record kinds in the 0x40..=0x4F extension range, group commit, segment rotation"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_storage = { path = "../../storage/rs" }
+protocol = { path = "../../../protocol/rs" }
+pack_core = { path = "../../../pack/core/rs" }

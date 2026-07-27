@@ -1,0 +1,56 @@
+[package]
+name = "db"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db facade — re-exports the full db_* family, Database::open_at zero-touch convenience"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../core/rs" }
+db_actor = { path = "../actor/rs" }
+db_state = { path = "../state/rs" }
+db_storage = { path = "../storage/rs" }
+db_wal = { path = "../wal/rs" }
+db_snapshot = { path = "../snapshot/rs" }
+db_index = { path = "../index/rs" }
+db_conflict = { path = "../conflict/rs" }
+db_projection = { path = "../projection/rs" }
+db_query = { path = "../query/rs" }
+db_preview = { path = "../preview/rs" }
+db_security = { path = "../security/rs" }
+db_document = { path = "../document/rs" }
+db_compact = { path = "../compact/rs" }
+db_sync = { path = "../sync/rs" }
+db_cluster = { path = "../cluster/rs" }
+db_observe = { path = "../observe/rs" }
+db_engine = { path = "../engine/rs" }
+
+[features]
+default = ["fs", "thread", "vcs"]
+fs = ["db_storage/fs"]
+thread = ["db_actor/thread"]
+vcs = ["db_engine/vcs"]
+tokio = ["db_engine/tokio"]
+cluster = []
+otel = ["db_observe/otel"]
+sqlite = ["dep:db_storage_sqlite"]
+postgres = ["dep:db_storage_postgres"]
+neo4j = ["dep:db_storage_neo4j"]
+
+[dependencies.db_storage_sqlite]
+path = "../storage/sqlite/rs"
+optional = true
+
+[dependencies.db_storage_postgres]
+path = "../storage/postgres/rs"
+optional = true
+
+[dependencies.db_storage_neo4j]
+path = "../storage/neo4j/rs"
+optional = true
+

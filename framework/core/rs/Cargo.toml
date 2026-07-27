@@ -19,6 +19,11 @@ thiserror = "2.0.12"
 ts-rs = { version = "10", optional = true }
 ui_wgpu = { path = "../../../ui/wgpu/rs" }
 semio-framework-hash = { path = "../../hash/rs" }
+# 🎞️ CW3 kernel cut-over: HybridLogicalTimestamp/UndoPolicy/MergeStrategyKind and the operation-
+# flavored id newtypes (OperationId/ActorId/DocumentId/DocumentVersion/SchemaId) now canonically
+# live in `protocol_core`; framework/core re-exports them under their existing names (see `kernel`
+# module) so every existing internal/external reference keeps resolving unchanged.
+protocol_core = { path = "../../../protocol/core/rs" }
 
 [dev-dependencies]
 pretty_assertions = "1.4.1"

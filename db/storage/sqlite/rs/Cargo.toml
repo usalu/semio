@@ -1,0 +1,16 @@
+[package]
+name = "db_storage_sqlite"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db storage backend over sqlite"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../../core/rs" }
+db_storage = { path = "../../../storage/rs" }
+rusqlite = { version = "0.38", features = ["bundled"] }

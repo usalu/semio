@@ -140,6 +140,7 @@ dependencies = [
  "animate_core",
  "animate_video",
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -241,6 +242,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "mathematical_graph",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -1104,6 +1106,7 @@ name = "cad_document"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -1464,6 +1467,7 @@ dependencies = [
  "js-sys",
  "nalgebra 0.34.2",
  "paste",
+ "protocol",
  "rusqlite",
  "serde",
  "serde-wasm-bindgen",
@@ -1998,6 +2002,264 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "be1e0bca6c3637f992fc1cc7cbc52a78c1ef6db076dbf1059c4323d6a2048376"
 
 [[package]]
+name = "db"
+version = "0.1.0"
+dependencies = [
+ "db_actor",
+ "db_cluster",
+ "db_compact",
+ "db_conflict",
+ "db_core",
+ "db_document",
+ "db_engine",
+ "db_index",
+ "db_observe",
+ "db_preview",
+ "db_projection",
+ "db_query",
+ "db_security",
+ "db_snapshot",
+ "db_state",
+ "db_storage",
+ "db_storage_neo4j",
+ "db_storage_postgres",
+ "db_storage_sqlite",
+ "db_sync",
+ "db_wal",
+]
+
+[[package]]
+name = "db_actor"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+]
+
+[[package]]
+name = "db_cli"
+version = "0.1.0"
+dependencies = [
+ "db",
+]
+
+[[package]]
+name = "db_cluster"
+version = "0.1.0"
+dependencies = [
+ "db_actor",
+ "db_core",
+ "db_storage",
+ "db_sync",
+ "db_wal",
+]
+
+[[package]]
+name = "db_compact"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_index",
+ "db_snapshot",
+ "db_state",
+ "db_storage",
+ "db_wal",
+]
+
+[[package]]
+name = "db_conflict"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_state",
+ "protocol",
+]
+
+[[package]]
+name = "db_core"
+version = "0.1.0"
+dependencies = [
+ "pack_core",
+ "serde",
+ "thiserror 2.0.18",
+]
+
+[[package]]
+name = "db_document"
+version = "0.1.0"
+dependencies = [
+ "db_actor",
+ "db_conflict",
+ "db_core",
+ "db_index",
+ "db_preview",
+ "db_projection",
+ "db_query",
+ "db_security",
+ "db_snapshot",
+ "db_state",
+ "db_storage",
+ "db_wal",
+ "pack",
+ "protocol",
+]
+
+[[package]]
+name = "db_engine"
+version = "0.1.0"
+dependencies = [
+ "db_actor",
+ "db_cluster",
+ "db_compact",
+ "db_core",
+ "db_document",
+ "db_observe",
+ "db_security",
+ "db_storage",
+ "db_sync",
+ "db_wal",
+ "protocol",
+ "vcs",
+]
+
+[[package]]
+name = "db_index"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "pack_core",
+]
+
+[[package]]
+name = "db_observe"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+]
+
+[[package]]
+name = "db_preview"
+version = "0.1.0"
+dependencies = [
+ "db_conflict",
+ "db_core",
+ "db_state",
+ "protocol",
+]
+
+[[package]]
+name = "db_projection"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_index",
+ "db_state",
+ "protocol",
+]
+
+[[package]]
+name = "db_query"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_index",
+ "db_projection",
+ "db_state",
+]
+
+[[package]]
+name = "db_security"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "protocol",
+]
+
+[[package]]
+name = "db_snapshot"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_state",
+ "db_storage",
+ "pack",
+]
+
+[[package]]
+name = "db_state"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "pack_core",
+]
+
+[[package]]
+name = "db_storage"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "pack",
+]
+
+[[package]]
+name = "db_storage_neo4j"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "neo4rs",
+ "tokio",
+]
+
+[[package]]
+name = "db_storage_postgres"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "sqlx",
+ "tokio",
+]
+
+[[package]]
+name = "db_storage_sqlite"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "rusqlite",
+]
+
+[[package]]
+name = "db_sync"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "db_wal",
+ "protocol",
+]
+
+[[package]]
+name = "db_testkit"
+version = "0.1.0"
+dependencies = [
+ "criterion",
+ "db",
+ "pack_testkit",
+]
+
+[[package]]
+name = "db_wal"
+version = "0.1.0"
+dependencies = [
+ "db_core",
+ "db_storage",
+ "pack_core",
+ "protocol",
+]
+
+[[package]]
 name = "deadpool"
 version = "0.9.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2231,6 +2493,7 @@ dependencies = [
  "image",
  "kernel_2d_engine",
  "kernel_2d_rs",
+ "protocol",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -2335,6 +2598,9 @@ name = "either"
 version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "48c757948c5ede0e46177b7add2e67155f70e33c07fea8284df6576da70b3719"
+dependencies = [
+ "serde",
+]
 
 [[package]]
 name = "email_address"
@@ -2594,6 +2860,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "fem_core",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2607,6 +2874,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "fem_core",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -2699,6 +2967,7 @@ dependencies = [
  "neural_dag",
  "neural_engine",
  "playbook",
+ "protocol",
  "semio-framework-core",
  "serde",
  "serde-wasm-bindgen",
@@ -3434,6 +3703,7 @@ dependencies = [
  "dsl",
  "framework_surface_terrain",
  "framework_surface_tiled_map",
+ "protocol",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -4496,6 +4766,7 @@ dependencies = [
  "imperative_engine",
  "imperative_module_core",
  "neural_engine",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -4651,6 +4922,7 @@ dependencies = [
  "mathematical_graph_drawing",
  "mathematical_graph_dsl",
  "mathematical_graph_manifest",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -5138,6 +5410,7 @@ dependencies = [
  "js-sys",
  "parley",
  "png 0.17.16",
+ "protocol",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -5310,6 +5583,7 @@ dependencies = [
  "kernel_3d_brepkit",
  "kernel_3d_engine",
  "kernel_3d_mesh",
+ "protocol",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
@@ -5372,6 +5646,7 @@ dependencies = [
  "mathematical_geometry",
  "mathematical_graph",
  "mathematical_graph_drawing",
+ "protocol",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -6480,6 +6755,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "norm_core",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6492,6 +6768,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "norm_core",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -6503,6 +6780,7 @@ name = "note-plugin"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -7590,6 +7868,7 @@ name = "playbook"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "ui_wgpu",
@@ -7606,6 +7885,7 @@ dependencies = [
  "flow_module_brep",
  "kernel_3d_engine",
  "playbook",
+ "protocol",
  "semio-framework-core",
  "semio-framework-plugin",
  "serde",
@@ -7823,6 +8103,7 @@ dependencies = [
  "dsl",
  "flow_core",
  "playbook",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -7836,6 +8117,7 @@ dependencies = [
  "dsl",
  "flow_core",
  "playbook",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -7863,6 +8145,7 @@ name = "process_3d"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -8007,8 +8290,14 @@ name = "protocol_testkit"
 version = "0.1.0"
 dependencies = [
  "criterion",
+ "dsl_core",
  "pack_testkit",
  "protocol",
+ "protocol_core",
+ "protocol_format",
+ "protocol_history",
+ "serde",
+ "serde_json",
 ]
 
 [[package]]
@@ -8063,6 +8352,7 @@ dependencies = [
  "infinite_board_port_directed_normal",
  "js-sys",
  "mathematical_geometry",
+ "protocol",
  "reasoning_mindmap",
  "serde",
  "serde-wasm-bindgen",
@@ -8085,6 +8375,7 @@ dependencies = [
  "mathematical_graph_manifest",
  "nalgebra 0.33.3",
  "parry3d",
+ "protocol",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -8099,6 +8390,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "mathematical_graph_manifest",
+ "protocol",
  "puzzle_3d",
  "serde",
  "serde_json",
@@ -8326,6 +8618,7 @@ name = "raster-plugin"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "semio-framework-os",
  "semio-framework-plugin",
  "serde",
@@ -8416,6 +8709,7 @@ dependencies = [
  "dsl",
  "infinite_board_normal_directed",
  "infinite_cavas",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -8605,6 +8899,7 @@ version = "0.1.0"
 dependencies = [
  "base64 0.22.1",
  "dsl",
+ "protocol",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -9083,6 +9378,7 @@ dependencies = [
  "base64 0.22.1",
  "dsl",
  "infinite_board_port_directed_dag",
+ "protocol",
  "semio-framework-core",
  "semio-framework-os",
  "semio-framework-plugin",
@@ -9097,6 +9393,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "js-sys",
+ "protocol",
  "serde",
  "serde-wasm-bindgen",
  "serde_json",
@@ -9234,6 +9531,7 @@ version = "0.1.0"
 dependencies = [
  "gltf",
  "pretty_assertions",
+ "protocol_core",
  "semio-framework-hash",
  "serde",
  "serde_json",
@@ -9250,13 +9548,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "semio-framework-hlc"
-version = "0.1.0"
-dependencies = [
- "semio-framework-core",
-]
-
-[[package]]
 name = "semio-framework-os"
 version = "0.1.0"
 dependencies = [
@@ -9266,6 +9557,7 @@ dependencies = [
  "kernel_3d_engine",
  "png 0.17.16",
  "pretty_assertions",
+ "protocol",
  "resvg",
  "rusqlite",
  "semio-framework-core",
@@ -9301,6 +9593,7 @@ name = "semio-framework-plugin"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "semio-framework-core",
  "serde",
  "serde_json",
@@ -9438,6 +9731,7 @@ dependencies = [
  "js-sys",
  "mathematical_graph_manifest",
  "neural_engine",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -9652,6 +9946,7 @@ name = "shooting"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -9861,6 +10156,7 @@ name = "sourcing_curate"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",
@@ -9922,6 +10218,17 @@ dependencies = [
 ]
 
 [[package]]
+name = "sqlx"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "1fefb893899429669dcdd979aff487bd78f4064e5e7907e4269081e0ef7d97dc"
+dependencies = [
+ "sqlx-core",
+ "sqlx-macros",
+ "sqlx-postgres",
+]
+
+[[package]]
 name = "sqlx-core"
 version = "0.8.6"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -9929,6 +10236,7 @@ checksum = "ee6798b1838b6a0f69c007c133b8df5866302197e404e8b6ee8ed3e3a5e68dc6"
 dependencies = [
  "base64 0.22.1",
  "bytes",
+ "crc",
  "crossbeam-queue",
  "either",
  "event-listener",
@@ -9946,6 +10254,7 @@ dependencies = [
  "rustls",
  "serde",
  "serde_json",
+ "sha2",
  "smallvec",
  "thiserror 2.0.18",
  "tokio",
@@ -9954,6 +10263,42 @@ dependencies = [
  "url",
  "uuid",
  "webpki-roots 0.26.11",
+]
+
+[[package]]
+name = "sqlx-macros"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "a2d452988ccaacfbf5e0bdbc348fb91d7c8af5bee192173ac3636b5fb6e6715d"
+dependencies = [
+ "proc-macro2",
+ "quote",
+ "sqlx-core",
+ "sqlx-macros-core",
+ "syn 2.0.117",
+]
+
+[[package]]
+name = "sqlx-macros-core"
+version = "0.8.6"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "19a9c1841124ac5a61741f96e1d9e2ec77424bf323962dd894bdb93f37d5219b"
+dependencies = [
+ "dotenvy",
+ "either",
+ "heck 0.5.0",
+ "hex",
+ "once_cell",
+ "proc-macro2",
+ "quote",
+ "serde",
+ "serde_json",
+ "sha2",
+ "sqlx-core",
+ "sqlx-postgres",
+ "syn 2.0.117",
+ "tokio",
+ "url",
 ]
 
 [[package]]
@@ -10829,6 +11174,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "mathematical_graph_manifest",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -10845,6 +11191,7 @@ dependencies = [
  "infinite_board_port_directed_normal",
  "infinite_cavas",
  "js-sys",
+ "protocol",
  "serde",
  "serde_json",
  "thiserror 2.0.18",
@@ -11565,10 +11912,12 @@ checksum = "accd4ea62f7bb7a82fe23066fb0957d48ef677f6eeb8215f372f52e48bb32426"
 name = "vcs"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "dsl",
  "dsl_core",
  "js-sys",
  "pack",
+ "protocol",
  "rusqlite",
  "semio-framework-core",
  "semio-framework-hash",
@@ -11587,6 +11936,7 @@ name = "vcs-plugin"
 version = "0.1.0"
 dependencies = [
  "dsl",
+ "protocol",
  "semio-framework-plugin",
  "serde",
  "serde_json",
@@ -13267,6 +13617,7 @@ version = "0.1.0"
 dependencies = [
  "dsl",
  "framework_editor",
+ "protocol",
  "serde",
  "serde_json",
  "vcs",

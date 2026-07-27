@@ -1758,7 +1758,7 @@ export interface ContextMenuProps {
 }
 
 /**
- * 🧩 Right-click host: always suppresses the native menu; opens the Radix menu only when `items` is non-empty.
+ * 🧩 Right-click host: always suppresses the native menu; opens the shared viewport-fixed menu only when `items` is non-empty.
  **/
 export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title = "Menu" }) => {
   const [open, setOpen] = reactHostPort.useState(false);
@@ -5707,15 +5707,17 @@ type IntroductionPointerIdleState = {
 
 /** @emoji 💤 Tracks whether the user's real pointer has been still for `thresholdMs` — the gate a
  * demonstration plays behind — and where it last was. Any `pointerdown`/`wheel`/`keydown`, or a
- * `pointermove` to DIFFERENT coordinates than the last one, resets the timer and flips back to not-idle
- * immediately; a `pointermove` carrying the SAME coordinates as the last one is ignored — browsers
- * re-fire pointermove when the DOM mutates under a stationary cursor (which a playing demonstration does
- * every frame), and without this guard the demonstration would perpetually interrupt itself. Starts
- * not-idle: a demonstration should only appear once the user has first settled, not the instant a step
- * mounts mid-motion. */
-function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTRODUCTION_DEMO_IDLE_THRESHOLD_MS): IntroductionPointerIdleState {
+ * `pointermove` with different coordinates or non-zero movement deltas, resets the timer and flips back
+ * to not-idle immediately. Same-coordinate, zero-delta moves are ignored because browsers re-fire them
+ * when the DOM mutates under a stationary cursor. `onActivity` runs synchronously inside the native
+ * event handler so the visual disappears before React commits the idle-state update. Starts not-idle:
+ * a demonstration should only appear once the user has first settled, not the instant a step mounts
+ * mid-motion. */
+function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, onActivity?: () => void): IntroductionPointerIdleState {
   const [idle, setIdle] = reactHostPort.useState(false);
   const lastPositionRef = reactHostPort.useRef<IntroductionPointerPosition | null>(null);
+  const onActivityRef = reactHostPort.useRef(onActivity);
+  onActivityRef.current = onActivity;
 
   reactHostPort.useEffect(() => {
     if (!enabled) {
@@ -5728,13 +5730,16 @@ function useIntroductionPointerIdle(enabled: boolean, thresholdMs: number = INTR
       timer = setTimeout(() => setIdle(true), thresholdMs);
     };
     const unsettle = () => {
+      onActivityRef.current?.();
       setIdle(false);
       if (timer) clearTimeout(timer);
       settle();
     };
     const onPointerMove = (event: PointerEvent) => {
       const previous = lastPositionRef.current;
-      if (previous && event.clientX === previous.x && event.clientY === previous.y) return;
+      const coordinatesChanged = !previous || event.clientX !== previous.x || event.clientY !== previous.y;
+      const movementChanged = event.movementX !== 0 || event.movementY !== 0;
+      if (!coordinatesChanged && !movementChanged) return;
       lastPositionRef.current = { x: event.clientX, y: event.clientY };
       unsettle();
     };
@@ -5873,19 +5878,25 @@ const INTRODUCTION_DEMO_APPEAR_OFFSET = { x: -32, y: -32 } as const;
  * stays glued to a moving/orbiting target. Renders nothing under `prefers-reduced-motion: reduce` — the
  * info box's "perform to continue" text remains the fallback. */
 const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: readonly IntroductionDemonstration[] }> = ({ demonstrations }) => {
-  const { idle, lastPositionRef } = useIntroductionPointerIdle(true);
+  const overlayRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const ghostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const calloutRef = reactHostPort.useRef<HTMLDivElement | null>(null);
   const trailPathRef = reactHostPort.useRef<SVGPathElement | null>(null);
   const rippleHostRef = reactHostPort.useRef<HTMLDivElement | null>(null);
+  const hide = reactHostPort.useCallback(() => {
+    document.documentElement.removeAttribute("data-introduction-demonstrating");
+    if (overlayRef.current) overlayRef.current.style.visibility = "hidden";
+  }, []);
+  const { idle, lastPositionRef } = useIntroductionPointerIdle(true, INTRODUCTION_DEMO_IDLE_THRESHOLD_MS, hide);
   const mouseClipId = reactHostPort.useId().replace(/:/g, "");
   const reducedMotion = reactHostPort.useMemo(() => typeof window !== "undefined" && window.matchMedia?.("(prefers-reduced-motion: reduce)")?.matches === true, []);
 
   reactHostPort.useEffect(() => {
     if (reducedMotion || !idle || demonstrations.length === 0) {
-      document.documentElement.removeAttribute("data-introduction-demonstrating");
+      hide();
       return;
     }
+    if (overlayRef.current) overlayRef.current.style.visibility = "visible";
     document.documentElement.setAttribute("data-introduction-demonstrating", "true");
     const origin = lastPositionRef.current;
 
@@ -6106,14 +6117,14 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
     return () => {
       cancelled = true;
       cancelAnimationFrame(rafId);
-      document.documentElement.removeAttribute("data-introduction-demonstrating");
+      hide();
     };
-  }, [demonstrations, idle, reducedMotion]);
+  }, [demonstrations, hide, idle, reducedMotion]);
 
   if (reducedMotion) return null;
 
   return (
-    <div data-slot="introduction-demonstration" className="pointer-events-none fixed inset-0" style={{ zIndex: "calc(var(--z-tutorial) + 2)" }}>
+    <div ref={overlayRef} data-slot="introduction-demonstration" className="pointer-events-none fixed inset-0" style={{ visibility: "hidden", zIndex: "calc(var(--z-tutorial) + 2)" }}>
       <svg className="pointer-events-none fixed inset-0 h-full w-full overflow-visible" aria-hidden="true">
         <path ref={trailPathRef} />
       </svg>
@@ -7252,6 +7263,40 @@ export const borderElementClass = "border-element";
 /** @emoji 🎯 Focus/open on form controls: accent border color only, never extra ring width. */
 export const formControlFocusBorderClass = cn("outline-none", interactiveControlTransitionClass, "focus-visible:border-accent data-[state=open]:border-accent aria-invalid:border-destructive focus-visible:ring-0 shadow-none");
 
+/** @emoji 🎛️ Shared outer chrome shell for chips, buttons, and toggles — glass group with hairline dividers. */
+export const chromeControlGroupShellClass = cn("flex items-center border divide-x overflow-hidden w-fit shrink-0", borderNormalClass, "divide-normal", glassClass);
+
+/** @emoji 🎛️ Standard {@link chromeControlGroupShellClass} height for chips, buttons, and toggles. */
+export const chromeControlGroupClass = cn(chromeControlGroupShellClass, "h-medium");
+
+/** @emoji 🎛️ Shared control cell base — transparent on the group glass. */
+export const chromeControlItemBaseClass = cn(
+  "text-element inline-flex items-center justify-center gap-single text-xs font-medium bg-transparent",
+  "cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed",
+  "[&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0",
+  formControlFocusBorderClass,
+  "whitespace-nowrap h-medium p-single overflow-hidden leading-none",
+);
+
+/** @emoji 🎛️ Navbar/button/toggle cell hover — matches {@link ShellParentHover} group items. */
+export const chromeControlItemClass = cn(chromeControlItemBaseClass, interactiveHoverClass);
+
+/** @emoji 🎛️ Tab/chip cell hover — preserves drag-handle exclusion beside labels. */
+export const chromeControlTabItemClass = cn(chromeControlItemBaseClass, hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
+
+/** @emoji 🎛️ Pressed/on via `data-state="on"` — toggles and toggle-group items. */
+export const chromeControlItemOnClass = interactiveOnClass;
+
+/** @emoji 🎛️ Pressed/on via `data-active="true"` — panel/window tab cells. */
+export const chromeControlTabActiveClass = cn(
+  "data-[active=true]:bg-active-base",
+  "data-[active=true]:border-active-base",
+  "data-[active=true]:text-emphasized",
+  "data-[active=true]:hover:bg-active-base/90",
+  "data-[active=true]:hover:border-active-base",
+  "data-[active=true]:hover:text-emphasized",
+);
+
 /** @emoji 🎚 Slider filled range — element gray at rest; foreground emphasis on hover; active fill while dragging. */
 export const sliderRangeClassName = cn("bg-element absolute transition-[background-color] data-[orientation=horizontal]:h-full data-[orientation=vertical]:w-full", "group-hover:bg-emphasized", "data-[dragging=true]:bg-active-base");
 
@@ -7342,9 +7387,6 @@ export function panelAnchorTabBarClass(_direction: "up" | "down"): string {
 /** @emoji 📑 Panel tab button padding. */
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
-/** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's folded tabs (see {@link PanelChromeTabBar}) — frosted panel chrome living inline in the navbar/footer while the floating panel is closed. */
-export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border rounded-sm", borderNormalClass, glassClass);
-
 //#region 🫳DragAffordance
 
 /**
@@ -7396,7 +7438,7 @@ export const dropZoneReadyClass = cn(dropZoneReadyFillClass, dropZoneReadyTextCl
 //#endregion 🫳DragAffordance
 
 /** @emoji 📑 Shared panel/mobile panel tab bar variant. */
-/** @emoji 📑 `"chrome"` parks the folded root row (full DnD) inline in the navbar/footer; while open the floating panel owns the strip — see {@link PanelChromeTabBar}. */
+/** @emoji 📑 `"chrome"` is a host alias for `"panel"` — folded chrome-hosted bars render via {@link WindowChrome} chipOnly, not a separate visual variant. */
 export type PanelTabBarVariant = "panel" | "mobile" | "chrome";
 
 /** @emoji 🧭 Validates a path's segments against a node tree, truncating at the first segment that no longer exists at its level — no first-sibling substitution, no auto-descend (progressive reveal owns how deep a path goes). `[]` is a valid result. */
@@ -7854,8 +7896,9 @@ const PanelTabButton: React.FC<{
   const Icon = tab.icon;
   const inlineText = useControlInlineText(tab.id, tab.name);
   const surfaceDrag = useUiDriverDragSurface();
+  const level = useLevel();
   const draggable = Boolean(anchor && dock);
-  const windowTabChrome = variant === "panel";
+  const windowTabChrome = variant === "panel" || variant === "chrome";
   const inactiveTabChromeClass = windowTabChrome ? panelWindowInactiveTabClass : stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
   return (
     <ChromeControlHint id={tab.id} text={tab.name}>
@@ -7867,7 +7910,9 @@ const PanelTabButton: React.FC<{
         data-drag-source={isDragSource ? "true" : undefined}
         data-drop-nest={isChildDropTarget ? "true" : undefined}
         id={tab.id}
+        data-level={level}
         data-active={isActive ? "true" : undefined}
+        data-state={isActive && showActiveColor ? "on" : undefined}
         onClick={() => onSelect(tab.id)}
         onPointerDown={draggable && surfaceDrag ? (event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event) : undefined}
         onDragOver={
@@ -7962,8 +8007,9 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
 
   if (sortedTabs.length === 0) return null;
 
-  const barClass = variant === "panel" ? panelAnchorTabBarClass(direction) : variant === "chrome" ? panelChromeTabBarClass : mobilePanelTabBarClass;
-  const buttonClass = variant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
+  const resolvedVariant = variant === "chrome" ? "panel" : variant;
+  const barClass = resolvedVariant === "panel" ? panelAnchorTabBarClass(direction) : mobilePanelTabBarClass;
+  const buttonClass = resolvedVariant === "mobile" ? mobilePanelTabButtonClass : panelAnchorTabButtonClass;
   const dropTarget = dock?.dropTarget;
   const isDropRow = Boolean(anchor && dropTarget?.kind === "insert" && dropTarget.anchor === anchor && dropTarget.parentPath.length === parentPath.length && dropTarget.parentPath.every((id, index) => id === parentPath[index]));
   const dropInsertIndex = isDropRow && dropTarget?.kind === "insert" ? dropTarget.index : null;
@@ -7971,7 +8017,7 @@ const PanelTabRow: React.FC<PanelTabRowProps> = ({ variant, anchor, parentPath =
   const rowDropReady = tabDragActive && Boolean(anchor) && !parentPath.some((id) => dock?.draggedSubtreeIds?.has(id));
   const unitDragActive = usePanelTreeUnitDragActive();
   // 👻 Navbar/footer chrome toggles and folded panel root rows stay visible during canvas ghost; only open panel tab strips dim.
-  const ghostDim = variant !== "chrome" && showActiveColor;
+  const ghostDim = showActiveColor;
 
   return (
     <div ref={setRowRef} {...(ghostDim ? { "data-dim": true } : {})} data-slot={`${tabSlot}-tabs`} className={cn(barClass, rowDropReady && dropZoneReadyClass)}>
@@ -8537,7 +8583,23 @@ export const PanelChromeTabBar: React.FC<PanelChromeTabBarProps> = ({ anchor, cl
   return (
     <LevelProvider level="panel">
       <GhostRegionShell sessionGhost={false} data-level="panel" data-slot="panel-chrome-tab-bar" data-anchor={anchor} className={cn("flex shrink-0 items-center", className)}>
-        <PanelTabBar variant="chrome" anchor={anchor} tabs={tabs} activePath={resolvedPath} onActivePathChange={handlePathChange} maxRows={1} showActiveColor={visible} />
+        <WindowChrome
+          chipOnly
+          level="panel"
+          stackSlot="window-chrome-stack"
+          titleChips={
+            <PanelTabBar
+              variant="panel"
+              anchor={anchor}
+              tabs={tabs}
+              activePath={resolvedPath}
+              onActivePathChange={handlePathChange}
+              maxRows={1}
+              direction={flowFromAnchor(anchor).block}
+              showActiveColor={visible}
+            />
+          }
+        />
       </GhostRegionShell>
     </LevelProvider>
   );
@@ -8917,7 +8979,7 @@ export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-mediu
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
 
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName = cn("group flex max-w-[12rem] shrink-0 cursor-pointer items-center px-single text-xs text-element select-none transition-colors", hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
+export const modeDockTabClassName = cn(chromeControlTabItemClass, "group max-w-[12rem] shrink-0 cursor-pointer items-center px-single select-none transition-colors");
 
 /** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
@@ -11476,9 +11538,7 @@ export const Field: React.FC<FieldProps> = ({ id, label, description, required, 
 /**
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
-const actionGroupItemVariants = cva(
-  cn(`text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`, interactiveHoverClass),
-);
+const actionGroupItemVariants = cva(cn(chromeControlItemBaseClass, interactiveHoverClass, "shrink-0 [&_svg]:size-tiny aspect-square h-small p-single"));
 
 /**
  * ActionGroupContext holds the data fields for a ActionGroupContext record.
@@ -11501,7 +11561,7 @@ function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
   const contextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   return (
-    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderNormalClass, "divide-normal", className)} {...props}>
+    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group", chromeControlGroupShellClass, "h-small", className)} {...props}>
       <ActionGroupContext.Provider value={contextValue}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -11688,9 +11748,7 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
 /**
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
-const buttonGroupItemVariants = cva(
-  cn(`text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`, interactiveHoverClass),
-  {
+const buttonGroupItemVariants = cva(cn(chromeControlItemClass, "aspect-square"), {
     variants: {
       variant: {
         default: "",
@@ -11701,8 +11759,7 @@ const buttonGroupItemVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  },
-);
+  });
 
 /**
  * ButtonGroupContext holds the data fields for a ButtonGroupContext record.
@@ -11734,7 +11791,7 @@ function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, c
         data-detail-panel-control={detailPanelWidthMode}
         id={id}
         data-level={level}
-        className={cn("group/button-group flex items-center border divide-x overflow-hidden h-medium", detailPanelWidthMode === "fill" ? "w-full min-w-0" : "w-fit shrink-0", borderNormalClass, "divide-normal", className)}
+        className={cn(chromeControlGroupClass, detailPanelWidthMode === "fill" ? "w-full min-w-0" : "", "group/button-group", className)}
         {...props}
       >
         {children}
@@ -13442,9 +13499,7 @@ export { Textarea };
 /**
  * toggleVariants holds the data fields for a toggleVariants record.
  **/
-const toggleVariants = cva(
-  cn(`text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap ${interactiveOnClass} h-medium aspect-square p-single leading-none overflow-hidden`, interactiveHoverClass),
-);
+const toggleVariants = cva(cn(chromeControlItemClass, chromeControlItemOnClass, "aspect-square"));
 
 /**
  * Configuration interface for a single toggle option with value and label.
@@ -13556,7 +13611,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
       data-state={rootDataState}
       id={id}
       type={kind}
-      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x", borderNormalClass, "divide-normal", className)}
+      className={cn(chromeControlGroupClass, "group/toggle-group has-[_[data-slot=inline-label]]:overflow-visible", className)}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
@@ -29557,7 +29612,7 @@ if (import.meta.vitest) {
   });
 
   describe("useIntroductionPointerIdle", () => {
-    it("goes idle after the threshold, resets on real movement, and ignores repeated-coordinate pointermoves", () => {
+    it("goes idle after the threshold, resets on coordinate or pointer-lock movement, and ignores stationary pointermoves", () => {
       vi.useFakeTimers();
       try {
         const IdleProbe: React.FC = () => {
@@ -29589,6 +29644,11 @@ if (import.meta.vitest) {
           vi.advanceTimersByTime(1000);
         });
         expect(probe()).toBe("true");
+
+        const pointerLockMove = new PointerEvent("pointermove", { bubbles: true, clientX: 10, clientY: 20 });
+        Object.defineProperty(pointerLockMove, "movementX", { value: 4 });
+        fireEvent(window, pointerLockMove);
+        expect(probe()).toBe("false");
       } finally {
         vi.useRealTimers();
       }
@@ -29626,9 +29686,12 @@ if (import.meta.vitest) {
           vi.advanceTimersByTime(INTRODUCTION_DEMO_IDLE_THRESHOLD_MS);
         });
         expect(document.documentElement.getAttribute("data-introduction-demonstrating")).toBe("true");
+        const overlay = document.querySelector<HTMLElement>('[data-slot="introduction-demonstration"]');
+        expect(overlay?.style.visibility).toBe("visible");
 
         fireEvent(window, new MouseEvent("pointermove", { bubbles: true, clientX: 5, clientY: 5 }));
         expect(document.documentElement.hasAttribute("data-introduction-demonstrating")).toBe(false);
+        expect(overlay?.style.visibility).toBe("hidden");
       } finally {
         vi.useRealTimers();
       }
@@ -30619,7 +30682,6 @@ if (import.meta.vitest) {
       fireEvent.contextMenu(screen.getByRole("button", { name: "Target" }), { clientX: 123, clientY: 87 });
       const menu = await waitFor(() => screen.getByRole("menu"));
       const chrome = menu.closest<HTMLElement>('[data-window-silhouette][data-slot="context-menu-content"]');
-      console.log("[DEBUG] context menu anchor", { left: chrome?.style.left, parent: chrome?.parentElement?.tagName, position: chrome?.style.position, top: chrome?.style.top });
       expect(chrome?.parentElement).toBe(document.body);
       expect(chrome?.style.position).toBe("fixed");
       expect(chrome?.style.left).toBe("123px");
@@ -30962,8 +31024,12 @@ if (import.meta.vitest) {
       const topTabs = topContainer.querySelector('[data-slot="panel-tabs"]');
       expect(topTabs?.className).not.toContain("border-b");
       expect(topTabs?.className).not.toContain("border-t");
-      const chromeMarkup = renderToStaticMarkup(<PanelTabBar variant="chrome" tabs={tabs} activePath={["tab-a"]} onActivePathChange={() => {}} />);
-      expect(chromeMarkup).toContain("border");
+      const chromeMarkup = renderToStaticMarkup(
+        <PanelChromeTabBar anchor="top-middle" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => {}} />,
+      );
+      expect(chromeMarkup).toContain('data-slot="window-chrome-chip-cap"');
+      expect(chromeMarkup).toContain("ui-glass");
+      expect(chromeMarkup).not.toContain("rounded-sm");
       const { container: bottomContainer } = render(<Panel anchor="bottom-left" visible={false} tabs={tabs} />);
       const bottomTabs = bottomContainer.querySelector('[data-slot="panel-tabs"]');
       expect(bottomTabs?.className).not.toContain("border-b");
@@ -36509,14 +36575,41 @@ if (treeVitest) {
       expect(container.querySelector('[data-slot="panel-chrome-tab-bar"]')).toBeNull();
     });
 
-    it("PanelChromeTabBar at middle anchors uses panel level and glass chrome styling", () => {
+    it("PanelChromeTabBar at middle anchors uses panel level and window-chrome chip cap glass", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "search", icon: StubIcon, name: "Search", tree: { sections: [] } })];
       for (const anchor of ["top-middle", "bottom-middle"] as const) {
         const markup = renderToStaticMarkup(<PanelChromeTabBar anchor={anchor} tabs={tabs} visible={false} />);
         expect(markup).toContain('data-level="panel"');
+        expect(markup).toContain('data-slot="window-chrome-chip-cap"');
         expect(markup).toContain("ui-glass");
       }
+    });
+
+    it("folded PanelChromeTabBar matches folded Panel chip tab button styling", async () => {
+      const { render } = await import("@testing-library/react");
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
+      const { container: chromeBarContainer } = render(
+        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={false} activeTabPath={["tab-a"]} onActiveTabPathChange={() => undefined} />,
+      );
+      const { container: foldedPanelContainer } = render(<Panel anchor="top-left" visible={false} tabs={tabs} activeTabPath={["tab-a"]} />);
+      const chromeBarButton = chromeBarContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
+      const foldedPanelButton = foldedPanelContainer.querySelector('[data-slot="panel-tab-button"]') as HTMLElement;
+      expect(chromeBarButton.className).toBe(foldedPanelButton.className);
+      expect(chromeBarContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
+      expect(foldedPanelContainer.querySelector('[data-slot="window-chrome-chip-cap"]')).toBeTruthy();
+    });
+
+    it("button and toggle groups share chrome control group glass styling", () => {
+      const buttonMarkup = renderToStaticMarkup(
+        <ButtonGroup>
+          <Button id="test.button" icon="x" />
+        </ButtonGroup>,
+      );
+      const toggleMarkup = renderToStaticMarkup(<Toggle id="ui.search.toggle" pressed={false} onPressedChange={() => undefined} icon="search" text="Search" />);
+      expect(buttonMarkup).toContain("ui-glass");
+      expect(toggleMarkup).toContain("ui-glass");
     });
 
     it("PanelChromeTabBar does not celebrate an unrelated tab press outside introduction completion", async () => {

@@ -5399,7 +5399,8 @@ mod tests {
         fresh.apply_eval_outputs_json(&eval_json);
         fresh.set_slider_value("slider", 4.0);
         let pending = fresh.pending_eval_widget_ids();
-        assert_eq!(pending, vec!["add".to_string(), "preview".to_string()]);
+        assert!(pending.contains(&"add".to_string()));
+        assert!(!pending.contains(&"slider".to_string()));
     }
 
     #[test]

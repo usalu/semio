@@ -4,19 +4,19 @@ overview: Make window chips, buttons, and toggles share one control chrome so op
 todos:
   - id: ticket
     content: List goals, open/reopen ticket under 🎯r2602 for unify control chrome
-    status: pending
+    status: completed
   - id: shared-tokens
     content: Define one group+item chrome recipe; wire ButtonGroup, ToggleGroup, ActionGroup, and chip/tab cells to it
-    status: pending
+    status: completed
   - id: chrome-tabbar
     content: PanelChromeTabBar folded = WindowChrome chipOnly + variant=panel; remove chrome visual fork
-    status: pending
+    status: completed
   - id: on-state-css
     content: Unify pressed/hover (showActiveColor + ShellParentHover) so on looks like ToggleGroup on
-    status: pending
+    status: completed
   - id: tests-verify
     content: Extend inline vitest assertions; run ui react verify; ticket close with summary
-    status: pending
+    status: completed
 isProject: false
 ---
 

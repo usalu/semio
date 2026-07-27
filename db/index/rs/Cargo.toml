@@ -1,0 +1,16 @@
+[package]
+name = "db_index"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db secondary indexes — immutable sorted runs, LSM-lite merges, per-kind index builders"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_storage = { path = "../../storage/rs" }
+pack_core = { path = "../../../pack/core/rs" }

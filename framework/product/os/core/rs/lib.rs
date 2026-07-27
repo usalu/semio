@@ -763,8 +763,22 @@ pub mod host {
 
         /// @emoji 🤝 Media-graph referential-integrity pass — see `reconcile_os_media_graph` (region
         /// 🔖GraphReconcile below) for the four ordered rules it runs.
-        fn reconcile(projection: OsProjection) -> (OsProjection, Vec<StudioConflict>) {
-            reconcile_os_media_graph(projection)
+        ///
+        /// 🎞️ CW3 kernel cut-over ripple fix: `Operation::reconcile` moved to `protocol_command` with
+        /// a changed signature (was an associated fn, `fn reconcile(projection: P) -> (P,
+        /// Vec<StudioConflict>)`; now an instance method returning `protocol`-owned
+        /// `Vec<ReconcileReport>`, per that trait's own doc comment: "`vcs` maps `ReconcileReport ->
+        /// StudioConflict` at its own edge instead of this crate knowing about studio types"). The
+        /// media-graph rules themselves (`reconcile_os_media_graph`) are untouched — only this thin
+        /// trait-facing wrapper adapts to the new signature, converting each `StudioConflict` to a
+        /// `ReconcileReport` at the boundary.
+        fn reconcile(&self, projection: OsProjection) -> (OsProjection, Vec<vcs::ReconcileReport>) {
+            let (projection, conflicts) = reconcile_os_media_graph(projection);
+            let reports = conflicts
+                .into_iter()
+                .map(|conflict| vcs::ReconcileReport { id: conflict.kind, message: conflict.message, severity: vcs::ReconcileSeverity::Warning })
+                .collect();
+            (projection, reports)
         }
     }
 

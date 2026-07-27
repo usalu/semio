@@ -17,6 +17,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../vcs/rs" }
+protocol = { path = "../../protocol/rs" }
 dsl = { path = "../../dsl/rs" }
 ui_wgpu = { path = "../../ui/wgpu/rs" }
 serde = { version = "1.0.219", features = ["derive"] }

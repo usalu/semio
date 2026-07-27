@@ -395,6 +395,9 @@ fn resolve_target_edit_ordinal(trusted: &[u8], target: &MaterializeTarget, limit
 /// byte range; resolve `target` to a concrete edit ordinal cap; find the newest valid projection at
 /// or before that cap (index first, reverse-scan fallback, skipping and retrying older candidates on
 /// corruption); fall back to `initial_pack` at ordinal 0 if none verify.
+// 🔒 `target` is by-value per the frozen contract signature (downstream callers pass an owned
+// enum they're done with); it happens to be read-only in this implementation.
+#[allow(clippy::needless_pass_by_value)]
 pub fn resolve_plan<'a>(protocol_bytes: &'a [u8], initial_pack: &'a [u8], target: MaterializeTarget, limits: &ProtocolLimits) -> Result<MaterializePlan<'a>, ProtocolError> {
     let recovery = protocol_format::recover(&protocol_bytes, limits, RecoveryMode::LastCommit)?;
     let trusted: &'a [u8] = &protocol_bytes[..recovery.bytes_recovered as usize];
@@ -543,7 +546,7 @@ mod tests {
 
     //#region 🔖Projection
     fn sample_record(anchor: Option<&str>, ordinal: u64, kind: ProjectionBodyKind, body: Option<Vec<u8>>) -> ProjectionRecord {
-        let body_hash = body.as_deref().map(|b| Blake3Hasher.hash(b)).unwrap_or([0u8; 32]);
+        let body_hash = body.as_deref().map_or([0u8; 32], |b| Blake3Hasher.hash(b));
         ProjectionRecord { anchor_checkpoint_id: anchor.map(str::to_string), edit_ordinal: ordinal, body_kind: kind, body_hash, body }
     }
 
@@ -637,6 +640,9 @@ mod tests {
 
     type Collected = (Vec<u8>, Vec<String>);
 
+    // 🔒 Must return `Result` to satisfy `materialize_with`'s `apply_edit` closure bound even
+    // though this particular collector never fails.
+    #[allow(clippy::unnecessary_wraps)]
     fn collect_ids(p: &mut Collected, edit: &HistoryEdit) -> Result<(), ProtocolError> {
         p.1.push(edit.id.clone());
         Ok(())

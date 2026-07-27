@@ -90,7 +90,9 @@ pub enum Bootstrap {
 #[derive(Clone, Debug, PartialEq, serde::Serialize, serde::Deserialize)]
 pub enum ApplyOutcome {
     Accepted,
-    Transformed { envelope: protocol_causal::OperationEnvelope },
+    // 🔒 Boxed: OperationEnvelope is far larger than the other variants, and clippy's
+    // large_enum_variant lint (a real per-instance cost, not just style) applies at -D warnings.
+    Transformed { envelope: Box<protocol_causal::OperationEnvelope> },
     Rejected { reason: String },
 }
 
@@ -99,7 +101,8 @@ pub enum ApplyOutcome {
 pub enum AckStage {
     Received,
     Persisted,
-    Applied { outcome: ApplyOutcome },
+    // 🔒 Boxed for the same reason as ApplyOutcome::Transformed above.
+    Applied { outcome: Box<ApplyOutcome> },
 }
 
 /// @emoji 📬 One frame the hub sends to a client.
@@ -385,9 +388,9 @@ mod tests {
 
     #[test]
     fn server_frame_ack_round_trips_for_every_stage_and_apply_outcome_variant() {
-        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: sample_envelope("op-1") }, ApplyOutcome::Rejected { reason: "conflict".to_string() }] {
+        for outcome in [ApplyOutcome::Accepted, ApplyOutcome::Transformed { envelope: Box::new(sample_envelope("op-1")) }, ApplyOutcome::Rejected { reason: "conflict".to_string() }] {
             assert_server_round_trips(
-                &ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome }], frontier: sample_frontier() },
+                &ServerFrame::Ack { batch_id: 7, stages: vec![AckStage::Received, AckStage::Persisted, AckStage::Applied { outcome: Box::new(outcome) }], frontier: sample_frontier() },
                 Lane::Command,
             );
         }

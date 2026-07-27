@@ -16,6 +16,7 @@ path = "lib.rs"
 
 [dependencies]
 vcs = { path = "../../../vcs/rs" }
+protocol = { path = "../../../protocol/rs" }
 dsl = { path = "../../../dsl/rs" }
 flow_module_brep = { path = "../../module/brep/rs", default-features = false }
 flow_module_draw = { path = "../../module/draw/rs", default-features = false }

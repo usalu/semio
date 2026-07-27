@@ -3428,6 +3428,16 @@ pub mod d3 {
         Puzzle3dScene { fixture, runtime, active_utility: active_utility.to_string() }
     }
 
+    /// 🧮 Document ops for a fixture mutation — normalizes `before` through the same plugin typed
+    /// round-trip as `after` so View-kind actions that only touch runtime never trip the
+    /// "must not emit operations" guard when the live store still holds a `puzzle_3d`-shaped
+    /// projection (`skip_serializing_if` / optional `camera.projection`) from a prior op apply.
+    fn puzzle3d_operations_from_fixture_change(before: &Value, after_fixture: &Puzzle3dFixture) -> Vec<Puzzle3dOperation> {
+        let before_normalized = serde_json::to_value(serde_json::from_value::<Puzzle3dFixture>(before.clone()).unwrap_or_else(|_| empty_fixture())).unwrap_or_else(|_| before.clone());
+        let after = serde_json::to_value(after_fixture).unwrap_or_else(|_| before_normalized.clone());
+        puzzle3d_document_delta_operations(&before_normalized, &after)
+    }
+
     /// 🪟 Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
     /// `vec![kind_id]` when the list is empty — a headless/test call that never threads instances still
     /// gets exactly the one entry today's single-window callers expect.
@@ -6382,8 +6392,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let incoming = resolve_puzzle3d_attractions(&mut scratch);
             puzzle3d_rederive_moved_attractions(&mut scratch, &object_ids, &incoming);
             resolve_puzzle3d_attractions(&mut scratch);
-            let after = serde_json::to_value(&scratch).unwrap_or_else(|_| projection.clone());
-            let operations = puzzle3d_document_delta_operations(projection, &after);
+            let operations = puzzle3d_operations_from_fixture_change(projection, &scratch);
             if operations.is_empty() {
                 ActionEmit { ui_scope: puzzle3d_transform_drag_scope(), ..Default::default() }
             } else {
@@ -7198,8 +7207,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let next_active_utility = envelope.active_utility.clone();
             envelope.runtime.save_window(&wid);
             self.runtime = envelope.runtime;
-            let after = serde_json::to_value(&envelope.fixture).unwrap_or_else(|_| before.clone());
-            let operations = puzzle3d_document_delta_operations(&before, &after);
+            let operations = puzzle3d_operations_from_fixture_change(&before, &envelope.fixture);
             let coalesce_key = match action {
                 "translateSelection" => Some("gumball-translate".to_string()),
                 "rotateSelection" => Some("gumball-rotate".to_string()),
@@ -9139,6 +9147,32 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         }
 
         #[test]
+        fn set_hover_is_a_view_action_with_no_ops_after_document_mutation() {
+            // 🖱️ After a real document edit the live store holds a `puzzle_3d`-shaped projection
+            // (optional camera.projection, skipped nulls). Hover must still round-trip as View-kind
+            // with zero operations — not fall into a spurious SetDocument from serde shape noise.
+            let mut app = new_app_with_registry();
+            app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
+            let object_id = app
+                .projection()
+                .expect("projection")
+                .0
+                .get("objects")
+                .and_then(Value::as_array)
+                .and_then(|objects| objects.last())
+                .and_then(|object| object.get("id"))
+                .and_then(Value::as_str)
+                .expect("added object id")
+                .to_string();
+            let before = app.projection().expect("projection").0;
+            let result = app.handle_action("setHover", Some(&json!({ "objectId": object_id })), &ViewState::default(), &testkit::meta("local")).expect("setHover");
+            assert!(result.operations.is_empty(), "setHover must not emit document operations");
+            assert_eq!(app.projection().expect("projection").0, before, "setHover must not mutate the document");
+            let clear = app.handle_action("setHover", None, &ViewState::default(), &testkit::meta("local")).expect("clear hover");
+            assert!(clear.operations.is_empty(), "clearing hover must not emit document operations");
+        }
+
+        #[test]
         fn engagement_exposes_no_utility_switch_options() {
             // 🧰 select/brush/fill switching lives only on the framework utility bar (declared via `.utility` +
             // `.window_kind_utilities`); the engagement HUD must not duplicate it as options.
@@ -10022,6 +10056,16 @@ pub mod d5 {
     fn scene_from_projection(projection: &Value, runtime: Puzzle5dRuntime, active_utility: &str) -> Puzzle5dScene {
         let document = serde_json::from_value::<Puzzle5dDocument>(projection.clone()).unwrap_or_else(|_| empty_document());
         Puzzle5dScene { document, runtime, active_utility: active_utility.to_string() }
+    }
+
+    /// 🧮 Document ops for a document mutation — normalizes `before` through the same plugin typed
+    /// round-trip as `after` so View-kind actions that only touch runtime never trip the
+    /// "must not emit operations" guard when the live store still holds a `puzzle_5d`-shaped
+    /// projection from a prior op apply.
+    fn puzzle5d_operations_from_document_change(before: &Value, after_document: &Puzzle5dDocument) -> Vec<Puzzle5dOperation> {
+        let before_normalized = serde_json::to_value(serde_json::from_value::<Puzzle5dDocument>(before.clone()).unwrap_or_else(|_| empty_document())).unwrap_or_else(|_| before.clone());
+        let after = serde_json::to_value(after_document).unwrap_or_else(|_| before_normalized.clone());
+        puzzle5d_document_delta_operations(&before_normalized, &after)
     }
 
     /// 🪟 Live window-instance ids of `kind_id` from `view_state.window_instances`, falling back to
@@ -12085,8 +12129,7 @@ pub mod d5 {
             }
             let next_active_utility = envelope.active_utility.clone();
             self.runtime = envelope.runtime;
-            let after = serde_json::to_value(&envelope.document).unwrap_or_else(|_| before.clone());
-            let operations = puzzle5d_document_delta_operations(&before, &after);
+            let operations = puzzle5d_operations_from_document_change(&before, &envelope.document);
             // 🌀 Coalesce each gumball drag tick into one undoable edit (compact per-part records, not full meshes).
             let coalesce_key = match action {
                 "translateSelection" => Some("gumball-translate".to_string()),

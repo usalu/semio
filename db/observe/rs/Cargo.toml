@@ -1,0 +1,17 @@
+[package]
+name = "db_observe"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db observability — metrics, spans, health registries, structured/audit event sinks, determinism verification"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[features]
+otel = []
+
+[dependencies]
+db_core = { path = "../../core/rs" }

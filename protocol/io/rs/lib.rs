@@ -26,6 +26,7 @@ mod native {
     /// @emoji 🚨 Wraps a `std::io::Error` into the crate-wide `ProtocolError::Io` variant — the
     /// only place `std::io::Error` is allowed to appear, per the family's no-`std::io::Error`-in-
     /// public-signatures rule.
+    #[allow(clippy::needless_pass_by_value)] // used as a `map_err` callback, which passes the error by value
     fn io_err(err: std::io::Error) -> ProtocolError {
         ProtocolError::Io(err.to_string())
     }

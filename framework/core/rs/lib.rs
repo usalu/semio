@@ -5790,9 +5790,17 @@ pub struct PluginInstanceId(pub String);
 #[serde(transparent)]
 pub struct ResourceId(pub String);
 
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct OperationId(pub String);
+// 🎞️ CW3 kernel cut-over: OperationId/ActorId/DocumentId/DocumentVersion/SchemaId moved to
+// `protocol_core` (frozen contract `.repo/🎫/26/07/27/PROTOCOL-BINARY-OP-LOG-LAYER/contract.md`),
+// re-exported here under their original names — shapes are unchanged (plain serde-transparent
+// String/u64 newtypes), so every existing reference (internal `kernel` types below, and external
+// crates like `framework/sync`/`framework/product/os/hub` that import them straight from
+// `semio_framework_core`) keeps resolving without edits. `SchemaVersion` below is NOT re-exported
+// from `protocol_core` — that crate's own `SchemaVersion` is `u32`-shaped (a distinct, unrelated
+// protocol-format concept), incompatible with this kernel's `String`-shaped version below, which
+// several external crates (`framework/sync`, hub storage crates) still construct from plain
+// strings; moving it would be a breaking shape change out of this wave's scope.
+pub use protocol_core::{ActorId, DocumentId, DocumentVersion, OperationId, SchemaId};
 
 /// 🪪 Identifies one dispatched invocation — of an action *or* a command; both route through the same
 /// `KernelOperation`/`UndoGroup` history bookkeeping.
@@ -5814,22 +5822,6 @@ pub struct AppInstanceId(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(transparent)]
-pub struct ActorId(pub String);
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct DocumentId(pub String);
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct SchemaId(pub String);
-
-#[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
-pub struct DocumentVersion(pub u64);
-
-#[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
-#[serde(transparent)]
 pub struct SchemaVersion(pub String);
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
@@ -5838,6 +5830,16 @@ pub struct WindowKindId(pub String);
 //#endregion 🔖Identifiers
 
 //#region 🔖HybridLogicalTimestamp
+// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::HybridLogicalTimestamp` is the new canonical home
+// (identical `{actor, physical_ms, logical}` shape, plus a real actor-tiebroken `Ord`/`PartialOrd`
+// this local struct lacks) — but it is deliberately NOT re-exported here this wave: this struct
+// derives `#[serde(rename_all = "camelCase")]` (`physicalMs` on the wire), while
+// `protocol_core::HybridLogicalTimestamp` has no such attribute (`physical_ms` on the wire). A
+// straight re-export would silently change this type's JSON shape for every existing serialized
+// use (kernel operations/undo groups, `framework/sync`'s wire frames) — a wire-format break outside
+// this wave's verified scope. Left local and unchanged; reconciling the two shapes is deferred to
+// whichever wave actually rewires the JSON/wire boundary (CW5) so the format change can be verified
+// end-to-end rather than assumed compatible.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub struct HybridLogicalTimestamp {
@@ -6123,6 +6125,9 @@ pub struct DocumentDiff {
     pub payload: Value,
 }
 
+// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::UndoPolicy` has identical variants but no
+// `#[serde(rename_all = "camelCase")]` (unlike this local enum) — left local and unchanged for the
+// same wire-format-preservation reason documented on `HybridLogicalTimestamp` above.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum UndoPolicy {
@@ -6644,6 +6649,9 @@ pub enum DocumentKind {
     ContentAddressedBlob,
 }
 
+// 🎞️ CW3 kernel cut-over NOTE: `protocol_core::MergeStrategyKind` has identical variants but no
+// `#[serde(rename_all = "camelCase")]` — left local and unchanged for the same wire-format
+// -preservation reason documented on `kernel::HybridLogicalTimestamp` above.
 #[derive(Clone, Copy, Debug, PartialEq, Eq, Hash, Serialize, Deserialize)]
 #[serde(rename_all = "camelCase")]
 pub enum MergeStrategyKind {

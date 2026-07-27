@@ -1,0 +1,18 @@
+[package]
+name = "db_cluster"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db clustering — sharding, ownership leases, epoch failover, follower replication, quorum durability"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_actor = { path = "../../actor/rs" }
+db_wal = { path = "../../wal/rs" }
+db_storage = { path = "../../storage/rs" }
+db_sync = { path = "../../sync/rs" }

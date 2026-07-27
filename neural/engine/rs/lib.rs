@@ -1234,7 +1234,7 @@ fn incoming_edges_signature(tree: &Tree, neuron_id: &str) -> u64 {
 /// 🧬 Per-neuron structural/adjacency fingerprint, keyed once by id in [`TreeSnapshot`] instead
 /// of duplicated across parallel maps — cuts id clones on [`TreeSnapshot::capture`] from four
 /// per neuron down to one.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 struct NeuronSnapshot {
     key: u64,
     incoming: u64,
@@ -1244,7 +1244,7 @@ struct NeuronSnapshot {
 
 /// 📸 Structural fingerprint of a tree+seeds pair, used by [`compute_dirty_set`] to diff two
 /// evaluations without re-hashing or re-walking neurons that provably didn't change.
-#[derive(Clone, Default)]
+#[derive(Clone, Debug, Default, PartialEq)]
 pub struct TreeSnapshot {
     neurons: HashMap<String, NeuronSnapshot>,
     seed_keys: HashMap<String, u64>,

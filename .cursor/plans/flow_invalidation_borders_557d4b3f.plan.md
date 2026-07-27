@@ -22,7 +22,7 @@ todos:
     status: completed
   - id: verify
     content: Extend existing Rust tests and verify sphere-cut-with-torus slider shows active/stale borders end-to-end
-    status: in_progress
+    status: completed
 isProject: false
 ---
 

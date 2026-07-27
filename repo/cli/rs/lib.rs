@@ -167,13 +167,12 @@ pub mod catalog {
         let Some(close_rel) = block[abs_open..].find(']') else { return Vec::new() };
         let inner = &block[abs_open + 1..abs_open + close_rel];
         let mut out = Vec::new();
-        let mut chars = inner.char_indices().peekable();
-        while let Some((i, c)) = chars.next() {
-            if c == '"' {
-                if let Some(end) = inner[i + 1..].find('"') {
-                    out.push(inner[i + 1..i + 1 + end].to_string());
-                }
-            }
+        let mut rest = inner;
+        while let Some(open_q) = rest.find('"') {
+            rest = &rest[open_q + 1..];
+            let Some(close_q) = rest.find('"') else { break };
+            out.push(rest[..close_q].to_string());
+            rest = &rest[close_q + 1..];
         }
         out
     }

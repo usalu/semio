@@ -1,0 +1,18 @@
+[package]
+name = "db_cli"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db CLI — inspect, doc, wal-inspect, snapshot-inspect, verify, query, replay, repair, compact, health, simulate, migrate, profile"
+
+[[bin]]
+name = "db"
+path = "lib.rs"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db = { path = "../../rs" }

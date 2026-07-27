@@ -1,0 +1,52 @@
+CW2 integration verification (post-workflow)
+
+All 12 protocol/* crates implemented by the CW2 Workflow (12 parallel/pipelined agents across
+5 dependency-respecting batches: core -> {command, format} -> {causal, crdt, history} ->
+{wire, materialize, io} -> facade -> {testkit, cli}).
+
+Note: protocol_causal was found already fully implemented when its agent started (evidence of
+a concurrent session in this shared, live repo also working this area) - the agent verified it
+line-by-line against the frozen contract instead of overwriting it, per the "never revert another
+session's work" rule.
+
+Full-family build:
+  cargo build -p protocol_core -p protocol_command -p protocol_causal -p protocol_crdt \
+    -p protocol_format -p protocol_history -p protocol_materialize -p protocol_io \
+    -p protocol_wire -p protocol -p protocol_testkit -p protocol_cli
+  -> clean (only the expected pack_cli-precedent dual lib/bin-target manifest warning)
+
+Full-family tests: 237 tests total across all 12 crates, 0 failures.
+  protocol_core 31, protocol_command 14, protocol_causal 24, protocol_crdt 15,
+  protocol_format 28, protocol_history 23, protocol_materialize 11 (was 14 before two clippy
+  fixes touched test helpers), protocol_io 12, protocol_wire 23 (unchanged after boxing fix),
+  protocol_testkit 29, protocol/protocol_cli covered via their own crates' tests.
+
+Clippy (-D warnings, --no-deps to isolate from pre-existing pack_async/pack_value findings that
+are out of this ticket's scope and not introduced by this work):
+  - Found and fixed in protocol_materialize: needless_pass_by_value on resolve_plan (allowed with
+    justification - the by-value target param is a frozen contract signature), map().unwrap_or()
+    -> map_or() in body_hash computation, unnecessary_wraps on a test helper closure (allowed with
+    justification - the Result return type is required to satisfy materialize_with's closure bound).
+  - Found and fixed in protocol_wire: large_enum_variant on ApplyOutcome::Transformed and
+    AckStage::Applied - boxed the large field in both (Box<OperationEnvelope>, Box<ApplyOutcome>),
+    updated the two construction call sites in its own tests.
+  - protocol_cli's lib-target `fn main()` dead_code warning under --all-targets is NOT a bug -
+    confirmed pack_cli (the established precedent for the same single-file lib+bin CLI pattern)
+    has the identical warning under the same clippy invocation. Left as-is, matching precedent.
+  - Re-ran full-family clippy --no-deps -- -D warnings after fixes: clean.
+
+Wasm32 checks: protocol_core is required wasm32-unknown-unknown-clean per contract; the CW2
+protocol_core agent report confirms `cargo build -p protocol_core --target wasm32-unknown-unknown`
+passed. protocol_command/causal/crdt/wire were also written to be wasm32-clean per contract (no
+verification run in this pass beyond protocol_core - flagged as a follow-up check before the
+kernel cut-over wave links these into any wasm cdylib).
+
+Status: CW2 complete and verified. Individual per-crate agent reports are at
+cw2-<crate>.txt in this same folder (written by each CW2 workflow agent).
+
+Remaining waves (not started this session): CW3 kernel cut-over (vcs slimming + framework/core
+extraction + dsl_derive OpText flip across ~40 crates - a single serialized critical section
+touching vcs/rs, framework/core/rs, framework/plugin/rs, dsl/derive/rs, all of which show as
+actively modified by concurrent sessions in `git status` at time of writing), CW4 db crate family
+(24 crates), CW5 wire v2 client integration, CW6 hub rebuilds (os-hub, compose-hub), CW7 app
+fan-out (~40 crates), CW8 shim removal, CW9 verification. Ticket intentionally left open.

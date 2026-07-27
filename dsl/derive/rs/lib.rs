@@ -727,7 +727,14 @@ pub fn derive_dsl_ops(input: TokenStream) -> TokenStream {
     let expanded = quote! {
         #variants_impl
 
-        impl ::vcs::OpText for #name {
+        // 🎞️ CW3 kernel cut-over: `OpText` now lives in `protocol_command`, re-exported as
+        // `protocol::OpText`. `vcs` carries a temporary `pub use protocol::{OpText, ...}` shim (see
+        // `vcs/rs/lib.rs`'s `🚧TEMPORARY protocol shim`), and virtually every `#[derive(dsl::DslOps)]`
+        // crate already depends on `vcs`, so this resolves without new Cargo.toml deps. The error
+        // type stays `::vcs::TextError` (a transparent re-export of `dsl_core::TextError`, the exact
+        // type `protocol::OpText::parse_op` declares) rather than switching to `::dsl_core::TextError`
+        // directly, since not every deriving crate has `dsl_core` as a *direct* dependency.
+        impl ::protocol::OpText for #name {
             fn parse_op(line: &str) -> Result<Self, ::vcs::TextError> {
                 let variants = <Self as ::dsl::DslVariants>::variants();
                 for (keyword, spec_fn) in &variants {

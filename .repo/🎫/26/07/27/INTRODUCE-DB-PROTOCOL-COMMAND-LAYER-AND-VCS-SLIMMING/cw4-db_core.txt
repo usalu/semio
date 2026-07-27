@@ -1,0 +1,117 @@
+Wave: CW4 (db family scaffold + implementation)
+Crate: db_core (/Users/ueli/Documents/semio/db/core/rs)
+Agent: db_core implementer
+
+WHAT WAS IMPLEMENTED
+=====================
+Replaced the stub lib.rs with a full implementation covering exactly the db_core row of the
+contract's crate table (Ids, DbError, limits, DurabilityClass, Frontier/FrontierDelta/ResumeToken,
+EpochFence, Priority, config+profiles, capabilities, VersionGraph trait, Emit trait). Only
+dependency is pack_core (as scaffolded) plus thiserror/serde already in Cargo.toml; no Cargo.toml
+changes were made (serde ended up unused by this wave's design — see Deviations).
+
+Regions (in file order):
+- #region Ids: DocumentId(String), ActorId(String) newtypes decoupled from protocol's types (see
+  design-choice note below); GenerationId(u64) for actor supervision generations (used by the
+  frozen DocumentHandle's "mailbox sender + generation" shape).
+- #region Errors: DbError (thiserror enum) — Io/NotFound/AlreadyExists/InvalidArgument/
+  LimitExceeded/Conflict/Fenced/StaleGeneration/Unavailable/Timeout/Corrupt/Closed/Unauthorized/
+  Unimplemented/Internal. From<pack_core::PackError> for DbError provided since db_wal/db_snapshot
+  sit directly on pack/protocol containers.
+- #region Limits: DbLimits (max_command_bytes, max_batch_commands, max_payload_bytes,
+  max_query_bytes, max_mailbox_depth, max_open_documents, max_preview_ttl_ms) + free fn
+  check_len(len, max, what) — the single "validate before allocating" primitive the rest of the
+  family is expected to reuse.
+- #region Durability: DurabilityClass{Memory, Os, Fsync, Quorum(u8)} with a derived total order
+  (Memory < Os < Fsync < Quorum(n), Quorum orders by n) via a private rank() tuple key.
+- #region Frontier: Frontier{document, head_seq, commit_seq, chain_hash: [u8;32], epoch} mirroring
+  the frozen db facade shape field-for-field (with db_core's local DocumentId); genesis(),
+  chain_hash_typed() -> pack_core::ContentHash, dominates(). FrontierDelta::between() with
+  same-document + non-backwards validation. ResumeToken: opaque text-encoded
+  (v1|doc|head_seq|commit_seq|epoch|hex_chain_hash) with encode/decode, this crate's own choice of
+  wire format (contract leaves it unspecified).
+- #region Fencing: EpochFence{epoch: u64} — the CatalogStorage::cas_root split-brain gate; next(),
+  check(current) -> Result<(), DbError::Fenced>.
+- #region Priority: Priority{System, Recovery, Command, Query, Live, Preview} — the 6 mailbox
+  lanes, declaration-order Ord, rank()/sheddable() (Preview only, per contract's "shed-previews-
+  first" wording)/default_weight() (this crate's own DRR weight choice, documented inline).
+- #region Capabilities: DbCapabilities{preview, historical_query, live_query, cluster,
+  max_durability}.
+- #region Config: Profile{Test, Dev, Prod}, MailboxCapacities([u32;6]) get/set by Priority,
+  DbConfig{profile, limits, default_durability, capabilities, mailbox_capacities} +
+  DbConfig::for_profile() with justified per-profile defaults (Test=Memory/tight limits,
+  Dev=Os/generous, Prod=Fsync/full ceilings + cluster capability on).
+- #region VersionGraph: ChangeRecord, CheckpointRequest (vcs-type-free argument shapes) and the
+  VersionGraph trait (record_change/checkpoint/merge_base/head) — the seam through which only
+  db_engine (behind the vcs feature) touches real vcs types, per the contract's hard dependency
+  rule. NullVersionGraph is a real, panic-free placeholder impl returning
+  DbError::Unimplemented("VersionGraph is not wired up...") for every method — the deliberate
+  extension seam (see Deviations/seams below).
+- #region Emit: EmitField, EmitEvent (builder-style with/field), Emit trait (dyn-compatible,
+  Send+Sync), NullEmit no-op default — the observability inversion-of-control seam so db_core..
+  db_cluster stay db_observe-free.
+- #region Tests: 25 inline #[test] fns (no quick/long/exhaustive split needed — nothing here is
+  slow or crash-harness-shaped) exercising the actual laws: DocumentId/ActorId conversions,
+  GenerationId monotonicity, PackError->DbError category mapping, check_len's before-allocate
+  rejection, DurabilityClass total order + batch-max selection, Frontier genesis/dominates/
+  chain_hash bridge, FrontierDelta gap computation + backwards/mismatched-document rejection,
+  ResumeToken round-trip + pipe-in-id rejection + malformed-input rejection (never panics),
+  EpochFence CAS accept/reject (stale AND ahead) + monotonic next(), Priority rank/sheddable/
+  weight-ordering laws, MailboxCapacities per-lane get/set, Profile default ordering (durability
+  and limits), NullVersionGraph's never-panics-always-Unimplemented law + dyn-object-safety,
+  Emit trait object recording events + NullEmit no-op.
+
+DESIGN CHOICES / DEVIATIONS FROM A NAIVE READING
+=================================================
+1. db_core has ZERO dependency on `protocol`, per the contract's per-crate deps column (db_core:
+   "pack_core" only) and per Cargo.toml as scaffolded. The frozen `db` facade API types Frontier/
+   CommandReceipt against protocol::DocumentId/protocol::OperationId; since db_core cannot use
+   those types, it defines its own single-String-field DocumentId/ActorId newtypes with an
+   identical shape, documented at the top of the file as the intended 1:1 conversion point for
+   whichever higher crate (db_engine/db facade, which DO depend on protocol) assembles the real
+   frozen Frontier/CommandReceipt. This is called out as a design choice, not silently assumed.
+2. DbHealth, Database, DocumentHandle, CommandReceipt, Consistency, Query/CommandBatch/
+   SubmitOptions etc. are NOT defined here — they belong to db_engine/db (the facade) per the
+   crate table; db_core only supplies the shared value types those signatures are built from
+   (Frontier, DurabilityClass, DbError, DbConfig, ids). Kept the crate scoped to its table row.
+3. serde is a declared dependency (pre-existing in Cargo.toml) but nothing in this wave's design
+   needed serialization (ResumeToken is hand-encoded text, not serde; no wire types live in
+   db_core). Left as-is per instructions ("add a dependency ONLY if genuinely missing" — the
+   reverse, an already-present-but-unused dep, isn't something this agent is scoped to prune from
+   another crate's Cargo.toml decision).
+4. EpochFence deliberately carries only `epoch: u64`, no "holder" identity field — holder/lease
+   tracking is db_cluster's concern (ownership leases); db_core provides only the raw CAS
+   fencing primitive.
+5. Priority::default_weight() values (64/32/16/8/4/2->1) are this crate's own choice (contract
+   fixes the 6-lane set and the "shed previews first" law, not exact DRR weights) — documented
+   inline where decided.
+6. ResumeToken's wire encoding (v1|field|field|...) is this crate's own choice (contract leaves
+   exact encoding unspecified) — versioned via a leading "v1" tag, documented inline.
+
+EXTENSION SEAMS LEFT (deliberately, not stubs/TODOs)
+=====================================================
+- VersionGraph trait + NullVersionGraph: real trait, real panic-free placeholder impl returning
+  DbError::Unimplemented for every method. db_engine (behind the `vcs` Cargo feature) is expected
+  to supply the real impl over vcs::DocumentVcs*; anything without the vcs feature enabled can use
+  NullVersionGraph directly and get a clean error rather than a panic or silently-dropped write.
+- Emit trait + NullEmit: same pattern for observability — db_observe supplies real sinks later;
+  NullEmit is a genuine (not fake) no-op default.
+Neither seam contains unimplemented!()/todo!()/panic!() in any reachable path.
+
+VALIDATION
+==========
+cd /Users/ueli/Documents/semio/db/core/rs && cargo build -p db_core         -> success, 0 warnings/errors from db_core itself (only pre-existing unrelated workspace warnings about protocol/pack/db cli crates having both lib+bin targets, not touched by this wave)
+cd /Users/ueli/Documents/semio/db/core/rs && cargo test -p db_core          -> 25 passed; 0 failed; 0 ignored
+cd /Users/ueli/Documents/semio/db/core/rs && cargo clippy -p db_core --all-targets -> clean after fixing one redundant `.repeat(1)` in a test literal (self-caught, fixed before final report)
+cd /Users/ueli/Documents/semio/db/core/rs && CARGO_INCREMENTAL=0 cargo check -p db_core --target wasm32-unknown-unknown -> success, confirms the "db_core stays wasm32-unknown-unknown-clean" contract requirement (had to disable incremental compilation for this one check only because /System/Volumes/Data is at 100% capacity / 1.1Gi free on this machine — pre-existing host disk-space condition, unrelated to db_core; not something this agent touched or should touch)
+
+FILES TOUCHED
+=============
+/Users/ueli/Documents/semio/db/core/rs/lib.rs (full rewrite, stub -> real implementation)
+No other files touched. Cargo.toml unchanged (no new dependency needed).
+
+NOTE FOR LATER WAVES
+=====================
+Host disk is at 100% capacity (1.1Gi free on /System/Volumes/Data) as observed during this wave's
+wasm32 check — flagging in case a later wave's build starts failing with "No space left on
+device"; not a db_core code issue.

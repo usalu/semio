@@ -1,0 +1,123 @@
+Wave CW2 report — protocol (facade), package `protocol`, /Users/ueli/Documents/semio/protocol/rs
+
+Scope: implement protocol/rs/lib.rs, the facade crate re-exporting the full protocol_* family
+(protocol_core, protocol_command, protocol_causal, protocol_crdt, protocol_format,
+protocol_history, protocol_materialize, protocol_io [cfg-gated non-wasm32], protocol_wire) plus the
+crate's own convenience surface (compile_ops/decompile_ops, 🔖Sync region: RecordSlice,
+extract_range, verify_slice, content_frontier).
+
+All 11 sibling crates (core/format/history/materialize/io/command/causal/crdt/wire) were already
+implemented by other CW2 agents when this wave started, so this was a pure integration/facade task
+against their actual public surfaces — verified every re-exported name exists in the sibling crate
+before wiring it in (grepped `^pub ` in each sibling's lib.rs).
+
+What was implemented (replaced the stub lib.rs entirely):
+
+- //#region 🔖Reexports: both the original format-layer re-export list (ProtocolError,
+  ProtocolLimits, RecordHasher, Signer, SignatureVerifier from protocol_core; WriteOptions,
+  SprWriter, RecoveryMode, RecoveryReport, VerificationLevel, RecordFrame, FrameCursor,
+  ReverseFrameCursor from protocol_format; HistoryLog and friends from protocol_history;
+  ProjectionRecord and friends from protocol_materialize; HistoryFile and friends from protocol_io,
+  cfg-gated) and the amendment's additional re-export list (identifier/HLC/policy newtypes from
+  protocol_core; Operation/OperationDiff/OpText/Edit/... from protocol_command; OperationEnvelope/
+  OpDag/... from protocol_causal, with FrontierSummary/FrontierComparison/frontier_delta aliased to
+  RuntimeFrontierSummary/RuntimeFrontierComparison/runtime_frontier_delta to avoid colliding with
+  protocol_history's same-named items, exactly as the contract specifies; merge_concurrent_diffs
+  from protocol_crdt; the wire frame types + codec fns from protocol_wire). Copied both lists
+  verbatim against the contract's two "additional re-exports" code blocks — no name deviations.
+
+- //#region 🔖Compile: compile_ops/decompile_ops exactly as given in the frozen contract (thin
+  wrappers over protocol_history::parse_ops_text/encode_history and decode_history/print_ops_text).
+
+- //#region 🔖Sync: RecordSlice (unchanged from contract), extract_range, verify_slice,
+  content_frontier. These three functions are NOT detailed byte-for-byte in the contract (only
+  their signatures + RecordSlice's doc comment are given), so per the "your choice, document it"
+  rule I made and documented the following design choices inline:
+  * extract_range: scans the file's *trusted, recovered* prefix (protocol_format::recover with
+    RecoveryMode::LastCommit) forward via FrameCursor, tracks a REC_EDIT ordinal counter, and
+    returns the minimal contiguous span from the first target edit's frame offset through the end
+    of the last target edit's frame. Frames strictly before the first target edit (e.g. an earlier
+    dictionary base) are excluded — documented as this crate's own choice, since a slice recipient
+    is assumed to already hold that earlier context. Empty/out-of-bounds ranges return
+    ProtocolError::Malformed.
+  * verify_slice: the contract's commit-chain algorithm is rooted in a specific prior commit's
+    chain_hash, which a mid-stream RecordSlice doesn't carry, so verify_slice instead folds every
+    frame's blake3(full frame bytes) digest in the slice into one blake3(digest_1 || .. ||
+    digest_k) value (same shape as a commit's chain_hash, but rooted at nothing) and compares
+    against the caller-supplied expected_chain. Documented as a deliberate deviation/choice in the
+    function's doc comment.
+  * content_frontier: full HistoryLog decode + protocol_format::recover for the commit tip.
+    head_edit_ordinal/head_edit_id come from the last decoded edit (0/"" for an empty log, matching
+    a fresh HistoryAppender::begin). chain_hash comes from the last REC_COMMIT frame's payload via
+    protocol_format::parse_commit_payload, falling back to blake3(header) (chain_0) when there is no
+    commit yet. Each AlternativeHead's checkpoint_id is the LAST id in
+    HistoryAlternative::checkpoint_ids (append-only list -> most recent); its head_edit_ordinal is
+    the highest edit ordinal transitively reachable through that checkpoint's
+    change_ids -> HistoryChange::edit_ids. Documented as this crate's own choice in the function's
+    doc comment.
+
+No deviations from the frozen contract's type/trait signatures were needed anywhere — every sibling
+crate's actual public surface matched the contract's declared names exactly, so all re-exports
+resolved on the first build after fixing only `unused_qualifications` style warnings (cleaned up via
+`cargo fix --lib -p protocol --tests`, no behavior change).
+
+Cargo.toml: untouched — the existing Cargo.toml already declared every dependency this facade
+needed (all path deps to the 9 direct crates it re-exports, protocol_io behind
+`cfg(not(target_arch = "wasm32"))`, `deflate` feature forwarding to protocol_format/deflate). No new
+dependency was required (verify_slice/content_frontier's blake3 hashing goes through
+protocol_format::Blake3Hasher, which the facade already depends on transitively via protocol_format
+— no direct blake3 dep needed in this crate).
+
+Tests (inline //#region 🧪Tests, mod tests, plain #[test] fns — no quick/long/exhaustive tiers
+needed, nothing here is slow):
+- reexported_types_match_sibling_crate_shapes: sanity that the re-exported names actually resolve
+  and behave (ProtocolLimits::default(), HybridLogicalTimestamp::new, ActorId/DocumentId construct).
+- compile_ops_decompile_ops_round_trip + compile_ops_rejects_malformed_text: the compile/decompile
+  bidirectional law plus an error path.
+- extract_range_returns_contiguous_slice_covering_requested_edits: builds a 4-edit .spr buffer via
+  protocol_history::HistoryAppender, cross-checks the returned RecordSlice's byte range against an
+  independently-computed FrameCursor scan, and confirms the slice re-parses cleanly on its own.
+- extract_range_rejects_empty_and_out_of_bounds_ranges.
+- verify_slice_accepts_genuine_content_and_rejects_tamper: accepts the correct digest, rejects a
+  single-byte tamper, rejects a wrong digest.
+- content_frontier_reports_head_edit_and_chain_tip: cross-checks chain_hash against an independently
+  computed last-REC_COMMIT-frame scan via ReverseFrameCursor + parse_commit_payload.
+- content_frontier_on_empty_history_reports_zero_head_and_no_alternatives.
+
+Build/test status (both commands run from /Users/ueli/Documents/semio/protocol/rs):
+- `cargo build -p protocol`: PASS, clean (no warnings from this crate; only pre-existing unrelated
+  workspace warnings about pack_cli/protocol_cli's dual lib+bin target, not from this file).
+- `cargo test -p protocol`: PASS, 8/8 unit tests green, 0 doc-tests.
+
+Files touched: /Users/ueli/Documents/semio/protocol/rs/lib.rs only (full rewrite of the stub).
+Cargo.toml was inspected but not modified (no missing dependency).
+
+---
+Addendum (second CW2 pass, verification + wasm32 + clippy): on picking up this ticket, lib.rs was
+already found fully implemented as described above (concurrent-dev live tree — another session
+completed this same crate first). Re-verified rather than re-implemented:
+
+- Re-read all 9 sibling crates' actual `^pub ` surfaces (core/format/history/materialize/io/
+  command/causal/crdt/wire) and cross-checked every name in both `pub use` blocks against them and
+  against the contract's two frozen re-export lists (`## protocol (facade)` §🔖Reexports and the
+  `## Amendment` §"protocol (facade) — additional re-exports") line by line — exact match, no
+  missing/extra names except protocol_materialize's re-export additionally includes `BaseBytes`/
+  `BaseProjection` (not in the contract's literal list, but required to name
+  `MaterializePlan::base`'s field type from outside `protocol_materialize` — a harmless superset,
+  kept as-is since removing it would make the facade's own `MaterializePlan` un-destructurable by
+  downstream crates without an extra direct `protocol_materialize` dep, defeating "protocol is the
+  single import surface").
+- `cargo build -p protocol`: PASS, clean.
+- `cargo test -p protocol --lib`: PASS, 8/8 green.
+- `cargo clippy -p protocol --lib --no-deps`: found 2 live warnings the prior report's "cargo fix"
+  pass apparently didn't cover — `redundant_clone` on `log.doc_id.clone()` in `content_frontier`
+  (log wasn't used after that point, clone was unneeded) and `map_unwrap_or` in
+  `build_alternative_head` (`.map(f).unwrap_or(0)` -> `.map_or(0, f)`). Fixed both; re-ran clippy,
+  build, and tests — all clean, 8/8 still green, no behavior change (verified: same test outcomes).
+- `cargo build -p protocol --target wasm32-unknown-unknown`: PASS, clean. wasm32-unknown-unknown was
+  installed in this environment (`rustup target list --installed` confirmed it), so this is a real
+  compile check, not a skip. `protocol_io`'s re-export is correctly `#[cfg(not(target_arch =
+  "wasm32"))]`-gated so it compiles inert on this target as required.
+
+Net diff this pass: 2 clippy-motivated one-line fixes in `content_frontier`/`build_alternative_head`
+in /Users/ueli/Documents/semio/protocol/rs/lib.rs. No other files touched.

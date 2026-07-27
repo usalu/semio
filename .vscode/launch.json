@@ -3158,6 +3158,270 @@
       }
     },
     {
+      "name": "🧪test🗄️db-core",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-core-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.921
+      }
+    },
+    {
+      "name": "🧪test🗄️db-actor",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-actor-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.922
+      }
+    },
+    {
+      "name": "🧪test🗄️db-state",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-state-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.923
+      }
+    },
+    {
+      "name": "🧪test🗄️db-storage",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-storage-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.924
+      }
+    },
+    {
+      "name": "🧪test🗄️db-storage-sqlite",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-storage-sqlite-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.925
+      }
+    },
+    {
+      "name": "🧪test🗄️db-storage-postgres",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-storage-postgres-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.926
+      }
+    },
+    {
+      "name": "🧪test🗄️db-storage-neo4j",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-storage-neo4j-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.927
+      }
+    },
+    {
+      "name": "🧪test🗄️db-wal",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-wal-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.928
+      }
+    },
+    {
+      "name": "🧪test🗄️db-snapshot",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-snapshot-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.929
+      }
+    },
+    {
+      "name": "🧪test🗄️db-index",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-index-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.93
+      }
+    },
+    {
+      "name": "🧪test🗄️db-conflict",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-conflict-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.931
+      }
+    },
+    {
+      "name": "🧪test🗄️db-projection",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-projection-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.932
+      }
+    },
+    {
+      "name": "🧪test🗄️db-query",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-query-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.933
+      }
+    },
+    {
+      "name": "🧪test🗄️db-preview",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-preview-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.934
+      }
+    },
+    {
+      "name": "🧪test🗄️db-security",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-security-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.935
+      }
+    },
+    {
+      "name": "🧪test🗄️db-document",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-document-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.936
+      }
+    },
+    {
+      "name": "🧪test🗄️db-compact",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-compact-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.937
+      }
+    },
+    {
+      "name": "🧪test🗄️db-sync",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-sync-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.938
+      }
+    },
+    {
+      "name": "🧪test🗄️db-cluster",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-cluster-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.939
+      }
+    },
+    {
+      "name": "🧪test🗄️db-observe",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-observe-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.94
+      }
+    },
+    {
+      "name": "🧪test🗄️db-engine",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-engine-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.941
+      }
+    },
+    {
+      "name": "🧪test🗄️db",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.942
+      }
+    },
+    {
+      "name": "🧪test🗄️db-testkit",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-testkit-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.943
+      }
+    },
+    {
+      "name": "🧪test🗄️db-cli",
+      "type": "node-terminal",
+      "request": "launch",
+      "command": "bun nx run @semio-tech/db-cli-rs:test",
+      "cwd": "${workspaceFolder}",
+      "presentation": {
+        "group": "3_dev",
+        "order": 391.944
+      }
+    },
+    {
       "name": "🛠️dev🏗️fem🩻2d⚛️react",
       "type": "node-terminal",
       "request": "launch",

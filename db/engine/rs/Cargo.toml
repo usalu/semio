@@ -1,0 +1,31 @@
+[package]
+name = "db_engine"
+version = "0.1.0"
+edition = "2021"
+rust-version = "1.88"
+description = "Db engine — Database supervisor, catalog actor, open/recovery, document lifecycle, VersionGraph impl over vcs, sagas, migration"
+
+[lints]
+workspace = true
+[lib]
+path = "lib.rs"
+
+[dependencies]
+db_core = { path = "../../core/rs" }
+db_actor = { path = "../../actor/rs" }
+db_document = { path = "../../document/rs" }
+db_storage = { path = "../../storage/rs" }
+db_wal = { path = "../../wal/rs" }
+db_compact = { path = "../../compact/rs" }
+db_sync = { path = "../../sync/rs" }
+db_security = { path = "../../security/rs" }
+db_observe = { path = "../../observe/rs" }
+db_cluster = { path = "../../cluster/rs" }
+protocol = { path = "../../../protocol/rs" }
+vcs = { path = "../../../vcs/rs", optional = true }
+
+[features]
+default = ["vcs"]
+vcs = ["dep:vcs"]
+tokio = []
+
