@@ -13,5 +13,7 @@ path = "lib.rs"
 [dependencies]
 db_core = { path = "../../../core/rs" }
 db_storage = { path = "../../../storage/rs" }
+pack = { path = "../../../../pack/rs" }
+blake3 = "1"
 sqlx = { version = "0.8", default-features = false, features = ["runtime-tokio", "postgres"] }
 tokio = { version = "1", features = ["rt", "rt-multi-thread"] }

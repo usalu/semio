@@ -6427,11 +6427,13 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         active={surfaceActive}
         borderKind={introductionActivated ? undefined : "introduced"}
         level="dialog"
-        className="pointer-events-auto fixed z-tutorial max-w-sm bg-transparent"
+        className="pointer-events-auto fixed z-tutorial w-fit max-w-[calc(100vw-2rem)] bg-transparent"
         style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
         titleChips={
-          <div data-hover-scope data-slot="introduction-info-box-chip" className={windowChromeTitleChipClass}>
-            <span className="min-w-0 flex-1 truncate text-sm font-medium">{step.title}</span>
+          <div data-hover-scope data-slot="introduction-info-box-chip" className={cn(windowChromeTitleChipClass, "!h-auto max-w-none shrink overflow-visible whitespace-normal")}>
+            <span data-slot="introduction-info-box-title" className="min-w-0 flex-1 break-words whitespace-normal text-sm leading-normal font-medium">
+              {step.title}
+            </span>
             <div data-slot="introduction-info-box-drag" className="flex shrink-0 items-center justify-center">
               <DragHandle {...dragPointerProps} emphasized={dragging} />
             </div>
@@ -6445,7 +6447,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
           onClick: skip,
         }}
         body={
-          <>
+          <div data-slot="introduction-info-box-content" className="max-w-sm">
             {bodyParagraphs.length > 0 && (
               <div data-slot="introduction-body" className="mb-double flex flex-col gap-double">
                 {bodyParagraphs.map((paragraph, index) => (
@@ -6487,7 +6489,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
                 })}
               </ul>
             )}
-          </>
+          </div>
         }
         footerCenterChips={
           <div data-slot="introduction-step-chip" className={windowChromeTitleChipClass}>
@@ -8868,51 +8870,38 @@ export function windowSilhouetteBorderPaint(kind: WindowSilhouetteBorderKind): {
 }
 
 const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot="mode-dock-tab-gap"]';
-const WINDOW_CHROME_CONTROLS_SELECTOR = '[data-slot="window-chrome-controls"], [data-slot="mode-dock-controls-cap"]';
 const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
-const WINDOW_CHROME_FOOTER_SELECTOR = '[data-slot="window-chrome-footer"]';
-const WINDOW_CHROME_FOOTER_GAP_SELECTOR = '[data-slot="window-chrome-footer-gap"], [data-slot="window-chrome-footer-gap-left"], [data-slot="window-chrome-footer-gap-right"]';
-const WINDOW_CHROME_FOOTER_LEFT_SELECTOR = '[data-slot="window-chrome-footer-left"]';
-const WINDOW_CHROME_FOOTER_CENTER_SELECTOR = '[data-slot="window-chrome-footer-center-chip"]';
-const WINDOW_CHROME_FOOTER_RIGHT_SELECTOR = '[data-slot="window-chrome-footer-right"]';
 
-/** @emoji 🪟 Reads live silhouette metrics from a mounted window-chrome stack (gap + controls). */
+/** @emoji 🪟 Whether a stack-local rect sits on the given silhouette dock edge. */
+function windowSilhouetteRectOnDock(stackRect: DOMRect, rect: DOMRect, dock: "top" | "bottom"): boolean {
+  return dock === "top" ? rect.top - stackRect.top <= WINDOW_SILHOUETTE_CHIP_EPSILON : stackRect.bottom - rect.bottom <= WINDOW_SILHOUETTE_CHIP_EPSILON;
+}
+
+/** @emoji 🪟 Reads live silhouette metrics from painted chip spans grouped by `data-dock` (works for RTL caps and bottom-docked panels). */
 export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhouetteMetrics | null {
   const stackRect = stack.getBoundingClientRect();
   const width = stackRect.width;
   const height = stackRect.height;
   if (width <= 0 || height <= 0) return null;
-  const gap = stack.querySelector<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR);
-  const controls = stack.querySelector<HTMLElement>(WINDOW_CHROME_CONTROLS_SELECTOR);
-  const tabBar = stack.querySelector<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR);
-  const gapRect = gap?.getBoundingClientRect();
-  const controlsRect = controls?.getBoundingClientRect();
-  const tabBarRect = tabBar?.getBoundingClientRect();
-  const topChips: WindowSilhouetteChip[] = [];
-  if (gapRect && gapRect.left - stackRect.left > WINDOW_SILHOUETTE_CHIP_EPSILON) topChips.push({ left: 0, right: gapRect.left - stackRect.left });
-  if (controlsRect && stackRect.right - controlsRect.left > WINDOW_SILHOUETTE_CHIP_EPSILON) topChips.push({ left: controlsRect.left - stackRect.left, right: width });
-  const topDepth = tabBarRect?.height || gapRect?.height || controlsRect?.height || 0;
-  const footer = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_SELECTOR);
-  const footerLeft = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_LEFT_SELECTOR);
-  const footerCenter = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_CENTER_SELECTOR);
-  const footerRight = stack.querySelector<HTMLElement>(WINDOW_CHROME_FOOTER_RIGHT_SELECTOR);
-  const bottomChips: WindowSilhouetteChip[] = [];
-  let bottomDepth = 0;
-  if (footer && (footerLeft || footerCenter || footerRight)) {
-    const footerLeftRect = footerLeft?.getBoundingClientRect();
-    const footerCenterRect = footerCenter?.getBoundingClientRect();
-    const footerRightRect = footerRight?.getBoundingClientRect();
-    if (footerLeftRect) bottomChips.push({ left: footerLeftRect.left - stackRect.left, right: footerLeftRect.right - stackRect.left });
-    if (footerCenterRect) bottomChips.push({ left: footerCenterRect.left - stackRect.left, right: footerCenterRect.right - stackRect.left });
-    if (footerRightRect) bottomChips.push({ left: footerRightRect.left - stackRect.left, right: footerRightRect.right - stackRect.left });
-    bottomDepth = Math.max(footerLeftRect?.height ?? 0, footerCenterRect?.height ?? 0, footerRightRect?.height ?? 0);
-  }
-  return {
-    width,
-    height,
-    top: { depth: topDepth, chips: topChips },
-    bottom: { depth: bottomDepth, chips: bottomChips },
+  const measureEdge = (dock: "top" | "bottom"): WindowSilhouetteEdge => {
+    const chips: WindowSilhouetteChip[] = [];
+    let depth = 0;
+    for (const chip of stack.querySelectorAll<HTMLElement>(`[data-window-silhouette-chip][data-dock="${dock}"]`)) {
+      const rect = chip.getBoundingClientRect();
+      if (rect.width <= WINDOW_SILHOUETTE_CHIP_EPSILON || rect.height <= WINDOW_SILHOUETTE_CHIP_EPSILON) continue;
+      chips.push({ left: rect.left - stackRect.left, right: rect.right - stackRect.left });
+      depth = Math.max(depth, rect.height);
+    }
+    for (const gap of stack.querySelectorAll<HTMLElement>(WINDOW_CHROME_GAP_SELECTOR)) {
+      const gapRect = gap.getBoundingClientRect();
+      if (gapRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, gapRect, dock)) depth = Math.max(depth, gapRect.height);
+    }
+    const cap = stack.querySelector<HTMLElement>(WINDOW_CHROME_CAP_SELECTOR);
+    const capRect = cap?.getBoundingClientRect();
+    if (capRect && capRect.height > WINDOW_SILHOUETTE_CHIP_EPSILON && windowSilhouetteRectOnDock(stackRect, capRect, dock)) depth = Math.max(depth, capRect.height);
+    return { depth, chips: normalizeWindowSilhouetteChips(chips, 0, width) };
   };
+  return { width, height, top: measureEdge("top"), bottom: measureEdge("bottom") };
 }
 
 /** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on chip (+ controls) cells only so the U-gap punches through to the base floor. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
@@ -9133,6 +9122,8 @@ export interface WindowChromeProps {
   readonly borderKind?: WindowSilhouetteBorderKind;
   readonly stackBindProps?: SurfaceActiveBindProps;
   readonly stackDataAttrs?: Record<string, string | undefined>;
+  /** @emoji 🧭 Which silhouette edge the cap row docks to — `"bottom"` for panels that grow upward from a bottom anchor. */
+  readonly capDock?: "top" | "bottom";
 }
 
 /** @emoji 🪟 SVG overlay that paints the U-cutout silhouette for any window-chrome stack. */
@@ -9232,6 +9223,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       borderKind,
       stackBindProps,
       stackDataAttrs,
+      capDock = "top",
     },
     ref,
   ) => {
@@ -9257,7 +9249,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     if (chipOnly) {
       return wrapLevel(
         <div ref={setStackRef} data-slot={stackSlot} data-window-silhouette data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
-          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top" data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
         </div>,
@@ -9277,19 +9269,19 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         data-window-silhouette
         data-level={level}
         data-active={active ? "true" : undefined}
-        className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", stackClassName, className)}
+        className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", capDock === "bottom" && "flex-col-reverse", stackClassName, className)}
         style={style}
         {...stackBindProps}
         {...stackDataAttrs}
       >
         <WindowChromeSilhouetteBorder stack={stackEl} active={active} introduceTarget={introduceTarget} borderKind={borderKind} />
         <div ref={capRef} data-slot="window-chrome-cap" data-ui-reveal-region="window-cap" data-dim className="relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent">
-          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock={capDock} className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
           <div data-slot="window-chrome-gap" data-window-silhouette-gap aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
           {enlarge || close ? (
-            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="top" className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
+            <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock={capDock} className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
               {enlarge ? (
                 <button
                   type="button"
@@ -20130,7 +20122,8 @@ const Panel: React.FC<PanelProps> = ({
                 stackSlot="window-chrome-stack"
                 active={surfaceActive}
                 level="panel"
-                stackClassName={cn("w-full flex-1 min-h-0 bg-transparent", isBottom && "flex-col-reverse")}
+                capDock={isBottom ? "bottom" : "top"}
+                stackClassName="w-full flex-1 min-h-0 bg-transparent"
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
                 bodyRef={panelContentRef}
@@ -20166,6 +20159,7 @@ const Panel: React.FC<PanelProps> = ({
             <WindowChrome
               chipOnly
               level="panel"
+              capDock={isBottom ? "bottom" : "top"}
               stackSlot="window-chrome-stack"
               titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
             />
@@ -20424,6 +20418,7 @@ export const Pane: React.FC<PaneProps> = ({
             chipOnly={effectiveFolded}
             active={!effectiveFolded && surfaceActive}
             level="pane"
+            capDock={flow.block === "up" ? "bottom" : "top"}
             stackClassName={cn("bg-transparent", !effectiveFolded && "w-full")}
             bodyClassName="overflow-y-auto p-single"
             bodySlot="pane-body"
@@ -28507,6 +28502,7 @@ if (import.meta.vitest) {
         } as DOMRect);
       };
       mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
@@ -28979,6 +28975,7 @@ if (import.meta.vitest) {
       expect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]')).toBeTruthy();
       expect(stack.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
       mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
@@ -29034,6 +29031,7 @@ if (import.meta.vitest) {
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
       mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
@@ -29233,6 +29231,30 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="introduction-interactions"]')).toBeNull();
       expect(screen.getByRole("button", { name: /next|done|weiter|fertig/i })).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
+    });
+
+    it("grows the introduction window for complete step titles and wraps only at the viewport boundary", () => {
+      const title = "Willkommen bei Entwerfen mit Bestand";
+      const steps: IntroductionStepDefinition[] = [{ id: "welcome", title, body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const box = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      const chip = container.querySelector('[data-slot="introduction-info-box-chip"]') as HTMLElement;
+      const stepTitle = container.querySelector('[data-slot="introduction-info-box-title"]') as HTMLElement;
+      const content = container.querySelector('[data-slot="introduction-info-box-content"]') as HTMLElement;
+      expect(stepTitle.textContent).toBe(title);
+      expect(stepTitle.className).not.toContain("truncate");
+      expect(stepTitle.className).toContain("break-words");
+      expect(stepTitle.className).toContain("whitespace-normal");
+      expect(chip.className).toContain("max-w-none");
+      expect(chip.className).not.toContain("max-w-[12rem]");
+      expect(chip.className.split(" ")).toContain("shrink");
+      expect(chip.className.split(" ")).not.toContain("shrink-0");
+      expect(chip.className.split(" ")).toContain("!h-auto");
+      expect(chip.className.split(" ")).toContain("overflow-visible");
+      expect(chip.className.split(" ")).not.toContain("overflow-hidden");
+      expect(box.className).toContain("w-fit");
+      expect(box.className).toContain("max-w-[calc(100vw-2rem)]");
+      expect(content.className).toContain("max-w-sm");
     });
 
     it("renders a header drag handle in the title chip and moves the info box", () => {
@@ -31851,6 +31873,7 @@ if (import.meta.vitest) {
         } as DOMRect);
       };
       mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="mode-dock-tab-cap"]'), { left: 0, right: 60, width: 60, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tab-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-controls-cap"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
       mockRect(stack.querySelector('[data-slot="mode-dock-tabbar"]'), { height: 24, bottom: 24, width: 200, right: 200 });
@@ -37006,6 +37029,98 @@ if (treeVitest) {
       expect(inactive.className).not.toContain("ui-surface");
       expect(active.className).toContain("bg-active-base");
       expect(body.className).toContain("z-[1]");
+    });
+
+    it("measureWindowSilhouetteMetrics reads RTL top caps from painted chip spans instead of assuming LTR gap order", () => {
+      const stack = document.createElement("div");
+      stack.innerHTML = `
+        <div data-slot="window-chrome-cap">
+          <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="top"></div>
+          <div data-slot="window-chrome-gap"></div>
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="top"></div>
+        </div>
+      `;
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: rect.left ?? 0,
+          y: rect.top ?? 0,
+          top: rect.top ?? 0,
+          left: rect.left ?? 0,
+          bottom: rect.bottom ?? 0,
+          right: rect.right ?? 0,
+          width: rect.width ?? 0,
+          height: rect.height ?? 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 0, right: 40, width: 40, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 40, right: 140, width: 100, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 140, right: 200, width: 60, height: 24, top: 0, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 0, bottom: 24 });
+      expect(measureWindowSilhouetteMetrics(stack)).toEqual({
+        width: 200,
+        height: 100,
+        top: { depth: 24, chips: [{ left: 0, right: 40 }, { left: 140, right: 200 }] },
+        bottom: { depth: 0, chips: [] },
+      });
+    });
+
+    it("measureWindowSilhouetteMetrics places bottom-docked caps on the bottom silhouette edge", () => {
+      const stack = document.createElement("div");
+      stack.innerHTML = `
+        <div data-slot="window-chrome-body"></div>
+        <div data-slot="window-chrome-cap">
+          <div data-slot="window-chrome-chip-cap" data-window-silhouette-chip data-dock="bottom"></div>
+          <div data-slot="window-chrome-gap"></div>
+          <div data-slot="window-chrome-controls" data-window-silhouette-chip data-dock="bottom"></div>
+        </div>
+      `;
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: rect.left ?? 0,
+          y: rect.top ?? 0,
+          top: rect.top ?? 0,
+          left: rect.left ?? 0,
+          bottom: rect.bottom ?? 0,
+          right: rect.right ?? 0,
+          width: rect.width ?? 0,
+          height: rect.height ?? 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      mockRect(stack, { width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-chip-cap"]'), { left: 0, right: 60, width: 60, height: 24, top: 76, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, top: 76, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, top: 76, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, right: 200, width: 200, height: 24, top: 76, bottom: 100 });
+      const metrics = measureWindowSilhouetteMetrics(stack);
+      expect(metrics?.top).toEqual({ depth: 0, chips: [] });
+      expect(metrics?.bottom).toEqual({ depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] });
+      expect(windowSilhouettePath(metrics!)).toBe(
+        windowSilhouettePath({
+          width: 200,
+          height: 100,
+          top: { depth: 0, chips: [] },
+          bottom: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+        }),
+      );
+    });
+
+    it("bottom-anchored panels stamp capDock=bottom on WindowChrome and keep rtl on the panel root for top-right", () => {
+      const StubIcon = (): null => null;
+      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } }), singleTreeLeaf({ id: "tab-b", icon: StubIcon, name: "Tab B", tree: { sections: [] } })];
+      const bottomMarkup = renderToStaticMarkup(<Panel anchor="bottom-right" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+      expect(bottomMarkup).toContain('data-dock="bottom"');
+      expect(bottomMarkup).toContain("flex-col-reverse");
+      const rightMarkup = renderToStaticMarkup(<Panel anchor="top-right" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+      expect(rightMarkup).toContain('dir="rtl"');
+      expect(rightMarkup).toContain('data-dock="top"');
+      expect(rightMarkup).not.toMatch(/data-slot="window-chrome-stack"[^>]*flex-col-reverse/);
     });
 
     it("pane and panel chrome toggles keep the drag handle inside data-hover-scope so parent hover can emphasize it", () => {

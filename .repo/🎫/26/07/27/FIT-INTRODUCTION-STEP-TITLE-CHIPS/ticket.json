@@ -1,0 +1,14 @@
+{
+  "title": "Fit Introduction Step Title Chips",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "Introduction step window title chips must show their complete names. The introduction window width must grow with the title when space is available, while remaining bounded by the viewport on narrow screens. Aggregator step names currently truncate.",
+  "summary": "Removed the generic 12rem tab-width cap and ellipsis behavior from introduction step title chips. Introduction windows now size intrinsically to complete titles, keep body copy at a readable maximum width, and remain bounded to the viewport; constrained titles wrap and long unbroken names break instead of clipping. Added an Aggregator-title regression test. All 13 introduction-focused UI tests pass. Runtime preview attempts were blocked by separately existing Storybook/Vite optimizer failures and the vcs wasm hash_bytes compile error.",
+  "goal": "🎯r2602/🎯runningsketchpad",
+  "sessions": [],
+  "files": [
+    "ui/js/react/index.tsx",
+    ".repo/🎫/26/07/27/FIT-INTRODUCTION-STEP-TITLE-CHIPS/notes.md",
+    ".repo/🎫/26/07/27/FIT-INTRODUCTION-STEP-TITLE-CHIPS/ticket.json"
+  ]
+}

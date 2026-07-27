@@ -1,0 +1,159 @@
+db_storage_sqlite — CW4 implementation report
+================================================
+
+Scope: db/storage/sqlite/rs (single file lib.rs). No other crate/file touched.
+
+What was implemented
+---------------------
+Replaced the stub lib.rs with a full db_storage::DbStorage backend over rusqlite (bundled),
+implementing every sub-trait from db_storage's frozen trait family against one
+rusqlite::Connection behind a Mutex:
+
+  - WalStorage: per-document, per-segment_index rows in `wal_segment` (document, segment_index,
+    bytes BLOB, sealed INTEGER). append() grows the blob in-place via `bytes = CAST(bytes || ?
+    AS BLOB)`; truncate_tail() shrinks via `CAST(substr(bytes,1,?) AS BLOB)`. seal() is
+    idempotent by relying on SQLite's `changes()` counting WHERE-matched rows regardless of
+    whether the assigned value actually changed. sync() is a documented no-op (see durability
+    choice below).
+  - SnapshotStorage: `snapshot_generation` (document, generation, bytes), upsert via
+    `INSERT ... ON CONFLICT(document, generation) DO UPDATE`.
+  - PayloadStorage: `payload` (hash TEXT PRIMARY KEY = hex ContentHash, bytes BLOB, len INTEGER),
+    blake3-hashed, `ON CONFLICT(hash) DO NOTHING` for put-is-idempotent-under-content-equality.
+  - CatalogStorage: single-row `catalog_root` (id INTEGER PRIMARY KEY CHECK(id=0), bytes, epoch).
+    cas_root() runs inside an IMMEDIATE SQLite transaction (real write-lock acquired up front),
+    so — unlike db_storage::FsStorage's Mutex-only fencing (documented there as in-process-only)
+    — this genuinely serializes concurrent cross-process writers against the same .sqlite3 file,
+    not just concurrent threads in this process.
+  - IndexStorage: `index_run` (document, run_id, bytes), same upsert pattern as snapshots.
+  - LeaseStorage: `lease` (resource TEXT PRIMARY KEY, holder, epoch, expires_at_ms). acquire/
+    renew/release all run inside IMMEDIATE transactions for the same cross-process CAS reason.
+  - DbStorage: accessor methods returning `self` for every sub-trait, plus capabilities()
+    reporting durable=true, max_durability=Fsync, supports_fsync=true, supports_cas=true.
+
+The whole implementation lives inside a `#[cfg(not(target_arch = "wasm32"))] mod sqlite_storage`
+inner module (re-exporting only `SqliteStorage`), matching the crate's own Cargo.toml which
+already gates the `rusqlite` dependency under
+`[target.'cfg(not(target_arch = "wasm32"))'.dependencies]` — a wasm32 build of this crate is an
+intentionally empty shell, per the contract's "everything storage/thread-touching is
+#[cfg(not(target_arch = "wasm32"))] module-wrapped" rule.
+
+Design choices (contract left unspecified / this crate's own call)
+--------------------------------------------------------------------
+1. Durability: opened with `PRAGMA journal_mode=WAL` + `PRAGMA synchronous=FULL`. In WAL mode
+   with synchronous=FULL, SQLite fsyncs the WAL file on every commit, so every write this crate
+   makes is already at DurabilityClass::Fsync by the time the call returns, regardless of which
+   class the caller requested. WalStorage::sync() is therefore a real, documented no-op — it can
+   never under-deliver (Memory/Os requests are simply over-delivered), only skip doing
+   unnecessary extra work. A perf-motivated future revision could relax `synchronous` and give
+   sync() real work to do for batching Memory/Os-class WAL appends; left as an extension seam
+   since this wave's goal was correctness, not throughput.
+2. Cross-process CAS: CatalogStorage::cas_root and every LeaseStorage mutation open an IMMEDIATE
+   SQLite transaction (acquires SQLite's real write lock before the read), which is a step up
+   from FsStorage's own documented limitation (in-process Mutex fencing only, cross-process CAS
+   flagged there as an extension seam). This crate's single Mutex<Connection> already serializes
+   in-process callers; IMMEDIATE additionally serializes against other OS processes opening the
+   same .sqlite3 file.
+3. u64 -> SQLite INTEGER (signed i64): every u64 index/generation/run_id/epoch/timestamp is
+   validated via `to_sql_i64` (i64::try_from) before being bound as a SQL parameter, returning
+   DbError::LimitExceeded on overflow instead of silently reinterpreting the bit pattern as
+   negative. In practice these values never approach i64::MAX, but this keeps the "validate
+   before use" invariant real rather than assumed.
+4. SQLite `||` (concatenation) type quirk: found and fixed during testing — concatenating the
+   `x''` (zero-length BLOB literal) seed value from create_segment with a subsequent BLOB
+   parameter via plain `bytes || ?` silently produced a TEXT-typed result (rusqlite's
+   `row.get::<_, Vec<u8>>` then errors "Invalid column type Text"). Fixed with an explicit
+   `CAST(... AS BLOB)` around both the append() concatenation and the truncate_tail() substr()
+   call, so the wal_segment.bytes column always round-trips as BLOB. This is exercised directly
+   by the `wal_storage_append_seal_truncate_and_bounds_laws` test, which failed before the cast
+   and passes after.
+5. No `pub` API beyond `SqliteStorage::{open, open_in_memory}` plus the trait impls — nothing
+   about the schema, SQL, or rusqlite is exposed publicly, matching the "external libs behind an
+   interface" / "never export a type outside this codebase" rules.
+
+Dependencies
+------------
+Cargo.toml was NOT modified — `db_core`, `db_storage`, `pack` (facade re-exporting
+pack_core::{ByteRange, ContentHash}), `blake3`, and the wasm32-gated `rusqlite` dependency were
+already present (added by an earlier scaffolding pass). No dependency addition was needed.
+rusqlite is pinned at 0.38.0 (libsqlite3-sys 0.36.0) in Cargo.toml, matching the version already
+resolved workspace-wide in Cargo.lock (verified via `grep rusqlite Cargo.lock` before writing any
+code) — no duplicate-native-library link error.
+
+Extension seams left (deliberately, not stubs)
+-------------------------------------------------
+- WalStorage::sync() doing real (rather than already-satisfied) work for a relaxed-durability
+  mode — noted above, would need a `synchronous=NORMAL` variant plus an explicit
+  `PRAGMA wal_checkpoint` or per-call `synchronous` toggle.
+- No incremental/streaming BLOB I/O (rusqlite's `Blob` API) for very large WAL segments/
+  snapshot generations — every read/append currently materializes the full row value in Rust
+  memory once, bounded by MAX_BLOB_BYTES (1 GiB, matching db_storage's own MemoryStorage/
+  FsStorage ceiling). Fine at this crate's tested scope; a real perf pass for multi-hundred-MB
+  segments would want incremental blob I/O instead.
+Neither seam panics or returns Unimplemented on any reachable path — both are pure "could be
+faster later" notes, not missing correctness.
+
+Build & test status
+--------------------
+`cargo build -p db_storage_sqlite` — PASSED (0 warnings, 0 errors specific to this crate; only
+pre-existing unrelated workspace warnings about lib/bin target name collisions in other crates:
+protocol_cli, db_cli, pack_cli).
+
+`cargo test -p db_storage_sqlite` — PASSED, 9/9 tests green, 0 failed, 0 ignored:
+  wal_storage_append_seal_truncate_and_bounds_laws
+  snapshot_storage_generations_overwrite_and_delete_laws
+  payload_storage_is_content_addressed_and_idempotent
+  catalog_storage_cas_root_fences_stale_writers
+  index_storage_runs_list_read_and_delete_laws
+  lease_storage_acquire_renew_fence_and_handoff_laws
+  db_storage_accessors_and_capabilities
+  write_survives_reopen_across_instances_against_a_real_file  (real on-disk .sqlite3 file, not
+    :memory: — verifies genuine persistence across two separate SqliteStorage::open() calls)
+  in_memory_storage_works_without_a_file
+
+All tests use a real temp SQLite file under std::env::temp_dir() (via SqliteStorage::open()),
+except the dedicated in-memory convenience test, per the task's "test with a real temp sqlite
+file" instruction.
+
+Files touched
+-------------
+- /Users/ueli/Documents/semio/db/storage/sqlite/rs/lib.rs (full rewrite, stub -> real
+  implementation)
+
+No other file was created, modified, or deleted.
+
+Addendum (independent verification pass, same wave, second agent)
+--------------------------------------------------------------------
+A second agent instance was independently dispatched for this same crate/ticket. On first read the
+crate was NOT the stub state described in that agent's brief — this report and the fully-implemented
+lib.rs above were already in place, so no lib.rs edit was made by the second agent (per the "do not
+overwrite substantial concurrent work" rule).
+
+One real Cargo.toml delta WAS made by the second agent, timed concurrently with (and consistent
+with) the work above: `db_storage_sqlite/rs/Cargo.toml` was seen at session start with only
+`db_core`, `db_storage`, and an ungated `rusqlite = "0.38"` — missing `pack` (for
+`ByteRange`/`ContentHash`), `blake3` (for `PayloadStorage::put`'s content hash), and the exact
+`"0.38.0"` patch pin under the wasm32-gated `[target.'cfg(not(target_arch = "wasm32"))'.dependencies]`
+block that both this lib.rs and `vcs/rs/Cargo.toml` require for the single-link constraint. The
+second agent added exactly those three things; by the time both agents' edits settled, `Cargo.toml`
+and `lib.rs` were mutually consistent (this may be why this report's own "Cargo.toml was NOT
+modified" line reads as it does — the two edits interleaved).
+
+Independent re-verification, same wave:
+- Confirmed `vcs/rs/Cargo.toml`'s rusqlite pin (`0.38.0`, `features = ["bundled"]`,
+  `cfg(not(target_arch = "wasm32"))`-gated) matches this crate's Cargo.toml exactly.
+- `cargo build -p db_storage_sqlite` — SUCCESS.
+- `cargo test -p db_storage_sqlite` — 9/9 PASSED (same suite listed above).
+- `cargo clippy -p db_storage_sqlite --all-targets` — 3 pre-existing `warn`-level lints, not
+  build-breaking: `clippy::unnecessary_wraps` on `SqliteStorage::lock` (its `Result` wrapper is
+  never actually fallible), `clippy::map_unwrap_or` (×2 call sites: `cas_root`'s
+  `current_epoch.map(...).unwrap_or(EpochFence::INITIAL)` should be `map_or(EpochFence::INITIAL,
+  ...)`). Left as-is for the CW9 clippy `-D warnings` sweep rather than editing further into this
+  concurrently-owned file.
+- `grep -A2 'name = "rusqlite"' Cargo.lock` / `libsqlite3-sys` — exactly one entry each
+  (0.38.0 / 0.36.0), confirming the single-link-per-workspace constraint holds workspace-wide.
+- Checked `db_storage_postgres`/`db_storage_neo4j` (siblings, same batch): still scaffold-stub
+  shape as of this check — presumably other batch-B agents' concurrent work in progress, not part
+  of this crate's scope.
+
+No conclusions above conflict with the original report; this addendum only records a second,
+independent confirmation pass plus the one small Cargo.toml gap that was filled.

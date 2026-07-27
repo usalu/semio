@@ -1,0 +1,8 @@
+{
+  "title": "Show Introduction Step Titles Completely",
+  "emoji": "🎓",
+  "status": "closed",
+  "description": "Introduction step window title chips must show their complete names. The introduction window width must grow with the title when space is available, while remaining bounded by the viewport on narrow screens. Aggregator step names currently truncate.",
+  "summary": "Fixed mirrored panel/pane growth for RTL (top-right, bottom-right) and bottom-up anchors by making WindowChrome cap-dock aware and rewriting measureWindowSilhouetteMetrics to read painted chip spans by data-dock instead of assuming LTR top caps. Panel/Pane pass capDock from flow.block; added vitest coverage for RTL metrics, bottom-dock metrics, and bottom-anchored panel wiring.",
+  "goal": "🎯r2602/🎯runningsketchpad"
+}

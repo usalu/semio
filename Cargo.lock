@@ -2135,6 +2135,7 @@ name = "db_observe"
 version = "0.1.0"
 dependencies = [
  "db_core",
+ "pack_core",
 ]
 
 [[package]]
@@ -2173,6 +2174,7 @@ version = "0.1.0"
 dependencies = [
  "db_core",
  "protocol",
+ "serde_json",
 ]
 
 [[package]]
@@ -2189,6 +2191,7 @@ dependencies = [
 name = "db_state"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "pack_core",
 ]
@@ -2197,6 +2200,7 @@ dependencies = [
 name = "db_storage"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "pack",
 ]
@@ -2205,9 +2209,13 @@ dependencies = [
 name = "db_storage_neo4j"
 version = "0.1.0"
 dependencies = [
+ "base64 0.22.1",
+ "blake3",
  "db_core",
  "db_storage",
  "neo4rs",
+ "pack",
+ "serde",
  "tokio",
 ]
 
@@ -2215,8 +2223,10 @@ dependencies = [
 name = "db_storage_postgres"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "db_storage",
+ "pack",
  "sqlx",
  "tokio",
 ]
@@ -2225,8 +2235,10 @@ dependencies = [
 name = "db_storage_sqlite"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "db_storage",
+ "pack",
  "rusqlite",
 ]
 
@@ -2253,10 +2265,13 @@ dependencies = [
 name = "db_wal"
 version = "0.1.0"
 dependencies = [
+ "blake3",
  "db_core",
  "db_storage",
  "pack_core",
  "protocol",
+ "protocol_core",
+ "protocol_format",
 ]
 
 [[package]]

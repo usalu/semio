@@ -1,0 +1,146 @@
+CW4 report: db_security (db/security/rs)
+=========================================
+
+Scope: implemented db_security per the frozen contract's row: "Authn/authz (db/document/
+command-kind/object/field/historical/preview), signatures via injected Signer/Verifier traits,
+replay protection, audit, redaction, DoS budgets, tenant isolation | db_core, protocol".
+
+Dependencies used (both already fully implemented, real APIs read directly, not guessed):
+- db_core (db/core/rs/lib.rs): DbError, Emit/EmitEvent/EmitField, DocumentId (used only in
+  audit EmitEvent::with_document).
+- protocol (protocol/rs/lib.rs facade): ActorId, DocumentId, OperationId (protocol_core
+  newtypes), Signer, SignatureVerifier, ProtocolError (protocol_core crypto/error seam).
+
+File written: db/security/rs/lib.rs (full replacement of the stub). No other files touched
+except db/security/rs/Cargo.toml (one dependency addition, see below).
+
+Dependency addition (deviation from the bare Cargo.toml as scaffolded)
+------------------------------------------------------------------------
+Added `serde_json = "1"` to db/security/rs/Cargo.toml. The contract's per-crate deps column
+lists only "db_core, protocol" for db_security, but protocol_causal's own `DocumentDiff.payload`
+is already typed `serde_json::Value` (protocol's own choice, not one I introduced), and the
+contract's "redaction" responsibility has no way to walk "the field named X inside a JSON
+payload" without sharing that concrete type. Version pin ("1") matches protocol_causal/rs's own
+Cargo.toml so there is exactly one serde_json semver line in the tree. Documented at the top of
+the module doc comment as well.
+
+Design summary (regions, in lib.rs order)
+------------------------------------------
+- Identity: `TenantId`, `Principal { actor: protocol::ActorId, tenant, roles }`,
+  `check_tenant(principal, resource_tenant)` — hard tenant-isolation boundary, deliberately kept
+  outside the policy engine so a policy misconfiguration can never leak cross-tenant.
+- Scope: `Action { Read, Write, Admin }` (one flat action set, orthogonal to scope granularity);
+  `AuthzScope { Database, Document, CommandKind, Object, Field, Historical, Preview }` — the
+  seven granularities named in the contract row, each rendering to a canonical path-segment
+  sequence (`segments()`) nested under `["db","document",<id>,...]` so a document-rooted `**`
+  grant covers every scope kind under that document.
+- Policy: `Effect`, `Decision`, `Grant` (role + glob pattern + action set + effect),
+  `RoleBasedPolicy::evaluate` — default-deny; `"*"` matches one path segment, a trailing `"**"`
+  (only valid as the last pattern segment — this crate's own choice for an unambiguous matcher)
+  matches the remainder; explicit `Deny` always short-circuits over any `Allow`.
+- Signing: `Signature`, `sign_message`/`verify_signature` wrapping the injected
+  `protocol::Signer`/`protocol::SignatureVerifier` traits directly (no concrete scheme chosen by
+  this crate, per the contract wording), plus a `ProtocolError -> DbError` category mapper.
+- Replay: `ReplayGuard` — bounded per-actor sliding-time-window dedupe on `OperationId`, evicted
+  both by time (`window_ms`) and by count (`capacity_per_actor`, oldest-first) so memory can never
+  grow unboundedly under a hostile/buggy high-volume actor. Deliberately a cheap in-memory replay
+  catch, not a permanent ledger — documented as relying on WAL sequencing (db_wal/db_document,
+  not yet implemented in this wave) for durable dedupe beyond the window.
+- Budget: `BudgetRegistry` — per-string-key token buckets (lazy refill on each `try_consume` call,
+  no background timer) for DoS budgeting at any caller-chosen granularity (actor, tenant, command
+  kind, ...).
+- Redaction: `redact_fields` — structurally walks a `serde_json::Value` object, replacing every
+  dotted field path the policy denies `Action::Read` on (scoped as `AuthzScope::Field`) with a
+  `{"$redacted": true}` marker; never recurses into a denied subtree (so nested fields under a
+  denied field can't leak); depth-ceilinged (`MAX_REDACT_DEPTH = 64`, redacts conservatively
+  beyond it) as a stack-safety/hardening measure against adversarially deep payloads. Arrays are
+  left as opaque leaves (not walked) — documented as a deliberate scope limit: array-element
+  redaction would need index-stable paths, which is payload-schema knowledge this crate must not
+  depend on (command payloads are opaque below db_document per the contract).
+- Audit: `audit_decision`/`audit_replay_rejected`/`audit_budget_exceeded` — emit
+  `security.authz_allowed`/`security.authz_denied`/`security.replay_rejected`/
+  `security.budget_exceeded` events via `db_core::Emit` (the family's existing observability seam
+  — db_security does not depend on db_observe directly, matching every other db_* crate below
+  db_document).
+- Gate: `SecurityGate` — the composition root bundling `RoleBasedPolicy` + `ReplayGuard` +
+  `BudgetRegistry` + `Arc<dyn Emit>` behind `authorize`/`admit_command`/`redact`. Intended as the
+  piece db_document's pipeline ("admit -> dedupe -> base-resolve -> authz -> ...") calls for its
+  admit/dedupe/authz stages; every building block is also independently usable since a deployment
+  may wire only a subset (e.g. no signing configured).
+
+Deviations from the contract
+------------------------------
+- serde_json dependency addition — see above, only deviation from the literal deps column.
+- No other deviations; every other design choice (glob pattern matcher shape, token-bucket
+  refill model, replay window bounding, redaction marker shape, audit event names, Action's flat
+  three-value set) is this crate's own choice where the contract says "your choice" or leaves the
+  exact mechanism unspecified, each documented inline at its point of decision.
+
+Extension seams deliberately left (no TODOs, no panics, no stubs)
+--------------------------------------------------------------------
+- `RoleBasedPolicy` is the only policy engine shipped (linear grant scan, default-deny + explicit
+  deny). A more advanced engine (e.g. attribute-based policy, external policy service) is a
+  drop-in alternative behind the same `evaluate(&Principal, &AuthzScope, Action) -> Decision`
+  shape; not made into a formal `trait Policy` in this pass since `SecurityGate` only needed one
+  concrete implementation and an unused trait seam would be a hollow abstraction per the
+  "honestly scoped" instruction. Adding that trait later is a non-breaking refactor.
+- Signing is fully wired (sign/verify + error mapping) but nothing in this crate calls it
+  automatically — `SecurityGate` does not itself require signatures, since the contract frames
+  signing as "via injected Signer/Verifier traits" (opt-in per deployment), and no upstream crate
+  (db_document, db_wal) exists yet in this wave to define what message gets signed (a commit's
+  chain_hash, most likely, per db_core::Frontier). `sign_message`/`verify_signature` are ready for
+  db_document to call once it exists.
+- Array-element field redaction is out of scope (documented above) — the marker-and-object-only
+  walk is the correct, tested, honestly-scoped subset for this turn.
+
+Build/test status
+-------------------
+`cargo build -p db_security` — succeeds, no warnings from this crate (three pre-existing
+unrelated workspace warnings about db_cli/protocol_cli/pack_cli having both a lib and bin target
+sharing lib.rs, not touched by this change).
+
+`cargo test -p db_security` — 26/26 tests pass (0 failed, 0 ignored). `cargo clippy -p
+db_security --all-targets` — clean, no warnings.
+
+Tests exercise the crate's actual invariants, not smoke tests: tenant-isolation enforcement,
+scope-segment rendering, glob pattern matching (exact/`*`/trailing `**`), default-deny policy
+evaluation, explicit-deny-wins-over-allow, sign/verify round-trip plus mismatched-signature
+rejection plus protocol-error-category mapping, replay-guard duplicate rejection within window,
+window-expiry re-admission, per-actor isolation, capacity-bounded eviction, token-bucket
+exhaustion/refill/per-key isolation, nested field redaction (allow siblings, deny+no-recursion for
+denied subtree, depth-ceiling conservative redaction), audit event emission, and
+`SecurityGate::admit_command`'s full authz -> budget -> replay ordering plus cross-tenant
+short-circuit.
+
+---
+Addendum (second pass, independent verification, no code changes)
+--------------------------------------------------------------------
+On picking up this same ticket/crate, I re-read `db/security/rs/{Cargo.toml,lib.rs}` fresh per
+instructions and found this file's implementation already complete on disk (my own first-draft
+implementation, written before I re-read, was discarded entirely rather than overwriting this
+version — never reverting another session's concurrent work). Re-verified independently rather
+than re-implementing:
+
+- Read db_core (db/core/rs/lib.rs) and protocol facade + protocol_core (protocol/rs/lib.rs,
+  protocol/core/rs/lib.rs) ground truth directly; confirmed every type/trait this crate uses
+  (DbError, Emit/EmitEvent/EmitField, protocol::{ActorId, DocumentId, OperationId, Signer,
+  SignatureVerifier, ProtocolError}) matches the actual sibling-crate public surface exactly, no
+  guessed signatures.
+- `cargo build -p db_security`: PASS, clean (only the pre-existing dual lib/bin-target manifest
+  warnings from db_cli/protocol_cli/pack_cli, unrelated to this crate).
+- `cargo test -p db_security`: PASS, 26/26 unit tests green, 0 doc-tests — same count/names as
+  reported above.
+- `cargo clippy -p db_security --no-deps -- -D warnings` and `--no-deps --tests -- -D warnings`:
+  both PASS, zero findings.
+- Manual contract cross-check: Cargo.toml deps are exactly `db_core, protocol, serde_json` — no
+  `semio-framework-core`/`os-hub-storage*`/`pack_value`/`dsl_*`/`vcs` anywhere, honoring the
+  family's hard dependency rules; no `std::io::Error` in any public signature; no `unsafe`; every
+  region has a matching `//#region 🔖Name`/`//#endregion 🔖Name` pair; tests are inline in a
+  trailing `//#region 🧪Tests` with subregions mirroring the implementation; every doc comment
+  starts with an emoji, consistent with `db_core`'s established convention. `SecurityGate`'s
+  poison-safe `lock()` helper was cross-checked against `db_observe/rs/lib.rs` line 29's identical
+  pattern, confirming the module doc's claim of consistency with that crate.
+
+Net diff this pass: none to `lib.rs`/`Cargo.toml` (verification only). This addendum appended to
+the existing report rather than overwriting it, since the original report (above) is accurate and
+authored by the session that did the actual implementation work.

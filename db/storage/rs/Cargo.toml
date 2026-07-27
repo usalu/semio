@@ -17,3 +17,4 @@ fs = []
 [dependencies]
 db_core = { path = "../../core/rs" }
 pack = { path = "../../../pack/rs" }
+blake3 = "1"

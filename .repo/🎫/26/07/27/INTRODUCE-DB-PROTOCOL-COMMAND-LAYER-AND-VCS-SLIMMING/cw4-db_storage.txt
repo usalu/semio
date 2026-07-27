@@ -1,0 +1,127 @@
+Wave CW4 — db_storage — report
+Crate: db_storage (db/storage/rs)
+Files touched: db/storage/rs/lib.rs (replaced stub), db/storage/rs/Cargo.toml (added one dependency)
+
+WHAT WAS IMPLEMENTED
+=====================
+Replaced the stub lib.rs with a full implementation of the pluggable storage substrate seam:
+
+- Trait family (all `Send + Sync`, dyn-compatible):
+  - WalStorage: create_segment/append/sync(class)/seal/read/segment_len/list_segments/
+    truncate_tail(active-only)/delete_segment. Raw per-document, per-segment append-only byte
+    storage; db_wal is expected to frame its own .spr records on top of this. sync() is a
+    correctness-aware no-op for DurabilityClass::Memory/Os (data is already handed to the OS via
+    the ordinary append write) and only physically fsyncs for Fsync/Quorum, matching db_core's
+    DurabilityClass doc exactly.
+  - SnapshotStorage: write_generation/read_generation/latest_generation/list_generations/
+    delete_generation. Stores whole pack-file bytes per (document, generation); no parsing.
+  - PayloadStorage: put/get/contains/delete/len — blake3 content-addressed blob store, put() is
+    idempotent under content equality.
+  - CatalogStorage: read_root/cas_root(expected) -> new EpochFence. Single root blob per
+    DbStorage instance, epoch-fenced compare-and-swap (the split-brain gate), built directly on
+    db_core::EpochFence::check/next.
+  - IndexStorage: write_run/read_run/list_runs/delete_run — opaque per-document, per-run blobs
+    for db_index's future LSM-lite runs.
+  - LeaseStorage: acquire/renew/release/current — named, TTL'd, fenced ownership leases for
+    db_cluster's shard ownership + epoch failover. acquire() is idempotent for the same,
+    unexpired holder; a hand-off (expired or absent lease) bumps the EpochFence.
+  - DbStorage: umbrella trait exposing `&dyn {Wal,Snapshot,Payload,Catalog,Index,Lease}Storage`
+    accessors plus `capabilities() -> StorageCapabilities` (durable, max_durability,
+    supports_fsync, supports_cas).
+
+- MemoryStorage: pure in-memory backend (Mutex-guarded HashMaps), implements every sub-trait
+  directly on itself plus DbStorage. capabilities(): durable=false, max_durability=Memory. Always
+  available (no cfg gate) — usable on wasm32 too, though nothing in this crate is asserted
+  wasm-clean by the contract (only db_core/db_state/db_actor-core/db_conflict are required to be).
+
+- FsStorage (default via the `fs` Cargo feature, `#[cfg(all(feature = "fs", not(target_arch =
+  "wasm32")))]`, mirroring pack's own pack_io native-only convention): pure files under a root
+  directory, no new C dependency.
+  Layout: wal/<doc>/segment-<20-digit index>.bin (+ .sealed marker), snapshot/<doc>/
+  gen-<20-digit generation>.pack, payload/<hash[0..2]>/<hash>.bin (blake3 CAS, 2-hex-char
+  sharding), catalog/root.bin (8-byte LE epoch prefix + opaque bytes), index/<doc>/
+  run-<20-digit id>.bin, lease/<resource>.bin (pack::ByteWriter/ByteReader-encoded).
+  Every multi-step/CAS-flavored write goes through pack::write_atomic (temp file + fsync +
+  rename) so a reader never observes a torn file; WAL segment appends use plain
+  OpenOptions::append for incremental writes (write_atomic is whole-file-replace, unsuited to a
+  long-lived append log). capabilities(): durable=true, max_durability=Fsync, supports_fsync=true.
+  Document/resource ids are validated through a safe_component() guard (rejects empty, ".", "..",
+  path separators, NUL) before becoming filesystem path components, so a malicious/malformed
+  DocumentId can't escape the storage root.
+
+DEPENDENCY ADDED
+=================
+Added `blake3 = "1"` to db/storage/rs/Cargo.toml. Genuinely needed: PayloadStorage does blake3
+content-addressing and pack_core::ContentHash is just the `[u8; 32]` wrapper type — it has no
+hashing constructor of its own (pack_format/pack_value compute blake3 hashes directly via the
+`blake3` crate, not through pack_core). Pinned to the same "1" version spec already used by
+pack/format/rs and pack/value/rs (locked to 1.8.5 in the workspace Cargo.lock), so this doesn't
+introduce a second blake3 version into the workspace.
+
+DEVIATIONS / DESIGN CHOICES (contract left these to this crate)
+=================================================================
+- The contract names the trait family and a short primitive list for WalStorage
+  ("create/append/sync(class)/seal/read/truncate_tail-active-only") but doesn't fix full method
+  signatures. I added segment_len/list_segments/delete_segment as natural companions (recovery
+  needs to enumerate segments; compaction needs to delete a folded-away one) and used
+  pack::ByteRange for WalStorage::read's range parameter (reuse over reinventing an offset/len
+  pair).
+- CatalogStorage::cas_root signature: `cas_root(&self, expected: EpochFence, new_bytes: &[u8]) ->
+  Result<EpochFence, DbError>` — the caller supplies only the epoch it believes is current; the
+  backend computes and returns `expected.next()` on success. This removes the possibility of a
+  caller passing a wrong/skipped new_epoch and matches EpochFence::next()'s existing "the fence a
+  new leader claims" semantics in db_core.
+- LeaseStorage's exact acquire/renew/release/current semantics (idempotent same-holder
+  re-acquire, epoch bump only on genuine hand-off, expired lease reported as absent rather than
+  stale) are this crate's own choice — the contract only names the trait and its consumer
+  (db_cluster's ownership-lease failover), not the state machine. Documented inline on the trait.
+- FsStorage::CatalogStorage::cas_root and LeaseStorage use an in-process std::sync::Mutex to
+  serialize the read-verify-write around EpochFence::check, on top of write_atomic's
+  temp-file+rename durability. This is NOT cross-process safe (two OS processes writing the same
+  root/lease file could both pass the in-memory epoch check before either renames into place).
+  Documented as a deliberate extension seam in the source (`FsStorage::cas_root`'s doc comment):
+  real cross-process fencing needs either an OS file lock (flock) or a single owning process,
+  which this campaign's db_cluster ownership-lease actor is expected to provide in front of
+  catalog/lease writes once it exists. Not filled in with a half-implemented flock now since
+  db_cluster isn't implemented yet either and flock semantics differ across platforms
+  (documented rather than faked, per the instructions' "genuinely deferred sub-feature" guidance).
+- PayloadStorage is NOT document-scoped (a single flat CAS namespace shared across all
+  documents) — matches the usual content-addressed-store dedup benefit (identical payload bytes
+  referenced from multiple documents/WAL records store once). The contract's per-crate table only
+  says "PayloadStorage (blake3 CAS)" without scoping, so this is this crate's own reasonable
+  choice.
+- WalStorage::sync()'s per-class behavior (no-op for Memory/Os, real fsync for Fsync/Quorum) is a
+  deliberate, documented reading of db_core::DurabilityClass's own doc comments ("Os: written to
+  the WAL and handed to the OS, not yet fsynced") rather than an unconditional fsync on every
+  sync() call — this is the crate's own interpretation, flagged inline where decided.
+
+EXTENSION SEAMS LEFT (not stubs — real, working subset)
+==========================================================
+- Cross-process fencing for FsStorage::CatalogStorage/LeaseStorage beyond in-process Mutex
+  serialization (see deviation above) — needs db_cluster's ownership lease or an OS file lock;
+  intentionally not implemented since faking it would be worse than documenting the gap.
+- db_storage_sqlite/db_storage_postgres/db_storage_neo4j (sibling crates, out of this crate's
+  scope) implement the same trait family against different substrates — not touched here.
+
+BUGS FOUND AND FIXED DURING SELF-TESTING
+==========================================
+FsStorage::WalStorage::read originally seeked + read_exact without bounds-checking the requested
+range against the segment's actual file length first, so an over-long read surfaced a raw
+`UnexpectedEof` as `DbError::Io(..)` instead of `DbError::InvalidArgument`, inconsistent with
+MemoryStorage's behavior for the same law. Caught by the shared `exercise_wal_storage` test
+function (written once, run against both backends) — fixed by checking `offset + len` against
+`file.metadata()?.len()` before seeking/reading.
+
+BUILD / TEST STATUS
+=====================
+cargo build -p db_storage: PASS, no warnings from this crate (only pre-existing, unrelated
+`pack_cli`/`protocol_cli`/`db_cli` lib+bin-target-collision warnings from other crates in the
+workspace build graph).
+cargo test -p db_storage: PASS, 16/16 tests green (WalStorage/SnapshotStorage/PayloadStorage/
+CatalogStorage/IndexStorage/LeaseStorage laws each exercised once via a shared generic fn and run
+against both MemoryStorage and FsStorage; DbStorage umbrella accessor + capabilities test for
+both backends; FsStorage-specific path-traversal-safety test and a write_atomic-survives-reopen
+test).
+cargo clippy -p db_storage --all-targets: PASS, zero warnings from db_storage's own code (fixed
+two `clippy::map_unwrap_or` findings during the pass; the `needless_pass_by_value`-tagged io_err
+helper carries the same `#[allow(...)]` pack_io itself uses for the identical pattern).

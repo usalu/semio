@@ -13,5 +13,11 @@ path = "lib.rs"
 [dependencies]
 db_core = { path = "../../../core/rs" }
 db_storage = { path = "../../../storage/rs" }
+pack = { path = "../../../../pack/rs" }
 neo4rs = "0.8"
 tokio = { version = "1", features = ["rt", "rt-multi-thread"] }
+base64 = "0.22.1"
+blake3 = "1"
+
+[dev-dependencies]
+serde = "1"

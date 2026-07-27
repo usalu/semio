@@ -13,3 +13,4 @@ path = "lib.rs"
 [dependencies]
 db_core = { path = "../../core/rs" }
 pack_core = { path = "../../../pack/core/rs" }
+blake3 = "1"

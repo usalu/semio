@@ -13,3 +13,4 @@ path = "lib.rs"
 [dependencies]
 db_core = { path = "../../core/rs" }
 protocol = { path = "../../../protocol/rs" }
+serde_json = "1"

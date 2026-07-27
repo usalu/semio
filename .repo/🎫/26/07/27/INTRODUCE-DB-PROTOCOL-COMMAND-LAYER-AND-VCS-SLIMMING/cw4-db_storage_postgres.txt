@@ -1,0 +1,117 @@
+db_storage_postgres — CW4 implementation report
+================================================
+
+Scope: db/storage/postgres/rs (Cargo.toml + lib.rs). No other crate/file touched.
+
+IMPORTANT — concurrent-session note
+------------------------------------
+When I started this task I re-read db/storage/postgres/rs/{Cargo.toml,lib.rs} fresh per the
+standing instruction (never assume the stub state persists). Cargo.toml was still the 6-dep
+stub. I began drafting my own implementation and, mid-edit, a `Write` to lib.rs was rejected
+with "File has been modified since read" — a concurrent session had, between my Read and Write
+calls, added `pack`/`blake3` deps to Cargo.toml. I re-read again and found the SAME concurrent
+session (or a very fast second one) had, in the interim, ALSO written a complete, working
+`PostgresStorage` implementation to lib.rs (933 lines) — not a stub. Per this repo's "never
+revert another session's concurrent work" / "do not overwrite substantial unexpected content"
+rule, I did NOT overwrite it with my own draft. Instead I read it in full, verified it builds and
+its tests pass (see below), and I am reporting on THAT implementation rather than authoring a
+competing one. No file in this crate was modified by me — this ticket entry documents/verifies
+someone else's (or another of my own concurrently-spawned) work.
+
+What is implemented (as found, verified)
+------------------------------------------
+`db/storage/postgres/rs/Cargo.toml`: deps db_core, db_storage, pack (facade — for `ByteRange`/
+`ContentHash`, type-identical to db_storage's own `pack::{ByteRange, ContentHash}` trait
+parameters), blake3, sqlx (default-features = false, features = ["runtime-tokio", "postgres"]),
+tokio (features = ["rt", "rt-multi-thread"]).
+
+`db/storage/postgres/rs/lib.rs`: `PostgresStorage` — a `db_storage::DbStorage` backend over
+PostgreSQL via `sqlx`, implementing every sub-trait (WalStorage, SnapshotStorage, PayloadStorage,
+CatalogStorage, IndexStorage, LeaseStorage) against six bootstrapped tables (db_wal_segment,
+db_snapshot_generation, db_payload, db_catalog_root, db_index_run, db_lease), all opaque BYTEA
+blobs keyed by (document_id, ...) per db_storage's "never interprets bytes" design note.
+
+Notable design points:
+  - Sync-over-async bridge: every db_storage trait method is `fn(...) -> Result<T, DbError>` (no
+    async), but sqlx's Postgres driver is async-only. `PostgresStorage::block_on` handles BOTH
+    cases: if called from inside an existing tokio runtime (e.g. a `db_engine` built with its
+    `tokio` feature), it escapes via `tokio::task::block_in_place` + the ambient `Handle`, since
+    calling its own dedicated `Runtime::block_on` in that situation would panic ("cannot start a
+    runtime from within a runtime"); otherwise it falls back to its own dedicated multi-thread
+    `Runtime`. This is a real correctness point my own draft had NOT covered (I would have called
+    `self.runtime.block_on` unconditionally, which is a latent panic risk once `db_engine`/`tokio`
+    feature callers exist) — worth flagging to whoever wires `db_engine`'s tokio feature in later.
+  - CatalogStorage::cas_root / LeaseStorage all run inside a `pool.begin()` transaction with
+    `SELECT ... FOR UPDATE`, giving genuine cross-connection/cross-process CAS — stronger than
+    `db_storage::FsStorage`'s documented in-process-only mutex caveat. The catalog singleton row
+    (id=1) is pre-seeded by the bootstrap DDL so `FOR UPDATE` always has a row to lock (no
+    first-writer race).
+  - `sync()` is a documented no-op: Postgres already fsyncs at COMMIT under default
+    `synchronous_commit = on`, so by the time `append`/`truncate_tail` return, `Fsync` durability
+    is already satisfied. `Quorum` is explicitly left as a `db_cluster` extension seam.
+  - Lease/range/truncate decision logic is factored into small pure functions
+    (`lease_acquire_decision`, `lease_renew_check`, `lease_release_check`, `validate_read_range`,
+    `validate_truncate`, `to_i64`, `map_sqlx_error`) that are unit-tested WITHOUT a live Postgres
+    connection — this is how the crate satisfies "no docker/testcontainers dependency" (see
+    Deviations below) while still having real test coverage of its actual correctness logic; the
+    SQL statements themselves are exercised only by inspection/schema-presence assertions.
+  - `capabilities()`: durable=true, max_durability=Fsync, supports_fsync=true, supports_cas=true
+    (no Quorum — single-instance Postgres has no replica quorum of its own; that's db_cluster's
+    concern layered on top of any backend).
+
+Deviations from the "os-hub-storage-postgres informs this" precedent
+------------------------------------------------------------------------
+The deleted... actually NOT deleted: `framework/product/os/hub/storage/postgres/rs/lib.rs` still
+exists in the tree (450 lines, HubStorage impl over sqlx-core/sqlx-postgres direct, informed
+table shapes are hub-specific — users/studios/documents/blobs — not reused verbatim, per the
+task's "fresh implementation, not a port" instruction). That crate's tests use
+`testcontainers-modules` (spins up a real Postgres in Docker) — this environment has no Docker
+daemon running (verified: `docker ps` fails to connect) and no `psql`/`postgres` binary. The
+db_storage_postgres implementation deliberately did NOT add a testcontainers/docker dependency;
+instead its test suite covers every non-trivial decision function in isolation (23 tests, listed
+below), leaving true end-to-end Postgres integration testing as a documented, explicit gap (see
+the test module's header comment) rather than a broken/skipped dependency. I agree with this
+call given the environment constraint and did not change it.
+
+Build / test results (verified by me, this session)
+-------------------------------------------------------
+`cd /Users/ueli/Documents/semio && cargo build -p db_storage_postgres`
+  → succeeds. Two trivial `unused-qualification` warnings on `bootstrap_schema`'s signature
+    (`&sqlx::PgPool` / `db_core::DbError` could drop the redundant path segments since both are
+    already `use`d elsewhere in the module) — cosmetic only, not a build error, left as-is per
+    "don't touch files being concurrently edited more than necessary"; flagged here for CW9's
+    clippy pass.
+
+`cargo test -p db_storage_postgres`
+  → 23 passed; 0 failed; 0 ignored. Covers: read-range bounds/overflow validation, truncate
+    sealed/growth rejection, the full lease acquire/renew/release state machine (fresh, re-acquire
+    by live holder, foreign-holder conflict, post-expiry hand-off, NotFound/Unavailable/
+    Unauthorized/Fenced error shapes on renew/release), u64→i64 conversion bounds, sqlx error
+    classification (RowNotFound/pool-exhaustion/protocol-configuration/io), schema DDL covers all
+    6 tables + seeds the catalog singleton, capabilities() shape, and blake3 content-addressing
+    determinism.
+
+Notes for the next crate's implementer / CW9 clippy pass
+-------------------------------------------------------------
+- `db_storage_sqlite` (already implemented, see cw4-db_storage_sqlite.txt) wraps its whole impl in
+  `#[cfg(not(target_arch = "wasm32"))] mod sqlite_storage`, matching its Cargo.toml's
+  target-gated rusqlite dependency. `db_storage_postgres` does NOT wasm32-gate itself (sqlx/tokio
+  deps are plain `[dependencies]`, unconditional) — this is fine per the contract (only
+  db_core/db_state/db_actor's mailbox core/db_conflict are required to stay
+  wasm32-unknown-unknown-clean; storage backend crates are implicitly native-only and nothing
+  requires them to even attempt a wasm32 compile), but it's an inconsistency with the sqlite
+  sibling worth a deliberate call (keep as native-only-unconditional, or retrofit the same cfg
+  wrapper for symmetry) rather than an accident, if a later wave audits crate-shape consistency
+  across the three storage backends.
+- The two `unused-qualification` warnings above are trivial one-line fixes for whoever runs the
+  CW9 `clippy -D warnings` pass on this crate.
+- No `DATABASE_URL`/live Postgres was available in this environment to exercise the actual SQL
+  (schema bootstrap, real CAS-under-contention, transaction rollback-on-error). If a later wave
+  gets a Postgres available in CI, worth adding a `#[ignore]`-by-default or env-var-gated
+  integration test tier here (my own draft, discarded in favor of not overwriting concurrent
+  work, had sketched an env-var-gated `connect_from_env()` pattern for exactly this — available on
+  request if useful).
+
+Files touched by me this session: none (db_storage_postgres/Cargo.toml and lib.rs were already
+complete and verified working by the time I re-read them; I only ran `cargo build`/`cargo test`
+to verify, and wrote this report).
