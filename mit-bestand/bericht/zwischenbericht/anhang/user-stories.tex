@@ -1,6 +1,6 @@
 \label{anlage:user-stories}
 
-Aus der Recherche und den Interviews konsolidierte User Stories der vier zentralen Akteursgruppen, mit der daraus abgeleiteten Systemarchitektur und dem Anforderungsmapping, das die User Stories in funktionale Anforderungscluster übersetzt.
+Dieser Anhang enthält die User Stories der vier zentralen Akteursgruppen, die die Ergebnisse aus Recherche und Interviews zusammenführen. Darauf aufbauend zeigt er die Systemarchitektur und das Anforderungsmapping, das die User Stories in funktionale Anforderungscluster überführt.
 
 \begin{Table}[title=Übersicht]
 \begin{SemioTable}{@{}T{0.7\linewidth-2\tabcolsep}U{0.3\linewidth-2\tabcolsep}@{}}
@@ -72,16 +72,16 @@ Aus der Recherche und den Interviews konsolidierte User Stories der vier zentral
 \label{us:a-08} Als Architekt:in möchte ich ästhetische und materielle Eigenschaften wiederverwendbarer Baukomponenten gezielt berücksichtigen, damit Wiederverwendung als bewusster Bestandteil des Entwurfs eingesetzt werden kann.
 
 \subsection{Aufgaben zur Wiederverwendung phasenbezogen steuern}
-\label{us:a-09} Als Architekt:in möchte ich wiederverwendungsbezogene Aufgaben entlang der Planungsphasen strukturieren, damit Entscheidungen, Prüfungen und Dokumentationen zum richtigen Zeitpunkt erfolgen.
+\label{us:a-09} Als Architekt:in möchte ich Aufgaben und Fristen zur Wiederverwendung phasenbezogen steuern, damit Prüfungen und Dokumentationen rechtzeitig erfolgen.
 
 \subsection{Risiken systematisch bewerten}
-\label{us:a-10} Als Architekt:in möchte ich Risiken zu geplanten Baukomponenten systematisch angezeigt bekommen, damit ich ihre Auswirkungen auf Entwurf, Kosten, Termine und Umsetzbarkeit bewerten kann.
+\label{us:a-10} Als Architekt:in möchte ich die Risiken geplanter Baukomponenten übersichtlich sehen, damit ich ihre Auswirkungen auf Entwurf, Kosten, Termine und Umsetzbarkeit bewerten kann.
 
 \subsection{Baukomponenten flexibel filtern}
 \label{us:a-11} Als Architekt:in möchte ich Baukomponenten über frei kombinierbare Kriterien filtern, damit ich geeignete Elemente gezielt für unterschiedliche Entwurfsanforderungen auswählen kann.
 
 \subsection{Wiederverwendungsprozesse den Planungsphasen zuordnen}
-\label{us:a-12} Als Architekt:in möchte ich wiederverwendungsbezogene Entscheidungen und Aufgaben den jeweiligen Planungsphasen zuordnen, damit der Wiederverwendungsprozess nachvollziehbar in den Planungsablauf integriert wird.
+\label{us:a-12} Als Architekt:in möchte ich den Status des Wiederverwendungsprozesses über die Planungsphasen hinweg nachvollziehen, damit Übergänge und Entscheidungen transparent bleiben.
 
 \appendixsection[T]{Tragwerksplaner:in}
 
@@ -128,39 +128,39 @@ Aus der Recherche und den Interviews konsolidierte User Stories der vier zentral
 
 \appendixsection[SA]{Systemarchitektur für das Anforderungsmapping}
 
-Die Systemstruktur wird aus den konsolidierten User Stories abgeleitet. Die wiederkehrenden Anforderungen verweisen auf zwei Hauptbereiche: die Einspeiseplattform mit dem Bauteilportal und das Design Tool mit den Teilbereichen Katalog, Entwurf und Konfigurator. Die folgende Tabelle dient als Leselogik für das anschließende Anforderungsmapping.
+Die Systemstruktur wird aus den konsolidierten User Stories abgeleitet. Die wiederkehrenden Anforderungen verweisen auf zwei Hauptbereiche: die Einspeiseplattform mit dem Bauteilportal und das Entwurfswerkzeug mit den Teilbereichen Katalog, Entwurf und Konfigurator. Die folgende Tabelle dient als Leselogik für das anschließende Anforderungsmapping.
 
 \begin{Table}[title=Systemarchitektur]
 \begin{SemioTable}{@{}T{0.16\linewidth-2\tabcolsep}T{0.16\linewidth-2\tabcolsep}T{0.20\linewidth-2\tabcolsep}T{0.48\linewidth-2\tabcolsep}@{}}
 \SemioTableHeaderRow{Hauptbereich & Teilbereich & Hauptfunktion & Einordnung}
 \SemioTableRow{Einspeiseplattform & Bauteilportal & Datenbereitstellung & Bündelt Anforderungen zur Erfassung, Qualifizierung und Bereitstellung von Baukomponentendaten.}
-\SemioTableRow{Design Tool & Tool (Katalog) & Komponentenauswahl & Bündelt Anforderungen zur Sichtbarkeit, Suche, Filterung, Vergleichbarkeit und fachlichen Einschätzung von Baukomponenten.}
-\SemioTableRow{Design Tool & Tool (Entwurf) & Entwurfsbearbeitung & Bündelt Anforderungen zur Verwendung, Kombination, Bewertung und Dokumentation von Baukomponenten im Entwurf.}
-\SemioTableRow{Design Tool & Tool (Konfigurator) & Projektbezogene Abstimmung & Bündelt Anforderungen zur Abstimmung mit Bauteilbörsen, insbesondere zu Verfügbarkeit, Reservierung, Bestellung und Zusatzleistungen.}
+\SemioTableRow{Entwurfswerkzeug & Tool (Katalog) & Komponentenauswahl & Bündelt Anforderungen zur Sichtbarkeit, Suche, Filterung, Vergleichbarkeit und fachlichen Einschätzung von Baukomponenten.}
+\SemioTableRow{Entwurfswerkzeug & Tool (Entwurf) & Entwurfsbearbeitung & Bündelt Anforderungen zur Verwendung, Kombination, Bewertung und Dokumentation von Baukomponenten im Entwurf.}
+\SemioTableRow{Entwurfswerkzeug & Tool (Konfigurator) & Projektbezogene Abstimmung & Bündelt Anforderungen zur Abstimmung mit Bauteilbörsen, insbesondere zu Verfügbarkeit, Reservierung, Bestellung und Zusatzleistungen.}
 \end{SemioTable}
 \end{Table}
 
 \appendixsection[AM]{Anforderungsmapping der User Stories}
 \label{anlage:anforderungsmapping}
 
-Das Mapping übersetzt die User Stories in funktionale Anforderungscluster. Die Zuordnung folgt der aus den User Stories abgeleiteten Systemstruktur.
+Das Mapping ordnet die User Stories den funktionalen Anforderungsclustern und Systembereichen zu.
 
 \SemioTableLong{Anforderungsmapping}{0.10,0.40,0.26,0.24}{ID & Funktionaler Anforderungscluster & Zuordnung & Zugeordnete User Stories}{%
   \SemioTableRow{\textbf{REQ-01} & Baukomponentendaten erfassen und standardisieren & Einspeiseplattform (Bauteilportal) & \ref{us:bb-01}, \ref{us:bb-05}}
-  \SemioTableRow{\textbf{REQ-02} & Baukomponentengruppen darstellen und auswählbar machen & Design Tool (Katalog) & \ref{us:bb-02}}
+  \SemioTableRow{\textbf{REQ-02} & Baukomponentengruppen darstellen und auswählbar machen & Entwurfswerkzeug (Katalog) & \ref{us:bb-02}}
   \SemioTableRow{\textbf{REQ-03} & Status-, Verfügbarkeits- und Nachweisdaten pflegen & Einspeiseplattform (Bauteilportal) & \ref{us:bb-03}, \ref{us:bb-04}, \ref{us:bb-08}}
   \SemioTableRow{\textbf{REQ-04} & Kontext, Herkunft und Baukomponentenhistorie dokumentieren & Einspeiseplattform (Bauteilportal) & \ref{us:bb-06}, \ref{us:bb-07}}
   \SemioTableRow{\textbf{REQ-05} & Kosteninformationen bereitstellen & Einspeiseplattform (Bauteilportal) & \ref{us:bb-09}}
-  \SemioTableRow{\textbf{REQ-06} & Baukomponenten suchen, filtern und auswählen & Design Tool (Katalog) & \ref{us:a-01}, \ref{us:a-02}, \ref{us:a-11}, \ref{us:t-01}}
-  \SemioTableRow{\textbf{REQ-07} & Risiken, fehlende Fachinformationen und Eignung anzeigen & Design Tool (Katalog) & \ref{us:a-06}, \ref{us:t-02}}
-  \SemioTableRow{\textbf{REQ-08} & Gestalterische und materielle Eigenschaften bewerten & Design Tool (Katalog) & \ref{us:a-08}}
-  \SemioTableRow{\textbf{REQ-09} & Ökologische, energetische und leistungsbezogene Kennwerte bereitstellen & Design Tool (Katalog) & \ref{us:e-01}, \ref{us:e-02}}
-  \SemioTableRow{\textbf{REQ-10} & Digitale Baukomponenten in den Entwurf überführen & Design Tool (Katalog) & \ref{us:a-05}}
-  \SemioTableRow{\textbf{REQ-11} & Baukomponenten reservieren, anfragen und servicebezogen konfigurieren & Design Tool (Konfigurator) & \ref{us:a-03}, \ref{us:bb-10}}
-  \SemioTableRow{\textbf{REQ-12} & Entwurfs- und Tragwerksvarianten entwickeln und vergleichen & Design Tool (Entwurf) & \ref{us:a-04}, \ref{us:t-05}}
-  \SemioTableRow{\textbf{REQ-13} & Ökologische und energetische Variantenbewertung unterstützen & Design Tool (Entwurf) & \ref{us:e-03}, \ref{us:e-04}, \ref{us:e-05}, \ref{us:e-06}}
-  \SemioTableRow{\textbf{REQ-14} & Konstruktive Integration und fachliches Feedback unterstützen & Design Tool (Entwurf) & \ref{us:t-03}, \ref{us:t-04}}
-  \SemioTableRow{\textbf{REQ-15} & Änderungen und Risiken geplanter Baukomponenten nachvollziehen & Design Tool (Entwurf) & \ref{us:a-07}, \ref{us:a-10}}
-  \SemioTableRow{\textbf{REQ-16} & Aufgaben und Entscheidungen den Planungsphasen zuordnen & Design Tool (Entwurf) & \ref{us:a-09}, \ref{us:a-12}}
-  \SemioTableRow{\textbf{REQ-17} & Dokumentation, Berichte und exportierbare Nachweise erzeugen & Design Tool (Entwurf) & \ref{us:t-06}, \ref{us:e-07}}
+  \SemioTableRow{\textbf{REQ-06} & Baukomponenten suchen, filtern und auswählen & Entwurfswerkzeug (Katalog) & \ref{us:a-01}, \ref{us:a-02}, \ref{us:a-11}, \ref{us:t-01}}
+  \SemioTableRow{\textbf{REQ-07} & Risiken, fehlende Fachinformationen und Eignung anzeigen & Entwurfswerkzeug (Katalog) & \ref{us:a-06}, \ref{us:t-02}}
+  \SemioTableRow{\textbf{REQ-08} & Gestalterische und materielle Eigenschaften bewerten & Entwurfswerkzeug (Katalog) & \ref{us:a-08}}
+  \SemioTableRow{\textbf{REQ-09} & Ökologische, energetische und leistungsbezogene Kennwerte bereitstellen & Entwurfswerkzeug (Katalog) & \ref{us:e-01}, \ref{us:e-02}}
+  \SemioTableRow{\textbf{REQ-10} & Digitale Baukomponenten in den Entwurf überführen & Entwurfswerkzeug (Katalog) & \ref{us:a-05}}
+  \SemioTableRow{\textbf{REQ-11} & Baukomponenten reservieren, anfragen und servicebezogen konfigurieren & Entwurfswerkzeug (Konfigurator) & \ref{us:a-03}, \ref{us:bb-10}}
+  \SemioTableRow{\textbf{REQ-12} & Entwurfs- und Tragwerksvarianten entwickeln und vergleichen & Entwurfswerkzeug (Entwurf) & \ref{us:a-04}, \ref{us:t-05}}
+  \SemioTableRow{\textbf{REQ-13} & Ökologische und energetische Variantenbewertung unterstützen & Entwurfswerkzeug (Entwurf) & \ref{us:e-03}, \ref{us:e-04}, \ref{us:e-05}, \ref{us:e-06}}
+  \SemioTableRow{\textbf{REQ-14} & Konstruktive Integration und fachliches Feedback unterstützen & Entwurfswerkzeug (Entwurf) & \ref{us:t-03}, \ref{us:t-04}}
+  \SemioTableRow{\textbf{REQ-15} & Änderungen und Risiken geplanter Baukomponenten nachvollziehen & Entwurfswerkzeug (Entwurf) & \ref{us:a-07}, \ref{us:a-10}}
+  \SemioTableRow{\textbf{REQ-16} & Aufgaben und Entscheidungen den Planungsphasen zuordnen & Entwurfswerkzeug (Entwurf) & \ref{us:a-09}, \ref{us:a-12}}
+  \SemioTableRow{\textbf{REQ-17} & Dokumentation, Berichte und exportierbare Nachweise erzeugen & Entwurfswerkzeug (Entwurf) & \ref{us:t-06}, \ref{us:e-07}}
 }
