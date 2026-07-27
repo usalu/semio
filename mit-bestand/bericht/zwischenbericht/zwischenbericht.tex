@@ -3,7 +3,18 @@
 \documentclass[type=zwischenbericht]{zukunftbau}
 
 \usepackage{xurl}
+% LR-019: biblatex justifies bibliography entries; its \biburlsetup sets
+% \Urlmuskip=0mu plus 3mu, so every URL breakpoint stretches to fill the line
+% and URLs render with visible gaps ("www . baunetzwissen . de"). Reset the
+% muskip after biblatex's setup so URLs stay continuous (xurl still allows the
+% breaks, just without stretch).
+\usepackage{etoolbox}
+\appto\biburlsetup{\Urlmuskip=0mu\relax}
 \addbibresource{references.bib}
+
+% LR-020: this is a digital deliverable; drop the print-signature padding so
+% the PDF ends right after the bibliography instead of on trailing blank pages.
+\SemioSignaturePadding{false}
 
 \counterwithin{section}{part}
 \renewcommand{\thepart}{\arabic{part}}
@@ -209,7 +220,7 @@ Das Gespräch mit Raoul Bunschoten rückt die Zusammenarbeit zwischen den beteil
 Die digitale Arbeitsumgebung soll deshalb bestehende Werkzeuge und Beteiligte miteinander verbinden. Zugleich sollte sie unterschiedliche Varianten vergleichbar machen und die jeweiligen Entscheidungsgrundlagen sichtbar halten.
 
 \paragraph{Tragwerksplanung}
-Das Gespräch mit Eike Schling verdeutlicht, dass das eigentliche Hindernis der Wiederverwendung häufig nicht die Verfügbarkeit, sondern die Nachweisbarkeit vorhandener Baukomponenten ist (vgl.\ \appendixref{anlage:interview-schling}). Ihre Eigenschaften lassen sich materialabhängig unterschiedlich gut belegen; bei Stahlbeton ist die Beurteilung besonders schwierig. Zugleich beschreibt ein Bauteil nicht allein seine Geometrie: ursprüngliche Lagerung, Bewehrung und Zerlegung müssen als Tragwerkswissen erhalten bleiben. Eine frühe digitale Bewertung muss daher vorhandene Angaben, Annahmen und offenen Prüfbedarf unterscheiden und die Materialmenge von der konstruktiven Ausnutzung trennen. Über die direkte Bauteilzuordnung hinaus können mehrere kleine Elemente zu neuen Tragwerken kombiniert werden; eine konfigurierbare Anschlusslogik macht dabei geeignete Anschlussprinzipien und die erforderlichen Angaben sichtbar, ohne den fachlichen Nachweis zu ersetzen.
+Das Gespräch mit Eike Schling zeigt, dass ein digitales Reuse-Werkzeug für tragende Bauteile mehr leisten muss als ein reines Inventar: Es muss die für eine fundierte Wiederverwendungsentscheidung nötigen tragwerklichen Informationen erschließen und nachvollziehbar halten (vgl.\ \appendixref{anlage:interview-schling}). Ihre Eigenschaften lassen sich materialabhängig unterschiedlich gut belegen; bei Stahlbeton ist die Beurteilung besonders schwierig. Zugleich beschreibt ein Bauteil nicht allein seine Geometrie: ursprüngliche Lagerung, Bewehrung und Zerlegung müssen als Tragwerkswissen erhalten bleiben. Eine frühe digitale Bewertung muss daher vorhandene Angaben, Annahmen und offenen Prüfbedarf unterscheiden und die Materialmenge von der konstruktiven Ausnutzung trennen. Über die direkte Bauteilzuordnung hinaus können mehrere kleine Elemente zu neuen Tragwerken kombiniert werden; eine konfigurierbare Anschlusslogik macht dabei geeignete Anschlussprinzipien und die erforderlichen Angaben sichtbar, ohne den fachlichen Nachweis zu ersetzen.
 \end{SemioNest}
 \end{SemioNest}
 
@@ -332,6 +343,7 @@ Die Test-Case-Daten kommen im Bauteilkatalog sowie in der 3D-, Diagramm- und Det
 
 Der formale Durchführungszeitraum reicht vom 03.11.2025 bis 02.05.2027. Die operative Bearbeitung startet bei \Abbr{NGS} am 01.01.2026 und bei \Abbr{KET} am 23.01.2026; für die interne Meilensteinplanung gilt der 01.01.2026 als Ausgangspunkt. Nach dieser Zeitrechnung ist ausschließlich Meilenstein 1 fällig. Tabelle 2.1.a zeigt die Fristen und den aktuellen Stand aller Meilensteine.
 
+\needspace{0.55\textheight}%
 \begin{Table}[title=Meilensteine gemäß Zuwendungsbescheid\, Ziffer 8.3]
 \begin{SemioTable}{@{}T{0.05\linewidth-2\tabcolsep}T{0.40\linewidth-2\tabcolsep}T{0.18\linewidth-2\tabcolsep}T{0.37\linewidth-2\tabcolsep}@{}}
   \SemioTableHeaderRow{MS & Formales Kriterium & Frist & Ist-Stand}
@@ -352,16 +364,16 @@ Gegenüber dem Antrag sind drei Punkte relevant:
 
 \begin{enumerate}
 \item Operativer Projektbeginn: Die Bearbeitung begann später als im formalen Durchführungszeitraum vorgesehen.
-\item Methodische Präzisierung der Geometrieerzeugung: Die Arbeitsgeometrie der Baukomponenten wird parametrisch durch einen Generator erzeugt. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Dieser überführt die erfassten Angaben in eine einheitliche und anpassbare Arbeitsgeometrie. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Die Abweichung betrifft die technische Umsetzung, nicht das Ziel der digitalen Objektbildung.
-\item Interviews: Drei der acht genehmigten Fachgespräche sind ausgewertet. Die fünf weiteren Gespräche ergänzen in den nächsten Projektphasen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung. Sie werden nachgeholt und weiterhin auf Architektur- und Ingenieurperspektiven ausgerichtet. Usability- und Fachvalidierung ergänzen den beantragten Erfahrungsbezug.
+\item Methodische Präzisierung der Geometrieerzeugung: Die Arbeitsgeometrie der Baukomponenten wird parametrisch durch einen Generator erzeugt. Der Generator überführt die erfassten Angaben in eine einheitliche und anpassbare Arbeitsgeometrie. Fotografien und Scans können ergänzend als Referenz- und Belegquellen genutzt werden. Die methodische Präzisierung betrifft die technische Umsetzung, nicht das Ziel der digitalen Objektbildung.
+\item Interviews: Drei der acht genehmigten Fachgespräche sind ausgewertet. Die fünf weiteren Gespräche ergänzen in den nächsten Projektphasen die Architektur- und Ingenieurperspektiven und unterstützen die spätere Fach- und Nutzungsvalidierung.
 \end{enumerate}
 
 Projektziel und grundsätzliche Abfolge der Arbeitspakete bleiben unverändert. [ERGÄNZEN: formalen Status der Startverschiebung, Datum und Empfänger eintragen.]
 
 \begin{Table}[title=Risiken und Maßnahmen]
-\begin{SemioTable}{@{}T{0.22\linewidth-2\tabcolsep}T{0.08\linewidth-2\tabcolsep}T{0.14\linewidth-2\tabcolsep}T{0.30\linewidth-2\tabcolsep}T{0.26\linewidth-2\tabcolsep}@{}}
+\begin{SemioTable}{@{}T{0.20\linewidth-2\tabcolsep}T{0.10\linewidth-2\tabcolsep}T{0.18\linewidth-2\tabcolsep}T{0.27\linewidth-2\tabcolsep}T{0.25\linewidth-2\tabcolsep}@{}}
   \SemioTableHeaderRow{Risiko & Status & Verantwortung & Maßnahme & Restrisiko}
-  \SemioTableRow{Formale Fristen und interne Meilensteinplanung verwenden unterschiedliche Ausgangspunkte & adressiert & \Abbr{NGS}, Verbundkoordination & Formalen und operativen Projektbeginn mit ihren jeweiligen Fristen im Bericht getrennt dargestellt & Formale Bewertung kann von der internen Zeitrechnung abweichen}
+  \SemioTableRow{Formale Fristen und interne Meilensteinplanung verwenden unterschiedliche Ausgangspunkte & adressiert & \Abbr{NGS}, Verbundkoordination & Formaler und operativer Projektbeginn sind mit ihren jeweiligen Fristen im Bericht getrennt dargestellt & Formale Bewertung kann von der internen Zeitrechnung abweichen}
   \SemioTableRow{Externe Börsenanbindung verzögert sich & aktiv & \Abbr{NGS} & Referenzquelle bis [ERGÄNZEN: internes Zieldatum] auswählen; zulässigen Anbindungsweg und Integrationstest festlegen & Meilenstein 5 bleibt bis zur Referenzanbindung offen}
   \SemioTableRow{Interviews oder Workshop verzögern sich & aktiv & beide Partner & Fünf Interviewprofile, Zuständigkeiten und Termine bis [ERGÄNZEN: internes Zieldatum] festlegen; Workshopkonzept bis [ERGÄNZEN: internes Zieldatum] erstellen & Fach- und Nutzungsvalidierung können sich verschieben}
 \end{SemioTable}
@@ -369,7 +381,7 @@ Projektziel und grundsätzliche Abfolge der Arbeitspakete bleiben unverändert. 
 
 \section{Arbeitspakete}
 
-Die Statusdarstellung fasst Verantwortung, Bearbeitungsstand und weitere Arbeiten zusammen. Die fachliche Herleitung wird in \hyperref[teil:ergebnisse]{Teil~\ref*{teil:ergebnisse}} erläutert.
+Die Statusdarstellung fasst Verantwortung, derzeitigen Stand und weiteres Vorgehen zusammen. Die fachliche Herleitung wird in \hyperref[teil:ergebnisse]{Teil~\ref*{teil:ergebnisse}} erläutert.
 
 \subsection{AP-Erfahrung}
 

@@ -448,8 +448,10 @@
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_keep_with_body:
-  \semio_window_header_muted_use:
-  \semio_window_vskip_stroke_hairline:
+  % 🩹 Title bar is emitted inside the long-table firsthead (see
+  % \semio@table@long@render), not as a separate chip here — a chip drawn
+  % before the longtable floated below its firsthead. Drawing it here too
+  % would double the title bar.
 }
 
 \cs_new_protected:Npn \semio_register_list_begin:n #1 {
@@ -493,8 +495,12 @@
   \semio_window_header_store:
   \semio_block_sep_before:
   \semio_window_header_keep_with_body:
-  \semio_window_header_muted_use:
-  \semio_window_vskip_stroke_hairline:
+  % 🩹 The title bar is NOT drawn here as a separate chip anymore. A chip drawn
+  % before \begin{longtable} was floated *below* longtable's firsthead (the
+  % column-header row hoists to the galley top), so the title rendered under
+  % the header. The title is now emitted inside the longtable's firsthead
+  % itself (see \semio@table@long@render), exactly like the continuation head,
+  % so it stacks above the column header on every page.
 }
 \cs_new_protected:Npn \semio_table_long_close: {
   \use:c { semio@window@leave }

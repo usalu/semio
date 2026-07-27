@@ -59,13 +59,26 @@
 
 \newcounter{semio@shippedpages}
 \AddToHook{shipout/before}{\stepcounter{semio@shippedpages}}
+% 📄 Signature padding: for print binding the document is padded with trailing
+% empty pages up to a multiple of four. Digital-only deliverables don't want
+% those blanks — \SemioSignaturePadding{false} disables the padding at the
+% source (default stays true so print workflows are unchanged).
+\bool_new:N \g_semio_signature_padding_bool
+\bool_gset_true:N \g_semio_signature_padding_bool
+\NewDocumentCommand{\SemioSignaturePadding}{m}{
+  \str_if_eq:nnTF {#1} {false}
+    { \bool_gset_false:N \g_semio_signature_padding_bool }
+    { \bool_gset_true:N \g_semio_signature_padding_bool }
+}
 \AddToHook{enddocument}{
   \clearpage
   \legacy_if:nT { @twoside } {
-    \bool_while_do:nn { \int_compare_p:nNn { \int_mod:nn { \value{semio@shippedpages} + 1 } { 4 } } > { 0 } } {
-      \null\thispagestyle{empty}\clearpage
+    \bool_if:NT \g_semio_signature_padding_bool {
+      \bool_while_do:nn { \int_compare_p:nNn { \int_mod:nn { \value{semio@shippedpages} + 1 } { 4 } } > { 0 } } {
+        \null\thispagestyle{empty}\clearpage
+      }
+      \null\thispagestyle{empty}
     }
-    \null\thispagestyle{empty}
   }
 }
 %endregion PageNumbering

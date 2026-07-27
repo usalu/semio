@@ -213,7 +213,7 @@
   \semio@table@header@cell{#3} &
   \semio@table@header@cell{#4} \\
   \hhline{|---|}
-  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   \global\semio@table@row@startedfalse
 }
 
@@ -243,7 +243,7 @@
     }%
   }%
   \\%
-  \noalign{\vskip\dimexpr-\dp\@arstrutbox-\arrayrulewidth\relax}%
+  \noalign{\vskip\z@}%
 }
 
 \newcommand{\semio@table@long@continuation@chrome}[1]{%
@@ -299,12 +299,13 @@
   \setlength{\LTright}{0pt}%
   \setlength{\LTcapwidth}{\linewidth}%
   \begin{longtable}{#1}%
+  \semio@table@long@continuation@chrome{#5}%
   #2%
   \endfirsthead
   \semio@table@long@continuation@chrome{#5}%
   #3%
   \endhead
-  \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+  \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   #4%
   \end{longtable}%
   \endgroup
@@ -436,7 +437,7 @@
   }
   \global\long\expandafter\def\expandafter\semio@table@long@head@current\expandafter{\l_semio_table_long_head_tl\global\semio@table@row@startedfalse}
   \tl_put_right:Nn \l_semio_table_long_head_tl {
-    \noalign{\vskip\dimexpr-\semio@table@body@height+2\arrayrulewidth\relax}%
+    \noalign{\vskip\z@}% head->body transition: no negative pull (a -\semio@table@body@height skip here pulled the first body row up over the header row, hiding it)
   }
   \tl_put_right:Nn \l_semio_table_long_head_tl {
     \global\semio@table@row@startedfalse
