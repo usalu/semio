@@ -50,11 +50,28 @@
   }
 }
 
+\cs_new_protected:Npn \semio_logo_fit:nnn #1 #2 #3 {
+  \semio_logo_resolve_path:nN {#3} \l_semio_logo_path_tl
+  \exp_args:NV \file_if_exist:nTF \l_semio_logo_path_tl {
+    \includegraphics[width=#1,height=#2,keepaspectratio]{\tl_use:N \l_semio_logo_path_tl}
+  } {
+    \rule{0pt}{#2}\rule{#1}{0pt}%
+  }
+}
+
 \NewDocumentCommand{\semio@logo@slot}{O{4cm} m}{%
   \dim_set:Nn \l_semio_logo_slot_width_dim {#1}%
   \begin{minipage}[c]{\dim_use:N \l_semio_logo_slot_width_dim}%
     \centering%
     \semio_logo_slot:nn { \dim_use:N \l_semio_logo_slot_width_dim } {#2}%
+  \end{minipage}%
+}
+
+\NewDocumentCommand{\semio@logo@fit}{O{4cm} m m}{%
+  \dim_set:Nn \l_semio_logo_slot_width_dim {#1}%
+  \begin{minipage}[c]{\dim_use:N \l_semio_logo_slot_width_dim}%
+    \centering%
+    \semio_logo_fit:nnn { \dim_use:N \l_semio_logo_slot_width_dim } {#2} {#3}%
   \end{minipage}%
 }
 

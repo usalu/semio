@@ -4,6 +4,7 @@
 \RequirePackage{expl3}
 \RequirePackage{xparse}
 \RequirePackage{calc}
+\RequirePackage{etoolbox}
 \RequirePackage{semio-core}
 \RequirePackage{semio-fonts}
 \RequirePackage{semio-logo}
@@ -268,6 +269,17 @@
     }
     \tl_if_in:NnT \l_tmpa_tl { Hy@SectionAnchorHref } {
       \tl_clear:N \l_tmpa_tl
+    }
+    % LR-2.15: the register / TOC / bookmark write path stringifies this title
+    % with \tl_to_str, which turns the control symbol \& into a literal backslash
+    % + ampersand ("\&" shows in the contents). Normalise once here, at the single
+    % choke point, so every downstream \tl_to_str is idempotent and a plain "&"
+    % reaches the contents; body text and hyperref bookmarks are untouched.
+    \tl_if_empty:NF \l_tmpa_tl {
+      \str_set:Nx \l_tmpb_str { \tl_to_str:N \l_tmpa_tl }
+      \str_set:Nx \l_tmpc_str { \tl_to_str:n { \& } }
+      \str_replace_all:NVn \l_tmpb_str \l_tmpc_str { & }
+      \tl_set:Nx \l_tmpa_tl { \l_tmpb_str }
     }
   }
 }
@@ -1752,6 +1764,13 @@
   \setlength { \semio@block@sep@skip } { \semio@spacing@single }
   \setlength { \parskip } { \semio@spacing@par }
   \setlength { \parindent } { 0pt }
+  % LR-2.6: keep the shared 0.5em document \parskip (above) from leaking into
+  % compact list contexts, where it would loosen inter-item spacing past the
+  % surrounding body text. Reset it locally at each list start via etoolbox hooks
+  % (this build's LaTeX predates the kernel env/.../begin hooks).
+  \AtBeginEnvironment{itemize}{\setlength{\parskip}{\z@}}%
+  \AtBeginEnvironment{enumerate}{\setlength{\parskip}{\z@}}%
+  \AtBeginEnvironment{description}{\setlength{\parskip}{\z@}}%
   \ifcsname chapterheadstartvskip\endcsname
     \renewcommand*{\chapterheadstartvskip}{}%
   \fi
@@ -2029,8 +2048,17 @@
 \ExplSyntaxOff
 %endregion WindowBreakParts chrome
 
+% LR-2.8: deliver the running-header section name via the marks mechanism, not a
+% bare \gdef. A \gdef takes effect when the heading is tokenised in the main
+% vertical list, while TeX's page builder breaks asynchronously (reading ahead),
+% so a page whose break lands before a heading could ship carrying the NEXT
+% section's name. A mark travels with the heading box. Classic \markright/
+% \rightmark is used (this build's kernel predates the ltmarks \NewMarkClass API;
+% fancyhdr, already loaded, provides \rightmark). The \gdef is kept as a harmless
+% legacy value; the navbar reads the mark.
 \newcommand{\semio@chrome@heading@set}[1]{%
   \gdef\semio@chrome@heading{#1}%
+  \markright{#1}%
 }
 
 \newcommand{\semio@chrome@heading@track}[2]{%
@@ -2099,6 +2127,12 @@
   \raisebox{0pt}[\semio@window@cap@titleh][0pt]{#1}%
 }
 
+\newcommand{\semio@window@cap@left@overlay}[1]{%
+  \kern-\semio@window@cap@w
+  \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
+  \kern\dimexpr\semio@window@cap@w-\semio@stroke@hairline\relax
+}
+
 \newcommand{\semio@window@cap@paint}[3]{%
   \hbox to #1{%
     \rlap{%
@@ -2154,6 +2188,7 @@
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
     \semio@window@cap@raise{\semio@window@cap@accent@vbox{#1}}%
+    \semio@window@cap@left@overlay{#1}%
     \semio@window@cap@raise{\semio@window@stroke@v{#1}}%
   }%
 }
@@ -2223,6 +2258,7 @@
     \hbox{%
       \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
       \semio@heading@cap@nofill@core{#1}{#2}{#3}%
+      \semio@window@cap@left@overlay{#3}%
       \semio@window@cap@raise{\semio@window@stroke@v{#3}}%
     }%
   \fi
@@ -2252,6 +2288,7 @@
   \hbox{%
     \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
     \semio@heading@cap@muted@core{#1}%
+    \semio@window@cap@left@overlay{semio-chrome-border-normal}%
     \semio@window@cap@raise{\semio@window@stroke@v{semio-chrome-border-normal}}%
   }%
 }
@@ -2375,7 +2412,11 @@
   % 🧲 Keep the heading bar with its first lines of content so it never sits
   % orphaned at the foot of a page (reserves the bar + ~3 body lines; if that
   % much space isn't left, the heading moves to the next page as one unit).
-  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip\relax}%
+  % LR-2.7: reserve a SECOND title bar's worth on top, so a heading that
+  % introduces a table (heading -> optional "N Fälle." count -> table title bar)
+  % keeps that title bar with it instead of stranding the heading at the page
+  % foot above a table that migrated to the next page.
+  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip+\semio@chrome@titlebar@height\relax}%
   \ifnum\numexpr\semio@toc@level{#1}\relax>\value{tocdepth}\else
     \semio@toc@track@num{#1}{\csname the#1\endcsname}{#3}%
   \fi
@@ -2997,6 +3038,20 @@
   }%
 }
 
+% LR-2.9: bound a running-header field to a maximum width, shrinking to fit only
+% when it would otherwise overflow, so a long running-section title cannot reach
+% back to the centred report-type chip (the three navbar zones are overlaid
+% full-width boxes with no gutter). Footer/threezone untouched.
+\newsavebox\semio@chrome@fit@box
+\newcommand{\semio@chrome@fit@width}[2]{%
+  \sbox\semio@chrome@fit@box{#2}%
+  \ifdim\wd\semio@chrome@fit@box>\dimexpr#1\relax
+    \resizebox{\dimexpr#1\relax}{!}{\usebox\semio@chrome@fit@box}%
+  \else
+    \usebox\semio@chrome@fit@box
+  \fi
+}
+
 \newcommand{\SemioChromeNavbarHead}{%
   \semio@chrome@navbar@bar{%
     \semio@chrome@bar@threezone{\semio@chrome@zone@height}{%
@@ -3007,9 +3062,17 @@
     }{%
       \SemioChromeNavbarCenterChip
     }{%
-      \if\relax\detokenize{\semio@chrome@heading}\relax
+      % LR-2.8: read the section in effect on THIS page from the mark, not the
+      % read-ahead \gdef. \protected@edef keeps robust tokens (e.g. \& in project
+      % names) unexpanded; if no mark is set yet, \rightmark is empty.
+      \protected@edef\semio@chrome@heading@now{\rightmark}%
+      \ifx\semio@chrome@heading@now\@empty
       \else
-        \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading}%
+        % LR-2.9: cap the running-section chip below half the free width so it
+        % cannot reach the centred report-type chip; long titles scale down.
+        \semio@chrome@fit@width{0.34\headwidth}{%
+          \semio@chrome@navbar@chip@text{\semio@chrome@font@chip}{\semio@chrome@heading@now}%
+        }%
       \fi
     }%
   }%

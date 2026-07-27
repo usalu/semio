@@ -67,7 +67,10 @@
 }
 
 \ExplSyntaxOn
-\cs_set:Npn \semio_glossary_header_definition: { Verwendung im Bericht }
+% LR-2.16: runs under \ExplSyntaxOn where the space char is catcode 9 (ignored),
+% so plain spaces are eaten and the header renders "VerwendungimBericht". Use
+% explicit ~ space tokens so the words stay separated.
+\cs_set:Npn \semio_glossary_header_definition: { Verwendung~im~Bericht }
 \ExplSyntaxOff
 
 \GlossaryDefine{Baukomponente}{Physisches Element oder zusammengehörige Gruppe von Elementen, die im Entwurf als Einheit betrachtet und verwendet wird.}
@@ -113,11 +116,9 @@
 
 \section{Forschungsfragen und Vorgehen}
 
-Die Wiederverwendung von Bauteilen gilt als zentraler Ansatz zur Reduzierung des Ressourcenverbrauchs und der grauen Emissionen im Bauwesen. In der Praxis ist sie bislang jedoch weitgehend auf einzelne Pilot- und Leuchtturmprojekte beschränkt. Die Bestandsaufnahme zeigt ein wachsendes Angebot an Bauteilbörsen, Rückbauinventaren und Materialbanken (vgl.\ \appendixref{anlage:bauteilboersen}). Dennoch gibt es bisher nur wenige realisierte Wiederverwendungsprojekte (vgl.\ \appendixref{anlage:projekte}). Die zentrale Herausforderung liegt daher vor allem in den planerischen, technischen und organisatorischen Hürden zwischen dem vorhandenen Bauteilangebot und seinem tatsächlichen Wiedereinsatz (vgl.\ \appendixref{anlage:huerden} sowie Handbuch \cite{udk-abbau-aufbau-handbuch-2023}).
+Die Wiederverwendung von Baukomponenten gilt als wichtiger Ansatz zur Reduzierung des Ressourcenverbrauchs und der grauen Emissionen im Bauwesen. In der Praxis beschränkt sie sich bislang jedoch weitgehend auf einzelne Pilot- und Leuchtturmprojekte. Zwar wächst das Angebot an Bauteilbörsen, Rückbauinventaren und Materialbanken (vgl.\ \appendixref{anlage:bauteilboersen}), doch stehen diesem bislang nur wenige realisierte Wiederverwendungsprojekte gegenüber (vgl.\ \appendixref{anlage:projekte}). Wesentliche Hemmnisse liegen in den planerischen, technischen und organisatorischen Übergängen zwischen dem vorhandenen Bauteilangebot und seinem tatsächlichen Wiedereinsatz (vgl.\ \appendixref{anlage:huerden} sowie Handbuch \cite{udk-abbau-aufbau-handbuch-2023}).
 
-Das Vorhaben knüpft an das \Abbr{BBSR}-Projekt „Abbau/Aufbau“ \cite{bbsr-abbau-aufbau-2024} an, in dessen Rahmen methodische Grundlagen für den Umgang mit wiederverwendeten Tragwerksbauteilen entwickelt wurden. Das Folgeprojekt „Entwerfen mit Bestand“ greift zentrale offene Fragestellungen auf. Offen sind vor allem drei Punkte: eine durchgängige Datenverbindung zwischen Bauteilangebot und Entwurf, eine stärker digital unterstützte Fügungs- und Nachweislogik sowie die systematische Zuordnung verfügbarer Bauteile zu konkreten Entwurfs- und Planungsanforderungen.
-
-Das Vorgängerprojekt „Abbau/Aufbau“ zeigt die grundsätzliche Machbarkeit des Ansatzes. „Entwerfen mit Bestand“ entwickelt diesen Ansatz zu einer skalierbaren digitalen Arbeitsumgebung weiter. Im Mittelpunkt steht die Frage, wie heterogene Bauteildaten über verschiedene Planungsschritte hinweg erfasst, miteinander verknüpft und für den Entwurfsprozess nutzbar gemacht werden können.
+Das Vorhaben baut auf dem \Abbr{BBSR}-Projekt „Abbau/Aufbau“ \cite{bbsr-abbau-aufbau-2024} auf, in dem methodische Grundlagen für den Umgang mit wiederverwendeten Tragwerksbauteilen entwickelt wurden. „Entwerfen mit Bestand“ führt diese Arbeiten weiter und richtet den Blick auf drei bislang nicht durchgängig gelöste Aufgaben: die Verbindung von Bauteilangebot und Entwurfsprozess, die digitale Unterstützung von Fügungs- und Nachweisprozessen sowie die Zuordnung verfügbarer Baukomponenten zu konkreten Entwurfs- und Planungsanforderungen.
 
 Daraus ergeben sich fünf Forschungsfragen:
 
@@ -137,7 +138,7 @@ Wie können \Abbr{KI} und insbesondere \Abbr{LLM}s die Datenerfassung, die Model
 Wie müssen digitale Werkzeuge gestaltet und erprobt werden, damit sie praxistauglich, anschlussfähig und langfristig nutzbar sind?
 
 \subsection{Zielsetzung}
-Das Projekt entwickelt eine durchgängige digitale Arbeitsumgebung, mit der Baukomponenten im Planungsprozess erfasst, verknüpft und genutzt werden können. Recherche, Anforderungsentwicklung und technische Erprobung erfolgen parallel und werden fortlaufend aufeinander abgestimmt.
+Ziel ist die Entwicklung einer digitalen Arbeitsumgebung, in der heterogene Bauteildaten über verschiedene Planungsschritte hinweg erfasst, miteinander verknüpft und für den Entwurf nutzbar gemacht werden können. Auf diese Weise soll die Wiederverwendung von Baukomponenten nicht nur dokumentiert, sondern frühzeitig und systematisch in Entwurfsentscheidungen einbezogen werden.
 
 \section{Arbeitspakete}
 
