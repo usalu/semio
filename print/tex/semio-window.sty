@@ -1908,12 +1908,15 @@
       \setlength{\labelsep}{\biblabelsep}%
       \addtolength{\leftmargin}{\labelsep}%
       \setlength{\itemsep}{\bibitemsep}%
-      \setlength{\parsep}{\bibparsep}}%
+      \setlength{\parsep}{\bibparsep}%
+      \setlength{\parskip}{\z@}}% LR-2.6: bib is a compact list
       \renewcommand*{\makelabel}[1]{\hss##1}}
   {\endlist}
   {\item}
 
 \newcommand{\SemioReferences}{%
+  % LR-2.17: shrinkable inter-entry spacing so the last bib page isn't sparse.
+  \setlength{\bibitemsep}{0.5em plus 0.2em minus 0.45em}%
   \semio@register@window@open{\SemioReferencesTitle}%
   \printbibliography[env=semioreferences,heading=none]%
   \semio@register@window@close
