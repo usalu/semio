@@ -26,7 +26,6 @@ pub enum Shape {
     Int,
     UInt,
     Float,
-    Ident,
     Text,
     Bytes64,
     /// Unit-variant keyword table: `(tag, ordinal)` pairs.
@@ -52,8 +51,12 @@ pub enum Shape {
     Map(Box<Shape>),
     /// Dynamic JSON-equivalent literal.
     Value,
-    /// Header + N verbatim raw lines in Document mode; one escaped `Text` token in Inline mode.
-    RawLines { count_field: String },
+    /// Structure-of-Arrays columnar table: `key [col:TYPE ...] { v11 v12 ...  v21 v22 ... }`.
+    /// `fn() -> RecordSpec` is the SAME lazy self-referential seam `Record`/`Statements` use.
+    /// Parses to `FieldValue::List(Vec<FieldValue::Record>)` — identical to `List(Record)` — so
+    /// no binder/diff/derive path needs to know a field is a table rather than a verbose AoS list;
+    /// only the parser's alternate-input detection and the printer's always-SoA output differ.
+    Table(fn() -> RecordSpec),
     /// Graph endpoint literal: `id[:kind][@port][->|--id2[:kind2][@port2]]{props}`.
     Wire,
 }
@@ -156,7 +159,6 @@ pub enum FieldValue {
     Int(i64),
     UInt(u64),
     Float(f64),
-    Ident(String),
     Text(String),
     Bytes64(Vec<u8>),
     Enum(u32),
@@ -167,7 +169,6 @@ pub enum FieldValue {
     Statements(Vec<(String, RecordValue)>),
     Map(Vec<(String, FieldValue)>),
     Value(DslValue),
-    RawLines(Vec<String>),
     Wire(WireValue),
     Absent,
 }
@@ -194,18 +195,20 @@ pub enum SourceMode {
     Inline,
 }
 
-struct Cursor<'a> {
+struct Cursor {
     tokens: Vec<SpannedToken>,
-    source: &'a str,
     pos: usize,
     limits: Limits,
-    mode: SourceMode,
 }
 
-impl<'a> Cursor<'a> {
-    fn new(source: &'a str, tokens: Vec<SpannedToken>, limits: Limits, mode: SourceMode) -> Self {
+impl Cursor {
+    // `SourceMode` no longer participates in parsing (its only consumer, `RawLines`, is gone —
+    // `Shape::Text` now accepts `Ident|Text` identically regardless of Document/Inline); it stays
+    // a `ParseOptions`/`parse` public-API distinction only, still meaningful to callers choosing
+    // between `dsl::__rt::parse_document_record`/`parse_inline_record`.
+    fn new(tokens: Vec<SpannedToken>, limits: Limits) -> Self {
         let tokens: Vec<SpannedToken> = tokens.into_iter().filter(|t| !t.kind.is_trivia()).collect();
-        Self { tokens, source, pos: 0, limits, mode }
+        Self { tokens, pos: 0, limits }
     }
 
     fn peek(&self) -> &SpannedToken {
@@ -251,44 +254,6 @@ impl<'a> Cursor<'a> {
     fn at_keyword(&self, keyword: &str) -> bool {
         self.peek().kind == TokenKind::Ident && self.peek().text.as_str().as_ref() == keyword
     }
-
-    /// @emoji 📍 Byte offset in the original source immediately after the last consumed token —
-    /// the resume point for [`Self::consume_raw_lines`].
-    fn byte_offset_after_last_consumed(&self) -> usize {
-        if self.pos == 0 {
-            0
-        } else {
-            self.tokens[self.pos - 1].byte_range.1 as usize
-        }
-    }
-
-    /// @emoji 📄 Reads exactly `count` verbatim newline-delimited lines from the original source,
-    /// starting right after the current record's header line, and advances the cursor past every
-    /// token whose byte range falls inside those lines.
-    fn consume_raw_lines(&mut self, count: usize) -> Vec<String> {
-        let start = self.byte_offset_after_last_consumed();
-        let rest = &self.source[start.min(self.source.len())..];
-        let body_start = start + rest.find('\n').map_or(rest.len(), |i| i + 1);
-        let mut lines = Vec::with_capacity(count);
-        let mut cursor_byte = body_start;
-        for _ in 0..count {
-            let remaining = &self.source[cursor_byte.min(self.source.len())..];
-            match remaining.find('\n') {
-                Some(i) => {
-                    lines.push(remaining[..i].to_string());
-                    cursor_byte += i + 1;
-                }
-                None => {
-                    lines.push(remaining.to_string());
-                    cursor_byte = self.source.len();
-                }
-            }
-        }
-        while self.pos < self.tokens.len() - 1 && (self.tokens[self.pos].byte_range.0 as usize) < cursor_byte {
-            self.pos += 1;
-        }
-        lines
-    }
 }
 //#endregion 🔖Cursor
 
@@ -304,22 +269,25 @@ impl Default for ParseOptions {
     }
 }
 
+/// @emoji ✂️ The structural seam between lexing and parsing: everything downstream of a token
+/// vector is grammar-only and needs no raw source bytes (the parser is token-only — no shape
+/// still consumes verbatim source text the way the deleted `RawLines` shape once did). Exists so
+/// a caller that already has tokens (e.g. an incremental relexer) can skip `parse`'s own lex pass.
+pub fn parse_tokens(tokens: Vec<SpannedToken>, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
+    let mut cursor = Cursor::new(tokens, opts.limits);
+    parse_record_body(&mut cursor, spec, 0)
+}
+
 pub fn parse(text: &str, spec: &RecordSpec, opts: &ParseOptions) -> Result<Cst, TextError> {
-    // Lex forgiving: a `RawLines` region can legitimately contain any character (arbitrary
-    // source text), so the whole-document lex pass must never hard-fail on it — the parser (not
-    // the lexer) is the source of truth for what's actually malformed, once it reaches a
-    // non-raw-lines position and tries to match a real token kind against an `Error` token.
-    let tokens = lex(text, &opts.limits, true)?;
-    let mut cursor = Cursor::new(text, tokens, opts.limits, opts.mode);
-    let value = parse_record_body(&mut cursor, spec, 0)?;
-    Ok(value)
+    let tokens = lex(text, &opts.limits, false)?;
+    parse_tokens(tokens, spec, opts)
 }
 
 fn ident_like_text(token: &SpannedToken) -> String {
     token.text.as_str().to_string()
 }
 
-fn parse_scalar(cursor: &mut Cursor<'_>, shape: &Shape) -> Result<FieldValue, TextError> {
+fn parse_scalar(cursor: &mut Cursor, shape: &Shape) -> Result<FieldValue, TextError> {
     match shape {
         Shape::Bool => {
             let token = cursor.expect(TokenKind::Ident)?;
@@ -349,15 +317,18 @@ fn parse_scalar(cursor: &mut Cursor<'_>, shape: &Shape) -> Result<FieldValue, Te
             let value = parse_f64(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
             Ok(FieldValue::Float(value))
         }
-        Shape::Ident => {
-            let token = cursor.expect(TokenKind::Ident)?;
-            Ok(FieldValue::Ident(ident_like_text(&token)))
-        }
-        Shape::Text => {
-            let token = cursor.expect(TokenKind::Text)?;
-            let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
-            Ok(FieldValue::Text(text))
-        }
+        Shape::Text => match cursor.peek().kind {
+            TokenKind::Text => {
+                let token = cursor.advance();
+                let text = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
+                Ok(FieldValue::Text(text))
+            }
+            TokenKind::Ident => {
+                let token = cursor.advance();
+                Ok(FieldValue::Text(ident_like_text(&token)))
+            }
+            other => Err(TextError::new(format!("expected Text, found {other:?} '{}'", cursor.peek().text.as_str()), cursor.span())),
+        },
         Shape::Bytes64 => {
             let token = cursor.expect(TokenKind::Text)?;
             let bytes = base64_decode(&token.text.as_str()).map_err(|e| TextError::new(e, token.span))?;
@@ -376,10 +347,10 @@ fn parse_scalar(cursor: &mut Cursor<'_>, shape: &Shape) -> Result<FieldValue, Te
     }
 }
 
-fn parse_shape(cursor: &mut Cursor<'_>, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
+fn parse_shape(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     match shape {
-        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Ident | Shape::Text | Shape::Bytes64 | Shape::Enum(_) => parse_scalar(cursor, shape),
+        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) => parse_scalar(cursor, shape),
         Shape::Tuple(elem, len) => {
             let mut items = Vec::new();
             loop {
@@ -442,16 +413,22 @@ fn parse_shape(cursor: &mut Cursor<'_>, shape: &Shape, depth: usize) -> Result<F
             Ok(FieldValue::Map(entries))
         }
         Shape::Value => Ok(FieldValue::Value(parse_dsl_value(cursor, depth + 1)?)),
-        Shape::RawLines { count_field: _ } => {
-            // Handled specially by the caller (`parse_record_body`), which knows the already-
-            // parsed count. Reaching here directly means the shape was used outside a record.
-            Err(TextError::new("RawLines shape may only be used as a record field", cursor.span()))
+        // Reached directly whenever a `Table` shape is parsed via the generic `key=` dispatch
+        // (the AoS-verbose alternate input, `name= [ key=val ... ]`) or nested inside another
+        // shape — both are structurally identical to `List(Record)`, so delegate to that arm
+        // rather than duplicating it. The bare SoA form (`name [col:TYPE ...] { rows }`) is
+        // recognized earlier, in `parse_record_body`, and calls `parse_table_soa` directly since
+        // its grammar (a header, then count-delimited rows) isn't reachable through `parse_shape`.
+        Shape::Table(spec_fn) => {
+            validate_table_columns(&spec_fn())?;
+            let list_shape = Shape::List(Box::new(Shape::Record(*spec_fn)));
+            parse_shape(cursor, &list_shape, depth)
         }
         Shape::Wire => Ok(FieldValue::Wire(parse_wire(cursor)?)),
     }
 }
 
-fn current_keyword(cursor: &Cursor<'_>) -> Option<String> {
+fn current_keyword(cursor: &Cursor) -> Option<String> {
     if cursor.peek().kind == TokenKind::Ident && cursor.at_attr_key().is_none() {
         Some(cursor.peek().text.as_str().to_string())
     } else {
@@ -459,7 +436,7 @@ fn current_keyword(cursor: &Cursor<'_>) -> Option<String> {
     }
 }
 
-fn parse_dsl_value(cursor: &mut Cursor<'_>, depth: usize) -> Result<DslValue, TextError> {
+fn parse_dsl_value(cursor: &mut Cursor, depth: usize) -> Result<DslValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     match cursor.peek().kind {
         TokenKind::LBrace => {
@@ -505,12 +482,21 @@ fn parse_dsl_value(cursor: &mut Cursor<'_>, depth: usize) -> Result<DslValue, Te
     }
 }
 
-fn parse_wire(cursor: &mut Cursor<'_>) -> Result<WireValue, TextError> {
-    let from = parse_wire_node(cursor)?;
-    let edge = if cursor.peek().kind == TokenKind::Arrow || cursor.peek().kind == TokenKind::DashArrow {
-        let directed = cursor.advance().kind == TokenKind::Arrow;
+/// @emoji 🕸️ Parses one wire literal. `<-` is accepted sugar only: normalized here by swapping
+/// the two endpoints, so the stored `WireValue` (and everything reprinted from it) only ever
+/// holds `->`/`--` — `b<-a` and `a->b` parse to the identical value and print identically.
+fn parse_wire(cursor: &mut Cursor) -> Result<WireValue, TextError> {
+    let mut from = parse_wire_node(cursor)?;
+    let edge = if matches!(cursor.peek().kind, TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow) {
+        let arrow_kind = cursor.advance().kind;
         let to = parse_wire_node(cursor)?;
-        Some((directed, to))
+        match arrow_kind {
+            TokenKind::BackArrow => {
+                let swapped_to = std::mem::replace(&mut from, to);
+                Some((true, swapped_to))
+            }
+            other => Some((other == TokenKind::Arrow, to)),
+        }
     } else {
         None
     };
@@ -518,7 +504,16 @@ fn parse_wire(cursor: &mut Cursor<'_>) -> Result<WireValue, TextError> {
     Ok(WireValue { from, edge, properties })
 }
 
-fn parse_wire_node(cursor: &mut Cursor<'_>) -> Result<WireNode, TextError> {
+/// @emoji 🔌 Small public entry point other crates (the graph wire module, trinity) can call
+/// directly to lex + parse one standalone wire literal, without needing a `RecordSpec` around it.
+pub fn parse_wire_text(text: &str) -> Result<WireValue, TextError> {
+    let limits = Limits::default();
+    let tokens = lex(text, &limits, false)?;
+    let mut cursor = Cursor::new(tokens, limits);
+    parse_wire(&mut cursor)
+}
+
+fn parse_wire_node(cursor: &mut Cursor) -> Result<WireNode, TextError> {
     let id = ident_like_text(&cursor.expect(TokenKind::Ident)?);
     let kind = if cursor.peek().kind == TokenKind::Colon {
         cursor.advance();
@@ -542,7 +537,7 @@ fn parse_wire_node(cursor: &mut Cursor<'_>) -> Result<WireNode, TextError> {
 /// then order-independent `key=value` attributes (LL(2): an `Ident` followed by `=` is always a
 /// key), until a token that is neither a known key nor an unfilled positional slot — which ends
 /// the record (it belongs to whatever comes next: a new statement, a closing brace, or EOF).
-fn parse_record_body(cursor: &mut Cursor<'_>, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
+fn parse_record_body(cursor: &mut Cursor, spec: &RecordSpec, depth: usize) -> Result<RecordValue, TextError> {
     cursor.limits.check_depth(depth, cursor.span())?;
     if let Some(keyword) = &spec.keyword {
         if cursor.at_keyword(keyword) {
@@ -558,9 +553,20 @@ fn parse_record_body(cursor: &mut Cursor<'_>, spec: &RecordSpec, depth: usize) -
         p
     };
     for field in &positional {
-        if field.optional && !can_start_positional(cursor, &field.shape) {
-            record.fields.insert(field.id, FieldValue::Absent);
-            continue;
+        if field.optional {
+            // An explicit `_` placeholder always means "absent, but consume the slot" — this is
+            // what keeps LATER positionals aligned when an earlier optional one is skipped (see
+            // `print_record`'s matching print-side logic). Only positional contexts ever see a
+            // `Placeholder` token; keyed optionals are simply omitted instead.
+            if cursor.peek().kind == TokenKind::Placeholder {
+                cursor.advance();
+                record.fields.insert(field.id, FieldValue::Absent);
+                continue;
+            }
+            if !can_start_positional(cursor, &field.shape) {
+                record.fields.insert(field.id, FieldValue::Absent);
+                continue;
+            }
         }
         let value = parse_shape(cursor, &field.shape, depth + 1)?;
         record.fields.insert(field.id, value);
@@ -568,16 +574,11 @@ fn parse_record_body(cursor: &mut Cursor<'_>, spec: &RecordSpec, depth: usize) -
 
     // `Statements` fields have no field-level key at all — they're recognized purely by matching
     // one of their own variants' keywords, so at most one such field may appear per record.
-    // `Block`/`RawLines` fields are also excluded from the `key=value` loop below: `Block`'s own
-    // key acts as a bare leading keyword (`children { ... }`, no `=`), and `RawLines` is handled
-    // as its own post-pass since it consumes raw source text, not tokens.
+    // `Block` fields are also excluded from the `key=value` loop below: their own key acts as a
+    // bare leading keyword (`children { ... }`, no `=`) — `Table` fields (bare `key [...] {...}`
+    // SoA form) are handled the same way, via their own lookahead branch below.
     let statements_field = spec.fields.iter().find(|f| f.position.is_none() && matches!(f.shape, Shape::Statements(_)));
-    let raw_lines_field = spec.fields.iter().find(|f| matches!(f.shape, Shape::RawLines { .. }));
-    let mut keyed: Vec<&FieldSpec> = spec
-        .fields
-        .iter()
-        .filter(|f| f.position.is_none() && !f.key.is_empty() && !matches!(f.shape, Shape::Statements(_) | Shape::RawLines { .. }))
-        .collect();
+    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !matches!(f.shape, Shape::Statements(_))).collect();
 
     loop {
         if let Some(key) = cursor.at_attr_key() {
@@ -586,6 +587,17 @@ fn parse_record_body(cursor: &mut Cursor<'_>, spec: &RecordSpec, depth: usize) -
             cursor.advance();
             cursor.expect(TokenKind::Equals)?;
             let value = parse_shape(cursor, &field.shape, depth + 1)?;
+            record.fields.insert(field.id, value);
+            continue;
+        }
+        // `Table`'s bare SoA form: the keyword directly followed by `[` (no `=`) — distinct from
+        // the AoS-verbose `key=[...]` form already handled by the `at_attr_key` branch above.
+        if let Some(index) = keyed.iter().position(|f| matches!(f.shape, Shape::Table(_)) && cursor.at_keyword(&f.key) && cursor.peek_at(1).kind == TokenKind::LBracket) {
+            let field = keyed.remove(index);
+            let Shape::Table(spec_fn) = &field.shape else { unreachable!() };
+            let spec_fn = *spec_fn;
+            cursor.advance();
+            let value = parse_table_soa(cursor, spec_fn, depth + 1)?;
             record.fields.insert(field.id, value);
             continue;
         }
@@ -604,47 +616,122 @@ fn parse_record_body(cursor: &mut Cursor<'_>, spec: &RecordSpec, depth: usize) -
         record.fields.insert(field.id, value);
     }
 
-    if let Some(field) = raw_lines_field {
-        let Shape::RawLines { count_field } = &field.shape else { unreachable!() };
-        let count_field_id = spec.fields.iter().find(|f| f.key == *count_field).map(|f| f.id);
-        let count = count_field_id.and_then(|id| record.fields.get(&id)).and_then(field_value_as_usize).unwrap_or(0);
-        let lines = match cursor.mode {
-            SourceMode::Document => cursor.consume_raw_lines(count),
-            SourceMode::Inline => {
-                if cursor.peek().kind == TokenKind::Text {
-                    let token = cursor.advance();
-                    let joined = dsl_core::unescape_text(&token.text.as_str(), false).map_err(|e| TextError::new(e, token.span))?;
-                    joined.split('\n').map(|s| s.to_string()).collect()
-                } else {
-                    Vec::new()
-                }
-            }
-        };
-        record.fields.insert(field.id, FieldValue::RawLines(lines));
-    }
-
     Ok(record)
 }
 
-fn field_value_as_usize(value: &FieldValue) -> Option<usize> {
-    match value {
-        FieldValue::Int(v) => Some(*v as usize),
-        FieldValue::UInt(v) => Some(*v as usize),
-        _ => None,
-    }
-}
-
-fn can_start_positional(cursor: &Cursor<'_>, shape: &Shape) -> bool {
+fn can_start_positional(cursor: &Cursor, shape: &Shape) -> bool {
     match shape {
-        Shape::Bool | Shape::Ident | Shape::Enum(_) => cursor.peek().kind == TokenKind::Ident,
+        Shape::Bool | Shape::Enum(_) => cursor.peek().kind == TokenKind::Ident,
         Shape::Int | Shape::UInt => cursor.peek().kind == TokenKind::Int,
         Shape::Float => matches!(cursor.peek().kind, TokenKind::Float | TokenKind::Int),
-        Shape::Text | Shape::Bytes64 => cursor.peek().kind == TokenKind::Text,
+        // Only `Text|Placeholder` — NOT bare `Ident` — may start an optional positional `Text`
+        // field: an unquoted bare-ident value here would be indistinguishable from the next
+        // statement's leading keyword, so this deliberately narrower check (versus `Shape::Text`
+        // parsing `Ident|Text` everywhere else) resolves that ambiguity.
+        Shape::Text => matches!(cursor.peek().kind, TokenKind::Text | TokenKind::Placeholder),
+        Shape::Bytes64 => cursor.peek().kind == TokenKind::Text,
         Shape::List(_) => cursor.peek().kind == TokenKind::LBracket,
         Shape::Block(_) | Shape::Map(_) => cursor.peek().kind == TokenKind::LBrace,
         _ => true,
     }
 }
+
+//#region 🔖Table
+/// @emoji 🚧 Which shapes have a fixed/bounded token extent and may therefore be a `Table`
+/// column: an unbounded `Tuple` (`len: None`, comma-separated until... forever) and `Statements`
+/// (repeats until a non-matching keyword) both need an external delimiter to know where they end
+/// — fine inside `[ ]`/`{ }` brackets, fatal inside a table row where the ONLY thing marking a
+/// row boundary is "we've now read exactly `columns.len()` values".
+fn shape_is_self_delimiting(shape: &Shape) -> bool {
+    !matches!(shape, Shape::Statements(_) | Shape::Tuple(_, None))
+}
+
+/// @emoji 🚧 Spec-build-time validation for a `Table`'s element `RecordSpec` — called wherever a
+/// `Shape::Table(spec_fn)` is first evaluated (both parse paths, and printing), since `spec_fn` is
+/// a lazy pointer rather than an eagerly-built value there is no earlier moment to check it at.
+fn validate_table_columns(spec: &RecordSpec) -> Result<(), TextError> {
+    for field in &spec.fields {
+        if !shape_is_self_delimiting(&field.shape) {
+            return Err(TextError::new(
+                format!("table column '{}' has a non-self-delimiting shape ({}) and cannot be a table column", field.key, shape_type_name(&field.shape)),
+                TextSpan::at(1, 1),
+            ));
+        }
+    }
+    Ok(())
+}
+
+/// @emoji 🏷️ UPPERCASE schema type tag for a `Shape` — what a `Table` header prints per column
+/// (`id:TEXT`), per the unified syntax law (`UPPERCASE` for engine shapes, `PascalCase` reserved
+/// for technology-declared domain kinds).
+pub fn shape_type_name(shape: &Shape) -> &'static str {
+    match shape {
+        Shape::Bool => "BOOL",
+        Shape::Int => "INT",
+        Shape::UInt => "UINT",
+        Shape::Float => "NUM",
+        Shape::Text => "TEXT",
+        Shape::Bytes64 => "BYTES",
+        Shape::Enum(_) => "ENUM",
+        Shape::Tuple(_, _) => "TUPLE",
+        Shape::List(_) => "LIST",
+        Shape::Record(_) => "REC",
+        Shape::Block(_) => "BLOCK",
+        Shape::Statements(_) => "STMT",
+        Shape::Map(_) => "MAP",
+        Shape::Value => "VAL",
+        Shape::Table(_) => "TABLE",
+        Shape::Wire => "WIRE",
+    }
+}
+
+/// @emoji 📊 Parses the bare SoA form of a `Table` field: `[col:TYPE ...] { v11 v12 ...  v21 v22
+/// ... }`, cursor positioned right after the field's own keyword has already been consumed. The
+/// header names columns (in the order values then appear per row); a `:TYPE` suffix is accepted
+/// but not required to resolve a column (it's a human/printer-facing tag, not load-bearing for
+/// parsing — the column's real shape always comes from the element `RecordSpec`), which is what
+/// lets a hand-written header omit types the engine can already infer. Rows have NO separator —
+/// reading exactly `columns.len()` values per row is what makes a row self-delimiting, which is
+/// also why every column shape must itself be self-delimiting (`validate_table_columns`).
+fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usize) -> Result<FieldValue, TextError> {
+    let element_spec = spec_fn();
+    validate_table_columns(&element_spec)?;
+    cursor.expect(TokenKind::LBracket)?;
+    let mut columns: Vec<&FieldSpec> = Vec::new();
+    while cursor.peek().kind != TokenKind::RBracket {
+        let key_token = cursor.expect(TokenKind::Ident)?;
+        let key = key_token.text.as_str().to_string();
+        if cursor.peek().kind == TokenKind::Colon {
+            cursor.advance();
+            cursor.expect(TokenKind::Ident)?; // type tag — documentation only, not re-validated here
+        }
+        let field_spec = element_spec.fields.iter().find(|f| f.key == key).ok_or_else(|| TextError::new(format!("unknown table column '{key}'"), key_token.span))?;
+        columns.push(field_spec);
+    }
+    cursor.expect(TokenKind::RBracket)?;
+    cursor.expect(TokenKind::LBrace)?;
+    let mut rows = Vec::new();
+    while cursor.peek().kind != TokenKind::RBrace {
+        let mut record = RecordValue::default();
+        for field_spec in &columns {
+            if cursor.peek().kind == TokenKind::Placeholder {
+                cursor.advance();
+                record.fields.insert(field_spec.id, FieldValue::Absent);
+                continue;
+            }
+            let value = parse_shape(cursor, &field_spec.shape, depth + 1)?;
+            record.fields.insert(field_spec.id, value);
+        }
+        for field_spec in &element_spec.fields {
+            record.fields.entry(field_spec.id).or_insert(FieldValue::Absent);
+        }
+        rows.push(FieldValue::Record(record));
+        cursor.limits.check_nodes(rows.len(), cursor.span())?;
+    }
+    cursor.expect(TokenKind::RBrace)?;
+    Ok(FieldValue::List(rows))
+}
+//#endregion 🔖Table
 
 fn base64_decode(text: &str) -> Result<Vec<u8>, String> {
     const ALPHABET: &[u8] = b"ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -698,6 +785,15 @@ pub enum JoinMode {
 /// law. `atom` asserts its argument contains no raw `\n` (Document mode still separates atoms with
 /// synthesized whitespace, never embeds one inside an atom), so `render(Inline)` joining every
 /// chunk with a single space can never produce an embedded newline.
+///
+/// @emoji 📏 Canonical spacing rules (both join modes, structurally guaranteed — never hand-tuned
+/// per callsite): never a space adjacent to `=` (`key=[ a b ]`, not `key= [ a b ]` — the printer
+/// achieves this by pushing a bare `key=` atom, calling [`Writer::glue`], then printing the
+/// value); exactly one space between sibling atoms; exactly one space just inside `[ ]`/`{ }` when
+/// rendered inline (`[ a b ]`, not `[a b]`) — EXCEPT a `Table` header's `[ ]`, which is glued
+/// tight on both sides (`[id:TEXT x:NUM]`) since it's a fixed one-shot header, not a
+/// space-joined element list; a space appears before a keyword-led block's `{` (`children {
+/// ... }`) but never before a glued composite's `{` (`data={ ... }`).
 pub struct Writer {
     chunks: Vec<Chunk>,
     indent: usize,
@@ -705,10 +801,13 @@ pub struct Writer {
 
 enum Chunk {
     Atom(String),
-    Raw(String), // Document-mode-only verbatim lines (already newline-delimited); collapsed in Inline mode by the caller before reaching the writer
     OpenBlock,
     CloseBlock,
     NewRecord,
+    /// @emoji 🧲 One-shot marker: the very next `Atom`/`OpenBlock` chunk renders with NO
+    /// preceding separator (space in Inline mode, space-or-newline-continuation in Document mode)
+    /// — consumed by that one chunk, then normal spacing resumes. See [`Writer::glue`].
+    Glue,
 }
 
 impl Default for Writer {
@@ -732,10 +831,6 @@ impl Writer {
         self.atom(format!("{key}={}", value.as_ref()));
     }
 
-    pub fn raw_lines(&mut self, lines: &[String]) {
-        self.chunks.push(Chunk::Raw(lines.join("\n")));
-    }
-
     pub fn open_block(&mut self) {
         self.chunks.push(Chunk::OpenBlock);
         self.indent += 1;
@@ -750,16 +845,39 @@ impl Writer {
         self.chunks.push(Chunk::NewRecord);
     }
 
+    /// @emoji 🧲 Fuses the next pushed chunk onto whatever precedes it, with no separator, in
+    /// BOTH join modes — the mechanism behind every `key=value`/`key=[...]`/`key={...}` fusion in
+    /// this printer. Replaces the old approach of mutating an already-pushed atom's string in
+    /// place (which only worked for single-atom scalar values): `glue()` composes with arbitrarily
+    /// structured values (nested blocks, lists, whole sub-records) since it's a rendering-time
+    /// join, not a string-splice.
+    pub fn glue(&mut self) {
+        self.chunks.push(Chunk::Glue);
+    }
+
     pub fn render(&self, mode: JoinMode) -> String {
         match mode {
             JoinMode::Inline => {
-                let mut parts = Vec::new();
+                let mut parts: Vec<String> = Vec::new();
+                let mut glued = false;
+                let mut push = |piece: String, glued: &mut bool| {
+                    if *glued {
+                        if let Some(last) = parts.last_mut() {
+                            last.push_str(&piece);
+                        } else {
+                            parts.push(piece);
+                        }
+                    } else {
+                        parts.push(piece);
+                    }
+                    *glued = false;
+                };
                 for chunk in &self.chunks {
                     match chunk {
-                        Chunk::Atom(s) => parts.push(s.clone()),
-                        Chunk::Raw(s) => parts.push(format!("\"{}\"", dsl_core::escape_text(s))),
-                        Chunk::OpenBlock => parts.push("{".to_string()),
-                        Chunk::CloseBlock => parts.push("}".to_string()),
+                        Chunk::Glue => glued = true,
+                        Chunk::Atom(s) => push(s.clone(), &mut glued),
+                        Chunk::OpenBlock => push("{".to_string(), &mut glued),
+                        Chunk::CloseBlock => push("}".to_string(), &mut glued),
                         Chunk::NewRecord => {}
                     }
                 }
@@ -769,6 +887,7 @@ impl Writer {
                 let mut out = String::new();
                 let mut indent = 0usize;
                 let mut line_open = false;
+                let mut glued = false;
                 let push_indent = |out: &mut String, indent: usize| {
                     for _ in 0..indent {
                         out.push_str("  ");
@@ -776,28 +895,27 @@ impl Writer {
                 };
                 for chunk in &self.chunks {
                     match chunk {
+                        Chunk::Glue => glued = true,
                         Chunk::Atom(s) => {
                             if !line_open {
                                 push_indent(&mut out, indent);
                                 line_open = true;
-                            } else {
+                            } else if !glued {
                                 out.push(' ');
                             }
                             out.push_str(s);
-                        }
-                        Chunk::Raw(s) => {
-                            if line_open {
-                                out.push('\n');
-                                line_open = false;
-                            }
-                            out.push_str(s);
-                            out.push('\n');
+                            glued = false;
                         }
                         Chunk::OpenBlock => {
-                            out.push_str(" {");
+                            if glued {
+                                out.push('{');
+                            } else {
+                                out.push_str(" {");
+                            }
                             out.push('\n');
                             line_open = false;
                             indent += 1;
+                            glued = false;
                         }
                         Chunk::CloseBlock => {
                             if line_open {
@@ -826,68 +944,79 @@ impl Writer {
     }
 }
 
+/// @emoji 🥇 Field print order within one record — NOT declaration order: keyword, then
+/// positionals (unchanged), then keyed fields grouped scalar-before-composite-before-table-
+/// before-statements, ties broken by original declaration order (a stable sort over an
+/// already-declaration-order slice achieves this for free). Metadata/scalars land before large
+/// nested/tabular blocks, which is friendlier to lazy loading/streaming readers — parsing stays
+/// completely order-independent, so this is a print-only change.
+fn keyed_field_rank(shape: &Shape) -> u8 {
+    match shape {
+        Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Text | Shape::Bytes64 | Shape::Enum(_) | Shape::Tuple(_, _) => 0,
+        Shape::List(_) | Shape::Map(_) | Shape::Record(_) | Shape::Block(_) | Shape::Value | Shape::Wire => 1,
+        Shape::Table(_) => 2,
+        Shape::Statements(_) => 3,
+    }
+}
+
 pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer) {
     if let Some(keyword) = &spec.keyword {
         writer.atom(keyword);
     }
     let mut positional: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_some()).collect();
     positional.sort_by_key(|f| f.position.unwrap());
-    for field in positional {
-        if let Some(fv) = value.get(field.id) {
-            if matches!(fv, FieldValue::Absent) {
-                continue;
-            }
-            print_shape(fv, &field.shape, writer);
-        }
-    }
-    for field in spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty() && !matches!(f.shape, Shape::RawLines { .. } | Shape::Statements(_))) {
+    for (index, field) in positional.iter().enumerate() {
         match value.get(field.id) {
-            Some(FieldValue::Absent) | None => continue,
-            Some(fv) => {
-                if matches!(field.shape, Shape::Block(_)) {
-                    // `Block`'s own key is a bare leading keyword, not a `key=value` attribute.
-                    writer.new_record();
-                    writer.atom(&field.key);
-                    print_shape(fv, &field.shape, writer);
-                } else {
-                    writer.atom(format!("{}=", field.key));
-                    print_key_value(field, fv, writer);
+            Some(fv) if !matches!(fv, FieldValue::Absent) => print_shape(fv, &field.shape, writer),
+            _ => {
+                // An absent OPTIONAL positional prints as `_` only if some LATER positional in
+                // this same record is actually present — that's what keeps slots aligned for the
+                // reader (and reparse). A run of trailing absents needs no placeholder at all.
+                let later_present = positional[index + 1..].iter().any(|f| matches!(value.get(f.id), Some(fv) if !matches!(fv, FieldValue::Absent)));
+                if later_present {
+                    writer.atom("_");
                 }
             }
         }
     }
-    if let Some(field) = spec.fields.iter().find(|f| matches!(f.shape, Shape::Statements(_))) {
-        if let Some(fv) = value.get(field.id) {
-            print_shape(fv, &field.shape, writer);
-        }
-    }
-    if let Some(field) = spec.fields.iter().find(|f| matches!(f.shape, Shape::RawLines { .. })) {
-        if let Some(FieldValue::RawLines(lines)) = value.get(field.id) {
-            writer.raw_lines(lines);
+
+    let mut keyed: Vec<&FieldSpec> = spec.fields.iter().filter(|f| f.position.is_none() && !f.key.is_empty()).collect();
+    keyed.sort_by_key(|f| keyed_field_rank(&f.shape));
+    for field in keyed {
+        match value.get(field.id) {
+            Some(FieldValue::Absent) | None => continue,
+            Some(fv) => match &field.shape {
+                // `Statements` items each carry their own leading keyword — no field-level key at
+                // all is ever printed for this shape.
+                Shape::Statements(_) => print_shape(fv, &field.shape, writer),
+                // `Block`'s and `Table`'s own key is a bare leading keyword, not a `key=value`
+                // attribute (`children { ... }`, `nodes [...] { ... }`, never `children={...}`).
+                Shape::Block(_) | Shape::Table(_) => {
+                    writer.new_record();
+                    writer.atom(&field.key);
+                    print_shape(fv, &field.shape, writer);
+                }
+                _ => {
+                    writer.atom(format!("{}=", field.key));
+                    print_key_value(field, fv, writer);
+                }
+            },
         }
     }
 }
 
+/// @emoji 🧲 `key=` was just pushed by the caller — glue the value onto it with no separator,
+/// then print it normally (composed, not string-spliced, so this handles arbitrarily structured
+/// values exactly like a bare `print_shape` call would).
 fn print_key_value(field: &FieldSpec, value: &FieldValue, writer: &mut Writer) {
-    // Overwrites the bare `key=` atom pushed by the caller with a fused `key=value` atom for
-    // scalar shapes (the common case), or falls back to `key=` followed by a structured value for
-    // composite shapes.
+    writer.glue();
     match (&field.shape, value) {
         (Shape::Enum(variants), FieldValue::Enum(ordinal)) => {
             if let Some((tag, _)) = variants.iter().find(|(_, o)| o == ordinal) {
-                if let Chunk::Atom(last) = writer.chunks.last_mut().expect("key atom just pushed") {
-                    last.push_str(tag);
-                }
+                writer.atom(tag);
             }
         }
-        (Shape::Bool | Shape::Int | Shape::UInt | Shape::Float | Shape::Ident | Shape::Text | Shape::Bytes64, _) => {
-            if let Chunk::Atom(last) = writer.chunks.last_mut().expect("key atom just pushed") {
-                last.push_str(&scalar_to_text(value));
-            }
-        }
-        _ => {
-            print_shape(value, &field.shape, writer);
-        }
+        _ => print_shape(value, &field.shape, writer),
     }
 }
 
@@ -897,8 +1026,17 @@ fn scalar_to_text(value: &FieldValue) -> String {
         FieldValue::Int(i) => i.to_string(),
         FieldValue::UInt(u) => u.to_string(),
         FieldValue::Float(f) => format_f64(*f),
-        FieldValue::Ident(s) => s.clone(),
-        FieldValue::Text(s) => format!("\"{}\"", dsl_core::escape_text(s)),
+        // Bare (unquoted) whenever the text lexes back as exactly this one ident — the printer's
+        // half of the "strings bare-preferred" law; `is_bare_ident` also excludes reserved literal
+        // idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and number-shaped text, which always fall
+        // through to the quoted+escaped form instead.
+        FieldValue::Text(s) => {
+            if dsl_core::is_bare_ident(s) {
+                s.clone()
+            } else {
+                format!("\"{}\"", dsl_core::escape_text(s))
+            }
+        }
         FieldValue::Bytes64(bytes) => format!("\"{}\"", base64_encode(bytes)),
         FieldValue::Enum(_) => String::new(), // resolved by caller via variants table when needed
         _ => String::new(),
@@ -907,7 +1045,7 @@ fn scalar_to_text(value: &FieldValue) -> String {
 
 pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
     match (value, shape) {
-        (FieldValue::Bool(_) | FieldValue::Int(_) | FieldValue::UInt(_) | FieldValue::Float(_) | FieldValue::Ident(_) | FieldValue::Text(_) | FieldValue::Bytes64(_), _) => {
+        (FieldValue::Bool(_) | FieldValue::Int(_) | FieldValue::UInt(_) | FieldValue::Float(_) | FieldValue::Text(_) | FieldValue::Bytes64(_), _) => {
             writer.atom(scalar_to_text(value));
         }
         (FieldValue::Enum(ordinal), Shape::Enum(variants)) => {
@@ -926,6 +1064,7 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
                 .collect();
             writer.atom(rendered.join(","));
         }
+        (FieldValue::List(items), Shape::Table(spec_fn)) => print_table(*spec_fn, items, writer),
         (FieldValue::List(items), Shape::List(elem)) => {
             writer.atom("[");
             for item in items {
@@ -955,22 +1094,43 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
             sorted.sort_by(|a, b| a.0.cmp(&b.0));
             for (key, value) in &sorted {
                 writer.atom(format!("{key}="));
-                if let Chunk::Atom(_) = writer.chunks.last().unwrap() {
-                    let mut sub = Writer::new();
-                    print_shape(value, inner, &mut sub);
-                    let rendered = sub.render(JoinMode::Inline);
-                    if let Chunk::Atom(last) = writer.chunks.last_mut().unwrap() {
-                        last.push_str(&rendered);
-                    }
-                }
+                writer.glue();
+                print_shape(value, inner, writer);
             }
             writer.close_block();
         }
         (FieldValue::Value(dsl_value), Shape::Value) => print_dsl_value(dsl_value, writer),
-        (FieldValue::RawLines(lines), Shape::RawLines { .. }) => writer.raw_lines(lines),
         (FieldValue::Wire(wire), Shape::Wire) => print_wire(wire, writer),
         _ => {}
     }
+}
+
+/// @emoji 📊 Always prints the compact SoA form — this (not the parser, which still accepts the
+/// verbose AoS form too) is what makes `canonicalize` migrate old AoS documents to SoA
+/// automatically. Header `[ ]` is glued tight on both sides (`[id:TEXT x:NUM]`); rows have no
+/// separator, one row per line in Document mode purely for readability (`new_record` is a no-op
+/// in Inline mode).
+fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut Writer) {
+    let element_spec = spec_fn();
+    writer.atom("[");
+    writer.glue();
+    for field in &element_spec.fields {
+        writer.atom(format!("{}:{}", field.key, shape_type_name(&field.shape)));
+    }
+    writer.glue();
+    writer.atom("]");
+    writer.open_block();
+    for item in items {
+        writer.new_record();
+        let FieldValue::Record(record) = item else { continue };
+        for field in &element_spec.fields {
+            match record.get(field.id) {
+                Some(fv) if !matches!(fv, FieldValue::Absent) => print_shape(fv, &field.shape, writer),
+                _ => writer.atom("_"),
+            }
+        }
+    }
+    writer.close_block();
 }
 
 fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
@@ -992,12 +1152,8 @@ fn print_dsl_value(value: &DslValue, writer: &mut Writer) {
             writer.open_block();
             for (key, value) in &sorted {
                 writer.atom(format!("{key}="));
-                let mut sub = Writer::new();
-                print_dsl_value(value, &mut sub);
-                let rendered = sub.render(JoinMode::Inline);
-                if let Chunk::Atom(last) = writer.chunks.last_mut().unwrap() {
-                    last.push_str(&rendered);
-                }
+                writer.glue();
+                print_dsl_value(value, writer);
             }
             writer.close_block();
         }
@@ -1227,14 +1383,14 @@ mod tests {
 
     // --- primitive 2 + 3: keyword-led statements, homogeneous ordered collection ---
     fn layer_variant_spec() -> RecordSpec {
-        RecordSpec::new(Some("layer"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Ident).positional(0), FieldSpec::new(1, "opacity", Shape::Float)])
+        RecordSpec::new(Some("layer"), RecordLayout::Inline, vec![FieldSpec::new(0, "id", Shape::Text).positional(0), FieldSpec::new(1, "opacity", Shape::Float)])
     }
 
     fn document_with_layers_spec() -> RecordSpec {
         RecordSpec::new(
             None,
             RecordLayout::Inline,
-            vec![FieldSpec::new(0, "schema", Shape::Ident), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))],
+            vec![FieldSpec::new(0, "schema", Shape::Text), FieldSpec::new(1, "layers", Shape::Statements(vec![("layer".to_string(), layer_variant_spec)]))],
         )
     }
 
@@ -1258,7 +1414,7 @@ mod tests {
             Some("group"),
             RecordLayout::Inline,
             vec![
-                FieldSpec::new(0, "id", Shape::Ident).positional(0),
+                FieldSpec::new(0, "id", Shape::Text).positional(0),
                 FieldSpec::new(1, "children", Shape::Block(Box::new(Shape::Statements(vec![("group".to_string(), group_spec)])))).optional(),
             ],
         )
@@ -1277,36 +1433,6 @@ mod tests {
         let spec = camera_spec();
         let value = parse("camera x=1 y=1 zoom=1 label=\"line1\\nline2 with \\\"quotes\\\"\"", &spec, &ParseOptions::default()).expect("parse");
         assert_eq!(value.get(3), Some(&FieldValue::Text("line1\nline2 with \"quotes\"".to_string())));
-    }
-
-    // --- primitive 8: header + N verbatim raw lines ---
-    fn writer_doc_spec() -> RecordSpec {
-        RecordSpec::new(
-            None,
-            RecordLayout::Inline,
-            vec![FieldSpec::new(0, "lines", Shape::UInt), FieldSpec::new(1, "body", Shape::RawLines { count_field: "lines".to_string() })],
-        )
-    }
-
-    #[test]
-    fn primitive_raw_lines_reads_exact_verbatim_lines_in_document_mode() {
-        let spec = writer_doc_spec();
-        let text = "lines=2\nfn main() {\n    let x = 1;\n}\n";
-        let value = parse(text, &spec, &ParseOptions::default()).expect("parse");
-        assert_eq!(value.get(1), Some(&FieldValue::RawLines(vec!["fn main() {".to_string(), "    let x = 1;".to_string()])));
-    }
-
-    #[test]
-    fn primitive_raw_lines_lowers_to_one_escaped_token_in_inline_mode() {
-        let spec = writer_doc_spec();
-        let doc_text = "lines=2\nfirst line\nsecond line\n";
-        let doc_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Document };
-        let value = parse(doc_text, &spec, &doc_opts).expect("parse document");
-        let inline = print(&value, &spec, JoinMode::Inline);
-        assert!(!inline.contains('\n'), "inline rendering of raw lines must be one line: {inline:?}");
-        let inline_opts = ParseOptions { limits: Limits::default(), mode: SourceMode::Inline };
-        let reparsed = parse(&inline, &spec, &inline_opts).expect("reparse inline");
-        assert_eq!(reparsed.get(1), value.get(1));
     }
 
     // --- primitive 9: graph endpoints (wire literal) ---
@@ -1329,7 +1455,7 @@ mod tests {
             RecordLayout::Inline,
             vec![
                 FieldSpec::new(0, "pos", Shape::Tuple(Box::new(Shape::Float), Some(3))).positional(0),
-                FieldSpec::new(1, "tags", Shape::List(Box::new(Shape::Ident))).optional(),
+                FieldSpec::new(1, "tags", Shape::List(Box::new(Shape::Text))).optional(),
                 FieldSpec::new(2, "blob", Shape::Bytes64).optional(),
             ],
         )
@@ -1384,6 +1510,173 @@ mod tests {
         let spec = camera_spec();
         let error = parse("camera x=1\ny=notanumber zoom=1", &spec, &ParseOptions::default()).unwrap_err();
         assert_eq!(error.span.line, 2, "error span must point at the real line, not (1,1)");
+    }
+
+    // --- bare-string printing: `is_bare_ident` values print unquoted, reserved/number-shaped/
+    // multi-word values stay quoted (unified syntax law: strings bare-preferred) ---
+    #[test]
+    fn bare_strings_print_unquoted_and_reserved_or_number_shaped_values_stay_quoted() {
+        let spec = camera_spec();
+        let value = parse("camera x=1 y=2 zoom=3 label=alpha", &spec, &ParseOptions::default()).expect("parse");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("label=alpha"), "a bare-ident-shaped value must print unquoted: {printed}");
+        assert!(!printed.contains("\"alpha\""), "must not quote a value that already lexes as a bare ident: {printed}");
+
+        for reserved in ["_", "true", "3", "two words"] {
+            let mut writer = Writer::new();
+            print_shape(&FieldValue::Text(reserved.to_string()), &Shape::Text, &mut writer);
+            let out = writer.render(JoinMode::Inline);
+            assert!(out.starts_with('"') && out.ends_with('"'), "{reserved:?} must print quoted, got {out:?}");
+        }
+    }
+
+    // --- `Writer::glue()`: exact-string spacing assertions for every composite shape's
+    // `key=value` fusion (the "key= value" bug this replaces) ---
+    fn nested_point_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "x", Shape::Float), FieldSpec::new(1, "y", Shape::Float)])
+    }
+    fn marker_spec() -> RecordSpec {
+        RecordSpec::new(Some("marker"), RecordLayout::Inline, vec![FieldSpec::new(0, "at", Shape::Record(nested_point_spec))])
+    }
+    fn edge_keyed_wire_spec() -> RecordSpec {
+        RecordSpec::new(Some("edge2"), RecordLayout::Inline, vec![FieldSpec::new(0, "link", Shape::Wire)])
+    }
+    fn tags_map_spec() -> RecordSpec {
+        RecordSpec::new(Some("meta"), RecordLayout::Inline, vec![FieldSpec::new(0, "props", Shape::Map(Box::new(Shape::Text)))])
+    }
+
+    #[test]
+    fn glue_removes_the_key_equals_space_for_every_composite_shape() {
+        // List
+        let spec = geometry_spec();
+        let value = parse("vertex 1,2,3 tags=[a b c]", &spec, &ParseOptions::default()).expect("parse list");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("tags=[ a b c ]"), "List field must glue key= directly onto '[': {printed}");
+        assert!(!printed.contains("tags= ["), "must never leave a stray space after 'key=': {printed}");
+
+        // Value (dynamic)
+        let spec = value_spec();
+        let value = parse("payload data={a=1}", &spec, &ParseOptions::default()).expect("parse value");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("data={"), "Value field must glue key= directly onto '{{': {printed}");
+        assert!(!printed.contains("data= {"), "must never leave a stray space before the glued brace: {printed}");
+
+        // Map
+        let spec = tags_map_spec();
+        let value = parse("meta props={a=\"x\" b=\"y\"}", &spec, &ParseOptions::default()).expect("parse map");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("props={"), "Map field must glue key= directly onto '{{': {printed}");
+        assert_round_trip("meta props={a=\"x\" b=\"y\"}", &spec);
+
+        // Record (nested, un-blocked — prints inline without its own keyword)
+        let spec = marker_spec();
+        let value = parse("marker at=x=1 y=2", &spec, &ParseOptions::default()).expect("parse record");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("at=x=1"), "Record field must glue key= directly onto its first field: {printed}");
+        assert!(!printed.contains("at= x=1"), "must never leave a stray space before a nested record: {printed}");
+
+        // Wire (keyed, not positional)
+        let spec = edge_keyed_wire_spec();
+        let value = parse("edge2 link=a->b", &spec, &ParseOptions::default()).expect("parse wire");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("link=a->b"), "Wire field must glue key= directly onto the wire literal: {printed}");
+        assert!(!printed.contains("link= a"), "must never leave a stray space before a keyed wire literal: {printed}");
+    }
+
+    // --- wire `<-` normalization: accepted sugar only, always stored/printed as `->` with
+    // endpoints swapped ---
+    #[test]
+    fn wire_back_arrow_normalizes_to_forward_arrow_with_swapped_endpoints() {
+        let spec = wire_spec();
+        let backward = parse("edge b<-a", &spec, &ParseOptions::default()).expect("parse backward");
+        let forward = parse("edge a->b", &spec, &ParseOptions::default()).expect("parse forward");
+        assert_eq!(backward, forward, "'b<-a' must parse to the same value as 'a->b'");
+        let printed = print(&backward, &spec, JoinMode::Document);
+        assert!(printed.contains("a->b"), "must print using '->': {printed}");
+        assert!(!printed.contains("<-"), "must never print '<-': {printed}");
+    }
+
+    #[test]
+    fn parse_wire_text_parses_a_standalone_wire_literal_with_back_arrow() {
+        let value = parse_wire_text("b<-a").expect("parse_wire_text");
+        assert_eq!(value.from.id, "a");
+        let (directed, to) = value.edge.expect("edge");
+        assert!(directed);
+        assert_eq!(to.id, "b");
+    }
+
+    // --- primitive 17: `Shape::Table` — SoA columnar collection ---
+    fn table_row_spec() -> RecordSpec {
+        RecordSpec::new(
+            None,
+            RecordLayout::Inline,
+            vec![
+                FieldSpec::new(0, "id", Shape::Text),
+                FieldSpec::new(1, "x", Shape::Float),
+                FieldSpec::new(2, "y", Shape::Float),
+                FieldSpec::new(3, "link", Shape::Wire).optional(),
+            ],
+        )
+    }
+    fn table_doc_spec() -> RecordSpec {
+        RecordSpec::new(Some("scene"), RecordLayout::Inline, vec![FieldSpec::new(0, "nodes", Shape::Table(table_row_spec))])
+    }
+
+    #[test]
+    fn table_soa_round_trips_with_underscore_absent_cell_and_a_wire_column() {
+        let spec = table_doc_spec();
+        let text = "scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }";
+        assert_round_trip(text, &spec);
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse");
+        let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
+        assert_eq!(rows.len(), 2);
+        let FieldValue::Record(row0) = &rows[0] else { panic!("expected a Record row") };
+        assert_eq!(row0.get(3), Some(&FieldValue::Absent), "the '_' cell must parse as Absent");
+        let FieldValue::Record(row1) = &rows[1] else { panic!("expected a Record row") };
+        assert!(matches!(row1.get(3), Some(FieldValue::Wire(_))), "the wire-typed column must parse as FieldValue::Wire");
+
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "header must print tight SoA, no inner spaces: {printed}");
+    }
+
+    #[test]
+    fn table_accepts_verbose_aos_input_and_canonicalizes_to_soa_output() {
+        let spec = table_doc_spec();
+        let aos_text = "scene nodes=[ id=a x=1 y=2  id=b x=3 y=4 ]";
+        let value = parse(aos_text, &spec, &ParseOptions::default()).expect("parse AoS-verbose");
+        let printed = print(&value, &spec, JoinMode::Document);
+        assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM link:WIRE]"), "AoS input must canonicalize to the SoA header on print: {printed}");
+        assert!(!printed.contains("nodes="), "must never print the old AoS '=' form: {printed}");
+        let reparsed = parse(&printed, &spec, &ParseOptions::default()).expect("reparse canonicalized SoA");
+        assert_eq!(value, reparsed, "AoS-in/SoA-out must still round trip to the same value");
+    }
+
+    #[test]
+    fn table_header_without_explicit_type_tags_is_still_parseable() {
+        let spec = table_doc_spec();
+        let text = "scene nodes [id x y link] { a 1 2 _  b 3 4 a@out->b@in }";
+        let value = parse(text, &spec, &ParseOptions::default()).expect("parse header without explicit types");
+        let FieldValue::List(rows) = value.get(0).unwrap() else { panic!("expected a table (List) value") };
+        assert_eq!(rows.len(), 2);
+    }
+
+    #[test]
+    fn table_document_and_inline_renders_agree() {
+        let spec = table_doc_spec();
+        assert_document_inline_agree("scene nodes [id:TEXT x:NUM y:NUM link:WIRE] { a 1 2 _  b 3 4 a@out->b@in }", &spec);
+    }
+
+    #[test]
+    fn table_rejects_non_self_delimiting_column_shapes_at_spec_build_time() {
+        fn unbounded_tuple_row_spec() -> RecordSpec {
+            RecordSpec::new(None, RecordLayout::Inline, vec![FieldSpec::new(0, "vals", Shape::Tuple(Box::new(Shape::Float), None))])
+        }
+        fn bad_table_doc_spec() -> RecordSpec {
+            RecordSpec::new(Some("bad"), RecordLayout::Inline, vec![FieldSpec::new(0, "rows", Shape::Table(unbounded_tuple_row_spec))])
+        }
+        let spec = bad_table_doc_spec();
+        let result = parse("bad rows [vals:TUPLE] { 1,2,3 }", &spec, &ParseOptions::default());
+        assert!(result.is_err(), "an unbounded Tuple column must be rejected, not silently accepted");
     }
 
     // --- idempotent canonicalization ---

@@ -10625,7 +10625,8 @@ export function sketchpadSetHomeDropzoneOverlayVisible(visible: boolean): void {
     overlay = document.createElement("div");
     overlay.id = SKETCHPAD_HOME_DROPZONE_OVERLAY_ID;
     overlay.setAttribute("data-testid", "sketchpad-home-dropzone-overlay");
-    overlay.className = "pointer-events-none fixed inset-0 z-50 flex items-center justify-center bg-base/80 backdrop-blur-sm";
+    overlay.setAttribute("data-level", "dialog");
+    overlay.className = "pointer-events-none fixed inset-0 z-50 flex items-center justify-center ui-glass";
     const inner = document.createElement("div");
     inner.className = "flex flex-col items-center gap-2 px-6 text-center";
     const title = document.createElement("p");
@@ -16520,6 +16521,8 @@ if (import.meta.vitest) {
       const overlay = document.getElementById(SKETCHPAD_HOME_DROPZONE_OVERLAY_ID);
       expect(overlay).toBeTruthy();
       expect(overlay?.classList.contains("hidden")).toBe(false);
+      expect(overlay?.getAttribute("data-level")).toBe("dialog");
+      expect(overlay?.classList.contains("ui-glass")).toBe(true);
       sketchpadSetHomeDropzoneOverlayVisible(false);
       expect(overlay?.classList.contains("hidden")).toBe(true);
     });

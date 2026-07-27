@@ -722,7 +722,7 @@ pub mod id {
         }
         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
             match value {
-                dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(Self(s.clone())),
+                dsl::FieldValue::Text(s) => Ok(Self(s.clone())),
                 other => Err(format!("expected Text, found {other:?}")),
             }
         }

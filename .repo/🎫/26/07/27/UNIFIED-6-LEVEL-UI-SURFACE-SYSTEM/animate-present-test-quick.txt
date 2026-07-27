@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/animate-present-renderer-react:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/animate/present/renderer/react
+
+No test files found, exiting with code 0
+
+filter: quick
+include: index.tsx
+exclude:  **/node_modules/**, **/.git/**
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/animate-present-renderer-react
+
+

@@ -164,7 +164,7 @@ const ControlTreeDemo = () => {
   ];
   return (
     <LevelProvider level="panel">
-      <div className="bg-panel border p-2 w-[320px]">
+      <div className="ui-surface border p-2 w-[320px]" data-level="panel">
         <div className="mb-2">
           <input type="text" placeholder="Filter controls..." value={filterText} onChange={(e) => setFilterText(e.target.value)} className="w-full h-6 px-2 text-xs border bg-transparent text-foreground placeholder:text-muted-foreground" />
         </div>

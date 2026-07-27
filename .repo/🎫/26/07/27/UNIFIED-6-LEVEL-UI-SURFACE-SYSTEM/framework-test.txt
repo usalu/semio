@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/framework-renderer-react:test
+
+> bun ./script.ts test
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+[0m[31m[budget] /Users/ueli/.bun/bin/bun /Users/ueli/Documents/semio/node_modules/vitest/vitest.mjs run --config vitest.config.ts --passWithNoTests exceeded 15000ms — killed. Trim it, or assign it to a higher level (quick/long/exhaustive).[0m
+Warning: command "bun ./script.ts test" exited with non-zero status code
+
+
+ NX   Running target test for project @semio-tech/framework-renderer-react failed
+
+Failed tasks:
+
+- @semio-tech/framework-renderer-react:test
+
+Hint: run the command with --verbose for more details.
+

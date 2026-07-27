@@ -70,7 +70,11 @@ if (!rootElement) {
   throw new Error("Renderer root element '#root' is missing.");
 }
 
-createRoot(rootElement).render(<div className="flex h-screen w-screen items-center justify-center bg-neutral-950 text-white">Loading sketchpad…</div>);
+createRoot(rootElement).render(
+  <div className="flex h-screen w-screen items-center justify-center ui-surface text-white" data-level="base">
+    Loading sketchpad…
+  </div>,
+);
 
 void (async () => {
   try {

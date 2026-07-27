@@ -6,6 +6,7 @@
 import {
   cn,
   floatingRibbonSurfaceClass,
+  LevelProvider,
   reactHostPort,
   resolveSceneGizmoViewportPlacement,
   sceneHostPort,
@@ -1945,8 +1946,10 @@ export function WorldProjectionKindSwitch(props: WorldProjectionKindSwitchProps)
   const items = reactHostPort.useMemo(() => worldProjectionSwitchTreeItems(templates, props.onSpecChange, props.spec), [templates, props.onSpecChange, props.spec]);
   const selectedId = worldProjectionTemplateSelectionId(props.spec);
   return (
-    <div className={shellClass} data-world-projection-kind-switch>
-      <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: "projection-modes", items }]} />
+    <div className={shellClass} data-world-projection-kind-switch data-level="window">
+      <LevelProvider level="window">
+        <Tree showLines={false} sortableSections={false} selectionMode="single" selectedIds={[selectedId]} sections={[{ id: "projection-modes", items }]} />
+      </LevelProvider>
     </div>
   );
 }
@@ -1967,7 +1970,7 @@ export function WorldOrbitProjectionSwitch(props: WorldOrbitProjectionSwitchProp
   const shellClass = props.className ?? cn("pointer-events-auto flex text-2xs font-medium", floatingRibbonSurfaceClass);
   const buttonClass = (active: boolean) => cn("px-2 py-1 transition-colors text-muted-foreground hover:text-emphasized", active && "text-emphasized");
   return (
-    <div className={shellClass} data-world-projection-switch>
+    <div className={shellClass} data-world-projection-switch data-level="window">
       <button type="button" className={buttonClass(props.projection === "orthographic")} aria-pressed={props.projection === "orthographic"} onClick={() => props.onProjectionChange("orthographic")}>
         Ortho
       </button>

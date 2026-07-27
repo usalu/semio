@@ -150,10 +150,7 @@ STYLING_OPACITIES: Final[dict[str, float]] = {
     "disabledPanelMixAlpha": 128,
     "labelHaloAlpha": 200,
     "selectionPreviewStrokeAlpha": 180,
-    "handleFillTransparent": 0,
-    "glassPanelAlpha": 0.58,
-    "glassMenuAlpha": 0.36,
-    "glassWindowOptionsAlpha": 0.22
+    "handleFillTransparent": 0
 }
 STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
     "camera": {
@@ -309,11 +306,7 @@ STYLING_METRICS: Final[dict[str, dict[str, float | list[float]]]] = {
         "panelHeaderHeightUiSpacing": 7,
         "gapStandardUiSpacing": 1,
         "paddingStandardUiSpacing": 1,
-        "panelInsetUiSpacing": 1,
-        "glassBlurPx": 24,
-        "glassPanelBlurPx": 40,
-        "glassWindowOptionsBlurPx": 14,
-        "glassSaturate": 1.45
+        "panelInsetUiSpacing": 1
     },
     "typography": {
         "text2xsPx": 9.6,
@@ -406,9 +399,6 @@ CANVAS_DARK: Final[CanvasPalette] = CanvasPalette(raster_clear=(12, 28, 33, 255)
 @dataclass(frozen=True, slots=True)
 class ChromePalette:
     base: tuple[int, int, int, int]
-    canvas: tuple[int, int, int, int]
-    window: tuple[int, int, int, int]
-    panel: tuple[int, int, int, int]
     foreground: tuple[int, int, int, int]
     muted_foreground: tuple[int, int, int, int]
     accent: tuple[int, int, int, int]
@@ -417,16 +407,24 @@ class ChromePalette:
     active_foreground: tuple[int, int, int, int]
     active_hover: tuple[int, int, int, int]
     hover_interactive_fill: tuple[int, int, int, int]
-    hover_window: tuple[int, int, int, int]
-    hover_panel: tuple[int, int, int, int]
     border_normal: tuple[int, int, int, int]
     border_emphasized: tuple[int, int, int, int]
     border_element: tuple[int, int, int, int]
-    temporary: tuple[int, int, int, int]
-    overlay_bg: tuple[int, int, int, int]
+    level_base: tuple[int, int, int, int]
+    element_base: tuple[int, int, int, int]
+    level_window: tuple[int, int, int, int]
+    element_window: tuple[int, int, int, int]
+    level_pane: tuple[int, int, int, int]
+    element_pane: tuple[int, int, int, int]
+    level_panel: tuple[int, int, int, int]
+    element_panel: tuple[int, int, int, int]
+    level_dialog: tuple[int, int, int, int]
+    element_dialog: tuple[int, int, int, int]
+    level_menu: tuple[int, int, int, int]
+    element_menu: tuple[int, int, int, int]
 
-CHROME_LIGHT: Final[ChromePalette] = ChromePalette(base=(247, 243, 227, 255), canvas=(240, 236, 221, 255), window=(235, 232, 217, 255), panel=(201, 200, 189, 255), foreground=(0, 17, 23, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(0, 17, 23, 255), active_base=(255, 52, 79, 255), active_foreground=(0, 17, 23, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), hover_window=(211, 210, 197, 255), hover_panel=(162, 165, 157, 255), border_normal=(123, 130, 125, 255), border_emphasized=(0, 17, 23, 255), border_element=(123, 130, 125, 255), temporary=(151, 155, 148, 255), overlay_bg=(151, 155, 148, 250))
-CHROME_DARK: Final[ChromePalette] = ChromePalette(base=(0, 17, 23, 255), canvas=(12, 28, 33, 255), window=(7, 24, 29, 255), panel=(29, 43, 47, 255), foreground=(247, 243, 227, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(247, 243, 227, 255), active_base=(255, 52, 79, 255), active_foreground=(247, 243, 227, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), hover_window=(36, 50, 53, 255), hover_panel=(85, 95, 93, 255), border_normal=(123, 130, 125, 255), border_emphasized=(247, 243, 227, 255), border_element=(123, 130, 125, 255), temporary=(36, 50, 53, 255), overlay_bg=(36, 50, 53, 250))
+CHROME_LIGHT: Final[ChromePalette] = ChromePalette(base=(247, 243, 227, 255), foreground=(0, 17, 23, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(0, 17, 23, 255), active_base=(255, 52, 79, 255), active_foreground=(0, 17, 23, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), border_normal=(123, 130, 125, 255), border_emphasized=(0, 17, 23, 255), border_element=(123, 130, 125, 255), level_base=(247, 243, 227, 255), element_base=(123, 130, 125, 255), level_window=(233, 230, 215, 255), element_window=(115, 122, 118, 255), level_pane=(218, 217, 204, 255), element_pane=(106, 115, 112, 255), level_panel=(204, 205, 193, 255), element_panel=(98, 108, 105, 255), level_dialog=(190, 192, 181, 255), element_dialog=(90, 100, 99, 255), level_menu=(176, 180, 170, 255), element_menu=(82, 93, 92, 255))
+CHROME_DARK: Final[ChromePalette] = ChromePalette(base=(0, 17, 23, 255), foreground=(247, 243, 227, 255), muted_foreground=(123, 130, 125, 255), accent=(255, 52, 79, 255), accent_foreground=(247, 243, 227, 255), active_base=(255, 52, 79, 255), active_foreground=(247, 243, 227, 255), active_hover=(230, 47, 71, 255), hover_interactive_fill=(123, 130, 125, 255), border_normal=(123, 130, 125, 255), border_emphasized=(247, 243, 227, 255), border_element=(123, 130, 125, 255), level_base=(0, 17, 23, 255), element_base=(123, 130, 125, 255), level_window=(6, 26, 31, 255), element_window=(130, 136, 131, 255), level_pane=(17, 35, 40, 255), element_pane=(137, 143, 137, 255), level_panel=(28, 45, 49, 255), element_panel=(144, 149, 143, 255), level_dialog=(39, 55, 58, 255), element_dialog=(151, 156, 148, 255), level_menu=(50, 65, 67, 255), element_menu=(159, 163, 154, 255))
 
 @dataclass(frozen=True, slots=True)
 class MapPalette:

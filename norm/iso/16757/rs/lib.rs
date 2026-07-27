@@ -25,7 +25,7 @@ impl dsl::DslField for CatalogueId {
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(CatalogueId(s.clone())),
+            dsl::FieldValue::Text(s) => Ok(CatalogueId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }

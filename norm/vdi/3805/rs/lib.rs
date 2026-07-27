@@ -1687,7 +1687,7 @@ impl dsl::DslField for RecordFamilyId {
     }
     fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
         match value {
-            dsl::FieldValue::Text(s) | dsl::FieldValue::Ident(s) => Ok(RecordFamilyId(s.clone())),
+            dsl::FieldValue::Text(s) => Ok(RecordFamilyId(s.clone())),
             other => Err(format!("expected Text, found {other:?}")),
         }
     }

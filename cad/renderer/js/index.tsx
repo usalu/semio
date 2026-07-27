@@ -23,6 +23,7 @@ import {
   humanizeEngagementStepId,
   Input,
   isUiTypingTarget,
+  LevelProvider,
   marqueeCoverageFromGesture,
   normalizeEngagementActionText,
   Pane,
@@ -5989,13 +5990,13 @@ export function InteractionRepl({
   const dragOverlayPoints = dragSelection && dragOverlayRect ? dragSelection.path.map((point) => ({ x: point.x - dragOverlayRect.left, y: point.y - dragOverlayRect.top })) : [];
 
   return (
-    <div className={fillHost ? canvasHostRootClass : editorShellRootClass} style={rootStyle}>
+    <div className={fillHost ? canvasHostRootClass : editorShellRootClass} data-level="base" style={rootStyle}>
       <div className="relative min-h-0 min-w-0 flex-1">
         <InteractionCanvas
           {...canvasOverrides}
           managedCamera={spatialViewOverrides?.cameraView !== undefined}
           frameloop={canvasFrameloop}
-          className={cn("bg-canvas", canvasOverrides?.className)}
+          className={cn("bg-transparent", canvasOverrides?.className)}
           onCanvasReady={handleCanvasReady}
           overlay={<WorldOrbitProjectionSwitchPane spec={projectionSpec} onSpecChange={handleProjectionSpecChange} />}
         >
@@ -6092,7 +6093,8 @@ export function InteractionRepl({
         ) : null}
       </div>
       {showAside ? (
-        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-floating-menu-lg shrink-0")} style={asideStyle}>
+        <aside className={cn(floatingPaneAsideClass, fillHost ? "max-h-[45%] w-full shrink-0 border-l-0 border-t" : "w-layout-floating-menu-lg shrink-0")} style={asideStyle} data-level="pane">
+        <LevelProvider level="pane">
           <strong className="text-sm font-semibold">Editor</strong>
           <div className="flex flex-wrap gap-half">
             {transitionRows.map((row) => (
@@ -6101,7 +6103,7 @@ export function InteractionRepl({
               </Button>
             ))}
           </div>
-          <div className={cn("relative grid overflow-visible", floatingFieldSurfaceClass)}>
+          <div className={cn("relative grid overflow-visible", floatingFieldSurfaceClass)} data-level="menu">
             <Input
               ref={cmdRef}
               type="text"
@@ -6141,6 +6143,7 @@ export function InteractionRepl({
               <div
                 onPointerDown={(e) => e.stopPropagation()}
                 className={cn("absolute top-[calc(100%+var(--spacing-double))] right-0 z-[3] max-h-layout-floating-menu-sm w-layout-floating-menu-md max-w-[calc(100vw-var(--size-xl))] overflow-y-auto p-single", floatingMenuSurfaceClass)}
+                data-level="menu"
               >
                 {interactionMatches.length ? (
                   interactionMatches.map((suggestion) => (
@@ -6412,6 +6415,7 @@ export function InteractionRepl({
               </ul>
             ) : null}
           </div>
+        </LevelProvider>
         </aside>
       ) : null}
     </div>

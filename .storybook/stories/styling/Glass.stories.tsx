@@ -1,18 +1,18 @@
 // #region 🧲Header
 // 💻 .storybook/stories/styling/Glass.stories.tsx
-// Specs: Docs gallery for `GlassTierProvider`/`useGlassTier`/`getGlassSurfaceClass` (`@semio-tech/ui-react`) across every `GlassTier`.
-// Summary: `getGlassSurfaceClass` maps a `GlassTier` ("panel"|"ribbon"|"menu"|"windowOptions") to one of the `ui-glass-*` Tailwind `@utility` classes defined in `ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill over `--panel`/`--temporary`). Each swatch renders over a colorful backdrop so the blur/alpha differences across tiers are visible without needing WebGL or a running plugin.
+// Specs: Docs gallery for the `Level` context (`LevelProvider`/`useLevel`) and its two glass fills (`@semio-tech/ui-react`) across every `Level`.
+// Summary: `glassClass`/`glassChromeClass` are generic Tailwind `@utility` classes defined in `ui/styling/js/ui.css` (backdrop-filter blur/saturate + a `color-mix` fill); their alpha/blur are derived per the `[data-level="…"]` ancestor the swatch is stamped with — not per a hand-picked tier. Each swatch renders over a colorful backdrop so the blur/alpha differences across levels are visible without needing WebGL or a running plugin.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { ReactElement } from "react";
 
-import { getGlassSurfaceClass, GlassTierProvider, useGlassTier, type GlassTier } from "@semio-tech/ui-react";
+import { glassChromeClass, glassClass, LEVELS, LevelProvider, useLevel, type Level } from "@semio-tech/ui-react";
 import { galleryPageStyle } from "../../styling/index.tsx";
 
-//#region 🔖Tiers
-const GLASS_TIERS: readonly GlassTier[] = ["panel", "ribbon", "menu", "windowOptions"];
+//#region 🔖Variants
+type GlassVariant = "glass" | "chrome";
 
 /** @emoji 🌈 Busy backdrop every glass swatch sits over — a flat background would make blur/saturate differences invisible. */
 const BACKDROP_STYLE = {
@@ -21,46 +21,52 @@ const BACKDROP_STYLE = {
   padding: 24,
   borderRadius: 10,
 } as const;
-//#endregion 🔖Tiers
+//#endregion 🔖Variants
 
-//#region 🔖GlassTierSwatch
-/** @emoji 🪟 Reads the tier from context via `useGlassTier()` (falling back to "menu" per its own contract) rather than taking it as a prop — this is what a real consumer nested under `GlassTierProvider` does. */
-function GlassTierReader(): ReactElement {
-  const tier = useGlassTier();
-  const glassClass = getGlassSurfaceClass(tier);
+//#region 🔖LevelGlassSwatch
+/** @emoji 🪟 Reads the level from context via `useLevel()` (falling back to `"base"` per its own contract) rather than taking it as a prop — this is what a real consumer nested under `LevelProvider` does. */
+function LevelGlassReader({ variant }: { readonly variant: GlassVariant }): ReactElement {
+  const level = useLevel();
+  const swatchClass = variant === "chrome" ? glassChromeClass : glassClass;
   return (
-    <div className={glassClass} style={{ borderRadius: 8, border: "1px solid rgba(128, 128, 128, 0.4)", padding: "20px 16px", minWidth: 160, textAlign: "center" }}>
-      <div style={{ fontSize: 13, fontWeight: 600 }}>{tier}</div>
-      <div style={{ fontSize: 11, opacity: 0.7, fontFamily: "monospace" }}>.{glassClass}</div>
+    <div data-level={level} className={swatchClass} style={{ borderRadius: 8, border: "1px solid rgba(128, 128, 128, 0.4)", padding: "20px 16px", minWidth: 160, textAlign: "center" }}>
+      <div style={{ fontSize: 13, fontWeight: 600 }}>{level}</div>
+      <div style={{ fontSize: 11, opacity: 0.7, fontFamily: "monospace" }}>.{swatchClass}</div>
     </div>
   );
 }
 
-/** @emoji 🪟 One `GlassTierProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
-function GlassTierSwatch({ tier }: { readonly tier: GlassTier }): ReactElement {
+/** @emoji 🪟 One `LevelProvider` boundary + a reader nested inside — demonstrates the provider/hook contract, not just the class lookup table. */
+function LevelGlassSwatch({ level, variant }: { readonly level: Level; readonly variant: GlassVariant }): ReactElement {
   return (
-    <GlassTierProvider tier={tier}>
-      <GlassTierReader />
-    </GlassTierProvider>
+    <LevelProvider level={level}>
+      <LevelGlassReader variant={variant} />
+    </LevelProvider>
   );
 }
-//#endregion 🔖GlassTierSwatch
+//#endregion 🔖LevelGlassSwatch
 
 //#region 🔖Gallery
 function GlassGallery(): ReactElement {
   return (
     <div style={galleryPageStyle}>
       <div style={BACKDROP_STYLE}>
-        <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
-          {GLASS_TIERS.map((tier) => (
-            <GlassTierSwatch key={tier} tier={tier} />
-          ))}
+        <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            {LEVELS.map((level) => (
+              <LevelGlassSwatch key={`glass-${level}`} level={level} variant="glass" />
+            ))}
+          </div>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 16 }}>
+            {LEVELS.map((level) => (
+              <LevelGlassSwatch key={`chrome-${level}`} level={level} variant="chrome" />
+            ))}
+          </div>
         </div>
       </div>
       <p style={{ fontSize: 12, opacity: 0.6, maxWidth: 640 }}>
-        Each card is a `GlassTierProvider` boundary around a `useGlassTier()` reader — `getGlassSurfaceClass(tier)` resolves to `ui-glass-panel` / `ui-glass-ribbon` / `ui-glass-menu` /
-        `ui-glass-window-options`, whose blur radius and fill alpha come from the active theme's <code>chrome.glassBlurPx</code>/<code>chrome.glassPanelBlurPx</code>/
-        <code>chrome.glassWindowOptionsBlurPx</code> metrics and <code>opacities.glassPanelAlpha</code>/<code>glassMenuAlpha</code>/<code>glassWindowOptionsAlpha</code> (see the `theme` toolbar).
+        Each card is a `LevelProvider` boundary around a `useLevel()` reader — `.ui-glass` / `.ui-glass-chrome` resolve their alpha and blur from the `[data-level]` ancestor via the formula
+        in the levels contract (<code>base=0..menu=5</code>), never a hand-picked per-tier value (see the `theme` toolbar).
       </p>
     </div>
   );
@@ -81,34 +87,34 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 //#region 🔖Stories
-export const AllTiers: Story = {};
+export const AllLevels: Story = {};
 
-export const PanelTier: Story = {
+export const PanelLevel: Story = {
   render: () => (
     <div style={galleryPageStyle}>
       <div style={BACKDROP_STYLE}>
-        <GlassTierSwatch tier="panel" />
+        <LevelGlassSwatch level="panel" variant="glass" />
       </div>
     </div>
   ),
 };
 
-export const WindowOptionsTier: Story = {
+export const PaneLevelChrome: Story = {
   render: () => (
     <div style={galleryPageStyle}>
       <div style={BACKDROP_STYLE}>
-        <GlassTierSwatch tier="windowOptions" />
+        <LevelGlassSwatch level="pane" variant="chrome" />
       </div>
     </div>
   ),
 };
 
-/** @emoji 🪝 Outside any `GlassTierProvider`, `useGlassTier()` falls back to `"menu"` per its own docstring contract. */
-export const DefaultTierFallback: Story = {
+/** @emoji 🪝 Outside any `LevelProvider`, `useLevel()` falls back to `"base"` per its own docstring contract. */
+export const DefaultLevelFallback: Story = {
   render: () => (
     <div style={galleryPageStyle}>
       <div style={BACKDROP_STYLE}>
-        <GlassTierReader />
+        <LevelGlassReader variant="glass" />
       </div>
     </div>
   ),

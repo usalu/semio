@@ -855,6 +855,18 @@
   --z-panel: 10;
   --z-overlay: 20;
   --z-temporary: 30;
+  /* #region 🪜LevelZScale — formula z(k) = k * --z-step (zStep=10), k=0..5 for base..menu (see
+     contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). --z-base/
+     -window/-panel are shared names with the OLD level scale above and are superseded here to the
+     new formula-derived values; --z-canvas/-overlay/-temporary keep their old values untouched
+     until the Cleanup phase removes their last consumers. */
+  --z-base: 0;
+  --z-window: 10;
+  --z-pane: 20;
+  --z-panel: 30;
+  --z-dialog: 40;
+  --z-menu: 50;
+  /* #endregion 🪜LevelZScale */
   --z-navbar: 100;
   --z-modal: 1000;
   --z-tutorial: 10000;
@@ -870,6 +882,19 @@
   /* 🎓 Deliberately more transparent than --glass-panel-alpha so an introduction's info box reads as
      less see-through than the veil it sits on. */
   --glass-veil-alpha: 0.38;
+  /* #region 🎚️LevelKnobs — formula knobs for the unified 6-level surface system (base=0 window=1
+     pane=2 panel=3 dialog=4 menu=5); ui.css and ui/styling/tokens.json's "levels" block must stay
+     in lockstep (see contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt).
+     --glass-saturate above (1.45) is reused as-is by the new glass utilities, no duplicate knob. */
+  --level-shade-step: 5%;
+  --glass-alpha-step: 0.12;
+  --glass-blur-step: 0.5rem;
+  --glass-chrome-alpha-factor: 0.5;
+  --element-shade-step: 6%;
+  --hover-shade-step: 12%;
+  --veil-alpha: 0.4;
+  --veil-blur: 0.5rem;
+  /* #endregion 🎚️LevelKnobs */
   --scrollbar-size: var(--spacing-double);
   --color-background: var(--base);
   --color-base: var(--base);
@@ -929,6 +954,63 @@
 [data-level="temporary"] {
   --border-element-color: var(--element-temporary);
 }
+
+/* #region 🎚️LevelSurfaces — new 6-level surface system (base=0 window=1 pane=2 panel=3 dialog=4
+   menu=5). Each block redeclares the same formula with its literal k baked in, since CSS custom
+   properties cannot be recomputed per-descendant (see contract CSS MECHANISM section); this is
+   still 100% formula-derived off --level-shade-step/--glass-alpha-step/--glass-blur-step/
+   --element-shade-step/--hover-shade-step above, just unrolled six times. base is combined with
+   `:root` so undecorated content defaults to base level. The old base/canvas/window/panel/overlay/
+   temporary blocks above stay until the Cleanup phase confirms --border-element-color is unused. */
+:root,
+[data-level="base"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(0 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 0 * var(--glass-alpha-step));
+  --surface-blur: calc(0 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(0 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+
+[data-level="window"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(1 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 1 * var(--glass-alpha-step));
+  --surface-blur: calc(1 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(1 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+
+[data-level="pane"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(2 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 2 * var(--glass-alpha-step));
+  --surface-blur: calc(2 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(2 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+
+[data-level="panel"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(3 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 3 * var(--glass-alpha-step));
+  --surface-blur: calc(3 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(3 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+
+[data-level="dialog"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(4 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 4 * var(--glass-alpha-step));
+  --surface-blur: calc(4 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(4 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+
+[data-level="menu"] {
+  --surface-bg: color-mix(in oklab, var(--base), var(--foreground) calc(5 * var(--level-shade-step)));
+  --surface-alpha: calc(1 - 5 * var(--glass-alpha-step));
+  --surface-blur: calc(5 * var(--glass-blur-step));
+  --element-color: color-mix(in oklab, var(--color-gray), var(--foreground) calc(5 * var(--element-shade-step)));
+  --surface-hover: color-mix(in oklab, var(--surface-bg), var(--foreground) var(--hover-shade-step));
+}
+/* #endregion 🎚️LevelSurfaces */
 
 @utility border-normal {
   border-color: var(--border-normal-color);
@@ -6734,6 +6816,22 @@
   z-index: var(--z-temporary);
 }
 
+/* #region 🪜LevelZUtilities — z-pane/z-dialog/z-menu are new; z-base/z-window/z-panel above
+   already read var(--z-base/-window/-panel), which now resolve to the new formula values declared
+   in the 🪜LevelZScale region, so no duplicate @utility is needed for those three. */
+@utility z-pane {
+  z-index: var(--z-pane);
+}
+
+@utility z-dialog {
+  z-index: var(--z-dialog);
+}
+
+@utility z-menu {
+  z-index: var(--z-menu);
+}
+/* #endregion 🪜LevelZUtilities */
+
 @utility z-navbar {
   z-index: var(--z-navbar);
 }
@@ -6745,6 +6843,40 @@
 @utility z-tutorial {
   z-index: var(--z-tutorial);
 }
+
+/* #region 🪟LevelGlassUtilities — the 4 generic fill utilities that replace ALL bg-base/canvas/
+   window/panel/overlay/temporary surface fills and ALL 5 ui-glass-* classes below, once every
+   consumer switches to `[data-level]` + one of these (see contract). ui-surface is an opaque
+   per-level fill; ui-glass/ui-glass-chrome are per-level glass fills (chrome = half-alpha glass
+   for attached chrome like ribbons/rails); ui-veil is the fullscreen scrim whose host must carry
+   data-level="dialog" for correct tint. The old ui-glass-panel/-veil/-ribbon/-menu/-window-options
+   utilities stay until the Cleanup phase confirms nothing references them anymore. */
+@utility ui-surface {
+  background-color: var(--surface-bg);
+}
+
+@utility ui-glass {
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
+}
+
+@utility ui-glass-chrome {
+  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(
+    in srgb,
+    var(--surface-bg) calc(var(--surface-alpha) * var(--glass-chrome-alpha-factor) * 100%),
+    transparent
+  );
+}
+
+@utility ui-veil {
+  -webkit-backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
+  backdrop-filter: blur(var(--veil-blur)) saturate(var(--glass-saturate));
+  background-color: color-mix(in srgb, var(--surface-bg) calc(var(--veil-alpha) * 100%), transparent);
+}
+/* #endregion 🪟LevelGlassUtilities */
 
 @utility ui-glass-panel {
   -webkit-backdrop-filter: blur(var(--glass-panel-blur)) saturate(var(--glass-saturate));
@@ -6790,27 +6922,9 @@
   transition: stroke 120ms ease;
 }
 
-/* 🎓 Introduction step body hover: emphasize all window content (title chip, body copy/checklist/
- * icons, step chip, close) while the pointer is inside the body. Celebrate paint keeps
- * `color: transparent` — leave `[data-celebrated="true"]` alone. Cap/footer still use their
- * own hover when the pointer is on those chips instead of the body. */
-[data-slot="introduction-info-box"]:has([data-slot="window-chrome-body"]:hover)
-  :is(
-    [data-slot="introduction-info-box-chip"],
-    [data-slot="introduction-step-chip"],
-    [data-slot="window-chrome-controls"],
-    [data-slot="introduction-close"]
-  ),
-[data-slot="introduction-info-box"]:has([data-slot="window-chrome-body"]:hover)
-  :is(
-    [data-slot="introduction-info-box-chip"],
-    [data-slot="introduction-step-chip"],
-    [data-slot="window-chrome-controls"],
-    [data-slot="introduction-close"]
-  )
-  :is(span, [data-slot="drag-handle"], [data-icon], [data-icon-kind]),
-[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]:hover
-  :is(p, li, span, [data-icon], [data-icon-kind]):not([data-celebrated="true"]) {
+/* 🎓 Introduction step body: emphasize only the paragraph under the pointer — never the
+ * whole body, sibling paragraphs, chips, or checklist. */
+[data-slot="introduction-info-box"] [data-slot="introduction-body-paragraph"]:hover {
   color: var(--border-emphasized-color);
   transition: color 120ms ease;
 }

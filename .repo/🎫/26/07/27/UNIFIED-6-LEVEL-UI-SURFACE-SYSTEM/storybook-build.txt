@@ -1,0 +1,45 @@
+
+┌  Building storybook v10.4.1
+│
+◇  Cleaning outputDir: storybook-static
+│
+◇  Loading presets
+│
+◇  Building manager..
+│
+●  Building preview..
+│  Vite vite v7.3.3 building client environment for production...
+│  Vite transforming...
+│
+▲  Vite node_modules/react-router/dist/development/index.mjs (11:0):
+│  Module level directives cause errors when bundled, "use client" in
+│  "node_modules/react-router/dist/development/index.mjs" was ignored.
+│
+▲  Vite [plugin vite:react-docgen-typescript] .storybook/preview.tsx:
+│  Skipping docgen for
+│  "/Users/ueli/Documents/semio/.storybook/preview.tsx" because it is not
+│  included in the active TypeScript project.
+│  Vite ✓ 163 modules transformed.
+│
+■  Vite ✗ Build failed in 12.57s
+│
+■  Failed to build the preview
+│
+■  [static-dir-build/renderer-modules] ENOENT, No such file or directory
+│  './storybook-static/renderer-modules/wgpu/plugin-modules/sequence'
+│  at copyDir (node:internal/fs/cp/cp-sync:145:22)
+│  at onDir (node:internal/fs/cp/cp-sync:136:25)
+│  at getStats (node:internal/fs/cp/cp-sync:68:12)
+│  at cpSyncFn (node:internal/fs/cp/cp-sync:58:10)
+│  at cpSync (node:fs:3147:3)
+│  at Object.closeBundle
+│  (file://./ui/styling/vite-elements-assets.ts:1134:9)
+│  at Object.handler
+│  (file://./node_modules/vite/dist/node/chunks/config.js:33763:13)
+│  at file://./node_modules/rollup/dist/es/shared/node-entry.js:22988:40
+│  at async Promise.all (index 2)
+│  at async PluginDriver.hookParallel
+│  (file://./node_modules/rollup/dist/es/shared/node-entry.js:22898:9)
+│
+└  Storybook exited with an error
+

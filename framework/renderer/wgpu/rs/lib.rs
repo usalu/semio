@@ -15,7 +15,7 @@ use semio_framework_core::AppDefinition;
 use std::collections::HashMap;
 use ui_wgpu::{
     chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border,
-    even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, GlassTier,
+    even_window_layout, ActionDescriptor, DrawList, DragAxis, FontAtlas, Level,
     HitKind, HitTarget, IconAtlas, InputState, Rect, Rgba, Theme, UiPresence, WindowLayout, WindowLayoutChild,
     WindowLayoutRoot, WindowLayoutStackNode, WindowLayoutWindowNode,
 };
@@ -1445,8 +1445,7 @@ fn render_stack(
     let cap_glass = ctx.draw.push_glass(
         [cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h],
         0.0,
-        GlassTier::Ribbon,
-        theme,
+        theme.glass_chrome(Level::Window),
     );
     ctx.draw.begin_glass_content(cap_glass);
 
@@ -16114,7 +16113,7 @@ use serde::{Deserialize, Serialize};
 use wasm_bindgen::JsCast;
 use std::collections::HashMap;
 use ui_wgpu::{
-    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, GlassTier,
+    chrome_item_bg, chrome_item_text, draw_text, push_chrome_group_border, DrawList, DragAxis, FontAtlas, Level,
     HitKind, HitTarget, IconAtlas, InputState, PointerModifiers, Rect, Rgba, Theme, TreeDragState, TreeDropPosition,
     WidgetInteractionMaps,
 };
@@ -24834,8 +24833,7 @@ impl ShellState {
         let glass = panel_draw.push_glass(
             [panel.x, panel.y, panel.w, panel.h],
             theme.border_radius,
-            GlassTier::Panel,
-            theme,
+            theme.glass(Level::Panel),
         );
         panel_draw.begin_glass_content(glass);
         panel_draw.push_solid([panel.x, panel.y, panel.w, hair], top);
@@ -25620,7 +25618,7 @@ impl ShellState {
             (width, height),
             ui_wgpu::OverlayKind::Tooltip.default_placement(),
         );
-        overlay.push_glass([x, y, content_w, content_h], theme.border_radius, GlassTier::Menu, theme);
+        overlay.push_glass([x, y, content_w, content_h], theme.border_radius, theme.glass(Level::Menu));
         chrome_text(
             overlay,
             atlas,
@@ -25666,7 +25664,7 @@ impl ShellState {
             ui_wgpu::OverlayKind::Dialog.default_placement(),
         );
         let dialog_rect = Rect::new(x, y, dialog_w, dialog_h);
-        overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, GlassTier::Panel, theme);
+        overlay.push_glass([x, y, dialog_w, dialog_h], theme.border_radius, theme.glass(Level::Dialog));
         let pad = theme.padding_standard;
         chrome_text(overlay, atlas, input, theme, &request.title, x + pad, y + pad + theme.font_size_body, theme.font_size_body, theme.text);
         chrome_text(
@@ -26156,7 +26154,7 @@ impl ShellState {
         let box_w = 320.0_f32;
         let box_h = 168.0_f32 + logos_row_h;
         let (x, y) = resolve_introduction_placement(step.placement, introduce_rect, (box_w, box_h), (width, height));
-        overlay.push_glass([x, y, box_w, box_h], theme.border_radius, GlassTier::Panel, theme);
+        overlay.push_glass([x, y, box_w, box_h], theme.border_radius, theme.glass(Level::Dialog));
         let pad = theme.padding_standard;
         if !resolved_logos.is_empty() {
             let total_w: f32 = resolved_logos.iter().map(|(_, w)| *w).sum::<f32>()
@@ -26281,7 +26279,7 @@ impl ShellState {
     ) {
         let row_h = theme.control_height;
         let h = items.len() as f32 * row_h + theme.padding_standard * 2.0;
-        overlay.push_glass([x, y, w, h.max(row_h + 8.0)], theme.border_radius, GlassTier::Menu, theme);
+        overlay.push_glass([x, y, w, h.max(row_h + 8.0)], theme.border_radius, theme.glass(Level::Menu));
         for (index, (_group, label, _)) in items.iter().enumerate() {
             let row = Rect::new(
                 x + theme.gap_standard,
@@ -26346,7 +26344,7 @@ impl ShellState {
         items: &[(String, String, usize)],
         item_prefix: &str,
     ) {
-        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
+        overlay.push_glass([x, y, w, h], theme.border_radius, theme.glass(Level::Menu));
         chrome_text(
             overlay,
             atlas,
@@ -26572,8 +26570,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                GlassTier::WindowOptions,
-                theme,
+                theme.glass_chrome(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
@@ -26720,8 +26717,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                GlassTier::WindowOptions,
-                theme,
+                theme.glass_chrome(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let body = Rect::new(
@@ -26977,8 +26973,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                GlassTier::WindowOptions,
-                theme,
+                theme.glass_chrome(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
@@ -27346,8 +27341,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                GlassTier::WindowOptions,
-                theme,
+                theme.glass_chrome(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
@@ -27772,7 +27766,7 @@ impl ShellState {
         let w = 180.0;
         let h = menu.items.len() as f32 * row_h + 8.0;
         let rect = Rect::new(menu.x, menu.y, w, h);
-        overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, GlassTier::Menu, theme);
+        overlay.push_glass([rect.x, rect.y, rect.w, rect.h], theme.border_radius, theme.glass(Level::Menu));
         for (index, item) in menu.items.iter().enumerate() {
             let row = Rect::new(rect.x + 4.0, rect.y + 4.0 + index as f32 * row_h, w - 8.0, row_h);
             overlay.push_rounded([row.x, row.y, row.w, row.h], theme.button, theme.border_radius);
@@ -27805,7 +27799,7 @@ impl ShellState {
         hint: &str,
     ) {
         let h = 120.0;
-        overlay.push_glass([x, y, w, h], theme.border_radius, GlassTier::Menu, theme);
+        overlay.push_glass([x, y, w, h], theme.border_radius, theme.glass(Level::Menu));
         chrome_text(overlay, atlas, input, theme, title,
             x + 12.0,
             y + 24.0,

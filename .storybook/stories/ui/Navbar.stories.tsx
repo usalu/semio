@@ -76,7 +76,7 @@ export const RibbonDefault: Story = {
   args: { items: defaultItems },
   render: () => (
     <LevelProvider level="panel">
-      <div className="p-4 bg-panel">
+      <div className="p-4 ui-surface" data-level="panel">
         <RibbonZone>
           <RibbonGroup>
             <RibbonItem>

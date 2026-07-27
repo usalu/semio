@@ -19,14 +19,13 @@ struct ContainerAttrs {
 struct FieldAttrs {
     key: Option<String>,
     positional: bool,
-    ident: bool,
     list: bool,
     tuple: bool,
     statements: bool,
     block: bool,
     base64: bool,
     flatten: bool,
-    raw_lines_count_field: Option<String>,
+    table: bool,
 }
 
 fn parse_container_attrs(input: &DeriveInput) -> ContainerAttrs {
@@ -64,8 +63,6 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
                 out.key = Some(value.value());
             } else if meta.path.is_ident("positional") {
                 out.positional = true;
-            } else if meta.path.is_ident("ident") {
-                out.ident = true;
             } else if meta.path.is_ident("list") {
                 out.list = true;
             } else if meta.path.is_ident("tuple") {
@@ -78,9 +75,8 @@ fn parse_field_attrs(attrs: &[syn::Attribute]) -> FieldAttrs {
                 out.base64 = true;
             } else if meta.path.is_ident("flatten") {
                 out.flatten = true;
-            } else if meta.path.is_ident("raw_lines") {
-                let value: syn::LitStr = meta.value()?.parse()?;
-                out.raw_lines_count_field = Some(value.value());
+            } else if meta.path.is_ident("table") {
+                out.table = true;
             }
             Ok(())
         });
@@ -114,7 +110,11 @@ enum FieldKind {
     /// rather than treating 0 as `None`.
     RequiredStatements(Box<Type>),
     Bytes64,
-    IdentString,
+    /// `#[dsl(table)] Vec<T>` (`T: DslRecord`) — Structure-of-Arrays columnar `Shape::Table`.
+    /// `to_value`/`from_value` are identical to `VecList` (both produce `FieldValue::List(Vec<
+    /// FieldValue::Record>)`) — only the `Shape` differs, so every binder/diff path downstream
+    /// keeps working unchanged.
+    VecTable(Box<Type>),
 }
 
 /// @emoji 🪆 Strips `macro_rules!`-introduced invisible-delimiter `Type::Group` wrappers so a type
@@ -197,10 +197,10 @@ fn classify_field(ty: &Type, attrs: &FieldAttrs) -> (FieldKind, Type) {
         if attrs.tuple {
             return (FieldKind::VecTuple(Box::new(inner.clone())), inner);
         }
+        if attrs.table {
+            return (FieldKind::VecTable(Box::new(inner.clone())), inner);
+        }
         return (FieldKind::VecList(Box::new(inner.clone())), inner);
-    }
-    if attrs.ident && matches!(strip_groups(ty), Type::Path(p) if p.path.is_ident("String")) {
-        return (FieldKind::IdentString, ty.clone());
     }
     (FieldKind::Scalar, ty.clone())
 }
@@ -229,7 +229,7 @@ fn plan_fields(fields: &Fields) -> Vec<FieldPlan> {
         let attrs = parse_field_attrs(&field.attrs);
         let ident = field.ident.clone().expect("dsl_derive only supports named fields");
         let (kind, elem_ty) = classify_field(&field.ty, &attrs);
-        let key = attrs.key.clone().unwrap_or_else(|| ident.to_string());
+        let key = attrs.key.clone().unwrap_or_else(|| to_kebab(&ident.to_string()));
         let optional = matches!(kind, FieldKind::OptionScalar(_) | FieldKind::OptionStatements(_));
         let positional = if attrs.positional {
             let p = positional_counter;
@@ -269,16 +269,6 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
                 quote! { ::dsl::DslField::to_value(&self.#ident) },
                 quote! { <#elem_ty as ::dsl::DslField>::from_value(value).map_err(::dsl::__rt::field_error)? },
             ),
-            FieldKind::IdentString => (
-                quote! { ::dsl::Shape::Ident },
-                quote! { ::dsl::FieldValue::Ident(self.#ident.clone()) },
-                quote! {
-                    match value {
-                        ::dsl::FieldValue::Ident(s) | ::dsl::FieldValue::Text(s) => s.clone(),
-                        other => return Err(::dsl::__rt::field_error(format!("expected Ident, found {other:?}"))),
-                    }
-                },
-            ),
             FieldKind::Bytes64 => (
                 quote! { ::dsl::Shape::Bytes64 },
                 quote! { ::dsl::FieldValue::Bytes64(self.#ident.clone()) },
@@ -306,6 +296,19 @@ fn record_codegen(fields: &Fields) -> (Vec<proc_macro2::TokenStream>, Vec<proc_m
             ),
             FieldKind::VecList(inner) => (
                 quote! { ::dsl::Shape::List(Box::new(<#inner as ::dsl::DslField>::shape())) },
+                quote! { ::dsl::FieldValue::List(self.#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
+                quote! {
+                    match value {
+                        ::dsl::FieldValue::List(items) => items.iter().map(|v| <#inner as ::dsl::DslField>::from_value(v)).collect::<Result<Vec<_>, String>>().map_err(::dsl::__rt::field_error)?,
+                        other => return Err(::dsl::__rt::field_error(format!("expected List, found {other:?}"))),
+                    }
+                },
+            ),
+            // Same `to_value`/`from_value` as `VecList` (both produce `FieldValue::List(Record)`)
+            // — only the `Shape` differs (`Table` vs `List(Record)`), which is what makes the
+            // printer emit compact SoA instead of verbose AoS for this field.
+            FieldKind::VecTable(inner) => (
+                quote! { ::dsl::Shape::Table(<#inner>::__dsl_spec as fn() -> ::dsl::RecordSpec) },
                 quote! { ::dsl::FieldValue::List(self.#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
                 quote! {
                     match value {
@@ -583,7 +586,7 @@ pub fn derive_dsl_scalar(input: TokenStream) -> TokenStream {
         }
         let attrs = parse_field_attrs(&variant.attrs);
         let variant_ident = variant.ident.clone();
-        let tag = attrs.key.unwrap_or_else(|| variant_ident.to_string());
+        let tag = attrs.key.unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
         let ordinal = ordinal as u32;
         variant_tags.push(quote! { (#tag.to_string(), #ordinal) });
         match_to_ordinal.push(quote! { #name::#variant_ident => #ordinal });
@@ -625,7 +628,7 @@ fn dsl_variants_codegen(name: &syn::Ident, data: &syn::DataEnum) -> proc_macro2:
     for variant in &data.variants {
         let attrs = parse_field_attrs(&variant.attrs);
         let variant_ident = variant.ident.clone();
-        let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab_or_camel(&variant_ident.to_string()));
+        let keyword = attrs.key.clone().unwrap_or_else(|| to_kebab(&variant_ident.to_string()));
         let fields = &variant.fields;
 
         // A single-field tuple variant (`Shape(DrawShapeBody)`) delegates entirely to its inner
@@ -750,11 +753,42 @@ pub fn derive_dsl_enum(input: TokenStream) -> TokenStream {
 //#endregion 🔖DslEnum
 
 //#region 🔖VariantHelpers
-/// @emoji 🔡 Falls back to the variant's own Rust identifier as the keyword when no
-/// `#[dsl(key = "...")]` override is given (kept literal, no case conversion, so the printed
-/// keyword matches exactly what a reader would expect from the enum's own naming).
-fn to_kebab_or_camel(name: &str) -> String {
-    name.to_string()
+/// @emoji 🔡 Converts a Rust identifier (`PascalCase`/`camelCase`/`snake_case`, any mix) into
+/// lowercase `kebab-case` — the unified syntax law's key/keyword/tag convention. Falls back to
+/// this whenever no explicit `#[dsl(key = "...")]` override is given, for variant keywords,
+/// record field keys, and `DslScalar` variant tags alike, so `SetCamera` -> `set-camera`,
+/// `airtightness_n50` -> `airtightness-n50`, `HTTPServer` -> `http-server`.
+fn to_kebab(name: &str) -> String {
+    let chars: Vec<char> = name.chars().collect();
+    let mut out = String::with_capacity(name.len() + 4);
+    for (i, &c) in chars.iter().enumerate() {
+        if c == '_' || c == '-' {
+            if !out.is_empty() && !out.ends_with('-') {
+                out.push('-');
+            }
+            continue;
+        }
+        if c.is_uppercase() {
+            let prev = if i == 0 { None } else { chars.get(i - 1).copied() };
+            let next = chars.get(i + 1).copied();
+            // A new word starts at an uppercase letter that follows a lowercase/digit
+            // (`SetCamera` -> boundary before `C`) OR that follows another uppercase letter but
+            // is itself followed by a lowercase one (`HTTPServer` -> boundary before the `S` that
+            // starts "Server", not between every letter of the "HTTP" acronym).
+            let boundary = match prev {
+                Some(p) if p.is_lowercase() || p.is_ascii_digit() => true,
+                Some(p) if p.is_uppercase() => next.is_some_and(|n| n.is_lowercase()),
+                _ => false,
+            };
+            if boundary && !out.is_empty() && !out.ends_with('-') {
+                out.push('-');
+            }
+            out.extend(c.to_lowercase());
+        } else {
+            out.push(c);
+        }
+    }
+    out
 }
 
 /// @emoji 🏗️ Like the `to_value` half of `record_codegen`, but reading from bare local bindings
@@ -768,7 +802,6 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
             let FieldPlan { ident, id, kind, block, .. } = plan;
             let to_value_expr: proc_macro2::TokenStream = match kind {
                 FieldKind::Scalar => quote! { ::dsl::DslField::to_value(#ident) },
-                FieldKind::IdentString => quote! { ::dsl::FieldValue::Ident(#ident.clone()) },
                 FieldKind::Bytes64 => quote! { ::dsl::FieldValue::Bytes64(#ident.clone()) },
                 FieldKind::OptionScalar(_) => quote! {
                     match #ident {
@@ -776,7 +809,7 @@ fn record_codegen_to_value_from_bindings(fields: &Fields) -> Vec<proc_macro2::To
                         None => ::dsl::FieldValue::Absent,
                     }
                 },
-                FieldKind::VecList(_) => quote! { ::dsl::FieldValue::List(#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
+                FieldKind::VecList(_) | FieldKind::VecTable(_) => quote! { ::dsl::FieldValue::List(#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
                 FieldKind::VecTuple(_) => quote! { ::dsl::FieldValue::Tuple(#ident.iter().map(|v| ::dsl::DslField::to_value(v)).collect()) },
                 FieldKind::VecStatements(_) => quote! { ::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()) },
                 FieldKind::VecBlockStatements(_) => quote! { ::dsl::FieldValue::Block(Box::new(::dsl::FieldValue::Statements(#ident.iter().map(|v| ::dsl::DslVariants::to_named_record(v)).collect()))) },

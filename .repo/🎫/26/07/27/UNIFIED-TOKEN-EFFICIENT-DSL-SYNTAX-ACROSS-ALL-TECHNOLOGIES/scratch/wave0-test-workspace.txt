@@ -1,0 +1,224 @@
+   Compiling serde_json v1.0.149
+   Compiling core-foundation v0.10.1
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling tokio v1.52.3
+   Compiling aho-corasick v1.1.4
+   Compiling regex-syntax v0.8.10
+   Compiling serde_with_macros v3.21.0
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:796:32
+    |
+796 |     fn parse_typed_item(input: ParseStream) -> syn::Result<Type> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+796 |     fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:803:32
+    |
+803 |     fn parse_ident_item(input: ParseStream) -> syn::Result<Ident> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+803 |     fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:810:33
+    |
+810 |     fn parse_event_block(input: ParseStream) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                 ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+810 |     fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                            ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:852:27
+    |
+852 |     fn parse_after(input: ParseStream) -> syn::Result<AfterAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+852 |     fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:867:24
+    |
+867 |     fn parse_on(input: ParseStream) -> syn::Result<OnAst> {
+    |                        ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+867 |     fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    |                                   ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:893:28
+    |
+893 |     fn parse_always(input: ParseStream) -> syn::Result<AlwaysAst> {
+    |                            ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+893 |     fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    |                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:912:29
+    |
+912 |     fn parse_history(input: ParseStream) -> syn::Result<HistoryAst> {
+    |                             ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+912 |     fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:925:32
+    |
+925 |     fn parse_state_body(input: ParseStream, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+925 |     fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:974:27
+    |
+974 |     fn parse_final(input: ParseStream) -> syn::Result<FinalAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+974 |     fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:994:30
+    |
+994 |     fn parse_parallel(input: ParseStream) -> syn::Result<ParallelAst> {
+    |                              ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+994 |     fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    |                                         ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1025:25
+     |
+1025 |         fn parse(input: ParseStream) -> syn::Result<Self> {
+     |                         ^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1025 |         fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+     |                                    ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1208:33
+     |
+1208 |     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+     |                     ------------^^^^^^^^^^^
+     |                     |
+     |                     expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1208 |     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+     |                                            ++++
+
+   Compiling structmeta-derive v0.3.0
+warning: `fsm_macros` (lib) generated 12 warnings
+   Compiling wasm-bindgen-futures v0.4.76
+   Compiling serde_repr v0.1.20
+   Compiling xattr v1.6.1
+   Compiling core-graphics-types v0.2.0
+   Compiling security-framework v3.7.0
+   Compiling ui_tui v0.1.0 (/Users/ueli/Documents/semio/ui/tui/rs)
+warning: unnecessary qualification
+    --> ui/tui/rs/lib.rs:2507:41
+     |
+2507 |             fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+     |                                         ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2507 -             fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+2507 +             fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
+     |
+
+error[E0609]: no field `canvas` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:149:31
+    |
+149 |                 canvas: rgb(p.canvas),
+    |                               ^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `window` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:150:31
+    |
+150 |                 window: rgb(p.window),
+    |                               ^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `panel` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:151:30
+    |
+151 |                 panel: rgb(p.panel),
+    |                              ^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `hover_window` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:161:37
+    |
+161 |                 hover_window: rgb(p.hover_window),
+    |                                     ^^^^^^^^^^^^ unknown field
+    |
+help: a field with a similar name exists
+    |
+161 -                 hover_window: rgb(p.hover_window),
+161 +                 hover_window: rgb(p.level_window),
+    |
+
+error[E0609]: no field `hover_panel` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:162:36
+    |
+162 |                 hover_panel: rgb(p.hover_panel),
+    |                                    ^^^^^^^^^^^ unknown field
+    |
+help: a field with a similar name exists
+    |
+162 -                 hover_panel: rgb(p.hover_panel),
+162 +                 hover_panel: rgb(p.level_panel),
+    |
+
+error[E0609]: no field `temporary` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:163:34
+    |
+163 |                 temporary: rgb(p.temporary),
+    |                                  ^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+For more information about this error, try `rustc --explain E0609`.
+warning: `ui_tui` (lib) generated 1 warning
+error: could not compile `ui_tui` (lib) due to 6 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...

@@ -75,7 +75,7 @@ function SortableRowsDemo({ initialRows }: { readonly initialRows: { id: string;
 export const Default: Story = {
   args: { items: [], onReorder: () => {} },
   render: () => (
-    <div className="w-72 border bg-panel p-single">
+    <div className="w-72 border ui-surface p-single" data-level="panel">
       <SortableRowsDemo
         initialRows={[
           { id: "row-1", label: "Capsule J" },
@@ -91,7 +91,7 @@ export const SingleItem: Story = {
   name: "Single item (drag handle still renders)",
   args: { items: [], onReorder: () => {} },
   render: () => (
-    <div className="w-72 border bg-panel p-single">
+    <div className="w-72 border ui-surface p-single" data-level="panel">
       <SortableRowsDemo initialRows={[{ id: "row-only", label: "Only Row" }]} />
     </div>
   ),

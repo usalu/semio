@@ -1,0 +1,31 @@
+WGPU lane — verification log
+=============================
+Files touched: ui/wgpu/rs/lib.rs, framework/renderer/wgpu/rs/lib.rs
+
+Commands run (real output, not assumed):
+
+$ cargo check -p ui_wgpu -q
+exit=0 (clean, default features)
+
+$ cargo check -p ui_wgpu --features engine -q
+exit=0 (clean; draw/paint modules are gated behind "engine", checked explicitly)
+
+$ cargo test -p ui_wgpu --features engine -q
+running 212 tests
+test result: ok. 212 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out
+(includes the 3 pre-existing glass_* tests, updated to the new Level enum/formula,
+plus 1 new test: draw::tests::glass_alpha_and_blur_are_formula_derived_per_level)
+
+$ cargo check -p semio-framework-renderer-wgpu -q
+exit=0 (clean)
+
+Baseline note: before any edit, `cargo check -p ui_wgpu` failed with 15 errors —
+GlassTier's old match table referenced opacities::GLASS_PANEL_ALPHA /
+GLASS_MENU_ALPHA / GLASS_WINDOW_OPTIONS_ALPHA and chrome_metrics::GLASS_*_BLUR_PX /
+GLASS_SATURATE (all removed by the Core: Tokens + Generator regeneration), and
+ChromePalette no longer had .canvas/.panel/.window/.temporary fields (renamed to
+.base/.level_panel/.level_window/.level_menu). Fixing these was necessarily in
+scope since Theme::glass/from_chrome are exactly what this ticket rewrites.
+
+grep -n "GlassTier" ui/wgpu/rs/lib.rs framework/renderer/wgpu/rs/lib.rs
+-> only one hit left, inside a doc comment describing what was replaced.

@@ -2,10 +2,13 @@
 /** @emoji ⚙️ Reads `ui/styling/tokens.json`; emits palette CSS, TS, C#, Rust, and Python styling artifacts. */
 import { existsSync, mkdirSync, readFileSync, readdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { BundleScript, ScriptRouter, runBundleScriptMain, runVitest } from "../../repo/lib/js/index.ts";
 import { parseUiTheme, resolveThemeMetrics, resolveThemePaint, type ThemePaintRef, type UiTheme } from "./js/index.ts";
 
-const stylingRoot = import.meta.dir;
+/** @emoji 🧭 `import.meta.dir` is a Bun-only extension; fall back to `import.meta.url` so this module loads
+ * under Vitest (which transforms it outside the Bun runtime) for the inline 🌓Levels generator tests. */
+const stylingRoot = import.meta.dir ?? dirname(fileURLToPath(import.meta.url));
 const tokensPath = join(stylingRoot, "tokens.json");
 const generatedDir = join(stylingRoot, "generated");
 const jsGeneratedDir = join(stylingRoot, "js");
@@ -43,7 +46,23 @@ interface Tokens {
   radii?: Record<string, number>;
   opacities?: Record<string, number>;
   metrics?: Record<string, Record<string, number | number[]>>;
+  levels?: StylingLevels;
   appearances?: Record<string, Record<string, Record<string, PaintRef>>>;
+}
+
+/** @emoji 🌓 Knobs driving the formula-derived 6-level UI surface system (`base..menu`); see contract at
+ * `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`. */
+interface StylingLevels {
+  names: readonly string[];
+  shadeStepPercent: number;
+  elementStepPercent: number;
+  hoverStepPercent: number;
+  glassAlphaStep: number;
+  glassBlurStepPx: number;
+  glassSaturate: number;
+  glassChromeAlphaFactor: number;
+  veilAlphaExtraSteps: number;
+  zStep: number;
 }
 
 const APPEARANCE_NAMES = ["light", "dark"] as const;
@@ -91,6 +110,77 @@ function rgba8ToLinear(rgba: Rgba8): [number, number, number, number] {
   return [srgbByteToLinear(rgba[0]), srgbByteToLinear(rgba[1]), srgbByteToLinear(rgba[2]), rgba[3] / 255];
 }
 
+function linearToSrgbByte(x: number): number {
+  const c = x <= 0.0031308 ? x * 12.92 : 1.055 * x ** (1 / 2.4) - 0.055;
+  return Math.round(Math.min(1, Math.max(0, c)) * 255);
+}
+
+//#region 🌓Levels
+/** @emoji 🌓 sRGB(linear) → Oklab, per Björn Ottosson's reference matrices (https://bottosson.github.io/posts/oklab/). */
+function linearToOklab(r: number, g: number, b: number): [number, number, number] {
+  const l = 0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b;
+  const m = 0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b;
+  const s = 0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b;
+  const l_ = Math.cbrt(l);
+  const m_ = Math.cbrt(m);
+  const s_ = Math.cbrt(s);
+  return [0.2104542553 * l_ + 0.793617785 * m_ - 0.0040720468 * s_, 1.9779984951 * l_ - 2.428592205 * m_ + 0.4505937099 * s_, 0.0259040371 * l_ + 0.7827717662 * m_ - 0.808675766 * s_];
+}
+
+/** @emoji 🌓 Oklab → sRGB(linear), inverse of {@link linearToOklab}. */
+function oklabToLinear(L: number, a: number, b: number): [number, number, number] {
+  const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+  const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+  const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+  const l = l_ ** 3;
+  const m = m_ ** 3;
+  const s = s_ ** 3;
+  return [4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s, -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s, -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s];
+}
+
+/** @emoji 🌓 Mixes two resolved paints in Oklab space (srgb → linear → oklab → lerp → back), `t=0` returns `a`, `t=1` returns `b`. Alpha lerps linearly. Powers the formula-derived level/element paint ladders (see contract's CSS MECHANISM section). */
+export function oklabMix(a: Rgba8, b: Rgba8, t: number): Rgba8 {
+  const la = rgba8ToLinear(a);
+  const lb = rgba8ToLinear(b);
+  const oa = linearToOklab(la[0], la[1], la[2]);
+  const ob = linearToOklab(lb[0], lb[1], lb[2]);
+  const mixed: [number, number, number] = [oa[0] * (1 - t) + ob[0] * t, oa[1] * (1 - t) + ob[1] * t, oa[2] * (1 - t) + ob[2] * t];
+  const [lr, lg, lbl] = oklabToLinear(mixed[0], mixed[1], mixed[2]);
+  const alpha = la[3] * (1 - t) + lb[3] * t;
+  return [linearToSrgbByte(lr), linearToSrgbByte(lg), linearToSrgbByte(lbl), Math.round(alpha * 255)];
+}
+
+const LEVELS_DEFAULT: StylingLevels = {
+  names: ["base", "window", "pane", "panel", "dialog", "menu"],
+  shadeStepPercent: 5,
+  elementStepPercent: 6,
+  hoverStepPercent: 12,
+  glassAlphaStep: 0.12,
+  glassBlurStepPx: 8,
+  glassSaturate: 1.45,
+  glassChromeAlphaFactor: 0.5,
+  veilAlphaExtraSteps: 1,
+  zStep: 10,
+};
+
+/** @emoji 🌓 Injects the 6 formula-derived `level<Name>` background paints and `element<Name>` element paints
+ * (k=0..5, `base..menu`) into one appearance's `chrome` group, mutating it in place. `bg(k) = mix_oklab(base,
+ * foreground, k*shadeStep)`, `element(k) = mix_oklab(gray, foreground, k*elementStep)` — see contract CSS MECHANISM. */
+function injectLevelPaints(levels: StylingLevels, gray: Rgba8, chrome: Record<string, Rgba8>): void {
+  const base = chrome.base;
+  const foreground = chrome.foreground;
+  if (!base || !foreground) {
+    throw new Error("levels: chrome group needs base and foreground paints resolved before injecting level paints");
+  }
+  const shadeStep = levels.shadeStepPercent / 100;
+  const elementStep = levels.elementStepPercent / 100;
+  levels.names.forEach((name, k) => {
+    chrome[`level${toPascalCase(name)}`] = oklabMix(base, foreground, k * shadeStep);
+    chrome[`element${toPascalCase(name)}`] = oklabMix(gray, foreground, k * elementStep);
+  });
+}
+//#endregion 🌓Levels
+
 function rustF32(x: number): string {
   return `${x.toFixed(8).replace(/\.?0+$/, "")}_f32`;
 }
@@ -99,7 +189,10 @@ function rustF64Lit(v: number): string {
   return Number.isInteger(v) ? `${v}.0` : String(v);
 }
 
-function resolveAppearances(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
+/** @emoji 🎨 Resolves every appearance's paint refs to Rgba8, then injects the formula-derived level/element
+ * paints (see {@link injectLevelPaints}) into each appearance's `chrome` group so every existing emitter
+ * (TS/Rust/Python, keyed off object entries) carries them automatically. */
+export function resolveAppearances(tokens: Tokens): Record<string, Record<string, Record<string, Rgba8>>> {
   const out: Record<string, Record<string, Record<string, Rgba8>>> = {};
   for (const [appearanceName, groups] of Object.entries(tokens.appearances ?? {})) {
     out[appearanceName] = {};
@@ -110,8 +203,120 @@ function resolveAppearances(tokens: Tokens): Record<string, Record<string, Recor
       }
     }
   }
+  const levels = tokens.levels ?? LEVELS_DEFAULT;
+  const gray = resolvePaint(tokens.colors, { token: "gray" });
+  for (const appearanceChrome of Object.values(out)) {
+    const chrome = appearanceChrome!.chrome;
+    if (chrome) {
+      injectLevelPaints(levels, gray, chrome);
+    }
+  }
   return out;
 }
+
+//#region 🧪LevelsTests
+if (import.meta.vitest) {
+  const { describe, expect, it } = import.meta.vitest;
+
+  function relativeLuminance(rgba: Rgba8): number {
+    const [r, g, b] = rgba8ToLinear(rgba);
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+  }
+
+  function contrastRatio(a: Rgba8, b: Rgba8): number {
+    const la = relativeLuminance(a);
+    const lb = relativeLuminance(b);
+    const lighter = Math.max(la, lb);
+    const darker = Math.min(la, lb);
+    return (lighter + 0.05) / (darker + 0.05);
+  }
+
+  function oklabL(rgba: Rgba8): number {
+    const [r, g, b] = rgba8ToLinear(rgba);
+    return linearToOklab(r, g, b)[0];
+  }
+
+  function toHex(rgba: Rgba8): string {
+    return `#${rgba
+      .slice(0, 3)
+      .map((c) => c.toString(16).padStart(2, "0"))
+      .join("")}`;
+  }
+
+  describe("levels: oklabMix", () => {
+    it("t=0 returns a and t=1 returns b unchanged", () => {
+      const a: Rgba8 = [10, 20, 30, 255];
+      const b: Rgba8 = [200, 100, 50, 255];
+      expect(oklabMix(a, b, 0)).toEqual(a);
+      expect(oklabMix(a, b, 1)).toEqual(b);
+    });
+  });
+
+  describe("levels: derived appearance paints", () => {
+    const tokens = loadTokens();
+    const levels = tokens.levels ?? LEVELS_DEFAULT;
+    const resolved = resolveAppearances(tokens);
+    const levelKeys = levels.names.map((n) => `level${toPascalCase(n)}`);
+    const elementKeys = levels.names.map((n) => `element${toPascalCase(n)}`);
+
+    it("injects exactly 6 level + 6 element paints into every appearance's chrome group", () => {
+      for (const appearance of ["light", "dark"] as const) {
+        const chrome = resolved[appearance]!.chrome!;
+        for (const key of [...levelKeys, ...elementKeys]) {
+          expect(chrome[key]).toBeDefined();
+        }
+      }
+    });
+
+    it("monotonic lightness per appearance across the 6 levels (light darkens, dark lightens)", () => {
+      const lightL = levelKeys.map((k) => oklabL(resolved.light!.chrome![k]!));
+      const darkL = levelKeys.map((k) => oklabL(resolved.dark!.chrome![k]!));
+      for (let i = 1; i < lightL.length; i++) {
+        expect(lightL[i]!).toBeLessThanOrEqual(lightL[i - 1]!);
+      }
+      for (let i = 1; i < darkL.length; i++) {
+        expect(darkL[i]!).toBeGreaterThanOrEqual(darkL[i - 1]!);
+      }
+    });
+
+    it("contrast against foreground stays >= 4.5:1 at every level, both appearances", () => {
+      for (const appearance of ["light", "dark"] as const) {
+        const chrome = resolved[appearance]!.chrome!;
+        for (const key of levelKeys) {
+          expect(contrastRatio(chrome[key]!, chrome.foreground!)).toBeGreaterThanOrEqual(4.5);
+        }
+      }
+    });
+
+    it("monotone alpha ladder: alpha(k) = 1 - k*glassAlphaStep, strictly decreasing", () => {
+      const alphas = levels.names.map((_, k) => 1 - k * levels.glassAlphaStep);
+      for (let i = 1; i < alphas.length; i++) {
+        expect(alphas[i]!).toBeLessThan(alphas[i - 1]!);
+      }
+      expect(alphas[0]).toBe(1);
+      expect(alphas.at(-1)!).toBeCloseTo(1 - 5 * levels.glassAlphaStep, 10);
+    });
+
+    it("monotone blur ladder: blur(k) = k*glassBlurStepPx, strictly increasing", () => {
+      const blurs = levels.names.map((_, k) => k * levels.glassBlurStepPx);
+      for (let i = 1; i < blurs.length; i++) {
+        expect(blurs[i]!).toBeGreaterThan(blurs[i - 1]!);
+      }
+      expect(blurs[0]).toBe(0);
+    });
+
+    it("pinned hex snapshot: light appearance level backgrounds", () => {
+      const chrome = resolved.light!.chrome!;
+      expect(levelKeys.map((k) => toHex(chrome[k]!))).toEqual(["#f7f3e3", "#e9e6d7", "#dad9cc", "#cccdc1", "#bec0b5", "#b0b4aa"]);
+    });
+
+    it("pinned hex snapshot: dark appearance level backgrounds", () => {
+      const chrome = resolved.dark!.chrome!;
+      expect(levelKeys.map((k) => toHex(chrome[k]!))).toEqual(["#001117", "#061a1f", "#112328", "#1c2d31", "#27373a", "#324143"]);
+    });
+  });
+}
+//#endregion 🧪LevelsTests
 
 function paletteGroupNames(resolvedAppearances: ReturnType<typeof resolveAppearances>): string[] {
   return Object.keys(resolvedAppearances.light ?? {}).sort();
@@ -149,6 +354,22 @@ function emitPaletteTheme(tokens: Tokens): string {
   }
   lines.push("}");
   lines.push("");
+  //#region 🌓Levels
+  const levels = tokens.levels ?? LEVELS_DEFAULT;
+  lines.push("/* 🌓 Level system knobs (ui/styling/tokens.json → levels) — formula in ui.css's [data-level] blocks reads these. */");
+  lines.push(":root {");
+  lines.push(`  --level-shade-step-percent: ${levels.shadeStepPercent}%;`);
+  lines.push(`  --level-element-step-percent: ${levels.elementStepPercent}%;`);
+  lines.push(`  --level-hover-step-percent: ${levels.hoverStepPercent}%;`);
+  lines.push(`  --level-glass-alpha-step: ${levels.glassAlphaStep};`);
+  lines.push(`  --level-glass-blur-step: ${levels.glassBlurStepPx}px;`);
+  lines.push(`  --level-glass-saturate: ${levels.glassSaturate};`);
+  lines.push(`  --level-glass-chrome-alpha-factor: ${levels.glassChromeAlphaFactor};`);
+  lines.push(`  --level-veil-alpha-extra-steps: ${levels.veilAlphaExtraSteps};`);
+  lines.push(`  --level-z-step: ${levels.zStep};`);
+  lines.push("}");
+  lines.push("");
+  //#endregion 🌓Levels
   return lines.join("\n");
 }
 
@@ -187,6 +408,7 @@ function emitTypeScriptTokens(tokens: Tokens, resolvedAppearances: ReturnType<ty
   lines.push(emitJsonConst("STYLING_RADII", tokens.radii ?? {}));
   lines.push(emitJsonConst("STYLING_OPACITIES", tokens.opacities ?? {}));
   lines.push(emitJsonConst("STYLING_METRICS", resolveMetrics(tokens.metrics)));
+  lines.push(emitJsonConst("STYLING_LEVELS", tokens.levels ?? LEVELS_DEFAULT));
   lines.push(emitJsonConst("STYLING_CANVAS_FONTS", tokens.canvasFonts ?? {}));
   for (const group of paletteGroupNames(resolvedAppearances)) {
     const groupPalettes: Record<string, Record<string, number[]>> = {};
@@ -321,6 +543,24 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
   }
   lines.push("}");
   lines.push("");
+  //#region 🌓Levels
+  {
+    const levels = tokens.levels ?? LEVELS_DEFAULT;
+    lines.push("pub mod levels {");
+    lines.push(`    pub const NAMES: &[&str] = &[${levels.names.map((n) => JSON.stringify(n)).join(", ")}];`);
+    lines.push(`    pub const SHADE_STEP_PERCENT: f64 = ${rustF64Lit(levels.shadeStepPercent)};`);
+    lines.push(`    pub const ELEMENT_STEP_PERCENT: f64 = ${rustF64Lit(levels.elementStepPercent)};`);
+    lines.push(`    pub const HOVER_STEP_PERCENT: f64 = ${rustF64Lit(levels.hoverStepPercent)};`);
+    lines.push(`    pub const GLASS_ALPHA_STEP: f64 = ${rustF64Lit(levels.glassAlphaStep)};`);
+    lines.push(`    pub const GLASS_BLUR_STEP_PX: f64 = ${rustF64Lit(levels.glassBlurStepPx)};`);
+    lines.push(`    pub const GLASS_SATURATE: f64 = ${rustF64Lit(levels.glassSaturate)};`);
+    lines.push(`    pub const GLASS_CHROME_ALPHA_FACTOR: f64 = ${rustF64Lit(levels.glassChromeAlphaFactor)};`);
+    lines.push(`    pub const VEIL_ALPHA_EXTRA_STEPS: u32 = ${levels.veilAlphaExtraSteps};`);
+    lines.push(`    pub const Z_STEP: f64 = ${rustF64Lit(levels.zStep)};`);
+    lines.push("}");
+    lines.push("");
+  }
+  //#endregion 🌓Levels
   for (const group of paletteGroupNames(resolvedAppearances)) {
     lines.push(`pub struct ${toPascalCase(group)}Palette {`);
     const sample = resolvedAppearances.light?.[group];

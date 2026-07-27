@@ -1,0 +1,536 @@
+   Compiling dsl_schema v0.1.0 (/Users/ueli/Documents/semio/dsl/schema/rs)
+   Compiling metal v0.32.0
+   Compiling neural_engine v0.1.0 (/Users/ueli/Documents/semio/neural/engine/rs)
+   Compiling gltf-json v1.4.1
+   Compiling mathematical_graph_manifest v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/manifest/rs)
+   Compiling syntect v5.3.0
+   Compiling typst-timing v0.14.2
+   Compiling tokio-tungstenite v0.26.2
+   Compiling fem_core v0.1.0 (/Users/ueli/Documents/semio/fem/core/rs)
+   Compiling hyper v1.10.1
+   Compiling regex-automata v0.4.14
+   Compiling dsl v0.1.0 (/Users/ueli/Documents/semio/dsl/rs)
+   Compiling typst-syntax v0.14.2
+   Compiling flow_module_wasm v0.1.0 (/Users/ueli/Documents/semio/flow/module/wasm/rs)
+   Compiling imperative_module_text v0.1.0 (/Users/ueli/Documents/semio/imperative/module/text/rs)
+   Compiling flow_module_math v0.1.0 (/Users/ueli/Documents/semio/flow/module/math/rs)
+   Compiling mathematical_graph v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/rs)
+   Compiling flow_module_bim v0.1.0 (/Users/ueli/Documents/semio/flow/module/bim/rs)
+   Compiling mathematical_graph_dsl v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dsl/rs)
+   Compiling mathematical_graph_drawing v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/drawing/rs)
+   Compiling mathematical_graph_traversal v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/traversal/rs)
+   Compiling mathematical_graph_paths v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/paths/rs)
+   Compiling mathematical_graph_components v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/components/rs)
+   Compiling flow_module_core v0.1.0 (/Users/ueli/Documents/semio/flow/module/core/rs)
+   Compiling flow_module_list v0.1.0 (/Users/ueli/Documents/semio/flow/module/list/rs)
+   Compiling flow_module_logic v0.1.0 (/Users/ueli/Documents/semio/flow/module/logic/rs)
+   Compiling flow_module_dictionary v0.1.0 (/Users/ueli/Documents/semio/flow/module/dictionary/rs)
+   Compiling flow_module_text v0.1.0 (/Users/ueli/Documents/semio/flow/module/text/rs)
+   Compiling mathematical_graph_cliques v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/cliques/rs)
+   Compiling mathematical_graph_structure v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/structure/rs)
+   Compiling mathematical_graph_matching v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/matching/rs)
+   Compiling hyper-util v0.1.20
+   Compiling mathematical_graph_flow v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/flow/rs)
+   Compiling mathematical_graph_trees v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/trees/rs)
+   Compiling two-face v0.4.5
+   Compiling mathematical_graph_centrality v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/centrality/rs)
+   Compiling mathematical_graph_generate v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/generate/rs)
+   Compiling imperative_module_math v0.1.0 (/Users/ueli/Documents/semio/imperative/module/math/rs)
+   Compiling neural_dag v0.1.0 (/Users/ueli/Documents/semio/neural/dag/rs)
+   Compiling imperative_module_core v0.1.0 (/Users/ueli/Documents/semio/imperative/module/core/rs)
+   Compiling imperative_module_logic v0.1.0 (/Users/ueli/Documents/semio/imperative/module/logic/rs)
+   Compiling tokio-rustls v0.26.4
+   Compiling imperative_module_control v0.1.0 (/Users/ueli/Documents/semio/imperative/module/control/rs)
+   Compiling fxprof-processed-profile v0.6.0
+   Compiling mathematical_graph_generate_random v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/generate/random/rs)
+   Compiling mathematical_graph_community v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/community/rs)
+   Compiling mathematical_graph_connectivity v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/connectivity/rs)
+   Compiling mathematical_graph_approximation v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/approximation/rs)
+   Compiling mathematical_graph_distance v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/distance/rs)
+   Compiling mathematical_graph_bipartite v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/bipartite/rs)
+   Compiling mathematical_graph_cycles v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/cycles/rs)
+   Compiling mathematical_graph_similarity v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/similarity/rs)
+   Compiling mathematical_graph_coloring v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/coloring/rs)
+   Compiling gltf v1.4.1
+   Compiling mathematical_graph_dag v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/dag/rs)
+   Compiling mathematical_graph_planarity v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/planarity/rs)
+   Compiling mathematical_graph_isomorphism v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/isomorphism/rs)
+   Compiling mathematical_graph_io v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/io/rs)
+   Compiling mathematical_graph_spectral v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/spectral/rs)
+   Compiling mathematical_graph_clustering v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/clustering/rs)
+   Compiling mathematical_graph_operators v0.1.0 (/Users/ueli/Documents/semio/mathematical/graph/operators/rs)
+   Compiling framework_surface_terrain v0.1.0 (/Users/ueli/Documents/semio/framework/surface/terrain/rs)
+   Compiling tower v0.5.3
+   Compiling wgpu-hal v27.0.4
+   Compiling ureq v2.12.1
+   Compiling tokio-stream v0.1.18
+   Compiling async-graphql-value v7.2.1
+   Compiling regex v1.12.3
+   Compiling hyper-rustls v0.27.9
+   Compiling typst-library v0.14.2
+   Compiling wasmtime v22.0.1
+   Compiling handlebars v6.4.3
+   Compiling tower-http v0.6.11
+   Compiling tokio-util v0.7.18
+   Compiling kernel_3d_mesh v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/mesh/rs)
+   Compiling wgpu-core-deps-apple v27.0.0
+   Compiling async-graphql-parser v7.2.1
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:796:32
+    |
+796 |     fn parse_typed_item(input: ParseStream) -> syn::Result<Type> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+    = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+    = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+    |
+796 |     fn parse_typed_item(input: ParseStream<'_>) -> syn::Result<Type> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:803:32
+    |
+803 |     fn parse_ident_item(input: ParseStream) -> syn::Result<Ident> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+803 |     fn parse_ident_item(input: ParseStream<'_>) -> syn::Result<Ident> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:810:33
+    |
+810 |     fn parse_event_block(input: ParseStream) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                 ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+810 |     fn parse_event_block(input: ParseStream<'_>) -> syn::Result<(Ident, Vec<EventVariantAst>)> {
+    |                                            ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:852:27
+    |
+852 |     fn parse_after(input: ParseStream) -> syn::Result<AfterAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+852 |     fn parse_after(input: ParseStream<'_>) -> syn::Result<AfterAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:867:24
+    |
+867 |     fn parse_on(input: ParseStream) -> syn::Result<OnAst> {
+    |                        ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+867 |     fn parse_on(input: ParseStream<'_>) -> syn::Result<OnAst> {
+    |                                   ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:893:28
+    |
+893 |     fn parse_always(input: ParseStream) -> syn::Result<AlwaysAst> {
+    |                            ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+893 |     fn parse_always(input: ParseStream<'_>) -> syn::Result<AlwaysAst> {
+    |                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:912:29
+    |
+912 |     fn parse_history(input: ParseStream) -> syn::Result<HistoryAst> {
+    |                             ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+912 |     fn parse_history(input: ParseStream<'_>) -> syn::Result<HistoryAst> {
+    |                                        ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:925:32
+    |
+925 |     fn parse_state_body(input: ParseStream, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+925 |     fn parse_state_body(input: ParseStream<'_>, name: Option<Ident>) -> syn::Result<StateAst> {
+    |                                           ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:974:27
+    |
+974 |     fn parse_final(input: ParseStream) -> syn::Result<FinalAst> {
+    |                           ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+974 |     fn parse_final(input: ParseStream<'_>) -> syn::Result<FinalAst> {
+    |                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+   --> fsm/macros/rs/lib.rs:994:30
+    |
+994 |     fn parse_parallel(input: ParseStream) -> syn::Result<ParallelAst> {
+    |                              ^^^^^^^^^^^ expected lifetime parameter
+    |
+help: indicate the anonymous lifetime
+    |
+994 |     fn parse_parallel(input: ParseStream<'_>) -> syn::Result<ParallelAst> {
+    |                                         ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1025:25
+     |
+1025 |         fn parse(input: ParseStream) -> syn::Result<Self> {
+     |                         ^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1025 |         fn parse(input: ParseStream<'_>) -> syn::Result<Self> {
+     |                                    ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> fsm/macros/rs/lib.rs:1208:33
+     |
+1208 |     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+     |                     ------------^^^^^^^^^^^
+     |                     |
+     |                     expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1208 |     fn parse(input: syn::parse::ParseStream<'_>) -> syn::Result<Self> {
+     |                                            ++++
+
+warning: `fsm_macros` (lib) generated 12 warnings
+   Compiling structmeta v0.3.0
+   Compiling serde_with v3.21.0
+   Compiling sqlx-core v0.8.6
+   Compiling parse-zoneinfo v0.3.1
+   Compiling rustls-native-certs v0.8.4
+   Compiling wgpu-core v27.0.3
+   Compiling reqwest v0.12.28
+   Compiling parse-display-derive v0.9.1
+   Compiling async-graphql v7.2.1
+   Compiling wiggle v22.0.1
+   Compiling bollard-stubs v1.47.1-rc.27.3.1
+   Compiling hyperlocal v0.9.1
+   Compiling filetime v0.2.29
+   Compiling sqlx-postgres v0.8.6
+   Compiling chrono-tz-build v0.2.1
+   Compiling deadpool v0.9.5
+   Compiling wgpu v27.0.1
+   Compiling typst-svg v0.14.2
+   Compiling typst-realize v0.14.2
+   Compiling typst-layout v0.14.2
+   Compiling typst-eval v0.14.2
+   Compiling wasmtime-wasi v22.0.1
+   Compiling chrono-tz v0.8.6
+   Compiling tokio-tar v0.3.1
+   Compiling ui_wgpu v0.1.0 (/Users/ueli/Documents/semio/ui/wgpu/rs)
+warning: unused import: `Level`
+    --> ui/wgpu/rs/lib.rs:6202:32
+     |
+6202 | use crate::theme::{GlassStyle, Level, Rgba, Theme};
+     |                                ^^^^^
+     |
+     = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `crate::IconName`
+     --> ui/wgpu/rs/lib.rs:14105:5
+      |
+14105 | use crate::IconName;
+      |     ^^^^^^^^^^^^^^^
+
+warning: unnecessary qualification
+     --> ui/wgpu/rs/lib.rs:16903:52
+      |
+16903 |     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+      |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      |
+      = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+      |
+16903 -     pub fn set_window_kind_icons(&mut self, icons: std::collections::HashMap<String, IconName>) {
+16903 +     pub fn set_window_kind_icons(&mut self, icons: HashMap<String, IconName>) {
+      |
+
+   Compiling typst-html v0.14.2
+   Compiling vello v0.7.0
+   Compiling semio-framework-core v0.1.0 (/Users/ueli/Documents/semio/framework/core/rs)
+   Compiling bollard v0.18.1
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `ui_wgpu` (lib) generated 3 warnings (run `cargo fix --lib -p ui_wgpu` to apply 3 suggestions)
+   Compiling parse-display v0.9.1
+   Compiling referencing v0.29.1
+   Compiling fsm v0.1.0 (/Users/ueli/Documents/semio/fsm/rs)
+warning: unused extern crate
+ --> fsm/rs/lib.rs:6:1
+  |
+6 | extern crate self as fsm;
+  | ^^^^^^^^^^^^^^^^^^^^^^^^^ unused
+  |
+  = note: `-W unused-extern-crates` implied by `-W rust-2018-idioms`
+  = help: to override `-W rust-2018-idioms` add `#[allow(unused_extern_crates)]`
+help: remove the unused `extern crate`
+  |
+6 - extern crate self as fsm;
+  |
+
+warning: unnecessary qualification
+    --> fsm/rs/lib.rs:2037:33
+     |
+2037 |     fn definition() -> &'static kernel::MachineDefinition<Self>;
+     |                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2037 -     fn definition() -> &'static kernel::MachineDefinition<Self>;
+2037 +     fn definition() -> &'static MachineDefinition<Self>;
+     |
+
+warning: `fsm` (lib) generated 2 warnings (run `cargo fix --lib -p fsm` to apply 2 suggestions)
+   Compiling mathematical_statistics v0.1.0 (/Users/ueli/Documents/semio/mathematical/statistics/rs)
+   Compiling etcetera v0.8.0
+   Compiling backoff v0.4.0
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:653:20
+    |
+653 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+653 -     let committed: std::collections::HashSet<String> = envelope
+653 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1711:36
+     |
+1711 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1711 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1711 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1973:24
+     |
+1973 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1973 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+1973 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+   Compiling vello_svg v0.9.0
+   Compiling kernel_3d_brepkit v0.1.0 (/Users/ueli/Documents/semio/kernel/3d/brep/rs)
+   Compiling typst v0.14.2
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5861:28
+     |
+5861 |         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+5861 -         let Some(aabb_a) = brepkit_operations::measure::solid_bounding_box(&self.topo, a).ok() else {
+5861 +         let Some(aabb_a) = measure::solid_bounding_box(&self.topo, a).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:5864:28
+     |
+5864 |         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+     |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+5864 -         let Some(aabb_b) = brepkit_operations::measure::solid_bounding_box(&self.topo, b).ok() else {
+5864 +         let Some(aabb_b) = measure::solid_bounding_box(&self.topo, b).ok() else {
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:28
+     |
+7007 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7007:106
+     |
+7007 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7007 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7007 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:28
+     |
+7050 | ...   let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::...
+     |                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+warning: unnecessary qualification
+    --> kernel/3d/brep/rs/lib.rs:7050:106
+     |
+7050 | ...esh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |                                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+7050 -         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| brepkit_math::vec::Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+7050 +         let positions: Vec<brepkit_math::vec::Point3> = mesh.positions.as_chunks::<3>().0.iter().map(|c| Point3::new(c[0] as f64, c[1] as f64, c[2] as f64)).collect();
+     |
+
+   Compiling kernel_2d_rs v0.1.0 (/Users/ueli/Documents/semio/kernel/2d/rs)
+   Compiling os-hub-storage v0.1.0 (/Users/ueli/Documents/semio/framework/product/os/hub/storage/rs)
+   Compiling remodel_mesh v0.1.0 (/Users/ueli/Documents/semio/remodel/mesh/rs)
+   Compiling infinite_world v0.1.0 (/Users/ueli/Documents/semio/infinite/world/rs)
+   Compiling docker_credential v1.4.0
+   Compiling ui_tui v0.1.0 (/Users/ueli/Documents/semio/ui/tui/rs)
+warning: unnecessary qualification
+    --> ui/tui/rs/lib.rs:2507:41
+     |
+2507 |             fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+     |                                         ^^^^^^^^^^^^^^^^^^^
+     |
+     = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+     |
+2507 -             fn poll(&mut self, timeout: std::time::Duration) -> Result<Vec<Event>, BackendError> {
+2507 +             fn poll(&mut self, timeout: Duration) -> Result<Vec<Event>, BackendError> {
+     |
+
+error[E0609]: no field `canvas` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:149:31
+    |
+149 |                 canvas: rgb(p.canvas),
+    |                               ^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `window` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:150:31
+    |
+150 |                 window: rgb(p.window),
+    |                               ^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `panel` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:151:30
+    |
+151 |                 panel: rgb(p.panel),
+    |                              ^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+error[E0609]: no field `hover_window` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:161:37
+    |
+161 |                 hover_window: rgb(p.hover_window),
+    |                                     ^^^^^^^^^^^^ unknown field
+    |
+help: a field with a similar name exists
+    |
+161 -                 hover_window: rgb(p.hover_window),
+161 +                 hover_window: rgb(p.level_window),
+    |
+
+error[E0609]: no field `hover_panel` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:162:36
+    |
+162 |                 hover_panel: rgb(p.hover_panel),
+    |                                    ^^^^^^^^^^^ unknown field
+    |
+help: a field with a similar name exists
+    |
+162 -                 hover_panel: rgb(p.hover_panel),
+162 +                 hover_panel: rgb(p.level_panel),
+    |
+
+error[E0609]: no field `temporary` on type `&ChromePalette`
+   --> ui/tui/rs/lib.rs:163:34
+    |
+163 |                 temporary: rgb(p.temporary),
+    |                                  ^^^^^^^^^ unknown field
+    |
+    = note: available fields are: `base`, `foreground`, `muted_foreground`, `accent`, `accent_foreground` ... and 19 others
+
+   Compiling flow_module_draw v0.1.0 (/Users/ueli/Documents/semio/flow/module/draw/rs)
+For more information about this error, try `rustc --explain E0609`.
+warning: `ui_tui` (lib) generated 1 warning
+error: could not compile `ui_tui` (lib) due to 6 previous errors; 1 warning emitted
+warning: build failed, waiting for other jobs to finish...
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+warning: `kernel_3d_brepkit` (lib) generated 6 warnings (run `cargo fix --lib -p kernel_3d_brepkit` to apply 6 suggestions)

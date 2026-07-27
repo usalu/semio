@@ -1,0 +1,13 @@
+=== SHELL lane verification (framework/renderer/react/index.tsx) ===
+date: Mon Jul 27 13:41:32 CEST 2026
+
+--- lint ---
+bunx nx run @semio-tech/framework-renderer-react:lint -> region/host-contract lint passed
+
+--- test-quick ---
+bunx nx run @semio-tech/framework-renderer-react:test-quick -> 269 passed, 3 failed (matches Shallow-Fixes-agent baseline: 2 pre-existing plugin-runtime timeouts + 1 unrelated icon-name mismatch maximize-2/select-all; none touch Level/glass/data-level)
+
+--- tsc --noEmit -p tsconfig.json (full workspace) ---
+baseline (tsc-full.txt, pre-my-edits): 1862 errors
+after my edits (tsc-shell-lane.txt): 1867 errors
+diff analysis: all deltas are (a) icon-literal-union member reordering from a concurrent lane's icon-list edit, (b) 5 new errors in coda/client/ui/desktop/js/renderer.tsx (CODA lane, file not touched by me), (c) bun/Bun global-type message wording change in script.ts (not my file). Zero new errors on any line I edited in framework/renderer/react/index.tsx (grepped every edited line number, only 1 pre-existing TS18046 'data is unknown' hit at MediaGraphDiagramNode, present in baseline too at same col+/-1).

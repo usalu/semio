@@ -453,6 +453,9 @@ pub mod host {
         SpawnAppInstance {
             instance: OsAppInstance,
             position: MediaGraphPosition,
+            /// 🆔 Minted once at dispatch time (`OsStore::spawn_app_instance`) and carried in the op
+            /// itself so replay never re-mints it — see `apply_os_operation`'s `SpawnAppInstance` arm.
+            node_id: String,
         },
         RemoveAppInstance {
             instance_id: String,
@@ -531,12 +534,12 @@ pub mod host {
             OsOperation::SetActiveAlternative { alternative_id } => {
                 next.active_alternative_id = alternative_id.clone();
             }
-            OsOperation::SpawnAppInstance { instance, position } => {
+            OsOperation::SpawnAppInstance { instance, position, node_id } => {
                 if !next.programs.contains(&instance.program_id) {
                     next.programs.push(instance.program_id.clone());
                 }
                 if let Some(registration) = os_app_registration(&instance.program_id, &instance.app_id) {
-                    let node = sync_media_node_parameter_ports(&media_graph_node_for_instance(instance, &registration, position, &create_os_id("node")), &next.parameter_bindings);
+                    let node = sync_media_node_parameter_ports(&media_graph_node_for_instance(instance, &registration, position, node_id), &next.parameter_bindings);
                     next.media_graph.nodes.push(node);
                 }
                 next.app_instances.push(instance.clone());
@@ -624,6 +627,7 @@ pub mod host {
         SpawnAppInstance {
             instance: OsAppInstance,
             position: MediaGraphPosition,
+            node_id: String,
         },
         RemoveAppInstance {
             instance_id: String,
@@ -670,7 +674,7 @@ pub mod host {
                 OsDiff::Empty => return projection.clone(),
                 OsDiff::SetActiveProgram { program_id } => OsOperation::SetActiveProgram { program_id: program_id.clone() },
                 OsDiff::SetActiveAlternative { alternative_id } => OsOperation::SetActiveAlternative { alternative_id: alternative_id.clone() },
-                OsDiff::SpawnAppInstance { instance, position } => OsOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+                OsDiff::SpawnAppInstance { instance, position, node_id } => OsOperation::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
                 OsDiff::RemoveAppInstance { instance_id } => OsOperation::RemoveAppInstance { instance_id: instance_id.clone() },
                 OsDiff::ConnectMediaPorts { edge } => OsOperation::ConnectMediaPorts { edge: edge.clone() },
                 OsDiff::DisconnectMediaEdge { edge_id } => OsOperation::DisconnectMediaEdge { edge_id: edge_id.clone() },
@@ -700,7 +704,7 @@ pub mod host {
             match self {
                 OsOperation::SetActiveProgram { program_id } => OsDiff::SetActiveProgram { program_id: program_id.clone() },
                 OsOperation::SetActiveAlternative { alternative_id } => OsDiff::SetActiveAlternative { alternative_id: alternative_id.clone() },
-                OsOperation::SpawnAppInstance { instance, position } => OsDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+                OsOperation::SpawnAppInstance { instance, position, node_id } => OsDiff::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
                 OsOperation::RemoveAppInstance { instance_id } => OsDiff::RemoveAppInstance { instance_id: instance_id.clone() },
                 OsOperation::ConnectMediaPorts { edge } => OsDiff::ConnectMediaPorts { edge: edge.clone() },
                 OsOperation::DisconnectMediaEdge { edge_id } => OsDiff::DisconnectMediaEdge { edge_id: edge_id.clone() },
@@ -726,7 +730,11 @@ pub mod host {
                     .find(|instance| instance.id == *instance_id)
                     .map(|instance| {
                         let node = projection.media_graph.nodes.iter().find(|entry| entry.instance_id == *instance_id);
-                        vec![OsOperation::SpawnAppInstance { instance: instance.clone(), position: MediaGraphPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) } }]
+                        vec![OsOperation::SpawnAppInstance {
+                            instance: instance.clone(),
+                            position: MediaGraphPosition { x: node.map(|entry| entry.x).unwrap_or(0.0), y: node.map(|entry| entry.y).unwrap_or(0.0) },
+                            node_id: node.map(|entry| entry.id.clone()).unwrap_or_else(|| create_os_id("node")),
+                        }]
                     })
                     .unwrap_or_default(),
                 OsOperation::ConnectMediaPorts { edge } => vec![OsOperation::DisconnectMediaEdge { edge_id: edge.id.clone() }],
@@ -930,7 +938,7 @@ pub mod host {
             alternative_id: Option<String>,
         },
         #[dsl(key = "spawn-app-instance")]
-        SpawnAppInstance { instance: OsAppInstance, position: MediaGraphPosition },
+        SpawnAppInstance { instance: OsAppInstance, position: MediaGraphPosition, #[dsl(key = "node")] node_id: String },
         #[dsl(key = "remove-app-instance")]
         RemoveAppInstance {
             #[dsl(key = "id")]
@@ -985,7 +993,7 @@ pub mod host {
         match operation {
             OsOperation::SetActiveProgram { program_id } => OsOperationDsl::SetActiveProgram { program_id: program_id.clone() },
             OsOperation::SetActiveAlternative { alternative_id } => OsOperationDsl::SetActiveAlternative { alternative_id: alternative_id.clone() },
-            OsOperation::SpawnAppInstance { instance, position } => OsOperationDsl::SpawnAppInstance { instance: instance.clone(), position: position.clone() },
+            OsOperation::SpawnAppInstance { instance, position, node_id } => OsOperationDsl::SpawnAppInstance { instance: instance.clone(), position: position.clone(), node_id: node_id.clone() },
             OsOperation::RemoveAppInstance { instance_id } => OsOperationDsl::RemoveAppInstance { instance_id: instance_id.clone() },
             OsOperation::ConnectMediaPorts { edge } => OsOperationDsl::ConnectMediaPorts { edge: edge.clone() },
             OsOperation::DisconnectMediaEdge { edge_id } => OsOperationDsl::DisconnectMediaEdge { edge_id: edge_id.clone() },
@@ -1004,7 +1012,7 @@ pub mod host {
         match operation {
             OsOperationDsl::SetActiveProgram { program_id } => OsOperation::SetActiveProgram { program_id },
             OsOperationDsl::SetActiveAlternative { alternative_id } => OsOperation::SetActiveAlternative { alternative_id },
-            OsOperationDsl::SpawnAppInstance { instance, position } => OsOperation::SpawnAppInstance { instance, position },
+            OsOperationDsl::SpawnAppInstance { instance, position, node_id } => OsOperation::SpawnAppInstance { instance, position, node_id },
             OsOperationDsl::RemoveAppInstance { instance_id } => OsOperation::RemoveAppInstance { instance_id },
             OsOperationDsl::ConnectMediaPorts { edge } => OsOperation::ConnectMediaPorts { edge },
             OsOperationDsl::DisconnectMediaEdge { edge_id } => OsOperation::DisconnectMediaEdge { edge_id },
@@ -1118,6 +1126,7 @@ pub mod host {
             // replay is deterministic (it never re-mints) — same idempotency property `create_os_id`
             // already relies on for `instance_id`.
             let document_id = create_os_document_id();
+            let node_id = create_os_id("node");
             let instance = OsAppInstance {
                 id: instance_id.clone(),
                 program_id: program_id.into(),
@@ -1126,7 +1135,7 @@ pub mod host {
                 yields: os_app_primary_output_kind(&registration),
                 document: OsDocumentRef { document_id, schema: registration.source_format.clone() },
             };
-            self.dispatch_apply(vec![OsOperation::SpawnAppInstance { instance, position }])?;
+            self.dispatch_apply(vec![OsOperation::SpawnAppInstance { instance, position, node_id }])?;
             Ok(instance_id)
         }
 
@@ -1946,6 +1955,7 @@ pub mod host {
                     document: OsDocumentRef { document_id: "doc-1".into(), schema: "puzzle.2d.fixture".into() },
                 },
                 position: MediaGraphPosition { x: 10.0, y: -20.5 },
+                node_id: "node-1".into(),
             });
         }
 
@@ -3283,8 +3293,8 @@ pub mod media_graph {
                 dsl::FieldSpec::new(0, "kind_id", dsl::Shape::Text),
                 dsl::FieldSpec::new(1, "class", dsl::Shape::Enum(media_class_variants())),
                 dsl::FieldSpec::new(2, "form", dsl::Shape::Enum(media_form_variants())),
-                dsl::FieldSpec::new(3, "wire_kind", dsl::Shape::Ident),
-                dsl::FieldSpec::new(4, "wire_format", dsl::Shape::Ident).optional(),
+                dsl::FieldSpec::new(3, "wire_kind", dsl::Shape::Text),
+                dsl::FieldSpec::new(4, "wire_format", dsl::Shape::Text).optional(),
                 dsl::FieldSpec::new(5, "wire_schema", dsl::Shape::Text).optional(),
                 dsl::FieldSpec::new(6, "conversion_from", dsl::Shape::Enum(media_form_variants())).optional(),
                 dsl::FieldSpec::new(7, "conversion_to", dsl::Shape::Enum(media_form_variants())).optional(),
@@ -3299,12 +3309,12 @@ pub mod media_graph {
         record.fields.insert(2, dsl::FieldValue::Enum(media_form_ordinal(contract.media_type.form)));
         match &contract.wire {
             MediaWireFormat::Binary { format } => {
-                record.fields.insert(3, dsl::FieldValue::Ident("binary".to_string()));
-                record.fields.insert(4, dsl::FieldValue::Ident(format.as_str().to_string()));
+                record.fields.insert(3, dsl::FieldValue::Text("binary".to_string()));
+                record.fields.insert(4, dsl::FieldValue::Text(format.as_str().to_string()));
                 record.fields.insert(5, dsl::FieldValue::Absent);
             }
             MediaWireFormat::Document { schema } => {
-                record.fields.insert(3, dsl::FieldValue::Ident("document".to_string()));
+                record.fields.insert(3, dsl::FieldValue::Text("document".to_string()));
                 record.fields.insert(4, dsl::FieldValue::Absent);
                 record.fields.insert(5, dsl::FieldValue::Text(schema.clone()));
             }
@@ -3324,7 +3334,7 @@ pub mod media_graph {
 
     fn media_contract_from_record(record: &dsl::RecordValue) -> Result<MediaContract, vcs::TextError> {
         let kind_id = match record.get(0) {
-            Some(dsl::FieldValue::Text(s)) | Some(dsl::FieldValue::Ident(s)) => s.clone(),
+            Some(dsl::FieldValue::Text(s)) => s.clone(),
             other => return Err(dsl::__rt::field_error(format!("expected kind_id, found {other:?}"))),
         };
         let class = match record.get(1) {
@@ -3336,13 +3346,13 @@ pub mod media_graph {
             other => return Err(dsl::__rt::field_error(format!("expected form, found {other:?}"))),
         };
         let wire_kind = match record.get(3) {
-            Some(dsl::FieldValue::Ident(s)) | Some(dsl::FieldValue::Text(s)) => s.clone(),
+            Some(dsl::FieldValue::Text(s)) => s.clone(),
             other => return Err(dsl::__rt::field_error(format!("expected wire_kind, found {other:?}"))),
         };
         let wire = match wire_kind.as_str() {
             "binary" => {
                 let format_word = match record.get(4) {
-                    Some(dsl::FieldValue::Ident(s)) | Some(dsl::FieldValue::Text(s)) => s.clone(),
+                    Some(dsl::FieldValue::Text(s)) => s.clone(),
                     other => return Err(dsl::__rt::field_error(format!("expected wire_format, found {other:?}"))),
                 };
                 let format = semio_framework_core::OsMediaFormat::parse(&format_word).ok_or_else(|| dsl::__rt::field_error(format!("unknown wire format '{format_word}'")))?;
@@ -3350,7 +3360,7 @@ pub mod media_graph {
             }
             "document" => {
                 let schema = match record.get(5) {
-                    Some(dsl::FieldValue::Text(s)) | Some(dsl::FieldValue::Ident(s)) => s.clone(),
+                    Some(dsl::FieldValue::Text(s)) => s.clone(),
                     other => return Err(dsl::__rt::field_error(format!("expected wire_schema, found {other:?}"))),
                 };
                 MediaWireFormat::Document { schema }

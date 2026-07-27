@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/infinite-cavas-react-renderer:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/cavas/react-renderer
+
+
+ Test Files  2 passed (2)
+      Tests  2 passed (2)
+   Start at  13:31:30
+   Duration  5.27s (transform 4.19s, setup 0ms, import 7.85s, tests 7ms, environment 2.29s)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/infinite-cavas-react-renderer
+
+

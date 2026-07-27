@@ -6199,7 +6199,7 @@ pub mod draw {
 
 use kernel_3d_scene::ScenePass3d;
 use crate::shaders::{BLUR_DOWNSAMPLE_SHADER, GLASS_SHADER, SCENE_BLIT_SHADER, UI_SHADER, VECTOR_SHADER, WORLD3D_LINES_SHADER, WORLD3D_SHADER};
-use crate::theme::{GlassTier, Rgba, Theme};
+use crate::theme::{GlassStyle, Level, Rgba, Theme};
 use bytemuck::{Pod, Zeroable};
 use wgpu::util::DeviceExt;
 
@@ -6674,8 +6674,11 @@ impl DrawList {
             .push(UiInstance::introducing_border(rect, color, radius, stroke));
     }
 
-    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, tier: GlassTier, theme: &Theme) -> usize {
-        let style = theme.glass(tier);
+    /// 🧊 Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
+    /// from `Theme::glass(level)`/`Theme::glass_chrome(level)` themselves (see
+    /// `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
+    /// picking a per-tier lookup.
+    pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
         let index = self.glass_regions.len();
         self.glass_regions.push(GlassRegion {
             rect,
@@ -9791,11 +9794,11 @@ mod tests {
 
     #[test]
     fn glass_content_layers_tagged_with_foreground_of() {
-        use super::{GlassTier, Theme};
+        use super::{Level, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 100.0, 100.0], Rgba::new(0.2, 0.2, 0.2, 1.0));
-        let glass = draw.push_glass([10.0, 10.0, 80.0, 80.0], 8.0, GlassTier::Panel, &theme);
+        let glass = draw.push_glass([10.0, 10.0, 80.0, 80.0], 8.0, theme.glass(Level::Panel));
         assert_eq!(glass, 0);
         draw.begin_glass_content(glass);
         draw.push_solid([10.0, 10.0, 80.0, 80.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
@@ -9813,11 +9816,11 @@ mod tests {
 
     #[test]
     fn glass_foreground_layers_excluded_from_backdrop_batches() {
-        use super::{build_layer_batches, GlassTier, LayerBatchFilter, Theme};
+        use super::{build_layer_batches, Level, LayerBatchFilter, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
         draw.push_solid([0.0, 0.0, 200.0, 200.0], Rgba::new(0.1, 0.1, 0.1, 1.0));
-        let glass = draw.push_glass([20.0, 20.0, 160.0, 160.0], 8.0, GlassTier::Panel, &theme);
+        let glass = draw.push_glass([20.0, 20.0, 160.0, 160.0], 8.0, theme.glass(Level::Panel));
         draw.begin_glass_content(glass);
         draw.push_solid([20.0, 20.0, 160.0, 160.0], Rgba::new(1.0, 0.0, 0.0, 1.0));
         draw.end_glass_content();
@@ -9836,10 +9839,10 @@ mod tests {
 
     #[test]
     fn glass_scissor_inherits_foreground_tag() {
-        use super::{GlassTier, Theme};
+        use super::{Level, Theme};
         let theme = Theme::default();
         let mut draw = DrawList::default();
-        let glass = draw.push_glass([0.0, 0.0, 100.0, 100.0], 8.0, GlassTier::Panel, &theme);
+        let glass = draw.push_glass([0.0, 0.0, 100.0, 100.0], 8.0, theme.glass(Level::Panel));
         draw.begin_glass_content(glass);
         draw.push_scissor(Rect::new(10.0, 10.0, 80.0, 80.0));
         draw.push_solid([10.0, 10.0, 80.0, 80.0], Rgba::new(0.0, 1.0, 0.0, 1.0));
@@ -9847,6 +9850,37 @@ mod tests {
         draw.end_glass_content();
         let scissor_layer = draw.layers.iter().find(|layer| layer.scissor.is_some()).expect("scissor layer");
         assert_eq!(scissor_layer.foreground_of, Some(glass));
+    }
+
+    /// 🪜 `Theme::glass`/`glass_chrome` must be formula-derived off `Level::index` (never a per-tier
+    /// lookup table): alpha/blur both monotone across all 6 levels, `glass_chrome` exactly halves
+    /// alpha (see `ui_styling::levels::GLASS_CHROME_ALPHA_FACTOR`) at unchanged tint/blur/saturate.
+    #[test]
+    fn glass_alpha_and_blur_are_formula_derived_per_level() {
+        use super::{Level, Theme};
+        let theme = Theme::default();
+        let ordered = [
+            Level::Base,
+            Level::Window,
+            Level::Pane,
+            Level::Panel,
+            Level::Dialog,
+            Level::Menu,
+        ];
+        for (k, level) in ordered.iter().enumerate() {
+            assert_eq!(level.index(), k);
+            let style = theme.glass(*level);
+            assert!((style.alpha - (1.0 - k as f32 * ui_styling::levels::GLASS_ALPHA_STEP as f32)).abs() < 1e-6);
+            assert!((style.blur_px - k as f32 * ui_styling::levels::GLASS_BLUR_STEP_PX as f32).abs() < 1e-6);
+            assert_eq!(style.tint, theme.level_bg[k]);
+            let chrome = theme.glass_chrome(*level);
+            assert!((chrome.alpha - style.alpha * ui_styling::levels::GLASS_CHROME_ALPHA_FACTOR as f32).abs() < 1e-6);
+            assert_eq!(chrome.blur_px, style.blur_px);
+            assert_eq!(chrome.tint, style.tint);
+        }
+        assert!(theme.glass(Level::Base).alpha > theme.glass(Level::Menu).alpha);
+        assert!(theme.glass(Level::Base).blur_px < theme.glass(Level::Menu).blur_px);
+        assert_eq!(theme.surface(Level::Panel), theme.level_bg[Level::Panel.index()]);
     }
 }
 // #endregion draw
@@ -12231,8 +12265,9 @@ pub mod theme {
 
 use crate::geometry::Rect;
 use ui_styling::{
+    levels,
     metrics::{chrome as chrome_metrics, dom, typography},
-    opacities, radii, strokes, ChromePalette, CHROME_DARK, CHROME_LIGHT,
+    radii, strokes, ChromePalette, CHROME_DARK, CHROME_LIGHT,
 };
 use ui_styling::appearance::AppearanceName;
 
@@ -12263,13 +12298,36 @@ impl Rgba {
     }
 }
 
+//#region 🔖Level
+/// 🪜 The unified 6-level UI surface axis (base..menu, both z-order and glass/shade formula input)
+/// — see `ui/styling/tokens.json`'s `levels` block and `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`.
+/// Replaces the old unlinked `Level` (canvas/window/panel/overlay/temporary) + `GlassTier`
+/// (panel/ribbon/menu/windowOptions) axes with one formula-derived enum.
 #[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum GlassTier {
+pub enum Level {
+    Base,
+    Window,
+    Pane,
     Panel,
-    Ribbon,
+    Dialog,
     Menu,
-    WindowOptions,
 }
+
+impl Level {
+    /// 🔢 Ordinal step `k` (0..=5) every formula-derived value (`Theme::surface`/`glass`/`glass_chrome`)
+    /// is computed from — mirrors `ui/styling/rs/generated.rs`'s `levels::NAMES` ordering.
+    pub const fn index(self) -> usize {
+        match self {
+            Level::Base => 0,
+            Level::Window => 1,
+            Level::Pane => 2,
+            Level::Panel => 3,
+            Level::Dialog => 4,
+            Level::Menu => 5,
+        }
+    }
+}
+//#endregion 🔖Level
 
 #[derive(Clone, Copy, Debug)]
 pub struct GlassStyle {
@@ -12328,6 +12386,10 @@ pub struct Theme {
     pub diagram_accent: Rgba,
     pub diagram_accent_fill: Rgba,
     pub error: Rgba,
+    /// 🪜 Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
+    /// `Theme::surface`/`glass`/`glass_chrome`. Populated from the generated `levelBase..levelMenu`
+    /// chrome paints (see `from_chrome` below).
+    pub level_bg: [Rgba; 6],
 }
 
 impl Default for Theme {
@@ -12346,29 +12408,29 @@ fn panel_width(ui_spacing_mult: f64) -> f32 {
 
 fn from_chrome(chrome: &ChromePalette) -> Theme {
     Theme {
-        background: Rgba::from_chrome(&chrome.canvas),
-        panel: Rgba::from_chrome(&chrome.panel),
+        background: Rgba::from_chrome(&chrome.base),
+        panel: Rgba::from_chrome(&chrome.level_panel),
         panel_border: Rgba::from_chrome(&chrome.border_normal),
-        navbar: Rgba::from_chrome(&chrome.window),
+        navbar: Rgba::from_chrome(&chrome.level_window),
         text: Rgba::from_chrome(&chrome.foreground),
         text_muted: Rgba::from_chrome(&chrome.muted_foreground),
         accent: Rgba::from_chrome(&chrome.accent),
         accent_hover: Rgba::from_chrome(&chrome.active_hover),
         active_foreground: Rgba::from_chrome(&chrome.active_foreground),
-        button: Rgba::from_chrome(&chrome.window),
+        button: Rgba::from_chrome(&chrome.level_window),
         button_hover: Rgba::from_chrome(&chrome.hover_interactive_fill),
-        input_bg: Rgba::from_chrome(&chrome.canvas),
+        input_bg: Rgba::from_chrome(&chrome.base),
         separator: Rgba::from_chrome(&chrome.border_normal),
         selected: Rgba::from_chrome(&chrome.active_base),
-        canvas_clear: Rgba::from_chrome(&chrome.canvas),
-        temporary: Rgba::from_chrome(&chrome.temporary),
+        canvas_clear: Rgba::from_chrome(&chrome.base),
+        temporary: Rgba::from_chrome(&chrome.level_menu),
         gap_standard: chrome_px(chrome_metrics::GAP_STANDARD_UI_SPACING),
         padding_standard: chrome_px(chrome_metrics::PADDING_STANDARD_UI_SPACING),
         navbar_height: chrome_px(chrome_metrics::NAVBAR_HEIGHT_UI_SPACING),
         panel_header_height: chrome_px(chrome_metrics::PANEL_HEADER_HEIGHT_UI_SPACING),
         control_height: chrome_px(chrome_metrics::CONTROL_HEIGHT_UI_SPACING),
         control_height_small: chrome_px(5.0),
-        glass_saturate: chrome_metrics::GLASS_SATURATE as f32,
+        glass_saturate: levels::GLASS_SATURATE as f32,
         font_size_body: typography::TEXT_SM_PX as f32,
         font_size_small: typography::TEXT_XS_PX as f32,
         font_size_emphasized: typography::TEXT_BASE_PX as f32,
@@ -12393,6 +12455,14 @@ fn from_chrome(chrome: &ChromePalette) -> Theme {
         diagram_accent: Rgba::new(0.25, 0.45, 0.65, 0.9),
         diagram_accent_fill: Rgba::new(0.25, 0.35, 0.55, 0.8),
         error: Rgba::new(0.95, 0.35, 0.35, 1.0),
+        level_bg: [
+            Rgba::from_chrome(&chrome.level_base),
+            Rgba::from_chrome(&chrome.level_window),
+            Rgba::from_chrome(&chrome.level_pane),
+            Rgba::from_chrome(&chrome.level_panel),
+            Rgba::from_chrome(&chrome.level_dialog),
+            Rgba::from_chrome(&chrome.level_menu),
+        ],
     }
 }
 
@@ -12412,34 +12482,36 @@ impl Theme {
         }
     }
 
-    pub fn glass(&self, tier: GlassTier) -> GlassStyle {
-        match tier {
-            GlassTier::Panel => GlassStyle {
-                tint: self.panel,
-                alpha: opacities::GLASS_PANEL_ALPHA as f32,
-                blur_px: chrome_metrics::GLASS_PANEL_BLUR_PX as f32,
-                saturate: self.glass_saturate,
-            },
-            GlassTier::Ribbon => GlassStyle {
-                tint: self.panel,
-                alpha: 0.3,
-                blur_px: chrome_metrics::GLASS_BLUR_PX as f32,
-                saturate: self.glass_saturate,
-            },
-            GlassTier::Menu => GlassStyle {
-                tint: self.temporary,
-                alpha: opacities::GLASS_MENU_ALPHA as f32,
-                blur_px: chrome_metrics::GLASS_BLUR_PX as f32,
-                saturate: self.glass_saturate,
-            },
-            GlassTier::WindowOptions => GlassStyle {
-                tint: self.panel,
-                alpha: opacities::GLASS_WINDOW_OPTIONS_ALPHA as f32,
-                blur_px: chrome_metrics::GLASS_WINDOW_OPTIONS_BLUR_PX as f32,
-                saturate: self.glass_saturate,
-            },
+    //#region 🔖LevelSurfaces
+    /// 🪜 Plain per-level fill (no blur/alpha) — `ui-surface`'s wgpu counterpart.
+    pub fn surface(&self, level: Level) -> Rgba {
+        self.level_bg[level.index()]
+    }
+
+    /// 🧊 Formula-derived glass style for `level` — `ui-glass`'s wgpu counterpart. Alpha steps down
+    /// and blur steps up per level index (`ui/styling/tokens.json`'s `levels` block:
+    /// `alpha(k) = 1 - k * glassAlphaStep`, `blur(k) = k * glassBlurStepPx`), read from
+    /// `ui_styling::levels` constants — never a per-tier lookup table.
+    pub fn glass(&self, level: Level) -> GlassStyle {
+        let k = level.index() as f32;
+        GlassStyle {
+            tint: self.level_bg[level.index()],
+            alpha: 1.0 - k * levels::GLASS_ALPHA_STEP as f32,
+            blur_px: k * levels::GLASS_BLUR_STEP_PX as f32,
+            saturate: self.glass_saturate,
         }
     }
+
+    /// 🎗️ Attached-chrome variant of `glass` (ribbons/rails) — `ui-glass-chrome`'s wgpu counterpart:
+    /// same tint/blur as `glass(level)`, alpha scaled by `GLASS_CHROME_ALPHA_FACTOR`.
+    pub fn glass_chrome(&self, level: Level) -> GlassStyle {
+        let style = self.glass(level);
+        GlassStyle {
+            alpha: style.alpha * levels::GLASS_CHROME_ALPHA_FACTOR as f32,
+            ..style
+        }
+    }
+    //#endregion 🔖LevelSurfaces
 
     pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {
         (blur_px / 4.0).log2().max(0.0).min(max_mip as f32)
@@ -12482,7 +12554,7 @@ use crate::draw::{DrawList, IconAtlas};
 use crate::IconName;
 use crate::geometry::Rect;
 use crate::text::FontAtlas;
-use crate::theme::{GlassTier, Rgba, Theme};
+use crate::theme::{Level, Rgba, Theme};
 use crate::tree::{EditState, NodeFlags, NodeKey, UiTree};
 use crate::widgets::{draw_text_on, wrap_text};
 
@@ -12963,7 +13035,7 @@ fn paint_select(node: &UiSelectNode, bounds: Rect, flags: NodeFlags, open: bool,
     let item_h = theme.control_height;
     let menu_h = node.items.len() as f32 * item_h + 4.0;
     let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
-    draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, GlassTier::Menu, theme);
+    draw.push_glass([menu.x, menu.y, menu.w, menu.h], theme.border_radius, theme.glass(Level::Menu));
     for (index, item) in node.items.iter().enumerate() {
         let relative = select_popup_row_rect(bounds.w, bounds.h, index, theme);
         let row = Rect::new(bounds.x + relative.x, bounds.y + relative.y, relative.w, relative.h);
@@ -18060,7 +18132,7 @@ use crate::geometry::Rect;
 use crate::input::{DragAxis, HitKind, HitTarget, InputState};
 use crate::layout::{gap_for_token, layout_horizontal, layout_vertical, padding_for_token};
 use crate::text::FontAtlas;
-use crate::theme::{GlassTier, Rgba, Theme};
+use crate::theme::{Level, Rgba, Theme};
 use crate::IconName;
 use std::collections::HashMap;
 
@@ -18724,7 +18796,7 @@ fn render_select_menu<E: Clone>(
     let menu_h = items.len() as f32 * item_h + 4.0;
     let menu = Rect::new(bounds.x, bounds.y + bounds.h + 2.0, bounds.w, menu_h);
     let mut render_rows = |draw: &mut DrawList| {
-        draw.push_glass([menu.x, menu.y, menu.w, menu.h], ctx.theme.border_radius, GlassTier::Menu, ctx.theme);
+        draw.push_glass([menu.x, menu.y, menu.w, menu.h], ctx.theme.border_radius, ctx.theme.glass(Level::Menu));
         for (index, item) in items.iter().enumerate() {
             let row = Rect::new(menu.x + 2.0, menu.y + 2.0 + index as f32 * item_h, menu.w - 4.0, item_h);
             let row_hovered = ctx.input.hit_at(ctx.input.pointer_x, ctx.input.pointer_y)
@@ -19827,7 +19899,7 @@ pub async fn clipboard_read_text() -> Option<String> {
 // #region re-exports
 // 🧩 Always available: declarative component types + engine-agnostic primitives (default features).
 pub use geometry::Rect;
-pub use theme::{GlassTier, Rgba, Theme};
+pub use theme::{GlassStyle, Level, Rgba, Theme};
 pub use component::layout::{
     collect_window_kind_ids_from_layout, create_default_layout, create_named_layout, create_stack_layout,
     create_tab_stack_layout, create_window_layout, even_window_layout, merge_named_layouts, ActionDescriptor,

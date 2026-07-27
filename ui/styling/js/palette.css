@@ -221,3 +221,16 @@
   --spacing-compact: 0.2rem;
   --spacing-touch: 0.275rem;
 }
+
+/* 🌓 Level system knobs (ui/styling/tokens.json → levels) — formula in ui.css's [data-level] blocks reads these. */
+:root {
+  --level-shade-step-percent: 5%;
+  --level-element-step-percent: 6%;
+  --level-hover-step-percent: 12%;
+  --level-glass-alpha-step: 0.12;
+  --level-glass-blur-step: 8px;
+  --level-glass-saturate: 1.45;
+  --level-glass-chrome-alpha-factor: 0.5;
+  --level-veil-alpha-extra-steps: 1;
+  --level-z-step: 10;
+}

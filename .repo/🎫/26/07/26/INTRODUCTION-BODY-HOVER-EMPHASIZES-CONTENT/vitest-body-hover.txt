@@ -3,16 +3,7 @@
 
 
  Test Files  1 passed (1)
-      Tests  1 passed | 434 skipped (435)
-   Start at  03:15:44
-   Duration  5.47s (transform 2.72s, setup 227ms, import 4.30s, tests 177ms, environment 484ms)
-
-
- RUN  v4.1.7 /Users/ueli/Documents/semio/ui/js/react
-
-
- Test Files  1 passed (1)
-      Tests  3 passed | 432 skipped (435)
-   Start at  03:15:54
-   Duration  5.93s (transform 3.41s, setup 228ms, import 4.90s, tests 138ms, environment 417ms)
+      Tests  2 passed | 446 skipped (448)
+   Start at  11:53:26
+   Duration  2.82s (transform 1.29s, setup 135ms, import 2.16s, tests 50ms, environment 372ms)
 

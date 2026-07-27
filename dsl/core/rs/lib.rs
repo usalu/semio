@@ -228,6 +228,8 @@ pub enum TokenKind {
     At,
     Arrow,
     DashArrow,
+    BackArrow,
+    Placeholder,
     LBrace,
     RBrace,
     LBracket,
@@ -587,7 +589,17 @@ pub fn lex(text: &str, limits: &Limits, forgiving: bool) -> Result<Vec<SpannedTo
                 j += 1;
             }
             i = j;
-            push!(TokenKind::Ident, start_line, start_col, start_byte, buf);
+            // A lone `_` is the placeholder sigil (positional "absent" marker), never an ident —
+            // `_foo`/`foo_bar` still lex as ordinary idents since the buffer differs from "_".
+            let kind = if buf == "_" { TokenKind::Placeholder } else { TokenKind::Ident };
+            push!(kind, start_line, start_col, start_byte, buf);
+            continue;
+        }
+        if c == '<' && i + 1 < chars.len() && chars[i + 1] == '-' {
+            i += 2;
+            byte_offset += 2;
+            column += 2;
+            push!(TokenKind::BackArrow, start_line, start_col, start_byte, "<-".to_string());
             continue;
         }
         if c == '-' && i + 1 < chars.len() && chars[i + 1] == '>' {
@@ -661,7 +673,8 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
                 }
                 TokenKind::Int | TokenKind::Float => TokenClass::Number,
                 TokenKind::Text => TokenClass::String,
-                TokenKind::Equals | TokenKind::Arrow | TokenKind::DashArrow | TokenKind::At | TokenKind::Colon => TokenClass::Operator,
+                TokenKind::Placeholder => TokenClass::Ident,
+                TokenKind::Equals | TokenKind::Arrow | TokenKind::DashArrow | TokenKind::BackArrow | TokenKind::At | TokenKind::Colon => TokenClass::Operator,
                 TokenKind::Comma | TokenKind::LBrace | TokenKind::RBrace | TokenKind::LBracket | TokenKind::RBracket | TokenKind::LParen | TokenKind::RParen => TokenClass::Punctuation,
                 TokenKind::Comment => TokenClass::Comment,
                 TokenKind::Error => TokenClass::Error,
@@ -670,6 +683,25 @@ pub fn token_classes(tokens: &[SpannedToken], keywords: &[&str]) -> Vec<(TokenCl
             (class, t.span)
         })
         .collect()
+}
+/// @emoji 🪪 True iff `s` lexes (strict) as exactly one `Ident` token whose text equals `s` —
+/// i.e. `s` is safe to print bare (unquoted) wherever `Shape::Text` is expected. Excludes the
+/// reserved literal idents (`_`/`true`/`false`/`null`/`nan`/`inf`) and anything number-shaped
+/// (those lex as `Int`/`Float`/`Placeholder`, not `Ident`, so they're already excluded by
+/// construction — the reserved-word list catches the ones that would otherwise lex as `Ident`).
+/// Implemented defensively by actually calling the lexer rather than hand-rolling a second
+/// notion of "identifier-shaped" that could drift from the real grammar.
+pub fn is_bare_ident(s: &str) -> bool {
+    if matches!(s, "_" | "true" | "false" | "null" | "nan" | "inf") {
+        return false;
+    }
+    match lex(s, &Limits::default(), false) {
+        Ok(tokens) => {
+            let significant: Vec<&SpannedToken> = tokens.iter().filter(|t| t.kind != TokenKind::Eof).collect();
+            matches!(significant.as_slice(), [only] if only.kind == TokenKind::Ident && only.text.as_str().as_ref() == s)
+        }
+        Err(_) => false,
+    }
 }
 //#endregion 🔖Lexer
 
@@ -905,6 +937,68 @@ mod tests {
         let error = diagnostic.into_text_error();
         assert_eq!(error.span, TextSpan::at(2, 3));
         assert_eq!(error.expected.as_deref(), Some("camera|layer"));
+    }
+
+    #[test]
+    fn lexer_back_arrow_tokenizes_distinctly_from_dash_and_arrow() {
+        let tokens = lex("a<-b a->b a--b a<-hexagonal-column", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> =
+            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Ident, "a".to_string()),
+                (TokenKind::BackArrow, "<-".to_string()),
+                (TokenKind::Ident, "b".to_string()),
+                (TokenKind::Ident, "a".to_string()),
+                (TokenKind::Arrow, "->".to_string()),
+                (TokenKind::Ident, "b".to_string()),
+                (TokenKind::Ident, "a".to_string()),
+                (TokenKind::DashArrow, "--".to_string()),
+                (TokenKind::Ident, "b".to_string()),
+                (TokenKind::Ident, "a".to_string()),
+                (TokenKind::BackArrow, "<-".to_string()),
+                // `<` isn't ident-continue, so the '<' of "<-" can never be swallowed into the
+                // preceding kebab ident, and the following ident lexes untouched.
+                (TokenKind::Ident, "hexagonal-column".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn lexer_lone_underscore_is_placeholder_but_underscore_words_are_ident() {
+        let tokens = lex("_ _foo foo_bar _", &Limits::default(), false).expect("lex");
+        let significant: Vec<(TokenKind, String)> =
+            tokens.iter().filter(|t| !t.kind.is_trivia() && t.kind != TokenKind::Eof).map(|t| (t.kind, t.text.as_str().to_string())).collect();
+        assert_eq!(
+            significant,
+            vec![
+                (TokenKind::Placeholder, "_".to_string()),
+                (TokenKind::Ident, "_foo".to_string()),
+                (TokenKind::Ident, "foo_bar".to_string()),
+                (TokenKind::Placeholder, "_".to_string()),
+            ]
+        );
+    }
+
+    #[test]
+    fn is_bare_ident_accepts_normal_idents_and_rejects_reserved_and_number_shaped() {
+        assert!(is_bare_ident("alpha"));
+        assert!(is_bare_ident("hexagonal-mushroom-column"));
+        assert!(is_bare_ident("airtightness_n50"));
+        assert!(!is_bare_ident("_"));
+        assert!(!is_bare_ident("true"));
+        assert!(!is_bare_ident("false"));
+        assert!(!is_bare_ident("null"));
+        assert!(!is_bare_ident("nan"));
+        assert!(!is_bare_ident("inf"));
+        assert!(!is_bare_ident("3"));
+        assert!(!is_bare_ident("1.5"));
+        assert!(!is_bare_ident("-inf"));
+        assert!(!is_bare_ident("-2"));
+        assert!(!is_bare_ident("two words"));
+        assert!(!is_bare_ident(""));
+        assert!(!is_bare_ident("\"quoted\""));
     }
 
     #[test]

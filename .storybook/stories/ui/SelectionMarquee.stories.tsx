@@ -30,7 +30,7 @@ type Story = StoryObj<typeof meta>;
 export const RectFull: Story = {
   name: 'shape="rect", coverage="full" (drag left-to-right)',
   render: () => (
-    <div className="relative h-64 w-96 border bg-canvas">
+    <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee shape="rect" coverage="full" rect={{ x: 40, y: 30, width: 220, height: 140 }} />
     </div>
   ),
@@ -39,7 +39,7 @@ export const RectFull: Story = {
 export const RectPartial: Story = {
   name: 'shape="rect", coverage="partial" (drag right-to-left — dashed)',
   render: () => (
-    <div className="relative h-64 w-96 border bg-canvas">
+    <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee shape="rect" coverage="partial" rect={{ x: 40, y: 30, width: 220, height: 140 }} />
     </div>
   ),
@@ -48,7 +48,7 @@ export const RectPartial: Story = {
 export const Polygon: Story = {
   name: 'shape="polygon" (lasso gesture)',
   render: () => (
-    <div className="relative h-64 w-96 border bg-canvas">
+    <div className="relative h-64 w-96 border ui-surface" data-level="base">
       <SelectionMarquee
         shape="polygon"
         coverage="full"

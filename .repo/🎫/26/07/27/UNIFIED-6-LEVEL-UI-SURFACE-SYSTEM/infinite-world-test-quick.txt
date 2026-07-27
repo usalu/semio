@@ -1,0 +1,20 @@
+
+> nx run @semio-tech/infinite-world-r3f:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/infinite/world/r3f
+
+
+ Test Files  2 passed (2)
+      Tests  188 passed (188)
+   Start at  13:31:14
+   Duration  5.42s (transform 4.73s, setup 0ms, import 8.64s, tests 102ms, environment 1.76s)
+
+
+
+
+ NX   Successfully ran target test-quick for project @semio-tech/infinite-world-r3f
+
+

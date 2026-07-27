@@ -354,7 +354,7 @@ export function RhinoPanel() {
   }, []);
 
   return (
-    <div className="flex h-full flex-col bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100">
+    <div className="flex h-full flex-col ui-surface text-zinc-900 dark:text-zinc-100" data-level="panel">
       {/* Header */}
       <div className="border-b border-zinc-200 px-3 py-2 dark:border-zinc-700">
         <h1 className="text-sm font-semibold">compose</h1>

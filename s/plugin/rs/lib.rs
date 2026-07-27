@@ -977,7 +977,8 @@ pub mod app_studio {
     }
 
     /// @emoji ✨ Builds the `SpawnAppInstance` operation (minting a deterministic instance id + app-document id
-    /// embedded in the operation, so replay never re-mints) plus the new instance id for the caller to focus.
+    /// + media-graph node id, all embedded in the operation, so replay never re-mints) plus the new instance
+    /// id for the caller to focus.
     /// The store-free operation-builder the plugin uses in place of os-core's `OsStore::spawn_app_instance`
     /// (a `DocumentApp` owns no store — its wrapper does).
     fn spawn_app_instance_operation(
@@ -988,6 +989,7 @@ pub mod app_studio {
     ) -> Option<(OsOperation, String)> {
         let registration = os_app_registration(program_id, app_id)?;
         let instance_id = create_os_id("app");
+        let node_id = create_os_id("node");
         let instance = OsAppInstance {
             id: instance_id.clone(),
             program_id: program_id.into(),
@@ -999,7 +1001,7 @@ pub mod app_studio {
                 schema: registration.source_format.clone(),
             },
         };
-        Some((OsOperation::SpawnAppInstance { instance, position }, instance_id))
+        Some((OsOperation::SpawnAppInstance { instance, position, node_id }, instance_id))
     }
 
     /// @emoji ➕ Builds an `AddParameter` operation with a fresh default parameter of the requested type.

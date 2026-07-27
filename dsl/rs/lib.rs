@@ -103,10 +103,10 @@ impl DslField for f64 {
     }
 }
 
-/// @emoji 🔤 `String` binds as quoted, escaped `Text` by default. Fields wanting the bare-token
-/// `Ident` shape instead (identifiers/tags) opt in via `#[dsl(ident)]`, which the derive handles
-/// by generating a direct `Shape::Ident`/`FieldValue::Ident` binding instead of routing through
-/// this impl — so this blanket impl only ever needs to cover the `Text` case.
+/// @emoji 🔤 `String` binds as `Shape::Text` — the one string shape. The parser accepts either a
+/// bare `Ident` token or a quoted `Text` token wherever `Text` is expected; the printer emits bare
+/// (unquoted) whenever `dsl_core::is_bare_ident` holds for the value, quoted+escaped otherwise —
+/// so bare-vs-quoted is entirely a printing decision now, not a separate shape a field opts into.
 impl DslField for String {
     fn shape() -> Shape {
         Shape::Text
@@ -117,8 +117,28 @@ impl DslField for String {
     fn from_value(value: &FieldValue) -> Result<Self, String> {
         match value {
             FieldValue::Text(s) => Ok(s.clone()),
-            FieldValue::Ident(s) => Ok(s.clone()),
             other => Err(format!("expected Text, found {other:?}")),
+        }
+    }
+}
+
+/// @emoji 🔌 A wire literal as a plain struct field (or inside a `#[dsl(table)]` `Vec` as a
+/// `WIRE`-typed column) — thin `DslField` wrapper around `dsl_schema::WireValue` so adopter
+/// technologies never need to hand-roll their own `Shape::Wire` binding.
+#[derive(Clone, Debug, PartialEq)]
+pub struct Wire(pub WireValue);
+
+impl DslField for Wire {
+    fn shape() -> Shape {
+        Shape::Wire
+    }
+    fn to_value(&self) -> FieldValue {
+        FieldValue::Wire(self.0.clone())
+    }
+    fn from_value(value: &FieldValue) -> Result<Self, String> {
+        match value {
+            FieldValue::Wire(w) => Ok(Wire(w.clone())),
+            other => Err(format!("expected Wire, found {other:?}")),
         }
     }
 }
@@ -340,6 +360,17 @@ mod tests {
     }
 
     #[test]
+    fn wire_field_dsl_field_impl_round_trips() {
+        let literal = parse_wire_text("a:Kind@out->b:Kind2@in").expect("parse_wire_text");
+        assert!(matches!(Wire::shape(), Shape::Wire));
+        let wire = Wire(literal.clone());
+        let value = wire.to_value();
+        assert_eq!(value, FieldValue::Wire(literal));
+        let restored = Wire::from_value(&value).expect("from_value");
+        assert_eq!(restored, wire);
+    }
+
+    #[test]
     fn serde_json_value_and_map_dsl_field_impls_round_trip_through_dsl_value() {
         // `DslValue::Number` is a single `f64` variant (no int/float distinction, matching dsl_core's
         // canonical number policy elsewhere) — literals here are already floats so the round trip is exact.
@@ -521,7 +552,9 @@ mod tests {
             ],
         };
         let printed = <ShapeDocument as vcs::DocumentDsl>::print_dsl(&doc);
-        assert!(printed.contains("circle \"c1\" r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
+        // `"c1"` is bare-ident-shaped, so the unified "strings bare-preferred" law prints it
+        // unquoted (`circle c1 r=2`, not `circle "c1" r=2`) — see `dsl_core::is_bare_ident`.
+        assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
         let parsed = <ShapeDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
     }
@@ -655,6 +688,33 @@ mod tests {
         let printed = <SelfRefDocument as vcs::DocumentDsl>::print_dsl(&doc);
         let parsed = <SelfRefDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "self-referential record round trip diverged;\nprinted:\n{printed}");
+    }
+
+    // --- end-to-end derive test: `#[dsl(table)] Vec<T>` (Structure-of-Arrays columnar field) ---
+
+    #[derive(Clone, Debug, PartialEq, DslRecord, serde::Serialize, serde::Deserialize)]
+    struct TableNodeRow {
+        id: String,
+        x: f64,
+        y: f64,
+    }
+
+    #[derive(Clone, Debug, PartialEq, DslDocument, serde::Serialize, serde::Deserialize)]
+    #[dsl(extension = "tabledoc")]
+    struct TableDocument {
+        #[dsl(table)]
+        nodes: Vec<TableNodeRow>,
+    }
+
+    #[test]
+    fn derived_table_field_prints_compact_soa_and_round_trips() {
+        let doc = TableDocument {
+            nodes: vec![TableNodeRow { id: "a".to_string(), x: 1.0, y: 2.0 }, TableNodeRow { id: "b".to_string(), x: 3.0, y: 4.0 }],
+        };
+        let printed = <TableDocument as vcs::DocumentDsl>::print_dsl(&doc);
+        assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");
+        let parsed = <TableDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
+        assert_eq!(parsed, doc, "table round trip diverged;\nprinted:\n{printed}");
     }
 }
 //#endregion 🧪Tests

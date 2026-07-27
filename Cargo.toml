@@ -5,7 +5,6 @@ members = [
     "dsl/schema/rs",
     "dsl/derive/rs",
     "dsl/editor/rs",
-    "dsl/codec/rs",
     "dsl/rs",
     "framework/core/rs",
     "framework/hash/rs",

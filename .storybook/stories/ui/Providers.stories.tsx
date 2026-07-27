@@ -13,8 +13,8 @@ import {
   createIconComponent,
   FlowProvider,
   GhostProvider,
-  GlassTierProvider,
   InteractionProvider,
+  LevelProvider,
   Panel,
   PanelDockProvider,
   singleTreeLeaf,
@@ -24,7 +24,7 @@ import {
   DEFAULT_UI_DRIVER,
   COMPACT_UI_DRIVER,
   useFlow,
-  useGlassTier,
+  useLevel,
   usePanelGhost,
   useTransaction,
   useTreeState,
@@ -56,7 +56,7 @@ type Story = StoryObj<typeof meta>;
 
 function ProbeShell({ title, children }: { readonly title: string; readonly children: ReactNode }) {
   return (
-    <div className="flex w-80 flex-col gap-single border bg-panel p-double">
+    <div className="flex w-80 flex-col gap-single border ui-surface p-double" data-level="panel">
       <h4 className="text-xs font-semibold">{title}</h4>
       {children}
     </div>
@@ -145,7 +145,7 @@ function PanelDockDemo() {
   };
   return (
     <PanelDockProvider dock={dock} onTabDockDrop={onTabDockDrop} onTreeUnitDockDrop={() => {}}>
-      <div className="relative h-64 w-full border bg-base">
+      <div className="relative h-64 w-full border ui-surface" data-level="base">
         <Panel anchor="top-left" tabs={dock.anchors["top-left"]} />
         <Panel anchor="top-right" tabs={dock.anchors["top-right"]} />
       </div>
@@ -285,21 +285,21 @@ export const Flow: Story = {
 };
 // #endregion 🧭FlowProvider
 
-// #region 🪟GlassTierProvider
-function GlassTierProbe() {
-  const tier = useGlassTier();
-  return <span className="text-xs">tier: {tier}</span>;
+// #region 🪟LevelProvider
+function LevelProbe() {
+  const level = useLevel();
+  return <span className="text-xs">level: {level}</span>;
 }
 
-export const GlassTier: Story = {
-  name: "GlassTierProvider",
+export const LevelStory: Story = {
+  name: "LevelProvider",
   render: () => (
-    <ProbeShell title="GlassTierProvider → useGlassTier()">
-      <GlassTierProvider tier="windowOptions">
-        <GlassTierProbe />
-      </GlassTierProvider>
+    <ProbeShell title="LevelProvider → useLevel()">
+      <LevelProvider level="pane">
+        <LevelProbe />
+      </LevelProvider>
     </ProbeShell>
   ),
 };
-// #endregion 🪟GlassTierProvider
+// #endregion 🪟LevelProvider
 // #endregion 🧬Providers

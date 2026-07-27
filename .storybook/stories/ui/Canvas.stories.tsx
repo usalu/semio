@@ -25,8 +25,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const WindowContent = ({ title, color = "bg-panel" }: { title: string; color?: string }) => (
-  <div className={`flex items-center justify-center h-full ${color}`}>
+// A `<Window>` root already fills `ui-surface` at level="window" (WindowChrome contract) — this
+// placeholder content stays bg-transparent so it doesn't double-tint that fill (one ui-surface/
+// ui-glass per level root; interior containers stay transparent).
+const WindowContent = ({ title }: { title: string }) => (
+  <div className="flex items-center justify-center h-full bg-transparent">
     <h2 className="text-2xl font-bold">{title}</h2>
   </div>
 );
@@ -36,10 +39,10 @@ export const Default: Story = {
     children: (
       <HorizontalWindows>
         <Window id="left" defaultSize={50}>
-          <WindowContent title="Left Window" color="bg-panel" />
+          <WindowContent title="Left Window" />
         </Window>
         <Window id="right" defaultSize={50}>
-          <WindowContent title="Right Window" color="bg-base" />
+          <WindowContent title="Right Window" />
         </Window>
       </HorizontalWindows>
     ),

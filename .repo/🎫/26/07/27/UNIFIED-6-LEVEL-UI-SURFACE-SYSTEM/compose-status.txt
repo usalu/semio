@@ -1,0 +1,101 @@
+COMPOSE lane — status (mechanical class-string restyling only, per contract + task instructions)
+=================================================================================================
+
+compose/client/ui/desktop/js/renderer.tsx
+  Does not build today: `bunx nx run @semio-tech/compose-desktop:build` fails inside its dependency
+  chain, NOT in this file — @semio-tech/compose-rs:wasm fails to compile ui/wgpu/rs/lib.rs
+  (`GlassTier`/`opacities`/`level_bg` not found — the WGPU lane's in-flight migration) and
+  @semio-tech/ui-react:build fails at `bunx storybook build` (pre-existing, unrelated to this
+  file). Changed the only hardcoded surface in this file: the fullscreen Electron loading `<div>`
+  went from `bg-neutral-950 text-white` to `ui-surface text-white` plus `data-level="base"`
+  (this is the app root / canvas host the mode body floats on, i.e. the old canvas -> new base
+  mapping). Nothing else in this 88-line file has color/background classes. Remains: nothing
+  further to restyle here; the app-level build failure is owned by other lanes
+  (WGPU / ui-react / the separate FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-REFERENCES ticket).
+
+compose/client/ui/3dm/ui/js/index.tsx
+  Does not build today: `bunx nx run @semio-tech/compose-3dm-ui:build` fails for the identical
+  reason as above — its `@semio-tech/compose-rs:wasm` and `@semio-tech/ui-react:build`
+  dependencies fail first, before this file's own code is ever bundled. This file does not import
+  the dead framework-platform packages, so it is unaffected by the sibling ticket's issue; it is
+  only blocked by the other two lanes' concurrent, in-progress work. Changed the `RhinoPanel` root
+  container from `bg-white text-zinc-900 dark:bg-zinc-900 dark:text-zinc-100` to `ui-surface
+  text-zinc-900 dark:text-zinc-100` plus `data-level="panel"` — this is a docked WebView2 chrome
+  host in Rhino, i.e. docked chrome -> panel level. Left the zinc-toned borders, hover backgrounds
+  (`hover:bg-zinc-100/-800`, `hover:bg-zinc-200/-700`), and text colors untouched: the contract's
+  four generic utilities (ui-surface/ui-glass/ui-glass-chrome/ui-veil) only cover level
+  background/glass fills, and this standalone app does not import the Level/hover helpers from
+  `ui/js/react/index.tsx` (only Kit/type/icon imports), so there is nothing exported by the
+  contract's API for those interaction-state classes to be swapped onto. Remains: same upstream
+  build blockers as above; nothing further owned by this lane to restyle.
+
+compose/client/ui/vscode/js/webview.tsx
+  Does not build today: `bunx nx run @semio-tech/compose-vscode:build` fails identically upstream
+  (`@semio-tech/compose-rs:wasm` / `@semio-tech/ui-react:build`). No change made: this file renders
+  no JSX and contains no Tailwind class strings of its own — it only calls `ensureSketchpadPlatform`
+  / `mountPlatform` and parses an injected kit JSON. `webview.html` (not owned by this lane per the
+  file list, and not a `.tsx`) has a bare `<div id="root" class="h-screen w-screen">` with no
+  color classes either. Nothing to restyle in this file.
+
+compose/client/lib/sketchpad/js/index.ts
+  Does not build/test today: `bunx nx run @semio-tech/compose-sketchpad:test` fails with
+  `Cannot find package '@semio-tech/framework-platform-core'` (the `framework/product/platform`
+  directory does not exist in the tree yet — only `framework/product/os` does) — this is exactly
+  the dead-import family owned by the sibling ticket
+  `26/07/27/FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-REFERENCES`, so left untouched per
+  instructions. Made the one required imperative-DOM restyle: in
+  `sketchpadSetHomeDropzoneOverlayVisible`, the full-screen home kit-drop overlay's
+  `overlay.className` changed from `"pointer-events-none fixed inset-0 z-50 flex items-center
+  justify-center bg-base/80 backdrop-blur-sm"` to `"pointer-events-none fixed inset-0 z-50 flex
+  items-center justify-center ui-glass"`, plus a new `overlay.setAttribute("data-level",
+  "dialog")`. Judged this as dialog level rather than menu: it is a full-viewport (`fixed inset-0`)
+  blocking drag-and-drop affordance, not a small transient popover/menu. Extended (did not create)
+  the existing inline vitest for `sketchpadSetHomeDropzoneOverlayVisible` in the same
+  `if (import.meta.vitest)` block to assert `overlay.getAttribute("data-level") === "dialog"` and
+  `overlay.classList.contains("ui-glass")`. Could not actually execute this vitest file (blocked by
+  the framework-platform-core import failure above, which fails before any test body runs), so I
+  am not claiming the assertions pass at runtime — only that they are a correct, minimal, literal
+  (non-interpolated) extension of the existing test matching the new className/attribute.
+
+compose/client/lib/sketchpad/play/* and compose/client/lib/sketchpad/doc/*
+  No source file under either directory (excluding `dist/`, `node_modules/`, and `boot.tsx` /
+  `js/index.tsx` which import platform-mount only) had any raw dark-neutral/zinc/plain-white
+  Tailwind background to restyle. `play/index.html`'s `<body>` already uses the semantic
+  `bg-background text-foreground` tokens (untouched, out of scope). `doc/index.html` has no classes
+  at all. `play/script.ts` / `doc/script.ts` are nx script-router files with no UI. `play/globals.css`
+  / `doc/globals.css` only `@import`/`@source` other stylesheets, no literal colors. Confirmed via
+  `bunx nx run @semio-tech/compose-sketchpad-play:build` and
+  `bunx nx run @semio-tech/compose-sketchpad-docs:build`: both fail identically upstream at
+  `@semio-tech/compose-rs:wasm` (WGPU lib.rs mid-migration) and `@semio-tech/ui-react:build`
+  (storybook), never reaching this lane's own code. No changes made to either directory.
+
+Verification commands actually run (exact, with results)
+----------------------------------------------------------
+1. bunx nx run @semio-tech/compose-sketchpad:test
+   -> FAIL: "Error: Cannot find package '@semio-tech/framework-platform-core' imported from
+      .../compose/client/lib/sketchpad/js/index.ts" (0 tests ran; pre-existing, sibling-ticket scope).
+2. bunx nx run @semio-tech/compose-3dm-ui:build
+   -> FAIL: upstream tasks @semio-tech/compose-rs:wasm (cargo error, missing `level_bg`/`opacities`/
+      `GlassTier` in ui/wgpu/rs/lib.rs) and @semio-tech/ui-react:build (storybook build exit 1)
+      both failed before compose-3dm-ui's own vite build ran.
+3. bunx nx run @semio-tech/compose-vscode:build
+   -> FAIL: identical upstream failure (@semio-tech/compose-rs:wasm cargo error).
+4. bunx nx run @semio-tech/compose-desktop:build
+   -> FAIL: identical upstream failure (@semio-tech/compose-rs:wasm + @semio-tech/ui-react:build).
+5. bunx nx run @semio-tech/compose-sketchpad-play:build
+   -> FAIL: identical upstream failure (@semio-tech/compose-rs:wasm + @semio-tech/ui-react:build).
+6. bunx nx run @semio-tech/compose-sketchpad-docs:build
+   -> FAIL: identical upstream failure (@semio-tech/compose-rs:wasm + @semio-tech/ui-react:build).
+All six failures were inspected and confirmed to originate outside every file this lane touched
+(ui/wgpu/rs/lib.rs is WGPU-lane-owned; ui-react's storybook build is CORE/STORYBOOK-owned;
+framework/product/platform/core is the sibling FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-
+REFERENCES ticket's scope) — none are regressions introduced by the restyling in this ticket.
+
+Files touched (all in this lane's ownership)
+-----------------------------------------------
+- compose/client/ui/desktop/js/renderer.tsx (edited)
+- compose/client/ui/3dm/ui/js/index.tsx (edited)
+- compose/client/lib/sketchpad/js/index.ts (edited: overlay className/data-level + its inline vitest)
+- compose/client/ui/vscode/js/webview.tsx (inspected, no change needed)
+- compose/client/lib/sketchpad/play/* (inspected, no change needed)
+- compose/client/lib/sketchpad/doc/* (inspected, no change needed)

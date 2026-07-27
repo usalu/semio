@@ -30,11 +30,11 @@ enum Appearance {
 
 enum Level {
   BASE = "base",
-  CANVAS = "canvas",
   WINDOW = "window",
+  PANE = "pane",
   PANEL = "panel",
-  OVERLAY = "overlay",
-  TEMPORARY = "temporary",
+  DIALOG = "dialog",
+  MENU = "menu",
 }
 
 enum Device {
@@ -88,11 +88,11 @@ const preview: Preview = {
         icon: "component",
         items: [
           { value: Level.BASE, title: "Base" },
-          { value: Level.CANVAS, title: "Canvas" },
           { value: Level.WINDOW, title: "Window" },
+          { value: Level.PANE, title: "Pane" },
           { value: Level.PANEL, title: "Panel" },
-          { value: Level.OVERLAY, title: "Overlay" },
-          { value: Level.TEMPORARY, title: "Temporary" },
+          { value: Level.DIALOG, title: "Dialog" },
+          { value: Level.MENU, title: "Menu" },
         ],
         dynamicTitle: true,
       },
@@ -186,15 +186,15 @@ const preview: Preview = {
 export default preview;
 
 //#region 🔖withLevel
-import { type Level, LevelProvider, getLevelBgClass } from "@semio-tech/ui-react";
+import { type Level as UiLevel, LevelProvider, surfaceClass } from "@semio-tech/ui-react";
 import type { Decorator } from "@storybook/react-vite";
 import React from "react";
 
 // #region 🧩LevelWrapper
 /** Border + min width used when a story sets `level` via args (compose UI / algorithms). */
-export const LevelWrapper: React.FC<{ level: Level; children: React.ReactNode }> = ({ level, children }) => {
+export const LevelWrapper: React.FC<{ level: UiLevel; children: React.ReactNode }> = ({ level, children }) => {
   return (
-    <div className={`p-4 ${getLevelBgClass(level)} border min-w-[200px]`}>
+    <div className={`p-4 ${surfaceClass} border min-w-[200px]`} data-level={level}>
       <LevelProvider level={level}>{children}</LevelProvider>
     </div>
   );
@@ -203,7 +203,7 @@ export const LevelWrapper: React.FC<{ level: Level; children: React.ReactNode }>
 
 // #region 🧩WithLevel
 export const withLevel: Decorator = (Story, context) => {
-  const argLevel = context.args?.level as Level | undefined;
+  const argLevel = context.args?.level as UiLevel | undefined;
   if (argLevel) {
     return (
       <LevelWrapper level={argLevel}>
@@ -211,10 +211,10 @@ export const withLevel: Decorator = (Story, context) => {
       </LevelWrapper>
     );
   }
-  const level = context.globals.level as Level;
+  const level = context.globals.level as UiLevel;
   return (
     <LevelProvider level={level}>
-      <div className={`p-4 ${getLevelBgClass(level)}`}>
+      <div className={`p-4 ${surfaceClass}`} data-level={level}>
         <Story />
       </div>
     </LevelProvider>

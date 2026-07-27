@@ -1,0 +1,93 @@
+
+> nx run @semio-tech/framework-renderer-react:test-quick
+
+> bun ./script.ts test quick
+
+
+ RUN  v4.1.7 /Users/ueli/Documents/semio/framework/renderer/react
+
+stderr | index.test.ts > framework plugin runtime > loads plugin modules through framework-core
+[DEBUG] plugin worker mock-refresh unresponsive for 10000ms: init
+
+stderr | index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+stderr | index.test.ts
+THREE.WARNING: Multiple instances of Three.js being imported.
+
+ ❯ |@semio-tech/framework-renderer-react| index.test.ts (272 tests | 3 failed) 10827ms
+     × preserves batched UI refreshes through the React plugin adapter 5002ms
+     × loads plugin modules through framework-core 5000ms
+     × builds a select-all menu when nothing is selected 17ms
+
+⎯⎯⎯⎯⎯⎯⎯ Failed Tests 3 ⎯⎯⎯⎯⎯⎯⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| index.test.ts > framework plugin runtime > preserves batched UI refreshes through the React plugin adapter
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ <anonymous> index.test.ts:584:31
+
+ ❯ processTicksAndRejections unknown:7:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/3]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| index.test.ts > framework plugin runtime > loads plugin modules through framework-core
+Error: Test timed out in 5000ms.
+If this is a long-running test, pass a timeout value as the last argument or configure it globally with "testTimeout".
+ ❯ <anonymous> index.test.ts:591:31
+    589|
+    590|     const expanded = shellReducer(onCategory, { type: "SET_COMMAND_EXP…
+    591|     expect(expanded.commandPanel.expandedCommandId).toBe("os.setThemeI…
+       |                               ^
+    592|
+    593|     const switchedPath = shellReducer(expanded, { type: "SET_PANEL_PAT…
+ ❯ processTicksAndRejections unknown:7:39
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[2/3]⎯
+
+ FAIL  |@semio-tech/framework-renderer-react| index.test.ts > framework renderer hosts > builds a select-all menu when nothing is selected
+AssertionError: expected [ { id: 'selectAll', …(3) } ] to deeply equal [ { id: 'selectAll', …(3) } ]
+
+- Expected
++ Received
+
+  [
+    {
+      "action": "selectAll",
+-     "icon": "maximize-2",
++     "icon": "select-all",
+      "id": "selectAll",
+      "label": "Select all",
+    },
+  ]
+
+ ❯ index.test.ts:1739:19
+    1737|   it("builds a select-all menu when nothing is selected", () => {
+    1738|     const items = buildPuzzle2dSelectionMenuItems(JSON.stringify({ nod…
+    1739|     expect(items).toEqual([{ id: "selectAll", label: "Select all", ico…
+       |                   ^
+    1740|   });
+    1741|
+
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[3/3]⎯
+
+
+ Test Files  1 failed (1)
+      Tests  3 failed | 269 passed (272)
+   Start at  13:22:13
+   Duration  14.90s (transform 2.10s, setup 0ms, import 3.28s, tests 10.83s, environment 613ms)
+
+Warning: command "bun ./script.ts test quick" exited with non-zero status code
+
+
+ NX   Running target test-quick for project @semio-tech/framework-renderer-react failed
+
+Failed tasks:
+
+- @semio-tech/framework-renderer-react:test-quick
+
+Hint: run the command with --verbose for more details.
+

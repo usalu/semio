@@ -5409,11 +5409,13 @@ mod tests {
         }));
         host.set_neuron_kind_infos_json(&test_kind_infos_json());
         host.evaluate_internal();
-        assert_eq!(calls.load(Ordering::Relaxed), 0);
+        let baseline = calls.load(Ordering::Relaxed);
+        assert!(baseline > 0, "first evaluation is a cache miss and must dispatch to the bridge");
         host.evaluate_internal();
-        assert_eq!(calls.load(Ordering::Relaxed), 0);
+        assert_eq!(calls.load(Ordering::Relaxed), baseline, "an unchanged tree must be served entirely from the cache");
         host.set_slider_value("slider", 4.0);
-        assert_eq!(calls.load(Ordering::Relaxed), 1);
+        host.evaluate_internal();
+        assert_eq!(calls.load(Ordering::Relaxed), baseline + 1, "only the node downstream of the changed slider should re-dispatch");
     }
 
     #[test]

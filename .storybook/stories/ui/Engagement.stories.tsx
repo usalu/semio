@@ -83,7 +83,8 @@ export const InWindow: Story = {
           input: { placeholder: "Type an action" },
         }}
       >
-        <div className="flex h-full items-center justify-center bg-panel">Window body</div>
+        {/* Interior content of the `<Window>` above — its root already fills `ui-surface` at level="window", so this stays bg-transparent. */}
+        <div className="flex h-full items-center justify-center bg-transparent">Window body</div>
       </Window>
     </div>
   ),

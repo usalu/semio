@@ -1219,7 +1219,6 @@ mod kernel {
         fn from_value(value: &dsl::FieldValue) -> Result<Self, String> {
             match value {
                 dsl::FieldValue::Text(s) => Ok(EntityId(s.clone())),
-                dsl::FieldValue::Ident(s) => Ok(EntityId(s.clone())),
                 other => Err(format!("expected Text, found {other:?}")),
             }
         }

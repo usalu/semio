@@ -121,9 +121,12 @@ import {
   borderNormalBottomClass,
   createEvenWindowLayout,
   iconRenderPort,
-  getLevelBgClass,
+  surfaceClass,
+  glassClass,
+  glassChromeClass,
   insertWindowAtDropZone,
   interactiveActiveFillClass,
+  interactiveHoverFillClass,
   shellChromeTitleClassName,
   staticTreePanelDefinition,
   UI_MOBILE_MEDIA_QUERY,
@@ -983,7 +986,7 @@ function UiStackHost({ node, context, path }: { readonly node: UiStackNode; read
         node.gap === "none" ? "gap-0" : node.gap === "tight" ? "gap-single" : node.gap === "relaxed" ? "gap-small" : "gap-double",
         node.padding === "none" ? "p-0" : "p-double",
         `semio-ui-stack semio-ui-stack--${node.direction}`,
-        activate && cn(borderElementClass, "border bg-panel cursor-pointer rounded-md"),
+        activate && cn(borderElementClass, "border cursor-pointer rounded-md", surfaceClass),
         node.selected && "ring-primary border-primary ring-1",
       )}
       data-ui-path={path}
@@ -8533,7 +8536,7 @@ export function FrameworkOsShell({
     <AppKeybindingsContext.Provider value={keysByActionId}>
     <UIFindProvider>
       <LevelProvider level="window">
-        <div className={`flex h-screen min-h-0 w-screen flex-col ${getLevelBgClass("window")}`}>
+        <div className={cn("flex h-screen min-h-0 w-screen flex-col", surfaceClass)} data-level="window">
           <PanelDockProvider dock={dock} onTabDockDrop={handleTabDockDrop} onTreeUnitDockDrop={handleTreeUnitDockDrop}>
             <Layout
               mobile={mobile}
@@ -11478,7 +11481,7 @@ export function Canvas2dHost({ node, onAction }: ComponentSceneHostProps) {
   if (!scene) return <div className="semio-canvas-2d-empty">{emptySceneLabel}</div>;
 
   return (
-    <div ref={containerRef} className="semio-canvas-2d-host h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
+    <div ref={containerRef} className="semio-canvas-2d-host h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} onDragOver={handleDragOver} onDragLeave={handleDragLeave} onDrop={handleDrop}>
       <GraphWasmCanvas className="h-full w-full" sessionFactory={sessionFactory} />
     </div>
   );
@@ -15768,7 +15771,7 @@ export function World3dHost({ node, onAction }: ComponentSceneHostProps) {
             {frame ? <IconShotFrame width={frame.width} height={frame.height} shape={frame.shape === "ellipse" ? "ellipse" : "rectangle"} badge={frame.badge !== false} background={frame.background} /> : null}
             <WorldOrbitProjectionSwitchPane spec={worldProjectionSpec} onSpecChange={handleProjectionKindChange} />
             {computing ? (
-              <div className="pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded bg-panel/90 px-2 py-1 text-xs shadow-sm" role="status" aria-busy="true">
+              <div className={cn("pointer-events-none absolute right-3 top-3 flex items-center gap-2 rounded px-2 py-1 text-xs shadow-sm", glassChromeClass)} data-level="pane" role="status" aria-busy="true">
                 <Spinner size="small" />
                 <span>{shellLabel("ui.common.loading")}</span>
               </div>
@@ -16236,6 +16239,7 @@ function FlowSpotlight({
     <div
       ref={rootRef}
       className={cn("pointer-events-auto absolute z-60 flex min-h-0 w-layout-floating-menu-sm flex-col overflow-hidden", floatingMenuSurfaceClass)}
+      data-level="menu"
       style={{ left: state.screen.x, top: state.screen.y }}
       onPointerDown={(event) => event.stopPropagation()}
       onDoubleClick={(event) => event.stopPropagation()}
@@ -16397,7 +16401,7 @@ function MediaGraphDiagramNode({ data }: NodeProps<MediaGraphNodeData>) {
   const rowHeight = 18;
   const bodyHeight = Math.max(data.height, 56 + rowCount * rowHeight);
   return (
-    <div className="rounded border border-border bg-panel text-panel-foreground shadow-sm" style={{ width: data.width, minHeight: bodyHeight }}>
+    <div className="rounded border border-border bg-background text-foreground shadow-sm" style={{ width: data.width, minHeight: bodyHeight }}>
       <div className="border-b border-border px-2 py-1 text-xs font-medium">{data.label}</div>
       <div className="relative px-2 py-1 text-[10px] leading-[18px]">
         {Array.from({ length: rowCount }, (_, rowIndex) => {
@@ -16636,7 +16640,8 @@ function WasmGraphSurface({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full"
+      className={cn("relative h-full w-full", surfaceClass)}
+      data-level="base"
       onContextMenu={(event) => {
         if (!editable || contextMenuItems.length === 0) return;
         event.preventDefault();
@@ -16773,7 +16778,8 @@ function DiagramGraphFallback({
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full"
+      className={cn("relative h-full w-full", surfaceClass)}
+      data-level="base"
       onDragOver={(event) => {
         if (editable && event.dataTransfer.types.includes(CATALOGUE_DRAG_MIME)) event.preventDefault();
       }}
@@ -16883,7 +16889,7 @@ const useClient = () => {
 function PresencePeersOverlay({ peers }: { readonly peers: readonly PresencePeer[] }) {
   if (peers.length === 0) return null;
   return (
-    <div className="pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 bg-window/90 px-2 py-1 text-xs shadow-sm">
+    <div className={cn("pointer-events-none absolute right-2 top-2 z-panel flex max-w-[14rem] flex-col gap-1 rounded border border-border/60 px-2 py-1 text-xs shadow-sm", glassChromeClass)} data-level="pane">
       {peers.map((peer) => (
         <div key={peer.clientId} className="flex items-center justify-between gap-2 text-muted-foreground">
           <span className="truncate font-medium text-foreground">{peer.name}</span>
@@ -17447,7 +17453,7 @@ export function alignModeToDag(mode: string): string {
 
 export function SelectionAlignChrome({ bounds, onAlign }: { readonly bounds: DagSelectionBounds; readonly onAlign: (mode: string) => void }) {
   return (
-    <div className="pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border bg-panel p-0.5 shadow-sm" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
+    <div className={cn("pointer-events-auto absolute z-50 flex gap-0.5 rounded border border-border p-0.5 shadow-sm", glassChromeClass)} data-level="pane" style={{ left: bounds.x, top: Math.max(0, bounds.y - 28) }}>
       {ALIGN_MODES.map((mode) => (
         <button key={mode.id} type="button" className="size-5 rounded text-xs hover:bg-active-base" aria-label={mode.id} onPointerDown={(event) => event.stopPropagation()} onClick={() => onAlign(mode.id)}>
           {mode.label}
@@ -18699,7 +18705,8 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
       >
         {renameDraft ? (
           <input
-            className="pointer-events-auto absolute z-50 min-w-[12rem] rounded border border-border bg-panel px-2 py-1 font-mono text-xs text-foreground shadow-md"
+            className={cn("pointer-events-auto absolute z-50 min-w-[12rem] rounded border border-border px-2 py-1 font-mono text-xs text-foreground shadow-md", glassChromeClass)}
+            data-level="pane"
             style={renamePosition ? { left: renamePosition.x, top: renamePosition.y - 4 } : { left: 12, top: 12 }}
             value={renameDraft.text}
             autoFocus
@@ -18724,7 +18731,7 @@ function WasmEditorSurface({ scene, controllerId, surfaceId, onAction }: { reado
               const session = sessionRef.current;
               const position = session ? caretScreenPosition(session) : null;
               return (
-                <div className="pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border bg-popover p-1 shadow-md" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
+                <div className={cn("pointer-events-auto absolute z-50 max-h-48 min-w-40 overflow-auto rounded border border-border p-1 shadow-md", glassClass)} data-level="menu" style={position ? { left: position.x, top: position.y + 18 } : { left: 12, top: 12 }}>
                   {completions.map((item, index) => (
                     <button
                       key={`${item.label}-${index}`}
@@ -18923,7 +18930,7 @@ export function TextEditorHost({ node, onAction }: ComponentSceneHostProps) {
   if (!scene) return <div className="semio-text-editor-empty">{emptySceneLabel}</div>;
 
   return (
-    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col bg-canvas" data-surface-id={node.surfaceId}>
+    <div className="semio-text-editor-host flex h-full min-h-[16rem] w-full flex-col ui-surface" data-level="base" data-surface-id={node.surfaceId}>
       {isClient ? (
         <WasmEditorSurface scene={scene} controllerId={node.controllerId} surfaceId={node.surfaceId} onAction={onAction} />
       ) : (
@@ -19615,10 +19622,10 @@ function Paint2dCanvasSurface({ node, scene, onAction }: { readonly node: UiComp
   //#endregion Pointer
 
   return (
-    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full bg-canvas" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
+    <div ref={containerRef} className="semio-paint-2d-canvas-surface relative h-full min-h-[24rem] w-full ui-surface" data-level="base" data-controller-id={node.controllerId} data-surface-id={node.surfaceId} data-view-mode={scene.viewMode}>
       <Paint2dWasmCanvas sessionFactory={sessionFactory} onSessionReady={onSessionReady} />
       {attachError ? (
-        <div className="absolute inset-0 flex items-center justify-center bg-canvas text-xs text-muted-foreground">
+        <div className="absolute inset-0 flex items-center justify-center ui-surface text-xs text-muted-foreground">
           {canvasUnavailableLabel}: {attachError}
         </div>
       ) : null}
@@ -20725,7 +20732,7 @@ export function TiledMapHost({ node, onAction }: ComponentSceneHostProps) {
       {marqueeOverlay?.shape === "polygon" ? <SelectionMarquee coverage={marqueeOverlay.coverage} shape="polygon" points={marqueeOverlay.points} /> : null}
       <ContextMenuController open={contextMenu.open} position={contextMenu.position} items={contextMenu.items} onOpenChange={(open) => setContextMenu((prev) => ({ ...prev, open }))} />
       {hoveredFeature?.kind === "position" ? (
-        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} style={{ left: 0, top: 0 }}>
+        <div ref={popupRef} className={cn("pointer-events-none absolute z-10 max-w-56 -translate-x-1/2 -translate-y-[calc(100%+12px)] px-2 py-1.5", floatingMenuSurfaceClass)} data-level="menu" style={{ left: 0, top: 0 }}>
           {(() => {
             const meta = positionMetaById.get(hoveredFeature.id);
             const title = meta?.name ?? meta?.label ?? hoveredFeature.id;
@@ -23307,7 +23314,8 @@ export function InkCanvasHost({ node, onAction }: ComponentSceneHostProps) {
       ref={rootRef}
       tabIndex={0}
       data-surface-id={node.surfaceId}
-      className={cn("bg-muted/20 relative h-full w-full touch-none overflow-hidden outline-none")}
+      data-level="base"
+      className={cn("relative h-full w-full touch-none overflow-hidden outline-none", surfaceClass)}
       onPointerDown={handlePointerDown}
       onPointerMove={handlePointerMove}
       onPointerUp={handlePointerUp}
@@ -23440,7 +23448,7 @@ function BlockCard({ block, stepId, controllerId, onAction }: { readonly block: 
   return (
     <SortableRow id={block.id}>
       {() => (
-        <div className="semio-block-card flex items-center gap-2 rounded border border-border bg-panel p-single" data-block-id={block.id}>
+        <div className="semio-block-card flex items-center gap-2 rounded border border-border bg-background p-single" data-block-id={block.id}>
           <Icon icon="grip-vertical" size="small" />
           <div className="min-w-0 flex-1">
             <div className="truncate text-xs font-medium">{block.label}</div>
@@ -23470,7 +23478,7 @@ function StepCard({ step, palette, controllerId, onAction }: { readonly step: St
     <SortableRow id={step.id}>
       {() => (
         <div
-          className="semio-step-card flex flex-col gap-2 rounded border border-border bg-panel p-single"
+          className="semio-step-card flex flex-col gap-2 rounded border border-border bg-background p-single"
           data-step-id={step.id}
           onDragOver={(event) => {
             event.preventDefault();
@@ -23783,7 +23791,7 @@ export function EventFeedHost({ node, onAction }: ComponentSceneHostProps) {
       {entries.map((entry) => (
         <div
           key={entry.id}
-          className={cn("flex items-start gap-single rounded-md p-single", activateAction && "hover:bg-panel cursor-pointer")}
+          className={cn("flex items-start gap-single rounded-md p-single", activateAction && cn(interactiveHoverFillClass, "cursor-pointer"))}
           role={activateAction ? "button" : undefined}
           onClick={
             activateAction

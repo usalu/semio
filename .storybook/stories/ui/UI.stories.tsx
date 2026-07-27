@@ -7,8 +7,11 @@ import { App, Mode, Ui, reactHostPort } from "@semio-tech/ui-react";
 import type { Meta, StoryObj } from "@storybook/react";
 // #endregion 🔌Adapters
 
+// `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
+// a `<Window>` (level="window"), both of which already fill `ui-surface`/`ui-glass` — this stays
+// bg-transparent so it doesn't double-tint either ancestor fill.
 const Pane = ({ title }: { title: string }) => (
-  <div className="flex h-full items-center justify-center bg-window">
+  <div className="flex h-full items-center justify-center bg-transparent">
     <h2 className="text-xl font-bold">{title}</h2>
   </div>
 );

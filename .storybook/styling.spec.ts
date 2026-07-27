@@ -65,19 +65,20 @@ test("styling/Tokens Colors: renders the STYLING_TOKENS palette as a table", asy
 //#endregion 🔖Tokens
 
 //#region 🔖Glass
-test("styling/Glass AllTiers: renders every GlassTier's surface class swatch", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-glass--all-tiers");
+test("styling/Glass AllLevels: renders every Level's ui-glass/ui-glass-chrome swatch", async ({ page }) => {
+  await expectStylingStory(page, "🎨styling-glass--all-levels");
   await expect(page.getByText("panel", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("ribbon", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText("window", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("menu", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText("windowOptions", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(".ui-glass-panel", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText("pane", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(".ui-glass", { exact: false }).first()).toBeVisible();
+  await expect(page.getByText(".ui-glass-chrome", { exact: false }).first()).toBeVisible();
 });
 
-test("styling/Glass DefaultTierFallback: useGlassTier() falls back to menu outside any provider", async ({ page }) => {
-  await expectStylingStory(page, "🎨styling-glass--default-tier-fallback");
-  await expect(page.getByText("menu", { exact: true }).first()).toBeVisible();
-  await expect(page.getByText(".ui-glass-menu", { exact: false }).first()).toBeVisible();
+test("styling/Glass DefaultLevelFallback: useLevel() falls back to base outside any provider", async ({ page }) => {
+  await expectStylingStory(page, "🎨styling-glass--default-level-fallback");
+  await expect(page.getByText("base", { exact: true }).first()).toBeVisible();
+  await expect(page.getByText(".ui-glass", { exact: false }).first()).toBeVisible();
 });
 //#endregion 🔖Glass
 

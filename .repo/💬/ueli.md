@@ -20,6 +20,104 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 # 🔍 Research
 
+## db
+
+---
+
+We want to create a thrid crate: db
+db is a database for efficiently storing, querying, resolving conflicts, etc for collaborative co.
+We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls.
+Integrate it with vcs, pack and protocol
+Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## protocol
+
+---
+
+We want to create a second crate: protocol
+Protocol is a technology for defining custom commands (some change documents, some only affect ui). We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls. Protocols are the mechanism to efficiently serialize, deserialize, store the history of all commands. Make sure they are heavily optimized for streaming, zero-copy of buffers, etc
+Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## pack
+
+---
+
+What are advanced features for creating custom protocols? We create a new technology called pack that allows for extreme optimized storage and streaming of documents. It must provide mechanisms for apps to define custom documents. Assume documents can be gigabytes large and app developers should be able to configure lazy loadable content, have uis that are incrementally loaded etc. Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## brep
+
+---
+
+What are advanced features for a brep kernel? Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## wfc
+
+---
+
+What are advanced wave function collapse features for generative design? Three different solvers 2d, 3d and general graph solver.
+Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## entropy
+
+---
+
+What are advanced entropy information theory features?
+Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## dsl
+
+---
+
+What are advanced features for creating domain specific languages? We want it to be declarative, it needs to be expressive for languages. We use dsl to represent documents and operations for more token efficient and readable persistence and transport than json. It needs to have support for fast compiler checking, parsing, tokenization, sanitization. We provide an editor that is not character based but token based.
+Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+## norm
+
+### iso
+
+####
+
+---
+
+We want to create a rust crate for everything in ISO 16757
+Make an exhaustive bulleted feature tree list with everything inside that norm
+
+---
+
+### vdi
+
+#### 3805
+
+---
+
+We want to create a rust crate for everything in VDI 3805 Make an exhaustive bulleted feature tree list with everything inside that norm
+
+---
+
+### animate
+
+---
+
+How does manim work architecturally?
+How does manim handle nested animations?
+Make a bullet point tree of all features of manim that I can copy
+
+---
+
 ## 🧩elements
 
 ###
@@ -248,6 +346,42 @@ Make fullblown, clean mechanisms that generalize well to all apps.
 Make the first demo tutorial for aggregator.
 Implement the tutorial api and support for all apps.
 Everything end to end.
+
+---
+
+Introduce a new technology: db
+db is a database for storing 
+
+--- 
+
+Introduce a new layer into every app along with the mechanisms around it: protocol
+Currently every app uses text-based ops (handcrafted representations for a commands with custom syntax, etc) to interact with the document. Instead use a heavily optimized binary format (streaming support, optimized layouts, etc). Every app defines its own handcrafted protocol format. Integrate it with vcs history-based materalization with pack.
+Keep the op layer and make sure that every protocol is bidirectionally convertable. The op layer is used for debugging, llms, etc
+Create a general fullblown feature-complete rust crate and exhaustively refactor all apps.
+Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows
+
+---
+
+Introduce a new layer into every app along with the mechanisms around it: pack
+Currently every app uses text-based dsl (handcrafted textual representation for a document with custom syntax, etc) to store complete documents. Instead use a heavily optimized binary format (streaming support, optimized layouts, etc). Every app defines its own handcrafted pack format. Currently use it only for storing the initial document and for export and import but keep the vcs history-based materalization with op (it will be replaced in the future with protocol which is an equivalent of op but in binary).
+Keep the dsl layer and make sure that every pack is bidirectionally convertable. The dsl layer is used for debugging, llms, etc
+Create a general fullblown feature-complete rust crate and exhaustively refactor all apps.
+Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows
+
+---
+
+Every dsl must be maximum token/parser efficient (implicit dont repeat schema, dont add additional ascii art characters e.g. turtle graphics is a good example, allow for verbose syntax but also prefer implicit, etc) and intuitive to the domain, make existing languages subset (e.g. svg paths). Make sure to optimize layout for lazy loading (streaming support) in order to display and access data before the complete document is loaded. Use all enhaced strategies such as Structure of Arrays (SoA) for data optimized processing. 
+Repeat patterns across dsls:
+: for typting
+camelCase for names
+PascalCase for types
+-- for unirectected connections
+-> or <- for directed connections
+_ for placeholders
+"" for strings, if strings can be interpreted without quotes allow for both and prefer without
+@ for connection points
+etc
+Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows
 
 ---
 
@@ -485,6 +619,20 @@ This MUST NOT happen.
 ## ui
 
 ###
+
+---
+
+All ui elements are on different levels
+1. base
+2. windows
+3. panes
+4. panels
+5. dialog (such as introdction or tutorial steps)
+6. context menu
+All ui elements must work on all of these levels.
+The background color for every level turns slightely darker in light mode and lighter in dark mode. The glassy effect also increases for every level.
+Make sure that the complete ui is enforcing this, has clean mechanisms, everything is properly refactored and no element asigns e.g. filling or glassy manually but instead inherits everything from the level they are in.
+First plan proper mechanisms and then refactor every app to use it. Use a workforce of parallel agents /workflows 
 
 ---
 

@@ -1313,7 +1313,11 @@ function isIconSource(value: ControlIcon): value is IconSource {
 }
 
 function useThemeIcons(): UiTheme["icons"] {
-  return React.useSyncExternalStore(subscribeActiveUiTheme, () => activeUiTheme().icons, () => activeUiTheme().icons);
+  return React.useSyncExternalStore(
+    subscribeActiveUiTheme,
+    () => activeUiTheme().icons,
+    () => activeUiTheme().icons,
+  );
 }
 
 /** @emoji 🖼 Resolves catalog icon SVG for the active theme. */
@@ -1450,21 +1454,10 @@ export function Icon({ icon, size = "base", className, title }: IconProps): Reac
     );
   }
   const svgMarkup =
-    normalized.kind === "svg"
-      ? normalized.svg
-      : normalized.kind === "catalog"
-        ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons)
-        : normalized.kind === "themed"
-          ? resolveMetabolismIconSvgFromTheme(normalized.key, themeIcons)
-          : undefined;
+    normalized.kind === "svg" ? normalized.svg : normalized.kind === "catalog" ? resolveCatalogIconSvgFromTheme(normalized.key, themeIcons) : normalized.kind === "themed" ? resolveMetabolismIconSvgFromTheme(normalized.key, themeIcons) : undefined;
   if (!svgMarkup) {
     return (
-      <span
-        data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"}
-        className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)}
-        style={boxStyle}
-        title={title}
-      >
+      <span data-icon-kind={normalized.kind === "shortcode" ? "shortcode" : "missing"} className={cn("inline-flex shrink-0 items-center justify-center font-mono text-2xs text-muted-foreground", boxClass)} style={boxStyle} title={title}>
         {normalized.kind === "catalog" || normalized.kind === "themed" ? normalized.key.slice(0, 3) : "?"}
       </span>
     );
@@ -1553,37 +1546,6 @@ const UsersIcon = createIconComponent("users");
 
 // #region 🖱️ContextMenu
 
-export type GlassTier = "panel" | "ribbon" | "menu" | "windowOptions";
-
-export const glassPanelClass = "ui-glass-panel";
-export const glassRibbonClass = "ui-glass-ribbon";
-export const glassMenuClass = "ui-glass-menu";
-export const glassWindowOptionsClass = "ui-glass-window-options";
-
-const GlassTierContext = reactHostPort.createContext<GlassTier | null>(null);
-
-/** @emoji 🪟 Sets the glass opacity tier for portaled overlays (e.g. window-options selects). */
-export const GlassTierProvider: React.FC<{ readonly tier: GlassTier; readonly children: React.ReactNode }> = ({ tier, children }) => <GlassTierContext.Provider value={tier}>{children}</GlassTierContext.Provider>;
-
-/** @emoji 🪝 Returns the nearest {@link GlassTierProvider} tier, else `menu`. */
-export function useGlassTier(): GlassTier {
-  return reactHostPort.useContext(GlassTierContext) ?? "menu";
-}
-
-/** @emoji 🎨 Tailwind glass surface class for a {@link GlassTier}. */
-export function getGlassSurfaceClass(tier: GlassTier): string {
-  switch (tier) {
-    case "panel":
-      return glassPanelClass;
-    case "ribbon":
-      return glassRibbonClass;
-    case "windowOptions":
-      return glassWindowOptionsClass;
-    default:
-      return glassMenuClass;
-  }
-}
-
 /** @emoji 🎨 Shared transition for interactive chrome (hover, focus, active backgrounds). */
 export const interactiveControlTransitionClass = "transition-[color,border-color,background-color]";
 
@@ -1657,14 +1619,7 @@ export const interactiveOnClass = cn(
 );
 
 /** @emoji 🎨 Shared active fill for pressed tabs, toggles, and nav selection. */
-export const interactiveActiveFillClass = cn(
-  "bg-active-base",
-  interactiveActiveBorderClass,
-  "text-emphasized",
-  hoverExcludingHandleActiveBgClass,
-  hoverExcludingHandleActiveBorderClass,
-  hoverExcludingHandleTextEmphasizedClass,
-);
+export const interactiveActiveFillClass = cn("bg-active-base", interactiveActiveBorderClass, "text-emphasized", hoverExcludingHandleActiveBgClass, hoverExcludingHandleActiveBorderClass, hoverExcludingHandleTextEmphasizedClass);
 
 /** @emoji 🎨 Table rows: element gray at rest, hover fill + emphasized content. */
 export const tableRowInteractiveClass = cn("text-element", interactiveControlTransitionClass, interactiveHoverClass);
@@ -1694,7 +1649,7 @@ const contextMenuShortcutClassName = "ms-auto text-xs text-muted-foreground ps-t
 
 /** @emoji 🪟 Context-menu surface — window-chrome wrapper around menu rows. */
 function contextMenuContentClassName(...extra: Array<string | false | null | undefined>): string {
-  return cn("z-temporary w-auto min-w-[10rem]", ...extra);
+  return cn("z-menu w-auto min-w-[10rem]", ...extra);
 }
 
 /** @emoji 🪟 Context-menu row — same density as {@link floatingMenuItemClass}; `checked` paints the active/preview highlight (no tick/checkmark), kept through hover like {@link CanvasPickMenu}. */
@@ -1772,7 +1727,7 @@ export function renderContextMenuItems(items: readonly ContextMenuItem[] | undef
             <span className={contextMenuShortcutClassName}>{item.shortcut}</span>
           </DropdownMenuPrimitive.SubTrigger>
           <DropdownMenuPrimitive.Portal>
-            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className="z-temporary border-0 bg-transparent p-0 shadow-none">
+            <DropdownMenuPrimitive.SubContent data-slot="context-menu-content" className="z-menu border-0 bg-transparent p-0 shadow-none">
               <ContextMenuChrome title={item.label ?? item.id}>{renderContextMenuItems(item.children, onClose)}</ContextMenuChrome>
             </DropdownMenuPrimitive.SubContent>
           </DropdownMenuPrimitive.Portal>
@@ -1897,7 +1852,7 @@ export const ContextMenu: React.FC<ContextMenuProps> = ({ items, children, title
         <DropdownMenuPrimitive.Content
           align="start"
           avoidCollisions={false}
-          className="z-temporary border-0 bg-transparent p-0 shadow-none"
+          className="z-menu border-0 bg-transparent p-0 shadow-none"
           data-slot="context-menu-content"
           onCloseAutoFocus={(event) => event.preventDefault()}
           side="bottom"
@@ -1926,15 +1881,7 @@ function FixedContextMenuSubmenu({ item, onClose }: { readonly item: ContextMenu
   const [open, setOpen] = reactHostPort.useState(false);
   return (
     <div className="relative" onPointerEnter={() => setOpen(true)} onPointerLeave={() => setOpen(false)}>
-      <button
-        aria-disabled={item.disabled}
-        className={contextMenuItemClassName(item)}
-        data-disabled={item.disabled ? "" : undefined}
-        data-selected={item.checked ? "true" : undefined}
-        disabled={item.disabled}
-        role="menuitem"
-        type="button"
-      >
+      <button aria-disabled={item.disabled} className={contextMenuItemClassName(item)} data-disabled={item.disabled ? "" : undefined} data-selected={item.checked ? "true" : undefined} disabled={item.disabled} role="menuitem" type="button">
         {renderContextMenuLeading(item)}
         <span className="truncate">{item.label ?? item.id}</span>
         <span className={contextMenuShortcutClassName}>›</span>
@@ -2910,7 +2857,27 @@ export type UiLabelValue = {
 };
 
 /** @emoji 🪁 Ribbon collection ids for ribbon collection toggles. */
-export type UiRibbonParentCategory = "history" | "hand" | "selection" | "lasso" | "filter" | "open" | "save" | "transfer" | "transform" | "create" | "view" | "actions" | "settings" | "methods" | "mode" | "targets" | "export" | "tools" | "utilities" | "sync";
+export type UiRibbonParentCategory =
+  | "history"
+  | "hand"
+  | "selection"
+  | "lasso"
+  | "filter"
+  | "open"
+  | "save"
+  | "transfer"
+  | "transform"
+  | "create"
+  | "view"
+  | "actions"
+  | "settings"
+  | "methods"
+  | "mode"
+  | "targets"
+  | "export"
+  | "tools"
+  | "utilities"
+  | "sync";
 
 /** @emoji 🪁 i18n key for a ribbon collection toggle. */
 export type UiRibbonParentKey = `ui.ribbon.parent.${string}`;
@@ -3840,7 +3807,9 @@ export const uiChromeTranslationBundles = {
         chat: {
           readyFor: { label: { normal: "Chat ist bereit für {{title}}.", beginner: "Chat ist bereit für {{title}}." } },
           localOnly: { label: { normal: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird.", beginner: "Nachrichten bleiben lokal in diesem Panel, bis ein verbundener Assistent hinzugefügt wird." } },
-          instructions: { label: { normal: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile.", beginner: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile." } },
+          instructions: {
+            label: { normal: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile.", beginner: "Lokaler Chat für {{title}}. Eingabetaste zum Senden, Umschalt+Eingabetaste für eine neue Zeile." },
+          },
           placeholder: { label: { normal: "Nachricht für {{title}} schreiben…", beginner: "Nachricht für {{title}} schreiben…" } },
           savedLocally: { label: { normal: "Lokal gespeichert: „{{preview}}“", beginner: "Lokal gespeichert: „{{preview}}“" } },
           send: { label: { normal: "Senden", beginner: "Senden" } },
@@ -4455,7 +4424,7 @@ export const uiChromeTranslationBundles = {
           localOnly: { label: { normal: "Messages stay local in this panel until a connected assistant is added.", beginner: "Messages stay local in this panel until a connected assistant is added." } },
           instructions: { label: { normal: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line.", beginner: "Local chat for {{title}}. Use Enter to send and Shift+Enter for a new line." } },
           placeholder: { label: { normal: "Write a message for {{title}}…", beginner: "Write a message for {{title}}…" } },
-          savedLocally: { label: { normal: "Saved locally: \"{{preview}}\"", beginner: "Saved locally: \"{{preview}}\"" } },
+          savedLocally: { label: { normal: 'Saved locally: "{{preview}}"', beginner: 'Saved locally: "{{preview}}"' } },
           send: { label: { normal: "Send", beginner: "Send" } },
         },
         blockList: {
@@ -5349,7 +5318,7 @@ function PanelGhostRoot({ children, className, style, ...props }: PanelGhostRoot
  * Border color is CSS-owned (`[data-slot="introduction-info-box"|"dialog-box"]`): normal at rest,
  * emphasized on `:hover` only — never `:focus-within`, so clicking a button does not leave the
  * border stuck after the pointer leaves. */
-export const GLASS_OVERLAY_BOX_CLASS = cn(getGlassSurfaceClass("panel"), "text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
+export const GLASS_OVERLAY_BOX_CLASS = cn("text-foreground pointer-events-auto fixed z-tutorial max-w-sm rounded-lg p-double shadow-lg");
 
 type IntroductionRect = { readonly top: number; readonly left: number; readonly width: number; readonly height: number };
 
@@ -5413,8 +5382,7 @@ function useIntroductionAnchorRect(selector: string | null): IntroductionRect | 
         }
         return;
       }
-      const same =
-        candidates.length === elements.length && candidates.every((candidate, index) => candidate === elements[index]);
+      const same = candidates.length === elements.length && candidates.every((candidate, index) => candidate === elements[index]);
       if (same) return;
       const previous = new Set(elements);
       const next = new Set(candidates);
@@ -5529,6 +5497,15 @@ type IntroductionInfoBoxPosition = { readonly top: number; readonly left: number
 
 const INTRODUCTION_INFO_BOX_GAP_PX = 16;
 
+/** @emoji 📝 Splits an introduction step body into visual paragraphs on blank lines so each
+ * paragraph can emphasize independently on hover. */
+export function splitIntroductionBodyParagraphs(body: string): readonly string[] {
+  return body
+    .split(/\n\n+/)
+    .map((paragraph) => paragraph.trim())
+    .filter((paragraph) => paragraph.length > 0);
+}
+
 /** @emoji 🧲 Clamps an introduction info box to the viewport. Authored placement uses a visual inset;
  * direct manipulation uses zero so every outer edge can meet the corresponding viewport border. */
 export function clampIntroductionInfoBoxPosition(
@@ -5621,10 +5598,7 @@ export function registerIntroductionSurfaceResolver(windowId: string, resolver: 
 }
 
 /** @emoji 🧊 Pure NDC (`[-1, 1]`, y-up) → viewport-pixel conversion shared by every 3D scene resolver. */
-export function ndcToViewportPoint(
-  ndc: { readonly x: number; readonly y: number },
-  rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number },
-): { readonly x: number; readonly y: number } {
+export function ndcToViewportPoint(ndc: { readonly x: number; readonly y: number }, rect: { readonly left: number; readonly top: number; readonly width: number; readonly height: number }): { readonly x: number; readonly y: number } {
   return { x: rect.left + ((ndc.x + 1) / 2) * rect.width, y: rect.top + ((1 - ndc.y) / 2) * rect.height };
 }
 //#endregion 🎬DemonstrationProjectors
@@ -6079,8 +6053,7 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       const isScroll = gesture.kind === "scroll";
       const hoverCursor = demonstration.cursor ?? INTRODUCTION_DEMO_GESTURE_DEFAULT_CURSOR[gesture.kind];
       const dragCursor = demonstration.cursor ?? (gesture.kind === "orbit" ? "move" : "grabbing");
-      const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } =
-        isDragLike ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
+      const targets: { readonly start: IntroductionPoint; readonly end: IntroductionPoint | null } = isDragLike ? { start: gesture.from, end: gesture.to } : { start: gesture.at, end: null };
 
       const start = resolveIntroductionPoint(targets.start);
       const end = targets.end ? resolveIntroductionPoint(targets.end) : null;
@@ -6214,19 +6187,8 @@ const IntroductionDemonstrationOverlay: React.FC<{ readonly demonstrations: read
       <svg className="pointer-events-none fixed inset-0 h-full w-full overflow-visible" aria-hidden="true">
         <path ref={trailPathRef} />
       </svg>
-      <div
-        ref={ghostRef}
-        data-slot="introduction-demonstration-cursor"
-        className="pointer-events-none fixed h-6 w-6 bg-contain bg-no-repeat opacity-0"
-        style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }}
-      />
-      <div
-        ref={calloutRef}
-        data-slot="introduction-demonstration-callout"
-        className="introduction-demo-callout pointer-events-none fixed opacity-0 text-foreground"
-        data-button="left"
-        data-feedback="leftClick"
-      >
+      <div ref={ghostRef} data-slot="introduction-demonstration-cursor" className="pointer-events-none fixed h-6 w-6 bg-contain bg-no-repeat opacity-0" style={{ backgroundImage: "var(--cursor-ghost-default)", willChange: "transform, opacity" }} />
+      <div ref={calloutRef} data-slot="introduction-demonstration-callout" className="introduction-demo-callout pointer-events-none fixed opacity-0 text-foreground" data-button="left" data-feedback="leftClick">
         <svg className="introduction-demo-mouse" viewBox="0 0 48 72" aria-hidden="true">
           <defs>
             <clipPath id={mouseClipId}>
@@ -6350,8 +6312,8 @@ function IntroductionLogoRow({ logos }: { readonly logos: readonly IntroductionL
  * crisp and interactive — `introduce` additionally pulses the introduced border on the precise element —
  * and an info box explains it (header {@link DragHandle} between title and step count repositions the box
  * for the current step; the box silhouette itself always uses the same introduced highlight + thickness
- * pulse as stamped targets; body copy/checklist/icons emphasize while the pointer is inside the body —
- * see `[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]:hover` in `ui.css`).
+ * pulse as stamped targets; each blank-line body paragraph emphasizes only while the pointer is on
+ * that paragraph — see `[data-slot="introduction-body-paragraph"]:hover` in `ui.css`).
  * Renders the declarative `IntroductionDefinition`/`IntroductionStepDefinition` contract. Every step
  * plays a ghost-cursor `IntroductionDemonstrationOverlay`: the step's own declared `demonstration` if
  * it has one, otherwise — for a purely informational step whose only way forward is the Next/Done
@@ -6361,10 +6323,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
   const step: IntroductionStepDefinition | undefined = introduction.steps[stepIndex];
   const introduceSelector = step?.introduce ? elementIdSelector(step.introduce) : null;
   const introduceRect = useIntroductionAnchorRect(introduceSelector);
-  const elevationIds = reactHostPort.useMemo(
-    (): readonly string[] => [...(step?.introduce ? [step.introduce] : []), ...(step?.show ?? [])],
-    [step],
-  );
+  const elevationIds = reactHostPort.useMemo((): readonly string[] => [...(step?.introduce ? [step.introduce] : []), ...(step?.show ?? [])], [step]);
   const elevated = useIntroductionElevation(elevationIds);
   // 🎬 A step that declares no `demonstrations` still gets one automatically when Next/Done is its only
   // way forward — see `INTRODUCTION_DEMO_NEXT_BUTTON_DEMONSTRATION`. Memoized on `step` (not recomputed
@@ -6494,6 +6453,7 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   if (!step) return null;
 
+  const bodyParagraphs = splitIntroductionBodyParagraphs(step.body);
   const boxPosition = resolveIntroductionPlacement(step.placement, introduceRect, boxSize, viewport);
   dragLayoutRef.current = { placement: boxPosition, boxSize, viewport };
   const position = dragPosition ?? boxPosition;
@@ -6506,15 +6466,14 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
 
   return (
     <>
-      <div className={cn("ui-glass-veil z-tutorial fixed inset-0", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
+      <div data-level="dialog" className={cn(veilClass, "z-tutorial fixed inset-0", veilBlocksPointer ? "pointer-events-auto" : "pointer-events-none")} />
       <WindowChrome
         ref={boxRef}
         stackSlot="introduction-info-box"
         stackDataAttrs={dragging ? { "data-dragging": "true" } : undefined}
         active={false}
         borderKind="introduced"
-        capGlassClass={getGlassSurfaceClass("panel")}
-        bodyFillClass={cn(getGlassSurfaceClass("panel"), "shadow-lg")}
+        level="dialog"
         className="pointer-events-auto fixed z-tutorial max-w-sm bg-transparent"
         style={{ top: position.top, left: position.left, zIndex: "calc(var(--z-tutorial) + 2)" }}
         titleChips={
@@ -6534,12 +6493,22 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         }}
         body={
           <>
-            <p className="mb-double whitespace-pre-line text-xs text-muted-foreground">{step.body}</p>
+            {bodyParagraphs.length > 0 && (
+              <div data-slot="introduction-body" className="mb-double flex flex-col gap-double">
+                {bodyParagraphs.map((paragraph, index) => (
+                  <p key={index} data-slot="introduction-body-paragraph" className="whitespace-pre-line text-xs text-muted-foreground">
+                    {paragraph}
+                  </p>
+                ))}
+              </div>
+            )}
             {step.logos && step.logos.length > 0 && (
               <div className="mb-double flex flex-col gap-double">
-                {[step.logos.slice(0, -1), step.logos.slice(-1)].filter((row) => row.length > 0).map((row, rowIndex) => (
-                  <IntroductionLogoRow key={rowIndex} logos={row} />
-                ))}
+                {[step.logos.slice(0, -1), step.logos.slice(-1)]
+                  .filter((row) => row.length > 0)
+                  .map((row, rowIndex) => (
+                    <IntroductionLogoRow key={rowIndex} logos={row} />
+                  ))}
               </div>
             )}
             {interactions.length > 0 && (
@@ -6569,22 +6538,14 @@ export const UIIntroduction: React.FC<UIIntroductionProps> = ({ introduction, st
         }
         footerCenterChips={
           <div data-slot="introduction-step-chip" className={windowChromeTitleChipClass}>
-            <span className="px-single text-xs text-muted-foreground">
+            <span className="px-single text-xs text-muted-foreground transition-colors group-hover:text-emphasized">
               {stepIndex + 1} / {introduction.steps.length}
             </span>
           </div>
         }
-        footerLeftChips={
-          stepIndex > 0 ? (
-            <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} />
-          ) : undefined
-        }
-        footerRightChips={
-          advanceByButton ? (
-            <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} />
-          ) : undefined
-        }
-        bodyClassName="p-double"
+        footerLeftChips={stepIndex > 0 ? <Button id="ui.introduction.back" variant="ghost" icon="chevron-left" text={backLabel} onClick={back} /> : undefined}
+        footerRightChips={advanceByButton ? <Button id="ui.introduction.next" icon={isLast ? "check" : "chevron-right"} text={isLast ? doneLabel : nextLabel} onClick={next} /> : undefined}
+        bodyClassName="p-double shadow-lg"
       />
       {effectiveDemonstrations.length > 0 && <IntroductionDemonstrationOverlay key={step.id} demonstrations={effectiveDemonstrations} />}
     </>
@@ -6952,8 +6913,7 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   onRecordToggle,
   onAddChapter,
 }) => {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
+  const bgClass = surfaceClass;
   const timeMs = useTutorialClock(clock);
   const playLabel = useLabel("tutorial.play");
   const pauseLabel = useLabel("tutorial.pause");
@@ -7018,7 +6978,7 @@ export type TutorialCaptionsProps = {
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
-    <div id="ui.tutorial.captions.text" data-slot="tutorial-captions" className={cn(GLASS_OVERLAY_BOX_CLASS, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
+    <div id="ui.tutorial.captions.text" data-slot="tutorial-captions" data-level="dialog" className={cn(GLASS_OVERLAY_BOX_CLASS, glassClass, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
       {text}
     </div>
   );
@@ -7155,8 +7115,8 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
 
   return (
     <>
-      <div className="ui-glass-veil z-tutorial fixed inset-0 pointer-events-auto" onClick={onCancel} />
-      <div data-slot="dialog-box" className={cn(GLASS_OVERLAY_BOX_CLASS, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
+      <div data-level="dialog" className={cn(veilClass, "z-tutorial fixed inset-0 pointer-events-auto")} onClick={onCancel} />
+      <div data-slot="dialog-box" data-level="dialog" className={cn(GLASS_OVERLAY_BOX_CLASS, glassClass, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
         <h3 className="mb-single text-sm font-medium">{dialog.title}</h3>
         {dialog.body && <p className="mb-double text-xs text-muted-foreground">{dialog.body}</p>}
         {dialog.args.length > 0 && (
@@ -7180,8 +7140,11 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
 // #endregion 🗨️Dialog
 
 // #region 🎈Level Context
-/** @emoji 📚 Semantic UI depth layer for background, hover, and z-index tokens. */
-export type Level = "base" | "canvas" | "window" | "panel" | "overlay" | "temporary";
+/** @emoji 📚 Semantic UI depth layer for background/glass/z-index tokens (base=0 .. menu=5, formula-derived — see contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
+export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
+
+/** @emoji 📚 Every {@link Level}, ordered base..menu (Storybook/tests). */
+export const LEVELS: readonly Level[] = ["base", "window", "pane", "panel", "dialog", "menu"] as const;
 
 const LevelContext = reactHostPort.createContext<Level>("base");
 
@@ -7196,61 +7159,35 @@ export function useLevel(): Level {
   return reactHostPort.useContext(LevelContext);
 }
 
-/** @emoji 🎨 Tailwind background class for a {@link Level}. */
-export function getLevelBgClass(level: Level): string {
-  switch (level) {
-    case "canvas":
-      return "bg-canvas";
-    case "window":
-      return "bg-window";
-    case "panel":
-      return "bg-panel";
-    case "overlay":
-      return "bg-overlay";
-    case "temporary":
-      return "bg-temporary";
-    default:
-      return "bg-base";
-  }
-}
-
-/** @emoji 🎨 Per-level hover background + emphasized content for interactive controls. */
-export const levelHoverVariantClasses = {
-  base: interactiveHoverClass,
-  canvas: interactiveHoverClass,
-  window: interactiveHoverClass,
-  panel: interactiveHoverClass,
-  overlay: interactiveHoverClass,
-  temporary: interactiveHoverClass,
-} as const satisfies Record<Level, string>;
-
-/** @emoji 🎨 Tailwind hover background class for a {@link Level}. */
-export function getLevelHoverClass(_level: Level): string {
-  return interactiveHoverClass;
-}
-
-/** @emoji 🎨 Tailwind active-hover class for a {@link Level}. */
-export function getLevelActiveHoverClass(_level: Level): string {
-  return interactiveTabActiveClass;
-}
-
 /** @emoji 🎨 Tailwind z-index class for a {@link Level}. */
 export function getLevelZClass(level: Level): string {
   switch (level) {
-    case "canvas":
-      return "z-canvas";
     case "window":
       return "z-window";
+    case "pane":
+      return "z-pane";
     case "panel":
       return "z-panel";
-    case "overlay":
-      return "z-overlay";
-    case "temporary":
-      return "z-temporary";
+    case "dialog":
+      return "z-dialog";
+    case "menu":
+      return "z-menu";
     default:
       return "z-base";
   }
 }
+
+/** @emoji 🎨 Opaque per-level fill — background-color only, no blur (see `[data-level]` cascade in ui.css). */
+export const surfaceClass = "ui-surface";
+
+/** @emoji 🎨 Per-level glass fill (blur + alpha). */
+export const glassClass = "ui-glass";
+
+/** @emoji 🎨 Attached chrome (ribbons/rails) — half-alpha glass relative to {@link glassClass} at the same level. */
+export const glassChromeClass = "ui-glass-chrome";
+
+/** @emoji 🎨 Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
+export const veilClass = "ui-veil";
 
 /** @emoji 📏 Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
@@ -7306,38 +7243,29 @@ export const activeLineClass = "border-active-base";
 /** @emoji 🪟 Shell outline — normal gray frame; emphasized while the pointer is inside the parent `[data-slot="panel"]` / `[data-slot="pane"]`. */
 export const shellChromeBorderClass = borderNormalFrameClass;
 
-/** @emoji 🪟 Frosted fill layer behind panel/pane content (no stroke — border lives on the frame). */
-export const panelGlassFillClass = glassPanelClass;
-
-/** @emoji 🪟 Frosted fill layer (ghost-dimmed with the open panel/pane). */
-export const panelChromeFillLayerClass = cn("pointer-events-none absolute inset-0 z-0", panelGlassFillClass);
-
 /** @emoji 🪟 Parent stroke on top of fill and content (transparent center; ghost-dimmed with the open panel/pane). Border color is CSS-only so parent `:hover` can emphasize it like the window silhouette. */
 export const shellChromeFrameLayerClass = "pointer-events-none absolute inset-0 z-30 box-border bg-transparent";
 
-/** @emoji 🪟 Frosted side/bottom panel chrome (full frame + glass fill) for hosts that use a single layer. */
-export const panelGlassFrameClass = cn(shellChromeBorderClass, panelGlassFillClass);
-
-/** @emoji 🪟 Frosted floating menu/popover surface for technology renderer overlays. */
-export const floatingMenuSurfaceClass = cn(glassMenuClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
+/** @emoji 🪟 Frosted floating menu/popover surface for technology renderer overlays — menu tier; host element must also carry `data-level="menu"` (Radix-portal-style consumers stamp their own content root). */
+export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
 /** @emoji 🪟 Action row inside {@link floatingMenuSurfaceClass}. */
 export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-start text-xs text-element outline-none select-none", menuListItemClassName);
 
-/** @emoji 🪟 Frosted editor aside chrome for technology renderers. */
-export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", panelGlassFrameClass);
+/** @emoji 🪟 Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
+export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassChromeClass);
 
-/** @emoji 🪟 Frosted compact ribbon chrome (projection switch, align controls). */
-export const floatingRibbonSurfaceClass = cn(glassRibbonClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
+/** @emoji 🪟 Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
+export const floatingRibbonSurfaceClass = cn(glassChromeClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
 
-/** @emoji 🪟 Frosted inline field/action shell inside editor asides. */
-export const floatingFieldSurfaceClass = cn(glassMenuClass, "relative overflow-visible rounded-md border", borderNormalClass);
+/** @emoji 🪟 Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
+export const floatingFieldSurfaceClass = cn(glassClass, "relative overflow-visible rounded-md border", borderNormalClass);
 
-/** @emoji 🪟 Golden-window host root for technology canvases inside {@link ProductShell}. */
-export const canvasHostRootClass = "relative flex h-full min-h-0 w-full min-w-0 flex-col bg-canvas text-element font-sans";
+/** @emoji 🪟 Golden-window host root for technology canvases inside {@link ProductShell} — base level (the floor windows float on); host element must also carry `data-level="base"`. */
+export const canvasHostRootClass = cn("relative flex h-full min-h-0 w-full min-w-0 flex-col text-element font-sans", surfaceClass);
 
-/** @emoji 🪟 Full-viewport standalone editor shell (outside golden windows). */
-export const editorShellRootClass = "bg-background text-element flex h-screen min-h-0 w-full flex-row font-sans";
+/** @emoji 🪟 Full-viewport standalone editor shell (outside golden windows) — base level. */
+export const editorShellRootClass = cn("text-element flex h-screen min-h-0 w-full flex-row font-sans", surfaceClass);
 
 /** @emoji 🏷️ Toggle chip for layer/filter controls in technology renderers. */
 export const floatingTagClass = cn("inline-flex items-center gap-half rounded-full border px-half py-0.5 text-xs text-element", borderNormalClass);
@@ -7346,7 +7274,7 @@ export const floatingTagOnClass = "bg-accent text-accent-foreground";
 export const floatingTagOffClass = "bg-transparent text-muted-foreground";
 
 /** @emoji 🪟 Canvas viewport surface inside a host root. */
-export const canvasViewportClass = "relative h-full min-h-0 w-full min-w-0 bg-canvas outline-none";
+export const canvasViewportClass = cn("relative h-full min-h-0 w-full min-w-0 outline-none", surfaceClass);
 
 /** @emoji 📑 Panel tab strip base — sits above {@link shellChromeFrameLayerClass}; tabs sit flush against the panel's edges (no side inset — only tree/content rows carry that). `w-full` spans the divider across the row, while `ui-scrollbar-hidden` preserves the fixed control height when overflowing tabs remain horizontally scrollable. Border side is added by callers ({@link panelTabBarClass}, {@link panelAnchorTabBarClass}). */
 const panelTabBarBaseClass = "ui-scrollbar-hidden relative z-40 flex w-full min-w-0 items-stretch shrink-0 overflow-x-auto overscroll-x-contain scroll-px-single";
@@ -7379,7 +7307,7 @@ export function panelAnchorTabBarClass(direction: "up" | "down"): string {
 export const panelAnchorTabButtonClass = cn(panelTabButtonClass, "px-tiny");
 
 /** @emoji 📑 Framed root-row strip for a chrome-hosted anchor's tabs (see {@link PanelChromeTabBar}) — frosted panel chrome living inline in the navbar/footer instead of on the floating panel. */
-export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border rounded-sm", borderNormalClass, panelGlassFillClass);
+export const panelChromeTabBarClass = cn(panelTabBarBaseClass, "h-medium border rounded-sm", borderNormalClass, glassClass);
 
 //#region 🫳DragAffordance
 
@@ -7401,11 +7329,7 @@ export const DragHandle: React.FC<{
 }> = ({ onPointerDown, onPointerMove, onPointerUp, onPointerCancel, attributes, listeners, onClick, className, emphasized = false }) => (
   <span
     data-slot="drag-handle"
-    className={cn(
-      "inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing",
-      emphasized ? "text-emphasized" : "text-muted-foreground",
-      className,
-    )}
+    className={cn("inline-flex shrink-0 cursor-grab touch-none items-center justify-center transition-colors hover:text-emphasized active:cursor-grabbing", emphasized ? "text-emphasized" : "text-muted-foreground", className)}
     onPointerDown={onPointerDown}
     onPointerMove={onPointerMove}
     onPointerUp={onPointerUp}
@@ -7906,9 +7830,7 @@ const PanelTabButton: React.FC<{
           <Icon size={12} />
         </span>
         {inlineText !== undefined ? <span className={panelTabLabelClass}>{inlineText}</span> : null}
-        {draggable && !surfaceDrag ? (
-          <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} />
-        ) : null}
+        {draggable && !surfaceDrag ? <DragHandle onPointerDown={(event) => dock!.startTabDrag(anchor!, tab.id, tab.name, event)} onClick={(event) => event.stopPropagation()} emphasized={(isActive && showActiveColor) || isUnitDropReady} /> : null}
       </button>
     </ChromeControlHint>
   );
@@ -8278,7 +8200,8 @@ const DOCK_DRAG_CURSOR_OFFSET_Y = 10;
 const DockDragChip: React.FC<{ readonly label: string; readonly x: number; readonly y: number }> = ({ label, x, y }) => (
   <div
     data-slot="dock-drag-chip"
-    className={cn("pointer-events-none fixed z-tutorial flex max-w-[12rem] shrink-0 items-center gap-half rounded-sm border px-single py-half text-xs text-element shadow-md select-none bg-window", borderNormalClass)}
+    data-level="window"
+    className={cn("pointer-events-none fixed z-tutorial flex max-w-[12rem] shrink-0 items-center gap-half rounded-sm border px-single py-half text-xs text-element shadow-md select-none", surfaceClass, borderNormalClass)}
     style={{ left: x + DOCK_DRAG_CURSOR_OFFSET_X, top: y + DOCK_DRAG_CURSOR_OFFSET_Y }}
   >
     <span className="truncate">{label}</span>
@@ -8618,14 +8541,7 @@ export function resolveWindowSilhouetteBorderKind(windowEl: Element | null, stac
 export const WINDOW_SILHOUETTE_PATH_INSET = 1;
 
 /** @emoji 🪟 Appends the bottom edge wrapping outside each footer chip; gaps between chips stay open upward into the body (mirror of the top cap). */
-export function appendWindowSilhouetteBottomPath(
-  path: string,
-  chips: readonly WindowSilhouetteBottomChip[],
-  x0: number,
-  x1: number,
-  y1: number,
-  bottomCap: number,
-): string {
+export function appendWindowSilhouetteBottomPath(path: string, chips: readonly WindowSilhouetteBottomChip[], x0: number, x1: number, y1: number, bottomCap: number): string {
   if (chips.length === 0 || bottomCap <= 0) return `${path} V${y1} H${x0} Z`;
   const sorted = [...chips].sort((a, b) => a.left - b.left);
   const notchTop = y1 - bottomCap;
@@ -8685,8 +8601,7 @@ const WINDOW_CHROME_GAP_SELECTOR = '[data-slot="window-chrome-gap"], [data-slot=
 const WINDOW_CHROME_CONTROLS_SELECTOR = '[data-slot="window-chrome-controls"], [data-slot="mode-dock-controls-cap"]';
 const WINDOW_CHROME_CAP_SELECTOR = '[data-slot="window-chrome-cap"], [data-slot="mode-dock-tabbar"]';
 const WINDOW_CHROME_FOOTER_SELECTOR = '[data-slot="window-chrome-footer"]';
-const WINDOW_CHROME_FOOTER_GAP_SELECTOR =
-  '[data-slot="window-chrome-footer-gap"], [data-slot="window-chrome-footer-gap-left"], [data-slot="window-chrome-footer-gap-right"]';
+const WINDOW_CHROME_FOOTER_GAP_SELECTOR = '[data-slot="window-chrome-footer-gap"], [data-slot="window-chrome-footer-gap-left"], [data-slot="window-chrome-footer-gap-right"]';
 const WINDOW_CHROME_FOOTER_LEFT_SELECTOR = '[data-slot="window-chrome-footer-left"]';
 const WINDOW_CHROME_FOOTER_CENTER_SELECTOR = '[data-slot="window-chrome-footer-center-chip"]';
 const WINDOW_CHROME_FOOTER_RIGHT_SELECTOR = '[data-slot="window-chrome-footer-right"]';
@@ -8723,9 +8638,6 @@ export function measureWindowSilhouetteMetrics(stack: HTMLElement): WindowSilhou
   return { width, height, tabsWidth, controlsWidth, capHeight };
 }
 
-/** @emoji 🪟 Continuous tabbar glass ribbon — one backdrop-filter region (no seams between tab/gap/controls). */
-export const modeDockTabBarGlassClass = glassRibbonClass;
-
 /** @emoji 📏 Tab/gap/controls cells stay transparent; glass lives on the tabbar. Borders owned by {@link ModeDockStackSilhouetteBorder}. */
 export const windowCapFrameClass = "relative z-[2] border-0 bg-transparent";
 
@@ -8738,8 +8650,8 @@ export const windowGapFrameClass = "border-0 bg-transparent";
 /** @emoji 🪟 Active gap — same transparent cell; silhouette SVG paints the notch baseline. */
 export const windowGapFrameActiveClass = windowGapFrameClass;
 
-/** @emoji 📏 Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body). */
-export const windowBodyFrameClass = "relative border-0 bg-canvas";
+/** @emoji 📏 Body fill only — outer stroke is the stack silhouette SVG (tabs + cutout + controls + body); base level (mode body / floor windows float on) — host element must also carry `data-level="base"`. */
+export const windowBodyFrameClass = cn("relative border-0", surfaceClass);
 
 /** @emoji 📏 Active body fill — outline via silhouette SVG `data-kind="active"`. */
 export const windowBodyFrameActiveClass = windowBodyFrameClass;
@@ -8776,21 +8688,17 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline. */
-export const modeDockInactiveTabClass = `relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass} bg-window`;
+/** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline (window level, inherited from the ancestor {@link ModeDockStack} `data-level="window"` stamp). */
+export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0 border ${borderNormalClass}`, surfaceClass);
 
 /** @emoji 📏 Inactive tab before gap — no bottom stroke; gap owns the horizontal segment before controls. */
-export const modeDockInactiveTabBeforeGapClass = `relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass} bg-window`;
+export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0 border-t border-l border-r border-b-0 ${borderNormalClass}`, surfaceClass);
 
 /** @emoji 🪟 Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
 
 /** @emoji 🪟 Default mode-dock tab label — element gray; emphasize on hover/active only. */
-export const modeDockTabClassName = cn(
-  "group flex max-w-[12rem] shrink-0 cursor-pointer items-center px-single text-xs text-element select-none transition-colors",
-  hoverExcludingHandleBgFillClass,
-  hoverExcludingHandleTextEmphasizedClass,
-);
+export const modeDockTabClassName = cn("group flex max-w-[12rem] shrink-0 cursor-pointer items-center px-single text-xs text-element select-none transition-colors", hoverExcludingHandleBgFillClass, hoverExcludingHandleTextEmphasizedClass);
 
 /** @emoji 🪧 Static shell title (navbar app label, pane headings) — element gray at rest. */
 export const shellChromeTitleClassName = "truncate text-sm font-medium text-element";
@@ -8828,17 +8736,16 @@ export interface WindowChromeControlAction {
 }
 
 /** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag). */
-export const windowChromeTitleChipClass = cn(modeDockTabClassName, "bg-window relative z-30 box-border min-h-medium shrink-0 border", borderNormalClass);
+export const windowChromeTitleChipClass = cn(modeDockTabClassName, surfaceClass, "relative z-30 box-border min-h-medium shrink-0 border", borderNormalClass);
 
 export interface WindowChromeProps {
   readonly active?: boolean;
   readonly chipOnly?: boolean;
-  readonly fillLayer?: boolean;
   readonly className?: string;
   readonly stackClassName?: string;
-  readonly capGlassClass?: string;
   readonly bodyClassName?: string;
-  readonly bodyFillClass?: string;
+  /** 🎈 Stamps `data-level={level}` on the chrome stack and wraps its content in a {@link LevelProvider}; cap/controls always render {@link glassChromeClass}, the body always renders {@link glassClass} — no longer configurable per-instance. */
+  readonly level?: Level;
   readonly style?: React.CSSProperties;
   readonly stackRef?: React.Ref<HTMLDivElement>;
   readonly capRef?: React.Ref<HTMLDivElement>;
@@ -8900,28 +8807,12 @@ const WindowChromeSilhouetteBorder: React.FC<{
   void epoch;
 
   if (!metrics) {
-    return (
-      <div
-        data-slot={silhouetteSlot}
-        data-kind={resolvedKind}
-        data-pending=""
-        aria-hidden
-        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-      />
-    );
+    return <div data-slot={silhouetteSlot} data-kind={resolvedKind} data-pending="" aria-hidden className="pointer-events-none absolute inset-0 z-[40] overflow-visible" />;
   }
   const path = windowSilhouettePath(metrics);
   if (resolvedKind === "celebrated") {
     return (
-      <svg
-        data-slot={silhouetteSlot}
-        data-kind={resolvedKind}
-        className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-        width={metrics.width}
-        height={metrics.height}
-        viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-        aria-hidden
-      >
+      <svg data-slot={silhouetteSlot} data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
         <defs>
           <mask id={celebrateMaskId} maskUnits="userSpaceOnUse" x={0} y={0} width={metrics.width} height={metrics.height}>
             <rect x={0} y={0} width={metrics.width} height={metrics.height} fill="black" />
@@ -8945,15 +8836,7 @@ const WindowChromeSilhouetteBorder: React.FC<{
             ? "var(--active-base)"
             : "var(--border-normal-color)";
   return (
-    <svg
-      data-slot={silhouetteSlot}
-      data-kind={resolvedKind}
-      className="pointer-events-none absolute inset-0 z-[40] overflow-visible"
-      width={metrics.width}
-      height={metrics.height}
-      viewBox={`0 0 ${metrics.width} ${metrics.height}`}
-      aria-hidden
-    >
+    <svg data-slot={silhouetteSlot} data-kind={resolvedKind} className="pointer-events-none absolute inset-0 z-[40] overflow-visible" width={metrics.width} height={metrics.height} viewBox={`0 0 ${metrics.width} ${metrics.height}`} aria-hidden>
       <path
         d={path}
         fill="none"
@@ -8981,12 +8864,10 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     {
       active = false,
       chipOnly = false,
-      fillLayer = false,
       className,
       stackClassName,
-      capGlassClass = modeDockTabBarGlassClass,
       bodyClassName,
-      bodyFillClass = windowBodyFrameClass,
+      level,
       style,
       stackRef,
       capRef,
@@ -9021,17 +8902,18 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       [ref, stackRef],
     );
 
-    const chipSurfaceClass = cn(windowCapFrameClass, capGlassClass, fillLayer && panelGlassFillClass);
-    const bodySurfaceClass = cn(bodyFillClass, fillLayer && panelGlassFillClass);
-    const controlsSurfaceClass = cn(windowControlsCapClass, capGlassClass, fillLayer && panelGlassFillClass);
+    const chipSurfaceClass = cn(windowCapFrameClass, glassChromeClass);
+    const bodySurfaceClass = cn("relative border-0", glassClass);
+    const controlsSurfaceClass = cn(windowControlsCapClass, glassChromeClass);
+    const wrapLevel = (node: React.ReactNode): React.ReactNode => (level ? <LevelProvider level={level}>{node}</LevelProvider> : node);
 
     if (chipOnly) {
-      return (
-        <div ref={setStackRef} data-slot={stackSlot} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
+      return wrapLevel(
+        <div ref={setStackRef} data-slot={stackSlot} data-level={level} className={cn("relative inline-flex min-w-0 bg-transparent", className, stackClassName)} style={style}>
           <div data-slot="window-chrome-chip-cap" data-ui-reveal-region="window-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
-        </div>
+        </div>,
       );
     }
 
@@ -9041,10 +8923,11 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
     const hasFooterGap = Boolean(footerLeftChips && footerRightChips && !footerCenterChips);
     const footerGapClass = cn("pointer-events-none relative min-h-0 min-w-0 bg-transparent", windowGapFrameClass, footerGapClassName);
     const footerChipClass = cn("relative flex min-h-medium min-w-0 shrink-0 items-stretch", chipSurfaceClass);
-    return (
+    return wrapLevel(
       <div
         ref={setStackRef}
         data-slot={stackSlot}
+        data-level={level}
         data-active={active ? "true" : undefined}
         className={cn("relative flex min-h-0 min-w-0 flex-col overflow-visible bg-transparent text-foreground", stackClassName, className)}
         style={style}
@@ -9055,13 +8938,8 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
           <div data-slot="window-chrome-chip-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
             {titleChips}
           </div>
-          <div
-            data-slot="window-chrome-gap"
-            aria-hidden
-            {...gapRest}
-            className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)}
-          />
-          {(enlarge || close) ? (
+          <div data-slot="window-chrome-gap" aria-hidden {...gapRest} className={cn("pointer-events-none relative min-h-medium min-w-0 flex-1 bg-transparent", windowGapFrameClass, gapClassName)} />
+          {enlarge || close ? (
             <div data-slot="window-chrome-controls" className={cn("relative z-[2] flex shrink-0 items-stretch", controlsSurfaceClass)}>
               {enlarge ? (
                 <button
@@ -9095,7 +8973,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
         </div>
         {hasFooter ? (
           footerCenterChips ? (
-            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative z-[2] grid w-full min-w-0 shrink-0 grid-cols-[auto_1fr_auto] items-end bg-transparent">
+            <div ref={footerRef} data-slot="window-chrome-footer" data-dim className="relative z-[2] grid w-full min-w-0 shrink-0 grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)] items-end bg-transparent">
               <div data-slot="window-chrome-footer-gap-left" {...footerGapRest} aria-hidden={footerLeftChips ? undefined : true} className={cn(footerGapClass, "justify-self-start")}>
                 {footerLeftChips ? (
                   <div data-slot="window-chrome-footer-left" className={cn("pointer-events-auto", footerChipClass)}>
@@ -9121,20 +8999,14 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
               ref={footerRef}
               data-slot="window-chrome-footer"
               data-dim
-              className={cn(
-                "relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent",
-                footerLeftChips && !footerRightChips && "justify-start",
-                footerRightChips && !footerLeftChips && "justify-end",
-              )}
+              className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch bg-transparent", footerLeftChips && !footerRightChips && "justify-start", footerRightChips && !footerLeftChips && "justify-end")}
             >
               {footerLeftChips ? (
                 <div data-slot="window-chrome-footer-left" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerLeftChips}
                 </div>
               ) : null}
-              {hasFooterGap ? (
-                <div data-slot="window-chrome-footer-gap" aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} />
-              ) : null}
+              {hasFooterGap ? <div data-slot="window-chrome-footer-gap" aria-hidden {...footerGapRest} className={cn(footerGapClass, "flex-1")} /> : null}
               {footerRightChips ? (
                 <div data-slot="window-chrome-footer-right" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", chipSurfaceClass)}>
                   {footerRightChips}
@@ -9143,29 +9015,18 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             </div>
           )
         ) : null}
-      </div>
+      </div>,
     );
   },
 );
 WindowChrome.displayName = "WindowChrome";
 
 /** @emoji 🪟 Context menu with U-cutout chrome — title chip only, no enlarge/close; gap punches through. */
-function ContextMenuChrome({
-  title,
-  children,
-  className,
-  style,
-}: {
-  readonly title: string;
-  readonly children: React.ReactNode;
-  readonly className?: string;
-  readonly style?: React.CSSProperties;
-}): React.ReactElement {
+function ContextMenuChrome({ title, children, className, style }: { readonly title: string; readonly children: React.ReactNode; readonly className?: string; readonly style?: React.CSSProperties }): React.ReactElement {
   return (
     <WindowChrome
       active={false}
-      capGlassClass={glassMenuClass}
-      bodyFillClass={cn(glassMenuClass, "border-0")}
+      level="menu"
       stackSlot="context-menu-content"
       className={contextMenuContentClassName(className)}
       style={style}
@@ -9207,7 +9068,7 @@ export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacin
 export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
 
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
-export const windowMeasuresStackClass = cn(glassWindowOptionsClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`);
+export const windowMeasuresStackClass = cn(glassChromeClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`);
 
 /** @emoji 📐 Window measures rail spanning the full window body (stays below shell side panels). */
 export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
@@ -9416,7 +9277,7 @@ export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col 
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
 /** @emoji 📐 Single measure tile in the window rail. */
-export const windowMeasureTileClass = `pointer-events-auto select-none ${glassWindowOptionsClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
+export const windowMeasureTileClass = `pointer-events-auto select-none ${glassChromeClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
@@ -9450,15 +9311,6 @@ export const windowMeasureTreeGroupLabelClass = "text-tiny font-semibold upperca
 /** @emoji 🌳 Typography for measure tree leaf labels. */
 export const windowMeasureTreeLeafLabelClass = "text-tiny font-normal text-element group-hover:text-emphasized transition-colors";
 
-/** @emoji 🎨 Normal border stroke for controls and in-chrome dividers at a {@link Level}. */
-export function getLevelBorderElementClass(_level: Level): string {
-  return borderNormalClass;
-}
-
-/** @emoji 🎨 Tailwind divide token class for a {@link Level}. */
-export function getLevelDivideElementClass(_level: Level): string {
-  return "divide-normal";
-}
 // #endregion 🎈Level Context
 
 // #region 🐹Element
@@ -9694,7 +9546,7 @@ export function useFirstDraggableElementAlias(containerRef: React.RefObject<HTML
  * Command holds the data fields for a Command record.
  **/
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
-  return <CommandPrimitive data-slot="command" className={cn(glassMenuClass, "text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
+  return <CommandPrimitive data-slot="command" className={cn(glassClass, "text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
 }
 
 /**
@@ -9934,8 +9786,7 @@ export interface FooterProps {
 
 /** @emoji 🪟 Footer mirrors {@link Navbar} exactly (normal flow, centered-item overlay) but anchored to the bottom edge with the border on top instead of the bottom. */
 const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
+  const bgClass = surfaceClass;
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
@@ -10045,18 +9896,18 @@ function PopoverTrigger({ className, ...props }: React.ComponentProps<typeof Pop
  * PopoverContent holds the data fields for a PopoverContent record.
  **/
 function PopoverContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
-  const glassClass = getGlassSurfaceClass(useGlassTier());
   const flow = useFlow();
   return (
     <PopoverPrimitive.Portal>
       <PopoverPrimitive.Content
         data-slot="popover-content"
+        data-level="menu"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         align={align}
         sideOffset={sideOffset}
         className={cn(
           glassClass,
-          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
           className,
         )}
         {...props}
@@ -10136,10 +9987,12 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
     <TooltipPrimitive.Portal>
       <TooltipPrimitive.Content
         data-slot="tooltip-content"
+        data-level="menu"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         sideOffset={sideOffset}
         className={cn(
-          "bg-temporary border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit",
+          glassClass,
+          "border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit",
           className,
         )}
         {...props}
@@ -11152,13 +11005,12 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
       <HoverCardPrimitive.Content
         data-slot="hover-card-content"
+        data-level="menu"
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          cn(
-            glassMenuClass,
-            "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-temporary w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
-          ),
+          glassClass,
+          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
           className,
         )}
         {...props}
@@ -11316,15 +11168,7 @@ export const Field: React.FC<FieldProps> = ({ id, label, description, required, 
  * actionGroupItemVariants holds the data fields for a actionGroupItemVariants record.
  **/
 const actionGroupItemVariants = cva(
-  `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`,
-  {
-    variants: {
-      level: levelHoverVariantClasses,
-    },
-    defaultVariants: {
-      level: "base",
-    },
-  },
+  cn(`text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single ${formControlFocusBorderClass}`, interactiveHoverClass),
 );
 
 /**
@@ -11346,11 +11190,9 @@ interface ActionGroupProps extends Omit<React.ComponentProps<"div">, "children">
  **/
 function ActionGroup({ className, children, ...props }: ActionGroupProps) {
   const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
-  const divideClass = getLevelDivideElementClass(level);
   const contextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   return (
-    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderClass, divideClass, className)} {...props}>
+    <div data-slot="action-group" data-detail-panel-control="fit" data-level={level} className={cn("group/action-group flex h-small items-center border divide-x overflow-hidden", borderNormalClass, "divide-normal", className)} {...props}>
       <ActionGroupContext.Provider value={contextValue}>{children}</ActionGroupContext.Provider>
     </div>
   );
@@ -11388,9 +11230,7 @@ function ActionGroupItem({
       title={accessibleLabel}
       data-level={context.level || level}
       className={cn(
-        actionGroupItemVariants({
-          level: context.level || level,
-        }),
+        actionGroupItemVariants(),
         "min-w-0 shrink-0 focus:z-panel focus-visible:z-panel",
         !id && "flex-1",
         hasText && "aspect-auto gap-single",
@@ -11496,7 +11336,6 @@ interface ActionProps extends Omit<React.ComponentProps<"button">, "children"> {
  **/
 function Action({ className, id, icon, text, as = "button", loading = false, waiting = false, ...props }: ActionProps) {
   const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
   const Comp = as;
   const inlineText = useControlInlineText(id, text);
   const accessibleLabel = useControlAccessibleLabel(id, text);
@@ -11517,8 +11356,8 @@ function Action({ className, id, icon, text, as = "button", loading = false, wai
       className={cn(
         `text-element inline-flex items-center justify-center shrink-0 cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-tiny [&_svg]:shrink-0 overflow-hidden aspect-square p-single h-medium border ${formControlFocusBorderClass}`,
         hasText && "aspect-auto gap-single",
-        getLevelHoverClass(level),
-        borderClass,
+        interactiveHoverClass,
+        borderNormalClass,
         (loading && loadingBorderElementClass) || (waiting && waitingBorderElementClass),
         className,
       )}
@@ -11541,10 +11380,9 @@ export type { ActionDropdownOption, ActionDropdownProps, ActionProps };
  * buttonGroupItemVariants holds the data fields for a buttonGroupItemVariants record.
  **/
 const buttonGroupItemVariants = cva(
-  `text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`,
+  cn(`text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap h-medium aspect-square p-single overflow-hidden`, interactiveHoverClass),
   {
     variants: {
-      level: levelHoverVariantClasses,
       variant: {
         default: "",
         ghost: "border-transparent bg-transparent",
@@ -11552,7 +11390,6 @@ const buttonGroupItemVariants = cva(
       },
     },
     defaultVariants: {
-      level: "base",
       variant: "default",
     },
   },
@@ -11580,8 +11417,6 @@ interface ButtonGroupProps extends Omit<React.ComponentProps<"div">, "id"> {
  **/
 function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, children, ...props }: ButtonGroupProps) {
   const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
-  const divideClass = getLevelDivideElementClass(level);
   const buttonGroupContextValue = reactHostPort.useMemo(() => ({ level }), [level]);
   const buttonGroupElement = (
     <ButtonGroupContext.Provider value={buttonGroupContextValue}>
@@ -11590,7 +11425,7 @@ function ButtonGroup({ className, detailPanelWidthMode = "fit", id, showLabel, c
         data-detail-panel-control={detailPanelWidthMode}
         id={id}
         data-level={level}
-        className={cn("group/button-group flex items-center border divide-x overflow-hidden h-medium", detailPanelWidthMode === "fill" ? "w-full min-w-0" : "w-fit shrink-0", borderClass, divideClass, className)}
+        className={cn("group/button-group flex items-center border divide-x overflow-hidden h-medium", detailPanelWidthMode === "fill" ? "w-full min-w-0" : "w-fit shrink-0", borderNormalClass, "divide-normal", className)}
         {...props}
       >
         {children}
@@ -11641,9 +11476,7 @@ function ButtonGroupItem({
       title={ariaLabel}
       data-level={context.level || level}
       className={cn(
-        buttonGroupItemVariants({
-          level: context.level || level,
-        }),
+        buttonGroupItemVariants(),
         inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         inlineText && "flex items-center gap-single py-single px-double w-auto aspect-auto",
         className,
@@ -11663,7 +11496,7 @@ function ButtonGroupItem({
  * ButtonProps holds the data fields for a ButtonProps record.
  **/
 type ButtonProps = React.ComponentProps<"button"> &
-  Omit<VariantProps<typeof buttonGroupItemVariants>, "level"> & {
+  VariantProps<typeof buttonGroupItemVariants> & {
     asChild?: boolean;
     id?: string;
     icon: ControlIcon;
@@ -12420,7 +12253,6 @@ function SelectTrigger({
   id?: string;
 }) {
   const level = useLevel();
-  const hoverClass = getLevelHoverClass(level);
 
   return (
     <SelectPrimitive.Trigger
@@ -12431,7 +12263,7 @@ function SelectTrigger({
       data-level={level}
       className={cn(
         `text-element data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground flex w-fit min-w-0 items-center justify-between gap-single border bg-transparent px-tiny py-single text-sm whitespace-nowrap ${borderElementClass} ${formControlFocusBorderClass} disabled:cursor-not-allowed disabled:opacity-50 h-medium *:data-[slot=select-value]:line-clamp-1 *:data-[slot=select-value]:flex *:data-[slot=select-value]:min-w-0 *:data-[slot=select-value]:flex-1 *:data-[slot=select-value]:items-center *:data-[slot=select-value]:gap-single *:data-[slot=select-value]:overflow-hidden [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-tiny cursor-foldable`,
-        hoverClass,
+        interactiveHoverClass,
         className,
       )}
       {...props}
@@ -12450,16 +12282,16 @@ function SelectTrigger({
  * SelectContent holds the data fields for a SelectContent record.
  **/
 function SelectContent({ className, children, position = "popper", ...props }: React.ComponentProps<typeof SelectPrimitive.Content>) {
-  const glassClass = getGlassSurfaceClass(useGlassTier());
   const flow = useFlow();
   return (
     <SelectPrimitive.Portal>
       <SelectPrimitive.Content
         data-slot="select-content"
+        data-level="menu"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
           glassClass,
-          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-temporary max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
+          "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-menu max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
           position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
@@ -12809,10 +12641,7 @@ function Slider({
         data-waiting={waiting ? "true" : undefined}
         className={cn("relative flex h-full min-w-0 grow items-center", loadingBorderStateClass(loading) || waitingBorderStateClass(waiting))}
       >
-        <SliderPrimitive.Track
-          data-slot="slider-track"
-          className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}
-        >
+        <SliderPrimitive.Track data-slot="slider-track" className={cn("bg-muted relative w-full overflow-hidden rounded-[9999px] data-[orientation=horizontal]:h-single data-[orientation=vertical]:h-full data-[orientation=vertical]:w-single")}>
           <SliderPrimitive.Range data-slot="slider-range" data-dragging={isDragging ? "true" : undefined} className={cn(sliderRangeClassName)} />
           {readyWidthPct > 0 ? <div data-slot="slider-ready" data-orientation="horizontal" className={sliderReadyClassName} style={{ left: `${readyStartPct}%`, width: `${readyWidthPct}%` }} /> : null}
         </SliderPrimitive.Track>
@@ -12903,8 +12732,7 @@ export const Stepper: React.FC<StepperProps> = ({ value, defaultValue = 0, min, 
   const transaction = useTransaction();
   const isInPropertyValueColumn = reactHostPort.useContext(PropertyValueColumnContext);
   const mixedLabel = useLabel("ui.common.mixedValues");
-  const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
+  const borderClass = borderNormalClass;
   const [internalValue, setInternalValue] = reactHostPort.useState(value ?? defaultValue);
   const [isEditing, setIsEditing] = reactHostPort.useState(false);
   const [hasBeenEdited, setHasBeenEdited] = reactHostPort.useState(false);
@@ -13304,15 +13132,7 @@ export { Textarea };
  * toggleVariants holds the data fields for a toggleVariants record.
  **/
 const toggleVariants = cva(
-  `text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap ${interactiveOnClass} h-medium aspect-square p-single leading-none overflow-hidden`,
-  {
-    variants: {
-      level: levelHoverVariantClasses,
-    },
-    defaultVariants: {
-      level: "base",
-    },
-  },
+  cn(`text-element inline-flex items-center justify-center gap-single text-sm font-medium cursor-selectable disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-small [&_svg]:shrink-0 ${formControlFocusBorderClass} whitespace-nowrap ${interactiveOnClass} h-medium aspect-square p-single leading-none overflow-hidden`, interactiveHoverClass),
 );
 
 /**
@@ -13414,8 +13234,6 @@ interface ToggleGroupProps extends Omit<React.ComponentProps<typeof ToggleGroupP
  **/
 function ToggleGroup({ className, id, showLabel, items, kind = "single", ...restProps }: ToggleGroupProps) {
   const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
-  const divideClass = getLevelDivideElementClass(level);
 
   const controlledValue = (restProps as any).value;
   const rootDataState = kind === "single" && controlledValue !== undefined ? (controlledValue ? "on" : "off") : undefined;
@@ -13427,7 +13245,7 @@ function ToggleGroup({ className, id, showLabel, items, kind = "single", ...rest
       data-state={rootDataState}
       id={id}
       type={kind}
-      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x", borderClass, divideClass, className)}
+      className={cn("group/toggle-group flex w-fit shrink-0 items-center border overflow-hidden has-[_[data-slot=inline-label]]:overflow-visible h-medium divide-x", borderNormalClass, "divide-normal", className)}
       {...(restProps as any)}
     >
       <ToggleGroupContext.Provider value={{ level }}>
@@ -13467,9 +13285,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       title={ariaLabel}
       data-level={level}
       className={cn(
-        toggleVariants({
-          level,
-        }),
+        toggleVariants(),
         inlineText ? "w-auto shrink-0 focus:z-panel focus-visible:z-panel" : "min-w-0 flex-1 shrink-0 focus:z-panel focus-visible:z-panel",
         (inlineText || action) && "flex items-center gap-single py-single px-double aspect-auto",
         inlineText && "w-auto",
@@ -13485,7 +13301,7 @@ function ToggleGroupItem({ className, id, icon, text, action, ...props }: Toggle
       <span className={action ? "flex-1 flex items-center justify-center" : undefined}>{renderControlIcon(icon)}</span>
       {action && (
         <div
-          className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", getLevelBgClass(level), text && "ms-single")}
+          className={cn("flex items-center justify-center aspect-square h-full flex-shrink-0", surfaceClass, text && "ms-single")}
           onClick={(e) => e.stopPropagation()}
           onPointerDown={(e) => e.stopPropagation()}
           onMouseDown={(e) => e.stopPropagation()}
@@ -13938,11 +13754,9 @@ function AccordionItem({ className, ...props }: React.ComponentProps<typeof Acco
  * AccordionTrigger holds the data fields for a AccordionTrigger record.
  **/
 function AccordionTrigger({ className, children, ...props }: React.ComponentProps<typeof AccordionPrimitive.Trigger>) {
-  const level = useLevel();
-  const hoverClass = getLevelHoverClass(level);
   return (
     <AccordionPrimitive.Header className="flex">
-      <AccordionPrimitive.Trigger data-slot="accordion-trigger" className={cn("flex flex-1 cursor-selectable items-center justify-between py-single text-sm font-medium", interactiveControlTransitionClass, hoverClass, className)} {...props}>
+      <AccordionPrimitive.Trigger data-slot="accordion-trigger" className={cn("flex flex-1 cursor-selectable items-center justify-between py-single text-sm font-medium", interactiveControlTransitionClass, interactiveHoverClass, className)} {...props}>
         {children as React.ReactNode}
         <ChevronDownIconAlt className="text-muted-foreground pointer-events-none size-small shrink-0 translate-y-0.5 transition-transform duration-200" />
       </AccordionPrimitive.Trigger>
@@ -13980,9 +13794,7 @@ function Collapsible({ ...props }: React.ComponentProps<typeof CollapsiblePrimit
  * CollapsibleTrigger holds the data fields for a CollapsibleTrigger record.
  **/
 function CollapsibleTrigger({ className, ...props }: React.ComponentProps<typeof CollapsiblePrimitive.CollapsibleTrigger>) {
-  const level = useLevel();
-  const hoverClass = getLevelHoverClass(level);
-  return <CollapsiblePrimitive.CollapsibleTrigger data-slot="collapsible-trigger" className={cn("cursor-selectable", interactiveControlTransitionClass, hoverClass, className)} {...props} />;
+  return <CollapsiblePrimitive.CollapsibleTrigger data-slot="collapsible-trigger" className={cn("cursor-selectable", interactiveControlTransitionClass, interactiveHoverClass, className)} {...props} />;
 }
 
 /**
@@ -14034,7 +13846,8 @@ function DialogOverlay({ className, ...props }: React.ComponentProps<typeof Dial
   return (
     <DialogPrimitive.Overlay
       data-slot="dialog-overlay"
-      className={cn("data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-overlay bg-overlay", className)}
+      data-level="dialog"
+      className={cn(veilClass, "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 fixed inset-0 z-dialog", className)}
       {...props}
     />
   );
@@ -14057,12 +13870,11 @@ function DialogContent({
     <DialogPortal data-slot="dialog-portal">
       <DialogPrimitive.Content
         data-slot="dialog-content"
+        data-level="dialog"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
-          cn(
-            glassMenuClass,
-            "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-temporary grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
-          ),
+          glassClass,
+          "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
           className,
         )}
         {...props}
@@ -14404,9 +14216,8 @@ export interface BandProps {
  * Band holds the data fields for a Band record.
  **/
 function Band({ items, scrollable = true, className, id }: BandProps) {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
-  const borderClass = getLevelBorderElementClass(level);
+  const bgClass = surfaceClass;
+  const borderClass = borderNormalClass;
   const itemsElement = (
     <div id={id} data-slot="band" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -14457,9 +14268,8 @@ export interface StripProps {
  * Strip holds the data fields for a Strip record.
  **/
 function Strip({ items, scrollable = true, className, id }: StripProps) {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
-  const borderClass = getLevelBorderElementClass(level);
+  const bgClass = surfaceClass;
+  const borderClass = borderNormalClass;
   const itemsElement = (
     <div id={id} data-slot="strip" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
       {items.map((item, index) => (
@@ -14575,8 +14385,7 @@ export interface NavbarProps {
  * Navbar holds the data fields for a Navbar record.
  **/
 function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
+  const bgClass = surfaceClass;
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
@@ -14780,9 +14589,7 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
  * TabsList holds the data fields for a TabsList record.
  **/
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  const level = useLevel();
-  const bgClass = getLevelBgClass(level);
-  return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", bgClass, className)} {...props} />;
+  return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", surfaceClass, className)} {...props} />;
 }
 
 /** TabsTrigger holds the data fields for a TabsTrigger record.
@@ -14790,16 +14597,13 @@ function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimi
 /**
  **/
 function TabsTrigger({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.Trigger>) {
-  const level = useLevel();
-  const activeHoverClass = getLevelActiveHoverClass(level);
-  const hoverClass = getLevelHoverClass(level);
   return (
     <TabsPrimitive.Trigger
       data-slot="tabs-trigger"
       className={cn(
         "focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:outline-ring text-element inline-flex h-[calc(100%-var(--stroke-hairline))] flex-1 items-center justify-center gap-single border border-transparent p-single text-sm font-medium whitespace-nowrap transition-[color,box-shadow] focus-visible:ring-[length:var(--stroke-focus)] focus-visible:outline-1 disabled:pointer-events-none disabled:opacity-50 data-[state=active]:shadow-sm [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-4",
-        activeHoverClass,
-        hoverClass,
+        interactiveTabActiveClass,
+        interactiveHoverClass,
         className,
       )}
       {...props}
@@ -15315,9 +15119,7 @@ const TreeDocumentGutter: React.FC<TreeDocumentGutterProps> = ({ level, showLine
           style={{ top: treeGutterAnchorTop(anchorOffsetPx), insetInlineStart: indentationLineLen(level - 1, indentMultiplier), width: `calc(${uiSpacingLen(elbowWidthPx / (STYLING_COMPACT_ROOT_PX * 0.2))})` }}
         />
       )}
-      {showLines && extendBranchStem && (
-        <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />
-      )}
+      {showLines && extendBranchStem && <div data-slot="tree-branch-stem" className={cn("pointer-events-none absolute w-px", treeGuideLineStrokeClassName)} style={branchStemStyle} />}
       {positionedSlot}
     </div>
   );
@@ -17066,11 +16868,7 @@ export const TreeItem: React.FC<TreeItemProps> = ({
           {propertyContent}
         </>
       );
-    return (
-      <TreeItemRowContextMenu items={contextMenu}>
-        {isExpandable ? <div className="min-w-0 w-full">{propertyBlock}</div> : propertyHeader}
-      </TreeItemRowContextMenu>
-    );
+    return <TreeItemRowContextMenu items={contextMenu}>{isExpandable ? <div className="min-w-0 w-full">{propertyBlock}</div> : propertyHeader}</TreeItemRowContextMenu>;
   }
 
   if (isExpandable && resolvedLabel) {
@@ -18055,7 +17853,8 @@ export const Tree = (({
         const ghost = document.createElement("div");
         ghost.textContent = labelText;
         ghost.setAttribute("data-puzzle3d-fixture-drag-ghost", "true");
-        ghost.className = "border-primary bg-panel text-foreground pointer-events-none fixed left-offscreen top-0 z-tutorial rounded-md border px-2 py-1 text-xs shadow-md";
+        ghost.setAttribute("data-level", "panel");
+        ghost.className = cn("border-primary text-foreground pointer-events-none fixed left-offscreen top-0 z-tutorial rounded-md border px-2 py-1 text-xs shadow-md", surfaceClass);
         document.body.appendChild(ghost);
         event.dataTransfer.setDragImage(ghost, ghost.offsetWidth / 2, ghost.offsetHeight / 2);
         requestAnimationFrame(() => ghost.remove());
@@ -18344,8 +18143,7 @@ interface BasicChatMessage {
 }
 
 export const BasicChatPanel: React.FC<BasicChatPanelProps> = ({ id, title }) => {
-  const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
+  const borderClass = borderNormalClass;
   const readyForLabel = useLabel("ui.chat.readyFor", { title });
   const localOnlyLabel = useLabel("ui.chat.localOnly");
   const instructionsLabel = useLabel("ui.chat.instructions", { title });
@@ -18890,7 +18688,14 @@ export const WindowMeasuresTree: React.FC<{ children: React.ReactNode; className
 
   return (
     <FlowProvider block={direction}>
-      <div ref={treeRootRef} data-slot="window-measures-tree" data-direction={direction} className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)} onPointerOver={handleTreePointerOver} onPointerLeave={handleTreePointerLeave}>
+      <div
+        ref={treeRootRef}
+        data-slot="window-measures-tree"
+        data-direction={direction}
+        className={cn("pointer-events-auto w-full min-w-0", windowMeasureTreeChromeClass, className)}
+        onPointerOver={handleTreePointerOver}
+        onPointerLeave={handleTreePointerLeave}
+      >
         <TreeHoverPathRefreshContext.Provider value={refreshTreeHoverPath}>
           <TreeContext.Provider value={{ level: 0, isLastAtLevel: [], showLines: true, isTree: true, indentMultiplier: 1, direction }}>{orderedChildren}</TreeContext.Provider>
         </TreeHoverPathRefreshContext.Provider>
@@ -19038,17 +18843,7 @@ export interface WindowPaneChromeToggleProps {
 }
 
 /** @emoji 🪟 Pane chrome toggle matching panel toggles: leading semantic icon, label, trailing {@link DragHandle} — never a fold-direction chevron. */
-export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({
-  id,
-  icon,
-  label,
-  onClick,
-  disabled,
-  className,
-  dragPointerProps,
-  showDragHandle = true,
-  emphasized = false,
-}) => {
+export const WindowPaneChromeToggle: React.FC<WindowPaneChromeToggleProps> = ({ id, icon, label, onClick, disabled, className, dragPointerProps, showDragHandle = true, emphasized = false }) => {
   const accessibleLabel = useControlAccessibleLabel(id, label);
   const inlineText = useControlInlineText(id, label);
   const surfaceDrag = useUiDriverDragSurface();
@@ -19108,13 +18903,7 @@ const WindowMeasuresChrome: React.FC<WindowMeasuresChromeProps> = ({ windowId, f
         className={cn(windowRailChromeLabelActionClass, windowMeasuresChromeCornerLeftClass)}
         onClick={expanded ? onCollapseExpand : onExpand}
       />
-      <WindowPaneChromeToggle
-        id={childElementId("framework.window", windowId, "measures", "fold")}
-        icon={WINDOW_PANE_MEASURES_ICON}
-        label={windowOptionsLabel}
-        className={windowMeasuresChromeCornerRightClass}
-        onClick={onFold}
-      />
+      <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "measures", "fold")} icon={WINDOW_PANE_MEASURES_ICON} label={windowOptionsLabel} className={windowMeasuresChromeCornerRightClass} onClick={onFold} />
     </div>
   );
 };
@@ -19193,13 +18982,7 @@ const UtilityBarChrome: React.FC<UtilityBarChromeProps> = ({ windowId, folded, d
   if (folded) {
     return (
       <div data-slot="utility-bar-chrome" data-folded="true" className={cn(windowMeasuresChromeClass, "justify-end border-b-0")}>
-        <WindowPaneChromeToggle
-          id={childElementId("framework.window", windowId, "utilityBar", "unfold")}
-          icon={WINDOW_PANE_UTILITIES_ICON}
-          label={utilitiesLabel}
-          disabled={disabled}
-          onClick={onUnfold}
-        />
+        <WindowPaneChromeToggle id={childElementId("framework.window", windowId, "utilityBar", "unfold")} icon={WINDOW_PANE_UTILITIES_ICON} label={utilitiesLabel} disabled={disabled} onClick={onUnfold} />
       </div>
     );
   }
@@ -19306,8 +19089,7 @@ interface BreadcrumbProps extends Omit<React.ComponentProps<"nav">, "children"> 
  **/
 function Breadcrumb({ className, items, ...props }: BreadcrumbProps) {
   const [openIndex, setOpenIndex] = reactHostPort.useState<number | null>(null);
-  const level = useLevel();
-  const borderClass = getLevelBorderElementClass(level);
+  const borderClass = borderNormalClass;
 
   return (
     <nav aria-label="breadcrumb" data-slot="breadcrumb" className={cn("flex h-medium items-stretch border", borderClass, className)} {...props}>
@@ -19342,8 +19124,7 @@ interface BreadcrumbItemProps extends Omit<React.ComponentProps<"li">, "content"
  * BreadcrumbItem holds the data fields for a BreadcrumbItem record.
  **/
 function BreadcrumbItem({ className, id, content, children, onNavigate, options, ...props }: BreadcrumbItemProps) {
-  const level = useLevel();
-  const hoverClass = getLevelHoverClass(level);
+  const hoverClass = interactiveHoverClass;
   const itemContent = content ?? children;
   const interactiveContent = reactHostPort.useMemo(() => {
     if (itemContent == null || typeof itemContent === "boolean") return null;
@@ -19398,8 +19179,7 @@ interface BreadcrumbSeparatorItemProps {
 /**
  **/
 function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options, onNavigate }: BreadcrumbSeparatorItemProps) {
-  const level = useLevel();
-  const hoverClass = getLevelHoverClass(level);
+  const hoverClass = interactiveHoverClass;
   const icon = isOpen ? <ChevronDownIcon className="cursor-foldable" /> : <ChevronRightIcon className="cursor-foldable" />;
 
   const handleSelect = (href: string) => {
@@ -19431,7 +19211,7 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
           </button>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content align="center" sideOffset={8} className={cn(glassWindowOptionsClass, "w-auto overflow-hidden border p-single z-temporary", borderNormalClass)}>
+          <DropdownMenuPrimitive.Content data-level="menu" align="center" sideOffset={8} className={cn(glassClass, "w-auto overflow-hidden border p-single z-menu", borderNormalClass)}>
             {options.map((item, index) => {
               const menuItem = (
                 <DropdownMenuPrimitive.Item
@@ -19792,12 +19572,7 @@ function PanelEmptyDockZone({ anchor }: { readonly anchor: Anchor }) {
     <div
       ref={setRef}
       data-slot="panel-empty-drop-zone"
-      className={cn(
-        "flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed",
-        borderNormalClass,
-        dropZoneReadyFillClass,
-        isDropAnchor ? "border-accent text-accent" : "text-emphasized",
-      )}
+      className={cn("flex h-medium min-w-[10rem] items-center justify-center rounded-sm border border-dashed", borderNormalClass, dropZoneReadyFillClass, isDropAnchor ? "border-accent text-accent" : "text-emphasized")}
     >
       <Icon icon="grip-vertical" size="small" />
     </div>
@@ -19950,8 +19725,7 @@ const Panel: React.FC<PanelProps> = ({
               <WindowChrome
                 stackSlot="window-chrome-stack"
                 active
-                capGlassClass={panelGlassFillClass}
-                bodyFillClass={cn("relative border-0", panelGlassFillClass)}
+                level="panel"
                 stackClassName={cn("w-full flex-1 min-h-0 bg-transparent", isBottom && "flex-col-reverse")}
                 bodyClassName="flex min-h-0 flex-1 flex-col"
                 bodySlot="panel-content"
@@ -19966,14 +19740,7 @@ const Panel: React.FC<PanelProps> = ({
                 body={
                   <Scrollable className="relative flex-1 min-h-0">
                     {activeTabTrees && activeNode ? (
-                      <PanelTreeUnitsPane
-                        anchor={anchor}
-                        tabId={activeNode.id}
-                        units={activeTabTrees}
-                        treeOpenStates={treeOpenStates}
-                        onTreeOpenStateChange={onTreeOpenStateChange}
-                        treeContentRevision={treeContentRevision}
-                      />
+                      <PanelTreeUnitsPane anchor={anchor} tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} />
                     ) : null}
                   </Scrollable>
                 }
@@ -19999,6 +19766,7 @@ const Panel: React.FC<PanelProps> = ({
           ) : (
             <WindowChrome
               chipOnly
+              level="panel"
               stackSlot="window-chrome-stack"
               titleChips={<PanelTabBar anchor={anchor} activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="panel" direction={flow.block} maxRows={1} showActiveColor={visible} />}
             />
@@ -20091,7 +19859,21 @@ export function usePaneSlot(pane: React.ReactElement): React.ReactPortal | null 
 }
 
 /** @emoji ↔️ Pane resize handle — same sign convention as {@link PanelResizeHandle}: dragging the right-side handle right (or the left-side handle left) grows the pane. Middle anchors pass `deltaFactor={2}` so each edge contributes half the visual grow. */
-function PaneResizeHandle({ side, size, minSize, maxSize, onSizeChange, deltaFactor = 1 }: { readonly side: "left" | "right"; readonly size: number; readonly minSize: number; readonly maxSize: number; readonly onSizeChange: (size: number) => void; readonly deltaFactor?: number }) {
+function PaneResizeHandle({
+  side,
+  size,
+  minSize,
+  maxSize,
+  onSizeChange,
+  deltaFactor = 1,
+}: {
+  readonly side: "left" | "right";
+  readonly size: number;
+  readonly minSize: number;
+  readonly maxSize: number;
+  readonly onSizeChange: (size: number) => void;
+  readonly deltaFactor?: number;
+}) {
   const startRef = reactHostPort.useRef<{ pointerX: number; size: number } | null>(null);
   const pointerProps = usePointerDrag<HTMLDivElement>({
     onStart: (event) => {
@@ -20200,48 +19982,50 @@ export const Pane: React.FC<PaneProps> = ({
   const resizeDeltaFactor = horizontal === "middle" ? 2 : 1;
 
   return (
-    <div
-      data-slot="pane"
-      data-anchor={anchor}
-      data-dragging={dragging ? "true" : undefined}
-      dir={flow.inline === "rtl" ? "rtl" : undefined}
-      className={cn(
-        "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
-        flow.block === "up" ? "flex-col-reverse" : "flex-col",
-        horizontal === "middle" ? "items-center" : "items-start",
-        !effectiveFolded && "w-fit",
-        className,
-      )}
-      style={positionStyle}
-    >
-      <FlowProvider inline={flow.inline} block={flow.block}>
-        <WindowChrome
-          stackSlot="window-chrome-stack"
-          chipOnly={effectiveFolded}
-          active={!effectiveFolded}
-          capGlassClass={panelGlassFillClass}
-          bodyFillClass={cn("relative border-0", panelGlassFillClass)}
-          stackClassName={cn("bg-transparent", !effectiveFolded && "w-full")}
-          bodyClassName="overflow-y-auto p-single"
-          bodySlot="pane-body"
-          titleChips={
-            <WindowPaneChromeToggle
-              id={childElementId(id, "pane", "fold")}
-              icon={icon}
-              label={label ?? id}
-              onClick={mobile ? undefined : onFoldToggle}
-              dragPointerProps={mobile ? undefined : dragPointerProps}
-              showDragHandle={!mobile}
-              emphasized={dragging}
-            />
-          }
-          body={!effectiveFolded ? children : undefined}
-        />
-        {resizable && !mobile && !effectiveFolded && onSizeChange
-          ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} deltaFactor={resizeDeltaFactor} />)
-          : null}
-      </FlowProvider>
-    </div>
+    <LevelProvider level="pane">
+      <div
+        data-slot="pane"
+        data-level="pane"
+        data-anchor={anchor}
+        data-dragging={dragging ? "true" : undefined}
+        dir={flow.inline === "rtl" ? "rtl" : undefined}
+        className={cn(
+          "pointer-events-auto absolute flex min-h-0 min-w-0 box-border overflow-visible",
+          flow.block === "up" ? "flex-col-reverse" : "flex-col",
+          horizontal === "middle" ? "items-center" : "items-start",
+          !effectiveFolded && "w-fit",
+          className,
+        )}
+        style={positionStyle}
+      >
+        <FlowProvider inline={flow.inline} block={flow.block}>
+          <WindowChrome
+            stackSlot="window-chrome-stack"
+            chipOnly={effectiveFolded}
+            active={!effectiveFolded}
+            level="pane"
+            stackClassName={cn("bg-transparent", !effectiveFolded && "w-full")}
+            bodyClassName="overflow-y-auto p-single"
+            bodySlot="pane-body"
+            titleChips={
+              <WindowPaneChromeToggle
+                id={childElementId(id, "pane", "fold")}
+                icon={icon}
+                label={label ?? id}
+                onClick={mobile ? undefined : onFoldToggle}
+                dragPointerProps={mobile ? undefined : dragPointerProps}
+                showDragHandle={!mobile}
+                emphasized={dragging}
+              />
+            }
+            body={!effectiveFolded ? children : undefined}
+          />
+          {resizable && !mobile && !effectiveFolded && onSizeChange
+            ? resizeSides.map((side) => <PaneResizeHandle key={side} side={side} size={size ?? minSize} minSize={minSize} maxSize={maxSize} onSizeChange={onSizeChange} deltaFactor={resizeDeltaFactor} />)
+            : null}
+        </FlowProvider>
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -20298,20 +20082,12 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
         id={activeNode ? `framework.panelTab.${activeNode.id}` : undefined}
         className={cn("relative w-full flex-1 min-h-0 text-foreground flex flex-col box-border overflow-hidden", className)}
       >
-        <div data-dim aria-hidden className={panelChromeFillLayerClass} />
+        <div data-dim aria-hidden className={cn("pointer-events-none absolute inset-0 z-0", glassClass)} />
         <div data-dim data-slot="chrome-frame" aria-hidden className={shellChromeFrameLayerClass} />
         {showTabBar ? <PanelTabBar activePath={resolvedPath} onActivePathChange={handlePathChange} tabs={tabs} variant="mobile" /> : null}
         <Scrollable className="relative z-10 flex-1 min-h-0">
           <div ref={panelContentRef} data-dim data-slot="mobile-panel-content" className="flex min-h-0 flex-1 flex-col">
-            {activeTabTrees && activeNode ? (
-              <PanelTreeUnitsPane
-                tabId={activeNode.id}
-                units={activeTabTrees}
-                treeOpenStates={treeOpenStates}
-                onTreeOpenStateChange={onTreeOpenStateChange}
-                treeContentRevision={treeContentRevision}
-              />
-            ) : null}
+            {activeTabTrees && activeNode ? <PanelTreeUnitsPane tabId={activeNode.id} units={activeTabTrees} treeOpenStates={treeOpenStates} onTreeOpenStateChange={onTreeOpenStateChange} treeContentRevision={treeContentRevision} /> : null}
           </div>
         </Scrollable>
       </PanelGhostRoot>
@@ -20321,7 +20097,6 @@ const MobilePanel: React.FC<MobilePanelProps> = ({ visible = false, tabs, active
 export { MobilePanel };
 
 // #endregion 💧MobilePanel
-
 
 // #endregion 📷Panel Components
 
@@ -20850,11 +20625,7 @@ export function routeWindowSearchKeydown(search: SearchSpec | undefined, event: 
 }
 
 /** @emoji ⎋ Routes Escape to {@link SearchInput.onAbort} when window search chrome is active (skips other typing targets). */
-export function routeWindowSearchEscape(
-  search: SearchSpec | undefined,
-  event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">,
-  zone: { readonly chromeVisible: boolean; readonly actionActive: boolean },
-): boolean {
+export function routeWindowSearchEscape(search: SearchSpec | undefined, event: Pick<KeyboardEvent, "key" | "defaultPrevented" | "isComposing" | "target">, zone: { readonly chromeVisible: boolean; readonly actionActive: boolean }): boolean {
   if (event.key !== "Escape" || event.defaultPrevented || event.isComposing) return false;
   const onAbort = search?.input?.onAbort;
   if (!onAbort) return false;
@@ -21126,14 +20897,14 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
   if (!hasInput) return null;
 
   return (
-    <LevelProvider level="overlay">
+    <LevelProvider level="pane">
       <div
         ref={searchRef}
         data-slot="search"
         data-active={active ? "true" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm", className)}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && cn(surfaceClass, "ring-accent/35 rounded-sm ring-1 shadow-sm"), className)}
       >
         <Popover
           open={showPossiblesList}
@@ -21274,11 +21045,11 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
   if (!hasOptions && !hasControl && !hasStatus) return null;
 
   return (
-    <LevelProvider level="overlay">
+    <LevelProvider level="pane">
       <div
         data-slot="engagement"
         data-session-active={sessionActive ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "ring-accent/35 rounded-sm bg-window/95 ring-1 shadow-sm", className)}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && cn(surfaceClass, "ring-accent/35 rounded-sm ring-1 shadow-sm"), className)}
       >
         {primaryStepStatus ? (
           <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
@@ -21383,7 +21154,7 @@ interface WindowProps extends WindowConfig {
  * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
-  const bgClass = "bg-window";
+  const bgClass = surfaceClass;
   const errorLabel = useLabel("ui.common.error");
   return (
     <div className={cn("flex flex-col items-center justify-center h-full w-full p-small", bgClass)}>
@@ -21504,7 +21275,7 @@ const Window: React.FC<WindowProps> = ({
   onActivate,
   fill = false,
 }) => {
-  const bgClass = "bg-window";
+  const bgClass = surfaceClass;
   const newWindowLabel = useLabel("ui.common.newWindow");
   const closeLabel = useLabel("ui.common.close");
   const controlsFocusLabel = useLabel("ui.common.focus");
@@ -21625,7 +21396,14 @@ const Window: React.FC<WindowProps> = ({
       {(showControls || onOpenInNewWindow || focusControl || onClose) && (
         <ActionGroup id={childElementId("framework.window", id, "windowControls")}>
           {onOpenInNewWindow && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "external")} onClick={onOpenInNewWindow} icon={<ExternalLinkIcon />} text={newWindowLabel} />}
-          {focusControl && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "maximize")} onClick={onMaximize ?? onMinimize} icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />} text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel} />}
+          {focusControl && (
+            <ActionGroupItem
+              id={childElementId("framework.window", id, "windowControls", "maximize")}
+              onClick={onMaximize ?? onMinimize}
+              icon={onMinimize ? <Minimize2Icon /> : <Maximize2Icon />}
+              text={onMinimize ? controlsUnfocusLabel : controlsFocusLabel}
+            />
+          )}
           {onClose && <ActionGroupItem id={childElementId("framework.window", id, "windowControls", "close")} onClick={onClose} icon={<CloseIcon />} text={closeLabel} />}
         </ActionGroup>
       )}
@@ -21638,6 +21416,7 @@ const Window: React.FC<WindowProps> = ({
         ref={windowRef}
         id={id}
         data-slot="window"
+        data-level="window"
         data-elevation-root=""
         data-active={active ? "true" : undefined}
         onDoubleClick={onDoubleClick}
@@ -21654,11 +21433,9 @@ const Window: React.FC<WindowProps> = ({
         {hasControls ? <div className="absolute top-1 right-1 z-panel flex items-stretch gap-single">{controlsContent}</div> : null}
         <div ref={windowBodyRef} data-slot="window-body" className={cn("relative flex min-w-0 flex-col overflow-hidden", fill ? "min-h-0 flex-1" : "h-auto shrink-0")}>
           {/* 🪟 PaneHost wraps window body content so deep canvas hosts (e.g. projection switcher via usePaneSlot) receive PaneHostContext; the portal mount is a sibling overlay. */}
-          <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>
-            {error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}
-          </PaneHost>
+          <PaneHost className={cn("flex min-w-0 flex-col", fill ? "min-h-0 flex-1" : undefined)}>{error ? <DefaultErrorDisplay error={error} /> : loading && skeleton ? skeleton : children}</PaneHost>
           {measures ? (
-            <GlassTierProvider tier="windowOptions">
+            <LevelProvider level="pane">
               <div
                 ref={measuresOverlayRef}
                 data-slot="window-measures-overlay"
@@ -21669,6 +21446,7 @@ const Window: React.FC<WindowProps> = ({
                 <div
                   {...(!measuresFolded ? { "data-dim": true } : {})}
                   data-slot="window-measures-stack"
+                  data-level="pane"
                   data-folded={measuresFolded ? "true" : undefined}
                   className={cn(
                     windowMeasuresStackClass,
@@ -21707,10 +21485,10 @@ const Window: React.FC<WindowProps> = ({
                   ) : null}
                 </div>
               </div>
-            </GlassTierProvider>
+            </LevelProvider>
           ) : null}
           {engagementVisible ? (
-            <GlassTierProvider tier="windowOptions">
+            <LevelProvider level="pane">
               <div
                 data-slot="window-engagement-overlay"
                 data-expanded={engagementExpanded ? "true" : undefined}
@@ -21721,6 +21499,7 @@ const Window: React.FC<WindowProps> = ({
                   ref={engagementZoneRef}
                   {...(engagementExpanded ? { "data-dim": true } : {})}
                   data-slot="window-engagement-zone"
+                  data-level="pane"
                   data-folded={engagementExpanded ? undefined : "true"}
                   className={cn(windowMeasuresStackClass, "flex-row items-start", !engagementExpanded && windowMeasuresStackFoldedClass)}
                 >
@@ -21733,10 +21512,10 @@ const Window: React.FC<WindowProps> = ({
                   ) : null}
                 </div>
               </div>
-            </GlassTierProvider>
+            </LevelProvider>
           ) : null}
           {search && searchVisible ? (
-            <GlassTierProvider tier="windowOptions">
+            <LevelProvider level="pane">
               <div
                 data-slot="window-search-overlay"
                 data-expanded={searchExpanded ? "true" : undefined}
@@ -21746,6 +21525,7 @@ const Window: React.FC<WindowProps> = ({
                 <div
                   {...(searchExpanded ? { "data-dim": true } : {})}
                   data-slot="window-search-zone"
+                  data-level="pane"
                   data-folded={searchExpanded ? undefined : "true"}
                   className={cn(windowMeasuresStackClass, "flex-row items-start", !searchExpanded && windowMeasuresStackFoldedClass)}
                 >
@@ -21768,12 +21548,12 @@ const Window: React.FC<WindowProps> = ({
                   ) : null}
                 </div>
               </div>
-            </GlassTierProvider>
+            </LevelProvider>
           ) : null}
           {!measuresExpanded ? (
-            <GlassTierProvider tier="windowOptions">
+            <LevelProvider level="pane">
               <div data-slot="utility-bar-overlay" data-folded={utilityBarFolded ? "true" : undefined} className={utilityBarOverlayClass}>
-                <div {...(!utilityBarFolded ? { "data-dim": true } : {})} data-slot="utility-bar" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
+                <div {...(!utilityBarFolded ? { "data-dim": true } : {})} data-slot="utility-bar" data-level="pane" data-folded={utilityBarFolded ? "true" : undefined} className={cn(windowMeasuresStackClass, "flex-row items-end w-fit")}>
                   <UtilityBarChrome windowId={id} folded={utilityBarFolded} disabled={!utilityBar} onFold={() => setUtilityBarFolded(true)} onUnfold={() => setUtilityBarFolded(false)} />
                   {!utilityBarFolded && utilityBar ? (
                     <div data-slot="utility-bar-body" className={utilityBarBodyClass} style={utilityBarMaxHeightPx > 0 ? { maxHeight: utilityBarMaxHeightPx } : undefined}>
@@ -21782,7 +21562,7 @@ const Window: React.FC<WindowProps> = ({
                   ) : null}
                 </div>
               </div>
-            </GlassTierProvider>
+            </LevelProvider>
           ) : null}
         </div>
       </GhostRegionShell>
@@ -22467,7 +22247,7 @@ const DiagramInner: React.FC<DiagramProps> = ({
         autoPanOnNodeDrag={autoPanOnNodeDrag}
         selectNodesOnDrag={selectNodesOnDrag}
         proOptions={proOptions}
-        className="bg-background"
+        className={surfaceClass}
       >
         {showMinimap && <MiniMap className="border" maskColor="var(--accent)" bgColor="var(--background)" nodeStrokeWidth={3} zoomable pannable nodeComponent={miniMapNodeComponent} />}
         {panels}
@@ -22549,7 +22329,7 @@ export const DiagramSkeleton: React.FC<DiagramSkeletonProps> = ({ nodeCount = 5,
         zoomOnScroll={false}
         zoomOnPinch={false}
         proOptions={{ hideAttribution: true }}
-        className="bg-background animate-pulse opacity-50"
+        className={cn(surfaceClass, "animate-pulse opacity-50")}
       ></HostReactFlow>
     </div>
   );
@@ -23830,54 +23610,54 @@ function GumballHandles(props: {
             </>,
           )
         : null}
-      {show("moveXY") ? (
-        handleProps(
-          "moveXY",
-          <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
-            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-          </mesh>,
-        )
-      ) : null}
-      {show("moveYZ") ? (
-        handleProps(
-          "moveYZ",
-          <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
-            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-          </mesh>,
-        )
-      ) : null}
-      {show("moveXZ") ? (
-        handleProps(
-          "moveXZ",
-          <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
-            <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
-          </mesh>,
-        )
-      ) : null}
-      {show("rotateX") ? (
-        handleProps(
-          "rotateX",
-          <mesh rotation={[0, Math.PI / 2, 0]}>
-            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-          </mesh>,
-        )
-      ) : null}
-      {show("rotateY") ? (
-        handleProps(
-          "rotateY",
-          <mesh rotation={[Math.PI / 2, 0, 0]}>
-            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-          </mesh>,
-        )
-      ) : null}
-      {show("rotateZ") ? (
-        handleProps(
-          "rotateZ",
-          <mesh>
-            <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
-          </mesh>,
-        )
-      ) : null}
+      {show("moveXY")
+        ? handleProps(
+            "moveXY",
+            <mesh position={[GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )
+        : null}
+      {show("moveYZ")
+        ? handleProps(
+            "moveYZ",
+            <mesh position={[0, GUMBALL_PLANE_OFFSET, GUMBALL_PLANE_OFFSET]} rotation={[0, Math.PI / 2, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )
+        : null}
+      {show("moveXZ")
+        ? handleProps(
+            "moveXZ",
+            <mesh position={[GUMBALL_PLANE_OFFSET, 0, GUMBALL_PLANE_OFFSET]} rotation={[-Math.PI / 2, 0, 0]}>
+              <planeGeometry args={[GUMBALL_PLANE_SIZE, GUMBALL_PLANE_SIZE]} />
+            </mesh>,
+          )
+        : null}
+      {show("rotateX")
+        ? handleProps(
+            "rotateX",
+            <mesh rotation={[0, Math.PI / 2, 0]}>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
+          )
+        : null}
+      {show("rotateY")
+        ? handleProps(
+            "rotateY",
+            <mesh rotation={[Math.PI / 2, 0, 0]}>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
+          )
+        : null}
+      {show("rotateZ")
+        ? handleProps(
+            "rotateZ",
+            <mesh>
+              <torusGeometry args={[GUMBALL_RING_RADIUS, GUMBALL_RING_TUBE, 8, 48]} />
+            </mesh>,
+          )
+        : null}
       {show("scaleX") ? scaleHandleProps("scaleX", "x") : null}
       {show("scaleY") ? scaleHandleProps("scaleY", "y") : null}
       {show("scaleZ") ? scaleHandleProps("scaleZ", "z") : null}
@@ -24674,7 +24454,7 @@ export const Scene: React.FC<SceneProps> = ({
  *
  **/
 export const SceneSkeleton: React.FC = () => (
-  <div className={cn("h-full w-full bg-background flex items-center justify-center", loadingBorderClass)}>
+  <div className={cn("h-full w-full flex items-center justify-center", surfaceClass, loadingBorderClass)}>
     <div className="relative w-32 h-32 animate-pulse">
       <div className="absolute inset-0 border-4 border-muted-foreground/20 rounded-lg" />
       <div className="absolute inset-2 border-2 border-muted-foreground/20 rounded-lg" />
@@ -24884,15 +24664,6 @@ const Table = <T,>({
   const selectedSet = selectedRows instanceof Set ? selectedRows : new Set(selectedRows || []);
   const scrollAreaRef = reactHostPort.useRef<HTMLDivElement>(null);
   const [activeId, setActiveId] = reactHostPort.useState<string | null>(null);
-  const level = useLevel();
-  const headerBgClass = {
-    base: "bg-base",
-    canvas: "bg-canvas",
-    window: "bg-window",
-    panel: "bg-panel",
-    overlay: "bg-overlay",
-    temporary: "bg-temporary",
-  }[level];
 
   const sensors = useSensors(
     useSensor(PointerSensor, {
@@ -24988,7 +24759,7 @@ const Table = <T,>({
     return (
       <Scrollable ref={scrollAreaRef} className={`h-full w-full ${className}`}>
         <table className="w-full border-collapse">
-          <thead className={`${headerBgClass} ${borderNormalBottomClass} ${stickyHeader ? "sticky top-0 z-panel" : ""} ${headerClassName}`}>
+          <thead className={cn(surfaceClass, borderNormalBottomClass, stickyHeader && "sticky top-0 z-panel", headerClassName)}>
             <tr className="h-large">
               {visibleColumns.map((column) => (
                 <th key={column.id} className={`text-start p-single font-medium h-large text-element ${column.headerClassName || column.className || ""}`} style={{ width: column.width }}>
@@ -25102,7 +24873,7 @@ export interface TableSkeletonProps {
 export const TableSkeleton: React.FC<TableSkeletonProps> = ({ columns, rowCount = 5, className = "" }) => (
   <Scrollable className={`h-full w-full ${className}`}>
     <table className="w-full border-collapse">
-      <thead className={cn("bg-window sticky top-0 z-panel", borderNormalBottomClass)}>
+      <thead className={cn(surfaceClass, "sticky top-0 z-panel", borderNormalBottomClass)}>
         <tr className="h-large">
           {columns.map((column) => (
             <th key={column.id} className={`text-start p-single text-sm font-medium h-large ${column.className || ""}`} style={{ width: column.width }}>
@@ -25874,8 +25645,8 @@ VirtualFileSystem.displayName = "VirtualFileSystem";
  **/
 export const Canvas: React.FC<{ children: React.ReactNode; id?: string }> = ({ children, id }) => {
   return (
-    <LevelProvider level="canvas">
-      <div id={id} data-slot="canvas" className="box-border h-full w-full bg-canvas p-single">
+    <LevelProvider level="base">
+      <div id={id} data-slot="canvas" data-level="base" className={cn("box-border h-full w-full p-single", surfaceClass)}>
         {children}
       </div>
     </LevelProvider>
@@ -26613,7 +26384,12 @@ interface ModeTabInsertPreview {
 type ModeDockTabDisplayItem = { id: string; title: string; iconId: IconName; preview?: "ghost" };
 
 /** @emoji 📑 Tab bar row with ghost tab(s) at the drop index so layout matches the committed drop. */
-function modeDockTabsWithInsertPreview(tabs: readonly { id: string; title: string; iconId: IconName }[], insertPreview: ModeTabInsertPreview | null, stackPath: ModeLayoutPath, ghostTabs: readonly { id: string; title: string; iconId: IconName }[]): ModeDockTabDisplayItem[] {
+function modeDockTabsWithInsertPreview(
+  tabs: readonly { id: string; title: string; iconId: IconName }[],
+  insertPreview: ModeTabInsertPreview | null,
+  stackPath: ModeLayoutPath,
+  ghostTabs: readonly { id: string; title: string; iconId: IconName }[],
+): ModeDockTabDisplayItem[] {
   if (!insertPreview || insertPreview.stackPath !== stackPath || ghostTabs.length === 0) return tabs.map((tab) => ({ ...tab }));
   const insertAt = Math.min(Math.max(0, insertPreview.index), tabs.length);
   const row: ModeDockTabDisplayItem[] = tabs.map((tab) => ({ ...tab }));
@@ -26664,14 +26440,18 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId
     </div>
   ) : (
     <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)} style={style}>
-      <div data-slot="mode-dock-drag-preview-cap" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", modeDockTabBarGlassClass, windowCapFrameClass)}>
+      <div data-slot="mode-dock-drag-preview-cap" data-level="window" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", glassChromeClass, windowCapFrameClass)}>
         <div className={modeDockTabLabelClassName}>
           {iconId ? <Icon icon={iconId} size="small" className="shrink-0" /> : null}
           <span className="truncate">{title}</span>
         </div>
       </div>
-      <div data-slot="mode-dock-drag-preview-body" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
-        {content ? <div className="h-full w-full overflow-hidden bg-window [&_*]:pointer-events-none">{content}</div> : null}
+      <div data-slot="mode-dock-drag-preview-body" data-level="base" className={cn("relative min-h-0 flex-1 overflow-hidden p-single opacity-95", windowBodyFrameClass)}>
+        {content ? (
+          <div data-level="window" className={cn("h-full w-full overflow-hidden [&_*]:pointer-events-none", surfaceClass)}>
+            {content}
+          </div>
+        ) : null}
       </div>
     </div>
   );
@@ -26757,7 +26537,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         data-active={activeWindowId === tab.id ? "true" : undefined}
         className={cn(
           modeDockTabClassName,
-          !perTabActiveChrome && "bg-window",
+          !perTabActiveChrome && surfaceClass,
           perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
           perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
           perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
@@ -26824,7 +26604,13 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   if (perTabActiveChrome && displayChromeGrid && chromeBody) {
     return (
       <div data-slot="mode-dock-chrome-column" className="relative z-[2] grid h-full min-h-0 min-w-0 flex-1 grid-rows-[auto_minmax(0,1fr)]" style={{ gridTemplateColumns: displayChromeGrid.templateColumns }}>
-        <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("grid min-h-medium min-w-0 items-stretch", modeDockTabBarGlassClass, modeDragActive && dropZoneReadyClass)} style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}>
+        <div
+          ref={ref}
+          data-slot="mode-dock-tabbar"
+          data-ui-reveal-region="window-cap"
+          className={cn("grid min-h-medium min-w-0 items-stretch", glassChromeClass, modeDragActive && dropZoneReadyClass)}
+          style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
+        >
           {displayTabs.map((tab, index) =>
             tab.preview === "ghost" ? (
               <div key={`ghost-${tab.id}`} className="relative z-20 flex min-h-medium items-stretch justify-self-start" style={{ gridColumn: displayChromeGrid.tabCol(index) }}>
@@ -26859,7 +26645,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", modeDockTabBarGlassClass)}>
+    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", glassChromeClass)}>
       <div data-slot="mode-dock-tab-cap" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
@@ -26885,9 +26671,7 @@ ModeDockTabBar.displayName = "ModeDockTabBar";
 //#region 🧭ModeDockStack
 
 /** @emoji 🪟 Mode-dock silhouette — delegates to {@link WindowChromeSilhouetteBorder} with the legacy slot name. */
-const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => (
-  <WindowChromeSilhouetteBorder stack={stack} active={active} silhouetteSlot="mode-dock-silhouette-border" />
-);
+const ModeDockStackSilhouetteBorder: React.FC<{ stack: HTMLElement | null; active: boolean }> = ({ stack, active }) => <WindowChromeSilhouetteBorder stack={stack} active={active} silhouetteSlot="mode-dock-silhouette-border" />;
 
 interface ModeDockStackProps {
   stackPath: ModeLayoutPath;
@@ -26920,34 +26704,38 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
   const stackBody = (
-    <div ref={bodyRef} data-slot="mode-dock-stack-body" className={cn("relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
-      {activeDescriptor
-        ? (() => {
-            const { children, engagement, ...windowProps } = activeDescriptor;
-            return (
-              <Window {...windowProps} fill={activeDescriptor.fill ?? true} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
-                {children}
-              </Window>
-            );
-          })()
-        : null}
-    </div>
+    <LevelProvider level="base">
+      <div ref={bodyRef} data-slot="mode-dock-stack-body" data-level="base" className={cn("relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
+        {activeDescriptor
+          ? (() => {
+              const { children, engagement, ...windowProps } = activeDescriptor;
+              return (
+                <Window {...windowProps} fill={activeDescriptor.fill ?? true} engagement={engagement} active={activeWindowId === activeId} onActivate={() => dock?.activateWindow(activeId!)}>
+                  {children}
+                </Window>
+              );
+            })()
+          : null}
+      </div>
+    </LevelProvider>
   );
 
   // 🪟 `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
-    <div ref={setStackEl} data-slot="mode-dock-stack" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
-      <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
-      {chromeGrid ? (
-        <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
-      ) : (
-        <>
-          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
-          {stackBody}
-        </>
-      )}
-    </div>
+    <LevelProvider level="window">
+      <div ref={setStackEl} data-slot="mode-dock-stack" data-level="window" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
+        <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
+        {chromeGrid ? (
+          <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} chromeGrid={chromeGrid} chromeBody={stackBody} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
+        ) : (
+          <>
+            <ModeDockTabBar ref={tabBarRef} stackPath={stackPath} tabs={tabs} activeId={activeId} activeWindowId={activeWindowId} onSelectTab={(windowId) => dock?.activateWindow(windowId)} mobile={mobile} />
+            {stackBody}
+          </>
+        )}
+      </div>
+    </LevelProvider>
   );
 };
 
@@ -27511,11 +27299,12 @@ const Mode: React.FC<ModeProps> = ({ windows, activeWindowId, onActiveWindowChan
 
   return (
     <div data-slot="mode" data-mobile={mobile ? "true" : undefined} data-dragging={previewDragState ? "true" : undefined} data-maximized-path={maximizedStackPath ?? undefined} className={cn("relative flex h-full min-h-0 w-full flex-col", className)}>
-      <LevelProvider level="canvas">
+      <LevelProvider level="base">
         <div
           ref={modeBodyRef}
           data-slot="mode-body"
-          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden bg-canvas", MODE_CANVAS_INSET_CLASS)}
+          data-level="base"
+          className={cn("relative box-border flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden", surfaceClass, MODE_CANVAS_INSET_CLASS)}
           onDragOver={!mobile && onTemplateDrop ? handleExternalTemplateDragOver : undefined}
           onDrop={!mobile && onTemplateDrop ? handleExternalTemplateDrop : undefined}
         >
@@ -27916,23 +27705,13 @@ if (import.meta.vitest) {
       expect(css).toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="button-group-item"\]/);
       expect(css).toMatch(/\[data-celebrated="true"\]\[data-slot="introduction-interaction-label"\][\s\S]*?background-clip:\s*text/);
       expect(css).toMatch(/mix-blend-mode:\s*destination-in/);
-      expect(css).toMatch(
-        /\[data-hover-scope\]:hover[\s\S]*\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="drag-handle"\][\s\S]*?color:\s*#000/,
-      );
+      expect(css).toMatch(/\[data-hover-scope\]:hover[\s\S]*\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="drag-handle"\][\s\S]*?color:\s*#000/);
       expect(css).toMatch(/\.window-silhouette-border-celebrated-fill[\s\S]*?background:\s*var\(--celebrate-conic\)/);
-      expect(css).not.toMatch(
-        /\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="window"\]/,
-      );
+      expect(css).not.toMatch(/\[data-celebrated="true"\]:is\([\s\S]*?\[data-slot="window"\]/);
       const celebrateContent = css.match(/\/\* #region 🎉CelebrateContent[\s\S]*?\/\* #endregion 🎉CelebrateContent \*\//)?.[0] ?? "";
-      expect(celebrateContent).not.toMatch(
-        /:is\(\[data-icon\], \[data-icon-kind\], \[data-slot="tree-icon"\], \[data-slot="drag-handle"\]\)/,
-      );
-      expect(celebrateContent).toMatch(
-        /:is\(\[data-icon\], \[data-icon-kind="catalog"\], \[data-icon-kind="svg"\]\)::before/,
-      );
-      expect(celebrateContent).toMatch(
-        /:is\(\[data-tree-guide-line\], \[data-slot="tree-branch-elbow"\], \[data-slot="tree-branch-stem"\]\)/,
-      );
+      expect(celebrateContent).not.toMatch(/:is\(\[data-icon\], \[data-icon-kind\], \[data-slot="tree-icon"\], \[data-slot="drag-handle"\]\)/);
+      expect(celebrateContent).toMatch(/:is\(\[data-icon\], \[data-icon-kind="catalog"\], \[data-icon-kind="svg"\]\)::before/);
+      expect(celebrateContent).toMatch(/:is\(\[data-tree-guide-line\], \[data-slot="tree-branch-elbow"\], \[data-slot="tree-branch-stem"\]\)/);
       expect(celebrateContent).toContain('[data-slot="tree-section-content"]');
       expect(celebrateContent).toContain('> [data-slot="tree-guide"] [data-tree-guide-line]');
       expect(celebrateContent).toMatch(/:has\([\s\S]*?\[data-celebrated="true"\]\s*\)/);
@@ -28016,7 +27795,8 @@ if (import.meta.vitest) {
                   introduce: "framework.panelTab.framework.panel.catalogue",
                   show: [],
                   placement: "right",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28032,7 +27812,7 @@ if (import.meta.vitest) {
         expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduced")).toBe("true");
       });
       expect(container.querySelector('[data-slot="panel"]')?.getAttribute("data-introduction-elevated")).toBe("true");
-      expect(container.querySelectorAll(".ui-glass-veil")).toHaveLength(1);
+      expect(container.querySelectorAll(".ui-veil")).toHaveLength(1);
       expect(document.documentElement.getAttribute("data-introduction-active")).toBe("true");
     });
 
@@ -28049,7 +27829,8 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                interactions: [], ordered: false,
+                interactions: [],
+                ordered: false,
                 logos: [],
                 demonstrations: [],
               },
@@ -28125,7 +27906,8 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "auto",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28153,9 +27935,17 @@ if (import.meta.vitest) {
               {
                 id: "puzzle3d-main-top",
                 title: "Top",
-                utilityBar: <button id="transform" type="button">Transform</button>,
+                utilityBar: (
+                  <button id="transform" type="button">
+                    Transform
+                  </button>
+                ),
                 utilityBarFolded: false,
-                children: <div id="framework.window.puzzle3dMainTop" data-element-alias="framework.window.puzzle3dMain">Main Pane</div>,
+                children: (
+                  <div id="framework.window.puzzle3dMainTop" data-element-alias="framework.window.puzzle3dMain">
+                    Main Pane
+                  </div>
+                ),
               },
             ]}
             layout={{ kind: "stack", children: [{ kind: "window", id: "puzzle3d-main-top" }], activeId: "puzzle3d-main-top" }}
@@ -28223,7 +28013,8 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "auto",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28294,7 +28085,8 @@ if (import.meta.vitest) {
                   introduce: null,
                   show: ["framework.window.puzzle3dMain"],
                   placement: "right",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28309,7 +28101,7 @@ if (import.meta.vitest) {
       await waitFor(() => {
         expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduction-elevated")).toBe("true");
       });
-      expect(container.querySelectorAll(".ui-glass-veil")).toHaveLength(1);
+      expect(container.querySelectorAll(".ui-veil")).toHaveLength(1);
       expect(container.querySelector('[id="framework.window.puzzle3dMain"]')?.getAttribute("data-introduced")).toBeNull();
     });
 
@@ -28327,7 +28119,8 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "right",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28339,7 +28132,7 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      expect(container.querySelector(".ui-glass-veil")?.className).toContain("pointer-events-none");
+      expect(container.querySelector(".ui-veil")?.className).toContain("pointer-events-none");
       rerender(
         <div>
           <div id="framework.window.puzzle3dMain" />
@@ -28354,7 +28147,8 @@ if (import.meta.vitest) {
                   introduce: "framework.window.puzzle3dMain",
                   show: [],
                   placement: "right",
-                  interactions: [], ordered: false,
+                  interactions: [],
+                  ordered: false,
                   logos: [],
                   demonstrations: [],
                 },
@@ -28367,7 +28161,7 @@ if (import.meta.vitest) {
         </div>,
       );
       await waitFor(() => {
-        expect(container.querySelector(".ui-glass-veil")?.className).toContain("pointer-events-auto");
+        expect(container.querySelector(".ui-veil")?.className).toContain("pointer-events-auto");
       });
     });
 
@@ -28425,9 +28219,7 @@ if (import.meta.vitest) {
   describe("UIIntroduction appearance", () => {
     it("Done on the last step dismisses as completed; Skip dismisses as not completed", async () => {
       const onDismiss = vi.fn();
-      const steps: IntroductionStepDefinition[] = [
-        { id: "only", title: "Only", body: "Last step.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
-      ];
+      const steps: IntroductionStepDefinition[] = [{ id: "only", title: "Only", body: "Last step.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
       const { unmount } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={onDismiss} />);
       fireEvent.click(screen.getByRole("button", { name: /done|fertig/i }));
       expect(onDismiss).toHaveBeenCalledWith(true);
@@ -28518,7 +28310,8 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                interactions: [], ordered: false,
+                interactions: [],
+                ordered: false,
                 logos: [],
                 demonstrations: [],
               },
@@ -28538,7 +28331,19 @@ if (import.meta.vitest) {
     });
 
     it("pulses the introduction info-box silhouette with the introduced border effect", () => {
-      const rect = { x: 0, y: 0, top: 0, left: 0, bottom: 200, right: 320, width: 320, height: 200, toJSON() { return this; } };
+      const rect = {
+        x: 0,
+        y: 0,
+        top: 0,
+        left: 0,
+        bottom: 200,
+        right: 320,
+        width: 320,
+        height: 200,
+        toJSON() {
+          return this;
+        },
+      };
       const rectSpy = vi.spyOn(HTMLElement.prototype, "getBoundingClientRect").mockReturnValue(rect as DOMRect);
       try {
         const { container } = render(
@@ -28598,23 +28403,23 @@ if (import.meta.vitest) {
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
     });
 
-    it("emphasizes all introduction body content while the pointer is inside the body", async () => {
+    it("emphasizes only the introduction body paragraph under the pointer", async () => {
       const { readFileSync } = await import("node:fs");
       const { fileURLToPath } = await import("node:url");
       const { dirname, resolve } = await import("node:path");
       const css = readFileSync(resolve(dirname(fileURLToPath(import.meta.url)), "../../styling/js/ui.css"), "utf8");
-      expect(css).toMatch(
-        /\[data-slot="introduction-info-box"\]:has\(\[data-slot="window-chrome-body"\]:hover\)/,
-      );
-      expect(css).toMatch(
-        /\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover\s*:is\(p,\s*li,\s*span,\s*\[data-icon\],\s*\[data-icon-kind\]\):not\(\[data-celebrated="true"\]\)\s*\{\s*color:\s*var\(--border-emphasized-color\);/,
-      );
-      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:focus-within/);
+      expect(css).toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="introduction-body-paragraph"\]:hover\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
+      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]\s*\[data-slot="window-chrome-body"\]:hover/);
+      expect(css).not.toMatch(/\[data-slot="introduction-info-box"\]:has\(\[data-slot="window-chrome-body"\]:hover\)/);
+      expect(css).not.toMatch(/\[data-slot="introduction-body-paragraph"\]:focus-within/);
+      expect(splitIntroductionBodyParagraphs("One.\n\nTwo.\n\n\nThree.")).toEqual(["One.", "Two.", "Three."]);
+      expect(splitIntroductionBodyParagraphs("  single  ")).toEqual(["single"]);
+      expect(splitIntroductionBodyParagraphs("")).toEqual([]);
       const steps: IntroductionStepDefinition[] = [
         {
           id: "body-hover",
           title: "Body Hover",
-          body: "Muted copy becomes emphasized on body hover.",
+          body: "First paragraph.\n\nSecond paragraph.",
           introduce: null,
           show: [],
           placement: "center",
@@ -28625,16 +28430,12 @@ if (import.meta.vitest) {
         },
       ];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
-      const box = container.querySelector('[data-slot="introduction-info-box"]');
-      const body = box?.querySelector('[data-slot="window-chrome-body"]');
-      expect(body).toBeTruthy();
-      expect(body?.querySelector("p")?.className).toContain("text-muted-foreground");
-      expect(body?.querySelector('[data-slot="introduction-interaction-label"]')).toBeTruthy();
-      expect(box?.querySelector('[data-slot="introduction-info-box-chip"]')).toBeTruthy();
-      expect(box?.querySelector('[data-slot="introduction-step-chip"]')).toBeTruthy();
-      expect(box?.querySelector('[data-slot="introduction-close"]')).toBeTruthy();
-      expect(body?.textContent).toContain("Muted copy becomes emphasized on body hover.");
-      expect(body?.textContent).toContain("Click footer");
+      const paragraphs = container.querySelectorAll('[data-slot="introduction-body-paragraph"]');
+      expect(paragraphs).toHaveLength(2);
+      expect(paragraphs[0]?.textContent).toBe("First paragraph.");
+      expect(paragraphs[1]?.textContent).toBe("Second paragraph.");
+      expect(paragraphs[0]?.className).toContain("text-muted-foreground");
+      expect(container.querySelector('[data-slot="introduction-interaction-label"]')?.textContent).toBe("Click footer");
     });
 
     it("renders step logos, wrapping only those with an href, and swaps light/dark srcs", () => {
@@ -28650,7 +28451,8 @@ if (import.meta.vitest) {
                 introduce: null,
                 show: [],
                 placement: "center",
-                interactions: [], ordered: false,
+                interactions: [],
+                ordered: false,
                 logos: [
                   { src: "/asset/logo/bbsr.png", darkSrc: "/asset/logo/bbsr-dark.png", alt: "BBSR", href: "https://www.bbsr.bund.de" },
                   { src: "/asset/logo/zukunft-bau.png", darkSrc: null, alt: "Zukunft Bau", href: null },
@@ -28692,9 +28494,7 @@ if (import.meta.vitest) {
           demonstrations: [],
         },
       ];
-      const { container } = render(
-        <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[1]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
-      );
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[1]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const rows = container.querySelectorAll('[data-slot="introduction-interactions"] li');
       expect(rows).toHaveLength(3);
       expect(Array.from(rows).map((row) => row.querySelector("[data-slot='introduction-interaction-label']")?.textContent)).toEqual(["Zoom", "Pan", "Orbit"]);
@@ -28724,16 +28524,12 @@ if (import.meta.vitest) {
             demonstrations: [],
           },
         ];
-        const { container, rerender } = render(
-          <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
-        );
+        const { container, rerender } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         const labels = () => container.querySelectorAll('[data-slot="introduction-interaction-label"]');
         expect(labels()[0]?.getAttribute("data-celebrated")).toBeNull();
         expect(labels()[1]?.getAttribute("data-celebrated")).toBeNull();
 
-        rerender(
-          <UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[0]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />,
-        );
+        rerender(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} completedInteractionIndices={[0]} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         expect(labels()[0]?.getAttribute("data-celebrated")).toBe("true");
         expect(labels()[1]?.getAttribute("data-celebrated")).toBeNull();
 
@@ -28780,9 +28576,7 @@ if (import.meta.vitest) {
     });
 
     it("renders the Next button and no checklist when the step has no interactions", () => {
-      const steps: IntroductionStepDefinition[] = [
-        { id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
-      ];
+      const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       expect(container.querySelector('[data-slot="introduction-interactions"]')).toBeNull();
       expect(screen.getByRole("button", { name: /next|done|weiter|fertig/i })).toBeTruthy();
@@ -28790,9 +28584,7 @@ if (import.meta.vitest) {
     });
 
     it("renders a header drag handle in the title chip and moves the info box", () => {
-      const steps: IntroductionStepDefinition[] = [
-        { id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
-      ];
+      const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "Hi.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const box = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
       const chip = container.querySelector('[data-slot="introduction-info-box-chip"]') as HTMLElement;
@@ -28849,6 +28641,7 @@ if (import.meta.vitest) {
       expect(footerGapRight?.getAttribute("aria-hidden")).toBeNull();
       expect(footerLeft?.classList.contains("pointer-events-auto")).toBe(true);
       expect(footerRight?.classList.contains("pointer-events-auto")).toBe(true);
+      expect(footer?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
       const backButton = screen.getByRole("button", { name: /back|zurück/i });
       const nextButton = screen.getByRole("button", { name: /next|weiter/i });
       expect(backButton.className).toContain("hover:bg-hover-interactive-fill");
@@ -28860,16 +28653,36 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="introduction-info-box"] [data-slot="window-chrome-body"]')?.textContent).not.toMatch(/next|done|back|zurück|\d\s*\/\s*\d/i);
     });
 
-    it("centers the step chip in the footer when only one navigation chip is present", () => {
-      const steps: IntroductionStepDefinition[] = [
-        { id: "only", title: "Only", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
-      ];
-      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+    it("centers the step chip when navigation occupies either side alone", () => {
+      const rightOnlySteps: IntroductionStepDefinition[] = [{ id: "only", title: "Only", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
+      const { container, rerender } = render(<UIIntroduction introduction={{ title: "Welcome", steps: rightOnlySteps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       expect(container.querySelector('[data-slot="window-chrome-footer-gap-left"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer-gap-right"]')).toBeTruthy();
       expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/1\s*\/\s*1/);
       expect(container.querySelector('[data-slot="window-chrome-footer-left"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
+
+      const leftOnlySteps: IntroductionStepDefinition[] = [
+        { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
+        {
+          id: "second",
+          title: "Second",
+          body: "Complete the step.",
+          introduce: null,
+          show: [],
+          placement: "center",
+          interactions: [{ on: { kind: "click", id: "ui.footer" }, label: "Click" }],
+          ordered: false,
+          logos: [],
+          demonstrations: [],
+        },
+      ];
+      rerender(<UIIntroduction introduction={{ title: "Welcome", steps: leftOnlySteps }} stepIndex={1} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      expect(container.querySelector('[data-slot="window-chrome-footer-center-chip"]')?.textContent).toMatch(/2\s*\/\s*2/);
+      expect(container.querySelector('[data-slot="window-chrome-footer-left"]')).toBeTruthy();
+      expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
     });
 
     it("does not paint glass on the footer center rail when the next chip is absent", () => {
@@ -28890,9 +28703,10 @@ if (import.meta.vitest) {
       const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
       const centerRail = container.querySelector('[data-slot="window-chrome-footer-center"]');
       const centerChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]');
-      expect(centerRail?.className).not.toMatch(/ui-glass-panel/);
-      expect(centerChip?.className).toMatch(/ui-glass-panel/);
+      expect(centerRail?.className).not.toMatch(/ui-glass-chrome/);
+      expect(centerChip?.className).toMatch(/ui-glass-chrome/);
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
+      expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
     });
   });
 
@@ -29006,7 +28820,14 @@ if (import.meta.vitest) {
       const unregister = registerIntroductionSurfaceResolver("demo.curve", {
         entity: (domain, entityId) => {
           if (domain !== "attraction" || entityId !== "a1") return null;
-          return { point: { x: 50, y: 0 }, polyline: [{ x: 0, y: 0 }, { x: 100, y: 0 }], visible: true };
+          return {
+            point: { x: 50, y: 0 },
+            polyline: [
+              { x: 0, y: 0 },
+              { x: 100, y: 0 },
+            ],
+            visible: true,
+          };
         },
       });
       expect(resolveIntroductionPoint({ kind: "curve", id: "demo.curve", domain: "attraction", entity: "a1", t: 0 })).toEqual({ x: 0, y: 0 });
@@ -29052,12 +28873,23 @@ if (import.meta.vitest) {
     });
 
     it("clamps t outside [0, 1] and degrades gracefully for degenerate polylines", () => {
-      const points = [{ x: 0, y: 0 }, { x: 10, y: 0 }];
+      const points = [
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ];
       expect(polylinePointAt(points, -1)).toEqual({ x: 0, y: 0 });
       expect(polylinePointAt(points, 2)).toEqual({ x: 10, y: 0 });
       expect(polylinePointAt([], 0.5)).toEqual({ x: 0, y: 0 });
       expect(polylinePointAt([{ x: 3, y: 4 }], 0.5)).toEqual({ x: 3, y: 4 });
-      expect(polylinePointAt([{ x: 1, y: 1 }, { x: 1, y: 1 }], 0.5)).toEqual({ x: 1, y: 1 });
+      expect(
+        polylinePointAt(
+          [
+            { x: 1, y: 1 },
+            { x: 1, y: 1 },
+          ],
+          0.5,
+        ),
+      ).toEqual({ x: 1, y: 1 });
     });
   });
 
@@ -29067,9 +28899,18 @@ if (import.meta.vitest) {
         { kind: "move", to: [0, 0] },
         { kind: "line", to: [10, 0] },
       ]);
-      expect(linePoints).toEqual([{ x: 0, y: 0 }, { x: 10, y: 0 }]);
+      expect(linePoints).toEqual([
+        { x: 0, y: 0 },
+        { x: 10, y: 0 },
+      ]);
 
-      const quadPoints = sampleBezierSegments([{ kind: "move", to: [0, 0] }, { kind: "quad", ctrl: [5, 10], to: [10, 0] }], 2);
+      const quadPoints = sampleBezierSegments(
+        [
+          { kind: "move", to: [0, 0] },
+          { kind: "quad", ctrl: [5, 10], to: [10, 0] },
+        ],
+        2,
+      );
       // 🪡 2 samples of a quad from (0,0) via ctrl (5,10) to (10,0): t=0.5 is the curve's own midpoint.
       expect(quadPoints).toHaveLength(3);
       expect(quadPoints[1].x).toBeCloseTo(5, 5);
@@ -29269,7 +29110,18 @@ if (import.meta.vitest) {
       vi.useFakeTimers();
       try {
         const steps: IntroductionStepDefinition[] = [
-          { id: "transform-utility", title: "Transform", body: "No demo declared.", introduce: "transform", show: [], placement: "auto", interactions: [{ on: { kind: "utility", id: "transform" }, label: "Activate Transform" }], ordered: false, logos: [], demonstrations: [] },
+          {
+            id: "transform-utility",
+            title: "Transform",
+            body: "No demo declared.",
+            introduce: "transform",
+            show: [],
+            placement: "auto",
+            interactions: [{ on: { kind: "utility", id: "transform" }, label: "Activate Transform" }],
+            ordered: false,
+            logos: [],
+            demonstrations: [],
+          },
         ];
         render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
         act(() => {
@@ -29356,10 +29208,7 @@ if (import.meta.vitest) {
             interactions: [],
             ordered: false,
             logos: [],
-            demonstrations: [
-              { gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } },
-              { gesture: { kind: "scroll", at: { kind: "element", id: "tool.fill" }, deltaY: -100 } },
-            ],
+            demonstrations: [{ gesture: { kind: "leftClick", at: { kind: "element", id: "tool.fill" } } }, { gesture: { kind: "scroll", at: { kind: "element", id: "tool.fill" }, deltaY: -100 } }],
           },
         ];
         render(
@@ -29375,6 +29224,17 @@ if (import.meta.vitest) {
       } finally {
         vi.useRealTimers();
       }
+    });
+
+    it("emphasizes the step count chip when hovered", () => {
+      const steps: IntroductionStepDefinition[] = [{ id: "welcome", title: "Welcome", body: "Hello", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const stepChip = container.querySelector('[data-slot="introduction-step-chip"]');
+      expect(stepChip).toBeTruthy();
+      const stepText = stepChip?.querySelector("span");
+      expect(stepText).toBeTruthy();
+      expect(stepText?.className).toContain("group-hover:text-emphasized");
+      expect(stepText?.className).toContain("transition-colors");
     });
   });
 
@@ -29708,7 +29568,122 @@ if (import.meta.vitest) {
     // folder/folder-open/message-square/message-circle, handled with a best-effort single-rigid-body
     // motion instead) or their rigid motion already is the mechanically correct animation (globe, search,
     // settings, rotate-cw/ccw, flip-horizontal/vertical, text-cursor).
-    const PART_MECHANISM_ICONS = new Set(["alert-circle", "align-left", "app-window", "arrow-right-left", "award", "bar-chart-3", "bell", "book-open", "calendar-days", "camera", "folder", "folder-open", "check-circle-2", "chevrons-up-down", "circle-dot", "clipboard", "clipboard-list", "clock", "code", "combine", "component", "copy", "crosshair", "cylinder", "download", "edit-3", "eraser", "external-link", "eye", "eye-off", "file", "file-archive", "file-code", "file-image", "file-json", "file-spreadsheet", "file-text", "file-type", "file-video", "focus", "git-branch", "git-commit", "git-merge", "graduation-cap", "grid-3x3", "grip-vertical", "hand", "hard-drive", "hash", "home", "image", "image-plus", "image-up", "info", "landmark", "lasso", "layers", "layout", "layout-grid", "library", "lightbulb", "link", "link-2-off", "list", "list-ordered", "list-tree", "lock", "lock-open", "magnet", "maximize-2", "minimize-2", "monitor", "more-horizontal", "mouse-pointer", "move-3d", "network", "paint-bucket", "paintbrush", "panel-left", "panel-right", "panel-top", "pause", "pen-tool", "pipette", "plug", "plus", "save", "scaling", "scissors", "settings-2", "shapes", "skip-back", "skip-forward", "smartphone", "smile", "sparkles", "square-arrow-down-left", "square-arrow-down-right", "square-arrow-up-left", "square-arrow-up-right", "square-dashed", "sun", "table-2", "tablet", "tags", "text-search", "trash-2", "triangle-alert", "unlink", "user", "users", "x", "zoom-in", "zoom-out"]);
+    const PART_MECHANISM_ICONS = new Set([
+      "alert-circle",
+      "align-left",
+      "app-window",
+      "arrow-right-left",
+      "award",
+      "bar-chart-3",
+      "bell",
+      "book-open",
+      "calendar-days",
+      "camera",
+      "folder",
+      "folder-open",
+      "check-circle-2",
+      "chevrons-up-down",
+      "circle-dot",
+      "clipboard",
+      "clipboard-list",
+      "clock",
+      "code",
+      "combine",
+      "component",
+      "copy",
+      "crosshair",
+      "cylinder",
+      "download",
+      "edit-3",
+      "eraser",
+      "external-link",
+      "eye",
+      "eye-off",
+      "file",
+      "file-archive",
+      "file-code",
+      "file-image",
+      "file-json",
+      "file-spreadsheet",
+      "file-text",
+      "file-type",
+      "file-video",
+      "focus",
+      "git-branch",
+      "git-commit",
+      "git-merge",
+      "graduation-cap",
+      "grid-3x3",
+      "grip-vertical",
+      "hand",
+      "hard-drive",
+      "hash",
+      "home",
+      "image",
+      "image-plus",
+      "image-up",
+      "info",
+      "landmark",
+      "lasso",
+      "layers",
+      "layout",
+      "layout-grid",
+      "library",
+      "lightbulb",
+      "link",
+      "link-2-off",
+      "list",
+      "list-ordered",
+      "list-tree",
+      "lock",
+      "lock-open",
+      "magnet",
+      "maximize-2",
+      "minimize-2",
+      "monitor",
+      "more-horizontal",
+      "mouse-pointer",
+      "move-3d",
+      "network",
+      "paint-bucket",
+      "paintbrush",
+      "panel-left",
+      "panel-right",
+      "panel-top",
+      "pause",
+      "pen-tool",
+      "pipette",
+      "plug",
+      "plus",
+      "save",
+      "scaling",
+      "scissors",
+      "settings-2",
+      "shapes",
+      "skip-back",
+      "skip-forward",
+      "smartphone",
+      "smile",
+      "sparkles",
+      "square-arrow-down-left",
+      "square-arrow-down-right",
+      "square-arrow-up-left",
+      "square-arrow-up-right",
+      "square-dashed",
+      "sun",
+      "table-2",
+      "tablet",
+      "tags",
+      "text-search",
+      "trash-2",
+      "triangle-alert",
+      "unlink",
+      "user",
+      "users",
+      "x",
+      "zoom-in",
+      "zoom-out",
+    ]);
 
     async function readUiCss(): Promise<string> {
       const { readFileSync } = await import("node:fs");
@@ -29844,6 +29819,59 @@ if (import.meta.vitest) {
     });
   });
 
+  describe("Level Context", () => {
+    it("LEVELS is ordered base..menu", () => {
+      expect(LEVELS).toEqual(["base", "window", "pane", "panel", "dialog", "menu"]);
+    });
+
+    it("useLevel resolves the nearest LevelProvider when nested, defaulting to base with none", () => {
+      const ProbeLevel: React.FC = () => {
+        const level = useLevel();
+        return <span data-testid="probe-level" data-level={level} />;
+      };
+      const { container, rerender } = render(<ProbeLevel />);
+      expect(container.querySelector('[data-testid="probe-level"]')?.getAttribute("data-level")).toBe("base");
+
+      rerender(
+        <LevelProvider level="window">
+          <LevelProvider level="dialog">
+            <ProbeLevel />
+          </LevelProvider>
+        </LevelProvider>,
+      );
+      expect(container.querySelector('[data-testid="probe-level"]')?.getAttribute("data-level")).toBe("dialog");
+    });
+
+    it("a transient (Popover) always resolves menu level on its own portaled content root, regardless of the ambient LevelProvider", () => {
+      render(
+        <LevelProvider level="dialog">
+          <Popover open>
+            <PopoverTrigger>Open</PopoverTrigger>
+            <PopoverContent>Body</PopoverContent>
+          </Popover>
+        </LevelProvider>,
+      );
+      const content = document.querySelector('[data-slot="popover-content"]');
+      expect(content?.getAttribute("data-level")).toBe("menu");
+      expect(content?.className).toContain("ui-glass");
+      expect(content?.className).not.toContain("ui-glass-panel");
+      expect(content?.className).not.toContain("ui-glass-menu");
+    });
+
+    it("WindowChrome with level=dialog stamps data-level=dialog on its stack and applies ui-glass to its body", () => {
+      const { container } = render(
+        <WindowChrome level="dialog" stackSlot="level-dialog-stack" titleChips={<span>Title</span>} body={<div data-testid="dialog-body">Body</div>} />,
+      );
+      const stack = container.querySelector('[data-slot="level-dialog-stack"]') as HTMLElement;
+      expect(stack.getAttribute("data-level")).toBe("dialog");
+      const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
+      expect(body.className).toContain("ui-glass");
+      const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
+      expect(chip.className).toContain("ui-glass-chrome");
+      expect(screen.getByTestId("dialog-body")).toBeTruthy();
+    });
+  });
+
   describe("ContextMenu", () => {
     it("prevents the native context menu when no items are registered", () => {
       render(
@@ -29937,14 +29965,7 @@ if (import.meta.vitest) {
     it("renders a color swatch and fires hover callbacks on controller items", async () => {
       const onHover = vi.fn();
       const onHoverEnd = vi.fn();
-      render(
-        <ContextMenuController
-          open
-          position={{ x: 12, y: 24 }}
-          items={[{ id: "kind", label: "Capsule", icon: "box", color: "#aabbcc", onHover, onHoverEnd }]}
-          onOpenChange={vi.fn()}
-        />,
-      );
+      render(<ContextMenuController open position={{ x: 12, y: 24 }} items={[{ id: "kind", label: "Capsule", icon: "box", color: "#aabbcc", onHover, onHoverEnd }]} onOpenChange={vi.fn()} />);
       const item = await waitFor(() => screen.getByRole("menuitem", { name: "Capsule" }));
       const swatch = item.querySelector("[aria-hidden]") as HTMLElement | null;
       expect(swatch?.getAttribute("style") ?? "").toMatch(/#aabbcc|rgb\(170,\s*187,\s*204\)/);
@@ -30265,10 +30286,16 @@ if (import.meta.vitest) {
       expect(onActiveTabPathChange).not.toHaveBeenCalled();
     });
 
-    it("Panel with tabBarHost=\"chrome\" renders nothing while closed and only depth ≥ 1 rows once open, leaving the root row to its sibling PanelChromeTabBar", () => {
+    it('Panel with tabBarHost="chrome" renders nothing while closed and only depth ≥ 1 rows once open, leaving the root row to its sibling PanelChromeTabBar', () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [
-        { kind: "branch", id: "root-a", icon: StubIcon, name: "Root A", children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } }), singleTreeLeaf({ id: "leaf-b", icon: StubIcon, name: "Leaf B", tree: { sections: [] } })] },
+        {
+          kind: "branch",
+          id: "root-a",
+          icon: StubIcon,
+          name: "Root A",
+          children: [singleTreeLeaf({ id: "leaf-a", icon: StubIcon, name: "Leaf A", tree: { sections: [] } }), singleTreeLeaf({ id: "leaf-b", icon: StubIcon, name: "Leaf B", tree: { sections: [] } })],
+        },
       ];
       const { container, rerender } = render(<Panel anchor="top-left" tabBarHost="chrome" visible={false} tabs={tabs} activeTabPath={["root-a", "leaf-a"]} />);
       expect(container.querySelector('[data-slot="panel"]')).toBeNull();
@@ -30280,16 +30307,14 @@ if (import.meta.vitest) {
       expect(screen.getByText("Leaf B")).toBeTruthy();
     });
 
-    it("Panel with tabBarHost=\"chrome\" at top-middle and bottom-middle expands with glass panel level and nested rows", () => {
+    it('Panel with tabBarHost="chrome" at top-middle and bottom-middle expands with glass panel level and nested rows', () => {
       const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [
-        { kind: "branch", id: "root", icon: StubIcon, name: "Command", children: [singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Palette", tree: { sections: [] } })] },
-      ];
+      const tabs: PanelTabNode[] = [{ kind: "branch", id: "root", icon: StubIcon, name: "Command", children: [singleTreeLeaf({ id: "leaf", icon: StubIcon, name: "Palette", tree: { sections: [] } })] }];
       for (const anchor of ["top-middle", "bottom-middle"] as const) {
         const { container, unmount } = render(<Panel anchor={anchor} tabBarHost="chrome" visible tabs={tabs} activeTabPath={["root", "leaf"]} size={360} />);
         const panel = container.querySelector('[data-slot="panel"]');
         expect(panel?.getAttribute("data-level")).toBe("panel");
-        expect(panel?.querySelector(".ui-glass-panel")).toBeTruthy();
+        expect(panel?.querySelector(".ui-glass")).toBeTruthy();
         expect(screen.getByText("Palette")).toBeTruthy();
         expect(screen.queryByText("Command")).toBeNull();
         unmount();
@@ -30651,7 +30676,10 @@ if (import.meta.vitest) {
     it("Panel sets dir=rtl only for right anchors (corners and right-middle), never for left or middle anchors", () => {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "tab-a", icon: StubIcon, name: "Tab A", tree: { sections: [] } })];
-      const dirOf = (anchor: Anchor) => render(<Panel anchor={anchor} visible tabs={tabs} />).container.querySelector('[data-slot="panel"]')?.getAttribute("dir");
+      const dirOf = (anchor: Anchor) =>
+        render(<Panel anchor={anchor} visible tabs={tabs} />)
+          .container.querySelector('[data-slot="panel"]')
+          ?.getAttribute("dir");
       expect(dirOf("top-left")).toBeNull();
       expect(dirOf("bottom-left")).toBeNull();
       expect(dirOf("left-middle")).toBeNull();
@@ -30697,7 +30725,14 @@ if (import.meta.vitest) {
 
     it("Layout on mobile fills the mobile panel to the available space and hides (not unmounts) the canvas while it's open", () => {
       const StubIcon = (): null => null;
-      const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "mobile-tab", icon: StubIcon, name: "Mobile Tab", tree: { sections: [{ id: "mobile-tab.section", label: "", items: [{ id: "mobile-tab.item", label: "", control: <div data-testid="mobile-tab-content">Tab body</div> }] }] } })];
+      const tabs: PanelTabNode[] = [
+        singleTreeLeaf({
+          id: "mobile-tab",
+          icon: StubIcon,
+          name: "Mobile Tab",
+          tree: { sections: [{ id: "mobile-tab.section", label: "", items: [{ id: "mobile-tab.item", label: "", control: <div data-testid="mobile-tab-content">Tab body</div> }] }] },
+        }),
+      ];
       const { container, rerender } = render(<Layout mobile mobilePanel={{ visible: true, tabs, activeTabPath: ["mobile-tab"] }} canvas={<div data-testid="canvas">Canvas</div>} />);
       const mobilePanel = container.querySelector('[data-panel="mobilePanel"]');
       expect(mobilePanel).toBeTruthy();
@@ -30811,18 +30846,10 @@ if (import.meta.vitest) {
     it("windowSilhouettePath follows tabs, gap cutout, and controls", () => {
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
       expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H1 Z");
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 V76 H0 Z",
-      );
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 })).toBe(
-        "M1,1 H60 V24 H159 V1 H199 V99 H139 V75 H50 V99 H1 V75 H1 Z",
-      );
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 0, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z",
-      );
-      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 0, bottomCapHeight: 24 }, 0)).toBe(
-        "M0,0 H60 V24 H160 V0 H200 V100 V76 H50 V100 H0 V76 H0 Z",
-      );
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 V76 H0 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 60, bottomCapHeight: 24 })).toBe("M1,1 H60 V24 H159 V1 H199 V99 H139 V75 H50 V99 H1 V75 H1 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 0, bottomRightWidth: 60, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z");
+      expect(windowSilhouettePath({ width: 200, height: 100, tabsWidth: 60, controlsWidth: 40, capHeight: 24, bottomLeftWidth: 50, bottomRightWidth: 0, bottomCapHeight: 24 }, 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 V76 H50 V100 H0 V76 H0 Z");
       expect(
         windowSilhouettePath(
           {
@@ -30976,20 +31003,21 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-dock-tab"][data-window-id="left"][data-active="true"]')).toBeNull();
       expect(screen.getByText("Left")).toBeTruthy();
       expect(screen.getByText("Right")).toBeTruthy();
-      expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-body"]')?.getAttribute("data-level")).toBe("base");
+      expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-ribbon");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("justify-end");
       const tabbar = container.querySelector('[data-slot="mode-dock-tabbar"]');
       expect(tabbar?.querySelector('[data-slot="mode-dock-tab-cap"]')).toBeTruthy();
       expect(tabbar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect([...(tabbar?.children ?? [])].map((child) => child.getAttribute("data-slot")).filter(Boolean)).toEqual(["mode-dock-tab-cap", "mode-dock-tab-gap", "mode-dock-controls-cap"]);
-      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-ribbon");
-      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-maximize"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-close"]')?.className).toContain("hover:text-emphasized");
       expect(container.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("text-element");
@@ -31087,11 +31115,11 @@ if (import.meta.vitest) {
       expect(activeStackTab?.className).toContain("border-0");
       expect(inactiveStackTab?.className).toContain("text-element");
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-tab-active-cell"]')).toBeNull();
@@ -31226,7 +31254,8 @@ if (import.meta.vitest) {
           />
         </div>,
       );
-      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("bg-canvas");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.getAttribute("data-level")).toBe("base");
+      expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-stack-body"]')?.className).toContain("p-single");
       expect(screen.getByText("Alpha Body")).toBeTruthy();
       expect(screen.queryByText("Beta Body")).toBeNull();
@@ -31246,8 +31275,8 @@ if (import.meta.vitest) {
       expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-ribbon");
-      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-ribbon");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
       expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       const tabOrder = () => [...container.querySelectorAll('[data-slot="mode-dock-tab"]')].map((tab) => tab.getAttribute("data-window-id"));
@@ -31315,7 +31344,8 @@ if (import.meta.vitest) {
       expect(inactiveTab?.className).toContain("text-element");
       expect(inactiveTab?.className).not.toContain("text-foreground");
       expect(stackBody?.className).toContain("border-0");
-      expect(stackBody?.className).toContain("bg-canvas");
+      expect(stackBody?.getAttribute("data-level")).toBe("base");
+      expect(stackBody?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
     });
 
@@ -32517,22 +32547,19 @@ if (import.meta.vitest) {
 
     it("Window shows engagement and search as folded strips by default, same surface as window options", () => {
       const { container } = render(
-        <Window
-          id="engagement-window"
-          active
-          engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }}
-          search={{ sessionActive: true, input: { value: "Box", placeholder: "Action" } }}
-        >
+        <Window id="engagement-window" active engagement={{ sessionActive: true, status: [{ id: "s", content: "Idle" }] }} search={{ sessionActive: true, input: { value: "Box", placeholder: "Action" } }}>
           <div>Body</div>
         </Window>,
       );
       const engagementZone = container.querySelector('[data-slot="window-engagement-zone"]') as HTMLElement;
       const searchZone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
       expect(engagementZone).toBeTruthy();
-      expect(engagementZone.className).toContain("ui-glass-window-options");
+      expect(engagementZone.getAttribute("data-level")).toBe("pane");
+      expect(engagementZone.className).toContain("ui-glass-chrome");
       expect(engagementZone.className).toContain("flex-row");
       expect(searchZone).toBeTruthy();
-      expect(searchZone.className).toContain("ui-glass-window-options");
+      expect(searchZone.getAttribute("data-level")).toBe("pane");
+      expect(searchZone.className).toContain("ui-glass-chrome");
       expect(searchZone.className).toContain("flex-row");
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
@@ -32549,12 +32576,7 @@ if (import.meta.vitest) {
 
     it("Window merges the ad-hoc actionPane into the top-left Actions pane below the active engagement, sharing one toggle", () => {
       const { container } = render(
-        <Window
-          id="merged-window"
-          active
-          engagement={{ status: [{ id: "s", content: "Idle" }] }}
-          actionPane={<div data-testid="adhoc-actions">Extrude…</div>}
-        >
+        <Window id="merged-window" active engagement={{ status: [{ id: "s", content: "Idle" }] }} actionPane={<div data-testid="adhoc-actions">Extrude…</div>}>
           <div>Body</div>
         </Window>,
       );
@@ -32998,7 +33020,8 @@ if (import.meta.vitest) {
       );
       const strip = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
       expect(strip).toBeTruthy();
-      expect(strip.className).toContain("ui-glass-window-options");
+      expect(strip.getAttribute("data-level")).toBe("pane");
+      expect(strip.className).toContain("ui-glass-chrome");
       expect(strip.className).toContain("flex-row");
       expect(strip.className).toContain("w-fit");
       expect(screen.queryByText("Utility")).toBeNull();
@@ -33057,297 +33080,315 @@ if (import.meta.vitest) {
     });
 
     describe("Pane", () => {
-    it("nearestAnchor resolves each of the eight zones, incl. the dead-center zone by distance from the nearer midline", () => {
-      const hostRect = { left: 0, top: 0, width: 300, height: 300 };
-      expect(nearestAnchor(10, 10, hostRect)).toBe("top-left");
-      expect(nearestAnchor(150, 10, hostRect)).toBe("top-middle");
-      expect(nearestAnchor(290, 10, hostRect)).toBe("top-right");
-      expect(nearestAnchor(10, 150, hostRect)).toBe("left-middle");
-      expect(nearestAnchor(290, 150, hostRect)).toBe("right-middle");
-      expect(nearestAnchor(10, 290, hostRect)).toBe("bottom-left");
-      expect(nearestAnchor(150, 290, hostRect)).toBe("bottom-middle");
-      expect(nearestAnchor(290, 290, hostRect)).toBe("bottom-right");
-      // Dead center, nudged slightly toward the vertical midline (closer horizontally than vertically) -> the nearer side-middle.
-      expect(nearestAnchor(160, 155, hostRect)).toBe("right-middle");
-      // Dead center, nudged slightly toward the horizontal midline -> the nearer top/bottom-middle.
-      expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
-    });
-
-    it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
-      const { container, rerender } = render(
-        <PaneHost>
-          <Pane id="test-pane" anchor="top-right" icon="box" label="Test">
-            <div data-testid="pane-content">Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
-      expect(pane.getAttribute("data-anchor")).toBe("top-right");
-      expect(pane.style.right).toBe("var(--spacing-single)");
-      expect(pane.style.top).toBe("var(--spacing-single)");
-      expect(screen.getByTestId("pane-content")).toBeTruthy();
-      rerender(
-        <PaneHost>
-          <Pane id="test-pane" anchor="top-right" icon="box" label="Test" folded>
-            <div data-testid="pane-content">Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(screen.queryByTestId("pane-content")).toBeNull();
-    });
-
-    it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
-      const { container, rerender } = render(
-        <PaneHost>
-          <Pane id="direction-pane" anchor="top-left" icon="box" label="Direction">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      const pane = () => container.querySelector('[data-slot="pane"]') as HTMLElement;
-      expect(pane().className).toContain("flex-col");
-      expect(pane().className).not.toContain("flex-col-reverse");
-      expect(pane().style.top).toBe("var(--spacing-single)");
-      expect(pane().style.maxWidth).toBe("calc(100% - (var(--spacing-single) * 2))");
-      expect(pane().style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
-
-      rerender(
-        <PaneHost>
-          <Pane id="direction-pane" anchor="bottom-left" icon="box" label="Direction">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(pane().className).toContain("flex-col-reverse");
-      expect(pane().style.bottom).toBe("var(--spacing-single)");
-
-      rerender(
-        <PaneHost>
-          <Pane id="direction-pane" anchor="bottom-middle" icon="box" label="Direction">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(pane().className).toContain("flex-col-reverse");
-      expect(pane().className).toContain("items-center");
-      expect(pane().style.bottom).toBe("var(--spacing-single)");
-      expect(pane().style.left).toBe("50%");
-      expect(pane().style.transform).toBe("translateX(-50%)");
-
-      rerender(
-        <PaneHost>
-          <Pane id="direction-pane" anchor="left-middle" icon="box" label="Direction">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(pane().style.top).toBe("50%");
-      expect(pane().style.transform).toBe("translateY(-50%)");
-    });
-
-    it("Pane chrome toggle folds and unfolds when onFoldToggle is wired", () => {
-      let folded = false;
-      const onFoldToggle = vi.fn(() => {
-        folded = !folded;
+      it("nearestAnchor resolves each of the eight zones, incl. the dead-center zone by distance from the nearer midline", () => {
+        const hostRect = { left: 0, top: 0, width: 300, height: 300 };
+        expect(nearestAnchor(10, 10, hostRect)).toBe("top-left");
+        expect(nearestAnchor(150, 10, hostRect)).toBe("top-middle");
+        expect(nearestAnchor(290, 10, hostRect)).toBe("top-right");
+        expect(nearestAnchor(10, 150, hostRect)).toBe("left-middle");
+        expect(nearestAnchor(290, 150, hostRect)).toBe("right-middle");
+        expect(nearestAnchor(10, 290, hostRect)).toBe("bottom-left");
+        expect(nearestAnchor(150, 290, hostRect)).toBe("bottom-middle");
+        expect(nearestAnchor(290, 290, hostRect)).toBe("bottom-right");
+        // Dead center, nudged slightly toward the vertical midline (closer horizontally than vertically) -> the nearer side-middle.
+        expect(nearestAnchor(160, 155, hostRect)).toBe("right-middle");
+        // Dead center, nudged slightly toward the horizontal midline -> the nearer top/bottom-middle.
+        expect(nearestAnchor(155, 160, hostRect)).toBe("bottom-middle");
       });
-      const { container, rerender } = render(
-        <PaneHost>
-          <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
-            <div data-testid="fold-pane-content">Modes</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
-      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
-      fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
-      expect(onFoldToggle).toHaveBeenCalledTimes(1);
-      rerender(
-        <PaneHost>
-          <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
-            <div data-testid="fold-pane-content">Modes</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(screen.queryByTestId("fold-pane-content")).toBeNull();
-      fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
-      expect(onFoldToggle).toHaveBeenCalledTimes(2);
-    });
 
-    it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
-      let anchor: Anchor = "top-left";
-      const onAnchorChange = vi.fn((next: Anchor) => {
-        anchor = next;
+      it("Pane positions itself via the same anchorPositionStyle math as Panel and folds to a chip", () => {
+        const { container, rerender } = render(
+          <PaneHost>
+            <Pane id="test-pane" anchor="top-right" icon="box" label="Test">
+              <div data-testid="pane-content">Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
+        expect(pane.getAttribute("data-anchor")).toBe("top-right");
+        expect(pane.style.right).toBe("var(--spacing-single)");
+        expect(pane.style.top).toBe("var(--spacing-single)");
+        expect(screen.getByTestId("pane-content")).toBeTruthy();
+        rerender(
+          <PaneHost>
+            <Pane id="test-pane" anchor="top-right" icon="box" label="Test" folded>
+              <div data-testid="pane-content">Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(screen.queryByTestId("pane-content")).toBeNull();
       });
-      const { container, rerender } = render(
-        <PaneHost>
-          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
-      host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-      const handle = container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]') as HTMLElement;
-      fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
-      fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
-      expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
-      fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
-      rerender(
-        <PaneHost>
-          <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
-    });
 
-    it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
-      const { container } = render(
-        <PaneHost>
-          <Pane id="fixed-pane" anchor="bottom-left" icon="box" label="Fixed">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
-      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-icon="box"]')).toBeTruthy();
-    });
-
-    it("under the compact driver, Pane renders no drag-handle and no label, but the whole toggle stays draggable", () => {
-      let anchor: Anchor = "top-left";
-      const onAnchorChange = vi.fn((next: Anchor) => {
-        anchor = next;
+      it("Pane opens its own pane level and stamps ui-glass-chrome chrome (new — Pane previously reused panel glass with no level of its own)", () => {
+        const { container } = render(
+          <PaneHost>
+            <Pane id="level-pane" anchor="top-right" icon="box" label="Test">
+              <div data-testid="pane-level-content">{"placeholder"}</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const pane = container.querySelector('[data-slot="pane"]') as HTMLElement;
+        expect(pane.getAttribute("data-level")).toBe("pane");
+        const chromeStack = container.querySelector('[data-slot="window-chrome-stack"]') as HTMLElement;
+        expect(chromeStack.getAttribute("data-level")).toBe("pane");
+        const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
+        expect(chip.className).toContain("ui-glass-chrome");
+        const body = container.querySelector('[data-slot="pane-body"]') as HTMLElement;
+        expect(body.className).toContain("ui-glass");
       });
-      const { container } = render(
-        <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+
+      it("Pane grows down from top anchors, up from bottom anchors, and symmetrically around middle anchors within responsive bounds", () => {
+        const { container, rerender } = render(
+          <PaneHost>
+            <Pane id="direction-pane" anchor="top-left" icon="box" label="Direction">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const pane = () => container.querySelector('[data-slot="pane"]') as HTMLElement;
+        expect(pane().className).toContain("flex-col");
+        expect(pane().className).not.toContain("flex-col-reverse");
+        expect(pane().style.top).toBe("var(--spacing-single)");
+        expect(pane().style.maxWidth).toBe("calc(100% - (var(--spacing-single) * 2))");
+        expect(pane().style.maxHeight).toBe("calc(100% - (var(--spacing-single) * 2))");
+
+        rerender(
+          <PaneHost>
+            <Pane id="direction-pane" anchor="bottom-left" icon="box" label="Direction">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(pane().className).toContain("flex-col-reverse");
+        expect(pane().style.bottom).toBe("var(--spacing-single)");
+
+        rerender(
+          <PaneHost>
+            <Pane id="direction-pane" anchor="bottom-middle" icon="box" label="Direction">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(pane().className).toContain("flex-col-reverse");
+        expect(pane().className).toContain("items-center");
+        expect(pane().style.bottom).toBe("var(--spacing-single)");
+        expect(pane().style.left).toBe("50%");
+        expect(pane().style.transform).toBe("translateX(-50%)");
+
+        rerender(
+          <PaneHost>
+            <Pane id="direction-pane" anchor="left-middle" icon="box" label="Direction">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(pane().style.top).toBe("50%");
+        expect(pane().style.transform).toBe("translateY(-50%)");
+      });
+
+      it("Pane chrome toggle folds and unfolds when onFoldToggle is wired", () => {
+        let folded = false;
+        const onFoldToggle = vi.fn(() => {
+          folded = !folded;
+        });
+        const { container, rerender } = render(
+          <PaneHost>
+            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+              <div data-testid="fold-pane-content">Modes</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(screen.getByTestId("fold-pane-content")).toBeTruthy();
+        expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
+        fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
+        expect(onFoldToggle).toHaveBeenCalledTimes(1);
+        rerender(
+          <PaneHost>
+            <Pane id="fold-pane" anchor="bottom-right" icon="camera" label="Projection" folded={folded} onFoldToggle={onFoldToggle}>
+              <div data-testid="fold-pane-content">Modes</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(screen.queryByTestId("fold-pane-content")).toBeNull();
+        fireEvent.click(container.querySelector('[data-slot="window-pane-chrome-toggle"]')!);
+        expect(onFoldToggle).toHaveBeenCalledTimes(2);
+      });
+
+      it("Pane drag handle calls onAnchorChange once per anchor crossed, resolved against the PaneHost's bounds", () => {
+        let anchor: Anchor = "top-left";
+        const onAnchorChange = vi.fn((next: Anchor) => {
+          anchor = next;
+        });
+        const { container, rerender } = render(
           <PaneHost>
             <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
               <div>Content</div>
             </Pane>
-          </PaneHost>
-        </UiDriverProvider>,
-      );
-      const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
-      host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
-      expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
-      expect(container.querySelector('[data-slot="pane-chrome"]')?.textContent).not.toContain("Drag");
-      const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
-      fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
-      fireEvent.pointerMove(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
-      expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
-      fireEvent.pointerUp(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
-    });
-
-    it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {
-      let size = 300;
-      const onSizeChange = vi.fn((next: number) => {
-        size = next;
-      });
-      const { container, rerender } = render(
-        <PaneHost>
-          <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      const handle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
-      expect(handle.className).toContain("right-0");
-      fireEvent.pointerDown(handle, { pointerId: 2, clientX: 100, clientY: 0 });
-      fireEvent.pointerMove(handle, { pointerId: 2, clientX: 150, clientY: 0 });
-      expect(onSizeChange).toHaveBeenCalledWith(350);
-      rerender(
-        <PaneHost>
-          <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(container.querySelector('[data-slot="pane"]')?.getAttribute("style")).toContain("350px");
-    });
-
-    it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
-      function DeepChild() {
-        return usePaneSlot(
-          <Pane id="slotted-pane" anchor="bottom-right" icon="box" label="Slotted">
-            <div data-testid="slotted-content">Slotted</div>
-          </Pane>,
+          </PaneHost>,
         );
-      }
-      const { container: withHost } = render(
-        <PaneHost>
-          <DeepChild />
-        </PaneHost>,
-      );
-      expect(withHost.querySelector('[data-slot="pane"][data-anchor="bottom-right"]')).toBeTruthy();
-      expect(screen.getByTestId("slotted-content")).toBeTruthy();
-
-      function OrphanDeepChild() {
-        return usePaneSlot(
-          <Pane id="orphan-pane" anchor="top-left" icon="box">
-            {null}
-          </Pane>,
-        );
-      }
-      const { container: withoutHost } = render(<OrphanDeepChild />);
-      expect(withoutHost.querySelector('[data-slot="pane"]')).toBeNull();
-    });
-
-    it("is fixed on mobile — no drag handle, no resize handle, and content visible despite folded", () => {
-      const { container } = render(
-        <UiMobileProvider mobile>
+        const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
+        host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+        const handle = container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]') as HTMLElement;
+        fireEvent.pointerDown(handle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+        fireEvent.pointerUp(handle, { pointerId: 1, clientX: 290, clientY: 290 });
+        rerender(
           <PaneHost>
-            <Pane id="mobile-pane" anchor="bottom-right" icon="box" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
-              <div data-testid="mobile-pane-content">Content</div>
+            <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+              <div>Content</div>
             </Pane>
-          </PaneHost>
-        </UiMobileProvider>,
-      );
-      expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeNull();
-      expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
-      expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
-    });
+          </PaneHost>,
+        );
+        expect(container.querySelector('[data-slot="pane"]')?.getAttribute("data-anchor")).toBe("bottom-right");
+      });
 
-    it("mirrors dir=rtl for right anchors with a fixed semantic icon and trailing drag handle, while the body carries no dir override", () => {
-      const { container: leftContainer } = render(
-        <PaneHost>
-          <Pane id="left-pane" anchor="top-left" icon="box" label="Left">
-            <div data-testid="left-pane-content">Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(leftContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBeNull();
-      expect(leftContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
-      expect(leftContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
-      expect(leftContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
-      expect(leftContainer.querySelector('[data-icon="box"]')).toBeTruthy();
-      expect(leftContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
+      it("Pane without onAnchorChange still renders a drag-handle affordance like panel toggles", () => {
+        const { container } = render(
+          <PaneHost>
+            <Pane id="fixed-pane" anchor="bottom-left" icon="box" label="Fixed">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
+        expect(container.querySelector('[data-slot="window-chrome-cap"] [data-icon="box"]')).toBeTruthy();
+      });
 
-      const { container: rightContainer } = render(
-        <PaneHost>
-          <Pane id="right-pane" anchor="top-right" icon="camera" label="Right">
-            <div data-testid="right-pane-content">Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(rightContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBe("rtl");
-      expect(rightContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
-      expect(rightContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
-      expect(rightContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
-      expect(rightContainer.querySelector('[data-icon="camera"]')).toBeTruthy();
-      expect(rightContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
-    });
+      it("under the compact driver, Pane renders no drag-handle and no label, but the whole toggle stays draggable", () => {
+        let anchor: Anchor = "top-left";
+        const onAnchorChange = vi.fn((next: Anchor) => {
+          anchor = next;
+        });
+        const { container } = render(
+          <UiDriverProvider driver={COMPACT_UI_DRIVER}>
+            <PaneHost>
+              <Pane id="drag-pane" anchor={anchor} onAnchorChange={onAnchorChange} icon="box" label="Drag">
+                <div>Content</div>
+              </Pane>
+            </PaneHost>
+          </UiDriverProvider>,
+        );
+        const host = container.querySelector('[data-slot="pane-host"]') as HTMLElement;
+        host.getBoundingClientRect = () => ({ left: 0, top: 0, width: 300, height: 300, right: 300, bottom: 300, x: 0, y: 0, toJSON: () => ({}) }) as DOMRect;
+        expect(container.querySelector('[data-slot="pane-chrome"] [data-slot="drag-handle"]')).toBeNull();
+        expect(container.querySelector('[data-slot="pane-chrome"]')?.textContent).not.toContain("Drag");
+        const toggle = container.querySelector('[data-slot="window-pane-chrome-toggle"]') as HTMLElement;
+        fireEvent.pointerDown(toggle, { pointerId: 1, clientX: 10, clientY: 10 });
+        fireEvent.pointerMove(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
+        expect(onAnchorChange).toHaveBeenCalledWith("bottom-right");
+        fireEvent.pointerUp(toggle, { pointerId: 1, clientX: 290, clientY: 290 });
+      });
 
-    it("centers a middle anchor with items-center instead of items-start", () => {
-      const { container } = render(
-        <PaneHost>
-          <Pane id="middle-pane" anchor="top-middle" icon="box" label="Middle">
-            <div>Content</div>
-          </Pane>
-        </PaneHost>,
-      );
-      expect(container.querySelector('[data-slot="pane"]')?.className).toContain("items-center");
-    });
+      it("Pane resize handle grows the pane on its inner edge and respects min/max size", () => {
+        let size = 300;
+        const onSizeChange = vi.fn((next: number) => {
+          size = next;
+        });
+        const { container, rerender } = render(
+          <PaneHost>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        const handle = container.querySelector('[data-slot="pane-resize-handle"]') as HTMLElement;
+        expect(handle.className).toContain("right-0");
+        fireEvent.pointerDown(handle, { pointerId: 2, clientX: 100, clientY: 0 });
+        fireEvent.pointerMove(handle, { pointerId: 2, clientX: 150, clientY: 0 });
+        expect(onSizeChange).toHaveBeenCalledWith(350);
+        rerender(
+          <PaneHost>
+            <Pane id="resize-pane" anchor="top-left" icon="box" label="Resize" resizable size={size} onSizeChange={onSizeChange} minSize={200} maxSize={600}>
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(container.querySelector('[data-slot="pane"]')?.getAttribute("style")).toContain("350px");
+      });
+
+      it("usePaneSlot portals its pane into the nearest PaneHost and renders nothing outside one", () => {
+        function DeepChild() {
+          return usePaneSlot(
+            <Pane id="slotted-pane" anchor="bottom-right" icon="box" label="Slotted">
+              <div data-testid="slotted-content">Slotted</div>
+            </Pane>,
+          );
+        }
+        const { container: withHost } = render(
+          <PaneHost>
+            <DeepChild />
+          </PaneHost>,
+        );
+        expect(withHost.querySelector('[data-slot="pane"][data-anchor="bottom-right"]')).toBeTruthy();
+        expect(screen.getByTestId("slotted-content")).toBeTruthy();
+
+        function OrphanDeepChild() {
+          return usePaneSlot(
+            <Pane id="orphan-pane" anchor="top-left" icon="box">
+              {null}
+            </Pane>,
+          );
+        }
+        const { container: withoutHost } = render(<OrphanDeepChild />);
+        expect(withoutHost.querySelector('[data-slot="pane"]')).toBeNull();
+      });
+
+      it("is fixed on mobile — no drag handle, no resize handle, and content visible despite folded", () => {
+        const { container } = render(
+          <UiMobileProvider mobile>
+            <PaneHost>
+              <Pane id="mobile-pane" anchor="bottom-right" icon="box" label="Mobile" onAnchorChange={vi.fn()} resizable size={300} onSizeChange={vi.fn()} folded>
+                <div data-testid="mobile-pane-content">Content</div>
+              </Pane>
+            </PaneHost>
+          </UiMobileProvider>,
+        );
+        expect(container.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeNull();
+        expect(container.querySelector('[data-slot="pane-resize-handle"]')).toBeNull();
+        expect(screen.getByTestId("mobile-pane-content")).toBeTruthy();
+      });
+
+      it("mirrors dir=rtl for right anchors with a fixed semantic icon and trailing drag handle, while the body carries no dir override", () => {
+        const { container: leftContainer } = render(
+          <PaneHost>
+            <Pane id="left-pane" anchor="top-left" icon="box" label="Left">
+              <div data-testid="left-pane-content">Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(leftContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBeNull();
+        expect(leftContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
+        expect(leftContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
+        expect(leftContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
+        expect(leftContainer.querySelector('[data-icon="box"]')).toBeTruthy();
+        expect(leftContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
+
+        const { container: rightContainer } = render(
+          <PaneHost>
+            <Pane id="right-pane" anchor="top-right" icon="camera" label="Right">
+              <div data-testid="right-pane-content">Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(rightContainer.querySelector('[data-slot="pane"]')?.getAttribute("dir")).toBe("rtl");
+        expect(rightContainer.querySelector('[data-slot="pane-body"]')?.getAttribute("dir")).toBeNull();
+        expect(rightContainer.querySelector('[data-slot="pane"]')?.className).toContain("items-start");
+        expect(rightContainer.querySelector('[data-slot="pane"]')?.className).not.toContain("items-end");
+        expect(rightContainer.querySelector('[data-icon="camera"]')).toBeTruthy();
+        expect(rightContainer.querySelector('[data-slot="window-chrome-cap"] [data-slot="drag-handle"]')).toBeTruthy();
+      });
+
+      it("centers a middle anchor with items-center instead of items-start", () => {
+        const { container } = render(
+          <PaneHost>
+            <Pane id="middle-pane" anchor="top-middle" icon="box" label="Middle">
+              <div>Content</div>
+            </Pane>
+          </PaneHost>,
+        );
+        expect(container.querySelector('[data-slot="pane"]')?.className).toContain("items-center");
+      });
     });
 
     it("createEvenWindowLayout builds a row of stacks", () => {
@@ -35593,9 +35634,7 @@ if (treeVitest) {
       ];
       let visible = false;
       let path: readonly string[] = ["framework.category.workbench", "framework.panel.document"];
-      const { container } = render(
-        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />,
-      );
+      const { container } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={path} onActiveTabPathChange={(next) => (path = next)} />);
       expect(container.querySelectorAll('[data-slot="panel-tabs"]').length).toBe(1);
       expect(screen.getByText("Workbench")).toBeTruthy();
       expect(screen.queryByText("Document")).toBeNull();
@@ -35610,7 +35649,7 @@ if (treeVitest) {
       for (const anchor of ["top-middle", "bottom-middle"] as const) {
         const markup = renderToStaticMarkup(<PanelChromeTabBar anchor={anchor} tabs={tabs} visible={false} />);
         expect(markup).toContain('data-level="panel"');
-        expect(markup).toContain("ui-glass-panel");
+        expect(markup).toContain("ui-glass");
       }
     });
 
@@ -35619,9 +35658,7 @@ if (treeVitest) {
       const StubIcon = (): null => null;
       const tabs: PanelTabNode[] = [singleTreeLeaf({ id: "framework.panel.catalogue", icon: StubIcon, name: "Katalog", tree: { sections: [] } })];
       let visible = false;
-      const { container } = render(
-        <PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={["framework.panel.catalogue"]} onActiveTabPathChange={() => undefined} />,
-      );
+      const { container } = render(<PanelChromeTabBar anchor="top-left" tabs={tabs} visible={visible} onVisibleChange={(next) => (visible = next)} activeTabPath={["framework.panel.catalogue"]} onActiveTabPathChange={() => undefined} />);
       fireEvent.click(screen.getByText("Katalog"));
       expect(visible).toBe(true);
       expect(container.querySelector('[id="framework.panel.catalogue"]')?.getAttribute("data-celebrated")).toBeNull();
@@ -35795,7 +35832,8 @@ if (treeVitest) {
         </Select>,
       );
       const content = document.querySelector('[data-slot="select-content"]');
-      expect(content?.className).toContain("ui-glass-menu");
+      expect(content?.getAttribute("data-level")).toBe("menu");
+      expect(content?.className).toContain("ui-glass");
       expect(content?.className).toContain("text-popover-foreground");
       expect(content?.className).not.toContain("bg-transparent");
     });
@@ -35899,7 +35937,7 @@ if (treeVitest) {
       expect(css).toContain("background-color: var(--border-emphasized-color)");
       expect(css).toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\],\s*\[data-slot="introduction-info-box"\][\s\S]*?window-chrome-silhouette-border/);
       expect(css).not.toMatch(/:is\(\[data-slot="panel"\],\s*\[data-slot="pane"\]\):focus-within\s*\[data-slot="chrome-frame"\]/);
-      expect(css).toContain("[data-slot=\"mode-dock-stack\"]:not([data-active=\"true\"]):hover [data-slot=\"mode-dock-silhouette-border\"][data-kind=\"normal\"] path");
+      expect(css).toContain('[data-slot="mode-dock-stack"]:not([data-active="true"]):hover [data-slot="mode-dock-silhouette-border"][data-kind="normal"] path');
       expect(css).toContain('[data-hover-scope]:hover [data-slot="drag-handle"]');
       expect(css).toMatch(/\[data-hover-scope\]:hover\s*\[data-slot="drag-handle"\]\s*\{\s*color:\s*var\(--border-emphasized-color\);/);
     });
@@ -36557,10 +36595,16 @@ if (treeVitest) {
     });
 
     it("tutorialCameraAt holds the first pose before the first keyframe and the last pose after", () => {
-      const def = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, camera: [
-        { at: 100, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const },
-        { at: 900, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 9 }, easing: "linear" as const },
-      ] } };
+      const def = {
+        ...minimalTutorial(),
+        tracks: {
+          ...minimalTutorial().tracks,
+          camera: [
+            { at: 100, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 1 }, easing: "linear" as const },
+            { at: 900, windowId: "w", camera: { kind: "canvas" as const, x: 0, y: 0, zoom: 9 }, easing: "linear" as const },
+          ],
+        },
+      };
       expect(tutorialCameraAt(def, "w", 0)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 1 });
       expect(tutorialCameraAt(def, "w", 10_000)).toEqual({ kind: "canvas", x: 0, y: 0, zoom: 9 });
       expect(tutorialCameraAt(def, "other-window", 500)).toBeUndefined();
@@ -36616,10 +36660,16 @@ if (treeVitest) {
     });
 
     it("validateTutorial rejects unsorted/out-of-range tracks and passes a minimal valid tutorial", () => {
-      const unsorted = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, narration: [
-        { id: "b", at: 500, durationMs: 100, text: "b", rate: 1, captions: [] },
-        { id: "a", at: 100, durationMs: 100, text: "a", rate: 1, captions: [] },
-      ] } };
+      const unsorted = {
+        ...minimalTutorial(),
+        tracks: {
+          ...minimalTutorial().tracks,
+          narration: [
+            { id: "b", at: 500, durationMs: 100, text: "b", rate: 1, captions: [] },
+            { id: "a", at: 100, durationMs: 100, text: "a", rate: 1, captions: [] },
+          ],
+        },
+      };
       expect(validateTutorial(unsorted)).not.toBeNull();
 
       const outOfRange = { ...minimalTutorial(), tracks: { ...minimalTutorial().tracks, narration: [{ id: "a", at: 999_999, durationMs: 100, text: "a", rate: 1, captions: [] }] } };

@@ -1,0 +1,190 @@
+UNIFIED 6-LEVEL UI SURFACE SYSTEM — CONTRACT
+==============================================
+Full design: /Users/ueli/.claude/plans/all-ui-elements-are-fizzy-shore.md
+Ticket folder: /Users/ueli/Documents/semio/.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/
+Ticket path for repo MCP tools: 26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM
+
+GOAL
+----
+Replace two unlinked axes:
+  Level     = "base" | "canvas" | "window" | "panel" | "overlay" | "temporary"  (backgrounds/z)
+  GlassTier = "panel" | "ribbon" | "menu" | "windowOptions"                      (blur/alpha)
+with ONE formula-derived Level system:
+  Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu"
+Every level's background darkens (light mode) / lightens (dark mode) per step, and glass
+(blur+alpha) increases per step. Values are derived from base knobs (oklab color-mix), never
+hand-tuned per level. No component may assign fill/glass classes manually — everything must
+inherit from the level it is stamped with via CSS cascade off `[data-level]`.
+
+OLD -> NEW MAPPING (exact, use everywhere)
+-------------------------------------------
+Level:      canvas -> base (mode body / floor windows float on)
+            overlay -> dialog
+            temporary -> menu
+            window -> window (unchanged name)
+            panel -> panel (unchanged name)
+            base -> base (unchanged name)
+            NEW: pane (floating in-window chrome: measures rail, engagement zone, search,
+                 utility bar host — previously reused "panel" glass with no level of its own)
+
+GlassTier:  "panel" tier            -> ui-glass @ whatever level the surface actually is
+                                        (usually panel; introduction/tutorial/modal boxes -> dialog)
+            "ribbon" tier           -> ui-glass-chrome @ window level (mode-dock/window cap chips, tab bars)
+            "windowOptions" tier    -> ui-glass-chrome @ pane level (measures/engagement/search/utility rails)
+            "menu" tier (fallback)  -> ui-glass @ menu level
+
+Transients (ALWAYS menu level): tooltip, popover, select, dropdown menu, command palette,
+  hover card, context menu.
+Dialogs (ALWAYS dialog level): shadcn Dialog/DialogContent, UIDialog, introduction info box,
+  tutorial captions/veil.
+
+FINAL REACT API (ui/js/react/index.tsx, region "🎈Level Context")
+------------------------------------------------------------------
+  export type Level = "base" | "window" | "pane" | "panel" | "dialog" | "menu";
+  export const LEVELS: readonly Level[]; // ordered base..menu, for Storybook/tests
+  export const LevelProvider: React.FC<{ level: Level; children: React.ReactNode }>;
+  export function useLevel(): Level;
+  export function getLevelZClass(level: Level): string; // literal switch: "z-base"|"z-window"|"z-pane"|"z-panel"|"z-dialog"|"z-menu"
+  export const surfaceClass = "ui-surface";       // opaque per-level fill
+  export const glassClass = "ui-glass";           // per-level glass fill
+  export const glassChromeClass = "ui-glass-chrome"; // attached chrome (ribbons/rails), half-alpha glass
+  export const veilClass = "ui-veil";             // fullscreen scrim, tint from data-level="dialog" host
+
+DELETED (must not exist anywhere after this ticket):
+  GlassTier, GlassTierProvider, useGlassTier, getGlassSurfaceClass,
+  glassPanelClass, glassRibbonClass, glassMenuClass, glassWindowOptionsClass,
+  getLevelBgClass, getLevelHoverClass, getLevelActiveHoverClass, levelHoverVariantClasses,
+  panelGlassFillClass, panelChromeFillLayerClass, panelGlassFrameClass, modeDockTabBarGlassClass,
+  GLASS_OVERLAY_BOX_CLASS's glass half, GlassTierProvider tier="windowOptions" wraps,
+  duplicate level->bg lookup table in Table component.
+  CSS: ui-glass-panel, ui-glass-ribbon, ui-glass-menu, ui-glass-window-options, ui-glass-veil,
+  bg-canvas, bg-overlay, bg-temporary, z-canvas, z-overlay, z-temporary,
+  --color-canvas/-overlay/-temporary, --color-hover-canvas/-overlay/-temporary,
+  --glass-panel-alpha/-window-options-alpha/-ribbon-alpha/-menu-alpha/-veil-alpha (old per-tier knobs),
+  --glass-panel-blur/-window-options-blur/-veil-blur (old per-tier knobs).
+
+WindowChrome changes:
+  Props REMOVED: capGlassClass, bodyFillClass, fillLayer.
+  Prop ADDED: level?: Level — when set, stamps data-level={level} on the chrome stack and wraps
+    children in <LevelProvider level={level}>. Internally: cap/controls surface = ui-glass-chrome,
+    body surface = ui-glass. Never configurable per-instance again.
+  Consumers -> level prop: Panel -> "panel", Pane -> "pane" (NEW), ContextMenuChrome -> "menu",
+    Introduction info box -> "dialog", mode dock stacks -> "window".
+
+CSS MECHANISM (ui/styling/js/ui.css)
+--------------------------------------
+Formula, k = level index 0..5 (base=0, window=1, pane=2, panel=3, dialog=4, menu=5):
+  bg(k)      = mix_oklab(base, foreground, k * shadeStep)      shadeStep = 5%
+  alpha(k)   = 1 - k * glassAlphaStep                            glassAlphaStep = 0.12
+  blur(k)    = k * glassBlurStep                                 glassBlurStep = 0.5rem
+  element(k) = mix_oklab(gray, foreground, k * elementStep)      elementStep = 6%
+  hover(k)   = mix_oklab(bg(k), foreground, hoverStep)            hoverStep = 12%
+  z(k)       = k * zStep                                          zStep = 10
+  chrome variant: alphaChrome(k) = alpha(k) * glassChromeAlphaFactor   factor = 0.5
+  veil: veilAlpha = alpha(4) - glassAlphaStep = 0.40; veilBlur = glassBlurStep (one step)
+Knobs live in ui/styling/tokens.json under a new "levels" block; ui.css and the generator both
+read from the SAME knobs (CSS via custom properties, Rust/TS via generated constants — CSS
+custom properties cannot be recomputed per-descendant, so each of the six [data-level="..."]
+blocks redeclares the derived properties with its literal k; this is still 100% formula-derived,
+just unrolled six times).
+
+Exactly 4 generic fill utilities replace ALL bg-base/canvas/window/panel/overlay/temporary
+surface fills and ALL 5 ui-glass-* classes:
+  ui-surface       -> background-color: var(--surface-bg)
+  ui-glass         -> color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha)*100%), transparent)
+                       + backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate))
+  ui-glass-chrome  -> same as ui-glass but alpha * glassChromeAlphaFactor
+  ui-veil          -> fullscreen scrim; alpha/blur are the dedicated veil values; host element
+                       must carry data-level="dialog" for correct tint
+
+Portaled surfaces (popover/select/tooltip/menu/dialog content) MUST stamp data-level on their
+OWN content root (not rely on an ancestor), since Radix portals to document.body.
+
+The chrome-gap backdrop-filter:none !important suppression (window-chrome-gap etc.) stays
+untouched — it already beats ui-glass/ui-glass-chrome via specificity+!important.
+
+Rule for nested same-level surfaces: exactly one ui-surface/ui-glass per level root; interior
+containers stay bg-transparent (existing WindowChrome convention) to avoid double-tinting.
+
+TOKENS.JSON + GENERATOR (ui/styling/tokens.json, ui/styling/script.ts)
+------------------------------------------------------------------------
+Add a "levels" block: names, shadeStepPercent(5), elementStepPercent(6), hoverStepPercent(12),
+glassAlphaStep(0.12), glassBlurStepPx(8), glassSaturate(1.45), glassChromeAlphaFactor(0.5),
+veilAlphaExtraSteps(1), zStep(10).
+Remove: opacities.glassPanelAlpha/glassMenuAlpha/glassWindowOptionsAlpha, metrics.chrome.glassBlurPx/
+glassPanelBlurPx/glassWindowOptionsBlurPx/glassSaturate (old, mismatched with ui.css anyway), and
+per-appearance chrome entries canvas/window/panel/temporary/overlayBg/hoverWindow/hoverPanel.
+script.ts: add oklabMix(a,b,t) (srgb -> linear -> oklab -> lerp -> back); inject computed
+levelBase..levelMenu + elementBase..elementMenu paints into each appearance's chrome group so
+existing TS/Rust/Python/C# emitters carry them automatically (fields generated from keys); emit
+knob constants into the generated CSS @theme block, tokens.generated.ts (STYLING_LEVELS), and
+generated.rs (pub mod levels { ... }).
+Extend the EXISTING inline vitest for the generator (do not create new test files): monotonic L*
+per appearance, contrast >= 4.5:1 vs foreground at all 6 levels, monotone alpha/blur ladders,
+pinned hex snapshot.
+ui/styling/js/index.ts: applyUiThemeToDocument writes the ~6 knobs instead of 5 old per-tier
+glass vars; downstream re-derives entirely in CSS.
+
+NATIVE WGPU MIRROR (ui/wgpu/rs/lib.rs, framework/renderer/wgpu/rs/lib.rs)
+-----------------------------------------------------------------------------
+GlassTier enum -> pub enum Level { Base, Window, Pane, Panel, Dialog, Menu }
+Theme gains level_bg: [Rgba; 6] from the generated levelBase..levelMenu paints.
+Theme::glass(level) computes GlassStyle from levels:: constants (formula, NOT a per-tier match
+table). New Theme::glass_chrome(level) = glass(level) with alpha * GLASS_CHROME_ALPHA_FACTOR.
+Migrate all push_glass call sites: GlassTier::Panel -> glass(Level::Panel) (boxes that are really
+dialogs -> glass(Level::Dialog)), GlassTier::Menu -> glass(Level::Menu),
+GlassTier::Ribbon -> glass_chrome(Level::Window), GlassTier::WindowOptions -> glass_chrome(Level::Pane).
+Update inline #[cfg(test)] glass tests in the same file (extend, don't add new test files/modules).
+
+TEST-ASSERTION CONTRACT
+--------------------------
+Tests (inline vitest, Rust #[cfg(test)], Playwright specs) must assert data-level="<name>" plus
+the generic class (ui-surface / ui-glass / ui-glass-chrome / ui-veil) — NEVER a tier-specific
+class name (ui-glass-panel etc. no longer exist) and never the old level names
+(canvas/overlay/temporary).
+
+FILE OWNERSHIP FOR PARALLEL WORK (never edit a file another lane owns)
+--------------------------------------------------------------------------
+CORE (sequential):     ui/styling/tokens.json, ui/styling/script.ts (+ regenerated outputs:
+                        ui/styling/js/palette.css, ui/styling/js/tokens.generated.ts,
+                        ui/styling/rs/generated.rs, any .py/.cs generated outputs),
+                        ui/styling/js/ui.css, ui/styling/js/index.ts, ui/js/react/index.tsx
+SHELL:                 framework/renderer/react/index.tsx
+CODA:                  coda/client/ui/desktop/js/renderer.tsx, coda/client/bin/assistant/js/mcp-app.tsx
+SATELLITES:            cad/renderer/js/index.tsx, infinite/world/r3f/index.tsx,
+                        infinite/cavas/react-renderer/index.tsx, animate/present/renderer/react/index.tsx
+COMPOSE:                compose/client/ui/desktop/js/renderer.tsx, compose/client/ui/3dm/ui/js/index.tsx,
+                        compose/client/ui/vscode/js/webview.tsx, compose/client/lib/sketchpad/{js,play,doc}/*
+                        NOTE: a separate ticket 26/07/27/FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-REFERENCES
+                        already owns fixing the dead @semio-tech/framework-platform-renderer-react /
+                        @semio-tech/compose-sketchpad imports — do NOT fix that here, only restyle
+                        class strings (mechanical, zero compile risk) and leave a note if a file can't build.
+STORYBOOK:              .storybook/preview.tsx, .storybook/styling.spec.ts,
+                        .storybook/stories/styling/Glass.stories.tsx,
+                        .storybook/stories/ui/Providers.stories.tsx,
+                        .storybook/stories/ui/Panel.stories.tsx,
+                        .storybook/stories/ui/SelectionMarquee.stories.tsx,
+                        + any other .storybook/stories/ui/*.stories.tsx with hardcoded bg-* wrappers
+WGPU:                   ui/wgpu/rs/lib.rs, framework/renderer/wgpu/rs/lib.rs
+
+CLAUDE.MD HARD RULES THAT APPLY TO EVERY LANE
+------------------------------------------------
+- bun package manager, nx task runner. Never run raw npm/yarn/pnpm.
+- Never run any modifying git command (no commit/stash/checkout/reset/worktree) — concurrent
+  human devs + auto-commit are live on this tree.
+- No new files outside this ticket folder. Any scratch/log/temp file goes in this ticket folder
+  as .txt (NOT .log — repo-wide .log is gitignored and ticket_close silently drops it).
+- Extend existing test files (inline vitest / #[cfg(test)]) — never create new test files.
+- No new example files.
+- Use #region/#endregion (or `pub mod` in Rust) to structure any new code inside existing files.
+- [DEBUG] prefix on any temporary console/log output.
+- Do not claim something passes/works without actually running it.
+- No legacy support, no deprecations, no compatibility shims — this is a greenfield rewrite of
+  these identifiers. Delete old names outright once no longer referenced (per the phased plan,
+  deletion happens in the Cleanup phase, not before).
+- Class name strings (Tailwind) MUST be complete literal strings — never built via `${}`
+  template interpolation — or Tailwind's static scanner emits no CSS for them at all (silent
+  failure, not a compile error). See existing comment in ui/js/react/index.tsx near
+  hoverExcludingHandleBgFillClass for the documented rationale.
+- Line numbers drift constantly from concurrent edits — always grep/anchor on region names,
+  export names, and identifiers, not line numbers from any prior report.

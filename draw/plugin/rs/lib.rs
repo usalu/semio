@@ -2336,6 +2336,9 @@ mod tests {
         document.layers.push(rect_b);
         let document_value: Value = serde_json::to_value(&document).unwrap();
         app.handle_action("setDocument", Some(&json!({ "document": document_value })), &view, &testkit::meta("local")).expect("load");
+        // `default_draw_document` centers the camera on its 1024x1024 artboard (512,512 @ 0.75 zoom);
+        // pin it to an identity camera so screen and world coordinates coincide for this drag.
+        app.handle_action("setCamera", Some(&json!({ "camera": { "x": 0.0, "y": 0.0, "zoom": 1.0 } })), &view, &testkit::meta("local")).expect("camera");
         app.handle_action("canvasPointerDown", Some(&json!({ "x": 400.0, "y": 300.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("down");
         app.handle_action("canvasPointerMove", Some(&json!({ "x": 460.0, "y": 360.0, "width": 800.0, "height": 600.0 })), &view, &testkit::meta("local")).expect("move");
         app.handle_action(

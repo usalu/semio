@@ -48,7 +48,7 @@ import {
   type ActionDescriptor,
 } from "@semio-tech/framework-core";
 import { PlatformView, registerUiPanelSurfaceHost } from "@semio-tech/framework-platform-renderer-react";
-import { reactHostPort, registerUiTranslationBundles, Tree, TreeItem, useActionHotkey, useLabel, type UiLocale } from "@semio-tech/ui-react";
+import { LEVELS, LevelProvider, reactHostPort, registerUiTranslationBundles, Tree, TreeItem, useActionHotkey, useLabel, useLevel, type Level as UiLevel, type UiLocale } from "@semio-tech/ui-react";
 // #endregion 🔌Adapters
 
 import "../globals.css";
@@ -649,6 +649,23 @@ function IconEvents({ className = "w-4 h-4" }: { className?: string }) {
 // Reusable UI components for the coda desktop application.
 // Components MUST use Tailwind CSS classes for styling.
 
+// #region 🪟DockedPanelLevel
+// Shared level-bump logic for docked content boxes (Card/StatCard/OntologyTree/ValidationTree).
+// See the 6-level contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt --
+// "desktop chrome and docked panels get panel" -- and its nesting rule: exactly one ui-surface
+// per level root, so a box already sitting inside another panel-level box must stay transparent
+// instead of double-tinting.
+
+/** @emoji 🪟 Resolves whether a docked content box (Card/StatCard/OntologyTree/ValidationTree)
+ * must open its own `panel` level (bumping up from a shallower ambient floor like `window`), or
+ * stay transparent because it is already nested inside a `panel`-or-deeper ambient box. */
+function useDockedPanelLevel(): { level: UiLevel; opensLevel: boolean } {
+  const ambient = useLevel();
+  const opensLevel = LEVELS.indexOf(ambient) < LEVELS.indexOf("panel");
+  return { level: opensLevel ? "panel" : ambient, opensLevel };
+}
+// #endregion 🪟DockedPanelLevel
+
 // #region 🌀StatusBadge
 
 /**
@@ -680,10 +697,11 @@ function StatusBadge({ status }: { status?: string }) {
  *MUST render a bordered container with optional title.
  **/
 function Card({ title, children, className = "", action }: { title?: string; children: React.ReactNode; className?: string; action?: React.ReactNode }) {
-  return (
-    <div className={`rounded-lg border border-border-window bg-window ${className}`}>
+  const { level, opensLevel } = useDockedPanelLevel();
+  const body = (
+    <div data-level={opensLevel ? level : undefined} className={opensLevel ? `rounded-lg border border-normal ui-surface ${className}` : `rounded-lg border border-normal bg-transparent ${className}`}>
       {(title || action) && (
-        <div className="flex items-center justify-between border-b border-border-window px-4 py-3">
+        <div className="flex items-center justify-between border-b border-normal px-4 py-3">
           {title && <h3 className="text-sm font-semibold text-foreground">{title}</h3>}
           {action}
         </div>
@@ -691,6 +709,7 @@ function Card({ title, children, className = "", action }: { title?: string; chi
       <div className="p-4">{children}</div>
     </div>
   );
+  return opensLevel ? <LevelProvider level={level}>{body}</LevelProvider> : body;
 }
 
 // #endregion 🎬Card
@@ -702,13 +721,15 @@ function Card({ title, children, className = "", action }: { title?: string; chi
  *MUST display a label and a large value.
  **/
 function StatCard({ label, value, sublabel }: { label: string; value: string | number; sublabel?: string }) {
-  return (
-    <div className="rounded-lg border border-border-window bg-window p-4">
+  const { level, opensLevel } = useDockedPanelLevel();
+  const body = (
+    <div data-level={opensLevel ? level : undefined} className={opensLevel ? "rounded-lg border border-normal ui-surface p-4" : "rounded-lg border border-normal bg-transparent p-4"}>
       <div className="text-xs font-medium text-muted-foreground uppercase tracking-wider">{label}</div>
       <div className="mt-1 text-2xl font-bold text-foreground">{value}</div>
       {sublabel && <div className="mt-0.5 text-xs text-muted-foreground">{sublabel}</div>}
     </div>
   );
+  return opensLevel ? <LevelProvider level={level}>{body}</LevelProvider> : body;
 }
 
 // #endregion 📌StatCard
@@ -736,8 +757,8 @@ function Button({
 }) {
   const variants: Record<string, string> = {
     primary: "bg-active-base text-active-foreground hover:bg-hover-base disabled:opacity-50",
-    secondary: "bg-window border border-border-window text-foreground hover:bg-hover-window disabled:opacity-50",
-    danger: "bg-destructive-bg text-destructive-foreground border border-destructive-border hover:bg-hover-window disabled:opacity-50",
+    secondary: "bg-element border border-normal text-foreground hover:bg-hover-interactive-fill disabled:opacity-50",
+    danger: "bg-destructive-bg text-destructive-foreground border border-destructive-border hover:bg-hover-interactive-fill disabled:opacity-50",
   };
   return (
     <button onClick={onClick} disabled={disabled || loading} className={`inline-flex items-center gap-2 rounded-md px-3 py-1.5 text-sm font-medium transition-colors cursor-pointer disabled:cursor-not-allowed ${variants[variant]} ${className}`}>
@@ -802,13 +823,13 @@ function EmptyState({ message, action }: { message: string; action?: React.React
 function Collapsible({ title, children, defaultOpen = false, badge }: { title: string; children: React.ReactNode; defaultOpen?: boolean; badge?: React.ReactNode }) {
   const [open, setOpen] = reactHostPort.useState(defaultOpen);
   return (
-    <div className="border border-border-window rounded-md overflow-hidden">
-      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-hover-window transition-colors cursor-pointer">
+    <div className="border border-normal bg-transparent rounded-md overflow-hidden">
+      <button onClick={() => setOpen(!open)} className="flex w-full items-center gap-2 px-3 py-2 text-sm font-medium text-foreground hover:bg-hover-interactive-fill transition-colors cursor-pointer">
         {open ? <IconChevronDown className="w-3.5 h-3.5 text-muted-foreground" /> : <IconChevronRight className="w-3.5 h-3.5 text-muted-foreground" />}
         <span className="flex-1 text-left">{title}</span>
         {badge}
       </button>
-      {open && <div className="border-t border-border-window px-3 py-2">{children}</div>}
+      {open && <div className="border-t border-normal px-3 py-2">{children}</div>}
     </div>
   );
 }
@@ -829,7 +850,7 @@ function JsonViewer({ data }: { data: unknown }) {
       return String(data);
     }
   }, [data]);
-  return <pre className="overflow-auto max-h-96 rounded-md bg-panel border border-border-window p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">{formatted}</pre>;
+  return <pre className="overflow-auto max-h-96 rounded-md bg-transparent border border-normal p-3 text-xs font-mono text-muted-foreground whitespace-pre-wrap break-all">{formatted}</pre>;
 }
 
 // #endregion 📸JsonViewer
@@ -945,10 +966,11 @@ function OntologyTreeNodeView({ node, defaultExpanded = true }: { node: Ontology
  *MUST render the full ontology tree structure from root.
  **/
 function OntologyTree({ root, title, defaultExpanded = true }: { root: OntologyTreeNode; title?: string; defaultExpanded?: boolean }) {
-  return (
-    <div className="rounded-lg border border-border-window bg-window overflow-hidden">
+  const { level, opensLevel } = useDockedPanelLevel();
+  const body = (
+    <div data-level={opensLevel ? level : undefined} className={opensLevel ? "rounded-lg border border-normal ui-surface overflow-hidden" : "rounded-lg border border-normal bg-transparent overflow-hidden"}>
       {title && (
-        <div className="border-b border-border-window px-3 py-2">
+        <div className="border-b border-normal px-3 py-2">
           <h3 className="text-sm font-semibold text-foreground">{title}</h3>
         </div>
       )}
@@ -957,6 +979,7 @@ function OntologyTree({ root, title, defaultExpanded = true }: { root: OntologyT
       </div>
     </div>
   );
+  return opensLevel ? <LevelProvider level={level}>{body}</LevelProvider> : body;
 }
 
 // #endregion 🧨OntologyTree
@@ -1110,7 +1133,7 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
               <span
                 key={`${node.id}-${chip}`}
                 className={`inline-flex items-center rounded px-1.5 py-0.5 text-2xs font-medium shrink-0 ${
-                  chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-panel text-muted-foreground border border-border-window"
+                  chip === "counted" ? "bg-success-bg text-success-foreground" : chip === "not matching" ? "bg-info-bg text-info-foreground" : "bg-element text-muted-foreground border border-normal"
                 }`}
               >
                 {chip}
@@ -1138,9 +1161,10 @@ function ValidationTreeNodeView({ node, defaultExpanded = true }: { node: Valida
  *MUST render instance header, expression, overall truth, and the expanded result tree.
  **/
 function ValidationTree({ report, defaultExpanded = true }: { report: ValidationReport; defaultExpanded?: boolean }) {
-  return (
-    <div className="rounded-lg border border-border-window bg-window overflow-hidden">
-      <div className="border-b border-border-window px-3 py-2 space-y-1">
+  const { level, opensLevel } = useDockedPanelLevel();
+  const body = (
+    <div data-level={opensLevel ? level : undefined} className={opensLevel ? "rounded-lg border border-normal ui-surface overflow-hidden" : "rounded-lg border border-normal bg-transparent overflow-hidden"}>
+      <div className="border-b border-normal px-3 py-2 space-y-1">
         <div className="flex items-center gap-2">
           <span className="text-sm font-semibold text-foreground">Instance: {report.instance}</span>
           <span
@@ -1162,6 +1186,7 @@ function ValidationTree({ report, defaultExpanded = true }: { report: Validation
       </div>
     </div>
   );
+  return opensLevel ? <LevelProvider level={level}>{body}</LevelProvider> : body;
 }
 
 // #endregion 🔔ValidationTree
@@ -1297,7 +1322,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
             <Card title={`${propertiesTitle} (${totalPropertyCount})`}>
               <div className="space-y-1">
                 {properties.map((prop) => (
-                  <div key={prop.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
+                  <div key={prop.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-interactive-fill">
                     <IconConfig className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <div className="flex items-center gap-2">
@@ -1325,7 +1350,7 @@ function DashboardPage({ refreshKey }: { refreshKey: number }) {
             <Card title={`Frameworks (${frameworks.length})`}>
               <div className="space-y-1">
                 {frameworks.map((fw) => (
-                  <div key={fw.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-window">
+                  <div key={fw.id} className="flex items-start gap-2 rounded px-2 py-1.5 text-sm hover:bg-hover-interactive-fill">
                     <IconReport className="w-3.5 h-3.5 text-muted-foreground mt-0.5 shrink-0" />
                     <div>
                       <span className="font-medium text-foreground">{formatId(fw.id)}</span>
@@ -1371,7 +1396,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
   const itemsTitle = useLabel(codaKey("coda.section.items.title"));
   const propertiesTitle = useLabel(codaKey("coda.section.properties.title"));
   return (
-    <div className={`rounded bg-panel border border-border-window p-2 ${depth > 0 ? "ml-3" : ""}`}>
+    <div className={`rounded bg-element border border-normal p-2 ${depth > 0 ? "ml-3" : ""}`}>
       <div className="flex items-center gap-2 flex-wrap">
         <span className="text-sm font-medium text-foreground">{prop.name ?? formatId(prop.id)}</span>
         {prop.kind && <span className="text-xs bg-info-bg text-info-foreground px-1.5 py-0.5 rounded">{prop.kind}</span>}
@@ -1397,7 +1422,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
             const key = isObj ? v.id : v;
             const label = isObj ? (v.name ?? v.id) : v;
             return (
-              <span key={key} className="text-xs bg-window border border-border-window px-1 py-0.5 rounded font-mono" title={isObj ? v.description : undefined}>
+              <span key={key} className="text-xs bg-element border border-normal px-1 py-0.5 rounded font-mono" title={isObj ? v.description : undefined}>
                 {label}
               </span>
             );
@@ -1410,7 +1435,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
             {levelsTitle} ({prop.levels.length})
           </span>
           {prop.levels.map((level) => (
-            <div key={level.value} className="rounded border border-border-window p-2 space-y-1.5">
+            <div key={level.value} className="rounded border border-normal p-2 space-y-1.5">
               <div className="flex items-start gap-2 text-xs">
                 <span className="bg-active-base text-active-foreground px-1.5 py-0.5 rounded font-mono shrink-0">{level.value}</span>
                 <div>
@@ -1419,7 +1444,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
                 </div>
               </div>
               {level.measures && (
-                <div className="space-y-1 pl-2 border-l-2 border-border-window">
+                <div className="space-y-1 pl-2 border-l-2 border-normal">
                   {level.measures.lower && level.measures.lower.length > 0 && (
                     <div>
                       <span className="text-xs font-semibold text-muted-foreground">↓ Lower measures:</span>
@@ -1449,7 +1474,7 @@ function PropertyView({ prop, depth = 0 }: { prop: Property; depth?: number }) {
                 </div>
               )}
               {level.instructions && level.instructions.raise && level.instructions.raise.length > 0 && (
-                <div className="space-y-1 pl-2 border-l-2 border-border-window">
+                <div className="space-y-1 pl-2 border-l-2 border-normal">
                   <span className="text-xs font-semibold text-muted-foreground">↑ Raise instructions:</span>
                   <div className="mt-0.5 space-y-0.5">
                     {level.instructions.raise.map((hi) => (
@@ -1525,7 +1550,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
         {propertyKinds && Object.keys(propertyKinds).length > 0 ? (
           <div className="space-y-2">
             {Object.entries(propertyKinds).map(([kind, def]) => (
-              <div key={kind} className="rounded bg-panel border border-border-window p-2">
+              <div key={kind} className="rounded bg-element border border-normal p-2">
                 <span className="text-sm font-medium text-foreground font-mono">{kind}</span>
                 {(def.measures ?? def.measure) && (
                   <div className="mt-1 flex flex-wrap gap-1">
@@ -1618,11 +1643,11 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                       <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">{rulesTitle}</h4>
                       <div className="space-y-1.5">
                         {fw.rules.map((rule) => (
-                          <div key={rule.id} className="rounded bg-panel border border-border-window p-2">
+                          <div key={rule.id} className="rounded bg-element border border-normal p-2">
                             <div className="text-sm font-medium text-foreground">{formatId(rule.id)}</div>
                             {rule.description && <p className="text-xs text-muted-foreground mt-0.5">{rule.description}</p>}
                             {rule.clauses && rule.clauses.length > 0 && (
-                              <div className="mt-2 pl-3 border-l-2 border-border-window space-y-1">
+                              <div className="mt-2 pl-3 border-l-2 border-normal space-y-1">
                                 {rule.clauses.map((clause) => (
                                   <div key={clause.id} className="text-xs">
                                     <span className="font-medium text-foreground">{formatId(clause.id)}</span>
@@ -1630,7 +1655,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                     {clause.properties && clause.properties.length > 0 && (
                                       <div className="mt-0.5 flex flex-wrap gap-1">
                                         {clause.properties.map((cp, idx) => (
-                                          <span key={`${cp.id}-${cp.value}-${idx}`} className="bg-window border border-border-window px-1 py-0.5 rounded font-mono text-muted-foreground">
+                                          <span key={`${cp.id}-${cp.value}-${idx}`} className="bg-element border border-normal px-1 py-0.5 rounded font-mono text-muted-foreground">
                                             {cp.id}={cp.value}
                                           </span>
                                         ))}
@@ -1654,7 +1679,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                 <span className="text-xs text-muted-foreground">Data schema:</span>
                                 <div className="mt-0.5 flex flex-wrap gap-1">
                                   {Object.entries(rule.data).map(([k, v]) => (
-                                    <span key={k} className="text-xs bg-window border border-border-window px-1 py-0.5 rounded font-mono text-muted-foreground">
+                                    <span key={k} className="text-xs bg-element border border-normal px-1 py-0.5 rounded font-mono text-muted-foreground">
                                       {k}: {String(v)}
                                     </span>
                                   ))}
@@ -1685,7 +1710,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                     {platform.properties.map((pp) => {
                       const measureKindKeys = Object.keys(pp).filter((k) => k !== "id" && typeof pp[k] === "object");
                       return (
-                        <div key={pp.id} className="rounded bg-panel border border-border-window p-2">
+                        <div key={pp.id} className="rounded bg-element border border-normal p-2">
                           <div className="text-sm font-medium text-foreground font-mono">{pp.id}</div>
                           {measureKindKeys.length > 0 && (
                             <div className="mt-1.5 space-y-2">
@@ -1700,7 +1725,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                         <span className="text-xs font-semibold text-muted-foreground">MCP Resources:</span>
                                         <div className="mt-0.5 space-y-0.5">
                                           {mi.mcp.resources.map((r) => (
-                                            <div key={r.id} className="text-xs pl-2 border-l border-border-window">
+                                            <div key={r.id} className="text-xs pl-2 border-l border-normal">
                                               <span className="font-mono text-active-base">{r.id}</span>
                                               {r.instruction && <span className="text-muted-foreground"> — {r.instruction}</span>}
                                             </div>
@@ -1713,7 +1738,7 @@ function ConfigPage({ refreshKey }: { refreshKey: number }) {
                                         <span className="text-xs font-semibold text-muted-foreground">MCP Tools:</span>
                                         <div className="mt-0.5 space-y-0.5">
                                           {mi.mcp.tools.map((tool) => (
-                                            <div key={tool.id} className="text-xs pl-2 border-l border-border-window">
+                                            <div key={tool.id} className="text-xs pl-2 border-l border-normal">
                                               <span className="font-mono text-active-base">{tool.id}</span>
                                               {tool.instruction && <span className="text-muted-foreground"> — {tool.instruction}</span>}
                                               {tool.parameters && tool.parameters.length > 0 && (
@@ -1810,7 +1835,7 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
         {iterations && iterations.length > 0 ? (
           <div className="space-y-1">
             {iterations.map((iter) => (
-              <div key={iter.index} className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${String(iteration?.index) === iter.index ? "border-active-base bg-info-bg" : "border-border-window hover:bg-hover-window"}`}>
+              <div key={iter.index} className={`flex items-center gap-3 rounded-md border px-3 py-2 text-sm ${String(iteration?.index) === iter.index ? "border-active-base bg-info-bg" : "border-normal hover:bg-hover-interactive-fill"}`}>
                 <span className="font-mono font-bold text-active-base">#{iter.index}</span>
                 {String(iteration?.index) === iter.index && <span className="text-xs bg-active-base text-active-foreground px-1.5 py-0.5 rounded">current</span>}
               </div>
@@ -1829,7 +1854,7 @@ function RunsPage({ refreshKey }: { refreshKey: number }) {
                 <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{targetsTitle}</span>
                 <div className="mt-1 flex flex-wrap gap-1.5">
                   {iteration.targets.map((tid) => (
-                    <span key={tid} className="text-xs bg-panel border border-border-window px-2 py-1 rounded font-mono">
+                    <span key={tid} className="text-xs bg-element border border-normal px-2 py-1 rounded font-mono">
                       {tid}
                     </span>
                   ))}
@@ -2134,7 +2159,7 @@ function TargetActionCard({
   }, [manualInput, manualMode, targetId, runTool, runCall]);
 
   return (
-    <div className="rounded border border-border-window p-3 space-y-2">
+    <div className="rounded border border-normal p-3 space-y-2">
       <div className="text-sm font-medium text-foreground font-mono">{targetId}</div>
       <div className="flex gap-2">
         <Button onClick={() => runTool("translate", { target_id: targetId }, `Translate ${targetId}`)} loading={loading === `Translate ${targetId}`} disabled={loading !== null}>
@@ -2158,7 +2183,7 @@ function TargetActionCard({
                 setManualInput("");
               }}
               className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
-                manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+                manualMode === "translate" ? "bg-active-base text-active-foreground border-active-base" : "border-normal text-muted-foreground hover:bg-hover-interactive-fill"
               }`}
             >
               Translation
@@ -2169,7 +2194,7 @@ function TargetActionCard({
                 setManualInput("");
               }}
               className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${
-                manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"
+                manualMode === "validate" ? "bg-active-base text-active-foreground border-active-base" : "border-normal text-muted-foreground hover:bg-hover-interactive-fill"
               }`}
             >
               Validation
@@ -2180,7 +2205,7 @@ function TargetActionCard({
             onChange={(e) => setManualInput(e.target.value)}
             placeholder={`Paste ${manualMode} result JSON here...`}
             rows={5}
-            className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
+            className="w-full rounded-md border border-normal bg-element px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
           />
           <div className="flex gap-2 justify-end">
             <Button
@@ -2228,7 +2253,7 @@ function ManualFixInput({ loading, onSubmit, disabled }: { loading: string | nul
         onChange={(e) => setInput(e.target.value)}
         placeholder={fixResultJsonPlaceholder}
         rows={4}
-        className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
+        className="w-full rounded-md border border-normal bg-element px-3 py-2 text-xs font-mono text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base resize-y"
       />
       <div className="flex justify-end">
         <Button onClick={handleSubmit} variant="primary" loading={loading === "Manual Save Report"} disabled={disabled || !input.trim()} className="text-xs">
@@ -2262,7 +2287,7 @@ function FixAction({ loading, onFix, disabled }: { loading: string | null; onFix
           onChange={(e) => setPrompt(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
           placeholder={fixDescriptionExamplePlaceholder}
-          className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
+          className="flex-1 rounded-md border border-normal bg-element px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         <Button variant="danger" onClick={handleSubmit} loading={loading?.startsWith("Fix:") ?? false} disabled={disabled || !prompt.trim()}>
           <IconWrench className="w-3.5 h-3.5" />
@@ -2321,7 +2346,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
           value={filter}
           onChange={(e) => setFilter(e.target.value)}
           placeholder={filterEventsPlaceholder}
-          className="flex-1 rounded-md border border-border-window bg-window px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
+          className="flex-1 rounded-md border border-normal bg-element px-3 py-1.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
         />
         {uniqueKinds.length > 0 && (
           <div className="flex flex-wrap gap-1">
@@ -2329,7 +2354,7 @@ function EventsPage({ events, onClear }: { events: CodaEvent[]; onClear: () => v
               <button
                 key={kind}
                 onClick={() => setFilter(filter === kind ? "" : kind)}
-                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${filter === kind ? "bg-active-base text-active-foreground border-active-base" : "border-border-window text-muted-foreground hover:bg-hover-window"}`}
+                className={`text-xs px-2 py-1 rounded-full border cursor-pointer transition-colors ${filter === kind ? "bg-active-base text-active-foreground border-active-base" : "border-normal text-muted-foreground hover:bg-hover-interactive-fill"}`}
               >
                 {kind}
               </button>
@@ -2384,6 +2409,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   const projectNameLabel = useLabel(codaKey("coda.welcome.projectName.label"));
   const projectFolderLabel = useLabel(codaKey("coda.welcome.projectFolder.label"));
   const projectNamePlaceholder = useLabel(codaKey("coda.placeholder.projectName"));
+  const { level: boxLevel, opensLevel: boxOpensLevel } = useDockedPanelLevel();
 
   const handlePickFolder = reactHostPort.useCallback(async () => {
     const folder = await window.dialog.openFolder();
@@ -2435,18 +2461,19 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   }, [onProjectReady]);
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-window overflow-hidden">
-      {/* Title Bar */}
-      <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+    <LevelProvider level="window">
+    <div data-level="window" className="flex h-screen w-screen flex-col ui-surface overflow-hidden">
+      {/* Title Bar -- window-level chrome ribbon (GlassTier "ribbon" -> ui-glass-chrome @ window) */}
+      <div className="flex h-9 items-center border-b border-normal ui-glass-chrome px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
           <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button onClick={onMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
+          <button onClick={onMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground transition-colors cursor-pointer">
             <IconMinimize />
           </button>
-          <button onClick={onMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
+          <button onClick={onMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground transition-colors cursor-pointer">
             <IconMaximize />
           </button>
           <button onClick={onClose} className="rounded p-1.5 text-muted-foreground hover:bg-destructive-bg hover:text-destructive-foreground transition-colors cursor-pointer">
@@ -2471,9 +2498,14 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                   setMode("create");
                   setError(null);
                 }}
-                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border-window bg-window p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer"
+                data-level={boxOpensLevel ? boxLevel : undefined}
+                className={
+                  boxOpensLevel
+                    ? "group flex flex-col items-center gap-4 rounded-xl border-2 border-normal ui-surface p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer"
+                    : "group flex flex-col items-center gap-4 rounded-xl border-2 border-normal bg-transparent p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer"
+                }
               >
-                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-window">
+                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-interactive-fill">
                   <svg className="w-8 h-8 text-active-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
                     <polyline points="14 2 14 8 20 8" />
@@ -2492,9 +2524,14 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
               <button
                 onClick={handleOpen}
                 disabled={loading}
-                className="group flex flex-col items-center gap-4 rounded-xl border-2 border-border-window bg-window p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                data-level={boxOpensLevel ? boxLevel : undefined}
+                className={
+                  boxOpensLevel
+                    ? "group flex flex-col items-center gap-4 rounded-xl border-2 border-normal ui-surface p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                    : "group flex flex-col items-center gap-4 rounded-xl border-2 border-normal bg-transparent p-8 text-left transition-all hover:border-active-base hover:bg-info-bg cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                }
               >
-                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-window">
+                <div className="rounded-full bg-info-bg p-4 transition-colors group-hover:bg-hover-interactive-fill">
                   <svg className="w-8 h-8 text-active-base" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z" />
                   </svg>
@@ -2509,7 +2546,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
           )}
 
           {(mode === "create" || mode === "open") && (
-            <div className="rounded-xl border border-border-window bg-window p-6 space-y-5">
+            <div data-level={boxOpensLevel ? boxLevel : undefined} className={boxOpensLevel ? "rounded-xl border border-normal ui-surface p-6 space-y-5" : "rounded-xl border border-normal bg-transparent p-6 space-y-5"}>
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => {
@@ -2535,7 +2572,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                       onChange={(e) => setProjectName(e.target.value)}
                       onKeyDown={(e) => e.key === "Enter" && handleCreate()}
                       placeholder={projectNamePlaceholder}
-                      className="w-full rounded-md border border-border-window bg-window px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
+                      className="w-full rounded-md border border-normal bg-element px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-active-base focus:border-active-base"
                       autoFocus
                     />
                   </div>
@@ -2543,7 +2580,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
                   <div className="space-y-1.5">
                     <label className="text-sm font-medium text-foreground">{projectFolderLabel}</label>
                     <div className="flex gap-2">
-                      <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
+                      <div className="flex-1 rounded-md border border-normal bg-element px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
                       <Button onClick={handlePickFolder} variant="secondary">
                         Browse…
                       </Button>
@@ -2558,7 +2595,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
               {mode === "open" && (
                 <div className="space-y-4">
                   <div className="flex gap-2">
-                    <div className="flex-1 rounded-md border border-border-window bg-window px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
+                    <div className="flex-1 rounded-md border border-normal bg-element px-3 py-2 text-sm text-muted-foreground truncate">{selectedFolder ?? "No folder selected"}</div>
                     <Button onClick={handlePickFolder} variant="secondary">
                       Browse…
                     </Button>
@@ -2598,6 +2635,7 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
         </div>
       </div>
     </div>
+    </LevelProvider>
   );
 }
 
@@ -2925,7 +2963,7 @@ function CodaMainSurfaceHost(_props: { readonly node: UiPanelHostSurfaceNode }):
 function CodaNavButton({ item, active, onSelect }: { readonly item: (typeof navItems)[number]; readonly active: boolean; readonly onSelect: () => void }): React.ReactElement {
   const label = useLabel(codaKey(`coda.nav.${item.id}`));
   return (
-    <button type="button" onClick={onSelect} className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${active ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-window hover:text-foreground"}`}>
+    <button type="button" onClick={onSelect} className={`rounded px-2 py-1 text-xs whitespace-nowrap transition-colors ${active ? "bg-active-base text-active-foreground" : "text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground"}`}>
       {label}
     </button>
   );
@@ -3056,9 +3094,11 @@ function App() {
 
   if (projectPath === undefined) {
     return (
-      <div className="flex h-screen w-screen items-center justify-center bg-window">
-        <Spinner label={loadingLabel} />
-      </div>
+      <LevelProvider level="window">
+        <div data-level="window" className="flex h-screen w-screen items-center justify-center ui-surface">
+          <Spinner label={loadingLabel} />
+        </div>
+      </LevelProvider>
     );
   }
 
@@ -3069,9 +3109,10 @@ function App() {
   const projectName = projectPath.split("/").pop() ?? projectPath;
 
   return (
-    <div className="flex h-screen w-screen flex-col bg-window overflow-hidden">
-      {/* #region Title Bar */}
-      <div className="flex h-9 items-center border-b border-border-window bg-panel px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+    <LevelProvider level="window">
+    <div data-level="window" className="flex h-screen w-screen flex-col ui-surface overflow-hidden">
+      {/* #region Title Bar -- window-level chrome ribbon (GlassTier "ribbon" -> ui-glass-chrome @ window) */}
+      <div className="flex h-9 items-center border-b border-normal ui-glass-chrome px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
           <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>
@@ -3092,13 +3133,13 @@ function App() {
           </span>
         </div>
         <div className="flex items-center gap-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
-          <button onClick={handleRefresh} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer" title={refreshLabel}>
+          <button onClick={handleRefresh} className="rounded p-1.5 text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground transition-colors cursor-pointer" title={refreshLabel}>
             <IconRefresh className="w-3.5 h-3.5" />
           </button>
-          <button onClick={handleMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
+          <button onClick={handleMinimize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground transition-colors cursor-pointer">
             <IconMinimize />
           </button>
-          <button onClick={handleMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-window hover:text-foreground transition-colors cursor-pointer">
+          <button onClick={handleMaximize} className="rounded p-1.5 text-muted-foreground hover:bg-hover-interactive-fill hover:text-foreground transition-colors cursor-pointer">
             <IconMaximize />
           </button>
           <button onClick={handleClose} className="rounded p-1.5 text-muted-foreground hover:bg-destructive-bg hover:text-destructive-foreground transition-colors cursor-pointer">
@@ -3126,6 +3167,7 @@ function App() {
         />
       </div>
     </div>
+    </LevelProvider>
   );
 }
 

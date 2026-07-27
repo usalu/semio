@@ -8,8 +8,11 @@ import type { Meta, StoryObj } from "@storybook/react";
 import { expect, userEvent, within } from "storybook/test";
 // #endregion 🔌Adapters
 
+// `Mode` mounts each `windows[].children` inside a `mode-dock-stack-body` (level="base") wrapping
+// a `<Window>` (level="window"), both of which already fill `ui-surface`/`ui-glass` — this stays
+// bg-transparent so it doesn't double-tint either ancestor fill.
 const Pane = ({ label }: { label: string }) => (
-  <div className="flex h-full items-center justify-center bg-window">
+  <div className="flex h-full items-center justify-center bg-transparent">
     <span className="text-lg font-semibold">{label}</span>
   </div>
 );

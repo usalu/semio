@@ -151,10 +151,7 @@ export const STYLING_OPACITIES = {
   "disabledPanelMixAlpha": 128,
   "labelHaloAlpha": 200,
   "selectionPreviewStrokeAlpha": 180,
-  "handleFillTransparent": 0,
-  "glassPanelAlpha": 0.58,
-  "glassMenuAlpha": 0.36,
-  "glassWindowOptionsAlpha": 0.22
+  "handleFillTransparent": 0
 } as const;
 
 export const STYLING_METRICS = {
@@ -311,11 +308,7 @@ export const STYLING_METRICS = {
     "panelHeaderHeightUiSpacing": 7,
     "gapStandardUiSpacing": 1,
     "paddingStandardUiSpacing": 1,
-    "panelInsetUiSpacing": 1,
-    "glassBlurPx": 24,
-    "glassPanelBlurPx": 40,
-    "glassWindowOptionsBlurPx": 14,
-    "glassSaturate": 1.45
+    "panelInsetUiSpacing": 1
   },
   "typography": {
     "text2xsPx": 9.6,
@@ -347,6 +340,26 @@ export const STYLING_METRICS = {
     "controlTreeRowMinUiSpacing": 6.25,
     "windowMeasureRowMinUiSpacing": 5.625
   }
+} as const;
+
+export const STYLING_LEVELS = {
+  "names": [
+    "base",
+    "window",
+    "pane",
+    "panel",
+    "dialog",
+    "menu"
+  ],
+  "shadeStepPercent": 5,
+  "elementStepPercent": 6,
+  "hoverStepPercent": 12,
+  "glassAlphaStep": 0.12,
+  "glassBlurStepPx": 8,
+  "glassSaturate": 1.45,
+  "glassChromeAlphaFactor": 0.5,
+  "veilAlphaExtraSteps": 1,
+  "zStep": 10
 } as const;
 
 export const STYLING_CANVAS_FONTS = {
@@ -907,24 +920,6 @@ export const STYLING_CHROME_PALETTES = {
       227,
       255
     ],
-    "canvas": [
-      240,
-      236,
-      221,
-      255
-    ],
-    "window": [
-      235,
-      232,
-      217,
-      255
-    ],
-    "panel": [
-      201,
-      200,
-      189,
-      255
-    ],
     "foreground": [
       0,
       17,
@@ -973,18 +968,6 @@ export const STYLING_CHROME_PALETTES = {
       125,
       255
     ],
-    "hoverWindow": [
-      211,
-      210,
-      197,
-      255
-    ],
-    "hoverPanel": [
-      162,
-      165,
-      157,
-      255
-    ],
     "borderNormal": [
       123,
       130,
@@ -1003,17 +986,77 @@ export const STYLING_CHROME_PALETTES = {
       125,
       255
     ],
-    "temporary": [
-      151,
-      155,
-      148,
+    "levelBase": [
+      247,
+      243,
+      227,
       255
     ],
-    "overlayBg": [
-      151,
-      155,
-      148,
-      250
+    "elementBase": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "levelWindow": [
+      233,
+      230,
+      215,
+      255
+    ],
+    "elementWindow": [
+      115,
+      122,
+      118,
+      255
+    ],
+    "levelPane": [
+      218,
+      217,
+      204,
+      255
+    ],
+    "elementPane": [
+      106,
+      115,
+      112,
+      255
+    ],
+    "levelPanel": [
+      204,
+      205,
+      193,
+      255
+    ],
+    "elementPanel": [
+      98,
+      108,
+      105,
+      255
+    ],
+    "levelDialog": [
+      190,
+      192,
+      181,
+      255
+    ],
+    "elementDialog": [
+      90,
+      100,
+      99,
+      255
+    ],
+    "levelMenu": [
+      176,
+      180,
+      170,
+      255
+    ],
+    "elementMenu": [
+      82,
+      93,
+      92,
+      255
     ]
   },
   "dark": {
@@ -1023,24 +1066,6 @@ export const STYLING_CHROME_PALETTES = {
       23,
       255
     ],
-    "canvas": [
-      12,
-      28,
-      33,
-      255
-    ],
-    "window": [
-      7,
-      24,
-      29,
-      255
-    ],
-    "panel": [
-      29,
-      43,
-      47,
-      255
-    ],
     "foreground": [
       247,
       243,
@@ -1089,18 +1114,6 @@ export const STYLING_CHROME_PALETTES = {
       125,
       255
     ],
-    "hoverWindow": [
-      36,
-      50,
-      53,
-      255
-    ],
-    "hoverPanel": [
-      85,
-      95,
-      93,
-      255
-    ],
     "borderNormal": [
       123,
       130,
@@ -1119,17 +1132,77 @@ export const STYLING_CHROME_PALETTES = {
       125,
       255
     ],
-    "temporary": [
-      36,
-      50,
-      53,
+    "levelBase": [
+      0,
+      17,
+      23,
       255
     ],
-    "overlayBg": [
-      36,
+    "elementBase": [
+      123,
+      130,
+      125,
+      255
+    ],
+    "levelWindow": [
+      6,
+      26,
+      31,
+      255
+    ],
+    "elementWindow": [
+      130,
+      136,
+      131,
+      255
+    ],
+    "levelPane": [
+      17,
+      35,
+      40,
+      255
+    ],
+    "elementPane": [
+      137,
+      143,
+      137,
+      255
+    ],
+    "levelPanel": [
+      28,
+      45,
+      49,
+      255
+    ],
+    "elementPanel": [
+      144,
+      149,
+      143,
+      255
+    ],
+    "levelDialog": [
+      39,
+      55,
+      58,
+      255
+    ],
+    "elementDialog": [
+      151,
+      156,
+      148,
+      255
+    ],
+    "levelMenu": [
       50,
-      53,
-      250
+      65,
+      67,
+      255
+    ],
+    "elementMenu": [
+      159,
+      163,
+      154,
+      255
     ]
   }
 } as const;
@@ -1425,10 +1498,7 @@ export const STYLING_SEMIO_THEME = {
     "disabledPanelMixAlpha": 128,
     "labelHaloAlpha": 200,
     "selectionPreviewStrokeAlpha": 180,
-    "handleFillTransparent": 0,
-    "glassPanelAlpha": 0.58,
-    "glassMenuAlpha": 0.36,
-    "glassWindowOptionsAlpha": 0.22
+    "handleFillTransparent": 0
   },
   "metrics": {
     "camera": {
@@ -1584,11 +1654,7 @@ export const STYLING_SEMIO_THEME = {
       "panelHeaderHeightUiSpacing": 7,
       "gapStandardUiSpacing": 1,
       "paddingStandardUiSpacing": 1,
-      "panelInsetUiSpacing": 1,
-      "glassBlurPx": 24,
-      "glassPanelBlurPx": 40,
-      "glassWindowOptionsBlurPx": 14,
-      "glassSaturate": 1.45
+      "panelInsetUiSpacing": 1
     },
     "typography": {
       "text2xsPx": 9.6,
@@ -1847,15 +1913,6 @@ export const STYLING_SEMIO_THEME = {
         "base": {
           "token": "light"
         },
-        "canvas": {
-          "token": "light-8-9"
-        },
-        "window": {
-          "token": "light-6-7"
-        },
-        "panel": {
-          "token": "light-5-7"
-        },
         "foreground": {
           "token": "dark"
         },
@@ -1884,12 +1941,6 @@ export const STYLING_SEMIO_THEME = {
         "hoverInteractiveFill": {
           "token": "gray"
         },
-        "hoverWindow": {
-          "token": "light-gray"
-        },
-        "hoverPanel": {
-          "token": "gray-600"
-        },
         "borderNormal": {
           "token": "gray"
         },
@@ -1898,13 +1949,6 @@ export const STYLING_SEMIO_THEME = {
         },
         "borderElement": {
           "token": "gray"
-        },
-        "temporary": {
-          "token": "light-4-7"
-        },
-        "overlayBg": {
-          "token": "light-4-7",
-          "alpha": 0.98
         }
       }
     },
@@ -2137,15 +2181,6 @@ export const STYLING_SEMIO_THEME = {
         "base": {
           "token": "dark"
         },
-        "canvas": {
-          "token": "dark-6-7"
-        },
-        "window": {
-          "token": "dark-8-9"
-        },
-        "panel": {
-          "token": "dark-7-9"
-        },
         "foreground": {
           "token": "light"
         },
@@ -2174,12 +2209,6 @@ export const STYLING_SEMIO_THEME = {
         "hoverInteractiveFill": {
           "token": "gray"
         },
-        "hoverWindow": {
-          "token": "dark-gray"
-        },
-        "hoverPanel": {
-          "token": "gray-400"
-        },
         "borderNormal": {
           "token": "gray"
         },
@@ -2188,13 +2217,6 @@ export const STYLING_SEMIO_THEME = {
         },
         "borderElement": {
           "token": "gray"
-        },
-        "temporary": {
-          "token": "dark-gray"
-        },
-        "overlayBg": {
-          "token": "dark-gray",
-          "alpha": 0.98
         }
       }
     }

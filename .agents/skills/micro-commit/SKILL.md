@@ -54,13 +54,13 @@ EOF
 
 `prepare` prints a **fixed multi-line body**. You only author bullets; the script adds everything else. **Never** hand-write, shorten, or “fix” any line.
 
-| Line | Role | Pattern | Example |
-| ---- | ---- | ------- | ------- |
-| **1** | **Subject** (GitKraken summary) | `{emoji}{alias}🎆{YY}🌙{MM}☀️{DD}🚩{NNN}` | `🐙ueli🎆26🌙06☀️04🚩300` |
-| **2** | **Timestamp** (wall-clock now) | `🎆{YY}🌙{MM}☀️{DD}⏰{HH}⌚{mm}⏱️{ss}` | `🎆26🌙07☀️17⏰14⌚20⏱️03` |
-| 3… | **Bullets** | `{emoji}{description}` | `🧭Introduce semio cargo CLI…` |
-| … | **📊uloc** block | script-only | |
-| last | **Signed-off-by** | | |
+| Line  | Role                            | Pattern                                   | Example                        |
+| ----- | ------------------------------- | ----------------------------------------- | ------------------------------ |
+| **1** | **Subject** (GitKraken summary) | `{emoji}{alias}🎆{YY}🌙{MM}☀️{DD}🚩{NNN}` | `🐙ueli🎆26🌙06☀️04🚩300`      |
+| **2** | **Timestamp** (wall-clock now)  | `🎆{YY}🌙{MM}☀️{DD}⏰{HH}⌚{mm}⏱️{ss}`    | `🎆26🌙07☀️17⏰14⌚20⏱️03`     |
+| 3…    | **Bullets**                     | `{emoji}{description}`                    | `🧭Introduce semio cargo CLI…` |
+| …     | **📊uloc** block                | script-only                               |                                |
+| last  | **Signed-off-by**               |                                           |                                |
 
 **Line 1 rules (critical):**
 

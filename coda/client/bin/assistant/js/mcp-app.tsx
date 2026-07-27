@@ -5,7 +5,7 @@
 // #endregion Header
 
 // #region 🔌Adapters
-import { Card, CardGrid, reactHostPort, registerUiTranslationBundles, useLabel } from "@semio-tech/ui-react";
+import { Card, CardGrid, LevelProvider, reactHostPort, registerUiTranslationBundles, useLabel } from "@semio-tech/ui-react";
 import "@semio-tech/ui-react/globals.css";
 import type { App as McpApp } from "@modelcontextprotocol/ext-apps";
 import { useApp, useDocumentTheme } from "@modelcontextprotocol/ext-apps/react";
@@ -84,8 +84,15 @@ registerUiTranslationBundles({
 });
 //#endregion 🪁McpAppI18n
 
+/** @emoji 🪟 A docked JSON viewer -- opens its own `panel` level since it sits directly on the
+ * workspace's `window`-level floor (the shared `Card` it lives inside contributes no fill of its
+ * own; see the 6-level contract at .repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt). */
 function JsonBlock({ value }: { value: unknown }) {
-  return <pre className="text-xs overflow-auto max-h-64 rounded border border-border p-2 bg-panel font-mono whitespace-pre-wrap">{JSON.stringify(value, null, 2)}</pre>;
+  return (
+    <pre data-level="panel" className="text-xs overflow-auto max-h-64 rounded border border-border p-2 ui-surface font-mono whitespace-pre-wrap">
+      {JSON.stringify(value, null, 2)}
+    </pre>
+  );
 }
 
 /** @emoji 🪁 Resolves every card label unconditionally so hook order stays stable across the panel-dependent early returns below. */
@@ -207,7 +214,7 @@ function WorkspaceBody({ payload, activePanel }: { payload: Record<string, unkno
 function McpPanelButton({ panelId, active, onSelect }: { readonly panelId: (typeof PANELS)[number]; readonly active: boolean; readonly onSelect: () => void }) {
   const label = useLabel(`mcpApp.panel.${panelId}` as McpAppTranslationKey);
   return (
-    <button type="button" className={`rounded px-2 py-1 text-xs capitalize ${active ? "bg-primary text-primary-foreground" : "bg-panel hover:bg-muted"}`} onClick={onSelect}>
+    <button type="button" className={`rounded px-2 py-1 text-xs capitalize ${active ? "bg-primary text-primary-foreground" : "bg-element hover:bg-muted"}`} onClick={onSelect}>
       {label}
     </button>
   );
@@ -233,14 +240,16 @@ function McpShell() {
   }, [app?.toolResponse, panel]);
 
   return (
-    <div className="min-h-full flex flex-col gap-3 p-3 bg-window text-foreground">
-      <div className="flex flex-wrap gap-1 border-b border-border pb-2">
-        {PANELS.map((p) => (
-          <McpPanelButton key={p} panelId={p} active={panel === p} onSelect={() => setPanel(p)} />
-        ))}
+    <LevelProvider level="window">
+      <div data-level="window" className="min-h-full flex flex-col gap-3 p-3 ui-surface text-foreground">
+        <div className="flex flex-wrap gap-1 border-b border-border pb-2">
+          {PANELS.map((p) => (
+            <McpPanelButton key={p} panelId={p} active={panel === p} onSelect={() => setPanel(p)} />
+          ))}
+        </div>
+        <WorkspaceBody payload={payload} activePanel={panel} />
       </div>
-      <WorkspaceBody payload={payload} activePanel={panel} />
-    </div>
+    </LevelProvider>
   );
 }
 

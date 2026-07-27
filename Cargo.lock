@@ -2263,15 +2263,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "dsl_codec"
-version = "0.1.0"
-dependencies = [
- "dsl_core",
- "semio-framework-hash",
- "thiserror 2.0.18",
-]
-
-[[package]]
 name = "dsl_core"
 version = "0.1.0"
 dependencies = [

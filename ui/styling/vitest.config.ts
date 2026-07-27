@@ -7,8 +7,8 @@ import { defineConfig } from "vitest/config";
 const root = dirname(fileURLToPath(import.meta.url));
 
 /** @emoji 🧪 Vitest for `@semio-tech/ui-styling` (inline `import.meta.vitest` in `vite-elements-assets.ts`:
- * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins` and
- * every other in-source `describe` block in that file). */
+ * `tileProxyVitePlugin`/`staticDirVitePlugin`/`meshCollectionVitePlugin`/`playgroundAssetVitePlugins`,
+ * every other in-source `describe` block in that file, and `script.ts`'s 🌓Levels generator tests). */
 export default defineConfig({
   root,
   resolve: {
@@ -20,9 +20,9 @@ export default defineConfig({
     name: "@semio-tech/ui-styling",
     mode: "test",
     environment: "node",
-    include: ["vite-elements-assets.ts"],
-    coverage: { include: ["vite-elements-assets.ts"] },
-    includeSource: ["vite-elements-assets.ts"],
+    include: ["vite-elements-assets.ts", "script.ts"],
+    coverage: { include: ["vite-elements-assets.ts", "script.ts"] },
+    includeSource: ["vite-elements-assets.ts", "script.ts"],
     passWithNoTests: false,
   },
 });

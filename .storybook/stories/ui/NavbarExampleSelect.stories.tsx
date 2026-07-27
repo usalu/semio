@@ -38,7 +38,7 @@ export const Default: Story = {
   render: () => {
     const [value, setValue] = useState("");
     return (
-      <div className="w-64 border bg-window">
+      <div className="w-64 border ui-surface" data-level="window">
         <NavbarExampleSelect id="navbar.story.example" value={value} options={exampleOptions} onValueChange={setValue} />
       </div>
     );
@@ -50,7 +50,7 @@ export const WithoutNoExampleOption: Story = {
   render: () => {
     const [value, setValue] = useState("nakagin");
     return (
-      <div className="w-64 border bg-window">
+      <div className="w-64 border ui-surface" data-level="window">
         <NavbarExampleSelect id="navbar.story.example-no-empty" value={value} options={exampleOptions} onValueChange={setValue} includeNoExample={false} />
       </div>
     );

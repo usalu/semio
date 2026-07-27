@@ -1,14 +1,18 @@
 # Introduction Body Hover Emphasizes Content
 
 ## Intent
-When the pointer is inside the introduction step window body, all window content (title chip, body copy/checklist/icons, step chip, close) should use the emphasized color — same token as shell hover emphasis.
+Emphasize only the introduction body paragraph under the pointer — not the whole body, sibling paragraphs, chips, or checklist.
+
+## Root cause (Aggregator)
+Welcome step body is one string with `\n\n` between two visual paragraphs, rendered as a single `<p whitespace-pre-line>`. Hovering either paragraph emphasized the entire `<p>`.
 
 ## Change
-- CSS in `ui/styling/js/ui.css` `ShellParentHover`:
-  - `:has([data-slot="window-chrome-body"]:hover)` emphasizes cap/footer/close content
-  - body `:hover` emphasizes `p`/`li`/`span`/`[data-icon]` except `[data-celebrated="true"]`
-- Docstring on `UIIntroduction` notes the contract
-- Vitest covers CSS contract + markup slots
+- `splitIntroductionBodyParagraphs` splits body on blank lines
+- `UIIntroduction` renders each chunk as `[data-slot="introduction-body-paragraph"]`
+- CSS: `[data-slot="introduction-body-paragraph"]:hover` sets emphasized color
+- Vitest covers split helper + two-paragraph markup + CSS contract
 
-## MCP
-`CallMcpTool` `ticket_open` failed with "Cannot call tool before MCP process client is registered" after successful `mcp_auth`. Opened via `./mcp ticket open … --no-issue`.
+## Follow-ups
+1. Dev: content only, not chips
+2. Dev: only the paragraph where the cursor is
+3. Dev: Aggregator still highlighted both — fixed by splitting blank-line paragraphs

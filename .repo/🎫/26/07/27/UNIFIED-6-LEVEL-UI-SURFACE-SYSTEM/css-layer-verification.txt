@@ -1,0 +1,67 @@
+CSS cascade layer phase — ui/styling/js/ui.css — verification notes
+====================================================================
+Scope: this file only. Lane: CORE (ui.css).
+
+1) Full app build attempt (per instructions, "run this package build or lint nx target if one exists"):
+
+Command:
+  bun nx run @semio-tech/ui-react:build
+
+Result: FAILED, but for a reason unrelated to this change:
+
+  [vite]: Rollup failed to resolve import
+  "@semio-tech/framework-platform-core" from
+  "./coda/client/ui/desktop/js/renderer.tsx".
+
+This matches the contract's own note under COMPOSE file ownership: ticket
+26/07/27/FIX-SKETCHPAD-STALE-FRAMEWORK-PLATFORM-PACKAGE-REFERENCES already owns
+fixing dead @semio-tech/framework-platform-renderer-react / @semio-tech/compose-sketchpad
+imports elsewhere in the app graph. This failure happens at Rollup's import-resolution
+stage, before/independent of ui.css's Tailwind CSS-first parsing, and is not caused by
+anything touched in this phase (I did not touch any .tsx file). Full log saved by the
+orchestrating session's own scratch area (not duplicated here since it is not ui.css
+specific); the relevant excerpt is quoted above verbatim from the terminal.
+
+2) Direct Tailwind v4 CSS-first parser validation (isolates ui.css from the unrelated
+   Rollup/tsx import failure above):
+
+Script (bun, ad-hoc, not committed anywhere):
+  import postcss from "postcss";
+  import tailwind from "@tailwindcss/postcss";
+  import fs from "fs";
+  import path from "path";
+  const cssPath = path.resolve("ui/styling/js/ui.css");
+  const css = fs.readFileSync(cssPath, "utf8");
+  postcss([tailwind({ base: path.resolve("ui/styling/js") })])
+    .process(css, { from: cssPath })
+    .then((result) => console.log("TAILWIND_OK bytes=" + result.css.length))
+    .catch((e) => { console.error("TAILWIND_FAIL", e.stack || e); process.exit(1); });
+
+Command: bun <script>.mjs
+Result:
+  TAILWIND_OK bytes=172736
+
+No parse errors. Re-ran with output written to disk and grepped it to confirm the new
+rules actually made it through the CSS-first parser intact:
+  - --z-pane: 20; / --z-panel: 30; present (new z scale)
+  - --level-shade-step: 5%; / --veil-alpha: 0.4; present (new knobs)
+  - [data-level="pane"], [data-level="dialog"], [data-level="menu"] blocks present with
+    literal k baked into each calc() (0..5)
+No @utility name-collision errors for z-pane/z-dialog/z-menu/ui-surface/ui-glass/
+ui-glass-chrome/ui-veil (all new names, no duplicates registered — z-base/z-window/
+z-panel utilities were deliberately NOT redeclared as @utility since they already existed
+and just needed their underlying --z-base/--z-window/--z-panel custom properties updated,
+which I did).
+
+3) Brace-balance sanity check (python, counts `{`/`}` over the whole file): final depth 0.
+
+4) Untouched-by-design confirmed via grep (single occurrence each, unchanged):
+   - `--color-popover: var(--temporary);` (step 6 — leave popover alias alone)
+   - `[data-slot="window-chrome-gap"], ... backdrop-filter: none !important;` (step 7 — chrome
+     gap suppression; still beats the new ui-glass/ui-glass-chrome utilities on !important alone,
+     same mechanism as before, no textual change needed)
+
+Note: `git diff -- ui/styling/js/ui.css` also shows one hunk I did not author (the
+"Introduction step body hover" selector simplification near [data-slot="introduction-info-box"]) —
+this was already present/dirty in the working tree before this phase started (git status at
+session start already showed ui.css as modified), i.e. a concurrent live dev's edit, not mine.

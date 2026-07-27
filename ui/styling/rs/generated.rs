@@ -101,9 +101,6 @@ pub mod opacities {
     pub const LABEL_HALO_ALPHA: u8 = 200;
     pub const SELECTION_PREVIEW_STROKE_ALPHA: u8 = 180;
     pub const HANDLE_FILL_TRANSPARENT: f64 = 0.0;
-    pub const GLASS_PANEL_ALPHA: f64 = 0.58;
-    pub const GLASS_MENU_ALPHA: f64 = 0.36;
-    pub const GLASS_WINDOW_OPTIONS_ALPHA: f64 = 0.22;
 }
 
 pub mod metrics {
@@ -245,10 +242,6 @@ pub mod metrics {
         pub const GAP_STANDARD_UI_SPACING: f64 = 1.0;
         pub const PADDING_STANDARD_UI_SPACING: f64 = 1.0;
         pub const PANEL_INSET_UI_SPACING: f64 = 1.0;
-        pub const GLASS_BLUR_PX: f64 = 24.0;
-        pub const GLASS_PANEL_BLUR_PX: f64 = 40.0;
-        pub const GLASS_WINDOW_OPTIONS_BLUR_PX: f64 = 14.0;
-        pub const GLASS_SATURATE: f64 = 1.45;
     }
     pub mod typography {
         pub const TEXT2XS_PX: f64 = 9.6;
@@ -285,6 +278,19 @@ pub mod metrics {
 pub mod canvas_fonts {
     pub const MAP_LABEL_SANS_FALLBACK: &str = "sans-serif";
     pub const NOTO_COLOR_EMOJI: &str = "Noto Color Emoji";
+}
+
+pub mod levels {
+    pub const NAMES: &[&str] = &["base", "window", "pane", "panel", "dialog", "menu"];
+    pub const SHADE_STEP_PERCENT: f64 = 5.0;
+    pub const ELEMENT_STEP_PERCENT: f64 = 6.0;
+    pub const HOVER_STEP_PERCENT: f64 = 12.0;
+    pub const GLASS_ALPHA_STEP: f64 = 0.12;
+    pub const GLASS_BLUR_STEP_PX: f64 = 8.0;
+    pub const GLASS_SATURATE: f64 = 1.45;
+    pub const GLASS_CHROME_ALPHA_FACTOR: f64 = 0.5;
+    pub const VEIL_ALPHA_EXTRA_STEPS: u32 = 1;
+    pub const Z_STEP: f64 = 10.0;
 }
 
 pub struct BoardPalette {
@@ -439,9 +445,6 @@ pub const CANVAS_DARK: CanvasPalette = CanvasPalette {
 
 pub struct ChromePalette {
     pub base: [f32; 4],
-    pub canvas: [f32; 4],
-    pub window: [f32; 4],
-    pub panel: [f32; 4],
     pub foreground: [f32; 4],
     pub muted_foreground: [f32; 4],
     pub accent: [f32; 4],
@@ -450,20 +453,25 @@ pub struct ChromePalette {
     pub active_foreground: [f32; 4],
     pub active_hover: [f32; 4],
     pub hover_interactive_fill: [f32; 4],
-    pub hover_window: [f32; 4],
-    pub hover_panel: [f32; 4],
     pub border_normal: [f32; 4],
     pub border_emphasized: [f32; 4],
     pub border_element: [f32; 4],
-    pub temporary: [f32; 4],
-    pub overlay_bg: [f32; 4],
+    pub level_base: [f32; 4],
+    pub element_base: [f32; 4],
+    pub level_window: [f32; 4],
+    pub element_window: [f32; 4],
+    pub level_pane: [f32; 4],
+    pub element_pane: [f32; 4],
+    pub level_panel: [f32; 4],
+    pub element_panel: [f32; 4],
+    pub level_dialog: [f32; 4],
+    pub element_dialog: [f32; 4],
+    pub level_menu: [f32; 4],
+    pub element_menu: [f32; 4],
 }
 
 pub const CHROME_LIGHT: ChromePalette = ChromePalette {
     base: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
-    canvas: [0.87136712_f32, 0.83879901_f32, 0.72305513_f32, 1_f32],
-    window: [0.83076988_f32, 0.80695226_f32, 0.69387176_f32, 1_f32],
-    panel: [0.58407842_f32, 0.57758044_f32, 0.50888132_f32, 1_f32],
     foreground: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
     muted_foreground: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
     accent: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
@@ -472,20 +480,25 @@ pub const CHROME_LIGHT: ChromePalette = ChromePalette {
     active_foreground: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
     active_hover: [0.79129794_f32, 0.02842604_f32, 0.06301002_f32, 1_f32],
     hover_interactive_fill: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
-    hover_window: [0.65140564_f32, 0.64447968_f32, 0.55834039_f32, 1_f32],
-    hover_panel: [0.36130678_f32, 0.37626212_f32, 0.33716362_f32, 1_f32],
     border_normal: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
     border_emphasized: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
     border_element: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
-    temporary: [0.30946892_f32, 0.3277781_f32, 0.29613827_f32, 1_f32],
-    overlay_bg: [0.30946892_f32, 0.3277781_f32, 0.29613827_f32, 0.98039216_f32],
+    level_base: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
+    element_base: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    level_window: [0.81484657_f32, 0.79129794_f32, 0.67954247_f32, 1_f32],
+    element_window: [0.1714411_f32, 0.19461783_f32, 0.18116424_f32, 1_f32],
+    level_pane: [0.70110189_f32, 0.69387176_f32, 0.60382734_f32, 1_f32],
+    element_pane: [0.14412847_f32, 0.1714411_f32, 0.16202938_f32, 1_f32],
+    level_panel: [0.60382734_f32, 0.61049557_f32, 0.5332764_f32, 1_f32],
+    element_panel: [0.12213877_f32, 0.14995979_f32, 0.14126329_f32, 1_f32],
+    level_dialog: [0.51491767_f32, 0.52711513_f32, 0.462077_f32, 1_f32],
+    element_dialog: [0.10224173_f32, 0.12743768_f32, 0.12477182_f32, 1_f32],
+    level_menu: [0.43415364_f32, 0.45641102_f32, 0.40197778_f32, 1_f32],
+    element_menu: [0.08437621_f32, 0.10946171_f32, 0.1070231_f32, 1_f32],
 };
 
 pub const CHROME_DARK: ChromePalette = ChromePalette {
     base: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
-    canvas: [0.00367651_f32, 0.01161225_f32, 0.01520851_f32, 1_f32],
-    window: [0.00212469_f32, 0.00913406_f32, 0.01228649_f32, 1_f32],
-    panel: [0.01228649_f32, 0.02415763_f32, 0.02842604_f32, 1_f32],
     foreground: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
     muted_foreground: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
     accent: [1_f32, 0.03433981_f32, 0.07818742_f32, 1_f32],
@@ -494,13 +507,21 @@ pub const CHROME_DARK: ChromePalette = ChromePalette {
     active_foreground: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
     active_hover: [0.79129794_f32, 0.02842604_f32, 0.06301002_f32, 1_f32],
     hover_interactive_fill: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
-    hover_window: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 1_f32],
-    hover_panel: [0.09084171_f32, 0.11443537_f32, 0.10946171_f32, 1_f32],
     border_normal: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
     border_emphasized: [0.93011086_f32, 0.89626935_f32, 0.76815115_f32, 1_f32],
     border_element: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
-    temporary: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 1_f32],
-    overlay_bg: [0.01764195_f32, 0.03189603_f32, 0.03560131_f32, 0.98039216_f32],
+    level_base: [0_f32, 0.00560539_f32, 0.00856813_f32, 1_f32],
+    element_base: [0.19806932_f32, 0.22322796_f32, 0.20507874_f32, 1_f32],
+    level_window: [0.00182116_f32, 0.01032982_f32, 0.01370208_f32, 1_f32],
+    element_window: [0.22322796_f32, 0.24620133_f32, 0.22696587_f32, 1_f32],
+    level_pane: [0.00560539_f32, 0.01680738_f32, 0.02121901_f32, 1_f32],
+    element_pane: [0.25015828_f32, 0.27467731_f32, 0.25015828_f32, 1_f32],
+    level_panel: [0.01161225_f32, 0.02624122_f32, 0.03071344_f32, 1_f32],
+    element_panel: [0.27889426_f32, 0.30054379_f32, 0.27467731_f32, 1_f32],
+    level_dialog: [0.02028856_f32, 0.03820437_f32, 0.04231141_f32, 1_f32],
+    element_dialog: [0.30946892_f32, 0.33245154_f32, 0.29613827_f32, 1_f32],
+    level_menu: [0.03189603_f32, 0.05286065_f32, 0.05612849_f32, 1_f32],
+    element_menu: [0.34670406_f32, 0.3662526_f32, 0.32314321_f32, 1_f32],
 };
 
 pub struct MapPalette {

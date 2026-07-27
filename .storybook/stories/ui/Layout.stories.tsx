@@ -33,8 +33,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// Interior content of a `<Window>` — the window's own root already fills `ui-surface` at
+// level="window" (WindowChrome contract), so this stays bg-transparent (one ui-surface/ui-glass
+// per level root; interior containers stay transparent).
 const ExampleContent = ({ title }: { title: string }) => (
-  <div className="flex items-center justify-center h-full bg-panel">
+  <div className="flex items-center justify-center h-full bg-transparent">
     <h2 className="text-2xl font-bold">{title}</h2>
   </div>
 );
@@ -252,7 +255,7 @@ export const PanelDefault: Story = {
   render: () => {
     const [size, setSize] = useState(300);
     return (
-      <div className="relative h-[400px] w-[600px] border bg-base">
+      <div className="relative h-[400px] w-[600px] border ui-surface" data-level="base">
         <Panel
           anchor="top-left"
           size={size}
