@@ -1,7 +1,7 @@
 {
-  "title": "Mit-Bestand Zwischenbericht LaTeX Workshop",
+  "title": "Mit-Bestand Zwischenbericht Layout And Rendering Pass",
   "emoji": "🖨️",
-  "status": "closed",
+  "status": "open",
   "description": "Create mit-bestand zwischenbericht LaTeX document with placeholder content and configure LaTeX Workshop for Tectonic build.",
   "summary": "Fixed body text rendering: a dangling \\ExplSyntaxOn at the end of the \\AfterEndPreamble hook in semio-window.sty left expl3 space catcode 9 active after \\begin{document}, silently stripping every space from section headings, chip labels, and prose (words concatenated, lines overshot margins). Added the missing \\ExplSyntaxOff. Rebuilt zwischenbericht light+dark PDFs; verified pages 2/5/6/7 show normal LaTeX spacing and wrapping.",
   "github": {
@@ -17,6 +17,7 @@
     "⚪8c837ee321d548008fee3dfcbf56a128",
     "⚪f34b7f5f72e54e03b4e873de37a33b69",
     "⚪767bf085ba2d443dbfc0673ade96fb10",
-    "⚪748cee008dca4b49a1459a9bbcd54209"
+    "⚪748cee008dca4b49a1459a9bbcd54209",
+    "⚪e2d833e3de8249ed9e1fb534e3d8156f"
   ]
 }

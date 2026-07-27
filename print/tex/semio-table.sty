@@ -25,6 +25,11 @@
   }
 }
 \NewDocumentCommand \SemioTableHeaderRow { m } {
+  \bool_if:NT \g_semio_table_window_title_pending_bool {
+    \bool_gset_false:N \g_semio_table_window_title_pending_bool
+    \seq_set_split:Nnn \l_semio_table_row_seq { & } {#1}
+    \exp_args:Ne \semio@table@window@title@row { \int_eval:n { \seq_count:N \l_semio_table_row_seq } }
+  }
   \semio_table_header_row:n {#1}
   \\
   \semio@table@row@sep
@@ -160,6 +165,10 @@
 
 \newlength{\semio@table@long@inner@w}
 \newbox\semio@table@long@pad@box
+% Height of the bordered table-title row (computed in @prepare, outside the
+% tabular — a \setlength inside the row before \multicolumn would break the
+% "\multicolumn must be first in the cell" rule and throw Misplaced \omit).
+\newlength{\semio@table@title@rowh}
 % Per-column inner padding for long tables (each column gets this much air on
 % both sides → 2× between adjacent columns). Column p-widths are reduced by
 % 2× this, so the total still equals \semio@table@long@inner@w (no overflow).
@@ -235,6 +244,10 @@
 
 \newcommand{\semio@table@long@title@chrome@prepare}{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{\semio@window@header@title}}}%
+  % Title-row height = the chip's natural height (already includes the enlarged
+  % font + balanced padding from \semio@window@cap@metrics@set). Computed here,
+  % outside the tabular, so the row macro can keep \multicolumn as its first token.
+  \setlength{\semio@table@title@rowh}{\dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax}%
   \edef\semio@table@long@title@number{\semio@window@header@number}%
   \ifx\semio@table@long@title@number\@empty
     \semio@table@long@title@numberfalse
@@ -248,24 +261,53 @@
   \fi
 }
 
+% 🏷️ Title row as a proper bordered table level (full width, outer borders,
+% canvas fill, title left / number right, balanced padding via a symmetric
+% strut in a middle-aligned cell) followed by a continuous \hhline separator to
+% the column-header row. \multicolumn is the FIRST token in the cell (its height
+% was pre-computed in @prepare) so the head machinery's Misplaced-\omit trap is
+% avoided.
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
-  \multicolumn{#1}{@{}l@{}}{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-border-normal}%
-      \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
-    }%
+  \multicolumn{#1}{|@{\hspace{\semio@chrome@padding}}m{\dimexpr\semio@table@long@inner@w\relax}@{\hspace{\semio@chrome@padding}}|}{%
+    \cellcolor{semio-chrome-canvas}%
+    \rule[\dimexpr-0.5\semio@table@title@rowh\relax]{0pt}{\semio@table@title@rowh}%
+    {\semio@heading@bar@font\color{semio-chrome-foreground}\semio@window@header@title}%
+    \hfill
+    \ifsemio@table@long@title@number
+      {\semio@heading@bar@font\color{semio-chrome-text-normal}\semio@window@header@number}%
+    \fi
   }%
   \\%
-  % Weld the title bar onto the following column-header row: pull back the
-  % header row's \extrarowheight top padding and strut depth so the title bar
-  % sits flush on the header border (matching the tcolorbox tables), instead
-  % of leaving a gap that also inflates the page count.
-  \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
+  \hhline{|*{#1}{-}|}%
 }
 
 \newcommand{\semio@table@long@continuation@chrome}[1]{%
   \semio@table@long@title@chrome@row{#1}%
+}
+
+% 🏷️ Windowed (non-long) tables: the title used to be a floating chrome chip
+% drawn *outside* the tcolorbox (\semio_window_header_muted_use:), so it sat in a
+% gap above the frame with the number as a separate, differently-sized box and no
+% rule joined it to the column header. Instead we emit the title as the tabular's
+% first row — a full-width canvas band (title left / number right, vertically
+% centred by a symmetric strut) followed by the shared continuous \hrule
+% (\semio@table@row@sep) down to the column-header row. The outer L/R borders come
+% from the tcolorbox frame, so this row draws NO vertical rules (avoids doubling).
+\ExplSyntaxOn
+\bool_new:N \g_semio_table_window_title_pending_bool
+\ExplSyntaxOff
+\newcommand{\semio@table@window@title@row}[1]{%
+  \multicolumn{#1}{@{}m{\dimexpr\linewidth-2\tabcolsep\relax}@{}}{%
+    \cellcolor{semio-chrome-canvas}%
+    \rule[\dimexpr-0.5\semio@table@title@rowh\relax]{0pt}{\semio@table@title@rowh}%
+    {\semio@heading@bar@font\color{semio-chrome-foreground}\semio@window@header@title}%
+    \hfill
+    \ifsemio@table@long@title@number
+      {\semio@heading@bar@font\color{semio-chrome-text-normal}\semio@window@header@number}%
+    \fi
+  }%
+  \\%
+  \semio@table@row@sep
 }
 
 \newcommand{\semio@register@table@header@long@repeat}{%
@@ -620,6 +662,14 @@
   \SemioSans
   \semio@table@fontsize@apply
   \color{semio-chrome-text-normal}%
+  % 🩹 Measure the pending in-tabular title band HERE, before \begin{tabular}.
+  % Its \sbox/\setlength must run outside the tabular, else a non-\multicolumn
+  % first token in the title row throws Misplaced \omit (see @prepare's note).
+  \ExplSyntaxOn
+  \bool_if:NT \g_semio_table_window_title_pending_bool {
+    \semio@table@long@title@chrome@prepare
+  }
+  \ExplSyntaxOff
   \def\semio@table@spec{#1}%
   \ifx\semio@table@spec\semio@table@spec@ll
     \expandafter\semio@table@begin@tabular\expandafter{\semio@table@colspec@two}%
