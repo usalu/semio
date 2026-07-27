@@ -8416,11 +8416,25 @@ export function FrameworkOsShell({
         <input
           ref={importStudioInputRef}
           type="file"
-          accept="application/json,.json"
+          // 📦 `.pack` files branch to `s/plugin`'s pack-aware `importStudioPackPayload` action
+          // (`semio_framework_os::import_os_studio_from_pack`, wave 2 s+shome+sstudio family) —
+          // read as a dataUrl, same shape as the generic `RequestFileOpen`/`readAs: "dataUrl"` path
+          // below. Anything else keeps reading as text and dispatching the JSON-envelope "importStudio".
+          accept="application/json,.json,.pack"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.[0];
             if (!file) return;
+            if (file.name.toLowerCase().endsWith(".pack")) {
+              const reader = new FileReader();
+              reader.onload = () => {
+                const payload = typeof reader.result === "string" ? reader.result : "";
+                onAction({ controllerId: landingControllerId ?? "", action: "importStudioPackPayload", args: { payload } });
+                event.target.value = "";
+              };
+              reader.readAsDataURL(file);
+              return;
+            }
             void file.text().then((json) => {
               onAction({ controllerId: landingControllerId ?? "", action: "importStudio", args: { json } });
               event.target.value = "";

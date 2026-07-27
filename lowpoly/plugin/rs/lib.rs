@@ -2471,8 +2471,10 @@ fn mesh_from_mesh_document(doc: &serde_json::Value) -> Result<MeshData, String> 
 }
 
 /// 🔌 One call per `MeshExporter`/`MeshImporter` format so the OS media-graph VFS auto-populates from
-/// `required_os_media_export_formats`/`required_os_media_import_formats`.
+/// `required_os_media_export_formats`/`required_os_media_import_formats`; also registers the
+/// `DocumentPack` codec so `.pack`/`.ops` sync/storage paths can encode/decode `LowpolyProjection`.
 fn register_lowpoly_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<LowpolyPlayApp>(LOWPOLY_DOCUMENT_SCHEMA);
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
     semio_framework_os::register_mesh_exporter("3d.lowpoly", "lowpoly", lowpoly_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));

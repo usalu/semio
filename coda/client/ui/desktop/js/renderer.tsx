@@ -2463,8 +2463,8 @@ function WelcomePage({ onProjectReady, onMinimize, onMaximize, onClose }: { onPr
   return (
     <LevelProvider level="window">
     <div data-level="window" className="flex h-screen w-screen flex-col ui-surface overflow-hidden">
-      {/* Title Bar -- window-level chrome ribbon (ui-glass-chrome @ window) */}
-      <div className="flex h-9 items-center border-b border-normal ui-glass-chrome px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+      {/* Title Bar -- window-level chrome ribbon (ui-glass @ window) */}
+      <div className="flex h-9 items-center border-b border-normal ui-glass px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
           <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>
@@ -3111,8 +3111,8 @@ function App() {
   return (
     <LevelProvider level="window">
     <div data-level="window" className="flex h-screen w-screen flex-col ui-surface overflow-hidden">
-      {/* #region Title Bar -- window-level chrome ribbon (ui-glass-chrome @ window) */}
-      <div className="flex h-9 items-center border-b border-normal ui-glass-chrome px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
+      {/* #region Title Bar -- window-level chrome ribbon (ui-glass @ window) */}
+      <div className="flex h-9 items-center border-b border-normal ui-glass px-3 shrink-0" style={{ WebkitAppRegion: "drag" } as React.CSSProperties}>
         <div className="flex items-center gap-2 flex-1" style={{ WebkitAppRegion: "no-drag" } as React.CSSProperties}>
           <span className="text-sm font-bold text-active-base">coda</span>
           <span className="text-xs text-muted-foreground">{titlebarSubtitle}</span>

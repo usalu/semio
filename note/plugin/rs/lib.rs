@@ -2319,6 +2319,7 @@ fn note_document_json_to_svg(value: &Value) -> Result<(String, u32, u32), String
 fn register_note_exports() {
     semio_framework_os::register_2d_export_handlers("2d.note", "note", note_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.note", note_document_json_from_dwg);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
 }
 //#endregion 🔖MediaExport
 
@@ -3167,11 +3168,13 @@ mod tests {
             ],
         };
         vcs::test_support::assert_dsl_round_trip(&document);
+        vcs::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
     fn note_dsl_round_trips_semio_example_document() {
         vcs::test_support::assert_dsl_round_trip(&semio_example_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&semio_example_document());
     }
 
     #[test]
@@ -3215,6 +3218,7 @@ mod tests {
             })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

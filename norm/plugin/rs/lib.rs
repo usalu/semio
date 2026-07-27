@@ -154,7 +154,26 @@ define_norm_family_app!(iso16757, Iso16757PlayApp, "norm-iso-16757-play", "ISO 1
 define_norm_family_app!(vdi3805, Vdi3805PlayApp, "norm-vdi-3805-play", "VDI 3805", "vdi3805", norm_vdi_3805, Vdi3805Family);
 
 //#region 🔖Manifest
-fn register_norm_exports() {}
+/// 🗂️ Sole native setup hook for the whole `norm` plugin bundle (`semio_plugin!`'s single
+/// `setup: register_norm_exports`) — registers all fifteen family document kinds' pack↔dsl codecs
+/// here since each `define_norm_family_app!`-generated module has no native registration fn of its own.
+fn register_norm_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<din4108::Din4108PlayApp>(din4108::Din4108PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<din16798::Din16798PlayApp>(din16798::Din16798PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<din18599::Din18599PlayApp>(din18599::Din18599PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1990::En1990PlayApp>(en1990::En1990PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1991::En1991PlayApp>(en1991::En1991PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1992::En1992PlayApp>(en1992::En1992PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1993::En1993PlayApp>(en1993::En1993PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1994::En1994PlayApp>(en1994::En1994PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1995::En1995PlayApp>(en1995::En1995PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1996::En1996PlayApp>(en1996::En1996PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1997::En1997PlayApp>(en1997::En1997PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1998::En1998PlayApp>(en1998::En1998PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<en1999::En1999PlayApp>(en1999::En1999PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<iso16757::Iso16757PlayApp>(iso16757::Iso16757PlayApp.document_schema());
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<vdi3805::Vdi3805PlayApp>(vdi3805::Vdi3805PlayApp.document_schema());
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "norm",

@@ -23,7 +23,7 @@ pub fn empty_forms_projection() -> FormSpec {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use vcs::{create_document_vcs_envelope, test_support::assert_dsl_round_trip};
+    use vcs::{create_document_vcs_envelope, test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip}};
 
     #[test]
     fn forms_document_vcs_materializes() {
@@ -74,6 +74,7 @@ mod tests {
         assert_eq!(spec.id, "building-component");
         assert_eq!(spec.steps.len(), 2);
         assert_dsl_round_trip(&spec);
+        assert_dsl_pack_equivalence(&spec);
     }
 }
 //#endregion 🧪Tests

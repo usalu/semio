@@ -6675,7 +6675,7 @@ impl DrawList {
     }
 
     /// 🧊 Pushes a glass region rendered with an already-resolved `style` — callers derive `style`
-    /// from `Theme::glass(level)`/`Theme::glass_chrome(level)` themselves (see
+    /// from `Theme::glass(level)` themselves (see
     /// `.repo/🎫/26/07/27/UNIFIED-6-LEVEL-UI-SURFACE-SYSTEM/contract.txt`) rather than this method
     /// picking a per-tier lookup.
     pub fn push_glass(&mut self, rect: [f32; 4], radius: f32, style: GlassStyle) -> usize {
@@ -9852,9 +9852,10 @@ mod tests {
         assert_eq!(scissor_layer.foreground_of, Some(glass));
     }
 
-    /// 🪜 `Theme::glass`/`glass_chrome` must be formula-derived off `Level::index` (never a per-tier
-    /// lookup table): alpha/blur both monotone across all 6 levels, `glass_chrome` exactly halves
-    /// alpha (see `ui_styling::levels::GLASS_CHROME_ALPHA_FACTOR`) at unchanged tint/blur/saturate.
+    /// 🪜 `Theme::glass` must be formula-derived off `Level::index` (never a per-tier lookup
+    /// table): alpha/blur both monotone across all 6 levels. There is deliberately no separate
+    /// "chrome" variant — a level's attached chrome (title caps, ribbons, tab bars, rails) always
+    /// renders the exact same `glass(level)` as its body, so one level never shows two appearances.
     #[test]
     fn glass_alpha_and_blur_are_formula_derived_per_level() {
         use super::{Level, Theme};
@@ -9873,10 +9874,6 @@ mod tests {
             assert!((style.alpha - (1.0 - k as f32 * ui_styling::levels::GLASS_ALPHA_STEP as f32)).abs() < 1e-6);
             assert!((style.blur_px - k as f32 * ui_styling::levels::GLASS_BLUR_STEP_PX as f32).abs() < 1e-6);
             assert_eq!(style.tint, theme.level_bg[k]);
-            let chrome = theme.glass_chrome(*level);
-            assert!((chrome.alpha - style.alpha * ui_styling::levels::GLASS_CHROME_ALPHA_FACTOR as f32).abs() < 1e-6);
-            assert_eq!(chrome.blur_px, style.blur_px);
-            assert_eq!(chrome.tint, style.tint);
         }
         assert!(theme.glass(Level::Base).alpha > theme.glass(Level::Menu).alpha);
         assert!(theme.glass(Level::Base).blur_px < theme.glass(Level::Menu).blur_px);
@@ -12314,7 +12311,7 @@ pub enum Level {
 }
 
 impl Level {
-    /// 🔢 Ordinal step `k` (0..=5) every formula-derived value (`Theme::surface`/`glass`/`glass_chrome`)
+    /// 🔢 Ordinal step `k` (0..=5) every formula-derived value (`Theme::surface`/`glass`)
     /// is computed from — mirrors `ui/styling/rs/generated.rs`'s `levels::NAMES` ordering.
     pub const fn index(self) -> usize {
         match self {
@@ -12387,7 +12384,7 @@ pub struct Theme {
     pub diagram_accent_fill: Rgba,
     pub error: Rgba,
     /// 🪜 Plain per-level fill, indexed by `Level::index` — `ui-surface`'s wgpu counterpart, backing
-    /// `Theme::surface`/`glass`/`glass_chrome`. Populated from the generated `levelBase..levelMenu`
+    /// `Theme::surface`/`glass`. Populated from the generated `levelBase..levelMenu`
     /// chrome paints (see `from_chrome` below).
     pub level_bg: [Rgba; 6],
 }
@@ -12502,15 +12499,6 @@ impl Theme {
         }
     }
 
-    /// 🎗️ Attached-chrome variant of `glass` (ribbons/rails) — `ui-glass-chrome`'s wgpu counterpart:
-    /// same tint/blur as `glass(level)`, alpha scaled by `GLASS_CHROME_ALPHA_FACTOR`.
-    pub fn glass_chrome(&self, level: Level) -> GlassStyle {
-        let style = self.glass(level);
-        GlassStyle {
-            alpha: style.alpha * levels::GLASS_CHROME_ALPHA_FACTOR as f32,
-            ..style
-        }
-    }
     //#endregion 🔖LevelSurfaces
 
     pub fn glass_mip_level(blur_px: f32, max_mip: u32) -> f32 {

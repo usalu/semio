@@ -386,34 +386,54 @@ mod native_actor {
     }
 
     /// @emoji 📁 A folder/file binding's storage driver, keyed for multi-document sqlite or single
-    /// text-backed blob. `Text` stores the actor's whole-envelope JSON in `FolderTextStorage`'s `.dsl`
-    /// slot (the same single-blob-overwrite semantics the deleted `FileJsonStorage` used, just now
-    /// addressed by `<folder>/<document_id>.<extension>` instead of an arbitrary path) — this actor
-    /// stays `serde_json::Value`-typed end to end (it drains/relays generic backbone messages, never a
-    /// concrete `Projection`/`Operation`), so it cannot itself call `DocumentDsl::print_dsl`/
-    /// `OpText::print_op` to populate the sibling `.ops` file; that companion file is written empty and
-    /// is not yet read back. Per-operation DSL/op-text persistence would require threading a concrete
-    /// technology type through this actor, which is out of scope here.
+    /// pack-backed blob. `Pack` (was `Text`) stores the actor's whole-envelope JSON as a REAL pack
+    /// file + real `.ops` text + a DSL mirror via `vcs::FolderTextStorage::write_pack`/`read_pack` —
+    /// this actor stays `serde_json::Value`-typed end to end (it drains/relays generic backbone
+    /// messages, never a concrete `Projection`/`Operation`), so the `schema` string is how it reaches a
+    /// concrete codec: `vcs::document_codec(schema)` looks up the `vcs::DocumentCodec` a real app
+    /// registered (`register_document_codec_for_app`, wave 2) and does the pack↔envelope-JSON bridging
+    /// on this actor's behalf. Replaces the old bug where `.dsl` held a raw envelope-JSON dump and
+    /// `.ops` was always written empty (see `read`/`write` below — a missing codec is now a hard
+    /// error, never a silent JSON-in-`.dsl` fallback).
     enum FolderEndpoint {
         Sqlite { storage: vcs::FolderSqliteStorage, document_id: String, schema: String },
-        Text { storage: vcs::FolderTextStorage, document_id: String, extension: String },
+        Pack { storage: vcs::FolderTextStorage, document_id: String, extension: String, schema: String },
     }
 
     impl FolderEndpoint {
-        fn read(&self) -> Option<String> {
+        /// @emoji 📖 `Ok(None)` = nothing persisted yet; `Ok(Some(json))` = the envelope, resolved
+        /// pack-first (falling back to the DSL mirror for hand-authored/imported documents with no
+        /// `.pack` file yet); `Err` = a real failure (missing codec registration for `schema`, or a
+        /// pack/dsl decode error) — never silently degrades to a raw dump.
+        fn read(&self) -> Result<Option<String>, String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).ok().flatten(),
-                FolderEndpoint::Text { storage, document_id, extension } => storage.read(document_id, extension).ok().flatten().map(|files| files.dsl),
+                FolderEndpoint::Sqlite { storage, document_id, .. } => storage.read(document_id).map_err(|error| error.to_string()),
+                FolderEndpoint::Pack { storage, document_id, extension, schema } => {
+                    let Some(codec) = vcs::document_codec(schema) else {
+                        return Err(format!("no document codec registered for schema {schema:?}"));
+                    };
+                    if let Some(pack_files) = storage.read_pack(document_id, extension).map_err(|error| error.to_string())? {
+                        return (codec.parse)(&pack_files.pack, &pack_files.ops).map(Some).map_err(|error| error.to_string());
+                    }
+                    match storage.read(document_id, extension).map_err(|error| error.to_string())? {
+                        Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops).map(Some).map_err(|error| error.to_string()),
+                        None => Ok(None),
+                    }
+                }
             }
         }
 
-        fn write(&self, json: &str) {
+        /// @emoji ✍️ Persists `json` (the whole envelope). `Err` on a missing codec, same hard-error
+        /// rule as `read`.
+        fn write(&self, json: &str) -> Result<(), String> {
             match self {
-                FolderEndpoint::Sqlite { storage, document_id, schema } => {
-                    let _ = storage.write(document_id, schema, json);
-                }
-                FolderEndpoint::Text { storage, document_id, extension } => {
-                    let _ = storage.write(document_id, extension, &vcs::DocumentTextFiles { dsl: json.to_string(), ops: String::new() });
+                FolderEndpoint::Sqlite { storage, document_id, schema } => storage.write(document_id, schema, json).map_err(|error| error.to_string()),
+                FolderEndpoint::Pack { storage, document_id, extension, schema } => {
+                    let Some(codec) = vcs::document_codec(schema) else {
+                        return Err(format!("no document codec registered for schema {schema:?}"));
+                    };
+                    let (pack_files, dsl_mirror) = (codec.print)(json).map_err(|error| error.to_string())?;
+                    storage.write_pack(document_id, extension, &pack_files, &dsl_mirror).map_err(|error| error.to_string())
                 }
             }
         }
@@ -548,7 +568,7 @@ mod native_actor {
 
         /// @emoji 🌱 Seeds persistence state from any already-stored envelope and installs the file watcher.
         fn setup(&mut self) {
-            if let Some(json) = self.folder.as_ref().and_then(|folder| folder.read()) {
+            if let Some(json) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) {
                 if let Ok(value) = serde_json::from_str::<Value>(&json) {
                     self.known_edit_ids = envelope_edit_ids(Some(&value)).into_iter().collect();
                     self.current_envelope = Some(value);
@@ -622,11 +642,16 @@ mod native_actor {
 
         //#region 🔖Folder
         /// @emoji ✍️ Persists the current envelope JSON to the folder binding and records the content
-        /// hash for self-write suppression.
+        /// hash for self-write suppression. A write failure (e.g. no `vcs::DocumentCodec` registered
+        /// for this document's schema — see `FolderEndpoint::write`) is swallowed here the same way
+        /// every other best-effort path in this actor already is, but deliberately does NOT record
+        /// `last_written_hash` on failure — a false "persisted" mark would make `handle_external_change`
+        /// mistake the still-stale on-disk content for a self-write and ignore a real external change.
         fn persist_write(&mut self, json: &str) {
             let Some(folder) = self.folder.as_ref() else { return };
-            folder.write(json);
-            self.last_written_hash = Some(semio_framework_hash::hash_bytes(json.as_bytes()));
+            if folder.write(json).is_ok() {
+                self.last_written_hash = Some(semio_framework_hash::hash_bytes(json.as_bytes()));
+            }
         }
 
         /// @emoji 📸 Records a full-envelope snapshot as the canonical persisted state.
@@ -664,7 +689,7 @@ mod native_actor {
         /// divergence → `SnapshotReplaced`, divergence with local pending operations → `Conflict`. Self-writes
         /// (content hash match) are ignored.
         fn handle_external_change(&mut self) {
-            let Some(json) = self.folder.as_ref().and_then(|folder| folder.read()) else { return };
+            let Some(json) = self.folder.as_ref().and_then(|folder| folder.read().ok().flatten()) else { return };
             let hash = semio_framework_hash::hash_bytes(json.as_bytes());
             if self.last_written_hash.as_deref() == Some(hash.as_str()) {
                 return;
@@ -867,7 +892,12 @@ mod native_actor {
         match path.extension().and_then(|ext| ext.to_str()) {
             Some(extension) => {
                 let folder = path.parent().map(|parent| parent.to_path_buf()).unwrap_or_else(|| PathBuf::from("."));
-                FolderEndpoint::Text { storage: vcs::FolderTextStorage::new(folder), document_id: document_id.to_string(), extension: extension.to_string() }
+                FolderEndpoint::Pack {
+                    storage: vcs::FolderTextStorage::new(folder),
+                    document_id: document_id.to_string(),
+                    extension: extension.to_string(),
+                    schema: schema.to_string(),
+                }
             }
             None => FolderEndpoint::Sqlite { storage: vcs::FolderSqliteStorage::new(path.to_path_buf()), document_id: document_id.to_string(), schema: schema.to_string() },
         }

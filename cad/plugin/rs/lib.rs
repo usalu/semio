@@ -5980,6 +5980,8 @@ fn cad_document_from_mesh(mesh: &semio_framework_plugin::MeshData) -> Result<ser
 }
 
 fn register_cad_exports() {
+    // 📦 pack binary codec for `CadScene` (`CadPlayApp::document_schema()` == `CAD_DOCUMENT_SCHEMA`).
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<CadPlayApp>(CAD_DOCUMENT_SCHEMA);
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::ObjSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StlSolidExporter));
     semio_framework_os::register_solid_exporter("3d.cad", Box::new(kernel_3d_brepkit::StepSolidExporter));

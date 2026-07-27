@@ -1,0 +1,75 @@
+WAVE 2 — family: process
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+- App type: Process3dPlayApp (process/plugin/rs/lib.rs)
+  Projection: process_3d::Process3dDocument (process/3d/rs/lib.rs)
+  Schema string used: process_3d::PROCESS_3D_SCHEMA = "process.3d" (read from
+  Process3dPlayApp::document_schema(), which returns process_3d::PROCESS_3D_SCHEMA -- not guessed).
+
+2. CODEC REGISTRATION
+--------------------------------------------------------------------------------
+process/plugin/rs/lib.rs, inside the existing native setup fn `register_process3d_exports()`
+(invoked via `semio_plugin! { setup: register_process3d_exports, ... }`), added:
+
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Process3dPlayApp>(process_3d::PROCESS_3D_SCHEMA);
+
+Pattern confirmed against sibling family `note/plugin/rs/lib.rs`'s identical
+`register_document_codec_for_app::<NotePlayApp>(NOTE_DOCUMENT_SCHEMA)` call inside its own
+`register_note_exports()`.
+
+3. TEST-LAW CALLS ADDED (process/3d/rs/lib.rs, mod tests)
+--------------------------------------------------------------------------------
+Added `test_support::assert_dsl_pack_equivalence(...)` beside every existing
+`test_support::assert_dsl_round_trip(...)` call, same fixture value, same test fn:
+  - process3d_dsl_round_trips (both sample_document() and empty_process3d_projection() calls)
+  - process3d_dsl_round_trips_imported_solid_shapes
+  - process3d_dsl_round_trips_with_no_resolved_cursor
+  - timber_example_fixture_parses_and_round_trips (include_str! fixture)
+  - drilled_plate_example_fixture_parses_and_round_trips (include_str! fixture)
+
+Added `test_support::assert_document_pack_round_trip(&store)` beside the existing
+`test_support::assert_document_text_round_trip(&store)` call in
+process3d_document_text_round_trips_after_apply_and_checkpoint.
+
+4. FIXTURES CONVERTED
+--------------------------------------------------------------------------------
+None. Family note explicitly said process/3d/example/ fixtures (timber-beam-joinery.process3d,
+drilled-plate.process3d) stay as-is -- they are already .process3d DSL text, not JSON.
+
+5. UNRELATED BUG FIXED (in-scope file, blocking green)
+--------------------------------------------------------------------------------
+process/plugin/rs/lib.rs line ~1629: `UtilityDefinition::new("select", "Select", "cursor")` used a
+stale icon name ("cursor") not present in ui/asset/icon's generated catalog, causing
+`__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest` and
+`utility_registry_declares_four_flat_utilities_scoped_to_workpiece_window` to panic
+(`invalid catalog icon name`) on every test run, unrelated to any pack work and pre-dating this
+ticket. Confirmed via backtrace (panics inside `UtilityDefinition::new` called from
+`create_process3d_app`) and confirmed "cursor" is genuinely absent from
+ui/asset/icon/generated/icon_name.rs, while sibling plugins (puzzle/plugin, remodel/plugin) already
+use valid replacements ("mouse-pointer" / "mouse-pointer-2"). Fixed by changing to
+`"mouse-pointer"` (confirmed present in the icon catalog), matching current puzzle/plugin usage.
+This file is within my allowed process/** scope; the icon catalog itself (ui/asset/**) was not
+touched.
+
+6. PACK-COMPLETENESS LINT ALLOWLIST ENTRY NOW SATISFIED
+--------------------------------------------------------------------------------
+`process/3d/rs/lib.rs` (from POLICY_PACK_COMPLETENESS_ALLOWLIST in root script.ts) now has, for its
+one document kind (Process3dDocument), both an `assert_dsl_pack_equivalence(` call and an
+`assert_document_pack_round_trip(` call -- wave 3 can remove this line from the allowlist:
+
+  process/3d/rs/lib.rs
+
+(process/plugin/rs/lib.rs was never in the allowlist -- it holds no `#[derive(dsl::DslDocument)]`
+type itself, only the App wiring.)
+
+7. FINAL CARGO TEST STATUS
+--------------------------------------------------------------------------------
+cargo test -p process_3d --lib: 26 passed, 0 failed.
+cargo test -p process-plugin --lib: 34 passed, 0 failed.
+(Doc-test runs for both crates transiently failed once each with "can't find crate" / missing
+.rlib errors typical of concurrent-session target-dir churn per repo convention; re-running each
+in isolation succeeded / was a no-op (0 doc tests). Not a real failure, not touched further.)
+
+Nothing left incomplete for this family.

@@ -293,15 +293,10 @@ pub mod app_jack {
             Some(json!({ "automatic": false, "forcedLabel": mode }).to_string())
         }
     }
-    fn port_endpoint(node_id: &str, port_id: &str) -> String {
-        format!("{node_id}:{port_id}")
-    }
-
+    /// 🩹 Delegates to `trinity_ram::parse_port_key` (the one place the `nodeId@portId` convention is
+    /// owned) instead of hand-rolling a second splitter here.
     fn split_endpoint(endpoint: &str) -> (String, String) {
-        endpoint
-            .split_once(':')
-            .map(|(node, port)| (node.to_string(), port.to_string()))
-            .unwrap_or_else(|| (endpoint.to_string(), "in".into()))
+        trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
     }
 
     fn fixture_to_media_graph(fixture: &GraphFixture) -> (String, String, String) {
@@ -348,7 +343,7 @@ pub mod app_jack {
                 .iter()
                 .filter(|port| port.direction == PortDirection::In)
                 .map(|port| MediaGraphPortRecord {
-                    id: port_endpoint(&node.id, &port.id),
+                    id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
                 .collect(),
@@ -357,7 +352,7 @@ pub mod app_jack {
                 .iter()
                 .filter(|port| port.direction == PortDirection::Out)
                 .map(|port| MediaGraphPortRecord {
-                    id: port_endpoint(&node.id, &port.id),
+                    id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
                 .collect(),
@@ -1927,8 +1922,8 @@ pub mod app_rewrite {
             edges.push(trinity_ram::Edge {
                 id: "lhs-match-where".into(),
                 kind: "rewrite.flow".into(),
-                source: "lhs-match:out".into(),
-                target: "lhs-where:in".into(),
+                source: "lhs-match@out".into(),
+                target: "lhs-where@in".into(),
                 properties: Default::default(),
             });
         }
@@ -2082,15 +2077,10 @@ pub mod app_rewrite {
         }
         None
     }
+    /// 🩹 Delegates to `trinity_ram::parse_port_key` (the one place the `nodeId@portId` convention is
+    /// owned) instead of hand-rolling a second splitter here.
     fn split_endpoint(endpoint: &str) -> (String, String) {
-        endpoint
-            .split_once(':')
-            .map(|(node, port)| (node.to_string(), port.to_string()))
-            .unwrap_or_else(|| (endpoint.to_string(), "in".into()))
-    }
-
-    fn port_endpoint(node_id: &str, port_id: &str) -> String {
-        format!("{node_id}:{port_id}")
+        trinity_ram::parse_port_key(endpoint).map_or_else(|| (endpoint.to_string(), "in".into()), |(n, p)| (n.to_string(), p.to_string()))
     }
 
     fn fixture_to_media_graph(fixture: &GraphFixture) -> (String, String, String) {
@@ -2133,7 +2123,7 @@ pub mod app_rewrite {
                 .iter()
                 .filter(|port| port.direction == PortDirection::In)
                 .map(|port| MediaGraphPortRecord {
-                    id: port_endpoint(&node.id, &port.id),
+                    id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
                 .collect(),
@@ -2142,7 +2132,7 @@ pub mod app_rewrite {
                 .iter()
                 .filter(|port| port.direction == PortDirection::Out)
                 .map(|port| MediaGraphPortRecord {
-                    id: port_endpoint(&node.id, &port.id),
+                    id: trinity_ram::port_key(&node.id, &port.id),
                     label: Some(port.id.clone()),
                 })
                 .collect(),
@@ -3118,7 +3108,13 @@ pub mod app_rewrite {
 }
 
 //#region 🔖Bundle
-fn register_trinity_exports() {}
+/// 🗂️ Registers this crate's two document kinds' pack↔dsl codecs so `framework/sync`'s
+/// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse them without
+/// depending on `trinity_ram`/`trinity_rewrite`'s concrete `Projection`/`Operation` types.
+fn register_trinity_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_jack::TrinityJackPlayApp>(trinity_ram::TRINITY_GRAPH_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_rewrite::TrinityRewritePlayApp>(trinity_rewrite::REWRITE_RULE_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "trinity",

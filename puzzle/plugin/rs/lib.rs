@@ -3,7 +3,7 @@
 pub mod d2 {
     //! 🧩 Puzzle 2D plugin — declarative puzzle 2d play app bundled as a hot-swappable WASM component.
 
-    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_operations, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOperation, Puzzle2dProjection, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
+    use puzzle_2d::{handle_position_on_circle, handle_position_on_rectangle, puzzle2d_document_delta_operations, puzzle_2d_lod_scale_json, puzzle_board_host, BoardHost, Point, Puzzle2dExtension, Puzzle2dOperation, Puzzle2dPlayProjection, Puzzle2dProjection, BOARD_CAMERA_ZOOM_MAX, BOARD_CAMERA_ZOOM_MIN};
     use semio_framework_plugin::{
         build_canvas_2d_scene, build_board2d_scene, create_default_layout,
         MeasureSelectItem, WindowEngagementStatus,
@@ -1618,7 +1618,7 @@ pub mod d2 {
     }
 
     impl DocumentApp for Puzzle2dPlayApp {
-        type Projection = Value;
+        type Projection = Puzzle2dPlayProjection;
         type Operation = Puzzle2dOperation;
 
         fn app_id(&self) -> &str {
@@ -1629,12 +1629,12 @@ pub mod d2 {
             PUZZLE2D_FIXTURE_SCHEMA
         }
 
-        fn initial_projection(&self) -> Value {
-            default_empty_fixture()
+        fn initial_projection(&self) -> Puzzle2dPlayProjection {
+            Puzzle2dPlayProjection(default_empty_fixture())
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
-            let before = doc.projection.clone();
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle2dOperation> {
+            let before = doc.projection.0.clone();
             let active_utility = view_state.active_utility_id.as_deref().unwrap_or(PUZZLE2D_UTILITY_SELECT).to_string();
             let mut envelope = Puzzle2dScene { fixture: before.clone(), runtime: self.runtime.clone(), active_utility: active_utility.clone() };
             // 🐢 `sync_host_fixture_content` (`parse_fixture_v1`) does a full `clear_scene()` + rebuild of
@@ -2054,9 +2054,9 @@ pub mod d2 {
             ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
-            let document_json = doc.projection.to_string();
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> UiNode {
+            let document_json = doc.projection.0.to_string();
+            let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
             let labels = puzzle2d_labels(view_state);
             match body_key {
                 PUZZLE2D_PLAY_BODY_OVERVIEW => render_canvas(&document_json, &envelope, PUZZLE2D_PANE_OVERVIEW),
@@ -2069,7 +2069,7 @@ pub mod d2 {
             }
         }
 
-        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        fn window_engagements(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let labels = puzzle2d_labels(view_state);
             // 🪟 One entry per live window INSTANCE of each pane kind — a split/extra instance of e.g. the
             // overview pane gets its own entry (built from the same pane's per-pane state) instead of being
@@ -2078,28 +2078,28 @@ pub mod d2 {
                 .iter()
                 .flat_map(|pane| {
                     window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                        let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
                         (wid, puzzle2d_engagement(&envelope, &self.host, pane, labels))
                     })
                 })
                 .collect()
         }
 
-        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let labels = puzzle2d_labels(view_state);
             PUZZLE2D_PANES
                 .iter()
                 .flat_map(|pane| {
                     window_instance_ids(view_state, pane).into_iter().map(|wid| {
-                        let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
+                        let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, Some(&wid)) };
                         (wid, puzzle2d_window_measures(pane, &envelope, labels))
                     })
                 })
                 .collect()
         }
 
-        fn tool_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
-            let envelope = Puzzle2dScene { fixture: doc.projection.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
+        fn tool_measures(&self, doc: &DocumentView<'_, Puzzle2dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+            let envelope = Puzzle2dScene { fixture: doc.projection.0.clone(), runtime: self.runtime.clone(), active_utility: puzzle2d_active_utility(view_state, view_state.window_id.as_deref()) };
             let labels = puzzle2d_labels(view_state);
             HashMap::from([(PUZZLE2D_UTILITY_FILL.to_string(), vec![puzzle2d_fill_tool_measures(&envelope, labels)])])
         }
@@ -2317,6 +2317,10 @@ pub mod d2 {
     }
 
     pub fn register_puzzle2d_exports() {
+        // 🗂️ Registers `Puzzle2dPlayProjection`'s pack<->dsl codec under its real `document_schema()`
+        // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-2d play documents
+        // without depending on this crate's concrete `Projection`/`Operation` types.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle2dPlayApp>(PUZZLE2D_FIXTURE_SCHEMA);
         semio_framework_os::register_2d_export_handlers("2d.puzzle", "puzzle2d", puzzle2d_document_json_to_svg);
         semio_framework_os::register_dwg_import_handler("2d.puzzle", puzzle2d_document_json_from_dwg);
     }
@@ -2357,41 +2361,51 @@ pub mod d2 {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             let result = app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
             assert_eq!(result.operations.len(), 1, "addNode must emit exactly one granular operation");
-            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
         }
 
         #[test]
         fn set_active_example_loads_concrete_forest_via_operations() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
-            assert!(!fixture_nodes(&app.projection().expect("projection")).is_empty());
+            assert!(!fixture_nodes(&app.projection().expect("projection").0).is_empty());
+        }
+
+        /// 📦 `Puzzle2dPlayProjection`'s pack encoding round-trips through the same `(RecordSpec,
+        /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
+        /// `serde_json::Value` bridge impls), reusing the same concrete-forest fixture the DSL-facing
+        /// tests above already construct.
+        #[test]
+        fn puzzle2d_play_projection_pack_round_trips() {
+            let app = concrete_forest_app();
+            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]
         fn select_then_delete_selection_removes_the_node() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add node");
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             app.handle_action("setSelection", Some(&json!({ "ids": [node_id] })), &ViewState::default(), &testkit::meta("local")).expect("select");
             app.handle_action("deleteSelection", None, &ViewState::default(), &testkit::meta("local")).expect("delete");
-            assert!(fixture_nodes(&app.projection().expect("projection")).is_empty());
+            assert!(fixture_nodes(&app.projection().expect("projection").0).is_empty());
         }
 
         #[test]
         fn undo_redo_round_trip_through_the_wrapper() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("addNode", Some(&json!({ "kind": "node" })), &ViewState::default(), &testkit::meta("local")).expect("add");
-            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
             app.handle_action("undo", None, &ViewState::default(), &testkit::meta("local")).expect("undo");
-            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 0);
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 0);
             app.handle_action("redo", None, &ViewState::default(), &testkit::meta("local")).expect("redo");
-            assert_eq!(fixture_nodes(&app.projection().expect("projection")).len(), 1);
+            assert_eq!(fixture_nodes(&app.projection().expect("projection").0).len(), 1);
         }
 
         #[test]
         fn camera_drag_coalesces_into_one_undo_step() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
-            let camera_x = |app: &VcsDocumentApp<Puzzle2dPlayApp>| app.projection().expect("projection").get("camera").and_then(|camera| camera.get("x")).and_then(|value| value.as_f64()).unwrap_or(f64::NAN);
+            let camera_x = |app: &VcsDocumentApp<Puzzle2dPlayApp>| app.projection().expect("projection").0.get("camera").and_then(|camera| camera.get("x")).and_then(|value| value.as_f64()).unwrap_or(f64::NAN);
             let origin_x = camera_x(&app);
             for x in [1.0, 2.0, 3.0] {
                 app.handle_action("setCamera", Some(&json!({ "camera": { "x": x, "y": 0.0, "zoom": 1.0 } })), &ViewState::default(), &testkit::meta("local")).expect("camera");
@@ -2410,10 +2424,10 @@ pub mod d2 {
         fn repeated_actions_do_not_duplicate_edges() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_NAKAGIN_ID })), &ViewState::default(), &testkit::meta("local")).expect("load nakagin");
-            let edge_count = |app: &VcsDocumentApp<Puzzle2dPlayApp>| fixture_edges(&app.projection().expect("projection")).len();
+            let edge_count = |app: &VcsDocumentApp<Puzzle2dPlayApp>| fixture_edges(&app.projection().expect("projection").0).len();
             let before = edge_count(&app);
             assert!(before > 0, "fixture must have edges for this regression test to be meaningful");
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             for _ in 0..5 {
                 app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             }
@@ -2426,7 +2440,7 @@ pub mod d2 {
         #[test]
         fn apply_board_events_select_persists_across_the_next_action() {
             let mut app = concrete_forest_app();
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             let rendered_once = serde_json::to_string(&app.render(PUZZLE2D_PLAY_BODY_OVERVIEW, None, &ViewState::default()).expect("render")).unwrap();
             assert!(rendered_once.contains(&node_id), "selection must be visible immediately after the select action");
@@ -2443,7 +2457,7 @@ pub mod d2 {
         fn apply_board_events_camera_event_commits() {
             let mut app = testkit::new_app::<Puzzle2dPlayApp>();
             app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "camera", "payload": { "x": 5.0, "y": 6.0, "zoom": 1.2 } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("camera event");
-            let camera = app.projection().expect("projection").get("camera").cloned().expect("camera field");
+            let camera = app.projection().expect("projection").0.get("camera").cloned().expect("camera field");
             assert_eq!(camera.get("x").and_then(Value::as_f64), Some(5.0));
             assert_eq!(camera.get("y").and_then(Value::as_f64), Some(6.0));
             assert_eq!(camera.get("zoom").and_then(Value::as_f64), Some(1.2));
@@ -2455,7 +2469,7 @@ pub mod d2 {
         #[test]
         fn select_action_emits_no_operations() {
             let mut app = concrete_forest_app();
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             assert!(result.operations.is_empty(), "selection must not produce document operations");
         }
@@ -2467,7 +2481,7 @@ pub mod d2 {
         fn select_action_declares_partial_ui_scope() {
             use semio_framework_core::kernel::UiDirtyScope;
             let mut app = concrete_forest_app();
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let result = app.handle_action("applyBoardEvents", Some(&json!({ "eventsJson": json!([{ "name": "select", "payload": { "ids": [node_id] } }]).to_string() })), &ViewState::default(), &testkit::meta("local")).expect("select");
             match result.ui_scope {
                 UiDirtyScope::Partial { window_bodies, panel_bodies, engagements, measures, utilities, tools, labels } => {
@@ -2583,8 +2597,8 @@ pub mod d2 {
             instance_a.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-a")).expect("pump a");
             instance_b.handle_action("commitCheckpoint", None, &ViewState::default(), &testkit::meta("actor-b")).expect("pump b");
 
-            assert_eq!(fixture_nodes(&instance_a.projection().expect("projection")).len(), 2, "instance A must contain both nodes");
-            assert_eq!(fixture_nodes(&instance_b.projection().expect("projection")).len(), 2, "instance B must contain both nodes");
+            assert_eq!(fixture_nodes(&instance_a.projection().expect("projection").0).len(), 2, "instance A must contain both nodes");
+            assert_eq!(fixture_nodes(&instance_b.projection().expect("projection").0).len(), 2, "instance B must contain both nodes");
         }
 
         #[test]
@@ -2606,7 +2620,7 @@ pub mod d2 {
             let mut receiver = testkit::new_app::<Puzzle2dPlayApp>();
             receiver.ingest_operations(&operations_json).expect("ingest once");
             receiver.ingest_operations(&operations_json).expect("ingest twice");
-            assert_eq!(fixture_nodes(&receiver.projection().expect("projection")).len(), 1, "feeding the same operation twice must not double-apply");
+            assert_eq!(fixture_nodes(&receiver.projection().expect("projection").0).len(), 1, "feeding the same operation twice must not double-apply");
         }
 
         /// 🧰 The framework-injected `setActiveUtility` View action is host-owned: switching utilities must emit no
@@ -2701,7 +2715,7 @@ pub mod d2 {
         fn view_actions_emit_no_ops_through_the_registry() {
             let mut app = registry_app();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE2D_PLAY_EXAMPLE_CONCRETE_FOREST_ID })), &ViewState::default(), &testkit::meta("local")).expect("load example");
-            let node_id = fixture_nodes(&app.projection().expect("projection"))[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
+            let node_id = fixture_nodes(&app.projection().expect("projection").0)[0].get("id").and_then(|value| value.as_str()).unwrap().to_string();
             let view_dispatches: Vec<(&str, Value)> = vec![
                 ("setSelection", json!({ "ids": [node_id.clone()] })),
                 ("selectAll", Value::Null),
@@ -2735,7 +2749,7 @@ pub mod d2 {
 pub mod d3 {
     //! 🧊 Puzzle 3D plugin — 3D puzzle assembly play app bundled as a hot-swappable WASM component.
 
-    use puzzle_3d::{puzzle3d_document_delta_operations, BrushPlacePayload, Puzzle3dOperation, Puzzle3dPrecomputeSession, Puzzle3dProjection};
+    use puzzle_3d::{puzzle3d_document_delta_operations, BrushPlacePayload, Puzzle3dOperation, Puzzle3dPlayProjection, Puzzle3dPrecomputeSession, Puzzle3dProjection};
     use semio_framework_plugin::{
         apply_world3d_projection_action, apply_world3d_sun_action, build_world_3d_scene, create_window_layout, ActionArgDef, ActionArgOption, ActionDefinition, ActionEmit, ActionKind, DocumentApp, DocumentView, MeasureSelectItem, merge_world_selection_ids, mesh_from_kind, strip_engagement_prefix, ui_inspector_groups_to_tree, ui_inspector_readonly_field, ui_inspector_stepper_field, ui_inspector_toggle_field, ui_inspector_vec3_group,
         ui_stack_vertical, ui_text, world3d_camera_projection_json, world3d_chunking_json, world3d_environment_json, world3d_mesh_id_from_url, world3d_meshes_json_from_kinds_and_urls, world3d_meshes_json_from_urls, world3d_projection_action_moves_pose, world3d_projection_measures, world3d_projection_pose, world3d_scene_extended, world3d_selection_json, world3d_sun_measures, App, ActionDescriptor, MediaClass, MediaForm, MediaType, OsMediaCapability, OsMediaFormat, PanelGroup, ResourceKindSpec,
@@ -6387,7 +6401,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
     }
 
     impl DocumentApp for Puzzle3dPlayApp {
-        type Projection = Value;
+        type Projection = Puzzle3dPlayProjection;
         type Operation = Puzzle3dOperation;
 
         fn app_id(&self) -> &str {
@@ -6398,27 +6412,27 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             PUZZLE3D_FIXTURE_SCHEMA
         }
 
-        fn initial_projection(&self) -> Value {
-            serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null))
+        fn initial_projection(&self) -> Puzzle3dPlayProjection {
+            Puzzle3dPlayProjection(serde_json::to_value(default_fixture()).unwrap_or_else(|_| serde_json::to_value(empty_fixture()).unwrap_or(Value::Null)))
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle3dOperation> {
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle3dOperation> {
             // 🗨️ Shell-only effect (no document interaction, hence no `envelope`/`before`/`after` scaffolding
             // below): opens the declared "addObject" dialog over a glass veil.
             if action == "openAddObjectDialog" {
                 return ActionEmit::effect(HostEffect::OpenDialog { dialog_id: "addObject".into(), args: None });
             }
             if action == "transformBegin" {
-                self.begin_transform_session(doc.projection);
+                self.begin_transform_session(&doc.projection.0);
                 return ActionEmit::default();
             }
             if action == "transformEnd" {
-                return self.commit_transform(doc.projection);
+                return self.commit_transform(&doc.projection.0);
             }
             if self.transform_drag_active && matches!(action, "translateSelection" | "rotateSelection" | "scaleSelection") {
-                return self.transform_drag_tick(action, args, doc.projection);
+                return self.transform_drag_tick(action, args, &doc.projection.0);
             }
-            let before = doc.projection.clone();
+            let before = doc.projection.0.clone();
             let active_utility_initial = puzzle3d_scene_active_utility(view_state, view_state.window_id.as_deref());
             // 🪟 This action targets exactly one window instance — materialize ITS options onto the scene
             // runtime before handling, and snapshot them back out (via `save_window`, at every exit below)
@@ -7210,7 +7224,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             ActionEmit { operations, coalesce_key, effects, ui_scope, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> UiNode {
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
@@ -7219,7 +7233,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             // 🪣 Additive-only: appends just the not-yet-committed fill-plan tail onto the live fixture
             // (see `puzzle3d_fixture_with_fill_display`) — safe even during a live gumball scratch drag,
             // since it never touches/replaces any already-present object (the dragged one included).
-            let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(doc.projection), &self.precompute, runtime_for_window.fill_count, self.precompute.fill_available_count());
+            let fixture = puzzle3d_fixture_with_fill_display(self.render_fixture(&doc.projection.0), &self.precompute, runtime_for_window.fill_count, self.precompute.fill_available_count());
             let envelope = Puzzle3dScene { fixture, runtime: runtime_for_window, active_utility: active_utility.clone() };
             let labels = puzzle3d_labels(view_state);
             match body_key {
@@ -7255,7 +7269,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             }
         }
 
-        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        fn window_engagements(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let labels = puzzle3d_labels(view_state);
             // 🪟 One entry per live window INSTANCE (split top/perspective panes are two instances of the
             // same kind) — each built from ITS OWN materialized options, never the shared kind entry.
@@ -7265,13 +7279,13 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                     let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
                     let mut runtime_for_window = self.runtime.clone();
                     runtime_for_window.load_window(&wid);
-                    let envelope = scene_from_projection(doc.projection, runtime_for_window, &active_utility);
+                    let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
                     (wid, puzzle3d_engagement(&envelope, labels))
                 })
                 .collect()
         }
 
-        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let labels = puzzle3d_labels(view_state);
             window_instance_ids(view_state, PUZZLE3D_PLAY_WINDOW_MAIN)
                 .into_iter()
@@ -7279,20 +7293,20 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                     let active_utility = puzzle3d_scene_active_utility(view_state, Some(&wid));
                     let mut runtime_for_window = self.runtime.clone();
                     runtime_for_window.load_window(&wid);
-                    let envelope = scene_from_projection(doc.projection, runtime_for_window, &active_utility);
+                    let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
                     (wid, puzzle3d_window_measures(&envelope, &self.precompute, labels))
                 })
                 .collect()
         }
 
-        fn tool_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        fn tool_measures(&self, doc: &DocumentView<'_, Puzzle3dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let active_utility = puzzle3d_scene_active_utility(view_state, Some(wid));
             let labels = puzzle3d_labels(view_state);
             let wid = view_state.window_id.as_deref().unwrap_or(PUZZLE3D_PLAY_WINDOW_MAIN);
             let mut runtime_for_window = self.runtime.clone();
             runtime_for_window.load_window(wid);
-            let envelope = scene_from_projection(doc.projection, runtime_for_window, &active_utility);
+            let envelope = scene_from_projection(&doc.projection.0, runtime_for_window, &active_utility);
             HashMap::from([("fill".to_string(), puzzle3d_fill_tool_measures(&envelope, &self.precompute, labels))])
         }
 
@@ -7836,6 +7850,10 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
     }
 
     pub fn register_puzzle3d_exports() {
+        // 🗂️ Registers `Puzzle3dPlayProjection`'s pack<->dsl codec under its real `document_schema()`
+        // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-3d play documents
+        // without depending on this crate's concrete `Projection`/`Operation` types.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle3dPlayApp>(PUZZLE3D_FIXTURE_SCHEMA);
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::ObjExporter));
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::GlbExporter));
         semio_framework_os::register_mesh_exporter("3d.puzzle", "puzzle", puzzle3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
@@ -7858,7 +7876,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         }
 
         fn object_count(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> usize {
-            app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+            app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
         }
 
         #[test]
@@ -7871,8 +7889,18 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn initial_projection_is_the_concrete_forest_fixture() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-            assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
+            assert_eq!(app.projection().expect("projection").0.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
             assert!(object_count(&app) > 0, "the concrete-forest default fixture ships with objects");
+        }
+
+        /// 📦 `Puzzle3dPlayProjection`'s pack encoding round-trips through the same `(RecordSpec,
+        /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
+        /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture the test
+        /// above already loads.
+        #[test]
+        fn puzzle3d_play_projection_pack_round_trips() {
+            let app = testkit::new_app::<Puzzle3dPlayApp>();
+            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]
@@ -7905,7 +7933,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         fn nakagin_example_loads_via_operations() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": PUZZLE3D_EXAMPLE_NAKAGIN })), &ViewState::default(), &testkit::meta("local")).expect("nakagin");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             assert_eq!(projection.get("schema").and_then(|value| value.as_str()), Some(PUZZLE3D_FIXTURE_SCHEMA));
             assert!(projection.get("objects").and_then(|value| value.as_array()).is_some_and(|objects| !objects.is_empty()));
         }
@@ -7922,7 +7950,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn selected_object_inspector_nests_origin_into_x_y_z_steppers() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-            let object_id = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            let object_id = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
             app.handle_action("worldSelect", Some(&json!({ "ids": [object_id], "merge": "replace" })), &ViewState::default(), &testkit::meta("local")).expect("worldSelect");
             let node = app.render(PUZZLE3D_PLAY_BODY_INSPECTOR, None, &ViewState::default()).expect("render");
             let json = serde_json::to_value(&node).unwrap();
@@ -7950,8 +7978,8 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn patch_inspector_origin_axis_sets_absolute_value_and_preserves_other_axes() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-            let object_id = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
-            let before_y = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.get(1)).and_then(|value| value.as_f64()).expect("origin.y");
+            let object_id = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            let before_y = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.get(1)).and_then(|value| value.as_f64()).expect("origin.y");
             app.handle_action(
                 "patchInspector",
                 Some(&json!({ "entity": "object", "ids": [object_id.clone()], "field": "origin.x", "value": 42.5 })),
@@ -7959,7 +7987,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 &testkit::meta("local"),
             )
             .expect("patchInspector");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let objects = projection.get("objects").and_then(|value| value.as_array()).expect("objects");
             let object = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(object_id.as_str())).expect("patched object");
             let origin = object.get("origin").and_then(|value| value.as_array()).expect("origin");
@@ -7970,11 +7998,11 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         #[test]
         fn patch_inspector_origin_axis_delta_offsets_each_selected_object_from_its_own_current_value() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
-            let id_a = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
+            let id_a = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("first object id").to_string();
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [10.0, 0.0, 0.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
-            let id_b = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("added object id").to_string();
+            let id_b = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).and_then(|objects| objects.last()).and_then(|object| object.get("id")).and_then(|value| value.as_str()).expect("added object id").to_string();
             assert_ne!(id_a, id_b, "the added object must be distinct from the first fixture object");
-            let objects = app.projection().expect("projection").get("objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
+            let objects = app.projection().expect("projection").0.get("objects").and_then(|value| value.as_array()).cloned().unwrap_or_default();
             let x_a_before = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_a.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
             let x_b_before = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_b.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
             assert_ne!(x_a_before, x_b_before, "the two objects must start at different x values for this test to prove per-object offset preservation");
@@ -7985,7 +8013,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 &testkit::meta("local"),
             )
             .expect("patchInspector");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let objects = projection.get("objects").and_then(|value| value.as_array()).expect("objects");
             let x_a_after = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_a.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
             let x_b_after = objects.iter().find(|object| object.get("id").and_then(|value| value.as_str()) == Some(id_b.as_str())).and_then(|object| object.get("origin")).and_then(|value| value.as_array()).and_then(|origin| origin.first()).and_then(|value| value.as_f64()).unwrap();
@@ -8097,7 +8125,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 
         //#region 🧭 Suggestions, select-then-open context menu, fill build progress (Round 2)
         fn vortex_full_ids(app: &VcsDocumentApp<Puzzle3dPlayApp>) -> Vec<String> {
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let mut ids = Vec::new();
             for object in projection.get("objects").and_then(Value::as_array).into_iter().flatten() {
                 let object_id = object.get("id").and_then(Value::as_str).unwrap_or_default();
@@ -8215,13 +8243,13 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
         fn context_menu_at_selects_target_volume_and_set_target_volume_flag_toggles_hidden() {
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("addTargetVolume", Some(&json!({ "origin": [1.0, 2.0, 3.0] })), &ViewState::default(), &testkit::meta("local")).expect("addTargetVolume");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let volume_id = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("id")).and_then(Value::as_str).expect("volume id").to_string();
             app.handle_action("contextMenuAt", Some(&json!({ "kind": "targetVolume", "id": volume_id })), &ViewState::default(), &testkit::meta("local")).expect("contextMenuAt");
             let menu_json = serde_json::to_string(&context_menu_of(&render_composite(&mut app))).unwrap();
             assert!(menu_json.contains("setTargetVolumeFlag"), "menu should be {menu_json}");
             app.handle_action("setTargetVolumeFlag", Some(&json!({ "id": volume_id, "flag": "hidden", "value": true })), &ViewState::default(), &testkit::meta("local")).expect("setTargetVolumeFlag");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let hidden = projection.get("targetVolumes").and_then(Value::as_array).and_then(|volumes| volumes.first()).and_then(|volume| volume.get("hidden")).and_then(Value::as_bool);
             assert_eq!(hidden, Some(true));
         }
@@ -8271,7 +8299,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             let vortex = first_vortex_full_id(&app);
             app.handle_action("openVortexSuggestions", Some(&json!({ "fullId": vortex.clone(), "x": 0.0, "y": 0.0 })), &ViewState::default(), &testkit::meta("local")).expect("openVortexSuggestions");
-            let before_count = app.projection().expect("projection").get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
+            let before_count = app.projection().expect("projection").0.get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
             // 🧹 Simulate the split-pane outside-dismiss race clearing vortex selection before accept.
             app.handle_action("setSelection", Some(&json!({ "selection": { "objectIds": [], "vortexIds": [], "attractionIds": [], "targetVolumeIds": [], "referenceIds": [] } })), &ViewState::default(), &testkit::meta("local")).expect("setSelection");
             let result = app
@@ -8282,7 +8310,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
                 "accept must not switch utility/tool: {:?}",
                 result.requested_effects,
             );
-            let after_count = app.projection().expect("projection").get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
+            let after_count = app.projection().expect("projection").0.get("objects").and_then(Value::as_array).map(|objects| objects.len()).unwrap_or(0);
             assert!(after_count > before_count, "accept with fullId must place even after selection clear ({before_count} -> {after_count})");
             let interaction = interaction_of(&render_composite(&mut app));
             assert!(interaction.get("suggestionMenu").is_none_or(|menu| menu.is_null()));
@@ -8564,7 +8592,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             assert_eq!(instance_count(&rendered_after_fill), object_count_before + available_count, "the viewport must show every materialized fill object immediately");
             let initial_fill_ids: HashSet<String> = app
                 .projection()
-                .expect("projection")
+                .expect("projection").0
                 .get("objects")
                 .and_then(Value::as_array)
                 .into_iter()
@@ -8575,7 +8603,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             // 🪪 Incidental actions re-sync the applied document into the precompute session. That used to
             // rebuild `fill.base` around the materialized objects, after which the slider could neither
             // remove them nor replan — reproduce with a hover sync before clearing.
-            let hovered_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).unwrap_or("").to_string();
+            let hovered_id = app.projection().expect("projection").0.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).unwrap_or("").to_string();
             app.handle_action("setHover", Some(&json!({ "objectId": hovered_id })), &fill_view, &testkit::meta("local")).expect("setHover after fill");
             let reduced = (available_count / 2).max(0);
             app.handle_action("setFillCount", Some(&json!({ "value": reduced })), &fill_view, &testkit::meta("local")).expect("reduce fill count after sync");
@@ -8600,7 +8628,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             assert_eq!(find_measure_slider(target_tool_measures, "puzzle3d-fill-count"), Some(available_count as f64));
             let restored_fill_ids: HashSet<String> = app
                 .projection()
-                .expect("projection")
+                .expect("projection").0
                 .get("objects")
                 .and_then(Value::as_array)
                 .into_iter()
@@ -9074,7 +9102,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let before = object_count(&app);
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object", "origin": [2.5, 3.5, 0.0] })), &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
             assert_eq!(object_count(&app), before + 1);
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let object = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).expect("added object");
             let origin = object.get("origin").and_then(Value::as_array).expect("origin array");
             assert_eq!(origin.first().and_then(Value::as_f64), Some(2.5));
@@ -9092,7 +9120,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let result = app.handle_action("addObjectKind", None, &ViewState::default(), &testkit::meta("local")).expect("addObjectKind");
             assert!(!result.operations.is_empty(), "addObjectKind is an Operation that emits operations");
             assert_eq!(object_count(&app), before + 1, "the materialized default kind adds exactly one object");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let kind = projection.get("objects").and_then(Value::as_array).and_then(|objects| objects.last()).and_then(|object| object.get("objectKind")).and_then(Value::as_str);
             assert_eq!(kind, Some("Object"), "the declared objectKind default was materialized host-side");
         }
@@ -9102,12 +9130,12 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             // 🧰 Switching utilities is the framework-injected View action: no document operations, no undo entry, no
             // re-emitted utility-switch effect (the host already applied `view_state.active_utility_id`).
             let mut app = new_app_with_registry();
-            let before = app.projection().expect("projection");
+            let before = app.projection().expect("projection").0;
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
             assert!(result.operations.is_empty(), "utility switching never emits document operations");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
-            assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
+            assert_eq!(app.projection().expect("projection").0, before, "utility switching does not mutate the document");
         }
 
         #[test]
@@ -9349,9 +9377,9 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &testkit::meta("local")).expect("add object");
-            let object_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
+            let object_id = app.projection().expect("projection").0.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
             let origin_before = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
-                app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
+                app.projection().expect("projection").0.get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
             };
             let start = origin_before(&app);
             for dx in [1.0, 2.0, 3.0] {
@@ -9370,9 +9398,9 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
             let mut app = testkit::new_app::<Puzzle3dPlayApp>();
             app.handle_action("setActiveExample", Some(&json!({ "exampleId": "" })), &ViewState::default(), &testkit::meta("local")).expect("empty");
             app.handle_action("addObjectKind", Some(&json!({ "objectKind": "Object" })), &ViewState::default(), &testkit::meta("local")).expect("add object");
-            let object_id = app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
+            let object_id = app.projection().expect("projection").0.get("objects").and_then(Value::as_array).and_then(|objects| objects.first()).and_then(|object| object.get("id")).and_then(Value::as_str).expect("object id").to_string();
             let origin_of = |app: &VcsDocumentApp<Puzzle3dPlayApp>| -> Vec<f64> {
-                app.projection().expect("projection").get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
+                app.projection().expect("projection").0.get("objects").and_then(Value::as_array).and_then(|objects| objects.iter().find(|object| object.get("id").and_then(Value::as_str) == Some(object_id.as_str()))).and_then(|object| object.get("origin")).and_then(Value::as_array).map(|values| values.iter().filter_map(Value::as_f64).collect()).unwrap_or_default()
             };
             let scratch_origin_of = |app: &mut VcsDocumentApp<Puzzle3dPlayApp>, view: &ViewState| -> Vec<f64> {
                 let rendered = serde_json::to_value(app.render(PUZZLE3D_PLAY_BODY_COMPOSITE, None, view).expect("render")).expect("json");
@@ -9408,7 +9436,7 @@ on_change: puzzle3d_action("setVortexKindWeight", Some(json!({ "kindId": vortex_
 pub mod d5 {
     //! 👯 Puzzle 5D plugin — paired 2D board + 3D world puzzle play app bundled as a hot-swappable WASM component.
 
-    use puzzle_5d::{puzzle5d_document_delta_operations, BrushPlacePayload, Puzzle5dOperation, Puzzle5dPrecomputeSession, Puzzle5dProjection};
+    use puzzle_5d::{puzzle5d_document_delta_operations, BrushPlacePayload, Puzzle5dOperation, Puzzle5dPlayProjection, Puzzle5dPrecomputeSession, Puzzle5dProjection};
     use semio_framework_os::{register_mesh_exporter, register_mesh_importer};
     use semio_framework_plugin::{
         apply_world3d_sun_action, build_board2d_scene, build_world_3d_scene, create_default_layout,
@@ -11499,7 +11527,7 @@ pub mod d5 {
     }
 
     impl DocumentApp for Puzzle5dPlayApp {
-        type Projection = Value;
+        type Projection = Puzzle5dPlayProjection;
         type Operation = Puzzle5dOperation;
 
         fn app_id(&self) -> &str {
@@ -11510,12 +11538,12 @@ pub mod d5 {
             PUZZLE5D_SCHEMA
         }
 
-        fn initial_projection(&self) -> Value {
-            serde_json::to_value(default_document()).unwrap_or(Value::Null)
+        fn initial_projection(&self) -> Puzzle5dPlayProjection {
+            Puzzle5dPlayProjection(serde_json::to_value(default_document()).unwrap_or(Value::Null))
         }
 
-        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
-            let before = doc.projection.clone();
+        fn handle_action(&mut self, action: &str, args: Option<&Value>, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> ActionEmit<Puzzle5dOperation> {
+            let before = doc.projection.0.clone();
             let active_utility_initial = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
             let mut envelope = scene_from_projection(&before, self.runtime.clone(), &active_utility_initial);
             match action {
@@ -12076,9 +12104,9 @@ pub mod d5 {
             ActionEmit { operations, coalesce_key, effects, ..Default::default() }
         }
 
-        fn render(&self, body_key: &str, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> UiNode {
+        fn render(&self, body_key: &str, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> UiNode {
             let active_utility = puzzle5d_scene_active_utility(view_state, view_state.window_id.as_deref());
-            let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
+            let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
             let labels = puzzle5d_labels(view_state);
             match body_key {
                 PUZZLE5D_PLAY_BODY_2D => build_board2d_scene(PUZZLE5D_PLAY_SURFACE_2D, PUZZLE5D_PLAY_CONTROLLER_ID, puzzle5d_board_scene(&envelope)),
@@ -12113,7 +12141,7 @@ pub mod d5 {
             }
         }
 
-        fn window_engagements(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
+        fn window_engagements(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> HashMap<String, WindowEngagement> {
             let labels = puzzle5d_labels(view_state);
             // 🪟 One entry per live window INSTANCE of each of the 2D/3D window kinds — a split/extra
             // instance gets its own entry instead of being silently absent.
@@ -12122,21 +12150,21 @@ pub mod d5 {
                 .flat_map(|window| {
                     window_instance_ids(view_state, window).into_iter().map(|wid| {
                         let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                        let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
+                        let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
                         (wid, puzzle5d_engagement(&envelope, window, labels))
                     })
                 })
                 .collect()
         }
 
-        fn window_measures(&self, doc: &DocumentView<'_, Value>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
+        fn window_measures(&self, doc: &DocumentView<'_, Puzzle5dPlayProjection>, view_state: &ViewState) -> HashMap<String, Vec<WindowMeasure>> {
             let labels = puzzle5d_labels(view_state);
             PUZZLE5D_PLAY_WINDOWS
                 .iter()
                 .flat_map(|window| {
                     window_instance_ids(view_state, window).into_iter().map(|wid| {
                         let active_utility = puzzle5d_scene_active_utility(view_state, Some(&wid));
-                        let envelope = scene_from_projection(doc.projection, self.runtime.clone(), &active_utility);
+                        let envelope = scene_from_projection(&doc.projection.0, self.runtime.clone(), &active_utility);
                         (wid, puzzle5d_window_measures(window, &envelope, &self.precompute, labels))
                     })
                 })
@@ -12379,6 +12407,10 @@ pub mod d5 {
     }
 
     pub fn register_puzzle5d_exports() {
+        // 🗂️ Registers `Puzzle5dPlayProjection`'s pack<->dsl codec under its real `document_schema()`
+        // string so `framework/sync`'s `FolderEndpoint::Pack` can print/parse puzzle-5d play documents
+        // without depending on this crate's concrete `Projection`/`Operation` types.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Puzzle5dPlayApp>(PUZZLE5D_SCHEMA);
         register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::ObjExporter));
         register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::GlbExporter));
         register_mesh_exporter("5d.puzzle", "puzzle5d", |_| Ok(semio_framework_plugin::mesh_from_kind("box")), Box::new(semio_framework_plugin::StlExporter));
@@ -12401,7 +12433,7 @@ pub mod d5 {
         }
 
         fn part_count(app: &VcsDocumentApp<Puzzle5dPlayApp>) -> usize {
-            app.projection().expect("projection").get("parts").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
+            app.projection().expect("projection").0.get("parts").and_then(|value| value.as_array()).map(Vec::len).unwrap_or(0)
         }
 
         #[test]
@@ -12416,8 +12448,18 @@ pub mod d5 {
         #[test]
         fn initial_projection_is_the_concrete_forest_document() {
             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-            assert_eq!(app.projection().expect("projection").get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
+            assert_eq!(app.projection().expect("projection").0.get("schema").and_then(|value| value.as_str()), Some(PUZZLE5D_SCHEMA));
             assert!(part_count(&app) > 0, "the concrete-forest default document ships with parts");
+        }
+
+        /// 📦 `Puzzle5dPlayProjection`'s pack encoding round-trips through the same `(RecordSpec,
+        /// RecordValue)` pair its `parse_dsl`/`print_dsl` do (both delegate to the underlying
+        /// `serde_json::Value` bridge impls), reusing the default concrete-forest fixture the test
+        /// above already loads.
+        #[test]
+        fn puzzle5d_play_projection_pack_round_trips() {
+            let app = testkit::new_app::<Puzzle5dPlayApp>();
+            vcs::test_support::assert_dsl_pack_equivalence(&app.projection().expect("projection"));
         }
 
         #[test]
@@ -12488,7 +12530,7 @@ pub mod d5 {
             let result = app.handle_action("addPartKind", None, &ViewState::default(), &testkit::meta("local")).expect("addPartKind");
             assert!(!result.operations.is_empty(), "addPartKind is an Operation that emits operations");
             assert_eq!(part_count(&app), before + 1, "the materialized default kind adds exactly one part");
-            let projection = app.projection().expect("projection");
+            let projection = app.projection().expect("projection").0;
             let kind = projection.get("parts").and_then(Value::as_array).and_then(|parts| parts.last()).and_then(|part| part.get("partKind")).and_then(Value::as_str);
             assert_eq!(kind, Some("Part"), "the declared partKind default was materialized host-side");
         }
@@ -12497,12 +12539,12 @@ pub mod d5 {
         fn set_active_utility_emits_no_ops_and_no_history_entry() {
             // 🧰 Switching utilities is the framework View action: no document operations, no undo entry, no re-emitted effect.
             let mut app = new_app_with_registry();
-            let before = app.projection().expect("projection");
+            let before = app.projection().expect("projection").0;
             let brush_view = ViewState { active_utility_id: Some("brush".into()), ..ViewState::default() };
             let result = app.handle_action(SET_ACTIVE_UTILITY_ACTION_ID, Some(&json!({ "utilityId": "brush" })), &brush_view, &testkit::meta("local")).expect("switch utility");
             assert!(result.operations.is_empty(), "utility switching never emits document operations");
             assert!(result.requested_effects.is_empty(), "a user utility switch does not re-emit SetActiveUtility");
-            assert_eq!(app.projection().expect("projection"), before, "utility switching does not mutate the document");
+            assert_eq!(app.projection().expect("projection").0, before, "utility switching does not mutate the document");
         }
 
         #[test]
@@ -12570,9 +12612,9 @@ pub mod d5 {
         fn gumball_translate_drag_coalesces_into_one_edit() {
             // 🌀 Coalescing regression: three translate ticks with the same key are ONE undoable edit.
             let mut app = testkit::new_app::<Puzzle5dPlayApp>();
-            let part_id = app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("part id").to_string();
+            let part_id = app.projection().expect("projection").0.get("parts").and_then(Value::as_array).and_then(|parts| parts.first()).and_then(|part| part.get("id")).and_then(Value::as_str).expect("part id").to_string();
             let origin_x = |app: &VcsDocumentApp<Puzzle5dPlayApp>| -> f64 {
-                app.projection().expect("projection").get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).and_then(|part| part.pointer("/3d/origin/0")).and_then(Value::as_f64).unwrap_or(0.0)
+                app.projection().expect("projection").0.get("parts").and_then(Value::as_array).and_then(|parts| parts.iter().find(|part| part.get("id").and_then(Value::as_str) == Some(part_id.as_str()))).and_then(|part| part.pointer("/3d/origin/0")).and_then(Value::as_f64).unwrap_or(0.0)
             };
             let start = origin_x(&app);
             let move_view = ViewState { active_utility_id: Some("move".into()), ..ViewState::default() };

@@ -1405,11 +1405,13 @@ mod tests {
     #[test]
     fn empty_protocol_projection_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&empty_protocol_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_protocol_projection());
     }
 
     #[test]
     fn sample_spec_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&sample_spec());
+        vcs::test_support::assert_dsl_pack_equivalence(&sample_spec());
     }
 
     #[test]
@@ -1474,6 +1476,7 @@ mod tests {
             .expect("add block");
         store.dispatch(DocumentVcsCommand::Apply { operations: vec![ProtocolOperation::UpdateProtocol { title: Some("Recipe".into()) }], description: None }).expect("update title");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

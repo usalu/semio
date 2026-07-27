@@ -1498,13 +1498,18 @@ mod tests {
     #[test]
     fn fem3d_dsl_round_trips_fixture_documents() {
         vcs::test_support::assert_dsl_round_trip(&empty_fem3d_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_fem3d_projection());
         let (cantilever, ..) = cantilever_fixture();
         vcs::test_support::assert_dsl_round_trip(&cantilever);
+        vcs::test_support::assert_dsl_pack_equivalence(&cantilever);
         vcs::test_support::assert_dsl_round_trip(&truss_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&truss_fixture());
         vcs::test_support::assert_dsl_round_trip(&solid_slab_doc());
+        vcs::test_support::assert_dsl_pack_equivalence(&solid_slab_doc());
         let mut with_combination = cantilever;
         with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: BTreeMap::from([("point".into(), 1.35)]) });
         vcs::test_support::assert_dsl_round_trip(&with_combination);
+        vcs::test_support::assert_dsl_pack_equivalence(&with_combination);
     }
 
     #[test]
@@ -1569,6 +1574,7 @@ mod tests {
         let (cantilever, ..) = cantilever_fixture();
         store.dispatch(DocumentVcsCommand::Apply { operations: vec![Fem3dOperation::SetDocument { document: cantilever }], description: None }).expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslAndOpText
 

@@ -1,0 +1,103 @@
+WAVE 2 — family: draw
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+DrawDocument (draw/rs/lib.rs) via DrawPlayApp (draw/plugin/rs/lib.rs).
+  App type:  DrawPlayApp
+  Schema:    DRAW_DOCUMENT_SCHEMA = "draw.document" (draw/rs/lib.rs, read from
+             DrawPlayApp::document_schema() -> DRAW_DOCUMENT_SCHEMA, draw/plugin/rs/lib.rs:1626-1628)
+  Codec registration: draw/plugin/rs/lib.rs, register_draw_exports() (the existing native/setup fn
+    wired as `setup: register_draw_exports` in the `semio_framework_plugin::semio_plugin!` manifest
+    block) now opens with:
+      semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
+
+2. TEST-LAW CALLS ADDED (draw/rs/lib.rs, #[cfg(test)] mod tests)
+--------------------------------------------------------------------------------
+- dsl_round_trips_document_without_assets_or_artboard: added
+  vcs::test_support::assert_dsl_pack_equivalence(&doc) next to the existing assert_dsl_round_trip.
+  PASSES.
+- dsl_round_trips_semio_example_fixture: added
+  vcs::test_support::assert_dsl_pack_equivalence(&doc) next to the existing assert_dsl_round_trip
+  (fixture: draw/example/semio.draw via include_str!, unchanged). PASSES.
+- document_text_round_trips_a_store_with_an_applied_operation: added
+  vcs::test_support::assert_document_pack_round_trip(&store) next to the existing
+  assert_document_text_round_trip. PASSES.
+- dsl_round_trips_representative_document: assert_dsl_pack_equivalence was DELIBERATELY NOT added
+  here — see §4 blocker. assert_dsl_round_trip (pre-existing) still passes untouched.
+
+3. FIXTURES
+--------------------------------------------------------------------------------
+None converted — draw/example/semio.draw stays as-is per the family note (no JSON fixtures listed
+for this family).
+
+4. BLOCKER FOUND — OUT OF SCOPE, NEEDS A pack/** FIX (root-caused, not just reproduced)
+--------------------------------------------------------------------------------
+`vcs::test_support::assert_dsl_pack_equivalence(&representative_draw_document())` fails:
+
+    pack decode failed: schema error: expected a 4-item Tuple, found List([Float(1.0), Float(0.0),
+    Float(0.0), Float(1.0)]) at 1:1
+
+Root cause (confirmed via 3 isolation probes — stroke-only doc: pack-OK; solid-fill-only doc:
+pack-OK; single LinearGradient-with-stops doc: FAILS — isolating it to the `#[dsl(table)]` column
+path, not plain scalar `[f64; N]` fields):
+
+`pack/value/rs/lib.rs`'s `encode_table`/`decode_table_soa` pair (the `Shape::Table` SoA codec) is
+asymmetric in the ELEM_FALLBACK per-column branch:
+  - encode_table's fallback branch (~line 1022-1033) calls
+    `encode_value(ctx, Some(&field.shape), v, depth + 1, out)` — shape IS passed.
+  - decode_table_soa's fallback branch (~line 1112-1119) calls
+    `decode_value(reader, None, ctx, depth + 1)` — shape is dropped (`None`).
+
+Any `#[dsl(table)]` column whose row type has a fixed-size-array field (`Shape::Tuple(_, Some(N))`,
+homogeneous f64 elements) hits `TAG_PACKED_F64 => decode_packed_f64_body(reader,
+is_tuple_shape(shape))` (line 746) with `shape == None`, so `is_tuple_shape` is false and the value
+reconstructs as `FieldValue::List` instead of `FieldValue::Tuple` — divergent from what encode wrote
+and from what the RecordSpec (`Shape::Tuple(_, Some(4))`) requires on `__dsl_from_record`, hence the
+"expected a 4-item Tuple, found List" schema error.
+
+draw's trigger: `FillStyle::LinearGradient`/`RadialGradient`'s `#[dsl(table)] stops: Vec<GradientStop>`
+(draw/rs/lib.rs), where `GradientStop.color: [f64; 4]`. This is very likely NOT draw-specific — any
+technology with a `#[dsl(table)]` Vec whose row struct has a plain (non-Vec, non-positional) fixed-size
+array field will hit the identical bug the first time `assert_dsl_pack_equivalence`/
+`assert_pack_round_trip` actually exercises that combination.
+
+Suggested one-line fix (NOT applied — pack/** is outside this family's allowed directories):
+  decode_table_soa's `_` branch, change
+    let v = decode_value(reader, None, ctx, depth + 1)?;
+  to
+    let v = decode_value(reader, Some(&field.shape), ctx, depth + 1)?;
+  (mirrors encode_table's matching branch exactly; `field` is already in scope as the outer loop's
+  `&FieldSpec`, same one encode_table iterates).
+
+I did NOT touch pack/**, vcs/**, dsl/**, or framework/** to fix this, per this family's scope
+restriction. Recommend a targeted pack/value/rs/lib.rs hotfix (in whatever wave/session owns pack/**)
+followed by re-adding `assert_dsl_pack_equivalence(&representative_draw_document())` to
+dsl_round_trips_representative_document in draw/rs/lib.rs (currently has an inline comment at that
+exact spot documenting this and pointing back to this file).
+
+5. PACK-COMPLETENESS LINT ALLOWLIST
+--------------------------------------------------------------------------------
+`draw/rs/lib.rs` is in `POLICY_PACK_COMPLETENESS_ALLOWLIST` (root script.ts) and NOW calls both
+`assert_dsl_pack_equivalence(` and `assert_document_pack_round_trip(` at least once each (see §2), so
+wave 3 can remove this line from the allowlist:
+  draw/rs/lib.rs
+
+6. FINAL cargo test STATUS
+--------------------------------------------------------------------------------
+`cargo test -p draw`: 49 passed, 0 failed. GREEN.
+`cargo test -p draw-plugin`: 15 passed, 8 failed — ALL 8 failures panic identically at
+  ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1380 "invalid catalog icon name"
+  (an `IconName::from_str` lookup miss in the generated icon catalog, e.g. for icon ids like
+  "pen-tool"/"scan-line"/"combine" used by draw's own panels). CONFIRMED pre-existing / unrelated to
+  this ticket's changes: reproduced the identical failure with my
+  `register_document_codec_for_app` call temporarily reverted, and `git status` shows
+  `ui/wgpu/rs/lib.rs` (and other ui/**/ui.css/tokens files) modified/staged by a concurrent session
+  at the start of this task — matches the repo's known "concurrent cargo workspace churn" pattern.
+  `ui/**` is outside every wave-2 family's allowed directories; not fixed here.
+
+Files touched (all under draw/**, plus this ticket's .txt scratch note):
+  draw/rs/lib.rs        — 2 assert_dsl_pack_equivalence calls, 1 assert_document_pack_round_trip
+                           call, 1 explanatory comment block (no code removed).
+  draw/plugin/rs/lib.rs — register_draw_exports() now calls
+                           register_document_codec_for_app::<DrawPlayApp>(DRAW_DOCUMENT_SCHEMA) first.

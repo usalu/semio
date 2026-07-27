@@ -1,0 +1,101 @@
+WAVE 2 — family: layout
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+- LayoutDocument (layout/rs/lib.rs, `mod document`)
+  App type: LayoutPlayApp (layout/plugin/rs/lib.rs)
+  Schema string used: LAYOUT_FIXTURE_SCHEMA = "layout.fixture" (LayoutDocument::document_schema()'s
+    real return value, read directly from `impl DocumentApp for LayoutPlayApp`).
+  Codec registration added in `register_layout_exports()` (the plugin's existing native `setup:`
+    hook wired into `semio_framework_plugin::semio_plugin! { setup: register_layout_exports, ... }`):
+      semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<LayoutPlayApp>(LAYOUT_FIXTURE_SCHEMA);
+    Pattern copied verbatim in shape from draw/plugin/rs/lib.rs's `register_draw_exports` (already
+    landed by a concurrent wave-2 session) since layout has an identical `register_<name>_exports`
+    native setup fn.
+
+2. FIXTURES CONVERTED
+--------------------------------------------------------------------------------
+None. Family note said layout/example/sample.layout stays as-is — untouched.
+
+3. TEST-LAW CALLS ADDED (layout/rs/lib.rs, `mod dsl::tests`)
+--------------------------------------------------------------------------------
+- `dsl_round_trips_sample_fixture`: added `test_support::assert_dsl_pack_equivalence(&doc)` beside
+  the existing `assert_dsl_round_trip(&doc)`.
+- `dsl_round_trips_minimal_document_with_character_style`: same sibling addition.
+- `dsl_round_trips_overrides_frame_flags_and_absent_print_target`: same sibling addition.
+- `document_text_round_trips_a_store_with_applied_operations`: added
+  `test_support::assert_document_pack_round_trip(&store)` beside the existing
+  `assert_document_text_round_trip(&store)`.
+
+4. PACK-COMPLETENESS ALLOWLIST
+--------------------------------------------------------------------------------
+`layout/rs/lib.rs` now calls `assert_dsl_pack_equivalence`/`assert_document_pack_round_trip` beside
+every existing `assert_dsl_round_trip`/`assert_document_text_round_trip` call site for its one
+document kind (LayoutDocument). Wave 3 can remove this line from root script.ts's
+`POLICY_PACK_COMPLETENESS_ALLOWLIST`:
+    layout/rs/lib.rs
+(NOTE: cargo test is NOT green for this package — see §5 below — but the lint's own definition, per
+wave1's report, is purely a static "does this call exist" check, not a "does the test pass" check;
+confirm that reading before removing the allowlist entry.)
+
+5. CARGO TEST STATUS — NOT FULLY GREEN, BLOCKED ON A CONFIRMED UPSTREAM PACK BUG
+--------------------------------------------------------------------------------
+`cargo test -p layout_rs`: 34 passed, 2 FAILED (both newly-added-assertion failures, not pre-existing):
+  - dsl::tests::dsl_round_trips_sample_fixture
+  - dsl::tests::document_text_round_trips_a_store_with_applied_operations
+
+Both fail identically:
+  "pack decode failed: schema error: missing field 'character-style-id' at 1:1"
+
+ROOT CAUSE (isolated and confirmed, not guessed): `TextStyleRun.character_style_id: Option<String>`
+is `None` in the real sample fixture's one story style-run (`layout/example/sample.layout` line 85:
+`[ start=0 end=120 paragraph-style-id=paragraph.body ]` — `character-style-id` simply omitted, which
+is valid, working DSL-text syntax for "None"). `TextStyleRun` is not itself `#[dsl(table)]`; it only
+appears as `TextStory.style_runs: Vec<TextStyleRun>`, which itself is a LIST-typed column *inside*
+`TextStory`'s own `#[dsl(table)] pub stories: Vec<TextStory>` row (visible in the fixture's table
+header: `stories [id:TEXT content:TEXT style-runs:LIST] { ... }`).
+
+Isolated via a temporary diagnostic test (added, verified, then removed — not left in the tree):
+setting `doc.stories[0].style_runs[0].character_style_id = Some("char.emph".into())` on the exact
+same sample-fixture-derived document makes `assert_dsl_pack_equivalence` PASS. So: DSL-text round trip
+of a `None` optional field nested inside a list-of-records table column works fine (pre-existing,
+unaffected by wave 1/2); the PACK binary decode path does not — it fails to reconstruct a
+`FieldValue::Absent` entry for that field key when decoding this specific
+"list-of-record column nested inside a table row" shape, so `dsl_derive`'s generated
+`record.get(#id).ok_or_else(|| missing field ...)` (dsl/derive/rs/lib.rs ~line 444) finds no map entry
+at all instead of an `Absent` one.
+
+This is a genuine bug in the shared `pack`/`dsl` stack's handling of optional fields inside nested
+list-of-record table columns, not something fixable inside `layout/**` without either (a) changing
+`TextStyleRun`/`TextStory`'s `#[dsl(...)]` shape (which would change the wire format and risk breaking
+`layout/example/sample.layout`'s existing text, explicitly out of scope — "fixture stays as-is"), or
+(b) touching `dsl/**`/`pack/**` (explicitly forbidden for this family). Left as-is, correctly reported
+here for wave 3 / a follow-up ticket against `pack/rs` (or wherever `decode_document` reconstructs
+`RecordValue` from binary for `FieldKind::Statements`/list-of-record shapes) rather than silently
+weakened or reverted.
+
+`cargo test -p layout-plugin`: 35 passed, 4 FAILED — CONFIRMED PRE-EXISTING AND UNRELATED to this
+ticket: all four panic at `ui/asset/icon/generated/icon_name.rs:1380` with "invalid catalog icon
+name", triggered by `LAYOUT_CATALOGUE_KINDS`'s `("text", "type")` entry — `"type"` is not a valid
+`IconName` in the current generated icon catalog (grep-confirmed: no `"type"` entry exists in
+`ui/asset/icon/generated/icon_name.rs`, though `"square"`/`"image"`/`"file"`/`"layers"` all do). This
+predates and is unrelated to pack/codec work — none of the 4 failing tests
+(`catalogue_lists_frame_kinds`, `catalogue_items_are_draggable`,
+`layout_labels_resolve_native_english_by_default`, `layout_labels_translate_document_tree_in_german`)
+touch DSL/pack/codec code paths at all; they fail purely on icon-catalog lookup. Not touched — out of
+scope for this ticket and outside `layout/**`'s icon-catalog ownership boundary either way. Flagged
+here only for the record, not fixed.
+
+6. FILES TOUCHED
+--------------------------------------------------------------------------------
+- layout/plugin/rs/lib.rs — added `register_document_codec_for_app::<LayoutPlayApp>(...)` call in
+  `register_layout_exports()`.
+- layout/rs/lib.rs — added 4 sibling test-law assertions (see §3). No fixture, no schema, no
+  production code changed.
+
+7. NOT COMPLETED / BLOCKED
+--------------------------------------------------------------------------------
+`cargo test -p layout_rs` is not green: 2 failures, both traced to the confirmed upstream pack-codec
+bug in §5 (list-of-record table columns + optional inner field = None). Everything else in scope
+(codec registration, all 4 test-law call sites, `cargo check`) is done and correct.

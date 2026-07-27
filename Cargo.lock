@@ -11444,6 +11444,7 @@ dependencies = [
  "dsl",
  "dsl_core",
  "js-sys",
+ "pack",
  "rusqlite",
  "semio-framework-core",
  "semio-framework-hash",

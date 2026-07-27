@@ -1532,6 +1532,74 @@ const POLICY_JSON_FIXTURE_ALLOWLIST = new Set<string>([]);
 const POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST = ["coda/"];
 
 /**
+ * 🎫 pack/ binary-document-layer rollout lock step (`.repo/🎫/26/07/27/
+ * PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS`): every `*.rs` file below that already calls
+ * `assert_dsl_round_trip(`/`assert_document_text_round_trip(` but does not yet ALSO call
+ * `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` on the same fixtures — seeded at
+ * wave 1 with every file that fails the check today (wave 0 only built the `pack` crate family itself;
+ * wave 1 only wired `vcs`/`dsl_derive`/`framework`, proving the mechanism on `vcs/rs/lib.rs`'s own
+ * `DemoProjection` fixture, which is why `vcs/rs/lib.rs` is NOT in this list). Wave 2's per-app-family
+ * agents add the pack-equivalence assertions beside each technology's existing DSL round-trip tests and
+ * remove that file from this list; wave 3 verifies it has shrunk to empty.
+ */
+const POLICY_PACK_COMPLETENESS_ALLOWLIST = new Set<string>([
+  "animate/present/rs/lib.rs",
+  "architect/program/rs/lib.rs",
+  "cad/rs/lib.rs",
+  "compose/client/lib/rs/lib.rs",
+  "draw/rs/lib.rs",
+  "dsl/rs/lib.rs",
+  "fem/2d/rs/lib.rs",
+  "fem/3d/rs/lib.rs",
+  "flow/core/rs/lib.rs",
+  "forms/rs/lib.rs",
+  "framework/product/os/core/rs/lib.rs",
+  "gis/plugin/rs/lib.rs",
+  "imperative/core/rs/lib.rs",
+  "infinite/board/port/directed/dag/rs/lib.rs",
+  "layout/rs/lib.rs",
+  "lowpoly/core/rs/lib.rs",
+  "mathematical/plugin/rs/lib.rs",
+  "norm/core/rs/lib.rs",
+  "norm/din/4108/rs/lib.rs",
+  "norm/din/en/16798/rs/lib.rs",
+  "norm/din/v/18599/rs/lib.rs",
+  "norm/en/1990/rs/lib.rs",
+  "norm/en/1991/rs/lib.rs",
+  "norm/en/1992/rs/lib.rs",
+  "norm/en/1993/rs/lib.rs",
+  "norm/en/1994/rs/lib.rs",
+  "norm/en/1995/rs/lib.rs",
+  "norm/en/1996/rs/lib.rs",
+  "norm/en/1997/rs/lib.rs",
+  "norm/en/1998/rs/lib.rs",
+  "norm/en/1999/rs/lib.rs",
+  "norm/iso/16757/rs/lib.rs",
+  "norm/vdi/3805/rs/lib.rs",
+  "note/plugin/rs/lib.rs",
+  "procedural/2d/rs/lib.rs",
+  "procedural/3d/rs/lib.rs",
+  "process/3d/rs/lib.rs",
+  "protocol/module/procedural/rs/lib.rs",
+  "protocol/rs/lib.rs",
+  "puzzle/2d/rs/lib.rs",
+  "puzzle/3d/rs/lib.rs",
+  "puzzle/5d/rs/lib.rs",
+  "raster/plugin/rs/lib.rs",
+  "reasoning/mindmap/rs/lib.rs",
+  "remodel/rs/lib.rs",
+  "s/plugin/rs/lib.rs",
+  "s/rs/lib.rs",
+  "sequence/core/rs/lib.rs",
+  "shooting/rs/lib.rs",
+  "sourcing/curate/rs/lib.rs",
+  "trinity/ram/rs/lib.rs",
+  "trinity/rewrite/engine/rs/lib.rs",
+  "vcs/plugin/rs/lib.rs",
+  "writer/rs/lib.rs",
+]);
+
+/**
  * 🎫 dsl/ derive-engine migration lock step: known generic bridges whose `DocumentDsl`/`OpText` coverage
  * cannot be seen as a `#[derive(dsl::Dsl...)]` attribute directly on the type (a blanket/generic impl
  * elsewhere covers them) — accepted as DSL-complete by `policyDslCompletenessBreaches` without a
@@ -2187,6 +2255,91 @@ function policyDslCompletenessBreaches(repoRoot: string): BreachRecord[] {
 }
 //#endregion 🔧PolicyRuleDslCompleteness
 
+//#region 🔧PolicyRulePackCompleteness
+/**
+ * 📏pack/ rollout lock-step rule: every `*.rs` file that calls `assert_dsl_round_trip(`/
+ * `assert_document_text_round_trip(` must ALSO call `assert_dsl_pack_equivalence(`/
+ * `assert_document_pack_round_trip(` somewhere in the same file — dsl and pack are two projections of
+ * the same value model (see `vcs::DocumentPack`'s LAW doc comment), so a technology proving its DSL
+ * round trip without also proving its pack round trip is an incomplete migration. A documented
+ * allowlist (`POLICY_PACK_COMPLETENESS_ALLOWLIST`) tracks not-yet-converted files exactly like
+ * `POLICY_JSON_FIXTURE_ALLOWLIST` does for the dsl/ migration — remove an entry once that file adds the
+ * pack-equivalence call (see `vcs/rs/lib.rs`'s own `demo_dsl_pack_equivalence`/
+ * `document_text_round_trips_after_apply_and_checkpoint` tests for the pattern).
+ */
+function policyPackCompletenessBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyAllRustFiles(repoRoot)) {
+    if (POLICY_PACK_COMPLETENESS_ALLOWLIST.has(relPath)) continue;
+    const content = readFileSync(join(repoRoot, relPath), "utf8");
+    const hasDslCheck = content.includes("assert_dsl_round_trip(") || content.includes("assert_document_text_round_trip(");
+    if (!hasDslCheck) continue;
+    const hasPackCheck = content.includes("assert_dsl_pack_equivalence(") || content.includes("assert_document_pack_round_trip(");
+    if (hasPackCheck) continue;
+    breaches.push({
+      id: `pack-completeness-${relPath}`,
+      summary: `"${relPath}" calls assert_dsl_round_trip/assert_document_text_round_trip but never assert_dsl_pack_equivalence/assert_document_pack_round_trip`,
+      kind: "pack-migration/completeness",
+      scope: relPath,
+      priority: "high",
+      reason: "Every DSL round-trip test must have a pack-round-trip sibling on the same fixture(s), at the same test level — dsl and pack are two projections of the same (RecordSpec, RecordValue) value model, never two independently-maintained sources of truth.",
+      solution: `Add an assert_dsl_pack_equivalence(...)/assert_document_pack_round_trip(...) call beside ${relPath}'s existing DSL round-trip test(s), or if this technology hasn't adopted pack yet, add "${relPath}" to POLICY_PACK_COMPLETENESS_ALLOWLIST citing the follow-up ticket.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRulePackCompleteness
+
+//#region 🔧PolicyRuleNoPackFiles
+/** 🔎Repo-wide `*.pack` file paths (repo-relative), same walker + `POLICY_SKIP_DIRS` as `policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles`. */
+function policyDiscoverPackFiles(repoRoot: string): string[] {
+  const found: string[] = [];
+  const walk = (relDir: string): void => {
+    const abs = join(repoRoot, relDir);
+    let entries: ReturnType<typeof readdirSync>;
+    try {
+      entries = readdirSync(abs, { withFileTypes: true });
+    } catch {
+      return;
+    }
+    for (const ent of entries) {
+      const childRel = relDir ? `${relDir}/${ent.name}` : ent.name;
+      if (ent.isDirectory()) {
+        if (POLICY_SKIP_DIRS.has(ent.name)) continue;
+        walk(childRel);
+        continue;
+      }
+      if (ent.name.endsWith(".pack")) found.push(childRel);
+    }
+  };
+  walk("");
+  return found.sort();
+}
+
+/**
+ * 📏pack/ rollout rule: no `*.pack` binary file may ever be committed. Pack is authoritative-but-
+ * regeneratable local storage + export/import (`FolderTextStorage`/`FolderSqliteStorage`'s pack
+ * columns/files, both dev-disposable), never a checked-in artifact — examples stay committed DSL text
+ * so diffs and golden hashes stay human-legible (golden fixtures are text blake3 hashes, not binary
+ * blobs). `target/` and other build-artifact dirs are already excluded via `POLICY_SKIP_DIRS`.
+ */
+function policyNoPackFilesBreaches(repoRoot: string): BreachRecord[] {
+  const breaches: BreachRecord[] = [];
+  for (const relPath of policyDiscoverPackFiles(repoRoot)) {
+    breaches.push({
+      id: `no-pack-file-${relPath}`,
+      summary: `"${relPath}" is a committed *.pack binary file — pack is dev-disposable and must never be committed`,
+      kind: "pack-migration/no-pack-file",
+      scope: relPath,
+      priority: "high",
+      reason: "pack's disk role is regeneratable local storage + export/import, not a committed artifact; committing binary .pack blobs would also break the text-diffability the DSL-mirror/golden-hash design relies on.",
+      solution: `Delete ${relPath} from the repo (git rm) and rely on its DSL-text mirror / regenerate it via DocumentPack::encode_pack.`,
+    });
+  }
+  return breaches;
+}
+//#endregion 🔧PolicyRuleNoPackFiles
+
 //#region 🔖PolicyExport
 /** ⚖️Runs every Wave 4 rule over every discovered `…/plugin/rs` crate; `framework/plugin/rs` is exempted from the SDK-mechanism rules (it *is* the SDK). */
 export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency", (_l: TechnologyLinter): BreachRecord[] => {
@@ -2216,6 +2369,8 @@ export const policy = defineLint("@semio-tech/workspace-app-plugin-consistency",
   breaches.push(...policyJsonFixtureBreaches(repoRoot));
   breaches.push(...policyOpsGrammarBreaches(repoRoot));
   breaches.push(...policyDslCompletenessBreaches(repoRoot));
+  breaches.push(...policyPackCompletenessBreaches(repoRoot));
+  breaches.push(...policyNoPackFilesBreaches(repoRoot));
   return breaches;
 });
 //#endregion 🔖PolicyExport

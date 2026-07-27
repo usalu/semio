@@ -149,7 +149,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { useHotkeys } from "react-hotkeys-hook";
 import { initReactI18next, useTranslation } from "react-i18next";
 import { Link, useNavigate } from "react-router";
-import { twMerge } from "tailwind-merge";
+import { extendTailwindMerge } from "tailwind-merge";
 // #endregion 🔌Adapters
 
 // #region 🔌Ports
@@ -674,11 +674,23 @@ export type { ThreeEvent };
 // Generic utility and type definitions that make @semio-tech/ui-react self-contained.
 // These MUST NOT depend on any external compose package.
 
+/** @emoji 🎨 `ui-surface`/`ui-glass`/`ui-veil` are the only per-level fills — extending Tailwind's
+ * built-in `bg-color` group makes them mutually exclusive with each other AND with every `bg-*`
+ * utility (same group ⇒ last-in-`cn()` wins, both directions), so a fill composed after
+ * `bg-transparent` genuinely paints instead of losing silently to CSS declaration-count ordering. */
+const twMergeUi = extendTailwindMerge({
+  extend: {
+    classGroups: {
+      "bg-color": ["ui-surface", "ui-glass", "ui-veil"],
+    },
+  },
+});
+
 /**
  * Merges CSS class names using Tailwind merge.
  **/
 export function cn(...inputs: ClassValue[]) {
-  return twMerge(clsx(inputs));
+  return twMergeUi(clsx(inputs));
 }
 
 // #region 🔖SelectionMarquee
@@ -6925,44 +6937,46 @@ export const TutorialBar: React.FC<TutorialBarProps> = ({
   const addChapterLabel = useLabel("tutorial.addChapter");
 
   return (
-    <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
-      <div className="p-single flex gap-single items-center min-w-0 h-full">
-        <Button id="ui.tutorial.play" icon={playing ? "pause" : "play"} text={playing ? pauseLabel : playLabel} onClick={onPlayPause} />
-        <Button id="ui.tutorial.stop" icon="square" text={stopLabel} onClick={onStop} />
-        <span id="ui.tutorial.time" data-slot="tutorial-time" className="shrink-0 whitespace-nowrap px-single text-xs tabular-nums text-muted-foreground">
-          {formatTutorialTime(timeMs)} / {formatTutorialTime(durationMs)}
-        </span>
-        <div className="relative min-w-0 flex-1 px-single">
-          <Slider id="ui.tutorial.scrubber" min={0} max={Math.max(durationMs, 1)} value={[timeMs]} onValueChange={(values) => onSeek(values[0] ?? 0)} showValue={false} />
-          {chapters.map((chapter) => (
-            <button
-              key={chapter.id}
-              id={`ui.tutorial.chapter.${chapter.id}`}
-              type="button"
-              data-slot="tutorial-chapter-tick"
-              title={chapter.title}
-              className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
-              style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
-              onClick={() => onSeek(chapter.atMs)}
-            />
-          ))}
+    <nav id="ui.tutorial.bar" data-slot="tutorial-bar" data-level="base" data-ui-reveal-region="tutorial-bar" data-elevation-root="" className={cn("relative h-large z-navbar border-t border-border", bgClass)}>
+      <SurfaceScope level="base" fill="surface">
+        <div className="p-single flex gap-single items-center min-w-0 h-full">
+          <Button id="ui.tutorial.play" icon={playing ? "pause" : "play"} text={playing ? pauseLabel : playLabel} onClick={onPlayPause} />
+          <Button id="ui.tutorial.stop" icon="square" text={stopLabel} onClick={onStop} />
+          <span id="ui.tutorial.time" data-slot="tutorial-time" className="shrink-0 whitespace-nowrap px-single text-xs tabular-nums text-muted-foreground">
+            {formatTutorialTime(timeMs)} / {formatTutorialTime(durationMs)}
+          </span>
+          <div className="relative min-w-0 flex-1 px-single">
+            <Slider id="ui.tutorial.scrubber" min={0} max={Math.max(durationMs, 1)} value={[timeMs]} onValueChange={(values) => onSeek(values[0] ?? 0)} showValue={false} />
+            {chapters.map((chapter) => (
+              <button
+                key={chapter.id}
+                id={`ui.tutorial.chapter.${chapter.id}`}
+                type="button"
+                data-slot="tutorial-chapter-tick"
+                title={chapter.title}
+                className="pointer-events-auto absolute top-1/2 size-1 -translate-x-1/2 -translate-y-1/2 rounded-full bg-foreground/50 hover:bg-foreground"
+                style={{ left: `${durationMs > 0 ? (chapter.atMs / durationMs) * 100 : 0}%` }}
+                onClick={() => onSeek(chapter.atMs)}
+              />
+            ))}
+          </div>
+          <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
+          <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
+          <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
+          {recordAvailable && (
+            <>
+              <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
+              {recording && (
+                <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
+                  {recordingLabel}
+                </span>
+              )}
+            </>
+          )}
+          <Button id="ui.tutorial.addChapter" icon="plus" text={addChapterLabel} onClick={onAddChapter} />
+          <span className="min-w-0 flex-1 truncate px-single text-right text-xs text-muted-foreground">{title}</span>
         </div>
-        <Button id="ui.tutorial.rate" icon={<span className="hidden" aria-hidden />} text={`${rate}x`} onClick={() => onRateChange(nextTutorialRate(rate))} />
-        <Button id="ui.tutorial.mute" icon="x" text={muteLabel} aria-pressed={muted} onClick={() => onMutedChange(!muted)} />
-        <Button id="ui.tutorial.captions" icon="message-square" text={captionsLabel} aria-pressed={captionsOn} onClick={() => onCaptionsChange(!captionsOn)} />
-        {recordAvailable && (
-          <>
-            <Button id="ui.tutorial.record" icon="circle-dot" text={recordLabel} aria-pressed={recording} onClick={onRecordToggle} />
-            {recording && (
-              <span id="ui.tutorial.recordingIndicator" data-slot="tutorial-recording-indicator" className="whitespace-nowrap px-single text-xs text-destructive">
-                {recordingLabel}
-              </span>
-            )}
-          </>
-        )}
-        <Button id="ui.tutorial.addChapter" icon="plus" text={addChapterLabel} onClick={onAddChapter} />
-        <span className="min-w-0 flex-1 truncate px-single text-right text-xs text-muted-foreground">{title}</span>
-      </div>
+      </SurfaceScope>
     </nav>
   );
 };
@@ -6978,9 +6992,9 @@ export type TutorialCaptionsProps = {
 export const TutorialCaptions: React.FC<TutorialCaptionsProps> = ({ text, visible }) => {
   if (!visible || !text) return null;
   return (
-    <div id="ui.tutorial.captions.text" data-slot="tutorial-captions" data-level="dialog" className={cn(GLASS_OVERLAY_BOX_CLASS, glassClass, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
+    <Surface id="ui.tutorial.captions.text" data-slot="tutorial-captions" level="dialog" fill="glass" className={cn(GLASS_OVERLAY_BOX_CLASS, "bottom-double left-1/2 max-w-2xl -translate-x-1/2 text-center text-sm")}>
       {text}
-    </div>
+    </Surface>
   );
 };
 //#endregion 🎬TutorialCaptions
@@ -7116,7 +7130,7 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
   return (
     <>
       <div data-level="dialog" className={cn(veilClass, "z-tutorial fixed inset-0 pointer-events-auto")} onClick={onCancel} />
-      <div data-slot="dialog-box" data-level="dialog" className={cn(GLASS_OVERLAY_BOX_CLASS, glassClass, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
+      <Surface data-slot="dialog-box" level="dialog" fill="glass" className={cn(GLASS_OVERLAY_BOX_CLASS, "top-[50%] left-[50%] translate-x-[-50%] translate-y-[-50%]")}>
         <h3 className="mb-single text-sm font-medium">{dialog.title}</h3>
         {dialog.body && <p className="mb-double text-xs text-muted-foreground">{dialog.body}</p>}
         {dialog.args.length > 0 && (
@@ -7133,7 +7147,7 @@ export const UIDialog: React.FC<UIDialogProps> = ({ dialog, seedArgs, renderFiel
           <Button id="ui.dialog.cancel" variant="ghost" icon="x" text={dialog.cancelLabel ?? cancelLabel} onClick={onCancel} />
           <Button id="ui.dialog.submit" icon="check" text={dialog.submitLabel} disabled={!canSubmit} onClick={submit} />
         </div>
-      </div>
+      </Surface>
     </>
   );
 };
@@ -7183,11 +7197,83 @@ export const surfaceClass = "ui-surface";
 /** @emoji 🎨 Per-level glass fill (blur + alpha). */
 export const glassClass = "ui-glass";
 
-/** @emoji 🎨 Attached chrome (ribbons/rails) — half-alpha glass relative to {@link glassClass} at the same level. */
-export const glassChromeClass = "ui-glass-chrome";
+/** @emoji 🎨 Attached chrome (title caps, ribbons, tab bars, rails) — same {@link glassClass} fill as the level body so one level always renders as one appearance. */
+export const glassChromeClass = glassClass;
 
 /** @emoji 🎨 Fullscreen scrim; host element must carry `data-level="dialog"` for correct tint. */
 export const veilClass = "ui-veil";
+
+/** @emoji 🪟 Which fill a painted surface uses — maps 1:1 to {@link surfaceClass}/{@link glassClass}/{@link veilClass}. */
+export type SurfaceFill = "surface" | "glass" | "veil";
+
+/** @emoji 🎨 Literal-safe fill lookup for a {@link SurfaceFill} (Tailwind's static scanner only finds complete literal class strings, never a `${}`-built name). */
+export function surfaceFillClass(fill: SurfaceFill): string {
+  switch (fill) {
+    case "glass":
+      return glassClass;
+    case "veil":
+      return veilClass;
+    default:
+      return surfaceClass;
+  }
+}
+
+/** @emoji 🪟 The nearest painted surface's level + fill, or `"none"` for a level root that intentionally defers painting to a descendant. */
+export interface SurfaceScopeValue {
+  readonly level: Level;
+  readonly fill: SurfaceFill | "none";
+}
+
+const SurfaceContext = reactHostPort.createContext<SurfaceScopeValue | null>(null);
+
+/** @emoji 🪟 Opens a {@link LevelProvider} and records the level's fill for descendants — the "you
+ * are already inside a painted surface" signal that {@link Surface} uses to warn on accidental
+ * double-painting. Prefer {@link Surface} for a DOM-backed level root; use `SurfaceScope` directly
+ * only when the level root isn't a plain `<div>` (e.g. `WindowChrome`, which stamps `data-level`
+ * on its own stack element). */
+export const SurfaceScope: React.FC<{
+  readonly level: Level;
+  readonly fill?: SurfaceFill | "none";
+  readonly children: React.ReactNode;
+}> = ({ level, fill = "none", children }) => (
+  <LevelProvider level={level}>
+    <SurfaceContext.Provider value={{ level, fill }}>{children}</SurfaceContext.Provider>
+  </LevelProvider>
+);
+
+/** @emoji 🪝 Returns the nearest {@link SurfaceScope}/{@link Surface} value, or `null` outside any. */
+export function useSurface(): SurfaceScopeValue | null {
+  return reactHostPort.useContext(SurfaceContext);
+}
+
+export interface SurfaceProps extends Omit<React.HTMLAttributes<HTMLDivElement>, "className"> {
+  readonly level: Level;
+  readonly fill?: SurfaceFill | "none";
+  readonly className?: string;
+}
+
+/** @emoji 🪟 The one reusable "level root" primitive: stamps `data-level`, paints exactly one
+ * {@link SurfaceFill}, and opens a {@link SurfaceScope} for its children. This is the enforcement
+ * mechanism for "one level = one appearance" — a component that needs a new painted surface uses
+ * `Surface` (or `SurfaceScope` + the fill class, for `WindowChrome`-style non-div roots) instead of
+ * hand-composing `data-level` + a fill class, so nested same-level surfaces are structurally
+ * visible via {@link useSurface} rather than silently drifting. Dev-only: warns when nested inside
+ * an ancestor already painting the same level (that ancestor already painted — the "3 different
+ * backgrounds in one dialog" bug class). */
+export const Surface = reactHostPort.forwardRef<HTMLDivElement, SurfaceProps>(({ level, fill = "surface", className, children, ...rest }, ref) => {
+  const parent = useSurface();
+  if (process.env.NODE_ENV !== "production" && parent && parent.level === level && parent.fill !== "none" && fill !== "none") {
+    console.warn(`Surface: nested "${level}" surface painted inside an ancestor Surface already painting "${level}" — one level must render one appearance. Pass fill="none" on the inner Surface, or remove it and let the ancestor's fill show through.`);
+  }
+  return (
+    <div ref={ref} data-level={level} className={cn(fill === "none" ? undefined : surfaceFillClass(fill), className)} {...rest}>
+      <SurfaceScope level={level} fill={fill}>
+        {children}
+      </SurfaceScope>
+    </div>
+  );
+});
+Surface.displayName = "Surface";
 
 /** @emoji 📏 Emphasized shell stroke for active/selected chrome accents. */
 export const borderEmphasizedClass = "!border-emphasized";
@@ -7253,10 +7339,10 @@ export const floatingMenuSurfaceClass = cn(glassClass, "overflow-hidden rounded-
 export const floatingMenuItemClass = cn("relative flex w-full cursor-default items-center gap-single rounded-sm px-single py-half text-start text-xs text-element outline-none select-none", menuListItemClassName);
 
 /** @emoji 🪟 Frosted editor aside chrome for technology renderers — pane-level chrome; host element must also carry `data-level="pane"`. */
-export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassChromeClass);
+export const floatingPaneAsideClass = cn("relative flex shrink-0 flex-col gap-single overflow-auto p-double text-element z-[2]", shellChromeBorderClass, glassClass);
 
 /** @emoji 🪟 Frosted compact ribbon chrome (projection switch, align controls) — window-level chrome; host element must also carry `data-level="window"`. */
-export const floatingRibbonSurfaceClass = cn(glassChromeClass, "overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass);
+export const floatingRibbonSurfaceClass = cn("overflow-hidden rounded-md border shadow-sm text-element", borderNormalClass, glassClass);
 
 /** @emoji 🪟 Frosted inline field/action shell inside editor asides — menu tier (fallback); host element must also carry `data-level="menu"`. */
 export const floatingFieldSurfaceClass = cn(glassClass, "relative overflow-visible rounded-md border", borderNormalClass);
@@ -7799,7 +7885,7 @@ const PanelTabButton: React.FC<{
   const surfaceDrag = useUiDriverDragSurface();
   const draggable = Boolean(anchor && dock);
   const windowTabChrome = variant === "panel";
-  const inactiveTabChromeClass = windowTabChrome && stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
+  const inactiveTabChromeClass = windowTabChrome ? panelWindowInactiveTabClass : stackIndex === stackSize - 1 ? modeDockInactiveTabBeforeGapClass : modeDockInactiveTabClass;
   return (
     <ChromeControlHint id={tab.id} text={tab.name}>
       <button
@@ -7834,6 +7920,7 @@ const PanelTabButton: React.FC<{
         }
         className={cn(
           windowTabChrome ? modeDockTabClassName : buttonClass,
+          windowTabChrome && "h-full",
           windowTabChrome && !isActive && inactiveTabChromeClass,
           windowTabChrome && isActive && showActiveColor && modeDockActiveTabClass,
           !windowTabChrome && isActive && showActiveColor && modeDockActiveTabFillClass,
@@ -8000,7 +8087,7 @@ export const PanelTabBar: React.FC<PanelTabBarProps> = ({ variant, anchor, tabs,
     depth++;
   }
   if (rows.length === 0) return null;
-  return <Ribbon direction={direction} rows={rows} />;
+  return <Ribbon direction={direction} rows={rows} className={variant === "panel" ? "w-fit max-w-full" : undefined} />;
 };
 
 // #region 🧲PanelDock
@@ -8597,12 +8684,14 @@ export function normalizeWindowSilhouetteChips(chips: readonly WindowSilhouetteC
   return merged;
 }
 
-/** @emoji 🪟 Walks one docked edge left-to-right; absent chip slots stay on the outer baseline. */
+/** @emoji 🪟 Walks one docked edge left-to-right: chips ride the outer baseline, gaps sit on the inner body edge. */
 export function windowSilhouetteEdgePoints(edge: WindowSilhouetteEdge, x0: number, x1: number, outer: number, inner: number): WindowSilhouettePoint[] {
   const chips = normalizeWindowSilhouetteChips(edge.chips, x0, x1);
   if (edge.depth <= WINDOW_SILHOUETTE_CHIP_EPSILON || chips.length === 0) return [{ x: x0, y: outer }, { x: x1, y: outer }];
+  const first = chips[0]!;
+  const startsWithChip = first.left <= x0 + WINDOW_SILHOUETTE_CHIP_EPSILON;
   let x = x0;
-  let y = outer;
+  let y = startsWithChip ? outer : inner;
   const points: WindowSilhouettePoint[] = [{ x, y }];
   const push = (nextX: number, nextY: number) => {
     if (Math.abs(nextX - x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(nextY - y) <= WINDOW_SILHOUETTE_CHIP_EPSILON) return;
@@ -8610,54 +8699,33 @@ export function windowSilhouetteEdgePoints(edge: WindowSilhouetteEdge, x0: numbe
     x = nextX;
     y = nextY;
   };
+  if (!startsWithChip) {
+    push(first.left, inner);
+    push(first.left, outer);
+  }
   for (let i = 0; i < chips.length; i++) {
     const chip = chips[i]!;
     const hasNext = i < chips.length - 1;
-    if (x < chip.right) push(chip.right, outer);
-    const needsInnerTail = hasNext || chip.right < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON;
-    if (!needsInnerTail) continue;
-    push(chip.right, inner);
+    push(chip.right, outer);
     if (hasNext) {
       const nextLeft = chips[i + 1]!.left;
+      push(chip.right, inner);
       if (chip.right < nextLeft - WINDOW_SILHOUETTE_CHIP_EPSILON) push(nextLeft, inner);
       push(nextLeft, outer);
     } else if (chip.right < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON) {
+      push(chip.right, inner);
       push(x1, inner);
     }
   }
-  if (x < x1 - WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(y - outer) <= WINDOW_SILHOUETTE_CHIP_EPSILON) push(x1, outer);
   return points;
 }
 
-/** @emoji 🪟 Walks one docked edge right-to-left; absent chip slots stay on the outer baseline. */
+/** @emoji 🪟 Walks one docked edge right-to-left by reversing the LTR skyline (chips outer, gaps inner). */
 export function windowSilhouetteEdgePointsRtl(edge: WindowSilhouetteEdge, x0: number, x1: number, outer: number, inner: number): WindowSilhouettePoint[] {
-  const chips = normalizeWindowSilhouetteChips(edge.chips, x0, x1);
-  if (edge.depth <= WINDOW_SILHOUETTE_CHIP_EPSILON || chips.length === 0) return [{ x: x1, y: outer }, { x: x0, y: outer }];
-  let x = x1;
-  let y = outer;
-  const points: WindowSilhouettePoint[] = [{ x, y }];
-  const push = (nextX: number, nextY: number) => {
-    if (Math.abs(nextX - x) <= WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(nextY - y) <= WINDOW_SILHOUETTE_CHIP_EPSILON) return;
-    points.push({ x: nextX, y: nextY });
-    x = nextX;
-    y = nextY;
-  };
-  for (let i = chips.length - 1; i >= 0; i--) {
-    const chip = chips[i]!;
-    const hasPrev = i > 0;
-    if (x > chip.right) push(chip.right, y);
-    const needsInnerTail = edge.depth > WINDOW_SILHOUETTE_CHIP_EPSILON;
-    if (!needsInnerTail) continue;
-    push(chip.right, inner);
-    if (chip.right > chip.left + WINDOW_SILHOUETTE_CHIP_EPSILON) push(chip.left, inner);
-    if (hasPrev) push(chip.left, outer);
-    else if (chip.left > x0 + WINDOW_SILHOUETTE_CHIP_EPSILON) push(x0, inner);
-  }
-  if (x > x0 + WINDOW_SILHOUETTE_CHIP_EPSILON && Math.abs(y - outer) <= WINDOW_SILHOUETTE_CHIP_EPSILON) push(x0, outer);
-  return points;
+  return [...windowSilhouetteEdgePoints(edge, x0, x1, outer, inner)].reverse();
 }
 
-/** @emoji 🪟 Builds the closed silhouette outline (top LTR, right connector, bottom RTL, left connector). */
+/** @emoji 🪟 Builds the closed silhouette outline (top LTR, right connector via bottom start, bottom RTL). */
 export function windowSilhouetteOutline(metrics: WindowSilhouetteMetrics, inset = WINDOW_SILHOUETTE_PATH_INSET): WindowSilhouettePoint[] {
   const w = Math.max(inset * 2, metrics.width);
   const h = Math.max(inset * 2, metrics.height);
@@ -8668,10 +8736,8 @@ export function windowSilhouetteOutline(metrics: WindowSilhouetteMetrics, inset 
   const topInner = Math.max(y0, Math.min(y0 + metrics.top.depth, y1));
   const bottomInner = Math.max(y0, Math.min(y1 - metrics.bottom.depth, y1));
   const top = windowSilhouetteEdgePoints(metrics.top, x0, x1, y0, topInner);
-  const topEnd = top[top.length - 1] ?? { x: x1, y: y0 };
-  const bottomSeed: WindowSilhouettePoint[] = topEnd.x === x1 && topEnd.y === y1 ? [] : [{ x: x1, y: y1 }];
   const bottom = windowSilhouetteEdgePointsRtl(metrics.bottom, x0, x1, y1, bottomInner);
-  return simplifyWindowSilhouetteOutline([...top, ...bottomSeed, ...bottom]);
+  return simplifyWindowSilhouetteOutline([...top, ...bottom]);
 }
 
 /** @emoji 🪟 Drops zero-length segments and collinear vertices from a closed outline loop. */
@@ -8861,11 +8927,15 @@ export function modeDockChromeGridPlacement(tabs: readonly { id: string; title: 
   };
 }
 
-/** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline (window level, inherited from the ancestor {@link ModeDockStack} `data-level="window"` stamp). */
-export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, surfaceClass);
+/** @emoji 📏 Inactive sibling tab — normal pill resting on the U-frame baseline; transparent so it
+ * shows the window-level tabbar glass beneath it rather than a second opaque fill (matches {@link panelWindowInactiveTabClass}'s rule for the panel variant). */
+export const modeDockInactiveTabClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
 
 /** @emoji 📏 Inactive tab before gap — inner divider only; outer stroke owned by the silhouette SVG. */
-export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, surfaceClass);
+export const modeDockInactiveTabBeforeGapClass = cn(`relative z-30 box-border min-h-medium shrink-0`, "bg-transparent");
+
+/** @emoji 📑 Inactive panel tab inside {@link WindowChrome} — no opaque fill; the chip-cap glass is the panel boundary and must meet the body without a seam. */
+export const panelWindowInactiveTabClass = "relative z-30 box-border min-h-medium h-full shrink-0 bg-transparent";
 
 /** @emoji 🪟 Icon + title cluster inside a mode-dock tab — standard gap between glyph and label. */
 export const modeDockTabLabelClassName = "flex min-w-0 flex-1 items-center gap-single overflow-hidden";
@@ -8882,8 +8952,8 @@ export const shellChromeSectionTitleClassName = "text-2xs font-semibold uppercas
 /** @emoji 📏 Globally active dock tab — primary fill + emphasized label. */
 export const modeDockActiveTabFillClass = interactiveActiveFillClass;
 
-/** @emoji 📏 Stack-active tab fill — outline owned by the stack silhouette SVG. */
-export const modeDockActiveTabClass = `relative z-20 box-border min-h-medium shrink-0 border-0 ${modeDockActiveTabFillClass}`;
+/** @emoji 📏 Stack-active tab fill — outline owned by the stack silhouette SVG; `border-0` must win over {@link interactiveActiveFillClass}'s border color utility. */
+export const modeDockActiveTabClass = cn("relative z-20 box-border min-h-medium shrink-0 border-0", modeDockActiveTabFillClass);
 
 /** @emoji 📏 Maximize/controls glass cell — transparent; tabbar owns the ribbon. */
 export const windowControlsCapClass = "relative z-[2] flex shrink-0 items-stretch border-0 bg-transparent text-element";
@@ -8981,8 +9051,9 @@ export interface WindowChromeControlAction {
   readonly onClick: () => void;
 }
 
-/** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag). */
-export const windowChromeTitleChipClass = cn(modeDockTabClassName, surfaceClass, "relative z-30 box-border min-h-medium shrink-0 border", borderNormalClass);
+/** @emoji 🪟 Title chip in the window-chrome cap row (name + optional drag) — transparent so it
+ * shows the painted chip-cap cell it sits inside, never a second opaque fill of its own. */
+export const windowChromeTitleChipClass = cn(modeDockTabClassName, "relative z-30 box-border min-h-medium shrink-0 border bg-transparent", borderNormalClass);
 
 export interface WindowChromeProps {
   readonly active?: boolean;
@@ -8990,7 +9061,7 @@ export interface WindowChromeProps {
   readonly className?: string;
   readonly stackClassName?: string;
   readonly bodyClassName?: string;
-  /** 🎈 Stamps `data-level={level}` on the chrome stack and wraps its content in a {@link LevelProvider}; cap/controls always render {@link glassChromeClass}, the body always renders {@link glassClass} — no longer configurable per-instance. */
+  /** 🎈 Stamps `data-level={level}` on the chrome stack and wraps its content in a {@link LevelProvider}; cap/controls/body all render {@link glassClass} so one level is one appearance. */
   readonly level?: Level;
   readonly style?: React.CSSProperties;
   readonly stackRef?: React.Ref<HTMLDivElement>;
@@ -9125,10 +9196,12 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
       [ref, stackRef],
     );
 
-    const chipSurfaceClass = cn(windowCapFrameClass, glassChromeClass);
+    const chipSurfaceClass = cn(windowCapFrameClass, glassClass);
     const bodySurfaceClass = cn("relative border-0", glassClass);
-    const controlsSurfaceClass = cn(windowControlsCapClass, glassChromeClass);
-    const wrapLevel = (node: React.ReactNode): React.ReactNode => (level ? <LevelProvider level={level}>{node}</LevelProvider> : node);
+    const controlsSurfaceClass = cn(windowControlsCapClass, glassClass);
+    // 🪟 The stack element itself stamps `data-level` (below), so this only needs to open the
+    // SurfaceScope (fill="glass" — every cell above already renders it) for descendants to see via useSurface().
+    const wrapLevel = (node: React.ReactNode): React.ReactNode => (level ? <SurfaceScope level={level} fill="glass">{node}</SurfaceScope> : node);
 
     if (chipOnly) {
       return wrapLevel(
@@ -9192,7 +9265,7 @@ export const WindowChrome = reactHostPort.forwardRef<HTMLDivElement, WindowChrom
             </div>
           ) : null}
         </div>
-        <div ref={bodyRef} data-slot={bodySlot} data-dim className={cn("relative z-10 min-h-0 flex-1", bodySurfaceClass, bodyClassName)}>
+        <div ref={bodyRef} data-slot={bodySlot} data-dim className={cn("relative z-[1] min-h-0 flex-1", bodySurfaceClass, bodyClassName)}>
           {body}
         </div>
         {hasFooter ? (
@@ -9292,7 +9365,7 @@ export const windowEngagementMaxWidthPx = domSizePx("layoutEngagementMaxUiSpacin
 export const windowMeasuresOverlayClass = "pointer-events-none absolute top-0 right-0 z-panel flex max-h-full flex-col items-end p-0";
 
 /** @emoji 📐 Scrollable frosted rail for window measures (height follows content, capped by the window body). */
-export const windowMeasuresStackClass = cn(glassChromeClass, `pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`);
+export const windowMeasuresStackClass = cn(`pointer-events-auto flex h-auto max-h-full w-full min-w-0 shrink-0 flex-col gap-0 overflow-hidden border ${borderElementClass}/40 p-0 shadow-sm`, glassClass);
 
 /** @emoji 📐 Window measures rail spanning the full window body (stays below shell side panels). */
 export const windowMeasuresOverlayExpandedClass = "inset-0 z-panel items-stretch";
@@ -9500,8 +9573,8 @@ export const windowMeasuresBodyClass = "flex min-h-0 min-w-0 flex-auto flex-col 
 /** @emoji 📐 Vertical rhythm between top-level measure groups in the rail. */
 export const windowMeasuresStackInnerClass = "flex w-full min-w-0 flex-col gap-tiny";
 
-/** @emoji 📐 Single measure tile in the window rail. */
-export const windowMeasureTileClass = `pointer-events-auto select-none ${glassChromeClass} w-full min-w-0 shrink-0 rounded-sm border ${borderElementClass}/40 px-tiny py-tiny`;
+/** @emoji 📐 Single measure tile in the window rail — transparent so it shows the {@link windowMeasuresStackClass} glass it sits inside, never a second glass layer of its own. */
+export const windowMeasureTileClass = cn("pointer-events-auto select-none bg-transparent w-full min-w-0 shrink-0 rounded-sm border", `${borderElementClass}/40`, "px-tiny py-tiny");
 
 /** @emoji 📐 Optional measure caption above a control. */
 export const windowMeasureLabelClass = "text-muted-foreground mb-tiny block min-w-0 truncate text-2xs font-medium leading-none";
@@ -9770,7 +9843,9 @@ export function useFirstDraggableElementAlias(containerRef: React.RefObject<HTML
  * Command holds the data fields for a Command record.
  **/
 function Command({ className, ...props }: React.ComponentProps<typeof CommandPrimitive>) {
-  return <CommandPrimitive data-slot="command" className={cn(glassClass, "text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
+  // 🎨 Transparent — every consumer (CommandDialog's DialogContent, Popover-based combobox/search menus) already
+  // renders the level's glass; Command painting its own would be a second glass layer on top of the host's.
+  return <CommandPrimitive data-slot="command" className={cn("bg-transparent text-popover-foreground flex h-full w-full flex-col overflow-hidden", className)} {...props} />;
 }
 
 /**
@@ -10014,19 +10089,21 @@ const Footer: React.FC<FooterProps> = ({ items, className = "" }) => {
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <footer id="ui.footer" data-slot="footer" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <div className="p-single flex gap-single items-center min-w-0 h-full">
-        {normalItems.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-            {item.content}
+    <footer id="ui.footer" data-slot="footer" data-level="base" data-ui-reveal-region="footer" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      <SurfaceScope level="base" fill="surface">
+        <div className="p-single flex gap-single items-center min-w-0 h-full">
+          {normalItems.map((item, index) => (
+            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+              {item.content}
+            </div>
+          ))}
+        </div>
+        {centeredItems.map((item, index) => (
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
         ))}
-      </div>
-      {centeredItems.map((item, index) => (
-        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
-        </div>
-      ))}
+      </SurfaceScope>
     </footer>
   );
 };
@@ -10119,7 +10196,7 @@ function PopoverTrigger({ className, ...props }: React.ComponentProps<typeof Pop
 /**
  * PopoverContent holds the data fields for a PopoverContent record.
  **/
-function PopoverContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
+function PopoverContent({ className, align = "center", sideOffset = 4, children, ...props }: React.ComponentProps<typeof PopoverPrimitive.Content>) {
   const flow = useFlow();
   return (
     <PopoverPrimitive.Portal>
@@ -10130,12 +10207,16 @@ function PopoverContent({ className, align = "center", sideOffset = 4, ...props 
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          glassClass,
           "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-72 origin-(--radix-popover-content-transform-origin) border p-1 outline-hidden",
+          glassClass,
           className,
         )}
         {...props}
-      />
+      >
+        <SurfaceScope level="menu" fill="glass">
+          {children}
+        </SurfaceScope>
+      </PopoverPrimitive.Content>
     </PopoverPrimitive.Portal>
   );
 }
@@ -10215,13 +10296,15 @@ function TooltipContent({ className, sideOffset = 8, children, ...props }: React
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         sideOffset={sideOffset}
         className={cn(
-          glassClass,
           "border border-accent-foreground text-foreground animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu origin-(--radix-tooltip-content-transform-origin) p-single text-xs text-balance w-max max-w-fit",
+          glassClass,
           className,
         )}
         {...props}
       >
-        {children}
+        <SurfaceScope level="menu" fill="glass">
+          {children}
+        </SurfaceScope>
       </TooltipPrimitive.Content>
     </TooltipPrimitive.Portal>
   );
@@ -11224,7 +11307,7 @@ function HoverCardTrigger({ className, ...props }: React.ComponentProps<typeof H
 /**
  * HoverCardContent holds the data fields for a HoverCardContent record.
  **/
-function HoverCardContent({ className, align = "center", sideOffset = 4, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
+function HoverCardContent({ className, align = "center", sideOffset = 4, children, ...props }: React.ComponentProps<typeof HoverCardPrimitive.Content>) {
   return (
     <HoverCardPrimitive.Portal data-slot="hover-card-portal">
       <HoverCardPrimitive.Content
@@ -11233,12 +11316,16 @@ function HoverCardContent({ className, align = "center", sideOffset = 4, ...prop
         align={align}
         sideOffset={sideOffset}
         className={cn(
-          glassClass,
           "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 z-menu w-64 origin-(--radix-hover-card-content-transform-origin) border p-single outline-hidden",
+          glassClass,
           className,
         )}
         {...props}
-      />
+      >
+        <SurfaceScope level="menu" fill="glass">
+          {children}
+        </SurfaceScope>
+      </HoverCardPrimitive.Content>
     </HoverCardPrimitive.Portal>
   );
 }
@@ -12514,17 +12601,19 @@ function SelectContent({ className, children, position = "popper", ...props }: R
         data-level="menu"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
-          glassClass,
           "text-popover-foreground data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2 relative z-menu max-h-(--radix-select-content-available-height) min-w-32 origin-(--radix-select-content-transform-origin) overflow-x-hidden overflow-y-auto border",
+          glassClass,
           position === "popper" && "data-[side=bottom]:translate-y-1 data-[side=left]:-translate-x-1 data-[side=right]:translate-x-1 data-[side=top]:-translate-y-1",
           className,
         )}
         position={position}
         {...props}
       >
-        <SelectScrollUpButton />
-        <SelectPrimitive.Viewport className={cn("p-single", position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-single")}>{children}</SelectPrimitive.Viewport>
-        <SelectScrollDownButton />
+        <SurfaceScope level="menu" fill="glass">
+          <SelectScrollUpButton />
+          <SelectPrimitive.Viewport className={cn("p-single", position === "popper" && "h-[var(--radix-select-trigger-height)] w-full min-w-[var(--radix-select-trigger-width)] scroll-my-single")}>{children}</SelectPrimitive.Viewport>
+          <SelectScrollDownButton />
+        </SurfaceScope>
       </SelectPrimitive.Content>
     </SelectPrimitive.Portal>
   );
@@ -14097,22 +14186,24 @@ function DialogContent({
         data-level="dialog"
         dir={flow.inline === "rtl" ? "rtl" : undefined}
         className={cn(
-          glassClass,
           "data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-dialog grid w-full max-w-[calc(100%-2*var(--ui-spacing)*var(--medium))] translate-x-[-50%] translate-y-[-50%] gap-medium border p-medium duration-200 sm:max-w-lg",
+          glassClass,
           className,
         )}
         {...props}
       >
-        {children}
-        {showCloseButton && (
-          <DialogPrimitive.Close
-            data-slot="dialog-close"
-            className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small"
-          >
-            <CloseIconAlt />
-            <span className="sr-only">{closeLabel}</span>
-          </DialogPrimitive.Close>
-        )}
+        <SurfaceScope level="dialog" fill="glass">
+          {children}
+          {showCloseButton && (
+            <DialogPrimitive.Close
+              data-slot="dialog-close"
+              className="ring-offset-background focus:ring-ring data-[state=open]:bg-accent data-[state=open]:text-muted-foreground absolute top-medium right-4 rounded-xs opacity-70 transition-opacity hover:opacity-100 focus:ring-2 focus:ring-offset-2 focus:outline-hidden disabled:pointer-events-none [&_svg]:pointer-events-none [&_svg]:shrink-0 [&_svg:not([class*='size-'])]:size-small"
+            >
+              <CloseIconAlt />
+              <span className="sr-only">{closeLabel}</span>
+            </DialogPrimitive.Close>
+          )}
+        </SurfaceScope>
       </DialogPrimitive.Content>
     </DialogPortal>
   );
@@ -14440,7 +14531,8 @@ export interface BandProps {
  * Band holds the data fields for a Band record.
  **/
 function Band({ items, scrollable = true, className, id }: BandProps) {
-  const bgClass = surfaceClass;
+  // 🎨 Transparent — Band is chrome inside whatever painted surface hosts it, never a level root.
+  const bgClass = "bg-transparent";
   const borderClass = borderNormalClass;
   const itemsElement = (
     <div id={id} data-slot="band" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
@@ -14492,7 +14584,8 @@ export interface StripProps {
  * Strip holds the data fields for a Strip record.
  **/
 function Strip({ items, scrollable = true, className, id }: StripProps) {
-  const bgClass = surfaceClass;
+  // 🎨 Transparent — Strip is chrome inside whatever painted surface hosts it, never a level root.
+  const bgClass = "bg-transparent";
   const borderClass = borderNormalClass;
   const itemsElement = (
     <div id={id} data-slot="strip" className={cn("p-single flex gap-single items-center min-w-0", scrollable ? "w-fit" : "w-full")}>
@@ -14613,24 +14706,26 @@ function Navbar({ items, className, showFullscreenToggle = true }: NavbarProps) 
   const normalItems = items.filter((item) => !item.centered);
   const centeredItems = items.filter((item) => item.centered);
   return (
-    <nav id="ui.navbar" data-slot="navbar" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
-      <div className="p-single flex gap-single items-center min-w-0 h-full">
-        {normalItems.map((item, index) => (
-          <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
-            {item.content}
+    <nav id="ui.navbar" data-slot="navbar" data-level="base" data-ui-reveal-region="navbar" data-elevation-root="" className={cn("relative h-large z-navbar", bgClass, className)}>
+      <SurfaceScope level="base" fill="surface">
+        <div className="p-single flex gap-single items-center min-w-0 h-full">
+          {normalItems.map((item, index) => (
+            <div key={item.key ?? index} className={cn("h-medium flex shrink-0 items-center min-w-0", item.className)}>
+              {item.content}
+            </div>
+          ))}
+          {showFullscreenToggle ? (
+            <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
+              <NavbarFullscreenToggle />
+            </div>
+          ) : null}
+        </div>
+        {centeredItems.map((item, index) => (
+          <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
+            <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
           </div>
         ))}
-        {showFullscreenToggle ? (
-          <div key="fullscreenToggle" data-slot="navbar-fullscreen-toggle" className="h-medium flex shrink-0 items-center min-w-0 ms-auto">
-            <NavbarFullscreenToggle />
-          </div>
-        ) : null}
-      </div>
-      {centeredItems.map((item, index) => (
-        <div key={item.key ?? index} className="pointer-events-none absolute inset-0 flex items-center justify-center">
-          <div className={cn("pointer-events-auto h-medium flex items-center", item.className)}>{item.content}</div>
-        </div>
-      ))}
+      </SurfaceScope>
     </nav>
   );
 }
@@ -14812,8 +14907,11 @@ function Tabs({ className, ...props }: React.ComponentProps<typeof TabsPrimitive
 /**
  * TabsList holds the data fields for a TabsList record.
  **/
+// 🎨 Transparent — TabsList is chrome inside whatever painted surface (Panel/Pane/Dialog body) hosts
+// it, never a level root of its own; a consumer placing it outside any painted surface should wrap
+// it in <Surface>.
 function TabsList({ className, ...props }: React.ComponentProps<typeof TabsPrimitive.List>) {
-  return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single", surfaceClass, className)} {...props} />;
+  return <TabsPrimitive.List data-slot="tabs-list" className={cn("text-muted-foreground inline-flex h-large w-fit items-center justify-center p-single bg-transparent", className)} {...props} />;
 }
 
 /** TabsTrigger holds the data fields for a TabsTrigger record.
@@ -19435,28 +19533,30 @@ function BreadcrumbSeparatorItem({ hasOptions, isOpen, onOpenChange, id, options
           </button>
         </DropdownMenuPrimitive.Trigger>
         <DropdownMenuPrimitive.Portal>
-          <DropdownMenuPrimitive.Content data-level="menu" align="center" sideOffset={8} className={cn(glassClass, "w-auto overflow-hidden border p-single z-menu", borderNormalClass)}>
-            {options.map((item, index) => {
-              const menuItem = (
-                <DropdownMenuPrimitive.Item
-                  key={index}
-                  className="text-element hover:bg-hover-interactive-fill hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized relative flex items-center p-single text-sm outline-none whitespace-nowrap"
-                  onClick={() => handleSelect(item.href)}
-                  role="button"
-                >
-                  {item.label}
-                </DropdownMenuPrimitive.Item>
-              );
+          <DropdownMenuPrimitive.Content data-level="menu" align="center" sideOffset={8} className={cn("w-auto overflow-hidden border p-single z-menu", borderNormalClass, glassClass)}>
+            <SurfaceScope level="menu" fill="glass">
+              {options.map((item, index) => {
+                const menuItem = (
+                  <DropdownMenuPrimitive.Item
+                    key={index}
+                    className="text-element hover:bg-hover-interactive-fill hover:text-emphasized focus:bg-hover-interactive-fill focus:text-emphasized relative flex items-center p-single text-sm outline-none whitespace-nowrap"
+                    onClick={() => handleSelect(item.href)}
+                    role="button"
+                  >
+                    {item.label}
+                  </DropdownMenuPrimitive.Item>
+                );
 
-              const wrappedItem = item.id ? <ChromeControlHint id={item.id}>{menuItem}</ChromeControlHint> : menuItem;
+                const wrappedItem = item.id ? <ChromeControlHint id={item.id}>{menuItem}</ChromeControlHint> : menuItem;
 
-              return (
-                <React.Fragment key={index}>
-                  {wrappedItem}
-                  {index < options.length - 1 && <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />}
-                </React.Fragment>
-              );
-            })}
+                return (
+                  <React.Fragment key={index}>
+                    {wrappedItem}
+                    {index < options.length - 1 && <DropdownMenuPrimitive.Separator className="h-px bg-border my-single" />}
+                  </React.Fragment>
+                );
+              })}
+            </SurfaceScope>
           </DropdownMenuPrimitive.Content>
         </DropdownMenuPrimitive.Portal>
       </DropdownMenuPrimitive.Root>
@@ -21168,7 +21268,7 @@ const Search: React.FC<SearchProps> = ({ sessionActive = false, input, possibles
         data-active={active ? "true" : undefined}
         data-session-active={sessionActive ? "true" : undefined}
         data-possibles-open={showPossiblesList ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && cn(surfaceClass, "ring-accent/35 rounded-sm ring-1 shadow-sm"), className)}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
       >
         <Popover
           open={showPossiblesList}
@@ -21313,7 +21413,7 @@ const Engagement: React.FC<EngagementProps> = ({ sessionActive = false, options,
       <div
         data-slot="engagement"
         data-session-active={sessionActive ? "true" : undefined}
-        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && cn(surfaceClass, "ring-accent/35 rounded-sm ring-1 shadow-sm"), className)}
+        className={cn("pointer-events-auto flex w-full min-w-0 max-w-full flex-col gap-half", sessionActive && "bg-active-base ring-accent/35 rounded-sm ring-1 shadow-sm", className)}
       >
         {primaryStepStatus ? (
           <div data-slot="engagement-step-heading" className="text-foreground px-half text-sm font-medium leading-tight">
@@ -21418,7 +21518,8 @@ interface WindowProps extends WindowConfig {
  * DefaultErrorDisplay holds the data fields for a DefaultErrorDisplay record.
  **/
 const DefaultErrorDisplay: React.FC<{ error: Error }> = ({ error }) => {
-  const bgClass = surfaceClass;
+  // 🎨 Transparent — rendered inside the Window body, which already paints the window-level surface.
+  const bgClass = "bg-transparent";
   const errorLabel = useLabel("ui.common.error");
   return (
     <div className={cn("flex flex-col items-center justify-center h-full w-full p-small", bgClass)}>
@@ -21675,7 +21776,7 @@ const Window: React.FC<WindowProps> = ({
   );
 
   return (
-    <LevelProvider level="window">
+    <SurfaceScope level="window" fill="surface">
       <GhostRegionShell
         ref={windowRef}
         id={id}
@@ -21830,7 +21931,7 @@ const Window: React.FC<WindowProps> = ({
           ) : null}
         </div>
       </GhostRegionShell>
-    </LevelProvider>
+    </SurfaceScope>
   );
 };
 
@@ -26696,7 +26797,7 @@ interface ModeDockDragPreviewProps {
 /** @emoji 🪟 Floating tab or window preview shown while docking. */
 const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId, content, className, style, tabOnly = false }) =>
   tabOnly ? (
-    <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex max-w-[12rem] shrink-0 items-center px-single text-xs text-element shadow-md select-none", modeDockInactiveTabClass, className)} style={style}>
+    <div data-slot="mode-dock-drag-preview" data-level="window" className={cn(modeDockInactiveTabClass, "pointer-events-none flex max-w-[12rem] shrink-0 items-center px-single text-xs text-element shadow-md select-none", glassClass, className)} style={style}>
       <div className={modeDockTabLabelClassName}>
         {iconId ? <Icon icon={iconId} size="small" className="shrink-0" /> : null}
         <span className="truncate">{title}</span>
@@ -26704,7 +26805,7 @@ const ModeDockDragPreview: React.FC<ModeDockDragPreviewProps> = ({ title, iconId
     </div>
   ) : (
     <div data-slot="mode-dock-drag-preview" className={cn("pointer-events-none flex flex-col overflow-hidden rounded shadow-lg", className)} style={style}>
-      <div data-slot="mode-dock-drag-preview-cap" data-level="window" className={cn("relative z-[2] flex h-medium shrink-0 items-stretch px-single", glassChromeClass, windowCapFrameClass)}>
+      <div data-slot="mode-dock-drag-preview-cap" data-level="window" className={cn(windowCapFrameClass, "relative z-[2] flex h-medium shrink-0 items-stretch px-single", glassClass)}>
         <div className={modeDockTabLabelClassName}>
           {iconId ? <Icon icon={iconId} size="small" className="shrink-0" /> : null}
           <span className="truncate">{title}</span>
@@ -26801,7 +26902,6 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
         data-active={activeWindowId === tab.id ? "true" : undefined}
         className={cn(
           modeDockTabClassName,
-          !perTabActiveChrome && surfaceClass,
           perTabActiveChrome && activeId !== tab.id && inactiveTabChromeClass(stackIndex),
           perTabActiveChrome && activeId === tab.id && !stackGloballyActive && inactiveTabChromeClass(stackIndex),
           perTabActiveChrome && activeId === tab.id && stackGloballyActive && modeDockActiveTabClass,
@@ -26873,7 +26973,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
           ref={ref}
           data-slot="mode-dock-tabbar"
           data-ui-reveal-region="window-cap"
-          className={cn("grid min-h-medium min-w-0 items-stretch", glassChromeClass, modeDragActive && dropZoneReadyClass)}
+          className={cn("grid min-h-medium min-w-0 items-stretch", glassClass, modeDragActive && dropZoneReadyClass)}
           style={{ gridColumn: "1 / -1", gridRow: 1, gridTemplateColumns: displayChromeGrid.templateColumns }}
         >
           {displayTabs.map((tab, index) =>
@@ -26910,7 +27010,7 @@ const ModeDockTabBar = reactHostPort.forwardRef<HTMLDivElement, ModeDockTabBarPr
   }
 
   return (
-    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", glassChromeClass)}>
+    <div ref={ref} data-slot="mode-dock-tabbar" data-ui-reveal-region="window-cap" className={cn("relative z-[2] flex w-full min-w-0 shrink-0 items-stretch", glassClass)}>
       <div data-slot="mode-dock-tab-cap" data-window-silhouette-chip data-dock="top" className={cn("relative flex min-h-medium min-w-0 shrink items-stretch", capFrameClass, modeDragActive && dropZoneReadyClass)}>
         <div data-slot="mode-dock-tabs" className="flex min-w-0 items-stretch justify-start overflow-x-auto overflow-y-hidden">
           {displayTabs.map((tab) =>
@@ -26969,7 +27069,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
   const chromeGrid = !mobile && tabs.length > 1 ? modeDockChromeGridPlacement(tabs, activeId) : undefined;
 
   const stackBody = (
-    <LevelProvider level="base">
+    <SurfaceScope level="base" fill="surface">
       <div ref={bodyRef} data-slot="mode-dock-stack-body" data-level="base" className={cn("relative flex h-full min-h-0 min-w-0 flex-1 flex-col overflow-hidden p-single", stackGloballyActive ? windowBodyFrameActiveClass : windowBodyFrameClass)}>
         {activeDescriptor
           ? (() => {
@@ -26982,13 +27082,13 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
             })()
           : null}
       </div>
-    </LevelProvider>
+    </SurfaceScope>
   );
 
   // 🪟 `z-window` isolates dock chrome / silhouette z-indexes so they cannot paint above floating Panels
   // (`zIndex` ≥ `--z-panel`). `[data-introduction-elevated]` still overrides to `z-tutorial + 1`.
   return (
-    <LevelProvider level="window">
+    <SurfaceScope level="window">
       <div ref={setStackEl} data-slot="mode-dock-stack" data-window-silhouette data-level="window" data-stack-path={stackPath} data-active={stackGloballyActive ? "true" : undefined} className="relative z-window flex h-full min-h-0 w-full min-w-0 flex-col overflow-visible bg-transparent">
         <ModeDockStackSilhouetteBorder stack={stackEl} active={stackGloballyActive} />
         {chromeGrid ? (
@@ -27000,7 +27100,7 @@ const ModeDockStack: React.FC<ModeDockStackProps> = ({ stackPath, node, windowsB
           </>
         )}
       </div>
-    </LevelProvider>
+    </SurfaceScope>
   );
 };
 
@@ -28685,6 +28785,50 @@ if (import.meta.vitest) {
       expect(GLASS_OVERLAY_BOX_CLASS).not.toContain("border-normal");
     });
 
+    it("wraps the introduction silhouette around the step chip and Next when Back is absent", async () => {
+      const steps: IntroductionStepDefinition[] = [{ id: "only", title: "Welcome", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] }];
+      const mockRect = (el: Element | null, rect: Partial<DOMRect>) => {
+        if (!(el instanceof HTMLElement)) return;
+        vi.spyOn(el, "getBoundingClientRect").mockReturnValue({
+          x: 0,
+          y: 0,
+          top: 0,
+          left: 0,
+          bottom: 0,
+          right: 0,
+          width: 0,
+          height: 0,
+          toJSON: () => ({}),
+          ...rect,
+        } as DOMRect);
+      };
+      const { container } = render(<UIIntroduction introduction={{ title: "Welcome", steps }} stepIndex={0} onStepIndexChange={vi.fn()} onDismiss={vi.fn()} />);
+      const stack = container.querySelector('[data-slot="introduction-info-box"]') as HTMLElement;
+      expect(stack.querySelector('[data-slot="window-chrome-footer-left"]')).toBeNull();
+      expect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]')).toBeTruthy();
+      expect(stack.querySelector('[data-slot="window-chrome-footer-right"]')).toBeTruthy();
+      mockRect(stack, { left: 0, top: 0, width: 200, height: 100, right: 200, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-gap"]'), { left: 60, right: 160, width: 100, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-controls"]'), { left: 160, right: 200, width: 40, height: 24, bottom: 24 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-cap"]'), { left: 0, height: 24, bottom: 24, width: 200, right: 200 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-center-chip"]'), { left: 80, right: 120, width: 40, height: 24, bottom: 100 });
+      mockRect(stack.querySelector('[data-slot="window-chrome-footer-right"]'), { left: 140, right: 200, width: 60, height: 24, bottom: 100 });
+      stack.setAttribute("data-silhouette-remeasure", "intro-center-right");
+      await waitFor(() => {
+        const path = stack.querySelector('[data-slot="window-chrome-silhouette-border"] path')?.getAttribute("d");
+        expect(path).toBe(
+          windowSilhouettePath({
+            width: 200,
+            height: 100,
+            top: { depth: 24, chips: [{ left: 0, right: 60 }, { left: 160, right: 200 }] },
+            bottom: { depth: 24, chips: [{ left: 80, right: 120 }, { left: 140, right: 200 }] },
+          }),
+        );
+        expect(path).toContain("V99 H140 V75 H120 V99 H80 V75");
+        expect(path).not.toMatch(/V99 V\d+/);
+      });
+    });
+
     it("skips the bottom-right silhouette notch when the introduction next chip is absent", async () => {
       const steps: IntroductionStepDefinition[] = [
         { id: "first", title: "First", body: "Step one.", introduce: null, show: [], placement: "center", interactions: [], ordered: false, logos: [], demonstrations: [] },
@@ -28735,6 +28879,7 @@ if (import.meta.vitest) {
             bottom: { depth: 24, chips: [{ left: 0, right: 50 }, { left: 80, right: 120 }] },
           }),
         );
+        expect(path).toContain("V75 H120 V99 H80 V75 H50 V99");
         expect(path).not.toMatch(/V99 V\d+/);
       });
     });
@@ -29040,7 +29185,7 @@ if (import.meta.vitest) {
       const centerRail = container.querySelector('[data-slot="window-chrome-footer-center"]');
       const centerChip = container.querySelector('[data-slot="window-chrome-footer-center-chip"]');
       expect(centerRail?.className).not.toMatch(/ui-glass-chrome/);
-      expect(centerChip?.className).toMatch(/ui-glass-chrome/);
+      expect(centerChip?.className).toMatch(/ui-glass/);
       expect(container.querySelector('[data-slot="window-chrome-footer-right"]')).toBeNull();
       expect(container.querySelector('[data-slot="window-chrome-footer"]')?.className).toContain("grid-cols-[minmax(0,1fr)_auto_minmax(0,1fr)]");
     });
@@ -30203,7 +30348,7 @@ if (import.meta.vitest) {
       const body = container.querySelector('[data-slot="window-chrome-body"]') as HTMLElement;
       expect(body.className).toContain("ui-glass");
       const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
-      expect(chip.className).toContain("ui-glass-chrome");
+      expect(chip.className).toContain("ui-glass");
       expect(screen.getByTestId("dialog-body")).toBeTruthy();
     });
   });
@@ -30270,9 +30415,9 @@ if (import.meta.vitest) {
         const chip = stack?.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
         expect(gap).toBeTruthy();
         expect(gap.className).toContain("bg-transparent");
-        expect(gap.className).not.toMatch(/ui-glass-/);
-        expect(stack.querySelector('[class*="ui-glass-"][class*="absolute"][class*="inset-0"]')).toBeNull();
-        expect(chip?.className).toMatch(/ui-glass-/);
+        expect(gap.className).not.toContain("ui-glass");
+        expect(stack.querySelector('[class*="ui-glass"][class*="absolute"][class*="inset-0"]')).toBeNull();
+        expect(chip?.className).toContain("ui-glass");
       });
     });
 
@@ -31198,10 +31343,10 @@ if (import.meta.vitest) {
       });
       expect(windowSilhouettePath(metrics(dockTop()), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H0 Z");
       expect(windowSilhouettePath(metrics(dockTop()))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H1 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H140 V100 H50 V76 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }))).toBe("M1,1 H60 V25 H160 V1 H199 V75 H140 V99 H50 V75 H1 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H0 Z");
-      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H50 V76 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H50 V100 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }, { left: 140, right: 200 }] }))).toBe("M1,1 H60 V25 H160 V1 H199 V99 H140 V75 H50 V99 H1 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 140, right: 200 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 0, right: 50 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H50 V100 H0 Z");
       expect(
         windowSilhouettePath(
           metrics(dockTop(), {
@@ -31214,7 +31359,7 @@ if (import.meta.vitest) {
           }),
           0,
         ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V76 H140 V100 H120 V76 H80 V100 H50 V76 H0 Z");
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H50 V100 H0 Z");
       expect(
         windowSilhouettePath(
           metrics(dockTop(), {
@@ -31226,7 +31371,20 @@ if (import.meta.vitest) {
           }),
           0,
         ),
-      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H120 V76 H80 V100 H50 V76 H0 Z");
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V76 H120 V100 H80 V76 H50 V100 H0 Z");
+      expect(
+        windowSilhouettePath(
+          metrics(dockTop(), {
+            depth: 24,
+            chips: [
+              { left: 80, right: 120 },
+              { left: 140, right: 200 },
+            ],
+          }),
+          0,
+        ),
+      ).toBe("M0,0 H60 V24 H160 V0 H200 V100 H140 V76 H120 V100 H80 V76 H0 Z");
+      expect(windowSilhouettePath(metrics(dockTop(), { depth: 24, chips: [{ left: 80, right: 120 }] }), 0)).toBe("M0,0 H60 V24 H160 V0 H200 V76 H120 V100 H80 V76 H0 Z");
       expect(windowSilhouettePath(metrics({ depth: 24, chips: [{ left: 0, right: 60 }] }), 0)).toBe("M0,0 H60 V24 H200 V100 H0 Z");
       expect(windowSilhouettePath(metrics({ depth: 0, chips: [] }), 0)).toBe("M0,0 H200 V100 H0 Z");
       expect(WINDOW_SILHOUETTE_PATH_INSET).toBeGreaterThanOrEqual(1);
@@ -31400,7 +31558,7 @@ if (import.meta.vitest) {
       expect(container.querySelector('[data-slot="mode-body"]')?.className).toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-canvas-label"]')).toBeNull();
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("flex-1");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-surface");
       expect(container.querySelector('[data-slot="mode-dock-tab-cap"]')?.className).not.toContain("ml-auto");
@@ -31510,10 +31668,10 @@ if (import.meta.vitest) {
       expect(activeStackTab?.className).toContain("border-0");
       expect(inactiveStackTab?.className).toContain("text-element");
       expect(inactiveStackTab?.className).not.toContain("text-foreground");
-      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(inactiveStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).toContain("border-0");
-      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(activeStack?.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
       expect(activeStack?.querySelector('[data-slot="mode-dock-controls-cap"]')?.className).not.toContain("ui-glass-chrome");
       expect(activeStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
       expect(inactiveStack?.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("normal");
@@ -31671,7 +31829,7 @@ if (import.meta.vitest) {
       expect(multiTabBar?.querySelector('[data-slot="mode-dock-controls-cap"]')).toBeTruthy();
       expect(multiTabBar?.querySelectorAll('[data-slot="mode-dock-maximize"]')).toHaveLength(1);
       expect(container.querySelector('[data-slot="mode-dock-stack"]')?.className).not.toContain("grid");
-      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass-chrome");
+      expect(container.querySelector('[data-slot="mode-dock-tabbar"]')?.className).toContain("ui-glass");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).not.toContain("ui-glass-chrome");
       expect(container.querySelector('[data-slot="mode-dock-tab-gap"]')?.className).toContain("border-0");
       expect(container.querySelector('[data-slot="mode-dock-silhouette-border"]')?.getAttribute("data-kind")).toBe("active");
@@ -32952,11 +33110,11 @@ if (import.meta.vitest) {
       const searchZone = container.querySelector('[data-slot="window-search-zone"]') as HTMLElement;
       expect(engagementZone).toBeTruthy();
       expect(engagementZone.getAttribute("data-level")).toBe("pane");
-      expect(engagementZone.className).toContain("ui-glass-chrome");
+      expect(engagementZone.className).toContain("ui-glass");
       expect(engagementZone.className).toContain("flex-row");
       expect(searchZone).toBeTruthy();
       expect(searchZone.getAttribute("data-level")).toBe("pane");
-      expect(searchZone.className).toContain("ui-glass-chrome");
+      expect(searchZone.className).toContain("ui-glass");
       expect(searchZone.className).toContain("flex-row");
       expect(screen.queryByPlaceholderText("Action")).toBeNull();
       expect(screen.queryByText("Idle")).toBeNull();
@@ -33418,7 +33576,7 @@ if (import.meta.vitest) {
       const strip = container.querySelector('[data-slot="utility-bar"]') as HTMLElement;
       expect(strip).toBeTruthy();
       expect(strip.getAttribute("data-level")).toBe("pane");
-      expect(strip.className).toContain("ui-glass-chrome");
+      expect(strip.className).toContain("ui-glass");
       expect(strip.className).toContain("flex-row");
       expect(strip.className).toContain("w-fit");
       expect(screen.queryByText("Utility")).toBeNull();
@@ -33516,7 +33674,7 @@ if (import.meta.vitest) {
         expect(screen.queryByTestId("pane-content")).toBeNull();
       });
 
-      it("Pane opens its own pane level and stamps ui-glass-chrome chrome (new — Pane previously reused panel glass with no level of its own)", () => {
+      it("Pane opens its own pane level and stamps ui-glass chrome (same fill as the pane body)", () => {
         const { container } = render(
           <PaneHost>
             <Pane id="level-pane" anchor="top-right" icon="box" label="Test">
@@ -33529,7 +33687,7 @@ if (import.meta.vitest) {
         const chromeStack = container.querySelector('[data-slot="window-chrome-stack"]') as HTMLElement;
         expect(chromeStack.getAttribute("data-level")).toBe("pane");
         const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
-        expect(chip.className).toContain("ui-glass-chrome");
+        expect(chip.className).toContain("ui-glass");
         const body = container.querySelector('[data-slot="pane-body"]') as HTMLElement;
         expect(body.className).toContain("ui-glass");
       });
@@ -36387,9 +36545,35 @@ if (treeVitest) {
       const markup = renderToStaticMarkup(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
       expect(markup).toContain("bg-active-base");
       expect(markup).toContain("border-0");
-      expect(markup).toContain('data-window-silhouette');
+      expect(markup).toContain("data-window-silhouette");
       expect(markup).toContain('data-slot="window-chrome-gap"');
       expect(markup).not.toContain("border-e");
+      expect(markup).toContain("ui-glass");
+      expect(markup).not.toContain("ui-glass-chrome");
+    });
+
+    it("panel chip-cap and body share the same glass fill so tabs do not float above the frame", async () => {
+      const { render } = await import("@testing-library/react");
+      const tabs = [
+        singleTreeLeaf({ id: "tab-a", icon: PanelRightIcon, name: "Tab A", tree: { sections: [] } }),
+        singleTreeLeaf({ id: "tab-b", icon: PanelRightIcon, name: "Tab B", tree: { sections: [] } }),
+      ];
+      const { container } = render(<Panel anchor="top-left" visible onVisibleChange={() => {}} tabs={tabs} activeTabPath={["tab-a"]} />);
+      const chip = container.querySelector('[data-slot="window-chrome-chip-cap"]') as HTMLElement;
+      const body = container.querySelector('[data-slot="panel-content"]') as HTMLElement;
+      const controls = container.querySelector('[data-slot="window-chrome-controls"]') as HTMLElement;
+      expect(chip.className).toContain("ui-glass");
+      expect(body.className).toContain("ui-glass");
+      expect(controls.className).toContain("ui-glass");
+      expect(chip.className).not.toContain("ui-glass-chrome");
+      expect(chip.hasAttribute("data-window-silhouette-chip")).toBe(true);
+      expect(container.querySelector('[data-slot="window-chrome-silhouette-border"]')).toBeTruthy();
+      const inactive = container.querySelector('[data-slot="panel-tab-button"]:not([data-active="true"])') as HTMLElement;
+      const active = container.querySelector('[data-slot="panel-tab-button"][data-active="true"]') as HTMLElement;
+      expect(inactive.className).toContain("bg-transparent");
+      expect(inactive.className).not.toContain("ui-surface");
+      expect(active.className).toContain("bg-active-base");
+      expect(body.className).toContain("z-[1]");
     });
 
     it("pane and panel chrome toggles keep the drag handle inside data-hover-scope so parent hover can emphasize it", () => {

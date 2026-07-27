@@ -1626,7 +1626,7 @@ fn create_process3d_app() -> App {
             // 🧰 Flat top-level exclusive utility bar scoped to the workpiece window (active utility is
             // host-owned). These four are the window's entire utility set — not a sub-collection — so
             // each carries `group: None` and renders as its own flat utility bar icon.
-            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "cursor") })
+            .utility(UtilityDefinition { category: Some(UtilityCategory::Selection), ..UtilityDefinition::new("select", "Select", "mouse-pointer") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("cut", "Cut", "scissors") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("drill", "Drill", "circle-dot") })
             .utility(UtilityDefinition { category: Some(UtilityCategory::Utilities), ..UtilityDefinition::new("attach", "Attach", "plus") })
@@ -1659,6 +1659,7 @@ fn register_process3d_exports() {
     semio_framework_os::register_mesh_exporter("3d.process", "process", process3d_mesh_from_document, Box::new(semio_framework_plugin::StlExporter));
     semio_framework_os::register_mesh_dwg_export_handler("3d.process", "process", process3d_mesh_from_document);
     semio_framework_os::register_mesh_dwg_import_handler("3d.process", process3d_document_from_mesh);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Process3dPlayApp>(process_3d::PROCESS_3D_SCHEMA);
 }
 
 semio_framework_plugin::semio_plugin! {

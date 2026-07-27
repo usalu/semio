@@ -60,7 +60,6 @@ interface StylingLevels {
   glassAlphaStep: number;
   glassBlurStepPx: number;
   glassSaturate: number;
-  glassChromeAlphaFactor: number;
   veilAlphaExtraSteps: number;
   zStep: number;
 }
@@ -158,7 +157,6 @@ const LEVELS_DEFAULT: StylingLevels = {
   glassAlphaStep: 0.12,
   glassBlurStepPx: 8,
   glassSaturate: 1.45,
-  glassChromeAlphaFactor: 0.5,
   veilAlphaExtraSteps: 1,
   zStep: 10,
 };
@@ -538,7 +536,6 @@ function emitRust(tokens: Tokens, resolvedAppearances: ReturnType<typeof resolve
     lines.push(`    pub const GLASS_ALPHA_STEP: f64 = ${rustF64Lit(levels.glassAlphaStep)};`);
     lines.push(`    pub const GLASS_BLUR_STEP_PX: f64 = ${rustF64Lit(levels.glassBlurStepPx)};`);
     lines.push(`    pub const GLASS_SATURATE: f64 = ${rustF64Lit(levels.glassSaturate)};`);
-    lines.push(`    pub const GLASS_CHROME_ALPHA_FACTOR: f64 = ${rustF64Lit(levels.glassChromeAlphaFactor)};`);
     lines.push(`    pub const VEIL_ALPHA_EXTRA_STEPS: u32 = ${levels.veilAlphaExtraSteps};`);
     lines.push(`    pub const Z_STEP: f64 = ${rustF64Lit(levels.zStep)};`);
     lines.push("}");

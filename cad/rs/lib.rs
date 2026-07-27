@@ -1647,6 +1647,7 @@ mod tests {
     #[test]
     fn cad_scene_round_trips_through_dsl_document() {
         vcs::test_support::assert_dsl_round_trip(&sample_scene());
+        vcs::test_support::assert_dsl_pack_equivalence(&sample_scene());
     }
 
     #[test]
@@ -1656,6 +1657,7 @@ mod tests {
         scene.energy_geometry = Some(sample_geometry());
         scene.structure_classic_geometry = Some(sample_geometry());
         vcs::test_support::assert_dsl_round_trip(&scene);
+        vcs::test_support::assert_dsl_pack_equivalence(&scene);
     }
 
     #[test]

@@ -406,7 +406,9 @@ fn create_imperative_app() -> App {
     .program("imperative", "Imperative", "graph")
 }
 
-fn register_imperative_exports() {}
+fn register_imperative_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ImperativePlayApp>(IMPERATIVE_DOCUMENT_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "imperative",

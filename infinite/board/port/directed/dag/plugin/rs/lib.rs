@@ -996,7 +996,12 @@ fn create_dag_app() -> App {
     .program("dag", "DAG", "graph")
 }
 
-fn register_dag_exports() {}
+fn register_dag_exports() {
+    // 🗂️ Registers `DagDocument`'s pack<->dsl codec under its real `document_schema()` string so
+    // `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+    // DAG documents without depending on this crate's concrete `Projection`/`Operation` types.
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<DagPlayApp>(DAG_DOCUMENT_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "dag", label: "DAG", version: "0.1.0",

@@ -21,6 +21,7 @@ serde_json = "1.0.140"
 thiserror = "2.0.12"
 dsl_core = { path = "../../dsl/core/rs" }
 dsl = { path = "../../dsl/rs" }
+pack = { path = "../../pack/rs" }
 semio-framework-core = { path = "../../framework/core/rs" }
 semio-framework-hash = { path = "../../framework/hash/rs" }
 

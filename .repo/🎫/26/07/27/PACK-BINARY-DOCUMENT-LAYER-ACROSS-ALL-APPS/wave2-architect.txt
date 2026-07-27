@@ -1,0 +1,101 @@
+WAVE 2 REPORT — family: architect
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+Program (architect/program/rs/lib.rs, mod program) — schema "architect.program"
+(ARCHITECT_PROGRAM_SCHEMA), App type ArchitectApp (architect/plugin/rs/lib.rs).
+Only one document kind in this family.
+
+2. CHANGES MADE
+--------------------------------------------------------------------------------
+architect/plugin/rs/lib.rs
+  `register_architect_exports()` (the native setup fn already wired into
+  `semio_framework_plugin::semio_plugin! { setup: register_architect_exports, .. }`)
+  now calls:
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ArchitectApp>(
+        ARCHITECT_PROGRAM_SCHEMA,
+    );
+  Verified indirectly: `__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest`
+  (which invokes `__semio_plugin_bundle()`, which calls `register_architect_exports()`)
+  passes.
+
+architect/program/rs/lib.rs (mod program, #[cfg(test)] mod tests)
+  - `empty_program_dsl_round_trips`: added a sibling
+    `vcs::test_support::assert_dsl_pack_equivalence(&empty_program())` call right next
+    to the existing `assert_dsl_round_trip` call, same test. PASSES.
+  - `sample_program_dsl_round_trips`: left as-is (just `assert_dsl_round_trip`, still
+    passing) — the pack-equivalence sibling call for this fixture was split into its
+    own new test `sample_program_dsl_pack_equivalence` (see §3) because it fails on a
+    confirmed upstream bug, and leaving it inline would have IGNORE'd (and thus lost
+    default-run coverage of) the already-passing DSL-only assertion too.
+
+No `DocumentVcsStore`-backed test exists anywhere in this family (no
+`assert_document_text_round_trip`/store fixture to pair `assert_document_pack_round_trip`
+next to), so only `assert_dsl_pack_equivalence` was applicable here.
+
+No JSON fixtures existed for this family (in-code fixture only, per family note) — none
+converted.
+
+3. BLOCKED: CONFIRMED UPSTREAM `pack` CRATE BUG (NOT an architect defect)
+--------------------------------------------------------------------------------
+Test added: `program::tests::sample_program_dsl_pack_equivalence` in
+architect/program/rs/lib.rs, marked `#[ignore = "..."]` with a full explanation inline
+(also spawned as a background task — title "Fix pack decode_table_soa losing nested
+RecordSpec for Option fields", task_id task_2decfb30).
+
+Repro: `vcs::test_support::assert_dsl_pack_equivalence(&sample_program())` panics with
+  "pack decode failed: schema error: missing field 'description' at 1:1"
+
+Root cause (confirmed by reading pack/value/rs/lib.rs, not guessed):
+`Program.stakeholders: Vec<Stakeholder>` is `#[dsl(table)]`. `Stakeholder.header:
+EntityHeader` is a plain nested `#[derive(dsl::DslRecord)]` field (not `Option`, not
+`#[dsl(table)]`). `EntityHeader.description: Option<TextField>` is `None` in the sample
+fixture. `pack::value::decode_table_soa` (the `TableSoA` columnar table decoder) is
+deliberately spec-free/self-describing per its own doc comment ("no RecordSpec is ever
+required to reconstruct the rows"); for a non-primitive column (like the nested-Record
+"header" column) its fallback branch calls `decode_value(reader, None, ctx, depth + 1)`
+— passing `shape: None`. Inside `decode_value`'s `TAG_RECORD` arm this makes
+`record_spec_of(shape)` resolve to `None`, so the nested `decode_record_fields(reader,
+None, ..)` skips its own end-of-function "backfill every spec field not seen on the wire
+as `Absent`" loop (gated on `spec` being `Some`). Meanwhile `encode_table`'s symmetric
+fallback branch correctly omits the `Absent` `description` sub-field from the wire
+(canonical-mode compaction, by design). Net effect: the omitted field is never
+backfilled on decode, so `dsl_derive`'s generated `from_record` (`record.get(id)
+.ok_or_else(missing field)`) errors out.
+
+This will reproduce for ANY `#[dsl(table)]` field whose row type has a nested
+(non-Option) record field that itself has an `Option<T>` sub-field left at `None` —
+a common, idiomatic pattern, not architect-specific misuse. Full write-up with exact
+line numbers and two candidate fixes is in the spawned task prompt (task_2decfb30).
+
+I did NOT attempt a workaround inside architect/** (e.g. dropping the `Option` wrapper
+on `EntityHeader.description`) since that would mask a real `pack` crate defect rather
+than fix it at the root, and `pack/**`/`dsl/**` are explicitly out of my family's scope
+— flagged for a separate session instead.
+
+4. PACK-COMPLETENESS LINT ALLOWLIST
+--------------------------------------------------------------------------------
+`architect/program/rs/lib.rs` now calls `assert_dsl_pack_equivalence(` (twice — once
+passing, once in the ignored test) — it satisfies the letter of the allowlist rule
+(the file DOES call the pack-law function). Wave 3 can remove this line from root
+script.ts's `POLICY_PACK_COMPLETENESS_ALLOWLIST`:
+  architect/program/rs/lib.rs
+Note for wave 3: the underlying assertion for the `sample_program` fixture is currently
+`#[ignore]`d pending the upstream `pack` bug fix (§3) — the file is lint-clean but not
+fully test-green until that lands.
+
+5. FINAL CARGO TEST STATUS
+--------------------------------------------------------------------------------
+cargo test -p architect_program --lib   : 180 passed, 0 failed, 1 ignored.
+cargo test -p architect-plugin --lib    : 11 passed, 0 failed, 0 ignored.
+cargo check -p architect_program -p architect-plugin : clean, no new warnings/errors.
+`cargo test -p architect_program -p architect-plugin --doc` intermittently fails with
+"can't find crate for `semio_framework_plugin`" (E0463) — confirmed transient/concurrent
+workspace churn (target/ dep rlibs momentarily stale from another session's in-flight
+build elsewhere in the shared repo), NOT caused by anything in this change: re-running
+`cargo test -p architect-plugin --doc` alone immediately after succeeds (0 doctests,
+ok). Unrelated to architect/** content — there are no doc-test code fences in either
+file.
+
+Files touched: architect/plugin/rs/lib.rs, architect/program/rs/lib.rs.

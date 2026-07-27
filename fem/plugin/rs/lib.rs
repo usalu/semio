@@ -1643,7 +1643,13 @@ fn result_display_action_args() -> Vec<ActionArgDef> {
     ]
 }
 
-fn register_fem_exports() {}
+/// 🗂️ Registers `fem2d`/`fem3d`'s pack↔dsl codecs under their real `document_schema()` strings so
+/// `framework/sync`'s `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse
+/// them without depending on `fem_2d`/`fem_3d`'s concrete `Projection`/`Operation` types.
+fn register_fem_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Fem2dPlayApp>(fem_2d::FEM_2D_SCHEMA);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Fem3dPlayApp>(fem_3d::FEM_3D_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "fem", label: "FEM", version: "0.1.0",

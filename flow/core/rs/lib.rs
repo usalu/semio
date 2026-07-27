@@ -4596,6 +4596,22 @@ impl vcs::DocumentDsl for FlowFixture {
         <FlowFixtureDsl as vcs::DocumentDsl>::print_dsl(&flow_fixture_to_dsl(self))
     }
 }
+
+/// 🗜️ `FlowFixture` has no `#[derive(dsl::DslDocument)]` of its own (see `FlowFixtureDsl`'s doc
+/// comment above), so it doesn't automatically gain `vcs::DocumentPack` the way every derived type
+/// does — this hand-written twin of the `vcs::DocumentDsl` impl just above delegates through the
+/// same `flow_fixture_to_dsl`/`flow_fixture_dsl_to_fixture` mirror instead of `__dsl_to_record`/
+/// `__dsl_from_record`.
+impl vcs::DocumentPack for FlowFixture {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <FlowFixtureDsl as vcs::DocumentPack>::encode_pack_with(&flow_fixture_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let dsl_fixture = <FlowFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+        flow_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -5051,6 +5067,7 @@ mod flow_vcs_tests {
             expanded: BTreeSet::from(["a".to_string(), "b".to_string()]),
         });
         vcs::test_support::assert_dsl_round_trip(&fixture);
+        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     /// 📜 Exercises `vcs::OpText` for every `FlowOperation` variant — the ground-truth proof for the
@@ -5089,6 +5106,7 @@ mod flow_vcs_tests {
         let text = include_str!("../../example/default.flow");
         let fixture = <FlowFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.flow must parse");
         vcs::test_support::assert_dsl_round_trip(&fixture);
+        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 }
 // #endregion 🔖DocumentVcs

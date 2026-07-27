@@ -1,0 +1,67 @@
+<!doctype html>
+<html>
+  <body>
+    <pre id="out">loading…</pre>
+    <script type="module">
+      import init2d, { puzzle2dParseDslJson } from "/puzzle/2d/rs/pkg/puzzle_2d.js";
+      import init3d, { puzzle3dParseDslJson } from "/puzzle/3d/rs/pkg/puzzle_3d.js";
+      import init5d, { puzzle5dParseDslJson } from "/puzzle/5d/rs/pkg/puzzle_5d.js";
+
+      async function run() {
+        await init2d();
+        await init3d();
+        await init5d();
+
+        const dsl2d = await fetch("/puzzle/2d/example/concrete-forest.puzzle2d").then((r) => r.text());
+        const dsl3d = await fetch("/puzzle/3d/example/concrete-forest.puzzle3d").then((r) => r.text());
+        const dsl5d = await fetch("/puzzle/5d/example/concrete-forest.puzzle5d").then((r) => r.text());
+        const dsl2dBig = await fetch("/puzzle/2d/example/nakagin-capsule-tower.puzzle2d").then((r) => r.text());
+        const dsl3dBig = await fetch("/puzzle/3d/example/nakagin-capsule-tower.puzzle3d").then((r) => r.text());
+        const dsl5dBig = await fetch("/puzzle/5d/example/nakagin-capsule-tower.puzzle5d").then((r) => r.text());
+
+        const json2d = JSON.parse(puzzle2dParseDslJson(dsl2d));
+        const json3d = JSON.parse(puzzle3dParseDslJson(dsl3d));
+        const json5d = JSON.parse(puzzle5dParseDslJson(dsl5d));
+        const json2dBig = JSON.parse(puzzle2dParseDslJson(dsl2dBig));
+        const json3dBig = JSON.parse(puzzle3dParseDslJson(dsl3dBig));
+        const json5dBig = JSON.parse(puzzle5dParseDslJson(dsl5dBig));
+
+        const report = {
+          "2d": {
+            schema: json2d.schema,
+            camera: json2d.camera,
+            nodeCount: json2d.nodes.length,
+            edgeCount: json2d.edges.length,
+            firstNodeKeys: Object.keys(json2d.nodes[0] ?? {}),
+            firstNodeSample: json2d.nodes[0],
+            kindCompatibilitySample: json2d.meta?.kindCompatibility?.[0],
+          },
+          "3d": {
+            schema: json3d.schema,
+            camera: json3d.camera,
+            objectCount: json3d.objects?.length,
+            firstObjectKeys: Object.keys(json3d.objects?.[0] ?? {}),
+          },
+          "5d": {
+            schema: json5d.schema,
+            camera3d: json5d.camera3d,
+            partCount: json5d.parts?.length,
+            firstPartKeys: Object.keys(json5d.parts?.[0] ?? {}),
+            firstPart3dKeys: Object.keys(json5d.parts?.[0]?.["3d"] ?? {}),
+          },
+        };
+        report.bigCounts = {
+          nodes2d: json2dBig.nodes.length,
+          edges2d: json2dBig.edges.length,
+          objects3d: json3dBig.objects.length,
+          parts5d: json5dBig.parts.length,
+        };
+        document.getElementById("out").textContent = JSON.stringify(report, null, 2);
+        window.__VERIFY_REPORT__ = report;
+      }
+      run().catch((e) => {
+        document.getElementById("out").textContent = "ERROR: " + (e && e.stack ? e.stack : String(e));
+      });
+    </script>
+  </body>
+</html>

@@ -2068,6 +2068,10 @@ fn create_draw_app() -> App {
 }
 
 fn register_draw_exports() {
+    // 🗂️ Registers `DrawDocument`'s pack<->dsl codec under its real `document_schema()` string so
+    // `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+    // draw documents without depending on this crate's concrete `Projection`/`Operation` types.
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<DrawPlayApp>(DRAW_DOCUMENT_SCHEMA);
     semio_framework_os::register_2d_export_handlers("2d.drawing", "draw", draw::draw_document_json_to_svg);
     semio_framework_os::register_os_media_export_handler("2d.drawing", semio_framework_os::OsMediaFormat::Dwg, |doc| {
         let bytes = draw::draw_document_json_to_dwg_bytes(doc)?;

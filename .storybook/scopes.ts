@@ -95,7 +95,7 @@ export const STORY_SCOPES: readonly StoryScope[] = [
     titlePrefix: "🏘️compose🧪algorithms",
     sourceRoots: [repoRelative("compose/dev/algorithm"), repoRelative("compose/client/lib/rs"), repoRelative("compose/fixture")],
     aliases: {
-      "@semio-tech/compose-algorithm": "compose/dev/algorithm/index.ts",
+      "@semio-tech/compose-algorithm": "compose/dev/algorithm/js/index.ts",
     },
   },
   {

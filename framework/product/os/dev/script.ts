@@ -736,6 +736,27 @@ async function createPluginApiInner() {
       const artifact = await plugin.produceMedia(instanceId, portId, requestJson ?? "");
       return { descriptorJson: artifact.descriptorJson, data: artifact.data };
     },
+    async readAppDocumentText(instanceId) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const files = await plugin.readAppDocumentText(instanceId);
+      return { dsl: files.dsl, ops: files.ops };
+    },
+    async loadAppDocumentText(instanceId, dsl, ops) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      await plugin.loadAppDocumentText(instanceId, { dsl, ops });
+    },
+    async readAppDocumentPack(instanceId) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      const files = await plugin.readAppDocumentPack(instanceId);
+      return { pack: files.pack, ops: files.ops };
+    },
+    async loadAppDocumentPack(instanceId, pack, ops) {
+      if (!apps.has(instanceId)) throw new Error(\`unknown instance: \${instanceId}\`);
+      await plugin.loadAppDocumentPack(instanceId, {
+        pack: pack instanceof Uint8Array ? pack : new Uint8Array(pack ?? []),
+        ops,
+      });
+    },
   };
   return {
     manifest: () => runSerialized(() => core.manifest()),
@@ -754,6 +775,10 @@ async function createPluginApiInner() {
       runSerialized(() => core.consumeMedia(instanceId, portId, descriptorJson, data)),
     produceMedia: (instanceId, portId, requestJson) =>
       runSerialized(() => core.produceMedia(instanceId, portId, requestJson)),
+    readAppDocumentText: (instanceId) => runSerialized(() => core.readAppDocumentText(instanceId)),
+    loadAppDocumentText: (instanceId, dsl, ops) => runSerialized(() => core.loadAppDocumentText(instanceId, dsl, ops)),
+    readAppDocumentPack: (instanceId) => runSerialized(() => core.readAppDocumentPack(instanceId)),
+    loadAppDocumentPack: (instanceId, pack, ops) => runSerialized(() => core.loadAppDocumentPack(instanceId, pack, ops)),
   };
 }
 

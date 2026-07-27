@@ -2115,7 +2115,12 @@ fn create_forms_app() -> App {
     .program("forms", "Forms", "data")
 }
 
-fn register_forms_exports() {}
+/// 🗂️ Registers `FormSpec`'s pack<->dsl codec under its real `document_schema()` string so
+/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+/// forms documents without depending on this crate's concrete `Projection`/`Operation` types.
+fn register_forms_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<FormsPlayApp>(FORMS_DOCUMENT_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "forms",

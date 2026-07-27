@@ -1741,11 +1741,13 @@ mod tests {
     #[test]
     fn default_scene_roundtrips_through_dsl() {
         vcs::test_support::assert_dsl_round_trip(&default_remodel_scene());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_remodel_scene());
     }
 
     #[test]
     fn populated_scene_roundtrips_through_dsl() {
         vcs::test_support::assert_dsl_round_trip(&populated_scene_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&populated_scene_fixture());
     }
 
     /// ⚡ One `assert_op_line_round_trip` per `RemodelOperation` variant, per the mechanism contract.
@@ -1794,6 +1796,7 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![RemodelOperation::SetFeatureParams { params: feature_params }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

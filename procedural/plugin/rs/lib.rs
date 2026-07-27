@@ -1114,6 +1114,9 @@ pub mod app_2d {
     pub fn register_procedural2d_exports() {
         semio_framework_os::register_2d_export_handlers("2d.procedural", "procedural2d", procedural2d_document_json_to_svg);
         semio_framework_os::register_dwg_import_handler("2d.procedural", procedural2d_document_from_dwg);
+        // 📦 Registers `Procedural2dDocument`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
+        // can print/parse `.procedural2d` packs without depending on this crate's concrete types.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Procedural2dPlayApp>(PROCEDURAL_2D_SCHEMA);
     }
     //#endregion 🔖Manifest
 
@@ -3050,6 +3053,9 @@ pub mod app_3d {
         semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::GlbImporter));
         semio_framework_os::register_mesh_importer("3d.procedural", procedural3d_document_from_mesh, Box::new(semio_framework_plugin::StlImporter));
         semio_framework_os::register_mesh_dwg_import_handler("3d.procedural", procedural3d_document_from_mesh);
+        // 📦 Registers `Procedural3dDocument`'s pack<->dsl codec so `framework/sync`'s `FolderEndpoint`
+        // can print/parse `.procedural3d` packs without depending on this crate's concrete types.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Procedural3dPlayApp>(PROCEDURAL_3D_SCHEMA);
     }
     //#endregion 🔖Manifest
 

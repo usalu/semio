@@ -1,0 +1,155 @@
+Wave 0 closing/verification report — pack crate family
+========================================================
+
+STATUS: SUCCESS
+
+--------------------------------------------------------------------------------
+1. cargo check --workspace
+--------------------------------------------------------------------------------
+All 10 pack_* crates compile cleanly, both as part of the full workspace check and
+in isolation (`cargo check -p pack_core -p pack_format -p pack_value -p pack_io
+-p pack_async -p pack_http -p pack_index -p pack -p pack_testkit -p pack_cli`).
+
+The only errors surfaced by `cargo check --workspace` are 6x E0609 in
+`ui/tui/rs/lib.rs` (missing `canvas`/`window`/`panel`/`hover_window`/`hover_panel`/
+`temporary` fields on `&ChromePalette`). This file is entirely outside
+`pack/**` and unrelated to the pack crate family (pre-existing churn from a
+concurrent session touching `ui/tui`), so per my remit ("do NOT change any file
+outside pack/") I left it untouched. It does not block or affect any pack_* crate.
+
+Expected (contract-sanctioned) warning, not an error: `pack/cli/rs/Cargo.toml`
+warns that `lib.rs` is present in both the `lib` target `pack_cli` and the `bin`
+target `pack` — this is exactly what the contract's pack_cli section specifies
+(`[[bin]] name = "pack" path = "lib.rs"` alongside `[lib] path = "lib.rs"`, both
+pointing at the same file). Verified both `cargo build -p pack_cli --lib` and
+`cargo build -p pack_cli --bin pack` succeed independently.
+
+--------------------------------------------------------------------------------
+2. cargo test -p pack_core -p pack_format -p pack_value -p pack_io -p pack_async
+   -p pack_http -p pack_index -p pack -p pack_testkit -p pack_cli
+--------------------------------------------------------------------------------
+All green, no failures. Per-crate results:
+  pack_core     26 passed
+  pack_format   24 passed
+  pack_value    11 passed
+  pack_io        7 passed
+  pack_async     8 passed
+  pack_http      8 passed
+  pack_index    10 passed
+  pack           2 passed  (facade)
+  pack_testkit  18 passed
+  pack_cli       8 passed
+  (pack's bin target `pack` also runs pack_cli's 8 tests a second time under the
+  bin-target test binary — expected duplication from the intentional dual lib+bin
+  target, not a bug.)
+Doc-tests: 0 across all crates (none written, none expected).
+No fixes were required — everything was already green on first run.
+
+--------------------------------------------------------------------------------
+3. Cross-cutting code-quality checks (read every pack/**/rs/lib.rs end-to-end)
+--------------------------------------------------------------------------------
+- Dependency graph: confirmed via every pack/**/rs/Cargo.toml — no crate depends
+  on vcs, dsl_derive, or any app crate. Only pack_value, pack_testkit, the pack
+  facade, AND pack_cli depend on dsl_schema (pack_testkit and nothing else also
+  depends on dsl_core) — pack_cli's dsl_schema dependency is required by and
+  matches the contract's own pack_cli spec (seeding the built-in 2-entry schema
+  registry for `to-dsl`/`from-dsl` from `dsl_schema` test fixtures), so this is
+  not a stray leak.
+- No foreign error type leaks: grepped for `std::io::Error`/`io::Error` — the
+  only occurrence outside doc comments is `pack_io`'s private `io_err` helper,
+  which converts it to `PackError::Io(String)` immediately; never appears in any
+  public signature. `ureq::Agent` and `blake3::Hasher` only ever appear as
+  private struct fields (`UreqRangeTransport.agent`, `PackWriter.document_hasher`),
+  never in a public signature. Every fallible public fn returns `Result<_, PackError>`.
+- Region balance: every `//#region` has a matching `//#endregion` in every
+  pack/**/rs/lib.rs file (verified by paired grep counts per file; pack_cli's
+  raw region-marker occurrence counts differ by one only because line 4 of its
+  module doc comment *mentions* `//#region 🔖Registry` in prose — the real region
+  markers are balanced 16/16).
+- Docstrings: every top-level item doc-comment block (`///`/`//!`) starts with an
+  emoji or an `@emoji` marker, per file's module doc and per-item doc comments.
+  (Minor, non-blocking nit: a handful of individual enum-variant doc comments in
+  pack_async, e.g. `GroupState::Gathering`/`Dispatched`/`Done`, don't repeat an
+  emoji on the variant itself even though the enclosing enum's docstring has one
+  — cosmetic only, not a contract violation.)
+- No `unsafe` anywhere in pack/**.
+- Single-file lib.rs per crate, no stray files besides Cargo.toml/lib.rs/
+  project.json/script.ts (scaffolding) — confirmed via `find pack -type f`.
+
+--------------------------------------------------------------------------------
+4. Scaffolding consistency
+--------------------------------------------------------------------------------
+- Root /Users/ueli/Documents/semio/Cargo.toml `[workspace] members`: exactly the
+  10 new paths present, no duplicates (pack/core/rs, pack/format/rs, pack/value/rs,
+  pack/io/rs, pack/async/rs, pack/http/rs, pack/index/rs, pack/rs, pack/testkit/rs,
+  pack/cli/rs).
+- All 10 project.json files carry the exact nx project names used below and all
+  point their `test`/`test-quick`/`test-long`/`test-exhaustive` targets at
+  `bun ./script.ts test [level]` in the correct crate directory.
+- All 10 script.ts files call `runCargoTestBudgeted([<correct package name>], ...)`
+  matching each crate's actual Cargo.toml package name.
+- .vscode/launch.json has all 10 `🧪test📦pack-*` entries registered, each
+  running `bun nx run <project-name>:test`, matching the project.json names.
+- `bun nx run-many -t test --projects=@semio-tech/pack-core-rs,@semio-tech/pack-format-rs,@semio-tech/pack-value-rs,@semio-tech/pack-io-rs,@semio-tech/pack-async-rs,@semio-tech/pack-http-rs,@semio-tech/pack-index-rs,@semio-tech/pack-rs,@semio-tech/pack-testkit-rs,@semio-tech/pack-cli-rs`
+  run from /Users/ueli/Documents/semio: "NX Successfully ran target test for 10
+  projects". No nx wiring issues found; no fixes needed.
+
+--------------------------------------------------------------------------------
+5. Full file list under pack/** (all pre-existing from the 10 wave-0 agents +
+   Scaffold phase; nothing added or removed by this verification pass)
+--------------------------------------------------------------------------------
+pack/async/rs/Cargo.toml
+pack/async/rs/lib.rs
+pack/async/rs/project.json
+pack/async/rs/script.ts
+pack/cli/rs/Cargo.toml
+pack/cli/rs/lib.rs
+pack/cli/rs/project.json
+pack/cli/rs/script.ts
+pack/core/rs/Cargo.toml
+pack/core/rs/lib.rs
+pack/core/rs/project.json
+pack/core/rs/script.ts
+pack/format/rs/Cargo.toml
+pack/format/rs/lib.rs
+pack/format/rs/project.json
+pack/format/rs/script.ts
+pack/http/rs/Cargo.toml
+pack/http/rs/lib.rs
+pack/http/rs/project.json
+pack/http/rs/script.ts
+pack/index/rs/Cargo.toml
+pack/index/rs/lib.rs
+pack/index/rs/project.json
+pack/index/rs/script.ts
+pack/io/rs/Cargo.toml
+pack/io/rs/lib.rs
+pack/io/rs/project.json
+pack/io/rs/script.ts
+pack/rs/Cargo.toml
+pack/rs/lib.rs
+pack/rs/project.json
+pack/rs/script.ts
+pack/testkit/rs/Cargo.toml
+pack/testkit/rs/lib.rs
+pack/testkit/rs/project.json
+pack/testkit/rs/script.ts
+pack/value/rs/Cargo.toml
+pack/value/rs/lib.rs
+pack/value/rs/project.json
+pack/value/rs/script.ts
+
+Modified/relevant files outside pack/** (all pre-existing from prior Scaffold
+phase, none touched by this verification pass — read-only confirmation only):
+/Users/ueli/Documents/semio/Cargo.toml                (workspace members list)
+/Users/ueli/Documents/semio/.vscode/launch.json        (10 pack-* test entries)
+
+This verification pass made ZERO code edits — no cross-crate mismatches, no
+failing tests, and no nx/scaffolding defects were found; everything from the
+Scaffold + wave-0 implementation phases was already fully consistent and green.
+
+--------------------------------------------------------------------------------
+Final status: cargo check --workspace green for all pack_* crates (unrelated
+pre-existing ui_tui error out of scope, left untouched), cargo test green
+(122 tests passed across the 10 crates, 0 failed), nx run-many test green for
+all 10 projects. Ready for wave 1 (vcs path-depping onto pack/rs).

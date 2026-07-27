@@ -1831,7 +1831,9 @@ fn create_architect_app() -> App {
     .program("architect", "Architect", "data")
 }
 
-fn register_architect_exports() {}
+fn register_architect_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ArchitectApp>(ARCHITECT_PROGRAM_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "architect",

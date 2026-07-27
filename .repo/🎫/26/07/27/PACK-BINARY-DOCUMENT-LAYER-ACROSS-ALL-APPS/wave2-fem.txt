@@ -1,0 +1,152 @@
+WAVE 2 — family: fem
+================================================================================
+
+1. FILES TOUCHED
+--------------------------------------------------------------------------------
+fem/2d/rs/lib.rs
+  - fem2d_dsl_round_trips_fixture_documents: added assert_dsl_pack_equivalence(&..) beside every
+    existing assert_dsl_round_trip(&..) call (empty_fem2d_projection, simply_supported_beam_doc,
+    truss_doc, rectangle_with_hole_region_doc, with_combination).
+  - fem2d_document_text_round_trips_through_the_store: added
+    vcs::test_support::assert_document_pack_round_trip(&store) beside the existing
+    assert_document_text_round_trip(&store).
+
+fem/3d/rs/lib.rs
+  - fem3d_dsl_round_trips_fixture_documents: added assert_dsl_pack_equivalence(&..) beside every
+    existing assert_dsl_round_trip(&..) call (empty_fem3d_projection, cantilever_fixture,
+    truss_fixture, solid_slab_doc, with_combination).
+  - fem3d_document_text_round_trips_through_the_store: added
+    vcs::test_support::assert_document_pack_round_trip(&store) beside the existing
+    assert_document_text_round_trip(&store).
+
+fem/plugin/rs/lib.rs
+  - register_fem_exports() (previously an empty fn, already wired as `setup: register_fem_exports`
+    in the `semio_plugin!` macro invocation) now registers both document kinds' pack codecs:
+      semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Fem2dPlayApp>(fem_2d::FEM_2D_SCHEMA);
+      semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Fem3dPlayApp>(fem_3d::FEM_3D_SCHEMA);
+
+Fixtures: fem/2d/example/default.fem2d and fem/3d/example/default.fem3d left untouched (per family
+note — already DSL text, nothing to convert).
+
+--------------------------------------------------------------------------------
+2. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+  Fem2dDocument via Fem2dPlayApp (fem/plugin/rs/lib.rs) — schema string fem_2d::FEM_2D_SCHEMA = "fem.2d"
+    (DocumentApp::document_schema()'s actual return value, read from the impl, not guessed).
+  Fem3dDocument via Fem3dPlayApp (fem/plugin/rs/lib.rs) — schema string fem_3d::FEM_3D_SCHEMA = "fem.3d"
+    (same).
+
+--------------------------------------------------------------------------------
+3. FIXTURES CONVERTED
+--------------------------------------------------------------------------------
+  None. Family note said fem/2d/example/default.fem2d and fem/3d/example/default.fem3d stay as-is;
+  confirmed both are already DSL text and unaffected by this ticket.
+
+--------------------------------------------------------------------------------
+4. PACK-COMPLETENESS LINT ALLOWLIST
+--------------------------------------------------------------------------------
+  fem/2d/rs/lib.rs and fem/3d/rs/lib.rs are both in POLICY_PACK_COMPLETENESS_ALLOWLIST (root
+  script.ts). Both now textually call assert_dsl_pack_equivalence(/assert_document_pack_round_trip(
+  beside every existing DSL-round-trip law call, satisfying the lint's pattern requirement.
+  HOWEVER — see §5 below — the newly-added assert_dsl_pack_equivalence assertions currently FAIL AT
+  RUNTIME for both packages, due to a confirmed pre-existing pack-crate bug outside this family's
+  scope (the SAME bug independently confirmed by the cad/architect/layout wave-2 families — see
+  wave2-cad.txt §5, wave2-architect.txt §4, wave2-layout.txt §5 in this ticket folder). Wave 3 should
+  NOT remove fem/2d/rs/lib.rs or fem/3d/rs/lib.rs from the allowlist until pack/value/rs/lib.rs's
+  decode_table_soa fallback bug (below) is fixed and fem_2d/fem_3d's full test suites are re-verified
+  green.
+
+--------------------------------------------------------------------------------
+5. BLOCKER — NOT FIXED, OUT OF SCOPE (pack/value/rs/lib.rs)
+--------------------------------------------------------------------------------
+`cargo test -p fem_2d`: 35 passed, 1 FAILED (the newly-added pack-equivalence assertions, all in one
+test fn):
+
+  thread 'tests::fem2d_dsl_round_trips_fixture_documents' panicked at vcs/rs/lib.rs:3406:89:
+  pack decode failed: schema error: expected Enum, found Int(0) at 1:1
+
+`cargo test -p fem_3d`: 33 passed, 1 FAILED, identical shape:
+
+  thread 'tests::fem3d_dsl_round_trips_fixture_documents' panicked at vcs/rs/lib.rs:3406:89:
+  pack decode failed: schema error: expected Enum, found Int(0) at 1:1
+
+`cargo test -p fem-plugin`: 67 passed, 0 failed — fully green (the codec registration change and
+fem-plugin's own test suite are unaffected; the plugin crate never exercises a full pack round trip
+of a document with populated FemSupport/FemLoad rows in its own tests).
+
+ROOT CAUSE (traced precisely by hand-decoding record fields step by step with
+Fem2dDocument::__dsl_spec()/__dsl_to_record()/vcs::pack_rt::encode_document/decode_document/
+Fem2dDocument::__dsl_from_record individually — read-only, did not touch pack/** or dsl/**, both out
+of this family's allowed directories):
+
+  fem_2d::FemDof / fem_3d::FemDof are `#[derive(dsl::DslScalar)]` unit enums (Shape::Enum). Both
+  crates embed `Vec<FemDof>` inside a `#[dsl(table)]` row type — `FemSupport.fixed: Vec<FemDof>`,
+  itself a field of `supports: Vec<FemSupport>` (`#[dsl(table)]` on Fem2dDocument/Fem3dDocument, so
+  FemSupport is columnar Structure-of-Arrays `Shape::Table` encoded). `fixed`'s own shape is
+  `Shape::List(Box::new(Shape::Enum(..)))` — not itself Bool/Int/UInt/Float/Enum/Text, so
+  `elem_tag_for_shape` maps it to `ELEM_FALLBACK` and both encode/decode of that TableSoA column go
+  through the generic per-value fallback arms:
+
+  In pack/value/rs/lib.rs:
+  - `encode_table`'s ELEM_FALLBACK column-write arm (line 1029) correctly threads the real column
+    shape through: `encode_value(ctx, Some(&field.shape), v, depth + 1, out)`. For a homogeneous
+    `Vec<FemDof>` (e.g. `fixed: [Tx, Ty]`), `encode_seq`'s `homogeneous_numeric_kind` sees "every
+    element is FieldValue::Enum" and picks the packed `TAG_PACKED_VARINT` wire form — which, BY
+    DESIGN (see the doc comment on `decode_packed_varint_body`, ~line 773-776), does NOT itself
+    encode which numeric FieldValue variant (Int/UInt/Enum) the packed varints represent; that
+    disambiguation is supplied ONLY by the caller's `elem_shape` argument at decode time.
+  - `decode_table_soa`'s mirroring ELEM_FALLBACK arm (line 1115) calls
+    `decode_value(reader, None, ctx, depth + 1)?` — `None`, NOT `Some(&field.shape)`. This drops the
+    `Shape::List(Enum)` context that `decode_packed_varint_body` needs, so it falls through to its
+    documented "unknown context always defaults to Int" branch and returns
+    `FieldValue::List([FieldValue::Int(0), FieldValue::Int(1), ..])` instead of
+    `FieldValue::List([FieldValue::Enum(0), FieldValue::Enum(1), ..])`.
+  - `dsl_derive`'s generated `impl DslField for FemDof` (`from_value`, dsl/derive/rs/lib.rs:619-627)
+    then rejects the `Int(0)` it receives while reconstructing `Vec<FemDof>`, surfacing exactly the
+    observed "expected Enum, found Int(0)" (dsl/derive/rs/lib.rs:625's `format!("expected Enum, found
+    {other:?}")`, wrapped into a `TextError` with a synthetic `1:1` span since pack decode has no
+    real line/column, then bridged to `PackError` by `vcs::text_error_to_pack_error`).
+
+  MINIMAL, FULLY REPRODUCIBLE trigger (order-independent, deterministic every run — verified
+  standalone with just `vcs::test_support::assert_pack_round_trip(&simply_supported_beam_doc())`,
+  no other test needed): ANY Fem2dDocument/Fem3dDocument whose `supports` table has at least one row
+  with a non-empty `fixed: Vec<FemDof>` fails a pack round trip. `empty_fem2d_projection()`/
+  `empty_fem3d_projection()` alone (zero rows everywhere) do NOT trigger this specific bug in
+  isolation, since `decode_table_soa`'s per-column loops never execute for a zero-row table; but
+  empirically the full `fem2d_dsl_round_trips_fixture_documents` fails on its VERY FIRST
+  `assert_dsl_pack_equivalence(&empty_fem2d_projection())` call when run as part of the fem_2d
+  library's normal full-suite `cargo test` — the panic happens deterministically the same way on
+  every full-suite run but NOT when that exact same call is run in isolation (as its own #[test] fn
+  with nothing else in the binary). This second, narrower anomaly was investigated but not fully
+  root-caused (no global/static mutable state was found anywhere in pack_core/pack_format/pack_value/
+  pack_index — the only process-wide OnceLock in the dsl/pack dependency graph is dsl_core's string
+  INTERNER, used only by DSL-text tokenizing, not the pack binary path); it is very likely a second
+  symptom of the same shape-loss family of bugs (or a HashMap-iteration-order sensitivity pack_value
+  documents itself as deliberately avoiding — see `homogeneous_numeric_kind`'s comment — but may not
+  fully achieve for the TableSoA fallback path). Not chased further since the ELEM_FALLBACK
+  `Some`-vs-`None` bug above is already a complete, sufficient, and precisely located root cause and
+  fix target for wave 3 / whoever owns pack/**.
+
+  SUGGESTED FIX (for whoever owns pack/**, NOT applied by this agent — out of scope for family fem):
+  change pack/value/rs/lib.rs:1115 from `decode_value(reader, None, ctx, depth + 1)?` to
+  `decode_value(reader, Some(&field.shape), ctx, depth + 1)?`, mirroring the encode side at line 1029
+  exactly (`field` is already in scope in `decode_table_soa`'s enclosing loop — need to reconstruct
+  the per-column `FieldSpec`/shape from the table's row spec at decode time, the same way
+  `encode_table` has it via `spec_fn()`; `decode_table_soa`'s current doc comment claims it needs "no
+  RecordSpec... to reconstruct the rows", which is true for TAG_TABLE_SOA's own self-describing
+  per-column tags EXCEPT for this one ELEM_FALLBACK case, which silently degrades instead of erroring
+  when no spec is available).
+
+--------------------------------------------------------------------------------
+6. WHAT COULD NOT BE COMPLETED, AND WHY
+--------------------------------------------------------------------------------
+Neither fem_2d nor fem_3d's full test suite is fully green: each has exactly 1 failing test
+(fem2d_dsl_round_trips_fixture_documents / fem3d_dsl_round_trips_fixture_documents), both failing
+solely on the pack-completeness law calls this ticket required adding, both blocked on the
+pack/value/rs/lib.rs TableSoA-fallback bug documented in §5 above. Per this family's directory
+restriction (fem/** only — NOT pack/**, dsl/**, vcs/**, framework/**), this agent did not and could
+not fix pack/value/rs/lib.rs. The added test-law calls are correct and required by the wave-2 brief
+(and correctly caught a real, pre-existing latent defect in DocumentPack's pack encoding of any
+Fem2dDocument/Fem3dDocument with populated support DOF data — silently corrupting rather than only
+failing in the pre-pack-law world, since nothing previously exercised this code path at all); they
+were deliberately NOT removed or weakened to force a green run.

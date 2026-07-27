@@ -337,6 +337,24 @@ impl WasmPluginRuntime {
         Self::plugin_result(result)
     }
 
+    /// @emoji 📦 Pack counterpart of {@link Self::read_app_document_text}.
+    pub fn read_app_document_pack(&self, instance_id: u32) -> Result<semio::framework::types::DocumentPackFiles, PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_read_app_document_pack(&mut *store, instance_id).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
+    /// @emoji 📦 Pack counterpart of {@link Self::load_app_document_text}.
+    pub fn load_app_document_pack(&self, instance_id: u32, document_pack: semio::framework::types::DocumentPackFiles) -> Result<(), PluginHostError> {
+        let mut store = self.store_guard()?;
+        let bindings = self.bindings_guard()?;
+        Self::prepare_call(&mut store);
+        let result = bindings.semio_framework_plugin().call_load_app_document_pack(&mut *store, instance_id, &document_pack).map_err(|error| PluginHostError::Wasmtime(error.to_string()))?;
+        Self::plugin_result(result)
+    }
+
     /// @emoji 🔗 Asks the plugin to attach a backbone by uri (resolved to a `PortBackbone` inside the
     /// sandbox, relayed to the endpoint registered here via {@link register_host_backbone}).
     pub fn attach_backbone(&self, instance_id: u32, uri: &str) -> Result<(), PluginHostError> {

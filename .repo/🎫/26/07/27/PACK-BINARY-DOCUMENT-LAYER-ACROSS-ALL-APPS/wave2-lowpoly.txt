@@ -1,0 +1,79 @@
+WAVE 2 — FAMILY: lowpoly
+=========================
+
+1. DOCUMENT KINDS COVERED
+--------------------------
+- App type: lowpoly_plugin::LowpolyPlayApp
+  Projection: lowpoly_core::LowpolyProjection
+  Schema string used: lowpoly_core::LOWPOLY_DOCUMENT_SCHEMA = "lowpoly.document"
+    (read directly from LowpolyPlayApp's `DocumentApp::document_schema()` impl, which returns this
+    constant literally — not guessed.)
+  Registration call added: lowpoly/plugin/rs/lib.rs, inside `register_lowpoly_exports()` (the
+  existing native/all-target setup fn wired as `setup: register_lowpoly_exports` in the
+  `semio_framework_plugin::semio_plugin!` macro invocation — this fn already runs unconditionally
+  for every target since `semio_plugin!`'s generated `__semio_plugin_bundle()` calls `($setup)()`
+  with no cfg gate, so no new native-only hook was needed):
+      semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<LowpolyPlayApp>(LOWPOLY_DOCUMENT_SCHEMA);
+
+Only one document kind (one `#[derive(dsl::DslDocument)]` type: `LowpolyProjection`) and one
+`DocumentApp` impl (`LowpolyPlayApp`) exist in this family.
+
+2. FIXTURES CONVERTED
+----------------------
+None. `lowpoly/example/default.lowpoly.json` does NOT exist in the working tree (confirmed via
+directory listing) and is not referenced anywhere under lowpoly/** (grep clean). The sibling
+`lowpoly/example/concrete-forest-left.lowpoly` is already live DSL text and is what
+`lowpoly_core::default_projection()` loads via `include_str!`. The JSON fixture this family's brief
+note asked me to check was already dead/removed before this session started — nothing to convert or
+delete.
+
+3. TEST-LAW CALLS ADDED (lowpoly/core/rs/lib.rs, `//#region 🔖DslAndOpText`)
+------------------------------------------------------------------------------
+- `dsl_round_trips_the_default_concrete_forest_projection`: added
+  `vcs::test_support::assert_dsl_pack_equivalence(&default_projection());` beside the existing
+  `assert_dsl_round_trip`.
+- `dsl_round_trips_a_projection_with_a_painted_layer`: added
+  `vcs::test_support::assert_dsl_pack_equivalence(&projection);` beside the existing
+  `assert_dsl_round_trip` (same painted-pixel fixture).
+- `document_text_round_trip_after_applying_an_operation`: added
+  `vcs::test_support::assert_document_pack_round_trip(&store);` beside the existing
+  `assert_document_text_round_trip(&store)` (same store, same applied `PatchPaintLayer` operation).
+
+4. PACK-COMPLETENESS LINT ALLOWLIST ENTRY NOW SATISFIED
+----------------------------------------------------------
+`lowpoly/core/rs/lib.rs` — now calls both `assert_dsl_pack_equivalence(` and
+`assert_document_pack_round_trip(` beside its existing DSL round-trip tests. Wave 3 can remove this
+line from root `script.ts`'s `POLICY_PACK_COMPLETENESS_ALLOWLIST`:
+    lowpoly/core/rs/lib.rs
+
+5. FILES TOUCHED
+------------------
+- lowpoly/plugin/rs/lib.rs — added the `register_document_codec_for_app::<LowpolyPlayApp>(...)` call
+  in `register_lowpoly_exports()`.
+- lowpoly/core/rs/lib.rs — added the three `assert_dsl_pack_equivalence`/`assert_document_pack_round_trip`
+  calls described in §3.
+
+6. CARGO TEST STATUS
+-----------------------
+`cargo test -p lowpoly_core`: 72 passed, 0 failed — fully green, including the 3 new pack-law
+assertions.
+
+`cargo test -p lowpoly-plugin`: 15 passed, 5 failed. All 5 failures are PRE-EXISTING and UNRELATED to
+this ticket's pack work: they all panic at
+`ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1380` with "invalid catalog icon name",
+originating in `lowpoly_window_engagement` (lowpoly/plugin/rs/lib.rs ~line 1085), which references
+`icon_id: Some("git-commit-horizontal".into())` — an icon id that does not exist anywhere in the
+generated `IconName` catalog (only "git-commit" exists, no "-horizontal" variant; confirmed by grep
+of the generated catalog and repo-wide — the string is used only in this one file). This is
+unrelated to `DocumentPack`/codec registration (confirmed via stack trace: the panic happens while
+building `LowpolyPlayApp`'s window engagement UI, not in any pack/codec/DSL code path; my new
+`register_document_codec_for_app` call executes successfully earlier in the same bundle-build
+sequence, before the panic). Cannot fix within this ticket's scope since the root fix (adding the
+missing icon to `ui/asset/icon/**`) is outside `lowpoly/**`, and swapping to a different existing
+icon id is a UI/design decision outside this ticket's mandate — flagged as a separate background task
+instead (task_3b5387cc, "Fix invalid icon-catalog reference in lowpoly plugin").
+
+7. COULD NOT COMPLETE
+------------------------
+Nothing pack-related was left incomplete. The one blocker (lowpoly-plugin's 5 icon-catalog test
+failures) is pre-existing, unrelated to `DocumentPack`, and flagged separately per §6.

@@ -587,7 +587,9 @@ pub fn create_sourcing_curate_app() -> App {
     .example(EMPTY_EXAMPLE_ID, "Empty Curation", serde_json::to_string(&empty_document()).unwrap_or_default())
 }
 
-fn sourcing_setup() {}
+fn sourcing_setup() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<SourcingCurateApp>(SOURCING_CURATE_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "sourcing", label: "Sourcing", version: "0.1.0",

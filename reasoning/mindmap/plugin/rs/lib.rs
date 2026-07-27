@@ -727,7 +727,12 @@ pub fn create_wires_app() -> App {
     .program("reasoning-wires", "Mindmap Wires", "graph")
 }
 
-fn register_reasoning_mindmap_exports() {}
+/// 🗂️ Registers `MindmapWiresDocument`'s pack↔dsl codec so `framework/sync`'s
+/// `FolderEndpoint::Pack` (and any other schema-string-keyed caller) can print/parse it without
+/// depending on this crate's concrete `Projection`/`Operation` types.
+fn register_reasoning_mindmap_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ReasoningWiresPlayApp>(WIRES_FIXTURE_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "reasoning-mindmap", label: "Mindmap", version: "0.1.0",

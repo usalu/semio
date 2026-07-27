@@ -1647,6 +1647,11 @@ pub mod app_2d {
     pub fn register_gis2d_exports() {
         semio_framework_os::register_2d_export_handlers("2d.map", "gis2d", gis2d_document_json_to_svg);
         semio_framework_os::register_dwg_import_handler("2d.map", gis2d_document_json_from_dwg);
+        // 🗂️ Sole native setup hook for the whole `gis` plugin bundle (`semio_plugin!`'s single
+        // `setup: app_2d::register_gis2d_exports`) — registers both document kinds' pack↔dsl codecs
+        // here since `app_3d` has no native registration fn of its own.
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Gis2dPlayApp>(GIS_MAP_SCHEMA);
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<crate::app_3d::Gis3dPlayApp>(crate::domain::GIS_3D_TERRAIN_SCHEMA);
     }
     //#endregion 🔖Manifest
 
@@ -1841,11 +1846,13 @@ pub mod app_2d {
         #[test]
         fn gis_map_document_dsl_round_trips_bundled_reuse_example() {
             vcs::test_support::assert_dsl_round_trip(&default_document());
+            vcs::test_support::assert_dsl_pack_equivalence(&default_document());
         }
 
         #[test]
         fn gis_map_document_dsl_round_trips_empty_document() {
             vcs::test_support::assert_dsl_round_trip(&GisMapDocument::default());
+            vcs::test_support::assert_dsl_pack_equivalence(&GisMapDocument::default());
         }
 
         /// 🧬 `MapFeature::data` is an opaque `serde_json::Value` — round-trips every shape (nested
@@ -1873,6 +1880,7 @@ pub mod app_2d {
                 regions: vec![MapFeature { id: "g1".into(), data: json!({ "id": "g1", "ring": [[0.0, 0.0], [1.0, 1.0], [1.0, 0.0]] }) }],
             };
             vcs::test_support::assert_dsl_round_trip(&document);
+            vcs::test_support::assert_dsl_pack_equivalence(&document);
         }
 
         fn sample_patch_feature() -> MapFeature {
@@ -1930,6 +1938,7 @@ pub mod app_2d {
                 })
                 .expect("apply");
             vcs::test_support::assert_document_text_round_trip(&store);
+            vcs::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslTests
     }
@@ -2319,11 +2328,13 @@ pub mod app_3d {
         #[test]
         fn gis3d_terrain_document_dsl_round_trips_bundled_reuse_example() {
             vcs::test_support::assert_dsl_round_trip(&default_terrain_document());
+            vcs::test_support::assert_dsl_pack_equivalence(&default_terrain_document());
         }
 
         #[test]
         fn gis3d_terrain_document_dsl_round_trips_arbitrary_exaggeration() {
             vcs::test_support::assert_dsl_round_trip(&Gis3dTerrainDocument { exaggeration: 2.75 });
+            vcs::test_support::assert_dsl_pack_equivalence(&Gis3dTerrainDocument { exaggeration: 2.75 });
         }
 
         #[test]
@@ -2356,6 +2367,7 @@ pub mod app_3d {
                 })
                 .expect("apply");
             vcs::test_support::assert_document_text_round_trip(&store);
+            vcs::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslTests
     }

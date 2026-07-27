@@ -1,0 +1,58 @@
+WAVE 2 — family: present-animate
+================================================================================
+
+DOCUMENT KINDS COVERED
+-----------------------
+- PresentDeck (animate/present/rs/lib.rs), schema "animate.present.deck" (PRESENT_DECK_SCHEMA).
+  App type: AnimatePresentPlayApp (animate/plugin/rs/lib.rs), app_id "animate-present-play".
+  Registered via:
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<AnimatePresentPlayApp>(PRESENT_DECK_SCHEMA)
+  added inside the existing native setup fn `register_animate_present_exports()`
+  (animate/plugin/rs/lib.rs), which is already called unconditionally from the `setup:` slot of the
+  `semio_framework_plugin::semio_plugin!` macro invocation for this crate — no new registration hook
+  needed, no other document kinds exist in this family (animate/core, animate/video have no
+  #[derive(dsl::DslDocument)] types).
+
+FIXTURES CONVERTED
+-------------------
+None. No JSON fixtures existed for PresentDeck (confirmed by inspection of animate/present/rs/lib.rs
+and animate/plugin/rs/lib.rs — matches the family note).
+
+TEST-LAW CALLS ADDED (animate/present/rs/lib.rs, //#region 🧪Tests)
+---------------------------------------------------------------------
+- `dsl_round_trip_default_present_deck`: added `test_support::assert_dsl_pack_equivalence(&default_present_deck())`
+  next to the existing `assert_dsl_round_trip`.
+- `dsl_round_trip_present_deck_with_tiles`: added `test_support::assert_dsl_pack_equivalence(&deck)`
+  next to the existing `assert_dsl_round_trip`, same fixture (deck seeded via
+  `populate_tile_drafts_from_grid`).
+- `document_text_round_trip_with_operation_applied`: added
+  `test_support::assert_document_pack_round_trip(&store)` next to the existing
+  `assert_document_text_round_trip(&store)`, same store/fixture (a `PresentStore` with one
+  `Tiles(Add)` operation applied).
+
+PACK-COMPLETENESS LINT ALLOWLIST
+----------------------------------
+`animate/present/rs/lib.rs` — now satisfies the pack-completeness lint (every existing
+`assert_dsl_round_trip`/`assert_document_text_round_trip` call site has a sibling pack-law call).
+Wave 3 can remove this one entry from root `script.ts`'s `POLICY_PACK_COMPLETENESS_ALLOWLIST`:
+  animate/present/rs/lib.rs
+
+FILES TOUCHED
+--------------
+- /Users/ueli/Documents/semio/animate/present/rs/lib.rs
+- /Users/ueli/Documents/semio/animate/plugin/rs/lib.rs
+
+CARGO TEST STATUS
+-------------------
+`cargo test -p animate_present -p animate-plugin -p animate_core -p animate_video`:
+  animate_plugin:  45 passed, 0 failed
+  animate_core:   102 passed, 0 failed
+  animate_present: 22 passed, 0 failed
+  animate_video:    8 passed, 0 failed
+All green. One unrelated pre-existing failure: `cargo test -p animate-plugin --doc` fails with
+E0463 "can't find crate for `animate_present`/`semio_framework_plugin`" — a known rustdoc limitation
+with `crate-type = ["cdylib", "rlib"]` crates (animate/plugin/rs/Cargo.toml), unrelated to this
+change (no doc-comment code blocks were touched or added; the 4-line diff is two plain fn-body
+statements and a codec-registration call). Not investigated further, out of scope.
+
+NOTHING INCOMPLETE — family fully done.

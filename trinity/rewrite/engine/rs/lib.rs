@@ -1453,7 +1453,7 @@ mod tests {
     }
 
     //#region 🔖DslTests
-    use vcs::test_support::{assert_dsl_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use vcs::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     fn sample_rule_state() -> RewriteRuleState {
         let mut parameter_bindings = BTreeMap::new();
@@ -1473,6 +1473,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_rewrite_rule_state() {
         assert_dsl_round_trip(&sample_rule_state());
+        assert_dsl_pack_equivalence(&sample_rule_state());
     }
 
     #[test]
@@ -1487,6 +1488,7 @@ mod tests {
         next.lhs_json = "{}".into();
         dispatch_rewrite_rule_state(&mut store, next).unwrap();
         assert_document_text_round_trip(&store);
+        assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 
@@ -1640,6 +1642,7 @@ mod tests {
         let mut state = sample_rule_state();
         state.before_fixture_json = "a\\b\"c\nd".to_string();
         assert_dsl_round_trip(&state);
+        assert_dsl_pack_equivalence(&state);
     }
 
     #[test]

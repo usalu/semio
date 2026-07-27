@@ -1445,7 +1445,7 @@ fn render_stack(
     let cap_glass = ctx.draw.push_glass(
         [cap_rect.x, cap_rect.y, cap_rect.w, cap_rect.h],
         0.0,
-        theme.glass_chrome(Level::Window),
+        theme.glass(Level::Window),
     );
     ctx.draw.begin_glass_content(cap_glass);
 
@@ -26570,7 +26570,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                theme.glass_chrome(Level::Pane),
+                theme.glass(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
@@ -26717,7 +26717,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                theme.glass_chrome(Level::Pane),
+                theme.glass(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let body = Rect::new(
@@ -26973,7 +26973,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                theme.glass_chrome(Level::Pane),
+                theme.glass(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);
@@ -27341,7 +27341,7 @@ impl ShellState {
             let glass = chrome.push_glass(
                 [rail.x, rail.y, rail.w, rail.h],
                 theme.border_radius,
-                theme.glass_chrome(Level::Pane),
+                theme.glass(Level::Pane),
             );
             chrome.begin_glass_content(glass);
             let header = Rect::new(rail.x, rail.y, rail.w, theme.panel_header_height);

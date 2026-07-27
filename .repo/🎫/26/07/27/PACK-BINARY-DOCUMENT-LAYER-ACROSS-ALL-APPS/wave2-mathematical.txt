@@ -1,0 +1,75 @@
+WAVE 2 — family: mathematical
+================================================================================
+Files touched: mathematical/plugin/rs/lib.rs (only file in this family that needed changes;
+no other file under mathematical/** derives dsl::DslDocument or is a DocumentApp).
+
+--------------------------------------------------------------------------------
+1. Document kinds covered
+--------------------------------------------------------------------------------
+App type:    MathematicalPlayApp
+Projection:  MathProjection
+Schema used: "semio.mathematical/v1"  (read verbatim from
+             `impl DocumentApp for MathematicalPlayApp { fn document_schema(&self) -> &str { ... } }`)
+
+IMPORTANT DEVIATION from the generic wave-2 brief: `MathProjection` does NOT derive
+`#[derive(dsl::DslDocument)]` directly — it has a hand-written `impl vcs::DocumentDsl for
+MathProjection` that delegates to `MathProjectionDsl` (which does derive `dsl::DslDocument`;
+its `edges` field needs `MathEdgeDsl`/`dsl::Wire` folding that a plain-derive on `MathProjection`
+itself can't express). Because of this, `MathProjection` also did NOT automatically get
+`vcs::DocumentPack` from dsl_derive's blanket impl (that only lands on `MathProjectionDsl`).
+Added a hand-written `impl vcs::DocumentPack for MathProjection` right beside the existing manual
+`DocumentDsl` impl (`//#region 🔖Dsl`), delegating through the same `math_projection_to_dsl`/
+`math_projection_from_dsl` conversion functions the DSL impl already uses:
+  - `encode_pack_with` -> `math_projection_to_dsl(self).encode_pack_with(options)`
+  - `decode_pack_with` -> `MathProjectionDsl::decode_pack_with(...)` then
+    `math_projection_from_dsl(...).map_err(|m| vcs::text_error_to_pack_error(vcs::TextError::new(m, vcs::TextSpan::at(1,1))))`
+    (mirrors the existing `parse_dsl`'s error-mapping exactly).
+
+Registered the codec in `register_mathematical_exports()` (was an empty `fn register_mathematical_exports() {}`
+stub referenced by `setup:` in the `semio_plugin!` macro invocation — same pattern as
+note/imperative/animate/fem/lowpoly/layout/cad/architect/draw/gis/flow/infinite-board-dag plugins):
+  semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<MathematicalPlayApp>("semio.mathematical/v1");
+
+--------------------------------------------------------------------------------
+2. Fixtures converted
+--------------------------------------------------------------------------------
+None. Per the family note, this family has no JSON fixtures to convert — the crate never shipped
+an external `.mathematical` DSL fixture file (confirmed by the existing `//#region 🔖DslTests`
+comment); all round-trip tests already use inline-constructed fixtures.
+
+--------------------------------------------------------------------------------
+3. Test-law calls added (in mathematical/plugin/rs/lib.rs, `mod tests`, `//#region 🔖DslTests`)
+--------------------------------------------------------------------------------
+- `math_projection_dsl_round_trips_default`: added
+  `vcs::test_support::assert_dsl_pack_equivalence(&MathProjection::default());`
+  beside the existing `assert_dsl_round_trip`.
+- `math_projection_dsl_round_trips_with_seed_and_empty_collections`: added
+  `vcs::test_support::assert_dsl_pack_equivalence(&projection);`
+  beside the existing `assert_dsl_round_trip` (same fixture: bfs algorithm, seeded, empty
+  nodes/edges/points).
+- `math_document_text_round_trips_through_store`: added
+  `vcs::test_support::assert_document_pack_round_trip(&store);`
+  beside the existing `assert_document_text_round_trip(&store)` (same store, same
+  `SetGraph{algorithm: "components"}` fixture).
+
+No new fixture values were invented — all three reuse the exact fixture already constructed by
+the pre-existing test.
+
+--------------------------------------------------------------------------------
+4. Pack-completeness lint allowlist entry now satisfied
+--------------------------------------------------------------------------------
+  mathematical/plugin/rs/lib.rs
+(the only entry from `POLICY_PACK_COMPLETENESS_ALLOWLIST` under this family's directories —
+wave 3 can remove this one line from root script.ts's allowlist.)
+
+--------------------------------------------------------------------------------
+5. Verification
+--------------------------------------------------------------------------------
+`cargo test -p mathematical-plugin`: 13 passed, 0 failed (includes the two new
+`assert_dsl_pack_equivalence` calls and one new `assert_document_pack_round_trip` call).
+Doc-tests: 0 tests, ok (a first attempt hit a transient "extern location for vcs does not exist"
+doctest-linking error caused by another session's concurrent `cargo build` mid-flight touching
+`target/debug/deps/libvcs.*`; re-ran cleanly seconds later — not caused by this change, matches
+the known "Concurrent Cargo Workspace Churn" pattern in this repo).
+
+Nothing left incomplete for this family.

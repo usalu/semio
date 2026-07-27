@@ -1,0 +1,639 @@
+warning: pack/cli/rs/Cargo.toml: file `/Users/ueli/Documents/semio/pack/cli/rs/lib.rs` found to be present in multiple build targets:
+  * `lib` target `pack_cli`
+  * `bin` target `pack`
+warning: `pack_cli` (manifest) generated 1 warning
+    Blocking waiting for file lock on build directory
+   Compiling dsl_schema v0.1.0 (/Users/ueli/Documents/semio/dsl/schema/rs)
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1803:42
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader) -> Result<DwgColor, String> {
+     |                                          ^^^^^^^^^^^^ expected lifetime parameter
+     |
+     = note: `-W elided-lifetimes-in-paths` implied by `-W rust-2018-idioms`
+     = help: to override `-W rust-2018-idioms` add `#[allow(elided_lifetimes_in_paths)]`
+help: indicate the anonymous lifetime
+     |
+1803 | fn dwg_decode_entity_common(reader: &mut DwgBitReader<'_>) -> Result<DwgColor, String> {
+     |                                                      ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1816:43
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader) -> Result<u64, String> {
+     |                                           ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1816 | fn dwg_decode_entity_handles(reader: &mut DwgBitReader<'_>) -> Result<u64, String> {
+     |                                                       ++++
+
+warning: hidden lifetime parameters in types are deprecated
+    --> framework/core/rs/lib.rs:1931:53
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                     ^^^^^^^^^^^^ expected lifetime parameter
+     |
+help: indicate the anonymous lifetime
+     |
+1931 | fn dwg_decode_entity(object_type: u16, reader: &mut DwgBitReader<'_>) -> Result<Option<(u64, DwgColor, DwgGeometry)>, String> {
+     |                                                                 ++++
+
+warning: `semio-framework-core` (lib) generated 3 warnings
+   Compiling pack_value v0.1.0 (/Users/ueli/Documents/semio/pack/value/rs)
+   Compiling dsl v0.1.0 (/Users/ueli/Documents/semio/dsl/rs)
+   Compiling pack_index v0.1.0 (/Users/ueli/Documents/semio/pack/index/rs)
+   Compiling pack v0.1.0 (/Users/ueli/Documents/semio/pack/rs)
+   Compiling vcs v0.1.0 (/Users/ueli/Documents/semio/vcs/rs)
+warning: unnecessary qualification
+   --> vcs/rs/lib.rs:840:20
+    |
+840 |     let committed: std::collections::HashSet<String> = envelope
+    |                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+840 -     let committed: std::collections::HashSet<String> = envelope
+840 +     let committed: HashSet<String> = envelope
+    |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:1886:36
+     |
+1886 |                 payload_hash: Some(semio_framework_hash::hash_bytes(
+     |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+1886 -                 payload_hash: Some(semio_framework_hash::hash_bytes(
+1886 +                 payload_hash: Some(hash_bytes(
+     |
+
+warning: unnecessary qualification
+    --> vcs/rs/lib.rs:2148:24
+     |
+2148 |     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+2148 -     let payload_hash = semio_framework_hash::hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+2148 +     let payload_hash = hash_bytes(&serde_json::to_vec(edit).unwrap_or_default());
+     |
+
+warning: `vcs` (lib) generated 3 warnings (run `cargo fix --lib -p vcs` to apply 3 suggestions)
+   Compiling norm_core v0.1.0 (/Users/ueli/Documents/semio/norm/core/rs)
+   Compiling semio-framework-plugin v0.1.0 (/Users/ueli/Documents/semio/framework/plugin/rs)
+warning: unnecessary qualification
+   --> norm/core/rs/lib.rs:483:21
+    |
+483 |     type Operation: vcs::Operation<Self::Document> + Clone + PartialEq + Send;
+    |                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+483 -     type Operation: vcs::Operation<Self::Document> + Clone + PartialEq + Send;
+483 +     type Operation: Operation<Self::Document> + Clone + PartialEq + Send;
+    |
+
+   Compiling norm_en_1990 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1990/rs)
+   Compiling norm_din_4108 v0.1.0 (/Users/ueli/Documents/semio/norm/din/4108/rs)
+   Compiling norm_din_en_16798 v0.1.0 (/Users/ueli/Documents/semio/norm/din/en/16798/rs)
+   Compiling norm_vdi_3805 v0.1.0 (/Users/ueli/Documents/semio/norm/vdi/3805/rs)
+   Compiling norm_iso_16757 v0.1.0 (/Users/ueli/Documents/semio/norm/iso/16757/rs)
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:421:28
+    |
+421 |     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+    |                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+    = note: requested on the command line with `-W unused-qualifications`
+help: remove the unnecessary path segments
+    |
+421 -     terminology_documents: std::collections::HashMap<String, Vec<String>>,
+421 +     terminology_documents: HashMap<String, Vec<String>>,
+    |
+
+warning: unnecessary qualification
+   --> framework/plugin/rs/lib.rs:451:36
+    |
+451 |             terminology_documents: std::collections::HashMap::new(),
+    |                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    |
+help: remove the unnecessary path segments
+    |
+451 -             terminology_documents: std::collections::HashMap::new(),
+451 +             terminology_documents: HashMap::new(),
+    |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:3145:77
+     |
+3145 |     type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + vcs::OpText;
+     |                                                                             ^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+3145 -     type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + vcs::OpText;
+3145 +     type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + OpText;
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:4258:17
+     |
+4258 |     let action: serde_json::Value =
+     |                 ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4258 -     let action: serde_json::Value =
+4258 +     let action: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:4260:18
+     |
+4260 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4260 -     let context: serde_json::Value =
+4260 +     let context: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:4288:18
+     |
+4288 |     let command: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4288 -     let command: serde_json::Value =
+4288 +     let command: Value =
+     |
+
+warning: unnecessary qualification
+    --> framework/plugin/rs/lib.rs:4290:18
+     |
+4290 |     let context: serde_json::Value =
+     |                  ^^^^^^^^^^^^^^^^^
+     |
+help: remove the unnecessary path segments
+     |
+4290 -     let context: serde_json::Value =
+4290 +     let context: Value =
+     |
+
+warning: unused import: `Operation`
+   --> framework/plugin/rs/lib.rs:218:38
+    |
+218 |     DocumentVcsStore, HistoryColumn, Operation, OpText, StudioConflict,
+    |                                      ^^^^^^^^^
+    |
+    = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: `norm_core` (lib) generated 1 warning (run `cargo fix --lib -p norm_core` to apply 1 suggestion)
+   Compiling norm_en_1991 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1991/rs)
+   Compiling norm_din_v_18599 v0.1.0 (/Users/ueli/Documents/semio/norm/din/v/18599/rs)
+warning: `semio-framework-plugin` (lib) generated 8 warnings (run `cargo fix --lib -p semio-framework-plugin` to apply 7 suggestions)
+warning: `norm_core` (lib test) generated 1 warning (1 duplicate)
+   Compiling norm_en_1998 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1998/rs)
+   Compiling norm_en_1992 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1992/rs)
+   Compiling norm_en_1997 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1997/rs)
+   Compiling norm_en_1999 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1999/rs)
+   Compiling norm_en_1994 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1994/rs)
+   Compiling norm_en_1993 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1993/rs)
+   Compiling norm_en_1995 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1995/rs)
+   Compiling norm_en_1996 v0.1.0 (/Users/ueli/Documents/semio/norm/en/1996/rs)
+   Compiling norm-plugin v0.1.0 (/Users/ueli/Documents/semio/norm/plugin/rs)
+    Finished `test` profile [unoptimized] target(s) in 47.70s
+     Running unittests lib.rs (target/debug/deps/norm_plugin-acd139e23f90dacd)
+
+running 4 tests
+test tests::din4108_host_backed_report_after_set_document ... ok
+test tests::din4108_undo_redo_round_trip ... ok
+test tests::fifteen_family_apps_are_registered ... ok
+test __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest ... ok
+
+test result: ok. 4 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_core-0dac64298b0a98f2)
+
+running 8 tests
+test tests::check_minimum_passes_when_above_threshold ... ok
+test tests::norm_host_recomputes_report_after_apply ... ok
+test tests::check_result_passes_when_utilization_below_one ... ok
+test tests::table_lookup_linear_interpolates ... ok
+test tests::set_document_operation_op_text_round_trips ... ok
+test tests::set_document_operation_op_text_escapes_multiline_dsl_text ... ok
+test tests::demo_document_dsl_round_trips ... ok
+test tests::document_text_round_trips_for_a_norm_family_document ... ok
+
+test result: ok. 8 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_din_4108-d6a5f6dabdcc74c1)
+
+running 21 tests
+test tests::bb2_worked_example_conform_details_pass ... ok
+test tests::part_1_plausibility_flags_implausible_u_value ... ok
+test tests::part_2_colder_zone_allows_higher_u_limit ... ok
+test tests::bb2_non_conform_details_fall_back_to_flat_rate_surcharge ... ok
+test tests::opaque_wall_passes_din_4108_suite ... ok
+test tests::part_10_application_class_admissibility ... ok
+test tests::full_envelope_evaluate_covers_all_eight_parts ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::host_updates_report_after_document_replace ... ok
+test tests::part_4_mineral_wool_lambda ... ok
+test tests::part_4_has_fifteen_plus_materials ... ok
+test tests::part_5_summer_heat_zone_dependent ... ok
+test tests::part_8_catalog_lookup ... ok
+test tests::document_text_round_trips_through_store ... ok
+test tests::part_6_thermal_bridge_increases_u ... ok
+test tests::worked_example_f_rsi_above_minimum ... ok
+test tests::worked_example_u_value_known_wall ... ok
+test tests::worked_example_glaser_no_condensation_insulated_wall ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::worked_example_magnus_saturation_at_zero_c ... ok
+test tests::worked_example_vapor_resistance_formula ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.03s
+
+     Running unittests lib.rs (target/debug/deps/norm_din_en_16798-92d4bdb6fff5439b)
+
+running 30 tests
+test tests::cellar_ventilation_50m2 ... ok
+test tests::cooling_energy_need_worked_example ... ok
+test tests::acoustic_category_ii_limit ... ok
+test tests::chiller_eer_table_lookup_air_cooled ... ok
+test tests::adaptive_comfort_center_and_category_band ... ok
+test tests::co2_annex_divergence_de_stricter_than_en ... ok
+test tests::data_center_supply_air_22c_passes ... ok
+test tests::daylight_factor_category_ii_minimum ... ok
+test tests::dhw_delivery_temperature_58c_passes ... ok
+test tests::duct_leakage_class_c_400pa_worked_example ... ok
+test tests::fan_energy_1500w_1m3s_8h_is_12kwh ... ok
+test tests::full_environment_evaluate_covers_all_nine_parts ... ok
+test tests::heat_recovery_efficiency_minimum ... ok
+test tests::heat_recovery_savings_worked_example ... ok
+test tests::humidification_capacity_meets_requirement ... ok
+test tests::dwelling_ventilation_85m2_3_bedrooms ... ok
+test tests::infiltration_n50_1_5_volume_500m3_is_37_5 ... ok
+test tests::inspection_due_within_interval ... ok
+test tests::night_setback_residential_minimum ... ok
+test tests::pmv_comfort_passes_for_office_conditions ... ok
+test tests::pmv_simplified_neutral_at_reference ... ok
+test tests::pmv_iso7730_neutral_at_comfort_conditions ... ok
+test tests::residential_ventilation_rate_100m2_4_occupants ... ok
+test tests::residential_environment_e2e_with_acoustic ... ok
+test tests::sfp_1500w_1m3s_falls_in_class_4 ... ok
+test tests::storage_losses_worked_example ... ok
+test tests::ventilation_rates_per_room_type_at_ida2 ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_din_v_18599-f00f831d4417aece)
+
+running 20 tests
+test tests::dhw_from_occupants_4_persons ... ok
+test tests::cooling_degree_hours_zone2_positive ... ok
+test tests::balance_annual_includes_all_parts ... ok
+test tests::from_building_computes_h_t_from_u_value ... ok
+test tests::part_11_automation_factor_residential ... ok
+test tests::part_1_check_reached_via_balance_annual ... ok
+test tests::part_12_tabular_distinct_from_part_10 ... ok
+test tests::from_building_computes_h_v_from_ventilation ... ok
+test tests::part_1_primary_energy_aggregation_worked_example ... ok
+test tests::part_4_internal_gains_positive ... ok
+test tests::part_5_solar_gains_positive ... ok
+test tests::part_6_system_losses_scale_with_area ... ok
+test tests::part_8_cooling_demand_numeric_worked_example ... ok
+test tests::primary_energy_factor_table_cited ... ok
+test tests::reference_100m2_q_p_numeric ... ok
+test tests::reference_100m2_q_t_numeric ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::reference_100m2_q_v_numeric ... ok
+test tests::document_text_round_trips_through_store ... ok
+test tests::set_document_op_text_round_trips ... ok
+
+test result: ok. 20 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1990-03864518e022b3f8)
+
+running 16 tests
+test tests::accidental_situation_uses_unit_gamma ... ok
+test tests::de_combination_6_10a_numeric ... ok
+test tests::de_combination_6_10b_numeric ... ok
+test tests::check_combination_set_covers_uls_and_sls ... ok
+test tests::de_na_gamma_m_and_xi ... ok
+test tests::de_na_combination_6_10 ... ok
+test tests::de_vs_en_congregation_psi_tables ... ok
+test tests::check_design_basis_covers_all_situations ... ok
+test tests::en_combination_6_10a_differs_on_other_psi ... ok
+test tests::evaluate_accidental_situation_numeric ... ok
+test tests::evaluate_seismic_situation_numeric ... ok
+test tests::imposed_categories_a_to_h_de ... ok
+test tests::seismic_combination_de_vs_en_diverge_on_other_psi_2 ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+test tests::document_dsl_round_trips ... ok
+
+test result: ok. 16 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1991-0b7f9faf4347e697)
+
+running 11 tests
+test tests::bridge_lm1_alpha_q_diverges_de_vs_en ... ok
+test tests::de_wind_zone_2_basic_velocity ... ok
+test tests::evaluate_reaches_every_part_module ... ok
+test tests::full_actions_de_na_numeric ... ok
+test tests::snow_and_wind_de_vs_en_diverge_at_altitude ... ok
+test tests::snow_zone_2_ground_load ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::imposed_categories_table_6_1 ... ok
+test tests::wind_peak_velocity_pressure_vb_25 ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 11 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1992-215b2563c9f1998e)
+
+running 24 tests
+test tests::annex_params_alpha_cc_de_vs_en_divergence ... ok
+test tests::deflection_ss_udl ... ok
+test tests::crack_width_wk ... ok
+test tests::bridge_concrete_stress_and_fatigue ... ok
+test tests::anchor_m12_steel_and_concrete_cone_uncracked ... ok
+test tests::anchor_edge_shear_breakout ... ok
+test tests::evaluate_analytical_with_prestress ... ok
+test tests::evaluate_covers_all_parts ... ok
+test tests::evaluate_fem_path ... ok
+test tests::fire_cover_beam_r60 ... ok
+test tests::fire_r60_required_axis_distance_at_160mm ... ok
+test tests::flexural_resistance_annex_divergence ... ok
+test tests::liquid_retaining_stress_limit ... ok
+test tests::na_de_alpha_cc ... ok
+test tests::document_dsl_parse_error_reports_the_real_line_of_the_bad_field ... ok
+test tests::prestress_transfer_c30 ... ok
+test tests::punching_v_rd_max_c30 ... ok
+test tests::rc_beam_e2e ... ok
+test tests::slenderness_column ... ok
+test tests::rc_beam_from_fem_e2e ... ok
+test tests::tightness_class_crack_width_limits ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 24 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1993-fee33d7eaea7e4cf)
+
+running 30 tests
+test tests::annex_params_gamma_m1_divergence ... ok
+test tests::axial_resistance_s355 ... ok
+test tests::bolt_bearing_m20_worked_example ... ok
+test tests::bolt_shear_m20 ... ok
+test tests::chs_classification_table_5_2 ... ok
+test tests::crane_runway_web_stress ... ok
+test tests::cold_formed_reduction_factor_worked_example ... ok
+test tests::critical_steel_temperature_mu_0_5 ... ok
+test tests::fatigue_assessment_methods ... ok
+test tests::fatigue_cycles_to_failure_slope_m3 ... ok
+test tests::every_part_reaches_evaluate ... ok
+test tests::fatigue_detail_71 ... ok
+test tests::fillet_weld_s355 ... ok
+test tests::fire_board_r60 ... ok
+test tests::hea200_chi_at_lambda_1 ... ok
+test tests::full_steel_member_e2e ... ok
+test tests::hea200_section_classification ... ok
+test tests::high_strength_steel_class_4_guard ... ok
+test tests::net_tension_uses_gamma_m2_for_rupture ... ok
+test tests::plated_buckling_reduction ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+test tests::shell_sigma_x_rcr_worked_example ... ok
+test tests::silo_membrane_hoop_stress ... ok
+test tests::stainless_steel_gamma_is_1_1_regardless_of_annex ... ok
+test tests::steel_member_e2e ... ok
+test tests::tension_component_resistance ... ok
+test tests::through_thickness_table_lookup ... ok
+test tests::steel_member_from_fem_e2e ... ok
+
+test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1994-17081922aade2ee1)
+
+running 15 tests
+test tests::composite_beam_e2e ... ok
+test tests::annex_params_document_equality ... ok
+test tests::bridge_composite_fatigue ... ok
+test tests::fire_insulation_r60 ... ok
+test tests::full_composite_worked_example ... ok
+test tests::longitudinal_shear_vl ... ok
+test tests::effective_width_8m_span ... ok
+test tests::evaluate_runs_all_parts ... ok
+test tests::min_shear_connection_degree_span_8m ... ok
+test tests::partial_shear_connection_eta ... ok
+test tests::stud_connector_resistance_worked_example ... ok
+test tests::stud_fatigue_resistance_at_reference_cycles ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1995-748e503bf8510fba)
+
+running 15 tests
+test tests::annex_params_gamma_m_per_material ... ok
+test tests::connection_bearing_resistance_worked ... ok
+test tests::fatigue_reduction_factor_degrades_with_cycles ... ok
+test tests::fire_char_depth_r30 ... ok
+test tests::glulam_beam_e2e ... ok
+test tests::full_timber_worked_example ... ok
+test tests::glulam_ltb_reduces_bending_resistance ... ok
+test tests::k_cr_diverges_between_en_and_de_for_c24 ... ok
+test tests::k_mod_sc1_permanent ... ok
+test tests::pedestrian_vibration_within_comfort_limit ... ok
+test tests::evaluate_runs_all_parts ... ok
+test tests::shear_utilization_diverges_between_annexes_for_c24 ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 15 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1996-1ed88362f8e04e0b)
+
+running 14 tests
+test tests::document_dsl_round_trips ... ok
+test tests::bed_joint_thickness_range ... ok
+test tests::evaluate_runs_all_parts ... ok
+test tests::exposure_mortar_mx1_clay_m1_admissible ... ok
+test tests::exposure_mortar_mx4_aac_inadmissible ... ok
+test tests::fire_wall_r60_clay ... ok
+test tests::full_masonry_worked_example ... ok
+test tests::gamma_m_diverges_en_class2_vs_de_flat ... ok
+test tests::masonry_wall_e2e ... ok
+test tests::masonry_wall_sigma_vs_fd ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::simplified_method_applicability_guard ... ok
+test tests::simplified_method_worked_example ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1997-98b847b22a402479)
+
+running 14 tests
+test tests::bearing_factor_n_c_phi30 ... ok
+test tests::da2_star_de_diverges_from_da2_en_on_same_footing ... ok
+test tests::full_geotechnical_worked_example ... ok
+test tests::phi_from_spt_worked_example ... ok
+test tests::pile_correlation_factors_boundary_cases ... ok
+test tests::phi_from_cpt_worked_example ... ok
+test tests::investigation_depth_check_pass_and_fail ... ok
+test tests::evaluate_runs_all_parts ... ok
+test tests::pile_correlation_factors_n2_matches_annex_a_table ... ok
+test tests::document_text_round_trips_through_store ... ok
+test tests::pile_design_resistance_worked ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::shallow_foundation_e2e ... ok
+test tests::document_dsl_round_trips ... ok
+
+test result: ok. 14 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.01s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1998-3b1cc13a0a7c86a3)
+
+running 21 tests
+test tests::base_shear_uses_design_spectrum ... ok
+test tests::bridge_isolation_distinct ... ok
+test tests::building_seismic_base_shear_uses_sd ... ok
+test tests::building_seismic_e2e ... ok
+test tests::cantilever_modal_participation_factor_matches_closed_form ... ok
+test tests::drift_rho_limit ... ok
+test tests::en_type1_vs_de_zone_divergence_same_nominal_ag ... ok
+test tests::full_seismic_e2e ... ok
+test tests::tank_base_shear_combines_impulsive_and_convective ... ok
+test tests::tower_behaviour_factor_capped_by_type ... ok
+test tests::zone2_spectrum_sd_at_half_second ... ok
+test tests::zone2_spectrum_sd_at_t1 ... ok
+test tests::full_seismic_en_annex_e2e ... ok
+test tests::mononobe_okabe_k_ae_matches_hand_calc_and_reduces_to_rankine ... ok
+test tests::retaining_wall_thrust_from_k_ae ... ok
+test tests::retrofit_confidence_factor_scales_capacity_exactly ... ok
+test tests::silo_behaviour_factor_capped ... ok
+test tests::silo_impulsive_convective ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 21 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.02s
+
+     Running unittests lib.rs (target/debug/deps/norm_en_1999-4f25810389fef1af)
+
+running 19 tests
+test tests::alloy_6060_t6_m_c_rd ... ok
+test tests::aluminium_member_e2e ... ok
+test tests::annex_en_de_documented_equality ... ok
+test tests::check_cold_formed_sheeting_worked ... ok
+test tests::cold_formed_effective_width_factor_below_limit_is_unity ... ok
+test tests::cold_formed_effective_width_factor_worked ... ok
+test tests::evaluate_runs_all_parts ... ok
+test tests::fatigue_cutoff_at_2e6 ... ok
+test tests::fire_critical_temperature_6060 ... ok
+test tests::haz_reduced_strength ... ok
+test tests::haz_reduction_factor_6082_t6_table_6_2 ... ok
+test tests::section_classification_6060 ... ok
+test tests::shell_buckling_pipeline_worked ... ok
+test tests::shell_critical_axial_stress_worked ... ok
+test tests::weld_resistance_worked ... ok
+test tests::full_aluminium_worked_example ... ok
+test tests::set_document_op_text_round_trips ... ok
+test tests::document_dsl_round_trips ... ok
+test tests::document_text_round_trips_through_store ... ok
+
+test result: ok. 19 passed; 0 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.00s
+
+     Running unittests lib.rs (target/debug/deps/norm_iso_16757-fa1676c300128dab)
+
+running 43 tests
+test tests::bounding_box_overlaps ... ok
+test tests::cardinality_variants_and_satisfies ... ok
+test tests::dimension_signature_compatible_checks_equality ... ok
+test tests::calculate_part_number_table_rule_paths ... ok
+test tests::evaluate_bounding_box_cylinder_sphere_boolean_transform ... ok
+test tests::detect_subtype_cycle_true ... ok
+test tests::dictionary_json_round_trip ... ok
+test tests::dictionary_controlled_values_filter_by_subject ... ok
+test tests::composition_cycle_detected ... ok
+test tests::evaluate_bounding_box_error_paths ... ok
+test tests::evaluate_constraint_operators ... ok
+test tests::evaluate_constraint_type_mismatch_returns_false ... ok
+test tests::filter_controlled_values_context_rules ... ok
+test tests::evaluate_exercises_all_parts_with_numeric_checks ... ok
+test tests::geometry_bbox_volume_for_box_primitive ... ok
+test tests::geometry_catalogue_default_primitives ... ok
+test tests::ifc_step_export_contains_data_section ... ok
+test tests::norm_family_evaluate_matches_host ... ok
+test tests::catalogue_value_integer_variant_round_trips_through_the_dsl_field_bridge ... ok
+test tests::document_dsl_round_trips_the_reference_fixture ... FAILED
+test tests::catalogue_json_round_trip ... ok
+test tests::script_limits_default_values ... ok
+test tests::script_rejects_forbidden_import ... ok
+test tests::resolve_property_found_and_missing ... ok
+test tests::resolve_bim_embedding_falls_back_to_series_geometry ... ok
+test tests::resolve_bim_embedding_error_paths ... ok
+test tests::reference_fixture_selects_one_product ... ok
+test tests::part_number_script_is_deterministic ... ok
+test tests::script_runtime_arithmetic_operators ... ok
+test tests::script_runtime_limit_errors ... ok
+test tests::select_products_filters_by_series_id ... ok
+test tests::document_text_round_trips_through_a_vcs_store ... FAILED
+test tests::script_runtime_timeout ... ok
+test tests::validate_geometry_graph_self_reference_and_cycle ... ok
+test tests::select_products_flags_ambiguity_with_multiple_matches ... ok
+test tests::select_products_records_missing_property_and_constraint_failures ... ok
+test tests::set_document_operation_op_text_round_trips_for_iso16757 ... FAILED
+test tests::substitute_parameters_recurses_through_node_kinds ... ok
+test tests::subtype_closure_is_transitive ... ok
+test tests::to_iso12006_mappings_basic ... ok
+test tests::validate_catalogue_structure_flags_issues ... ok
+test tests::validate_dictionary_flags_dangling_and_cardinality_review ... ok
+test tests::validate_geometry_graph_empty_parameter_binding ... ok
+
+failures:
+
+---- tests::document_dsl_round_trips_the_reference_fixture stdout ----
+
+thread 'tests::document_dsl_round_trips_the_reference_fixture' (42209957) panicked at vcs/rs/lib.rs:3384:68:
+dsl parse failed: expected LBrace, found Ident 'preferred' at 8:16
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- tests::document_text_round_trips_through_a_vcs_store stdout ----
+
+thread 'tests::document_text_round_trips_through_a_vcs_store' (42209958) panicked at vcs/rs/lib.rs:3437:80:
+parse document text failed: expected LBrace, found Ident 'preferred' at 8:16
+
+---- tests::set_document_operation_op_text_round_trips_for_iso16757 stdout ----
+
+thread 'tests::set_document_operation_op_text_round_trips_for_iso16757' (42209982) panicked at vcs/rs/lib.rs:3422:68:
+op parse failed: expected LBrace, found Ident 'preferred' at 8:16
+
+
+failures:
+    tests::document_dsl_round_trips_the_reference_fixture
+    tests::document_text_round_trips_through_a_vcs_store
+    tests::set_document_operation_op_text_round_trips_for_iso16757
+
+test result: FAILED. 40 passed; 3 failed; 0 ignored; 0 measured; 0 filtered out; finished in 0.06s
+
+error: test failed, to rerun pass `-p norm_iso_16757 --lib`

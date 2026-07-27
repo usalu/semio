@@ -1963,6 +1963,7 @@ mod dsl {
             assert_eq!(doc.schema, LAYOUT_FIXTURE_SCHEMA);
             assert_eq!(doc.pages.len(), 2);
             test_support::assert_dsl_round_trip(&doc);
+            test_support::assert_dsl_pack_equivalence(&doc);
         }
 
         #[test]
@@ -1983,6 +1984,7 @@ mod dsl {
                 print_target: None,
             };
             test_support::assert_dsl_round_trip(&doc);
+            test_support::assert_dsl_pack_equivalence(&doc);
         }
 
         #[test]
@@ -2061,6 +2063,7 @@ mod dsl {
                 })
                 .expect("apply patch page");
             test_support::assert_document_text_round_trip(&store);
+            test_support::assert_document_pack_round_trip(&store);
             test_support::assert_live_equals_replay(&store);
         }
 
@@ -2102,6 +2105,7 @@ mod dsl {
                 print_target: None,
             };
             test_support::assert_dsl_round_trip(&doc);
+            test_support::assert_dsl_pack_equivalence(&doc);
         }
 
         #[test]

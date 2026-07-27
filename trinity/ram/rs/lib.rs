@@ -906,7 +906,7 @@ impl Operation<GraphFixture> for TrinityGraphOperation {
 // #endregion 🔖GraphOperations
 
 //#region 🔖Dsl
-use vcs::{DocumentDsl, OpText, TextError, TextSpan};
+use vcs::{DocumentDsl, DocumentPack, OpText, PackDecodeOptions, PackEncodeOptions, PackError, TextError, TextSpan};
 
 //#region 🔖DslMirrors
 /// 🔒 Local twin of `PortDirection` (foreign, re-exported from `mathematical_graph_manifest` and
@@ -1177,6 +1177,24 @@ impl dsl::DslField for GraphFixture {
     }
 }
 //#endregion 🔖DslDocument
+
+//#region 🔖Pack
+/// 📦 Binary pack notation for a whole [`GraphFixture`] (`vcs::DocumentPack`), hand-implemented
+/// exactly like `impl DocumentDsl for GraphFixture` above (`GraphFixture` itself does not derive
+/// `dsl::DslDocument`, only the `GraphFixtureDsl` mirror does — see `🔖DslMirrors`), delegating
+/// through the same mirror + `graph_fixture_to_dsl`/`graph_fixture_dsl_to_graph_fixture` pair.
+impl DocumentPack for GraphFixture {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        <GraphFixtureDsl as DocumentPack>::encode_pack_with(&graph_fixture_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError> {
+        let parsed = <GraphFixtureDsl as DocumentPack>::decode_pack_with(bytes, options)?;
+        graph_fixture_dsl_to_graph_fixture(parsed)
+            .map_err(|error| vcs::text_error_to_pack_error(TextError::new(error.to_string(), TextSpan::at(1, 1))))
+    }
+}
+//#endregion 🔖Pack
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -1510,23 +1528,26 @@ mod tests {
     }
 
     //#region 🔖DslTests
-    use vcs::test_support::{assert_dsl_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
+    use vcs::test_support::{assert_dsl_pack_equivalence, assert_dsl_round_trip, assert_document_pack_round_trip, assert_document_text_round_trip, assert_op_line_round_trip};
 
     #[test]
     fn dsl_round_trip_mini_fixture() {
         assert_dsl_round_trip(&mini_fixture());
+        assert_dsl_pack_equivalence(&mini_fixture());
     }
 
     #[test]
     fn dsl_round_trip_nakagin_fixture() {
         let fixture = GraphFixture::parse_dsl(include_str!("../../example/nakagin-capsule-tower.trinity")).expect("nakagin fixture parses");
         assert_dsl_round_trip(&fixture);
+        assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
     fn dsl_round_trip_branch_chain_fixture() {
         let fixture = GraphFixture::parse_dsl(include_str!("../../example/branch-chain.trinity")).expect("branch-chain fixture parses");
         assert_dsl_round_trip(&fixture);
+        assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
@@ -1598,6 +1619,7 @@ mod tests {
         let mut store = TrinityGraphStore::new(create_trinity_graph_envelope("test", mini_fixture()));
         dispatch_trinity_graph_operations(&mut store, vec![TrinityGraphOperation::Rename { id: "root".into(), name: "renamed".into() }]).expect("apply");
         assert_document_text_round_trip(&store);
+        assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 

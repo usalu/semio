@@ -542,6 +542,20 @@ impl vcs::DocumentDsl for Procedural3dDocument {
         <Procedural3dDocumentDsl as vcs::DocumentDsl>::print_dsl(&procedural3d_document_to_dsl(self))
     }
 }
+
+/// 📦 `.procedural3d` binary pack — same `Procedural3dDocumentDsl` mirror as `DocumentDsl` above (see
+/// `🔖DslMirror`); `dsl::DslDocument`'s derive already gives `Procedural3dDocumentDsl` its own
+/// `DocumentPack` impl, so this just routes through the same to/from-dsl boundary functions.
+impl vcs::DocumentPack for Procedural3dDocument {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <Procedural3dDocumentDsl as vcs::DocumentPack>::encode_pack_with(&procedural3d_document_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let parsed = <Procedural3dDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+        procedural3d_document_from_dsl(parsed).map_err(vcs::text_error_to_pack_error)
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -929,6 +943,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_empty_projection() {
         test_support::assert_dsl_round_trip(&empty_procedural3d_projection());
+        test_support::assert_dsl_pack_equivalence(&empty_procedural3d_projection());
     }
 
     #[test]
@@ -936,6 +951,7 @@ mod tests {
         let text = include_str!("../example/hexagonal-mushroom-column.procedural3d");
         let projection = Procedural3dDocument::parse_dsl(text).expect("parse hexagonal-mushroom-column.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -943,6 +959,7 @@ mod tests {
         let text = include_str!("../example/rectangle-extrude-volume.procedural3d");
         let projection = Procedural3dDocument::parse_dsl(text).expect("parse rectangle-extrude-volume.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -950,6 +967,22 @@ mod tests {
         let text = include_str!("../example/sphere-cut-with-torus.procedural3d");
         let projection = Procedural3dDocument::parse_dsl(text).expect("parse sphere-cut-with-torus.procedural3d fixture");
         test_support::assert_dsl_round_trip(&projection);
+        // 🪲 NOT `assert_dsl_pack_equivalence` here (unlike every sibling fixture test in this file):
+        // this is the only fixture whose `output-preview`'s `#[dsl(table)]` `preview: Vec<DictEntryDsl>`
+        // has non-empty rows, and `DictEntryDsl.value`'s `#[dsl(block)]` `ValueDsl` (six mutually-exclusive
+        // `Option` fields) then hits a confirmed pre-existing pack-crate bug: `pack/value/rs`'s
+        // `decode_table_soa` fallback column branch (`_ => decode_value(reader, None, ctx, depth + 1)`,
+        // near line 1115) decodes a table row's non-primitive column value with `spec: None` — unlike the
+        // row-level codec's own `decode_record_fields` (line ~696), which backfills every spec-declared
+        // but wire-omitted field as `FieldValue::Absent`, this self-describing path has no `RecordSpec` to
+        // backfill from, so a genuinely-absent optional field (e.g. `null`) is never inserted at all, and
+        // `ValueDsl::__dsl_from_record`'s `record.get(id).ok_or_else(...)` then fails with `missing field
+        // 'null'` on decode. Reproduced directly: `P::decode_pack(&projection.encode_pack())` panics with
+        // exactly that message for this fixture. Out of this crate's directory scope to fix (`pack/**` is
+        // off-limits per the PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS wave-2 family rules) — see
+        // `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-procedural.txt` for the full
+        // writeup. Add this call back once `decode_table_soa`'s fallback branch is fixed to backfill
+        // spec-declared-but-absent nested fields the same way the row-level codec already does.
     }
 
     #[test]
@@ -966,6 +999,7 @@ mod tests {
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -980,6 +1014,7 @@ mod tests {
             Widget::Cluster { id: "cluster-1".into(), name: "Cluster".into(), tree: Default::default(), flow: Default::default() },
         ];
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
     //#endregion 🔖DslTests
 
@@ -1064,6 +1099,7 @@ mod tests {
             })
             .expect("apply");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DocumentTextTests
 }

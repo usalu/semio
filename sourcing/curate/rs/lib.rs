@@ -660,6 +660,8 @@ mod tests {
     fn curate_document_dsl_round_trips_sample_and_empty() {
         vcs::test_support::assert_dsl_round_trip(&sample_document());
         vcs::test_support::assert_dsl_round_trip(&CurateDocument::default());
+        vcs::test_support::assert_dsl_pack_equivalence(&sample_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&CurateDocument::default());
     }
 
     #[test]
@@ -683,6 +685,7 @@ mod tests {
         document.filters.sort = Some(TableSort { column_id: "availability".into(), direction: SortDirection::Desc });
         document.runtime.selected_object_id = Some("beam-mesh-custom".into());
         vcs::test_support::assert_dsl_round_trip(&document);
+        vcs::test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🔖Dsl
 
@@ -705,6 +708,7 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![SourcingOperation::SetDocument { document: next }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpTextStore
 }

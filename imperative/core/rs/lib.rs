@@ -274,6 +274,35 @@ impl vcs::DocumentDsl for ImperativeDocument {
         <ImperativeDocumentDsl as vcs::DocumentDsl>::print_dsl(&mirror)
     }
 }
+
+//#region 🔖Pack
+/// 📦 Binary counterpart of the `vcs::DocumentDsl` impl above. `ImperativeDocument` carries a manual
+/// `DocumentDsl` impl (not `#[derive(dsl::DslDocument)]` itself — see the region's opening doc comment)
+/// so it did NOT automatically gain `vcs::DocumentPack` from `dsl_derive`'s expansion in wave 1. This
+/// mirrors the derive-emitted shape (wave1-report.txt §2) exactly, substituting `ImperativeDocumentDsl`'s
+/// `__dsl_spec`/`__dsl_to_record`/`__dsl_from_record` trio for `Self`'s (unavailable here) and routing
+/// the same mirror-struct conversion `parse_dsl`/`print_dsl` already use.
+impl vcs::DocumentPack for ImperativeDocument {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        let mirror = ImperativeDocumentDsl {
+            schema: self.schema.clone(),
+            seed: dictionary_to_option_dsl_map(&self.seed),
+            steps: self.path.steps.iter().map(step_to_step_node_dsl).collect(),
+        };
+        vcs::pack_rt::encode_document(&ImperativeDocumentDsl::__dsl_spec(), &mirror.__dsl_to_record(), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let (record, _report) = vcs::pack_rt::decode_document(bytes, &ImperativeDocumentDsl::__dsl_spec(), options)?;
+        let parsed = ImperativeDocumentDsl::__dsl_from_record(&record).map_err(vcs::text_error_to_pack_error)?;
+        Ok(ImperativeDocument {
+            schema: parsed.schema,
+            path: Path { steps: parsed.steps.into_iter().map(step_node_dsl_to_step).collect() },
+            seed: option_dsl_map_to_dictionary(parsed.seed),
+        })
+    }
+}
+//#endregion 🔖Pack
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -665,6 +694,7 @@ mod tests {
     #[test]
     fn default_document_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&default_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_document());
     }
 
     #[test]
@@ -677,6 +707,7 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
 
     //#region resolve_steps / resolve_steps_mut / prune_empty_slot
@@ -779,6 +810,7 @@ mod tests {
         let owner = &document.path.steps[0];
         assert_eq!(owner.bodies.get("then").map(|body| body.steps.len()), Some(1));
         vcs::test_support::assert_dsl_round_trip(&document);
+        vcs::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
@@ -799,6 +831,7 @@ mod tests {
         assert_eq!(document.seed.get("e"), Some(&Value::Atom(Atom::Decimal(f64::NEG_INFINITY))));
         assert_eq!(document.seed.get("f"), Some(&Value::Dictionary(Dictionary::new())));
         vcs::test_support::assert_dsl_round_trip(&document);
+        vcs::test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]

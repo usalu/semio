@@ -924,6 +924,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_default_present_deck() {
         test_support::assert_dsl_round_trip(&default_present_deck());
+        test_support::assert_dsl_pack_equivalence(&default_present_deck());
     }
 
     #[test]
@@ -932,6 +933,7 @@ mod tests {
         let tiles = populate_tile_drafts_from_grid(FigureTileGridSeedSpec { source: &deck.source, rows: 2, columns: 2, gap: 0.0, key_prefix: "tile" });
         let deck = PresentDeck { tiles, ..deck };
         test_support::assert_dsl_round_trip(&deck);
+        test_support::assert_dsl_pack_equivalence(&deck);
     }
     //#endregion 🔖DslTests
 
@@ -993,6 +995,7 @@ mod tests {
             })
             .expect("apply");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DocumentTextTests
 }

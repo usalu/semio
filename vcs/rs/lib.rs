@@ -238,25 +238,211 @@ pub trait OpText: Sized {
     fn print_op(&self) -> String;
 }
 
-/// @emoji 🌱 Schema-less escape hatch for a whole document that is genuinely untyped (a bare JSON
-/// scratch projection, predating this technology's typed DSL derive — see e.g. `puzzle_2d`'s own
-/// `🔖ValueBridge` region for why `puzzle-plugin`'s `DocumentApp::Projection` stays `serde_json::Value`
-/// rather than its crate's typed `Puzzle2dProjection`). Mirrors `dsl::DslField for serde_json::Value`'s
-/// same rationale one level up: `print_dsl`/`parse_dsl` round-trip through plain JSON text instead of
-/// the `dsl_schema` grammar, so a `Value`-projection document can still satisfy `DocumentApp`'s
-/// `Projection: DocumentDsl` bound without a full typed-projection migration.
-impl DocumentDsl for serde_json::Value {
-    const EXTENSION: &'static str = "json";
+//#endregion 🔖Text
 
-    fn parse_dsl(text: &str) -> Result<Self, TextError> {
-        serde_json::from_str(text).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))
+//#region 🔖Pack
+/// @emoji 📦 Binary counterpart of `🔖Text` above — see the wave-1 design at
+/// `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/` for the full container-format
+/// contract. `pack`'s own `EncodeOptions`/`DecodeOptions`/`VerificationLevel` are re-exported under
+/// a `Pack`-prefixed name (not a plain re-export — `dsl_derive`'s emitted `DocumentPack` impl and
+/// every downstream caller spell them `vcs::PackEncodeOptions`/`vcs::PackDecodeOptions`/
+/// `vcs::PackVerificationLevel`, so there is exactly one spelling repo-wide).
+pub use pack::{DecodeOptions as PackDecodeOptions, EncodeOptions as PackEncodeOptions, PackError, VerificationLevel as PackVerificationLevel};
+
+/// @emoji 🧵 Thin runtime bridge to `pack::{encode_document, decode_document}`, resolved as
+/// `::vcs::pack_rt::...` by `dsl_derive`'s generated `DocumentPack` impl (app crates depend on
+/// `vcs`, never on `pack` directly — same seam `::dsl::RecordSpec`/`RecordValue` already use). Also
+/// hosts the schema-less JSON bridge behind `impl DocumentPack for serde_json::Value` below.
+pub mod pack_rt {
+    use super::{PackDecodeOptions, PackEncodeOptions, PackError};
+    use dsl::{DslValue, FieldSpec, FieldValue, RecordLayout, RecordSpec, RecordValue, Shape};
+    use std::collections::HashMap;
+
+    /// @emoji 🚪 Forwards to `pack::encode_document`.
+    pub fn encode_document(spec: &RecordSpec, record: &RecordValue, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        pack::encode_document(spec, record, options)
     }
 
-    fn print_dsl(&self) -> String {
-        serde_json::to_string_pretty(self).unwrap_or_default()
+    /// @emoji 🚪 Forwards to `pack::decode_document`.
+    pub fn decode_document(bytes: &[u8], spec: &RecordSpec, options: &PackDecodeOptions) -> Result<(RecordValue, pack::DecodeReport), PackError> {
+        pack::decode_document(bytes, spec, options)
+    }
+
+    /// @emoji 🌱 Field id the JSON bridge's synthetic single-field record wraps a whole
+    /// `serde_json::Value` payload in — mirrors `dsl::DslField for serde_json::Value`'s
+    /// `Shape::Value` escape hatch (`dsl/rs/lib.rs`), lifted one level from "one field" to "one
+    /// whole document" so schema-less apps (puzzle plugins, compose kit) get a pack encoding too.
+    const JSON_BRIDGE_FIELD_ID: u16 = 1;
+
+    fn json_bridge_spec() -> RecordSpec {
+        RecordSpec::new(None, RecordLayout::Lines, vec![FieldSpec::new(JSON_BRIDGE_FIELD_ID, "value", Shape::Value)])
+    }
+
+    /// @emoji 🌱 Encodes an arbitrary `serde_json::Value` as a complete pack file. Infallible for any
+    /// well-formed JSON value — mirrors `DocumentDsl::print_dsl`'s infallible signature; a
+    /// `LimitExceeded` on a pathologically huge value is the one way this can panic, same ceiling
+    /// `pack_value`'s own encoder enforces.
+    pub fn encode_json_value(value: &serde_json::Value) -> Vec<u8> {
+        let mut fields = HashMap::new();
+        fields.insert(JSON_BRIDGE_FIELD_ID, FieldValue::Value(DslValue::from(value.clone())));
+        let record = RecordValue { fields };
+        encode_document(&json_bridge_spec(), &record, &PackEncodeOptions::default())
+            .expect("json bridge encode is infallible for a well-formed DslValue")
+    }
+
+    /// @emoji 🌱 Inverse of `encode_json_value`.
+    pub fn decode_json_value(bytes: &[u8]) -> Result<serde_json::Value, PackError> {
+        let (record, _report) = decode_document(bytes, &json_bridge_spec(), &PackDecodeOptions::default())?;
+        match record.get(JSON_BRIDGE_FIELD_ID) {
+            Some(FieldValue::Value(dsl_value)) => Ok(serde_json::Value::from(dsl_value.clone())),
+            _ => Ok(serde_json::Value::Null),
+        }
     }
 }
-//#endregion 🔖Text
+
+/// @emoji 📦 Binary counterpart to `DocumentDsl` — same shape, opposite face. LAW: `P::decode_pack(
+/// &p.encode_pack())` recovers an equal `p`, AND (structurally, not just by test) `decode_pack(
+/// encode_pack(p)) == parse_dsl(print_dsl(p))` — dsl and pack are two encodings of the identical
+/// `(RecordSpec, RecordValue)` pair keyed by the same stable `u16` field ids `dsl_derive` assigns,
+/// never two independent sources of truth. The `_with` methods are required (the seam
+/// `dsl_derive`'s generated impl calls through `::vcs::pack_rt`); the plain names are provided
+/// defaults over `Pack{Encode,Decode}Options::default()`.
+pub trait DocumentPack: Sized {
+    fn encode_pack_with(&self, options: &PackEncodeOptions) -> Result<Vec<u8>, PackError>;
+    fn decode_pack_with(bytes: &[u8], options: &PackDecodeOptions) -> Result<Self, PackError>;
+
+    /// @emoji 📦 `encode_pack_with` at default options — infallible in practice (mirrors
+    /// `DocumentDsl::print_dsl`'s infallible signature); panics only on a `PackLimits` overflow.
+    fn encode_pack(&self) -> Vec<u8> {
+        self.encode_pack_with(&PackEncodeOptions::default()).expect("default-options pack encode is infallible")
+    }
+
+    /// @emoji 📦 `decode_pack_with` at default (Standard) verification.
+    fn decode_pack(bytes: &[u8]) -> Result<Self, PackError> {
+        Self::decode_pack_with(bytes, &PackDecodeOptions::default())
+    }
+}
+
+/// @emoji 📦 Binary counterpart to `DocumentTextFiles`: `pack` is the encoded initial projection
+/// (whole `.spk` container bytes), `ops` stays the op-log TEXT — the op grammar is format-invariant,
+/// only the initial-projection encoding differs between the text and pack file pairs.
+#[derive(Clone, Debug, Default, PartialEq)]
+pub struct DocumentPackFiles {
+    pub pack: Vec<u8>,
+    pub ops: String,
+}
+
+/// @emoji 🌱 Pack counterpart of the schema-less `serde_json::Value` escape hatch (puzzle-plugin/
+/// compose-kit apps stay on `serde_json::Value` end to end): delegates to `pack_rt`'s JSON bridge.
+impl DocumentPack for serde_json::Value {
+    fn encode_pack_with(&self, _options: &PackEncodeOptions) -> Result<Vec<u8>, PackError> {
+        Ok(pack_rt::encode_json_value(self))
+    }
+    fn decode_pack_with(bytes: &[u8], _options: &PackDecodeOptions) -> Result<Self, PackError> {
+        pack_rt::decode_json_value(bytes)
+    }
+}
+
+/// @emoji 🔀 The closest `PackError` variant to "a text-format failure surfaced through a pack-facing
+/// API" (e.g. `dsl_derive`'s generated `decode_pack_with`, whose `__dsl_from_record` step returns
+/// `TextError`). A free function, not `impl From<TextError> for PackError`: both types are
+/// re-exports of foreign crates (`dsl_core`/`pack_core`) through `vcs`, so a blanket `From` impl
+/// here would violate the orphan rule — neither type is actually local to this crate.
+pub fn text_error_to_pack_error(error: TextError) -> PackError {
+    PackError::Schema(error.to_string())
+}
+//#endregion 🔖Pack
+
+//#region 🔖CodecRegistry
+/// @emoji 🗂️ Type-erased document codec — the bridge a schema-string-keyed caller (chiefly
+/// `framework/sync`'s `FolderEndpoint`) uses to print/parse pack+ops without naming the concrete
+/// `P`/`Operation` types at that layer. Built once per document kind via `DocumentCodec::of`
+/// (wrapped one line per app by `register_document_codec_for_app` in `framework/plugin/rs/lib.rs`,
+/// wave 2) and looked up by `schema` string through `register_document_codec`/`document_codec`.
+#[derive(Clone)]
+pub struct DocumentCodec {
+    pub schema: String,
+    pub extension: &'static str,
+    /// @emoji 📤 `envelope_json -> (pack files, dsl mirror text)` — the write path: `pack` is what
+    /// `FolderTextStorage::write_pack`/`FolderSqliteStorage::write_pack` persist as authoritative,
+    /// the returned `String` is the always-written DSL mirror (`print_dsl` on the initial
+    /// projection).
+    pub print: fn(&str) -> Result<(DocumentPackFiles, String), VcsError>,
+    /// @emoji 📥 `(pack bytes, ops text) -> envelope_json` — the pack-first read path.
+    pub parse: fn(&[u8], &str) -> Result<String, VcsError>,
+    /// @emoji 📥 `(dsl text, ops text) -> envelope_json` — the DSL-mirror fallback read path (no
+    /// `.pack` file yet: hand-authored or freshly imported documents).
+    pub parse_dsl: fn(&str, &str) -> Result<String, VcsError>,
+}
+
+impl DocumentCodec {
+    /// @emoji 🏗️ Monomorphizes three non-capturing bridge functions for `(P, Operation)` — each a
+    /// genuine zero-sized `fn` item, coercible to a bare `fn` pointer — and pairs them with `schema`/
+    /// `P::EXTENSION`. One call site per document kind (`register_document_codec_for_app`).
+    pub fn of<P, Operation>(schema: impl Into<String>) -> Self
+    where
+        P: Clone + PartialEq + Serialize + DeserializeOwned + DocumentDsl + DocumentPack + Send + 'static,
+        Operation: crate::Operation<P> + PartialEq + Serialize + DeserializeOwned + OpText + Send + 'static,
+    {
+        fn print_impl<P, Operation>(envelope_json: &str) -> Result<(DocumentPackFiles, String), VcsError>
+        where
+            P: DocumentDsl + DocumentPack + Serialize + DeserializeOwned,
+            Operation: OpText + Serialize + DeserializeOwned,
+        {
+            let envelope: DocumentVcsEnvelope<P, Operation> =
+                serde_json::from_str(envelope_json).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            let pack_files = print_document_pack(&envelope)?;
+            let dsl_mirror = envelope.vcs.initial_projection.print_dsl();
+            Ok((pack_files, dsl_mirror))
+        }
+
+        fn parse_impl<P, Operation>(pack: &[u8], ops: &str) -> Result<String, VcsError>
+        where
+            P: Clone + DocumentPack + Serialize + DeserializeOwned,
+            Operation: OpText + crate::Operation<P> + Serialize + DeserializeOwned,
+        {
+            let parsed: ParsedDocumentText<P, Operation> = parse_document_pack(pack, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
+        }
+
+        fn parse_dsl_impl<P, Operation>(dsl: &str, ops: &str) -> Result<String, VcsError>
+        where
+            P: Clone + DocumentDsl + Serialize + DeserializeOwned,
+            Operation: OpText + crate::Operation<P> + Serialize + DeserializeOwned,
+        {
+            let parsed: ParsedDocumentText<P, Operation> = parse_document_text(dsl, ops).map_err(|error| VcsError::Deserialize(error.to_string()))?;
+            serde_json::to_string(&parsed.envelope).map_err(|error| VcsError::Serialize(error.to_string()))
+        }
+
+        Self {
+            schema: schema.into(),
+            extension: P::EXTENSION,
+            print: print_impl::<P, Operation>,
+            parse: parse_impl::<P, Operation>,
+            parse_dsl: parse_dsl_impl::<P, Operation>,
+        }
+    }
+}
+
+static DOCUMENT_CODEC_REGISTRY: std::sync::OnceLock<std::sync::RwLock<HashMap<String, DocumentCodec>>> = std::sync::OnceLock::new();
+
+fn document_codec_registry() -> &'static std::sync::RwLock<HashMap<String, DocumentCodec>> {
+    DOCUMENT_CODEC_REGISTRY.get_or_init(|| std::sync::RwLock::new(HashMap::new()))
+}
+
+/// @emoji 📝 Registers (or overwrites) the codec for `codec.schema` — idempotent, safe to call
+/// repeatedly (every app's registration fn calls this once per document kind at plugin-init time).
+pub fn register_document_codec(codec: DocumentCodec) {
+    let mut registry = document_codec_registry().write().unwrap_or_else(|poisoned| poisoned.into_inner());
+    registry.insert(codec.schema.clone(), codec);
+}
+
+/// @emoji 🔎 Looks up the codec registered for `schema`, if any.
+pub fn document_codec(schema: &str) -> Option<DocumentCodec> {
+    let registry = document_codec_registry().read().unwrap_or_else(|poisoned| poisoned.into_inner());
+    registry.get(schema).cloned()
+}
+//#endregion 🔖CodecRegistry
 
 //#region 🔖CollectionDiff
 /// @emoji 🧩 Sparse collection patch entry (mirrors compose `XModified`).
@@ -789,15 +975,15 @@ pub fn print_edit_lines<Operation: OpText>(edit: &Edit<Operation>) -> Result<Str
     Ok(out)
 }
 
-/// @emoji 📤 Prints the full textual VCS document: the DSL text (initial projection) and the complete
-/// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
-/// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
-pub fn print_document_text<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
+/// @emoji 📤 Builds just the op-log half of a textual/pack document — `doc` header, every edit ever
+/// created as an `edit` block, then `change`/`checkpoint`/`alternative`/`active` records. Shared by
+/// `print_document_text` and `print_document_pack`: the op-log grammar never touches
+/// `initial_projection`, so it is provably format-invariant and both printers thin out to this plus
+/// their own initial-projection encoding.
+fn print_ops_log<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<String, VcsError>
 where
-    P: DocumentDsl,
     Operation: OpText,
 {
-    let dsl = envelope.vcs.initial_projection.print_dsl();
     let mut ops = String::new();
     ops.push_str(&OpsHeaderLine::Doc { id: envelope.id.clone(), schema: envelope.schema.clone() }.print_op());
     ops.push('\n');
@@ -839,19 +1025,46 @@ where
         ops.push_str(&OpsHeaderLine::Active { id: active_id.clone() }.print_op());
         ops.push('\n');
     }
+    Ok(ops)
+}
+
+/// @emoji 📤 Prints the full textual VCS document: the DSL text (initial projection) and the complete
+/// op log (`doc` header, every edit ever created as an `edit` block, then `change`/`checkpoint`/
+/// `alternative`/`active` records). Replaces the JSON envelope as the canonical persisted form.
+pub fn print_document_text<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentTextFiles, VcsError>
+where
+    P: DocumentDsl,
+    Operation: OpText,
+{
+    let dsl = envelope.vcs.initial_projection.print_dsl();
+    let ops = print_ops_log(envelope)?;
     Ok(DocumentTextFiles { dsl, ops })
 }
 
-/// @emoji 📥 Parses the textual VCS document back into an envelope plus its live (fully-replayed)
-/// projection. Every `edit` in the log is treated as applied, in file order — mirroring the existing
-/// JSON `load_document` semantics (undo/redo position and checkout-alternative state are runtime-only
-/// and are not restored across a save/load cycle either way).
-pub fn parse_document_text<P, Operation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+/// @emoji 📤 Pack counterpart of `print_document_text`: identical op-log body (`print_ops_log`), but
+/// the initial projection is encoded to pack bytes (`DocumentPack::encode_pack`) instead of printed
+/// to DSL text.
+pub fn print_document_pack<P, Operation>(envelope: &DocumentVcsEnvelope<P, Operation>) -> Result<DocumentPackFiles, VcsError>
 where
-    P: Clone + DocumentDsl,
+    P: DocumentPack,
+    Operation: OpText,
+{
+    let pack = envelope.vcs.initial_projection.encode_pack();
+    let ops = print_ops_log(envelope)?;
+    Ok(DocumentPackFiles { pack, ops })
+}
+
+/// @emoji 📥 Replays `ops` against an already-obtained `initial_projection` — the parse-independent
+/// tail shared by `parse_document_text` (which obtains the projection via `P::parse_dsl`) and
+/// `parse_document_pack` (via `P::decode_pack`). Every `edit` in the log is treated as applied, in
+/// file order — mirroring the existing JSON `load_document` semantics (undo/redo position and
+/// checkout-alternative state are runtime-only and are not restored across a save/load cycle either
+/// way).
+fn replay_ops<P, Operation>(initial_projection: P, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+where
+    P: Clone,
     Operation: OpText + crate::Operation<P>,
 {
-    let initial_projection = P::parse_dsl(dsl)?;
     let mut schema = String::new();
     let mut id = String::new();
     let mut edits: Vec<Edit<Operation>> = Vec::new();
@@ -976,6 +1189,29 @@ where
     };
     let (projection, _conflicts) = Operation::reconcile(projection);
     Ok(ParsedDocumentText { envelope, projection })
+}
+
+/// @emoji 📥 Parses the textual VCS document back into an envelope plus its live (fully-replayed)
+/// projection — obtains the initial projection via `P::parse_dsl` then shares `replay_ops`.
+pub fn parse_document_text<P, Operation>(dsl: &str, ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+where
+    P: Clone + DocumentDsl,
+    Operation: OpText + crate::Operation<P>,
+{
+    let initial_projection = P::parse_dsl(dsl)?;
+    replay_ops(initial_projection, ops)
+}
+
+/// @emoji 📥 Pack counterpart of `parse_document_text`: obtains the initial projection via
+/// `DocumentPack::decode_pack` instead of `DocumentDsl::parse_dsl`, then shares the same
+/// `replay_ops` tail.
+pub fn parse_document_pack<P, Operation>(pack: &[u8], ops: &str) -> Result<ParsedDocumentText<P, Operation>, TextError>
+where
+    P: Clone + DocumentPack,
+    Operation: OpText + crate::Operation<P>,
+{
+    let initial_projection = P::decode_pack(pack).map_err(|error| TextError::new(error.to_string(), TextSpan::at(1, 1)))?;
+    replay_ops(initial_projection, ops)
 }
 //#endregion 🔖TextFormat
 
@@ -2309,6 +2545,7 @@ impl FolderSqliteStorage {
                  id TEXT PRIMARY KEY,\
                  schema TEXT,\
                  json TEXT NOT NULL,\
+                 pack BLOB,\
                  updated_at INTEGER NOT NULL\
              );\
              CREATE TABLE IF NOT EXISTS blobs (\
@@ -2337,6 +2574,30 @@ impl FolderSqliteStorage {
             "INSERT INTO document (id, schema, json, updated_at) VALUES (?1, ?2, ?3, ?4) \
              ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, updated_at = excluded.updated_at",
             rusqlite::params![document_id, schema, envelope_json, now_ms() as i64],
+        )
+        .map_err(|e| VcsError::Backbone(e.to_string()))?;
+        Ok(())
+    }
+
+    /// @emoji 📖 Reads the stored pack bytes for `document_id`, or `None` if absent — no row, or a
+    /// row written before the `pack` column existed (SQL `NULL`, surfaced as `None` the same way).
+    pub fn read_pack(&self, document_id: &str) -> Result<Option<Vec<u8>>, VcsError> {
+        use rusqlite::OptionalExtension;
+        let conn = self.connection()?;
+        conn.query_row("SELECT pack FROM document WHERE id = ?1", [document_id], |row| row.get::<_, Option<Vec<u8>>>(0))
+            .optional()
+            .map(|row| row.flatten())
+            .map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji ✍️ Upserts `document_id`'s envelope JSON + pack bytes together (schema id, `updated_at`
+    /// stamp) — the pack-aware sibling of `write`.
+    pub fn write_pack(&self, document_id: &str, schema: &str, envelope_json: &str, pack: &[u8]) -> Result<(), VcsError> {
+        let conn = self.connection()?;
+        conn.execute(
+            "INSERT INTO document (id, schema, json, pack, updated_at) VALUES (?1, ?2, ?3, ?4, ?5) \
+             ON CONFLICT(id) DO UPDATE SET schema = excluded.schema, json = excluded.json, pack = excluded.pack, updated_at = excluded.updated_at",
+            rusqlite::params![document_id, schema, envelope_json, pack, now_ms() as i64],
         )
         .map_err(|e| VcsError::Backbone(e.to_string()))?;
         Ok(())
@@ -2383,6 +2644,11 @@ impl FolderTextStorage {
         self.folder.join(format!("{document_id}.{extension}.ops"))
     }
 
+    /// @emoji 🏷️ Path of the authoritative binary pack file — `dsl_path` with a `.pack` suffix.
+    pub fn pack_path(&self, document_id: &str, extension: &str) -> std::path::PathBuf {
+        self.folder.join(format!("{document_id}.{extension}.pack"))
+    }
+
     /// @emoji 📖 Reads both files for `document_id`, or `None` if the DSL file does not exist yet.
     pub fn read(&self, document_id: &str, extension: &str) -> Result<Option<DocumentTextFiles>, VcsError> {
         let dsl = match std::fs::read_to_string(self.dsl_path(document_id, extension)) {
@@ -2404,6 +2670,33 @@ impl FolderTextStorage {
         std::fs::create_dir_all(&self.folder).map_err(|e| VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.dsl_path(document_id, extension), &files.dsl).map_err(|e| VcsError::Backbone(e.to_string()))?;
         std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| VcsError::Backbone(e.to_string()))
+    }
+
+    /// @emoji 📖 Pack-first read: reads the pack bytes + op log for `document_id`, or `None` if the
+    /// `.pack` file itself doesn't exist (unlike `read`, the DSL mirror's existence alone doesn't
+    /// count — pack is authoritative per the disk-layout LAW, the DSL file is import-only).
+    pub fn read_pack(&self, document_id: &str, extension: &str) -> Result<Option<DocumentPackFiles>, VcsError> {
+        let pack = match std::fs::read(self.pack_path(document_id, extension)) {
+            Ok(bytes) => bytes,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+            Err(err) => return Err(VcsError::Backbone(err.to_string())),
+        };
+        let ops = match std::fs::read_to_string(self.ops_path(document_id, extension)) {
+            Ok(text) => text,
+            Err(err) if err.kind() == std::io::ErrorKind::NotFound => String::new(),
+            Err(err) => return Err(VcsError::Backbone(err.to_string())),
+        };
+        Ok(Some(DocumentPackFiles { pack, ops }))
+    }
+
+    /// @emoji ✍️ Overwrites all three files: the authoritative `.pack`, the shared `.ops` log, and the
+    /// always-written DSL mirror `dsl_mirror` (`print_dsl` on the initial projection) — the pack-aware
+    /// sibling of `write`.
+    pub fn write_pack(&self, document_id: &str, extension: &str, files: &DocumentPackFiles, dsl_mirror: &str) -> Result<(), VcsError> {
+        std::fs::create_dir_all(&self.folder).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.pack_path(document_id, extension), &files.pack).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.ops_path(document_id, extension), &files.ops).map_err(|e| VcsError::Backbone(e.to_string()))?;
+        std::fs::write(self.dsl_path(document_id, extension), dsl_mirror).map_err(|e| VcsError::Backbone(e.to_string()))
     }
 
     /// @emoji ➕ Appends already-printed op-log lines (one {@link print_edit_lines} block) to the `.ops`
@@ -3092,6 +3385,31 @@ pub mod test_support {
         assert_eq!(&parsed, projection, "dsl round trip diverged;\nprinted:\n{printed}");
     }
 
+    /// @emoji 📦 Asserts a pack round trip: `P::decode_pack(&projection.encode_pack())` recovers an
+    /// equal projection — the pack sibling of `assert_dsl_round_trip`.
+    pub fn assert_pack_round_trip<P>(projection: &P)
+    where
+        P: DocumentPack + PartialEq + std::fmt::Debug,
+    {
+        let bytes = projection.encode_pack();
+        let decoded = P::decode_pack(&bytes).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        assert_eq!(&decoded, projection, "pack round trip diverged");
+    }
+
+    /// @emoji ⚖️ Asserts dsl and pack are two projections of the SAME value: `decode_pack(
+    /// encode_pack(p)) == parse_dsl(print_dsl(p)) == p` — the compile-time validation ground truth
+    /// for the whole pack rollout's central LAW (see `DocumentPack`'s doc comment).
+    pub fn assert_dsl_pack_equivalence<P>(projection: &P)
+    where
+        P: DocumentDsl + DocumentPack + Clone + PartialEq + std::fmt::Debug,
+    {
+        let via_pack = P::decode_pack(&projection.encode_pack()).unwrap_or_else(|error| panic!("pack decode failed: {error}"));
+        let via_dsl = P::parse_dsl(&projection.print_dsl()).unwrap_or_else(|error| panic!("dsl parse failed: {error}"));
+        assert_eq!(&via_pack, projection, "pack round trip diverged from source projection");
+        assert_eq!(&via_dsl, projection, "dsl round trip diverged from source projection");
+        assert_eq!(via_pack, via_dsl, "pack and dsl round trips diverged from each other");
+    }
+
     /// @emoji ⚡ Asserts an op-text round trip for a single operation: `print_op` contains no newline
     /// and `Op::parse_op` recovers an equal operation from it. The compile-time validation ground
     /// truth for every technology's `🔖OpText` region — call this once per `Operation` variant.
@@ -3118,6 +3436,27 @@ pub mod test_support {
         let parsed: ParsedDocumentText<P, Operation> =
             parse_document_text(&files.dsl, &files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
         assert_eq!(parsed.projection, live, "document-text round trip diverged from store projection");
+    }
+
+    /// @emoji 🗄️ Asserts a full pack-based document round trip: mirrors
+    /// `assert_document_text_round_trip` but via `print_document_pack`/`parse_document_pack`, and
+    /// additionally asserts the pack path's parsed projection agrees with the text path's — the two
+    /// storage formats must never diverge on the same store.
+    pub fn assert_document_pack_round_trip<P, Operation>(store: &DocumentVcsStore<P, Operation>)
+    where
+        P: Clone + DocumentDsl + DocumentPack + PartialEq + std::fmt::Debug + Serialize + DeserializeOwned,
+        Operation: Clone + OpText + crate::Operation<P> + PartialEq + Serialize + DeserializeOwned,
+    {
+        let live = store.projection().expect("store projection");
+        let pack_files = print_document_pack(store.envelope()).expect("print document pack");
+        let parsed_pack: ParsedDocumentText<P, Operation> =
+            parse_document_pack(&pack_files.pack, &pack_files.ops).unwrap_or_else(|error| panic!("parse document pack failed: {error}"));
+        assert_eq!(parsed_pack.projection, live, "document-pack round trip diverged from store projection");
+
+        let text_files = print_document_text(store.envelope()).expect("print document text");
+        let parsed_text: ParsedDocumentText<P, Operation> =
+            parse_document_text(&text_files.dsl, &text_files.ops).unwrap_or_else(|error| panic!("parse document text failed: {error}"));
+        assert_eq!(parsed_pack.projection, parsed_text.projection, "document-pack path diverged from document-text path");
     }
 
     /// @emoji 🩺 Asserts the store's incrementally-maintained live projection agrees with a
@@ -3147,6 +3486,10 @@ mod tests {
     struct DemoProjection {
         n: i32,
     }
+
+    // `impl vcs::DocumentPack for DemoProjection` is now generated automatically by
+    // `#[derive(dsl::DslDocument)]` above (see dsl/derive/rs/lib.rs's `🔖DslDocument` region) —
+    // same seam as its `impl vcs::DocumentDsl for DemoProjection` sibling.
 
     #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
     struct DemoDiff {
@@ -3723,6 +4066,101 @@ mod tests {
     }
 
     #[test]
+    fn folder_text_storage_round_trips_pack() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let storage = FolderTextStorage::new(dir.path().to_path_buf());
+        assert_eq!(storage.read_pack("demo", "demo").expect("read empty"), None, "absent pack reads as None");
+
+        let envelope = create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 0 }, None);
+        let mut store = DocumentVcsStore::new(envelope);
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 1 }],
+                description: None,
+            })
+            .expect("apply");
+        let files = print_document_pack(store.envelope()).expect("print document pack");
+        let dsl_mirror = store.envelope().vcs.initial_projection.print_dsl();
+        storage.write_pack("demo", "demo", &files, &dsl_mirror).expect("write pack");
+
+        store
+            .dispatch(DocumentVcsCommand::Apply {
+                operations: vec![DemoOperation::SetN { n: 2 }],
+                description: None,
+            })
+            .expect("apply 2");
+        let second_edit = store.envelope().vcs.edits.last().expect("second edit");
+        storage
+            .append_ops("demo", "demo", &print_edit_lines(second_edit).expect("print edit lines"))
+            .expect("append ops");
+
+        let reloaded = storage.read_pack("demo", "demo").expect("read pack").expect("some");
+        let parsed: ParsedDocumentText<DemoProjection, DemoOperation> =
+            parse_document_pack(&reloaded.pack, &reloaded.ops).unwrap_or_else(|error| panic!("parse: {error}"));
+        assert_eq!(parsed.projection.n, 2, "pack write + append reconstructs every edit in order");
+
+        // The always-written DSL mirror must also be on disk and agree with the pack path.
+        let mirror = std::fs::read_to_string(storage.pack_path("demo", "demo").with_extension("")).expect("dsl mirror on disk");
+        assert_eq!(DemoProjection::parse_dsl(&mirror).expect("parse mirror").n, 0, "mirror captures the initial projection, not later edits");
+    }
+
+    #[test]
+    fn folder_sqlite_storage_round_trips_pack() {
+        let dir = tempfile::tempdir().expect("tempdir");
+        let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
+        assert_eq!(storage.read_pack("doc-a").expect("read empty"), None, "absent pack reads as None");
+
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "doc-a", DemoProjection { n: 3 }, None);
+        let pack_bytes = envelope.vcs.initial_projection.encode_pack();
+        storage
+            .write_pack("doc-a", "demo/v1", &serde_json::to_string(&envelope).expect("json"), &pack_bytes)
+            .expect("write pack");
+
+        let reloaded = storage.read_pack("doc-a").expect("read pack").expect("some");
+        assert_eq!(reloaded, pack_bytes, "sqlite pack column round trips exact bytes");
+
+        // `write` (JSON-only, no pack argument) must not clobber a previously-written pack.
+        storage
+            .write("doc-a", "demo/v1", &serde_json::to_string(&envelope).expect("json again"))
+            .expect("plain write");
+        assert_eq!(
+            storage.read_pack("doc-a").expect("read pack after plain write"),
+            Some(pack_bytes),
+            "plain write preserves the existing pack column (upsert only touches schema/json/updated_at)"
+        );
+    }
+
+    #[test]
+    fn document_codec_of_round_trips_pack_and_dsl() {
+        let codec = DocumentCodec::of::<DemoProjection, DemoOperation>("demo/v1");
+        assert_eq!(codec.schema, "demo/v1");
+        assert_eq!(codec.extension, "demo");
+
+        let envelope: DocumentVcsEnvelope<DemoProjection, DemoOperation> =
+            create_document_vcs_envelope("demo/v1", "demo", DemoProjection { n: 4 }, None);
+        let envelope_json = serde_json::to_string(&envelope).expect("envelope json");
+
+        let (pack_files, dsl_mirror) = (codec.print)(&envelope_json).expect("codec print");
+        assert_eq!(dsl_mirror, DemoProjection { n: 4 }.print_dsl(), "dsl mirror matches the initial projection's print_dsl");
+
+        let parsed_json = (codec.parse)(&pack_files.pack, &pack_files.ops).expect("codec parse");
+        let parsed: DocumentVcsEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_json).expect("parse envelope json");
+        assert_eq!(parsed.vcs.initial_projection.n, 4, "codec.parse round trips through pack bytes");
+
+        let parsed_dsl_json = (codec.parse_dsl)(&dsl_mirror, &pack_files.ops).expect("codec parse_dsl");
+        let parsed_dsl: DocumentVcsEnvelope<DemoProjection, DemoOperation> = serde_json::from_str(&parsed_dsl_json).expect("parse envelope json (dsl path)");
+        assert_eq!(
+            parsed.vcs.initial_projection, parsed_dsl.vcs.initial_projection,
+            "codec.parse and codec.parse_dsl agree on the same document"
+        );
+
+        register_document_codec(codec);
+        assert!(document_codec("demo/v1").is_some(), "registered codec is discoverable by schema string");
+        assert!(document_codec("no-such-schema").is_none());
+    }
+
+    #[test]
     fn blob_store_put_get_dedupes_idempotently() {
         let dir = tempfile::tempdir().expect("tempdir");
         let storage = FolderSqliteStorage::new(dir.path().to_path_buf());
@@ -4227,6 +4665,11 @@ mod tests {
     }
 
     #[test]
+    fn demo_dsl_pack_equivalence() {
+        test_support::assert_dsl_pack_equivalence(&DemoProjection { n: 42 });
+    }
+
+    #[test]
     fn demo_op_text_round_trips() {
         test_support::assert_op_line_round_trip(&DemoOperation::SetN { n: 7 });
     }
@@ -4268,6 +4711,7 @@ mod tests {
             })
             .expect("commit");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]
@@ -4820,6 +5264,7 @@ mod tests {
         let files = print_document_text(store.envelope()).expect("print document text");
         assert!(files.ops.lines().any(|line| line.starts_with("active ")), "an active alternative must print an `active` header line: {}", files.ops);
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖TextFormatHelpers
 

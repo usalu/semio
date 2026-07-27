@@ -288,7 +288,6 @@ pub mod levels {
     pub const GLASS_ALPHA_STEP: f64 = 0.12;
     pub const GLASS_BLUR_STEP_PX: f64 = 8.0;
     pub const GLASS_SATURATE: f64 = 1.45;
-    pub const GLASS_CHROME_ALPHA_FACTOR: f64 = 0.5;
     pub const VEIL_ALPHA_EXTRA_STEPS: u32 = 1;
     pub const Z_STEP: f64 = 10.0;
 }

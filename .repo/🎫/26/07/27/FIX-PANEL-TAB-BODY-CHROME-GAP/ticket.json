@@ -1,0 +1,8 @@
+{
+  "title": "Fix Panel Tab Body Chrome Gap",
+  "emoji": "🪟",
+  "status": "open",
+  "description": "Fix the wrong vertical gap between panel tab chips and the panel body so tabs, fold control, and body form one continuous window-chrome silhouette with shared border and background. Root cause: ui-glass-chrome was removed from CSS while WindowChrome still stamped that dead class on chip caps.",
+  "goal": "🎯r2602",
+  "sessions": []
+}

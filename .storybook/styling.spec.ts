@@ -65,14 +65,13 @@ test("styling/Tokens Colors: renders the STYLING_TOKENS palette as a table", asy
 //#endregion 🔖Tokens
 
 //#region 🔖Glass
-test("styling/Glass AllLevels: renders every Level's ui-glass/ui-glass-chrome swatch", async ({ page }) => {
+test("styling/Glass AllLevels: renders every Level's ui-glass swatch", async ({ page }) => {
   await expectStylingStory(page, "🎨styling-glass--all-levels");
   await expect(page.getByText("panel", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("window", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("menu", { exact: true }).first()).toBeVisible();
   await expect(page.getByText("pane", { exact: true }).first()).toBeVisible();
   await expect(page.getByText(".ui-glass", { exact: false }).first()).toBeVisible();
-  await expect(page.getByText(".ui-glass-chrome", { exact: false }).first()).toBeVisible();
 });
 
 test("styling/Glass DefaultLevelFallback: useLevel() falls back to base outside any provider", async ({ page }) => {

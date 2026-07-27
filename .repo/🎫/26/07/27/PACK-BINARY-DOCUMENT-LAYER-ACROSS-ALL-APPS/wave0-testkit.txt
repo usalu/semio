@@ -1,0 +1,87 @@
+pack_testkit — wave 0 implementation summary
+==============================================
+
+Crate: pack/testkit/rs (package pack_testkit)
+Files touched:
+  - /Users/ueli/Documents/semio/pack/testkit/rs/lib.rs (full implementation, was a placeholder)
+  - /Users/ueli/Documents/semio/pack/testkit/rs/Cargo.toml (added `blake3 = "1"` dependency,
+    matching the version pin already used by pack_format/pack_value — needed because
+    golden_hash_hex hashes arbitrary bytes, not a full .spk file with a footer, so it can't reuse
+    pack::content_hash/ContentHash)
+
+Implemented exactly the `## pack_testkit` contract section:
+
+//#region 🔖Arbitrary
+  RecordValueGen — hand-rolled splitmix64 PRNG (seeded u64 state, no `arbitrary`/`quickcheck`
+  dep). `generate(spec, max_depth)` walks every dsl_schema::Shape variant (Bool/Int/UInt/Float/
+  Text/Bytes64/Enum/Tuple/List/Record/Block/Statements/Map/Value/Table/Wire) recursively, with a
+  `depth > max_depth` backstop (`shallow_value`) that returns non-recursing terminal values —
+  this is what keeps a genuinely self-referential spec (e.g. a `group`-style recursive
+  Statements table whose own variant list names itself) from stack-overflowing the generator.
+  Float generation round-trips through dsl_core::format_f64/parse_f64 (the reason this crate
+  depends on dsl_core directly, per the contract) and deliberately avoids NaN (FieldValue's
+  derived PartialEq uses `==`, under which NaN != NaN, which would break the identity law on a
+  correct codec).
+
+//#region 🔖Laws
+  assert_encode_decode_identity, assert_canonical_stable, assert_unknown_field_preserved,
+  assert_streamed_equals_buffered, assert_dsl_pack_bidirectional<P> — all implemented per
+  signature. Shared `normalize_record`/`normalize_value` helpers strip pure-Absent noise AND sort
+  Map entries by key bytes at every nesting level before comparison — pack_value's encode_map
+  always sorts unconditionally (its own documented purity LAW), so a generator that inserted Map
+  entries in non-canonical order needs the same normalization on the "original" side to compare
+  fairly against a freshly-decoded (canonically-sorted) RecordValue. Found this the hard way: the
+  first test run failed on Map field ordering alone (values were correct, order wasn't) — fixed
+  by normalizing Map order in the shared helper rather than constraining the generator.
+
+  assert_streamed_equals_buffered's "streamed" side is EncodeOptions.frame_size = 1 (forces every
+  byte of the document body into its own KIND_DOCUMENT segment/frame) vs a large frame_size for
+  "buffered" (single frame) — pack_value only exposes one encode_document entry point (no
+  separate streaming API), so this is the wire-level interpretation of "streamed vs buffered"
+  that's actually testable through the public contract: decode_document must reassemble any
+  number of Document frames transparently.
+
+//#region 🔖Corrupt
+  CorruptionLevel (Quick/Long/Exhaustive), CorruptionReport {cases_run, cases_errored,
+  cases_panicked}, fuzz_truncation, fuzz_bit_flips. Both call a shared run_corruption_cases that
+  wraps every decode call in std::panic::catch_unwind(AssertUnwindSafe(...)), silencing the
+  default panic hook for the duration (fuzzing intentionally trips many panics when it finds a
+  real bug; the default hook printing each one to stderr would drown actual test output) and
+  restoring the previous hook afterward. Sampling density: Quick caps at 16 evenly-spaced
+  candidates, Long at 128, Exhaustive tries every byte offset (truncation) / every bit (bit
+  flips) — shared via one `sample_evenly(total, cap)` helper. Self-tested with a deliberately
+  panicking decoder closure to prove the harness actually catches panics as data instead of
+  crashing the test process.
+
+//#region 🔖Golden
+  golden_hash_hex(bytes) -> String = hex(blake3(bytes)), lowercase, 64 hex chars.
+
+//#region 🧪Tests (18 tests total: 15 fundamental, +1 in mod long, +2 in mod exhaustive)
+  Hand-built dsl_schema RecordSpecs (mixed_spec: one field of most scalar shapes + nested Record/
+  List/Map/Tuple; camera_spec: simple scalar spec for the DSL-bidirectional law) since
+  dsl_schema's own test fixtures live in a private #[cfg(test)] mod and aren't reachable from
+  here, per the contract's "hand-built ones otherwise" instruction.
+  - RecordValueGen: determinism for same seed, divergence across seeds, generated values accepted
+    by the real pack codec (20 seeds), recursion correctly bounded on a self-referential spec.
+  - Every LAW exercised against generator output (10+ seeds each) plus the DSL-bidirectional law
+    against a hand-built camera RecordValue round-tripped through dsl_schema::parse/print AND
+    pack::encode_document/decode_document.
+  - fuzz_truncation/fuzz_bit_flips against a real encoded pack document at Quick level
+    (fundamental), Long level (mod long), and Exhaustive level (mod exhaustive, every single byte
+    offset / every single bit of a real encoded document) — zero panics in all cases, matching
+    the repo-wide quick/long/exhaustive leveled-test convention (`--skip long:: --skip
+    exhaustive::` etc., verified by running `bun script.ts test quick|long|exhaustive` directly:
+    15/16/18 tests respectively).
+  - golden_hash_hex determinism/sensitivity-to-content plus stability across two encodes of the
+    same generated document.
+
+Verification performed (from /Users/ueli/Documents/semio):
+  cargo check -p pack_testkit   -> clean, no warnings from this crate
+  cargo test -p pack_testkit    -> 18 passed; 0 failed (lib + 0 doc-tests)
+  bun pack/testkit/rs/script.ts test quick      -> 15 passed
+  bun pack/testkit/rs/script.ts test long       -> 16 passed
+  bun pack/testkit/rs/script.ts test exhaustive -> 18 passed (also generated an lcov coverage
+    report under .repo/coverage/rust/pack_testkit.lcov, the existing exhaustive-level behavior)
+
+Nothing outside pack/testkit/rs/{lib.rs,Cargo.toml} and this ticket folder was modified. No git
+commands were run.

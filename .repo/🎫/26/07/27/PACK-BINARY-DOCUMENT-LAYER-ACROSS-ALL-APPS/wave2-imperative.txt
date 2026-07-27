@@ -1,0 +1,76 @@
+WAVE 2 — family: imperative
+================================================================================
+
+FILES TOUCHED
+  imperative/core/rs/lib.rs   (manual DocumentPack impl + pack-law test calls)
+  imperative/plugin/rs/lib.rs (codec registration in existing native setup fn)
+
+DOCUMENT KINDS COVERED
+  ImperativeDocument via ImperativePlayApp (DocumentApp impl at imperative/plugin/rs/lib.rs:224)
+    schema string used: IMPERATIVE_DOCUMENT_SCHEMA = "imperative.document/v1" (the exact value
+    ImperativePlayApp::document_schema() returns).
+
+CONFIRMED MANUAL-IMPL CASE
+  ImperativeDocument carries a hand-written `impl vcs::DocumentDsl for ImperativeDocument` (not
+  `#[derive(dsl::DslDocument)]` on ImperativeDocument itself — the derive lands on a local structural
+  mirror `ImperativeDocumentDsl`, per the region's own doc comment explaining the orphan-rule
+  constraint on foreign `Value`/`Step`/`Path`/`Dictionary` types). It therefore did NOT automatically
+  gain `vcs::DocumentPack` from wave 1's dsl_derive expansion. Added a manual
+  `impl vcs::DocumentPack for ImperativeDocument` in the `//#region 🔖Pack` subregion of `//#region
+  🔖Dsl`, mirroring the derive-emitted shape from wave1-report.txt §2 exactly: routes through
+  `vcs::pack_rt::{encode_document,decode_document}` using `ImperativeDocumentDsl::__dsl_spec()` /
+  `mirror.__dsl_to_record()` / `ImperativeDocumentDsl::__dsl_from_record()` (the mirror type's own
+  derive-generated trio, since `Self` has none), `.map_err(vcs::text_error_to_pack_error)` on decode,
+  same mirror-struct construct/destructure the existing `parse_dsl`/`print_dsl` impl already uses.
+
+CODEC REGISTRATION
+  imperative/plugin/rs/lib.rs had an existing empty native setup fn already wired via
+  `semio_plugin! { setup: register_imperative_exports, ... }`. Filled it in:
+
+    fn register_imperative_exports() {
+        semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ImperativePlayApp>(IMPERATIVE_DOCUMENT_SCHEMA);
+    }
+
+TEST-LAW CALLS ADDED (sibling to every existing assert_dsl_round_trip/assert_document_text_round_trip
+in imperative/core/rs/lib.rs)
+  - default_document_dsl_round_trips: added
+      vcs::test_support::assert_dsl_pack_equivalence(&default_document());
+  - document_text_round_trip_with_applied_operation: added
+      vcs::test_support::assert_document_pack_round_trip(&store);
+  - dsl_parses_seed_and_nested_control_bodies: added
+      vcs::test_support::assert_dsl_pack_equivalence(&document);
+  - dsl_parses_dictionary_and_atom_variants: added
+      vcs::test_support::assert_dsl_pack_equivalence(&document);
+
+FIXTURES CONVERTED
+  None. imperative/example/default.imperative left untouched, per family note (already DSL text).
+
+PACK-COMPLETENESS LINT ALLOWLIST
+  imperative/core/rs/lib.rs was the only file from this family in
+  POLICY_PACK_COMPLETENESS_ALLOWLIST (root script.ts). It now has both `assert_dsl_pack_equivalence(`
+  and `assert_document_pack_round_trip(` calls beside its existing DSL/text-round-trip calls, so it
+  satisfies the pack-completeness lint. Wave 3 can remove this one entry:
+    imperative/core/rs/lib.rs
+
+CARGO TEST STATUS
+  `cargo test -p imperative_core -p imperative-plugin -p imperative_engine -p
+  imperative_module_control -p imperative_module_core -p imperative_module_logic -p
+  imperative_module_math -p imperative_module_text --lib`: ALL GREEN.
+    imperative_core:           40 passed, 0 failed
+    imperative-plugin:         16 passed, 0 failed (incl. __semio_plugin_sanity_declared_apps_appear_in_bundle_manifest)
+    imperative_engine:          6 passed, 0 failed
+    imperative_module_control:  1 passed, 0 failed
+    imperative_module_core:     2 passed, 0 failed
+    imperative_module_logic:    1 passed, 0 failed
+    imperative_module_math:     1 passed, 0 failed
+    imperative_module_text:     4 passed, 0 failed
+
+  Note: `cargo test -p imperative-plugin` (full target set, not `--lib`) hit a transient doctest-phase
+  linker error ("extern location for vcs does not exist: .../libvcs.rlib") — a stale hashed rlib
+  evicted mid-run by concurrent workspace compilation (this repo has many other sessions building
+  concurrently; matches the known "Concurrent Cargo Workspace Churn" pattern). Not caused by this
+  change: imperative-plugin has zero doctests of its own, and the actual `--lib` test binary (the
+  real `#[cfg(test)] mod tests` suite) is fully green as shown above.
+
+NOT COMPLETED / BLOCKED
+  Nothing pack-related left incomplete for this family.

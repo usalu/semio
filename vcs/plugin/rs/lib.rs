@@ -776,7 +776,12 @@ fn create_vcs_app() -> App {
     )
 }
 
-fn register_vcs_exports() {}
+fn register_vcs_exports() {
+    // 🗂️ Registers `VcsDemoProjection`'s pack<->dsl codec under its real `document_schema()` string
+    // so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+    // vcs-play documents without depending on this crate's concrete `Projection`/`Operation` types.
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<VcsPlayApp>(VCS_DEMO_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "vcs", label: "VCS", version: "0.1.0",
@@ -994,6 +999,7 @@ mod tests {
     #[test]
     fn vcs_demo_projection_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&empty_vcs_demo_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_vcs_demo_projection());
     }
 
     #[test]

@@ -741,6 +741,21 @@ impl vcs::DocumentDsl for ShootingFixture {
         <ShootingFixtureDsl as vcs::DocumentDsl>::print_dsl(&shooting_fixture_to_dsl(self))
     }
 }
+
+/// 📦 Hand-written `vcs::DocumentPack` mirror of the `DocumentDsl` impl above — `ShootingFixture`
+/// itself doesn't derive `dsl::DslDocument` (see `ShootingFixtureDsl`'s doc comment), so it doesn't
+/// pick up the blanket derive-emitted `DocumentPack` impl either; this converts through the same
+/// `ShootingFixtureDsl` mirror, which does derive it.
+impl vcs::DocumentPack for ShootingFixture {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <ShootingFixtureDsl as vcs::DocumentPack>::encode_pack_with(&shooting_fixture_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let parsed = <ShootingFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+        Ok(shooting_fixture_from_dsl(parsed))
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -1137,11 +1152,13 @@ mod tests {
     #[test]
     fn shooting_dsl_round_trips_representative_fixture() {
         vcs::test_support::assert_dsl_round_trip(&representative_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&representative_fixture());
     }
 
     #[test]
     fn shooting_dsl_round_trips_empty_fixture() {
         vcs::test_support::assert_dsl_round_trip(&empty_shooting_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_shooting_fixture());
     }
 
     #[test]
@@ -1149,6 +1166,7 @@ mod tests {
         const BASE_ICON_EXAMPLE_DSL: &str = include_str!("../example/base-icon.shooting");
         let fixture = ShootingFixture::parse_dsl(BASE_ICON_EXAMPLE_DSL).expect("base-icon example parses");
         vcs::test_support::assert_dsl_round_trip(&fixture);
+        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
@@ -1211,6 +1229,7 @@ mod tests {
             })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

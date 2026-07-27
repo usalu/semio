@@ -1470,12 +1470,17 @@ mod tests {
     #[test]
     fn fem2d_dsl_round_trips_fixture_documents() {
         vcs::test_support::assert_dsl_round_trip(&empty_fem2d_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_fem2d_projection());
         vcs::test_support::assert_dsl_round_trip(&simply_supported_beam_doc());
+        vcs::test_support::assert_dsl_pack_equivalence(&simply_supported_beam_doc());
         vcs::test_support::assert_dsl_round_trip(&truss_doc());
+        vcs::test_support::assert_dsl_pack_equivalence(&truss_doc());
         vcs::test_support::assert_dsl_round_trip(&rectangle_with_hole_region_doc());
+        vcs::test_support::assert_dsl_pack_equivalence(&rectangle_with_hole_region_doc());
         let mut with_combination = simply_supported_beam_doc();
         with_combination.combinations.push(FemCombination { id: "uls".into(), name: "ULS".into(), terms: vec![FemCombinationTerm { case_id: "dead".into(), factor: 1.35 }, FemCombinationTerm { case_id: "live".into(), factor: 1.5 }] });
         vcs::test_support::assert_dsl_round_trip(&with_combination);
+        vcs::test_support::assert_dsl_pack_equivalence(&with_combination);
     }
 
     #[test]
@@ -1538,6 +1543,7 @@ mod tests {
             .dispatch(DocumentVcsCommand::Apply { operations: vec![Fem2dOperation::SetDocument { document: simply_supported_beam_doc() }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslAndOpText
 

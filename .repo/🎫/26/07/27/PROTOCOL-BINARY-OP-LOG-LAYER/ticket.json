@@ -1,0 +1,13 @@
+{
+  "title": "Protocol Binary Op-Log Layer",
+  "emoji": "📼",
+  "status": "open",
+  "description": "Add a new `protocol` technology: the binary container format for the vcs op-log/command-history, the exact twin of `pack` (which is the binary container for the initial document). Laws: dsl text ⇄ pack binary (exists); ops text ⇄ protocol binary (new). Protocol is only the format — serialization, storage, streaming — integrated with pack and vcs, reimplementing nothing from vcs (commands/diffs/inverses/projections/merge/sync stay in vcs/framework). Protocol additionally owns efficient materialization: (pack file, protocol file) -\u003e projection in O(checkpoint + tail).\n\nBlocking prerequisite: the existing `protocol` technology (a Blockly-like strict-list visual editor, schema `protocol.program`) must be renamed to `playbook` first, since it occupies the `protocol/` directory and crate name today.\n\nFull design (approved in plan mode) is at /Users/ueli/.claude/plans/we-want-to-create-refactored-harbor.md — read it first for the complete byte-level container format, crate family (protocol_core/format/history/materialize/io, facade protocol, protocol_testkit, protocol_cli), vcs integration surface (DocumentBinaryFiles replacing DocumentPackFiles, set_state_with_projection, CodecRegistry changes, storage backends), hub binary wire redesign (BackboneMessage binary slices + SliceMeta, WIT backbone funcs -\u003e list\u003cu8\u003e), and the wave-based rollout plan (Rename -\u003e Crate family -\u003e vcs integration -\u003e framework/WIT sweep -\u003e hub wire -\u003e ~24-family app sweep -\u003e verification).\n\nFull production scope: streaming, zero-copy, append-only history storage with crash recovery (commit-frame chain, not a footer — the file is live and append-only), checkpoints/snapshots, indexes, sync-range slicing, integrity (crc32c + blake3 chain + optional signatures), redaction, versioning/upcasting, CLI, testkit with law-based assertions and corruption fuzzing, and benchmarks.",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2362"
+  },
+  "goal": "🎯r2602🎯runningsketchpad",
+  "sessions": [
+    "⚪89a649b5a4a448e5928b2570e7425352"
+  ]
+}

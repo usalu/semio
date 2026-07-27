@@ -3169,6 +3169,7 @@ mod tests {
     #[test]
     fn document_dsl_round_trips_the_reference_fixture() {
         vcs::test_support::assert_dsl_round_trip(&reference_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&reference_fixture());
     }
 
     #[test]
@@ -3186,6 +3187,7 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![Operation::SetDocument { document: mutated }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslTests
 }

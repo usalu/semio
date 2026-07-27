@@ -853,7 +853,6 @@
   --level-shade-step: 5%;
   --glass-alpha-step: 0.12;
   --glass-blur-step: 0.5rem;
-  --glass-chrome-alpha-factor: 0.5;
   --element-shade-step: 6%;
   --hover-shade-step: 12%;
   --veil-alpha: 0.4;
@@ -6748,11 +6747,12 @@
   z-index: var(--z-tutorial);
 }
 
-/* #region 🪟LevelGlassUtilities — the 4 generic fill utilities that replace ALL bg-base/canvas/
+/* #region 🪟LevelGlassUtilities — the 3 generic fill utilities that replace ALL bg-base/canvas/
    window/panel/overlay/temporary surface fills and ALL 5 ui-glass-* classes below, once every
    consumer switches to `[data-level]` + one of these (see contract). ui-surface is an opaque
-   per-level fill; ui-glass/ui-glass-chrome are per-level glass fills (chrome = half-alpha glass
-   for attached chrome like ribbons/rails); ui-veil is the fullscreen scrim whose host must carry
+   per-level fill; ui-glass is the per-level glass fill — used identically by a level's body AND
+   its attached chrome (title caps, ribbons, tab bars, rails), since one level must always render
+   as one single appearance, never two; ui-veil is the fullscreen scrim whose host must carry
    data-level="dialog" for correct tint. */
 @utility ui-surface {
   background-color: var(--surface-bg);
@@ -6762,16 +6762,6 @@
   -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
   backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
   background-color: color-mix(in srgb, var(--surface-bg) calc(var(--surface-alpha) * 100%), transparent);
-}
-
-@utility ui-glass-chrome {
-  -webkit-backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
-  backdrop-filter: blur(var(--surface-blur)) saturate(var(--glass-saturate));
-  background-color: color-mix(
-    in srgb,
-    var(--surface-bg) calc(var(--surface-alpha) * var(--glass-chrome-alpha-factor) * 100%),
-    transparent
-  );
 }
 
 @utility ui-veil {
@@ -6820,23 +6810,12 @@
   box-shadow: none !important;
 }
 
-/* 🪟 Docked chips: inner separator only — the silhouette SVG owns every outer stroke. */
-[data-window-silhouette-chip][data-dock="top"] {
+/* 🪟 Docked chips: no piecewise borders or inset separators — the silhouette SVG owns every
+ * stroke, and chip glass must meet the body glass with no hairline gap between them. */
+[data-window-silhouette-chip] {
   border-width: 0;
   border-style: none;
-  box-shadow: inset 0 calc(-1 * var(--stroke-hairline)) 0 0 var(--border-normal-color);
-}
-
-[data-window-silhouette-chip][data-dock="bottom"] {
-  border-width: 0;
-  border-style: none;
-  box-shadow: inset 0 var(--stroke-hairline) 0 0 var(--border-normal-color);
-}
-
-[data-window-silhouette-chip][data-dock="top"] + [data-window-silhouette-chip][data-dock="top"] {
-  box-shadow:
-    inset var(--stroke-hairline) 0 0 0 var(--border-normal-color),
-    inset 0 calc(-1 * var(--stroke-hairline)) 0 0 var(--border-normal-color);
+  box-shadow: none;
 }
 
 [data-slot="mode-dock-tabs"] > [data-slot="mode-dock-tab"] + [data-slot="mode-dock-tab"] {
@@ -7082,6 +7061,15 @@
     [data-slot="mode-dock-tab-cap"],
     [data-slot="mode-dock-tab-gap"],
     [data-slot="mode-dock-controls-cap"]
+  ),
+[data-slot="window-chrome-stack"]
+  :is(
+    [data-slot="window-chrome-chip-cap"],
+    [data-slot="window-chrome-gap"],
+    [data-slot="window-chrome-controls"],
+    [data-slot="window-chrome-body"],
+    [data-slot="panel-content"],
+    [data-slot="pane-body"]
   ) {
   border-width: 0 !important;
   border-style: none !important;

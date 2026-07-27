@@ -1,0 +1,112 @@
+WAVE 2 FAMILY REPORT — sequence-shooting-curate
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+- sequence: App `SequencePlayApp` (sequence/plugin/rs/lib.rs), Projection `SequenceFixture`
+  (sequence/core/rs/lib.rs), schema `SEQUENCE_FIXTURE_SCHEMA` = "sequence.fixture".
+  `SequenceFixture` does NOT derive `dsl::DslDocument` itself (hand-written `DocumentDsl` impl
+  delegating to a private `SequenceFixtureDsl` mirror that does derive it) so it did not
+  automatically pick up `DocumentPack` from wave 1's blanket derive. Added a hand-written
+  `impl vcs::DocumentPack for SequenceFixture` right beside the existing `impl vcs::DocumentDsl`,
+  converting through the same `SequenceFixtureDsl` mirror (`sequence_fixture_to_dsl`/
+  `sequence_fixture_dsl_to_fixture`), using `vcs::text_error_to_pack_error` for the fallible decode
+  leg exactly as the wave-1 report specifies.
+- shooting: App `ShootingPlayApp` (shooting/plugin/rs/lib.rs), Projection `ShootingFixture`
+  (shooting/rs/lib.rs), schema `SHOOTING_FIXTURE_SCHEMA` = "shooting.fixture". Same situation as
+  sequence — hand-written `DocumentDsl` delegating to `ShootingFixtureDsl` mirror. Added the
+  matching hand-written `impl vcs::DocumentPack for ShootingFixture` beside it (infallible decode
+  leg here since `shooting_fixture_from_dsl` is infallible).
+- curate: App `SourcingCurateApp` (sourcing/plugin/rs/lib.rs), Projection `CurateDocument`
+  (sourcing/curate/rs/lib.rs), schema `SOURCING_CURATE_SCHEMA` = "sourcing.curate/v1".
+  `CurateDocument` directly derives `dsl::DslDocument`, so it already had `DocumentPack` for free —
+  no hand-written impl needed, only test-law calls and codec registration.
+
+2. REGISTRATION
+--------------------------------------------------------------------------------
+Added one `register_document_codec_for_app::<App>(SCHEMA)` call per kind, inside each plugin's
+existing native setup fn (all three already existed, called unconditionally from `semio_plugin!`'s
+`setup:`, matching the pattern used by note/plugin etc.):
+- sequence/plugin/rs/lib.rs: `register_sequence_exports()` (was empty) now calls
+  `register_document_codec_for_app::<SequencePlayApp>(SEQUENCE_FIXTURE_SCHEMA)`.
+- shooting/plugin/rs/lib.rs: appended to the existing `register_shooting_exports()`.
+- sourcing/plugin/rs/lib.rs: `sourcing_setup()` (was empty) now calls
+  `register_document_codec_for_app::<SourcingCurateApp>(SOURCING_CURATE_SCHEMA)`.
+
+3. TEST-LAW CALLS ADDED
+--------------------------------------------------------------------------------
+sequence/core/rs/lib.rs (`#region 🔖DslAndOpText`): added `assert_dsl_pack_equivalence` beside all
+3 existing `assert_dsl_round_trip` calls (default fixture, `default.sequence` example fixture,
+slots+nested-params fixture) and `assert_document_pack_round_trip` beside the existing
+`assert_document_text_round_trip` store test.
+
+shooting/rs/lib.rs (`//#region 🔖DslAndOpText`): added `assert_dsl_pack_equivalence` beside all 3
+existing `assert_dsl_round_trip` calls (representative fixture, empty fixture, `base-icon.shooting`
+example) and `assert_document_pack_round_trip` beside the existing `assert_document_text_round_trip`
+store test.
+
+sourcing/curate/rs/lib.rs (`//#region 🔖Dsl` / `🔖DslAndOpTextStore`): added `assert_dsl_pack_equivalence`
+beside all 3 existing `assert_dsl_round_trip` calls (sample document, default document, mesh-kind +
+curated-selection document) and `assert_document_pack_round_trip` beside the existing
+`assert_document_text_round_trip` store test.
+
+4. FIXTURES
+--------------------------------------------------------------------------------
+None converted — per the brief, sequence/example/ has no JSON fixture (in-code only),
+shooting/example/base-icon.shooting and sourcing/curate/example/*.curate were already DSL text.
+No files created/deleted.
+
+5. CARGO TEST STATUS
+--------------------------------------------------------------------------------
+`cargo test -p sequence_core -p sequence-plugin -p sourcing_curate -p sourcing-plugin --lib`: ALL
+GREEN (63 + 15 + 16 + 16 = 110 tests passed, 0 failed).
+
+`cargo test -p shooting-plugin --lib`: GREEN (31 passed, 0 failed).
+
+`cargo test -p shooting --lib`: 15 passed, 2 FAILED —
+  `tests::shooting_dsl_round_trips_representative_fixture`
+  `tests::shooting_dsl_round_trips_base_icon_example`
+Both fail with the identical pre-existing bug already independently diagnosed and documented by the
+cad and draw wave-2 families (see wave2-cad.txt / wave2-draw.txt in this ticket folder):
+`pack/value/rs/lib.rs`'s `Shape::Table` SoA codec (`encode_table`/`decode_table_soa`) is asymmetric
+in its ELEM_FALLBACK per-column branch — `encode_table` threads the real column `Shape` through to
+`encode_value`, but `decode_table_soa`'s mirroring branch calls `decode_value(reader, None, ...)`,
+dropping it. For a `Shape::Tuple(_, Some(N))` column (a plain fixed-size-array field, e.g. `ShootingAsset.origin:
+[f64; 3]` / `.orientation: Option<[f64; 4]>` inside the `#[dsl(table)] assets: Vec<ShootingAsset>`
+column), the packed-f64 wire tag decodes back as `FieldValue::List` instead of `FieldValue::Tuple`
+(shape-derived `is_tuple_shape` sees `None` and defaults false), so
+`__dsl_from_record`/`[T;N]::from_value` rejects it with "expected a 3-item Tuple, found List(...)".
+Confirmed this is table-column-specific, not a general Tuple-shape bug: `shooting_dsl_round_trips_empty_fixture`
+(camera's `[f64;3]` position/target fields, a plain `#[dsl(block)]` field, NOT inside a table) passes
+fine; only fixtures with non-empty `assets`/`saved_cameras` tables (whose row types carry array fields)
+fail. `assert_dsl_round_trip` (pure DSL-text path, unaffected by pack's table codec) still passes for
+both fixtures — only the newly-added `assert_dsl_pack_equivalence` pack leg fails.
+`pack/**` is explicitly outside this family's allowed directories, so NOT patched. The two new
+`assert_dsl_pack_equivalence` calls are left in place (not reverted) — per the wave-2 brief and the
+cad/draw precedent, they are correctly detecting a real pre-existing bug, not a mistake in this
+family's edits.
+
+One unrelated flake observed and NOT investigated further: `cargo test -p shooting-plugin --doc`
+intermittently fails with "extern location for vcs does not exist: .../libvcs.rlib" / "can't find
+crate for semio_framework_plugin" — classic concurrent-workspace-build artifact churn (another
+session rebuilding the shared `target/` mid-run), not reproducible on every run and unrelated to any
+edit in this family (`--lib` test runs for the same crate are consistently green). Not pursued further.
+
+6. PACK-COMPLETENESS LINT ALLOWLIST — ENTRIES NOW SATISFIED
+--------------------------------------------------------------------------------
+All three of this family's files were in wave 1's `POLICY_PACK_COMPLETENESS_ALLOWLIST` in root
+script.ts and now have at least one `assert_dsl_pack_equivalence`/`assert_document_pack_round_trip`
+call each — wave 3 can remove:
+  sequence/core/rs/lib.rs
+  shooting/rs/lib.rs
+  sourcing/curate/rs/lib.rs
+(root script.ts itself NOT edited — out of this family's allowed directories, left for wave 3.)
+
+7. FILES TOUCHED
+--------------------------------------------------------------------------------
+  sequence/core/rs/lib.rs      — DocumentPack impl for SequenceFixture + 4 test-law calls
+  sequence/plugin/rs/lib.rs    — register_document_codec_for_app in register_sequence_exports
+  shooting/rs/lib.rs           — DocumentPack impl for ShootingFixture + 4 test-law calls
+  shooting/plugin/rs/lib.rs    — register_document_codec_for_app in register_shooting_exports
+  sourcing/curate/rs/lib.rs    — 4 test-law calls (no DocumentPack impl needed, already derived)
+  sourcing/plugin/rs/lib.rs    — register_document_codec_for_app in sourcing_setup

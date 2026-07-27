@@ -1,0 +1,60 @@
+WAVE 2 — family: flow
+================================================================================
+
+FILES TOUCHED
+--------------------------------------------------------------------------------
+flow/plugin/rs/lib.rs
+  `register_flow_exports()` (native/setup fn, called by `semio_plugin!`'s `setup:` from
+  `__semio_plugin_bundle()` — unconditional, this crate has no wasm/native cfg split) now calls
+  `semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<FlowPlayApp>(FLOW_DOCUMENT_SCHEMA)`,
+  wrapped in a new `//#region 🔖PackCodec` / `//#endregion 🔖PackCodec`.
+
+flow/core/rs/lib.rs
+  - `FlowFixture` does NOT carry `#[derive(dsl::DslDocument)]` (only its DSL-mirror twin
+    `FlowFixtureDsl` does — see that struct's pre-existing doc comment), so it did NOT automatically
+    gain `vcs::DocumentPack` from wave 1's blanket derive change. Added a hand-written
+    `impl vcs::DocumentPack for FlowFixture` right beside the existing hand-written
+    `impl vcs::DocumentDsl for FlowFixture`, delegating through the same
+    `flow_fixture_to_dsl`/`flow_fixture_dsl_to_fixture` mirror functions to
+    `<FlowFixtureDsl as vcs::DocumentPack>::{encode_pack_with,decode_pack_with}`, converting the
+    mirror's error with `vcs::text_error_to_pack_error(vcs::TextError::new(...))` exactly like the
+    `DocumentDsl` impl's `parse_dsl` already does. This is the same "orphan-type-needs-a-hand-written
+    twin" situation wave 1's report flagged for `serde_json::Value` (§5(a) of wave1-report.txt).
+  - Added `vcs::test_support::assert_dsl_pack_equivalence(&fixture)` immediately after both existing
+    `vcs::test_support::assert_dsl_round_trip(&fixture)` call sites (same fixture value, same test,
+    same `flow_vcs_tests` submodule):
+      - `flow_fixture_dsl_round_trips_including_cluster_widget` (every `Widget` variant incl.
+        `Cluster`'s nested `Tree`, `Dictionary`, `BTreeSet`)
+      - `default_flow_example_dsl_round_trips` (real fixture: `include_str!("../../example/default.flow")`)
+
+DOCUMENT KIND COVERED
+--------------------------------------------------------------------------------
+FlowFixture — App: FlowPlayApp (flow/plugin/rs/lib.rs) — schema string used:
+`FLOW_DOCUMENT_SCHEMA = "flow.fixture"` (flow/core/rs/lib.rs, read from the real
+`DocumentApp::document_schema()` impl, not guessed).
+
+FIXTURES CONVERTED
+--------------------------------------------------------------------------------
+None. Family note confirmed `flow/example/default.flow` was already converted from JSON to DSL text in
+a prior ticket; left as-is. No other JSON fixtures existed under flow/** for this document kind.
+
+PACK-COMPLETENESS LINT ALLOWLIST ENTRY NOW SATISFIED
+--------------------------------------------------------------------------------
+flow/core/rs/lib.rs — now calls `assert_dsl_pack_equivalence(` (twice). Wave 3 can remove this line
+from root script.ts's `POLICY_PACK_COMPLETENESS_ALLOWLIST`.
+
+CARGO TEST STATUS
+--------------------------------------------------------------------------------
+`cargo test -p flow_core -p flow-plugin`:
+  - flow-plugin: 24/24 unit tests pass, `__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest`
+    passes (setup fn including the new codec registration runs without panic), doctest 0/0 clean.
+  - flow_core: 91 tests total. 90 pass including both new `assert_dsl_pack_equivalence` calls. One
+    pre-existing, pre-my-change test — `tests::hexagonal_mushroom_fixture_reports_extruded_solid_output`
+    — fails ONLY under default parallel `cargo test` execution ("missing handle: solid-3", a
+    brep/tessellation module concern unrelated to pack/dsl code) and passes reliably both in isolation
+    and with `cargo test -p flow_core --lib -- --test-threads=1` (91/91 green). Confirmed by running the
+    full suite single-threaded twice. This is a pre-existing test-isolation/shared-global-state flake in
+    unrelated brep tessellation code, not something introduced by this ticket's edits — out of scope for
+    this family (touches no files listed in the flow/** brief and isn't a DocumentPack/DSL concern).
+
+Nothing else was left incomplete.

@@ -1455,6 +1455,7 @@ mod tests {
     #[test]
     fn dsl_round_trips_the_default_concrete_forest_projection() {
         vcs::test_support::assert_dsl_round_trip(&default_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_projection());
     }
 
     #[test]
@@ -1463,6 +1464,7 @@ mod tests {
         projection.objects[0].paint_layers[0].pixels[0] = 7;
         projection.objects[0].paint_layers[0].pixels[1] = 9;
         vcs::test_support::assert_dsl_round_trip(&projection);
+        vcs::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -1537,6 +1539,7 @@ mod tests {
         let operation = LowpolyOperation::PatchPaintLayer { object_id, index: 0, patch: LowpolyPaintLayerPatch { name: Some("Renamed Layer".into()), visible: None, opacity: None, blend_mode: None } };
         store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![operation], description: None }).expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
 
     #[test]

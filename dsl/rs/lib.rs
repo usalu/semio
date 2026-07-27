@@ -449,6 +449,7 @@ mod tests {
     fn derived_document_dsl_satisfies_vcs_test_support_helpers() {
         let doc = DerivedDocument { category: "floor".to_string(), climate: ClimateZone::Temperate, airtightness_n50: 0.4, occupants: 3, note: None };
         vcs::test_support::assert_dsl_round_trip(&doc);
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     #[test]
@@ -507,6 +508,7 @@ mod tests {
         let printed = <SceneDocument as vcs::DocumentDsl>::print_dsl(&doc);
         let parsed = <SceneDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "recursive/nested-collection round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: single-field tuple ("newtype") variants (the `draw` pilot's
@@ -557,6 +559,7 @@ mod tests {
         assert!(printed.contains("circle c1 r=2"), "newtype variant must print via its own inner keyword/fields: {printed}");
         let parsed = <ShapeDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "newtype tuple-variant round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: `#[dsl(statements, block)] Option<T>` (the `draw` pilot's
@@ -589,12 +592,14 @@ mod tests {
         let printed = <PaintDocument as vcs::DocumentDsl>::print_dsl(&with_fill);
         let parsed = <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, with_fill, "Some(..) round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&with_fill);
 
         let no_fill = PaintDocument { attributes: PaintAttributes { fill: None } };
         let printed_none = <PaintDocument as vcs::DocumentDsl>::print_dsl(&no_fill);
         let parsed_none =
             <PaintDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_fill, "None round trip diverged;\nprinted:\n{printed_none}");
+        vcs::test_support::assert_dsl_pack_equivalence(&no_fill);
     }
 
     // --- regression: `#[dsl(block)] Option<PlainRecord>` (the `draw` pilot's `attributes.stroke:
@@ -620,6 +625,7 @@ mod tests {
         let printed = <BrushDocument as vcs::DocumentDsl>::print_dsl(&with_brush);
         let parsed = <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, with_brush, "Some(..) round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&with_brush);
 
         let no_brush = BrushDocument { brush: None };
         let printed_none = <BrushDocument as vcs::DocumentDsl>::print_dsl(&no_brush);
@@ -627,6 +633,7 @@ mod tests {
         let parsed_none =
             <BrushDocument as vcs::DocumentDsl>::parse_dsl(&printed_none).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed_none}"));
         assert_eq!(parsed_none, no_brush, "None round trip diverged;\nprinted:\n{printed_none:?}");
+        vcs::test_support::assert_dsl_pack_equivalence(&no_brush);
     }
 
     // --- end-to-end derive test: `#[dsl(statements)] Box<T>` (the `draw` pilot's
@@ -688,6 +695,7 @@ mod tests {
         let printed = <SelfRefDocument as vcs::DocumentDsl>::print_dsl(&doc);
         let parsed = <SelfRefDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "self-referential record round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     // --- end-to-end derive test: `#[dsl(table)] Vec<T>` (Structure-of-Arrays columnar field) ---
@@ -715,6 +723,7 @@ mod tests {
         assert!(printed.contains("nodes [id:TEXT x:NUM y:NUM]"), "#[dsl(table)] field must print compact SoA: {printed}");
         let parsed = <TableDocument as vcs::DocumentDsl>::parse_dsl(&printed).unwrap_or_else(|e| panic!("parse failed: {e}\nprinted:\n{printed}"));
         assert_eq!(parsed, doc, "table round trip diverged;\nprinted:\n{printed}");
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 }
 //#endregion 🧪Tests

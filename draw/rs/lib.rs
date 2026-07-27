@@ -2202,6 +2202,20 @@ mod tests {
     #[test]
     fn dsl_round_trips_representative_document() {
         vcs::test_support::assert_dsl_round_trip(&representative_draw_document());
+        // ⚠️ KNOWN BLOCKED: `assert_dsl_pack_equivalence` on this fixture currently fails with
+        // `schema error: expected a 4-item Tuple, found List(...)` — root-caused to
+        // `pack/value/rs/lib.rs`'s `decode_table_soa` fallback column branch (~line 1112-1119),
+        // which calls `decode_value(reader, None, ctx, depth + 1)` (drops the field's `Shape`)
+        // where `encode_table`'s matching fallback branch (~line 1022-1033) passes
+        // `Some(&field.shape)`. Any `#[dsl(table)]` column whose element type itself contains a
+        // fixed-size-array (`Shape::Tuple(_, Some(N))`, e.g. `GradientStop.color: [f64; 4]`) hits
+        // this: `decode_packed_f64_body`'s `is_tuple_shape(shape)` sees `None` and reconstructs
+        // `FieldValue::List` instead of `FieldValue::Tuple`. `pack/**` is out of this ticket's
+        // family scope (see wave2-draw.txt in the pack-binary-document-layer ticket folder) — file
+        // as a hotfix once `pack/**` is back in scope; do not add the pack-equivalence call here
+        // until that lands. `dsl_round_trips_document_without_assets_or_artboard` and
+        // `dsl_round_trips_semio_example_fixture` below already exercise
+        // `assert_dsl_pack_equivalence` successfully for `DrawDocument`.
     }
 
     #[test]
@@ -2211,6 +2225,7 @@ mod tests {
         doc.artboard = None;
         doc.title = None;
         vcs::test_support::assert_dsl_round_trip(&doc);
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     #[test]
@@ -2221,6 +2236,7 @@ mod tests {
         assert_eq!(doc.title.as_deref(), Some("Semio Emblem"));
         assert_eq!(doc.layers.len(), 1);
         vcs::test_support::assert_dsl_round_trip(&doc);
+        vcs::test_support::assert_dsl_pack_equivalence(&doc);
     }
 
     #[test]
@@ -2259,6 +2275,7 @@ mod tests {
             .expect("apply add layer");
         store.dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![DrawOperation::SetLayerOpacity { layer_id: layer_id_value, opacity: 0.5 }], description: Some("set opacity".into()) }).expect("apply set opacity");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
         vcs::test_support::assert_live_equals_replay(&store);
     }
     //#endregion 🔖DslTests

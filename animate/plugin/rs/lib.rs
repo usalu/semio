@@ -795,6 +795,7 @@ fn animate_present_document_json_from_dwg(drawing: &semio_framework_core::DwgDra
 fn register_animate_present_exports() {
     semio_framework_os::register_2d_export_handlers("animate.present.deck", "animate", animate_present_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("animate.present.deck", animate_present_document_json_from_dwg);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<AnimatePresentPlayApp>(PRESENT_DECK_SCHEMA);
 }
 
 semio_framework_plugin::semio_plugin! {

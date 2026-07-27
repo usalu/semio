@@ -1536,7 +1536,12 @@ fn create_writer_app() -> App {
     .program("writer", "Writer", "text.document")
 }
 
-fn register_writer_exports() {}
+/// 🗂️ Registers `WriterProjection`'s pack↔dsl codec so `framework/sync`'s `FolderEndpoint::Pack`
+/// (and any other schema-string-keyed caller) can print/parse it without depending on this crate's
+/// concrete `Projection`/`Operation` types.
+fn register_writer_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<WriterPlayApp>(WRITER_DOCUMENT_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "writer", label: "Writer", version: "0.1.0",

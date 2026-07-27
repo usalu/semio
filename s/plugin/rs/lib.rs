@@ -185,7 +185,7 @@ pub mod app_home {
     static EPHEMERAL_STUDIOS: LazyLock<Mutex<HashMap<String, OsDocument>>> =
         LazyLock::new(|| Mutex::new(HashMap::new()));
 
-    fn catalog_port() -> Arc<dyn OsBackbonePort> {
+    pub(crate) fn catalog_port() -> Arc<dyn OsBackbonePort> {
         CATALOG_PORT.clone()
     }
 
@@ -770,6 +770,8 @@ pub mod app_home {
         fn home_dsl_round_trips_default_and_populated_documents() {
             vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
             vcs::test_support::assert_dsl_round_trip(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
+            vcs::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 0 });
+            vcs::test_support::assert_dsl_pack_equivalence(&SHomeDocument { schema: "s.home".into(), catalog_generation: 42 });
         }
 
         #[test]
@@ -787,6 +789,7 @@ pub mod app_home {
                 .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![SHomeOperation::SetCatalogGeneration { value: 3 }], description: None })
                 .expect("apply");
             vcs::test_support::assert_document_text_round_trip(&store);
+            vcs::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslAndOpText
     }
@@ -810,6 +813,12 @@ pub mod app_studio {
         OsMediaGraphVfsNodeRecord, OsMediaPort, OsOperation, OsParameter, OsParameterFieldBinding, OsParameterType, OsProjection,
         OS_MEDIA_GRAPH_VFS_ROOT_ID, OS_STUDIO_SCHEMA,
     };
+    // 🕳️ `export_os_studio_pack`/`export_os_studio_dsl`/`import_os_studio_from_pack` (wave 1, `host`
+    // region) aren't in `framework/product/os/core/rs/lib.rs`'s crate-root `pub use host::{...}` list
+    // (that file's non-test code is out of this family's edit scope — see the pack-rollout ticket's
+    // wave 2 family note) — reached via `host::` directly instead, since `pub mod host` makes every
+    // `pub fn` inside it reachable that way regardless of the root re-export list.
+    use semio_framework_os::host::{export_os_studio_dsl, export_os_studio_pack, import_os_studio_from_pack};
     use semio_framework_plugin::{
         app_labels, build_node_graph_scene, build_text_editor_scene, build_virtual_file_system_scene,
         create_default_layout, host_now_ms, is_de_locale, localized_label_map, resolve_labels, tree_item_desc,
@@ -1404,6 +1413,10 @@ pub mod app_studio {
             ("exportMedia", "Export Media", "Medien exportieren"),
             ("importMedia", "Import Media", "Medien importieren"),
             ("importMediaPayload", "Import Media Payload", "Medien-Payload importieren"),
+            ("exportStudioPack", "Export Studio Pack", "Studio-Paket exportieren"),
+            ("exportStudioDsl", "Export Studio DSL", "Studio-DSL exportieren"),
+            ("importStudioPack", "Import Studio Pack", "Studio-Paket importieren"),
+            ("importStudioPackPayload", "Import Studio Pack Payload", "Studio-Paket-Payload importieren"),
             ("openStudio", "Open Studio", "Studio öffnen"),
             ("openInstance", "Open Instance", "Instanz öffnen"),
             ("closeFocusedInstance", "Close Focused Instance", "Fokussierte Instanz schließen"),
@@ -2543,6 +2556,65 @@ pub mod app_studio {
                     }
                     return ActionEmit::default();
                 }
+                "exportStudioPack" => {
+                    let studio_id = runtime_studio_id(&self.runtime);
+                    if let Some(document) = super::app_home::resolve_studio_document(&studio_id) {
+                        // 📦 Whole-document pack<->dsl codec (`register_document_codec_for_app::<StudioApp>`
+                        // in `register_s_exports`, see `🔖DocumentCodecs`), not the per-instance media
+                        // export above — mirrors `exportMedia`'s effect shape (base64 binary +
+                        // plain-text sidecar) one level up, at the studio document itself.
+                        if let Ok(pack_files) = export_os_studio_pack(&document) {
+                            use base64::Engine;
+                            effects.push(HostEffect::DownloadMediaExport {
+                                filename: format!("{studio_id}.pack"),
+                                mime_type: "application/octet-stream".into(),
+                                data: base64::engine::general_purpose::STANDARD.encode(&pack_files.pack),
+                                encoding: Some("base64".into()),
+                            });
+                            effects.push(HostEffect::DownloadMediaExport {
+                                filename: format!("{studio_id}.ops"),
+                                mime_type: "text/plain".into(),
+                                data: pack_files.ops,
+                                encoding: None,
+                            });
+                        }
+                    }
+                }
+                "exportStudioDsl" => {
+                    let studio_id = runtime_studio_id(&self.runtime);
+                    if let Some(document) = super::app_home::resolve_studio_document(&studio_id) {
+                        if let Ok(text_files) = export_os_studio_dsl(&document) {
+                            effects.push(HostEffect::DownloadMediaExport {
+                                filename: format!("{studio_id}.os"),
+                                mime_type: "text/plain".into(),
+                                data: text_files.dsl,
+                                encoding: None,
+                            });
+                        }
+                    }
+                }
+                "importStudioPack" => {
+                    return ActionEmit::effect(HostEffect::RequestFileOpen {
+                        accept: ".pack".into(),
+                        read_as: Some("dataUrl".into()),
+                        import_action: "importStudioPackPayload".into(),
+                        multiple: false,
+                    });
+                }
+                "importStudioPackPayload" => {
+                    if let Some(payload) = args.and_then(|value| value.get("payload")).and_then(|value| value.as_str()) {
+                        use base64::Engine;
+                        let base64_part = payload.split_once(',').map(|(_, data)| data).unwrap_or(payload);
+                        if let Ok(bytes) = base64::engine::general_purpose::STANDARD.decode(base64_part) {
+                            // 🌱 A single `.pack` file carries no separate ops sidecar (unlike
+                            // `exportStudioPack`'s two-file output) — an empty ops log decodes to a
+                            // document with no replayed edit history, i.e. its bare initial projection,
+                            // exactly like `importStudio`'s JSON-envelope counterpart.
+                            let _ = import_os_studio_from_pack(&bytes, "", super::app_home::catalog_port());
+                        }
+                    }
+                    return ActionEmit::default();
+                }
                 "selectInstance" => {
                     self.runtime.active_instance_id = args
                         .and_then(|value| value.get("instanceId"))
@@ -3168,6 +3240,10 @@ pub mod app_studio {
             .shell_action("exportMedia", "Export Media")
             .shell_action("importMedia", "Import Media")
             .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importMediaPayload", "Import Media Payload", ActionKind::Shell) })
+            .shell_action("exportStudioPack", "Export Studio Pack")
+            .shell_action("exportStudioDsl", "Export Studio DSL")
+            .shell_action("importStudioPack", "Import Studio Pack")
+            .action_with(ActionDefinition { in_palette: false, ..ActionDefinition::new("importStudioPackPayload", "Import Studio Pack Payload", ActionKind::Shell) })
             .shell_action("openStudio", "Open Studio")
             .shell_action("openInstance", "Open Instance")
             .shell_action("closeFocusedInstance", "Close Focused Instance")
@@ -3414,6 +3490,7 @@ pub mod app_studio {
         fn demo_document_dsl_text_round_trips() {
             let projection = demo_studio_projection();
             vcs::test_support::assert_dsl_round_trip(&projection);
+            vcs::test_support::assert_dsl_pack_equivalence(&projection);
         }
 
         #[test]
@@ -4197,8 +4274,19 @@ pub mod app_studio {
 }
 //#endregion 🔖app_studio
 
+//#region 🔖DocumentCodecs
+/// 🗂️ Registers `s.home`/`s.studio`'s pack<->dsl codecs under their real `document_schema()` strings
+/// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+/// these documents without depending on this crate's concrete `Projection`/`Operation` types.
+fn register_s_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_home::HomeApp>("s.home");
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<app_studio::StudioApp>(OS_STUDIO_SCHEMA);
+}
+//#endregion 🔖DocumentCodecs
+
 //#region 🔖Manifest
 fn bundle() -> semio_framework_plugin::PluginBundle {
+    register_s_exports();
     semio_framework_plugin::PluginBundle::new("s", "S Studio", "0.1.0")
         .local_backbone_storage()
         .register_document_app(app_home::create_home_app(), || app_home::HomeApp)

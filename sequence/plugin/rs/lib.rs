@@ -725,7 +725,9 @@ fn create_sequence_app() -> App {
     .program("sequence", "Sequence", "graph")
 }
 
-fn register_sequence_exports() {}
+fn register_sequence_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<SequencePlayApp>(SEQUENCE_FIXTURE_SCHEMA);
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "sequence",

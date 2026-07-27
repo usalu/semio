@@ -542,6 +542,20 @@ impl vcs::DocumentDsl for Procedural2dDocument {
         <Procedural2dDocumentDsl as vcs::DocumentDsl>::print_dsl(&procedural2d_document_to_dsl(self))
     }
 }
+
+/// 📦 `.procedural2d` binary pack — same `Procedural2dDocumentDsl` mirror as `DocumentDsl` above (see
+/// `🔖DslMirror`); `dsl::DslDocument`'s derive already gives `Procedural2dDocumentDsl` its own
+/// `DocumentPack` impl, so this just routes through the same to/from-dsl boundary functions.
+impl vcs::DocumentPack for Procedural2dDocument {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <Procedural2dDocumentDsl as vcs::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let parsed = <Procedural2dDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+        procedural2d_document_from_dsl(parsed).map_err(vcs::text_error_to_pack_error)
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -749,6 +763,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_empty_projection() {
         test_support::assert_dsl_round_trip(&empty_procedural2d_projection());
+        test_support::assert_dsl_pack_equivalence(&empty_procedural2d_projection());
     }
 
     #[test]
@@ -756,6 +771,7 @@ mod tests {
         let text = include_str!("../example/default.procedural2d");
         let projection = Procedural2dDocument::parse_dsl(text).expect("parse default.procedural2d fixture");
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -772,6 +788,7 @@ mod tests {
         projection.generation.selected_generation_id = Some("generation-1".into());
         projection.generation.preview_text = Some("42".into());
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -787,6 +804,7 @@ mod tests {
         ];
         projection.fixture.synapses = vec![];
         test_support::assert_dsl_round_trip(&projection);
+        test_support::assert_dsl_pack_equivalence(&projection);
     }
     //#endregion 🔖DslTests
 
@@ -852,6 +870,7 @@ mod tests {
             })
             .expect("apply");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DocumentTextTests
 

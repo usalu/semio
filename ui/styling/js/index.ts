@@ -974,7 +974,6 @@ export function applyUiThemeToDocument(theme: UiTheme): void {
     if (typeof chrome.hoverStepPercent === "number") setCssVar(root, "--hover-shade-step", `${chrome.hoverStepPercent}%`);
     if (typeof chrome.glassAlphaStep === "number") setCssVar(root, "--glass-alpha-step", `${chrome.glassAlphaStep}`);
     if (typeof chrome.glassBlurStepPx === "number") setCssVar(root, "--glass-blur-step", `${chrome.glassBlurStepPx / 16}rem`);
-    if (typeof chrome.glassChromeAlphaFactor === "number") setCssVar(root, "--glass-chrome-alpha-factor", `${chrome.glassChromeAlphaFactor}`);
   }
   clearColorResolveCache();
 }

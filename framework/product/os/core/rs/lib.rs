@@ -1299,6 +1299,40 @@ pub mod host {
         os_studio_catalog_entry_from_document(&backbone_uri, &document)
     }
 
+    /// @emoji 📦 Pack counterpart of `import_os_studio_from_json`: decodes `pack`+`ops` through the
+    /// `OS_STUDIO_SCHEMA` codec (`vcs::document_codec`, registered by `s/plugin`'s
+    /// `register_document_codec_for_app::<StudioApp>` — wave 2) into the same envelope JSON shape,
+    /// then follows the identical admission flow.
+    pub fn import_os_studio_from_pack(pack: &[u8], ops: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsStudioCatalogEntry, VcsError> {
+        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+        let json = (codec.parse)(pack, ops)?;
+        import_os_studio_from_json(&json, port)
+    }
+
+    /// @emoji 📤 Exports an already-loaded studio document as pack bytes + ops text. This crate never
+    /// constructs `HostEffect` itself (it has no command dispatcher of its own — see
+    /// `wave1-progress.txt` in the pack-rollout ticket for why `exportDocumentPack`/`exportDocumentDsl`/
+    /// `importDocumentPack` couldn't be wired as literal os/core "commands"); mirrors
+    /// `export_os_app_instance_media`'s data-returning shape so `s/plugin`'s `handle_action` can wrap
+    /// the result into a `HostEffect::DownloadMediaExport` exactly the way `exportMedia` already wraps
+    /// `export_os_app_instance_media`'s `OsMediaExportResult`.
+    pub fn export_os_studio_pack(document: &OsDocument) -> Result<vcs::DocumentPackFiles, VcsError> {
+        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+        let json = os_document_to_envelope_json(document)?;
+        let (pack_files, _dsl_mirror) = (codec.print)(&json)?;
+        Ok(pack_files)
+    }
+
+    /// @emoji 📤 DSL-text counterpart of `export_os_studio_pack` — exercises the text export path
+    /// (`exportDocumentDsl`) via the same codec's `print` (which already computes the DSL mirror
+    /// alongside the pack bytes).
+    pub fn export_os_studio_dsl(document: &OsDocument) -> Result<vcs::DocumentTextFiles, VcsError> {
+        let codec = vcs::document_codec(OS_STUDIO_SCHEMA).ok_or_else(|| VcsError::Deserialize(format!("no document codec registered for schema {OS_STUDIO_SCHEMA}")))?;
+        let json = os_document_to_envelope_json(document)?;
+        let (pack_files, dsl_mirror) = (codec.print)(&json)?;
+        Ok(vcs::DocumentTextFiles { dsl: dsl_mirror, ops: pack_files.ops })
+    }
+
     /// @emoji 📂 Loads a studio document from the dev backbone.
     pub fn load_os_studio_document(studio_id: &str, port: Arc<dyn OsBackbonePort>) -> Result<OsDocument, VcsError> {
         let backbone_uri = os_studio_backbone_uri(studio_id);
@@ -1912,11 +1946,13 @@ pub mod host {
         #[test]
         fn dsl_round_trips_default_projection() {
             vcs::test_support::assert_dsl_round_trip(&default_os_projection());
+            vcs::test_support::assert_dsl_pack_equivalence(&default_os_projection());
         }
 
         #[test]
         fn dsl_round_trips_projection_with_media_graph_and_parameters() {
             vcs::test_support::assert_dsl_round_trip(&sample_os_projection());
+            vcs::test_support::assert_dsl_pack_equivalence(&sample_os_projection());
         }
 
         #[test]
@@ -2028,6 +2064,7 @@ pub mod host {
                 .dispatch(DocumentVcsCommand::Apply { operations: vec![OsOperation::SetActiveProgram { program_id: Some("puzzle".into()) }], description: None })
                 .expect("apply");
             vcs::test_support::assert_document_text_round_trip(&store);
+            vcs::test_support::assert_document_pack_round_trip(&store);
         }
         // #endregion 🔖DslAndOpText
     }
@@ -2053,11 +2090,11 @@ pub mod backbone {
     const STUDIO_FOLDER_DOCUMENT_ID: &str = "studio";
 
     enum StudioPortKind {
-        /// @emoji 🗃️ A single document's text blob addressed by an arbitrary `file://` path — stores
-        /// the raw payload in `FolderTextStorage`'s `.dsl` slot (same single-blob-overwrite semantics
-        /// the deleted `FileJsonStorage` used, just relocated to `<folder>/<document_id>.<extension>`
-        /// derived from the path itself); the sibling `.ops` file is written empty since this port
-        /// is payload-typed (`&str`), not a concrete `Projection`/`Operation`.
+        /// @emoji 🗃️ A single document's pack blob addressed by an arbitrary `file://` path —
+        /// `<folder>/<document_id>.<extension>.pack` (authoritative) + `.ops` + a DSL mirror, via
+        /// `FolderTextStorage::write_pack`/`read_pack` and the `vcs::document_codec(OS_STUDIO_SCHEMA)`
+        /// registered codec (same fix as `framework/sync`'s `FolderEndpoint::Pack` — see there for the
+        /// rationale: a missing codec is a hard error, never a silent JSON-in-`.dsl` dump).
         #[cfg(not(target_arch = "wasm32"))]
         File { uri: String, storage: vcs::FolderTextStorage, document_id: String, extension: String },
         #[cfg(not(target_arch = "wasm32"))]
@@ -2093,7 +2130,16 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        return storage.read(document_id, extension)?.map(|files| files.dsl).ok_or_else(|| VcsError::Backbone(format!("missing backbone file {uri}")));
+                        let Some(codec) = vcs::document_codec(OS_STUDIO_SCHEMA) else {
+                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
+                        };
+                        if let Some(pack_files) = storage.read_pack(document_id, extension)? {
+                            return (codec.parse)(&pack_files.pack, &pack_files.ops);
+                        }
+                        return match storage.read(document_id, extension)? {
+                            Some(text_files) => (codec.parse_dsl)(&text_files.dsl, &text_files.ops),
+                            None => Err(VcsError::Backbone(format!("missing backbone file {uri}"))),
+                        };
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {
@@ -2110,7 +2156,11 @@ pub mod backbone {
                 match kind {
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::File { uri: file_uri, storage, document_id, extension } if uri == file_uri => {
-                        return storage.write(document_id, extension, &vcs::DocumentTextFiles { dsl: payload.to_string(), ops: String::new() });
+                        let Some(codec) = vcs::document_codec(OS_STUDIO_SCHEMA) else {
+                            return Err(VcsError::Backbone(format!("no document codec registered for schema {OS_STUDIO_SCHEMA:?}")));
+                        };
+                        let (pack_files, dsl_mirror) = (codec.print)(payload)?;
+                        return storage.write_pack(document_id, extension, &pack_files, &dsl_mirror);
                     }
                     #[cfg(not(target_arch = "wasm32"))]
                     StudioPortKind::Folder(folder_uri, storage) if uri == folder_uri => {

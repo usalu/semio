@@ -7333,6 +7333,19 @@ impl vcs::DocumentDsl for DagDocument {
         <DagDocumentDsl as vcs::DocumentDsl>::print_dsl(&dag_document_to_dsl(self))
     }
 }
+
+/// 📦 Binary counterpart of the `DocumentDsl` impl above — `DagDocument` can't `#[derive(dsl::
+/// DslDocument)]` directly (see this region's opening doc comment), so `DocumentPack` is hand-routed
+/// through the same `DagDocumentDsl` mirror, which does derive it.
+impl vcs::DocumentPack for DagDocument {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <DagDocumentDsl as vcs::DocumentPack>::encode_pack_with(&dag_document_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        Ok(dag_document_from_dsl(<DagDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?))
+    }
+}
 //#endregion 🔖DslMirror
 //#endregion 🔖Dsl
 
@@ -7539,16 +7552,19 @@ mod dag_vcs_tests {
     #[test]
     fn dag_document_dsl_round_trips_the_demo_fixture() {
         vcs::test_support::assert_dsl_round_trip(&default_dag_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_dag_document());
     }
 
     #[test]
     fn dag_document_dsl_round_trips_every_node_kind() {
         vcs::test_support::assert_dsl_round_trip(&kitchen_sink_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&kitchen_sink_document());
     }
 
     #[test]
     fn dag_document_dsl_round_trips_the_empty_document() {
         vcs::test_support::assert_dsl_round_trip(&empty_dag_document());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_dag_document());
     }
 
     #[test]
@@ -7618,6 +7634,7 @@ mod dag_vcs_tests {
             .dispatch(DocumentVcsCommand::Apply { operations: vec![DagOperation::Nodes(CollectionOperation::Add { index: 0, item: sample_node("extra") })], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 }

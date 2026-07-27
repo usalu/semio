@@ -149,6 +149,15 @@ pub fn board_redraw_handles_fixture_json(fixture_json: &str) -> Result<String, J
     graph::apply_edge_handle_snap_to_fixture_v1_json(fixture_json).map_err(|e| JsValue::from_str(&e))
 }
 
+/// 🔤 Parses `.puzzle2d` DSL text (`Puzzle2dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.2d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
+#[cfg(target_arch = "wasm32")]
+#[wasm_bindgen(js_name = puzzle2dParseDslJson)]
+pub fn puzzle2d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
+    use vcs::DocumentDsl;
+    let projection = Puzzle2dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
+}
+
 // #region 🔖WasmSession
 /// 🖥️ Single WASM entry: one {@link BoardHost}, optional WebGPU surface bound via {@link BoardSession::attach_canvas}.
 #[cfg(target_arch = "wasm32")]
@@ -1148,6 +1157,64 @@ pub fn puzzle2d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         fallback(after)
     }
 }
+
+// #region 🔖PlayProjection
+/// 🌱 `puzzle-plugin`'s `Puzzle2dPlayApp` predates the typed `Puzzle2dProjection` above and stays on
+/// this ad-hoc `serde_json::Value` fixture shape for its hundreds of Value-manipulating scene-mutation
+/// helpers (see `puzzle-plugin`'s own module docs) — out of scope to retrofit onto the typed struct.
+/// This newtype exists only to satisfy `DocumentApp::Projection: vcs::DocumentDsl + vcs::DocumentPack`
+/// post the repo-wide `vcs::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax
+/// convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip
+/// straight through the still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack
+/// encoding respectively), same local-bridge shape as `compose`'s `KitSnapshot`. `Operation`/
+/// `OperationDiff` delegate straight through to the `Value` impls above too.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Puzzle2dPlayProjection(pub Value);
+
+impl vcs::DocumentDsl for Puzzle2dPlayProjection {
+    const EXTENSION: &'static str = "puzzle2d-play";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        serde_json::from_str(text).map(Puzzle2dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(&self.0).unwrap_or_default()
+    }
+}
+
+impl vcs::DocumentPack for Puzzle2dPlayProjection {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        self.0.encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        Value::decode_pack_with(bytes, options).map(Puzzle2dPlayProjection)
+    }
+}
+
+impl OperationDiff<Puzzle2dPlayProjection> for Puzzle2dDiff {
+    fn apply(&self, projection: &Puzzle2dPlayProjection) -> Puzzle2dPlayProjection {
+        Puzzle2dPlayProjection(OperationDiff::<Value>::apply(self, &projection.0))
+    }
+
+    fn absorb(&mut self, other: Self) {
+        puzzle2d_diff_absorb(self, other);
+    }
+}
+
+impl Operation<Puzzle2dPlayProjection> for Puzzle2dOperation {
+    type Diff = Puzzle2dDiff;
+
+    fn diff(&self, projection: &Puzzle2dPlayProjection) -> Puzzle2dDiff {
+        Operation::<Value>::diff(self, &projection.0)
+    }
+
+    fn backwards(&self, projection: &Puzzle2dPlayProjection) -> Vec<Self> {
+        Operation::<Value>::backwards(self, &projection.0)
+    }
+}
+// #endregion 🔖PlayProjection
 // #endregion 🔖ValueBridge
 // #endregion 🔖DocumentVcs
 
@@ -5066,6 +5133,7 @@ mod force_graph_tests {
         use crate::{empty_puzzle2d_projection, Puzzle2dCamera, Puzzle2dCompatSpecificity, Puzzle2dEdge, Puzzle2dHandle, Puzzle2dKindCompatibility, Puzzle2dMeta, Puzzle2dNode};
 
         vcs::test_support::assert_dsl_round_trip(&empty_puzzle2d_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle2d_projection());
         let mut with_content = empty_puzzle2d_projection();
         with_content.camera = Puzzle2dCamera { x: 12.0, y: -4.0, zoom: 2.5 };
         with_content.nodes.push(Puzzle2dNode {
@@ -5109,6 +5177,16 @@ mod force_graph_tests {
             kind_catalogs: None,
         };
         vcs::test_support::assert_dsl_round_trip(&with_content);
+        // 🚧 `assert_dsl_pack_equivalence(&with_content)` deliberately NOT added here: it panics
+        // ("pack decode failed: schema error: missing field 'color' at 1:1") on this specific
+        // fixture because it has `#[dsl(table)]` rows (`nodes`/`handles`) with `Option` columns
+        // that are sometimes `None` (e.g. `Puzzle2dHandle.color`) — the same
+        // `pack/value/rs`'s `decode_table_soa` shape-dropping bug root-caused by the `draw` wave-2
+        // family (see `.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-draw.txt`
+        // §4 and `wave2-puzzle-compose.txt` in the same ticket folder). `pack/**` is outside this
+        // family's allowed directories, so not fixed here.
+        // `assert_dsl_pack_equivalence(&empty_puzzle2d_projection())` above already covers this
+        // document kind (it PASSES: no table rows means no `Option` column to hit the bug).
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.2d.json` shape — see ticket
@@ -5122,6 +5200,11 @@ mod force_graph_tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle2d"), include_str!("../example/nakagin-capsule-tower.puzzle2d")] {
             let projection = Puzzle2dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
+            // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: both real
+            // fixtures have `#[dsl(table)]` node/handle rows with `Option` columns sometimes
+            // `None`, hitting the same `pack/value/rs` `decode_table_soa` shape-dropping bug
+            // documented above in `puzzle2d_projection_dsl_round_trips` (and root-caused by the
+            // `draw` wave-2 family, `wave2-draw.txt` §4 in this ticket folder).
         }
     }
 }

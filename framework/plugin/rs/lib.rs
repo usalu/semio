@@ -6,8 +6,8 @@ pub mod component {
 
     use crate::plugin_runtime::{
         ensure_plugin_initialized, plugin_attach_backbone, plugin_clear_instance_guard, plugin_consume_media, plugin_create_app,
-        plugin_detach_backbone, plugin_document, plugin_document_text, plugin_handle_action, plugin_handle_command,
-        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document, plugin_load_document_text,
+        plugin_detach_backbone, plugin_document, plugin_document_pack, plugin_document_text, plugin_handle_action, plugin_handle_command,
+        plugin_ingest_operations, plugin_ingest_operations_text, plugin_load_document, plugin_load_document_pack, plugin_load_document_text,
         plugin_manifest, plugin_produce_media, plugin_refresh_ui, plugin_render_with_document,
     };
     use wit_bindgen::generate;
@@ -19,9 +19,9 @@ pub mod component {
 
     use exports::semio::framework::plugin::Guest;
     use semio::framework::types::{
-        ActionInvocationJson, CommandInvocationJson, DocumentTextFiles, InvocationContextJson, InvocationResponseJson, MediaArtifact,
-        MigrateDocumentInput, MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson, UiRefreshResponseJson,
-        WindowInputJson, WindowOutputJson,
+        ActionInvocationJson, CommandInvocationJson, DocumentPackFiles, DocumentTextFiles, InvocationContextJson, InvocationResponseJson,
+        MediaArtifact, MigrateDocumentInput, MigrateDocumentOutput, PluginError, PluginManifestJson, UiRefreshRequestJson,
+        UiRefreshResponseJson, WindowInputJson, WindowOutputJson,
     };
 
     pub struct ComponentGuest;
@@ -120,6 +120,18 @@ pub mod component {
             ensure_plugin_initialized();
             let files = vcs::DocumentTextFiles { dsl: document_text.dsl, ops: document_text.ops };
             plugin_load_document_text(instance_id, &files).map_err(PluginError::Message)
+        }
+
+        fn read_app_document_pack(instance_id: u32) -> Result<DocumentPackFiles, PluginError> {
+            ensure_plugin_initialized();
+            let files = plugin_document_pack(instance_id).map_err(PluginError::Message)?;
+            Ok(DocumentPackFiles { pack: files.pack, ops: files.ops })
+        }
+
+        fn load_app_document_pack(instance_id: u32, document_pack: DocumentPackFiles) -> Result<(), PluginError> {
+            ensure_plugin_initialized();
+            let files = vcs::DocumentPackFiles { pack: document_pack.pack, ops: document_pack.ops };
+            plugin_load_document_pack(instance_id, &files).map_err(PluginError::Message)
         }
 
         fn attach_backbone(instance_id: u32, uri: String) -> Result<(), PluginError> {
@@ -3129,7 +3141,7 @@ macro_rules! app_action_enum {
 /// - The pointer vocabulary (`canvasPointerDown/Move/Up`, `worldPointerDown/Move/Up`,
 ///   `paintStrokeBegin/End`) are `View`-kind internal action ids driving the above.
 pub trait DocumentApp: Send + 'static {
-    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + vcs::DocumentDsl;
+    type Projection: Clone + PartialEq + Serialize + DeserializeOwned + Send + vcs::DocumentDsl + vcs::DocumentPack;
     type Operation: ::vcs::Operation<Self::Projection> + PartialEq + Send + vcs::OpText;
 
     fn app_id(&self) -> &str;
@@ -3328,6 +3340,12 @@ pub trait PluginApp: Send {
     fn document_text(&self) -> Result<vcs::DocumentTextFiles, String>;
     /// @emoji 📜 Text-DSL counterpart to {@link Self::load_document}.
     fn load_document_text(&mut self, files: &vcs::DocumentTextFiles) -> Result<(), String>;
+    /// @emoji 📦 Binary-pack counterpart to {@link Self::document_text}: the whole document as
+    /// {@link vcs::DocumentPackFiles} (pack-encoded initial projection plus the same `ops` op-log
+    /// text — the op grammar is format-invariant) via `vcs::print_document_pack`.
+    fn document_pack(&self) -> Result<vcs::DocumentPackFiles, String>;
+    /// @emoji 📦 Binary-pack counterpart to {@link Self::load_document_text}.
+    fn load_document_pack(&mut self, files: &vcs::DocumentPackFiles) -> Result<(), String>;
     fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String>;
     fn detach_backbone(&mut self);
     fn render(
@@ -3850,6 +3868,19 @@ impl<A: DocumentApp> PluginApp for VcsDocumentApp<A> {
         Ok(())
     }
 
+    fn document_pack(&self) -> Result<vcs::DocumentPackFiles, String> {
+        vcs::print_document_pack(self.store.envelope()).map_err(|error| error.to_string())
+    }
+
+    fn load_document_pack(&mut self, files: &vcs::DocumentPackFiles) -> Result<(), String> {
+        let parsed: vcs::ParsedDocumentText<A::Projection, A::Operation> =
+            vcs::parse_document_pack(&files.pack, &files.ops).map_err(|error| error.to_string())?;
+        let applied: Vec<String> = parsed.envelope.vcs.edits.iter().map(|edit| edit.id.clone()).collect();
+        self.store.set_envelope(parsed.envelope, applied);
+        self.cache = None;
+        Ok(())
+    }
+
     fn attach_backbone(&mut self, backbone: Box<dyn vcs::Backbone>) -> Result<(), String> {
         self.store.attach_backbone(backbone).map_err(|error| error.to_string())?;
         self.cache = None;
@@ -4087,6 +4118,7 @@ pub mod plugin_runtime {
 //! 📤 WASM component export glue for plugin bundles.
 
 use crate::app::{ActionMeta, AppInstance, MediaArtifact, MediaArtifactDescriptor, Plugin, PluginBundle};
+use crate::DocumentApp;
 use semio_framework_core::{kernel::{HostEffect, InvocationResult}, PluginManifest, ViewState};
 use ui_wgpu::{framework_panel_tab_label, UiNode};
 use serde::{Deserialize, Serialize};
@@ -4324,6 +4356,31 @@ pub fn plugin_load_document_text(instance_id: u32, files: &vcs::DocumentTextFile
         let instance = find_instance(list, instance_id)?;
         instance.app.load_document_text(files)
     })
+}
+
+/// @emoji 📦 Binary-pack counterpart of {@link plugin_document}.
+pub fn plugin_document_pack(instance_id: u32) -> Result<vcs::DocumentPackFiles, String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.document_pack()
+    })
+}
+
+/// @emoji 📦 Binary-pack counterpart of {@link plugin_load_document}.
+pub fn plugin_load_document_pack(instance_id: u32, files: &vcs::DocumentPackFiles) -> Result<(), String> {
+    with_instances_mut(|list| {
+        let instance = find_instance(list, instance_id)?;
+        instance.app.load_document_pack(files)
+    })
+}
+
+/// @emoji 🗂️ Registers `A::Projection`'s pack↔dsl codec under `schema` in the process-wide
+/// `vcs::DocumentCodec` registry — the one-liner every app's own native registration fn
+/// (`register_<app>_exports()`-style) calls once per document kind so `framework/sync`'s
+/// `FolderEndpoint` (and any other schema-string-keyed caller) can print/parse that kind without
+/// depending on its concrete `Projection`/`Operation` types.
+pub fn register_document_codec_for_app<A: DocumentApp>(schema: impl Into<String>) {
+    vcs::register_document_codec(vcs::DocumentCodec::of::<A::Projection, A::Operation>(schema));
 }
 
 /// @emoji 🔗 Attaches a backbone channel by URI. The URI is resolved to a `vcs::PortBackbone`

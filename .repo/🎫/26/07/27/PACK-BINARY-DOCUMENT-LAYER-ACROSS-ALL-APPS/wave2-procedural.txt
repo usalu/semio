@@ -1,0 +1,174 @@
+WAVE 2 REPORT — family: procedural (procedural/**)
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+procedural2d — App: procedural/plugin/rs/lib.rs::app_2d::Procedural2dPlayApp
+  schema used: procedural_2d::PROCEDURAL_2D_SCHEMA (= "procedural.2d", read from
+  Procedural2dPlayApp::document_schema()).
+procedural3d — App: procedural/plugin/rs/lib.rs::app_3d::Procedural3dPlayApp
+  schema used: procedural_3d::PROCEDURAL_3D_SCHEMA (= "procedural.3d", read from
+  Procedural3dPlayApp::document_schema()).
+
+Registration call sites (native setup fns, each already the sole `setup:` target of this
+crate's `semio_framework_plugin::semio_plugin!` macro invocation, i.e. called once, natively,
+before the bundle is built — no wasm-only path exists for either):
+  procedural/plugin/rs/lib.rs::app_2d::register_procedural2d_exports()
+    added: semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Procedural2dPlayApp>(PROCEDURAL_2D_SCHEMA);
+  procedural/plugin/rs/lib.rs::app_3d::register_procedural3d_exports()
+    added: semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<Procedural3dPlayApp>(PROCEDURAL_3D_SCHEMA);
+
+2. DocumentPack IMPL — MANUAL, NOT AUTO-DERIVED (important deviation for wave 3 to know)
+--------------------------------------------------------------------------------
+Procedural2dDocument/Procedural3dDocument do NOT carry `#[derive(dsl::DslDocument)]`
+themselves (the flow_core/protocol field types are foreign to this crate — orphan rule).
+They already manually implement `vcs::DocumentDsl` by delegating to a same-crate, DERIVED
+`Procedural{2,3}dDocumentDsl` structural-twin type (`//#region 🔖DslMirror`), converting at the
+`parse_dsl`/`print_dsl` boundary. Since dsl_derive's `DocumentPack` impl is only emitted for
+the type actually wearing `#[derive(dsl::DslDocument)]` (i.e. the twin, not the real document),
+`Procedural2dDocument`/`Procedural3dDocument` got NO automatic `DocumentPack` impl from wave 1's
+derive rollout. Added one manually in each crate's `//#region 🔖Dsl`, immediately after the
+existing `impl vcs::DocumentDsl` block, following the exact same delegate-through-the-twin
+shape:
+
+    impl vcs::DocumentPack for Procedural2dDocument {
+        fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+            <Procedural2dDocumentDsl as vcs::DocumentPack>::encode_pack_with(&procedural2d_document_to_dsl(self), options)
+        }
+        fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+            let parsed = <Procedural2dDocumentDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+            procedural2d_document_from_dsl(parsed).map_err(vcs::text_error_to_pack_error)
+        }
+    }
+
+(same shape for Procedural3dDocument/Procedural3dDocumentDsl). Any other wave-2 family using
+the same "local DSL mirror twin" pattern (the report calls out fem_2d and imperative_core as
+sibling users of this pattern) will need the identical manual `DocumentPack` impl — it will NOT
+appear "for free" just because the twin type derives `DslDocument`.
+
+3. TEST LAW CALLS ADDED
+--------------------------------------------------------------------------------
+procedural/2d/rs/lib.rs (mod tests):
+  dsl_round_trip_empty_projection            + assert_dsl_pack_equivalence
+  dsl_round_trip_example_fixture             + assert_dsl_pack_equivalence (default.procedural2d)
+  dsl_round_trip_with_generation_state       + assert_dsl_pack_equivalence
+  dsl_round_trip_covers_every_widget_kind    + assert_dsl_pack_equivalence
+  document_text_round_trip_with_operation_applied + assert_document_pack_round_trip
+
+procedural/3d/rs/lib.rs (mod tests):
+  dsl_round_trip_empty_projection                    + assert_dsl_pack_equivalence
+  dsl_round_trip_hexagonal_mushroom_column_fixture    + assert_dsl_pack_equivalence
+  dsl_round_trip_rectangle_extrude_volume_fixture     + assert_dsl_pack_equivalence
+  dsl_round_trip_sphere_cut_with_torus_fixture        NOT added — see §4, blocking pack-crate bug
+  dsl_round_trip_with_generation_state                + assert_dsl_pack_equivalence
+  dsl_round_trip_covers_remaining_widget_kinds        + assert_dsl_pack_equivalence
+  document_text_round_trip_with_operation_applied     + assert_document_pack_round_trip
+
+4. BLOCKING FINDING — confirmed pre-existing bug in pack/value/rs (OUT OF SCOPE to fix; pack/**
+   is off-limits for this family) — needs a dedicated fix before this one call can be added
+--------------------------------------------------------------------------------
+`dsl_round_trip_sphere_cut_with_torus_fixture` (procedural/3d/rs/lib.rs) is the ONLY fixture
+test in this family whose `#[dsl(table)]` collection field has non-empty rows with a
+`#[dsl(block)]` nested record column made of mostly-`Option` fields — concretely,
+`Procedural3dDocumentDsl.widgets` contains an `output-preview` widget whose `preview:
+Vec<DictEntryDsl>` table has 2 rows, and `DictEntryDsl.value: ValueDsl` (6 mutually-exclusive
+`Option` fields: null/bool/int/decimal/text/dict) has only ONE of those 6 set per row. Calling
+`test_support::assert_dsl_pack_equivalence` on this fixture's parsed projection panics:
+
+    thread '...' panicked at vcs/rs/lib.rs:3406:...:
+    pack decode failed: schema error: missing field 'null' at 1:1
+
+Root cause traced to `pack/value/rs/lib.rs`'s `decode_table_soa` (around line 1112-1119): its
+fallback (non-primitive) column branch decodes each present cell with
+`decode_value(reader, None, ctx, depth + 1)` — `spec: None`. Compare `decode_record_fields`
+(same file, ~line 672-696), which backfills every spec-declared-but-wire-omitted field as
+`FieldValue::Absent` — that backfill loop is driven by having a `RecordSpec` in hand.
+`decode_table_soa`'s column decode has NO `RecordSpec` available (by design — a `TableSoA`
+column is only tagged with `field_id`/`presence`/`elem_tag` on the wire, not a full spec, so an
+*unknown* Table-shaped field can still round-trip generically). For a *known* nested
+`#[dsl(block)]` record column (our case), this means a genuinely-absent `Option` field is never
+inserted into the decoded row's `RecordValue` at all — not even as `FieldValue::Absent` — so
+`ValueDsl::__dsl_from_record`'s generated `record.get(id).ok_or_else(|| ...)` (dsl/derive/rs/lib.rs
+line ~444) fails with "missing field '<name>'" for whichever optional field the derive checks
+first (`null`, since it's `ValueDsl`'s first declared field).
+
+Confirmed NOT a bug in this crate's own code: every OTHER fixture/synthetic-widget test in both
+procedural/2d and procedural/3d that exercises `Neuron`/`OutputPreview` widgets only ever does so
+with an EMPTY `params=[ ]`/`preview=[ ]` table (no rows reach the buggy column-decode branch at
+all), which is exactly why those pass. `hexagonal-mushroom-column.procedural3d` and
+`rectangle-extrude-volume.procedural3d` were checked and confirmed empty-table-only.
+
+Left the existing `assert_dsl_round_trip` call on this one test untouched (dsl-text round trip
+is unaffected — the bug is pack-format-specific) and added a doc comment at the call site
+pointing back to this file instead of adding the pack-law call, so `cargo test -p procedural_3d`
+stays green. Re-add `test_support::assert_dsl_pack_equivalence(&projection);` there once
+`decode_table_soa`'s fallback branch is fixed to backfill spec-declared-but-absent nested fields
+the same way `decode_record_fields` already does for top-level/block records.
+
+This is a general engine gap (`pack/value/rs`, not this family's file), so it will affect ANY
+other wave-2 family whose DSL grammar has a `#[dsl(table)]` field with a nested
+`#[dsl(block)]` record column made of `Option` fields where not every row sets every field —
+worth flagging to whoever owns `pack/**` before wave 3 closes this ticket family out.
+
+5. FILES TOUCHED
+--------------------------------------------------------------------------------
+procedural/plugin/rs/lib.rs — register_document_codec_for_app::<Procedural2dPlayApp>/
+  <Procedural3dPlayApp> calls added inside register_procedural2d_exports()/
+  register_procedural3d_exports().
+procedural/2d/rs/lib.rs — manual `impl vcs::DocumentPack for Procedural2dDocument` added; 4
+  `assert_dsl_pack_equivalence` + 1 `assert_document_pack_round_trip` test calls added.
+procedural/3d/rs/lib.rs — manual `impl vcs::DocumentPack for Procedural3dDocument` added; 5
+  `assert_dsl_pack_equivalence` + 1 `assert_document_pack_round_trip` test calls added; 1
+  documented gap (see §4).
+
+No fixture conversions needed (procedural/2d/example/**, procedural/3d/example/** were already
+DSL text per the family brief).
+
+6. PACK-COMPLETENESS LINT ALLOWLIST — files that now satisfy it
+--------------------------------------------------------------------------------
+Both of this family's allowlisted files now call `assert_dsl_pack_equivalence`/
+`assert_document_pack_round_trip` at least once, alongside every pre-existing
+`assert_dsl_round_trip`/`assert_document_text_round_trip` call except the one documented gap in
+§4 (which still has its original `assert_dsl_round_trip` call, unmodified). Wave 3 can remove
+BOTH of the following from root `script.ts`'s `POLICY_PACK_COMPLETENESS_ALLOWLIST` (assuming the
+lint's bar is "at least one pack-law call present per file", matching how every other wave-2
+family's report has read it — if the lint instead requires 1:1 coverage of every text-law call
+site, `procedural/3d/rs/lib.rs` should stay on the allowlist until §4 is fixed):
+  procedural/2d/rs/lib.rs
+  procedural/3d/rs/lib.rs
+
+7. FINAL cargo test STATUS
+--------------------------------------------------------------------------------
+cargo check -p procedural_2d -p procedural_3d -p procedural-plugin: GREEN (pre-existing
+unrelated warnings only — unused_qualifications, dead_code on two unused SURFACE_GENERATIONS
+consts — no errors).
+
+cargo test -p procedural_2d: 46 passed, 0 failed.
+cargo test -p procedural_3d: 34 passed, 0 failed.
+cargo test -p procedural-plugin: 40 passed, 3 failed — all 3 PRE-EXISTING and UNRELATED to this
+  ticket (confirmed by inspection, not caused by either of my 2 one-line edits):
+    app_3d::tests::procedural3d_labels_resolve_native_english_by_default
+    app_3d::tests::procedural3d_labels_translate_catalogue_and_inspector_in_german
+      both panic in ui/wgpu/rs (generated ui/asset/icon/generated/icon_name.rs) with "invalid
+      catalog icon name" — traced to create_procedural3d_app()'s `.icon_id("procedural3d")`
+      referencing an icon id that plain does not exist in the generated icon catalog (only
+      "procedural2d" is registered there, grep-confirmed) — a pre-existing gap in ui/asset/icon,
+      outside procedural/** and outside this ticket's scope.
+    app_3d::tests::node_graph_hover_updates_preview_selection_and_graph_scene
+      unrelated hover-JSON assertion failure, no relation to document/pack/dsl code touched here.
+  Reproduced deterministically twice; none of the 3 involve DocumentPack/DocumentDsl/codec code.
+
+procedural_3d's `cargo test -p procedural_3d --doc` intermittently fails to link
+(`extern location for vcs does not exist: .../libvcs.rlib`) — confirmed environmental: many
+concurrently-timestamped `libvcs-*.rmeta` variants sit in target/debug/deps (other sessions'
+in-flight builds per the repo's known concurrent-cargo-workspace-churn pattern), and both crates
+have 0 actual doctest cases (`running 0 tests` when it does link). Not a regression from this
+ticket.
+
+8. NOT COMPLETED / COULD NOT COMPLETE
+--------------------------------------------------------------------------------
+- §4's one `assert_dsl_pack_equivalence` call (procedural/3d, sphere-cut-with-torus fixture) —
+  blocked on a pack/value/rs bug outside procedural/**'s scope.
+- The 3 procedural-plugin test failures and the procedural_3d doctest link flake above — both
+  pre-existing/out-of-scope, left as-is (not this ticket's files to fix, not caused by this
+  ticket's edits).

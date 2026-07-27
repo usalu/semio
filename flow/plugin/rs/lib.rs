@@ -1513,7 +1513,13 @@ fn create_flow_app() -> App {
     .program("flow", "Flow", "graph")
 }
 
-fn register_flow_exports() {}
+//#region 🔖PackCodec
+/// 🗂️ Registers `FlowFixture`'s pack↔dsl codec under `FLOW_DOCUMENT_SCHEMA` so `framework/sync`'s
+/// folder endpoints and any other schema-string-keyed caller can print/parse flow documents.
+fn register_flow_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<FlowPlayApp>(FLOW_DOCUMENT_SCHEMA);
+}
+//#endregion 🔖PackCodec
 
 semio_framework_plugin::semio_plugin! {
     id: "flow", label: "Flow", version: "0.1.0",

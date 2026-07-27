@@ -1736,6 +1736,15 @@ fn js_sys_time_now() -> f64 {
     js_sys::Date::now()
 }
 
+/// 🔤 Parses `.puzzle3d` DSL text (`Puzzle3dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.3d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+#[wasm_bindgen(js_name = puzzle3dParseDslJson)]
+pub fn puzzle3d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
+    use vcs::DocumentDsl;
+    let projection = Puzzle3dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+    serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
+}
+
 #[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
 #[wasm_bindgen]
 pub struct Puzzle3dPrecomputeSession {
@@ -3800,6 +3809,64 @@ pub fn puzzle3d_document_delta_operations(before: &serde_json::Value, after: &se
         fallback(after)
     }
 }
+
+// #region 🔖PlayProjection
+/// 🌱 `puzzle-plugin`'s `Puzzle3dPlayApp` predates the typed `Puzzle3dProjection` above and stays on
+/// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
+/// retrofit onto the typed struct). This newtype exists only to satisfy
+/// `DocumentApp::Projection: vcs::DocumentDsl + vcs::DocumentPack` post the repo-wide
+/// `vcs::DocumentDsl for serde_json::Value` bridge's removal (final DSL-syntax convergence gate);
+/// `parse_dsl`/`print_dsl`/`encode_pack_with`/`decode_pack_with` all round-trip straight through the
+/// still-standing `serde_json::Value` impls (JSON text / JSON-bridge pack encoding respectively),
+/// same local-bridge shape as `puzzle_2d`'s `Puzzle2dPlayProjection` and `compose`'s `KitSnapshot`.
+/// `Operation`/`OperationDiff` delegate straight through to the `Value` impls above too.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Puzzle3dPlayProjection(pub serde_json::Value);
+
+impl vcs::DocumentDsl for Puzzle3dPlayProjection {
+    const EXTENSION: &'static str = "puzzle3d-play";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        serde_json::from_str(text).map(Puzzle3dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(&self.0).unwrap_or_default()
+    }
+}
+
+impl vcs::DocumentPack for Puzzle3dPlayProjection {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        self.0.encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        serde_json::Value::decode_pack_with(bytes, options).map(Puzzle3dPlayProjection)
+    }
+}
+
+impl OperationDiff<Puzzle3dPlayProjection> for Puzzle3dDiff {
+    fn apply(&self, projection: &Puzzle3dPlayProjection) -> Puzzle3dPlayProjection {
+        Puzzle3dPlayProjection(OperationDiff::<serde_json::Value>::apply(self, &projection.0))
+    }
+
+    fn absorb(&mut self, other: Self) {
+        puzzle3d_diff_absorb(self, other);
+    }
+}
+
+impl Operation<Puzzle3dPlayProjection> for Puzzle3dOperation {
+    type Diff = Puzzle3dDiff;
+
+    fn diff(&self, projection: &Puzzle3dPlayProjection) -> Puzzle3dDiff {
+        Operation::<serde_json::Value>::diff(self, &projection.0)
+    }
+
+    fn backwards(&self, projection: &Puzzle3dPlayProjection) -> Vec<Self> {
+        Operation::<serde_json::Value>::backwards(self, &projection.0)
+    }
+}
+// #endregion 🔖PlayProjection
 // #endregion 🔖ValueBridge
 // #endregion 🔖DocumentVcs
 
@@ -3944,6 +4011,7 @@ mod puzzle3d_vcs_tests {
     #[test]
     fn puzzle3d_projection_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&empty_puzzle3d_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle3d_projection());
         let mut projection = empty_puzzle3d_projection();
         projection.camera = Puzzle3dCamera { position: [30.0, -30.0, 20.0], target: [7.0, 0.0, 3.0], zoom: 3.0, up: Some([0.0, 0.0, 1.0]), projection: None };
         projection.objects.push(Puzzle3dObject {
@@ -3966,6 +4034,17 @@ mod puzzle3d_vcs_tests {
         projection.references.push(Puzzle3dReference { id: "r1".into(), source: Puzzle3dReferenceSource { url: "https://example.com/plan.png".into(), media_kind: Some("image".into()) }, origin: [0.0, 0.0, 0.0], width_world: 12.0, locked: false, hidden: false });
         projection.meta = Puzzle3dMeta { kind_catalogs: None, kind_compatibility: vec![Puzzle3dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true, important: false, specificity: Some("vortex".into()) }] };
         vcs::test_support::assert_dsl_round_trip(&projection);
+        // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: it panics
+        // ("pack decode failed: schema error: expected a 3-item Tuple, found List([...])") because
+        // this fixture's `#[dsl(table)]` `objects`/`vortices` rows carry fixed-size-array fields
+        // (`Puzzle3dObject.origin: [f64; 3]`, `Puzzle3dVortex.position: [f64; 3]`, etc.) —
+        // `pack/value/rs`'s `decode_table_soa` drops the column's `Shape` in its fallback branch
+        // (encode_table passes it, decode doesn't), so a fixed-size tuple round-trips back as a
+        // generic `List` and `__dsl_from_record` rejects it. Root-caused by the `draw` wave-2
+        // family (`.repo/🎫/26/07/27/PACK-BINARY-DOCUMENT-LAYER-ACROSS-ALL-APPS/wave2-draw.txt`
+        // §4); `pack/**` is outside this family's allowed directories, so not fixed here.
+        // `assert_dsl_pack_equivalence(&empty_puzzle3d_projection())` above already covers this
+        // document kind (it PASSES: empty tables never hit the bug).
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.3d.json` shape — see ticket
@@ -3976,6 +4055,10 @@ mod puzzle3d_vcs_tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle3d"), include_str!("../example/nakagin-capsule-tower.puzzle3d")] {
             let projection = Puzzle3dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
+            // 🚧 `assert_dsl_pack_equivalence(&projection)` deliberately NOT added here: both real
+            // fixtures have `#[dsl(table)]` object/vortex rows with fixed-size-array fields,
+            // hitting the same `pack/value/rs` `decode_table_soa` shape-dropping bug documented
+            // above in `puzzle3d_projection_dsl_round_trips`.
         }
     }
 }

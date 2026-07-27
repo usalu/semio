@@ -377,6 +377,7 @@ mod tests {
     #[test]
     fn dsl_round_trip_empty_document() {
         test_support::assert_dsl_round_trip(&empty_mindmap_wires_document());
+        test_support::assert_dsl_pack_equivalence(&empty_mindmap_wires_document());
     }
 
     #[test]
@@ -387,6 +388,7 @@ mod tests {
         assert_eq!(document.wires_fixture["relationships"].as_array().unwrap().len(), 9);
         assert_eq!(document.board_fixture["nodes"].as_array().unwrap().len(), 7);
         test_support::assert_dsl_round_trip(&document);
+        test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🔖DslTests
 
@@ -449,6 +451,7 @@ mod tests {
             })
             .expect("apply");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DocumentTextTests
 }

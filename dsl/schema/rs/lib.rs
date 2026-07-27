@@ -54,8 +54,12 @@ pub enum Shape {
     /// Structure-of-Arrays columnar table: `key [col:TYPE ...] { v11 v12 ...  v21 v22 ... }`.
     /// `fn() -> RecordSpec` is the SAME lazy self-referential seam `Record`/`Statements` use.
     /// Parses to `FieldValue::List(Vec<FieldValue::Record>)` — identical to `List(Record)` — so
-    /// no binder/diff/derive path needs to know a field is a table rather than a verbose AoS list;
-    /// only the parser's alternate-input detection and the printer's always-SoA output differ.
+    /// no binder/diff/derive path needs to know a field is a table rather than a verbose AoS list.
+    /// Only a record's OWN keyword-prefixed field prints/parses the compact bare SoA form above
+    /// (`print_record`/`parse_record_body`'s dedicated lookahead); a `Table` reached any other way
+    /// (a table row's own column, a list element, the generic `key=` keyed dispatch) prints/parses
+    /// as the bracketed AoS list `[ {...} {...} ]` instead — the bare form has no bracket of its
+    /// own to mark where it ends, so it's only safe directly after a record's leading keyword.
     Table(fn() -> RecordSpec),
     /// Graph endpoint literal: `id[:kind][@port][->|--id2[:kind2][@port2]]{props}`.
     Wire,
@@ -719,7 +723,7 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usiz
                 record.fields.insert(field_spec.id, FieldValue::Absent);
                 continue;
             }
-            let value = parse_shape(cursor, &field_spec.shape, depth + 1)?;
+            let value = parse_table_cell(cursor, &field_spec.shape, depth + 1)?;
             record.fields.insert(field_spec.id, value);
         }
         for field_spec in &element_spec.fields {
@@ -730,6 +734,26 @@ fn parse_table_soa(cursor: &mut Cursor, spec_fn: fn() -> RecordSpec, depth: usiz
     }
     cursor.expect(TokenKind::RBrace)?;
     Ok(FieldValue::List(rows))
+}
+
+/// @emoji 🧱 Reads one table cell's value. Every table-safe shape is bounded by its own bracket or
+/// a fixed token count (`validate_table_columns`/`shape_is_self_delimiting`) — EXCEPT a bare
+/// `Shape::Record` column, which prints as a flat run of `key=value` tokens with no bracket of its
+/// own (a table row has no `field=` prefix to give it one, unlike a Record-shaped field elsewhere).
+/// Two adjacent columns of the SAME record type (or any two types sharing a field name) are then
+/// genuinely ambiguous: `parse_record_body`'s keyed loop for column N keeps matching `key=value`
+/// tokens for as long as the key is one of ITS OWN not-yet-filled fields, so a column-N field left
+/// absent (never printed) silently lets column N's parse run on and swallow column N+1's
+/// same-named token instead of stopping at the column boundary. Braced here for exactly that
+/// reason — every other shape already round-trips through the ordinary `parse_shape`.
+fn parse_table_cell(cursor: &mut Cursor, shape: &Shape, depth: usize) -> Result<FieldValue, TextError> {
+    if let Shape::Record(spec_fn) = shape {
+        cursor.expect(TokenKind::LBrace)?;
+        let record = parse_record_body(cursor, &spec_fn(), depth + 1)?;
+        cursor.expect(TokenKind::RBrace)?;
+        return Ok(FieldValue::Record(record));
+    }
+    parse_shape(cursor, shape, depth)
 }
 //#endregion 🔖Table
 
@@ -989,12 +1013,28 @@ pub fn print_record(value: &RecordValue, spec: &RecordSpec, writer: &mut Writer)
                 // `Statements` items each carry their own leading keyword — no field-level key at
                 // all is ever printed for this shape.
                 Shape::Statements(_) => print_shape(fv, &field.shape, writer),
-                // `Block`'s and `Table`'s own key is a bare leading keyword, not a `key=value`
-                // attribute (`children { ... }`, `nodes [...] { ... }`, never `children={...}`).
-                Shape::Block(_) | Shape::Table(_) => {
+                // `Block`'s own key is a bare leading keyword, not a `key=value` attribute
+                // (`children { ... }`, never `children={...}`).
+                Shape::Block(_) => {
                     writer.new_record();
                     writer.atom(&field.key);
                     print_shape(fv, &field.shape, writer);
+                }
+                // `Table`'s own key is likewise a bare leading keyword, but — unlike `Block` —
+                // it must always go through the dedicated SoA writer (`print_table`), never the
+                // generic `print_shape` dispatch: that dispatch renders `Table` as the bracketed
+                // AoS list (see its `Shape::Table` arm below) so a `Table` value reached any OTHER
+                // way (nested inside a table row, a list, ...) stays self-delimiting. Only here,
+                // directly after a record's own leading keyword, is the bare `[col:TYPE ...]
+                // {rows}` form reachable on the parse side (`parse_record_body`'s dedicated
+                // bare-SoA lookahead) — printing it via `print_shape` here would silently regress
+                // to the AoS form for every top-level table field.
+                Shape::Table(spec_fn) => {
+                    writer.new_record();
+                    writer.atom(&field.key);
+                    if let FieldValue::List(items) = fv {
+                        print_table(*spec_fn, items, writer);
+                    }
                 }
                 _ => {
                     writer.atom(format!("{}=", field.key));
@@ -1064,7 +1104,15 @@ pub fn print_shape(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
                 .collect();
             writer.atom(rendered.join(","));
         }
-        (FieldValue::List(items), Shape::Table(spec_fn)) => print_table(*spec_fn, items, writer),
+        // A `Table` reached here (NOT via `print_record`'s own keyed-field dispatch, which calls
+        // `print_table` directly) is nested inside another shape — a table row's own column, a
+        // list element, ... — where the bare `key [col:TYPE ...] {rows}` form has no bracket of
+        // its own to mark where it ends. Render the bracketed AoS list instead, matching what
+        // `parse_shape`'s own `Shape::Table` arm parses in every one of these same contexts.
+        (FieldValue::List(_), Shape::Table(spec_fn)) => {
+            let list_shape = Shape::List(Box::new(Shape::Record(*spec_fn)));
+            print_shape(value, &list_shape, writer);
+        }
         (FieldValue::List(items), Shape::List(elem)) => {
             writer.atom("[");
             for item in items {
@@ -1125,12 +1173,29 @@ fn print_table(spec_fn: fn() -> RecordSpec, items: &[FieldValue], writer: &mut W
         let FieldValue::Record(record) = item else { continue };
         for field in &element_spec.fields {
             match record.get(field.id) {
-                Some(fv) if !matches!(fv, FieldValue::Absent) => print_shape(fv, &field.shape, writer),
+                Some(fv) if !matches!(fv, FieldValue::Absent) => print_table_cell(fv, &field.shape, writer),
                 _ => writer.atom("_"),
             }
         }
     }
     writer.close_block();
+}
+
+/// @emoji 🧱 Prints one table cell's value. See `parse_table_cell` for why a bare `Shape::Record`
+/// column is brace-wrapped here — `{ }` glued tight on both sides, the same technique the header's
+/// own `[ ]` uses, so bracing never disturbs the "no space just inside" canonical spacing rule for
+/// a one-shot wrapper — and every other shape is left to the ordinary `print_shape`, already
+/// self-delimiting.
+fn print_table_cell(value: &FieldValue, shape: &Shape, writer: &mut Writer) {
+    if let (FieldValue::Record(record), Shape::Record(spec_fn)) = (value, shape) {
+        writer.atom("{");
+        writer.glue();
+        print_record(record, &spec_fn(), writer);
+        writer.glue();
+        writer.atom("}");
+        return;
+    }
+    print_shape(value, shape, writer);
 }
 
 fn print_dsl_value(value: &DslValue, writer: &mut Writer) {

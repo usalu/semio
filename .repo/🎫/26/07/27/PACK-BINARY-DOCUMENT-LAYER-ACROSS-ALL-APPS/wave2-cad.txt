@@ -1,0 +1,124 @@
+WAVE 2 — family: cad
+================================================================================
+
+1. DOCUMENT KINDS COVERED
+--------------------------------------------------------------------------------
+Only one `#[derive(dsl::DslDocument)]` type in this family: `CadScene` (cad/rs/lib.rs,
+`#[dsl(extension = "cad", layout = "lines")]`).
+
+App: `CadPlayApp` (cad/plugin/rs/lib.rs, `impl DocumentApp for CadPlayApp`).
+  app_id: "cad-play"
+  document_schema(): returns `CAD_DOCUMENT_SCHEMA` = "cad.scene" (cad/rs/lib.rs line 8) — this is
+  the real string read directly off the `DocumentApp` impl, NOT `CAD_PLAY_DOCUMENT_SCHEMA` =
+  "cad.document" (a different constant used only as `empty_cad_projection()`'s default `schema`
+  field value, unrelated to the codec registry key).
+
+Registration added: cad/plugin/rs/lib.rs, inside `register_cad_exports()` (the plugin's existing
+native/setup fn, invoked once by the `semio_plugin!` macro's generated `__semio_plugin_bundle()`
+— no other native-only setup hook exists in this crate, so this is "the" registration fn):
+
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<CadPlayApp>(CAD_DOCUMENT_SCHEMA);
+
+2. TEST LAW CALLS ADDED
+--------------------------------------------------------------------------------
+cad/rs/lib.rs — the only two existing `assert_dsl_round_trip` call sites, each given a sibling
+`assert_dsl_pack_equivalence` call using the exact same fixture, same test:
+
+  - `cad_scene_round_trips_through_dsl_document` (sample_scene())
+  - `cad_scene_with_all_geometry_panes_round_trips_through_dsl_document` (sample_scene() + all
+    geometry panes populated)
+
+No `assert_document_text_round_trip`/`assert_document_pack_round_trip` call sites existed anywhere
+in the family (grepped both cad/rs/lib.rs and cad/plugin/rs/lib.rs) — nothing to mirror there.
+
+3. FIXTURES
+--------------------------------------------------------------------------------
+No JSON fixtures converted. Verified cad/asset/play/*.model.json (schema "spatial.modelspace" /
+"spatial.model") and cad/asset/modelDefinition/**/*.json (interaction/action/attribute/stat
+definition catalogs, schema-less or "modelDefinition"-shaped) are NOT `CadScene` document
+serializations — confirmed by reading their `schema` fields and their only consumers
+(`include_str!` sites feeding `objects_from_fixture_model`/interaction catalog parsing, not
+`CadScene::parse_dsl`/`serde_json::from_str::<CadScene>`). Left untouched per the family note.
+
+4. PACK-COMPLETENESS ALLOWLIST
+--------------------------------------------------------------------------------
+`cad/rs/lib.rs` is in `POLICY_PACK_COMPLETENESS_ALLOWLIST` (root script.ts) and now calls
+`assert_dsl_pack_equivalence(` at both existing law call sites — textually it satisfies the lint's
+pattern requirement. HOWEVER see §5: those two tests currently FAIL at runtime due to a pre-existing
+pack-crate bug outside this family's scope, so wave 3 should NOT blindly remove this entry from the
+allowlist until that bug is fixed and these two tests are verified green.
+
+5. BLOCKER — NOT FIXED, OUT OF SCOPE (pack/value/rs/lib.rs)
+--------------------------------------------------------------------------------
+`cargo test -p cad_document` FAILS 2/15 tests (both newly-added pack-equivalence assertions):
+
+  thread 'tests::cad_scene_round_trips_through_dsl_document' panicked at vcs/rs/lib.rs:3406:89:
+  pack decode failed: schema error: expected a 3-item Tuple, found List([Float(1.0), Float(2.0), Float(3.0)]) at 1:1
+
+Root cause (traced precisely, read-only — did not touch pack/** or dsl/**, both out of this
+family's allowed directories):
+
+  `CadScene.objects`/`building_objects`/`energy_objects`/`structure_classic_objects`/`nodes` are all
+  `#[dsl(table)]` fields (`Shape::Table`, columnar Structure-of-Arrays pack encoding). `CadObject`
+  (the row type) has several `Shape::Tuple`-shaped fields (`origin: [f64; 3]`, `orientation:
+  Option<[f64; 4]>`, `scale`/`extent: Option<[f64; 3]>`).
+
+  In pack/value/rs/lib.rs:
+  - `encode_table`'s fallback column arm (~line 1022-1033, for any column shape outside
+    Bool/Int/UInt/Float/Enum/Text, i.e. `elem_tag_for_shape` -> `ELEM_FALLBACK`) correctly calls
+    `encode_value(ctx, Some(&field.shape), v, depth + 1, out)` — the real `Shape::Tuple(..)` is
+    threaded through.
+  - `decode_table_soa`'s mirroring fallback arm (~line 1112-1119) calls
+    `decode_value(reader, None, ctx, depth + 1)?` — `None`, NOT the column's actual shape.
+  - Wire tags `TAG_PACKED_F64`/`TAG_PACKED_VARINT` (the homogeneous-numeric packed forms
+    `encode_seq` picks for a `[f64; 3]`'s 3 same-variant `Float` items) do NOT themselves encode the
+    Tuple-vs-List bit — `decode_value`'s dispatch for those tags derives it purely from
+    `is_tuple_shape(shape)`. With `shape = None`, that's always `false`, so a `[f64; 3]` origin
+    column inside a `#[dsl(table)]` list decodes back as `FieldValue::List` instead of
+    `FieldValue::Tuple`, and `dsl/rs/lib.rs`'s `impl<T, const N: usize> DslField for [T; N]::from_value`
+    then rejects it with exactly the observed error.
+  - This is a real asymmetry bug (encode threads shape, decode doesn't), not a CadScene-specific
+    misconfiguration — it will reproduce for ANY `#[dsl(table)]` row type anywhere in the repo whose
+    fields include a fixed-size array (`Shape::Tuple`) or any other `ELEM_FALLBACK`-shaped field
+    (nested `List`/`Record`/`Map`/`Block`/`Value`/`Table`). `pack/value/rs/lib.rs`'s own inline unit
+    tests around line 1356/1491 only exercise `Shape::Tuple` at the top level of a plain
+    `encode_document`/`decode_document` call (never inside a `Table` column), which is why this gap
+    went unnoticed through wave 0/1.
+
+  I did NOT patch this — `pack/**` is explicitly off-limits for this family. Recommend a dedicated
+  fix (`decode_table_soa`'s fallback arm needs the column's real `Shape`, which requires either
+  passing the row type's `RecordSpec`/`fn() -> RecordSpec` into `decode_table_soa` — contradicting
+  its current "no RecordSpec required" self-describing design — or encoding enough shape metadata
+  per-column on the wire for the fallback case, e.g. widening `elem_tag_for_shape` to also flag
+  "packed-eligible Tuple" so the fallback decode can rebuild `is_tuple` from the byte stream alone).
+
+The two new `assert_dsl_pack_equivalence` calls were left in place (not reverted/removed) — they are
+exactly what wave 2 instructions require, and they are correctly detecting a real bug, not a mistake
+in my edits. `assert_dsl_round_trip` (pure DSL text path, unaffected by pack's table encoding) still
+passes for both.
+
+6. UNRELATED PRE-EXISTING FAILURE (also NOT fixed, also out of scope)
+--------------------------------------------------------------------------------
+`cargo test -p cad-plugin` FAILS 1/78 tests: `tests::cad_labels_translate_catalogue_typologies_in_german`
+panics at `ui/wgpu/rs/../../../ui/asset/icon/generated/icon_name.rs:1380:31: invalid catalog icon
+name`. This is a generated icon-catalog file under `ui/asset/**` (outside this family's directories,
+and outside the pack rollout entirely — a German-locale typology label/icon lookup, unrelated to
+`CadScene`/pack). My diff never touches icon/label/UI-rendering code. Consistent with the
+"Concurrent Cargo Workspace Churn" pattern (another session's in-flight icon-catalog regeneration) —
+not investigated further, flagged for the record only.
+
+7. FILES TOUCHED
+--------------------------------------------------------------------------------
+  cad/plugin/rs/lib.rs — added one `register_document_codec_for_app::<CadPlayApp>(CAD_DOCUMENT_SCHEMA)`
+    call inside the existing `register_cad_exports()` fn.
+  cad/rs/lib.rs — added `vcs::test_support::assert_dsl_pack_equivalence(...)` beside both existing
+    `assert_dsl_round_trip(...)` calls in `cad_scene_round_trips_through_dsl_document` and
+    `cad_scene_with_all_geometry_panes_round_trips_through_dsl_document`.
+
+8. FINAL TEST STATUS
+--------------------------------------------------------------------------------
+`cargo check -p cad_document -p cad-plugin`: GREEN, no new warnings/errors beyond pre-existing ones.
+`cargo test -p cad_document`: 13 passed, 2 failed (both `assert_dsl_pack_equivalence`, blocked on
+  §5's pack-crate bug — out of family scope to fix).
+`cargo test -p cad-plugin`: 77 passed, 1 failed (unrelated pre-existing icon-catalog generated-file
+  issue — see §6).

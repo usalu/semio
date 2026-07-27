@@ -476,6 +476,8 @@ mod tests {
     fn studio_dsl_round_trips_empty_and_sample_projections() {
         vcs::test_support::assert_dsl_round_trip(&default_studio_projection());
         vcs::test_support::assert_dsl_round_trip(&sample_studio_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_studio_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&sample_studio_projection());
     }
 
     #[test]
@@ -505,6 +507,7 @@ mod tests {
         let envelope = create_document_vcs_envelope::<SStudioProjection, StudioOperation>(S_STUDIO_SCHEMA, "studio", sample_studio_projection(), None);
         let store: DocumentVcsStore<SStudioProjection, StudioOperation> = DocumentVcsStore::new(envelope);
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslAndOpText
 }

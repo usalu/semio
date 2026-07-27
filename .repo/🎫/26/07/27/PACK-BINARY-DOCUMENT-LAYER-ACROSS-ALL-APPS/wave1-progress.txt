@@ -1,0 +1,384 @@
+WAVE 1 PROGRESS LOG
+====================
+
+BASELINE (before any wave-1 edits), cargo check --workspace:
+- ui_tui: 6x E0609 ChromePalette field errors (panel/window/canvas/hover_panel/hover_window/temporary) — PRE-EXISTING, confirmed out of scope per prompt (another session's in-flight work). NOT touching.
+- compose (compose/client/lib/rs/lib.rs:7836,7840): 2x E0277 "serde_json::Value: DocumentDsl is not satisfied" inside `impl vcs::DocumentDsl for KitSnapshot` body, using fully-qualified `<Value as vcs::DocumentDsl>::parse_dsl/print_dsl` where `Value` resolves to `serde_json::Value` (imported) instead of `KitSnapshot` — looks like a pre-existing bug/in-flight refactor UNRELATED to pack (baseline already broken before any wave-1 edit touched). Flagging, not fixing (not in my step list; would be scope creep touching compose which is wave-2 territory).
+- Everything else: green (warnings only).
+
+Plan: proceed steps 1-11 in order per the wave-1 brief. Will re-check compose status at the end to see if it's still the same pre-existing 2 errors (untouched by me) vs something new.
+
+=== STEP 1 DONE (vcs/rs) ===
+Files: vcs/rs/Cargo.toml (added `pack = { path = "../../pack/rs" }` dep), vcs/rs/lib.rs.
+
+Deviations from the literal prompt, both forced by the compiler, both noted here for wave-2/wave-3
+awareness:
+1. `impl DocumentDsl for serde_json::Value` does NOT exist anywhere in vcs/rs/lib.rs right now (grep
+   confirmed zero matches repo-wide for `impl.*DocumentDsl for` touching `serde_json::Value` /
+   `Value`). This explains the compose baseline break noted above — NOT something I introduced or
+   fixed; it self-resolved by the time step 1 finished (concurrent session churn, confirmed by
+   re-running `cargo check -p compose`, now green). I placed `impl DocumentPack for serde_json::Value`
+   in the new `🔖Pack` region per the prompt's own fallback instruction ("place it in your new 🔖Pack
+   region since that's where the trait lives") — it does NOT sit beside a DocumentDsl sibling impl
+   because none exists yet. Whoever lands `impl DocumentDsl for serde_json::Value` later should place
+   it beside this one for symmetry.
+2. `impl From<TextError> for PackError` is IMPOSSIBLE — orphan-rule violation (E0117): both
+   `TextError` (dsl_core) and `PackError` (pack_core) are foreign types merely re-exported through
+   vcs, so neither is "local" to vcs for the blanket-impl rule. Replaced with a free function
+   `pub fn text_error_to_pack_error(error: TextError) -> PackError` in the `🔖Pack` region. Step 2's
+   dsl_derive-emitted `decode_pack_with` must call `.map_err(::vcs::text_error_to_pack_error)`, NOT
+   `.map_err(::vcs::PackError::from)`.
+
+Design choices made where the prompt left them open:
+- `PackEncodeOptions`/`PackDecodeOptions`/`PackVerificationLevel` are RENAMED re-exports (not plain
+  `EncodeOptions`/`DecodeOptions`/`VerificationLevel`) — matches every other place in the prompt's own
+  text that already spells them with the `Pack` prefix (dsl_derive template, framework/plugin
+  mentions). No collision either way since vcs had no prior names of those shapes, but renamed for
+  one unambiguous spelling repo-wide.
+- `print_ops_log`/`replay_ops` (private helpers) and `print_document_pack`/`parse_document_pack`
+  (public) live in the EXISTING `🔖TextFormat` region, directly beside their text counterparts — not
+  in the new `🔖Pack` region — since that's where the shared op-log logic already lived and it reads
+  more coherently grouped with `print_document_text`/`parse_document_text`.
+- `DocumentPack` trait's required methods are `encode_pack_with`/`decode_pack_with` (Result-returning,
+  options-taking); `encode_pack()`/`decode_pack()` are provided defaults over
+  `Pack{Encode,Decode}Options::default()` — matches what `dsl_derive` will emit in step 2 (it only
+  ever has spec/record + options in scope, no reason to hand-roll the infallible default path twice).
+- Step 1h's `DocumentCodec::of` test needs a `P: DocumentDsl + DocumentPack` fixture. `DemoProjection`
+  (the existing test fixture, `#[derive(dsl::DslDocument)]`) does NOT implement `DocumentPack` yet
+  because that only happens once step 2 edits dsl_derive. Added a TEMPORARY hand-written
+  `impl DocumentPack for DemoProjection` in the tests module, clearly marked
+  `// 🔧 WAVE-1-STEP-1-TEMP`, delegating through the same `__dsl_spec`/`__dsl_to_record`/
+  `__dsl_from_record` trio the derive already emits for `DocumentDsl`. MUST BE DELETED as part of
+  step 2 (once the derive auto-provides it, the manual impl becomes a duplicate-impl compile error,
+  E0119) — tracked, will remove when step 2 lands.
+
+cargo check -p vcs: GREEN (only pre-existing unrelated warnings: unnecessary-qualification lints in
+framework/core and vcs itself, unrelated to this change).
+cargo test -p vcs: 75 passed, 0 failed (includes 3 new tests: folder_text_storage_round_trips_pack,
+folder_sqlite_storage_round_trips_pack, document_codec_of_round_trips_pack_and_dsl).
+cargo check --workspace: GREEN except the pre-existing, confirmed out-of-scope ui_tui ChromePalette
+errors (6x E0609) — same ones noted in BASELINE above, untouched, another session's in-flight work.
+compose's 2 baseline errors are GONE (self-resolved by concurrent churn, not by me) — re-verified via
+`cargo check -p compose` standalone, clean.
+
+Next: step 2 (dsl/derive/rs/lib.rs).
+
+=== STEP 2 DONE (dsl/derive/rs/lib.rs) ===
+File: dsl/derive/rs/lib.rs — appended a fourth impl block (`impl ::vcs::DocumentPack for #name`) to
+`derive_dsl_document`'s `expanded` quote, right after the existing `impl ::dsl::DslField for #name`.
+Uses `::vcs::pack_rt::encode_document`/`decode_document` + `Self::__dsl_spec()`/`__dsl_to_record()`/
+`__dsl_from_record()` (same trio the `DocumentDsl` impl already uses) and
+`.map_err(::vcs::text_error_to_pack_error)` (NOT `::vcs::PackError::from` — see step 1's deviation
+note #2 above; there is no `From<TextError> for PackError` impl, it's an orphan-rule violation).
+
+Also removed the step-1 TEMPORARY manual `impl DocumentPack for DemoProjection` from vcs/rs/lib.rs's
+test module now that the derive covers it automatically (would otherwise be a duplicate-impl error).
+
+cargo check -p dsl_derive: GREEN.
+cargo check -p vcs + cargo test -p vcs: GREEN, 75/75 passed (DemoProjection now gets DocumentPack via
+the derive, exact same tests still pass).
+cargo check --workspace: GREEN except the same pre-existing out-of-scope ui_tui ChromePalette errors
+(6x E0609, unchanged count) — confirms all ~49 document kinds across the repo compiled cleanly with
+the new derive-emitted `DocumentPack` impl added (nothing forces the bound yet since
+`DocumentApp::Projection` isn't touched until step 3, so this is purely additive at this point).
+Deferred the explicit `note`-crate smoke check to step 3, where `DocumentApp::Projection: +
+vcs::DocumentPack` actually forces every app's `Projection` type to satisfy it — a clean
+`cargo check --workspace` there is the real proof for all ~49 kinds simultaneously, including `note`.
+
+Next: step 3 (framework/plugin/rs/lib.rs).
+
+=== STEPS 3-5 DONE (framework/plugin, framework/wit, framework/plugin/host) ===
+Files: framework/plugin/rs/lib.rs, framework/wit/world.wit, framework/plugin/host/rs/lib.rs.
+
+Step 3 (framework/plugin/rs/lib.rs):
+- `DocumentApp::Projection` bound now includes `+ vcs::DocumentPack` (line ~3132). `Operation`
+  untouched.
+- `PluginApp` trait gained `fn document_pack(&self) -> Result<vcs::DocumentPackFiles, String>;` and
+  `fn load_document_pack(&mut self, files: &vcs::DocumentPackFiles) -> Result<(), String>;` right
+  after the text pair.
+- `impl<A: DocumentApp> PluginApp for VcsDocumentApp<A>` implements both, mirroring
+  `document_text`/`load_document_text` exactly via `vcs::print_document_pack`/`parse_document_pack`.
+- Free fns `plugin_document_pack`/`plugin_load_document_pack` added mirroring
+  `plugin_document_text`/`plugin_load_document_text`.
+- `pub fn register_document_codec_for_app<A: DocumentApp>(schema: impl Into<String>)` added inside
+  `pub mod plugin_runtime` (the same module `plugin_document_pack` etc. live in) — required adding
+  `use crate::DocumentApp;` to that module's imports (it previously never named the trait directly,
+  only called methods through `Box<dyn PluginApp>`). One deviation worth flagging: I expected
+  `DocumentCodec::of::<A::Projection, A::Operation>`'s `'static` bounds to fail against
+  `DocumentApp::Operation`'s trait-level bound (which has no `Serialize`/`DeserializeOwned`/`'static`
+  of its own) — it did NOT fail; compiled clean. Likely because `VcsDocumentApp<A>`'s own field
+  `store: DocumentVcsStore<A::Projection, A::Operation>` already structurally forces any real
+  `A: DocumentApp` impl to supply an `Operation` satisfying `DocumentVcsStore`'s stricter bounds
+  (`Clone + Serialize + DeserializeOwned + crate::Operation<P>`), and Rust's associated-type
+  well-formedness checking is lenient enough at the generic-fn level to let this through; verified
+  empirically via `cargo check -p semio-framework-plugin`, not just reasoned about — treat as
+  confirmed, not assumed.
+- Step 3f (WIT export glue): added `read_app_document_pack`/`load_app_document_pack` to the
+  `impl Guest for ComponentGuest` block inside `#[cfg(all(target_arch = "wasm32", target_env =
+  "p2"))] pub mod component`, plus `DocumentPackFiles` to the `use semio::framework::types::{...}`
+  import and `plugin_document_pack`/`plugin_load_document_pack` to the `use
+  crate::plugin_runtime::{...}` import. This code path is NOT exercised by a native
+  `cargo check --workspace` (cfg-gated to wasm32/p2) — verified separately via `cargo check -p
+  semio-framework-plugin --target wasm32-wasip2` (both `wasm32-unknown-unknown` and
+  `wasm32-wasip2` rustup targets are installed here), which is genuinely GREEN (the only `error[...]`
+  text appearing is inside pre-existing `warning[E0133]` notes generated by the `wit_bindgen::
+  generate!`/`export!` macros about implicit-unsafe in a future Rust edition — not real errors;
+  confirmed by grepping strictly for lines starting `^error`, zero matches, and the run ends with
+  `Finished`).
+
+Step 4 (framework/wit/world.wit): added `record document-pack-files { pack: list<u8>, ops: string }`
+beside `document-text-files`; added it to the `interface plugin`'s `use types.{...}` list; added
+`read-app-document-pack`/`load-app-document-pack` funcs beside the text pair; added a doc comment on
+`migrate-document` noting its `data: list<u8>` payload is pack bytes going forward (no signature
+change needed).
+
+Step 5 (framework/plugin/host/rs/lib.rs): added `read_app_document_pack`/`load_app_document_pack`
+wasmtime host bindings mirroring `read_app_document_text`/`load_app_document_text` exactly (same
+`store_guard`/`bindings_guard`/`prepare_call`/`plugin_result` pattern). This crate is native-only
+(wasmtime), no cfg gate needed beyond the crate's own default target; `cargo check -p
+semio-framework-plugin-host` is GREEN with zero errors.
+
+cargo check --workspace (native): GREEN except the same unchanged pre-existing ui_tui ChromePalette
+errors. Explicitly re-verified compose (clean) and note-plugin (clean, its real package name — `note`
+is not a package id in this workspace, `note-plugin` is) as the two "escape hatch"/"real app" smoke
+tests the brief asked for — both confirm the `+ vcs::DocumentPack` bound rolled out successfully to
+every `DocumentApp::Projection` in the repo with zero per-app edits, exactly as designed.
+
+Next: step 6 (framework/sync/rs/lib.rs + framework/product/os/core/rs/lib.rs admission site).
+
+=== STEP 6 DONE (framework/sync/rs/lib.rs + framework/product/os/core/rs/lib.rs) ===
+Files: framework/sync/rs/lib.rs, framework/product/os/core/rs/lib.rs.
+
+framework/sync/rs/lib.rs:
+- `FolderEndpoint::Text { storage, document_id, extension }` renamed to `FolderEndpoint::Pack {
+  storage, document_id, extension, schema }`.
+- `FolderEndpoint::read`/`write` signatures changed from `Option<String>`/`fn(&self, json: &str)` to
+  `Result<Option<String>, String>`/`Result<(), String>` — REQUIRED so a missing codec can be a real
+  `Err` instead of the old silent JSON-dump. `Sqlite` arm's errors now propagate too (previously
+  `.ok().flatten()`-discarded) since both arms share one return type.
+- `Pack` arm: `read` looks up `vcs::document_codec(schema)` (hard `Err` if absent), tries
+  `storage.read_pack` first (pack-first), calls `codec.parse`; falls back to `storage.read` +
+  `codec.parse_dsl` only if no `.pack` file exists yet (import/hand-authored case); `write` calls
+  `codec.print(json)` then `storage.write_pack`.
+- `build_folder_endpoint` constructs `FolderEndpoint::Pack { .. }` (added the `schema` field it
+  already had in scope as a parameter).
+- Call-site fallout: `setup()`/`handle_external_change()` now do `folder.read().ok().flatten()` —
+  DESIGN CHOICE: a read/write failure (including "no codec registered") is swallowed at these two
+  call sites exactly the way every other fallible path in this best-effort background actor already
+  is (zero existing logging infrastructure in this file — confirmed via grep, no eprintln/tracing/log
+  anywhere), rather than inventing a new error-reporting mechanism not requested by the brief. The
+  hard-error requirement from the brief is satisfied at the `FolderEndpoint::read`/`write` boundary
+  itself (a real `Err` value exists and is never masked as fake success) — what a caller does with
+  that `Err` is a separate, pre-existing actor-resilience concern. `persist_write` was tightened to
+  NOT record `last_written_hash` on a failed write (a correctness fix beyond the literal ask: the old
+  code always recorded the hash even via `let _ = storage.write(...)`, which would make a failed
+  write look like a successful self-write and cause `handle_external_change` to wrongly ignore a real
+  external change).
+
+framework/product/os/core/rs/lib.rs (the admission site at `pub mod backbone` /
+`StudioBackbonePort` / `StudioPortKind::File`, not literally line 2069 — line numbers had drifted
+from the brief's estimate, found by grepping for the exact same JSON-dump-into-`.dsl` bug pattern):
+identical fix applied to `StudioPortKind::File`'s `OsBackbonePort::read`/`write` arms, using the
+hardcoded `OS_STUDIO_SCHEMA` constant (already imported in this module) as the codec lookup key —
+confirmed correct because the sibling `StudioPortKind::Folder` arm already hardcodes
+`OS_STUDIO_SCHEMA` for its own `storage.write(STUDIO_FOLDER_DOCUMENT_ID, OS_STUDIO_SCHEMA, payload)`
+call; `StudioBackbonePort` only ever backs the `s.studio` document, `File` vs `Folder` is purely a
+physical-storage-shape choice (single path vs multi-document sqlite folder), not a schema choice. No
+new field needed since the schema is a compile-time constant here (unlike `framework/sync`'s
+schema-string-per-document actor).
+
+cargo check -p semio-framework-sync: GREEN. cargo check -p semio-framework-os: GREEN.
+cargo check --workspace: GREEN except the same unchanged pre-existing ui_tui errors.
+
+Next: step 7 (framework/product/os/core/rs/lib.rs — export/import commands).
+
+=== STEP 7 DONE, WITH A DESIGN DEVIATION (framework/product/os/core/rs/lib.rs) ===
+File: framework/product/os/core/rs/lib.rs (`pub mod host`, right after `import_os_studio_from_json`).
+
+IMPORTANT SCOPE FINDING (researched via a dedicated Explore subagent before writing any code): the
+brief asked for `exportDocumentPack`/`exportDocumentDsl`/`importDocumentPack`/
+`importDocumentPackPayload` as "commands" on "the active app instance" via `PluginApp::document_pack()`
+etc. This is NOT wireable inside `framework/product/os/core/rs/lib.rs` as literally described, for two
+confirmed structural reasons:
+1. This crate has ZERO command dispatcher of its own — no `OsCommand` enum, no `handle_command`/
+   `handle_action` override, no command-id match anywhere in the file. ALL actual command wiring
+   (`exportMedia`/`importMedia`/`importMediaPayload`/`importStudio` — the only existing precedents for
+   `HostEffect::DownloadMediaExport`/`RequestFileOpen`) lives in `s/plugin/rs/lib.rs`'s
+   `StudioApp`/`HomeApp` `handle_action` implementations — a DIFFERENT crate, explicitly wave-2
+   territory (the "s+shome+sstudio" family), not in wave-1's file list.
+2. `framework/product/os/core/rs/lib.rs` never imports or constructs `semio_framework_core::kernel::
+   HostEffect` anywhere (confirmed by grep — zero occurrences outside one doc-comment mention) — the
+   established layering is: os/core returns plain data (see `OsMediaExportResult`, returned by
+   `export_os_app_instance_media`), and the app-plugin crate (`s/plugin`) wraps that data into
+   `HostEffect::DownloadMediaExport`/`RequestFileOpen` inside its own `handle_action` (see the
+   `exportMedia`/`importMedia`/`importMediaPayload` arms at `s/plugin/rs/lib.rs:2471-2545`, and
+   `importStudio` at `s/plugin/rs/lib.rs:497-526`). Also: `PluginApp::document_pack()`/
+   `load_document_pack()` (added in step 3) have zero call sites anywhere in the repo — os/core never
+   holds a live `Box<dyn PluginApp>` for an "active app instance" (that's the wasm plugin host's
+   concern, a third crate); `OsAppInstance` here is a plain data record, not a `PluginApp` object.
+
+Given this, I implemented what genuinely fits os/core's real architecture and IS directly usable —
+the data-layer primitives a wave-2 `s/plugin` agent needs, mirroring `export_os_app_instance_media`'s
+established "return data, don't construct HostEffect" pattern:
+- `pub fn import_os_studio_from_pack(pack: &[u8], ops: &str, port: Arc<dyn OsBackbonePort>) ->
+  Result<OsStudioCatalogEntry, VcsError>` — EXACT signature requested by the brief. Sibling of
+  `import_os_studio_from_json`: decodes via `vcs::document_codec(OS_STUDIO_SCHEMA)`'s `.parse`, then
+  delegates to `import_os_studio_from_json` for the identical admission flow. Hard error (no silent
+  fallback) if no codec is registered.
+- `pub fn export_os_studio_pack(document: &OsDocument) -> Result<vcs::DocumentPackFiles, VcsError>` —
+  new function, not in the brief's literal list, added because SOME data-returning pack-export
+  primitive has to exist for `s/plugin` to build `exportDocumentPack` from; uses the codec's `.print`.
+- `pub fn export_os_studio_dsl(document: &OsDocument) -> Result<vcs::DocumentTextFiles, VcsError>` —
+  ditto for `exportDocumentDsl`, reusing the same `.print` call's `dsl_mirror`/`ops` output (no need
+  for a second codec call).
+
+NOT done (explicitly deferred to wave 2, `s+shome+sstudio` family, `s/plugin/rs/lib.rs` only):
+the actual `exportDocumentPack`/`exportDocumentDsl`/`importDocumentPack`/`importDocumentPackPayload`
+`handle_action` arms, base64 encoding/decoding (pattern already confirmed available: `base64 = "0.22.1"`
+already a dependency of both `framework/product/os/core` and `framework/renderer/wgpu`, used via
+`use base64::Engine;` + `base64::engine::general_purpose::STANDARD.encode/.decode` — no new dependency
+needed), and the `HostEffect::DownloadMediaExport`/`RequestFileOpen` construction itself. The wave-2
+agent should add three arms to `StudioApp::handle_action` (`s/plugin/rs/lib.rs`) mirroring
+`exportMedia`/`importMedia`/`importMediaPayload` verbatim (lines ~2471-2545) but calling
+`semio_framework_os::export_os_studio_pack`/`export_os_studio_dsl`/`import_os_studio_from_pack`
+instead of the media-handler-registry functions, base64-encoding the `.pack`/`.ops` bytes/text into
+two `DownloadMediaExport` effects (filenames `<id>.<ext>.pack`/`<id>.<ext>.ops`, matching the brief's
+exact naming), and one `RequestFileOpen { accept: ".pack", read_as: Some("dataUrl"), import_action:
+"importDocumentPackPayload", multiple: false }` + payload-decode arm mirroring `importMediaPayload`
+exactly (base64 split-on-comma-then-decode, matching the existing arm's own code verbatim). No new
+`HostEffect` variant needed — confirmed the two existing ones already cover it, per the brief.
+
+cargo check -p semio-framework-os: GREEN. cargo check --workspace: GREEN except the same unchanged
+pre-existing ui_tui errors.
+
+Next: step 8 (framework/product/os/dev/script.ts).
+
+=== STEP 8 DONE (framework/product/os/dev/script.ts) ===
+File: framework/product/os/dev/script.ts, inside `pluginComponentBridgeSource`'s generated-JS
+template literal (the jco bridge source).
+
+Added to both the `core` object and the returned bridge object: `readAppDocumentText`/
+`loadAppDocumentText` (closing the pre-existing gap the brief called out — the WIT funcs existed with
+zero JS exposure) AND `readAppDocumentPack`/`loadAppDocumentPack` (new), following the exact
+`consumeMedia` pattern for `list<u8>` <-> `Uint8Array` (`pack instanceof Uint8Array ? pack : new
+Uint8Array(pack ?? [])`) and the same `apps.has(instanceId)` guard + `runSerialized(...)` wrapping
+every other bridge method uses. Assumed jco's standard kebab-case-to-camelCase WIT->JS naming
+convention (`read-app-document-pack` -> `plugin.readAppDocumentPack`) since no jco-generated output
+exists yet to inspect directly (it's a build artifact, not checked in) — this is the same convention
+every other existing bridge method here already relies on (e.g. `read-app-document-text` ->
+`plugin.readAppDocumentText`, pre-existing code, confirms the convention).
+
+Verification (no cargo check applies, it's TypeScript): confirmed `bun run ./script.ts` (no args)
+still parses the whole file and prints its normal usage message rather than a syntax error; separately
+extracted the generated template-literal JS body and ran `node --check` on it standalone — both
+GREEN. No dedicated typecheck target exists for this file (checked project.json — only
+dev/build/test/verify/parity/plugin targets, all of which boot the full plugin host); per the step's
+own instructions, deferred the full boot-and-exercise verification to wave 3 ("Runtime proof: boot
+framework/product/os/dev") rather than running the slow multi-plugin dev server here.
+
+Next: step 9 (framework/renderer/react/index.tsx).
+
+=== STEP 9 DONE (framework/renderer/react/index.tsx) ===
+File: framework/renderer/react/index.tsx.
+
+- Read `downloadMediaExport` (line 2091) and `requestFileOpen` (line 2115) in full and CONFIRMED (not
+  just trusted the design doc) neither needs changes: `downloadMediaExport` already branches on
+  `encoding === "base64"` (atob -> Uint8Array -> Blob) vs raw string, with no MIME-type allowlist at
+  all — `application/vnd.semio.pack` (or any mime type) passes straight through. `requestFileOpen`
+  already branches on `readAs === "dataUrl"` (FileReader.readAsDataURL) vs plain text, also with no
+  MIME/extension allowlist — `accept` is just passed to the native `<input accept>` attribute,
+  advisory only. Both are format-agnostic today; zero edits needed, matching the brief's expectation.
+- Widened the studio hidden `<input ref={importStudioInputRef}>` (line 8416) `accept` from
+  `"application/json,.json"` to `"application/json,.json,.pack"`, per the brief. Did NOT rewire its
+  `onChange` handler beyond that (it still always reads the picked file as `file.text()` and dispatches
+  `"importStudio"` with `{ json }`) — deliberately minimal, because making it truly pack-aware requires
+  a NEW action id (`s/plugin`'s `handle_action` would need an `"importStudioPack"`-shaped arm calling
+  `semio_framework_os::import_os_studio_from_pack`, added in step 7) that doesn't exist yet and is
+  wave-2 (`s+shome+sstudio` family) territory, not wave-1's file list. Documented this explicitly as an
+  inline comment on the input. Confirmed this is SAFE in the interim, not silently corrupting: picking
+  a `.pack` file today just fails `file.text()`'s implicit UTF-8 decode into garbage, which then fails
+  `os_document_from_json`'s JSON parse, which `s/plugin`'s `importStudio` arm already swallows into a
+  no-op (`ActionEmit::default()`) — a visible no-op, not silent data loss.
+
+Verification: `cd framework/renderer/react && bun ./script.ts lint` -> "framework-renderer-react:
+region/host-contract lint passed" (this project's own lint target, the closest thing to a
+typecheck/region-contract check available per its project.json — no separate `tsc --noEmit` target
+exists). GREEN.
+
+Next: step 10 (framework/renderer/wgpu/rs/lib.rs).
+
+=== STEP 10 DONE, NO CODE CHANGES NEEDED (framework/renderer/wgpu/rs/lib.rs) ===
+File: framework/renderer/wgpu/rs/lib.rs (read only — confirmed, did not edit).
+
+Read `download_media_export` (native, line 29242) and `request_file_open` (native, line 29287) in
+full:
+- `download_media_export`: already fully binary-safe — `if encoding == Some("base64")` branch
+  base64-decodes into raw `Vec<u8>` and writes via `std::fs::write(path, bytes)`; the non-base64
+  branch writes `data.as_bytes()`. Works for any binary payload including `.pack` bytes, no MIME
+  allowlist. Already uses `base64::Engine` + `base64::engine::general_purpose::STANDARD` (confirmed
+  `base64 = "0.22.1"` is a direct dependency here too, same as os/core — no new dependency needed).
+- `request_file_open`: already fully binary-safe — `if read_as == Some("dataUrl")` branch reads raw
+  bytes via `std::fs::read` and base64-encodes into a `data:...;base64,...` URL string; the plain-text
+  branch is unchanged. Also no MIME/extension allowlist.
+- Only cosmetic (non-functional) imprecision found, NOT fixed (out of scope — the ask was
+  "binary-safe", not "cosmetically perfect", and this pre-dates pack entirely): `download_media_export`'s
+  `add_filter("export", &[mime_type.rsplit_once('/').map(|(_, ext)| ext)...])` derives the OS
+  save-dialog's filter-extension label from the MIME type's subtype — for `mime_type:
+  "application/vnd.semio.pack"` (the mime step 7's design uses) this yields filter label
+  `"vnd.semio.pack"` instead of `"pack"`. Purely a dialog filter-dropdown label; `set_file_name(filename)`
+  already pre-fills the correct real filename (`<id>.<ext>.pack`), so the actual saved file/extension
+  is unaffected — cosmetic only, pre-existing pattern (same happens for any multi-part MIME subtype
+  today, not pack-specific), not touched.
+
+`cargo check -p semio-framework-renderer-wgpu`: GREEN (no changes made, confirms baseline unaffected).
+`cargo check --workspace`: GREEN except the same unchanged pre-existing ui_tui errors.
+
+Next: step 11 (root script.ts lints).
+
+=== STEP 11 DONE (root script.ts) ===
+Files: script.ts, vcs/rs/lib.rs (added the pack-equivalence test calls the new lint requires, so
+`vcs/rs/lib.rs` is NOT in the allowlist — see below).
+
+(a) Pack-completeness lint: `POLICY_PACK_COMPLETENESS_ALLOWLIST` (new `Set<string>` beside
+`POLICY_JSON_FIXTURE_ALLOWLIST`/`POLICY_JSON_FIXTURE_PATH_PREFIX_ALLOWLIST`, same lock-step pattern)
+seeded with the 52 `*.rs` files that call `assert_dsl_round_trip(`/`assert_document_text_round_trip(`
+but not yet `assert_dsl_pack_equivalence(`/`assert_document_pack_round_trip(` (computed via `grep -rl`
+across the repo, excluding `target/`/`.claude/`/`.repo/`). `policyPackCompletenessBreaches` (new
+function, `//#region 🔧PolicyRulePackCompleteness`) does the substring-presence check per
+`policyAllRustFiles(repoRoot)` entry, skipping allowlisted paths. IMPORTANT: `vcs/rs/lib.rs` is
+DELIBERATELY NOT in the allowlist — instead of listing it as a known gap, I closed the gap directly by
+adding `demo_dsl_pack_equivalence` (calls `test_support::assert_dsl_pack_equivalence(&DemoProjection
+{ n: 42 })`) beside the existing `demo_dsl_round_trips` test, and adding
+`test_support::assert_document_pack_round_trip(&store)` beside both existing
+`test_support::assert_document_text_round_trip(&store)` call sites (in
+`document_text_round_trips_after_apply_and_checkpoint` and
+`document_text_round_trips_with_an_active_alternative_and_a_quoted_description`) — proving the
+mechanism end-to-end in the one crate wave 1 fully owns, one file fewer for wave 2 to convert.
+`cargo test -p vcs` after this: 76 passed (was 75; +1 new test), 0 failed.
+
+(b) No-committed-`*.pack`-files lint: `policyDiscoverPackFiles`/`policyNoPackFilesBreaches` (new
+`//#region 🔧PolicyRuleNoPackFiles`), same filesystem-walker + `POLICY_SKIP_DIRS` mechanism
+`policyDiscoverExampleJsonFiles`/`policyDiscoverOpsFiles` already use (NOT `git ls-files` — mirrored
+the existing in-script helper per the brief's own preference).
+
+Both wired into the `policy` export (`export const policy = defineLint("@semio-tech/
+workspace-app-plugin-consistency", ...)`) right after `policyDslCompletenessBreaches`.
+
+VERIFICATION (note: `bun ./script.ts lint` bare is a cross-project `nx run-many -t lint --all --exclude
+workspace` sweep across 78 projects that explicitly EXCLUDES the "workspace" project `policy` belongs
+to, and surfaced ~hundreds of lines of PRE-EXISTING unrelated clippy/eslint/repo-cli-graphql failures
+across totally unrelated crates — none caused by wave 1, not investigated further, out of scope).
+Since `defineLint(tag, fn)` (repo/lib/js/index.ts:438) just returns `fn` unwrapped, `policy` IS
+directly callable: ran `bun -e 'import { policy } from "./script.ts"; const breaches = await
+policy({} as any); ...'` and got: 32 total breaches, ALL pre-existing `app-plugin/sdk-*`/`app-plugin/
+mod-layout`/`app-plugin/region-marker-format`/`app-plugin/manifest-region` kinds (unrelated to pack or
+dsl migration) — ZERO `pack-migration/*` breaches, confirming both new lints pass cleanly: the
+completeness allowlist correctly covers every currently-failing file (spot-checked `note/plugin/rs/
+lib.rs`: 3 DSL-round-trip calls, 0 pack-equivalence calls — a real, correctly-allowlisted gap) and no
+`.pack` files are committed anywhere.
+(Side note: `repo/lib/js/index.ts` contains 2 stray null bytes somewhere in its ~182KB, making
+`file`/plain `grep` misclassify it as a binary and silently skip it — pre-existing, unrelated to this
+change, worked around locally with `grep -a`; NOT fixed, flagging for awareness only since it could
+trip up a future agent's naive grep the same way it tripped mine.)
+
+Next: FINAL verification sweep.

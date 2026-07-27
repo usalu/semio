@@ -233,6 +233,8 @@ mod document_vcs {
         fn writer_dsl_round_trips_empty_and_jack_projections() {
             vcs::test_support::assert_dsl_round_trip(&empty_writer_projection());
             vcs::test_support::assert_dsl_round_trip(&jack_projection());
+            vcs::test_support::assert_dsl_pack_equivalence(&empty_writer_projection());
+            vcs::test_support::assert_dsl_pack_equivalence(&jack_projection());
         }
 
         #[test]
@@ -265,6 +267,7 @@ mod document_vcs {
                 .dispatch(DocumentVcsCommand::Apply { operations: vec![WriterOperation::SetDocument { document: jack_projection() }], description: None })
                 .expect("apply");
             vcs::test_support::assert_document_text_round_trip(&store);
+            vcs::test_support::assert_document_pack_round_trip(&store);
         }
         //#endregion 🔖DslAndOpText
     }

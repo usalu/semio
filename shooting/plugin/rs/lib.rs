@@ -1605,6 +1605,7 @@ fn shooting_document_json_from_dwg(drawing: &DwgDrawing) -> Result<Value, String
 fn register_shooting_exports() {
     semio_framework_os::register_2d_export_handlers("2d.shooting", "shooting", shooting_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.shooting", shooting_document_json_from_dwg);
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ShootingPlayApp>(SHOOTING_FIXTURE_SCHEMA);
 }
 
 semio_framework_plugin::semio_plugin! {

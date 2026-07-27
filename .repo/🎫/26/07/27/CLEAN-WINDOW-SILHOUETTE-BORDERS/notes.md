@@ -1,0 +1,1 @@
+Bottom RTL skyline was inverted (chips on inner, gaps on outer). Fixed by rewriting LTR to handle leading gaps and defining RTL as reverse(LTR). Removed forced bottomSeed (x1,y1) that forced a phantom outer stub when no right chip.

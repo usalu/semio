@@ -612,7 +612,16 @@ fn solid_format_arg() -> ActionArgDef {
     ActionArgDef::select("format", "Format", SOLID_MEDIA_FORMATS.iter().map(|format| ActionArgOption::new(*format, format.to_uppercase())).collect()).default_value("obj")
 }
 
+/// 🗂️ Registers `ModuleRenderPayload`'s pack<->dsl codec under its real `document_schema()` string
+/// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+/// this module's render payload without depending on this crate's concrete `Projection`/`Operation`
+/// types.
+fn register_module_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ModuleApp>(MODULE_DOCUMENT_SCHEMA);
+}
+
 fn module_bundle() -> PluginBundle {
+    register_module_exports();
     PluginBundle::new(MODULE_PLUGIN_ID, "Protocol Module Procedural", "0.1.0")
         .contributes(Contribution::ProtocolBlockKind {
             app_id: MODULE_APP_ID.into(),
@@ -775,6 +784,7 @@ mod tests {
     #[test]
     fn module_render_payload_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&default_payload());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_payload());
     }
 
     #[test]

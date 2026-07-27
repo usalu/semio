@@ -564,6 +564,21 @@ pub fn derive_dsl_document(input: TokenStream) -> TokenStream {
                 }
             }
         }
+
+        // 📦 Binary counterpart of the `vcs::DocumentDsl` impl above — same `__dsl_spec`/
+        // `__dsl_to_record`/`__dsl_from_record` trio, routed through `pack` instead of the DSL
+        // grammar engine. `vcs::text_error_to_pack_error` (a free function, not `PackError: From
+        // <TextError>` — that impl is an orphan-rule violation since neither type is local to
+        // `vcs`) bridges `__dsl_from_record`'s `TextError` into `PackError`.
+        impl ::vcs::DocumentPack for #name {
+            fn encode_pack_with(&self, options: &::vcs::PackEncodeOptions) -> Result<Vec<u8>, ::vcs::PackError> {
+                ::vcs::pack_rt::encode_document(&Self::__dsl_spec(), &self.__dsl_to_record(), options)
+            }
+            fn decode_pack_with(bytes: &[u8], options: &::vcs::PackDecodeOptions) -> Result<Self, ::vcs::PackError> {
+                let (record, _report) = ::vcs::pack_rt::decode_document(bytes, &Self::__dsl_spec(), options)?;
+                Self::__dsl_from_record(&record).map_err(::vcs::text_error_to_pack_error)
+            }
+        }
     };
     expanded.into()
 }

@@ -7825,22 +7825,41 @@ pub mod vcs {
         /// state only exists as the live `Arc<RwLock<..>>` `Kit` entity graph (see `crate::kit::Kit`);
         /// there is no plain serializable "whole kit" struct anywhere in this crate to derive
         /// `dsl::DslDocument` on; the wire boundary this VCS store actually replays against is, by
-        /// design, `crate::kit_backbone::initial_kit_projection_value`'s JSON `Value`. This mirrors
-        /// `vcs::DocumentDsl for serde_json::Value`'s own escape-hatch rationale one level up (same
-        /// justification `puzzle-plugin`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/`Puzzle5dPlayApp` use
-        /// for keeping `Projection = serde_json::Value` rather than retrofitting a typed projection).
+        /// design, `crate::kit_backbone::initial_kit_projection_value`'s JSON `Value`. The repo-wide
+        /// `vcs::DocumentDsl for serde_json::Value` escape hatch this used to delegate to was removed
+        /// (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl` now round-trip through plain
+        /// JSON directly, scoped locally to this one deliberately-untyped bridge instead of a repo-wide
+        /// one (same local-bridge shape `puzzle-plugin`'s `Puzzle2dPlayApp`/`Puzzle3dPlayApp`/
+        /// `Puzzle5dPlayApp` now use for keeping `Projection = serde_json::Value`).
         impl vcs::DocumentDsl for KitSnapshot {
             const EXTENSION: &'static str = "kit";
 
             fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
-                Ok(KitSnapshot(<Value as vcs::DocumentDsl>::parse_dsl(text)?))
+                crate::external_adapters::serde_json::from_str(text).map(KitSnapshot).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
             }
 
             fn print_dsl(&self) -> String {
-                <Value as vcs::DocumentDsl>::print_dsl(&self.0)
+                crate::external_adapters::serde_json::to_string_pretty(&self.0).unwrap_or_default()
             }
         }
         //#endregion 🔖Dsl
+
+        //#region 🔖Pack
+        /// @emoji 📦 Same schema-less bridge rationale as `KitSnapshot`'s `DocumentDsl` above:
+        /// `encode_pack_with`/`decode_pack_with` round-trip straight through the still-standing
+        /// `vcs::DocumentPack for serde_json::Value` impl (JSON-bridge pack encoding), same
+        /// local-bridge shape as `puzzle-plugin`'s `Puzzle2dPlayProjection`/`Puzzle3dPlayProjection`/
+        /// `Puzzle5dPlayProjection`.
+        impl vcs::DocumentPack for KitSnapshot {
+            fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+                self.0.encode_pack_with(options)
+            }
+
+            fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+                Value::decode_pack_with(bytes, options).map(KitSnapshot)
+            }
+        }
+        //#endregion 🔖Pack
 
         #[derive(Clone, Debug, Default, PartialEq, Serialize, Deserialize)]
         pub struct ComposeKitDiff(pub Value);
@@ -7953,7 +7972,25 @@ pub mod vcs {
         pub type KitSnapshotStore = DocumentVcsStore<KitSnapshot, ComposeWireOperation>;
         pub type KitSnapshotEnvelope = DocumentVcsEnvelope<KitSnapshot, ComposeWireOperation>;
 
+        //#region 🔖CodecRegistration
+        /// 🗂️ Registers `KitSnapshot`'s pack<->dsl codec under its real `KIT_SNAPSHOT_SCHEMA` string
+        /// so `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can
+        /// print/parse kit documents. `compose` has no `framework/plugin`-style native setup hook (it
+        /// is not a `DocumentApp`/plugin-bundle crate), so this registers directly via
+        /// `vcs::register_document_codec`/`vcs::DocumentCodec::of` instead of
+        /// `register_document_codec_for_app`, gated by a `std::sync::Once` and called from
+        /// `create_kit_snapshot_store` — the sole constructor of this document kind's store.
+        static KIT_SNAPSHOT_CODEC_REGISTERED: std::sync::Once = std::sync::Once::new();
+
+        fn register_kit_snapshot_codec() {
+            KIT_SNAPSHOT_CODEC_REGISTERED.call_once(|| {
+                vcs::register_document_codec(vcs::DocumentCodec::of::<KitSnapshot, ComposeWireOperation>(KIT_SNAPSHOT_SCHEMA));
+            });
+        }
+        //#endregion 🔖CodecRegistration
+
         pub fn create_kit_snapshot_store(id: &crate::id::Id, initial: Value) -> KitSnapshotStore {
+            register_kit_snapshot_codec();
             DocumentVcsStore::new(create_document_vcs_envelope(KIT_SNAPSHOT_SCHEMA, id.as_str(), KitSnapshot(initial), None))
         }
 
@@ -19613,6 +19650,7 @@ mod tests {
     fn kit_snapshot_dsl_round_trips() {
         let empty = crate::vcs::kit_vcs::KitSnapshot(json!({}));
         vcs::test_support::assert_dsl_round_trip(&empty);
+        vcs::test_support::assert_dsl_pack_equivalence(&empty);
 
         let populated = crate::vcs::kit_vcs::KitSnapshot(json!({
             "name": "Kitchen Sink Kit",
@@ -19621,12 +19659,14 @@ mod tests {
             "types": [],
         }));
         vcs::test_support::assert_dsl_round_trip(&populated);
+        vcs::test_support::assert_dsl_pack_equivalence(&populated);
     }
 
     #[test]
     fn kit_snapshot_store_document_text_round_trip() {
         let store = crate::vcs::kit_vcs::create_kit_snapshot_store(&Id::from("ws-dsl-test"), json!({}));
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 

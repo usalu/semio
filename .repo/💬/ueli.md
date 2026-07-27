@@ -26,9 +26,22 @@ The plan should be a downloadable markdown file. Add as much details as you can.
 
 We want to create a thrid crate: db
 db is a database for efficiently storing, querying, resolving conflicts, etc for collaborative co.
-We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls.
+We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls. We have git like system for version control but addtionally with real time preview of the commands of the others (but there is only one tree of commands saved on the server).
+Use an Actor Model with MPSC (Multi-Producer, Single-Consumer) channel, Append-Only Log (Write-Ahead Log) paired with Periodic Snapshots, etc
+
 Integrate it with vcs, pack and protocol
 Make an exhaustive bullet list tree we can use to implement a rust crate.
+
+---
+
+ We want to develop a database for efficiently storing, querying, resolving conflicts, etc for collaborative editing of large documents in rust.
+We dont have CRUDs but instead use CQRS with event sourcing because we have distributed collaborative local first editing on documents. The document isnt shared but just stored once as initial document and then the current state is materialized through projection. Every document has a diff datastructure. Every command yields a diff. Every command implements inverse command calls.
+We have git like system for version control but addtionally with real time preview of the commands of the others (but there is only one tree of commands saved on the server).
+We want to develop our own database managment system.
+Assumptions:
+- Not more than a few hundrend authors edit and read in realtime
+- Read doesnt need to be in real time and based on commits but several thousands can read at the same time
+What architecture do you recommend? 
 
 ---
 
@@ -350,7 +363,11 @@ Everything end to end.
 ---
 
 Introduce a new technology: db
-db is a database for storing 
+A custom built database for our pack (binary document format), protocol (binary command format), vcs system.
+They all must work in conjunction and be fully integrated.
+Create a general fullblown feature-complete rust crate and exhaustively refactor all mechanisms and apps.
+Plan clean mechanisms and refactor all technologies. Then use a workforce of parallel agents to implement it everywhere /workflows.
+Everything end to end.
 
 --- 
 

@@ -239,11 +239,13 @@ impl RecordValueGen {
 //#endregion 🔖Arbitrary
 
 //#region 🔖Laws
-/// @emoji 🧹 Strips `FieldValue::Absent` entries at every nesting level — the "pure-Absent noise"
-/// `decode_document` reinserts for every spec field not found on the wire (canonical mode never
+/// @emoji 🧹 Strips `FieldValue::Absent` entries at every nesting level (the "pure-Absent noise"
+/// `decode_document` reinserts for every spec field not found on the wire — canonical mode never
 /// encodes `Absent`, so a freshly-decoded record always carries one for every spec field the
-/// generator happened to skip). Shared by every LAW below that compares an original `RecordValue`
-/// against a decoded one.
+/// generator happened to skip) and sorts `Map` entries by key bytes (`encode_map` always sorts,
+/// unconditionally, per `pack_value`'s purity LAW — a generator that inserted map entries in
+/// non-canonical order would otherwise fail this comparison on ordering alone, not content).
+/// Shared by every LAW below that compares an original `RecordValue` against a decoded one.
 fn normalize_record(record: &RecordValue) -> RecordValue {
     let mut fields = HashMap::with_capacity(record.fields.len());
     for (id, value) in &record.fields {
@@ -262,7 +264,11 @@ fn normalize_value(value: &FieldValue) -> FieldValue {
         FieldValue::List(items) => FieldValue::List(items.iter().map(normalize_value).collect()),
         FieldValue::Block(inner) => FieldValue::Block(Box::new(normalize_value(inner))),
         FieldValue::Statements(items) => FieldValue::Statements(items.iter().map(|(k, r)| (k.clone(), normalize_record(r))).collect()),
-        FieldValue::Map(entries) => FieldValue::Map(entries.iter().map(|(k, v)| (k.clone(), normalize_value(v))).collect()),
+        FieldValue::Map(entries) => {
+            let mut sorted: Vec<(String, FieldValue)> = entries.iter().map(|(k, v)| (k.clone(), normalize_value(v))).collect();
+            sorted.sort_by(|a, b| a.0.as_bytes().cmp(b.0.as_bytes()));
+            FieldValue::Map(sorted)
+        }
         other => other.clone(),
     }
 }

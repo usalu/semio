@@ -1,0 +1,59 @@
+WAVE 2 — family: note
+================================================================================
+
+FILES TOUCHED
+  note/plugin/rs/lib.rs (only file touched — no other files under note/** needed changes)
+
+DOCUMENT KINDS COVERED
+  NoteDocument via NotePlayApp (DocumentApp impl at note/plugin/rs/lib.rs:1747)
+    schema string used: NOTE_DOCUMENT_SCHEMA = "note.document" (the exact value
+    NotePlayApp::document_schema() returns — read from the impl, not guessed).
+
+CODEC REGISTRATION
+  Added one call in `register_note_exports()` (note/plugin/rs/lib.rs), the existing native setup fn
+  already wired via `semio_plugin! { setup: register_note_exports, ... }`:
+
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<NotePlayApp>(NOTE_DOCUMENT_SCHEMA);
+
+  (Called via fully-qualified path since `register_document_codec_for_app` lives in
+  `plugin_runtime` and is not re-exported at the framework-plugin crate root.)
+
+TEST-LAW CALLS ADDED (sibling to every existing assert_dsl_round_trip/assert_document_text_round_trip)
+  - note_dsl_round_trips_representative_document: added
+      vcs::test_support::assert_dsl_pack_equivalence(&document);
+  - note_dsl_round_trips_semio_example_document: added
+      vcs::test_support::assert_dsl_pack_equivalence(&semio_example_document());
+  - note_document_text_round_trips_store_with_applied_operation: added
+      vcs::test_support::assert_document_pack_round_trip(&store);
+
+FIXTURES CONVERTED
+  None needed. note/example/semio.note is already DSL text (per family note); left untouched.
+
+PACK-COMPLETENESS LINT ALLOWLIST
+  note/plugin/rs/lib.rs was the only file from this family in
+  POLICY_PACK_COMPLETENESS_ALLOWLIST (root script.ts). It now has both `assert_dsl_pack_equivalence(`
+  and `assert_document_pack_round_trip(` calls beside its existing DSL/text-round-trip calls, so it
+  satisfies the pack-completeness lint. Wave 3 can remove this one entry:
+    note/plugin/rs/lib.rs
+
+CARGO TEST STATUS
+  `cargo test -p note-plugin`: 25 passed, 6 failed (pre-existing, unrelated to this change — see below).
+  All 3 newly-added pack-law tests pass:
+    note_dsl_round_trips_representative_document ... ok
+    note_dsl_round_trips_semio_example_document ... ok
+    note_document_text_round_trips_store_with_applied_operation ... ok
+
+  The 6 failures (__semio_plugin_sanity_declared_apps_appear_in_bundle_manifest,
+  tests::note_labels_resolve_german_locale, tests::note_labels_resolve_native_by_default,
+  tests::renders_document_tree, tests::set_active_utility_emits_no_ops_and_no_history_entry,
+  tests::utility_registry_declares_canvas_utilities_scoped_to_composite_window) all panic identically
+  at `ui/asset/icon/generated/icon_name.rs:1380` ("invalid catalog icon name") — a generated UI icon
+  catalog lookup, nothing to do with DSL/pack encoding, and nothing my edits touch (verified
+  "note-math" and every icon literal my diff references already exist in that generated catalog).
+  This lines up with a concurrent session's in-flight icon/styling regeneration visible in the repo's
+  working tree (ui/styling/**, .storybook/** all mid-edit per `git status` at task start) — out of
+  scope for the note/** family and pre-existing before my edit (my diff touches only the 4 lines
+  listed above in note/plugin/rs/lib.rs).
+
+NOT COMPLETED / BLOCKED
+  Nothing pack-related left incomplete for this family.

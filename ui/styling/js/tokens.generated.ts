@@ -357,7 +357,6 @@ export const STYLING_LEVELS = {
   "glassAlphaStep": 0.12,
   "glassBlurStepPx": 8,
   "glassSaturate": 1.45,
-  "glassChromeAlphaFactor": 0.5,
   "veilAlphaExtraSteps": 1,
   "zStep": 10
 } as const;

@@ -685,7 +685,9 @@ mod tests {
     #[test]
     fn process3d_dsl_round_trips() {
         test_support::assert_dsl_round_trip(&sample_document());
+        test_support::assert_dsl_pack_equivalence(&sample_document());
         test_support::assert_dsl_round_trip(&empty_process3d_projection());
+        test_support::assert_dsl_pack_equivalence(&empty_process3d_projection());
     }
 
     #[test]
@@ -694,6 +696,7 @@ mod tests {
         document.stock = imported_mesh_stock();
         document.steps.push(ProcessStep { id: "imported-tool".into(), label: "Imported Cut".into(), enabled: true, origin: None, measure: ProcessMeasure::Cut { tool: SolidSpec::ImportedSolid { solid_handle: "solid-7".into() }, pose: Pose::default() } });
         test_support::assert_dsl_round_trip(&document);
+        test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
@@ -701,6 +704,7 @@ mod tests {
         let mut document = sample_document();
         document.resolved_up_to = None;
         test_support::assert_dsl_round_trip(&document);
+        test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
@@ -710,6 +714,7 @@ mod tests {
         assert_eq!(document.steps.len(), 4);
         assert!(document.resolved_up_to.is_none());
         test_support::assert_dsl_round_trip(&document);
+        test_support::assert_dsl_pack_equivalence(&document);
     }
 
     #[test]
@@ -719,6 +724,7 @@ mod tests {
         assert_eq!(document.steps.len(), 3);
         assert_eq!(document.resolved_up_to, Some(2));
         test_support::assert_dsl_round_trip(&document);
+        test_support::assert_dsl_pack_equivalence(&document);
     }
     //#endregion 🔖DslTests
 
@@ -805,6 +811,7 @@ mod tests {
             })
             .expect("commit");
         test_support::assert_document_text_round_trip(&store);
+        test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DocumentTextTests
 }

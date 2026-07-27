@@ -289,6 +289,21 @@ impl DocumentDsl for MathProjection {
         <MathProjectionDsl as DocumentDsl>::print_dsl(&math_projection_to_dsl(self))
     }
 }
+
+/// 📦 Manual `vcs::DocumentPack` mirror of the manual `DocumentDsl` impl above — `MathProjectionDsl`
+/// (which derives `dsl::DslDocument`) gets `DocumentPack` for free from `dsl_derive`; `MathProjection`
+/// itself doesn't derive it (its `edges` need the `MathEdgeDsl`/`dsl::Wire` folding), so this delegates
+/// through the same `math_projection_to_dsl`/`math_projection_from_dsl` conversions as `parse_dsl`/`print_dsl`.
+impl vcs::DocumentPack for MathProjection {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        math_projection_to_dsl(self).encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let dsl_projection = MathProjectionDsl::decode_pack_with(bytes, options)?;
+        math_projection_from_dsl(dsl_projection).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+    }
+}
 //#endregion 🔖Dsl
 
 //#region 🔖OpText
@@ -680,7 +695,9 @@ fn create_mathematical_app() -> App {
     .program("mathematical", "Mathematical", "graph")
 }
 
-fn register_mathematical_exports() {}
+fn register_mathematical_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<MathematicalPlayApp>("semio.mathematical/v1");
+}
 
 semio_framework_plugin::semio_plugin! {
     id: "mathematical", label: "Mathematical", version: "0.1.0",
@@ -765,6 +782,7 @@ mod tests {
     #[test]
     fn math_projection_dsl_round_trips_default() {
         vcs::test_support::assert_dsl_round_trip(&MathProjection::default());
+        vcs::test_support::assert_dsl_pack_equivalence(&MathProjection::default());
     }
 
     #[test]
@@ -776,6 +794,7 @@ mod tests {
         graph.edges.clear();
         let projection = MathProjection { graph, geometry: MathGeometry { points: Vec::new() } };
         vcs::test_support::assert_dsl_round_trip(&projection);
+        vcs::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     #[test]
@@ -799,6 +818,7 @@ mod tests {
             .dispatch(vcs::DocumentVcsCommand::Apply { operations: vec![MathOperation::SetGraph { graph }], description: None })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     //#endregion 🔖DslTests
 }

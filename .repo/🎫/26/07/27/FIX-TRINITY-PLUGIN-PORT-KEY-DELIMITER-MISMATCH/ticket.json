@@ -1,0 +1,14 @@
+{
+  "title": "Fix Trinity Plugin Port Key Delimiter Mismatch",
+  "emoji": "🔌",
+  "status": "closed",
+  "description": "trinity/plugin/rs/lib.rs has two duplicated local helper pairs (port_endpoint/split_endpoint, ~line 296 in app_jack and ~line 2085 in app_rewrite) that hardcode ':' as the node/port delimiter when building/parsing Edge.source/Edge.target strings. trinity_ram's own port_key/parse_port_key convention was changed from 'nodeId:portId' to 'nodeId@portId' during the Unified Token-Efficient DSL Syntax ticket (Wave 2), but trinity/plugin was out of that ticket's file scope, so these local helpers were left behind and now silently misparse real port-key strings coming out of trinity_ram (e.g. in fixture_to_media_graph). This was flagged as a deferred follow-up in that ticket's closing summary (task_11e64f5b). Fix: delete both duplicated local helper pairs and delegate to trinity_ram::port_key/trinity_ram::parse_port_key (or port_node_id/port_port_id) directly. Also fix two hardcoded 'nodeId:portId'-style test fixture literals in app_rewrite's lhs_semantic_graph_fixture (~line 1930: \"lhs-match:out\", \"lhs-where:in\") which are Edge.source/target values, not display labels. Run `cargo test -p trinity-plugin` after.",
+  "summary": "Deleted the two duplicated port_endpoint/split_endpoint helper pairs in trinity/plugin/rs/lib.rs (app_jack ~line 296, app_rewrite ~line 2080) that hardcoded ':' as the node/port delimiter. Both now delegate to trinity_ram::port_key/trinity_ram::parse_port_key, matching the '@' convention trinity_ram switched to during the Unified Token-Efficient DSL Syntax ticket (mirrors the same delegation pattern already used in trinity/rewrite/engine/rs/lib.rs). Also fixed two hardcoded \"nodeId:portId\"-style Edge.source/target test-fixture literals in app_rewrite's lhs_semantic_graph_fixture (\"lhs-match:out\"/\"lhs-where:in\" -\u003e \"lhs-match@out\"/\"lhs-where@in\"). Ran `cargo test -p trinity-plugin`: all 36 unit tests pass. A separate doctest run failed on a stale libvcs.rlib extern-location error, unrelated to this change (no doctests exist in the touched code; likely concurrent workspace rebuild elsewhere).",
+  "github": {
+    "issue": "https://github.com/usalu/semio/issues/2361"
+  },
+  "goal": "🎯aioptimizedrepo",
+  "sessions": [
+    "⚪96aa23e000b64c349be089e43d732745"
+  ]
+}

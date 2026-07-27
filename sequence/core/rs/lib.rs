@@ -1800,6 +1800,21 @@ impl vcs::DocumentDsl for SequenceFixture {
         <SequenceFixtureDsl as vcs::DocumentDsl>::print_dsl(&sequence_fixture_to_dsl(self))
     }
 }
+
+/// 📦 Hand-written `vcs::DocumentPack` mirror of the `DocumentDsl` impl above — `SequenceFixture`
+/// itself doesn't derive `dsl::DslDocument` (see `SequenceFixtureDsl`'s doc comment), so it doesn't
+/// pick up the blanket derive-emitted `DocumentPack` impl either; this converts through the same
+/// `SequenceFixtureDsl` mirror, which does derive it.
+impl vcs::DocumentPack for SequenceFixture {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        <SequenceFixtureDsl as vcs::DocumentPack>::encode_pack_with(&sequence_fixture_to_dsl(self), options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        let dsl_fixture = <SequenceFixtureDsl as vcs::DocumentPack>::decode_pack_with(bytes, options)?;
+        sequence_fixture_dsl_to_fixture(dsl_fixture).map_err(|message| vcs::text_error_to_pack_error(vcs::TextError::new(message, vcs::TextSpan::at(1, 1))))
+    }
+}
 // #endregion 🔖Dsl
 
 // #region 🔖OpText
@@ -1938,6 +1953,7 @@ mod ops_tests {
     #[test]
     fn dsl_round_trips_default_fixture() {
         vcs::test_support::assert_dsl_round_trip(&default_fixture());
+        vcs::test_support::assert_dsl_pack_equivalence(&default_fixture());
     }
 
     /// 📜 `sequence/example/default.sequence` is the handcrafted `.sequence` DSL-text fixture
@@ -1948,6 +1964,7 @@ mod ops_tests {
         let text = include_str!("../../example/default.sequence");
         let fixture = <SequenceFixture as vcs::DocumentDsl>::parse_dsl(text).expect("default.sequence must parse");
         vcs::test_support::assert_dsl_round_trip(&fixture);
+        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
@@ -1975,6 +1992,7 @@ mod ops_tests {
             collapsed: false,
         });
         vcs::test_support::assert_dsl_round_trip(&fixture);
+        vcs::test_support::assert_dsl_pack_equivalence(&fixture);
     }
 
     #[test]
@@ -2056,6 +2074,7 @@ mod ops_tests {
             })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
     // #endregion 🔖DslAndOpText
 }

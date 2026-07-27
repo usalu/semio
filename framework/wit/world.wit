@@ -57,6 +57,14 @@ interface types {
     ops: string,
   }
 
+  /// 📦 Binary counterpart of `document-text-files`: `pack` is the encoded initial projection
+  /// (pack container bytes), `ops` stays the op-log TEXT — the op grammar is format-invariant,
+  /// mirroring `vcs::DocumentPackFiles`.
+  record document-pack-files {
+    pack: list<u8>,
+    ops: string,
+  }
+
   /// 🎞️ Payload crossing the plugin ABI on one declared media-graph port (`consume-media`/
   /// `produce-media`). `descriptor-json` is a JSON object `{ edgeId?, portId?, kindId?, mediaType?,
   /// wire, blobHash? }` — `mediaType` mirrors `framework/core/rs/lib.rs`'s `MediaType` (`{class,
@@ -88,6 +96,7 @@ interface plugin {
     migrate-document-input,
     migrate-document-output,
     document-text-files,
+    document-pack-files,
     media-artifact,
     plugin-error,
   };
@@ -120,6 +129,8 @@ interface plugin {
     instance-id: u32,
     request: ui-refresh-request-json,
   ) -> result<ui-refresh-response-json, plugin-error>;
+  /// 📦 `data` (both directions) is pack-container bytes going forward (see `document-pack-files`) —
+  /// the WIT signature itself is unchanged (`list<u8>` both ways) so no other func needed updating.
   migrate-document: func(input: migrate-document-input) -> result<migrate-document-output, plugin-error>;
   apply-operations: func(instance-id: u32, operations-json: string) -> result<_, plugin-error>;
   read-app-document: func(instance-id: u32) -> result<string, plugin-error>;
@@ -131,6 +142,10 @@ interface plugin {
   read-app-document-text: func(instance-id: u32) -> result<document-text-files, plugin-error>;
   /// 📜 Text-DSL counterpart of `load-app-document`.
   load-app-document-text: func(instance-id: u32, document-text: document-text-files) -> result<_, plugin-error>;
+  /// 📦 Pack counterpart of `read-app-document-text`.
+  read-app-document-pack: func(instance-id: u32) -> result<document-pack-files, plugin-error>;
+  /// 📦 Pack counterpart of `load-app-document-text`.
+  load-app-document-pack: func(instance-id: u32, document-pack: document-pack-files) -> result<_, plugin-error>;
   attach-backbone: func(instance-id: u32, uri: string) -> result<_, plugin-error>;
   detach-backbone: func(instance-id: u32) -> result<_, plugin-error>;
   /// 🔌 Delivers a typed media artifact to a plugin instance's declared input port — the WIT-level

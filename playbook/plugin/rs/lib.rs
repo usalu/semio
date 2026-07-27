@@ -260,7 +260,15 @@ fn create_protocol_play_app() -> App {
     )
 }
 
+/// 🗂️ Registers `ProtocolSpec`'s pack<->dsl codec under its real `document_schema()` string so
+/// `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+/// protocol documents without depending on this crate's concrete `Projection`/`Operation` types.
+fn register_protocol_play_exports() {
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<ProtocolPlayApp>(PROTOCOL_DOCUMENT_SCHEMA);
+}
+
 fn protocol_play_bundle() -> PluginBundle {
+    register_protocol_play_exports();
     PluginBundle::new(PROTOCOL_PLAY_PLUGIN_ID, "Protocol", "0.1.0")
         .register_document_app(create_protocol_play_app(), ProtocolPlayApp::default)
 }

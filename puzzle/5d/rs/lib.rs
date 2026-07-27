@@ -27,10 +27,6 @@ impl Puzzle5dPrecomputeSession {
         Self { inner: puzzle_3d::Puzzle3dPrecomputeSession::new() }
     }
 
-    pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle5dError> {
-        Ok(self.inner.set_scene(json)?)
-    }
-
     pub fn register_mesh(&mut self, url: &str, positions: &[f32], indices: &[u32]) {
         self.inner.register_mesh(url, positions, indices);
     }
@@ -54,6 +50,14 @@ impl Puzzle5dPrecomputeSession {
     pub fn fill_progress(&self) -> String {
         self.inner.fill_progress()
     }
+}
+
+/// 🧵 Native/WASI-p2 build: `puzzle_3d::Puzzle3dPrecomputeSession`'s `Puzzle3dError`-typed `_rust`-suffixed API surface is available under this cfg — mirrors `puzzle_3d::Puzzle3dPrecomputeSession`'s own matching split.
+#[cfg(any(not(target_arch = "wasm32"), target_env = "p2"))]
+impl Puzzle5dPrecomputeSession {
+    pub fn set_scene(&mut self, json: &str) -> Result<(), Puzzle5dError> {
+        Ok(self.inner.set_scene(json)?)
+    }
 
     pub fn apply_brush_placement_rust(&mut self, payload_json: &str) -> Result<String, Puzzle5dError> {
         Ok(self.inner.apply_brush_placement_rust(payload_json)?)
@@ -61,6 +65,22 @@ impl Puzzle5dPrecomputeSession {
 
     pub fn apply_fill_count_rust(&mut self, count: u32) -> Result<String, Puzzle5dError> {
         Ok(self.inner.apply_fill_count_rust(count)?)
+    }
+}
+
+/// 🌐 Browser wasm-bindgen build (wasm32, non-p2): `puzzle_3d::Puzzle3dPrecomputeSession`'s `JsValue`-typed API surface is available instead — mirrors those method names/signatures 1:1 so callers on this target get the same capability.
+#[cfg(all(target_arch = "wasm32", not(target_env = "p2")))]
+impl Puzzle5dPrecomputeSession {
+    pub fn set_scene(&mut self, json: &str) -> Result<(), wasm_bindgen::JsValue> {
+        self.inner.set_scene(json)
+    }
+
+    pub fn apply_brush_placement_json(&mut self, payload_json: &str) -> Result<String, wasm_bindgen::JsValue> {
+        self.inner.apply_brush_placement_json(payload_json)
+    }
+
+    pub fn apply_fill_count(&mut self, count: u32) -> Result<String, wasm_bindgen::JsValue> {
+        self.inner.apply_fill_count(count)
     }
 }
 //#endregion 🔖BrushEngine
@@ -845,6 +865,64 @@ pub fn puzzle5d_document_delta_operations(before: &Value, after: &Value) -> Vec<
         fallback(after)
     }
 }
+
+// #region 🔖PlayProjection
+/// 🌱 `puzzle-plugin`'s `Puzzle5dPlayApp` predates the typed `Puzzle5dProjection` above and stays on
+/// this ad-hoc `serde_json::Value` fixture shape for its scene-mutation helpers (out of scope to
+/// retrofit onto the typed struct). This newtype exists only to satisfy `DocumentApp::Projection:
+/// vcs::DocumentDsl + vcs::DocumentPack` post the repo-wide `vcs::DocumentDsl for serde_json::Value`
+/// bridge's removal (final DSL-syntax convergence gate); `parse_dsl`/`print_dsl`/`encode_pack_with`/
+/// `decode_pack_with` all round-trip straight through the still-standing `serde_json::Value` impls
+/// (JSON text / JSON-bridge pack encoding respectively), same local-bridge shape as `puzzle_2d`'s
+/// `Puzzle2dPlayProjection`, `puzzle_3d`'s `Puzzle3dPlayProjection` and `compose`'s `KitSnapshot`.
+/// `Operation`/`OperationDiff` delegate straight through to the `Value` impls above too.
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+pub struct Puzzle5dPlayProjection(pub Value);
+
+impl vcs::DocumentDsl for Puzzle5dPlayProjection {
+    const EXTENSION: &'static str = "puzzle5d-play";
+
+    fn parse_dsl(text: &str) -> Result<Self, vcs::TextError> {
+        serde_json::from_str(text).map(Puzzle5dPlayProjection).map_err(|error| vcs::TextError::new(error.to_string(), vcs::TextSpan::at(1, 1)))
+    }
+
+    fn print_dsl(&self) -> String {
+        serde_json::to_string_pretty(&self.0).unwrap_or_default()
+    }
+}
+
+impl vcs::DocumentPack for Puzzle5dPlayProjection {
+    fn encode_pack_with(&self, options: &vcs::PackEncodeOptions) -> Result<Vec<u8>, vcs::PackError> {
+        self.0.encode_pack_with(options)
+    }
+
+    fn decode_pack_with(bytes: &[u8], options: &vcs::PackDecodeOptions) -> Result<Self, vcs::PackError> {
+        Value::decode_pack_with(bytes, options).map(Puzzle5dPlayProjection)
+    }
+}
+
+impl OperationDiff<Puzzle5dPlayProjection> for Puzzle5dDiff {
+    fn apply(&self, projection: &Puzzle5dPlayProjection) -> Puzzle5dPlayProjection {
+        Puzzle5dPlayProjection(OperationDiff::<Value>::apply(self, &projection.0))
+    }
+
+    fn absorb(&mut self, other: Self) {
+        puzzle5d_diff_absorb(self, other);
+    }
+}
+
+impl Operation<Puzzle5dPlayProjection> for Puzzle5dOperation {
+    type Diff = Puzzle5dDiff;
+
+    fn diff(&self, projection: &Puzzle5dPlayProjection) -> Puzzle5dDiff {
+        Operation::<Value>::diff(self, &projection.0)
+    }
+
+    fn backwards(&self, projection: &Puzzle5dPlayProjection) -> Vec<Self> {
+        Operation::<Value>::backwards(self, &projection.0)
+    }
+}
+// #endregion 🔖PlayProjection
 // #endregion 🔖ValueBridge
 
 //#region 🔖WasmBridge
@@ -853,6 +931,14 @@ mod wasm_bridge {
     use super::*;
     use std::cell::RefCell;
     use wasm_bindgen::prelude::*;
+
+    /// 🔤 Parses `.puzzle5d` DSL text (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) into the same camelCase JSON shape callers previously got from a hand-authored `*.5d.json` fixture — lets non-Rust consumers (e.g. Storybook stories) load the real example fixtures without duplicating the DSL grammar.
+    #[wasm_bindgen(js_name = puzzle5dParseDslJson)]
+    pub fn puzzle5d_parse_dsl_json(dsl_text: &str) -> Result<String, JsValue> {
+        use vcs::DocumentDsl;
+        let projection = Puzzle5dProjection::parse_dsl(dsl_text).map_err(|error| JsValue::from_str(&error.to_string()))?;
+        serde_json::to_string(&projection).map_err(|error| JsValue::from_str(&error.to_string()))
+    }
 
     #[wasm_bindgen]
     pub struct Puzzle5dDocumentVcs {
@@ -963,6 +1049,7 @@ mod tests {
     #[test]
     fn puzzle5d_projection_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&empty_puzzle5d_projection());
+        vcs::test_support::assert_dsl_pack_equivalence(&empty_puzzle5d_projection());
         let mut projection = empty_puzzle5d_projection();
         projection.label = Some("Concrete Forest".into());
         projection.camera2d = Puzzle5dCamera2d { x: 230.7, y: 93.5, zoom: 2.0 };
@@ -983,6 +1070,7 @@ mod tests {
         projection.fasteners.push(Puzzle5dFastener { id: "f1".into(), source: "seed-left-001:v0".into(), target: "seed-right-001:v0".into(), fastener_kind: None });
         projection.kind_compatibility.push(Puzzle5dKindCompatibility { source: "b-l".into(), target: "b-l".into(), bidirectional: true });
         vcs::test_support::assert_dsl_round_trip(&projection);
+        vcs::test_support::assert_dsl_pack_equivalence(&projection);
     }
 
     /// 📜 Both real example fixtures (migrated from the legacy `.5d.json` shape — see ticket
@@ -993,6 +1081,7 @@ mod tests {
         for dsl_text in [include_str!("../example/concrete-forest.puzzle5d"), include_str!("../example/nakagin-capsule-tower.puzzle5d")] {
             let projection = Puzzle5dProjection::parse_dsl(dsl_text).expect("example fixture parses as dsl");
             vcs::test_support::assert_dsl_round_trip(&projection);
+            vcs::test_support::assert_dsl_pack_equivalence(&projection);
         }
     }
 }

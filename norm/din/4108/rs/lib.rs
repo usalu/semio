@@ -1018,6 +1018,7 @@ mod tests {
     #[test]
     fn document_dsl_round_trips() {
         vcs::test_support::assert_dsl_round_trip(&Document::default());
+        vcs::test_support::assert_dsl_pack_equivalence(&Document::default());
     }
 
     #[test]
@@ -1038,5 +1039,6 @@ mod tests {
             })
             .expect("apply");
         vcs::test_support::assert_document_text_round_trip(&store);
+        vcs::test_support::assert_document_pack_round_trip(&store);
     }
 }

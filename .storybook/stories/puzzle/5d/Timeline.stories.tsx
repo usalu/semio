@@ -1,20 +1,20 @@
 // #region 🧲Header
 // 💻 .storybook/story/puzzle/5d/Timeline.stories.tsx
 // Specs: Compose `World3dHost` + `GraphTimelineHost` against the real puzzle-5d example fixtures — "5D" (3 spatial + assembly-order + fastener graph) rendered as a 3D world you can scrub through an assembly history.
-// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.json`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `ui/js/react/index.tsx`) and lets `GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same zero-WASM story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`.
+// Summary: `puzzle/5d`'s real fixture schema (`puzzle/5d/example/*.puzzle5d`) has no persisted checkpoint history (the plugin's `d5` module doesn't wire `graph_timeline` yet — grepped `puzzle/plugin/rs/lib.rs`, no `HistoryColumn`/`checkoutCheckpoint` hits under `mod d5`), so this story *synthesizes* one checkpoint per fixture `parts[]` entry (assembly order = array order, newest first per `HistoryColumn`'s docstring in `ui/js/react/index.tsx`) and lets `GraphTimelineHost`'s `checkoutCheckpoint` action scrub how many parts `World3dHost` reveals — same story-local-reducer pattern as `../3d/World.stories.tsx` and `../2d/Board.stories.tsx`. Fixture data comes from the real `.puzzle5d` DSL-text fixtures (`Puzzle5dProjection`'s `dsl::DslDocument` grammar) — raw-imported as text and parsed via `@semio-tech/puzzle-5d-rs`'s `puzzle5dParseDslJson` wasm export (the same `parse_dsl` Rust uses, reused as the single source of truth instead of duplicating the DSL grammar in TypeScript).
 // Mesh/reference-asset caveats are identical to `../3d/World.stories.tsx`: no `mesh-collection` route for this scope and the referenced GLBs don't exist on disk, so parts render as `World3dHost`'s neutral placeholder box.
 // 2026 Ueli Saluz <ueli@semio-tech.com>
 // #endregion 🧲Header
 
 import type { Meta, StoryObj } from "@storybook/react";
 import type { HistoryColumn } from "@semio-tech/ui-react";
-import { useCallback, useMemo, useState, type ReactElement } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactElement } from "react";
 
 import { GraphTimelineHost, World3dHost } from "../../../../framework/renderer/react/index.tsx";
 import type { ActionDescriptor, UiComponentSceneNode } from "../../../../framework/renderer/react/index.tsx";
 
-import concreteForestFixture from "../../../../puzzle/5d/example/concrete-forest.5d.json";
-import nakaginCapsuleTowerFixture from "../../../../puzzle/5d/example/nakagin-capsule-tower.5d.json";
+import concreteForestFixtureDsl from "../../../../puzzle/5d/example/concrete-forest.puzzle5d?raw";
+import nakaginCapsuleTowerFixtureDsl from "../../../../puzzle/5d/example/nakagin-capsule-tower.puzzle5d?raw";
 
 //#region StoryTypes
 type Vec3 = readonly [number, number, number];
@@ -50,6 +50,26 @@ type StoryPuzzle5dRuntime = {
 
 type StoryPuzzle5dState = { readonly fixture: StoryPuzzle5dFixture; readonly runtime: StoryPuzzle5dRuntime };
 //#endregion StoryTypes
+
+//#region WasmFixtureLoader
+/** @emoji 🧵 Lazily loads+inits `@semio-tech/puzzle-5d-rs`'s wasm module once (mirrors `framework/renderer/react/index.tsx`'s `createEngineSession` caching), then exposes `parse_dsl`'d fixture JSON via the crate's `puzzle5dParseDslJson` free export. */
+type Puzzle5dWasmModule = { readonly default: (input?: unknown) => Promise<unknown>; readonly puzzle5dParseDslJson: (dslText: string) => string };
+let puzzle5dWasmModulePromise: Promise<Puzzle5dWasmModule> | null = null;
+function loadPuzzle5dWasm(): Promise<Puzzle5dWasmModule> {
+  if (!puzzle5dWasmModulePromise) {
+    puzzle5dWasmModulePromise = import("@semio-tech/puzzle-5d-rs").then(async (mod) => {
+      await (mod as unknown as Puzzle5dWasmModule).default();
+      return mod as unknown as Puzzle5dWasmModule;
+    });
+  }
+  return puzzle5dWasmModulePromise;
+}
+
+async function parsePuzzle5dFixtureDsl(dslText: string): Promise<StoryPuzzle5dFixture> {
+  const mod = await loadPuzzle5dWasm();
+  return JSON.parse(mod.puzzle5dParseDslJson(dslText)) as StoryPuzzle5dFixture;
+}
+//#endregion WasmFixtureLoader
 
 //#region HistorySynthesis
 /** @emoji 🗄️ Synthesizes one linear `HistoryColumn` per fixture part (see header docstring) — newest (last-assembled) part first. */
@@ -174,19 +194,33 @@ function buildStoryGraphTimelineNode(fixture: StoryPuzzle5dFixture): UiComponent
 //#endregion SceneNode
 
 //#region StoryHost
-function Puzzle5dTimelineStoryHost({ initialFixture }: { readonly initialFixture: StoryPuzzle5dFixture }): ReactElement {
-  const [state, setState] = useState<StoryPuzzle5dState>(() => ({ fixture: initialFixture, runtime: { revealCount: initialFixture.parts.length, selectedIds: [], hoveredId: null } }));
+function Puzzle5dTimelineStoryHost({ fixtureDsl }: { readonly fixtureDsl: string }): ReactElement {
+  const [state, setState] = useState<StoryPuzzle5dState | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    parsePuzzle5dFixtureDsl(fixtureDsl).then((fixture) => {
+      if (!cancelled) setState({ fixture, runtime: { revealCount: fixture.parts.length, selectedIds: [], hoveredId: null } });
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [fixtureDsl]);
 
   const onAction = useCallback((descriptor: ActionDescriptor): void => {
-    setState((current) => reduceStoryPuzzle5dAction(current, descriptor.action, descriptor.args));
+    setState((current) => (current ? reduceStoryPuzzle5dAction(current, descriptor.action, descriptor.args) : current));
   }, []);
 
-  const worldNode = useMemo(() => buildStoryWorld3dNode(state.fixture, state.runtime), [state.fixture, state.runtime]);
-  const timelineNode = useMemo(() => buildStoryGraphTimelineNode(state.fixture), [state.fixture]);
+  const worldNode = useMemo(() => (state ? buildStoryWorld3dNode(state.fixture, state.runtime) : null), [state]);
+  const timelineNode = useMemo(() => (state ? buildStoryGraphTimelineNode(state.fixture) : null), [state]);
   const debug = useMemo(
-    () => JSON.stringify({ revealCount: state.runtime.revealCount, partCount: state.fixture.parts.length, selection: state.runtime.selectedIds }),
+    () => (state ? JSON.stringify({ revealCount: state.runtime.revealCount, partCount: state.fixture.parts.length, selection: state.runtime.selectedIds }) : "loading"),
     [state],
   );
+
+  if (!state || !worldNode || !timelineNode) {
+    return <div data-testid="puzzle5d-timeline-loading">Loading fixture…</div>;
+  }
 
   return (
     <div style={{ display: "flex", height: "100%", width: "100%", flexDirection: "column" }}>
@@ -219,16 +253,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-/** 🌲 The real Concrete Forest 5D fixture (`puzzle/5d/example/concrete-forest.5d.json`) — 1 part, so a single-checkpoint timeline. */
+/** 🌲 The real Concrete Forest 5D fixture (`puzzle/5d/example/concrete-forest.puzzle5d`) — 1 part, so a single-checkpoint timeline. */
 export const ConcreteForest: Story = {
   args: {
-    initialFixture: concreteForestFixture as unknown as StoryPuzzle5dFixture,
+    fixtureDsl: concreteForestFixtureDsl,
   },
 };
 
-/** 🏯 The real Nakagin Capsule Tower 5D fixture (`puzzle/5d/example/nakagin-capsule-tower.5d.json`) — 180 parts; scrub `GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
+/** 🏯 The real Nakagin Capsule Tower 5D fixture (`puzzle/5d/example/nakagin-capsule-tower.puzzle5d`) — 180 parts; scrub `GraphTimelineHost`'s checkpoints to watch `World3dHost` reassemble the tower. */
 export const NakaginCapsuleTower: Story = {
   args: {
-    initialFixture: nakaginCapsuleTowerFixture as unknown as StoryPuzzle5dFixture,
+    fixtureDsl: nakaginCapsuleTowerFixtureDsl,
   },
 };

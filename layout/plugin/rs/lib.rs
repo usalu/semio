@@ -1890,6 +1890,10 @@ fn layout_document_json_from_dwg(drawing: &semio_framework_os::DwgDrawing) -> Re
 }
 
 fn register_layout_exports() {
+    // 🗂️ Registers `LayoutDocument`'s pack<->dsl codec under its real `document_schema()` string so
+    // `framework/sync`'s `FolderEndpoint::Pack` (and any other schema-keyed caller) can print/parse
+    // layout documents without depending on this crate's concrete `Projection`/`Operation` types.
+    semio_framework_plugin::plugin_runtime::register_document_codec_for_app::<LayoutPlayApp>(LAYOUT_FIXTURE_SCHEMA);
     semio_framework_os::register_2d_export_handlers("2d.layout", "layout", layout_document_json_to_svg);
     semio_framework_os::register_dwg_import_handler("2d.layout", layout_document_json_from_dwg);
 }
