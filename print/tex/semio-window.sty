@@ -417,7 +417,9 @@
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
-    \semio@render@toc@window
+    \semio@register@window@open{\SemioTocTitle}%
+    \SemioTableRegister{\semio@register@table@body}%
+    \semio@register@window@close
     \clearpage
     \makeatother
     \group_end:
@@ -1916,51 +1918,6 @@
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
   \fi
-}
-
-% 📖 Inhaltsverzeichnis — restored to the pre-Kinan (early Ueli) rendering: a
-% register Table *window* whose title is drawn by the (now-aligned) header@muted
-% mechanism, wrapping a SIMPLE table — instead of the longtable-with-firsthead-
-% chrome that Kinan introduced for multi-page registers, whose title tab floats
-% above the header, misaligns with the table edge and leaves a stray box on the
-% right. Scoped to the TOC only (other registers keep the longtable so they can
-% still break across pages); the title keeps the current bigger heading-bar font.
-% Early-Ueli register column proportions (0.16 / 0.62 / 0.22) so the "Schlüssel"
-% header fits on one line, unlike the current 0.12/0.78/0.10 simple colspec.
-\newcommand{\semio@table@colspec@toc}{%
-  @{\hspace{\tabcolsep}}%
-  T{\dimexpr0.16\linewidth-2\tabcolsep\relax}%
-  T{\dimexpr0.62\linewidth-2\tabcolsep\relax}%
-  U{\dimexpr0.22\linewidth-2\tabcolsep\relax}%
-  @{\hspace{\tabcolsep}}%
-}
-\newcommand{\semio@toc@table@simple}{%
-  \expandafter\semio@table@render\expandafter{\semio@table@colspec@toc}{%
-    \SemioTableHeaderRow{%
-      \semio@register@header@key & \semio@register@header@title & \semio@register@header@page%
-    }%
-    \semio@register@table@body
-  }%
-}
-% Register mode on/off (@-named so they're callable from the makeatletter toc
-% renderer): \begin{Table} then draws the title with no "Tabelle N" number and
-% reuses the given title verbatim (see \semio_window_kind_begin:nnn).
-\ExplSyntaxOn
-\cs_new_protected:Npn \semio@register@mode@on {
-  \bool_set_true:N \l_semio_register_list_bool
-  \use:c { semio@register@listtrue }
-}
-\cs_new_protected:Npn \semio@register@mode@off {
-  \bool_set_false:N \l_semio_register_list_bool
-  \use:c { semio@register@listfalse }
-}
-\ExplSyntaxOff
-\newcommand{\semio@render@toc@window}{%
-  \semio@register@mode@on
-  \begin{Table}[title={\SemioTocTitle}]%
-    \semio@toc@table@simple
-  \end{Table}%
-  \semio@register@mode@off
 }
 
 %region References

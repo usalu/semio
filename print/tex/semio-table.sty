@@ -258,18 +258,30 @@
 
 \newcommand{\semio@table@long@title@chrome@row}[1]{%
   \multicolumn{#1}{@{}l@{}}{%
-    \hbox to \linewidth{%
+    % Bleed the row one hairline into the left margin (and widen it to match) so
+    % the title tab's left border lands exactly on the table's outer left rule
+    % instead of a hairline inside it — the same overhang the tcolorbox tables get.
+    \hskip-\semio@stroke@hairline\relax
+    \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
+      % Title tab flush-left, number tab (if any) flush-right; the middle stays
+      % open. The table's top border is NOT drawn here (the canvas header cells
+      % would cover a stroke drawn in this row, leaving it visible only in the
+      % inter-column pads — a broken/dashed line); it is a single continuous
+      % \hrule emitted below, on the row boundary, so it runs unbroken full width.
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{semio-chrome-border-normal}%
+      \hfil
       \ifsemio@table@long@title@number\usebox{\semio@window@ctrl@box}\fi
     }%
   }%
   \\%
-  % Weld the title bar onto the following column-header row: pull back the
-  % header row's \extrarowheight top padding and strut depth so the title bar
-  % sits flush on the header border (matching the tcolorbox tables), instead
-  % of leaving a gap that also inflates the page count.
+  % Weld the title bar onto the following column-header row so the (bigger) title
+  % tab SITS DIRECTLY ON the table's top border instead of floating above it. Pull
+  % back the header row's \extrarowheight top padding and strut depth, plus the
+  % tab's own top cap padding (\semio@chrome@padding) — the small surplus that
+  % opened as a visible gap once the header font grew.
   \noalign{\vskip\dimexpr-\extrarowheight-\dp\@arstrutbox\relax}%
+  % One clean, continuous full-width top border for the table — the tab sits on it.
+  \noalign{{\color{semio-chrome-border-normal}\hrule height\semio@stroke@hairline}}%
 }
 
 \newcommand{\semio@table@long@continuation@chrome}[1]{%
@@ -676,12 +688,42 @@
 % redefines nothing, so every other table in the report is untouched.
 
 \newlength{\semio@project@bandheight}
-\setlength{\semio@project@bandheight}{28mm}
+\setlength{\semio@project@bandheight}{26mm}
 % Photo cell inner width = cols 1+2 (0.28·inner) minus the outer chrome inset and
 % the photo↔Spender boundary cell-pad, so the image's right edge lands exactly on
 % the Spender column's left edge — alignment via the table grid, no coordinates.
-\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w-\semio@chrome@padding-\semio@table@long@cellpad\relax}
-\newcommand{\semio@project@metaw}{\dimexpr0.72\semio@table@long@inner@w-\semio@chrome@padding-\semio@table@long@cellpad\relax}
+% Photo multicolumn spans "|chrome@padding | photo | cellpad" = cols 1+2
+% (chrome@padding + 0.28·inner), so photo width = 0.28·inner − cellpad and its
+% right edge lands on the col-2/col-3 boundary = the Spender column's left edge.
+% Metadata multicolumn spans "cellpad | meta | chrome@padding|" = cols 3–6, so
+% meta width = 0.72·inner − cellpad and its text starts at Spender's text edge.
+\newcommand{\semio@project@photow}{\dimexpr0.28\semio@table@long@inner@w-\semio@table@long@cellpad\relax}
+\newcommand{\semio@project@metaw}{\dimexpr0.72\semio@table@long@inner@w-\semio@table@long@cellpad\relax}
+
+% Continuous-fill colspec for the component section. Each cell gets a canvas
+% \cellcolor, and every inter-column pad (plus the outer chrome inset) is a
+% canvas-coloured \vrule of the SAME width as the pad it replaces — so the fill
+% runs unbroken across the whole row with no cream stripes, and the geometry is
+% identical to the standard builder. (Uses \color+\vrule rather than
+% \columncolor, which misbehaves in this document's package stack.)
+% Pad fills: interior gaps get one cellpad-wide canvas rule from each side (they
+% abut → 2·cellpad, matching the two \hspace pads they replace); the two outer
+% edges get one combined (chrome+cellpad)-wide rule so the fill reaches the
+% border in a single stroke (no seam between abutting rules).
+\newcommand{\semio@project@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
+% Edge fills overlap one cellpad INTO the first/last cell (net width still
+% chrome+cellpad) so they cover the cell↔pad seam and meet the border cleanly.
+\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
+\newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\hspace{0pt}}
+\newcommand{\semio@project@colspec}{%
+|@{\semio@project@padendL}>{\semio@project@cellfill}p{\dimexpr0.18\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.26\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padendR}|%
+}
 
 % Cover-crop a project photo into an exact width×height box (no frame), reusing
 % the window package's CSS object-fit:cover primitive.
@@ -727,8 +769,8 @@
   \begingroup
   \setlength{\extrarowheight}{0pt}%
   \renewcommand{\arraystretch}{1.2}%
-  \begin{tabular}{@{}>{\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
-    Ort/Stadt & #1\tabularnewline
+  \begin{tabular}[t]{@{}>{\color{semio-chrome-foreground}}l@{\hspace{1.2em}}>{\color{semio-chrome-text-normal}}l@{}}
+    Stadt & #1\tabularnewline
     Land & #2\tabularnewline
     Jahr & #3\tabularnewline
     Typ & #4\tabularnewline
@@ -744,16 +786,20 @@
 \newcommand{\semio@project@overview@band}[7]{%
   \multicolumn{2}{|@{\hspace{\semio@chrome@padding}}p{\semio@project@photow}@{\hspace{\semio@table@long@cellpad}}}{%
     \cellcolor{semio-chrome-canvas}%
-    \SemioProjectPhoto{#1}{\semio@project@photow}{\semio@project@bandheight}%
+    \begin{minipage}[t]{\linewidth}\vspace{0pt}%
+      \SemioProjectPhoto{#1}{\linewidth}{\semio@project@bandheight}%
+    \end{minipage}%
   }%
   &
-  \multicolumn{4}{@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash}p{\semio@project@metaw}@{\hspace{\semio@chrome@padding}}|}{%
+  \multicolumn{4}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\hspace{\semio@chrome@padding}}|}{%
     \cellcolor{semio-chrome-canvas}%
-    \parbox[t][\semio@project@bandheight][t]{\linewidth}{%
+    \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
-    }%
+    \end{minipage}%
   }%
-  \\\hline
+  % 3–5pt breathing room on BOTH sides of the dividing rule between the overview
+  % band and the component section, while keeping the rule itself.
+  \\\noalign{\vskip 4pt}\hline\noalign{\vskip 4pt}%
 }
 
 \newcommand{\semio@project@long@render@call}[2]{%
@@ -776,6 +822,9 @@
     \semio@table@long@head@current
   }%
   \long\def\semio@project@head{\semio@table@long@head@continuation@current}%
-  \expandafter\semio@project@long@render@call\expandafter{\semio@table@long@colspec@current}{#5}%
+  % Render with the project colspec (continuous canvas via \columncolor overhangs)
+  % instead of the default one, so the fill runs through the whole table — header
+  % and every row — with no cream gaps between columns.
+  \expandafter\semio@project@long@render@call\expandafter{\semio@project@colspec}{#5}%
 }
 %endregion ProjectCatalogue
