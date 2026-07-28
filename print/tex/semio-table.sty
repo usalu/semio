@@ -149,13 +149,17 @@
   \global\semio@table@row@startedfalse
   \arrayrulecolor{semio-chrome-border-normal}%
   \setlength{\arrayrulewidth}{\semio@stroke@hairline}%
-  % 🔲 Roomier cells (~2×): horizontal via \tabcolsep (colspecs subtract
-  % \tabcolsep, so table width is preserved), vertical via \extrarowheight
-  % (top air) + \arraystretch (bottom air). \parskip is neutralised so a
-  % multi-line cell doesn't inherit the body paragraph gap.
+  % 🔲 Roomier cells: horizontal via \tabcolsep (colspecs subtract \tabcolsep,
+  % so table width is preserved). Vertical padding is NOT done here with
+  % \extrarowheight/\arraystretch (those are top-heavy and content-dependent);
+  % it is handled symmetrically per cell by the \semio@cell@struttop /
+  % \semio@cell@strutbot pair baked into the T/U/m columns, so top gap = bottom
+  % gap in every cell and the value is identical across all table types. Hence
+  % \extrarowheight is zeroed and \arraystretch is 1 here. \parskip is
+  % neutralised so a multi-line cell doesn't inherit the body paragraph gap.
   \setlength{\tabcolsep}{\semio@table@hpad}%
-  \setlength{\extrarowheight}{\semio@spacing@double}%
-  \renewcommand{\arraystretch}{1.3}%
+  \setlength{\extrarowheight}{\z@}%
+  \renewcommand{\arraystretch}{1}%
   \setlength{\parskip}{\z@}%
 }
 
@@ -184,25 +188,65 @@
 \newcommand{\semio@table@setup@long}{%
   \semio@table@setup
   \setlength{\tabcolsep}{0pt}%
-  \setlength{\extrarowheight}{\semio@spacing@single}%
+  % Vertical padding comes from the symmetric cell struts (same as short
+  % tables) — no separate \extrarowheight here, so long/short match exactly.
 }
 
-\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
+\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
 
-\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\raggedleft\arraybackslash\hspace{0pt}}p{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
+\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
 
 \newcommand{\semio@table@colspec@register}{@{\hspace{\tabcolsep}}T{\dimexpr0.12\linewidth-2\tabcolsep\relax}T{\dimexpr0.78\linewidth-2\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
 \newcommand{\semio@table@colspec@glossary}{@{\hspace{\tabcolsep}}T{\dimexpr0.22\linewidth-2\tabcolsep\relax}T{\dimexpr0.56\linewidth-2\tabcolsep\relax}U{\dimexpr0.22\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
+% 🔲 Symmetric vertical cell padding. Cells are vertically centred (m-columns);
+% every cell also carries an invisible strut pair that reserves \semio@table@vtop
+% above its first line and \semio@table@vbot below its last line. One pair of
+% tokens drives EVERY table (short, long, register, glossary, project), so the
+% padding is identical everywhere; values are em-relative so they track each
+% table's text-size.
+%
+% Why a top value ≠ bottom value: an m-column centres the whole cell box on the
+% math axis, and a text line box is ascender-heavy (cap ≈ 0.7em up, descender
+% ≈ 0.2em down). Making \vtop about 0.66em larger than \vbot cancels that skew,
+% so the *visible* top margin (top rule → cap) equals the *visible* bottom
+% margin (baseline/descender → bottom rule). Both are then tuned to ≈ the
+% horizontal inset (\semio@table@hpad + frame gap ≈ 5.5pt at the 9.6pt chrome
+% body size) → text sits the same distance from all four cell borders. Measured
+% on the rendered PDF: cap→toprule ≈ 5.8pt, matching the ≈5.5pt side inset.
+\providecommand{\semio@table@vtop}{1.78em}
+\providecommand{\semio@table@vbot}{1.12em}
+% Exception: the register/TOC listing (Inhaltsverzeichnis) opts into HALF the
+% vertical padding — it is a dense, single-line index where the full data-table
+% air reads as too loose. These are applied by locally \renewcommand-ing
+% \semio@table@vtop/@vbot to these values around ONLY the main TOC render (see
+% \semio_window_toc_render: in semio-window.sty); every other table, including
+% the appendix list and glossaries, keeps the full padding. Kept symmetric the
+% same way (vtop−vbot ≈ 0.7em cancels the ascender-heavy line box): measured
+% cap→toprule ≈ 2.9pt, ≈ half of the standard 5.8pt.
+\providecommand{\semio@table@vtop@toc}{1.40em}
+\providecommand{\semio@table@vbot@toc}{0.70em}
+% Top strut: zero-width rule that only sets the first line's height (no depth,
+% so interline spacing in multi-line cells is untouched).
+\newcommand{\semio@cell@struttop}{\rule[\z@]{\z@}{\semio@table@vtop}}
+% Bottom strut: zero-width rule that only sets the last line's depth.
+\newcommand{\semio@cell@strutbot}{\rule[-\semio@table@vbot]{\z@}{\z@}}
+% Unified cell openers: alignment + no-indent + top strut. The matching bottom
+% strut goes in the column's <{} slot.
+\newcommand{\semio@cell@pre}{\raggedright\arraybackslash\hspace{0pt}\semio@cell@struttop}
+\newcommand{\semio@cell@preR}{\raggedleft\arraybackslash\hspace{0pt}\semio@cell@struttop}
+
 \newcolumntype{T}[1]{%
-  >{\raggedright\arraybackslash\hspace{0pt}}%
-  p{#1}%
+  >{\semio@cell@pre}%
+  m{#1}%
+  <{\semio@cell@strutbot}%
 }
 
 \newcolumntype{U}[1]{%
-  >{\raggedleft\arraybackslash\hspace{0pt}}%
-  p{#1}%
+  >{\semio@cell@preR}%
+  m{#1}%
+  <{\semio@cell@strutbot}%
 }
 
 \newcommand{\semio@table@header@cell}[1]{%
@@ -217,7 +261,7 @@
 
 %region LongTableHeader
 \newcommand{\semio@table@long@header@left@cell}[2]{%
-  \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr#1\semio@table@long@inner@w\relax}@{}}{%
+  \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{%
     \semio@table@header@cell{#2}%
   }%
 }
@@ -451,7 +495,7 @@
   \tl_set:Nn \l_semio_table_long_colspec_tl { | @ { \hspace{\semio@chrome@padding} } @ { } }
   \clist_map_inline:nn {#1} {
     \tl_put_right:Nn \l_semio_table_long_colspec_tl {
-      @{\hspace{\semio@table@long@cellpad}}>{\raggedright\arraybackslash\hspace{0pt}}p{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\hspace{\semio@table@long@cellpad}}
+      @{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr##1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}
     }
   }
   \tl_put_right:Nn \l_semio_table_long_colspec_tl { @ { \hspace{\semio@chrome@padding} } | }
@@ -728,14 +772,17 @@
 % chrome+cellpad) so they cover the cell↔pad seam and meet the border cleanly.
 \newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
 \newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
-\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\hspace{0pt}}
+% Data cells are vertically centred (m) with the same symmetric strut padding as
+% every other table; the top strut rides in the cell-fill prefix, the bottom
+% strut in each column's <{} slot.
+\newcommand{\semio@project@cellfill}{\cellcolor{semio-chrome-canvas}\raggedright\arraybackslash\hspace{0pt}\semio@cell@struttop}
 \newcommand{\semio@project@colspec}{%
-|@{\semio@project@padendL}>{\semio@project@cellfill}p{\dimexpr0.18\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.26\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padcp}%
-@{\semio@project@padcp}>{\semio@project@cellfill}p{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}@{\semio@project@padendR}|%
+|@{\semio@project@padendL}>{\semio@project@cellfill}m{\dimexpr0.18\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.26\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padcp}%
+@{\semio@project@padcp}>{\semio@project@cellfill}m{\dimexpr0.17\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@project@padendR}|%
 }
 
 % Cover-crop a project photo into an exact width×height box (no frame), reusing
@@ -796,23 +843,54 @@
 % Overview band row: photo multicolumn (cols 1–2) + metadata multicolumn (cols
 % 3–6). The two multicolumns re-supply the outer border and mirror the base
 % colspec's edge padding, so the shared boundary falls on the Spender edge.
+% Canvas-coloured column separators for the band's outer inset and the photo↔meta
+% gap, drop-in replacements for the former cream \hspace pads of the SAME width —
+% so the band's fill runs edge-to-edge with no cream slivers at the border or
+% between photo and metadata, exactly like the component section's padcp fills.
+\newcommand{\semio@project@bandpadchrome}{{\color{semio-chrome-canvas}\vrule width \semio@chrome@padding}}
 \newcommand{\semio@project@overview@band}[7]{%
-  \multicolumn{2}{|@{\hspace{\semio@chrome@padding}}p{\semio@project@photow}@{\hspace{\semio@table@long@cellpad}}}{%
+  \multicolumn{2}{|@{\semio@project@bandpadchrome}p{\semio@project@photow}@{\semio@project@padcp}}{%
     \cellcolor{semio-chrome-canvas}%
     \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \SemioProjectPhoto{#1}{\linewidth}{\semio@project@bandheight}%
     \end{minipage}%
   }%
   &
-  \multicolumn{4}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\hspace{\semio@chrome@padding}}|}{%
+  \multicolumn{4}{@{}>{\raggedright\arraybackslash}p{\dimexpr\semio@project@metaw+\semio@table@long@cellpad\relax}@{\semio@project@bandpadchrome}|}{%
     \cellcolor{semio-chrome-canvas}%
     \begin{minipage}[t]{\linewidth}\vspace{0pt}%
       \semio@project@meta{#2}{#3}{#4}{#5}{#6}{#7}%
     \end{minipage}%
   }%
-  % 3–5pt breathing room on BOTH sides of the dividing rule between the overview
-  % band and the component section, while keeping the rule itself.
-  \\\noalign{\vskip 4pt}\hline\noalign{\vskip 4pt}%
+  % Divide the overview band from the component section with a single unbroken
+  % rule and NO cream breathing gap: the former \noalign{\vskip 4pt} above and
+  % below the \hline left a cream band across the full width and cut the left/right
+  % borders there. A bare \hline welds band-canvas → rule → header-canvas, borders
+  % continuous, exactly like every body-row boundary.
+  \\\hline
+}
+
+% Project component-section column header, rendered THROUGH the project colspec
+% itself — not the shared \semio@table@long@header@left@cell. That shared left
+% cell wraps column 1 in a \multicolumn whose preamble ends in a bare @{}, which
+% drops the canvas-filled inter-column pad (\semio@project@padcp) on col 1's
+% right edge and swaps the left edge for a plain \hspace. The result was a cream
+% stripe between "Bauteil / Menge" and "Material" (and a cream sliver at the left
+% border): the header fill broke away from the continuous body fill. Routing every
+% cell through \semio@table@header@cell in a plain project column lets
+% \semio@project@padendL / \semio@project@padcp fill the left edge and all five
+% gaps exactly like the body rows, and gives col 1 the same width and struts as
+% the body. Labels MUST stay in sync with the \semio@table@long@prepare call in
+% \SemioProject. \hline (not \hhline) guarantees one unbroken full-width divider.
+\newcommand{\semio@project@headrow}{%
+  \semio@table@header@cell{Bauteil / Menge} &
+  \semio@table@header@cell{Material} &
+  \semio@table@header@cell{Spender} &
+  \semio@table@header@cell{ReUse-Ort} &
+  \semio@table@header@cell{Schicht} &
+  \semio@table@header@cell{Prozess}\\
+  \hline
+  \noalign{\global\semio@table@row@startedfalse}%
 }
 
 \newcommand{\semio@project@long@render@call}[2]{%
@@ -832,9 +910,9 @@
     \semio@project@overview@band{#3}%
       {\semio@project@ort}{\semio@project@land}{\semio@project@jahr}%
       {\semio@project@typ}{\semio@project@status}{\semio@project@quelle}%
-    \semio@table@long@head@current
+    \semio@project@headrow
   }%
-  \long\def\semio@project@head{\semio@table@long@head@continuation@current}%
+  \long\def\semio@project@head{\semio@project@headrow}%
   % Render with the project colspec (continuous canvas via \columncolor overhangs)
   % instead of the default one, so the fill runs through the whole table — header
   % and every row — with no cream gaps between columns.

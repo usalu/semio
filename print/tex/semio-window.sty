@@ -19,6 +19,17 @@
 
 \providecommand{\semio@chrome@titlebar@height}{1.4em}
 \providecommand{\semio@chrome@padding}{0.2em}
+% Inner inset between a window's frame and its body content (text / image), for
+% every non-table window kind (generic Window, Figure, Photo, Image, Blockquote,
+% Epigraph, and the cover tiles). Deliberately SEPARATE from
+% \semio@chrome@padding — that token also drives the title-tab cap height (see
+% \semio@window@cap@metrics@set), so growing the content inset through it would
+% balloon the tabs. This token touches only the four tcolorbox body insets and
+% the image/text-fit content geometry. Set to 5.5pt to match the visible inset
+% of table cells (\semio@table@hpad + frame gap ≈ 5.5pt), so window content and
+% table content sit the same distance from their borders document-wide. Tables
+% zero the window inset and supply their own padding, so they are untouched.
+\providecommand{\semio@window@bodypad}{5.5pt}
 \providecommand{\semio@window@imagefit}{contain}
 \providecommand{\semio@chrome@navbar@height}{1.8em}
 \providecommand{\semio@chrome@footer@height}{1.8em}
@@ -303,14 +314,21 @@
           \exp_args:Nc \seq_gput_right:Nn { g_semio_register_toc_label_seq }
             { \str_use:N \l_tmpb_str }
         \group_end:
-        \semio_window_toc_iow_open:
-        \tl_set:Nx \l_tmpe_tl {
+        % 🩹 Buffer the aux line in a seq instead of writing it to the file now.
+        % The file is (re)written in one shot at \AtEndDocument. Writing
+        % incrementally opened — and truncated — jobname.register-toc on the
+        % first tracked heading; a report whose first heading precedes
+        % \tableofcontents (e.g. \makefundingacknowledgement's \chapter*) thus
+        % wiped the previous run's aux before the TOC could read it, leaving the
+        % TOC permanently blank. Deferring the write keeps the prior run's aux
+        % intact on disk until end-of-document, so \semio_window_toc_aux_load:
+        % always reads a complete file regardless of heading/TOC order.
+        \seq_gput_right:Nx \g_semio_toc_aux_seq {
           \SemioTocAuxLine
             { #2 }
             { \tl_to_str:N \l_tmpa_tl }
             { \str_use:N \l_tmpb_str }
         }
-        \iow_now:Nx \g_semio_toc_iow { \tl_use:N \l_tmpe_tl }
       }
     }
   }
@@ -331,15 +349,10 @@
 }
 
 \iow_new:N \g_semio_toc_iow
-\bool_new:N \g_semio_toc_iow_open_bool
-\bool_gset_false:N \g_semio_toc_iow_open_bool
-
-\cs_new_protected:Npn \semio_window_toc_iow_open: {
-  \bool_if:NF \g_semio_toc_iow_open_bool {
-    \iow_open:Nn \g_semio_toc_iow { \c_sys_jobname_str .register-toc }
-    \bool_gset_true:N \g_semio_toc_iow_open_bool
-  }
-}
+% Buffer of \SemioTocAuxLine{..}{..}{..} entries collected during the run and
+% flushed to jobname.register-toc once, at \AtEndDocument (see the rationale at
+% the buffering site in \semio_window_toc_append:nnn).
+\seq_new:N \g_semio_toc_aux_seq
 
 \cs_new_protected:Npn \semio_window_toc_aux_line:nnn #1#2#3 {
   \tl_if_in:nnTF {#2} { Hy@SectionAnchorHref } { } {
@@ -417,6 +430,11 @@
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
+    % Inhaltsverzeichnis exception: half the standard cell padding (dense index).
+    % Local to this group, so no other table — including the appendix list at
+    % \semio_window_appendix_register_render: — is affected.
+    \renewcommand{\semio@table@vtop}{\semio@table@vtop@toc}%
+    \renewcommand{\semio@table@vbot}{\semio@table@vbot@toc}%
     \semio@register@window@open{\SemioTocTitle}%
     \SemioTableRegister{\semio@register@table@body}%
     \semio@register@window@close
@@ -426,9 +444,18 @@
   }
 }
 
+\cs_new_protected:Npn \semio_toc_aux_write:n #1 {
+  \iow_now:Nn \g_semio_toc_iow {#1}
+}
+% Flush the buffered TOC aux entries to disk in one shot, now that the whole
+% document (and thus every tracked heading) has been seen. Opening here truncates
+% the previous run's file only after this run's TOC has already read it.
 \AtEndDocument {
-  \iow_close:N \g_semio_toc_iow
-  \bool_gset_false:N \g_semio_toc_iow_open_bool
+  \seq_if_empty:NF \g_semio_toc_aux_seq {
+    \iow_open:Nn \g_semio_toc_iow { \c_sys_jobname_str .register-toc }
+    \seq_map_function:NN \g_semio_toc_aux_seq \semio_toc_aux_write:n
+    \iow_close:N \g_semio_toc_iow
+  }
 }
 
 \cs_new_protected:Npn \semio@toc@track #1#2 {
@@ -471,7 +498,7 @@
     \ExplSyntaxOff
     \Needspace{\dimexpr
       \semio@chrome@titlebar@height
-      + 2\semio@chrome@padding
+      + 2\semio@window@bodypad
       + 2\semio@chrome@font@body
       + 2\semio@stroke@hairline
     \relax}
@@ -759,10 +786,10 @@
     bottomrule=\semio@stroke@hairline,
     colback=semio-chrome-canvas,
     coltext=semio-chrome-text-normal,
-    top=\semio@chrome@padding,
-    left=\semio@chrome@padding,
-    right=\semio@chrome@padding,
-    bottom=\semio@chrome@padding,
+    top=\semio@window@bodypad,
+    left=\semio@window@bodypad,
+    right=\semio@window@bodypad,
+    bottom=\semio@window@bodypad,
     % LR-2.14 seam: the title tab is welded on immediately above this box, so any
     % `before skip` becomes a gap between the tab and the content frame (the tab
     % floats, the borders start too low). External top spacing is provided
@@ -1065,7 +1092,7 @@
   \makeatletter
   \setlength{\semio@window@textfit@target@h}{%
     \dimexpr\semio@window@height@dim - \semio@chrome@titlebar@height
-      - \semio@chrome@padding - \semio@chrome@padding
+      - \semio@window@bodypad - \semio@window@bodypad
       - \semio@stroke@hairline - \semio@stroke@hairline
     \relax
   }
@@ -1335,7 +1362,7 @@
       } {
         \dim_set:Nn \l_semio_image_target_h_dim {
           \dimexpr \semio@window@height@dim
-            - \semio@chrome@padding - \semio@chrome@padding
+            - \semio@window@bodypad - \semio@window@bodypad
             - \semio@stroke@hairline
           \relax
         }
@@ -1444,7 +1471,7 @@
   } {
     \dim_set:Nn \l_semio_image_target_w_dim {
       \dimexpr \linewidth
-        - \semio@chrome@padding - \semio@chrome@padding
+        - \semio@window@bodypad - \semio@window@bodypad
         - \semio@stroke@hairline - \semio@stroke@hairline
       \relax
     }
@@ -2801,14 +2828,21 @@
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
+    % Baseline spans the gap PLUS one hairline of overlap into the number tab, and
+    % the tab is pulled back the same hairline (so it stays flush-right): the
+    % baseline stroke's right end thus lands under the number tab's left border
+    % instead of a rounding-hairline short of it, closing the sub-pixel notch that
+    % opened at that corner. Total row width is unchanged (the +hairline in gap@w
+    % and the -hairline \hskip cancel).
     \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box+\semio@stroke@hairline\relax
     }%
     \semio@window@header@row@wrap{%
       \hskip-\semio@stroke@hairline\relax
       \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
         \usebox{\semio@window@tab@box}%
         \semio@window@header@gap@open{semio-chrome-border-normal}%
+        \hskip-\semio@stroke@hairline\relax
         \usebox{\semio@window@ctrl@box}%
       }%
     }%
@@ -2923,7 +2957,7 @@
   \semio_window_arrangement_height_adopt:
   \semio_window_frame_push:
 } {
-  \semio_window_weights_to_dims:nn { \dim_use:N \l_semio_window_height_dim } { \semio@chrome@titlebar@height + \semio@chrome@padding + \semio@chrome@padding + \semio@stroke@hairline + \semio@stroke@hairline + 3pt }
+  \semio_window_weights_to_dims:nn { \dim_use:N \l_semio_window_height_dim } { \semio@chrome@titlebar@height + \semio@window@bodypad + \semio@window@bodypad + \semio@stroke@hairline + \semio@stroke@hairline + 3pt }
   \semio_window_column_items_render:nn { 1 } { \semio_window_frame_weight_count: }
   \semio_window_frame_pop:
   \group_end:
