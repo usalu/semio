@@ -2815,8 +2815,17 @@
   \ifvmode\nointerlineskip\fi
 }
 
+% LR-invert-tab (experiment): when \semio@invert@tab is true, the muted title tab
+% is drawn as a SOLID dark box (fill = chrome-foreground) with canvas-colour text,
+% instead of the default outline tab. Default off; scoped on per table via the
+% toggle. Remove this \newif + the \ifsemio@invert@tab branch below to revert.
+\newif\ifsemio@invert@tab
 \newcommand{\semio@window@header@muted}[2]{%
-  \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
+  \ifsemio@invert@tab
+    \sbox{\semio@window@tab@box}{\semio@heading@chip{semio-chrome-foreground}{semio-chrome-canvas}{#2}}%
+  \else
+    \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
+  \fi
   \edef\semio@window@header@numval{#1}%
   % LR-tabbleed: the component frame below (tcolorbox) is drawn one boxrule
   % (= one hairline) OUTSIDE \linewidth on the left, so a title row of exactly

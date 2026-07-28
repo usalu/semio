@@ -192,9 +192,27 @@
   % tables) — no separate \extrarowheight here, so long/short match exactly.
 }
 
-\newcommand{\semio@table@colspec@register@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
+% 🎨 Continuous canvas fill for the register/glossary long tables. Their cells
+% carry \cellcolor{semio-chrome-canvas} (set in the row macros), but the inter-
+% column pads were plain \hspace, so the cream page colour bled through as
+% vertical seams between columns. Replace each pad with a canvas-coloured \vrule
+% of the SAME width it used to occupy — so the fill runs unbroken across the
+% whole table with identical geometry. Same technique the project catalogue uses
+% (\semio@project@padcp et al.); factored here as generic \semio@table@pad* so
+% register and glossary share it. \color+\vrule, not \columncolor (which
+% misbehaves in this document's package stack).
+% Interior pad: one cellpad-wide canvas rule (two abut between columns →
+% 2·cellpad, matching the two \hspace pads they replace).
+\newcommand{\semio@table@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
+% Edge fills: overlap one cellpad INTO the first/last cell (net advance still
+% chrome+cellpad, exactly the old \hspace{chrome}+\hspace{cellpad}) so the fill
+% reaches the outer border in one seamless stroke.
+\newcommand{\semio@table@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
+\newcommand{\semio@table@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
 
-\newcommand{\semio@table@colspec@glossary@long}{|@{\hspace{\semio@chrome@padding}}@{}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@table@long@cellpad}}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\hspace{\semio@table@long@cellpad}}@{\hspace{\semio@chrome@padding}}|}
+\newcommand{\semio@table@colspec@register@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.12\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.78\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.10\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
+
+\newcommand{\semio@table@colspec@glossary@long}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@pre}m{\dimexpr0.56\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}>{\semio@cell@preR}m{\dimexpr0.22\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padendR}|}
 
 \newcommand{\semio@table@colspec@register}{@{\hspace{\tabcolsep}}T{\dimexpr0.12\linewidth-2\tabcolsep\relax}T{\dimexpr0.78\linewidth-2\tabcolsep\relax}U{\dimexpr0.10\linewidth-2\tabcolsep\relax}@{\hspace{\tabcolsep}}}
 
@@ -260,10 +278,26 @@
 }
 
 %region LongTableHeader
+% Canvas-fill switch for fully-canvas long tables (register/glossary). When set,
+% the header's first cell (a \multicolumn) uses the same canvas \vrule pads and
+% geometry as the body columns, so the header row fills seamlessly too. Off by
+% default → the generic \SemioTableLong header keeps its plain pads (those
+% tables have transparent bodies, so a partially-filled header would look wrong).
+\newif\ifsemio@table@headerfill
+\semio@table@headerfillfalse
 \newcommand{\semio@table@long@header@left@cell}[2]{%
-  \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{%
-    \semio@table@header@cell{#2}%
-  }%
+  \ifsemio@table@headerfill
+    % Structurally identical to a body col-1: canvas edge fill + width−2cellpad +
+    % two canvas pads bridging to col-2, so the header title aligns with the body
+    % cells AND the fill is continuous.
+    \multicolumn{1}{|@{\semio@table@padendL}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w-2\semio@table@long@cellpad\relax}<{\semio@cell@strutbot}@{\semio@table@padcp}@{\semio@table@padcp}}{%
+      \semio@table@header@cell{#2}%
+    }%
+  \else
+    \multicolumn{1}{|@{\hspace{\semio@chrome@padding}}@{}>{\semio@cell@pre}m{\dimexpr#1\semio@table@long@inner@w\relax}<{\semio@cell@strutbot}@{}}{%
+      \semio@table@header@cell{#2}%
+    }%
+  \fi
 }
 
 \newcommand{\semio@table@long@header@repeat@three}[4]{%
@@ -458,7 +492,9 @@
 }
 
 \newcommand{\SemioTableRegister}[1]{%
+  \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@register@long}{\semio@register@table@header}{\semio@register@table@header@long@repeat}{#1}{3}%
+  \global\semio@table@headerfillfalse
 }
 
 %region GenericLongTable
@@ -677,7 +713,9 @@
 \ExplSyntaxOff
 
 \newcommand{\semio@table@termlist}[2]{%
+  \global\semio@table@headerfilltrue
   \expandafter\semio@table@long@render\expandafter{\semio@table@colspec@glossary@long}{\csname semio@#1@table@header\endcsname}{\csname semio@#1@table@header@long@repeat\endcsname}{#2}{3}%
+  \global\semio@table@headerfillfalse
 }
 
 \newcommand{\SemioTableGlossary}[1]{\semio@table@termlist{glossary}{#1}}
@@ -770,8 +808,14 @@
 \newcommand{\semio@project@padcp}{{\color{semio-chrome-canvas}\vrule width \semio@table@long@cellpad}}
 % Edge fills overlap one cellpad INTO the first/last cell (net width still
 % chrome+cellpad) so they cover the cell↔pad seam and meet the border cleanly.
-\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
-\newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+2\semio@table@long@cellpad\relax}}
+\newcommand{\semio@project@padendL}{{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}\hspace{-\semio@table@long@cellpad}}
+% Net advance chrome (not chrome+cellpad): the wider +2cellpad vrule pushed the
+% right border one cellpad PAST where the horizontal rules end, so the top rule,
+% the band↔component divider and every row separator stopped a cellpad short of
+% the right border (an open top-right corner). At +cellpad the vrule still starts
+% one cellpad inside the last cell (the \hspace{-cellpad}) so the fill reaches the
+% border seamlessly, but the border now lands exactly where the rules end.
+\newcommand{\semio@project@padendR}{\hspace{-\semio@table@long@cellpad}{\color{semio-chrome-canvas}\vrule width \dimexpr\semio@chrome@padding+\semio@table@long@cellpad\relax}}
 % Data cells are vertically centred (m) with the same symmetric strut padding as
 % every other table; the top strut rides in the cell-fill prefix, the bottom
 % strut in each column's <{} slot.
