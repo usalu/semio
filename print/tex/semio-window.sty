@@ -2320,7 +2320,7 @@
 }
 
 \newcommand{\semio@window@gap@inbox}[1]{%
-  \semio@window@header@gap@paint{#1}%
+  \semio@window@header@gap@paint{#1}{#1}%
 }
 
 \newcommand{\semio@heading@number@suffix}[1]{%
@@ -2346,7 +2346,9 @@
   \semio@heading@row@wrap{%
     \hbox to \linewidth{%
       \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint{#1}%
+      % Solid heading bars: the chips fill with #1, so the band fills with #1
+      % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
+      \semio@window@header@gap@paint{#1}{#1}%
       \usebox{\semio@window@ctrl@box}%
     }%
   }%
@@ -2634,6 +2636,11 @@
 \newcommand{\semio@nest@paragraph}[1]{%
   \semio@block@before
   \addvspace{\semio@heading@topskip}% LR-topspace: same extra air above nested-paragraph headings (SemioNest redefines \paragraph to this, bypassing the main dispatch)
+  % LR-orphanfix: nested-paragraph headings bypass \semio@koma@heading@lines and
+  % so never got its keep-with-next reservation, leaving them stranded at the
+  % page foot (e.g. "Gestaltung", "Tragwerksplanung"). Reserve the bar + ~3 body
+  % lines so the heading moves to the next page with its content as one unit.
+  \Needspace*{\dimexpr\semio@chrome@titlebar@height+3\baselineskip\relax}%
   \semio@nest@counter@step
   \edef\semio@nest@num{\semio@nest@build@number}%
   \ifnum\numexpr\semio@toc@level@subparagraph+\value{semio@nest@depth}\relax>\value{tocdepth}\else
@@ -2657,29 +2664,54 @@
 }
 %endregion NestedParagraphs
 
-%region Header gap — transparent cutout between/after chips, closed only by the baseline stroke; {@link https://github.com/usalu/semio/issues/1965}
-\newcommand{\semio@window@header@gap@paint}[1]{%
-  % Reuse the measured cap height from the adjacent chips (do NOT reset it to
-  % the nominal titlebar height) so the connecting stroke lines up with the
-  % enlarged title/number boxes.
+%region Header gap — closed, filled band welding the title tab to the number/key tab; {@link https://github.com/usalu/semio/issues/1965}
+% \semio@window@header@gap@paint{<fill>}{<stroke>} paints the middle segment
+% between the two header chips as a *closed, filled* band rather than a
+% transparent cutout: a top hairline stroke (<stroke>), continuous with the
+% chip top borders, over a body filled with the band colour (<fill>),
+% continuous with the chip fill. Its bottom is closed by the same content-frame
+% seam the chips sit on (the chips carry no bottom rule of their own), so the
+% header row reads as one continuous rectangle — no cream strip in the middle
+% and no doubled baseline rule. This restores the pre-#1965 filled principle,
+% corrected on two points: the fill now matches the chip colour (was
+% semio-chrome-base, the page cream, which showed as a stripe) and the stroke
+% sits on TOP so the band's top border is continuous (was a bottom-only stroke,
+% which left the top border broken across the gap). Heights are taken from the
+% adjacent chips' measured \semio@window@cap@titleh / \semio@window@cap@body@h
+% (do NOT reset them) so the band lines up with enlarged title/number boxes.
+\newcommand{\semio@window@header@gap@paint}[2]{%
   \semio@window@cap@raise{%
     \vbox to \semio@window@cap@titleh{%
-      \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
       \nointerlineskip
       \hbox to \dimexpr\semio@window@gap@w\relax{%
-        \semio@window@stroke@h{#1}{\semio@window@gap@w}%
+        \semio@window@stroke@h{#2}{\semio@window@gap@w}%
+      }%
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        {\color{#1}\rule{\dimexpr\semio@window@gap@w\relax}{\semio@window@cap@body@h}}%
       }%
     }%
   }%
 }
 
+% Outline (nofill) headings keep the transparent middle closed only by the
+% baseline stroke — those chips carry no fill, so there is no band to continue.
+% Unchanged from before, just no longer routed through the filled painter.
 \newcommand{\semio@window@header@gap@paint@nofill}[1]{%
   \if\relax\detokenize{#1}\relax
     \semio@window@cap@raise{%
       \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@titleh}}%
     }%
   \else
-    \semio@window@header@gap@paint{#1}%
+    \semio@window@cap@raise{%
+      \vbox to \semio@window@cap@titleh{%
+        \hbox to \dimexpr\semio@window@gap@w\relax{\rule{0pt}{\semio@window@cap@body@h}}%
+        \nointerlineskip
+        \hbox to \dimexpr\semio@window@gap@w\relax{%
+          \semio@window@stroke@h{#1}{\semio@window@gap@w}%
+        }%
+      }%
+    }%
   \fi
 }
 %endregion Header gap
@@ -2701,7 +2733,10 @@
     \semio@window@header@row@wrap{%
       \hbox to \linewidth{%
         \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{semio-chrome-border-normal}%
+        % Muted title bars (table / figure / contents / window): the chips fill
+        % with semio-chrome-canvas, so the band fills with canvas too, closed on
+        % top by the border-normal stroke → one continuous canvas header band.
+        \semio@window@header@gap@paint{semio-chrome-canvas}{semio-chrome-border-normal}%
       }%
     }%
   \else
@@ -2712,7 +2747,10 @@
     \semio@window@header@row@wrap{%
       \hbox to \linewidth{%
         \usebox{\semio@window@tab@box}%
-        \semio@window@header@gap@paint{semio-chrome-border-normal}%
+        % Muted title bars (table / figure / contents / window): the chips fill
+        % with semio-chrome-canvas, so the band fills with canvas too, closed on
+        % top by the border-normal stroke → one continuous canvas header band.
+        \semio@window@header@gap@paint{semio-chrome-canvas}{semio-chrome-border-normal}%
         \usebox{\semio@window@ctrl@box}%
       }%
     }%
@@ -3109,8 +3147,16 @@
     }{%
       % LR-2.8: read the section in effect on THIS page from the mark, not the
       % read-ahead \gdef. \protected@edef keeps robust tokens (e.g. \& in project
-      % names) unexpanded; if no mark is set yet, \rightmark is empty.
+      % names) unexpanded.
       \protected@edef\semio@chrome@heading@now{\rightmark}%
+      % LR-hdrfix: \rightmark is empty on pages that start no new heading —
+      % continuation pages and the register/bibliography sections, which issue no
+      % section mark — leaving those pages with a blank header slot. Fall back to
+      % the persistent \gdef global (last heading set), which never empties, so
+      % every page carries a section label.
+      \ifx\semio@chrome@heading@now\@empty
+        \protected@edef\semio@chrome@heading@now{\semio@chrome@heading}%
+      \fi
       \ifx\semio@chrome@heading@now\@empty
       \else
         % LR-2.9: cap the running-section chip below half the free width so it
@@ -3181,3 +3227,5 @@
 \RenewDocumentCommand \tableofcontents { } { \semio@tableofcontents }
 \ExplSyntaxOff
 \makeatother
+
+	hisIsADeliberateUndefinedCommandForTesting
