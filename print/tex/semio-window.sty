@@ -356,10 +356,16 @@
 \cs_new_protected:Npn \semio_window_vskip_stroke_hairline: {
   \group_begin:
   \ExplSyntaxOff
-  % LR-2.14 seam: overlap the content frame onto the tab by exactly one hairline
-  % so the frame's top edge sits on the tab's baseline rule (one shared rule, no
-  % gap, no doubling). Paired with before~skip=0 on the semio~window style.
-  \vskip\dimexpr-\semio@stroke@hairline\relax
+  % LR-2.14 seam: overlap the content frame onto the tab so the frame's top edge
+  % sits on the tab's baseline rule (one shared rule, no gap, no doubling) — the
+  % tab must SIT ON the component, not float above it.
+  % The -\semio@stroke@hairline is the original one-hairline seam. The extra
+  % -5.75pt cancels the vertical space a breakable tcolorbox emits at the top of
+  % its first part despite before~skip=0/nobeforeafter (a fixed, font-independent
+  % amount, measured empirically); without it the title tab floated ~5pt above
+  % the table/figure/window body. Errs a hair toward a sub-pt gap rather than an
+  % overlap, so the tab never collides with the first body line.
+  \vskip\dimexpr-\semio@stroke@hairline-5.75pt\relax
   \group_end:
 }
 
@@ -406,9 +412,7 @@
     \group_begin:
     \ExplSyntaxOff
     \makeatletter
-    \semio@register@window@open{\SemioTocTitle}%
-    \SemioTableRegister{\semio@register@table@body}%
-    \semio@register@window@close
+    \semio@render@toc@window
     \clearpage
     \makeatother
     \group_end:
@@ -1909,11 +1913,49 @@
   \fi
 }
 
-\newcommand{\semio@render@toc}{%
-  \semio@register@window@open{\SemioTocTitle}%
-  \SemioTableRegister{\semio@register@table@body}%
-  \semio@register@window@close
-  \clearpage
+% 📖 Inhaltsverzeichnis — restored to the pre-Kinan (early Ueli) rendering: a
+% register Table *window* whose title is drawn by the (now-aligned) header@muted
+% mechanism, wrapping a SIMPLE table — instead of the longtable-with-firsthead-
+% chrome that Kinan introduced for multi-page registers, whose title tab floats
+% above the header, misaligns with the table edge and leaves a stray box on the
+% right. Scoped to the TOC only (other registers keep the longtable so they can
+% still break across pages); the title keeps the current bigger heading-bar font.
+% Early-Ueli register column proportions (0.16 / 0.62 / 0.22) so the "Schlüssel"
+% header fits on one line, unlike the current 0.12/0.78/0.10 simple colspec.
+\newcommand{\semio@table@colspec@toc}{%
+  @{\hspace{\tabcolsep}}%
+  T{\dimexpr0.16\linewidth-2\tabcolsep\relax}%
+  T{\dimexpr0.62\linewidth-2\tabcolsep\relax}%
+  U{\dimexpr0.22\linewidth-2\tabcolsep\relax}%
+  @{\hspace{\tabcolsep}}%
+}
+\newcommand{\semio@toc@table@simple}{%
+  \expandafter\semio@table@render\expandafter{\semio@table@colspec@toc}{%
+    \SemioTableHeaderRow{%
+      \semio@register@header@key & \semio@register@header@title & \semio@register@header@page%
+    }%
+    \semio@register@table@body
+  }%
+}
+% Register mode on/off (@-named so they're callable from the makeatletter toc
+% renderer): \begin{Table} then draws the title with no "Tabelle N" number and
+% reuses the given title verbatim (see \semio_window_kind_begin:nnn).
+\ExplSyntaxOn
+\cs_new_protected:Npn \semio@register@mode@on {
+  \bool_set_true:N \l_semio_register_list_bool
+  \use:c { semio@register@listtrue }
+}
+\cs_new_protected:Npn \semio@register@mode@off {
+  \bool_set_false:N \l_semio_register_list_bool
+  \use:c { semio@register@listfalse }
+}
+\ExplSyntaxOff
+\newcommand{\semio@render@toc@window}{%
+  \semio@register@mode@on
+  \begin{Table}[title={\SemioTocTitle}]%
+    \semio@toc@table@simple
+  \end{Table}%
+  \semio@register@mode@off
 }
 
 %region References
@@ -2139,7 +2181,7 @@
 }
 
 \newcommand{\semio@window@stroke@h}[2]{%
-  \color{green}%
+  \color{#1}%
   \rule{\dimexpr#2\relax}{\semio@stroke@hairline}%
 }
 
@@ -2709,10 +2751,25 @@
 % corrected on two points: the fill now matches the chip colour (was
 % semio-chrome-base, the page cream, which showed as a stripe) and the stroke
 % sits on TOP so the band's top border is continuous (was a bottom-only stroke,
-% which left the top border broken across the gap). Heights are taken from the
-% adjacent chips' measured \semio@window@cap@titleh / \semio@window@cap@body@h
-% (do NOT reset them) so the band lines up with enlarged title/number boxes.
+% which left the top border broken across the gap).
+%
+% ⚠️ Band height is derived from the *tab box* (\ht+\dp\semio@window@tab@box),
+% NOT from \semio@window@cap@titleh / \semio@window@cap@body@h. The chip builders
+% set those two lengths *inside* the \sbox that measures each chip, so the
+% assignments are local to that box group and have reverted (to a stale/zero
+% value) by the time this macro runs in the surrounding \hbox — which is why the
+% earlier "fill" collapsed to zero height and the band looked unchanged. The tab
+% box, in contrast, persists: its height IS the chip height (\semio@window@cap@raise
+% pins every chip to [titleh][0pt]), so \ht+\dp gives exactly the band height and
+% the fill lines up with both chips, long titles and enlarged fonts included.
 \newcommand{\semio@window@header@gap@paint}[2]{%
+  \begingroup
+  \setlength{\semio@window@cap@titleh}{%
+    \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax
+  }%
+  \setlength{\semio@window@cap@body@h}{%
+    \dimexpr\semio@window@cap@titleh-\semio@stroke@hairline\relax
+  }%
   \semio@window@cap@raise{%
     \vbox to \semio@window@cap@titleh{%
       \nointerlineskip
@@ -2725,6 +2782,7 @@
       }%
     }%
   }%
+  \endgroup
 }
 
 % Outline (nofill) headings keep the transparent middle closed only by the
@@ -2747,6 +2805,23 @@
     }%
   \fi
 }
+
+% Open connector for MUTED title bars (table / figure / contents): the two chips
+% are tabs sitting on the component's top edge, so the middle must stay UNFILLED
+% (paper shows through) with NO top line — only a baseline stroke joining the two
+% tabs along the component's top border. Height comes from the tab box (see
+% \semio@window@header@gap@paint) so the stroke lands exactly on the tab baseline.
+\newcommand{\semio@window@header@gap@open}[1]{%
+  \raisebox{0pt}[\dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax][0pt]{%
+    \vbox to \dimexpr\ht\semio@window@tab@box+\dp\semio@window@tab@box\relax{%
+      \vfil
+      \nointerlineskip
+      \hbox to \dimexpr\semio@window@gap@w\relax{%
+        \semio@window@stroke@h{#1}{\semio@window@gap@w}%
+      }%
+    }%
+  }%
+}
 %endregion Header gap
 
 \newcommand{\semio@window@header@row@wrap}[1]{%
@@ -2759,31 +2834,36 @@
 \newcommand{\semio@window@header@muted}[2]{%
   \sbox{\semio@window@tab@box}{\semio@heading@cap@muted{\textcolor{semio-chrome-foreground}{#2}}}%
   \edef\semio@window@header@numval{#1}%
+  % LR-tabbleed: the component frame below (tcolorbox) is drawn one boxrule
+  % (= one hairline) OUTSIDE \linewidth on the left, so a title row of exactly
+  % \linewidth left the left tab one hairline inside the body's left border. Bleed
+  % the whole row one hairline into the left margin and widen it to match, so the
+  % left tab lands flush on the body's left border while the right tab stays put
+  % on the (already-flush) right border. Muted title bars (table / figure /
+  % contents / window): the title and number are TABS sitting on the component's
+  % top edge, so the middle stays open (paper shows through) with NO top line —
+  % only a baseline stroke joins the tabs; fill lives inside the tabs and body.
   \if\relax\detokenize\expandafter{\semio@window@header@numval}\relax
     \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box\relax
+      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box\relax
     }%
     \semio@window@header@row@wrap{%
-      \hbox to \linewidth{%
+      \hskip-\semio@stroke@hairline\relax
+      \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
         \usebox{\semio@window@tab@box}%
-        % Muted title bars (table / figure / contents / window): the chips fill
-        % with semio-chrome-canvas, so the band fills with canvas too, closed on
-        % top by the border-normal stroke → one continuous canvas header band.
-        \semio@window@header@gap@paint{semio-chrome-canvas}{semio-chrome-border-normal}%
+        \semio@window@header@gap@open{semio-chrome-border-normal}%
       }%
     }%
   \else
     \sbox{\semio@window@ctrl@box}{\semio@heading@cap@muted{#1}}%
     \setlength{\semio@window@gap@w}{%
-      \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
+      \dimexpr\linewidth+\semio@stroke@hairline-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
     }%
     \semio@window@header@row@wrap{%
-      \hbox to \linewidth{%
+      \hskip-\semio@stroke@hairline\relax
+      \hbox to \dimexpr\linewidth+\semio@stroke@hairline\relax{%
         \usebox{\semio@window@tab@box}%
-        % Muted title bars (table / figure / contents / window): the chips fill
-        % with semio-chrome-canvas, so the band fills with canvas too, closed on
-        % top by the border-normal stroke → one continuous canvas header band.
-        \semio@window@header@gap@paint{semio-chrome-canvas}{semio-chrome-border-normal}%
+        \semio@window@header@gap@open{semio-chrome-border-normal}%
         \usebox{\semio@window@ctrl@box}%
       }%
     }%
