@@ -746,7 +746,7 @@
     leftrule=\semio@stroke@hairline,
     rightrule=\semio@stroke@hairline,
     bottomrule=\semio@stroke@hairline,
-    colback=red,
+    colback=semio-chrome-canvas,
     coltext=semio-chrome-text-normal,
     top=\semio@chrome@padding,
     left=\semio@chrome@padding,
@@ -2139,7 +2139,7 @@
 }
 
 \newcommand{\semio@window@stroke@h}[2]{%
-  \color{#1}%
+  \color{green}%
   \rule{\dimexpr#2\relax}{\semio@stroke@hairline}%
 }
 
@@ -2348,15 +2348,30 @@
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      % Solid heading bars: the chips fill with #1, so the band fills with #1
-      % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
-      \semio@window@header@gap@paint{#1}{#1}%
-      \usebox{\semio@window@ctrl@box}%
+  % LR-longtitle: a very long title (e.g. an interview quote as a heading) makes
+  % title+number exceed \linewidth, so the number tab overflowed the right margin
+  % and was clipped. When that happens, keep a minimal connector and scale the
+  % whole bar down to the text width so the number stays legible inside the margin.
+  \ifdim\semio@window@gap@w<2\semio@chrome@padding
+    \setlength{\semio@window@gap@w}{2\semio@chrome@padding}%
+    \semio@heading@row@wrap{%
+      \noindent\resizebox{\linewidth}{!}{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@header@gap@paint{#1}{#1}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
     }%
-  }%
+  \else
+    \semio@heading@row@wrap{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        % Solid heading bars: the chips fill with #1, so the band fills with #1
+        % too (stroke = #1, i.e. seamless) → one continuous coloured bar.
+        \semio@window@header@gap@paint{#1}{#1}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
+    }%
+  \fi
 }
 
 \newcommand{\semio@heading@pair@outline}[5]{%
@@ -2366,13 +2381,26 @@
   \setlength{\semio@window@gap@w}{%
     \dimexpr\linewidth-\wd\semio@window@tab@box-\wd\semio@window@ctrl@box\relax
   }%
-  \semio@heading@row@wrap{%
-    \hbox to \linewidth{%
-      \usebox{\semio@window@tab@box}%
-      \semio@window@header@gap@paint@nofill{#1}%
-      \usebox{\semio@window@ctrl@box}%
+  % LR-longtitle: see \semio@heading@pair — scale a too-wide title+number bar to
+  % the text width so the outline number tab stays inside the right margin.
+  \ifdim\semio@window@gap@w<2\semio@chrome@padding
+    \setlength{\semio@window@gap@w}{2\semio@chrome@padding}%
+    \semio@heading@row@wrap{%
+      \noindent\resizebox{\linewidth}{!}{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@header@gap@paint@nofill{#1}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
     }%
-  }%
+  \else
+    \semio@heading@row@wrap{%
+      \hbox to \linewidth{%
+        \usebox{\semio@window@tab@box}%
+        \semio@window@header@gap@paint@nofill{#1}%
+        \usebox{\semio@window@ctrl@box}%
+      }%
+    }%
+  \fi
 }
 
 \newcommand{\semio@heading@pair@nofill@num}[4]{%
